@@ -11,18 +11,16 @@ use crate::{
         user::User,
     },
     types::{EntityType, Partition},
-    utils::{aws::DynamoClient, dynamo_extractor::extract_user},
+    utils::{aws::DynamoClient, dynamo_extractor::extract_user_from_session},
 };
 use dto::File;
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Json, Path, State},
-    },
+use dto::by_axum::axum::{
+    Extension,
+    extract::{Json, Path, State},
 };
 use dto::{JsonSchema, aide, schemars};
 use serde::Deserialize;
+use tower_sessions::Session;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -57,11 +55,12 @@ pub struct DeliberationPath {
 
 pub async fn update_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    Extension(session): Extension<Session>,
     Path(DeliberationPath { space_pk }): Path<DeliberationPath>,
     Json(req): Json<UpdateDeliberationRequest>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
-    let user = extract_user(&dynamo.client, auth).await?;
+    let space_pk = space_pk.replace("%23", "#");
+    let user = extract_user_from_session(&dynamo.client, &session).await?;
     let _space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
         .await?
         .ok_or(Error2::NotFound(format!(

@@ -23,7 +23,7 @@ pub struct SurveyCreateRequest {
     pub questions: Vec<SurveyQuestion>,
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct DeliberationSurveyResponse {
     pub pk: Partition,
 

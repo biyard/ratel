@@ -33,7 +33,7 @@ impl DeliberationSpaceContent {
     }
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct DeliberationContentResponse {
     pub html_contents: String,
     pub files: Vec<File>,

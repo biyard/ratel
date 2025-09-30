@@ -7,7 +7,7 @@ use super::*;
 use bdk::prelude::*;
 use std::{collections::HashMap, mem};
 
-#[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct DeliberationResponse {
     pub pk: Partition,
     pub created_at: i64,
@@ -46,7 +46,7 @@ impl From<DeliberationSpace> for DeliberationResponse {
     }
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct DeliberationDetailResponse {
     #[serde(flatten)]
     pub deliberation: DeliberationResponse,

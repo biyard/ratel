@@ -10,20 +10,22 @@ use crate::{
     types::{EntityType, Partition},
     utils::aws::DynamoClient,
 };
-use dto::by_axum::auth::Authorization;
 use dto::by_axum::axum::{
     Extension,
     extract::{Json, Path, State},
 };
+use tower_sessions::Session;
 
 pub async fn end_recording_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(_auth): Extension<Option<Authorization>>,
+    Extension(_session): Extension<Session>,
     Path(DeliberationDiscussionByIdPath {
         space_pk,
         discussion_pk,
     }): Path<DeliberationDiscussionByIdPath>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
+    let space_pk = space_pk.replace("%23", "#");
+    let discussion_pk = discussion_pk.replace("%23", "#");
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
     let space_id = space_pk.split("#").last().unwrap_or_default().to_string();
     let discussion_id = discussion_pk

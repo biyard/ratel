@@ -3,17 +3,15 @@ use crate::{
     models::space::{
         DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace, SpaceCommon,
     },
-    utils::dynamo_extractor::extract_user,
+    utils::dynamo_extractor::extract_user_from_session,
 };
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Json, State},
-    },
+use dto::by_axum::axum::{
+    Extension,
+    extract::{Json, State},
 };
 use dto::{JsonSchema, aide, schemars};
 use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -22,17 +20,19 @@ pub struct CreateDeliberationRequest {
     pub feed_id: String,
 }
 
-#[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreateDeliberationResponse {
     pub metadata: DeliberationDetailResponse,
 }
 
 pub async fn create_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    Extension(session): Extension<Session>,
     Json(req): Json<CreateDeliberationRequest>,
 ) -> Result<Json<CreateDeliberationResponse>, Error2> {
-    let user = extract_user(&dynamo.client, auth).await?;
+    tracing::debug!("create_deliberation_handler called with req: {:?}", req,);
+    let user = extract_user_from_session(&dynamo.client, &session).await?;
+    tracing::debug!("User extracted: {:?}", user);
 
     let deliberation = DeliberationSpace::new(user);
     deliberation.create(&dynamo.client).await?;

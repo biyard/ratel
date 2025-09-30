@@ -7,17 +7,15 @@ use crate::{
         DeliberationSpaceSurvey, SpaceCommon,
     },
 };
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Json, Path, State},
-    },
+use dto::by_axum::axum::{
+    Extension,
+    extract::{Json, Path, State},
 };
 use dto::{JsonSchema, aide, schemars};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 
-#[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct DeleteDeliberationResponse {
     pub space_pk: String,
 }
@@ -31,9 +29,10 @@ pub struct DeliberationDeletePath {
 
 pub async fn delete_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(_auth): Extension<Option<Authorization>>,
+    Extension(_session): Extension<Session>,
     Path(DeliberationDeletePath { space_pk }): Path<DeliberationDeletePath>,
 ) -> Result<Json<DeleteDeliberationResponse>, Error2> {
+    let space_pk = space_pk.replace("%23", "#");
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
 
     for data in metadata.into_iter() {

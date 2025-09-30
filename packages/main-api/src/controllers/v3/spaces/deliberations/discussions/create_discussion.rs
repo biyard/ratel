@@ -7,18 +7,16 @@ use crate::{
         user::User,
     },
     types::{EntityType, Partition},
-    utils::dynamo_extractor::extract_user,
+    utils::dynamo_extractor::extract_user_from_session,
 };
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Json, Path, State},
-    },
+use dto::by_axum::axum::{
+    Extension,
+    extract::{Json, Path, State},
 };
 
 use dto::{JsonSchema, aide, schemars};
 use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -49,12 +47,13 @@ pub struct CreateDiscussionResponse {
 
 pub async fn create_discussion_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    Extension(session): Extension<Session>,
     Path(DeliberationDiscussionPath { space_pk }): Path<DeliberationDiscussionPath>,
     Json(req): Json<CreateDiscussionRequest>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
+    let space_pk = space_pk.replace("%23", "#");
     let deliberation_id = space_pk.split("#").last().unwrap_or_default().to_string();
-    let user = extract_user(&dynamo.client, auth).await?;
+    let user = extract_user_from_session(&dynamo.client, &session).await?;
 
     let disc = DeliberationSpaceDiscussion::new(
         crate::types::Partition::DeliberationSpace(deliberation_id.clone()),

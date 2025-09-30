@@ -1,14 +1,12 @@
 use crate::{AppState, Error2, models::space::DeliberationSpaceResponse, types::EntityType};
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Json, Path, State},
-    },
+use dto::by_axum::axum::{
+    Extension,
+    extract::{Json, Path, State},
 };
 
 use dto::{JsonSchema, aide, schemars};
 use serde::Deserialize;
+use tower_sessions::Session;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -27,12 +25,14 @@ pub struct DeliberationResponseByIdPath {
 
 pub async fn get_response_answer_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(_auth): Extension<Option<Authorization>>,
+    Extension(_session): Extension<Session>,
     Path(DeliberationResponseByIdPath {
         space_pk,
         response_pk,
     }): Path<DeliberationResponseByIdPath>,
 ) -> Result<Json<DeliberationSpaceResponse>, Error2> {
+    let space_pk = space_pk.replace("%23", "#");
+    let response_pk = response_pk.replace("%23", "#");
     let id = response_pk
         .split("#")
         .last()

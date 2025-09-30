@@ -8,27 +8,27 @@ use crate::{
         DiscussionParticipantResponse,
     },
     types::{EntityType, Partition},
-    utils::{aws::DynamoClient, dynamo_extractor::extract_user},
+    utils::{aws::DynamoClient, dynamo_extractor::extract_user_from_session},
 };
 use dto::{
     MediaPlacementInfo, MeetingInfo,
-    by_axum::{
-        auth::Authorization,
-        axum::{
-            Extension,
-            extract::{Json, Path, State},
-        },
+    by_axum::axum::{
+        Extension,
+        extract::{Json, Path, State},
     },
 };
+use tower_sessions::Session;
 
 pub async fn participant_meeting_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    Extension(session): Extension<Session>,
     Path(DeliberationDiscussionByIdPath {
         space_pk,
         discussion_pk,
     }): Path<DeliberationDiscussionByIdPath>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
+    let space_pk = space_pk.replace("%23", "#");
+    let discussion_pk = discussion_pk.replace("%23", "#");
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
     let space_id = space_pk.split("#").last().unwrap_or_default().to_string();
     let discussion_id = discussion_pk
@@ -37,7 +37,7 @@ pub async fn participant_meeting_handler(
         .unwrap_or_default()
         .to_string();
 
-    let user = extract_user(&dynamo.client, auth).await?;
+    let user = extract_user_from_session(&dynamo.client, &session).await?;
     let user_pk = match user.pk.clone() {
         Partition::User(v) => v,
         _ => String::new(),
