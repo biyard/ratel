@@ -24,7 +24,7 @@ async fn test_email_with_password_signup() {
         body: {
             "email": email.clone(),
         },
-        response_type: super::verification::send_code::SendCodeResponse,
+        response_type: super::verification::send_code::SendCodeResponse
     };
     assert_eq!(status, 200);
     assert!(body.expired_at > now as i64);

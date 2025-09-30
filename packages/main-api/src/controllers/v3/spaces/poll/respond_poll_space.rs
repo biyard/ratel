@@ -13,7 +13,8 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct RespondPollSpacePathParams {
-    space_pk: Partition,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    poll_space_pk: Partition,
 }
 
 #[derive(Debug, Deserialize, Default, aide::OperationIo, JsonSchema)]
@@ -24,7 +25,7 @@ pub struct RespondPollSpaceRequest {
 pub async fn respond_poll_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<tower_sessions::Session>,
-    Path(RespondPollSpacePathParams { space_pk }): Path<RespondPollSpacePathParams>,
+    Path(RespondPollSpacePathParams { poll_space_pk }): Path<RespondPollSpacePathParams>,
     Json(req): Json<RespondPollSpaceRequest>,
 ) -> Result<(), Error2> {
     // Authenticate User
@@ -32,9 +33,13 @@ pub async fn respond_poll_space_handler(
         extract_user_from_session(&dynamo.client, &session).await?;
 
     // Space Status Check
-    let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
-        .await?
-        .ok_or(Error2::NotFoundSpace)?;
+    let space_common = SpaceCommon::get(
+        &dynamo.client,
+        &poll_space_pk,
+        Some(EntityType::SpaceCommon),
+    )
+    .await?
+    .ok_or(Error2::NotFoundSpace)?;
     match space_common.visibility {
         SpaceVisibility::Private => {
             if user.pk != space_common.user_pk {
@@ -59,25 +64,28 @@ pub async fn respond_poll_space_handler(
     }
 
     //Validate Request
-    if !matches!(space_pk, Partition::PollSpace(_)) {
+    if !matches!(poll_space_pk, Partition::PollSpace(_)) {
         return Err(Error2::NotFoundPollSpace);
     }
 
-    let poll_space = PollSpace::get(&dynamo.client, &space_pk, Some(EntityType::PollSpace))
+    let poll_space = PollSpace::get(&dynamo.client, &poll_space_pk, Some(EntityType::PollSpace))
         .await?
         .ok_or(Error2::NotFoundPollSpace)?;
 
     //Validate Answers
-    let poll_space_survey =
-        PollSpaceSurvey::get(&dynamo.client, &space_pk, Some(EntityType::PollSpaceSurvey))
-            .await?
-            .ok_or(Error2::AnswersMismatchQuestions)?;
+    let poll_space_survey = PollSpaceSurvey::get(
+        &dynamo.client,
+        &poll_space_pk,
+        Some(EntityType::PollSpaceSurvey),
+    )
+    .await?
+    .ok_or(Error2::AnswersMismatchQuestions)?;
 
     if validate_answers(poll_space_survey.questions, req.answers.clone()) {
         return Err(Error2::AnswersMismatchQuestions);
     }
 
-    PollSpaceSurveyResponse::new(space_pk.clone(), user.pk.clone(), req.answers)
+    PollSpaceSurveyResponse::new(poll_space_pk.clone(), user.pk.clone(), req.answers)
         .create(&dynamo.client)
         .await?;
     PollSpace::updater(&poll_space.pk, &poll_space.sk)

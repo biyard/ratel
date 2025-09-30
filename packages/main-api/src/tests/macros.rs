@@ -26,7 +26,7 @@ macro_rules! call {
         use bdk::prelude::by_axum::axum;
 
         let mut req_builder = axum::http::Request::builder()
-            .uri(concat!("http://localhost:3000", $path))
+            .uri(format!("http://localhost:3000{}", $path))
             .method($method);
 
         if let Some(headers_mut) = req_builder.headers_mut() {

@@ -161,6 +161,9 @@ pub mod controllers {
 
         pub mod spaces {
             pub mod create_space;
+            pub mod delete_space;
+            #[cfg(test)]
+            pub mod tests;
 
             pub mod deliberations {
                 pub mod create_deliberation;

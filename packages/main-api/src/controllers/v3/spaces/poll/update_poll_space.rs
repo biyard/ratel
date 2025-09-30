@@ -1,5 +1,5 @@
 use crate::models::space::{PollSpaceMetadata, PollSpaceResponse, PollSpaceSurvey, SpaceCommon};
-use crate::types::{Partition, SpacePublishState, SpaceStatus, SurveyQuestion};
+use crate::types::{BoosterType, Partition, SpacePublishState, SpaceStatus, SurveyQuestion};
 use crate::utils::dynamo_extractor::extract_user_from_session;
 use crate::utils::security::{RatelResource, check_permission_from_session};
 use crate::{AppState, Error2};
@@ -12,11 +12,15 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct UpdatePollSpacePathParams {
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
     pub poll_space_pk: Partition,
 }
 
 #[derive(Debug, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct UpdatePollSpaceRequest {
+    pub started_at: i64,
+    pub ended_at: i64,
+    pub booster: Option<BoosterType>,
     pub questions: Vec<SurveyQuestion>,
 }
 
@@ -26,7 +30,12 @@ pub async fn update_poll_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<tower_sessions::Session>,
     Path(UpdatePollSpacePathParams { poll_space_pk }): Path<UpdatePollSpacePathParams>,
-    Json(UpdatePollSpaceRequest { questions }): Json<UpdatePollSpaceRequest>,
+    Json(UpdatePollSpaceRequest {
+        questions,
+        started_at,
+        ended_at,
+        booster,
+    }): Json<UpdatePollSpaceRequest>,
 ) -> Result<Json<UpdatePollSpaceResponse>, Error2> {
     let user = extract_user_from_session(&dynamo.client, &session).await?;
 
@@ -79,6 +88,15 @@ pub async fn update_poll_space_handler(
         .create(&dynamo.client)
         .await?;
 
+    let mut updater = SpaceCommon::updater(&poll_space_pk, &space_common.sk)
+        .with_started_at(started_at)
+        .with_ended_at(ended_at);
+    updater = if let Some(booster) = booster {
+        updater.with_booster(booster)
+    } else {
+        updater.remove_booster()
+    };
+    updater.execute(&dynamo.client).await?;
     let poll_metadata = PollSpaceMetadata::query(&dynamo.client, &poll_space_pk).await?;
     let response = PollSpaceResponse::from(poll_metadata);
     Ok(Json(response))

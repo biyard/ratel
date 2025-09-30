@@ -25,7 +25,7 @@ pub struct CreatePostRequest {
     pub team_pk: Option<String>,
 }
 
-#[derive(Debug, Serialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreatePostResponse {
     pub post_pk: String,
 }
