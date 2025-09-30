@@ -1,5 +1,14 @@
-use crate::{types::*, utils::time::get_now_timestamp_millis};
+#![allow(warnings)]
+use crate::{
+    AppState, Error2, constants::SESSION_KEY_USER_ID, types::*,
+    utils::time::get_now_timestamp_millis,
+};
+// use async_trait::async_trait;
+use axum::extract::FromRequestParts;
+use axum::http::request::Parts;
+use axum::{body::Body, extract::State, http::Request};
 use bdk::prelude::*;
+use tower_sessions::Session;
 
 #[derive(
     Debug,
@@ -84,5 +93,78 @@ impl User {
             password,
             ..Default::default()
         }
+    }
+}
+
+impl FromRequestParts<AppState> for Option<User> {
+    type Rejection = crate::Error2;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        _state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        let session = Session::from_request_parts(parts, _state).await;
+
+        if let Err(e) = &session {
+            return Ok(None);
+        }
+
+        let session = session.unwrap();
+
+        let user_pk: Partition = if let Ok(Some(u)) = session.get(SESSION_KEY_USER_ID).await {
+            u
+        } else {
+            let _ = session.flush().await;
+            return Ok(None);
+        };
+
+        let user = if let Ok(Some(u)) =
+            User::get(&(_state.dynamo.client), user_pk, Some(EntityType::User)).await
+        {
+            u
+        } else {
+            let _ = session.flush().await;
+            return Ok(None);
+        };
+
+        Ok(Some(user))
+    }
+}
+
+// For authenticated routes where User must be present
+impl FromRequestParts<AppState> for User {
+    type Rejection = crate::Error2;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        _state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        let session = Session::from_request_parts(parts, _state)
+            .await
+            .map_err(|e| crate::Error2::NoSessionFound)?;
+
+        let user_pk: Partition = session
+            .get(SESSION_KEY_USER_ID)
+            .await
+            .map_err(|e| crate::Error2::NoSessionFound)?
+            .ok_or(crate::Error2::NoSessionFound)?;
+
+        let user = User::get(&(_state.dynamo.client), user_pk, Some(EntityType::User))
+            .await
+            .map_err(|e| crate::Error2::NoSessionFound);
+
+        if user.is_err() {
+            let _ = session.flush().await;
+            return Err(crate::Error2::NoSessionFound);
+        }
+
+        let user = user.unwrap();
+
+        if user.is_none() {
+            let _ = session.flush().await;
+            return Err(crate::Error2::NoUserFound);
+        }
+
+        Ok(user.unwrap())
     }
 }

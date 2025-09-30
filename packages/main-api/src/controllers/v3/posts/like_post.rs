@@ -41,7 +41,7 @@ pub async fn like_post_handler(
     let post = Post::get(&dynamo.client, &params.post_pk, Some(EntityType::Post))
         .await?
         .ok_or(Error2::NotFound("Post not found".to_string()))?;
-    if let Some(Visibility::Team(team_pk)) = post.visibility.clone() {
+    if let Some(Visibility::TeamOnly(team_pk)) = post.visibility.clone() {
         check_permission(
             &dynamo.client,
             auth,
