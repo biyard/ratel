@@ -6,6 +6,9 @@ use crate::controllers::v3::spaces::deliberations::discussions::participant_meet
 // use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::start_meeting::start_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::start_recording::start_recording_handler;
+use crate::controllers::v3::spaces::deliberations::posting_deliberation::{
+    PostingDeliberationResponse, posting_deliberation_handler,
+};
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
 use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
@@ -340,6 +343,17 @@ pub fn route(
                                 Json<DeliberationDetailResponse>,
                                 "Get deliberation",
                                 "Get deliberation with ID"
+                            ),
+                        ),
+                    )
+                    .route(
+                        "/:space_pk/posting",
+                        post_with(
+                            posting_deliberation_handler,
+                            api_docs!(
+                                Json<PostingDeliberationResponse>,
+                                "Posting deliberation",
+                                "Posting deliberation with id"
                             ),
                         ),
                     )

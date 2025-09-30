@@ -6,11 +6,11 @@ use crate::{
             DeliberationSpaceContent, DeliberationSpaceDiscussion, DeliberationSpaceElearning,
             DeliberationSpaceMember, DeliberationSpaceMemberQueryOption, DeliberationSpaceQuestion,
             DeliberationSpaceQuestionQueryOption, DeliberationSpaceSurvey, DiscussionCreateRequest,
-            SurveyCreateRequest,
+            SpaceCommon, SurveyCreateRequest,
         },
         user::User,
     },
-    types::{EntityType, Partition},
+    types::{EntityType, Partition, SpaceVisibility},
     utils::{aws::DynamoClient, dynamo_extractor::extract_user_from_session},
 };
 use dto::File;
@@ -44,6 +44,13 @@ pub struct UpdateDeliberationRequest {
     pub recommendation_html_contents: Option<String>,
     #[schemars(description = "Final Recommendation files")]
     pub recommendation_files: Vec<File>,
+
+    #[schemars(description = "Deliberation visibility")]
+    pub visibility: SpaceVisibility,
+    #[schemars(description = "Deliberation start date")]
+    pub started_at: i64,
+    #[schemars(description = "Deliberation end date")]
+    pub ended_at: i64,
 }
 
 #[derive(
@@ -67,6 +74,13 @@ pub async fn update_deliberation_handler(
             "Space not found: (space ID: {:?})",
             space_pk
         )))?;
+
+    SpaceCommon::updater(&space_pk, EntityType::SpaceCommon)
+        .with_visibility(req.visibility)
+        .with_started_at(req.started_at)
+        .with_ended_at(req.ended_at)
+        .execute(&dynamo.client)
+        .await?;
 
     update_summary(
         dynamo.clone(),

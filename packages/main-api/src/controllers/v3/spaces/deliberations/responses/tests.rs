@@ -7,7 +7,10 @@ use crate::{
     },
     post,
     tests::v3_setup::{TestContextV3, setup_v3},
-    types::{ChoiceQuestion, LinearScaleQuestion, Partition, SurveyQuestion, SurveyStatus},
+    types::{
+        ChoiceQuestion, LinearScaleQuestion, Partition, SpaceVisibility, SurveyQuestion,
+        SurveyStatus,
+    },
 };
 use dto::File;
 
@@ -47,6 +50,9 @@ async fn test_create_response_answer_handler() {
         body: {
             "title": Some("deliberation title".to_string()),
             "html_contents": Some("<div>deliberation description</div>".to_string()),
+            "visibility": SpaceVisibility::Public,
+            "started_at": now,
+            "ended_at": now + 86400,
             "files": vec![File {
                 name: "deliberation summary file title".to_string(),
                 size: "15KB".to_string(),
@@ -205,6 +211,9 @@ async fn test_get_response_answer_handler() {
                 ext: dto::FileExtension::PDF,
                 url: None,
             }],
+            "visibility": SpaceVisibility::Public,
+            "started_at": now,
+            "ended_at": now + 86400,
             "discussions": vec![DiscussionCreateRequest {
                 discussion_pk: None,
                 started_at: now,

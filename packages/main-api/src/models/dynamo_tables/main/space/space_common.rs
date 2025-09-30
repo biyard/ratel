@@ -20,10 +20,14 @@ pub struct SpaceCommon {
     pub post_pk: Partition,
 
     pub status: SpaceStatus,
+    pub started_at: i64,
+    pub ended_at: i64,
 }
 
 impl SpaceCommon {
     pub fn new(pk: Partition, post_pk: Partition) -> Self {
+        let now = chrono::Utc::now().timestamp_micros();
+
         Self {
             pk,
             sk: EntityType::SpaceCommon,
@@ -31,6 +35,9 @@ impl SpaceCommon {
             participants: 0,
             visibility: SpaceVisibility::Public,
             status: SpaceStatus::Draft,
+
+            started_at: now,
+            ended_at: now,
         }
     }
 
