@@ -71,7 +71,7 @@ async fn test_verification_invalid_code() {
         body: {
             "email": email.clone(),
             "code": "111",
-        },
+        }
     };
 
     let verification = EmailVerification::get(
