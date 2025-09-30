@@ -1,4 +1,3 @@
-#![allow(warnings)]
 use crate::{
     AppState, Error2, constants::SESSION_KEY_USER_ID, types::*,
     utils::time::get_now_timestamp_millis,
