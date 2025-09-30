@@ -439,6 +439,7 @@ jobs:
         uses: actions/github-script@v7
         if: always()
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const artifactUrl = `${{ steps.artifact.outputs.artifact_ui_url }}`;
             const runUrl = `https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}`;
@@ -462,8 +463,17 @@ jobs:
             ---
             *Artifact produced by this workflow run.*`;
 
+            const run = context.payload.workflow_run
+            // PR 번호 추적: run.pull_requests[0].number 에 보통 담겨있음
+            const pr = run.pull_requests && run.pull_requests[0]
+            if (!pr) {
+              core.info("No PR associated with this run.")
+              return
+            }
+            const issue_number = pr.number
+
             const { data: comments } = await github.rest.issues.listComments({
-              issue_number: context.issue.number,
+              issue_number,
               owner: context.repo.owner,
               repo: context.repo.repo,
             });
@@ -471,6 +481,7 @@ jobs:
             const existingComment = comments.find(c =>
               c.body.includes('🎭 Playwright Test Results') && c.user.type === 'Bot'
             );
+
 
             if (existingComment) {
               await github.rest.issues.updateComment({
@@ -481,7 +492,7 @@ jobs:
               });
             } else {
               await github.rest.issues.createComment({
-                issue_number: context.issue.number,
+                issue_number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body: comment
