@@ -152,8 +152,8 @@ export function CreateRePost() {
           </div>
 
           <div className="flex items-center space-x-4">
-            <div className="py-2 px-4 rounded-lg flex w-[320px] justify-between border-[0.5px] border-create-space-border">
-              <p className="text-left text-foreground text-lg">{industry}</p>
+            <div className="py-2 px-4 rounded-lg flex w-[320px] justify-between border-[0.5px] border-create-space-border items-center">
+              <p className="text-left text-foreground text-md">{industry}</p>
 
               <ShapeDownArrow className="w-5 h-5" />
             </div>
@@ -171,7 +171,7 @@ export function CreateRePost() {
 
         {/* Quoted Content Section */}
         {(feedcontent || feedImageUrl) && (
-          <div className="px-4 pt-2 pb-2 bg-write-comment-box-bg rounded-md mx-4 ">
+          <div className="px-4 pt-2 pb-2 bg-write-comment-box-bg rounded-sm mx-4 ">
             <div className="flex items-center gap-3 relative">
               <div className="size-6 rounded-full">
                 <Image
@@ -207,7 +207,7 @@ export function CreateRePost() {
                 {feedcontent && (
                   <TruncatedContent
                     content={feedcontent}
-                    className="prose prose-invert text-sm bg-write-comment-box-bg mb-3 font-light text-desc-text text-start ml-[0.5px]"
+                    className="prose prose-invert text-sm bg-write-comment-box-bg mb-3 mt-2 font-light text-desc-text text-start ml-[0.5px]"
                     contentClassName="[&_*]:!my-0"
                   />
                 )}
