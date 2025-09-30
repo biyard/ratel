@@ -16,7 +16,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct GetPollSpacePathParams {
-    pub space_pk: Partition,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub poll_space_pk: Partition,
 }
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
@@ -28,7 +29,9 @@ pub struct GetPollSpaceResponse {}
 pub async fn get_poll_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<tower_sessions::Session>,
-    Path(GetPollSpacePathParams { space_pk }): Path<GetPollSpacePathParams>,
+    Path(GetPollSpacePathParams {
+        poll_space_pk: space_pk,
+    }): Path<GetPollSpacePathParams>,
 ) -> Result<Json<GetPollSpaceResponse>, Error2> {
     if !matches!(space_pk, Partition::PollSpace(_)) {
         return Err(Error2::NotFoundPollSpace);

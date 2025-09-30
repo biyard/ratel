@@ -1,4 +1,6 @@
 use crate::controllers::v3::auth::verification::verify_code::VerifyCodeResponse;
+use crate::controllers::v3::spaces::create_space::{CreateSpaceResponse, create_space_handler};
+use crate::controllers::v3::spaces::delete_space::delete_space_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
@@ -7,6 +9,13 @@ use crate::controllers::v3::spaces::deliberations::discussions::start_meeting::s
 use crate::controllers::v3::spaces::deliberations::discussions::start_recording::start_recording_handler;
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
+use crate::controllers::v3::spaces::poll::list_responses::{
+    ListSurveyResponse, list_responses_handler,
+};
+use crate::controllers::v3::spaces::poll::respond_poll_space::respond_poll_space_handler;
+use crate::controllers::v3::spaces::poll::update_poll_space::{
+    UpdatePollSpaceResponse, update_poll_space_handler,
+};
 use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
 use crate::{
     Error2,
@@ -212,6 +221,24 @@ pub fn route(
         .nest(
             "/spaces",
             Router::new()
+                .route(
+                    "/",
+                    post_with(
+                        create_space_handler,
+                        api_docs!(
+                            Json<CreateSpaceResponse>,
+                            "Create Space",
+                            "Create a new space"
+                        ),
+                    ),
+                )
+                .route(
+                    "/:space_pk",
+                    delete_with(
+                        delete_space_handler,
+                        api_docs!((), "Delete Space", "Delete a space by ID"),
+                    ),
+                )
                 .nest(
                     "/deliberation",
                     Router::new()
@@ -358,13 +385,56 @@ pub fn route(
                 )
                 .nest(
                     "/poll",
-                    Router::new().route(
-                        "/",
-                        get_with(
-                            get_poll_space_handler,
-                            api_docs!(Json<GetPollSpaceResponse>, "Get poll", "Get poll with ID"),
+                    Router::new()
+                        .route(
+                            "/",
+                            get_with(
+                                get_poll_space_handler,
+                                api_docs!(
+                                    Json<GetPollSpaceResponse>,
+                                    "Get poll",
+                                    "Get poll with ID"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/:poll_space_pk",
+                            get_with(
+                                get_poll_space_handler,
+                                api_docs!(
+                                    Json<GetPollSpaceResponse>,
+                                    "Get poll",
+                                    "Get poll with ID"
+                                ),
+                            )
+                            .put_with(
+                                update_poll_space_handler,
+                                api_docs!(
+                                    Json<UpdatePollSpaceResponse>,
+                                    "Update poll",
+                                    "Update poll with ID"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/:poll_space_pk/response",
+                            post_with(
+                                respond_poll_space_handler,
+                                api_docs!(
+                                    Json<()>,
+                                    "Respond to poll",
+                                    "Submit a response to the poll with ID"
+                                ),
+                            )
+                            .get_with(
+                                list_responses_handler,
+                                api_docs!(
+                                    Json<ListSurveyResponse>,
+                                    "List poll responses",
+                                    "List all responses for the poll with ID"
+                                ),
+                            ),
                         ),
-                    ),
                 ),
         )
         .nest(

@@ -17,16 +17,16 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreateSpaceRequest {
-    space_type: SpaceType,
-    post_pk: Partition,
+    pub(crate) space_type: SpaceType,
+    pub(crate) post_pk: Partition,
     started_at: Option<i64>,
     ended_at: Option<i64>,
     booster: Option<BoosterType>,
 }
 
-#[derive(Debug, Serialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreateSpaceResponse {
-    space_pk: Partition,
+    pub space_pk: Partition,
 }
 
 pub async fn create_space_handler(

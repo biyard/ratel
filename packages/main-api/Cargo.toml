@@ -37,6 +37,7 @@ aws-sdk-chimesdkmediapipelines = "1.75.0"
 aws-sdk-mediaconvert = "1.82.0"
 aws-sdk-sqs = "1.81.0"
 jsonwebtoken = "9.3.0"
+percent-encoding = "2.3.2"
 
 rmcp = { version = "0.6.1", git = "https://github.com/modelcontextprotocol/rust-sdk", features = [
     "server",
@@ -80,6 +81,7 @@ path = "src/main.rs"
 rest-api = { workspace = true, features = ["test"] }
 ring = { version = "0.17.14" }
 reqwest.workspace = true
+url = "2.5.7"
 
 [features]
 default = []

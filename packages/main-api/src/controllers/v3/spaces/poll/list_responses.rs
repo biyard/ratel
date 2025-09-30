@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct ListResponsesPathParams {
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
     poll_space_pk: Partition,
 }
 
@@ -21,7 +22,7 @@ pub struct ListResponsesQueryParams {
 }
 
 #[derive(Debug, Serialize, Default, aide::OperationIo, JsonSchema)]
-pub struct ListResponsesResponse {
+pub struct ListSurveyResponse {
     items: Vec<PollSpaceSurveyResponse>,
     bookmark: Option<String>,
 }
@@ -31,7 +32,7 @@ pub async fn list_responses_handler(
     Extension(session): Extension<tower_sessions::Session>,
     Path(ListResponsesPathParams { poll_space_pk }): Path<ListResponsesPathParams>,
     Query(ListResponsesQueryParams { bookmark, limit }): Query<ListResponsesQueryParams>,
-) -> Result<Json<ListResponsesResponse>, Error2> {
+) -> Result<Json<ListSurveyResponse>, Error2> {
     let _user = extract_user_from_session(&dynamo.client, &session).await;
     // FIXME: Need to check if the user has permission to view the responses
 
@@ -48,7 +49,7 @@ pub async fn list_responses_handler(
     )
     .await?;
 
-    Ok(Json(ListResponsesResponse {
+    Ok(Json(ListSurveyResponse {
         items: responses,
         bookmark: next_bookmark,
     }))
