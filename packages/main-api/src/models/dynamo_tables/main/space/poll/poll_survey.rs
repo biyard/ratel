@@ -7,20 +7,14 @@ pub struct PollSpaceSurvey {
     pub sk: EntityType,
 
     pub questions: Vec<SurveyQuestion>, // Questions in the survey
-    pub answers: Vec<SurveyAnswer>,     // Answers to the questions
 }
 
 impl PollSpaceSurvey {
-    pub fn new(
-        space_pk: Partition,
-        questions: Vec<SurveyQuestion>,
-        answers: Vec<SurveyAnswer>,
-    ) -> Self {
+    pub fn new(space_pk: Partition, questions: Vec<SurveyQuestion>) -> Self {
         Self {
             pk: space_pk,
             sk: EntityType::PollSpaceSurvey,
             questions,
-            answers,
         }
     }
 }

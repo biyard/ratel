@@ -4,6 +4,42 @@ use bdk::prelude::*;
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, schemars::JsonSchema,
 )]
+
+/*
+PUBLISH_STATE: 유저의 게시물 상태
+    Draft: 작성중
+    Published: 게시됨
+
+STATUS: Space 의 진행 상태(Only time limited space use this field based on started_at and ended_at)
+    None: for Draft or Time Unlimited space
+    Waiting: for Published but not started yet
+    InProgress: User Can respond or doing some actions for space
+    Finished: User
+
+VISIBILITY: 유저가 글을 볼 수 있는 범위
+    Private: only author can read
+    Public: anyone can read
+    Team(team_pk): only team members can read
+
+---
+PERMISSION RULES:
+
+READ: Based on VISIBILITY
+    Private: only author can read
+    Public: anyone can read
+    Team(team_pk): only team members can read
+
+EDIT(UPDATE): Based on PUBLISH_STATE and STATUS
+    Only Draft publish_state or Waiting status can be edited
+    Once Published, cannot revert to Draft
+    Once InProgress, cannot revert to Waiting
+    Once Finished, cannot revert to InProgress
+
+ACTION(e.g., Respond to Poll): Based on STATUS
+    Only InProgress status can perform actions
+    Cannot perform actions in Waiting or Finished status
+
+*/
 pub struct SpaceCommon {
     pub pk: Partition,
 
@@ -15,13 +51,14 @@ pub struct SpaceCommon {
 
     pub sk: EntityType,
 
-    // // Space statistics
-    // pub participants: i64,
+    pub status: Option<SpaceStatus>, // Waiting, InProgress, Finished
+    pub publish_state: SpacePublishState, // Draft, Published
     #[dynamo(prefix = "VIS", name = "find_by_visibility", index = "gsi6", pk)]
-    pub visibility: SpaceVisibility,
+    pub visibility: SpaceVisibility, // Private, Public, Team(team_pk)
     #[dynamo(prefix = "POST_PK", name = "find_by_post_pk", index = "gsi2", pk)]
     pub post_pk: Partition,
 
+    pub booster: Option<BoosterType>,
     // Author info
     #[dynamo(prefix = "USER_PK", name = "find_by_user_pk", index = "gsi1", pk)]
     pub user_pk: Partition,
@@ -53,7 +90,9 @@ impl SpaceCommon {
             post_pk,
             created_at: now,
             updated_at: now,
-            visibility: SpaceVisibility::Public,
+            publish_state: SpacePublishState::Draft,
+            status: None,
+            visibility: SpaceVisibility::Private,
             user_pk,
             author_display_name: display_name,
             author_profile_url: profile_url,
@@ -62,8 +101,17 @@ impl SpaceCommon {
         }
     }
 
-    pub fn with_visibility(mut self, visibility: SpaceVisibility) -> Self {
-        self.visibility = visibility;
+    pub fn with_time(mut self, started_at: i64, ended_at: i64) -> Self {
+        self.started_at = Some(started_at);
+        self.ended_at = Some(ended_at);
         self
     }
+    pub fn with_booster(mut self, booster: BoosterType) -> Self {
+        self.booster = Some(booster);
+        self
+    }
+    // pub fn with_visibility(mut self, visibility: SpaceVisibility) -> Self {
+    //     self.visibility = Some(visibility);
+    //     self
+    // }
 }
