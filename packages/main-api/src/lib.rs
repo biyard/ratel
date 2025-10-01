@@ -165,6 +165,7 @@ pub mod controllers {
 
                 pub mod delete_deliberation;
                 pub mod get_deliberation;
+                pub mod posting_deliberation;
 
                 pub mod discussions {
                     pub mod create_discussion;

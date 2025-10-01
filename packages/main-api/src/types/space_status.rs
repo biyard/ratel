@@ -8,14 +8,12 @@ use bdk::prelude::*;
     Default,
     DynamoEnum,
     JsonSchema,
+    Eq,
     PartialEq,
 )]
-pub enum SpaceVisibility {
+pub enum SpaceStatus {
     #[default]
-    Public,
-    // Only team members can access
-    Team(String),
-
-    // Only members in the specific team group can access
-    TeamGroupMember(String),
+    Draft,
+    InProgress,
+    Finished,
 }

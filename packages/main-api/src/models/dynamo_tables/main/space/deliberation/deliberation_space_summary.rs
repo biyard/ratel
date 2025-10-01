@@ -1,8 +1,8 @@
 use crate::types::*;
 
+use crate::types::File;
 use crate::types::deliberation_content_type::DeliberationContentType;
 use bdk::prelude::*;
-use dto::File;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct DeliberationSpaceContent {
@@ -33,7 +33,7 @@ impl DeliberationSpaceContent {
     }
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct DeliberationContentResponse {
     pub html_contents: String,
     pub files: Vec<File>,

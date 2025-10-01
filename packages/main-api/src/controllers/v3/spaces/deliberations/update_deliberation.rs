@@ -1,28 +1,31 @@
+use crate::types::File;
 use crate::{
     AppState, Error2,
     models::{
+        feed::Post,
         space::{
             DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace,
             DeliberationSpaceContent, DeliberationSpaceDiscussion, DeliberationSpaceElearning,
             DeliberationSpaceMember, DeliberationSpaceMemberQueryOption, DeliberationSpaceQuestion,
             DeliberationSpaceQuestionQueryOption, DeliberationSpaceSurvey, DiscussionCreateRequest,
-            SurveyCreateRequest,
+            SpaceCommon, SurveyCreateRequest,
         },
         user::User,
     },
-    types::{EntityType, Partition},
-    utils::{aws::DynamoClient, dynamo_extractor::extract_user},
-};
-use dto::File;
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Json, Path, State},
+    types::{EntityType, Partition, SpaceVisibility, TeamGroupPermission},
+    utils::{
+        aws::DynamoClient,
+        dynamo_extractor::extract_user_from_session,
+        security::{RatelResource, check_permission_from_session},
     },
 };
-use dto::{JsonSchema, aide, schemars};
+use bdk::prelude::axum::{
+    Extension,
+    extract::{Json, Path, State},
+};
+use bdk::prelude::*;
 use serde::Deserialize;
+use tower_sessions::Session;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -46,48 +49,105 @@ pub struct UpdateDeliberationRequest {
     pub recommendation_html_contents: Option<String>,
     #[schemars(description = "Final Recommendation files")]
     pub recommendation_files: Vec<File>,
+
+    #[schemars(description = "Deliberation visibility")]
+    pub visibility: SpaceVisibility,
+    #[schemars(description = "Deliberation start date")]
+    pub started_at: i64,
+    #[schemars(description = "Deliberation end date")]
+    pub ended_at: i64,
 }
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationPath {
-    pub id: String,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub space_pk: Partition,
 }
 
 pub async fn update_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
-    Path(DeliberationPath { id }): Path<DeliberationPath>,
+    Extension(session): Extension<Session>,
+    Path(DeliberationPath { space_pk }): Path<DeliberationPath>,
     Json(req): Json<UpdateDeliberationRequest>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
-    let user = extract_user(&dynamo.client, auth).await?;
-    let _space = DeliberationSpace::get(
-        &dynamo.client,
-        &Partition::DeliberationSpace(id.to_string()),
-        Some(EntityType::Space),
-    )
-    .await?
-    .ok_or(Error2::NotFound(format!(
-        "Space not found: (space ID: {:?})",
-        id
-    )))?;
+    let user = extract_user_from_session(&dynamo.client, &session).await?;
+    let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
+        .await?
+        .ok_or(Error2::NotFound("Space not found".to_string()))?;
 
-    update_summary(dynamo.clone(), id.clone(), req.html_contents, req.files).await?;
-    update_discussion(dynamo.clone(), user.clone(), id.clone(), req.discussions).await?;
-    update_elearning(dynamo.clone(), id.clone(), req.elearning_files).await?;
-    update_survey(dynamo.clone(), id.clone(), req.surveys).await?;
+    let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
+        .await?
+        .ok_or(Error2::NotFound("Space Common not found".to_string()))?;
+
+    let post_pk = space_common.post_pk;
+
+    let _ = match space.user_pk.clone() {
+        Partition::Team(_) => {
+            check_permission_from_session(
+                &dynamo.client,
+                &session,
+                RatelResource::Team {
+                    team_pk: space.user_pk.to_string(),
+                },
+                vec![TeamGroupPermission::SpaceEdit],
+            )
+            .await?;
+        }
+        Partition::User(_) => {
+            let user = extract_user_from_session(&dynamo.client, &session).await?;
+            if user.pk != space.user_pk {
+                return Err(Error2::Unauthorized(
+                    "You do not have permission to update this deliberation".into(),
+                ));
+            }
+        }
+        _ => {
+            return Err(Error2::InternalServerError(
+                "Invalid deliberation author".into(),
+            ));
+        }
+    };
+
+    SpaceCommon::updater(&space_pk, EntityType::SpaceCommon)
+        .with_visibility(req.visibility)
+        .with_started_at(req.started_at)
+        .with_ended_at(req.ended_at)
+        .execute(&dynamo.client)
+        .await?;
+
+    Post::updater(&post_pk, EntityType::Post)
+        .with_title(req.title.clone().unwrap_or_default())
+        .with_html_contents(req.html_contents.clone().unwrap_or_default())
+        .execute(&dynamo.client)
+        .await?;
+
+    update_summary(
+        dynamo.clone(),
+        space_pk.to_string(),
+        req.html_contents,
+        req.files,
+    )
+    .await?;
+    update_discussion(
+        dynamo.clone(),
+        user.clone(),
+        space_pk.to_string(),
+        req.discussions,
+    )
+    .await?;
+    update_elearning(dynamo.clone(), space_pk.to_string(), req.elearning_files).await?;
+    update_survey(dynamo.clone(), space_pk.to_string(), req.surveys).await?;
     update_recommendation(
         dynamo.clone(),
-        id.clone(),
+        space_pk.to_string(),
         req.recommendation_html_contents.unwrap_or_default(),
         req.recommendation_files,
     )
     .await?;
 
-    let metadata =
-        DeliberationMetadata::query(&dynamo.client, Partition::DeliberationSpace(id.to_string()))
-            .await?;
+    let metadata = DeliberationMetadata::query(&dynamo.client, space_pk).await?;
 
     let metadata: DeliberationDetailResponse = metadata.into();
 
@@ -96,14 +156,30 @@ pub async fn update_deliberation_handler(
 
 pub async fn update_survey(
     dynamo: DynamoClient,
-    id: String,
+    space_pk: String,
     surveys: Vec<SurveyCreateRequest>,
 ) -> Result<(), Error2> {
+    let id = space_pk
+        .clone()
+        .split("#")
+        .last()
+        .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
+        .to_string();
+
     for survey in surveys {
-        if survey.id.is_some() {
+        if survey.survey_pk.is_some() {
+            let survey_id = survey
+                .survey_pk
+                .clone()
+                .unwrap_or_default()
+                .split("#")
+                .last()
+                .ok_or_else(|| Error2::BadRequest("Invalid survey_pk format".into()))?
+                .to_string();
+
             DeliberationSpaceSurvey::updater(
-                &Partition::DeliberationSpace(id.to_string()),
-                EntityType::DeliberationSpaceSurvey(survey.id.clone().unwrap_or_default().clone()),
+                &space_pk,
+                EntityType::DeliberationSpaceSurvey(survey_id.clone()),
             )
             .with_started_at(survey.started_at)
             .with_ended_at(survey.ended_at)
@@ -115,7 +191,7 @@ pub async fn update_survey(
 
             let deleted_questions = DeliberationSpaceQuestion::find_by_survey_pk(
                 &dynamo.client,
-                Partition::Survey(survey.id.clone().unwrap_or_default().clone()),
+                survey.survey_pk.unwrap(),
                 option,
             )
             .await?
@@ -128,7 +204,7 @@ pub async fn update_survey(
 
             let question = DeliberationSpaceQuestion::new(
                 Partition::DeliberationSpace(id.clone()),
-                Partition::Survey(survey.id.clone().unwrap_or_default().clone()),
+                Partition::Survey(survey_id.clone()),
                 survey.questions,
             );
 
@@ -164,16 +240,28 @@ pub async fn update_survey(
 pub async fn update_discussion(
     dynamo: DynamoClient,
     user: User,
-    id: String,
+    space_pk: String,
     discussions: Vec<DiscussionCreateRequest>,
 ) -> Result<(), Error2> {
+    let id = space_pk
+        .clone()
+        .split("#")
+        .last()
+        .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
+        .to_string();
     for discussion in discussions {
-        if discussion.id.is_some() {
+        if discussion.discussion_pk.is_some() {
+            let discussion_id = discussion
+                .discussion_pk
+                .clone()
+                .unwrap()
+                .split("#")
+                .last()
+                .ok_or_else(|| Error2::BadRequest("Invalid discussion_pk format".into()))?
+                .to_string();
             DeliberationSpaceDiscussion::updater(
-                &Partition::DeliberationSpace(id.to_string()),
-                EntityType::DeliberationSpaceDiscussion(
-                    discussion.id.clone().unwrap_or_default().clone(),
-                ),
+                &space_pk.clone(),
+                EntityType::DeliberationSpaceDiscussion(discussion_id.to_string()),
             )
             .with_started_at(discussion.started_at)
             .with_ended_at(discussion.ended_at)
@@ -186,7 +274,7 @@ pub async fn update_discussion(
 
             let deleted_members = DeliberationSpaceMember::find_by_discussion_pk(
                 &dynamo.client,
-                Partition::Discussion(discussion.id.clone().unwrap_or_default()),
+                discussion.discussion_pk.unwrap(),
                 option,
             )
             .await?
@@ -207,7 +295,7 @@ pub async fn update_discussion(
 
                 let m = DeliberationSpaceMember::new(
                     Partition::DeliberationSpace(id.to_string()),
-                    Partition::Discussion(discussion.id.clone().unwrap_or_default()),
+                    Partition::Discussion(discussion_id.to_string()),
                     user,
                 );
 
@@ -259,27 +347,30 @@ pub async fn update_discussion(
 
 pub async fn update_recommendation(
     dynamo: DynamoClient,
-    id: String,
+    space_pk: String,
     html_contents: String,
     files: Vec<File>,
 ) -> Result<(), Error2> {
     let recommendation = DeliberationSpaceContent::get(
         &dynamo.client,
-        &Partition::DeliberationSpace(id.to_string()),
+        &space_pk,
         Some(EntityType::DeliberationSpaceRecommendation),
     )
     .await?;
 
     if recommendation.is_some() {
-        DeliberationSpaceContent::updater(
-            &Partition::DeliberationSpace(id.to_string()),
-            EntityType::DeliberationSpaceRecommendation,
-        )
-        .with_html_contents(html_contents)
-        .with_files(files)
-        .execute(&dynamo.client)
-        .await?;
+        DeliberationSpaceContent::updater(&space_pk, EntityType::DeliberationSpaceRecommendation)
+            .with_html_contents(html_contents)
+            .with_files(files)
+            .execute(&dynamo.client)
+            .await?;
     } else {
+        let id = space_pk
+            .clone()
+            .split("#")
+            .last()
+            .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
+            .to_string();
         let recommendation = DeliberationSpaceContent::new(
             Partition::DeliberationSpace(id.to_string()),
             EntityType::DeliberationSpaceRecommendation,
@@ -294,27 +385,25 @@ pub async fn update_recommendation(
 
 pub async fn update_elearning(
     dynamo: DynamoClient,
-    id: String,
+    space_pk: String,
     elearning_files: Vec<File>,
 ) -> Result<(), Error2> {
     let elearning = DeliberationSpaceElearning::get(
         &dynamo.client,
-        &Partition::DeliberationSpace(id.to_string()),
+        &space_pk,
         Some(EntityType::DeliberationSpaceElearning),
     )
     .await?;
 
     if elearning.is_some() {
-        DeliberationSpaceElearning::updater(
-            &Partition::DeliberationSpace(id.to_string()),
-            EntityType::DeliberationSpaceElearning,
-        )
-        .with_files(elearning_files)
-        .execute(&dynamo.client)
-        .await?;
+        DeliberationSpaceElearning::updater(&space_pk, EntityType::DeliberationSpaceElearning)
+            .with_files(elearning_files)
+            .execute(&dynamo.client)
+            .await?;
     } else {
+        let pk = space_pk.split("#").last().unwrap_or_default().to_string();
         let elearning = DeliberationSpaceElearning::new(
-            Partition::DeliberationSpace(id.to_string()),
+            Partition::DeliberationSpace(pk.to_string()),
             elearning_files,
         );
         elearning.create(&dynamo.client).await?;
@@ -325,29 +414,32 @@ pub async fn update_elearning(
 
 pub async fn update_summary(
     dynamo: DynamoClient,
-    id: String,
+    space_pk: String,
     html_contents: Option<String>,
     files: Vec<File>,
 ) -> Result<(), Error2> {
     let deliberation_summary = DeliberationSpaceContent::get(
         &dynamo.client,
-        &Partition::DeliberationSpace(id.to_string()),
+        &space_pk,
         Some(EntityType::DeliberationSpaceSummary),
     )
     .await?;
 
     if deliberation_summary.is_some() {
-        DeliberationSpaceContent::updater(
-            &Partition::DeliberationSpace(id.to_string()),
-            EntityType::DeliberationSpaceSummary,
-        )
-        .with_html_contents(html_contents.unwrap_or_default())
-        .with_files(files)
-        .execute(&dynamo.client)
-        .await?;
+        DeliberationSpaceContent::updater(&space_pk, EntityType::DeliberationSpaceSummary)
+            .with_html_contents(html_contents.unwrap_or_default())
+            .with_files(files)
+            .execute(&dynamo.client)
+            .await?;
     } else {
+        let id = space_pk
+            .clone()
+            .split("#")
+            .last()
+            .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
+            .to_string();
         let summary = DeliberationSpaceContent::new(
-            Partition::DeliberationSpace(id.to_string()),
+            Partition::DeliberationSpace(id),
             EntityType::DeliberationSpaceSummary,
             html_contents.unwrap_or_default(),
             files,
