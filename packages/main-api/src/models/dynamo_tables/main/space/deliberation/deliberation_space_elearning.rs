@@ -1,7 +1,7 @@
 use crate::types::*;
 
+use crate::types::File;
 use bdk::prelude::*;
-use dto::File;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct DeliberationSpaceElearning {

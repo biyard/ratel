@@ -1,3 +1,4 @@
+use crate::types::File;
 use crate::{
     controllers::v3::{
         posts::create_post::{CreatePostRequest, create_post_handler},
@@ -15,7 +16,6 @@ use crate::{
     },
     types::{ChoiceQuestion, LinearScaleQuestion, SpaceVisibility, SurveyQuestion, SurveyStatus},
 };
-use dto::File;
 
 use bdk::prelude::axum::{Extension, Json, extract::State};
 
@@ -74,7 +74,7 @@ async fn test_create_response_answer_handler() {
             "files": vec![File {
                 name: "deliberation summary file title".to_string(),
                 size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
+                ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
             "discussions": vec![DiscussionCreateRequest {
@@ -88,7 +88,7 @@ async fn test_create_response_answer_handler() {
             "elearning_files": vec![File {
                 name: "deliberation elearning file title".to_string(),
                 size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
+                ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
             "surveys": vec![SurveyCreateRequest {
@@ -139,7 +139,7 @@ async fn test_create_response_answer_handler() {
             "recommendation_files": vec![File {
                 name: "deliberation recommendation file title".to_string(),
                 size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
+                ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
         },
@@ -240,7 +240,7 @@ async fn test_get_response_answer_handler() {
             "files": vec![File {
                 name: "deliberation summary file title".to_string(),
                 size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
+                ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
             "visibility": SpaceVisibility::Public,
@@ -257,7 +257,7 @@ async fn test_get_response_answer_handler() {
             "elearning_files": vec![File {
                 name: "deliberation elearning file title".to_string(),
                 size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
+                ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
             "surveys": vec![SurveyCreateRequest {
@@ -308,7 +308,7 @@ async fn test_get_response_answer_handler() {
             "recommendation_files": vec![File {
                 name: "deliberation recommendation file title".to_string(),
                 size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
+                ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
         },
