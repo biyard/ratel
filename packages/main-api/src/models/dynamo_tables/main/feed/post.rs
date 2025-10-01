@@ -51,16 +51,6 @@ pub struct Post {
 }
 
 impl Post {
-    pub fn get_compose_key(status: PostStatus, visibility: Option<Visibility>, now: i64) -> String {
-        match (status, visibility) {
-            (PostStatus::Draft, _) => format!("DRAFT#{}", now),
-            (PostStatus::Published, Some(Visibility::Public)) => format!("PUBLIC#{}", now),
-            (PostStatus::Published, Some(Visibility::TeamOnly(team_pk))) => {
-                format!("TEAM#{}#{}", team_pk, now)
-            }
-            _ => format!("DRAFT#{}", now), // Fallback to Draft key
-        }
-    }
     pub fn new<T: Into<String>, A: Into<Author>>(
         title: T,
         html_contents: T,

@@ -42,14 +42,13 @@ ACTION(e.g., Respond to Poll): Based on STATUS
 */
 pub struct SpaceCommon {
     pub pk: Partition,
+    pub sk: EntityType,
 
     #[dynamo(index = "gsi2", sk)]
     #[dynamo(index = "gsi1", sk)]
     #[dynamo(index = "gsi6", sk)]
     pub created_at: i64,
     pub updated_at: i64,
-
-    pub sk: EntityType,
 
     pub status: Option<SpaceStatus>, // Waiting, InProgress, Finished
     pub publish_state: SpacePublishState, // Draft, Published
@@ -58,8 +57,6 @@ pub struct SpaceCommon {
     #[dynamo(prefix = "POST_PK", name = "find_by_post_pk", index = "gsi2", pk)]
     pub post_pk: Partition,
 
-    pub booster: Option<BoosterType>,
-    // Author info
     #[dynamo(prefix = "USER_PK", name = "find_by_user_pk", index = "gsi1", pk)]
     pub user_pk: Partition,
     pub author_display_name: String,
@@ -68,6 +65,10 @@ pub struct SpaceCommon {
 
     pub started_at: Option<i64>,
     pub ended_at: Option<i64>,
+
+    pub booster: BoosterType,
+    pub custom_booster: Option<i64>,
+    pub rewards: Option<i64>,
 }
 
 impl SpaceCommon {
@@ -82,9 +83,9 @@ impl SpaceCommon {
         Self {
             pk,
             sk: EntityType::SpaceCommon,
-            post_pk,
             created_at: now,
             updated_at: now,
+            post_pk,
             publish_state: SpacePublishState::Draft,
             status: None,
             visibility: SpaceVisibility::Private,
@@ -102,7 +103,7 @@ impl SpaceCommon {
         self
     }
     pub fn with_booster(mut self, booster: BoosterType) -> Self {
-        self.booster = Some(booster);
+        self.booster = booster;
         self
     }
     // pub fn with_visibility(mut self, visibility: SpaceVisibility) -> Self {

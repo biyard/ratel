@@ -236,6 +236,7 @@ pub mod controllers {
             pub mod get_post;
             pub mod like_post;
             pub mod list_posts;
+            pub mod post_response;
             pub mod update_post;
             pub mod comments {
                 pub mod add_comment;
