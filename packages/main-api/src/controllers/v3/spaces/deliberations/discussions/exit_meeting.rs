@@ -10,7 +10,7 @@ use crate::{
     types::{EntityType, Partition},
     utils::{aws::DynamoClient, dynamo_extractor::extract_user_from_session},
 };
-use dto::by_axum::axum::{
+use bdk::prelude::axum::{
     Extension,
     extract::{Json, Path, State},
 };
