@@ -41,6 +41,11 @@ impl DeliberationSpaceResponse {
             ..
         }: User,
     ) -> Self {
+        // FIXME:
+        // PK + SK should be unique.
+        // and, we know, one user can respond only once per survey.
+        // So, We can make USER_PK + SURVEY_SK is unique.
+
         let uid = uuid::Uuid::new_v4().to_string();
         let sk = EntityType::DeliberationSpaceResponse(uid);
 

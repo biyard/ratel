@@ -68,7 +68,7 @@ pub async fn respond_poll_space_handler(
         return Err(Error2::NotFoundPollSpace);
     }
 
-    let poll_space = PollSpace::get(&dynamo.client, &poll_space_pk, Some(EntityType::PollSpace))
+    let poll_space = PollSpace::get(&dynamo.client, &poll_space_pk, Some(EntityType::Space))
         .await?
         .ok_or(Error2::NotFoundPollSpace)?;
 
