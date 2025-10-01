@@ -26,12 +26,18 @@ pub struct LikePostResponse {
 
 pub async fn like_post_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
+    NoApi(User { pk: user_pk, .. }): NoApi<User>,
     Path(params): Path<LikePostPathParams>,
     Json(req): Json<LikePostRequest>,
 ) -> Result<Json<LikePostResponse>, Error2> {
-    let pk = Partition::from_str(&params.post_pk)?;
-    PostLike::new(pk, user).create(&dynamo.client).await?;
+    let cli = &dynamo.client;
+    let post_pk = Partition::from_str(&params.post_pk)?;
 
-    Ok(Json(LikePostResponse { like: req.like }))
+    if req.like {
+        PostLike::like(cli, post_pk, user_pk).await?;
+        Ok(Json(LikePostResponse { like: true }))
+    } else {
+        PostLike::unlike(cli, post_pk, user_pk).await?;
+        Ok(Json(LikePostResponse { like: false }))
+    }
 }

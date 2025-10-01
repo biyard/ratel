@@ -168,9 +168,11 @@ jobs:
 
       - name: Cache builder
         id: main-api-build-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          key: main-api-build-cache
+          key: main-api-build-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            main-api-build-
           path: |
             packages/main-api/target
 
@@ -230,9 +232,11 @@ jobs:
 
       - name: Cache builder
         id: fetcher-build-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          key: fetcher-build-cache
+          key: fetcher-build-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            fetcher-build-
           path: |
             packages/fetcher/target
 
