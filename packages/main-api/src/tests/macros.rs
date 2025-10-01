@@ -22,6 +22,7 @@ macro_rules! call {
         body:  $body:expr,
         headers: $headers:expr
     ) => {{
+        use axum::body::HttpBody;
         use axum::http::header::{self, HeaderValue};
         use bdk::prelude::by_axum::axum;
 
@@ -31,9 +32,11 @@ macro_rules! call {
 
         if let Some(headers_mut) = req_builder.headers_mut() {
             headers_mut.extend($headers);
-            headers_mut
-                .entry(header::CONTENT_TYPE)
-                .or_insert(HeaderValue::from_static("application/json"));
+            if $body.size_hint().exact().unwrap_or_default() > 0 {
+                headers_mut
+                    .entry(header::CONTENT_TYPE)
+                    .or_insert(HeaderValue::from_static("application/json"));
+            }
         }
 
         let req = req_builder.body($body).unwrap();
@@ -62,6 +65,7 @@ macro_rules! call {
         headers: $headers:expr,
         response_type: $resp_ty:ty
     ) => {{
+        use axum::body::HttpBody;
         use axum::http::header::{self, HeaderValue};
         use bdk::prelude::by_axum::axum;
 
@@ -71,9 +75,13 @@ macro_rules! call {
 
         if let Some(headers_mut) = req_builder.headers_mut() {
             headers_mut.extend($headers);
-            headers_mut
-                .entry(header::CONTENT_TYPE)
-                .or_insert(HeaderValue::from_static("application/json"));
+            let size = $body.size_hint().exact().unwrap_or_default();
+            tracing::info!("Request Body Size: {}", size);
+            if $body.size_hint().exact().unwrap_or_default() > 0 {
+                headers_mut
+                    .entry(header::CONTENT_TYPE)
+                    .or_insert(HeaderValue::from_static("application/json"));
+            }
         }
 
         let req = req_builder.body($body).unwrap();
@@ -86,13 +94,14 @@ macro_rules! call {
             .await
             .unwrap()
             .to_vec();
-
-        let body = String::from_utf8(body_bytes).unwrap();
-        (
-            parts.status,
-            parts.headers,
-            serde_json::from_str::<$resp_ty>(&body).unwrap(),
-        )
+        let body_str = String::from_utf8(body_bytes).unwrap();
+        tracing::info!("Response Body: {}", body_str);
+        let body = serde_json::from_str::<$resp_ty>(&body_str);
+        if let Err(e) = body {
+            panic!("Failed to parse response body: {}\nBody: {}", e, body_str);
+        } else {
+            (parts.status, parts.headers, body.unwrap())
+        }
     }};
 }
 
@@ -108,9 +117,7 @@ macro_rules! send {
     ) => {{
         use bdk::prelude::by_axum::axum;
         let body = axum::body::Body::from(serde_json::to_vec(&serde_json::json!({ $($body)* })).unwrap());
-        let (status, headers, parsed) = $crate::call! { app: $app, path: $path, method: $method, body: body, headers: $headers };
-        let parsed = serde_json::from_str::<$resp_ty>(&parsed).unwrap();
-        (status, headers, parsed)
+        $crate::call! { app: $app, path: $path, method: $method, body: body, headers: $headers, response_type: $resp_ty }
     }};
 
     (
@@ -214,6 +221,18 @@ macro_rules! post {
         let body = axum::body::Body::empty();
 
         $crate::call! { app: $app, path: $path, method: "POST", body: body, headers: axum::http::HeaderMap::new(), response_type: $resp_ty }
+    }};
+
+    (
+        app: $app:expr,
+        path: $path:expr,
+        headers: $headers:expr,
+        response_type: $resp_ty:ty $(,)?
+    ) => {{
+        use bdk::prelude::by_axum::axum;
+        let body = axum::body::Body::empty();
+
+        $crate::call! { app: $app, path: $path, method: "POST", body: body, headers: $headers,  response_type: $resp_ty }
     }};
 
     (
