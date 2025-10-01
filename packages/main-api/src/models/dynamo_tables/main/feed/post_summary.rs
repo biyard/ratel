@@ -18,7 +18,6 @@ To prevent this, they are temporarily included in PostMetadata.
 #[serde(untagged)]
 pub enum PostMetadata {
     Post(Post),
-    PostAuthor(PostAuthor),
     PostComment(PostComment),
     PostArtwork(PostArtwork),
     PostRepost(PostRepost),
@@ -29,7 +28,6 @@ pub enum PostMetadata {
 pub struct PostDetailResponse {
     #[serde(flatten)]
     pub post: Option<Post>,
-    pub author: PostAuthor,
     pub comments: Vec<PostComment>,
     pub artwork_metadata: Vec<PostArtworkMetadata>,
     pub repost: Option<PostRepost>,
@@ -42,7 +40,6 @@ impl From<Vec<PostMetadata>> for PostDetailResponse {
         for item in items {
             match item {
                 PostMetadata::Post(post) => res.post = Some(post),
-                PostMetadata::PostAuthor(author) => res.author = author,
                 PostMetadata::PostComment(comment) => res.comments.push(comment),
                 PostMetadata::PostArtwork(artwork) => res.artwork_metadata = artwork.metadata,
                 PostMetadata::PostRepost(repost) => res.repost = Some(repost),

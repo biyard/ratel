@@ -22,6 +22,7 @@ macro_rules! call {
         body:  $body:expr,
         headers: $headers:expr
     ) => {{
+        use axum::body::HttpBody;
         use axum::http::header::{self, HeaderValue};
         use bdk::prelude::by_axum::axum;
 
@@ -31,9 +32,11 @@ macro_rules! call {
 
         if let Some(headers_mut) = req_builder.headers_mut() {
             headers_mut.extend($headers);
-            headers_mut
-                .entry(header::CONTENT_TYPE)
-                .or_insert(HeaderValue::from_static("application/json"));
+            if $body.size_hint().exact().unwrap_or_default() > 0 {
+                headers_mut
+                    .entry(header::CONTENT_TYPE)
+                    .or_insert(HeaderValue::from_static("application/json"));
+            }
         }
 
         let req = req_builder.body($body).unwrap();
@@ -53,6 +56,53 @@ macro_rules! call {
             String::from_utf8(body_bytes).unwrap(),
         )
     }};
+
+    (
+        app: $app:expr,
+        path: $path:expr,
+        method: $method:expr,
+        body:  $body:expr,
+        headers: $headers:expr,
+        response_type: $resp_ty:ty
+    ) => {{
+        use axum::body::HttpBody;
+        use axum::http::header::{self, HeaderValue};
+        use bdk::prelude::by_axum::axum;
+
+        let mut req_builder = axum::http::Request::builder()
+            .uri(format!("http://localhost:3000{}", $path))
+            .method($method);
+
+        if let Some(headers_mut) = req_builder.headers_mut() {
+            headers_mut.extend($headers);
+            let size = $body.size_hint().exact().unwrap_or_default();
+            tracing::info!("Request Body Size: {}", size);
+            if $body.size_hint().exact().unwrap_or_default() > 0 {
+                headers_mut
+                    .entry(header::CONTENT_TYPE)
+                    .or_insert(HeaderValue::from_static("application/json"));
+            }
+        }
+
+        let req = req_builder.body($body).unwrap();
+
+        let res: axum::http::Response<axum::body::Body> =
+            tower::ServiceExt::oneshot($app.clone(), req).await.unwrap();
+
+        let (parts, body) = res.into_parts();
+        let body_bytes = axum::body::to_bytes(body, 10 * 1024 * 1024)
+            .await
+            .unwrap()
+            .to_vec();
+        let body_str = String::from_utf8(body_bytes).unwrap();
+        tracing::info!("Response Body: {}", body_str);
+        let body = serde_json::from_str::<$resp_ty>(&body_str);
+        if let Err(e) = body {
+            panic!("Failed to parse response body: {}\nBody: {}", e, body_str);
+        } else {
+            (parts.status, parts.headers, body.unwrap())
+        }
+    }};
 }
 
 #[macro_export]
@@ -67,9 +117,7 @@ macro_rules! send {
     ) => {{
         use bdk::prelude::by_axum::axum;
         let body = axum::body::Body::from(serde_json::to_vec(&serde_json::json!({ $($body)* })).unwrap());
-        let (status, headers, parsed) = $crate::call! { app: $app, path: $path, method: $method, body: body, headers: $headers };
-        let parsed = serde_json::from_str::<$resp_ty>(&parsed).unwrap();
-        (status, headers, parsed)
+        $crate::call! { app: $app, path: $path, method: $method, body: body, headers: $headers, response_type: $resp_ty }
     }};
 
     (
@@ -162,6 +210,29 @@ macro_rules! post {
         body: { $($body:tt)* }
     ) => {{
         $crate::post! { app: $app, path: $path, headers: axum::http::HeaderMap::new(), body: { $($body)* } }
+    }};
+
+    (
+        app: $app:expr,
+        path: $path:expr,
+        response_type: $resp_ty:ty $(,)?
+    ) => {{
+        use bdk::prelude::by_axum::axum;
+        let body = axum::body::Body::empty();
+
+        $crate::call! { app: $app, path: $path, method: "POST", body: body, headers: axum::http::HeaderMap::new(), response_type: $resp_ty }
+    }};
+
+    (
+        app: $app:expr,
+        path: $path:expr,
+        headers: $headers:expr,
+        response_type: $resp_ty:ty $(,)?
+    ) => {{
+        use bdk::prelude::by_axum::axum;
+        let body = axum::body::Body::empty();
+
+        $crate::call! { app: $app, path: $path, method: "POST", body: body, headers: $headers,  response_type: $resp_ty }
     }};
 
     (

@@ -1,3 +1,4 @@
+use crate::controllers::v3::posts::create_post::CreatePostResponse;
 use crate::types::File;
 use crate::{
     controllers::v3::{
@@ -33,15 +34,14 @@ async fn test_create_response_answer_handler() {
     let app_state = create_app_state();
     let auth = get_auth(&user);
 
-    let post = create_post_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Json(CreatePostRequest { team_pk: None }),
-    )
-    .await;
-    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+    let (status, _headers, post) = crate::post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse,
+    };
 
-    let feed_pk = post.unwrap().post_pk.clone();
+    let feed_pk = post.post_pk.clone();
 
     // SPACE
     let (status, _headers, body) = post! {
@@ -175,8 +175,6 @@ async fn test_create_response_answer_handler() {
 
     let meta = &body.metadata;
 
-    eprintln!("meta: {:?}", meta);
-
     assert_eq!(
         meta.surveys.user_responses.len(),
         1,
@@ -201,15 +199,14 @@ async fn test_get_response_answer_handler() {
     let app_state = create_app_state();
     let auth = get_auth(&user);
 
-    let post = create_post_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Json(CreatePostRequest { team_pk: None }),
-    )
-    .await;
-    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+    let (status, _headers, post) = crate::post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse,
+    };
 
-    let feed_pk = post.unwrap().post_pk.clone();
+    let feed_pk = post.post_pk.clone();
 
     // SPACE
 
@@ -358,7 +355,6 @@ async fn test_get_response_answer_handler() {
     let response_pk = body.metadata.surveys.user_responses[0].pk.clone();
 
     let response_pk_encoded = response_pk.to_string().replace('#', "%23");
-    eprintln!("response pk encoded: {:?}", response_pk_encoded.clone());
     let path = format!(
         "/v3/spaces/deliberation/{}/responses/{}",
         space_pk_encoded, response_pk_encoded
@@ -370,8 +366,6 @@ async fn test_get_response_answer_handler() {
         headers: headers,
         response_type: DeliberationSpaceResponse
     );
-
-    eprintln!("response_answer: {:?}", body);
 
     let meta = &body.answers;
 
