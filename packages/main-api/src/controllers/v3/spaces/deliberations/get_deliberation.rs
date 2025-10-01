@@ -64,7 +64,11 @@ pub async fn get_deliberation_handler(
                     ));
                 }
             }
-            _ => return Err(Error2::InternalServerError("Invalid post author".into())),
+            _ => {
+                return Err(Error2::InternalServerError(
+                    "Invalid deliberation author".into(),
+                ));
+            }
         };
     }
 
