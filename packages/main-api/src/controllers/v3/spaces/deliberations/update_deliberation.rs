@@ -1,3 +1,4 @@
+use crate::types::File;
 use crate::{
     AppState, Error2,
     models::{
@@ -23,7 +24,6 @@ use bdk::prelude::axum::{
     extract::{Json, Path, State},
 };
 use bdk::prelude::*;
-use dto::File;
 use serde::Deserialize;
 use tower_sessions::Session;
 use urlencoding::decode;

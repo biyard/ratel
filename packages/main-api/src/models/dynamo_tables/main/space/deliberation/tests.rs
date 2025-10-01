@@ -1,4 +1,4 @@
-use dto::File;
+use crate::types::File;
 
 use super::*;
 use crate::{
@@ -37,7 +37,7 @@ async fn tests_create_deliberation() {
         [File {
             name: "excel file".to_string(),
             size: "15KB".to_string(),
-            ext: dto::FileExtension::EXCEL,
+            ext: crate::types::FileExtension::EXCEL,
             url: None,
         }]
         .to_vec(),
@@ -89,7 +89,7 @@ async fn tests_create_deliberation() {
         [File {
             name: "elearning file".to_string(),
             size: "50KB".to_string(),
-            ext: dto::FileExtension::PDF,
+            ext: crate::types::FileExtension::PDF,
             url: None,
         }]
         .to_vec(),
@@ -160,7 +160,7 @@ async fn tests_create_deliberation() {
         [File {
             name: "excel file recommendation".to_string(),
             size: "15KB".to_string(),
-            ext: dto::FileExtension::EXCEL,
+            ext: crate::types::FileExtension::EXCEL,
             url: None,
         }]
         .to_vec(),
