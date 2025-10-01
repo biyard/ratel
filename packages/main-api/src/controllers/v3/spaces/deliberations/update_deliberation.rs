@@ -1,6 +1,7 @@
 use crate::{
     AppState, Error2,
     models::{
+        feed::Post,
         space::{
             DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace,
             DeliberationSpaceContent, DeliberationSpaceDiscussion, DeliberationSpaceElearning,
@@ -79,6 +80,12 @@ pub async fn update_deliberation_handler(
         .await?
         .ok_or(Error2::NotFound("Space not found".to_string()))?;
 
+    let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
+        .await?
+        .ok_or(Error2::NotFound("Space Common not found".to_string()))?;
+
+    let post_pk = space_common.post_pk;
+
     let _ = match space.user_pk.clone() {
         Partition::Team(_) => {
             check_permission_from_session(
@@ -106,6 +113,12 @@ pub async fn update_deliberation_handler(
         .with_visibility(req.visibility)
         .with_started_at(req.started_at)
         .with_ended_at(req.ended_at)
+        .execute(&dynamo.client)
+        .await?;
+
+    Post::updater(&post_pk, EntityType::Post)
+        .with_title(req.title.clone().unwrap_or_default())
+        .with_html_contents(req.html_contents.clone().unwrap_or_default())
         .execute(&dynamo.client)
         .await?;
 
