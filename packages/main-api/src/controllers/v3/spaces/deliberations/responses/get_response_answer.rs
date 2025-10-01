@@ -59,8 +59,6 @@ pub async fn get_response_answer_handler(
         .await?
         .ok_or(Error2::NotFound("Space not found".to_string()))?;
 
-    tracing::info!("Space common: {:?}", space_common);
-
     if space_common.visibility != SpaceVisibility::Public {
         let _ = match space_common.user_pk.clone() {
             Partition::Team(_) => {
@@ -89,8 +87,6 @@ pub async fn get_response_answer_handler(
             }
         };
     }
-
-    tracing::info!("Permission check passed");
 
     let response = response.unwrap();
 
