@@ -45,13 +45,22 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
                 let l = fields.unnamed.len();
 
                 if l == 1 {
-                    let prefix = format!(
+                    let prefix_wo_sharp = format!(
                         "{}",
                         variant_name
                             .to_string()
                             .to_case(convert_case::Case::UpperSnake)
                     );
+                    let prefix = format!(
+                        "{}#",
+                        variant_name
+                            .to_string()
+                            .to_case(convert_case::Case::UpperSnake)
+                    );
                     arms.push(quote! {
+                        s if s.eq(#prefix_wo_sharp) => {
+                            #name::#variant_name("".to_string())
+                        },
                         s if s.starts_with(#prefix) => {
                             let parts: Vec<&str> = s.splitn(2, '#').collect();
                             if parts.len() == 2 {
@@ -63,19 +72,29 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
                     });
 
                     display_arms.push(quote! {
-                        Self::#variant_name(value) => write!(f, "{}#{}", #prefix, value),
+                        Self::#variant_name(value) => write!(f, "{}#{}", #prefix_wo_sharp, value),
                     });
                     inner_arms.push(quote! {
                         Self::#variant_name(v) => Ok(format!("{v}")),
                     });
                 } else if l == 2 {
-                    let prefix = format!(
+                    let prefix_wo_sharp = format!(
                         "{}",
                         variant_name
                             .to_string()
                             .to_case(convert_case::Case::UpperSnake)
                     );
+                    let prefix = format!(
+                        "{}#",
+                        variant_name
+                            .to_string()
+                            .to_case(convert_case::Case::UpperSnake)
+                    );
+
                     arms.push(quote! {
+                        s if s.eq(#prefix_wo_sharp) => {
+                            #name::#variant_name("".to_string(), "".to_string())
+                        },
                         s if s.starts_with(#prefix) => {
                             let parts: Vec<&str> = s.splitn(3, '#').collect();
                             if parts.len() == 3 {
@@ -91,9 +110,9 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
                     display_arms.push(quote! {
                         Self::#variant_name(v1, v2) => {
                             if v2.is_empty() {
-                                write!(f, "{}#{}", #prefix, v1)
+                                write!(f, "{}#{}", #prefix_wo_sharp, v1)
                             } else {
-                                write!(f, "{}#{}#{}", #prefix, v1, v2)
+                                write!(f, "{}#{}#{}", #prefix_wo_sharp, v1, v2)
                             }
                         } ,
                     });

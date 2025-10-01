@@ -175,8 +175,6 @@ async fn test_create_response_answer_handler() {
 
     let meta = &body.metadata;
 
-    eprintln!("meta: {:?}", meta);
-
     assert_eq!(
         meta.surveys.user_responses.len(),
         1,
@@ -357,7 +355,6 @@ async fn test_get_response_answer_handler() {
     let response_pk = body.metadata.surveys.user_responses[0].pk.clone();
 
     let response_pk_encoded = response_pk.to_string().replace('#', "%23");
-    eprintln!("response pk encoded: {:?}", response_pk_encoded.clone());
     let path = format!(
         "/v3/spaces/deliberation/{}/responses/{}",
         space_pk_encoded, response_pk_encoded
@@ -366,29 +363,27 @@ async fn test_get_response_answer_handler() {
     let (_status, _headers, body) = get! (
         app: app,
         path: path.clone(),
-        headers: headers
-        // response_type: DeliberationSpaceResponse
+        headers: headers,
+        response_type: DeliberationSpaceResponse
     );
 
-    eprintln!("response_answer: {:?}", body);
+    let meta = &body.answers;
 
-    // let meta = &body.answers;
+    assert_eq!(
+        meta.len(),
+        2,
+        "Failed to match retrieved response answer length"
+    );
 
-    // assert_eq!(
-    //     meta.len(),
-    //     2,
-    //     "Failed to match retrieved response answer length"
-    // );
-
-    // assert!(
-    //     matches!(&meta[0], SurveyAnswer::SingleChoice { answer: Some(1) }),
-    //     "Failed to match updated single choice answer"
-    // );
-    // assert!(
-    //     matches!(
-    //         &meta[1],
-    //         SurveyAnswer::MultipleChoice { answer: Some(v) } if v.as_slice() == &[1]
-    //     ),
-    //     "Failed to match updated multiple choice answer"
-    // );
+    assert!(
+        matches!(&meta[0], SurveyAnswer::SingleChoice { answer: Some(1) }),
+        "Failed to match updated single choice answer"
+    );
+    assert!(
+        matches!(
+            &meta[1],
+            SurveyAnswer::MultipleChoice { answer: Some(v) } if v.as_slice() == &[1]
+        ),
+        "Failed to match updated multiple choice answer"
+    );
 }
