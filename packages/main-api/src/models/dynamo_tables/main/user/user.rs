@@ -1,11 +1,9 @@
 use crate::{
-    AppState, Error2, constants::SESSION_KEY_USER_ID, types::*,
-    utils::time::get_now_timestamp_millis,
+    AppState, constants::SESSION_KEY_USER_ID, types::*, utils::time::get_now_timestamp_millis,
 };
 // use async_trait::async_trait;
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
-use axum::{body::Body, extract::State, http::Request};
 use bdk::prelude::*;
 use tower_sessions::Session;
 
@@ -104,7 +102,7 @@ impl FromRequestParts<AppState> for Option<User> {
     ) -> Result<Self, Self::Rejection> {
         let session = Session::from_request_parts(parts, _state).await;
 
-        if let Err(e) = &session {
+        if let Err(_e) = &session {
             return Ok(None);
         }
 
@@ -140,27 +138,41 @@ impl FromRequestParts<AppState> for User {
     ) -> Result<Self, Self::Rejection> {
         let session = Session::from_request_parts(parts, _state)
             .await
-            .map_err(|e| crate::Error2::NoSessionFound)?;
+            .map_err(|e| {
+                tracing::error!("no session found from request: {:?}", e);
+                crate::Error2::NoSessionFound
+            })?;
 
         let user_pk: Partition = session
             .get(SESSION_KEY_USER_ID)
             .await
-            .map_err(|e| crate::Error2::NoSessionFound)?
+            .map_err(|e| {
+                tracing::error!("no user id found from session: {:?}", e);
+                crate::Error2::NoSessionFound
+            })?
             .ok_or(crate::Error2::NoSessionFound)?;
 
         let user = User::get(&(_state.dynamo.client), user_pk, Some(EntityType::User))
             .await
-            .map_err(|e| crate::Error2::NoSessionFound);
+            .map_err(|e| {
+                tracing::error!("failed to get user from db: {:?}", e);
+                crate::Error2::NoSessionFound
+            });
 
         if user.is_err() {
-            let _ = session.flush().await;
+            tracing::error!("no user found: {:?}", user);
+            if let Err(e) = session.flush().await {
+                tracing::error!("failed to flush session: {:?}", e);
+            }
             return Err(crate::Error2::NoSessionFound);
         }
 
         let user = user.unwrap();
 
         if user.is_none() {
-            let _ = session.flush().await;
+            if let Err(e) = session.flush().await {
+                tracing::error!("failed to flush session: {:?}", e);
+            }
             return Err(crate::Error2::NoUserFound);
         }
 
