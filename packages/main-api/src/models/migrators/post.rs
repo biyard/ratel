@@ -112,7 +112,7 @@ pub async fn migrate_posts(
         }) = spaces.first()
         {
             let space_pk = Partition::Space(id.to_string());
-            let mut space = SpaceCommon::new(space_pk, post.pk.clone());
+            let mut space = SpaceCommon::new(space_pk, post.pk.clone(), author.clone());
             space.created_at = *created_at;
             space.updated_at = *updated_at;
             space.booster = match booster_type.unwrap_or_default() {

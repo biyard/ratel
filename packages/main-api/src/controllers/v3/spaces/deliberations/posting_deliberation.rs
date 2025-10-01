@@ -1,9 +1,7 @@
 use crate::{
     AppState, Error2,
     controllers::v3::spaces::deliberations::update_deliberation::DeliberationPath,
-    models::space::{
-        DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace, SpaceCommon,
-    },
+    models::space::{DeliberationDetailResponse, DeliberationMetadata, SpaceCommon},
     types::{EntityType, Partition, SpaceStatus, TeamGroupPermission},
     utils::{
         dynamo_extractor::extract_user_from_session,
@@ -36,7 +34,7 @@ pub async fn posting_deliberation_handler(
     let space_pk = space_pk.to_string();
     let _user = extract_user_from_session(&dynamo.client, &session).await?;
 
-    let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
+    let space = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
         .await?
         .ok_or(Error2::NotFound("Space not found".to_string()))?;
     let _ = match space.user_pk.clone() {
