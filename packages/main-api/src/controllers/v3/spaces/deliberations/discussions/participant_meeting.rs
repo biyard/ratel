@@ -10,13 +10,12 @@ use crate::{
     types::{EntityType, Partition},
     utils::{aws::DynamoClient, dynamo_extractor::extract_user_from_session},
 };
-use dto::{
-    MediaPlacementInfo, MeetingInfo,
-    by_axum::axum::{
-        Extension,
-        extract::{Json, Path, State},
-    },
+use bdk::prelude::axum::{
+    Extension,
+    extract::{Json, Path, State},
 };
+use bdk::prelude::*;
+use dto::{MediaPlacementInfo, MeetingInfo};
 use tower_sessions::Session;
 use urlencoding::decode;
 

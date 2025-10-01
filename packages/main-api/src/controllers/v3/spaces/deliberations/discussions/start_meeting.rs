@@ -9,12 +9,11 @@ use crate::{
     types::{EntityType, Partition},
     utils::aws::DynamoClient,
 };
-use dto::by_axum::axum::{
+use bdk::prelude::axum::{
     Extension,
     extract::{Json, Path, State},
 };
-
-use dto::{aide, schemars};
+use bdk::prelude::*;
 use tower_sessions::Session;
 use urlencoding::decode;
 

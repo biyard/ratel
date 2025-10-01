@@ -18,10 +18,9 @@ use crate::{
         SurveyStatus,
     },
 };
-use dto::{
-    File,
-    axum::{Extension, Json, extract::State},
-};
+use dto::File;
+
+use bdk::prelude::axum::{Extension, Json, extract::State};
 
 #[tokio::test]
 async fn test_create_space_handler() {
