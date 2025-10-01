@@ -285,13 +285,9 @@ pub async fn update_discussion(
             }
 
             for member in discussion.user_ids {
-                let user = User::get(
-                    &dynamo.client,
-                    Partition::User(member),
-                    Some(EntityType::User),
-                )
-                .await?
-                .ok_or(Error2::NotFound("User not found".into()))?;
+                let user = User::get(&dynamo.client, member, Some(EntityType::User))
+                    .await?
+                    .ok_or(Error2::NotFound("User not found".into()))?;
 
                 let m = DeliberationSpaceMember::new(
                     Partition::DeliberationSpace(id.to_string()),
@@ -323,13 +319,9 @@ pub async fn update_discussion(
             disc.create(&dynamo.client).await?;
 
             for member in discussion.user_ids {
-                let user = User::get(
-                    &dynamo.client,
-                    Partition::User(member),
-                    Some(EntityType::User),
-                )
-                .await?
-                .ok_or(Error2::NotFound("User not found".into()))?;
+                let user = User::get(&dynamo.client, member, Some(EntityType::User))
+                    .await?
+                    .ok_or(Error2::NotFound("User not found".into()))?;
 
                 let m = DeliberationSpaceMember::new(
                     Partition::DeliberationSpace(id.to_string()),

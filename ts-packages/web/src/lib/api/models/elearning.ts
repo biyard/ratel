@@ -1,4 +1,5 @@
 import { FileInfo } from './feeds';
+import { File } from './spaces/deliberation-spaces';
 
 export interface Elearning {
   id: number;
@@ -11,4 +12,8 @@ export interface Elearning {
 
 export interface ElearningCreateRequest {
   files: FileInfo[];
+}
+
+export interface NewElearningCreateRequest {
+  files: File[];
 }
