@@ -10,23 +10,32 @@ use crate::{
     types::{EntityType, Partition},
     utils::aws::DynamoClient,
 };
-use dto::by_axum::auth::Authorization;
-use dto::by_axum::axum::{
+use bdk::prelude::axum::{
     Extension,
     extract::{Json, Path, State},
 };
+use bdk::prelude::*;
+use tower_sessions::Session;
 
 pub async fn end_recording_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(_auth): Extension<Option<Authorization>>,
+    Extension(_session): Extension<Session>,
     Path(DeliberationDiscussionByIdPath {
-        deliberation_id,
-        id,
+        space_pk,
+        discussion_pk,
     }): Path<DeliberationDiscussionByIdPath>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
+    let space_id = match space_pk.clone() {
+        Partition::DeliberationSpace(v) => v,
+        _ => "".to_string(),
+    };
+    let discussion_id = match discussion_pk {
+        Partition::Discussion(v) => v,
+        _ => "".to_string(),
+    };
 
-    let (disc, _disc_pk) = fetch_discussion_and_pk(&dynamo, &deliberation_id, &id).await?;
+    let (disc, _disc_pk) = fetch_discussion_and_pk(&dynamo, &space_id, &discussion_id).await?;
 
     let meeting_id = disc
         .meeting_id
@@ -46,15 +55,15 @@ pub async fn end_recording_handler(
         })?;
 
     DeliberationSpaceDiscussion::updater(
-        &Partition::DeliberationSpace(deliberation_id.clone()),
-        EntityType::DeliberationSpaceDiscussion(id.clone()),
+        &Partition::DeliberationSpace(space_id.clone()),
+        EntityType::DeliberationSpaceDiscussion(discussion_id.clone()),
     )
     .with_pipeline_id(String::new())
     .with_media_pipeline_arn(String::new())
     .execute(&dynamo.client)
     .await?;
 
-    let (disc_final, disc_pk) = fetch_discussion_and_pk(&dynamo, &deliberation_id, &id).await?;
+    let (disc_final, disc_pk) = fetch_discussion_and_pk(&dynamo, &space_id, &discussion_id).await?;
     let members_resp = list_members_resp(&dynamo, &disc_pk).await?;
     let participants_resp = list_participants_resp(&dynamo, &disc_pk).await?;
 

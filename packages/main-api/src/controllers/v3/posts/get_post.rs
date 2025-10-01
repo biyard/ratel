@@ -29,7 +29,7 @@ pub async fn get_post_handler(
     let post = Post::get(&dynamo.client, &path.post_pk, Some(EntityType::Post))
         .await?
         .ok_or(Error2::NotFound("Post not found".to_string()))?;
-    if let Some(Visibility::Team(team_pk)) = post.visibility {
+    if let Some(Visibility::TeamOnly(team_pk)) = post.visibility {
         check_permission(
             &dynamo.client,
             auth,

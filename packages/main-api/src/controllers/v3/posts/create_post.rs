@@ -1,10 +1,10 @@
 use crate::{
     AppState, Error2,
     models::{
-        feed::{Author, Post, PostAuthor},
+        feed::{Post, PostAuthor},
         team::Team,
     },
-    types::{EntityType, PostType, TeamGroupPermission},
+    types::{Author, EntityType, PostType, TeamGroupPermission},
     utils::{
         dynamo_extractor::extract_user,
         security::{RatelResource, check_permission},
@@ -25,7 +25,7 @@ pub struct CreatePostRequest {
     pub team_pk: Option<String>,
 }
 
-#[derive(Debug, Serialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreatePostResponse {
     pub post_pk: String,
 }

@@ -1,7 +1,7 @@
 use crate::types::*;
 
+use crate::types::File;
 use bdk::prelude::*;
-use dto::File;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct DeliberationSpaceElearning {
@@ -18,7 +18,7 @@ impl DeliberationSpaceElearning {
     }
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct ElearningResponse {
     pub files: Vec<File>,
 }
