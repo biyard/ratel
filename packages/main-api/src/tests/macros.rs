@@ -188,6 +188,21 @@ macro_rules! get {
     (
         app: $app:expr,
         path: $path:expr,
+        headers: $headers:expr,
+        response_type: $resp_ty:ty $(,)?
+    ) => {{
+        let (status, headers, text) = $crate::send! {
+            app: $app,
+            method: "GET",
+            path: $path,
+            headers: $headers,
+        };
+        let parsed = serde_json::from_str::<$resp_ty>(&text).unwrap();
+        (status, headers, parsed)
+    }};
+    (
+        app: $app:expr,
+        path: $path:expr,
         headers: $headers:expr
     ) => {{
         $crate::send! { app: $app, method: "GET", path: $path, headers: $headers, }

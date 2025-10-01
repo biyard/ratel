@@ -4199,6 +4199,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "url",
+ "urlencoding",
  "uuid 1.18.1",
  "validator",
 ]
