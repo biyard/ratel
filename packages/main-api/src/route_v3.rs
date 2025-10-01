@@ -14,6 +14,7 @@ use crate::controllers::v3::spaces::deliberations::posting_deliberation::{
 };
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
+use crate::models::feed::Post;
 // use crate::models::feed::Post;
 use crate::controllers::v3::spaces::poll::list_responses::{
     ListSurveyResponse, list_responses_handler,
@@ -23,6 +24,7 @@ use crate::controllers::v3::spaces::poll::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
 use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
+use crate::types::list_items_response::ListItemsResponse;
 // use crate::types::list_items_response::ListItemsResponse;
 use crate::{
     Error2,
@@ -145,19 +147,13 @@ pub fn route(
                         create_post_handler,
                         api_docs!(Json<CreatePostResponse>, "Create Post", "Create a new post"),
                     )
-                    .get(
+                    .get_with(
                         list_posts_handler,
-                        // |op| {
-                        //     op.summary("List Posts")
-                        //         .description("List all posts")
-                        //         .response::<200, Json<ListItemsResponse<Post>>>()
-                        //         .response::<400, Error2>()
-                        //         .input::<axum::extract::Query<ListPostsQueryParams>>()
-                        // }, // api_docs!(
-                        //     Json<ListItemsResponse<Post>>,
-                        //     "List Posts",
-                        //     "List all posts"
-                        // ),
+                        api_docs!(
+                            Json<ListItemsResponse<Post>>,
+                            "List Posts",
+                            "List all posts"
+                        ),
                     ),
                 )
                 .route(
