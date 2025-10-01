@@ -39,7 +39,7 @@ aws-sdk-sqs = "1.81.0"
 jsonwebtoken = "9.3.0"
 percent-encoding = "2.3.2"
 
-rmcp = { version = "0.6.1", git = "https://github.com/modelcontextprotocol/rust-sdk", features = [
+rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-sdk", features = [
     "server",
     "transport-streamable-http-server",
     "transport-worker",

@@ -40,6 +40,14 @@ pub enum Error {
     #[error("Other error: {0}")]
     ReqwestError(#[from] reqwest::Error),
 
+    // Authorization errors 400 ~
+    #[error("No session found")]
+    #[rest_error(status = 401, code = 400)]
+    NoSessionFound,
+    #[error("No user found in session")]
+    #[rest_error(status = 401, code = 401)]
+    NoUserFound,
+
     // /v3/auth endpoints 1000 ~
     #[error("Exceeded maximum attempt for email verification")]
     #[rest_error(code = 1000)]
@@ -54,8 +62,12 @@ pub enum Error {
     InvalidVerificationCode,
 
     // /v3/posts endpoints 2000 ~
-    #[error("Space not found")]
+    #[error("Post visibility is incorrectly configured: {0}")]
     #[rest_error(code = 2000)]
+    IncorrectConfiguredVisibility(String),
+
+    // /v3/posts endpoints 2000 ~
+    #[error("Post not found")]
     NotFoundPost,
 
     // /v3/spaces endpoints 3000 ~
