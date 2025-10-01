@@ -35,6 +35,7 @@ pub use post_type::*;
 pub use visibility::*;
 
 pub use relationship::*;
+pub use space_status::*;
 pub use space_type::*;
 pub use space_visibility::*;
 pub use survey_answer::*;

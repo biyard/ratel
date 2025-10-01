@@ -1,6 +1,5 @@
 use crate::types::*;
 use bdk::prelude::*;
-use dto::SpaceStatus;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct SpaceCommon {
@@ -21,7 +20,7 @@ pub struct SpaceCommon {
 
     pub status: SpaceStatus,
     pub started_at: i64,
-    pub ended_at: i64,
+    pub ended_at: Option<i64>,
 }
 
 impl SpaceCommon {
@@ -37,7 +36,7 @@ impl SpaceCommon {
             status: SpaceStatus::Draft,
 
             started_at: now,
-            ended_at: now,
+            ended_at: None,
         }
     }
 
