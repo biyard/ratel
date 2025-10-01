@@ -18,6 +18,10 @@ use dto::{
     },
 };
 use tower_sessions::Session;
+use urlencoding::decode;
+
+const SPACE_PREFIX: &str = "DELIBERATION_SPACE#";
+const DISCUSSION_PREFIX: &str = "DISCUSSION#";
 
 pub async fn participant_meeting_handler(
     State(AppState { dynamo, .. }): State<AppState>,
@@ -27,14 +31,16 @@ pub async fn participant_meeting_handler(
         discussion_pk,
     }): Path<DeliberationDiscussionByIdPath>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
-    let space_pk = space_pk.replace("%23", "#");
-    let discussion_pk = discussion_pk.replace("%23", "#");
+    let space_pk = decode(&space_pk).unwrap_or_default().to_string();
+    let discussion_pk = decode(&discussion_pk).unwrap_or_default().to_string();
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
-    let space_id = space_pk.split("#").last().unwrap_or_default().to_string();
+    let space_id = space_pk
+        .strip_prefix(SPACE_PREFIX)
+        .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
+        .to_string();
     let discussion_id = discussion_pk
-        .split("#")
-        .last()
-        .unwrap_or_default()
+        .strip_prefix(DISCUSSION_PREFIX)
+        .ok_or_else(|| Error2::BadRequest("Invalid discussion_pk format".into()))?
         .to_string();
 
     let user = extract_user_from_session(&dynamo.client, &session).await?;

@@ -17,6 +17,7 @@ use dto::by_axum::axum::{
 use dto::{JsonSchema, aide, schemars};
 use serde::{Deserialize, Serialize};
 use tower_sessions::Session;
+use urlencoding::decode;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -33,7 +34,7 @@ pub async fn posting_deliberation_handler(
     Path(DeliberationPath { space_pk }): Path<DeliberationPath>,
     Json(_req): Json<PostingDeliberationRequest>,
 ) -> Result<Json<PostingDeliberationResponse>, Error2> {
-    let space_pk = space_pk.replace("%23", "#");
+    let space_pk = decode(&space_pk).unwrap_or_default().to_string();
     let user = extract_user_from_session(&dynamo.client, &session).await?;
     tracing::debug!("User extracted: {:?}", user);
 
@@ -56,7 +57,7 @@ pub async fn posting_deliberation_handler(
             let user = extract_user_from_session(&dynamo.client, &session).await?;
             if user.pk != space.user_pk {
                 return Err(Error2::Unauthorized(
-                    "You do not have permission to delete this post".into(),
+                    "You do not have permission to posting this deliberation".into(),
                 ));
             }
         }

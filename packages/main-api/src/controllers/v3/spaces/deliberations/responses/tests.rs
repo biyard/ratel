@@ -62,7 +62,7 @@ async fn test_create_response_answer_handler() {
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
     let path = format!("/v3/spaces/deliberation/{}", space_pk_encoded);
 
-    let (status, _headers, _body) = post! {
+    let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
@@ -149,8 +149,8 @@ async fn test_create_response_answer_handler() {
 
     assert_eq!(status, 200);
 
-    let space_pk = body.metadata.deliberation.pk;
-    let survey_pk = body.metadata.surveys.pk;
+    let space_pk = body.clone().deliberation.pk;
+    let survey_pk = body.clone().surveys.pk;
 
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
     let path = format!("/v3/spaces/deliberation/{}/responses", space_pk_encoded);
@@ -231,7 +231,7 @@ async fn test_get_response_answer_handler() {
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
     let path = format!("/v3/spaces/deliberation/{}", space_pk_encoded);
 
-    let (status, _headers, _body) = post! {
+    let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
@@ -318,8 +318,8 @@ async fn test_get_response_answer_handler() {
 
     assert_eq!(status, 200);
 
-    let space_pk = body.metadata.deliberation.pk;
-    let survey_pk = body.metadata.surveys.pk;
+    let space_pk = body.deliberation.pk;
+    let survey_pk = body.surveys.pk;
 
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
     let path = format!("/v3/spaces/deliberation/{}/responses", space_pk_encoded);
@@ -359,6 +359,7 @@ async fn test_get_response_answer_handler() {
     let response_pk = body.metadata.surveys.user_responses[0].pk.clone();
 
     let response_pk_encoded = response_pk.to_string().replace('#', "%23");
+    eprintln!("response pk encoded: {:?}", response_pk_encoded.clone());
     let path = format!(
         "/v3/spaces/deliberation/{}/responses/{}",
         space_pk_encoded, response_pk_encoded

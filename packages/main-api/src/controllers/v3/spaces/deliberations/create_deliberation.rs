@@ -17,6 +17,7 @@ use dto::by_axum::axum::{
 use dto::{JsonSchema, aide, schemars};
 use serde::{Deserialize, Serialize};
 use tower_sessions::Session;
+use urlencoding::decode;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -30,13 +31,18 @@ pub struct CreateDeliberationResponse {
     pub metadata: DeliberationDetailResponse,
 }
 
+const FEED_PREFIX: &str = "FEED#";
+
 pub async fn create_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<Session>,
     Json(req): Json<CreateDeliberationRequest>,
 ) -> Result<Json<CreateDeliberationResponse>, Error2> {
-    let feed_pk = req.feed_pk.replace("%23", "#");
-    let feed_id = feed_pk.split('#').last().unwrap().to_string();
+    let feed_pk = decode(&req.feed_pk).unwrap_or_default().to_string();
+    let feed_id = feed_pk
+        .strip_prefix(FEED_PREFIX)
+        .ok_or_else(|| Error2::BadRequest("Invalid feed_pk format".into()))?
+        .to_string();
 
     let post = Post::get(&dynamo.client, &feed_pk, Some(EntityType::Post))
         .await?
@@ -59,7 +65,7 @@ pub async fn create_deliberation_handler(
             let user = extract_user_from_session(&dynamo.client, &session).await?;
             if user.pk != post.user_pk {
                 return Err(Error2::Unauthorized(
-                    "You do not have permission to delete this post".into(),
+                    "You do not have permission to create a deliberation".into(),
                 ));
             }
         }

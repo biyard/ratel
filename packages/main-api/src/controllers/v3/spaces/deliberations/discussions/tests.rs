@@ -67,6 +67,7 @@ async fn test_create_discussion_handler() {
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
     let path = format!("/v3/spaces/deliberation/{}/discussions", space_pk_encoded);
 
+    eprintln!("space_pk_encoded: {:?}", space_pk_encoded);
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),

@@ -15,6 +15,7 @@ use dto::by_axum::axum::{
 use dto::{JsonSchema, aide, schemars};
 use serde::Deserialize;
 use tower_sessions::Session;
+use urlencoding::decode;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -31,6 +32,8 @@ pub struct DeliberationResponseByIdPath {
     pub response_pk: String,
 }
 
+const RESPONSE_PREFIX: &str = "SURVEY_RESPONSE#";
+
 pub async fn get_response_answer_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<Session>,
@@ -39,12 +42,11 @@ pub async fn get_response_answer_handler(
         response_pk,
     }): Path<DeliberationResponseByIdPath>,
 ) -> Result<Json<DeliberationSpaceResponse>, Error2> {
-    let space_pk = space_pk.replace("%23", "#");
-    let response_pk = response_pk.replace("%23", "#");
+    let space_pk = decode(&space_pk).unwrap_or_default().to_string();
+    let response_pk = decode(&response_pk).unwrap_or_default().to_string();
     let id = response_pk
-        .split("#")
-        .last()
-        .unwrap_or_default()
+        .strip_prefix(RESPONSE_PREFIX)
+        .ok_or_else(|| Error2::BadRequest("Invalid response_pk format".into()))?
         .to_string();
     let response = DeliberationSpaceResponse::get(
         &dynamo.client,
@@ -78,7 +80,7 @@ pub async fn get_response_answer_handler(
                 let user = extract_user_from_session(&dynamo.client, &session).await?;
                 if user.pk != space.user_pk {
                     return Err(Error2::Unauthorized(
-                        "You do not have permission to delete this post".into(),
+                        "You do not have permission to get response answer".into(),
                     ));
                 }
             }

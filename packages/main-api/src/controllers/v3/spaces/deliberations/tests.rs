@@ -45,6 +45,8 @@ async fn test_create_space_handler() {
 
     let feed_pk = post.unwrap().post_pk.clone();
 
+    eprintln!("feed pk: {:?}", feed_pk);
+
     // SPACE
     let (status, _headers, _body) = post! {
         app: app,

@@ -19,6 +19,7 @@ use dto::by_axum::axum::{
 use dto::{JsonSchema, aide, schemars};
 use serde::{Deserialize, Serialize};
 use tower_sessions::Session;
+use urlencoding::decode;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct DeleteDeliberationResponse {
@@ -37,7 +38,7 @@ pub async fn delete_deliberation_handler(
     Extension(session): Extension<Session>,
     Path(DeliberationDeletePath { space_pk }): Path<DeliberationDeletePath>,
 ) -> Result<Json<DeleteDeliberationResponse>, Error2> {
-    let space_pk = space_pk.replace("%23", "#");
+    let space_pk = decode(&space_pk).unwrap_or_default().to_string();
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
 
     let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
@@ -60,7 +61,7 @@ pub async fn delete_deliberation_handler(
             let user = extract_user_from_session(&dynamo.client, &session).await?;
             if user.pk != space.user_pk {
                 return Err(Error2::Unauthorized(
-                    "You do not have permission to delete this post".into(),
+                    "You do not have permission to delete this deliberation".into(),
                 ));
             }
         }

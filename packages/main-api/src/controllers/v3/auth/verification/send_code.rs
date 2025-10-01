@@ -1,4 +1,3 @@
-#![allow(warnings)]
 use crate::{
     AppState, Error2,
     constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT},
@@ -31,7 +30,7 @@ pub async fn send_code_handler(
     State(AppState { dynamo, ses, .. }): State<AppState>,
     Json(req): Json<SendCodeRequest>,
 ) -> Result<Json<SendCodeResponse>, Error2> {
-    let _ses = ses.clone();
+    // let _ses = ses.clone();
     let (verification_list, _) = EmailVerification::find_by_email(
         &dynamo.client,
         &req.email,
