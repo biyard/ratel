@@ -166,6 +166,16 @@ jobs:
         run: |
           cargo binstall toml-cli
 
+      - name: Cache builder
+        id: main-api-build-cache
+        uses: actions/cache@v4
+        with:
+          key: main-api-build-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            main-api-build-
+          path: |
+            packages/main-api/target
+
       - name: Build and cache Docker image
         id: build
         env:
@@ -219,6 +229,16 @@ jobs:
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
+
+      - name: Cache builder
+        id: fetcher-build-cache
+        uses: actions/cache@v4
+        with:
+          key: fetcher-build-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            fetcher-build-
+          path: |
+            packages/fetcher/target
 
       - name: Build and cache Docker image
         id: build

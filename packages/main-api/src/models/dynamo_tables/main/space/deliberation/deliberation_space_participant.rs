@@ -35,10 +35,24 @@ pub struct DeliberationSpaceParticipant {
     pub discussion_pk: Partition,
 }
 
+//FIXME: GSI6 is unnecessary.
+// We know DISCUSSION_PK + USER_ID is unique.
+// So we can use PK: PARTICIPANT#USER#UID, SK:DISCUSSION_PK(DISCUSSION#UID)
+// And We can found multiple participant of DISCUSSION_PK with (GSI1_PK : SK, GSI1_SK: created_at)
+// DISCUSSION_PK + USER_ID 는 유일합니다.
+// 그래서 우리는 PK: PARTICIPANT#{USER_PK}, SK:{DISCUSSION_PK} 로 구성할 수 있습니다.
+// 특정 유저의 참석 여부를 알기 위해서는 PK, SK 로 조회 가능합니다.
+// 특정 DISCUSSION_PK 에 속한 모든 참석자를 찾기 위해서는 GSI1 (GSI1_PK: SK, GSI1_SK: created_at) 으로 조회 가능합니다.
+
+//FIXME: PK 를 Deliberation_PK 와 동일하게 가져가면 안됩니다.
+// 동일한 PK를 가진 Entity 중 1:N 관계를 가지는 경우, 1MB가 넘는 경우에는 조회가 불가능해집니다.
+// 그래서 DISCUSSION_PK 등으로 DELIBERTAION_PK 와 분리해야합니다.
+
 impl DeliberationSpaceParticipant {
     pub fn new(
         deliberation_pk: Partition,
         discussion_pk: Partition,
+
         participant_id: String,
         User {
             pk,

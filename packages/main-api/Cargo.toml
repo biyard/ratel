@@ -82,6 +82,7 @@ path = "src/main.rs"
 rest-api = { workspace = true, features = ["test"] }
 ring = { version = "0.17.14" }
 reqwest.workspace = true
+url = "2.5.7"
 
 [features]
 default = []
