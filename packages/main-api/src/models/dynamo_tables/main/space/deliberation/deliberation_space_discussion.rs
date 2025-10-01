@@ -16,7 +16,7 @@ pub struct DiscussionCreateRequest {
 
     pub name: String,
     pub description: String,
-    pub user_ids: Vec<String>,
+    pub user_ids: Vec<Partition>,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]

@@ -16,6 +16,7 @@ import {
   QK_GET_PERMISSION,
   QK_USERS_GET_INFO,
   QK_GET_NEWS_BY_NEWS_ID,
+  QK_GET_DELIBERATION_SPACE_BY_SPACE_ID,
 } from '@/constants';
 
 import { RedeemCode } from './models/redeem-code';
@@ -32,6 +33,7 @@ import { InfiniteData } from '@tanstack/react-query';
 import { GroupPermission } from './models/group';
 import { Permission } from './models/permission';
 import { NewsDetailItem } from './models/news';
+import { DeliberationSpace } from './models/spaces/deliberation-spaces';
 
 async function getDataFromServer<T>(
   key: (string | number)[],
@@ -95,6 +97,16 @@ export function getPostByUserId(
   return getDataFromServer<Feed>(
     [QK_GET_POSTS_BY_USER_ID, user_id, page, size, status],
     ratelApi.feeds.getPostsByUserId(user_id, page, size, status),
+  );
+}
+
+export function getDeliberationSpaceById(id: string) {
+  const spacePk = 'DELIBERATION_SPACE%23' + id;
+
+  return getDataFromServer<DeliberationSpace>(
+    [QK_GET_DELIBERATION_SPACE_BY_SPACE_ID, spacePk],
+    ratelApi.spaces.getDeliberationSpaceBySpaceId(spacePk),
+    true,
   );
 }
 

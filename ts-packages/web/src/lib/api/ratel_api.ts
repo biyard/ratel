@@ -1,4 +1,4 @@
-import { Feed, FeedStatus } from './models/feeds';
+import { Feed, FeedStatus, FeedV2 } from './models/feeds';
 import { FileType } from './models/file-type';
 import { Space } from './models/spaces';
 import {
@@ -15,6 +15,8 @@ import {
   QK_LATEST_QUIZ_ATTEMPT,
   QK_QUIZ_ATTEMPTS,
   QK_QUIZ_ANSWERS,
+  QK_GET_DELIBERATION_SPACE_BY_SPACE_ID,
+  QK_GET_FEED_BY_FEED_ID_V2,
 } from '@/constants';
 import {
   useSuspenseQuery,
@@ -27,6 +29,22 @@ import { RedeemCode } from './models/redeem-code';
 import { NetworkData } from './models/network';
 import { Promotion } from './models/promotion';
 import { GroupPermission } from './models/group';
+import { DeliberationSpace } from './models/spaces/deliberation-spaces';
+
+export function useDeliberationSpaceById(
+  id: string,
+): UseSuspenseQueryResult<DeliberationSpace> {
+  const spacePk = 'DELIBERATION_SPACE%23' + id;
+  const { get } = useApiCall();
+
+  const query = useSuspenseQuery({
+    queryKey: [QK_GET_DELIBERATION_SPACE_BY_SPACE_ID, spacePk],
+    queryFn: () => get(ratelApi.spaces.getDeliberationSpaceBySpaceId(spacePk)),
+    refetchOnWindowFocus: false,
+  });
+
+  return query;
+}
 
 export function useSpaceById(id: number): UseSuspenseQueryResult<Space> {
   const { get } = useApiCall();
@@ -48,6 +66,19 @@ export function useRedeemCode(
   const query = useSuspenseQuery({
     queryKey: [QK_GET_REDEEM_CODE, meta_id],
     queryFn: () => get(ratelApi.spaces.getSpaceRedeemCodes(meta_id)),
+    refetchOnWindowFocus: false,
+  });
+
+  return query;
+}
+
+export function usePostByIdV2(id: string): UseSuspenseQueryResult<FeedV2> {
+  const feedPk = 'FEED%23' + id;
+  const { get } = useApiCall();
+
+  const query = useSuspenseQuery({
+    queryKey: [QK_GET_FEED_BY_FEED_ID_V2, feedPk],
+    queryFn: () => get(ratelApi.feeds.getFeedById(feedPk)),
     refetchOnWindowFocus: false,
   });
 
@@ -218,6 +249,10 @@ export const ratelApi = {
   },
   responses: {
     respond_answer: (spaceId: number) => `/v1/spaces/${spaceId}/responses`,
+
+    //v3
+    deliberation_response_answer: (spacePk: string) =>
+      `/v3/spaces/deliberation/${spacePk}/responses`,
   },
   groups: {
     create_group: (team_id: number) => `/v1/teams/${team_id}/groups`,
@@ -284,6 +319,9 @@ export const ratelApi = {
       }
       return url;
     },
+
+    //V3
+    getFeedById: (feed_pk: string) => `/v3/posts/${feed_pk}`,
   },
   redeems: {
     useRedeemCode: (redeem_id: number) => `/v1/redeems/${redeem_id}`,
@@ -311,6 +349,16 @@ export const ratelApi = {
     getUserBadge: (space_id: number, page: number, size: number) =>
       `/v1/spaces/${space_id}/badges?param-type=query&bookmark=${page}&size=${size}`,
     claimBadge: (space_id: number) => `/v1/spaces/${space_id}/badges`,
+
+    // v3 api
+    getDeliberationSpaceBySpaceId: (space_pk: string) =>
+      `/v3/spaces/deliberation/${space_pk}`,
+    updateDeliberationSpaceBySpaceId: (space_pk: string) =>
+      `/v3/spaces/deliberation/${space_pk}`,
+    postingDeliberationSpaceBySpaceId: (space_pk: string) =>
+      `/v3/spaces/deliberation/${space_pk}/posting`,
+    deleteDeliberationSpaceBySpaceId: (space_pk: string) =>
+      `/v3/spaces/deliberation/${space_pk}/delete`,
   },
   notice_quiz: {
     submitQuizAnswers: (id: number) =>

@@ -14,10 +14,7 @@ use crate::{
         create_app_state, create_test_user, get_auth,
         v3_setup::{TestContextV3, setup_v3},
     },
-    types::{
-        ChoiceQuestion, LinearScaleQuestion, Partition, SpaceVisibility, SurveyQuestion,
-        SurveyStatus,
-    },
+    types::{ChoiceQuestion, LinearScaleQuestion, SpaceVisibility, SurveyQuestion, SurveyStatus},
 };
 
 use bdk::prelude::axum::{Extension, Json, extract::State};
@@ -100,14 +97,8 @@ async fn test_update_space_handler() {
     eprintln!("space_pk: {:?}", space_pk);
 
     // create user
-    let team_1 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-    let team_2 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
+    let team_1 = create_test_user(&cli).await.pk;
+    let team_2 = create_test_user(&cli).await.pk;
 
     let users = vec![team_1.clone(), team_2];
 
@@ -360,14 +351,8 @@ async fn test_delete_space_handler() {
     assert_eq!(status, 200);
 
     // create user
-    let team_1 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-    let team_2 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
+    let team_1 = create_test_user(&cli).await.pk;
+    let team_2 = create_test_user(&cli).await.pk;
 
     let users = vec![team_1.clone(), team_2];
 
