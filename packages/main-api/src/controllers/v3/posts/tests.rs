@@ -3,7 +3,7 @@ use crate::{
 };
 
 #[tokio::test]
-async fn test_create_post() {
+async fn test_create_post_by_user() {
     let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
 
     let (status, headers, body) = crate::post! {
@@ -37,3 +37,9 @@ async fn test_create_post_with_invalid_team() {
 
 #[tokio::test]
 async fn test_post_like() {}
+
+#[tokio::test]
+async fn test_post_delete() {}
+
+#[tokio::test]
+async fn test_post_update() {}
