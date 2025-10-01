@@ -100,7 +100,6 @@ impl From<Vec<DeliberationMetadata>> for DeliberationDetailResponse {
                 }
                 DeliberationMetadata::DeliberationSpaceContent(content) => match content.sk {
                     EntityType::DeliberationSpaceSummary => {
-                        println!("Found summary content: {:?}", content);
                         res.summary = DeliberationContentResponse {
                             html_contents: content.html_contents,
                             files: content.files,

@@ -2,11 +2,12 @@ use crate::models::space::SpaceCommon;
 use crate::types::{EntityType, Partition};
 use crate::utils::dynamo_extractor::extract_user_from_session;
 use crate::{AppState, Error2};
-use dto::by_axum::axum::{
+use axum::{
     Extension,
     extract::{Path, State},
 };
-use dto::{JsonSchema, aide, schemars};
+use bdk::prelude::*;
+
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
