@@ -1,4 +1,4 @@
-use dto::File;
+use crate::types::File;
 
 use super::*;
 use crate::{
@@ -16,7 +16,7 @@ async fn tests_create_deliberation() {
     let fetched_user = User::get(&cli, user.clone().pk.clone(), Some(user.clone().sk)).await;
     assert!(fetched_user.is_ok());
 
-    let deliberation = DeliberationSpace::new(user.clone());
+    let deliberation = DeliberationSpace::new();
     let res = deliberation.create(&cli).await;
     assert!(res.is_ok());
 
@@ -26,6 +26,7 @@ async fn tests_create_deliberation() {
     let space_common = SpaceCommon::new(
         deliberation.pk.clone(),
         crate::types::Partition::Feed(post_pk),
+        user.clone(),
     );
     let res = space_common.create(&cli).await;
     assert!(res.is_ok());
@@ -37,7 +38,7 @@ async fn tests_create_deliberation() {
         [File {
             name: "excel file".to_string(),
             size: "15KB".to_string(),
-            ext: dto::FileExtension::EXCEL,
+            ext: crate::types::FileExtension::EXCEL,
             url: None,
         }]
         .to_vec(),
@@ -89,7 +90,7 @@ async fn tests_create_deliberation() {
         [File {
             name: "elearning file".to_string(),
             size: "50KB".to_string(),
-            ext: dto::FileExtension::PDF,
+            ext: crate::types::FileExtension::PDF,
             url: None,
         }]
         .to_vec(),
@@ -160,7 +161,7 @@ async fn tests_create_deliberation() {
         [File {
             name: "excel file recommendation".to_string(),
             size: "15KB".to_string(),
-            ext: dto::FileExtension::EXCEL,
+            ext: crate::types::FileExtension::EXCEL,
             url: None,
         }]
         .to_vec(),
@@ -177,20 +178,20 @@ async fn tests_create_deliberation() {
     let metadatas = metadata.unwrap();
 
     assert_eq!(metadatas.len(), 11);
-
+    println!("Metadatas: {:?}", metadatas);
     let deliberation: DeliberationDetailResponse = metadatas.into();
 
     assert_eq!(deliberation.summary.files[0].name, "excel file".to_string());
-    // assert_eq!(deliberation.discussions[0].members.len(), 1);
-    // assert_eq!(deliberation.discussions[0].participants.len(), 1);
-    // assert_eq!(
-    //     deliberation.elearnings.files[0].name,
-    //     "elearning file".to_string()
-    // );
-    // assert_eq!(deliberation.surveys.questions.len(), 2);
-    // assert_eq!(deliberation.surveys.responses.len(), 1);
-    // assert_eq!(
-    //     deliberation.recommendation.files[0].name,
-    //     "excel file recommendation"
-    // );
+    assert_eq!(deliberation.discussions[0].members.len(), 1);
+    assert_eq!(deliberation.discussions[0].participants.len(), 1);
+    assert_eq!(
+        deliberation.elearnings.files[0].name,
+        "elearning file".to_string()
+    );
+    assert_eq!(deliberation.surveys.questions.len(), 2);
+    assert_eq!(deliberation.surveys.responses.len(), 1);
+    assert_eq!(
+        deliberation.recommendation.files[0].name,
+        "excel file recommendation"
+    );
 }

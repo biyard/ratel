@@ -30,6 +30,7 @@ pub async fn send_code_handler(
     State(AppState { dynamo, ses, .. }): State<AppState>,
     Json(req): Json<SendCodeRequest>,
 ) -> Result<Json<SendCodeResponse>, Error2> {
+    // let _ses = ses.clone();
     let (verification_list, _) = EmailVerification::find_by_email(
         &dynamo.client,
         &req.email,

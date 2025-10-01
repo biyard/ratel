@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 use ethers::prelude::*;
 use rlp::RlpStream;
-use std::convert::TryFrom;
+use std::{borrow::Cow, convert::TryFrom};
 
 #[derive(Debug, Clone, Copy, PartialEq, serde::Serialize, serde::Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
@@ -112,21 +112,12 @@ pub struct KaiaTransaction {
 }
 
 impl schemars::JsonSchema for KaiaTransaction {
-    fn schema_name() -> String {
-        "KlaytnTransaction".to_string()
+    fn schema_name() -> Cow<'static, str> {
+        std::borrow::Cow::Borrowed("KlaytnTransaction")
     }
 
-    fn json_schema(_gen: &mut schemars::r#gen::SchemaGenerator) -> schemars::schema::Schema {
-        use schemars::schema::SchemaObject;
-
-        let mut schema = SchemaObject::default();
-        schema.metadata = Some(Box::new(schemars::schema::Metadata {
-            title: Some("KlaytnTransaction".to_string()),
-            description: Some("Refer to the detailed specification".to_string()),
-            ..Default::default()
-        }));
-
-        schemars::schema::Schema::Object(schema)
+    fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
+        Default::default()
     }
 }
 

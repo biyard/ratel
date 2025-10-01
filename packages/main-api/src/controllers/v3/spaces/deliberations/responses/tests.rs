@@ -1,80 +1,98 @@
+use crate::types::File;
 use crate::{
-    controllers::v3::spaces::deliberations::{
-        create_deliberation::{CreateDeliberationRequest, create_deliberation_handler},
-        responses::{
-            create_response_answer::DeliberationResponsePath,
-            get_response_answer::{DeliberationResponseByIdPath, get_response_answer_handler},
-        },
-        update_deliberation::{
-            DeliberationPath, UpdateDeliberationRequest, update_deliberation_handler,
-        },
+    controllers::v3::{
+        posts::create_post::{CreatePostRequest, create_post_handler},
+        spaces::deliberations::responses::create_response_answer::CreateDeliberationResponse,
     },
-    models::space::{DiscussionCreateRequest, SurveyCreateRequest},
-    tests::{create_app_state, create_test_user, get_auth},
-    types::{ChoiceQuestion, LinearScaleQuestion, SurveyQuestion, SurveyStatus},
-};
-use dto::{
-    File,
-    by_axum::axum::{
-        Json,
-        extract::{Extension, Path, State},
+    get,
+    models::space::{
+        DeliberationDetailResponse, DeliberationSpaceResponse, DiscussionCreateRequest,
+        SurveyCreateRequest,
     },
+    post,
+    tests::{
+        create_app_state, get_auth,
+        v3_setup::{TestContextV3, setup_v3},
+    },
+    types::{ChoiceQuestion, LinearScaleQuestion, SpaceVisibility, SurveyQuestion, SurveyStatus},
 };
 
-use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::{
-    CreateResponseAnswerRequest, create_response_answer_handler,
-};
+use bdk::prelude::axum::{Extension, Json, extract::State};
+
 use crate::types::SurveyAnswer;
 
 #[tokio::test]
 async fn test_create_response_answer_handler() {
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    //FIXME: fix by session and one test code
     let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
-    let auth = get_auth(&user.clone());
-    let uid = uuid::Uuid::new_v4().to_string();
-    let create_deliberation = create_deliberation_handler(
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
         State(app_state.clone()),
         Extension(Some(auth.clone())),
-        Json(CreateDeliberationRequest { feed_id: uid }),
+        Json(CreatePostRequest { team_pk: None }),
     )
-    .await
-    .unwrap();
+    .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
 
-    let space_pk = create_deliberation.0.metadata.deliberation.pk.clone();
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/spaces/deliberation",
+        headers: headers.clone(),
+        body: {
+            "feed_pk": feed_pk
+        },
+        response_type: CreateDeliberationResponse
+    };
+
+    assert_eq!(status, 200);
+
     let now = chrono::Utc::now().timestamp();
+    let space_pk = body.metadata.deliberation.pk.clone();
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let path = format!("/v3/spaces/deliberation/{}", space_pk_encoded);
 
-    let update_deliberation = update_deliberation_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationPath {
-            id: space_pk.clone(),
-        }),
-        Json(UpdateDeliberationRequest {
-            title: Some("deliberation title".to_string()),
-            html_contents: Some("<div>deliberation description</div>".to_string()),
-            files: vec![File {
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "title": Some("deliberation title".to_string()),
+            "html_contents": Some("<div>deliberation description</div>".to_string()),
+            "visibility": SpaceVisibility::Public,
+            "started_at": now,
+            "ended_at": now + 86400,
+            "files": vec![File {
                 name: "deliberation summary file title".to_string(),
                 size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
+                ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
-            discussions: vec![DiscussionCreateRequest {
-                id: None,
+            "discussions": vec![DiscussionCreateRequest {
+                discussion_pk: None,
                 started_at: now,
                 ended_at: now,
                 name: "discussion title".to_string(),
                 description: "discussion description".to_string(),
                 user_ids: vec![],
             }],
-            elearning_files: vec![File {
+            "elearning_files": vec![File {
                 name: "deliberation elearning file title".to_string(),
                 size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
+                ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
-            surveys: vec![SurveyCreateRequest {
-                id: None,
+            "surveys": vec![SurveyCreateRequest {
+                survey_pk: None,
                 started_at: now,
                 ended_at: now + 10_000,
                 status: SurveyStatus::Ready,
@@ -115,50 +133,49 @@ async fn test_create_response_answer_handler() {
                     }),
                 ],
             }],
-            recommendation_html_contents: Some(
+            "recommendation_html_contents": Some(
                 "<div>deliberation recommendation description</div>".to_string(),
             ),
-            recommendation_files: vec![File {
+            "recommendation_files": vec![File {
                 name: "deliberation recommendation file title".to_string(),
                 size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
+                ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
-        }),
-    )
-    .await
-    .unwrap();
+        },
+        response_type: DeliberationDetailResponse,
+    };
 
-    let space_pk = create_deliberation.0.metadata.deliberation.pk;
-    let survey_pk = update_deliberation.0.surveys.pk;
+    assert_eq!(status, 200);
 
-    let create_response_answer = create_response_answer_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationResponsePath {
-            deliberation_id: space_pk.clone(),
-        }),
-        Json(CreateResponseAnswerRequest {
-            survey_id: survey_pk.clone(),
-            survey_type: crate::types::SurveyType::Survey,
-            answers: vec![
+    let space_pk = body.clone().deliberation.pk;
+    let survey_pk = body.clone().surveys.pk;
+
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let path = format!("/v3/spaces/deliberation/{}/responses", space_pk_encoded);
+
+    let (status, _headers, body) = post! (
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "survey_pk": survey_pk,
+            "survey_type": crate::types::SurveyType::Survey,
+            "answers": vec![
                 SurveyAnswer::SingleChoice { answer: Some(1) },
                 SurveyAnswer::MultipleChoice {
                     answer: Some(vec![1]),
                 },
             ],
-        }),
-    )
-    .await;
-
-    assert!(
-        create_response_answer.is_ok(),
-        "Failed to create response answer {:?}",
-        create_response_answer.err()
+        },
+        response_type: CreateDeliberationResponse,
     );
 
-    let resp = create_response_answer.as_ref().expect("request failed"); // &Json<...>
-    let meta = &resp.0.metadata;
+    assert_eq!(status, 200);
+
+    let meta = &body.metadata;
+
+    eprintln!("meta: {:?}", meta);
 
     assert_eq!(
         meta.surveys.user_responses.len(),
@@ -174,53 +191,77 @@ async fn test_create_response_answer_handler() {
 
 #[tokio::test]
 async fn test_get_response_answer_handler() {
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    //FIXME: fix by session and one test code
     let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
-    let auth = get_auth(&user.clone());
-    let uid = uuid::Uuid::new_v4().to_string();
-    let create_deliberation = create_deliberation_handler(
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
         State(app_state.clone()),
         Extension(Some(auth.clone())),
-        Json(CreateDeliberationRequest { feed_id: uid }),
+        Json(CreatePostRequest { team_pk: None }),
     )
-    .await
-    .unwrap();
+    .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
 
-    let space_pk = create_deliberation.0.metadata.deliberation.pk.clone();
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/spaces/deliberation",
+        headers: headers.clone(),
+        body: {
+            "feed_pk": feed_pk
+        },
+        response_type: CreateDeliberationResponse
+    };
+
+    assert_eq!(status, 200);
+
     let now = chrono::Utc::now().timestamp();
+    let space_pk = body.metadata.deliberation.pk.clone();
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let path = format!("/v3/spaces/deliberation/{}", space_pk_encoded);
 
-    let update_deliberation = update_deliberation_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationPath {
-            id: space_pk.clone(),
-        }),
-        Json(UpdateDeliberationRequest {
-            title: Some("deliberation title".to_string()),
-            html_contents: Some("<div>deliberation description</div>".to_string()),
-            files: vec![File {
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "title": Some("deliberation title".to_string()),
+            "html_contents": Some("<div>deliberation description</div>".to_string()),
+            "files": vec![File {
                 name: "deliberation summary file title".to_string(),
                 size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
+                ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
-            discussions: vec![DiscussionCreateRequest {
-                id: None,
+            "visibility": SpaceVisibility::Public,
+            "started_at": now,
+            "ended_at": now + 86400,
+            "discussions": vec![DiscussionCreateRequest {
+                discussion_pk: None,
                 started_at: now,
                 ended_at: now,
                 name: "discussion title".to_string(),
                 description: "discussion description".to_string(),
                 user_ids: vec![],
             }],
-            elearning_files: vec![File {
+            "elearning_files": vec![File {
                 name: "deliberation elearning file title".to_string(),
                 size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
+                ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
-            surveys: vec![SurveyCreateRequest {
-                id: None,
+            "surveys": vec![SurveyCreateRequest {
+                survey_pk: None,
                 started_at: now,
                 ended_at: now + 10_000,
                 status: SurveyStatus::Ready,
@@ -249,52 +290,59 @@ async fn test_get_response_answer_handler() {
                         ],
                         is_required: Some(false),
                     }),
+                    SurveyQuestion::LinearScale(LinearScaleQuestion {
+                        title: "Rate your onboarding experience".into(),
+                        description: Some("1 = Poor, 5 = Excellent".into()),
+                        image_url: None,
+                        min_value: 1,
+                        max_value: 5,
+                        min_label: "Poor".into(),
+                        max_label: "Excellent".into(),
+                        is_required: Some(true),
+                    }),
                 ],
             }],
-            recommendation_html_contents: Some(
+            "recommendation_html_contents": Some(
                 "<div>deliberation recommendation description</div>".to_string(),
             ),
-            recommendation_files: vec![File {
+            "recommendation_files": vec![File {
                 name: "deliberation recommendation file title".to_string(),
                 size: "15KB".to_string(),
-                ext: dto::FileExtension::PDF,
+                ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
-        }),
-    )
-    .await
-    .unwrap();
+        },
+        response_type: DeliberationDetailResponse,
+    };
 
-    let space_pk = create_deliberation.0.metadata.deliberation.pk;
-    let survey_pk = update_deliberation.0.surveys.pk;
+    assert_eq!(status, 200);
 
-    let create_response_answer = create_response_answer_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationResponsePath {
-            deliberation_id: space_pk.clone(),
-        }),
-        Json(CreateResponseAnswerRequest {
-            survey_id: survey_pk.clone(),
-            survey_type: crate::types::SurveyType::Survey,
-            answers: vec![
+    let space_pk = body.deliberation.pk;
+    let survey_pk = body.surveys.pk;
+
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let path = format!("/v3/spaces/deliberation/{}/responses", space_pk_encoded);
+
+    let (status, _headers, body) = post! (
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "survey_pk": survey_pk,
+            "survey_type": crate::types::SurveyType::Survey,
+            "answers": vec![
                 SurveyAnswer::SingleChoice { answer: Some(1) },
                 SurveyAnswer::MultipleChoice {
                     answer: Some(vec![1]),
                 },
             ],
-        }),
-    )
-    .await;
-
-    assert!(
-        create_response_answer.is_ok(),
-        "Failed to create response answer {:?}",
-        create_response_answer.err()
+        },
+        response_type: CreateDeliberationResponse,
     );
 
-    let resp = create_response_answer.as_ref().expect("request failed"); // &Json<...>
-    let meta = &resp.0.metadata;
+    assert_eq!(status, 200);
+
+    let meta = &body.metadata;
 
     assert_eq!(
         meta.surveys.user_responses.len(),
@@ -307,20 +355,25 @@ async fn test_get_response_answer_handler() {
         "Failed to match response answer length"
     );
 
-    let response_answer = get_response_answer_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationResponseByIdPath {
-            deliberation_id: space_pk.clone(),
-            id: meta.surveys.user_responses[0].pk.clone(),
-        }),
-    )
-    .await;
+    let response_pk = body.metadata.surveys.user_responses[0].pk.clone();
 
-    eprintln!("response_answer: {:?}", response_answer);
+    let response_pk_encoded = response_pk.to_string().replace('#', "%23");
+    eprintln!("response pk encoded: {:?}", response_pk_encoded.clone());
+    let path = format!(
+        "/v3/spaces/deliberation/{}/responses/{}",
+        space_pk_encoded, response_pk_encoded
+    );
 
-    let resp = response_answer.as_ref().expect("request failed"); // &Json<...>
-    let meta = &resp.0.answers;
+    let (_status, _headers, body) = get! (
+        app: app,
+        path: path.clone(),
+        headers: headers,
+        response_type: DeliberationSpaceResponse
+    );
+
+    eprintln!("response_answer: {:?}", body);
+
+    let meta = &body.answers;
 
     assert_eq!(
         meta.len(),

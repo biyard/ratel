@@ -26,7 +26,7 @@ macro_rules! call {
         use bdk::prelude::by_axum::axum;
 
         let mut req_builder = axum::http::Request::builder()
-            .uri(concat!("http://localhost:3000", $path))
+            .uri(format!("http://localhost:3000{}", $path))
             .method($method);
 
         if let Some(headers_mut) = req_builder.headers_mut() {
@@ -185,6 +185,21 @@ macro_rules! post {
 /// Usage: get! { app: ..., path: ..., headers: ... }
 #[macro_export]
 macro_rules! get {
+    (
+        app: $app:expr,
+        path: $path:expr,
+        headers: $headers:expr,
+        response_type: $resp_ty:ty $(,)?
+    ) => {{
+        let (status, headers, text) = $crate::send! {
+            app: $app,
+            method: "GET",
+            path: $path,
+            headers: $headers,
+        };
+        let parsed = serde_json::from_str::<$resp_ty>(&text).unwrap();
+        (status, headers, parsed)
+    }};
     (
         app: $app:expr,
         path: $path:expr,

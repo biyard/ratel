@@ -1,41 +1,55 @@
+use bdk::prelude::axum::{Extension, Json, extract::State};
+
 use crate::{
-    controllers::v3::spaces::deliberations::{
-        create_deliberation::{CreateDeliberationRequest, create_deliberation_handler},
-        discussions::{
-            create_discussion::{
-                CreateDiscussionRequest, DeliberationDiscussionPath, create_discussion_handler,
-            },
-            end_recording::end_recording_handler,
-            exit_meeting::exit_meeting_handler,
-            participant_meeting::participant_meeting_handler,
-            start_meeting::{DeliberationDiscussionByIdPath, start_meeting_handler},
-            start_recording::start_recording_handler,
-        },
+    controllers::v3::{
+        posts::create_post::{CreatePostRequest, create_post_handler},
+        spaces::deliberations::create_deliberation::CreateDeliberationResponse,
     },
-    tests::{create_app_state, create_test_user, get_auth},
+    models::space::DeliberationDiscussionResponse,
+    post,
+    tests::{
+        create_app_state, create_test_user, get_auth,
+        v3_setup::{TestContextV3, setup_v3},
+    },
     types::Partition,
-};
-use dto::by_axum::axum::{
-    Json,
-    extract::{Extension, Path, State},
 };
 
 #[tokio::test]
 async fn test_create_discussion_handler() {
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    //FIXME: fix by session and one test code
     let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
-    let auth = get_auth(&user.clone());
-    let uid = uuid::Uuid::new_v4().to_string();
-    let create_deliberation = create_deliberation_handler(
+    let cli = &app_state.dynamo.client;
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
         State(app_state.clone()),
         Extension(Some(auth.clone())),
-        Json(CreateDeliberationRequest { feed_id: uid }),
+        Json(CreatePostRequest { team_pk: None }),
     )
-    .await
-    .unwrap();
+    .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
 
-    let space_pk = create_deliberation.0.metadata.deliberation.pk.clone();
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/spaces/deliberation",
+        headers: headers.clone(),
+        body: {
+            "feed_pk": feed_pk
+        },
+        response_type: CreateDeliberationResponse
+    };
+
+    assert_eq!(status, 200);
+
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {
@@ -48,46 +62,66 @@ async fn test_create_discussion_handler() {
     };
 
     let members = vec![team_1, team_2];
+    let space_pk = body.metadata.deliberation.pk;
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let path = format!("/v3/spaces/deliberation/{}/discussions", space_pk_encoded);
 
-    let create_discussion = create_discussion_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionPath {
-            deliberation_id: space_pk.to_string(),
-        }),
-        Json(CreateDiscussionRequest {
-            name: "Test discussion title".to_string(),
-            description: "Test disscussion description".to_string(),
-            started_at: now,
-            ended_at: now + 3600,
-            members,
-        }),
-    )
-    .await;
+    eprintln!("space_pk_encoded: {:?}", space_pk_encoded);
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "name": "Test discussion title",
+            "description": "Test discussion description",
+            "started_at": now,
+            "ended_at": now + 3600,
+            "members": members
+        },
+        response_type: DeliberationDiscussionResponse
+    };
 
-    assert!(
-        create_discussion.is_ok(),
-        "Failed to create discussion {:?}",
-        create_discussion.err()
-    );
+    eprintln!("create discussion: {:?}", body);
+
+    assert_eq!(status, 200);
 }
 
 #[tokio::test]
 async fn test_start_meeting_handler() {
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    //FIXME: fix by session and one test code
     let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
-    let auth = get_auth(&user.clone());
-    let uid = uuid::Uuid::new_v4().to_string();
-    let create_deliberation = create_deliberation_handler(
+    let cli = &app_state.dynamo.client;
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
         State(app_state.clone()),
         Extension(Some(auth.clone())),
-        Json(CreateDeliberationRequest { feed_id: uid }),
+        Json(CreatePostRequest { team_pk: None }),
     )
-    .await
-    .unwrap();
+    .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
 
-    let space_pk = create_deliberation.0.metadata.deliberation.pk.clone();
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/spaces/deliberation",
+        headers: headers.clone(),
+        body: {
+            "feed_pk": feed_pk
+        },
+        response_type: CreateDeliberationResponse
+    };
+
+    assert_eq!(status, 200);
+
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {
@@ -100,72 +134,83 @@ async fn test_start_meeting_handler() {
     };
 
     let members = vec![team_1, team_2];
+    let space_pk = body.metadata.deliberation.pk;
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let path = format!("/v3/spaces/deliberation/{}/discussions", space_pk_encoded);
 
-    let create_discussion = create_discussion_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionPath {
-            deliberation_id: space_pk.to_string(),
-        }),
-        Json(CreateDiscussionRequest {
-            name: "Test discussion title".to_string(),
-            description: "Test disscussion description".to_string(),
-            started_at: now,
-            ended_at: now + 3600,
-            members,
-        }),
-    )
-    .await;
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "name": "Test discussion title",
+            "description": "Test discussion description",
+            "started_at": now,
+            "ended_at": now + 3600,
+            "members": members
+        },
+        response_type: DeliberationDiscussionResponse
+    };
 
-    assert!(
-        create_discussion.is_ok(),
-        "Failed to create discussion {:?}",
-        create_discussion.err()
+    assert_eq!(status, 200);
+
+    let discussion_pk = body.pk;
+    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
+
+    let path = format!(
+        "/v3/spaces/deliberation/{}/discussions/{}/start-meeting",
+        space_pk_encoded, discussion_pk_encoded
     );
 
-    let discussion = create_discussion.unwrap().0;
-    let pk = discussion.pk;
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {},
+        response_type: DeliberationDiscussionResponse
+    };
 
-    let start_meeting = start_meeting_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.to_string(),
-            id: pk.to_string(),
-        }),
-    )
-    .await;
+    assert_eq!(status, 200);
 
-    assert!(
-        start_meeting.is_ok(),
-        "Failed to start meeting {:?}",
-        start_meeting.err()
-    );
-
-    let start_meeting = start_meeting.unwrap().0;
-
-    assert!(
-        start_meeting.members.len() == 2,
-        "Meeting count is not matched"
-    );
+    assert!(body.members.len() == 2, "Meeting count is not matched");
 }
 
 #[tokio::test]
 async fn test_create_participants_handler() {
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    //FIXME: fix by session and one test code
     let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
-    let auth = get_auth(&user.clone());
-    let uid = uuid::Uuid::new_v4().to_string();
-    let create_deliberation = create_deliberation_handler(
+    let cli = &app_state.dynamo.client;
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
         State(app_state.clone()),
         Extension(Some(auth.clone())),
-        Json(CreateDeliberationRequest { feed_id: uid }),
+        Json(CreatePostRequest { team_pk: None }),
     )
-    .await
-    .unwrap();
+    .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
 
-    let space_pk = create_deliberation.0.metadata.deliberation.pk.clone();
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/spaces/deliberation",
+        headers: headers.clone(),
+        body: {
+            "feed_pk": feed_pk
+        },
+        response_type: CreateDeliberationResponse
+    };
+
+    assert_eq!(status, 200);
+
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {
@@ -178,90 +223,88 @@ async fn test_create_participants_handler() {
     };
 
     let members = vec![team_1, team_2];
+    let space_pk = body.metadata.deliberation.pk;
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let path = format!("/v3/spaces/deliberation/{}/discussions", space_pk_encoded);
 
-    let create_discussion = create_discussion_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionPath {
-            deliberation_id: space_pk.to_string(),
-        }),
-        Json(CreateDiscussionRequest {
-            name: "Test discussion title".to_string(),
-            description: "Test disscussion description".to_string(),
-            started_at: now,
-            ended_at: now + 3600,
-            members,
-        }),
-    )
-    .await;
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "name": "Test discussion title",
+            "description": "Test discussion description",
+            "started_at": now,
+            "ended_at": now + 3600,
+            "members": members
+        },
+        response_type: DeliberationDiscussionResponse
+    };
 
-    assert!(
-        create_discussion.is_ok(),
-        "Failed to create discussion {:?}",
-        create_discussion.err()
+    assert_eq!(status, 200);
+
+    let discussion_pk = body.pk;
+    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
+
+    let path = format!(
+        "/v3/spaces/deliberation/{}/discussions/{}/participant-meeting",
+        space_pk_encoded, discussion_pk_encoded
     );
 
-    let discussion = create_discussion.unwrap().0;
-    let pk = discussion.pk;
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {},
+        response_type: DeliberationDiscussionResponse
+    };
 
-    let start_meeting = start_meeting_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.to_string(),
-            id: pk.to_string(),
-        }),
-    )
-    .await;
+    assert_eq!(status, 200);
 
-    assert!(
-        start_meeting.is_ok(),
-        "Failed to start meeting {:?}",
-        start_meeting.err()
-    );
-
-    let participant_meeting = participant_meeting_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.to_string(),
-            id: pk.to_string(),
-        }),
-    )
-    .await;
+    eprintln!("participant meeting: {:?}", body);
 
     assert!(
-        participant_meeting.is_ok(),
-        "Failed to participant meeting {:?}",
-        participant_meeting.err()
-    );
-
-    let participant_meeting = participant_meeting.unwrap().0;
-
-    eprintln!("participant meeting: {:?}", participant_meeting);
-
-    assert!(
-        participant_meeting.participants.len() == 1,
+        body.participants.len() == 1,
         "Failed to participant meeting",
     );
 }
 
 #[tokio::test]
 async fn test_exit_meeting_handler() {
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    //FIXME: fix by session and one test code
     let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
-    let auth = get_auth(&user.clone());
-    let uid = uuid::Uuid::new_v4().to_string();
-    let create_deliberation = create_deliberation_handler(
+    let cli = &app_state.dynamo.client;
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
         State(app_state.clone()),
         Extension(Some(auth.clone())),
-        Json(CreateDeliberationRequest { feed_id: uid }),
+        Json(CreatePostRequest { team_pk: None }),
     )
-    .await
-    .unwrap();
+    .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
 
-    let space_pk = create_deliberation.0.metadata.deliberation.pk.clone();
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/spaces/deliberation",
+        headers: headers.clone(),
+        body: {
+            "feed_pk": feed_pk
+        },
+        response_type: CreateDeliberationResponse
+    };
+
+    assert_eq!(status, 200);
+
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {
@@ -274,130 +317,185 @@ async fn test_exit_meeting_handler() {
     };
 
     let members = vec![team_1, team_2];
+    let space_pk = body.metadata.deliberation.pk;
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let path = format!("/v3/spaces/deliberation/{}/discussions", space_pk_encoded);
 
-    let create_discussion = create_discussion_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionPath {
-            deliberation_id: space_pk.to_string(),
-        }),
-        Json(CreateDiscussionRequest {
-            name: "Test discussion title".to_string(),
-            description: "Test disscussion description".to_string(),
-            started_at: now,
-            ended_at: now + 3600,
-            members,
-        }),
-    )
-    .await;
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "name": "Test discussion title",
+            "description": "Test discussion description",
+            "started_at": now,
+            "ended_at": now + 3600,
+            "members": members
+        },
+        response_type: DeliberationDiscussionResponse
+    };
 
-    assert!(
-        create_discussion.is_ok(),
-        "Failed to create discussion {:?}",
-        create_discussion.err()
+    assert_eq!(status, 200);
+
+    let discussion_pk = body.pk;
+    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
+
+    let path = format!(
+        "/v3/spaces/deliberation/{}/discussions/{}/start-meeting",
+        space_pk_encoded, discussion_pk_encoded
     );
 
-    let discussion = create_discussion.unwrap().0;
-    let pk = discussion.pk;
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {},
+        response_type: DeliberationDiscussionResponse
+    };
 
-    let start_meeting = start_meeting_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.to_string(),
-            id: pk.to_string(),
-        }),
-    )
-    .await;
+    assert_eq!(status, 200);
 
-    assert!(
-        start_meeting.is_ok(),
-        "Failed to start meeting {:?}",
-        start_meeting.err()
+    let path = format!(
+        "/v3/spaces/deliberation/{}/discussions/{}/participant-meeting",
+        space_pk_encoded, discussion_pk_encoded
     );
 
-    let joined = participant_meeting_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.clone(),
-            id: pk.clone(),
-        }),
-    )
-    .await;
-    assert!(
-        joined.is_ok(),
-        "participant_meeting failed: {:?}",
-        joined.err()
-    );
-    let me_after_join = joined.unwrap().0;
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {},
+        response_type: DeliberationDiscussionResponse
+    };
 
-    let me_user_pk = me_after_join
+    assert_eq!(status, 200);
+
+    let me_user_pk: Partition = body
         .participants
         .iter()
-        .find(|p| !p.user_pk.is_empty())
-        .map(|p| p.user_pk.clone())
+        .find_map(|p| match &p.user_pk {
+            Partition::User(v) | Partition::Team(v) if !v.is_empty() => Some(p.user_pk.clone()),
+            _ => None,
+        })
         .unwrap_or_default();
 
     assert!(
-        me_after_join
-            .participants
-            .iter()
-            .any(|p| p.user_pk == me_user_pk),
+        body.participants.iter().any(|p| p.user_pk == me_user_pk),
         "self should be in participants after join"
     );
 
-    let exited = exit_meeting_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.clone(),
-            id: pk.clone(),
-        }),
-    )
-    .await;
-    assert!(exited.is_ok(), "exit_meeting failed: {:?}", exited.err());
-
-    let exited = exited.unwrap().0;
-
-    assert!(
-        exited.participants.len() == 0,
-        "not matched participants len",
+    let path = format!(
+        "/v3/spaces/deliberation/{}/discussions/{}/exit-meeting",
+        space_pk_encoded, discussion_pk_encoded
     );
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {},
+        response_type: DeliberationDiscussionResponse
+    };
+
+    assert_eq!(status, 200);
+
+    eprintln!("exited meeting: {:?}", body);
+
+    assert!(body.participants.len() == 0, "not matched participants len",);
 }
 
 #[tokio::test]
 async fn test_start_recording_handler() {
-    let (app_state, deliberation_id, discussion_id, auth) = setup_disc_with_meeting().await;
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
 
-    let _joined = participant_meeting_handler(
+    //FIXME: fix by session and one test code
+    let app_state = create_app_state();
+    let cli = &app_state.dynamo.client;
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
         State(app_state.clone()),
         Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionByIdPath {
-            deliberation_id: deliberation_id.clone(),
-            id: discussion_id.clone(),
-        }),
-    )
-    .await
-    .expect("participant_meeting failed");
-
-    let started_rec = start_recording_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionByIdPath {
-            deliberation_id: deliberation_id.clone(),
-            id: discussion_id.clone(),
-        }),
+        Json(CreatePostRequest { team_pk: None }),
     )
     .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
 
-    assert!(
-        started_rec.is_ok(),
-        "start_recording failed: {:?}",
-        started_rec.err()
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/spaces/deliberation",
+        headers: headers.clone(),
+        body: { "feed_pk": feed_pk },
+        response_type: CreateDeliberationResponse
+    };
+    assert_eq!(status, 200);
+
+    let space_pk = body.metadata.deliberation.pk.clone();
+    let now = chrono::Utc::now().timestamp();
+
+    let team_1 = match create_test_user(&cli).await.pk {
+        Partition::User(v) => v,
+        _ => String::new(),
+    };
+    let team_2 = match create_test_user(&cli).await.pk {
+        Partition::User(v) => v,
+        _ => String::new(),
+    };
+    let members = vec![team_1, team_2];
+
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let create_disc_path = format!("/v3/spaces/deliberation/{}/discussions", space_pk_encoded);
+
+    let (status, _headers, disc_body) = post! {
+        app: app,
+        path: create_disc_path,
+        headers: headers.clone(),
+        body: {
+            "name": "recording test",
+            "description": "recording test desc",
+            "started_at": now,
+            "ended_at": now + 3600,
+            "members": members
+        },
+        response_type: DeliberationDiscussionResponse
+    };
+    assert_eq!(status, 200);
+
+    let discussion_pk = disc_body.pk.clone();
+    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
+
+    let start_meeting_path = format!(
+        "/v3/spaces/deliberation/{}/discussions/{}/start-meeting",
+        space_pk_encoded, discussion_pk_encoded
     );
+    let (status, _headers, _started_meeting) = post! {
+        app: app,
+        path: start_meeting_path,
+        headers: headers.clone(),
+        body: {},
+        response_type: DeliberationDiscussionResponse
+    };
+    assert_eq!(status, 200);
 
-    let resp = started_rec.unwrap().0;
+    let start_recording_path = format!(
+        "/v3/spaces/deliberation/{}/discussions/{}/start-recording",
+        space_pk_encoded, discussion_pk_encoded
+    );
+    let (status, _headers, resp) = post! {
+        app: app,
+        path: start_recording_path,
+        headers: headers.clone(),
+        body: {},
+        response_type: DeliberationDiscussionResponse
+    };
+    assert_eq!(status, 200);
     assert!(
         !resp.members.is_empty(),
         "members should be present in response"
@@ -406,108 +504,111 @@ async fn test_start_recording_handler() {
 
 #[tokio::test]
 async fn test_end_recording_handler() {
-    let (app_state, deliberation_id, discussion_id, auth) = setup_disc_with_meeting().await;
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
 
-    let _ = start_recording_handler(
+    //FIXME: fix by session and one test code
+    let app_state = create_app_state();
+    let cli = &app_state.dynamo.client;
+    let auth = get_auth(&user);
+
+    let post = create_post_handler(
         State(app_state.clone()),
         Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionByIdPath {
-            deliberation_id: deliberation_id.clone(),
-            id: discussion_id.clone(),
-        }),
-    )
-    .await
-    .expect("start_recording failed");
-
-    let ended_rec = end_recording_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionByIdPath {
-            deliberation_id: deliberation_id.clone(),
-            id: discussion_id.clone(),
-        }),
+        Json(CreatePostRequest { team_pk: None }),
     )
     .await;
+    assert!(post.is_ok(), "Failed to create post: {:?}", post);
 
-    assert!(
-        ended_rec.is_ok(),
-        "end_recording failed: {:?}",
-        ended_rec.err()
+    let feed_pk = post.unwrap().post_pk.clone();
+
+    // SPACE
+    let (status, _headers, created_space) = post! {
+        app: app,
+        path: "/v3/spaces/deliberation",
+        headers: headers.clone(),
+        body: { "feed_pk": feed_pk },
+        response_type: CreateDeliberationResponse
+    };
+    assert_eq!(status, 200);
+
+    let space_pk = created_space.metadata.deliberation.pk.clone();
+    let now = chrono::Utc::now().timestamp();
+
+    let team_1 = match create_test_user(&cli).await.pk {
+        Partition::User(v) => v,
+        _ => String::new(),
+    };
+    let team_2 = match create_test_user(&cli).await.pk {
+        Partition::User(v) => v,
+        _ => String::new(),
+    };
+    let members = vec![team_1, team_2];
+
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let create_disc_path = format!("/v3/spaces/deliberation/{}/discussions", space_pk_encoded);
+
+    let (status, _headers, disc_body) = post! {
+        app: app,
+        path: create_disc_path,
+        headers: headers.clone(),
+        body: {
+            "name": "recording test",
+            "description": "recording test desc",
+            "started_at": now,
+            "ended_at": now + 3600,
+            "members": members
+        },
+        response_type: DeliberationDiscussionResponse
+    };
+    assert_eq!(status, 200);
+
+    let discussion_pk = disc_body.pk.clone();
+    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
+
+    let start_meeting_path = format!(
+        "/v3/spaces/deliberation/{}/discussions/{}/start-meeting",
+        space_pk_encoded, discussion_pk_encoded
     );
+    let (status, _, _) = post! {
+        app: app,
+        path: start_meeting_path,
+        headers: headers.clone(),
+        body: {},
+        response_type: DeliberationDiscussionResponse
+    };
+    assert_eq!(status, 200);
 
-    let resp = ended_rec.unwrap().0;
+    let start_recording_path = format!(
+        "/v3/spaces/deliberation/{}/discussions/{}/start-recording",
+        space_pk_encoded, discussion_pk_encoded
+    );
+    let (status, _, _) = post! {
+        app: app,
+        path: start_recording_path,
+        headers: headers.clone(),
+        body: {},
+        response_type: DeliberationDiscussionResponse
+    };
+    assert_eq!(status, 200);
+
+    let end_recording_path = format!(
+        "/v3/spaces/deliberation/{}/discussions/{}/end-recording",
+        space_pk_encoded, discussion_pk_encoded
+    );
+    let (status, _headers, resp) = post! {
+        app: app,
+        path: end_recording_path,
+        headers: headers.clone(),
+        body: {},
+        response_type: DeliberationDiscussionResponse
+    };
+    assert_eq!(status, 200);
     assert!(
         !resp.members.is_empty(),
         "members should be present after ending recording"
     );
-}
-
-fn upk(pk: Partition) -> String {
-    match pk {
-        Partition::User(v) | Partition::Team(v) => v,
-        _ => String::new(),
-    }
-}
-
-async fn setup_disc_with_meeting() -> (
-    crate::AppState,
-    String,
-    String,
-    dto::by_axum::auth::Authorization,
-) {
-    let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-
-    let user = create_test_user(&cli).await;
-    let auth = get_auth(&user.clone());
-    let uid = uuid::Uuid::new_v4().to_string();
-
-    let created_space = create_deliberation_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Json(CreateDeliberationRequest { feed_id: uid }),
-    )
-    .await
-    .expect("create_deliberation failed");
-
-    let space_pk = created_space.0.metadata.deliberation.pk.clone();
-
-    let now = chrono::Utc::now().timestamp();
-    let members = vec![
-        upk(create_test_user(&cli).await.pk),
-        upk(create_test_user(&cli).await.pk),
-    ];
-
-    let created_disc = create_discussion_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionPath {
-            deliberation_id: space_pk.to_string(),
-        }),
-        Json(CreateDiscussionRequest {
-            name: "recording test".into(),
-            description: "recording test desc".into(),
-            started_at: now,
-            ended_at: now + 3600,
-            members,
-        }),
-    )
-    .await
-    .expect("create_discussion failed");
-
-    let disc_id = created_disc.0.pk;
-
-    let started = start_meeting_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Path(DeliberationDiscussionByIdPath {
-            deliberation_id: space_pk.to_string(),
-            id: disc_id.to_string(),
-        }),
-    )
-    .await;
-
-    assert!(started.is_ok(), "start_meeting failed: {:?}", started.err());
-
-    (app_state, space_pk.to_string(), disc_id.to_string(), auth)
 }

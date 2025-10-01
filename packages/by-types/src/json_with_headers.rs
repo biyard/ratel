@@ -109,11 +109,11 @@ impl<T> schemars::JsonSchema for JsonWithHeaders<T>
 where
     T: schemars::JsonSchema,
 {
-    fn schema_name() -> String {
+    fn schema_name() -> std::borrow::Cow<'static, str> {
         T::schema_name()
     }
 
-    fn json_schema(gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
+    fn json_schema(gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
         T::json_schema(gen)
     }
 }

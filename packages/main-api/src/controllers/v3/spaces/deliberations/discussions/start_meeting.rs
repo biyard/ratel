@@ -9,38 +9,47 @@ use crate::{
     types::{EntityType, Partition},
     utils::aws::DynamoClient,
 };
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Json, Path, State},
-    },
+use bdk::prelude::axum::{
+    Extension,
+    extract::{Json, Path, State},
 };
-
-use dto::{aide, schemars};
+use bdk::prelude::*;
+use tower_sessions::Session;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationDiscussionByIdPath {
-    pub deliberation_id: String,
-    pub id: String,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub space_pk: Partition,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub discussion_pk: Partition,
 }
 
 pub async fn start_meeting_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(_auth): Extension<Option<Authorization>>,
+    Extension(_session): Extension<Session>,
     Path(DeliberationDiscussionByIdPath {
-        deliberation_id,
-        id,
+        space_pk,
+        discussion_pk,
     }): Path<DeliberationDiscussionByIdPath>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
+    let space_id = match space_pk.clone() {
+        Partition::DeliberationSpace(v) => v,
+        _ => "".to_string(),
+    };
+    let discussion_id = match discussion_pk {
+        Partition::Discussion(v) => v,
+        _ => "".to_string(),
+    };
 
     let disc = DeliberationSpaceDiscussion::get(
         &dynamo.client,
-        &Partition::DeliberationSpace(deliberation_id.to_string()),
-        Some(EntityType::DeliberationSpaceDiscussion(id.to_string())),
+        &space_pk,
+        Some(EntityType::DeliberationSpaceDiscussion(
+            discussion_id.to_string(),
+        )),
     )
     .await?;
 
@@ -53,16 +62,18 @@ pub async fn start_meeting_handler(
     let _ = ensure_current_meeting(
         dynamo.clone(),
         &client,
-        deliberation_id.clone(),
-        id.clone(),
+        space_id.clone(),
+        discussion_id.clone(),
         &disc,
     )
     .await;
 
     let disc = DeliberationSpaceDiscussion::get(
         &dynamo.client,
-        &Partition::DeliberationSpace(deliberation_id.to_string()),
-        Some(EntityType::DeliberationSpaceDiscussion(id.to_string())),
+        &space_pk,
+        Some(EntityType::DeliberationSpaceDiscussion(
+            discussion_id.to_string(),
+        )),
     )
     .await?;
 
