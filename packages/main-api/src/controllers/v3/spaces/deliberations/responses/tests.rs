@@ -34,7 +34,7 @@ async fn test_create_response_answer_handler() {
     let app_state = create_app_state();
     let auth = get_auth(&user);
 
-    let (status, headers, post) = crate::post! {
+    let (status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -201,7 +201,7 @@ async fn test_get_response_answer_handler() {
     let app_state = create_app_state();
     let auth = get_auth(&user);
 
-    let (status, headers, post) = crate::post! {
+    let (status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
