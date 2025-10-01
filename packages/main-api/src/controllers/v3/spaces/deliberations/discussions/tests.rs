@@ -27,7 +27,7 @@ async fn test_create_discussion_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let (status, headers, post) = crate::post! {
+    let (status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -98,7 +98,7 @@ async fn test_start_meeting_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let (status, headers, post) = crate::post! {
+    let (status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -186,7 +186,7 @@ async fn test_create_participants_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let (status, headers, post) = crate::post! {
+    let (status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -279,7 +279,7 @@ async fn test_exit_meeting_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let (status, headers, post) = crate::post! {
+    let (status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -413,7 +413,7 @@ async fn test_start_recording_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let (status, headers, post) = crate::post! {
+    let (status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -510,7 +510,7 @@ async fn test_end_recording_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let (status, headers, post) = crate::post! {
+    let (status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
