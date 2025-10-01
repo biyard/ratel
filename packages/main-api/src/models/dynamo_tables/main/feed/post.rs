@@ -1,4 +1,8 @@
-use crate::types::{sorted_visibility::SortedVisibility, *};
+use crate::{
+    Error2,
+    models::team::Team,
+    types::{author::Author, sorted_visibility::SortedVisibility, *},
+};
 use bdk::prelude::*;
 
 #[derive(
@@ -51,6 +55,10 @@ pub struct Post {
 }
 
 impl Post {
+    pub fn draft(author: Author) -> Self {
+        Self::new("", "", PostType::Post, author)
+    }
+
     pub fn new<T: Into<String>, A: Into<Author>>(
         title: T,
         html_contents: T,
@@ -90,6 +98,40 @@ impl Post {
             rewards: None,
             sorted_visibility: SortedVisibility::Draft(now.to_string()),
             urls: vec![],
+        }
+    }
+
+    pub async fn has_permission(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: &Partition,
+        user_pk: Option<&Partition>,
+        perm: TeamGroupPermission,
+    ) -> Result<(Self, bool), crate::Error2> {
+        let post = Post::get(cli, post_pk, Some(EntityType::Post))
+            .await?
+            .ok_or(Error2::NotFound("Post not found".to_string()))?;
+
+        let user_pk = if let Some(user_pk) = user_pk {
+            user_pk
+        } else {
+            if let Some(Visibility::Public) = post.visibility {
+                return Ok((post, true));
+            } else {
+                return Ok((post, false));
+            }
+        };
+
+        match post.user_pk.clone() {
+            Partition::Team(pk) => {
+                let has_perm =
+                    Team::has_permission(cli, &Partition::Team(pk.clone()), &user_pk, perm).await?;
+                Ok((post, has_perm))
+            }
+            Partition::User(_) => {
+                let has_perm = &post.user_pk == user_pk;
+                Ok((post, has_perm))
+            }
+            _ => Err(Error2::InternalServerError("Invalid post author".into())),
         }
     }
 }
