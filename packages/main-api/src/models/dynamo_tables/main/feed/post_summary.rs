@@ -25,10 +25,10 @@ pub enum PostMetadata {
     PostLike(PostLike),
 }
 
-#[derive(Default, Debug, Clone, serde::Serialize, JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, JsonSchema)]
 pub struct PostDetailResponse {
     #[serde(flatten)]
-    pub post: Post,
+    pub post: Option<Post>,
     pub author: PostAuthor,
     pub comments: Vec<PostComment>,
     pub artwork_metadata: Vec<PostArtworkMetadata>,
@@ -41,7 +41,7 @@ impl From<Vec<PostMetadata>> for PostDetailResponse {
         let mut res = Self::default();
         for item in items {
             match item {
-                PostMetadata::Post(post) => res.post = post,
+                PostMetadata::Post(post) => res.post = Some(post),
                 PostMetadata::PostAuthor(author) => res.author = author,
                 PostMetadata::PostComment(comment) => res.comments.push(comment),
                 PostMetadata::PostArtwork(artwork) => res.artwork_metadata = artwork.metadata,
