@@ -1,3 +1,4 @@
+use crate::controllers::v3::posts::create_post::CreatePostResponse;
 use crate::types::File;
 use crate::{
     controllers::v3::{
@@ -20,8 +21,6 @@ use crate::{
     },
 };
 
-use bdk::prelude::axum::{Extension, Json, extract::State};
-
 #[tokio::test]
 async fn test_create_space_handler() {
     let TestContextV3 {
@@ -34,15 +33,14 @@ async fn test_create_space_handler() {
     let app_state = create_app_state();
     let auth = get_auth(&user);
 
-    let post = create_post_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Json(CreatePostRequest { team_pk: None }),
-    )
-    .await;
-    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+    let (status, headers, post) = crate::post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse,
+    };
 
-    let feed_pk = post.unwrap().post_pk.clone();
+    let feed_pk = post.post_pk.clone();
 
     eprintln!("feed pk: {:?}", feed_pk);
 
@@ -73,15 +71,14 @@ async fn test_update_space_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let post = create_post_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Json(CreatePostRequest { team_pk: None }),
-    )
-    .await;
-    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+    let (status, headers, post) = crate::post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse,
+    };
 
-    let feed_pk = post.unwrap().post_pk.clone();
+    let feed_pk = post.post_pk.clone();
 
     // SPACE
 
@@ -335,15 +332,14 @@ async fn test_delete_space_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let post = create_post_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Json(CreatePostRequest { team_pk: None }),
-    )
-    .await;
-    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+    let (status, headers, post) = crate::post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse,
+    };
 
-    let feed_pk = post.unwrap().post_pk.clone();
+    let feed_pk = post.post_pk.clone();
 
     // SPACE
 
@@ -489,15 +485,14 @@ async fn test_get_space_handler() {
     let app_state = create_app_state();
     let auth = get_auth(&user);
 
-    let post = create_post_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Json(CreatePostRequest { team_pk: None }),
-    )
-    .await;
-    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+    let (status, headers, post) = crate::post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse,
+    };
 
-    let feed_pk = post.unwrap().post_pk.clone();
+    let feed_pk = post.post_pk.clone();
 
     // SPACE
     let (status, _headers, body) = post! {

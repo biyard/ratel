@@ -100,6 +100,7 @@ impl FromRequestParts<AppState> for Option<User> {
         parts: &mut Parts,
         _state: &AppState,
     ) -> Result<Self, Self::Rejection> {
+        tracing::debug!("extracting optional user from request parts");
         let session = Session::from_request_parts(parts, _state).await;
 
         if let Err(_e) = &session {
@@ -109,6 +110,7 @@ impl FromRequestParts<AppState> for Option<User> {
         let session = session.unwrap();
 
         let user_pk: Partition = if let Ok(Some(u)) = session.get(SESSION_KEY_USER_ID).await {
+            tracing::debug!("found user id in session: {:?}", u);
             u
         } else {
             let _ = session.flush().await;
@@ -136,6 +138,7 @@ impl FromRequestParts<AppState> for User {
         parts: &mut Parts,
         _state: &AppState,
     ) -> Result<Self, Self::Rejection> {
+        tracing::debug!("extracting user from request parts");
         let session = Session::from_request_parts(parts, _state)
             .await
             .map_err(|e| {

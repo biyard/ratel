@@ -1,3 +1,4 @@
+#![allow(warnings)]
 use crate::{
     AppState, Error2,
     models::{feed::Post, team::Team, user::User},
@@ -10,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, serde::Serialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreatePostRequest {
-    pub team_pk: Option<Partition>,
+    pub team_pk: Partition,
 }
 
 #[derive(Debug, Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema)]
@@ -21,10 +22,11 @@ pub struct CreatePostResponse {
 pub async fn create_post_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
-    Json(req): Json<CreatePostRequest>,
+    req: Option<Json<CreatePostRequest>>,
 ) -> Result<Json<CreatePostResponse>, Error2> {
+    tracing::info!("create_post_handler {:?}", req);
     let cli = &dynamo.client;
-    let author: Author = if let Some(team_pk) = req.team_pk {
+    let author: Author = if let Some(Json(CreatePostRequest { team_pk })) = req {
         Team::get_permitted_team(cli, team_pk, user.pk, TeamGroupPermission::PostWrite)
             .await?
             .into()
