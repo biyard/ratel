@@ -74,7 +74,7 @@ async fn test_create_discussion_handler() {
         headers: headers.clone(),
         body: {
             "name": "Test discussion title",
-            "description": "Test disscussion description",
+            "description": "Test discussion description",
             "started_at": now,
             "ended_at": now + 3600,
             "members": members
@@ -146,7 +146,7 @@ async fn test_start_meeting_handler() {
         headers: headers.clone(),
         body: {
             "name": "Test discussion title",
-            "description": "Test disscussion description",
+            "description": "Test discussion description",
             "started_at": now,
             "ended_at": now + 3600,
             "members": members
@@ -236,7 +236,7 @@ async fn test_create_participants_handler() {
         headers: headers.clone(),
         body: {
             "name": "Test discussion title",
-            "description": "Test disscussion description",
+            "description": "Test discussion description",
             "started_at": now,
             "ended_at": now + 3600,
             "members": members
@@ -331,7 +331,7 @@ async fn test_exit_meeting_handler() {
         headers: headers.clone(),
         body: {
             "name": "Test discussion title",
-            "description": "Test disscussion description",
+            "description": "Test discussion description",
             "started_at": now,
             "ended_at": now + 3600,
             "members": members

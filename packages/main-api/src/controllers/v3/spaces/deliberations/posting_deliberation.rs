@@ -4,7 +4,7 @@ use crate::{
     models::space::{
         DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace, SpaceCommon,
     },
-    types::{EntityType, Partition, TeamGroupPermission},
+    types::{EntityType, Partition, SpaceStatus, TeamGroupPermission},
     utils::{
         dynamo_extractor::extract_user_from_session,
         security::{RatelResource, check_permission_from_session},
@@ -35,8 +35,7 @@ pub async fn posting_deliberation_handler(
     Json(_req): Json<PostingDeliberationRequest>,
 ) -> Result<Json<PostingDeliberationResponse>, Error2> {
     let space_pk = decode(&space_pk).unwrap_or_default().to_string();
-    let user = extract_user_from_session(&dynamo.client, &session).await?;
-    tracing::debug!("User extracted: {:?}", user);
+    let _user = extract_user_from_session(&dynamo.client, &session).await?;
 
     let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
         .await?
@@ -65,7 +64,7 @@ pub async fn posting_deliberation_handler(
     };
 
     SpaceCommon::updater(&space_pk, EntityType::SpaceCommon)
-        .with_status(dto::SpaceStatus::InProgress)
+        .with_status(SpaceStatus::InProgress)
         .execute(&dynamo.client)
         .await?;
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
