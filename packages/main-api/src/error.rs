@@ -3,6 +3,10 @@ use thiserror::Error;
 
 #[derive(Debug, Error, RestError, aide::OperationIo)]
 pub enum Error {
+    #[error("Unknown")]
+    #[rest_error(code = 1)]
+    Unknown(String),
+
     #[error("DynamoDB error: {0}")]
     #[rest_error(code = 100)]
     DynamoDbError(#[from] aws_sdk_dynamodb::Error),
@@ -65,4 +69,10 @@ pub enum Error {
     #[error("Post visibility is incorrectly configured: {0}")]
     #[rest_error(code = 2000)]
     IncorrectConfiguredVisibility(String),
+}
+
+impl From<String> for Error {
+    fn from(s: String) -> Self {
+        Error::Unknown(s)
+    }
 }
