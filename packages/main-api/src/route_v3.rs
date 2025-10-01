@@ -15,6 +15,7 @@ use crate::controllers::v3::spaces::deliberations::responses::get_response_answe
 use crate::models::feed::Post;
 // use crate::models::feed::Post;
 use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
+use crate::models::user::User;
 use crate::types::list_items_response::ListItemsResponse;
 // use crate::types::list_items_response::ListItemsResponse;
 use crate::{
@@ -191,7 +192,17 @@ pub fn route(
         .nest(
             "/auth",
             Router::new()
-                .route("/login", post(login_handler))
+                .route(
+                    "/login",
+                    post_with(login_handler, |op| {
+                        op.id("Login")
+                            .description("User login")
+                            .summary("(V3) User login")
+                            .response::<200, Json<User>>()
+                            .response::<400, Error2>()
+                            .tag("AUTH")
+                    }),
+                )
                 .route("/logout", post(logout_handler))
                 .route("/signup", post(signup_handler))
                 .nest(
