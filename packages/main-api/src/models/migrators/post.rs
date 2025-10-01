@@ -52,7 +52,7 @@ pub async fn migrate_posts(
             url_type: _, // Skipped: url_type is not used in Post list view
             spaces,
             likes,
-            is_liked, // TODO: For user like document
+            is_liked,
             comments,
             comment_list: _, // NOTE: it will be migrated in getting specific posts
             files: _,        // Skipped: files are not used in Post list view
@@ -138,7 +138,7 @@ pub async fn migrate_posts(
         }
 
         if is_liked {
-            if let Err(e) = PostLike::new(post.pk.clone(), user.clone().unwrap())
+            if let Err(e) = PostLike::new(post.pk.clone(), user.clone().unwrap().pk)
                 .create(cli)
                 .await
             {
