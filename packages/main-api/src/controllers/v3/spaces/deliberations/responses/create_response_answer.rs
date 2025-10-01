@@ -19,13 +19,12 @@ use bdk::prelude::axum::{
 use bdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use tower_sessions::Session;
-use urlencoding::decode;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
 pub struct CreateResponseAnswerRequest {
     #[schemars(description = "Survey ID")]
-    pub survey_pk: String,
+    pub survey_pk: Partition,
     #[schemars(description = "Survey Type(Sample, Survey)")]
     pub survey_type: SurveyType,
     #[schemars(description = "Survey Answers")]
@@ -41,11 +40,9 @@ pub struct CreateDeliberationResponse {
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationResponsePath {
-    pub space_pk: String,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub space_pk: Partition,
 }
-
-const SPACE_PREFIX: &str = "DELIBERATION_SPACE#";
-const SURVEY_PREFIX: &str = "SURVEY#";
 
 pub async fn create_response_answer_handler(
     State(AppState { dynamo, .. }): State<AppState>,
@@ -53,17 +50,15 @@ pub async fn create_response_answer_handler(
     Path(DeliberationResponsePath { space_pk }): Path<DeliberationResponsePath>,
     Json(req): Json<CreateResponseAnswerRequest>,
 ) -> Result<Json<CreateDeliberationResponse>, Error2> {
-    let space_pk = decode(&space_pk).unwrap_or_default().to_string();
     let user = extract_user_from_session(&dynamo.client, &session).await?;
-    let pk_id = space_pk
-        .strip_prefix(SPACE_PREFIX)
-        .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
-        .to_string();
-    let survey_pk_id = req
-        .survey_pk
-        .strip_prefix(SURVEY_PREFIX)
-        .ok_or_else(|| Error2::BadRequest("Invalid survey_pk format".into()))?
-        .to_string();
+    let pk_id = match space_pk.clone() {
+        Partition::DeliberationSpace(v) => v,
+        _ => "".to_string(),
+    };
+    let survey_pk_id = match req.survey_pk {
+        Partition::Survey(v) => v,
+        _ => "".to_string(),
+    };
 
     let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
         .await?

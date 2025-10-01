@@ -17,13 +17,13 @@ use bdk::prelude::axum::{
 use bdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use tower_sessions::Session;
-use urlencoding::decode;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
 pub struct CreateDeliberationRequest {
     #[schemars(description = "Post ID")]
-    pub feed_pk: String,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub feed_pk: Partition,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
@@ -31,18 +31,16 @@ pub struct CreateDeliberationResponse {
     pub metadata: DeliberationDetailResponse,
 }
 
-const FEED_PREFIX: &str = "FEED#";
-
 pub async fn create_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<Session>,
     Json(req): Json<CreateDeliberationRequest>,
 ) -> Result<Json<CreateDeliberationResponse>, Error2> {
-    let feed_pk = decode(&req.feed_pk).unwrap_or_default().to_string();
-    let feed_id = feed_pk
-        .strip_prefix(FEED_PREFIX)
-        .ok_or_else(|| Error2::BadRequest("Invalid feed_pk format".into()))?
-        .to_string();
+    let feed_pk = req.clone().feed_pk;
+    let feed_id = match feed_pk.clone() {
+        Partition::Feed(v) => v,
+        _ => "".to_string(),
+    };
 
     let post = Post::get(&dynamo.client, &feed_pk, Some(EntityType::Post))
         .await?

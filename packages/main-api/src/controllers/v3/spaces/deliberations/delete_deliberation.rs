@@ -19,7 +19,6 @@ use bdk::prelude::axum::{
 use bdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use tower_sessions::Session;
-use urlencoding::decode;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct DeleteDeliberationResponse {
@@ -30,7 +29,8 @@ pub struct DeleteDeliberationResponse {
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationDeletePath {
-    pub space_pk: String,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub space_pk: Partition,
 }
 
 pub async fn delete_deliberation_handler(
@@ -38,7 +38,6 @@ pub async fn delete_deliberation_handler(
     Extension(session): Extension<Session>,
     Path(DeliberationDeletePath { space_pk }): Path<DeliberationDeletePath>,
 ) -> Result<Json<DeleteDeliberationResponse>, Error2> {
-    let space_pk = decode(&space_pk).unwrap_or_default().to_string();
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
 
     let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
@@ -103,5 +102,7 @@ pub async fn delete_deliberation_handler(
         }
     }
 
-    Ok(Json(DeleteDeliberationResponse { space_pk }))
+    Ok(Json(DeleteDeliberationResponse {
+        space_pk: space_pk.to_string(),
+    }))
 }

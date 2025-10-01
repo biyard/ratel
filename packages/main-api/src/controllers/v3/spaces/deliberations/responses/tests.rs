@@ -159,7 +159,7 @@ async fn test_create_response_answer_handler() {
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "survey_pk": survey_pk.to_string(),
+            "survey_pk": survey_pk,
             "survey_type": crate::types::SurveyType::Survey,
             "answers": vec![
                 SurveyAnswer::SingleChoice { answer: Some(1) },
@@ -328,7 +328,7 @@ async fn test_get_response_answer_handler() {
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "survey_pk": survey_pk.to_string(),
+            "survey_pk": survey_pk,
             "survey_type": crate::types::SurveyType::Survey,
             "answers": vec![
                 SurveyAnswer::SingleChoice { answer: Some(1) },
