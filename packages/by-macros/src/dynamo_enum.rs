@@ -17,6 +17,7 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
 
     let mut arms = Vec::new();
     let mut display_arms = Vec::new();
+    let mut inner_arms = Vec::new();
 
     let mut error_type = quote! { String };
 
@@ -57,6 +58,9 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
                     display_arms.push(quote! {
                         Self::#variant_name(value) => write!(f, "{}{}", #prefix, value),
                     });
+                    inner_arms.push(quote! {
+                        Self::#variant_name(v) => Ok(format!("{v}")),
+                    });
                 } else if l == 2 {
                     let prefix = format!(
                         "{}#",
@@ -86,17 +90,32 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
                             }
                         } ,
                     });
+
+                    inner_arms.push(quote! {
+                        Self::#variant_name(v1, v2) => {
+                            if v2.is_empty() {
+                                Ok(v1.clone())
+                            } else {
+                                Ok(format!("{}#{}", v1, v2))
+                            }
+                        },
+                    });
                 };
             }
             // Handle unit variants (no fields)
             syn::Fields::Unit => {
                 // For unit variants, match the exact string representation
-                let variant_str = variant_name.to_string();
+                let variant_str = variant_name
+                    .to_string()
+                    .to_case(convert_case::Case::UpperSnake);
                 arms.push(quote! {
                     #variant_str => #name::#variant_name,
                 });
                 display_arms.push(quote! {
-                    Self::#variant_name => write!(f, "{}", #variant_str),
+                    Self::#variant_name => write!(f, #variant_str),
+                });
+                inner_arms.push(quote! {
+                    Self::#variant_name => Err("Cannot extract inner value from unit variant".to_string())?,
                 });
             }
             _ => {
@@ -140,6 +159,14 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
                     #(#arms)*
                     #error_case
                 })
+            }
+        }
+
+        impl #name {
+            pub fn try_into_inner(&self) -> Result<String, crate::Error2> {
+                match self {
+                    #(#inner_arms)*
+                }
             }
         }
     };
