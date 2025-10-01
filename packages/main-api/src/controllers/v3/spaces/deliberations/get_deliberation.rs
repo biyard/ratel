@@ -15,13 +15,13 @@ use bdk::prelude::axum::{
 };
 use bdk::prelude::*;
 use tower_sessions::Session;
-use urlencoding::decode;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationGetPath {
-    pub space_pk: String,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub space_pk: Partition,
 }
 
 pub async fn get_deliberation_handler(
@@ -29,7 +29,6 @@ pub async fn get_deliberation_handler(
     Extension(session): Extension<Session>,
     Path(DeliberationGetPath { space_pk }): Path<DeliberationGetPath>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
-    let space_pk = decode(&space_pk).unwrap_or_default().to_string();
     tracing::debug!(
         "get_deliberation_handler called with space_pk: {}",
         space_pk

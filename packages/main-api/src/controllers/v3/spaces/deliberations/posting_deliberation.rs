@@ -17,7 +17,6 @@ use bdk::prelude::axum::{
 use bdk::prelude::*;
 use serde::{Deserialize, Serialize};
 use tower_sessions::Session;
-use urlencoding::decode;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -34,7 +33,7 @@ pub async fn posting_deliberation_handler(
     Path(DeliberationPath { space_pk }): Path<DeliberationPath>,
     Json(_req): Json<PostingDeliberationRequest>,
 ) -> Result<Json<PostingDeliberationResponse>, Error2> {
-    let space_pk = decode(&space_pk).unwrap_or_default().to_string();
+    let space_pk = space_pk.to_string();
     let _user = extract_user_from_session(&dynamo.client, &session).await?;
 
     let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))

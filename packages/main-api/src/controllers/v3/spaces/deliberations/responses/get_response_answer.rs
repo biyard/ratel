@@ -14,7 +14,6 @@ use bdk::prelude::axum::{
 use bdk::prelude::*;
 use serde::Deserialize;
 use tower_sessions::Session;
-use urlencoding::decode;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -27,11 +26,11 @@ pub struct GetResponseAnswerRequest {
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationResponseByIdPath {
-    pub space_pk: String,
-    pub response_pk: String,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub space_pk: Partition,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub response_pk: Partition,
 }
-
-const RESPONSE_PREFIX: &str = "SURVEY_RESPONSE#";
 
 pub async fn get_response_answer_handler(
     State(AppState { dynamo, .. }): State<AppState>,
@@ -41,12 +40,10 @@ pub async fn get_response_answer_handler(
         response_pk,
     }): Path<DeliberationResponseByIdPath>,
 ) -> Result<Json<DeliberationSpaceResponse>, Error2> {
-    let space_pk = decode(&space_pk).unwrap_or_default().to_string();
-    let response_pk = decode(&response_pk).unwrap_or_default().to_string();
-    let id = response_pk
-        .strip_prefix(RESPONSE_PREFIX)
-        .ok_or_else(|| Error2::BadRequest("Invalid response_pk format".into()))?
-        .to_string();
+    let id = match response_pk {
+        Partition::SurveyResponse(v) => v,
+        _ => "".to_string(),
+    };
     let response = DeliberationSpaceResponse::get(
         &dynamo.client,
         &space_pk,

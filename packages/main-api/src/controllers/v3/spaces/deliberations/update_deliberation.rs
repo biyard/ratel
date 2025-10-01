@@ -26,7 +26,6 @@ use bdk::prelude::axum::{
 use bdk::prelude::*;
 use serde::Deserialize;
 use tower_sessions::Session;
-use urlencoding::decode;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -63,7 +62,8 @@ pub struct UpdateDeliberationRequest {
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationPath {
-    pub space_pk: String,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub space_pk: Partition,
 }
 
 pub async fn update_deliberation_handler(
@@ -72,9 +72,6 @@ pub async fn update_deliberation_handler(
     Path(DeliberationPath { space_pk }): Path<DeliberationPath>,
     Json(req): Json<UpdateDeliberationRequest>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
-    let space_pk = decode(&space_pk)
-        .map_err(|_| Error2::BadRequest("Invalid space_pk encoding".into()))?
-        .into_owned();
     let user = extract_user_from_session(&dynamo.client, &session).await?;
     let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
         .await?
@@ -124,7 +121,7 @@ pub async fn update_deliberation_handler(
 
     update_summary(
         dynamo.clone(),
-        space_pk.clone(),
+        space_pk.to_string(),
         req.html_contents,
         req.files,
     )
@@ -132,15 +129,15 @@ pub async fn update_deliberation_handler(
     update_discussion(
         dynamo.clone(),
         user.clone(),
-        space_pk.clone(),
+        space_pk.to_string(),
         req.discussions,
     )
     .await?;
-    update_elearning(dynamo.clone(), space_pk.clone(), req.elearning_files).await?;
-    update_survey(dynamo.clone(), space_pk.clone(), req.surveys).await?;
+    update_elearning(dynamo.clone(), space_pk.to_string(), req.elearning_files).await?;
+    update_survey(dynamo.clone(), space_pk.to_string(), req.surveys).await?;
     update_recommendation(
         dynamo.clone(),
-        space_pk.clone(),
+        space_pk.to_string(),
         req.recommendation_html_contents.unwrap_or_default(),
         req.recommendation_files,
     )
