@@ -56,4 +56,30 @@ impl Team {
             description,
         }
     }
+
+    pub async fn get_permitted_team(
+        cli: &aws_sdk_dynamodb::Client,
+        team_pk: Partition,
+        _user_pk: Partition,
+        _perm: TeamGroupPermission,
+    ) -> Result<Self, crate::Error2> {
+        // TODO: Implement permission check logic
+
+        let team = Self::get(cli, team_pk, Some(EntityType::Team))
+            .await?
+            .ok_or(crate::Error2::TeamNotFound)?;
+
+        Ok(team)
+    }
+
+    pub async fn has_permission(
+        _cli: &aws_sdk_dynamodb::Client,
+        _team_pk: &Partition,
+        _user_pk: &Partition,
+        _perm: TeamGroupPermission,
+    ) -> Result<bool, crate::Error2> {
+        // TODO: Implement permission check logic
+
+        Ok(true)
+    }
 }
