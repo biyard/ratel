@@ -11,9 +11,8 @@ use bdk::prelude::*;
     Eq,
     PartialEq,
 )]
-pub enum SpaceStatus {
+pub enum SpacePublishState {
     #[default]
-    Waiting,
-    InProgress,
-    Finished,
+    Draft,
+    Published,
 }

@@ -53,13 +53,15 @@ pub enum EntityType {
     SpaceCommon,
 
     // Poll Space entity types
-    PollSpace,
+    // PollSpace,
+    PollSpaceSurvey,
+    PollSpaceSurveyResponse(String), //space_pk
 
     // Survery space entity types
     SurveySpace,
 
     // Deliberation space entity types
-    DeliberationSpace,
+    // DeliberationSpace,
     DeliberationSpaceSummary,
     DeliberationSpaceElearning,
     DeliberationSpaceRecommendation,

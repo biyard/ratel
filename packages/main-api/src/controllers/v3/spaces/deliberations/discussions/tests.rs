@@ -50,7 +50,6 @@ async fn test_create_discussion_handler() {
 
     assert_eq!(status, 200);
 
-    let _space_pk = body.metadata.deliberation.pk.clone();
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {
@@ -123,7 +122,6 @@ async fn test_start_meeting_handler() {
 
     assert_eq!(status, 200);
 
-    let _space_pk = body.metadata.deliberation.pk.clone();
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {
@@ -213,7 +211,6 @@ async fn test_create_participants_handler() {
 
     assert_eq!(status, 200);
 
-    let _space_pk = body.metadata.deliberation.pk.clone();
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {
@@ -308,7 +305,6 @@ async fn test_exit_meeting_handler() {
 
     assert_eq!(status, 200);
 
-    let _space_pk = body.metadata.deliberation.pk.clone();
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {

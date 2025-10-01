@@ -1,8 +1,7 @@
 use crate::{
     AppState, Error2,
     models::space::{
-        DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace,
-        DeliberationSpaceResponse, SpaceCommon,
+        DeliberationDetailResponse, DeliberationMetadata, DeliberationSpaceResponse, SpaceCommon,
     },
     types::{
         EntityType, Partition, SpaceVisibility, SurveyAnswer, SurveyType, TeamGroupPermission,
@@ -60,22 +59,18 @@ pub async fn create_response_answer_handler(
         _ => "".to_string(),
     };
 
-    let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
-        .await?
-        .ok_or(Error2::NotFound("Space not found".to_string()))?;
-
     let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
         .await?
         .ok_or(Error2::NotFound("Space not found".to_string()))?;
 
     if space_common.visibility != SpaceVisibility::Public {
-        let _ = match space.user_pk.clone() {
+        match space_common.user_pk.clone() {
             Partition::Team(_) => {
                 check_permission_from_session(
                     &dynamo.client,
                     &session,
                     RatelResource::Team {
-                        team_pk: space.user_pk.to_string(),
+                        team_pk: space_common.user_pk.to_string(),
                     },
                     vec![TeamGroupPermission::SpaceRead],
                 )
@@ -83,7 +78,7 @@ pub async fn create_response_answer_handler(
             }
             Partition::User(_) => {
                 let user = extract_user_from_session(&dynamo.client, &session).await?;
-                if user.pk != space.user_pk {
+                if user.pk != space_common.user_pk {
                     return Err(Error2::Unauthorized(
                         "You do not have permission to create response answer".into(),
                     ));

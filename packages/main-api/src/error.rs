@@ -71,6 +71,27 @@ pub enum Error {
     #[error("Post visibility is incorrectly configured: {0}")]
     #[rest_error(code = 2000)]
     IncorrectConfiguredVisibility(String),
+    #[error("Post not found")]
+    NotFoundPost,
+
+    // /v3/spaces endpoints 3000 ~
+    #[error("Space not found")]
+    #[rest_error(code = 3000)]
+    NotFoundSpace,
+    #[error("InvalidTimeRange")]
+    InvalidTimeRange,
+    // /v3/spaces/deliberations endpoints 3100 ~
+
+    // /v3/spaces/poll endpoints 3200 ~
+    #[rest_error(code = 3200)]
+    #[error("Poll space not found")]
+    NotFoundPollSpace,
+    #[error("Space is not in progress")]
+    SpaceNotInProgress,
+    #[error("Answers do not match with questions")]
+    AnswersMismatchQuestions,
+    #[error("Space cannot be updated in its current status")]
+    ImmutablePollSpaceState,
 }
 
 impl From<String> for Error {
