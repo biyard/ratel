@@ -33,7 +33,7 @@ async fn test_create_space_handler() {
     let app_state = create_app_state();
     let auth = get_auth(&user);
 
-    let (status, headers, post) = crate::post! {
+    let (status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -71,7 +71,7 @@ async fn test_update_space_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let (status, headers, post) = crate::post! {
+    let (status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -332,7 +332,7 @@ async fn test_delete_space_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let (status, headers, post) = crate::post! {
+    let (status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -485,7 +485,7 @@ async fn test_get_space_handler() {
     let app_state = create_app_state();
     let auth = get_auth(&user);
 
-    let (status, headers, post) = crate::post! {
+    let (status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
