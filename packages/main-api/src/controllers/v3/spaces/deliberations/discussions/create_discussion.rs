@@ -17,6 +17,7 @@ use dto::by_axum::axum::{
 use dto::{JsonSchema, aide, schemars};
 use serde::{Deserialize, Serialize};
 use tower_sessions::Session;
+use urlencoding::decode;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -45,14 +46,19 @@ pub struct CreateDiscussionResponse {
     pub space_pk: String,
 }
 
+const SPACE_PREFIX: &str = "DELIBERATION_SPACE#";
+
 pub async fn create_discussion_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<Session>,
     Path(DeliberationDiscussionPath { space_pk }): Path<DeliberationDiscussionPath>,
     Json(req): Json<CreateDiscussionRequest>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
-    let space_pk = space_pk.replace("%23", "#");
-    let deliberation_id = space_pk.split("#").last().unwrap_or_default().to_string();
+    let space_pk = decode(&space_pk).unwrap_or_default().to_string();
+    let deliberation_id = space_pk
+        .strip_prefix(SPACE_PREFIX)
+        .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
+        .to_string();
     let user = extract_user_from_session(&dynamo.client, &session).await?;
 
     let disc = DeliberationSpaceDiscussion::new(
