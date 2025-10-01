@@ -1,3 +1,4 @@
+// use crate::controllers::v2::posts::list_posts::ListPostsQueryParams;
 use crate::controllers::v3::auth::verification::verify_code::VerifyCodeResponse;
 use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
@@ -7,7 +8,9 @@ use crate::controllers::v3::spaces::deliberations::discussions::start_meeting::s
 use crate::controllers::v3::spaces::deliberations::discussions::start_recording::start_recording_handler;
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
+// use crate::models::feed::Post;
 use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
+// use crate::types::list_items_response::ListItemsResponse;
 use crate::{
     Error2,
     controllers::v3::{
@@ -30,7 +33,7 @@ use crate::{
             delete_post::delete_post_handler,
             get_post::{GetPostResponse, get_post_handler},
             like_post::{LikePostResponse, like_post_handler},
-            list_posts::{ListPostsResponse, list_posts_handler},
+            list_posts::list_posts_handler,
             update_post::{UpdatePostResponse, update_post_handler},
         },
         spaces::deliberations::{
@@ -128,9 +131,19 @@ pub fn route(
                         create_post_handler,
                         api_docs!(Json<CreatePostResponse>, "Create Post", "Create a new post"),
                     )
-                    .get_with(
+                    .get(
                         list_posts_handler,
-                        api_docs!(Json<ListPostsResponse>, "List Posts", "List all posts"),
+                        // |op| {
+                        //     op.summary("List Posts")
+                        //         .description("List all posts")
+                        //         .response::<200, Json<ListItemsResponse<Post>>>()
+                        //         .response::<400, Error2>()
+                        //         .input::<axum::extract::Query<ListPostsQueryParams>>()
+                        // }, // api_docs!(
+                        //     Json<ListItemsResponse<Post>>,
+                        //     "List Posts",
+                        //     "List all posts"
+                        // ),
                     ),
                 )
                 .route(

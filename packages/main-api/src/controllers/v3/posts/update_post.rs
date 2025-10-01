@@ -1,4 +1,5 @@
 use crate::models::feed::Post;
+use crate::types::sorted_visibility::SortedVisibility;
 use crate::types::{EntityType, Partition, PostStatus, PostType, TeamGroupPermission, Visibility};
 use crate::utils::dynamo_extractor::extract_user;
 use crate::utils::security::{RatelResource, check_permission};
@@ -40,7 +41,7 @@ pub enum UpdatePostRequest {
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub enum UpdateVisibility {
-    Private,
+    TeamOnly,
     Public,
 }
 // #[derive(Debug, Serialize, Default, aide::OperationIo, JsonSchema)]
@@ -120,18 +121,21 @@ pub async fn update_post_handler(
                     "Only Draft posts can be updated to Published".to_string(),
                 ));
             }
-            let visibility = match visibility {
-                UpdateVisibility::Private => Visibility::Team(post.user_pk.to_string()),
-                UpdateVisibility::Public => Visibility::Public,
+            let (visibility, sorted_visibility) = match visibility {
+                UpdateVisibility::TeamOnly => (
+                    Visibility::team_only(post.user_pk.clone())?,
+                    SortedVisibility::team_only(post.user_pk.clone(), post.created_at)?,
+                ),
+                UpdateVisibility::Public => (
+                    Visibility::public(),
+                    SortedVisibility::public(post.created_at),
+                ),
             };
+
             Post::updater(&post.pk, &post.sk)
                 .with_visibility(visibility.clone())
                 .with_status(status.clone())
-                .with_compose_sort_key(Post::get_compose_key(
-                    status.clone(),
-                    Some(visibility.clone()),
-                    now,
-                ))
+                .with_sorted_visibility(sorted_visibility)
                 .with_updated_at(now)
                 .execute(&dynamo.client)
                 .await?;
