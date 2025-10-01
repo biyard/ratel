@@ -235,7 +235,7 @@ async fn test_post_like() {
 
     let user2 = create_test_user(&cli).await;
 
-    let post_like = PostLike::new(post.pk.clone(), user2.clone());
+    let post_like = PostLike::new(post.pk.clone(), user2.pk.clone());
     let res = post_like.create(&cli).await;
     assert!(res.is_ok(), "Failed to create post like: {:?}", res);
 

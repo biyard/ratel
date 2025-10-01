@@ -9,6 +9,9 @@ pub struct SpaceCommon {
     #[dynamo(index = "gsi6", sk)]
     pub sk: EntityType,
 
+    pub created_at: i64,
+    pub updated_at: i64,
+
     // Space statistics
     pub participants: i64,
 
@@ -17,10 +20,13 @@ pub struct SpaceCommon {
 
     #[dynamo(prefix = "POST_PK", name = "find_by_post_pk", index = "gsi1", pk)]
     pub post_pk: Partition,
-
     pub status: SpaceStatus,
     pub started_at: i64,
     pub ended_at: Option<i64>,
+
+    pub booster: BoosterType,
+    pub custom_booster: Option<i64>,
+    pub rewards: Option<i64>,
 }
 
 impl SpaceCommon {
@@ -30,6 +36,8 @@ impl SpaceCommon {
         Self {
             pk,
             sk: EntityType::SpaceCommon,
+            created_at: now,
+            updated_at: now,
             post_pk,
             participants: 0,
             visibility: SpaceVisibility::Public,
@@ -37,6 +45,9 @@ impl SpaceCommon {
 
             started_at: now,
             ended_at: None,
+            booster: BoosterType::NoBoost,
+            custom_booster: None,
+            rewards: None,
         }
     }
 
