@@ -6,38 +6,70 @@ use crate::{
         DeliberationSpaceParticipant, DeliberationSpaceQuestion, DeliberationSpaceResponse,
         DeliberationSpaceSurvey, SpaceCommon,
     },
-    types::Partition,
-};
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Json, Path, State},
+    types::{EntityType, Partition, TeamGroupPermission},
+    utils::{
+        dynamo_extractor::extract_user_from_session,
+        security::{RatelResource, check_permission_from_session},
     },
 };
-use dto::{JsonSchema, aide, schemars};
-use serde::Serialize;
+use bdk::prelude::axum::{
+    Extension,
+    extract::{Json, Path, State},
+};
+use bdk::prelude::*;
+use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 
-#[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct DeleteDeliberationResponse {
-    pub space_id: String,
+    pub space_pk: String,
 }
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationDeletePath {
-    pub id: String,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub space_pk: Partition,
 }
 
 pub async fn delete_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(_auth): Extension<Option<Authorization>>,
-    Path(DeliberationDeletePath { id }): Path<DeliberationDeletePath>,
+    Extension(session): Extension<Session>,
+    Path(DeliberationDeletePath { space_pk }): Path<DeliberationDeletePath>,
 ) -> Result<Json<DeleteDeliberationResponse>, Error2> {
-    let space_pk = Partition::DeliberationSpace(id.clone());
-
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
+
+    let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
+        .await?
+        .ok_or(Error2::NotFound("Space not found".to_string()))?;
+
+    let _ = match space.user_pk.clone() {
+        Partition::Team(_) => {
+            check_permission_from_session(
+                &dynamo.client,
+                &session,
+                RatelResource::Team {
+                    team_pk: space.user_pk.to_string(),
+                },
+                vec![TeamGroupPermission::SpaceDelete],
+            )
+            .await?;
+        }
+        Partition::User(_) => {
+            let user = extract_user_from_session(&dynamo.client, &session).await?;
+            if user.pk != space.user_pk {
+                return Err(Error2::Unauthorized(
+                    "You do not have permission to delete this deliberation".into(),
+                ));
+            }
+        }
+        _ => {
+            return Err(Error2::InternalServerError(
+                "Invalid deliberation author".into(),
+            ));
+        }
+    };
 
     for data in metadata.into_iter() {
         match data {
@@ -74,5 +106,7 @@ pub async fn delete_deliberation_handler(
         }
     }
 
-    Ok(Json(DeleteDeliberationResponse { space_id: id }))
+    Ok(Json(DeleteDeliberationResponse {
+        space_pk: space_pk.to_string(),
+    }))
 }

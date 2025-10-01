@@ -1,34 +1,81 @@
 use crate::{
     AppState, Error2,
-    models::space::{DeliberationDetailResponse, DeliberationMetadata},
-    types::Partition,
-};
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Json, Path, State},
+    models::space::{
+        DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace, SpaceCommon,
+    },
+    types::{EntityType, Partition, SpaceVisibility, TeamGroupPermission},
+    utils::{
+        dynamo_extractor::extract_user_from_session,
+        security::{RatelResource, check_permission_from_session},
     },
 };
-use dto::{aide, schemars};
+use bdk::prelude::axum::{
+    Extension,
+    extract::{Json, Path, State},
+};
+use bdk::prelude::*;
+use tower_sessions::Session;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationGetPath {
-    pub id: String,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub space_pk: Partition,
 }
 
 pub async fn get_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(_auth): Extension<Option<Authorization>>,
-    Path(DeliberationGetPath { id }): Path<DeliberationGetPath>,
+    Extension(session): Extension<Session>,
+    Path(DeliberationGetPath { space_pk }): Path<DeliberationGetPath>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
-    let metadata =
-        DeliberationMetadata::query(&dynamo.client, Partition::DeliberationSpace(id.to_string()))
-            .await?;
+    tracing::debug!(
+        "get_deliberation_handler called with space_pk: {}",
+        space_pk
+    );
+    let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
 
+    let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
+        .await?
+        .ok_or(Error2::NotFound("Space not found".to_string()))?;
+
+    let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
+        .await?
+        .ok_or(Error2::NotFound("Space not found".to_string()))?;
+
+    if space_common.visibility != SpaceVisibility::Public {
+        let _ = match space.user_pk.clone() {
+            Partition::Team(_) => {
+                check_permission_from_session(
+                    &dynamo.client,
+                    &session,
+                    RatelResource::Team {
+                        team_pk: space.user_pk.to_string(),
+                    },
+                    vec![TeamGroupPermission::SpaceRead],
+                )
+                .await?;
+            }
+            Partition::User(_) => {
+                let user = extract_user_from_session(&dynamo.client, &session).await?;
+                if user.pk != space.user_pk {
+                    return Err(Error2::Unauthorized(
+                        "You do not have permission to get this deliberation".into(),
+                    ));
+                }
+            }
+            _ => {
+                return Err(Error2::InternalServerError(
+                    "Invalid deliberation author".into(),
+                ));
+            }
+        };
+    }
+
+    tracing::debug!("Deliberation metadata retrieved: {:?}", metadata);
     let metadata: DeliberationDetailResponse = metadata.into();
+
+    tracing::debug!("DeliberationDetailResponse formed: {:?}", metadata);
 
     Ok(Json(metadata))
 }

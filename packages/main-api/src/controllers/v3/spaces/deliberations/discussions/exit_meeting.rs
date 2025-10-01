@@ -8,31 +8,38 @@ use crate::{
         DiscussionParticipantResponse,
     },
     types::{EntityType, Partition},
-    utils::{aws::DynamoClient, dynamo_extractor::extract_user},
+    utils::{aws::DynamoClient, dynamo_extractor::extract_user_from_session},
 };
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Json, Path, State},
-    },
+use bdk::prelude::axum::{
+    Extension,
+    extract::{Json, Path, State},
 };
+use tower_sessions::Session;
 
 pub async fn exit_meeting_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    Extension(session): Extension<Session>,
     Path(DeliberationDiscussionByIdPath {
-        deliberation_id,
-        id,
+        space_pk,
+        discussion_pk,
     }): Path<DeliberationDiscussionByIdPath>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
-    let user = extract_user(&dynamo.client, auth).await?;
+    let user = extract_user_from_session(&dynamo.client, &session).await?;
+    let space_id = match space_pk.clone() {
+        Partition::DeliberationSpace(v) => v,
+        _ => "".to_string(),
+    };
+    let discussion_id = match discussion_pk {
+        Partition::Discussion(v) => v,
+        _ => "".to_string(),
+    };
+
     let user_pk = match user.pk {
         Partition::User(v) | Partition::Team(v) => v,
         _ => String::new(),
     };
 
-    let (disc, disc_pk) = fetch_discussion_and_pk(&dynamo, &deliberation_id, &id).await?;
+    let (disc, disc_pk) = fetch_discussion_and_pk(&dynamo, &space_id, &discussion_id).await?;
     if disc.meeting_id.is_none() {
         return Err(Error2::AwsChimeError("Not Found Meeting ID".into()));
     }
@@ -40,7 +47,7 @@ pub async fn exit_meeting_handler(
     let opt = DeliberationSpaceParticipantQueryOption::builder();
     let olds = DeliberationSpaceParticipant::find_by_discussion_user_pk(
         &dynamo.client,
-        Partition::DiscussionUser(format!("{}#{}", id, user_pk)),
+        Partition::DiscussionUser(format!("{}#{}", discussion_id, user_pk)),
         opt,
     )
     .await?

@@ -1,4 +1,3 @@
-// mod permission;
 mod team_permission_verifier;
 
 use crate::{
