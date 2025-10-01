@@ -1,4 +1,3 @@
-#![allow(warnings)]
 use bdk::prelude::*;
 use sqlx::postgres::PgRow;
 
@@ -32,28 +31,28 @@ pub async fn migrate_posts(
             id,
             created_at,
             updated_at,
-            feed_type,
-            user_id,          // TODO: user posts
+            feed_type: _,     // All are Post type
+            user_id: _,       // post.user_pk is used instead
             industry_id: _,   // industry is not stable
             parent_id: _,     // Post type does not use parent_id
             quote_feed_id: _, // Post type does not use quote_feed_id
             title,
             html_contents,
             url,
-            url_type,
+            url_type: _, // Skipped: url_type is not used in Post list view
             spaces,
             likes,
             is_liked, // TODO: For user like document
             comments,
-            comment_list, // TODO: feed comments
-            files: _,     // Skipped: files are not used in Post list view
+            comment_list: _, // NOTE: it will be migrated in getting specific posts
+            files: _,        // Skipped: files are not used in Post list view
             rewards,
             shares,
             status,
             author,
-            industry,
-            is_bookmarked,
-            onboard,
+            industry: _,      // industry is not stable
+            is_bookmarked: _, // For user bookmark document
+            onboard: _,       // deprecated
         } = post;
 
         let author = author.first().cloned().ok_or_else(|| {

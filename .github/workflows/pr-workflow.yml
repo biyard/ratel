@@ -166,6 +166,14 @@ jobs:
         run: |
           cargo binstall toml-cli
 
+      - name: Cache builder
+        id: main-api-build-cache
+        uses: actions/cache@v3
+        with:
+          key: main-api-build-cache
+          path: |
+            packages/main-api/target
+
       - name: Build and cache Docker image
         id: build
         env:
@@ -219,6 +227,14 @@ jobs:
       - name: Install dependencies
         run: |
           cargo binstall toml-cli
+
+      - name: Cache builder
+        id: fetcher-build-cache
+        uses: actions/cache@v3
+        with:
+          key: fetcher-build-cache
+          path: |
+            packages/fetcher/target
 
       - name: Build and cache Docker image
         id: build
