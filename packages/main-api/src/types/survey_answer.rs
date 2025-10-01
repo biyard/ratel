@@ -45,7 +45,9 @@ pub fn validate_answers(questions: Vec<SurveyQuestion>, answers: Vec<SurveyAnswe
                 }
                 // Check answer option index not out of bounds
                 if let Some(ans) = answer {
-                    return ans < 0 || ans < options.len() as i32;
+                    if ans < 0 || ans >= options.len() as i32 {
+                        return false;
+                    }
                 }
             }
             (

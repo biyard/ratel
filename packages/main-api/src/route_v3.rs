@@ -400,17 +400,6 @@ pub fn route(
                     "/poll",
                     Router::new()
                         .route(
-                            "/",
-                            get_with(
-                                get_poll_space_handler,
-                                api_docs!(
-                                    Json<GetPollSpaceResponse>,
-                                    "Get poll",
-                                    "Get poll with ID"
-                                ),
-                            ),
-                        )
-                        .route(
                             "/:poll_space_pk",
                             get_with(
                                 get_poll_space_handler,

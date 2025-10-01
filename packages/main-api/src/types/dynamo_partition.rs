@@ -57,3 +57,27 @@ where
     Ok(Partition::from_str(&url_decoded)
         .map_err(|e| de::Error::custom(format!("Invalid Partition: {}", e)))?)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serde::de::IntoDeserializer;
+    use serde::de::value::{Error as ValueError, StringDeserializer};
+
+    #[test]
+    fn test_path_param_valid_poll_space() {
+        let deserializer: StringDeserializer<ValueError> =
+            String::from("FEED%23abc123").into_deserializer();
+        let result = path_param_string_to_partition(deserializer);
+        println!("{:?}", result);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_path_param_invalid_encoding() {
+        let deserializer: StringDeserializer<ValueError> =
+            String::from("FEED%ZZ").into_deserializer();
+        let result = path_param_string_to_partition(deserializer);
+        assert!(result.is_err());
+    }
+}
