@@ -4,9 +4,9 @@ use crate::{
     models::{
         feed::Post,
         space::{
-            DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace,
-            DeliberationSpaceContent, DeliberationSpaceDiscussion, DeliberationSpaceElearning,
-            DeliberationSpaceMember, DeliberationSpaceMemberQueryOption, DeliberationSpaceQuestion,
+            DeliberationDetailResponse, DeliberationMetadata, DeliberationSpaceContent,
+            DeliberationSpaceDiscussion, DeliberationSpaceElearning, DeliberationSpaceMember,
+            DeliberationSpaceMemberQueryOption, DeliberationSpaceQuestion,
             DeliberationSpaceQuestionQueryOption, DeliberationSpaceSurvey, DiscussionCreateRequest,
             SpaceCommon, SurveyCreateRequest,
         },
@@ -73,9 +73,6 @@ pub async fn update_deliberation_handler(
     Json(req): Json<UpdateDeliberationRequest>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
     let user = extract_user_from_session(&dynamo.client, &session).await?;
-    let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
-        .await?
-        .ok_or(Error2::NotFound("Space not found".to_string()))?;
 
     let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
         .await?
@@ -83,13 +80,13 @@ pub async fn update_deliberation_handler(
 
     let post_pk = space_common.post_pk;
 
-    let _ = match space.user_pk.clone() {
+    let _ = match space_common.user_pk.clone() {
         Partition::Team(_) => {
             check_permission_from_session(
                 &dynamo.client,
                 &session,
                 RatelResource::Team {
-                    team_pk: space.user_pk.to_string(),
+                    team_pk: space_common.user_pk.to_string(),
                 },
                 vec![TeamGroupPermission::SpaceEdit],
             )
@@ -97,7 +94,7 @@ pub async fn update_deliberation_handler(
         }
         Partition::User(_) => {
             let user = extract_user_from_session(&dynamo.client, &session).await?;
-            if user.pk != space.user_pk {
+            if user.pk != space_common.user_pk {
                 return Err(Error2::Unauthorized(
                     "You do not have permission to update this deliberation".into(),
                 ));

@@ -1,8 +1,6 @@
 use crate::{
     AppState, Error2,
-    models::space::{
-        DeliberationDetailResponse, DeliberationMetadata, DeliberationSpace, SpaceCommon,
-    },
+    models::space::{DeliberationDetailResponse, DeliberationMetadata, SpaceCommon},
     types::{EntityType, Partition, SpaceVisibility, TeamGroupPermission},
     utils::{
         dynamo_extractor::extract_user_from_session,
@@ -29,28 +27,20 @@ pub async fn get_deliberation_handler(
     Extension(session): Extension<Session>,
     Path(DeliberationGetPath { space_pk }): Path<DeliberationGetPath>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
-    tracing::debug!(
-        "get_deliberation_handler called with space_pk: {}",
-        space_pk
-    );
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
-
-    let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
-        .await?
-        .ok_or(Error2::NotFound("Space not found".to_string()))?;
 
     let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
         .await?
         .ok_or(Error2::NotFound("Space not found".to_string()))?;
 
     if space_common.visibility != SpaceVisibility::Public {
-        let _ = match space.user_pk.clone() {
+        let _ = match space_common.user_pk.clone() {
             Partition::Team(_) => {
                 check_permission_from_session(
                     &dynamo.client,
                     &session,
                     RatelResource::Team {
-                        team_pk: space.user_pk.to_string(),
+                        team_pk: space_common.user_pk.to_string(),
                     },
                     vec![TeamGroupPermission::SpaceRead],
                 )
@@ -58,7 +48,7 @@ pub async fn get_deliberation_handler(
             }
             Partition::User(_) => {
                 let user = extract_user_from_session(&dynamo.client, &session).await?;
-                if user.pk != space.user_pk {
+                if user.pk != space_common.user_pk {
                     return Err(Error2::Unauthorized(
                         "You do not have permission to get this deliberation".into(),
                     ));

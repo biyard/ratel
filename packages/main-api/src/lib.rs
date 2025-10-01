@@ -160,6 +160,11 @@ pub mod controllers {
         }
 
         pub mod spaces {
+            pub mod create_space;
+            pub mod delete_space;
+            #[cfg(test)]
+            pub mod tests;
+
             pub mod deliberations {
                 pub mod create_deliberation;
 
@@ -191,6 +196,17 @@ pub mod controllers {
                 pub mod tests;
                 pub mod update_deliberation;
             }
+
+            pub mod poll {
+                // pub mod create_poll_space;
+                pub mod get_poll_space;
+                pub mod list_responses;
+                pub mod respond_poll_space;
+                pub mod update_poll_space;
+
+                #[cfg(test)]
+                pub mod tests;
+            }
         }
 
         pub mod teams {
@@ -220,6 +236,7 @@ pub mod controllers {
             pub mod get_post;
             pub mod like_post;
             pub mod list_posts;
+            pub mod post_response;
             pub mod update_post;
             pub mod comments {
                 pub mod add_comment;

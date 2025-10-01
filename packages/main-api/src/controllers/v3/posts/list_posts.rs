@@ -1,7 +1,7 @@
-use crate::models::feed::{Post, PostQueryOption};
+use crate::models::feed::{Post, PostLike, PostQueryOption};
 use crate::models::user::User;
 use crate::types::list_items_response::ListItemsResponse;
-use crate::types::{PostStatus, Visibility};
+use crate::types::{EntityType, PostStatus, Visibility};
 use crate::{AppState, Error2};
 use bdk::prelude::*;
 use by_axum::axum::{
@@ -11,6 +11,8 @@ use by_axum::axum::{
 use dto::aide::NoApi;
 use serde::Deserialize;
 use validator::Validate;
+
+use super::post_response::PostResponse;
 
 #[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema, Validate)]
 pub struct ListPostsQueryParams {
@@ -25,31 +27,50 @@ pub struct ListPostsQueryParams {
 
 pub async fn list_posts_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(_user): NoApi<Option<User>>,
+    NoApi(user): NoApi<Option<User>>,
     Query(params): Query<ListPostsQueryParams>,
-) -> Result<Json<ListItemsResponse<Post>>, Error2> {
-    tracing::debug!("list_posts_handler: user = {:?}", _user);
-    if let Err(e) = params.validate() {
-        return Err(Error2::BadRequest(e.to_string()));
-    }
+) -> Result<Json<ListItemsResponse<PostResponse>>, Error2> {
+    tracing::debug!("list_posts_handler: user = {:?}", user);
+    params.validate()?;
 
     let mut query_options = PostQueryOption::builder().limit(params.limit.unwrap_or(20));
 
     if let Some(bookmark) = params.bookmark {
         query_options = query_options.bookmark(bookmark);
     }
-    let posts = Post::find_by_visibility(&dynamo.client, Visibility::Public, query_options).await?;
+    let (posts, bookmark) =
+        Post::find_by_visibility(&dynamo.client, Visibility::Public, query_options).await?;
 
-    if posts.0.is_empty() {
+    if posts.is_empty() {
         return Ok(Json(ListItemsResponse {
             items: vec![],
             bookmark: None,
         }));
     }
 
-    // TODO: getting like for a user
+    let likes = if let Some(user) = user {
+        let sk = EntityType::PostLike(user.pk.to_string());
+        PostLike::batch_get(
+            &dynamo.client,
+            posts
+                .iter()
+                .map(|post| (post.pk.clone(), sk.clone()))
+                .collect(),
+        )
+        .await?
+    } else {
+        vec![]
+    };
 
-    Ok(Json(posts.into()))
+    let items = posts
+        .into_iter()
+        .map(|post| {
+            let liked = likes.iter().any(|like| like.pk == post.pk);
+            PostResponse::from(post).with_like(liked)
+        })
+        .collect();
+
+    Ok(Json(ListItemsResponse { items, bookmark }))
 }
 
 // let (posts, next_bookmark) = match params.r#type {

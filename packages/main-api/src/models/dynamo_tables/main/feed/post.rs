@@ -1,7 +1,4 @@
-use crate::{
-    models::{team::Team, user::User},
-    types::{sorted_visibility::SortedVisibility, *},
-};
+use crate::types::{sorted_visibility::SortedVisibility, *};
 use bdk::prelude::*;
 
 #[derive(
@@ -54,16 +51,6 @@ pub struct Post {
 }
 
 impl Post {
-    pub fn get_compose_key(status: PostStatus, visibility: Option<Visibility>, now: i64) -> String {
-        match (status, visibility) {
-            (PostStatus::Draft, _) => format!("DRAFT#{}", now),
-            (PostStatus::Published, Some(Visibility::Public)) => format!("PUBLIC#{}", now),
-            (PostStatus::Published, Some(Visibility::TeamOnly(team_pk))) => {
-                format!("TEAM#{}#{}", team_pk, now)
-            }
-            _ => format!("DRAFT#{}", now), // Fallback to Draft key
-        }
-    }
     pub fn new<T: Into<String>, A: Into<Author>>(
         title: T,
         html_contents: T,
@@ -103,50 +90,6 @@ impl Post {
             rewards: None,
             sorted_visibility: SortedVisibility::Draft(now.to_string()),
             urls: vec![],
-        }
-    }
-}
-
-pub struct Author {
-    pub pk: Partition,
-    pub display_name: String,
-    pub profile_url: String,
-    pub username: String,
-}
-
-impl From<User> for Author {
-    fn from(
-        User {
-            pk,
-            display_name,
-            profile_url,
-            username,
-            ..
-        }: User,
-    ) -> Self {
-        Self {
-            pk,
-            display_name,
-            profile_url,
-            username,
-        }
-    }
-}
-impl From<Team> for Author {
-    fn from(
-        Team {
-            pk,
-            display_name,
-            profile_url,
-            username,
-            ..
-        }: Team,
-    ) -> Self {
-        Self {
-            pk,
-            display_name,
-            profile_url,
-            username,
         }
     }
 }

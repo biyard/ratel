@@ -19,4 +19,6 @@ pub enum BoosterType {
     X2 = 2,
     X10 = 3,
     X100 = 4,
+
+    Custom = 255,
 }
