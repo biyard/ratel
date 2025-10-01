@@ -147,7 +147,7 @@ pub async fn update_survey(
         .clone()
         .split("#")
         .last()
-        .unwrap_or_default()
+        .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
         .to_string();
 
     for survey in surveys {
@@ -158,8 +158,9 @@ pub async fn update_survey(
                 .unwrap_or_default()
                 .split("#")
                 .last()
-                .unwrap_or_default()
+                .ok_or_else(|| Error2::BadRequest("Invalid survey_pk format".into()))?
                 .to_string();
+
             DeliberationSpaceSurvey::updater(
                 &space_pk,
                 EntityType::DeliberationSpaceSurvey(survey_id.clone()),
@@ -230,7 +231,7 @@ pub async fn update_discussion(
         .clone()
         .split("#")
         .last()
-        .unwrap_or_default()
+        .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
         .to_string();
     for discussion in discussions {
         if discussion.discussion_pk.is_some() {
@@ -240,7 +241,7 @@ pub async fn update_discussion(
                 .unwrap()
                 .split("#")
                 .last()
-                .unwrap_or_default()
+                .ok_or_else(|| Error2::BadRequest("Invalid discussion_pk format".into()))?
                 .to_string();
             DeliberationSpaceDiscussion::updater(
                 &space_pk.clone(),
@@ -348,7 +349,12 @@ pub async fn update_recommendation(
             .execute(&dynamo.client)
             .await?;
     } else {
-        let id = space_pk.split("#").last().unwrap_or_default().to_string();
+        let id = space_pk
+            .clone()
+            .split("#")
+            .last()
+            .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
+            .to_string();
         let recommendation = DeliberationSpaceContent::new(
             Partition::DeliberationSpace(id.to_string()),
             EntityType::DeliberationSpaceRecommendation,
@@ -410,9 +416,14 @@ pub async fn update_summary(
             .execute(&dynamo.client)
             .await?;
     } else {
-        let pk = space_pk.split("#").last().unwrap_or_default().to_string();
+        let id = space_pk
+            .clone()
+            .split("#")
+            .last()
+            .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
+            .to_string();
         let summary = DeliberationSpaceContent::new(
-            Partition::DeliberationSpace(pk),
+            Partition::DeliberationSpace(id),
             EntityType::DeliberationSpaceSummary,
             html_contents.unwrap_or_default(),
             files,
