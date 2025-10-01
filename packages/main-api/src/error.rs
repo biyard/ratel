@@ -45,6 +45,8 @@ pub enum Error {
     ReqwestError(#[from] reqwest::Error),
     #[error("Validation errors: {0}")]
     ValidationErrors(#[from] validator::ValidationErrors),
+    #[error("Decoding error: {0}")]
+    Utf8Decoding(#[from] std::str::Utf8Error),
 
     // Authorization errors 400 ~
     #[error("No session found")]
