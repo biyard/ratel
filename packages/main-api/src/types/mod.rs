@@ -10,7 +10,9 @@ pub mod post_status;
 pub mod post_type;
 pub mod visibility;
 
+pub mod list_items_response;
 pub mod relationship;
+pub mod sorted_visibility;
 pub mod space_status;
 pub mod space_type;
 pub mod space_visibility;
