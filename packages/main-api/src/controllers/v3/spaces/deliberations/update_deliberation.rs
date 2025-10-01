@@ -71,7 +71,9 @@ pub async fn update_deliberation_handler(
     Path(DeliberationPath { space_pk }): Path<DeliberationPath>,
     Json(req): Json<UpdateDeliberationRequest>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
-    let space_pk = decode(&space_pk).unwrap_or_default().to_string();
+    let space_pk = decode(&space_pk)
+        .map_err(|_| Error2::BadRequest("Invalid space_pk encoding".into()))?
+        .into_owned();
     let user = extract_user_from_session(&dynamo.client, &session).await?;
     let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
         .await?
