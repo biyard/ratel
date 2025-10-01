@@ -16,7 +16,7 @@ async fn tests_create_deliberation() {
     let fetched_user = User::get(&cli, user.clone().pk.clone(), Some(user.clone().sk)).await;
     assert!(fetched_user.is_ok());
 
-    let deliberation = DeliberationSpace::new(user.clone());
+    let deliberation = DeliberationSpace::new();
     let res = deliberation.create(&cli).await;
     assert!(res.is_ok());
 
@@ -178,7 +178,7 @@ async fn tests_create_deliberation() {
     let metadatas = metadata.unwrap();
 
     assert_eq!(metadatas.len(), 11);
-
+    println!("Metadatas: {:?}", metadatas);
     let deliberation: DeliberationDetailResponse = metadatas.into();
 
     assert_eq!(deliberation.summary.files[0].name, "excel file".to_string());

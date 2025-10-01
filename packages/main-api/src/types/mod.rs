@@ -1,5 +1,4 @@
 pub mod booster_type;
-pub mod deliberation_content_type;
 pub mod dynamo_entity_type;
 pub mod dynamo_partition;
 pub mod invitation_status;
@@ -10,6 +9,7 @@ pub mod post_status;
 pub mod post_type;
 pub mod visibility;
 
+pub mod author;
 pub mod file;
 pub mod list_items_response;
 pub mod relationship;
@@ -45,6 +45,7 @@ pub use space_publish_state::*;
 pub use space_status::*;
 pub use space_type::*;
 
+pub use author::*;
 pub use space_visibility::*;
 pub use survey_answer::*;
 pub use survey_question::*;

@@ -1,7 +1,4 @@
-use crate::{
-    models::{team::Team, user::User},
-    types::{sorted_visibility::SortedVisibility, *},
-};
+use crate::types::{sorted_visibility::SortedVisibility, *};
 use bdk::prelude::*;
 
 #[derive(
@@ -103,50 +100,6 @@ impl Post {
             rewards: None,
             sorted_visibility: SortedVisibility::Draft(now.to_string()),
             urls: vec![],
-        }
-    }
-}
-
-pub struct Author {
-    pub pk: Partition,
-    pub display_name: String,
-    pub profile_url: String,
-    pub username: String,
-}
-
-impl From<User> for Author {
-    fn from(
-        User {
-            pk,
-            display_name,
-            profile_url,
-            username,
-            ..
-        }: User,
-    ) -> Self {
-        Self {
-            pk,
-            display_name,
-            profile_url,
-            username,
-        }
-    }
-}
-impl From<Team> for Author {
-    fn from(
-        Team {
-            pk,
-            display_name,
-            profile_url,
-            username,
-            ..
-        }: Team,
-    ) -> Self {
-        Self {
-            pk,
-            display_name,
-            profile_url,
-            username,
         }
     }
 }

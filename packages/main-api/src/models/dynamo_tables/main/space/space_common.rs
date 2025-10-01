@@ -1,4 +1,4 @@
-use crate::{models::user::User, types::*, utils::time::get_now_timestamp_millis};
+use crate::{types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
 #[derive(
@@ -71,19 +71,14 @@ pub struct SpaceCommon {
 }
 
 impl SpaceCommon {
-    pub fn new(
-        pk: Partition,
-        post_pk: Partition,
-        User {
+    pub fn new<A: Into<Author>>(pk: Partition, post_pk: Partition, author: A) -> Self {
+        let now = get_now_timestamp_millis();
+        let Author {
             pk: user_pk,
             display_name,
             profile_url,
             username,
-            ..
-        }: User,
-    ) -> Self {
-        let now = get_now_timestamp_millis();
-
+        } = author.into();
         Self {
             pk,
             sk: EntityType::SpaceCommon,

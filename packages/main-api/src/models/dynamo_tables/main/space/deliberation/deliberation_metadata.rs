@@ -1,55 +1,17 @@
 use crate::{
     models::space::SpaceCommon,
-    types::{EntityType, Partition, SpaceVisibility},
+    types::{EntityType, Partition},
 };
 
 use super::*;
 use bdk::prelude::*;
-use std::{collections::HashMap, mem};
-
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
-pub struct DeliberationResponse {
-    pub pk: Partition,
-    pub created_at: i64,
-    pub updated_at: i64,
-    pub likes: i64,
-    pub comments: i64,
-    pub rewards: i64,
-    pub shares: i64,
-    pub visibility: SpaceVisibility,
-    pub title: String,
-    pub post_pk: Partition,
-    pub user_pk: Partition,
-    pub author_display_name: String,
-    pub author_profile_url: String,
-    pub author_username: String,
-}
-
-impl From<DeliberationSpace> for DeliberationResponse {
-    fn from(deliberation: DeliberationSpace) -> Self {
-        Self {
-            pk: deliberation.pk,
-            created_at: deliberation.created_at,
-            updated_at: deliberation.updated_at,
-            likes: 0,
-            comments: 0,
-            rewards: 0,
-            shares: 0,
-            visibility: SpaceVisibility::Public,
-            title: "".to_string(),
-            post_pk: Partition::Feed("".to_string()),
-            user_pk: deliberation.user_pk,
-            author_display_name: deliberation.author_display_name,
-            author_profile_url: deliberation.author_profile_url,
-            author_username: deliberation.author_username,
-        }
-    }
-}
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct DeliberationDetailResponse {
     #[serde(flatten)]
-    pub deliberation: DeliberationResponse,
+    pub space_common: SpaceCommon,
+    pub deliberation: DeliberationSpace,
     pub summary: DeliberationContentResponse,
     pub discussions: Vec<DeliberationDiscussionResponse>,
     pub elearnings: ElearningResponse,
@@ -60,7 +22,6 @@ pub struct DeliberationDetailResponse {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 #[serde(untagged)]
 pub enum DeliberationMetadata {
-    DeliberationSpace(DeliberationSpace),
     DeliberationSpaceSurvey(DeliberationSpaceSurvey),
     DeliberationSpaceResponse(DeliberationSpaceResponse),
     DeliberationSpaceContent(DeliberationSpaceContent),
@@ -70,6 +31,7 @@ pub enum DeliberationMetadata {
     DeliberationSpaceElearning(DeliberationSpaceElearning),
     DeliberationSpaceDiscussion(DeliberationSpaceDiscussion),
     SpaceCommon(SpaceCommon),
+    DeliberationSpace(DeliberationSpace),
 }
 
 fn discussion_id_of(pk: &Partition) -> String {
@@ -125,19 +87,20 @@ impl From<Vec<DeliberationMetadata>> for DeliberationDetailResponse {
 
         for item in items {
             match item {
-                DeliberationMetadata::DeliberationSpace(deliberation_space) => {
-                    let prev = mem::replace(&mut res.deliberation, deliberation_space.into());
-                    res.deliberation.post_pk = prev.post_pk;
-                    res.deliberation.visibility = prev.visibility;
+                DeliberationMetadata::DeliberationSpace(space) => {
+                    res.deliberation = space;
                 }
                 DeliberationMetadata::DeliberationSpaceSurvey(survey) => {
-                    let prev = mem::replace(&mut res.surveys, survey.into());
+                    let prev = res.surveys.clone();
+
+                    res.surveys = survey.into();
                     res.surveys.questions = prev.questions;
                     res.surveys.responses = prev.responses;
                     res.surveys.user_responses = prev.user_responses;
                 }
                 DeliberationMetadata::DeliberationSpaceContent(content) => match content.sk {
                     EntityType::DeliberationSpaceSummary => {
+                        println!("Found summary content: {:?}", content);
                         res.summary = DeliberationContentResponse {
                             html_contents: content.html_contents,
                             files: content.files,
@@ -198,8 +161,7 @@ impl From<Vec<DeliberationMetadata>> for DeliberationDetailResponse {
                     res.discussions.push(disc);
                 }
                 DeliberationMetadata::SpaceCommon(space_common) => {
-                    res.deliberation.visibility = space_common.visibility;
-                    res.deliberation.post_pk = space_common.post_pk;
+                    res.space_common = space_common;
                 }
             }
         }
