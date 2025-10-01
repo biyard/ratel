@@ -43,6 +43,8 @@ pub enum Error {
     AwsChimeError(String),
     #[error("Other error: {0}")]
     ReqwestError(#[from] reqwest::Error),
+    #[error("Validation errors: {0}")]
+    ValidationErrors(#[from] validator::ValidationErrors),
 
     // Authorization errors 400 ~
     #[error("No session found")]
