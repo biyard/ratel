@@ -63,7 +63,7 @@ pub async fn create_space_handler(
     }
     if booster.is_some() {
         space_common = space_common.with_booster(booster.unwrap());
-        post_updater = post_updater.with_space_pk(space_pk.clone());
+        post_updater = post_updater.with_booster(booster.unwrap());
     }
 
     space_common.create(&dynamo.client).await?;
