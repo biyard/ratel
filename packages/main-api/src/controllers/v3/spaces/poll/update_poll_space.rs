@@ -3,11 +3,14 @@ use crate::types::{BoosterType, Partition, SpacePublishState, SpaceStatus, Surve
 use crate::utils::dynamo_extractor::extract_user_from_session;
 use crate::utils::security::{RatelResource, check_permission_from_session};
 use crate::{AppState, Error2};
-use dto::by_axum::axum::{
+
+use bdk::prelude::*;
+
+use by_axum::axum::{
     Extension,
     extract::{Json, Path, State},
 };
-use dto::{JsonSchema, aide, schemars};
+
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
@@ -38,6 +41,14 @@ pub async fn update_poll_space_handler(
     }): Json<UpdatePollSpaceRequest>,
 ) -> Result<Json<UpdatePollSpaceResponse>, Error2> {
     let user = extract_user_from_session(&dynamo.client, &session).await?;
+
+    if !matches!(poll_space_pk, Partition::PollSpace(_)) {
+        return Err(Error2::NotFoundPollSpace);
+    }
+
+    if started_at >= ended_at {
+        return Err(Error2::InvalidTimeRange);
+    }
 
     // Check Space Existence
     let space_common = SpaceCommon::get(
@@ -75,12 +86,14 @@ pub async fn update_poll_space_handler(
         }
     }
 
-    // Check Space Status
-    // Only publish_state is Draft or Waiting status can be updated
-    if (space_common.publish_state == SpacePublishState::Published
-        && space_common.status != Some(SpaceStatus::Waiting))
-        || space_common.publish_state != SpacePublishState::Draft
-    {
+    // Only Draft or Published+Waiting state can be updated
+    let is_updatable = match space_common.publish_state {
+        SpacePublishState::Draft => true,
+        SpacePublishState::Published => space_common.status == Some(SpaceStatus::Waiting),
+        _ => false,
+    };
+
+    if !is_updatable {
         return Err(Error2::ImmutablePollSpaceState);
     }
 

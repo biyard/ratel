@@ -22,6 +22,7 @@ pub async fn delete_space_handler(
     Path(DeleteSpacePathParams { space_pk }): Path<DeleteSpacePathParams>,
 ) -> Result<(), Error2> {
     let _user = extract_user_from_session(&dynamo.client, &session).await?;
+    // FIXME: ADD PERMISSION CHECK
     let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
         .await?
         .ok_or(Error2::NotFoundSpace)?;

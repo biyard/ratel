@@ -12,7 +12,7 @@ use dto::by_axum::axum::{
     extract::{Path, State},
 };
 use dto::{JsonSchema, aide, schemars};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct GetPollSpacePathParams {
@@ -23,8 +23,7 @@ pub struct GetPollSpacePathParams {
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct GetPollSpaceQueryParams {}
 
-#[derive(Debug, Serialize, Default, aide::OperationIo, JsonSchema)]
-pub struct GetPollSpaceResponse {}
+pub type GetPollSpaceResponse = PollSpaceResponse;
 
 pub async fn get_poll_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
@@ -71,5 +70,6 @@ pub async fn get_poll_space_handler(
 
         poll_space_response.my_response = my_survey_response.map(|r| r.answers);
     }
-    Ok(Json(GetPollSpaceResponse::default()))
+
+    Ok(Json(poll_space_response))
 }

@@ -79,18 +79,30 @@ pub async fn respond_poll_space_handler(
         Some(EntityType::PollSpaceSurvey),
     )
     .await?
-    .ok_or(Error2::AnswersMismatchQuestions)?;
+    .ok_or(Error2::NotFoundPollSpace)?;
 
-    if validate_answers(poll_space_survey.questions, req.answers.clone()) {
+    if !validate_answers(poll_space_survey.questions, req.answers.clone()) {
         return Err(Error2::AnswersMismatchQuestions);
     }
+    let existing_response = PollSpaceSurveyResponse::get(
+        &dynamo.client,
+        Partition::PollSpaceResponse(user.pk.to_string()),
+        Some(EntityType::PollSpaceSurveyResponse(
+            poll_space_pk.to_string(),
+        )),
+    )
+    .await?;
 
     PollSpaceSurveyResponse::new(poll_space_pk.clone(), user.pk.clone(), req.answers)
         .create(&dynamo.client)
         .await?;
-    PollSpace::updater(&poll_space.pk, &poll_space.sk)
-        .increase_user_response_count(1)
-        .execute(&dynamo.client)
-        .await?;
+
+    if existing_response.is_none() {
+        PollSpace::updater(&poll_space.pk, &poll_space.sk)
+            .increase_user_response_count(1)
+            .execute(&dynamo.client)
+            .await?;
+    }
+
     Ok(())
 }

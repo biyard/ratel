@@ -65,8 +65,6 @@ pub enum Error {
     #[error("Post visibility is incorrectly configured: {0}")]
     #[rest_error(code = 2000)]
     IncorrectConfiguredVisibility(String),
-
-    // /v3/posts endpoints 2000 ~
     #[error("Post not found")]
     NotFoundPost,
 
@@ -74,11 +72,13 @@ pub enum Error {
     #[error("Space not found")]
     #[rest_error(code = 3000)]
     NotFoundSpace,
+    #[error("InvalidTimeRange")]
+    InvalidTimeRange,
     // /v3/spaces/deliberations endpoints 3100 ~
 
     // /v3/spaces/poll endpoints 3200 ~
     #[rest_error(code = 3200)]
-    #[error("Poll has already ended")]
+    #[error("Poll space not found")]
     NotFoundPollSpace,
     #[error("Space is not in progress")]
     SpaceNotInProgress,
