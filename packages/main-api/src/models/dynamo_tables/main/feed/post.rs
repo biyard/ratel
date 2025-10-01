@@ -1,15 +1,18 @@
 use crate::{
     models::{team::Team, user::User},
-    types::*,
+    types::{sorted_visibility::SortedVisibility, *},
 };
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, DynamoEntity, JsonSchema)]
+#[derive(
+    Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema, aide::OperationIo,
+)]
 pub struct Post {
     pub pk: Partition,
     pub sk: EntityType,
 
     #[dynamo(index = "gsi6", sk)]
+    #[dynamo(index = "gsi1", sk)]
     pub created_at: i64,
     pub updated_at: i64,
 
@@ -45,9 +48,9 @@ pub struct Post {
     pub rewards: Option<i64>,
 
     // Only for list posts Composed key
-    #[dynamo(index = "gsi1", sk)]
     #[dynamo(index = "gsi2", sk)]
-    pub compose_sort_key: String,
+    pub sorted_visibility: SortedVisibility,
+    pub urls: Vec<String>,
 }
 
 impl Post {
@@ -55,7 +58,7 @@ impl Post {
         match (status, visibility) {
             (PostStatus::Draft, _) => format!("DRAFT#{}", now),
             (PostStatus::Published, Some(Visibility::Public)) => format!("PUBLIC#{}", now),
-            (PostStatus::Published, Some(Visibility::Team(team_pk))) => {
+            (PostStatus::Published, Some(Visibility::TeamOnly(team_pk))) => {
                 format!("TEAM#{}#{}", team_pk, now)
             }
             _ => format!("DRAFT#{}", now), // Fallback to Draft key
@@ -98,7 +101,8 @@ impl Post {
             space_pk: None,
             booster: None,
             rewards: None,
-            compose_sort_key: Self::get_compose_key(PostStatus::Draft, None, now),
+            sorted_visibility: SortedVisibility::Draft(now.to_string()),
+            urls: vec![],
         }
     }
 }
