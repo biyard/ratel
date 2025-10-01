@@ -90,7 +90,7 @@ pub async fn update_poll_space_handler(
     let is_updatable = match space_common.publish_state {
         SpacePublishState::Draft => true,
         SpacePublishState::Published => space_common.status == Some(SpaceStatus::Waiting),
-        _ => false,
+        // _ => false,
     };
 
     if !is_updatable {
