@@ -4,8 +4,12 @@ use crate::controllers::v3::spaces::deliberations::discussions::create_discussio
 use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
+// use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::start_meeting::start_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::start_recording::start_recording_handler;
+use crate::controllers::v3::spaces::deliberations::posting_deliberation::{
+    PostingDeliberationResponse, posting_deliberation_handler,
+};
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
 // use crate::models::feed::Post;
@@ -227,7 +231,7 @@ pub fn route(
                 "/deliberation",
                 Router::new()
                     .nest(
-                        "/:deliberation_id/responses",
+                        "/:space_pk/responses",
                         Router::new()
                             .route(
                                 "/",
@@ -241,7 +245,7 @@ pub fn route(
                                 ),
                             )
                             .route(
-                                "/:id",
+                                "/:response_pk",
                                 get_with(
                                     get_response_answer_handler,
                                     api_docs!(
@@ -253,7 +257,7 @@ pub fn route(
                             ),
                     )
                     .nest(
-                        "/:deliberation_id/discussions",
+                        "/:space_pk/discussions",
                         Router::new()
                             .route(
                                 "/",
@@ -267,7 +271,7 @@ pub fn route(
                                 ),
                             )
                             .route(
-                                "/:id/start-meeting",
+                                "/:discussion_pk/start-meeting",
                                 post_with(
                                     start_meeting_handler,
                                     api_docs!(
@@ -278,7 +282,7 @@ pub fn route(
                                 ),
                             )
                             .route(
-                                "/:id/participant-meeting",
+                                "/:discussion_pk/participant-meeting",
                                 post_with(
                                     participant_meeting_handler,
                                     api_docs!(
@@ -289,7 +293,7 @@ pub fn route(
                                 ),
                             )
                             .route(
-                                "/:id/start-recording",
+                                "/:discussion_pk/start-recording",
                                 post_with(
                                     start_recording_handler,
                                     api_docs!(
@@ -300,7 +304,7 @@ pub fn route(
                                 ),
                             )
                             .route(
-                                "/:id/end-recording",
+                                "/:discussion_pk/end-recording",
                                 post_with(
                                     end_recording_handler,
                                     api_docs!(
@@ -311,7 +315,7 @@ pub fn route(
                                 ),
                             )
                             .route(
-                                "/:id/exit-meeting",
+                                "/:discussion_pk/exit-meeting",
                                 post_with(
                                     exit_meeting_handler,
                                     api_docs!(
@@ -334,7 +338,7 @@ pub fn route(
                         ),
                     )
                     .route(
-                        "/:id",
+                        "/:space_pk",
                         post_with(
                             update_deliberation_handler,
                             api_docs!(
@@ -345,7 +349,7 @@ pub fn route(
                         ),
                     )
                     .route(
-                        "/:id",
+                        "/:space_pk",
                         get_with(
                             get_deliberation_handler,
                             api_docs!(
@@ -356,7 +360,18 @@ pub fn route(
                         ),
                     )
                     .route(
-                        "/:id/delete",
+                        "/:space_pk/posting",
+                        post_with(
+                            posting_deliberation_handler,
+                            api_docs!(
+                                Json<PostingDeliberationResponse>,
+                                "Posting deliberation",
+                                "Posting deliberation with id"
+                            ),
+                        ),
+                    )
+                    .route(
+                        "/:space_pk/delete",
                         post_with(
                             delete_deliberation_handler,
                             api_docs!(

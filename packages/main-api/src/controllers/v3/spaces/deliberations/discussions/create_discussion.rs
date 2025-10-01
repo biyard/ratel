@@ -7,18 +7,15 @@ use crate::{
         user::User,
     },
     types::{EntityType, Partition},
-    utils::dynamo_extractor::extract_user,
+    utils::dynamo_extractor::extract_user_from_session,
 };
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Json, Path, State},
-    },
+use bdk::prelude::axum::{
+    Extension,
+    extract::{Json, Path, State},
 };
-
-use dto::{JsonSchema, aide, schemars};
+use bdk::prelude::*;
 use serde::{Deserialize, Serialize};
+use tower_sessions::Session;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -39,21 +36,27 @@ pub struct CreateDiscussionRequest {
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
 )]
 pub struct DeliberationDiscussionPath {
-    pub deliberation_id: String,
+    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
+    pub space_pk: Partition,
 }
 
 #[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreateDiscussionResponse {
-    pub deliberation_id: String,
+    pub space_pk: String,
 }
 
 pub async fn create_discussion_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
-    Path(DeliberationDiscussionPath { deliberation_id }): Path<DeliberationDiscussionPath>,
+    Extension(session): Extension<Session>,
+    Path(DeliberationDiscussionPath { space_pk }): Path<DeliberationDiscussionPath>,
     Json(req): Json<CreateDiscussionRequest>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
-    let user = extract_user(&dynamo.client, auth).await?;
+    let deliberation_id = match space_pk.clone() {
+        Partition::DeliberationSpace(v) => v,
+        _ => "".to_string(),
+    };
+
+    let user = extract_user_from_session(&dynamo.client, &session).await?;
 
     let disc = DeliberationSpaceDiscussion::new(
         crate::types::Partition::DeliberationSpace(deliberation_id.clone()),
@@ -95,7 +98,7 @@ pub async fn create_discussion_handler(
 
     let disc = DeliberationSpaceDiscussion::get(
         &dynamo.client,
-        &Partition::DeliberationSpace(deliberation_id.to_string()),
+        &space_pk,
         Some(EntityType::DeliberationSpaceDiscussion(disc_id.to_string())),
     )
     .await?;
