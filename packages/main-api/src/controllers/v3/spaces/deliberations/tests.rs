@@ -1,5 +1,6 @@
 use crate::controllers::v3::posts::create_post::CreatePostResponse;
 use crate::types::File;
+use crate::*;
 use crate::{
     controllers::v3::{
         posts::create_post::{CreatePostRequest, create_post_handler},
@@ -8,9 +9,7 @@ use crate::{
             delete_deliberation::DeleteDeliberationResponse,
         },
     },
-    get,
     models::space::{DeliberationDetailResponse, DiscussionCreateRequest, SurveyCreateRequest},
-    post,
     tests::{
         create_app_state, create_test_user, get_auth,
         v3_setup::{TestContextV3, setup_v3},
@@ -33,11 +32,11 @@ async fn test_create_space_handler() {
     let app_state = create_app_state();
     let auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
-        response_type: CreatePostResponse,
+        response_type: CreatePostResponse
     };
 
     let feed_pk = post.post_pk.clone();
@@ -71,11 +70,11 @@ async fn test_update_space_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
-        response_type: CreatePostResponse,
+        response_type: CreatePostResponse
     };
 
     let feed_pk = post.post_pk.clone();
@@ -195,7 +194,7 @@ async fn test_update_space_handler() {
                 url: None,
             }],
         },
-        response_type: DeliberationDetailResponse,
+        response_type: DeliberationDetailResponse
     };
 
     assert_eq!(status, 200);
@@ -295,7 +294,7 @@ async fn test_update_space_handler() {
                 url: None,
             }],
         },
-        response_type: DeliberationDetailResponse,
+        response_type: DeliberationDetailResponse
     };
 
     assert_eq!(status, 200);
@@ -332,11 +331,11 @@ async fn test_delete_space_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
-        response_type: CreatePostResponse,
+        response_type: CreatePostResponse
     };
 
     let feed_pk = post.post_pk.clone();
@@ -454,7 +453,7 @@ async fn test_delete_space_handler() {
                 url: None,
             }],
         },
-        response_type: DeliberationDetailResponse,
+        response_type: DeliberationDetailResponse
     };
 
     assert_eq!(status, 200);
@@ -485,11 +484,11 @@ async fn test_get_space_handler() {
     let app_state = create_app_state();
     let auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
-        response_type: CreatePostResponse,
+        response_type: CreatePostResponse
     };
 
     let feed_pk = post.post_pk.clone();

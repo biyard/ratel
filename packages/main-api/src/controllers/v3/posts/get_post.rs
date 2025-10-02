@@ -1,5 +1,3 @@
-use std::str::FromStr;
-
 use crate::{
     AppState, Error2,
     models::{
@@ -8,19 +6,16 @@ use crate::{
     },
     types::Partition,
 };
-use dto::{JsonSchema, aide, schemars};
-use dto::{
-    aide::NoApi,
-    by_axum::axum::{
-        Json,
-        extract::{Path, State},
-    },
+use aide::NoApi;
+use axum::{
+    Json,
+    extract::{Path, State},
 };
-use serde::Deserialize;
+use bdk::prelude::*;
 
-#[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 pub struct GetPostPathParams {
-    pub post_pk: String,
+    pub post_pk: Partition,
 }
 
 pub type GetPostResponse = PostDetailResponse;
@@ -31,7 +26,7 @@ pub async fn get_post_handler(
     Path(GetPostPathParams { post_pk }): Path<GetPostPathParams>,
 ) -> Result<Json<GetPostResponse>, Error2> {
     let cli = &dynamo.client;
-    let post_pk = Partition::from_str(&post_pk)?;
+    tracing::info!("Get post for post_pk: {}", post_pk);
 
     if !Post::has_permission(
         cli,

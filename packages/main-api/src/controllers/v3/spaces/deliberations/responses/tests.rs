@@ -5,22 +5,16 @@ use crate::{
         posts::create_post::{CreatePostRequest, create_post_handler},
         spaces::deliberations::responses::create_response_answer::CreateDeliberationResponse,
     },
-    get,
     models::space::{
         DeliberationDetailResponse, DeliberationSpaceResponse, DiscussionCreateRequest,
         SurveyCreateRequest,
     },
-    post,
-    tests::{
-        create_app_state, get_auth,
-        v3_setup::{TestContextV3, setup_v3},
-    },
+    tests::v3_setup::{TestContextV3, setup_v3},
     types::{ChoiceQuestion, LinearScaleQuestion, SpaceVisibility, SurveyQuestion, SurveyStatus},
 };
 
-use bdk::prelude::axum::{Extension, Json, extract::State};
-
 use crate::types::SurveyAnswer;
+use crate::*;
 
 #[tokio::test]
 async fn test_create_response_answer_handler() {
@@ -30,15 +24,11 @@ async fn test_create_response_answer_handler() {
         ..
     } = setup_v3().await;
 
-    //FIXME: fix by session and one test code
-    let app_state = create_app_state();
-    let auth = get_auth(&user);
-
-    let (status, _headers, post) = crate::post! {
+    let (status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
-        response_type: CreatePostResponse,
+        response_type: CreatePostResponse
     };
 
     let feed_pk = post.post_pk.clone();
@@ -143,7 +133,7 @@ async fn test_create_response_answer_handler() {
                 url: None,
             }],
         },
-        response_type: DeliberationDetailResponse,
+        response_type: DeliberationDetailResponse
     };
 
     assert_eq!(status, 200);
@@ -168,7 +158,7 @@ async fn test_create_response_answer_handler() {
                 },
             ],
         },
-        response_type: CreateDeliberationResponse,
+        response_type: CreateDeliberationResponse
     );
 
     assert_eq!(status, 200);
@@ -195,15 +185,11 @@ async fn test_get_response_answer_handler() {
         ..
     } = setup_v3().await;
 
-    //FIXME: fix by session and one test code
-    let app_state = create_app_state();
-    let auth = get_auth(&user);
-
-    let (status, _headers, post) = crate::post! {
+    let (status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
-        response_type: CreatePostResponse,
+        response_type: CreatePostResponse
     };
 
     let feed_pk = post.post_pk.clone();
@@ -309,7 +295,7 @@ async fn test_get_response_answer_handler() {
                 url: None,
             }],
         },
-        response_type: DeliberationDetailResponse,
+        response_type: DeliberationDetailResponse
     };
 
     assert_eq!(status, 200);
@@ -334,7 +320,7 @@ async fn test_get_response_answer_handler() {
                 },
             ],
         },
-        response_type: CreateDeliberationResponse,
+        response_type: CreateDeliberationResponse
     );
 
     assert_eq!(status, 200);

@@ -1,7 +1,7 @@
 #![allow(warnings)]
+use crate::*;
 use crate::{
     models::email::EmailVerification,
-    post,
     tests::v3_setup::{TestContextV3, setup_v3},
     types::{EntityType, Partition},
 };
@@ -19,7 +19,7 @@ async fn test_verification_code() {
         body: {
             "email": email.clone(),
         },
-        response_type: super::send_code::SendCodeResponse,
+        response_type: super::send_code::SendCodeResponse
     };
     assert_eq!(status, 200);
     assert!(body.expired_at > now as i64);
@@ -40,7 +40,7 @@ async fn test_verification_code() {
             "email": email.clone(),
             "code": code,
         },
-        response_type: super::verify_code::VerifyCodeResponse,
+        response_type: super::verify_code::VerifyCodeResponse
     };
 
     assert_eq!(status, 200);
@@ -60,7 +60,7 @@ async fn test_verification_invalid_code() {
         body: {
             "email": email.clone(),
         },
-        response_type: super::send_code::SendCodeResponse,
+        response_type: super::send_code::SendCodeResponse
     };
     assert_eq!(status, 200);
     assert!(body.expired_at > now as i64);
