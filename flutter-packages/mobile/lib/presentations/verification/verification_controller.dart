@@ -51,6 +51,8 @@ class VerificationController extends BaseController {
 
   Future<void> verify() async {
     final auth = AuthApi();
+    final authService = Get.find<AuthService>();
+
     if (!isComplete || isBusy.value) return;
     isBusy.value = true;
     try {
@@ -60,6 +62,7 @@ class VerificationController extends BaseController {
 
       if (res != null) {
         logger.d("verification response: ${res}");
+        authService.neededSignup = false;
         Get.rootDelegate.offNamed(AppRoutes.setupProfileScreen);
       } else {
         Biyard.error(

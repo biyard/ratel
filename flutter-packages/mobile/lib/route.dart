@@ -16,6 +16,7 @@ class AppRoutes {
   static const String draftScreen = '/draft';
   static const String postScreen = '/post';
   static const String verifiedScreen = '/verified';
+  static const String settingScreen = '/settings';
   static const String mySpaces = '/my-spaces';
   static const String explore = "/dashboard/explore";
   static const String home = "/dashboard/home";
@@ -197,6 +198,15 @@ class AppRoutes {
       name: welcomeScreen,
       page: () => const WelcomeScreen(),
       binding: WelcomeBinding(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
+      name: settingScreen,
+      page: () => const SettingsScreen(),
+      binding: SettingsBinding(),
       customTransition: SlideOverTransition(),
       transitionDuration: const Duration(milliseconds: 300),
       opaque: true,

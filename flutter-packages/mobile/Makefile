@@ -68,7 +68,7 @@ run.android: $(BUILD_CONFIG_FILE)
 	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d emulator-5554
 
 run.ios: $(BUILD_CONFIG_FILE)
-	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d A34FDE94-9689-48FF-BBDA-436360EFB727
+	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d 5608475F-6D9A-4CFB-A518-AB756BBDDC44
 
 run.web: $(BUILD_CONFIG_FILE)
 	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d chrome --web-renderer $(RENDERER)

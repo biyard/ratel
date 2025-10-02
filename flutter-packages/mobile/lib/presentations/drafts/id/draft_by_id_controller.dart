@@ -5,6 +5,7 @@ class DraftByIdController extends BaseController {
   final feedApi = Get.find<FeedsApi>();
   final titleCtrl = TextEditingController();
   final bodyCtrl = TextEditingController();
+  final RxString bodyHtml = ''.obs;
   final RxBool warnTitle = false.obs;
   final RxBool warnCategory = false.obs;
   final RxBool warnBody = false.obs;
@@ -80,6 +81,7 @@ class DraftByIdController extends BaseController {
 
     titleCtrl.text = res.title;
     bodyCtrl.text = res.description;
+    bodyHtml.value = res.description;
 
     if (res.feedType.isNotEmpty) {
       categories.assignAll([res.feedType]);
