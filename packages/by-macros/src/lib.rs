@@ -15,6 +15,8 @@ mod rest_error;
 mod sql_model;
 mod write_file;
 
+mod openapi_docs;
+
 use api_model::api_model_impl;
 use dynamo_entity::dynamo_entity_impl;
 use dynamo_enum::dynamo_enum_impl;
@@ -24,6 +26,8 @@ use query_display::query_display_impl;
 use quote::{quote, ToTokens};
 use rest_error::rest_error_impl;
 use syn::{parse_macro_input, Data, DataEnum, DeriveInput, Fields};
+
+use crate::openapi_docs::openapi_impl;
 
 #[proc_macro_derive(QueryDisplay)]
 pub fn query_display_derive(input: TokenStream) -> TokenStream {
@@ -323,4 +327,20 @@ pub(crate) fn save_file(st_name: &str, output: &str) {
     } else {
         tracing::info!("generated code {} into {}", st_name, file_path);
     }
+}
+
+#[proc_macro_attribute]
+pub fn openapi(
+    attr: proc_macro::TokenStream,
+    item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_file(true)
+        .with_line_number(true)
+        .with_thread_ids(true)
+        .with_target(false)
+        .try_init();
+
+    openapi_impl(attr.into(), item.into()).into()
 }
