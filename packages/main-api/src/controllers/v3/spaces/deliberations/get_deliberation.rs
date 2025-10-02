@@ -28,6 +28,7 @@ pub async fn get_deliberation_handler(
     Path(DeliberationGetPath { space_pk }): Path<DeliberationGetPath>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
+    let user = extract_user_from_session(&dynamo.client, &session).await?;
 
     let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
         .await?
@@ -47,7 +48,6 @@ pub async fn get_deliberation_handler(
                 .await?;
             }
             Partition::User(_) => {
-                let user = extract_user_from_session(&dynamo.client, &session).await?;
                 if user.pk != space_common.user_pk {
                     return Err(Error2::Unauthorized(
                         "You do not have permission to get this deliberation".into(),
@@ -63,9 +63,16 @@ pub async fn get_deliberation_handler(
     }
 
     tracing::debug!("Deliberation metadata retrieved: {:?}", metadata);
-    let metadata: DeliberationDetailResponse = metadata.into();
+    let mut metadata: DeliberationDetailResponse = metadata.into();
 
     tracing::debug!("DeliberationDetailResponse formed: {:?}", metadata);
+    let responses = metadata.clone().surveys.responses;
+
+    for response in responses {
+        if response.user_pk == user.pk {
+            metadata.surveys.user_responses.push(response);
+        }
+    }
 
     Ok(Json(metadata))
 }

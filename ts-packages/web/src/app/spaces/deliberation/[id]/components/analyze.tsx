@@ -3,10 +3,10 @@ import React from 'react';
 import { logger } from '@/lib/logger';
 import { useTranslations } from 'next-intl';
 import { MappedResponse, Poll } from '../types';
-import { SurveyResponseResponse } from '@/lib/api/models/spaces/deliberation-spaces';
 import ObjectiveResponse from '@/app/spaces/[id]/_components/dashboard/objective-response';
 import SubjectiveResponse from '@/app/spaces/[id]/_components/dashboard/subjective-response';
 import SummaryReport from '@/app/spaces/[id]/_components/dashboard/summary-report';
+import { SurveyResponseResponse } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 
 enum AnswerType {
   SingleChoice = 'single_choice',

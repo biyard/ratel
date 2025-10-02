@@ -11,8 +11,8 @@ import { SurveyAnswer } from '@/app/spaces/[id]/type';
 import { AnswerType } from '@/app/spaces/[id]/_components/question/answer-type-select';
 import SurveyQuestionEditor from '@/app/spaces/[id]/_components/question/survey-question-editor';
 import { Add } from '@/components/icons';
-import { DeliberationSpace } from '@/lib/api/models/spaces/deliberation-spaces';
 import SurveyViewer from './survey-viewer';
+import { DeliberationSpace } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 
 export default function SpaceSurvey({
   isEdit,
@@ -62,12 +62,12 @@ export default function SpaceSurvey({
 }
 
 function ViewSurvey({
+  space,
   isEdit,
   startDate,
   endDate,
   survey,
   answer,
-  status,
   handleSetAnswers,
   handleSend,
 }: {
@@ -89,7 +89,7 @@ function ViewSurvey({
         endDate={endDate}
         survey={survey}
         answer={answer}
-        status={status}
+        publish={space.publish_state}
         handleSetAnswers={handleSetAnswers}
         handleSend={handleSend}
       />

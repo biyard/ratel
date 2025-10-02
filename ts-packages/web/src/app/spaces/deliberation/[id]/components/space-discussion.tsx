@@ -79,10 +79,13 @@ function DiscussionSchedules() {
                   members={[]}
                   record={''}
                   onclick={() => {
-                    handleMoveDiscussion(space.data.pk, discussion.pk);
+                    handleMoveDiscussion(space.data.pk, discussion.pk ?? '');
                   }}
                   viewRecordClick={() => {
-                    handleViewRecord(discussion.pk, discussion.record ?? '');
+                    handleViewRecord(
+                      discussion.pk ?? '',
+                      discussion.record ?? '',
+                    );
                   }}
                 />
                 {index !== discussions.length - 1 ? (
@@ -377,7 +380,7 @@ function EditableDiscussionInfo({
   const [endTime, setEndTime] = useState<number>(endedAt);
   const [title, setTitle] = useState<string>(name);
   const [desc, setDesc] = useState<string>(description);
-  const [, setUsers] = useState<DiscussionUser[]>(participants);
+  const [users, setUsers] = useState<DiscussionUser[]>(participants);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
@@ -462,8 +465,7 @@ function EditableDiscussionInfo({
                                 ended_at: Math.floor(endedAt * 1000),
                                 name,
                                 description,
-                                participants: [],
-                                // participants: users,
+                                participants: users,
                               }}
                               onadd={(discussion: DiscussionInfo) => {
                                 onupdate(index, discussion);
@@ -526,8 +528,7 @@ function EditableDiscussionInfo({
                           ended_at: Math.floor(endedAt * 1000),
                           name,
                           description,
-                          participants: [],
-                          //   participants: users,
+                          participants: users,
                         }}
                         onadd={(discussion: DiscussionInfo) => {
                           onupdate(index, discussion);

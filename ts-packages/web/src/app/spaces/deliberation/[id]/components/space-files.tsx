@@ -22,7 +22,7 @@ import {
 } from '@/components/icons';
 import { useTranslations } from 'next-intl';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
-import { File } from '@/lib/api/models/spaces/deliberation-spaces';
+import { File } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 
 export interface SpaceFilesProps {
   isEdit?: boolean;

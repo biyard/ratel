@@ -7,7 +7,7 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { useDeliberationSpaceByIdContext } from '../../providers.client';
 import SetSchedulePopup from '@/app/spaces/[id]/_components/modal/set-schedule';
 import SpaceSurvey from '../space-survey';
-import { DeliberationSpace } from '@/lib/api/models/spaces/deliberation-spaces';
+import { DeliberationSpace } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 
 export function DeliberationSurveyPage({
   space,

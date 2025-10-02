@@ -1,5 +1,5 @@
 import { Answer } from '@/lib/api/models/response';
-import { File } from '@/lib/api/models/spaces/deliberation-spaces';
+import { File } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 import { Question, SurveyCreateRequest } from '@/lib/api/models/survey';
 
 export enum DeliberationTab {
@@ -44,7 +44,7 @@ export interface DiscussionUser {
 
 export interface Deliberation {
   discussions: DiscussionInfo[];
-  elearnings: ElearningCreateRequest[];
+  elearnings: ElearningCreateRequest;
 }
 
 export interface ElearningCreateRequest {

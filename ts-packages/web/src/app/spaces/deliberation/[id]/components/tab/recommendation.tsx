@@ -4,7 +4,7 @@ import React from 'react';
 import { useDeliberationSpaceByIdContext } from '../../providers.client';
 import SpaceContents from '../space-contents';
 import SpaceFiles from '../space-files';
-import { File } from '@/lib/api/models/spaces/deliberation-spaces';
+import { File } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 
 export default function FinalConsensusPage() {
   const { draft, handleUpdateDraft, isEdit, title } =

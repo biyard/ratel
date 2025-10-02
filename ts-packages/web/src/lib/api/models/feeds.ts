@@ -57,7 +57,7 @@ export interface FeedV2 {
 
   shares: number;
   likes: number;
-  comments: number;
+  comments: FeedComment[];
 
   user_pk: PartitionString;
   author_display_name: string;
@@ -70,6 +70,20 @@ export interface FeedV2 {
 
   sorted_visibility: SortedVisibility;
   urls: string[];
+}
+
+export interface FeedComment {
+  pk: PartitionString;
+  sk: EntityTypeString;
+
+  updated_at: number;
+
+  content: string;
+
+  author_pk: PartitionString;
+  author_display_name: string;
+  author_profile_url: string;
+  author_username: string;
 }
 
 export interface Feed {
@@ -155,15 +169,15 @@ export interface FileInfo {
 }
 
 export enum FileExtension {
-  JPG = 1,
-  PNG = 2,
-  PDF = 3,
-  ZIP = 4,
-  WORD = 5,
-  PPTX = 6,
-  EXCEL = 7,
-  MP4 = 8,
-  MOV = 9,
+  JPG = 'JPG',
+  PNG = 'PNG',
+  PDF = 'PDF',
+  ZIP = 'ZIP',
+  WORD = 'WORD',
+  PPTX = 'PPTX',
+  EXCEL = 'EXCEL',
+  MP4 = 'MP4',
+  MOV = 'MOV',
 }
 
 export const FileExtensionLabel: Record<

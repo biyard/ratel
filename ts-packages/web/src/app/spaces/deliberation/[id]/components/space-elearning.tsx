@@ -11,7 +11,7 @@ import { CircleClose } from '@/components/icons';
 import { useTranslations } from 'next-intl';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 import { useDeliberationSpaceByIdContext } from '../providers.client';
-import { File } from '@/lib/api/models/spaces/deliberation-spaces';
+import { File } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 
 export default function SpaceElearning() {
   const t = useTranslations('DeliberationSpace');
@@ -48,7 +48,9 @@ export default function SpaceElearning() {
 
                 handleUpdateDeliberation({
                   ...deliberation,
-                  elearnings: [...deliberation.elearnings, { files: [f] }],
+                  elearnings: {
+                    files: [...deliberation.elearnings.files, f],
+                  },
                 });
               }}
             >
@@ -67,42 +69,38 @@ export default function SpaceElearning() {
         {isEdit ? (
           <div className="flex flex-col w-full gap-2.5">
             <div className="flex flex-col w-full gap-2.5">
-              {elearnings
-                ?.filter((file) => file.files.length != 0)
-                .map((file, index) => (
-                  <div
-                    className="flex flex-col w-full"
-                    key={file?.files[0].name ?? ''}
-                  >
-                    <EditableFile
-                      file={file.files[0]}
-                      onclick={() => {
-                        const updated = deliberation.elearnings.filter(
-                          (_, i) => i !== index,
-                        );
-                        handleUpdateDeliberation({
-                          ...deliberation,
-                          elearnings: updated,
-                        });
-                      }}
-                    />
+              {elearnings.files.map((file, index) => (
+                <div className="flex flex-col w-full" key={file?.name ?? ''}>
+                  <EditableFile
+                    file={file}
+                    onclick={() => {
+                      handleUpdateDeliberation({
+                        ...deliberation,
+                        elearnings: {
+                          files: deliberation.elearnings.files.filter(
+                            (_, i) => i !== index,
+                          ),
+                        },
+                      });
+                    }}
+                  />
 
-                    {index !== elearnings.length - 1 ? (
-                      <div className="flex flex-row w-full h-0.25 bg-neutral-800 light:bg-[#e5e5e5]" />
-                    ) : (
-                      <></>
-                    )}
-                  </div>
-                ))}
+                  {index !== elearnings.files.length - 1 ? (
+                    <div className="flex flex-row w-full h-0.25 bg-neutral-800 light:bg-[#e5e5e5]" />
+                  ) : (
+                    <></>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         ) : (
           <div className="flex flex-col w-full gap-2.5">
-            {elearnings.map((file, index) => (
+            {elearnings.files.map((file, index) => (
               <EBook
-                file={file.files[0]}
+                file={file}
                 key={'file ' + index}
-                onClick={() => handlePdfDownload(file.files[0])}
+                onClick={() => handlePdfDownload(file)}
               />
             ))}
           </div>

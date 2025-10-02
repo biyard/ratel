@@ -4,8 +4,14 @@ import * as XLSX from 'xlsx';
 import {
   File,
   responseCreateRequest,
-} from '@/lib/api/models/spaces/deliberation-spaces';
-import { ratelApi, useDeliberationSpaceById } from '@/lib/api/ratel_api';
+  SpacePublishState,
+  toBackendFile,
+} from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import {
+  ratelApi,
+  useDeliberationSpaceById,
+  usePostByIdV2,
+} from '@/lib/api/ratel_api';
 import { useTranslations } from 'next-intl';
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -22,8 +28,8 @@ import { Answer } from '@/lib/api/models/response';
 import {
   SurveyResponseResponse,
   updateSpaceRequest,
-  Visibility,
-} from '@/lib/api/models/spaces/deliberation-spaces';
+  SpaceVisibility,
+} from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 import { SurveyAnswer } from '../../[id]/type';
 import { NewSurveyCreateRequest, Question } from '@/lib/api/models/survey';
 import { PublishingScope } from '@/lib/api/models/notice';
@@ -55,7 +61,7 @@ type ContextType = {
   proposerImage: string;
   proposerName: string;
   createdAt: number;
-  visibility: Visibility;
+  visibility: SpaceVisibility;
 
   handleGoBack: () => void;
   handleDownloadExcel: () => void;
@@ -95,12 +101,16 @@ export default function ClientProviders({
 
   const { data: space, refetch } = useDeliberationSpaceById(spaceId);
 
+  const postId = decodeURIComponent(space.post_pk).replace(/^.*#/, '');
+  const { data: feed } = usePostByIdV2(postId);
+
   const [selectedType, setSelectedType] = useState<DeliberationTabType>(
     DeliberationTab.SUMMARY,
   );
-  const [isPrivatelyPublished] = useState<boolean>(false);
+  const [isPrivatelyPublished, setIsPrivatelyPublished] =
+    useState<boolean>(false);
   const [isEdit, setIsEdit] = useState(false);
-  const [title, setTitle] = useState(space.title ?? '');
+  const [title, setTitle] = useState(feed.title ?? '');
   const [startedAt, setStartedAt] = useState(
     changeStartedAt(
       space.surveys.started_at && space.surveys.started_at != 0
@@ -121,18 +131,14 @@ export default function ClientProviders({
   const createdAt = space.created_at;
   const visibility = space.visibility;
 
-  //FIXME: fix to publish when api is implemented
-  //   useEffect(() => {
-  //     if (space) {
-  //       setIsPrivatelyPublished(
-  //         // space.status !== SpaceStatus.Draft &&
-  //         //   space.publishing_scope === PublishingScope.Private,
-  //         false,
-  //       );
-  //     }
-
-  //     console.log('deliberation space: ', space);
-  //   }, [space]);
+  useEffect(() => {
+    if (space) {
+      setIsPrivatelyPublished(
+        space.publish_state !== SpacePublishState.Draft.toUpperCase() &&
+          (space.visibility ?? '').toUpperCase() === 'PRIVATE',
+      );
+    }
+  }, [space]);
 
   useEffect(() => {
     if (space.surveys.started_at) {
@@ -162,7 +168,7 @@ export default function ClientProviders({
         username: member.author_username,
       })),
     })),
-    elearnings: [{ files: space.elearnings.files }],
+    elearnings: { files: space.elearnings.files },
   });
 
   const surveyStartedAt = space.surveys.started_at;
@@ -189,9 +195,9 @@ export default function ClientProviders({
         : [],
     is_completed:
       space.surveys.user_responses.length !== 0
-        ? space.surveys.user_responses[0].survey_type === 1
-          ? false
-          : true
+        ? space.surveys.user_responses[0].survey_type === 'SURVEY'
+          ? true
+          : false
         : false,
   });
 
@@ -295,8 +301,8 @@ export default function ClientProviders({
       showErrorToast(t('all_input_required'));
       return;
     }
-
-    const spacePk = 'DELIBERATION_SPACE%23' + spaceId;
+    const id = decodeURIComponent(spaceId).replace(/^.*#/, '');
+    const spacePk = 'DELIBERATION_SPACE%23' + id;
 
     try {
       await post(
@@ -318,12 +324,12 @@ export default function ClientProviders({
   const handlePublishWithScope = async (scope: PublishingScope) => {
     if (!space) return;
     try {
-      const spacePk = 'DELIBERATION_SPACE%23' + spaceId;
+      const id = decodeURIComponent(spaceId).replace(/^.*#/, '');
+      const spacePk = 'DELIBERATION_SPACE%23' + id;
 
-      await post(
-        ratelApi.spaces.postingDeliberationSpaceBySpaceId(spacePk),
-        {},
-      );
+      await post(ratelApi.spaces.postingDeliberationSpaceBySpaceId(spacePk), {
+        visibility: scope === PublishingScope.Private ? 'PRIVATE' : 'PUBLIC',
+      });
 
       const discussions = deliberation.discussions.map((disc) => ({
         discussion_pk: disc.discussion_pk,
@@ -339,12 +345,12 @@ export default function ClientProviders({
         survey_pk: space.surveys.pk,
         started_at: survey.surveys[0]?.started_at ?? startedAt,
         ended_at: survey.surveys[0]?.ended_at ?? endedAt,
-        status: 1,
+        status: 'READY',
         questions: survey.surveys.flatMap((s) => s.questions),
       };
 
       const elearningFiles: NewElearningCreateRequest = {
-        files: deliberation.elearnings.flatMap((e) => e.files),
+        files: deliberation.elearnings.files,
       };
 
       await handleUpdate(
@@ -358,7 +364,7 @@ export default function ClientProviders({
         surveys,
         draft.drafts.html_contents,
         draft.drafts.files,
-        'Public',
+        scope === PublishingScope.Private ? 'PRIVATE' : 'PUBLIC',
       );
 
       queryClient.invalidateQueries({
@@ -389,22 +395,27 @@ export default function ClientProviders({
     surveys: NewSurveyCreateRequest,
     recommendation_html_contents: string,
     recommendation_files: File[],
-    visibility: Visibility,
+    visibility: SpaceVisibility,
   ) => {
-    const spacePk = 'DELIBERATION_SPACE%23' + spaceId;
+    const id = decodeURIComponent(spaceId).replace(/^.*#/, '');
+    const spacePk = 'DELIBERATION_SPACE%23' + id;
+
+    const payloadFiles = files.map(toBackendFile);
+    const payloadElearningFiles = elearning_files.files.map(toBackendFile);
+    const payloadRecommendationFiles = recommendation_files.map(toBackendFile);
 
     await post(
       ratelApi.spaces.updateDeliberationSpaceBySpaceId(spacePk),
       updateSpaceRequest(
         html_contents,
-        files,
+        payloadFiles,
 
         discussions,
-        elearning_files.files,
+        payloadElearningFiles,
 
         [surveys],
 
-        recommendation_files,
+        payloadRecommendationFiles,
 
         visibility,
         started_at,
@@ -503,7 +514,8 @@ export default function ClientProviders({
 
   const handlePostingSpace = async () => {
     try {
-      const spacePk = 'DELIBERATION_SPACE%23' + spaceId;
+      const id = decodeURIComponent(spaceId).replace(/^.*#/, '');
+      const spacePk = 'DELIBERATION_SPACE%23' + id;
 
       await post(
         ratelApi.spaces.postingDeliberationSpaceBySpaceId(spacePk),
@@ -523,7 +535,8 @@ export default function ClientProviders({
   };
 
   const handleSave = async () => {
-    const spacePk = 'DELIBERATION_SPACE%23' + spaceId;
+    const id = decodeURIComponent(spaceId).replace(/^.*#/, '');
+    const spacePk = 'DELIBERATION_SPACE%23' + id;
 
     if (checkString(title) || checkString(thread.html_contents)) {
       showErrorToast(t('remove_test_keyword'));
@@ -573,14 +586,14 @@ export default function ClientProviders({
 
     const surveys: NewSurveyCreateRequest = {
       survey_pk: space.surveys.pk,
-      started_at: survey.surveys[0]?.started_at ?? startedAt,
-      ended_at: survey.surveys[0]?.ended_at ?? endedAt,
-      status: 1,
+      started_at: startedAt,
+      ended_at: endedAt,
+      status: 'READY',
       questions: survey.surveys.flatMap((s) => s.questions),
     };
 
     const elearningFiles: NewElearningCreateRequest = {
-      files: deliberation.elearnings.flatMap((e) => e.files),
+      files: deliberation.elearnings.files,
     };
 
     try {
@@ -595,7 +608,7 @@ export default function ClientProviders({
         surveys,
         draft.drafts.html_contents,
         draft.drafts.files,
-        'Public',
+        space.visibility,
       );
 
       queryClient.invalidateQueries({
@@ -614,7 +627,8 @@ export default function ClientProviders({
   };
 
   const handleDelete = async () => {
-    const spacePk = 'DELIBERATION_SPACE%23' + spaceId;
+    const id = decodeURIComponent(spaceId).replace(/^.*#/, '');
+    const spacePk = 'DELIBERATION_SPACE%23' + id;
 
     try {
       await post(ratelApi.spaces.deleteDeliberationSpaceBySpaceId(spacePk), {});
