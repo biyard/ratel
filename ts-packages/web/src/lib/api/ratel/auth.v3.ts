@@ -26,6 +26,12 @@ export async function loginWithOAuth(
   return user;
 }
 
+export async function getMe(): Promise<User> {
+  const user: User = await call('GET', '/v3/me');
+
+  return user;
+}
+
 export interface User {
   pk: string;
   sk: string;
@@ -35,6 +41,7 @@ export interface User {
 
   display_name: string;
   profile_url: string;
+  nickname: string;
 
   email: string;
 

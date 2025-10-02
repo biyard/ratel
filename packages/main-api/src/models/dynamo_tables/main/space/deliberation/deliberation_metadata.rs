@@ -1,3 +1,4 @@
+#![allow(unused)]
 use crate::{
     models::space::SpaceCommon,
     types::{EntityType, Partition},
@@ -22,6 +23,7 @@ pub struct DeliberationDetailResponse {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 #[serde(untagged)]
 pub enum DeliberationMetadata {
+    SpaceCommon(SpaceCommon),
     DeliberationSpaceSurvey(DeliberationSpaceSurvey),
     DeliberationSpaceResponse(DeliberationSpaceResponse),
     DeliberationSpaceContent(DeliberationSpaceContent),
@@ -30,7 +32,6 @@ pub enum DeliberationMetadata {
     DeliberationSpaceMember(DeliberationSpaceMember),
     DeliberationSpaceElearning(DeliberationSpaceElearning),
     DeliberationSpaceDiscussion(DeliberationSpaceDiscussion),
-    SpaceCommon(SpaceCommon),
     DeliberationSpace(DeliberationSpace),
 }
 

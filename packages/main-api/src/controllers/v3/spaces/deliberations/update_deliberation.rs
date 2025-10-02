@@ -1,3 +1,4 @@
+use crate::models::space::DeliberationSpaceParticipant;
 use crate::types::File;
 use crate::{
     AppState, Error2,
@@ -240,12 +241,30 @@ pub async fn update_discussion(
     space_pk: String,
     discussions: Vec<DiscussionCreateRequest>,
 ) -> Result<(), Error2> {
+    let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
+
+    for data in metadata.into_iter() {
+        match data {
+            DeliberationMetadata::DeliberationSpaceParticipant(v) => {
+                DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+            DeliberationMetadata::DeliberationSpaceMember(v) => {
+                DeliberationSpaceMember::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+            DeliberationMetadata::DeliberationSpaceDiscussion(v) => {
+                DeliberationSpaceDiscussion::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
+            _ => {}
+        }
+    }
+
     let id = space_pk
         .clone()
         .split("#")
         .last()
         .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
         .to_string();
+
     for discussion in discussions {
         if discussion.discussion_pk.is_some() {
             let discussion_id = discussion
@@ -282,13 +301,9 @@ pub async fn update_discussion(
             }
 
             for member in discussion.user_ids {
-                let user = User::get(
-                    &dynamo.client,
-                    Partition::User(member),
-                    Some(EntityType::User),
-                )
-                .await?
-                .ok_or(Error2::NotFound("User not found".into()))?;
+                let user = User::get(&dynamo.client, member, Some(EntityType::User))
+                    .await?
+                    .ok_or(Error2::NotFound("User not found".into()))?;
 
                 let m = DeliberationSpaceMember::new(
                     Partition::DeliberationSpace(id.to_string()),
@@ -320,13 +335,9 @@ pub async fn update_discussion(
             disc.create(&dynamo.client).await?;
 
             for member in discussion.user_ids {
-                let user = User::get(
-                    &dynamo.client,
-                    Partition::User(member),
-                    Some(EntityType::User),
-                )
-                .await?
-                .ok_or(Error2::NotFound("User not found".into()))?;
+                let user = User::get(&dynamo.client, member, Some(EntityType::User))
+                    .await?
+                    .ok_or(Error2::NotFound("User not found".into()))?;
 
                 let m = DeliberationSpaceMember::new(
                     Partition::DeliberationSpace(id.to_string()),

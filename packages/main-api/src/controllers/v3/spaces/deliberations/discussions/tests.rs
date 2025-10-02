@@ -23,9 +23,9 @@ async fn test_create_discussion_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -94,9 +94,9 @@ async fn test_start_meeting_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -182,9 +182,9 @@ async fn test_create_participants_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -275,9 +275,9 @@ async fn test_exit_meeting_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -409,9 +409,9 @@ async fn test_start_recording_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -506,9 +506,9 @@ async fn test_end_recording_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),

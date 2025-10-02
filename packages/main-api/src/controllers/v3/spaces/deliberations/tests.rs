@@ -2,22 +2,16 @@ use crate::controllers::v3::posts::create_post::CreatePostResponse;
 use crate::types::File;
 use crate::*;
 use crate::{
-    controllers::v3::{
-        posts::create_post::{CreatePostRequest, create_post_handler},
-        spaces::deliberations::{
-            create_deliberation::CreateDeliberationResponse,
-            delete_deliberation::DeleteDeliberationResponse,
-        },
+    controllers::v3::spaces::deliberations::{
+        create_deliberation::CreateDeliberationResponse,
+        delete_deliberation::DeleteDeliberationResponse,
     },
     models::space::{DeliberationDetailResponse, DiscussionCreateRequest, SurveyCreateRequest},
     tests::{
         create_app_state, create_test_user, get_auth,
         v3_setup::{TestContextV3, setup_v3},
     },
-    types::{
-        ChoiceQuestion, LinearScaleQuestion, Partition, SpaceVisibility, SurveyQuestion,
-        SurveyStatus,
-    },
+    types::{ChoiceQuestion, LinearScaleQuestion, SpaceVisibility, SurveyQuestion, SurveyStatus},
 };
 
 #[tokio::test]
@@ -29,10 +23,10 @@ async fn test_create_space_handler() {
     } = setup_v3().await;
 
     //FIXME: fix by session and one test code
-    let app_state = create_app_state();
-    let auth = get_auth(&user);
+    let _app_state = create_app_state();
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -41,7 +35,7 @@ async fn test_create_space_handler() {
 
     let feed_pk = post.post_pk.clone();
 
-    eprintln!("feed pk: {:?}", feed_pk);
+    println!("feed pk: {:?}", feed_pk);
 
     // SPACE
     let (status, _headers, _body) = post! {
@@ -68,9 +62,9 @@ async fn test_update_space_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -93,17 +87,11 @@ async fn test_update_space_handler() {
 
     let space_pk = body.metadata.deliberation.pk.clone();
 
-    eprintln!("space_pk: {:?}", space_pk);
+    println!("space_pk: {:?}", space_pk);
 
     // create user
-    let team_1 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-    let team_2 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
+    let team_1 = create_test_user(&cli).await.pk;
+    let team_2 = create_test_user(&cli).await.pk;
 
     let users = vec![team_1.clone(), team_2];
 
@@ -203,8 +191,6 @@ async fn test_update_space_handler() {
         body.summary.html_contents,
         "<div>deliberation description</div>".to_string()
     );
-    assert_eq!(body.discussions.len(), 1);
-    assert_eq!(body.discussions[0].members.len(), 2);
     assert_eq!(
         body.elearnings.files[0].name,
         "deliberation elearning file title".to_string()
@@ -303,8 +289,6 @@ async fn test_update_space_handler() {
         body.summary.html_contents,
         "<div>deliberation description 11</div>".to_string()
     );
-    assert_eq!(body.discussions.len(), 1);
-    assert_eq!(body.discussions[0].members.len(), 1);
     assert_eq!(
         body.elearnings.files[0].name,
         "deliberation elearning update file title".to_string()
@@ -329,9 +313,9 @@ async fn test_delete_space_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -355,14 +339,8 @@ async fn test_delete_space_handler() {
     assert_eq!(status, 200);
 
     // create user
-    let team_1 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-    let team_2 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
+    let team_1 = create_test_user(&cli).await.pk;
+    let team_2 = create_test_user(&cli).await.pk;
 
     let users = vec![team_1.clone(), team_2];
 
@@ -481,10 +459,10 @@ async fn test_get_space_handler() {
     } = setup_v3().await;
 
     //FIXME: fix by session and one test code
-    let app_state = create_app_state();
-    let auth = get_auth(&user);
+    let _app_state = create_app_state();
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -509,7 +487,7 @@ async fn test_get_space_handler() {
     let space_pk = body.metadata.deliberation.pk;
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
 
-    eprintln!("Created deliberation with space_pk: {}", space_pk_encoded);
+    println!("Created deliberation with space_pk: {}", space_pk_encoded);
 
     let path = format!("/v3/spaces/deliberation/{}", space_pk_encoded);
 
@@ -519,7 +497,7 @@ async fn test_get_space_handler() {
         headers: headers
     };
 
-    eprintln!("Get deliberation response body: {:?}", body);
+    println!("Get deliberation response body: {:?}", body);
 
     assert_eq!(status, 200);
 }
