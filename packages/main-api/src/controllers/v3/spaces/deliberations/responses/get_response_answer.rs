@@ -51,6 +51,10 @@ pub async fn get_response_answer_handler(
     )
     .await?;
 
+    if response.is_none() {
+        Err(Error2::NotFound("Response not found".to_string()))?;
+    }
+
     let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
         .await?
         .ok_or(Error2::NotFound("Space not found".to_string()))?;
@@ -82,10 +86,6 @@ pub async fn get_response_answer_handler(
                 ));
             }
         };
-    }
-
-    if response.is_none() {
-        Err(Error2::NotFound("Response not found".to_string()))?;
     }
 
     let response = response.unwrap();

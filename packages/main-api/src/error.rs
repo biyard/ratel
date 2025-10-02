@@ -45,6 +45,8 @@ pub enum Error {
     ReqwestError(#[from] reqwest::Error),
     #[error("Validation errors: {0}")]
     ValidationErrors(#[from] validator::ValidationErrors),
+    #[error("Decoding error: {0}")]
+    Utf8Decoding(#[from] std::str::Utf8Error),
 
     // Authorization errors 400 ~
     #[error("No session found")]
@@ -53,6 +55,9 @@ pub enum Error {
     #[error("No user found in session")]
     #[rest_error(status = 401, code = 401)]
     NoUserFound,
+    #[error("No permission to access this resource")]
+    #[rest_error(status = 403, code = 403)]
+    NoPermission,
 
     // /v3/auth endpoints 1000 ~
     #[error("Exceeded maximum attempt for email verification")]
@@ -92,6 +97,11 @@ pub enum Error {
     AnswersMismatchQuestions,
     #[error("Space cannot be updated in its current status")]
     ImmutablePollSpaceState,
+
+    // teams 4000 ~
+    #[error("Team not found")]
+    #[rest_error(status = 404, code = 4000)]
+    TeamNotFound,
 }
 
 impl From<String> for Error {

@@ -1,8 +1,8 @@
-use crate::{
-    models::{team::Team, user::User},
-    types::Partition,
-};
+use crate::models::{team::Team, user::User};
 
+use super::Partition;
+
+#[derive(Debug, Clone)]
 pub struct Author {
     pub pk: Partition,
     pub display_name: String,

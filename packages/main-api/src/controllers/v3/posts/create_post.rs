@@ -1,66 +1,41 @@
+#![allow(warnings)]
 use crate::{
     AppState, Error2,
-    models::{
-        feed::{Post, PostAuthor},
-        team::Team,
-    },
-    types::{Author, EntityType, PostType, TeamGroupPermission},
-    utils::{
-        dynamo_extractor::extract_user,
-        security::{RatelResource, check_permission},
-    },
+    models::{feed::Post, team::Team, user::User},
+    types::{Partition, TeamGroupPermission, author::Author},
 };
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Json, State},
-    },
-};
-use dto::{JsonSchema, aide, schemars};
+use aide::NoApi;
+use axum::extract::{Json, State};
+use bdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Deserialize, serde::Serialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreatePostRequest {
-    pub team_pk: Option<String>,
+    pub team_pk: Partition,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreatePostResponse {
-    pub post_pk: String,
+    pub post_pk: Partition,
 }
 
 pub async fn create_post_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
-    Json(req): Json<CreatePostRequest>,
+    NoApi(user): NoApi<User>,
+    req: Option<Json<CreatePostRequest>>,
 ) -> Result<Json<CreatePostResponse>, Error2> {
-    let user = extract_user(&dynamo.client, auth.clone()).await?;
-    let author: Author = if let Some(team_pk) = req.team_pk {
-        check_permission(
-            &dynamo.client,
-            auth,
-            RatelResource::Team {
-                team_pk: team_pk.clone(),
-            },
-            vec![TeamGroupPermission::PostWrite],
-        )
-        .await?;
-        let team = Team::get(&dynamo.client, &team_pk, Some(EntityType::Team))
+    tracing::info!("create_post_handler {:?}", req);
+    let cli = &dynamo.client;
+    let author: Author = if let Some(Json(CreatePostRequest { team_pk })) = req {
+        Team::get_permitted_team(cli, team_pk, user.pk, TeamGroupPermission::PostWrite)
             .await?
-            .ok_or(Error2::NotFound("Team not found".to_string()))?;
-        team.into()
+            .into()
     } else {
-        user.clone().into()
+        user.into()
     };
 
-    let post = Post::new("", "", PostType::default(), author);
-    post.create(&dynamo.client).await?;
-    PostAuthor::new(post.pk.clone(), user)
-        .create(&dynamo.client)
-        .await?;
+    let post = Post::draft(author);
+    post.create(cli).await?;
 
-    Ok(Json(CreatePostResponse {
-        post_pk: post.pk.to_string(),
-    }))
+    Ok(Json(CreatePostResponse { post_pk: post.pk }))
 }

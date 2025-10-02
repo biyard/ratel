@@ -14,6 +14,12 @@ pub struct TestContextV3 {
     pub test_user: (User, axum::http::HeaderMap),
 }
 
+impl TestContextV3 {
+    pub async fn setup() -> Self {
+        setup_v3().await
+    }
+}
+
 pub async fn setup_v3() -> TestContextV3 {
     let app = api_main::api_main().await.unwrap();
     let now = SystemTime::now()
