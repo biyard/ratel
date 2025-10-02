@@ -1,4 +1,5 @@
 #![allow(warnings)]
+use crate::*;
 use aws_config::BehaviorVersion;
 use aws_credential_types::Credentials;
 use base64::{Engine as _, engine::general_purpose};
@@ -12,7 +13,6 @@ use tower_sessions::Session;
 use crate::{
     AppState,
     models::user::User,
-    post,
     types::UserType,
     utils::{
         aws::{DynamoClient, SesClient},
