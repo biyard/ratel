@@ -1,10 +1,7 @@
 use crate::controllers::v3::posts::create_post::CreatePostResponse;
 use crate::types::File;
 use crate::{
-    controllers::v3::{
-        posts::create_post::{CreatePostRequest, create_post_handler},
-        spaces::deliberations::responses::create_response_answer::CreateDeliberationResponse,
-    },
+    controllers::v3::spaces::deliberations::responses::create_response_answer::CreateDeliberationResponse,
     models::space::{
         DeliberationDetailResponse, DeliberationSpaceResponse, DiscussionCreateRequest,
         SurveyCreateRequest,
@@ -20,11 +17,11 @@ use crate::*;
 async fn test_create_response_answer_handler() {
     let TestContextV3 {
         app,
-        test_user: (user, headers),
+        test_user: (_user, headers),
         ..
     } = setup_v3().await;
 
-    let (status, _headers, post) = post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -181,11 +178,11 @@ async fn test_create_response_answer_handler() {
 async fn test_get_response_answer_handler() {
     let TestContextV3 {
         app,
-        test_user: (user, headers),
+        test_user: (_user, headers),
         ..
     } = setup_v3().await;
 
-    let (status, _headers, post) = post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
