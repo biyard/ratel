@@ -134,6 +134,7 @@ jobs:
 
           DYNAMO_TABLE_PREFIX: ratel-dev
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          RUST_FLAG: --features bypass
         run: |
           make docker.build
           make docker.login

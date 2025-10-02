@@ -7,7 +7,7 @@ use crate::{
     types::Theme,
     utils::{
         dynamo_extractor::extract_user,
-        validator::{validate_description, validate_image_url, validate_nickname},
+        validator::{validate_description, validate_image_url, validate_username},
     },
 };
 use dto::by_axum::{
@@ -65,7 +65,7 @@ pub async fn update_user_handler(
             profile_url,
             description,
         } => {
-            validate_nickname(&nickname)?;
+            validate_username(&nickname)?;
             validate_image_url(&profile_url)?;
             validate_description(&description)?;
             User::updater(user.pk.clone(), user.sk)

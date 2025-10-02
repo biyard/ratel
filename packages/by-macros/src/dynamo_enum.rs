@@ -17,6 +17,7 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
 
     let mut arms = Vec::new();
     let mut display_arms = Vec::new();
+    let mut inner_arms = Vec::new();
 
     let mut error_type = quote! { String };
 
@@ -40,10 +41,16 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
 
         match &variant.fields {
             // Handle variants with one field and a prefix pattern from strum
-            syn::Fields::Unnamed(fields) if fields.unnamed.len() == 1 => {
+            syn::Fields::Unnamed(fields) if fields.unnamed.len() <= 2 => {
                 let l = fields.unnamed.len();
 
                 if l == 1 {
+                    let prefix_wo_sharp = format!(
+                        "{}",
+                        variant_name
+                            .to_string()
+                            .to_case(convert_case::Case::UpperSnake)
+                    );
                     let prefix = format!(
                         "{}#",
                         variant_name
@@ -51,42 +58,100 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
                             .to_case(convert_case::Case::UpperSnake)
                     );
                     arms.push(quote! {
-                        s if s.starts_with(#prefix) => #name::#variant_name(s[#prefix.len()..].to_string()),
+                        s if s.eq(#prefix_wo_sharp) => {
+                            #name::#variant_name("".to_string())
+                        },
+                        s if s.starts_with(#prefix) => {
+                            let parts: Vec<&str> = s.splitn(2, '#').collect();
+                            if parts.len() == 2 {
+                                #name::#variant_name(parts[1].to_string())
+                            } else {
+                                #name::#variant_name("".to_string())
+                            }
+                        } ,
                     });
 
                     display_arms.push(quote! {
-                        Self::#variant_name(value) => write!(f, "{}{}", #prefix, value),
+                        Self::#variant_name(value) => write!(f, "{}#{}", #prefix_wo_sharp, value),
+                    });
+                    inner_arms.push(quote! {
+                        Self::#variant_name(v) => Ok(format!("{v}")),
                     });
                 } else if l == 2 {
-                    return syn::Error::new_spanned(
-                        input.ident,
-                        "DynamoEnum does not support variants with 2 unnamed fields; use custom bridge function",
-                    )
-                    .to_compile_error()
-                    .into();
-                } else {
-                    return syn::Error::new_spanned(
-                        variant_name,
-                        "DynamoEnum supports variants with 0 (unit), 1, or 2 unnamed fields only",
-                    )
-                    .to_compile_error()
-                    .into();
+                    let prefix_wo_sharp = format!(
+                        "{}",
+                        variant_name
+                            .to_string()
+                            .to_case(convert_case::Case::UpperSnake)
+                    );
+                    let prefix = format!(
+                        "{}#",
+                        variant_name
+                            .to_string()
+                            .to_case(convert_case::Case::UpperSnake)
+                    );
+
+                    arms.push(quote! {
+                        s if s.eq(#prefix_wo_sharp) => {
+                            #name::#variant_name("".to_string(), "".to_string())
+                        },
+                        s if s.starts_with(#prefix) => {
+                            let parts: Vec<&str> = s.splitn(3, '#').collect();
+                            if parts.len() == 3 {
+                                #name::#variant_name(parts[1].to_string(), parts[2].to_string())
+                            } else if parts.len() == 2 {
+                                #name::#variant_name(parts[1].to_string(), "".to_string())
+                            } else {
+                                #name::#variant_name("".to_string(), "".to_string())
+                            }
+                        } ,
+                    });
+
+                    display_arms.push(quote! {
+                        Self::#variant_name(v1, v2) => {
+                            if v2.is_empty() {
+                                write!(f, "{}#{}", #prefix_wo_sharp, v1)
+                            } else {
+                                write!(f, "{}#{}#{}", #prefix_wo_sharp, v1, v2)
+                            }
+                        } ,
+                    });
+
+                    inner_arms.push(quote! {
+                        Self::#variant_name(v1, v2) => {
+                            if v2.is_empty() {
+                                Ok(v1.clone())
+                            } else {
+                                Ok(format!("{}#{}", v1, v2))
+                            }
+                        },
+                    });
                 };
             }
             // Handle unit variants (no fields)
             syn::Fields::Unit => {
                 // For unit variants, match the exact string representation
-                let variant_str = variant_name.to_string();
+                let variant_str = variant_name
+                    .to_string()
+                    .to_case(convert_case::Case::UpperSnake);
                 arms.push(quote! {
                     #variant_str => #name::#variant_name,
                 });
                 display_arms.push(quote! {
-                    Self::#variant_name => write!(f, "{}", #variant_str),
+                    Self::#variant_name => write!(f, #variant_str),
+                });
+                inner_arms.push(quote! {
+                    Self::#variant_name => Err("Cannot extract inner value from unit variant".to_string())?,
                 });
             }
             _ => {
                 // Skip variants that don't have the expected structure
-                continue;
+                return syn::Error::new_spanned(
+                    variant_name,
+                    "DynamoEnum supports variants with 0 (unit), 1, or 2 unnamed fields only",
+                )
+                .to_compile_error()
+                .into();
             }
         }
     }
@@ -116,10 +181,22 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
             type Err = #error_type;
 
             fn from_str(s: &str) -> Result<Self, Self::Err> {
-                Ok(match s {
+                let s = percent_encoding::percent_decode_str(s)
+                    .decode_utf8().map_err(|e| format!("Invalid percent-encoding: {}", e))?;
+                let s = s.into_owned();
+
+                Ok(match s.as_str() {
                     #(#arms)*
                     #error_case
                 })
+            }
+        }
+
+        impl #name {
+            pub fn try_into_inner(&self) -> Result<String, crate::Error2> {
+                match self {
+                    #(#inner_arms)*
+                }
             }
         }
     };

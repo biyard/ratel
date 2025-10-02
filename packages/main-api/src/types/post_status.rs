@@ -3,16 +3,18 @@ use bdk::prelude::*;
 #[derive(
     Debug,
     Clone,
-    serde_with::SerializeDisplay,
-    serde_with::DeserializeFromStr,
+    Copy,
+    PartialEq,
+    Eq,
+    serde_repr::Serialize_repr,
+    serde_repr::Deserialize_repr,
     Default,
     DynamoEnum,
-    JsonSchema,
-    Eq,
-    PartialEq,
+    schemars::JsonSchema_repr,
 )]
+#[repr(u8)]
 pub enum PostStatus {
     #[default]
-    Draft,
-    Published,
+    Draft = 1,
+    Published = 2,
 }

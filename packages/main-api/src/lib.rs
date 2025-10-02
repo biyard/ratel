@@ -2,6 +2,7 @@ pub type Result<T> = dto::Result<T>;
 pub type Error = dto::Error;
 pub type Error2 = crate::error::Error;
 
+pub mod constants;
 pub mod error;
 pub mod controllers {
     pub mod mcp;
@@ -143,11 +144,70 @@ pub mod controllers {
         pub mod auth {
             pub mod health;
             pub mod login;
+            pub mod logout;
             pub mod signup;
+
+            #[cfg(test)]
+            pub mod tests;
 
             pub mod verification {
                 pub mod send_code;
                 pub mod verify_code;
+
+                #[cfg(test)]
+                pub mod tests;
+            }
+        }
+
+        pub mod spaces {
+            pub mod create_space;
+            pub mod delete_space;
+            #[cfg(test)]
+            pub mod tests;
+
+            pub mod deliberations {
+                pub mod create_deliberation;
+
+                pub mod delete_deliberation;
+                pub mod get_deliberation;
+                pub mod posting_deliberation;
+
+                pub mod discussions {
+                    pub mod create_discussion;
+                    pub mod end_recording;
+                    pub mod exit_meeting;
+                    pub mod participant_meeting;
+                    pub mod start_meeting;
+                    pub mod start_recording;
+
+                    pub mod get_discussion;
+
+                    #[cfg(not(feature = "no-secret"))]
+                    #[cfg(test)]
+                    pub mod tests;
+                }
+
+                pub mod responses {
+                    pub mod create_response_answer;
+                    pub mod get_response_answer;
+
+                    #[cfg(test)]
+                    pub mod tests;
+                }
+                #[cfg(test)]
+                pub mod tests;
+                pub mod update_deliberation;
+            }
+
+            pub mod poll {
+                // pub mod create_poll_space;
+                pub mod get_poll_space;
+                pub mod list_responses;
+                pub mod respond_poll_space;
+                pub mod update_poll_space;
+
+                #[cfg(test)]
+                pub mod tests;
             }
         }
 
@@ -157,6 +217,7 @@ pub mod controllers {
             pub mod get_team;
             pub mod update_team;
 
+            pub mod dto;
             #[cfg(test)]
             pub mod tests;
 
@@ -177,6 +238,7 @@ pub mod controllers {
             pub mod get_post;
             pub mod like_post;
             pub mod list_posts;
+            pub mod post_response;
             pub mod update_post;
             pub mod comments {
                 pub mod add_comment;

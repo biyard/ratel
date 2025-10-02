@@ -1,5 +1,5 @@
 import { apiFetch } from './apiFetch';
-import { Feed, FeedStatus } from './models/feeds';
+import { Feed, FeedStatus, FeedV2 } from './models/feeds';
 import { Space } from './models/spaces';
 import { config } from '@/config';
 import {
@@ -16,6 +16,8 @@ import {
   QK_GET_PERMISSION,
   QK_USERS_GET_INFO,
   QK_GET_NEWS_BY_NEWS_ID,
+  QK_GET_DELIBERATION_SPACE_BY_SPACE_ID,
+  QK_GET_FEED_BY_FEED_ID_V2,
 } from '@/constants';
 
 import { RedeemCode } from './models/redeem-code';
@@ -32,6 +34,7 @@ import { InfiniteData } from '@tanstack/react-query';
 import { GroupPermission } from './models/group';
 import { Permission } from './models/permission';
 import { NewsDetailItem } from './models/news';
+import { DeliberationSpace } from './ratel/spaces/deliberation-spaces.v3';
 
 async function getDataFromServer<T>(
   key: (string | number)[],
@@ -95,6 +98,25 @@ export function getPostByUserId(
   return getDataFromServer<Feed>(
     [QK_GET_POSTS_BY_USER_ID, user_id, page, size, status],
     ratelApi.feeds.getPostsByUserId(user_id, page, size, status),
+  );
+}
+
+export function getFeedByIdV2(id: string) {
+  const feedPk = 'FEED%23' + id;
+
+  return getDataFromServer<FeedV2>(
+    [QK_GET_FEED_BY_FEED_ID_V2, feedPk],
+    ratelApi.feeds.getFeedById(feedPk),
+  );
+}
+
+export function getDeliberationSpaceById(id: string) {
+  const spacePk = 'DELIBERATION_SPACE%23' + id;
+
+  return getDataFromServer<DeliberationSpace>(
+    [QK_GET_DELIBERATION_SPACE_BY_SPACE_ID, spacePk],
+    ratelApi.spaces.getDeliberationSpaceBySpaceId(spacePk),
+    true,
   );
 }
 
