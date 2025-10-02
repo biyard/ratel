@@ -4,14 +4,14 @@ use crate::{
     models::user::{UserDetailResponse, UserMetadata},
     types::Partition,
 };
+use bdk::prelude::by_macros::openapi;
 use dto::by_axum::axum::{Extension, Json, extract::State};
 
-pub type GetInfoResponse = UserDetailResponse;
-
+#[openapi(method = "GET", tag = "Me", id = "get_user_info", response = Json<UserDetailResponse>)]
 pub async fn get_info_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<tower_sessions::Session>,
-) -> Result<Json<GetInfoResponse>, Error2> {
+) -> Result<Json<UserDetailResponse>, Error2> {
     let user_pk: Partition = session
         .get(SESSION_KEY_USER_ID)
         .await?

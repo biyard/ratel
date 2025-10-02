@@ -24,14 +24,13 @@ use crate::controllers::v3::spaces::poll::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
 use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
-use crate::models::user::User;
 use crate::types::list_items_response::ListItemsResponse;
 // use crate::types::list_items_response::ListItemsResponse;
 use crate::{
     Error2,
     controllers::v3::{
         auth::{
-            login::login_handler,
+            login::login_handler_with_doc,
             logout::logout_handler,
             signup::signup_handler,
             verification::{
@@ -40,7 +39,7 @@ use crate::{
             },
         },
         me::{
-            get_info::{GetInfoResponse, get_info_handler},
+            get_info::get_info_handler_with_doc,
             update_user::{UpdateUserResponse, update_user_handler},
         },
         posts::{
@@ -115,22 +114,22 @@ pub fn route(
     Ok(Router::new()
         .route(
             "/me",
-            get_with(
-                get_info_handler,
-                api_docs!(
-                    Json<GetInfoResponse>,
-                    "Get Logged-in User Info",
-                    "Get the user data of the logged-in user"
+            get_info_handler_with_doc()
+                // get_with(
+                //     get_info_handler,
+                //     api_docs!(
+                //         Json<GetInfoResponse>,
+                //         "Get Logged-in User Info",
+                //         "Get the user data of the logged-in user"
+                //     ),
+                .patch_with(
+                    update_user_handler,
+                    api_docs!(
+                        Json<UpdateUserResponse>,
+                        "Update Logged-in User Info",
+                        "Update the user data of the logged-in user"
+                    ),
                 ),
-            )
-            .patch_with(
-                update_user_handler,
-                api_docs!(
-                    Json<UpdateUserResponse>,
-                    "Update Logged-in User Info",
-                    "Update the user data of the logged-in user"
-                ),
-            ),
         )
         .nest(
             "/users",
@@ -202,17 +201,7 @@ pub fn route(
         .nest(
             "/auth",
             Router::new()
-                .route(
-                    "/login",
-                    post_with(login_handler, |op| {
-                        op.id("Login")
-                            .description("User login")
-                            .summary("(V3) User login")
-                            .response::<200, Json<User>>()
-                            .response::<400, Error2>()
-                            .tag("AUTH")
-                    }),
-                )
+                .route("/login", login_handler_with_doc())
                 .route("/logout", post(logout_handler))
                 .route("/signup", post(signup_handler))
                 .nest(
