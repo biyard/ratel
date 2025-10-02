@@ -43,11 +43,37 @@ function findSchemaRefs(obj, refsSet) {
 module.exports = (openapi) => {
   console.log('[Orval Transformer] Running transformer with schema pruning...');
 
-  // Step 1: Filter paths
+  // Step 1: Filter paths and convert Partition parameters to string
   const filteredPaths = Object.keys(openapi.paths)
     .filter((path) => path.startsWith('/v3'))
     .reduce((acc, path) => {
-      acc[path] = openapi.paths[path];
+      const pathItem = { ...openapi.paths[path] };
+
+      // For each HTTP method in the path
+      Object.keys(pathItem).forEach((method) => {
+        if (
+          typeof pathItem[method] === 'object' &&
+          pathItem[method].parameters
+        ) {
+          // Convert Partition type parameters in path to string type
+          pathItem[method].parameters = pathItem[method].parameters.map(
+            (param) => {
+              if (
+                param.in === 'path' &&
+                param.schema?.$ref === '#/components/schemas/Partition'
+              ) {
+                return {
+                  ...param,
+                  schema: { type: 'string' },
+                };
+              }
+              return param;
+            },
+          );
+        }
+      });
+
+      acc[path] = pathItem;
       return acc;
     }, {});
 

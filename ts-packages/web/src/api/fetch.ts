@@ -14,6 +14,7 @@ const getBody = <T>(c: Response | Request): Promise<T> => {
 };
 
 // NOTE: Update just base url
+// TODO: This should be updated to use environment variables
 const getUrl = (contextUrl: string): string => {
   const url = new URL(contextUrl);
   const pathname = url.pathname;
@@ -21,7 +22,7 @@ const getUrl = (contextUrl: string): string => {
   const baseUrl =
     process.env.NODE_ENV === 'production'
       ? 'productionBaseUrl'
-      : 'http://localhost:3000';
+      : 'http://localhost:4000';
 
   const requestUrl = new URL(`${baseUrl}${pathname}${search}`);
 
@@ -46,6 +47,7 @@ export const call = async <T>(
 
   const requestInit: RequestInit = {
     ...options,
+    credentials: 'include',
     headers: requestHeaders,
   };
 

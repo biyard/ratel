@@ -8,7 +8,8 @@ export default defineConfig({
       target: 'src/api/endpoints.ts',
       client: 'fetch',
       httpClient: 'fetch',
-      baseUrl: 'http://localhost:8000', // API base URL
+      //FIXME: Use env variable
+      baseUrl: 'http://localhost:4000', // API base URL
       mock: false,
       prettier: true,
       override: {
@@ -17,6 +18,7 @@ export default defineConfig({
           name: 'call', // Function name
         },
       },
+      urlEncodeParameters: true,
     },
 
     input: {
