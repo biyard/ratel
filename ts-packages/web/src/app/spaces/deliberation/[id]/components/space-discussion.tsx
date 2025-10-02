@@ -6,15 +6,12 @@ import { format } from 'date-fns';
 
 import { v4 as uuidv4 } from 'uuid';
 import discussionImg from '@/assets/images/discussion.png';
-import { Member } from '@/lib/api/models/discussion';
-import { SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowRight } from 'lucide-react';
 // import { useRouter } from 'next/navigation';
 // import { route } from '@/route';
 import { Add, Extra2 } from '@/components/icons';
 import { DiscussionInfo, DiscussionUser } from '../types';
 // import { TotalUser } from '@/lib/api/models/user';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { usePopup } from '@/lib/contexts/popup-service';
 
 import { useTranslations } from 'next-intl';
@@ -23,6 +20,11 @@ import { useDeliberationSpaceByIdContext } from '../providers.client';
 import { useDeliberationSpaceById } from '@/lib/api/ratel_api';
 import { logger } from '@/lib/logger';
 import NewDiscussion from './modal/new-discussion';
+import { useUserInfo } from '@/hooks/use-user-info';
+import {
+  DiscussionMemberResponse,
+  SpacePublishState,
+} from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 
 export default function SpaceDiscussion() {
   const { isEdit } = useDeliberationSpaceByIdContext();
@@ -45,8 +47,8 @@ function ViewDiscussion() {
 function DiscussionSchedules() {
   const t = useTranslations('DeliberationSpace');
   const { handleViewRecord, spaceId } = useDeliberationSpaceByIdContext();
-  const { data: userInfo } = useSuspenseUserInfo();
-  const userId = userInfo?.id || 0;
+  const { data: userInfo } = useUserInfo();
+  const userPk = userInfo?.pk || '';
 
   const space = useDeliberationSpaceById(spaceId);
 
@@ -70,14 +72,14 @@ function DiscussionSchedules() {
             {discussions.map((discussion, index) => (
               <React.Fragment key={index}>
                 <DiscussionRoom
-                  userId={userId}
-                  status={SpaceStatus.Draft}
+                  userPk={userPk}
+                  published={space.data.publish_state}
                   startDate={discussion.started_at}
                   endDate={discussion.ended_at}
                   title={discussion.name}
                   description={discussion.description}
-                  members={[]}
-                  record={''}
+                  members={discussion.members}
+                  record={discussion.record ?? ''}
                   onclick={() => {
                     handleMoveDiscussion(space.data.pk, discussion.pk ?? '');
                   }}
@@ -103,25 +105,25 @@ function DiscussionSchedules() {
 }
 
 export function DiscussionRoom({
-  userId,
+  userPk,
   startDate,
   endDate,
   title,
-  status,
+  published,
   description,
   members,
   record,
   onclick,
   viewRecordClick,
 }: {
-  userId: number;
-  status: SpaceStatus;
+  userPk: string;
+  published: SpacePublishState;
   startDate: number;
   endDate: number;
   title: string;
   description: string;
   record?: string;
-  members: Member[];
+  members: DiscussionMemberResponse[];
 
   onclick: () => void;
   viewRecordClick: () => void;
@@ -141,7 +143,7 @@ export function DiscussionRoom({
       ? t('finished_discussion')
       : t('ongoing_discussion');
 
-  const isMember = members.some((member) => member.id === userId);
+  const isMember = members.some((member) => member.user_pk === userPk);
 
   return (
     <div className="flex flex-row w-full items-start justify-between max-tablet:flex-col gap-5">
@@ -185,7 +187,7 @@ export function DiscussionRoom({
           </div>
         </div>
 
-        {isLive && isMember && status !== SpaceStatus.Draft && (
+        {isLive && isMember && published !== SpacePublishState.Draft && (
           <div className="flex flex-row w-full justify-end">
             <JoinButton
               onClick={() => {
