@@ -30,7 +30,7 @@ use crate::{
     Error2,
     controllers::v3::{
         auth::{
-            login::login_handler_with_doc,
+            login::login_handler,
             logout::logout_handler,
             signup::signup_handler,
             verification::{
@@ -39,7 +39,7 @@ use crate::{
             },
         },
         me::{
-            get_info::get_info_handler_with_doc,
+            get_info::get_info_handler,
             update_user::{UpdateUserResponse, update_user_handler},
         },
         posts::{
@@ -114,7 +114,7 @@ pub fn route(
     Ok(Router::new()
         .route(
             "/me",
-            get_info_handler_with_doc()
+            get_info_handler()
                 // get_with(
                 //     get_info_handler,
                 //     api_docs!(
@@ -201,7 +201,7 @@ pub fn route(
         .nest(
             "/auth",
             Router::new()
-                .route("/login", login_handler_with_doc())
+                .route("/login", login_handler())
                 .route("/logout", post(logout_handler))
                 .route("/signup", post(signup_handler))
                 .nest(

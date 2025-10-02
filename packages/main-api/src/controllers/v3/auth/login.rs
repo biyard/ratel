@@ -37,7 +37,7 @@ pub enum LoginRequest {
     },
 }
 
-#[openapi(method = "POST", tag = "Auth", id = "login", response = Json<User>)]
+#[openapi(method = "POST", tag = "Auth")]
 pub async fn login_handler(
     State(AppState { dynamo, pool, .. }): State<AppState>,
     Extension(session): Extension<Session>,
