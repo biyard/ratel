@@ -1,16 +1,19 @@
 use crate::{
-    controllers::v3::posts::create_post::CreatePostResponse, tests::v3_setup::TestContextV3,
+    controllers::v3::posts::create_post::CreatePostResponse, models::feed::PostDetailResponse,
+    tests::v3_setup::TestContextV3,
 };
+
+use crate::*;
 
 #[tokio::test]
 async fn test_create_post_by_user() {
     let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
 
-    let (status, headers, body) = crate::post! {
+    let (status, headers, body) = post! {
         app: app,
         path: "/v3/posts",
         headers: test_user.1,
-        response_type: CreatePostResponse,
+        response_type: CreatePostResponse
     };
 
     assert_eq!(status, 200);
@@ -21,14 +24,19 @@ async fn test_create_post_by_user() {
 async fn test_create_post_with_invalid_team() {
     let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
 
-    let (status, headers, body) = crate::post! {
+    let (status, _headers, body) = post! {
         app: app,
         path: "/v3/posts",
         headers: test_user.1,
         body: {
             "team_pk": "TEAM#invalid"
         },
-        response_type: serde_json::Value,
+        response_type: CreatePostResponse
+    };
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", body.post_pk.to_string())
     };
 
     assert_eq!(status, 404);
