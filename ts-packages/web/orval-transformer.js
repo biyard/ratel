@@ -45,7 +45,7 @@ module.exports = (openapi) => {
 
   // Step 1: Filter paths
   const filteredPaths = Object.keys(openapi.paths)
-    .filter((path) => path.startsWith('/v3/auth/login'))
+    .filter((path) => path.startsWith('/v3'))
     .reduce((acc, path) => {
       acc[path] = openapi.paths[path];
       return acc;
