@@ -1,7 +1,11 @@
-// mod permission;
 mod team_permission_verifier;
 
-use crate::{Error2, types::TeamGroupPermission, utils::dynamo_extractor::extract_user_pk};
+use crate::{
+    Error2,
+    constants::SESSION_KEY_USER_ID,
+    types::{Partition, TeamGroupPermission},
+    utils::dynamo_extractor::extract_user_pk,
+};
 use bdk::prelude::{by_axum::auth::Authorization, *};
 use team_permission_verifier::TeamPermissionVerifier;
 
@@ -20,6 +24,7 @@ pub trait PermissionVerifier {
     fn has_any_permissions(&self, required_bit_mask: i64) -> bool;
 }
 
+//FIXME: refactor to use session where possible
 pub async fn check_permission(
     client: &aws_sdk_dynamodb::Client,
     auth: Option<Authorization>,
@@ -43,6 +48,7 @@ pub async fn check_permission(
     Ok(())
 }
 
+//FIXME: refactor to use session where possible
 pub async fn check_any_permission(
     client: &aws_sdk_dynamodb::Client,
     auth: Option<Authorization>,
@@ -54,6 +60,58 @@ pub async fn check_any_permission(
     let verifier: Box<dyn PermissionVerifier> = match rsc {
         RatelResource::Team { team_pk } => {
             Box::new(TeamPermissionVerifier::new(client, user_pk, team_pk).await?)
+        }
+    };
+    let required_mask = permissions_mask(&permissions);
+    if !verifier.has_any_permissions(required_mask) {
+        return Err(Error2::Unauthorized(
+            "You do not have permission to perform this action".into(),
+        ));
+    }
+
+    Ok(())
+}
+
+pub async fn check_permission_from_session(
+    client: &aws_sdk_dynamodb::Client,
+    session: &tower_sessions::Session,
+    rsc: RatelResource,
+    permissions: Vec<TeamGroupPermission>,
+) -> Result<(), Error2> {
+    let user_pk: Partition = session
+        .get(SESSION_KEY_USER_ID)
+        .await?
+        .ok_or(Error2::Unauthorized("no session".to_string()))?;
+
+    let verifier: Box<dyn PermissionVerifier> = match rsc {
+        RatelResource::Team { team_pk } => {
+            Box::new(TeamPermissionVerifier::new(client, user_pk.to_string(), team_pk).await?)
+        }
+    };
+    let required_mask = permissions_mask(&permissions);
+    if !verifier.has_all_permission(required_mask) {
+        return Err(Error2::Unauthorized(
+            "You do not have permission to perform this action".into(),
+        ));
+    }
+
+    Ok(())
+}
+
+pub async fn check_any_permission_from_session(
+    client: &aws_sdk_dynamodb::Client,
+    session: &tower_sessions::Session,
+    rsc: RatelResource,
+    permissions: Vec<TeamGroupPermission>,
+) -> Result<(), Error2> {
+    let user_pk: Partition = session
+        .get(SESSION_KEY_USER_ID)
+        .await?
+        .ok_or(Error2::Unauthorized("no session".to_string()))?;
+
+    let verifier: Box<dyn PermissionVerifier> = match rsc {
+        RatelResource::Team { team_pk } => {
+            Box::new(TeamPermissionVerifier::new(client, user_pk.to_string(), team_pk).await?)
         }
     };
     let required_mask = permissions_mask(&permissions);

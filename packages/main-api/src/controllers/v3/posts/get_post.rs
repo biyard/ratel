@@ -1,47 +1,50 @@
 use crate::{
     AppState, Error2,
-    models::feed::{Post, PostDetailResponse, PostMetadata},
-    types::{EntityType, TeamGroupPermission, Visibility},
-    utils::security::{RatelResource, check_permission},
-};
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension, Json,
-        extract::{Path, State},
+    models::{
+        feed::{Post, PostDetailResponse, PostMetadata},
+        user::User,
     },
+    types::Partition,
 };
-use dto::{JsonSchema, aide, schemars};
-use serde::Deserialize;
+use aide::NoApi;
+use axum::{
+    Json,
+    extract::{Path, State},
+};
+use bdk::prelude::*;
 
-#[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 pub struct GetPostPathParams {
-    pub post_pk: String,
+    pub post_pk: Partition,
 }
 
 pub type GetPostResponse = PostDetailResponse;
 
 pub async fn get_post_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
-    Path(path): Path<GetPostPathParams>,
+    NoApi(user): NoApi<Option<User>>,
+    Path(GetPostPathParams { post_pk }): Path<GetPostPathParams>,
 ) -> Result<Json<GetPostResponse>, Error2> {
-    let post = Post::get(&dynamo.client, &path.post_pk, Some(EntityType::Post))
-        .await?
-        .ok_or(Error2::NotFound("Post not found".to_string()))?;
-    if let Some(Visibility::Team(team_pk)) = post.visibility {
-        check_permission(
-            &dynamo.client,
-            auth,
-            RatelResource::Team { team_pk },
-            vec![TeamGroupPermission::PostRead],
-        )
-        .await?;
-    }
+    let cli = &dynamo.client;
+    tracing::info!("Get post for post_pk: {}", post_pk);
 
-    let post_metadata = PostMetadata::query(&dynamo.client, &path.post_pk).await?;
+    if !Post::has_permission(
+        cli,
+        &post_pk,
+        if let Some(ref user) = user {
+            Some(&user.pk)
+        } else {
+            None
+        },
+        crate::types::TeamGroupPermission::PostRead,
+    )
+    .await?
+    .1
+    {
+        return Err(Error2::NoPermission);
+    };
 
-    let post_response: PostDetailResponse = post_metadata.into();
+    let post_metadata = PostMetadata::query(cli, &post_pk).await?;
 
-    Ok(Json(post_response))
+    Ok(Json(post_metadata.into()))
 }

@@ -26,8 +26,9 @@ BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECR
 
 # Playwright test envs
 RATEL_TEST_PLAYWRIGHT_URL ?= http://localhost:8080
-PLAYWRIGHT_ENV ?= RATEL_TEST_PLAYWRIGHT_URL=$(RATEL_TEST_PLAYWRIGHT_URL)
-
+RATEL_TEST_PLAYWRIGHT_ID ?= $(shell date +%s)
+PLAYWRIGHT_ENV ?= RATEL_TEST_PLAYWRIGHT_URL=$(RATEL_TEST_PLAYWRIGHT_URL) \
+								RATEL_TEST_PLAYWRIGHT_ID=$(RATEL_TEST_PLAYWRIGHT_ID)
 
 .build/evm-keys:
 	mkdir -p .build
@@ -80,4 +81,11 @@ node_modules:
 	pnpm i
 
 test: node_modules
-	$(PLAYWRIGHT_ENV ) npx playwright test
+	$(PLAYWRIGHT_ENV) npx playwright test
+
+test-head: node_modules
+	$(PLAYWRIGHT_ENV) npx playwright test --headed --project=chromium
+
+
+infra: .build/evm-keys
+	docker compose --profile infra up -d --remove-orphans

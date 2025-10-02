@@ -1,97 +1,54 @@
 use crate::{
-    AppState, Error2, config,
-    models::user::{
-        User, UserOAuth, UserOAuthQueryOption, UserPrincipal, UserPrincipalQueryOption,
+    AppState, Error2,
+    constants::SESSION_KEY_USER_ID,
+    models::{
+        migrators::user::{migrate_by_email, migrate_by_email_password},
+        user::{User, UserQueryOption},
     },
     types::Provider,
-    utils::{dynamo_extractor::get_principal_from_auth, firebase, password::verify_password},
+    utils::password::hash_password,
 };
 use bdk::prelude::*;
 
 use dto::{
     JsonSchema, aide,
-    by_axum::{
-        auth::{Authorization, DYNAMO_USER_SESSION_KEY, DynamoUserSession, generate_jwt},
-        axum::{
-            Extension,
-            extract::{Json, State},
-            http::{HeaderMap, header::SET_COOKIE},
-        },
+    by_axum::axum::{
+        Extension,
+        extract::{Json, State},
     },
-    by_types::Claims,
 };
 use serde::Deserialize;
 use tower_sessions::Session;
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
+#[serde(untagged)]
 pub enum LoginRequest {
-    Email { email: String, password: String },
-    OAuth { provider: Provider, token: String },
-    Telegram { telegram_raw: String },
+    Email {
+        email: String,
+        password: String,
+    },
+    OAuth {
+        provider: Provider,
+        access_token: String,
+    },
+    Telegram {
+        telegram_raw: String,
+    },
 }
 
-pub type LoginResponse = (HeaderMap, ());
-
 pub async fn login_handler(
-    State(AppState { dynamo, .. }): State<AppState>,
+    State(AppState { dynamo, pool, .. }): State<AppState>,
     Extension(session): Extension<Session>,
-    Extension(auth): Extension<Option<Authorization>>,
     Json(req): Json<LoginRequest>,
-) -> Result<(HeaderMap, ()), Error2> {
+) -> Result<Json<User>, Error2> {
     let user = match req {
         LoginRequest::Email { email, password } => {
-            let (u, _) = User::find_by_email(&dynamo.client, &email, Default::default()).await?;
-            let user = u
-                .get(0)
-                .cloned()
-                .ok_or(Error2::BadRequest("Invalid email or password".into()))?;
-            let hashed_password = user
-                .password
-                .as_ref()
-                .ok_or(Error2::BadRequest("Invalid email or password".into()))?;
-            if !verify_password(&password, &hashed_password).map_err(|e| {
-                Error2::InternalServerError(format!("Password verification error: {}", e))
-            })? {
-                return Err(Error2::BadRequest("Invalid email or password".into()));
-            }
-            user
+            login_with_email(&dynamo.client, &pool, email, password).await?
         }
-        LoginRequest::OAuth { provider, token } => match provider {
-            Provider::Google => {
-                let uid = firebase::oauth::verify_token(&token).await?;
-
-                // For Migration from Principal Login to Google OAuth.
-                // Remove this code after the users have logged in with Google OAuth.
-                if let Ok(principal) = get_principal_from_auth(auth) {
-                    let (user_principal, _) = UserPrincipal::find_by_principal(
-                        &dynamo.client,
-                        principal,
-                        UserPrincipalQueryOption::builder(),
-                    )
-                    .await?;
-                    let user = user_principal
-                        .get(0)
-                        .cloned()
-                        .ok_or(Error2::Unauthorized("Invalid email or password".into()))?;
-                    UserOAuth::new(user.pk, Provider::Google, uid.clone())
-                        .create(&dynamo.client)
-                        .await?;
-                }
-                let (u, _) = UserOAuth::find_by_provider_and_uid(
-                    &dynamo.client,
-                    uid,
-                    UserOAuthQueryOption::builder().sk(token),
-                )
-                .await?;
-                let user_oauth = u
-                    .get(0)
-                    .cloned()
-                    .ok_or(Error2::NotFound("Invalid OAuth token".into()))?;
-                User::get(&dynamo.client, user_oauth.pk, None::<String>)
-                    .await?
-                    .ok_or(Error2::NotFound("User not found".into()))?
-            }
-        },
+        LoginRequest::OAuth {
+            provider,
+            access_token,
+        } => login_with_oauth(&dynamo.client, &pool, provider, access_token).await?,
         LoginRequest::Telegram { .. } => {
             // Handle Telegram login
             // Not implemented yet
@@ -99,31 +56,64 @@ pub async fn login_handler(
         }
     };
 
-    let user_session = DynamoUserSession {
-        pk: user.pk.to_string(),
-        typ: user.user_type as i64,
-    };
     session
-        .insert(DYNAMO_USER_SESSION_KEY, user_session)
+        .insert(SESSION_KEY_USER_ID, user.pk.to_string())
         .await?;
 
-    let mut claims = Claims {
-        sub: user.pk.to_string(),
-        ..Default::default()
-    };
-    let token = generate_jwt(&mut claims)
-        .map_err(|e| Error2::InternalServerError(format!("JWT generation error: {}", e)))?;
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        SET_COOKIE,
-        format!(
-            "{}_auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure;",
-            config::get().env,
-            token,
-        )
-        .parse()
-        .unwrap(),
-    );
+    Ok(Json(user))
+}
 
-    Ok((headers, ()))
+pub async fn login_with_oauth(
+    cli: &aws_sdk_dynamodb::Client,
+    pool: &sqlx::PgPool,
+    provider: Provider,
+    access_token: String,
+) -> Result<User, Error2> {
+    let email = provider.get_email(&access_token).await?;
+
+    let user = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1))
+        .await?
+        .0
+        .get(0)
+        .cloned();
+
+    if let Some(user) = user {
+        return Ok(user);
+    }
+
+    // FIXME(migrate): fallback to tricky migration from postgres
+    migrate_by_email(cli, pool, email).await.map_err(|e| {
+        tracing::error!("Failed to migrate user by email: {}", e);
+        Error2::Unauthorized("Invalid email or password".into())
+    })
+}
+
+pub async fn login_with_email(
+    cli: &aws_sdk_dynamodb::Client,
+    pool: &sqlx::PgPool,
+    email: String,
+    password: String,
+) -> Result<User, Error2> {
+    let hashed_password = hash_password(&password);
+    let (u, _) = User::find_by_email_and_password(
+        cli,
+        &email,
+        UserQueryOption::builder().sk(hashed_password),
+    )
+    .await?;
+    let user = u.get(0).cloned();
+
+    // FIXME(migrate): fallback to tricky migration from postgres
+    let user = if user.is_none() {
+        migrate_by_email_password(cli, pool, email, password)
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to migrate user by email: {}", e);
+                Error2::Unauthorized("Invalid email or password".into())
+            })?
+    } else {
+        user.unwrap()
+    };
+
+    Ok(user)
 }
