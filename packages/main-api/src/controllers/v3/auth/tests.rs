@@ -2,9 +2,9 @@
 
 use std::convert;
 
+use crate::*;
 use crate::{
     models::{email::EmailVerification, user::User},
-    post,
     tests::v3_setup::{TestContextV3, setup_v3},
     types::{EntityType, Partition},
 };
@@ -51,7 +51,7 @@ async fn test_email_with_password_signup() {
             "term_agreed": true,
             "informed_agreed": true,
         },
-        response_type: crate::models::user::User,
+        response_type: crate::models::user::User
     };
 
     assert_eq!(status, 200);
@@ -66,7 +66,7 @@ async fn test_email_with_password_signup() {
             "email": email,
             "password": "0x1111",
         },
-        response_type: crate::models::user::User,
+        response_type: crate::models::user::User
     };
 
     assert_eq!(status, 200);
@@ -88,7 +88,7 @@ async fn test_email_with_invalid_password() {
         body: {
             "email": email.clone(),
         },
-        response_type: super::verification::send_code::SendCodeResponse,
+        response_type: super::verification::send_code::SendCodeResponse
     };
     assert_eq!(status, 200);
     assert!(body.expired_at > now as i64);
@@ -115,7 +115,7 @@ async fn test_email_with_invalid_password() {
             "term_agreed": true,
             "informed_agreed": true,
         },
-        response_type: crate::models::user::User,
+        response_type: crate::models::user::User
     };
 
     assert_eq!(status, 200);
@@ -148,7 +148,7 @@ async fn test_email_with_password_signup_with_invalid_code() {
         body: {
             "email": email.clone(),
         },
-        response_type: super::verification::send_code::SendCodeResponse,
+        response_type: super::verification::send_code::SendCodeResponse
     };
     assert_eq!(status, 200);
     assert!(body.expired_at > now as i64);

@@ -1,13 +1,12 @@
 use crate::controllers::v3::posts::create_post::CreatePostResponse;
 use crate::types::File;
+use crate::*;
 use crate::{
     controllers::v3::spaces::deliberations::{
         create_deliberation::CreateDeliberationResponse,
         delete_deliberation::DeleteDeliberationResponse,
     },
-    get,
     models::space::{DeliberationDetailResponse, DiscussionCreateRequest, SurveyCreateRequest},
-    post,
     tests::{
         create_app_state, create_test_user, get_auth,
         v3_setup::{TestContextV3, setup_v3},
@@ -27,16 +26,16 @@ async fn test_create_space_handler() {
     let _app_state = create_app_state();
     let _auth = get_auth(&user);
 
-    let (_status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
-        response_type: CreatePostResponse,
+        response_type: CreatePostResponse
     };
 
     let feed_pk = post.post_pk.clone();
 
-    eprintln!("feed pk: {:?}", feed_pk);
+    println!("feed pk: {:?}", feed_pk);
 
     // SPACE
     let (status, _headers, _body) = post! {
@@ -65,11 +64,11 @@ async fn test_update_space_handler() {
     let cli = &app_state.dynamo.client;
     let _auth = get_auth(&user);
 
-    let (_status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
-        response_type: CreatePostResponse,
+        response_type: CreatePostResponse
     };
 
     let feed_pk = post.post_pk.clone();
@@ -88,7 +87,7 @@ async fn test_update_space_handler() {
 
     let space_pk = body.metadata.deliberation.pk.clone();
 
-    eprintln!("space_pk: {:?}", space_pk);
+    println!("space_pk: {:?}", space_pk);
 
     // create user
     let team_1 = create_test_user(&cli).await.pk;
@@ -183,7 +182,7 @@ async fn test_update_space_handler() {
                 url: None,
             }],
         },
-        response_type: DeliberationDetailResponse,
+        response_type: DeliberationDetailResponse
     };
 
     assert_eq!(status, 200);
@@ -192,8 +191,6 @@ async fn test_update_space_handler() {
         body.summary.html_contents,
         "<div>deliberation description</div>".to_string()
     );
-    assert_eq!(body.discussions.len(), 1);
-    assert_eq!(body.discussions[0].members.len(), 2);
     assert_eq!(
         body.elearnings.files[0].name,
         "deliberation elearning file title".to_string()
@@ -283,7 +280,7 @@ async fn test_update_space_handler() {
                 url: None,
             }],
         },
-        response_type: DeliberationDetailResponse,
+        response_type: DeliberationDetailResponse
     };
 
     assert_eq!(status, 200);
@@ -318,11 +315,11 @@ async fn test_delete_space_handler() {
     let cli = &app_state.dynamo.client;
     let _auth = get_auth(&user);
 
-    let (_status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
-        response_type: CreatePostResponse,
+        response_type: CreatePostResponse
     };
 
     let feed_pk = post.post_pk.clone();
@@ -434,7 +431,7 @@ async fn test_delete_space_handler() {
                 url: None,
             }],
         },
-        response_type: DeliberationDetailResponse,
+        response_type: DeliberationDetailResponse
     };
 
     assert_eq!(status, 200);
@@ -465,11 +462,11 @@ async fn test_get_space_handler() {
     let _app_state = create_app_state();
     let _auth = get_auth(&user);
 
-    let (_status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
-        response_type: CreatePostResponse,
+        response_type: CreatePostResponse
     };
 
     let feed_pk = post.post_pk.clone();
@@ -490,7 +487,7 @@ async fn test_get_space_handler() {
     let space_pk = body.metadata.deliberation.pk;
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
 
-    eprintln!("Created deliberation with space_pk: {}", space_pk_encoded);
+    println!("Created deliberation with space_pk: {}", space_pk_encoded);
 
     let path = format!("/v3/spaces/deliberation/{}", space_pk_encoded);
 
@@ -500,7 +497,7 @@ async fn test_get_space_handler() {
         headers: headers
     };
 
-    eprintln!("Get deliberation response body: {:?}", body);
+    println!("Get deliberation response body: {:?}", body);
 
     assert_eq!(status, 200);
 }

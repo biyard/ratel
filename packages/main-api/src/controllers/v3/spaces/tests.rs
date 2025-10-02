@@ -1,7 +1,7 @@
+use crate::*;
 use crate::{
     controllers::v3::spaces::create_space::CreateSpaceResponse,
     models::feed::Post,
-    post, send,
     tests::v3_setup::{TestContextV3, setup_v3},
     types::PostType,
 };
@@ -51,11 +51,10 @@ async fn test_create_space() {
     .to_string();
     let path = format!("/v3/spaces/{}", encoded_pk);
 
-    let (status, _, res) = send! {
+    let (status, _, res) = delete! {
         app: app,
-        method: "DELETE",
         path: path,
-        headers: headers.clone(),
+        headers: headers.clone()
     };
     tracing::debug!("Delete space response: {:?}", res);
     assert_eq!(status, 200);
