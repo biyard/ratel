@@ -1,12 +1,9 @@
 use crate::controllers::v3::posts::create_post::CreatePostResponse;
 use crate::types::File;
 use crate::{
-    controllers::v3::{
-        posts::create_post::{CreatePostRequest, create_post_handler},
-        spaces::deliberations::{
-            create_deliberation::CreateDeliberationResponse,
-            delete_deliberation::DeleteDeliberationResponse,
-        },
+    controllers::v3::spaces::deliberations::{
+        create_deliberation::CreateDeliberationResponse,
+        delete_deliberation::DeleteDeliberationResponse,
     },
     get,
     models::space::{DeliberationDetailResponse, DiscussionCreateRequest, SurveyCreateRequest},
@@ -27,10 +24,10 @@ async fn test_create_space_handler() {
     } = setup_v3().await;
 
     //FIXME: fix by session and one test code
-    let app_state = create_app_state();
-    let auth = get_auth(&user);
+    let _app_state = create_app_state();
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -66,9 +63,9 @@ async fn test_update_space_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -321,9 +318,9 @@ async fn test_delete_space_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -467,10 +464,10 @@ async fn test_get_space_handler() {
     } = setup_v3().await;
 
     //FIXME: fix by session and one test code
-    let app_state = create_app_state();
-    let auth = get_auth(&user);
+    let _app_state = create_app_state();
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),

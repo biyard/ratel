@@ -6,7 +6,7 @@ use crate::{
 async fn test_create_post_by_user() {
     let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
 
-    let (status, headers, body) = crate::post! {
+    let (status, _headers, body) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: test_user.1,
@@ -21,7 +21,7 @@ async fn test_create_post_by_user() {
 async fn test_create_post_with_invalid_team() {
     let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
 
-    let (status, headers, body) = crate::post! {
+    let (status, _headers, body) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: test_user.1,
