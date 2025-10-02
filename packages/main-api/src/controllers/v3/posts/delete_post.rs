@@ -1,85 +1,62 @@
+use std::str::FromStr;
+
 use crate::{
     AppState, Error2,
-    models::feed::{
-        Post, PostArtwork, PostAuthor, PostComment, PostLike, PostMetadata, PostRepost,
-    },
-    types::{EntityType, Partition, TeamGroupPermission},
-    utils::{
-        dynamo_extractor::extract_user,
-        security::{RatelResource, check_permission},
-    },
+    models::{feed::Post, user::User},
+    types::Partition,
 };
-use dto::by_axum::{
-    auth::Authorization,
-    axum::{
-        Extension,
-        extract::{Path, State},
-    },
-};
-use dto::{JsonSchema, aide, schemars};
+use aide::NoApi;
+use axum::extract::Query;
+use bdk::prelude::*;
+use by_axum::axum::extract::{Path, State};
 use serde::Deserialize;
+use validator::Validate;
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct DeletePostPathParams {
     pub post_pk: String,
 }
 
+#[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema, Validate)]
+pub struct DeletePostParams {
+    pub force: Option<bool>,
+}
+
+#[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
+pub struct DeletePostResponse {
+    pub dependancies: Vec<Partition>,
+}
+
 pub async fn delete_post_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    NoApi(user): NoApi<User>,
+    Query(DeletePostParams { force }): Query<DeletePostParams>,
     Path(params): Path<DeletePostPathParams>,
 ) -> Result<(), Error2> {
-    let post = Post::get(&dynamo.client, &params.post_pk, Some(EntityType::Post))
-        .await?
-        .ok_or(Error2::NotFound("Post not found".to_string()))?;
+    let cli = &dynamo.client;
 
-    match post.user_pk {
-        Partition::Team(_) => {
-            check_permission(
-                &dynamo.client,
-                auth.clone(),
-                RatelResource::Team {
-                    team_pk: post.user_pk.to_string(),
-                },
-                vec![TeamGroupPermission::PostDelete],
-            )
-            .await?;
-        }
-        Partition::User(_) => {
-            let user = extract_user(&dynamo.client, auth).await?;
-            if user.pk != post.user_pk {
-                return Err(Error2::Unauthorized(
-                    "You do not have permission to delete this post".into(),
-                ));
-            }
-        }
-        _ => return Err(Error2::InternalServerError("Invalid post author".into())),
-    }
-    let metadata = PostMetadata::query(&dynamo.client, post.pk.clone()).await?;
-    for data in metadata.into_iter() {
-        match data {
-            PostMetadata::Post(v) => {
-                Post::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            }
-            PostMetadata::PostAuthor(v) => {
-                PostAuthor::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            }
-            PostMetadata::PostComment(v) => {
-                PostComment::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            }
-            PostMetadata::PostArtwork(v) => {
-                PostArtwork::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            }
-            PostMetadata::PostRepost(v) => {
-                PostRepost::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            }
-            PostMetadata::PostLike(v) => {
-                PostLike::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            }
-        };
+    let post_pk = Partition::from_str(&params.post_pk)?;
+    if !Post::has_permission(
+        cli,
+        &post_pk,
+        Some(&user.pk),
+        crate::types::TeamGroupPermission::PostDelete,
+    )
+    .await?
+    .1
+    {
+        return Err(Error2::NoPermission);
     }
 
-    // let post_likes = PostLike::get(&dynamo.client, post.pk.clone()).await?;
+    // TODO: Check dependancies
+
+    if force.unwrap_or(false) {
+        // TODO: delete all dependancies
+    } else {
+        unimplemented!()
+    }
+
+    Post::delete(cli, post_pk, None::<String>).await?;
 
     Ok(())
 }
