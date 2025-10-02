@@ -11,6 +11,9 @@ use super::Partition;
     DynamoEnum,
     JsonSchema,
 )]
+// None : is Invisible (Only owner can access)
+// Public : is Visible to all
+// Team : is Visible to team members with permission
 pub enum Visibility {
     #[default]
     Public, // All user/team can access

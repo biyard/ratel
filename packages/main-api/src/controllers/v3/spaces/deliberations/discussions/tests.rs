@@ -2,7 +2,7 @@ use bdk::prelude::axum::{Extension, Json, extract::State};
 
 use crate::{
     controllers::v3::{
-        posts::create_post::{CreatePostRequest, create_post_handler},
+        posts::create_post::{CreatePostRequest, CreatePostResponse, create_post_handler},
         spaces::deliberations::create_deliberation::CreateDeliberationResponse,
     },
     models::space::DeliberationDiscussionResponse,
@@ -27,15 +27,14 @@ async fn test_create_discussion_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let post = create_post_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Json(CreatePostRequest { team_pk: None }),
-    )
-    .await;
-    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+    let (status, _headers, post) = crate::post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse,
+    };
 
-    let feed_pk = post.unwrap().post_pk.clone();
+    let feed_pk = post.post_pk.clone();
 
     // SPACE
     let (status, _headers, body) = post! {
@@ -50,7 +49,6 @@ async fn test_create_discussion_handler() {
 
     assert_eq!(status, 200);
 
-    let _space_pk = body.metadata.deliberation.pk.clone();
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {
@@ -100,15 +98,14 @@ async fn test_start_meeting_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let post = create_post_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Json(CreatePostRequest { team_pk: None }),
-    )
-    .await;
-    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+    let (status, _headers, post) = crate::post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse,
+    };
 
-    let feed_pk = post.unwrap().post_pk.clone();
+    let feed_pk = post.post_pk.clone();
 
     // SPACE
     let (status, _headers, body) = post! {
@@ -123,7 +120,6 @@ async fn test_start_meeting_handler() {
 
     assert_eq!(status, 200);
 
-    let _space_pk = body.metadata.deliberation.pk.clone();
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {
@@ -190,15 +186,14 @@ async fn test_create_participants_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let post = create_post_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Json(CreatePostRequest { team_pk: None }),
-    )
-    .await;
-    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+    let (status, _headers, post) = crate::post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse,
+    };
 
-    let feed_pk = post.unwrap().post_pk.clone();
+    let feed_pk = post.post_pk.clone();
 
     // SPACE
     let (status, _headers, body) = post! {
@@ -213,7 +208,6 @@ async fn test_create_participants_handler() {
 
     assert_eq!(status, 200);
 
-    let _space_pk = body.metadata.deliberation.pk.clone();
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {
@@ -285,15 +279,14 @@ async fn test_exit_meeting_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let post = create_post_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Json(CreatePostRequest { team_pk: None }),
-    )
-    .await;
-    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+    let (status, _headers, post) = crate::post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse,
+    };
 
-    let feed_pk = post.unwrap().post_pk.clone();
+    let feed_pk = post.post_pk.clone();
 
     // SPACE
     let (status, _headers, body) = post! {
@@ -308,7 +301,6 @@ async fn test_exit_meeting_handler() {
 
     assert_eq!(status, 200);
 
-    let _space_pk = body.metadata.deliberation.pk.clone();
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {
@@ -421,15 +413,14 @@ async fn test_start_recording_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let post = create_post_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Json(CreatePostRequest { team_pk: None }),
-    )
-    .await;
-    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+    let (status, _headers, post) = crate::post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse,
+    };
 
-    let feed_pk = post.unwrap().post_pk.clone();
+    let feed_pk = post.post_pk.clone();
 
     // SPACE
     let (status, _headers, body) = post! {
@@ -519,15 +510,14 @@ async fn test_end_recording_handler() {
     let cli = &app_state.dynamo.client;
     let auth = get_auth(&user);
 
-    let post = create_post_handler(
-        State(app_state.clone()),
-        Extension(Some(auth.clone())),
-        Json(CreatePostRequest { team_pk: None }),
-    )
-    .await;
-    assert!(post.is_ok(), "Failed to create post: {:?}", post);
+    let (status, _headers, post) = crate::post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse,
+    };
 
-    let feed_pk = post.unwrap().post_pk.clone();
+    let feed_pk = post.post_pk.clone();
 
     // SPACE
     let (status, _headers, created_space) = post! {

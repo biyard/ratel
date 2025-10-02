@@ -1,5 +1,7 @@
 // use crate::controllers::v2::posts::list_posts::ListPostsQueryParams;
 use crate::controllers::v3::auth::verification::verify_code::VerifyCodeResponse;
+use crate::controllers::v3::spaces::create_space::{CreateSpaceResponse, create_space_handler};
+use crate::controllers::v3::spaces::delete_space::delete_space_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
@@ -14,6 +16,13 @@ use crate::controllers::v3::spaces::deliberations::responses::create_response_an
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
 use crate::models::feed::Post;
 // use crate::models::feed::Post;
+use crate::controllers::v3::spaces::poll::list_responses::{
+    ListSurveyResponse, list_responses_handler,
+};
+use crate::controllers::v3::spaces::poll::respond_poll_space::respond_poll_space_handler;
+use crate::controllers::v3::spaces::poll::update_poll_space::{
+    UpdatePollSpaceResponse, update_poll_space_handler,
+};
 use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
 use crate::models::user::User;
 use crate::types::list_items_response::ListItemsResponse;
@@ -49,6 +58,7 @@ use crate::{
             get_deliberation::get_deliberation_handler,
             update_deliberation::update_deliberation_handler,
         },
+        spaces::poll::get_poll_space::{GetPollSpaceResponse, get_poll_space_handler},
         teams::{
             create_team::{CreateTeamResponse, create_team_handler},
             find_team::{FindTeamResponse, find_team_handler},
@@ -234,161 +244,222 @@ pub fn route(
         )
         .nest(
             "/spaces",
-            Router::new().nest(
-                "/deliberation",
-                Router::new()
-                    .nest(
-                        "/:space_pk/responses",
-                        Router::new()
-                            .route(
-                                "/",
-                                post_with(
-                                    create_response_answer_handler,
-                                    api_docs!(
-                                        Json<CreateDeliberationResponse>,
-                                        "Create response answer",
-                                        "Create response answer with survey id"
-                                    ),
-                                ),
-                            )
-                            .route(
-                                "/:response_pk",
-                                get_with(
-                                    get_response_answer_handler,
-                                    api_docs!(
-                                        Json<DeliberationSpaceResponse>,
-                                        "Get response answer",
-                                        "Get response answer with response id"
-                                    ),
-                                ),
-                            ),
-                    )
-                    .nest(
-                        "/:space_pk/discussions",
-                        Router::new()
-                            .route(
-                                "/",
-                                post_with(
-                                    create_discussion_handler,
-                                    api_docs!(
-                                        Json<DeliberationDiscussionResponse>,
-                                        "Create discussion",
-                                        "Create discussion under deliberation with id"
-                                    ),
-                                ),
-                            )
-                            .route(
-                                "/:discussion_pk/start-meeting",
-                                post_with(
-                                    start_meeting_handler,
-                                    api_docs!(
-                                        Json<DeliberationDiscussionResponse>,
-                                        "Start meeting",
-                                        "Start meeting for discussion with id"
-                                    ),
-                                ),
-                            )
-                            .route(
-                                "/:discussion_pk/participant-meeting",
-                                post_with(
-                                    participant_meeting_handler,
-                                    api_docs!(
-                                        Json<DeliberationDiscussionResponse>,
-                                        "Participant meeting",
-                                        "Participant meeting for discussion with id"
-                                    ),
-                                ),
-                            )
-                            .route(
-                                "/:discussion_pk/start-recording",
-                                post_with(
-                                    start_recording_handler,
-                                    api_docs!(
-                                        Json<DeliberationDiscussionResponse>,
-                                        "Start recording",
-                                        "Start recording for discussion with id"
-                                    ),
-                                ),
-                            )
-                            .route(
-                                "/:discussion_pk/end-recording",
-                                post_with(
-                                    end_recording_handler,
-                                    api_docs!(
-                                        Json<DeliberationDiscussionResponse>,
-                                        "End recording",
-                                        "End recording for discussion with id"
-                                    ),
-                                ),
-                            )
-                            .route(
-                                "/:discussion_pk/exit-meeting",
-                                post_with(
-                                    exit_meeting_handler,
-                                    api_docs!(
-                                        Json<DeliberationDiscussionResponse>,
-                                        "Exit meeting",
-                                        "Exit meeting for discussion with id"
-                                    ),
-                                ),
-                            ),
-                    )
-                    .route(
-                        "/",
-                        post_with(
-                            create_deliberation_handler,
-                            api_docs!(
-                                Json<CreateDeliberationResponse>,
-                                "Create deliberation",
-                                "Create a new deliberation"
-                            ),
-                        ),
-                    )
-                    .route(
-                        "/:space_pk",
-                        post_with(
-                            update_deliberation_handler,
-                            api_docs!(
-                                Json<DeliberationDetailResponse>,
-                                "Update deliberation",
-                                "Update a deliberation"
-                            ),
-                        ),
-                    )
-                    .route(
-                        "/:space_pk",
-                        get_with(
-                            get_deliberation_handler,
-                            api_docs!(
-                                Json<DeliberationDetailResponse>,
-                                "Get deliberation",
-                                "Get deliberation with ID"
-                            ),
-                        ),
-                    )
-                    .route(
-                        "/:space_pk/posting",
-                        post_with(
-                            posting_deliberation_handler,
-                            api_docs!(
-                                Json<PostingDeliberationResponse>,
-                                "Posting deliberation",
-                                "Posting deliberation with id"
-                            ),
-                        ),
-                    )
-                    .route(
-                        "/:space_pk/delete",
-                        post_with(
-                            delete_deliberation_handler,
-                            api_docs!(
-                                Json<String>,
-                                "Delete deliberation",
-                                "Delete deliberation with id"
-                            ),
+            Router::new()
+                .route(
+                    "/",
+                    post_with(
+                        create_space_handler,
+                        api_docs!(
+                            Json<CreateSpaceResponse>,
+                            "Create Space",
+                            "Create a new space"
                         ),
                     ),
-            ),
+                )
+                .route(
+                    "/:space_pk",
+                    delete_with(
+                        delete_space_handler,
+                        api_docs!((), "Delete Space", "Delete a space by ID"),
+                    ),
+                )
+                .nest(
+                    "/deliberation",
+                    Router::new()
+                        .nest(
+                            "/:space_pk/responses",
+                            Router::new()
+                                .route(
+                                    "/",
+                                    post_with(
+                                        create_response_answer_handler,
+                                        api_docs!(
+                                            Json<CreateDeliberationResponse>,
+                                            "Create response answer",
+                                            "Create response answer with survey id"
+                                        ),
+                                    ),
+                                )
+                                .route(
+                                    "/:response_pk",
+                                    get_with(
+                                        get_response_answer_handler,
+                                        api_docs!(
+                                            Json<DeliberationSpaceResponse>,
+                                            "Get response answer",
+                                            "Get response answer with response id"
+                                        ),
+                                    ),
+                                ),
+                        )
+                        .nest(
+                            "/:space_pk/discussions",
+                            Router::new()
+                                .route(
+                                    "/",
+                                    post_with(
+                                        create_discussion_handler,
+                                        api_docs!(
+                                            Json<DeliberationDiscussionResponse>,
+                                            "Create discussion",
+                                            "Create discussion under deliberation with id"
+                                        ),
+                                    ),
+                                )
+                                .route(
+                                    "/:discussion_pk/start-meeting",
+                                    post_with(
+                                        start_meeting_handler,
+                                        api_docs!(
+                                            Json<DeliberationDiscussionResponse>,
+                                            "Start meeting",
+                                            "Start meeting for discussion with id"
+                                        ),
+                                    ),
+                                )
+                                .route(
+                                    "/:discussion_pk/participant-meeting",
+                                    post_with(
+                                        participant_meeting_handler,
+                                        api_docs!(
+                                            Json<DeliberationDiscussionResponse>,
+                                            "Participant meeting",
+                                            "Participant meeting for discussion with id"
+                                        ),
+                                    ),
+                                )
+                                .route(
+                                    "/:discussion_pk/start-recording",
+                                    post_with(
+                                        start_recording_handler,
+                                        api_docs!(
+                                            Json<DeliberationDiscussionResponse>,
+                                            "Start recording",
+                                            "Start recording for discussion with id"
+                                        ),
+                                    ),
+                                )
+                                .route(
+                                    "/:discussion_pk/end-recording",
+                                    post_with(
+                                        end_recording_handler,
+                                        api_docs!(
+                                            Json<DeliberationDiscussionResponse>,
+                                            "End recording",
+                                            "End recording for discussion with id"
+                                        ),
+                                    ),
+                                )
+                                .route(
+                                    "/:discussion_pk/exit-meeting",
+                                    post_with(
+                                        exit_meeting_handler,
+                                        api_docs!(
+                                            Json<DeliberationDiscussionResponse>,
+                                            "Exit meeting",
+                                            "Exit meeting for discussion with id"
+                                        ),
+                                    ),
+                                ),
+                        )
+                        .route(
+                            "/",
+                            post_with(
+                                create_deliberation_handler,
+                                api_docs!(
+                                    Json<CreateDeliberationResponse>,
+                                    "Create deliberation",
+                                    "Create a new deliberation"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/:space_pk",
+                            post_with(
+                                update_deliberation_handler,
+                                api_docs!(
+                                    Json<DeliberationDetailResponse>,
+                                    "Update deliberation",
+                                    "Update a deliberation"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/:space_pk",
+                            get_with(
+                                get_deliberation_handler,
+                                api_docs!(
+                                    Json<DeliberationDetailResponse>,
+                                    "Get deliberation",
+                                    "Get deliberation with ID"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/:space_pk/posting",
+                            post_with(
+                                posting_deliberation_handler,
+                                api_docs!(
+                                    Json<PostingDeliberationResponse>,
+                                    "Posting deliberation",
+                                    "Posting deliberation with id"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/:space_pk/delete",
+                            post_with(
+                                delete_deliberation_handler,
+                                api_docs!(
+                                    Json<String>,
+                                    "Delete deliberation",
+                                    "Delete deliberation with id"
+                                ),
+                            ),
+                        ),
+                )
+                .nest(
+                    "/poll",
+                    Router::new()
+                        .route(
+                            "/:poll_space_pk",
+                            get_with(
+                                get_poll_space_handler,
+                                api_docs!(
+                                    Json<GetPollSpaceResponse>,
+                                    "Get poll",
+                                    "Get poll with ID"
+                                ),
+                            )
+                            .put_with(
+                                update_poll_space_handler,
+                                api_docs!(
+                                    Json<UpdatePollSpaceResponse>,
+                                    "Update poll",
+                                    "Update poll with ID"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/:poll_space_pk/response",
+                            post_with(
+                                respond_poll_space_handler,
+                                api_docs!(
+                                    Json<()>,
+                                    "Respond to poll",
+                                    "Submit a response to the poll with ID"
+                                ),
+                            )
+                            .get_with(
+                                list_responses_handler,
+                                api_docs!(
+                                    Json<ListSurveyResponse>,
+                                    "List poll responses",
+                                    "List all responses for the poll with ID"
+                                ),
+                            ),
+                        ),
+                ),
         )
         .nest(
             "/teams",

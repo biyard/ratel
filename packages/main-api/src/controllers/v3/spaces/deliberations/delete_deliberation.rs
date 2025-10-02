@@ -22,7 +22,7 @@ use tower_sessions::Session;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct DeleteDeliberationResponse {
-    pub space_pk: String,
+    pub space_pk: Partition,
 }
 
 #[derive(
@@ -40,7 +40,7 @@ pub async fn delete_deliberation_handler(
 ) -> Result<Json<DeleteDeliberationResponse>, Error2> {
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
 
-    let space = DeliberationSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
+    let space = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
         .await?
         .ok_or(Error2::NotFound("Space not found".to_string()))?;
 
@@ -106,7 +106,5 @@ pub async fn delete_deliberation_handler(
         }
     }
 
-    Ok(Json(DeleteDeliberationResponse {
-        space_pk: space_pk.to_string(),
-    }))
+    Ok(Json(DeleteDeliberationResponse { space_pk }))
 }
