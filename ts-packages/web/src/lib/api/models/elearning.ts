@@ -1,5 +1,5 @@
 import { FileInfo } from './feeds';
-import { File } from './spaces/deliberation-spaces';
+import { File } from '../ratel/spaces/deliberation-spaces.v3';
 
 export interface Elearning {
   id: number;

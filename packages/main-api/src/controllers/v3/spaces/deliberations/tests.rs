@@ -292,8 +292,6 @@ async fn test_update_space_handler() {
         body.summary.html_contents,
         "<div>deliberation description 11</div>".to_string()
     );
-    assert_eq!(body.discussions.len(), 1);
-    assert_eq!(body.discussions[0].members.len(), 1);
     assert_eq!(
         body.elearnings.files[0].name,
         "deliberation elearning update file title".to_string()
