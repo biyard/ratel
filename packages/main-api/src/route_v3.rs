@@ -15,7 +15,7 @@ use crate::controllers::v3::spaces::deliberations::posting_deliberation::{
 };
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
-use crate::models::feed::Post;
+use crate::models::feed::{Post, PostDetailResponse};
 // use crate::models::feed::Post;
 use crate::controllers::v3::spaces::poll::list_responses::{
     ListSurveyResponse, list_responses_handler,
@@ -47,10 +47,10 @@ use crate::{
             comments::add_comment::{AddCommentResponse, add_comment_handler},
             create_post::{CreatePostResponse, create_post_handler},
             delete_post::delete_post_handler,
-            get_post::{GetPostResponse, get_post_handler},
+            get_post::get_post_handler,
             like_post::{LikePostResponse, like_post_handler},
             list_posts::list_posts_handler,
-            update_post::{UpdatePostResponse, update_post_handler},
+            update_post::update_post_handler,
         },
         spaces::deliberations::{
             create_deliberation::{CreateDeliberationResponse, create_deliberation_handler},
@@ -158,7 +158,7 @@ pub fn route(
                     ),
                 )
                 .route(
-                    "/:post_pk/like",
+                    "/:post_pk/likes",
                     post_with(
                         like_post_handler,
                         api_docs!(
@@ -183,15 +183,11 @@ pub fn route(
                     "/:post_pk",
                     get_with(
                         get_post_handler,
-                        api_docs!(Json<GetPostResponse>, "Get Post", "Get a post by ID"),
+                        api_docs!(Json<PostDetailResponse>, "Get Post", "Get a post by ID"),
                     )
-                    .put_with(
+                    .patch_with(
                         update_post_handler,
-                        api_docs!(
-                            Json<UpdatePostResponse>,
-                            "Update Post",
-                            "Update a post by ID"
-                        ),
+                        api_docs!(Json<Post>, "Update Post", "Update a post by ID"),
                     )
                     .delete_with(
                         delete_post_handler,

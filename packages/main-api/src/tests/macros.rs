@@ -12,8 +12,9 @@ macro_rules! call {
         use axum::http::header::{self, HeaderValue};
         use bdk::prelude::by_axum::axum;
 
+        let path = $path.replace("#", "%23");
         let mut req_builder = axum::http::Request::builder()
-            .uri(format!("http://localhost:3000{}", $path))
+            .uri(format!("http://localhost:3000{}", path))
             .method($method);
 
         if let Some(headers_mut) = req_builder.headers_mut() {
@@ -221,6 +222,11 @@ macro_rules! post {
 #[macro_export]
 macro_rules! put {
     ( $($t:tt)* ) => { $crate::http!(@METHOD "PUT"; $($t)*) };
+}
+
+#[macro_export]
+macro_rules! patch {
+    ( $($t:tt)* ) => { $crate::http!(@METHOD "PATCH"; $($t)*) };
 }
 
 #[macro_export]

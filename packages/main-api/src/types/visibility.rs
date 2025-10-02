@@ -5,6 +5,8 @@ use super::Partition;
 #[derive(
     Debug,
     Clone,
+    PartialEq,
+    Eq,
     serde_with::SerializeDisplay,
     serde_with::DeserializeFromStr,
     Default,
@@ -29,7 +31,7 @@ impl Visibility {
         if let Partition::Team(pk) = team_pk {
             Ok(Visibility::TeamOnly(pk))
         } else {
-            Err(crate::Error2::IncorrectConfiguredVisibility(
+            Err(crate::Error2::PostIncorrectConfiguredVisibility(
                 "Visibility::team_only requires a team Partition".into(),
             ))
         }

@@ -235,6 +235,7 @@ pub mod controllers {
         pub mod posts {
             pub mod create_post;
             pub mod delete_post;
+            pub mod dto;
             pub mod get_post;
             pub mod like_post;
             pub mod list_posts;

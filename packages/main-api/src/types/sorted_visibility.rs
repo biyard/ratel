@@ -17,6 +17,12 @@ pub enum SortedVisibility {
     TeamOnly(String, String), // Only team members with permission can access
 }
 
+impl Default for SortedVisibility {
+    fn default() -> Self {
+        SortedVisibility::Draft(chrono::Utc::now().timestamp_micros().to_string())
+    }
+}
+
 impl SortedVisibility {
     pub fn draft(now: i64) -> SortedVisibility {
         SortedVisibility::Draft(now.to_string())
@@ -30,7 +36,7 @@ impl SortedVisibility {
         let pk = match team_pk {
             Partition::Team(pk) => pk,
             _ => {
-                return Err(crate::Error2::IncorrectConfiguredVisibility(
+                return Err(crate::Error2::PostIncorrectConfiguredVisibility(
                     "SortedVisibility::team_only requires a team Partition".into(),
                 ));
             }
