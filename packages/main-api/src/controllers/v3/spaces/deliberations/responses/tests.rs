@@ -1,10 +1,7 @@
 use crate::controllers::v3::posts::create_post::CreatePostResponse;
 use crate::types::File;
 use crate::{
-    controllers::v3::{
-        posts::create_post::{CreatePostRequest, create_post_handler},
-        spaces::deliberations::responses::create_response_answer::CreateDeliberationResponse,
-    },
+    controllers::v3::spaces::deliberations::responses::create_response_answer::CreateDeliberationResponse,
     get,
     models::space::{
         DeliberationDetailResponse, DeliberationSpaceResponse, DiscussionCreateRequest,
@@ -18,8 +15,6 @@ use crate::{
     types::{ChoiceQuestion, LinearScaleQuestion, SpaceVisibility, SurveyQuestion, SurveyStatus},
 };
 
-use bdk::prelude::axum::{Extension, Json, extract::State};
-
 use crate::types::SurveyAnswer;
 
 #[tokio::test]
@@ -31,10 +26,10 @@ async fn test_create_response_answer_handler() {
     } = setup_v3().await;
 
     //FIXME: fix by session and one test code
-    let app_state = create_app_state();
-    let auth = get_auth(&user);
+    let _app_state = create_app_state();
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -196,10 +191,10 @@ async fn test_get_response_answer_handler() {
     } = setup_v3().await;
 
     //FIXME: fix by session and one test code
-    let app_state = create_app_state();
-    let auth = get_auth(&user);
+    let _app_state = create_app_state();
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),

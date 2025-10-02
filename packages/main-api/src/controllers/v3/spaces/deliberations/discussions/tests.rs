@@ -1,8 +1,6 @@
-use bdk::prelude::axum::{Extension, Json, extract::State};
-
 use crate::{
     controllers::v3::{
-        posts::create_post::{CreatePostRequest, CreatePostResponse, create_post_handler},
+        posts::create_post::CreatePostResponse,
         spaces::deliberations::create_deliberation::CreateDeliberationResponse,
     },
     models::space::DeliberationDiscussionResponse,
@@ -25,9 +23,9 @@ async fn test_create_discussion_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -96,9 +94,9 @@ async fn test_start_meeting_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -184,9 +182,9 @@ async fn test_create_participants_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -277,9 +275,9 @@ async fn test_exit_meeting_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -411,9 +409,9 @@ async fn test_start_recording_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
@@ -508,9 +506,9 @@ async fn test_end_recording_handler() {
     //FIXME: fix by session and one test code
     let app_state = create_app_state();
     let cli = &app_state.dynamo.client;
-    let auth = get_auth(&user);
+    let _auth = get_auth(&user);
 
-    let (status, _headers, post) = crate::post! {
+    let (_status, _headers, post) = crate::post! {
         app: app,
         path: "/v3/posts",
         headers: headers.clone(),
