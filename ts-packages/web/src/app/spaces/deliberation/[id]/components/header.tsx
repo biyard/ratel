@@ -14,6 +14,7 @@ import {
   CommentIcon,
   Rewards,
   Internet,
+  Extra,
 } from '@/components/icons';
 // import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { getTimeAgo } from '@/lib/time-utils';
@@ -23,17 +24,27 @@ import { useTranslations } from 'next-intl';
 import { PublishingScope } from '@/lib/api/models/notice';
 import { useDeliberationSpaceByIdContext } from '../providers.client';
 import PublishForm from '@/app/spaces/[id]/notice/_components/modal/publish-form';
+import {
+  DeliberationSpace,
+  SpacePublishState,
+} from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { useUserInfo } from '@/hooks/use-user-info';
+import GoPublicModal from '@/app/spaces/[id]/notice/_components/modal/go-public-modal';
+import { useDropdown } from '@/app/spaces/[id]/_components/dropdown/dropdown-service';
+import DropdownMenu from '@/app/spaces/[id]/_components/dropdown/dropdown-menu';
+import DeleteSpacePopup from '@/app/spaces/[id]/_components/modal/confirm-delete';
 // import GoPublicModal from '@/app/spaces/[id]/notice/_components/modal/go-public-modal';
 // import DeleteSpacePopup from '@/app/spaces/[id]/_components/modal/confirm-delete';
 // import { useDropdown } from '@/app/spaces/[id]/_components/dropdown/dropdown-service';
-import { DeliberationSpace } from '@/lib/api/models/spaces/deliberation-spaces';
 
 export default function SpaceHeader({
+  space,
   feed,
 }: {
   space: DeliberationSpace;
   feed: FeedV2;
 }) {
+  const { data: user } = useUserInfo();
   const t = useTranslations('Space');
 
   const {
@@ -48,80 +59,69 @@ export default function SpaceHeader({
     handleEdit,
     handlePublishWithScope,
     handleUpdateTitle,
-    // handleDelete,
+    handleDelete,
   } = useDeliberationSpaceByIdContext();
 
   const popup = usePopup();
 
   const handlePost = async () => {
-    popup
-      .open(
-        <PublishForm
-          onPublish={async (scope: PublishingScope) => {
-            popup.close();
-            await handlePublishWithScope(scope);
-          }}
-          // currentScope={space.publishing_scope}
-          currentScope={PublishingScope.Private}
-        />,
-      )
-      .withoutBackdropClose();
-    // if (space.status === SpaceStatus.Draft) {
-    //   popup
-    //     .open(
-    //       <PublishForm
-    //         onPublish={async (scope: PublishingScope) => {
-    //           popup.close();
-    //           await handlePublishWithScope(scope);
-    //         }}
-    //         // currentScope={space.publishing_scope}
-    //         currentScope={PublishingScope.Private}
-    //       />,
-    //     )
-    //     .withoutBackdropClose();
-    // } else {
-    //   popup
-    //     .open(
-    //       <GoPublicModal
-    //         onCancel={() => popup.close()}
-    //         onGoPublic={async () => {
-    //           popup.close();
-    //           await handlePublishWithScope(PublishingScope.Public);
-    //         }}
-    //       />,
-    //     )
-    //     .withoutBackdropClose();
-    // }
+    if (space.publish_state === SpacePublishState.Draft.toUpperCase()) {
+      popup
+        .open(
+          <PublishForm
+            onPublish={async (scope: PublishingScope) => {
+              popup.close();
+              await handlePublishWithScope(scope);
+            }}
+            // currentScope={space.publishing_scope}
+            currentScope={PublishingScope.Private}
+          />,
+        )
+        .withoutBackdropClose();
+    } else {
+      popup
+        .open(
+          <GoPublicModal
+            onCancel={() => popup.close()}
+            onGoPublic={async () => {
+              popup.close();
+              await handlePublishWithScope(PublishingScope.Public);
+            }}
+          />,
+        )
+        .withoutBackdropClose();
+    }
   };
 
   // Add this new handler function in SpaceHeader
-  //   const handleDeleteClick = () => {
-  //     popup
-  //       .open(
-  //         <DeleteSpacePopup
-  //           spaceName={space.title || t('untitled_space')}
-  //           onClose={() => popup.close()}
-  //           onDelete={async () => {
-  //             await handleDelete(); // Your existing delete handler
-  //             popup.close();
-  //           }}
-  //         />,
-  //       )
-  //       .withoutBackdropClose();
-  //   };
+  const handleDeleteClick = () => {
+    popup
+      .open(
+        <DeleteSpacePopup
+          spaceName={feed.title || t('untitled_space')}
+          onClose={() => popup.close()}
+          onDelete={async () => {
+            await handleDelete(); // Your existing delete handler
+            popup.close();
+          }}
+        />,
+      )
+      .withoutBackdropClose();
+  };
 
   //   const { data: userInfo } = useUserInfo();
   //   const userId = userInfo?.id ?? 0;
   //   const { teams } = useContext(TeamContext);
   //   const authorId = space?.author.id;
   //   const selectedTeam = teams.some((t) => t.id === authorId);
-  //   const authorId = space?.user_pk;
+  const authorId = space?.user_pk;
+  const publish = space?.publish_state;
 
   const likes = feed.likes;
   const shares = feed.shares;
   const comments = feed.comments;
   const rewards = feed.rewards;
-  //   const { isOpen, toggle, close, dropdownRef } = useDropdown();
+  const { isOpen, toggle, close, dropdownRef } = useDropdown();
 
   //   const writePostPermission = usePermission(
   //     space.author_pk,
@@ -141,7 +141,7 @@ export default function SpaceHeader({
           )}
         </div>
 
-        {
+        {authorId === user?.pk && (
           <div className="flex flex-row items-center gap-2 text-sm text-white">
             {isEdit ? (
               <button
@@ -165,7 +165,7 @@ export default function SpaceHeader({
               </button>
             )}
 
-            {!isEdit && (
+            {!isEdit && publish === SpacePublishState.Draft.toUpperCase() && (
               <button
                 className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
                 onClick={async () => {
@@ -178,21 +178,23 @@ export default function SpaceHeader({
                 </div>
               </button>
             )}
-            {!isEdit && isPrivatelyPublished && (
-              <button
-                className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
-                onClick={async () => {
-                  await handlePost();
-                }}
-              >
-                <Internet className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
-                <div className="font-bold text-zinc-900 text-sm">
-                  {t('go_public')}
-                </div>
-              </button>
-            )}
+            {!isEdit &&
+              publish !== SpacePublishState.Draft.toUpperCase() &&
+              isPrivatelyPublished && (
+                <button
+                  className="flex flex-row w-fit px-3.5 py-2 rounded-md bg-white gap-1"
+                  onClick={async () => {
+                    await handlePost();
+                  }}
+                >
+                  <Internet className="stroke-neutral-500 [&>path]:stroke-2 w-5 h-5" />
+                  <div className="font-bold text-zinc-900 text-sm">
+                    {t('go_public')}
+                  </div>
+                </button>
+              )}
 
-            {/* {writePostPermission ? (
+            {authorId === user?.pk ? (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={toggle}
@@ -201,24 +203,6 @@ export default function SpaceHeader({
                   aria-haspopup="menu"
                   className="w-fit p-2 rounded-md bg-neutral-800 light:bg-transparent"
                   onKeyDown={(e) => {
-                    // if (
-                    //   e.key === 'Enter' ||
-                    //   e.key === ' ' ||
-                    //   e.key === 'ArrowDown'
-                    // ) {
-                    //   e.preventDefault();
-                    //   toggle();
-                    //   if (!isOpen) {
-                    //     setTimeout(() => {
-                    //       const firstMenuItem =
-                    //         dropdownRef.current?.querySelector(
-                    //           '[role="menuitem"]:not([aria-disabled="true"])',
-                    //         );
-                    //       (firstMenuItem as HTMLElement)?.focus();
-                    //     }, 0);
-                    //   }
-                    // }
-
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       if (!isOpen) {
@@ -280,9 +264,9 @@ export default function SpaceHeader({
               </div>
             ) : (
               <></>
-            )} */}
+            )}
           </div>
-        }
+        )}
       </div>
 
       <div className="flex flex-row w-full justify-between max-tablet:justify-end items-center">
@@ -301,7 +285,7 @@ export default function SpaceHeader({
           <div className="flex flex-row w-fit gap-1 items-center">
             <CommentIcon width={20} height={20} />
             <div className="font-medium text-[15px] text-text-primary">
-              {comments ?? 0}
+              {comments.length ?? 0}
             </div>
           </div>
 
@@ -383,7 +367,7 @@ export default function SpaceHeader({
         </div>
 
         <div className="font-light text-text-primary text-sm">
-          {getTimeAgo(createdAt / 1000000)}
+          {getTimeAgo(createdAt / 1000)}
         </div>
       </div>
     </div>

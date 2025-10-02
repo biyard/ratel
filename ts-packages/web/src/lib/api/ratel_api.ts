@@ -29,7 +29,7 @@ import { RedeemCode } from './models/redeem-code';
 import { NetworkData } from './models/network';
 import { Promotion } from './models/promotion';
 import { GroupPermission } from './models/group';
-import { DeliberationSpace } from './models/spaces/deliberation-spaces';
+import { DeliberationSpace } from './ratel/spaces/deliberation-spaces.v3';
 
 export function useDeliberationSpaceById(
   id: string,
@@ -213,10 +213,12 @@ export const ratelApi = {
       `/v1/users?action=login-by-telegram&telegram_raw=${raw}`,
     // getUserInfo: () => '/v1/users?action=user-info',
     getUserInfo: () => '/v3/me',
-    getUserByEmail: (email: string) => `/v3/users?email=${email}`,
-    getUserByUsername: (username: string) => `/v3/users?username=${username}`,
+    getUserByEmail: (email: string) =>
+      `/v3/users?type=email&value=${encodeURIComponent(email)}`,
+    getUserByUsername: (username: string) =>
+      `/v3/users?type=username&value=${username}`,
     getUserByPhoneNumber: (phoneNumber: string) =>
-      `/v3/users?phone-number=${phoneNumber}`,
+      `/v3/users?type=phone-number&value=${phoneNumber}`,
 
     signup: () => '/v3/auth/signup',
     editProfile: (user_id: number) => `/v1/users/${user_id}`,

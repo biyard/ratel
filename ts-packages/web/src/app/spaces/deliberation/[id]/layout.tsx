@@ -1,4 +1,7 @@
-import { getDeliberationSpaceById } from '@/lib/api/ratel_api.server';
+import {
+  getDeliberationSpaceById,
+  getFeedByIdV2,
+} from '@/lib/api/ratel_api.server';
 import { Metadata } from 'next';
 import React, { Suspense } from 'react';
 import striptags from 'striptags';
@@ -13,8 +16,13 @@ export async function generateMetadata({
   const { id } = await params;
 
   const { data } = await getDeliberationSpaceById(id);
+  const postPk = data?.post_pk ?? '';
 
-  const title = data?.title ?? undefined;
+  const postId = decodeURIComponent(postPk).replace(/^.*#/, '');
+
+  const { data: feed } = await getFeedByIdV2(postId);
+
+  const title = feed?.title ?? undefined;
   const description = data ? striptags(data.summary.html_contents) : undefined;
   //   let images = undefined;
   //   if (data) {

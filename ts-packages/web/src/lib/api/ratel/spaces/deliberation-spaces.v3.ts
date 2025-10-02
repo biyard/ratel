@@ -1,29 +1,43 @@
-import { NewDiscussionCreateRequest } from '../discussion';
-import { Answer } from '../response';
-import { NewSurveyCreateRequest, Question } from '../survey';
+import { NewDiscussionCreateRequest } from '../../models/discussion';
+import { Answer } from '../../models/response';
+import { NewSurveyCreateRequest, Question } from '../../models/survey';
 
 export type PartitionString = string;
 
 export interface DeliberationSpace {
   pk: string;
+  sk: string;
   created_at: number;
   updated_at: number;
+  status: SpaceStatus | undefined | null;
+  publish_state: SpacePublishState;
   likes: number;
   comments: number;
   rewards: number;
   shares: number;
-  visibility: Visibility;
-  title: string;
+  visibility: SpaceVisibility;
   post_pk: string;
   user_pk: string;
   author_display_name: string;
   author_profile_url: string;
   author_username: string;
+  info: DeliberationSpace;
   summary: DeliberationContentResponse;
   discussions: DeliberationDiscussionResponse[];
   elearnings: ElearningResponse;
   surveys: DeliberationSurveyResponse;
   recommendation: DeliberationContentResponse;
+}
+
+export enum SpacePublishState {
+  Draft = 'Draft',
+  Published = 'Published',
+}
+
+export enum SpaceStatus {
+  Waiting = 'Waiting',
+  InProgress = 'InProgress',
+  Finish = 'Finish',
 }
 
 export interface ElearningResponse {
@@ -46,7 +60,7 @@ export interface DiscussionParticipantResponse {
 }
 
 export interface DeliberationDiscussionResponse {
-  pk: PartitionString;
+  pk: string | undefined;
   started_at: number;
   ended_at: number;
   name: string;
@@ -63,6 +77,11 @@ export interface DeliberationDiscussionResponse {
   participants: DiscussionParticipantResponse[];
 }
 
+export interface DeliberationSpace {
+  pk: string;
+  sk: string;
+}
+
 export interface DeliberationContentResponse {
   html_contents: string;
   files: File[];
@@ -76,23 +95,43 @@ export interface File {
 }
 
 export enum FileExtension {
-  JPG = 1,
-  PNG = 2,
-  PDF = 3,
-  ZIP = 4,
-  WORD = 5,
-  PPTX = 6,
-  EXCEL = 7,
-  MP4 = 8,
-  MOV = 9,
+  JPG = 'JPG',
+  PNG = 'PNG',
+  PDF = 'PDF',
+  ZIP = 'ZIP',
+  WORD = 'WORD',
+  PPTX = 'PPTX',
+  EXCEL = 'EXCEL',
+  MP4 = 'MP4',
+  MOV = 'MOV',
 }
 
-export type Visibility =
-  | 'Public'
+export const FileExtensionMap: Record<FileExtension, string> = {
+  [FileExtension.JPG]: 'JPG',
+  [FileExtension.PNG]: 'PNG',
+  [FileExtension.PDF]: 'PDF',
+  [FileExtension.ZIP]: 'ZIP',
+  [FileExtension.WORD]: 'WORD',
+  [FileExtension.PPTX]: 'PPTX',
+  [FileExtension.EXCEL]: 'EXCEL',
+  [FileExtension.MP4]: 'MP4',
+  [FileExtension.MOV]: 'MOV',
+};
+
+type BackendFile = Omit<File, 'ext'> & { ext: string };
+
+export const toBackendFile = (f: File): BackendFile => ({
+  ...f,
+  ext: FileExtensionMap[f.ext],
+});
+
+export type SpaceVisibility =
+  | 'PRIVATE'
+  | 'PUBLIC'
   | `Team:${string}`
   | `TeamGroupMember:${string}`;
 
-type SurveyType = 1 | 2;
+type SurveyType = 'SAMPLE' | 'SURVEY';
 
 export interface DeliberationResponse {
   pk: string;
@@ -102,7 +141,7 @@ export interface DeliberationResponse {
   comments: number;
   rewards: number;
   shares: number;
-  visibility: Visibility;
+  visibility: SpaceVisibility;
   title: string;
   post_pk: string;
   user_pk: string;
@@ -111,7 +150,7 @@ export interface DeliberationResponse {
   author_username: string;
 }
 
-export type SurveyStatus = 1 | 2 | 3; //1: ready, 2: in progress, 3: finish
+export type SurveyStatus = 'READY' | 'IN_PROGRESS' | 'FINISH'; //1: ready, 2: in progress, 3: finish
 
 export interface SurveyResponseResponse {
   pk?: string;
@@ -135,7 +174,7 @@ export interface DeliberationSurveyResponse {
 
 export interface ResponseCreateRequest {
   survey_pk: string;
-  survey_type: number;
+  survey_type: string;
   answers: Answer[];
 }
 
@@ -145,7 +184,7 @@ export function responseCreateRequest(
 ): ResponseCreateRequest {
   return {
     survey_pk,
-    survey_type: 2,
+    survey_type: 'SURVEY',
     answers,
   };
 }
@@ -153,33 +192,32 @@ export function responseCreateRequest(
 export interface UpdateSpaceRequest {
   title?: string;
   html_contents: string;
-  files: File[];
+  files: BackendFile[];
 
   discussions: NewDiscussionCreateRequest[];
-  elearning_files: File[];
-
+  elearning_files: BackendFile[];
   surveys: NewSurveyCreateRequest[];
 
   recommendation_html_contents?: string;
-  recommendation_files: File[];
+  recommendation_files: BackendFile[];
 
-  visibility: Visibility;
+  visibility: SpaceVisibility;
   started_at: number;
   ended_at: number;
 }
 
 export function updateSpaceRequest(
   html_contents: string,
-  files: File[],
+  files: BackendFile[],
 
   discussions: NewDiscussionCreateRequest[],
-  elearning_files: File[],
+  elearning_files: BackendFile[],
 
   surveys: NewSurveyCreateRequest[],
 
-  recommendation_files: File[],
+  recommendation_files: BackendFile[],
 
-  visibility: Visibility,
+  visibility: SpaceVisibility,
   started_at: number,
   ended_at: number,
   title?: string,

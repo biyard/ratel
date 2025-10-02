@@ -2,10 +2,7 @@ import React from 'react';
 import { Answer } from '@/lib/api/models/response';
 import { usePopup } from '@/lib/contexts/popup-service';
 
-import { SpaceStatus } from '@/lib/api/models/spaces';
 import { logger } from '@/lib/logger';
-
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 
 import { useTranslations } from 'next-intl';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
@@ -16,6 +13,8 @@ import LinearScaleViewer from '@/app/spaces/[id]/_components/question/_component
 import DropdownViewer from '@/app/spaces/[id]/_components/question/_component/viewer/dropdown-viewer';
 import SubjectiveViewer from '@/app/spaces/[id]/_components/question/_component/viewer/subjective-viewer';
 import CheckPopup from '@/app/spaces/[id]/_components/question/check-popup';
+import { useUserInfo } from '@/hooks/use-user-info';
+import { SpacePublishState } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 
 interface Question {
   title: string;
@@ -34,7 +33,7 @@ export default function SurveyViewer({
   isEdit,
   survey,
   answer,
-  status,
+  publish,
   startDate,
   endDate,
   handleSetAnswers,
@@ -45,13 +44,13 @@ export default function SurveyViewer({
   endDate: number;
   survey: Poll;
   answer: SurveyAnswer;
-  status: SpaceStatus;
+  publish: SpacePublishState;
   handleSetAnswers: (answers: Answer[]) => void;
   handleSend: () => Promise<void>;
 }) {
   const t = useTranslations('PollSpace');
-  const { data: userInfo } = useSuspenseUserInfo();
-  const userId = userInfo?.id || 0;
+  const { data: userInfo } = useUserInfo();
+  const userPk = userInfo?.pk || '';
 
   // const members = space.discussions.flatMap((discussion) => discussion.members);
   // const isMember = members.some((member) => member.id === userId);
@@ -158,6 +157,16 @@ export default function SurveyViewer({
   return (
     <div className="flex flex-col gap-2.5 w-full">
       {questions.map((q, index) => {
+        console.log(
+          'ddsds: ',
+          is_completed,
+          !isLive,
+          userPk === '',
+          publish === SpacePublishState.Draft.toUpperCase(),
+          isEdit,
+          questions.length == 0,
+        );
+
         const selected = answers[index];
 
         let selectedIndexes =
@@ -240,7 +249,7 @@ export default function SurveyViewer({
       })}
 
       <div
-        className={`flex flex-row w-full justify-end ${is_completed || !isLive || userId === 0 || status === SpaceStatus.Draft || isEdit || questions.length == 0 ? 'hidden' : ''}`}
+        className={`flex flex-row w-full justify-end ${is_completed || !isLive || userPk === '' || publish === SpacePublishState.Draft.toUpperCase() || isEdit || questions.length == 0 ? 'hidden' : ''}`}
       >
         <div
           className="cursor-pointer flex flex-row w-[180px] h-fit py-[14px] px-[40px] justify-center items-center bg-primary hover:opacity-70 rounded-lg font-bold text-[15px] text-[#000203]"

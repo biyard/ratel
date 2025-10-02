@@ -1,22 +1,21 @@
 'use client';
 
-// import { TotalUser } from '@/lib/api/models/user';
 import React, { useState } from 'react';
 // import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Clear } from '@/components/icons';
 import SearchInput from '@/components/input/search-input';
-// import { useApiCall } from '@/lib/api/use-send';
-// import { ratelApi } from '@/lib/api/ratel_api';
+import { useApiCall } from '@/lib/api/use-send';
+import { ratelApi } from '@/lib/api/ratel_api';
 import clsx from 'clsx';
 import { logger } from '@/lib/logger';
-// import { checkString } from '@/lib/string-filter-utils';
-// import { showErrorToast } from '@/lib/toast';
+import { checkString } from '@/lib/string-filter-utils';
+import { showErrorToast } from '@/lib/toast';
 import { DiscussionInfo, DiscussionUser } from '../../types';
 import { useTranslations } from 'next-intl';
-// import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useUserInfo } from '@/hooks/use-user-info';
+import { User } from '@/lib/api/ratel/auth.v3';
 
 export default function InviteMemberPopup({
-  discussion_pk,
   title,
   description,
   startTime,
@@ -34,99 +33,108 @@ export default function InviteMemberPopup({
   onadd: (discussion: DiscussionInfo) => void;
 }) {
   const t = useTranslations('DeliberationSpace');
-  //   const { get } = useApiCall();
-  //   const { data: me } = useSuspenseUserInfo();
+  const { get } = useApiCall();
+  const { data: me } = useUserInfo();
 
   const [selectedUsers, setSelectedUsers] = useState<DiscussionUser[]>(users);
   const [isError, setIsError] = useState<boolean[]>([]);
-  const [searchValue] = useState('');
+  const [searchValue, setSearchValue] = useState('');
   const [errorCount, setErrorCount] = useState(0);
 
-  //   const ensureMe = (list: TotalUser[]) => {
-  //     if (!me) return list;
-  //     return list.some((u) => u.id === me.id)
-  //       ? list
-  //       : [
-  //           ...list,
-  //           {
-  //             id: me.id,
-  //             created_at: me.created_at,
-  //             updated_at: me.updated_at,
-  //             nickname: me.nickname,
-  //             html_contents: me.html_contents,
-  //             username: me.username,
-  //             profile_url: me.profile_url,
-  //             user_type: me.user_type,
-  //           } as TotalUser,
-  //         ];
-  //   };
+  const ensureMe = (list: DiscussionUser[]) => {
+    if (!me) return list;
+    return list.some((u) => u.user_pk === me.pk)
+      ? list
+      : [
+          ...list,
+          {
+            user_pk: me.pk,
+            display_name:
+              me.nickname != undefined && me.nickname != ''
+                ? me.nickname
+                : me.email,
+            profile_url: me.profile_url,
+            username:
+              me.nickname != undefined && me.nickname != ''
+                ? me.nickname
+                : me.email,
+          } as DiscussionUser,
+        ];
+  };
 
-  //   const setValue = async (
-  //     value: string,
-  //     isEnter: boolean,
-  //   ): Promise<TotalUser[] | void> => {
-  //     let nextSelected = ensureMe(selectedUsers);
+  const setValue = async (
+    value: string,
+    isEnter: boolean,
+  ): Promise<DiscussionUser[] | void> => {
+    let nextSelected = ensureMe(selectedUsers);
 
-  //     if (value.includes(',') || isEnter) {
-  //       const identifiers = value
-  //         .split(',')
-  //         .map((v) => v.trim())
-  //         .filter((v) => v !== '');
+    if (value.includes(',') || isEnter) {
+      const identifiers = value
+        .split(',')
+        .map((v) => v.trim())
+        .filter((v) => v !== '');
 
-  //       for (const input of identifiers) {
-  //         if (checkString(input)) continue;
+      for (const input of identifiers) {
+        if (checkString(input)) continue;
 
-  //         const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
-  //         const isPhone = /^\+?[0-9]\d{7,14}$/.test(input);
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+        const isPhone = /^\+?[0-9]\d{7,14}$/.test(input);
 
-  //         try {
-  //           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //           let data: any = null;
-  //           if (isEmail) {
-  //             data = await get(ratelApi.users.getUserByEmail(input));
-  //           } else if (isPhone) {
-  //             data = await get(ratelApi.users.getUserByPhoneNumber(input));
-  //           } else {
-  //             data = await get(ratelApi.users.getUserByUsername(input));
-  //           }
+        try {
+          let data: User | null = null;
+          if (isEmail) {
+            data = await get(ratelApi.users.getUserByEmail(input));
+          } else if (isPhone) {
+            data = await get(ratelApi.users.getUserByPhoneNumber(input));
+          } else {
+            data = await get(ratelApi.users.getUserByUsername(input));
+          }
 
-  //           if (data) {
-  //             const exists = nextSelected.some((u) => u.id === data.id);
-  //             if (!exists) {
-  //               nextSelected = [...nextSelected, data];
-  //             }
-  //           } else {
-  //             showErrorToast(t('invalid_user'));
-  //           }
-  //         } catch (err) {
-  //           logger.error('failed to search user with error: ', err);
-  //           showErrorToast(t('failed_search_user'));
-  //         }
-  //       }
+          if (data) {
+            const exists = nextSelected.some((u) => u.user_pk === data.pk);
 
-  //       setSelectedUsers(nextSelected);
-  //       setSearchValue('');
-  //       return nextSelected;
-  //     } else {
-  //       setSearchValue(value);
-  //     }
-  //   };
+            if (!exists) {
+              const user = {
+                user_pk: data.pk,
+                display_name:
+                  data.display_name != undefined && data.display_name != ''
+                    ? data.display_name
+                    : data.email,
+                profile_url: data.profile_url,
+                username:
+                  data.display_name != undefined && data.display_name != ''
+                    ? data.display_name
+                    : data.email,
+              };
+              nextSelected = [...nextSelected, user];
+            }
+          } else {
+            showErrorToast(t('invalid_user'));
+          }
+        } catch (err) {
+          logger.error('failed to search user with error: ', err);
+          showErrorToast(t('failed_search_user'));
+        }
+      }
+
+      setSelectedUsers(nextSelected);
+      setSearchValue('');
+      return nextSelected;
+    } else {
+      setSearchValue(value);
+    }
+  };
 
   const handleSend = async () => {
-    // const flushed = undefined;
-    // const participants = [];
-
-    // const flushed = searchValue ? await setValue(searchValue, true) : undefined;
-    // const participants = ensureMe(flushed ?? selectedUsers);
+    const flushed = searchValue ? await setValue(searchValue, true) : undefined;
+    const participants = ensureMe(flushed ?? selectedUsers);
 
     onadd({
       started_at: Math.floor(startTime),
       ended_at: Math.floor(endTime),
       name: title,
       description,
-
-      discussion_pk: discussion_pk,
-      participants: [],
+      participants,
     });
   };
 
@@ -142,12 +150,10 @@ export default function InviteMemberPopup({
               value={searchValue}
               placeholder={t('invite_hint')}
               setValue={async (value) => {
-                logger.debug('value: ', value);
-                // setValue(value, false);
+                setValue(value, false);
               }}
               onenter={async () => {
-                logger.debug('value: ', searchValue);
-                // setValue(searchValue, true);
+                setValue(searchValue, true);
               }}
             />
           </div>

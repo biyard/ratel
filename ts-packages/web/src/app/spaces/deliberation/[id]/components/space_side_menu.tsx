@@ -15,8 +15,12 @@ import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 // import { usePermission } from '@/app/(social)/_hooks/use-permission';
 // import { GroupPermission } from '@/lib/api/models/group';
 import { useDeliberationSpaceByIdContext } from '../providers.client';
-import { DeliberationSpace } from '@/lib/api/models/spaces/deliberation-spaces';
 import SetSchedulePopup from '@/app/spaces/[id]/_components/modal/set-schedule';
+import {
+  DeliberationSpace,
+  SpacePublishState,
+} from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { useUserInfo } from '@/hooks/use-user-info';
 
 export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
   const t = useTranslations('DeliberationSpace');
@@ -28,12 +32,11 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
     handleUpdateSelectedType,
     startedAt,
     endedAt,
-    // status,
     handleUpdateEndDate,
     handleUpdateStartDate,
   } = useDeliberationSpaceByIdContext();
   //   const { teams } = useContext(TeamContext);
-  //   const authorId = space?.author[0].id;
+  const authorPk = space.user_pk;
 
   const discussions = deliberation.discussions;
 
@@ -46,8 +49,8 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
 
   //   const selectedTeam = teams.some((t) => t.id === authorId);
 
-  //   const { data: userInfo } = useUserInfo();
-  //   const userId = userInfo ? userInfo.id : 0;
+  const { data: userInfo } = useUserInfo();
+  const userPk = userInfo ? userInfo.pk : '';
   const createdAt = space.created_at;
 
   //   const writePostPermission = usePermission(
@@ -107,41 +110,24 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
             </div>
           </div>
 
-          {/* {(space.author.some((a) => a.id === userId) || selectedTeam) &&
-            status != SpaceStatus.Draft &&
-            writePostPermission && (
+          {authorPk === userPk &&
+            space.publish_state !== SpacePublishState.Draft.toUpperCase() && (
               <div
                 className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
-                  selectedType == DeliberationTab.ANALYZE
+                  selectedType === DeliberationTab.ANALYZE
                     ? 'bg-neutral-800 light:bg-[#f5f5f5]'
                     : ''
                 }`}
-                onClick={() => {
-                  handleUpdateSelectedType(DeliberationTab.ANALYZE);
-                }}
+                onClick={() =>
+                  handleUpdateSelectedType(DeliberationTab.ANALYZE)
+                }
               >
                 <PieChart1 className="[&>path]:stroke-neutral-80 w-5 h-5" />
                 <div className="font-bold text-text-primary text-sm">
                   {t('analyze')}
                 </div>
               </div>
-            )} */}
-
-          <div
-            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
-              selectedType == DeliberationTab.ANALYZE
-                ? 'bg-neutral-800 light:bg-[#f5f5f5]'
-                : ''
-            }`}
-            onClick={() => {
-              handleUpdateSelectedType(DeliberationTab.ANALYZE);
-            }}
-          >
-            <PieChart1 className="[&>path]:stroke-neutral-80 w-5 h-5" />
-            <div className="font-bold text-text-primary text-sm">
-              {t('analyze')}
-            </div>
-          </div>
+            )}
         </div>
       </BorderSpaceCard>
       <BorderSpaceCard>
@@ -183,7 +169,7 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
 
           <div className="flex flex-col pl-3.25 gap-5">
             {[
-              { label: t('created'), date: createdAt / 1000000 },
+              { label: t('created'), date: createdAt / 1000 },
               deliberationEndedAt
                 ? { label: t('deliberation'), date: deliberationEndedAt }
                 : null,
@@ -211,24 +197,23 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
   );
 }
 
-export function SpaceTabsMobile({}: { space: DeliberationSpace }) {
+export function SpaceTabsMobile({ space }: { space: DeliberationSpace }) {
   const t = useTranslations('DeliberationSpace');
   const { selectedType, handleUpdateSelectedType } =
     useDeliberationSpaceByIdContext();
-  //   const { data: userInfo } = useUserInfo();
-  //   const userId = userInfo ? userInfo.id : 0;
+  const { data: userInfo } = useUserInfo();
+  const userPk = userInfo ? userInfo.pk : '';
+  const authorPk = space.user_pk;
   //   const { teams } = useContext(TeamContext);
-  //   const authorId = space?.author[0].id;
   //   const selectedTeam = teams.some((t) => t.id === authorId);
   //   const writePostPermission = usePermission(
   //     space.author[0]?.id ?? 0,
   //     GroupPermission.WritePosts,
   //   ).data.has_permission;
 
-  //   const showAnalyze =
-  //     (space.author.some((a) => a.id === userId) || selectedTeam) &&
-  //     space.status != SpaceStatus.Draft &&
-  //     writePostPermission;
+  const showAnalyze =
+    authorPk == userPk &&
+    space.publish_state !== SpacePublishState.Draft.toUpperCase();
 
   const wrapRef = React.useRef<HTMLDivElement | null>(null);
   const pos = React.useRef({ isDown: false, startX: 0, scrollLeft: 0 });
@@ -316,19 +301,13 @@ export function SpaceTabsMobile({}: { space: DeliberationSpace }) {
               handleUpdateSelectedType(DeliberationTab.RECOMMANDATION)
             }
           />
-          {/* {showAnalyze && (
+          {showAnalyze && (
             <Tab
               label={t('analyze')}
               active={selectedType === DeliberationTab.ANALYZE}
               onClick={() => handleUpdateSelectedType(DeliberationTab.ANALYZE)}
             />
-          )} */}
-
-          <Tab
-            label={t('analyze')}
-            active={selectedType === DeliberationTab.ANALYZE}
-            onClick={() => handleUpdateSelectedType(DeliberationTab.ANALYZE)}
-          />
+          )}
         </div>
       </div>
     </div>
