@@ -207,7 +207,7 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
             fn from_str(s: &str) -> Result<Self, Self::Err> {
                 let s = percent_encoding::percent_decode_str(s)
                     .decode_utf8().map_err(|e| format!("Invalid percent-encoding: {}", e))?;
-                let s = s.into_owned().to_uppercase().replace("-", "_");
+                let s = s.into_owned();
 
                 Ok(match s.as_str() {
                     #(#arms)*
