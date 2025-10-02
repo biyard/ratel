@@ -37,11 +37,13 @@ macro_rules! call {
             .await
             .unwrap()
             .to_vec();
+
         let body_str = String::from_utf8(body_bytes).unwrap();
         tracing::info!("Response Body: {}", body_str);
         let body = serde_json::from_str::<$resp_ty>(&body_str);
         if let Err(e) = body {
-            panic!("Failed to parse response body: {}\nBody: {}", e, body_str);
+            tracing::error!("Failed to parse response body: {}\nBody: {}", e, body_str);
+            (parts.status, parts.headers, <$resp_ty>::default())
         } else {
             (parts.status, parts.headers, body.unwrap())
         }
