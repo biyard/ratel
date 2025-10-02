@@ -18,6 +18,11 @@ async fn test_create_post_by_user() {
 
     assert_eq!(status, 200);
     assert!(body.post_pk.to_string().len() > 0);
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", body.post_pk.to_string())
+    };
 }
 
 #[tokio::test]
@@ -30,13 +35,7 @@ async fn test_create_post_with_invalid_team() {
         headers: test_user.1,
         body: {
             "team_pk": "TEAM#invalid"
-        },
-        response_type: CreatePostResponse
-    };
-
-    let (status, _headers, body) = get! {
-        app: app,
-        path: format!("/v3/posts/{}", body.post_pk.to_string())
+        }
     };
 
     assert_eq!(status, 404);
