@@ -120,169 +120,338 @@ macro_rules! send {
         $crate::call! { app: $app, path: $path, method: $method, body: body, headers: $headers, response_type: $resp_ty }
     }};
 
+
     (
         app: $app:expr,
         method: $method:expr,
         path: $path:expr,
-        body: { $($body:tt)* },
+        headers: $headers:expr,
         response_type: $resp_ty:ty
     ) => {{
-        $crate::send! { app: $app, method: $method, path: $path, headers: axum::http::HeaderMap::new(), body: { $($body)* }, response_type: $resp_ty }
-    }};
-
-    (
-        app: $app:expr,
-        method: $method:expr,
-        path: $path:expr,
-        headers: $headers:expr,
-        body: { $($body:tt)* }
-    ) => {{
-        use bdk::prelude::by_axum::axum;
-        let body = axum::body::Body::from(serde_json::to_vec(&serde_json::json!({ $($body)* })).unwrap());
-        $crate::call! { app: $app, path: $path, method: $method, body: body, headers: $headers }
-    }};
-
-    (
-        app: $app:expr,
-        method: $method:expr,
-        path: $path:expr,
-        body: { $($body:tt)* }
-    ) => {{
-        $crate::send! { app: $app, method: $method, path: $path, headers: axum::http::HeaderMap::new(), body: { $($body)* } }
-    }};
-
-    (
-        app: $app:expr,
-        method: $method:expr,
-        path: $path:expr,
-        headers: $headers:expr,
-    ) => {{
         use bdk::prelude::by_axum::axum;
         let body = axum::body::Body::empty();
-        $crate::call! { app: $app, path: $path, method: $method, body: body, headers: $headers }
+        $crate::call! { app: $app, path: $path, method: $method, body: body, headers: $headers, response_type: $resp_ty }
     }};
 
-    (
-        app: $app:expr,
-        method: $method:expr,
-        path: $path:expr,
-    ) => {{
-        $crate::send! { app: $app, method: $method, path: $path, headers: axum::http::HeaderMap::new() }
-    }};
+    // (
+    //     app: $app:expr,
+    //     method: $method:expr,
+    //     path: $path:expr,
+    //     body: { $($body:tt)* },
+    //     response_type: $resp_ty:ty
+    // ) => {{
+    //     $crate::send! { app: $app, method: $method, path: $path, headers: axum::http::HeaderMap::new(), body: { $($body)* }, response_type: $resp_ty }
+    // }};
+
+    // (
+    //     app: $app:expr,
+    //     method: $method:expr,
+    //     path: $path:expr,
+    //     headers: $headers:expr,
+    //     body: { $($body:tt)* }
+    // ) => {{
+    //     use bdk::prelude::by_axum::axum;
+    //     let body = axum::body::Body::from(serde_json::to_vec(&serde_json::json!({ $($body)* })).unwrap());
+    //     $crate::call! { app: $app, path: $path, method: $method, body: body, headers: $headers }
+    // }};
+
+    // (
+    //     app: $app:expr,
+    //     method: $method:expr,
+    //     path: $path:expr,
+    //     body: { $($body:tt)* }
+    // ) => {{
+    //     $crate::send! { app: $app, method: $method, path: $path, headers: axum::http::HeaderMap::new(), body: { $($body)* } }
+    // }};
+
+    // (
+    //     app: $app:expr,
+    //     method: $method:expr,
+    //     path: $path:expr,
+    //     headers: $headers:expr,
+    // ) => {{
+    //     use bdk::prelude::by_axum::axum;
+    //     let body = axum::body::Body::empty();
+    //     $crate::call! { app: $app, path: $path, method: $method, body: body, headers: $headers }
+    // }};
+
+    // (
+    //     app: $app:expr,
+    //     method: $method:expr,
+    //     path: $path:expr,
+    // ) => {{
+    //     $crate::send! { app: $app, method: $method, path: $path, headers: axum::http::HeaderMap::new() }
+    // }};
 }
 
-/// Sends an HTTP POST request to the given path with optional headers.
-/// Notice: End of the macro does not have a comma.
-/// Usage: post! { app: ..., path: ..., headers: ..., body: { ... }, response_type: MyType }
+// /// Sends an HTTP POST request to the given path with optional headers.
+// /// Notice: End of the macro does not have a comma.
+// /// Usage: post! { app: ..., path: ..., headers: ..., body: { ... }, response_type: MyType }
+// #[macro_export]
+// macro_rules! post {
+//     (
+//         app: $app:expr,
+//         path: $path:expr,
+//         headers: $headers:expr,
+//         body: { $($body:tt)* },
+//         response_type: $resp_ty:ty $(,)?
+//     ) => {{
+//         $crate::send! { app: $app, method: "POST", path: $path, headers: $headers, body: { $($body)* }, response_type: $resp_ty }
+//     }};
+
+//     (
+//         app: $app:expr,
+//         path: $path:expr,
+//         body: { $($body:tt)* },
+//         response_type: $resp_ty:ty $(,)?
+//     ) => {{
+//         $crate::send! { app: $app, method: "POST", path: $path, headers: axum::http::HeaderMap::new(), body: { $($body)* }, response_type: $resp_ty }
+//     }};
+
+//     (
+//         app: $app:expr,
+//         path: $path:expr,
+//         headers: $headers:expr,
+//         body: { $($body:tt)* }
+//     ) => {{
+//         $crate::send! { app: $app, method: "POST", path: $path, headers: $headers, body: { $($body)* }, response_type: serde_json::Value }
+//     }};
+
+//     (
+//         app: $app:expr,
+//         path: $path:expr,
+//         body: { $($body:tt)* }
+//     ) => {{
+//         $crate::send! { app: $app, method: "POST", path: $path, headers: axum::http::HeaderMap::new(), body: { $($body)* }, response_type: serde_json::Value }
+//     }};
+
+//     (
+//         app: $app:expr,
+//         path: $path:expr,
+//         response_type: $resp_ty:ty $(,)?
+//     ) => {{
+//         $crate::send! { app: $app, method: "POST", path: $path, headers: axum::http::HeaderMap::new(), response_type: $resp_ty }
+//     }};
+
+//     (
+//         app: $app:expr,
+//         path: $path:expr,
+//         headers: $headers:expr,
+//         response_type: $resp_ty:ty $(,)?
+//     ) => {{
+//         $crate::send! { app: $app, method: "POST", path: $path, headers: $headers, response_type: $resp_ty }
+//     }};
+
+//     (
+//         app: $app:expr,
+//         path: $path:expr,
+//         headers: $headers:expr
+//     ) => {{
+//         $crate::send! { app: $app, method: "POST", path: $path, headers: $headers }
+//     }};
+
+//     (
+//         app: $app:expr,
+//         path: $path:expr
+//     ) => {{
+//         $crate::send! { app: $app, method: "POST", path: $path, headers: axum::http::HeaderMap::new(), response_type: serde_json::Value }
+//     }};
+// }
+
+// /// Sends an HTTP GET request to the given path with optional headers.
+// /// Notice: End of the macro does not have a comma.
+// /// Usage: get! { app: ..., path: ..., headers: ... }
+// #[macro_export]
+// macro_rules! get {
+//     (
+//         app: $app:expr,
+//         path: $path:expr,
+//         response_type: $resp_ty:ty $(,)?
+//     ) => {{
+//         $crate::send! {
+//             app: $app,
+//             method: "GET",
+//             path: $path,
+//             headers: axum::http::HeaderMap::new(),
+//             response_type: $resp_ty
+//         }
+//     }};
+
+//     (
+//         app: $app:expr,
+//         path: $path:expr,
+//         headers: $headers:expr,
+//         response_type: $resp_ty:ty $(,)?
+//     ) => {{
+//         $crate::send! {
+//             app: $app,
+//             method: "GET",
+//             path: $path,
+//             headers: $headers,
+//             response_type: $resp_ty
+//         }
+//     }};
+//     (
+//         app: $app:expr,
+//         path: $path:expr,
+//         headers: $headers:expr $(,)?
+//     ) => {{
+//         $crate::send! { app: $app, method: "GET", path: $path, headers: $headers, response_type: serde_json::Value }
+//     }};
+
+//     (
+//         app: $app:expr,
+//         path: $path:expr
+//     ) => {{
+//         $crate::get! { app: $app, path: $path, headers: axum::http::HeaderMap::new() }
+//     }};
+// }
+
+// Order: app, path, headers, body, response_type
 #[macro_export]
-macro_rules! post {
-    (
+macro_rules! http {
+    // For two args
+    (@METHOD $method:literal;
         app: $app:expr,
-        path: $path:expr,
-        headers: $headers:expr,
-        body: { $($body:tt)* },
-        response_type: $resp_ty:ty $(,)?
+        path: $path:expr
     ) => {{
-        $crate::send! { app: $app, method: "POST", path: $path, headers: $headers, body: { $($body)* }, response_type: $resp_ty }
+        $crate::send! {
+            app: $app,
+            method: $method,
+            path: $path,
+            headers: axum::http::HeaderMap::new(),
+            response_type: serde_json::Value
+        }
     }};
 
-    (
-        app: $app:expr,
-        path: $path:expr,
-        body: { $($body:tt)* },
-        response_type: $resp_ty:ty $(,)?
-    ) => {{
-        $crate::post! { app: $app, path: $path, headers: axum::http::HeaderMap::new(), body: { $($body)* }, response_type: $resp_ty }
-    }};
-
-    (
-        app: $app:expr,
-        path: $path:expr,
-        headers: $headers:expr,
-        body: { $($body:tt)* }
-    ) => {{
-        $crate::send! { app: $app, method: "POST", path: $path, headers: $headers, body: { $($body)* } }
-    }};
-
-    (
-        app: $app:expr,
-        path: $path:expr,
-        body: { $($body:tt)* }
-    ) => {{
-        $crate::post! { app: $app, path: $path, headers: axum::http::HeaderMap::new(), body: { $($body)* } }
-    }};
-
-    (
-        app: $app:expr,
-        path: $path:expr,
-        response_type: $resp_ty:ty $(,)?
-    ) => {{
-        use bdk::prelude::by_axum::axum;
-        let body = axum::body::Body::empty();
-
-        $crate::call! { app: $app, path: $path, method: "POST", body: body, headers: axum::http::HeaderMap::new(), response_type: $resp_ty }
-    }};
-
-    (
-        app: $app:expr,
-        path: $path:expr,
-        headers: $headers:expr,
-        response_type: $resp_ty:ty $(,)?
-    ) => {{
-        use bdk::prelude::by_axum::axum;
-        let body = axum::body::Body::empty();
-
-        $crate::call! { app: $app, path: $path, method: "POST", body: body, headers: $headers,  response_type: $resp_ty }
-    }};
-
-    (
+    // For three args
+    (@METHOD $method:literal;
         app: $app:expr,
         path: $path:expr,
         headers: $headers:expr
     ) => {{
-        $crate::send! { app: $app, method: "POST", path: $path, headers: $headers }
-    }};
-
-    (
-        app: $app:expr,
-        path: $path:expr
-    ) => {{
-        $crate::post! { app: $app, path: $path, headers: axum::http::HeaderMap::new() }
-    }};
-}
-
-/// Sends an HTTP GET request to the given path with optional headers.
-/// Notice: End of the macro does not have a comma.
-/// Usage: get! { app: ..., path: ..., headers: ... }
-#[macro_export]
-macro_rules! get {
-    (
-        app: $app:expr,
-        path: $path:expr,
-        headers: $headers:expr,
-        response_type: $resp_ty:ty $(,)?
-    ) => {{
-        let (status, headers, text) = $crate::send! {
+        $crate::send! {
             app: $app,
-            method: "GET",
+            method: $method,
             path: $path,
             headers: $headers,
-        };
-        let parsed = serde_json::from_str::<$resp_ty>(&text).unwrap();
-        (status, headers, parsed)
-    }};
-    (
-        app: $app:expr,
-        path: $path:expr,
-        headers: $headers:expr
-    ) => {{
-        $crate::send! { app: $app, method: "GET", path: $path, headers: $headers, }
+            response_type: serde_json::Value
+        }
     }};
 
-    (
+    (@METHOD $method:literal;
         app: $app:expr,
-        path: $path:expr
+        path: $path:expr,
+        body: { $($body:tt)* }
     ) => {{
-        $crate::get! { app: $app, path: $path, headers: axum::http::HeaderMap::new() }
+        $crate::send! {
+            app: $app,
+            method: $method,
+            path: $path,
+            headers: axum::http::HeaderMap::new(),
+            body: { $($body)* },
+            response_type: serde_json::Value
+        }
     }};
+
+    (@METHOD $method:literal;
+        app: $app:expr,
+        path: $path:expr,
+        response_type: $resp_ty:ty $(,)?
+    ) => {{
+        $crate::send! {
+            app: $app,
+            method: $method,
+            path: $path,
+            headers: axum::http::HeaderMap::new(),
+            response_type: $resp_ty
+        }
+    }};
+
+    // For four args
+    (@METHOD $method:literal;
+        app: $app:expr,
+        path: $path:expr,
+        body: { $($body:tt)* },
+        response_type: $resp_ty:ty $(,)?
+    ) => {{
+        $crate::send! {
+            app: $app,
+            method: $method,
+            path: $path,
+            headers: axum::http::HeaderMap::new(),
+            body: { $($body)* },
+            response_type: $resp_ty
+        }
+    }};
+
+    (@METHOD $method:literal;
+        app: $app:expr,
+        path: $path:expr,
+        headers: $headers:expr,
+        body: { $($body:tt)* }
+    ) => {{
+        $crate::send! {
+            app: $app,
+            method: $method,
+            path: $path,
+            headers: $headers,
+            body: { $($body)* },
+            response_type: serde_json::Value
+        }
+    }};
+
+    (@METHOD $method:literal;
+        app: $app:expr,
+        path: $path:expr,
+        headers: $headers:expr,
+        response_type: $resp_ty:ty $(,)?
+    ) => {{
+        $crate::send! {
+            app: $app,
+            method: $method,
+            path: $path,
+            headers: $headers,
+            response_type: $resp_ty
+        }
+    }};
+
+
+    // For five args
+    (@METHOD $method:literal;
+        app: $app:expr,
+        path: $path:expr,
+        headers: $headers:expr,
+        body: { $($body:tt)* },
+        response_type: $resp_ty:ty $(,)?
+    ) => {{
+        $crate::send! {
+            app: $app,
+            method: $method,
+            path: $path,
+            headers: $headers,
+            body: { $($body)* },
+            response_type: $resp_ty
+        }
+    }};
+}
+
+#[macro_export]
+macro_rules! get {
+    ( $($t:tt)* ) => { $crate::http!(@METHOD "GET"; $($t)*) };
+}
+
+#[macro_export]
+macro_rules! post {
+    ( $($t:tt)* ) => { $crate::http!(@METHOD "POST"; $($t)*) };
+}
+
+#[macro_export]
+macro_rules! put {
+    ( $($t:tt)* ) => { $crate::http!(@METHOD "PUT"; $($t)*) };
+}
+
+#[macro_export]
+macro_rules! delete {
+    ( $($t:tt)* ) => { $crate::http!(@METHOD "DELETE"; $($t)*) };
 }

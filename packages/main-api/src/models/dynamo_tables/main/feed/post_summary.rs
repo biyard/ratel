@@ -24,7 +24,7 @@ pub enum PostMetadata {
     PostLike(PostLike),
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct PostDetailResponse {
     #[serde(flatten)]
     pub post: Option<Post>,

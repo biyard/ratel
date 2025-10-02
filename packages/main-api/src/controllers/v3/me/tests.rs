@@ -1,5 +1,4 @@
 use crate::controllers::v3::me::update_user::{UpdateUserRequest, update_user_handler};
-use crate::get;
 use crate::tests::v3_setup::{TestContextV3, setup_v3};
 use crate::tests::{create_nick_name, create_user_name};
 use crate::{
@@ -15,6 +14,7 @@ use crate::controllers::v3::teams::{
     create_team::{CreateTeamRequest, create_team_handler},
     get_team::{GetTeamPathParams, get_team_handler},
 };
+use crate::*;
 use dto::by_axum::axum::extract::Path;
 
 #[tokio::test]
