@@ -11,13 +11,17 @@ class DriveApi extends GetConnect {
   }
 
   Future<FileList?> listFiles(String accessToken) async {
-    String uri = "$base/files";
+    final String fileName = Config.env;
+    logger.d("list files: $accessToken");
+    String uri = "$base/files?q=${fileName}";
     final response = await get(
       uri,
       headers: {'Authorization': 'Bearer $accessToken'},
       query: {'spaces': 'appDataFolder'},
       decoder: (map) => FileList.fromJson(map),
     );
+
+    logger.d("file responses: $response");
 
     if (response.statusCode == 200) {
       return response.body;
@@ -44,21 +48,30 @@ class DriveApi extends GetConnect {
   Future<File> uploadFile(String accessToken, String content) async {
     final String fileName = Config.env;
     final url = Uri.parse(
-      "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart",
+      'https://www.googleapis.com/upload/drive/v3/files'
+      '?uploadType=multipart',
     );
 
     final metadata = {
-      "name": fileName,
-      "parents": ["appDataFolder"],
+      'name': fileName,
+      'parents': ['appDataFolder'],
     };
 
     final request = http.MultipartRequest('POST', url)
       ..headers['Authorization'] = 'Bearer $accessToken'
-      ..fields['metadata'] = json.encode(metadata)
       ..files.add(
         http.MultipartFile.fromString(
-          'file',
+          'metadata',
+          json.encode(metadata),
+          filename: 'metadata.json',
+          contentType: MediaType('application', 'json'),
+        ),
+      )
+      ..files.add(
+        http.MultipartFile.fromString(
+          'media',
           content,
+          filename: '$fileName.txt',
           contentType: MediaType('text', 'plain'),
         ),
       );
@@ -70,7 +83,9 @@ class DriveApi extends GetConnect {
       final data = json.decode(response.body);
       return File.fromJson(data);
     } else {
-      throw Exception('Error uploading file: ${response.body}');
+      throw Exception(
+        'Error uploading file: ${response.statusCode} ${response.body}',
+      );
     }
   }
 }

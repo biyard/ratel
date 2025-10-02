@@ -65,6 +65,10 @@ export 'presentations/welcome/welcome_binding.dart';
 export 'presentations/welcome/welcome_controller.dart';
 export 'presentations/welcome/welcome_screen.dart';
 
+export 'presentations/settings/settings_binding.dart';
+export 'presentations/settings/settings_controller.dart';
+export 'presentations/settings/settings_screen.dart';
+
 export 'presentations/setup_profile/setup_profile_binding.dart';
 export 'presentations/setup_profile/setup_profile_controller.dart';
 export 'presentations/setup_profile/setup_profile_screen.dart';

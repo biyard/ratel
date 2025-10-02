@@ -51,30 +51,58 @@ class SetupProfileController extends BaseController {
   }
 
   Future<void> next() async {
+    final authService = Get.find<AuthService>();
     final auth = AuthApi();
     if (!formValid.value) return;
     logger.d('Setup Profile: ${displayName.value}, ${username.value}');
 
-    try {
-      final res = await auth.signup(
-        email.value,
-        password.value,
-        displayName.value,
-        username.value,
-        avatarUrl.value,
-        termsAccepted.value,
-      );
+    if (authService.neededSignup) {
+      // social signup
+      final pk = authService.privateKey ?? "";
 
-      if (res != null) {
-        // Biyard.info("Success to signup user");
-        Get.rootDelegate.offNamed(AppRoutes.selectTopicScreen);
-      } else {
-        Biyard.error(
-          "Failed to signup",
-          "Signup failed. Please try again later.",
+      try {
+        final res = await auth.socialSignup(
+          email.value,
+          displayName.value,
+          username.value,
+          avatarUrl.value,
+          termsAccepted.value,
+          pk,
         );
-      }
-    } finally {}
+
+        if (res != null) {
+          // Biyard.info("Success to signup user");
+          Get.rootDelegate.offNamed(AppRoutes.selectTopicScreen);
+        } else {
+          Biyard.error(
+            "Failed to signup",
+            "Signup failed. Please try again later.",
+          );
+        }
+      } finally {}
+    } else {
+      // general signup
+      try {
+        final res = await auth.signup(
+          email.value,
+          password.value,
+          displayName.value,
+          username.value,
+          avatarUrl.value,
+          termsAccepted.value,
+        );
+
+        if (res != null) {
+          // Biyard.info("Success to signup user");
+          Get.rootDelegate.offNamed(AppRoutes.selectTopicScreen);
+        } else {
+          Biyard.error(
+            "Failed to signup",
+            "Signup failed. Please try again later.",
+          );
+        }
+      } finally {}
+    }
   }
 
   void goBack() {

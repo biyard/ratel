@@ -1,0 +1,106 @@
+{
+  "project_info": {
+    "project_number": "925748630857",
+    "project_id": "ratel-eef15",
+    "storage_bucket": "ratel-eef15.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:925748630857:android:c0b4b464373bd1b10d3698",
+        "android_client_info": {
+          "package_name": "com.ratel.ratelMobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "925748630857-igenetmci5jcsr29qisfok3egdlta2hp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOkL9ndDuaY3bLl2t8EFppnu0K_eFmdZ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "925748630857-igenetmci5jcsr29qisfok3egdlta2hp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "925748630857-gla98vdbf4th33ahd0shlsu47qnp0u90.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "foundation.ratel.app"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:925748630857:android:21bade2376f06f480d3698",
+        "android_client_info": {
+          "package_name": "foundation.ratel.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "925748630857-mmgq18au9c5sclfu2vo6ll9nd946cl74.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "foundation.ratel.app",
+            "certificate_hash": "b09b1a54f5a0692bfe8bd147a1fbfa153505a7ec"
+          }
+        },
+        {
+          "client_id": "925748630857-muvn15cpn0l94oeci2m4m68beauv9gt4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "foundation.ratel.app",
+            "certificate_hash": "d023fcd5c5f3e8bdd746479b0aa4894b922e8287"
+          }
+        },
+        {
+          "client_id": "925748630857-ts88o905vvqdem71fe8hl3jrogng3j98.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "foundation.ratel.app",
+            "certificate_hash": "e24829e71c51333c1fce18ed239a3a1fd1fc8b57"
+          }
+        },
+        {
+          "client_id": "925748630857-igenetmci5jcsr29qisfok3egdlta2hp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCOkL9ndDuaY3bLl2t8EFppnu0K_eFmdZ0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "925748630857-igenetmci5jcsr29qisfok3egdlta2hp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "925748630857-gla98vdbf4th33ahd0shlsu47qnp0u90.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "foundation.ratel.app"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

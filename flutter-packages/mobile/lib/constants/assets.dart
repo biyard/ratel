@@ -56,8 +56,10 @@ abstract class Assets {
   static const String bell = 'assets/images/bell.svg';
   static const String search = 'assets/images/search.svg';
   static const String google = 'assets/images/google.svg';
+
   static const String upload = 'assets/icons/upload.svg';
   static const String ai = 'assets/icons/ai.svg';
+  static const String apple = 'assets/icons/apple.svg';
 
   static const String docx = 'assets/icons/docx.svg';
   static const String jpg = 'assets/icons/jpg.svg';
@@ -74,11 +76,21 @@ abstract class Assets {
   static const String delete2 = 'assets/icons/delete_2.svg';
   static const String warning = 'assets/icons/warning.svg';
 
+  static const String bold = 'assets/icons/bold.svg';
+  static const String bottomLine = 'assets/icons/bottom_line.svg';
+  static const String bullet = 'assets/icons/bullet.svg';
+  static const String h1 = 'assets/icons/h1.svg';
+  static const String h2 = 'assets/icons/h2.svg';
+  static const String h3 = 'assets/icons/h3.svg';
+  static const String italic = 'assets/icons/italic.svg';
+  static const String keyboard = 'assets/icons/keyboard.svg';
+
   static final addIcon = SvgPicture.asset(add, width: 15, height: 15);
   static final backIcon = SvgPicture.asset(back, width: 16, height: 16);
   static final badgeImage = SvgPicture.asset(badge, width: 20, height: 20);
   static final logoImage = Image.asset(logo, width: 40, height: 40);
   static final googleImage = SvgPicture.asset(google, width: 24, height: 24);
+  static final appleImage = SvgPicture.asset(apple, width: 24, height: 24);
   static final bellImage = SvgPicture.asset(
     bell,
     width: 32,
