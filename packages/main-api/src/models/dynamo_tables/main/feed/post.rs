@@ -1,15 +1,28 @@
 use crate::{
-    models::{team::Team, user::User},
-    types::*,
+    Error2,
+    models::team::Team,
+    types::{author::Author, sorted_visibility::SortedVisibility, *},
 };
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, DynamoEntity, JsonSchema)]
+use super::PostLike;
+
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    DynamoEntity,
+    JsonSchema,
+    aide::OperationIo,
+)]
 pub struct Post {
     pub pk: Partition,
     pub sk: EntityType,
 
     #[dynamo(index = "gsi6", sk)]
+    #[dynamo(index = "gsi1", sk)]
     pub created_at: i64,
     pub updated_at: i64,
 
@@ -45,22 +58,16 @@ pub struct Post {
     pub rewards: Option<i64>,
 
     // Only for list posts Composed key
-    #[dynamo(index = "gsi1", sk)]
     #[dynamo(index = "gsi2", sk)]
-    pub compose_sort_key: String,
+    pub sorted_visibility: SortedVisibility,
+    pub urls: Vec<String>,
 }
 
 impl Post {
-    pub fn get_compose_key(status: PostStatus, visibility: Option<Visibility>, now: i64) -> String {
-        match (status, visibility) {
-            (PostStatus::Draft, _) => format!("DRAFT#{}", now),
-            (PostStatus::Published, Some(Visibility::Public)) => format!("PUBLIC#{}", now),
-            (PostStatus::Published, Some(Visibility::Team(team_pk))) => {
-                format!("TEAM#{}#{}", team_pk, now)
-            }
-            _ => format!("DRAFT#{}", now), // Fallback to Draft key
-        }
+    pub fn draft(author: Author) -> Self {
+        Self::new("", "", PostType::Post, author)
     }
+
     pub fn new<T: Into<String>, A: Into<Author>>(
         title: T,
         html_contents: T,
@@ -98,115 +105,96 @@ impl Post {
             space_pk: None,
             booster: None,
             rewards: None,
-            compose_sort_key: Self::get_compose_key(PostStatus::Draft, None, now),
+            sorted_visibility: SortedVisibility::Draft(now.to_string()),
+            urls: vec![],
         }
     }
-}
 
-pub struct Author {
-    pub pk: Partition,
-    pub display_name: String,
-    pub profile_url: String,
-    pub username: String,
-}
+    pub async fn has_permission(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: &Partition,
+        user_pk: Option<&Partition>,
+        perm: TeamGroupPermission,
+    ) -> Result<(Self, bool), crate::Error2> {
+        let post = Post::get(cli, post_pk, Some(EntityType::Post))
+            .await?
+            .ok_or(Error2::NotFound("Post not found".to_string()))?;
 
-impl From<User> for Author {
-    fn from(
-        User {
-            pk,
-            display_name,
-            profile_url,
-            username,
-            ..
-        }: User,
-    ) -> Self {
-        Self {
-            pk,
-            display_name,
-            profile_url,
-            username,
+        let user_pk = if let Some(user_pk) = user_pk {
+            user_pk
+        } else {
+            if post.visibility.is_some()
+                && post.visibility.as_ref().unwrap() == &Visibility::Public
+                && perm == TeamGroupPermission::PostRead
+                && post.status == PostStatus::Published
+            {
+                return Ok((post, true));
+            } else {
+                return Ok((post, false));
+            }
+        };
+
+        match post.user_pk.clone() {
+            Partition::Team(pk) => {
+                let has_perm =
+                    Team::has_permission(cli, &Partition::Team(pk.clone()), &user_pk, perm).await?;
+                Ok((post, has_perm))
+            }
+            Partition::User(_) => {
+                let has_perm = &post.user_pk == user_pk;
+                Ok((post, has_perm))
+            }
+            _ => Err(Error2::InternalServerError("Invalid post author".into())),
         }
     }
-}
-impl From<Team> for Author {
-    fn from(
-        Team {
-            pk,
-            display_name,
-            profile_url,
-            username,
-            ..
-        }: Team,
-    ) -> Self {
-        Self {
-            pk,
-            display_name,
-            profile_url,
-            username,
-        }
+
+    pub async fn like(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: Partition,
+        user_pk: Partition,
+    ) -> Result<(), crate::Error2> {
+        tracing::info!("Liking post {} by user {}", post_pk, user_pk);
+        let post_tx = Self::updater(&post_pk, EntityType::Post)
+            .increase_likes(1)
+            .transact_write_item();
+        let pl_tx = PostLike::new(post_pk, user_pk).create_transact_write_item();
+
+        tracing::info!("Post like transact items: {:?}, {:?}", post_tx, pl_tx);
+
+        cli.transact_write_items()
+            .set_transact_items(Some(vec![post_tx, pl_tx]))
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to like post: {}", e);
+                crate::Error2::PostLikeError
+            })?;
+
+        Ok(())
     }
-}
 
-pub struct PostResponse {
-    pub pk: Partition,
-    pub title: String,
-    pub html_contents: String,
-    pub post_type: PostType,
-    pub status: PostStatus,
-    pub visibility: Option<Visibility>,
-    pub shares: i64,
-    pub likes: i64,
-    pub comments: i64,
+    pub async fn unlike(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: Partition,
+        user_pk: Partition,
+    ) -> Result<(), crate::Error2> {
+        let post_tx = Self::updater(&post_pk, EntityType::Post)
+            .decrease_likes(1)
+            .transact_write_item();
+        let pl_tx = PostLike::delete_transact_write_item(
+            &post_pk,
+            EntityType::PostLike(user_pk.to_string()).to_string(),
+        );
 
-    pub user_pk: Partition,
-    pub author_display_name: String,
-    pub author_profile_url: String,
-    pub author_username: String,
+        cli.transact_write_items()
+            .set_transact_items(Some(vec![post_tx, pl_tx]))
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to unlike post: {}", e);
+                crate::Error2::PostLikeError
+            })?;
 
-    pub space_pk: Option<Partition>,
-    pub booster: Option<BoosterType>,
-    pub rewards: Option<i64>,
-}
-
-impl From<Post> for PostResponse {
-    fn from(
-        Post {
-            pk,
-            title,
-            html_contents,
-            post_type,
-            status,
-            visibility,
-            shares,
-            likes,
-            comments,
-            user_pk,
-            author_display_name,
-            author_profile_url,
-            author_username,
-            space_pk,
-            booster,
-            rewards,
-            ..
-        }: Post,
-    ) -> Self {
-        Self {
-            pk,
-            title,
-            html_contents,
-            post_type,
-            status,
-            visibility,
-            shares,
-            likes,
-            comments,
-            user_pk,
-            author_display_name,
-            author_profile_url,
-            author_username,
-            space_pk,
-            booster,
-            rewards,
-        }
+        Ok(())
     }
 }

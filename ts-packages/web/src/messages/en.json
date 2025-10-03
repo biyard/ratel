@@ -35,6 +35,9 @@
     }
   },
   "Signup": {
+    "verification_code": "Verify code in your email.",
+    "failed_verify_code": "Verification code is incorrect or has expired.",
+    "failed_send_code": "Failed to send verification code. Please try again.",
     "signing_in": "Signing you in...",
     "welcome_title": "Welcome to Ratel!",
     "welcome_description": "Policy is shaped by civic engagement—when we speak up, policymakers listen. \nRatel gives you a platform to take action and shape crypto policy. \nYour voice matters, so make it heard and help secure a bright future for crypto.",

@@ -193,6 +193,7 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
         .nest(
             "/v3",
             route_v3::route(route_v3::RouteDeps {
+                pool: pool.clone(),
                 dynamo_client: dynamo_client.clone(),
                 ses_client: ses_client.clone(),
             })?,
@@ -711,23 +712,59 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router> {
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(|request: &axum::http::Request<_>| {
-                    tracing::span!(
-                        Level::INFO,
-                        "request",
-                        method = %request.method(),
-                        uri = %request.uri(),
-                        version = ?request.version()
-                    )
+                    let uri = request.uri().to_string();
+                    if uri.contains("/users") {
+                        tracing::span!(
+                            Level::WARN,
+                            "deprecated request",
+                            method = %request.method(),
+                            uri = %request.uri(),
+                            headers = ?request.headers(),
+                            version = ?request.version()
+                        )
+                    } else {
+                        tracing::span!(
+                            Level::INFO,
+                            "request",
+                            method = %request.method(),
+                            uri = %request.uri(),
+                            headers = ?request.headers(),
+                            version = ?request.version()
+                        )
+                    }
                 })
                 .on_response(
                     |response: &axum::http::Response<_>,
                      latency: std::time::Duration,
                      _span: &tracing::Span| {
-                        tracing::info!(
-                            status = %response.status(),
-                            latency = ?latency,
-                            "response generated"
-                        )
+                        let level = if let Some(meta) = _span.metadata() {
+                            meta.level().clone()
+                        } else {
+                            Level::INFO
+                        };
+
+                        if !response.status().is_success() {
+                            tracing::error!(
+                                status = %response.status(),
+                                latency = ?latency,
+                                "response generated"
+                            );
+                            return;
+                        }
+
+                        if level == Level::WARN {
+                            tracing::warn!(
+                                status = %response.status(),
+                                latency = ?latency,
+                                "response generated"
+                            )
+                        } else {
+                            tracing::info!(
+                                status = %response.status(),
+                                latency = ?latency,
+                                "response generated"
+                            )
+                        }
                     },
                 ),
         )

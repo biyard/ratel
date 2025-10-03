@@ -12,6 +12,7 @@ import TableRow from '@tiptap/extension-table-row';
 import TableHeader from '@tiptap/extension-table-header';
 import TableCell from '@tiptap/extension-table-cell';
 import { forwardRef, useEffect, useImperativeHandle } from 'react';
+import { CaseToggle } from '@/lib/tiptap/extensions/case-toggle';
 import { Editor } from '@tiptap/core';
 
 interface TiptapEditorProps {
@@ -38,6 +39,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           },
         }),
         TextStyle,
+        CaseToggle,
         Color,
         Highlight.configure({ multicolor: true }),
         TextAlign.configure({
@@ -115,7 +117,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       <div className={`flex flex-col ${className}`}>
         <EditorContent
           editor={editor}
-          className="outline-none min-h-[100px] text-neutral-300"
+          className="outline-none min-h-[100px] text-desc-text text-sm [&_.ProseMirror]:outline-none [&_.ProseMirror]:border-0 [&_.ProseMirror]:ring-0 [&_.ProseMirror]:focus:outline-none [&_.ProseMirror]:focus:border-0 [&_.ProseMirror]:focus:ring-0 [&_.ProseMirror]:focus:shadow-none [&_.ProseMirror]:focus-within:outline-none [&_.ProseMirror]:focus-within:ring-0 [&_.ProseMirror]:focus-within:border-0 [&_.ProseMirror]:focus-within:shadow-none"
         />
       </div>
     );

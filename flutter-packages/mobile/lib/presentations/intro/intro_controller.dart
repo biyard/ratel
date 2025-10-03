@@ -34,7 +34,7 @@ class IntroController extends BaseController {
         curve: Curves.easeOut,
       );
     } else {
-      await autoLogin();
+      // await autoLogin();
       Get.rootDelegate.offNamed(AppRoutes.loginScreen);
     }
   }

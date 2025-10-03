@@ -421,11 +421,28 @@ fn generate_updater(
                 ),
                 proc_macro2::Span::call_site(),
             );
-            let idx_key_name = syn::LitStr::new(
+            let key_base_name = format!(
+                "{}_{}",
+                idx.base_index_name,
+                if idx.pk { "pk" } else { "sk" }
+            );
+
+            let idx_key_name = syn::LitStr::new(&key_base_name, proc_macro2::Span::call_site());
+
+            let an_var = syn::LitStr::new(
+                &format!("#{}", key_base_name.to_string()),
+                proc_macro2::Span::call_site(),
+            );
+            let av_var = syn::LitStr::new(
+                &format!(":{}", key_base_name.to_string()),
+                proc_macro2::Span::call_site(),
+            );
+
+            let f_str = syn::LitStr::new(
                 &format!(
-                    "{}_{}",
-                    idx.base_index_name,
-                    if idx.pk { "pk" } else { "sk" }
+                    "#{} = :{}",
+                    key_base_name.to_string(),
+                    key_base_name.to_string()
                 ),
                 proc_macro2::Span::call_site(),
             );
@@ -440,20 +457,35 @@ fn generate_updater(
                         .action(aws_sdk_dynamodb::types::AttributeAction::Put)
                         .build(),
                 );
+
+                self.set_update_expressions.push(#f_str.to_string());
+                self.expression_attribute_names.insert(#an_var.to_string(), stringify!(#idx_key_name).to_string());
+                self.expression_attribute_values.insert(#av_var.to_string(), aws_sdk_dynamodb::types::AttributeValue::S(
+                    #ident::#composer_ident(#var_name.clone())
+                ));
             });
         }
 
         // Build additional GSI updates for this field (DELETE on remove)
         let mut gsi_delete_updates: Vec<proc_macro2::TokenStream> = vec![];
         for idx in f.indice.iter() {
-            let idx_key_name = syn::LitStr::new(
-                &format!(
-                    "{}_{}",
-                    idx.base_index_name,
-                    if idx.pk { "pk" } else { "sk" }
-                ),
+            let key_base_name = format!(
+                "{}_{}",
+                idx.base_index_name,
+                if idx.pk { "pk" } else { "sk" }
+            );
+
+            let idx_key_name = syn::LitStr::new(&key_base_name, proc_macro2::Span::call_site());
+            let an_var = syn::LitStr::new(
+                &format!("#{}", key_base_name.to_string()),
                 proc_macro2::Span::call_site(),
             );
+
+            let f_str = syn::LitStr::new(
+                &format!("#{}", key_base_name.to_string()),
+                proc_macro2::Span::call_site(),
+            );
+
             gsi_delete_updates.push(quote! {
                 self.m.insert(
                     #idx_key_name.to_string(),
@@ -461,31 +493,65 @@ fn generate_updater(
                         .action(aws_sdk_dynamodb::types::AttributeAction::Delete)
                         .build(),
                 );
+
+                self.remove_update_expressions.push(#f_str.to_string());
+                self.expression_attribute_names.insert(#an_var.to_string(), stringify!(#idx_key_name).to_string());
+
             });
         }
 
+        let av_var = syn::LitStr::new(
+            &format!(":{}", var_name.to_string()),
+            proc_macro2::Span::call_site(),
+        );
+
+        let an_var = syn::LitStr::new(
+            &format!("#{}", var_name.to_string()),
+            proc_macro2::Span::call_site(),
+        );
+
         // setter
+        let f_str = syn::LitStr::new(
+            &format!("#{} = :{}", var_name.to_string(), var_name.to_string(),),
+            proc_macro2::Span::call_site(),
+        );
+
         update_fns.push(quote! {
             pub fn #fn_setter(mut self, #var_name: #var_ty) -> Self {
-                let v = serde_dynamo::to_attribute_value(&#var_name)
+                let av:aws_sdk_dynamodb::types::AttributeValue = serde_dynamo::to_attribute_value(&#var_name)
                     .expect("failed to serialize field");
                 let v = aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
-                    .value(v)
+                    .value(av.clone())
                     .action(aws_sdk_dynamodb::types::AttributeAction::Put)
                     .build();
                 self.m.insert(stringify!(#var_name).to_string(), v);
+
+                self.set_update_expressions.push(#f_str.to_string());
+                self.expression_attribute_names.insert(#an_var.to_string(), stringify!(#var_name).to_string());
+                self.expression_attribute_values.insert(#av_var.to_string(), av);
+
+
                 // Update derived GSI attributes for this field
                 #(#gsi_put_updates)*
                 self
             }
         });
         // remove
+        let f_str = syn::LitStr::new(
+            &format!("#{}", var_name.to_string()),
+            proc_macro2::Span::call_site(),
+        );
+
         update_fns.push(quote! {
             pub fn #fn_remove(mut self) -> Self {
                 let v = aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
                     .action(aws_sdk_dynamodb::types::AttributeAction::Delete)
                     .build();
                 self.m.insert(stringify!(#var_name).to_string(), v);
+
+                self.remove_update_expressions.push(#f_str.to_string());
+                self.expression_attribute_names.insert(#an_var.to_string(), stringify!(#var_name).to_string());
+
                 // Remove derived GSI attributes for this field
                 #(#gsi_delete_updates)*
                 self
@@ -497,28 +563,51 @@ fn generate_updater(
         }
 
         // increase
+        let f_str = syn::LitStr::new(
+            &format!(
+                "#{} = if_not_exists(#{}, :z) + :{}",
+                var_name.to_string(),
+                var_name.to_string(),
+                var_name.to_string(),
+            ),
+            proc_macro2::Span::call_site(),
+        );
+
         update_fns.push(quote! {
             pub fn #fn_increase(mut self, by: i64) -> Self {
-                let v = serde_dynamo::to_attribute_value(by)
+                let av:aws_sdk_dynamodb::types::AttributeValue = serde_dynamo::to_attribute_value(by)
                     .expect("failed to serialize field");
                 let v = aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
-                    .value(v)
+                    .value(av.clone())
                     .action(aws_sdk_dynamodb::types::AttributeAction::Add)
                     .build();
                 self.m.insert(stringify!(#var_name).to_string(), v);
+
+                self.set_update_expressions.push(#f_str.to_string());
+                self.expression_attribute_names.insert(#an_var.to_string(), stringify!(#var_name).to_string());
+                self.expression_attribute_values.insert(#av_var.to_string(), av.clone());
+                self.expression_attribute_values.insert(":z".to_string(), aws_sdk_dynamodb::types::AttributeValue::N("0".to_string()));
+
                 self
             }
         });
         // decrease
         update_fns.push(quote! {
             pub fn #fn_decrease(mut self, by: i64) -> Self {
-                let v = serde_dynamo::to_attribute_value(-by)
+                let av:aws_sdk_dynamodb::types::AttributeValue = serde_dynamo::to_attribute_value(-by)
                     .expect("failed to serialize field");
                 let v = aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
-                    .value(v)
+                    .value(av.clone())
                     .action(aws_sdk_dynamodb::types::AttributeAction::Add)
                     .build();
                 self.m.insert(stringify!(#var_name).to_string(), v);
+
+                self.set_update_expressions.push(#f_str.to_string());
+                self.expression_attribute_names.insert(#an_var.to_string(), stringify!(#var_name).to_string());
+                self.expression_attribute_values.insert(#av_var.to_string(), av.clone());
+                self.expression_attribute_values.insert(":z".to_string(), aws_sdk_dynamodb::types::AttributeValue::N("0".to_string()));
+
+
                 self
             }
         });
@@ -530,6 +619,11 @@ fn generate_updater(
         pub struct #updater_ident {
             #key_fields
             m: std::collections::HashMap<String, aws_sdk_dynamodb::types::AttributeValueUpdate>,
+            set_update_expressions: Vec<String>,
+            remove_update_expressions: Vec<String>,
+            expression_attribute_names: std::collections::HashMap<::std::string::String, ::std::string::String>,
+            expression_attribute_values: std::collections::HashMap<::std::string::String, aws_sdk_dynamodb::types::AttributeValue>,
+
         }
 
         impl #ident {
@@ -545,12 +639,78 @@ fn generate_updater(
                 #updater_ident {
                     m: std::collections::HashMap::new(),
                     k,
+                    set_update_expressions: vec![],
+                    remove_update_expressions: vec![],
+                    expression_attribute_names: std::collections::HashMap::new(),
+                    expression_attribute_values: std::collections::HashMap::new(),
                 }
+            }
+
+            pub fn create_transact_write_item(self) -> aws_sdk_dynamodb::types::TransactWriteItem {
+                let item = serde_dynamo::to_item(self)
+                    .expect("failed to serialize struct to dynamodb item");
+
+                let req = aws_sdk_dynamodb::types::Put::builder()
+                    .table_name(Self::table_name())
+                    .set_item(Some(item))
+                    .build().unwrap();
+
+                aws_sdk_dynamodb::types::TransactWriteItem::builder()
+                    .put(req)
+                    .build()
+            }
+
+            pub fn delete_transact_write_item(pk: impl std::fmt::Display, #sk_param) -> aws_sdk_dynamodb::types::TransactWriteItem {
+                let k = std::collections::HashMap::from([
+                    (
+                        #pk_field.to_string(),
+                        aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
+                    ),
+                    #sk_key
+                ]);
+
+                let req = aws_sdk_dynamodb::types::Delete::builder()
+                    .table_name(Self::table_name())
+                    .set_key(Some(k))
+                    .build().unwrap();
+
+                aws_sdk_dynamodb::types::TransactWriteItem::builder()
+                    .delete(req)
+                    .build()
             }
         }
 
         impl #updater_ident {
             #(#update_fns)*
+
+            pub fn transact_write_item(self) -> aws_sdk_dynamodb::types::TransactWriteItem {
+                let mut req = aws_sdk_dynamodb::types::Update::builder()
+                    .table_name(#ident::table_name())
+                    .set_key(Some(self.k));
+
+                let mut update_expr = "".to_string();
+                if !self.remove_update_expressions.is_empty() {
+                    update_expr = format!("REMOVE {}", self.remove_update_expressions.join(", "));
+                }
+
+                if !self.set_update_expressions.is_empty() {
+                    update_expr = format!("SET {} {}", self.set_update_expressions.join(", "), update_expr);
+                };
+
+                if !update_expr.is_empty() {
+                    req = req.update_expression(update_expr);
+                }
+                if !self.expression_attribute_names.is_empty() {
+                    req = req.set_expression_attribute_names(Some(self.expression_attribute_names));
+                }
+                if !self.expression_attribute_values.is_empty() {
+                    req = req.set_expression_attribute_values(Some(self.expression_attribute_values));
+                }
+
+                aws_sdk_dynamodb::types::TransactWriteItem::builder()
+                    .update(req.build().expect("invalid transact write item request"))
+                    .build()
+            }
 
             pub async fn execute(
                 self,
@@ -603,6 +763,34 @@ fn generate_struct_impl(
         quote! { sk: Option<impl std::fmt::Display>, }
     } else {
         quote! {}
+    };
+
+    let batch_get_param = if s_cfg.sk_name.is_some() {
+        quote! { (impl std::fmt::Display, impl std::fmt::Display) }
+    } else {
+        quote! {impl std::fmt::Display}
+    };
+
+    let batch_get_key = if let Some(ref sk_name) = s_cfg.sk_name {
+        let sk_name = syn::LitStr::new(sk_name, proc_macro2::Span::call_site());
+
+        quote! {
+            (
+                #pk_field_name.to_string(),
+                aws_sdk_dynamodb::types::AttributeValue::S(key.0.to_string()),
+            ),
+            (
+                #sk_name.to_string(),
+                aws_sdk_dynamodb::types::AttributeValue::S(key.1.to_string()),
+            ),
+        }
+    } else {
+        quote! {
+            (
+                #pk_field_name.to_string(),
+                aws_sdk_dynamodb::types::AttributeValue::S(key.to_string()),
+            ),
+        }
     };
 
     let sk_condition = if s_cfg.sk_name.is_some() {
@@ -707,6 +895,46 @@ fn generate_struct_impl(
                 Ok(())
             }
 
+            pub async fn batch_get(
+                cli: &aws_sdk_dynamodb::Client,
+                keys: Vec<#batch_get_param>,
+            ) -> Result<Vec<Self>, #err_ctor> {
+                let keys = keys
+                    .iter()
+                    .map(|key| {
+                        std::collections::HashMap::from([
+                            #batch_get_key
+                        ])
+                    })
+                    .collect::<Vec<_>>();
+
+                let keys_and_attributes = aws_sdk_dynamodb::types::KeysAndAttributes::builder()
+                    .set_keys(Some(keys))
+                    .consistent_read(false)
+                    .build()
+                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                let table_name = Self::table_name();
+
+                let response = cli
+                    .batch_get_item()
+                    .request_items(table_name, keys_and_attributes)
+                    .send()
+                    .await
+                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                let items = if let Some(responses) = response.responses() {
+                    if let Some(items) = responses.get(table_name) {
+                        serde_dynamo::from_items(items.to_vec())?
+                    } else {
+                        vec![]
+                    }
+                } else {
+                    vec![]
+                };
+
+                Ok(items)
+            }
         }
     };
 
