@@ -32,14 +32,14 @@ import { BoosterType } from '@/lib/api/models/notice';
 import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 
 export interface FeedCardProps {
-  id: number;
+  id: string;
   industry: string;
   title: string;
   contents: string;
   author_profile_url: string;
   author_name: string;
   author_type: UserType;
-  url?: string;
+  url: string[];
   created_at: number;
 
   likes: number;
@@ -48,12 +48,11 @@ export interface FeedCardProps {
   rewards: number;
   shares: number;
 
-  space_id?: number;
+  space_id?: string;
   space_type?: SpaceType;
   booster_type?: BoosterType;
-  author_id: number;
+  author_id: string;
   user_id: number;
-  onboard: boolean;
 
   onRepostThought?: () => void;
   onRepost?: (e: React.MouseEvent) => void;

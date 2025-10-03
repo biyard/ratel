@@ -21,7 +21,7 @@ export default function DraftPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteFeeds(user_id, FeedStatus.Draft);
+  } = useInfiniteFeeds();
 
   const { openPostEditorPopup } = usePostEditorContext();
   const { mutateAsync } = useDeleteFeedMutation(user_id, FeedStatus.Draft);

@@ -10,8 +10,8 @@ import {
 import ClientProviders from './providers.client';
 import { getServerQueryClient } from '@/lib/query-utils.server';
 import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import { FeedStatus } from '@/lib/api/models/feeds';
-import { prefetchInfiniteFeeds } from '@/hooks/feeds/use-feeds-infinite-query';
+import { QK_INF_POSTS } from '@/constants';
+import { listPosts } from '@/lib/api/ratel/posts.v3';
 
 export default async function Provider({ children }: { children: ReactNode }) {
   const queryClient = await getServerQueryClient();
@@ -35,7 +35,12 @@ export default async function Provider({ children }: { children: ReactNode }) {
     throw error;
   }
 
-  await Promise.allSettled([prefetchInfiniteFeeds(0, FeedStatus.Published)]);
+  const posts = await listPosts();
+  queryClient.setQueryData([QK_INF_POSTS], {
+    pages: [posts],
+    pageParams: [posts.bookmark],
+  });
+  /* await Promise.allSettled([prefetchInfiniteFeeds()]); */
 
   const dehydratedState = dehydrate(queryClient);
 

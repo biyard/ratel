@@ -35,7 +35,7 @@ export default function TeamDraftPage({
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteFeeds(teamId, FeedStatus.Draft);
+  } = useInfiniteFeeds();
 
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {

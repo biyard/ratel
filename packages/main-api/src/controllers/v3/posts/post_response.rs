@@ -1,6 +1,6 @@
 use crate::{
     models::feed::Post,
-    types::{BoosterType, Partition},
+    types::{BoosterType, Partition, SpaceType},
 };
 use bdk::prelude::*;
 
@@ -21,8 +21,10 @@ pub struct PostResponse {
     pub author_display_name: String,
     pub author_profile_url: String,
     pub author_username: String,
+    pub auth_pk: Partition,
 
     pub space_pk: Option<Partition>,
+    pub space_type: Option<SpaceType>,
     pub booster: BoosterType,
     // only for reward spaces
     pub rewards: Option<i64>,
@@ -58,6 +60,8 @@ impl From<Post> for PostResponse {
             rewards: post.rewards,
             urls: post.urls.clone(),
             liked: false,
+            auth_pk: post.user_pk,
+            space_type: post.space_type,
         }
     }
 }

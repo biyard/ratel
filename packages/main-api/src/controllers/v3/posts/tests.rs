@@ -1,3 +1,4 @@
+use percent_encoding::{AsciiSet, NON_ALPHANUMERIC};
 use validator::ValidateLength;
 
 use crate::{
@@ -302,7 +303,7 @@ async fn test_list_posts() {
         ..
     } = TestContextV3::setup().await;
 
-    for i in 0..5 {
+    for i in 0..11 {
         let (status, _headers, create_body) = post! {
             app: app,
             path: "/v3/posts",
@@ -374,13 +375,30 @@ async fn test_list_posts() {
 
     assert_eq!(status, 200);
     let items = body["items"].as_array().unwrap();
+    let bookmark = body["bookmark"].as_str().unwrap_or_default().to_string();
+    assert!(bookmark.len() > 0);
     assert!(items.length().unwrap_or_default() >= 5);
 
     let first = items[0].as_object().unwrap();
-    assert_eq!(first["title"], format!("Updated Title {} 4", now));
+    assert_eq!(first["title"], format!("Updated Title {} 10", now));
     assert_eq!(
         first["html_contents"],
-        format!("<p>Updated Content {} 4</p>", now)
+        format!("<p>Updated Content {} 10</p>", now)
+    );
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts?bookmark={}", percent_encoding::utf8_percent_encode(&bookmark, NON_ALPHANUMERIC).to_string()),
+        response_type: serde_json::Value,
+    };
+    assert_eq!(status, 200);
+    let items = body["items"].as_array().unwrap();
+    assert!(bookmark.len() > 0);
+    let first = items[0].as_object().unwrap();
+    assert_eq!(first["title"], format!("Updated Title {} 0", now));
+    assert_eq!(
+        first["html_contents"],
+        format!("<p>Updated Content {} 0</p>", now)
     );
 }
 

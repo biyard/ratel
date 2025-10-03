@@ -10,15 +10,20 @@ export async function call<T, R>(
 ): Promise<R> {
   const apiBaseUrl: string = config.api_url;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const headers: any = { 'Content-Type': 'application/json' };
-
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    method,
-    headers,
-    credentials: 'include',
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let response;
+  if (body) {
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } else {
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      method,
+      credentials: 'include',
+    });
+  }
 
   if (!response.ok) {
     const errorData = await response
@@ -29,7 +34,13 @@ export async function call<T, R>(
     throw new RatelSdkError(errorData);
   }
 
-  return response.json();
+  const json_body: R = await response.json();
+  logger.debug(
+    `API Response Body(${method} ${apiBaseUrl}${path}): `,
+    json_body,
+  );
+
+  return json_body;
 }
 
 export class RatelSdkError extends Error {
