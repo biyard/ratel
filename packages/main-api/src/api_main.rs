@@ -223,7 +223,13 @@ pub async fn api_main() -> Result<Router> {
         .nest_service("/mcp", controllers::mcp::route(pool.clone()).await?)
         .layer(middleware::from_fn(mcp_middleware));
     let bot = if let Some(token) = conf.telegram_token {
-        Some(TelegramBot::new(token).await?)
+        let res = TelegramBot::new(token).await;
+        if let Err(err) = res {
+            tracing::error!("Failed to initialize Telegram bot: {}", err);
+            None
+        } else {
+            Some(res.unwrap())
+        }
     } else {
         None
     };

@@ -6,7 +6,7 @@ use crate::{
 use aide::NoApi;
 use axum::extract::Query;
 use bdk::prelude::*;
-use by_axum::axum::extract::{Path, State};
+use by_axum::axum::extract::{Json, Path, State};
 use serde::Deserialize;
 use validator::Validate;
 
@@ -25,7 +25,7 @@ pub async fn delete_post_handler(
     NoApi(user): NoApi<User>,
     Query(DeletePostParams { force }): Query<DeletePostParams>,
     Path(super::dto::PostPathParam { post_pk }): super::dto::PostPath,
-) -> Result<(), Error2> {
+) -> Result<Json<Post>, Error2> {
     let cli = &dynamo.client;
 
     if !Post::has_permission(
@@ -52,7 +52,7 @@ pub async fn delete_post_handler(
         return Err(Error2::HasDependencies(dependancies));
     }
 
-    Post::delete(cli, post_pk, Some(EntityType::Post)).await?;
+    let post = Post::delete(cli, post_pk, Some(EntityType::Post)).await?;
 
-    Ok(())
+    Ok(Json(post))
 }

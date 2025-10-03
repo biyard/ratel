@@ -215,6 +215,15 @@ async fn test_delete_draft() {
     assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
     let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
+
+    let (status, _headers, body) = delete! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        headers: test_user.1.clone()
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body["status"], 1);
 }
 
 #[tokio::test]
@@ -272,6 +281,7 @@ async fn test_delete_post() {
     };
 
     assert_eq!(status, 200);
+    assert_eq!(body["status"], 2);
 
     let (status, _headers, body) = get! {
         app: app,
