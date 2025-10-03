@@ -49,7 +49,7 @@ export class RegionalServiceStack extends Stack {
     const apiRepoName = props.apiRepoName ?? "ratel/main-api";
     const webRepoName = props.webRepoName ?? "ratel/web";
     const minCapacity = props.minCapacity ?? 2;
-    const maxCapacity = props.maxCapacity ?? 50;
+    const maxCapacity = props.maxCapacity ?? 2;
 
     const vpc = ec2.Vpc.fromLookup(this, "Vpc", { isDefault: true });
     const cluster = new ecs.Cluster(this, "Cluster", { vpc });
@@ -68,8 +68,8 @@ export class RegionalServiceStack extends Stack {
     // 5) Task Definition with multiple containers
     const taskDefinition = new ecs.TaskDefinition(this, "TaskDefinition", {
       compatibility: ecs.Compatibility.FARGATE,
-      cpu: "256",
-      memoryMiB: "512",
+      cpu: "1024",
+      memoryMiB: "1024",
       executionRole: taskExecutionRole,
     });
 
