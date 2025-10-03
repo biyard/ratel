@@ -38,6 +38,55 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
 
     for variant in variants {
         let variant_name = &variant.ident;
+        let prefix_wo_sharp = format!(
+            "{}",
+            variant_name
+                .to_string()
+                .to_case(convert_case::Case::UpperSnake)
+        );
+        let prefix = format!(
+            "{}#",
+            variant_name
+                .to_string()
+                .to_case(convert_case::Case::UpperSnake)
+        );
+
+        let camel_pws = format!(
+            "{}",
+            variant_name.to_string().to_case(convert_case::Case::Camel)
+        );
+        let up_camel_pws = format!(
+            "{}",
+            variant_name
+                .to_string()
+                .to_case(convert_case::Case::UpperCamel)
+        );
+        let kebab_pws = format!(
+            "{}",
+            variant_name.to_string().to_case(convert_case::Case::Kebab)
+        );
+        let snake_pws = format!(
+            "{}",
+            variant_name.to_string().to_case(convert_case::Case::Snake)
+        );
+        let camel_p = format!(
+            "{}#",
+            variant_name.to_string().to_case(convert_case::Case::Camel)
+        );
+        let up_camel_p = format!(
+            "{}#",
+            variant_name
+                .to_string()
+                .to_case(convert_case::Case::UpperCamel)
+        );
+        let kebab_p = format!(
+            "{}#",
+            variant_name.to_string().to_case(convert_case::Case::Kebab)
+        );
+        let snake_p = format!(
+            "{}#",
+            variant_name.to_string().to_case(convert_case::Case::Snake)
+        );
 
         match &variant.fields {
             // Handle variants with one field and a prefix pattern from strum
@@ -45,23 +94,11 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
                 let l = fields.unnamed.len();
 
                 if l == 1 {
-                    let prefix_wo_sharp = format!(
-                        "{}",
-                        variant_name
-                            .to_string()
-                            .to_case(convert_case::Case::UpperSnake)
-                    );
-                    let prefix = format!(
-                        "{}#",
-                        variant_name
-                            .to_string()
-                            .to_case(convert_case::Case::UpperSnake)
-                    );
                     arms.push(quote! {
-                        s if s.eq(#prefix_wo_sharp) => {
+                        s if s.eq(#prefix_wo_sharp) || s.eq(#camel_pws) || s.eq(#up_camel_pws) || s.eq(#kebab_pws) || s.eq(#snake_pws) => {
                             #name::#variant_name("".to_string())
                         },
-                        s if s.starts_with(#prefix) => {
+                        s if s.starts_with(#prefix) || s.starts_with(#camel_p) || s.starts_with(#up_camel_p) || s.starts_with(#kebab_p) || s.starts_with(#snake_p) => {
                             let parts: Vec<&str> = s.splitn(2, '#').collect();
                             if parts.len() == 2 {
                                 #name::#variant_name(parts[1].to_string())
@@ -78,24 +115,11 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
                         Self::#variant_name(v) => Ok(format!("{v}")),
                     });
                 } else if l == 2 {
-                    let prefix_wo_sharp = format!(
-                        "{}",
-                        variant_name
-                            .to_string()
-                            .to_case(convert_case::Case::UpperSnake)
-                    );
-                    let prefix = format!(
-                        "{}#",
-                        variant_name
-                            .to_string()
-                            .to_case(convert_case::Case::UpperSnake)
-                    );
-
                     arms.push(quote! {
-                        s if s.eq(#prefix_wo_sharp) => {
+                        s if s.eq(#prefix_wo_sharp) || s.eq(#camel_pws) || s.eq(#up_camel_pws) || s.eq(#kebab_pws) || s.eq(#snake_pws) => {
                             #name::#variant_name("".to_string(), "".to_string())
                         },
-                        s if s.starts_with(#prefix) => {
+                        s if s.starts_with(#prefix) || s.starts_with(#camel_p) || s.starts_with(#up_camel_p) || s.starts_with(#kebab_p) || s.starts_with(#snake_p) => {
                             let parts: Vec<&str> = s.splitn(3, '#').collect();
                             if parts.len() == 3 {
                                 #name::#variant_name(parts[1].to_string(), parts[2].to_string())
@@ -130,15 +154,15 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
             }
             // Handle unit variants (no fields)
             syn::Fields::Unit => {
-                // For unit variants, match the exact string representation
-                let variant_str = variant_name
-                    .to_string()
-                    .to_case(convert_case::Case::UpperSnake);
                 arms.push(quote! {
-                    #variant_str => #name::#variant_name,
+                    #prefix_wo_sharp => #name::#variant_name,
+                    #camel_pws => #name::#variant_name,
+                    #up_camel_pws => #name::#variant_name,
+                    #kebab_pws => #name::#variant_name,
+                    #snake_pws => #name::#variant_name,
                 });
                 display_arms.push(quote! {
-                    Self::#variant_name => write!(f, #variant_str),
+                    Self::#variant_name => write!(f, #prefix_wo_sharp),
                 });
                 inner_arms.push(quote! {
                     Self::#variant_name => Err("Cannot extract inner value from unit variant".to_string())?,
