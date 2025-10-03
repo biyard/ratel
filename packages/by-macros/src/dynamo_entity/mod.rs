@@ -840,24 +840,18 @@ fn generate_struct_impl(
             pub async fn create(
                 &self,
                 cli: &aws_sdk_dynamodb::Client,
-            ) -> #result_ty <Self, #err_ctor> {
+            ) -> #result_ty <(), #err_ctor> {
                 let item = serde_dynamo::to_item(self)?;
 
                 let item = self.indexed_fields(item);
 
-                let new = cli.put_item()
+                cli.put_item()
                     .table_name(Self::table_name())
                     .set_item(Some(item))
-                    .return_values(aws_sdk_dynamodb::types::ReturnValue::AllNew)
                     .send()
                     .await.map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
 
-                if let Some(item) = new.attributes {
-                    let ev: Self = serde_dynamo::from_item(item)?;
-                    Ok(ev)
-                } else {
-                    Err("Failed to create item".to_string().into())
-                }
+                Ok(())
             }
 
             pub async fn get(

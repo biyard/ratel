@@ -116,16 +116,6 @@ pub fn create_nick_name() -> String {
     format!("nickname{}", short_uuid)
 }
 
-#[deprecated(note = "use create_test_user instead")]
-pub async fn get_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
-    create_test_user(cli).await
-}
-
-#[deprecated(note = "use get_auth instead")]
-pub async fn create_auth(user: User) -> Authorization {
-    get_auth(&user)
-}
-
 pub async fn create_user_session(
     app: AxumRouter,
     cli: &aws_sdk_dynamodb::Client,
