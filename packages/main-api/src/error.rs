@@ -47,6 +47,12 @@ pub enum Error {
     ValidationErrors(#[from] validator::ValidationErrors),
     #[error("Decoding error: {0}")]
     Utf8Decoding(#[from] std::str::Utf8Error),
+    #[error("Misconfiguration: {0}")]
+    Misconfiguration(String),
+    #[error("Operation not supported: {0}")]
+    NotSupported(String),
+    #[error("The item has dependencies and cannot be deleted: {0:?}")]
+    HasDependencies(Vec<String>),
 
     // Authorization errors 400 ~
     #[error("No session found")]
@@ -56,7 +62,7 @@ pub enum Error {
     #[rest_error(status = 401, code = 401)]
     NoUserFound,
     #[error("No permission to access this resource")]
-    #[rest_error(status = 403, code = 403)]
+    #[rest_error(status = 401, code = 403)]
     NoPermission,
 
     // /v3/auth endpoints 1000 ~
@@ -75,9 +81,11 @@ pub enum Error {
     // /v3/posts endpoints 2000 ~
     #[error("Post visibility is incorrectly configured: {0}")]
     #[rest_error(code = 2000)]
-    IncorrectConfiguredVisibility(String),
+    PostIncorrectConfiguredVisibility(String),
     #[error("Post not found")]
-    NotFoundPost,
+    PostNotFound,
+    #[error("You do not have permission to access this post")]
+    PostLikeError,
 
     // /v3/spaces endpoints 3000 ~
     #[error("Space not found")]

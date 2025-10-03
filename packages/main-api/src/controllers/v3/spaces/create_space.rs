@@ -46,7 +46,7 @@ pub async fn create_space_handler(
     // FIXME: Check Post Visibility
     let post = Post::get(&dynamo.client, &post_pk, Some(EntityType::Post))
         .await?
-        .ok_or(Error2::NotFoundPost)?;
+        .ok_or(Error2::PostNotFound)?;
     let space_pk = match space_type {
         SpaceType::Poll => {
             let space = PollSpace::new();
