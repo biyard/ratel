@@ -14,6 +14,12 @@ impl DynamoClient {
         let conf = config::get();
         // Only for local development
         let endpoint = match conf.dynamodb {
+            DatabaseConfig::DynamoDb { endpoint, .. }
+                if endpoint.unwrap_or_default().to_lowercase() == "none"
+                    || endpoint.unwrap_or_default() == "" =>
+            {
+                None
+            }
             DatabaseConfig::DynamoDb { endpoint, .. } => endpoint,
             _ => panic!(
                 "DynamoDB config not found. In Local env, you must set DynamoDB config with Endpoint"
