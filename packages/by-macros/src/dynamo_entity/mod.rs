@@ -715,22 +715,16 @@ fn generate_updater(
             pub async fn execute(
                 self,
                 cli: &aws_sdk_dynamodb::Client,
-            ) -> #result_ty <#ident, #err_ctor> {
+            ) -> #result_ty <(), #err_ctor> {
                 let new = cli.update_item()
                     .table_name(#ident::table_name())
                     .set_key(Some(self.k))
                     .set_attribute_updates(Some(self.m))
-                    .return_values(aws_sdk_dynamodb::types::ReturnValue::AllNew)
                     .send()
                     .await
                     .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
 
-                if let Some(item) = new.attributes {
-                    let ev: #ident = serde_dynamo::from_item(item)?;
-                    Ok(ev)
-                } else {
-                    Err("Failed to update item".to_string().into())
-                }
+                Ok(())
             }
         }
     }
