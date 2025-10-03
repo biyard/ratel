@@ -215,6 +215,15 @@ async fn test_delete_draft() {
     assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
     let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
+
+    let (status, _headers, body) = delete! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        headers: test_user.1.clone()
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body["status"], 1);
 }
 
 #[tokio::test]
@@ -272,6 +281,7 @@ async fn test_delete_post() {
     };
 
     assert_eq!(status, 200);
+    assert_eq!(body["status"], 2);
 
     let (status, _headers, body) = get! {
         app: app,
@@ -281,6 +291,97 @@ async fn test_delete_post() {
     tracing::info!("Get post response: {:?}", body);
     assert_eq!(status, 404);
     assert_eq!(body["code"], 107);
+}
+
+#[tokio::test]
+async fn test_list_posts() {
+    let TestContextV3 {
+        app,
+        test_user,
+        now,
+        ..
+    } = TestContextV3::setup().await;
+
+    for i in 0..5 {
+        let (status, _headers, create_body) = post! {
+            app: app,
+            path: "/v3/posts",
+            headers: test_user.1.clone(),
+            response_type: CreatePostResponse
+        };
+
+        assert_eq!(status, 200);
+        assert!(create_body.post_pk.to_string().len() > 0);
+
+        tracing::info!("Create post response pk: {:?}", create_body.post_pk);
+
+        let (status, _headers, body) = get! {
+            app: app,
+            path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
+            headers: test_user.1.clone()
+        };
+        tracing::info!("Get post response: {:?}", body);
+        assert_eq!(status, 200);
+        assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
+
+        let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
+        let title = format!("Updated Title {} {}", now, i);
+        let content = format!("<p>Updated Content {} {}</p>", now, i);
+
+        // Writing
+        let (status, _headers, _body) = patch! {
+            app: app,
+            path: format!("/v3/posts/{}", post_pk.to_string()),
+            headers: test_user.1.clone(),
+            body: {
+                "title": title,
+                "content": content
+            }
+        };
+
+        assert_eq!(status, 200);
+
+        let (status, _headers, body) = patch! {
+            app: app,
+            path: format!("/v3/posts/{}", post_pk.to_string()),
+            headers: test_user.1.clone(),
+            body: {
+                "visibility": "PUBLIC"
+            }
+        };
+
+        assert_eq!(status, 200);
+        assert_eq!(body["visibility"], "PUBLIC");
+
+        let (status, _headers, body) = patch! {
+            app: app,
+            path: format!("/v3/posts/{}", post_pk),
+            headers: test_user.1.clone(),
+            body: {
+                "publish": true
+            }
+        };
+
+        assert_eq!(status, 200);
+        assert_eq!(body["status"], 2);
+    }
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts"),
+        response_type: serde_json::Value,
+    };
+
+    assert_eq!(status, 200);
+    let items = body["items"].as_array().unwrap();
+    assert!(items.length().unwrap_or_default() >= 5);
+
+    let first = items[0].as_object().unwrap();
+    assert_eq!(first["title"], format!("Updated Title {} 4", now));
+    assert_eq!(
+        first["html_contents"],
+        format!("<p>Updated Content {} 4</p>", now)
+    );
 }
 
 #[tokio::test]
