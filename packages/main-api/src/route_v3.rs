@@ -191,7 +191,7 @@ pub fn route(
                     )
                     .delete_with(
                         delete_post_handler,
-                        api_docs!((), "Delete Post", "Delete a post by ID"),
+                        api_docs!(Json<Post>, "Delete Post", "Delete a post by ID"),
                     ),
                 ),
         )
