@@ -66,12 +66,16 @@ export class RegionalServiceStack extends Stack {
     );
 
     // --- API Task Definition ---
-    const apiTaskDefinition = new ecs.TaskDefinition(this, "ApiTaskDefinition", {
-      compatibility: ecs.Compatibility.FARGATE,
-      cpu: "256",
-      memoryMiB: "512",
-      executionRole: taskExecutionRole,
-    });
+    const apiTaskDefinition = new ecs.TaskDefinition(
+      this,
+      "ApiTaskDefinition",
+      {
+        compatibility: ecs.Compatibility.FARGATE,
+        cpu: "256",
+        memoryMiB: "512",
+        executionRole: taskExecutionRole,
+      },
+    );
 
     const apiRepository = Repository.fromRepositoryName(
       this,
@@ -95,12 +99,16 @@ export class RegionalServiceStack extends Stack {
     });
 
     // --- Web Task Definition ---
-    const webTaskDefinition = new ecs.TaskDefinition(this, "WebTaskDefinition", {
-      compatibility: ecs.Compatibility.FARGATE,
-      cpu: "256",
-      memoryMiB: "512",
-      executionRole: taskExecutionRole,
-    });
+    const webTaskDefinition = new ecs.TaskDefinition(
+      this,
+      "WebTaskDefinition",
+      {
+        compatibility: ecs.Compatibility.FARGATE,
+        cpu: "256",
+        memoryMiB: "512",
+        executionRole: taskExecutionRole,
+      },
+    );
 
     const webRepository = Repository.fromRepositoryName(
       this,
