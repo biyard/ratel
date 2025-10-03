@@ -1,7 +1,7 @@
 use crate::models::feed::{Post, PostLike, PostQueryOption};
 use crate::models::user::User;
 use crate::types::list_items_response::ListItemsResponse;
-use crate::types::{EntityType, PostStatus, Visibility};
+use crate::types::{EntityType, Visibility};
 use crate::{AppState, Error2};
 use bdk::prelude::*;
 use by_axum::axum::{
@@ -16,13 +16,7 @@ use super::post_response::PostResponse;
 
 #[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema, Validate)]
 pub struct ListPostsQueryParams {
-    #[validate(range(min = 1, max = 100))]
-    #[schemars(description = "Number of items to return (default: 20, max: 100)")]
-    pub limit: Option<i32>,
     pub bookmark: Option<String>,
-
-    pub value: Option<String>, // PK of User or Team based on type
-    pub status: Option<PostStatus>,
 }
 
 pub async fn list_posts_handler(
@@ -33,7 +27,7 @@ pub async fn list_posts_handler(
     tracing::debug!("list_posts_handler: user = {:?}", user);
     params.validate()?;
 
-    let mut query_options = PostQueryOption::builder().limit(params.limit.unwrap_or(20));
+    let mut query_options = PostQueryOption::builder().limit(10);
 
     if let Some(bookmark) = params.bookmark {
         query_options = query_options.bookmark(bookmark);
