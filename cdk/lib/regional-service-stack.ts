@@ -68,8 +68,8 @@ export class RegionalServiceStack extends Stack {
     // --- API Task Definition ---
     const apiTaskDefinition = new ecs.TaskDefinition(this, "ApiTaskDefinition", {
       compatibility: ecs.Compatibility.FARGATE,
-      cpu: "1024",
-      memoryMiB: "2048",
+      cpu: "256",
+      memoryMiB: "512",
       executionRole: taskExecutionRole,
     });
 
@@ -97,8 +97,8 @@ export class RegionalServiceStack extends Stack {
     // --- Web Task Definition ---
     const webTaskDefinition = new ecs.TaskDefinition(this, "WebTaskDefinition", {
       compatibility: ecs.Compatibility.FARGATE,
-      cpu: "1024",
-      memoryMiB: "2048",
+      cpu: "256",
+      memoryMiB: "512",
       executionRole: taskExecutionRole,
     });
 
