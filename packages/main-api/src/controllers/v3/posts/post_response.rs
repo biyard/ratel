@@ -1,6 +1,6 @@
 use crate::{
     models::feed::Post,
-    types::{BoosterType, EntityType, Partition},
+    types::{BoosterType, Partition},
 };
 use bdk::prelude::*;
 
