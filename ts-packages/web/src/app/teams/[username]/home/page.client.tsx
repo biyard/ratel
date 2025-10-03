@@ -4,7 +4,6 @@ import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
 import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
 import { useObserver } from '@/hooks/use-observer';
-import { FeedStatus } from '@/lib/api/models/feeds';
 import { UserType } from '@/lib/api/models/user';
 import React, { useCallback } from 'react';
 
@@ -14,7 +13,7 @@ interface TeamHomeProps {
 
 export default function TeamHome({ teamId }: TeamHomeProps) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteFeeds(teamId, FeedStatus.Published);
+    useInfiniteFeeds();
 
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {

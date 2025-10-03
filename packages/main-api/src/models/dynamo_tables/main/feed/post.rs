@@ -53,6 +53,7 @@ pub struct Post {
 
     // #[dynamo(prefix = "SPACE_PK", name = "find_by_space_pk", index = "gsi2", pk)]
     pub space_pk: Option<Partition>,
+    pub space_type: Option<SpaceType>,
     pub booster: Option<BoosterType>,
     // only for reward spaces
     pub rewards: Option<i64>,
@@ -103,6 +104,7 @@ impl Post {
             author_username: username,
 
             space_pk: None,
+            space_type: None,
             booster: None,
             rewards: None,
             sorted_visibility: SortedVisibility::Draft(now.to_string()),

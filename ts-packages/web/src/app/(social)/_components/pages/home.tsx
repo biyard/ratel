@@ -1,5 +1,4 @@
 'use client';
-import { useCallback } from 'react';
 
 import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
@@ -14,11 +13,12 @@ import PromotionCard from '../promotion-card';
 import News from '../News';
 import Suggestions from '../suggestions';
 import { Promotion } from '@/lib/api/models/promotion';
-import { Feed, FeedStatus } from '@/lib/api/models/feeds';
-import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
-import { useObserver } from '@/hooks/use-observer';
+import { Feed } from '@/lib/api/models/feeds';
 import DisableBorderCard from '../disable-border-card';
 import { usePostEditorContext } from '../post-editor/provider';
+import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
+import { useObserver } from '@/hooks/use-observer';
+import { useCallback } from 'react';
 
 export const SIZE = 10;
 
@@ -57,7 +57,7 @@ export default function Home({
   const userId = userInfo?.id || 0;
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteFeeds(0, FeedStatus.Published);
+    useInfiniteFeeds();
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
@@ -74,34 +74,31 @@ export default function Home({
       </div>
     );
   }
-  const flattedPosts = data?.pages.flatMap((page) => page.posts) ?? [];
+  const flattedPosts = data?.pages.flatMap((page) => page.items) ?? [];
   return (
     <div className="flex-1 flex relative">
       <Col className="flex-1 flex max-mobile:px-[10px]">
         <Col className="flex-1">
           {flattedPosts.map((post) => (
             <FeedCard
-              key={`feed-${post.id}`}
+              key={`feed-${post.pk}`}
               contents={post.html_contents || ''}
-              author_profile_url={post?.author?.[0]?.profile_url || ''}
-              author_name={post?.author?.[0]?.nickname || ''}
-              author_type={post?.author?.[0]?.user_type || UserType.Anonymous}
-              author_id={post?.author?.[0]?.id || 0}
+              author_profile_url={post?.author_profile_url || ''}
+              author_name={post?.author_display_name || ''}
+              author_id={post?.author_pk}
               user_id={userId}
-              id={post.id}
-              industry={post.industry?.[0]?.name || ''}
+              id={post.pk}
               title={post.title || ''}
               created_at={post.created_at || 0}
               likes={post.likes || 0}
-              is_liked={post.is_liked || false}
+              is_liked={post.liked}
               comments={post.comments || 0}
               rewards={post.rewards || 0}
               shares={post.shares || 0}
-              onboard={post.onboard || false}
-              space_id={post.space?.[0]?.id}
-              space_type={post.space?.[0]?.space_type}
-              booster_type={post.space?.[0]?.booster_type}
-              url={post.url || ''}
+              space_id={post.space_pk}
+              space_type={post.space_type}
+              booster_type={post.booster}
+              url={post.urls}
             />
           ))}
 

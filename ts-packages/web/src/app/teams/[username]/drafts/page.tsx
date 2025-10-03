@@ -1,5 +1,4 @@
 import TeamDraftPage from './page.client';
-import { FeedStatus } from '@/lib/api/models/feeds';
 import { prefetchInfiniteFeeds } from '@/hooks/feeds/use-feeds-infinite-query';
 import { getTeamByUsername } from '@/lib/api/ratel_api.server';
 export interface TeamLayoutProps {
@@ -15,9 +14,7 @@ export default async function Page({ params }: TeamLayoutProps) {
     return <div className="text-center">Team not found</div>;
   }
 
-  await Promise.allSettled([
-    prefetchInfiniteFeeds(user?.data?.id ?? 0, FeedStatus.Draft),
-  ]);
+  await Promise.allSettled([prefetchInfiniteFeeds()]);
 
   return <TeamDraftPage teamId={user?.data?.id ?? 0} username={username} />;
 }

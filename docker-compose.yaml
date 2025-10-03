@@ -32,7 +32,7 @@ services:
       - "3000:3000"
     environment:
       ENV: dev
-      RUST_LOG: ${RUST_LOG:-debug}
+      RUST_LOG: ${RUST_LOG:-info}
       RUSTFLAGS: ${RUSTFLAGS:--A warnings}
       RUST_FLAG: ${RUST_FLAG:---features bypass}
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}

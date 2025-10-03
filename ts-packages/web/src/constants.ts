@@ -50,6 +50,7 @@ export const QK_GET_ARTWORK = 'get-artwork';
 export const QK_GET_ARTWORK_CERTIFICATE = 'get-artwork-certificate';
 
 export const QK_GET_HOME_DATA = 'get-home-data';
+export const QK_INF_POSTS = 'infinite-posts';
 
 function sortObjectKeys<T extends object>(obj: T): T {
   const sortedKeys = Object.keys(obj).sort() as Array<keyof T>;
@@ -66,7 +67,6 @@ export const feedKeys = {
   all: [QK_FEEDS] as const,
   lists: () => [...feedKeys.all, 'list'] as const,
   list: (filters: object) => {
-    // 빈 필터 객체는 제외하여 불필요한 복잡성을 줄입니다.
     const nonNullFilters = Object.fromEntries(
       Object.entries(filters).filter(([, value]) => value != null),
     );

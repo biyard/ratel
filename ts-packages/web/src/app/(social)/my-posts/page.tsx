@@ -5,7 +5,6 @@ import { Col } from '@/components/ui/col';
 import FeedCard from '@/components/feed-card';
 import CreatePostButton from '../_components/create-post-button';
 import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
-import { FeedStatus } from '@/lib/api/models/feeds';
 import { useObserver } from '@/hooks/use-observer';
 import { UserType } from '@/lib/api/models/user';
 import FeedEndMessage from '../_components/feed-end-message';
@@ -15,7 +14,7 @@ export default function MyPostsPage() {
   const userId = user.id || 0;
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteFeeds(userId, FeedStatus.Published);
+    useInfiniteFeeds();
 
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
