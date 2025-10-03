@@ -69,7 +69,7 @@ export class RegionalServiceStack extends Stack {
     const taskDefinition = new ecs.TaskDefinition(this, "TaskDefinition", {
       compatibility: ecs.Compatibility.FARGATE,
       cpu: "1024",
-      memoryMiB: "1024",
+      memoryMiB: "2048",
       executionRole: taskExecutionRole,
     });
 
