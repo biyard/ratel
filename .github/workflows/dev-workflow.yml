@@ -92,7 +92,7 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
           ENV: dev
-          RUST_LOG: debug
+          RUST_LOG: info
           SERVICE: main-api
           DOMAIN: api.dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
@@ -260,7 +260,7 @@ jobs:
       - name: Build
         env:
           REGION: ap-northeast-2
-          NEXT_PUBLIC_LOG_LEVEL: debug
+          NEXT_PUBLIC_LOG_LEVEL: info
           NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
           NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
