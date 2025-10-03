@@ -716,7 +716,7 @@ fn generate_updater(
                 self,
                 cli: &aws_sdk_dynamodb::Client,
             ) -> #result_ty <(), #err_ctor> {
-                cli.update_item()
+                let new = cli.update_item()
                     .table_name(#ident::table_name())
                     .set_key(Some(self.k))
                     .set_attribute_updates(Some(self.m))
@@ -880,7 +880,7 @@ fn generate_struct_impl(
                 cli: &aws_sdk_dynamodb::Client,
                 pk: impl std::fmt::Display,
                 #sk_param
-            ) -> #result_ty <(), #err_ctor> {
+            ) -> #result_ty <Self, #err_ctor> {
                 let mut req = cli.delete_item().table_name(Self::table_name()).key(
                     Self::pk_field(),
                     aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
@@ -888,11 +888,18 @@ fn generate_struct_impl(
 
                 #sk_condition
 
-                req.send()
+                let old = req
+                    .return_values(aws_sdk_dynamodb::types::ReturnValue::AllOld)
+                    .send()
                     .await
                     .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
 
-                Ok(())
+                if let Some(item) = old.attributes {
+                    let ev: Self = serde_dynamo::from_item(item)?;
+                    Ok(ev)
+                } else {
+                    Err("Item not found".to_string().into())
+                }
             }
 
             pub async fn batch_get(

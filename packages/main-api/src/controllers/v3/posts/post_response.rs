@@ -1,13 +1,12 @@
 use crate::{
     models::feed::Post,
-    types::{BoosterType, EntityType, Partition},
+    types::{BoosterType, Partition},
 };
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 pub struct PostResponse {
     pub pk: Partition,
-    pub sk: EntityType,
 
     pub created_at: i64,
     pub updated_at: i64,
@@ -44,7 +43,6 @@ impl From<Post> for PostResponse {
     fn from(post: Post) -> Self {
         PostResponse {
             pk: post.pk,
-            sk: post.sk,
             created_at: post.created_at,
             updated_at: post.updated_at,
             title: post.title,
