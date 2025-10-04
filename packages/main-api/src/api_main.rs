@@ -19,16 +19,13 @@ use bdk::prelude::{by_axum::axum::Router, *};
 use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
 use dto::{
-    by_axum::{
-        auth::{authorization_middleware, generate_jwt, set_auth_token_key},
-        axum::{extract::Request, http::Response, middleware::Next},
-    },
+    by_axum::auth::{authorization_middleware, set_auth_token_key},
     sqlx::PgPool,
     *,
 };
 use sqlx::postgres::PgPoolOptions;
 use tower_sessions::{
-    Session, SessionManagerLayer,
+    SessionManagerLayer,
     cookie::time::{Duration, OffsetDateTime},
 };
 
@@ -190,9 +187,9 @@ pub async fn api_main() -> Result<Router> {
         panic!("Database is not initialized. Call init() first.");
     };
 
-    if conf.migrate {
-        migration(&pool).await?;
-    }
+    // if conf.migrate {
+    //     migration(&pool).await?;
+    // }
     let is_local = conf.env == "local" || conf.env == "test";
     let aws_sdk_config = get_aws_config();
     let dynamo_client = DynamoClient::new(Some(aws_sdk_config.clone()));
@@ -226,7 +223,13 @@ pub async fn api_main() -> Result<Router> {
         .nest_service("/mcp", controllers::mcp::route(pool.clone()).await?)
         .layer(middleware::from_fn(mcp_middleware));
     let bot = if let Some(token) = conf.telegram_token {
-        Some(TelegramBot::new(token).await?)
+        let res = TelegramBot::new(token).await;
+        if let Err(err) = res {
+            tracing::error!("Failed to initialize Telegram bot: {}", err);
+            None
+        } else {
+            Some(res.unwrap())
+        }
     } else {
         None
     };
@@ -244,63 +247,8 @@ pub async fn api_main() -> Result<Router> {
     })
     .await?
     .layer(middleware::from_fn(authorization_middleware))
-    .layer(session_layer)
-    .layer(middleware::from_fn(cookie_middleware));
+    .layer(session_layer);
 
     let app = app.merge(mcp_router).merge(api_router);
     Ok(app)
-}
-
-//FIXME: Remove this middleware
-pub async fn cookie_middleware(
-    req: Request,
-    next: Next,
-) -> std::result::Result<Response<by_axum::axum::body::Body>, by_axum::axum::http::StatusCode> {
-    let session_initialized = if let Some(session) = req.extensions().get::<Session>() {
-        if let Ok(Some(_)) = session
-            .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
-            .await
-        {
-            true
-        } else {
-            false
-        }
-    } else {
-        false
-    };
-
-    let mut res = next.run(req).await;
-    if session_initialized {
-        tracing::debug!("Session not initialized, skipping cookie generation.");
-        return Ok(res);
-    }
-
-    if let Some(ref session) = res.extensions().get::<Session>() {
-        tracing::debug!("Checking for user session in response...");
-        if let Ok(Some(user_session)) = session
-            .get::<by_axum::auth::UserSession>(by_axum::auth::USER_SESSION_KEY)
-            .await
-        {
-            tracing::debug!("User session found in response: {:?}", user_session);
-            let mut claims = by_types::Claims {
-                sub: user_session.user_id.to_string(),
-                ..Default::default()
-            };
-
-            let token = generate_jwt(&mut claims)?;
-
-            res.headers_mut().append(
-                reqwest::header::SET_COOKIE,
-                format!(
-                    "{}_auth_token={}; SameSite=Lax; Path=/; Max-Age=2586226; HttpOnly; Secure;",
-                    config::get().env,
-                    token,
-                )
-                .parse()
-                .unwrap(),
-            );
-        }
-    }
-
-    return Ok(res);
 }

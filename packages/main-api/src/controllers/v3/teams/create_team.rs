@@ -6,7 +6,7 @@ use crate::{
     },
     utils::{
         dynamo_extractor::extract_user,
-        validator::{validate_description, validate_image_url, validate_nickname},
+        validator::{validate_description, validate_image_url, validate_username},
     },
 };
 use dto::by_axum::{
@@ -23,10 +23,10 @@ use validator::Validate;
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
 pub struct CreateTeamRequest {
     #[schemars(description = "Team name. SHOULD be unique")]
+    #[validate(custom(function = "validate_username"))]
     pub username: String,
 
     #[schemars(description = "Team display name. (3 ~ 10 Characters)")]
-    #[validate(custom(function = "validate_nickname"))]
     pub nickname: String,
 
     #[schemars(description = "Team profile URL to update")]

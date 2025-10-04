@@ -339,13 +339,13 @@ impl ApiModel<'_> {
         quote! {
             #[cfg(feature = "server")]
             impl schemars::JsonSchema for #name {
-                fn schema_name() -> String {
+                fn schema_name() -> std::borrow::Cow<'static, str> {
                     #name_str.to_string()
                 }
 
-                fn json_schema(_gen: &mut schemars::gen::SchemaGenerator) -> schemars::schema::Schema {
-                    let mut schema_obj = schemars::schema::SchemaObject::default();
-                    schema_obj.metadata = Some(Box::new(schemars::schema::Metadata {
+                fn json_schema(_gen: &mut schemars::SchemaGenerator) -> schemars::Schema {
+                    let mut schema_obj = schemars::SchemaObject::default();
+                    schema_obj.metadata = Some(Box::new(schemars::Metadata {
                         title: Some(#title.to_string()),
                         ..Default::default()
                     }));
@@ -354,7 +354,7 @@ impl ApiModel<'_> {
 
                     schema_obj.object().required.insert("size".to_string());
 
-                    schemars::schema::Schema::Object(schema_obj)
+                    schemars::Schema::Object(schema_obj)
                 }
             }
         }
@@ -1656,17 +1656,17 @@ impl ApiModel<'_> {
             });
         }
 
-        let json_schema = self.generate_jsonschema_for_param();
+        // let json_schema = self.generate_jsonschema_for_param();
 
         let output = quote! {
             #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, by_macros::QueryDisplay)]
-            #[cfg_attr(feature = "server", derive(aide::OperationIo))]
+            #[cfg_attr(feature = "server", derive(aide::OperationIo, schemars::JsonSchema))]
             #[serde(tag = "param-type", rename_all = "kebab-case")]
             pub enum #name {
                 #(#enums)*
             }
 
-            #json_schema
+            // #json_schema
         };
 
         output.into()

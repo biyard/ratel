@@ -32,6 +32,16 @@ export interface Member {
   username: string;
 }
 
+export interface NewDiscussionCreateRequest {
+  discussion_pk: string | undefined;
+  started_at: number;
+  ended_at: number;
+
+  name: string;
+  description: string;
+  user_ids: string[];
+}
+
 export interface DiscussionCreateRequest {
   started_at: number;
   ended_at: number;

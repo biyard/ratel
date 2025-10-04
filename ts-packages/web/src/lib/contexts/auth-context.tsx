@@ -26,6 +26,8 @@ const dummyAuthUserInfo: AuthUserInfo = {
   photoURL: '',
   event: null,
   keyPair: null,
+  idToken: '',
+  accessToken: '',
 };
 
 export const AuthContext = createContext<AuthContextType>({

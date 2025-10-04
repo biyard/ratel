@@ -22,6 +22,7 @@ import NumberBullet from '@/assets/icons/editor/misc2-part.svg';
 import Bullet from '@/assets/icons/editor/misc-parts.svg';
 import RightAlign from '@/assets/icons/editor/paragraph.svg';
 import RightAlignLight from '@/assets/icons/editor/paragraph-light.svg';
+import CapsLock from '@/assets/icons/editor/capslock.svg';
 
 interface ToolbarPluginProps {
   editor: Editor | null;
@@ -108,9 +109,41 @@ export default function ToolbarPlugin({
     return null;
   }
 
+  // Function to check if selected text is uppercase
+  const isSelectionUppercase = () => {
+    if (!editor) return false;
+
+    const { from, to, empty } = editor.state.selection;
+    let text = '';
+
+    if (empty) {
+      // If no selection, check the current word
+      const $pos = editor.state.selection.$from;
+      const start = $pos.start();
+      const end = $pos.end();
+      text = editor.state.doc.textBetween(start, end, ' ');
+    } else {
+      // Get selected text
+      text = editor.state.doc.textBetween(from, to, ' ');
+    }
+
+    // Check if text is not empty and is all uppercase
+    return text.length > 0 && text === text.toUpperCase();
+  };
+
   return (
     <div className="flex items-center gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-neutral-700 ">
       {/*  formatting buttons */}
+      <button
+        type="button"
+        onClick={() => editor.chain().focus().toggleCase().run()}
+        aria-label="Toggle case"
+        title="Toggle case (UPPER/lower)"
+        className={isSelectionUppercase() ? 'bg-neutral-600' : ''}
+      >
+        <CapsLock />
+      </button>
+
       <button
         onClick={() => editor.chain().focus().toggleCode().run()}
         className={cn(editor.isActive('code') && 'bg-neutral-600')}

@@ -21,6 +21,7 @@ pub struct FindUserQueryParams {
 }
 
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
 pub enum FindUserQueryType {
     Email,
     Username,

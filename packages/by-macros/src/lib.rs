@@ -10,6 +10,7 @@ pub(crate) mod parse_queryable_fields;
 #[cfg(feature = "server")]
 mod query_builder_functions;
 mod query_display;
+mod rest_error;
 #[cfg(feature = "server")]
 mod sql_model;
 mod write_file;
@@ -21,6 +22,7 @@ use enum_prop::enum_prop_impl;
 use proc_macro::TokenStream;
 use query_display::query_display_impl;
 use quote::{quote, ToTokens};
+use rest_error::rest_error_impl;
 use syn::{parse_macro_input, Data, DataEnum, DeriveInput, Fields};
 
 #[proc_macro_derive(QueryDisplay)]
@@ -81,6 +83,20 @@ pub fn dynamo_enum_derive(input: TokenStream) -> TokenStream {
         .with_target(false)
         .try_init();
     dynamo_enum_impl(input)
+}
+
+/// #[derive(RestError)]
+/// #[rest_error(status = 401, code = 1000)]
+#[proc_macro_derive(RestError, attributes(rest_error))]
+pub fn rest_error_derive(input: TokenStream) -> TokenStream {
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_file(true)
+        .with_line_number(true)
+        .with_thread_ids(true)
+        .with_target(false)
+        .try_init();
+    rest_error_impl(input)
 }
 
 #[proc_macro_derive(ApiModel)]

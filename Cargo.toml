@@ -36,8 +36,8 @@ tokio = { version = "1.40.0", features = ["full"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 reqwest = { version = "0.12.12", features = ["blocking", "json", "multipart"] }
-schemars = { version = "0.8.10", features = ["uuid1"] }
-aide = { version = "0.14.2", features = [
+schemars = { version = "1.0.4", features = ["uuid1"] }
+aide = { version = "0.15.1", git="https://github.com/tamasfe/aide.git", features = [
   "axum",
   "axum-query",
   "axum-extra",
