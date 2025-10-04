@@ -14,6 +14,7 @@ use bdk::prelude::*;
 #[repr(u8)]
 pub enum BoosterType {
     #[default]
+    // NoBoost means 1x times points will be applied
     NoBoost = 1,
 
     X2 = 2,

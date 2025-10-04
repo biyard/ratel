@@ -46,7 +46,7 @@ pub enum EntityType {
     Team,
     TeamOwner, // from User
     TeamGroup(String),
-    TeamMember(String),
+    TeamMember(String, String), // TeamMember#${TeamGroup Pk inner}#${User Pk inner}
 
     // Space common entity types
     // SPACE_PK index is aligned by gsi2-index

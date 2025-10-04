@@ -22,6 +22,7 @@ pub struct PostResponse {
     pub author_profile_url: String,
     pub author_username: String,
     pub auth_pk: Partition,
+    pub author_type: crate::types::UserType,
 
     pub space_pk: Option<Partition>,
     pub space_type: Option<SpaceType>,
@@ -62,6 +63,7 @@ impl From<Post> for PostResponse {
             liked: false,
             auth_pk: post.user_pk,
             space_type: post.space_type,
+            author_type: post.author_type,
         }
     }
 }

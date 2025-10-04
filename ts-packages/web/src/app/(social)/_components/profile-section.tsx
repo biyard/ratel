@@ -2,7 +2,6 @@
 import React, { useContext, useMemo } from 'react';
 import TeamSelector from './team-selector';
 import Image from 'next/image';
-import UserBadges from './user-badges';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { TeamContext } from '@/lib/contexts/team-context';
 import UserFollows from './user-follows';
@@ -25,7 +24,6 @@ export default function ProfileSection() {
   return (
     <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-card-bg border border-card-border">
       <TeamSelector onSelect={handleTeamSelect} team={team} />
-
       <div className="relative">
         {user?.profile_url && user?.profile_url !== '' ? (
           <Image
@@ -39,17 +37,15 @@ export default function ProfileSection() {
           <div className="w-20 h-20 rounded-full border border-neutral-500 bg-profile-bg" />
         )}
       </div>
-
       <div className="font-medium text-text-secondary">{user.nickname}</div>
-
       <div
         id="user-profile-description"
         className="text-xs text-text-secondary"
-        dangerouslySetInnerHTML={{ __html: user.html_contents }}
+        dangerouslySetInnerHTML={{ __html: user.description }}
       />
-
       {/* <UserTier /> */}
-      <UserBadges badges={user.badges ? user.badges : []} />
+      {/* FIXME: implement badges */}
+      {/* <UserBadges badges={user.badges ? user.badges : []} /> */}
       <UserFollows
         followers_count={user.followers_count}
         followings_count={user.followings_count}

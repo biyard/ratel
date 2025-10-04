@@ -42,6 +42,8 @@ pub enum Partition {
     PollSpaceResponse(String), // user_pk
 
     Team(String),
+
+    Promotion(String),
 }
 
 pub fn path_param_string_to_partition<'de, D>(deserializer: D) -> Result<Partition, D::Error>

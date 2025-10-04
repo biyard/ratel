@@ -4,8 +4,9 @@ import React from 'react';
 import { useLoggedIn } from '@/lib/api/hooks/users';
 import { useTranslations } from 'next-intl';
 import { usePostEditorContext } from './post-editor/provider';
+import { createPost } from '@/lib/api/ratel/posts.v3';
 
-export default function CreatePostButton() {
+export default function CreatePostButton({ team_pk }: { team_pk?: string }) {
   const t = useTranslations('Home');
   const loggedIn = useLoggedIn();
   const { openPostEditorPopup, setClose } = usePostEditorContext();
@@ -14,9 +15,10 @@ export default function CreatePostButton() {
     <div
       className="cursor-pointer flex flex-row w-full justify-start items-center gap-1 bg-create-button-bg rounded-[100px] px-4 py-3 mb-[10px] aria-hidden:hidden"
       aria-hidden={!loggedIn}
-      onClick={() => {
+      onClick={async () => {
         setClose(false);
-        openPostEditorPopup();
+        const { post_pk } = await createPost(team_pk);
+        openPostEditorPopup(post_pk);
       }}
     >
       <Edit1 className="w-4 h-4 [&>path]:stroke-text-third" />

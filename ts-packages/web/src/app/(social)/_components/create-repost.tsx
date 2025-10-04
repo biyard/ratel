@@ -85,7 +85,7 @@ export function CreateRePost() {
           html_contents: editorRef.current!.getHTML(),
           quote_feed_id: originalFeedId,
           parent_id: authorId,
-          user_id: User?.id,
+          user_id: User?.pk,
         },
       });
 
@@ -392,14 +392,14 @@ export function CreateRePost() {
 }
 
 interface RePostDraftContextType {
-  originalFeedId: number | null;
-  setOriginalFeedId: (id: number | null) => void;
+  originalFeedId: string | null;
+  setOriginalFeedId: (id: string | null) => void;
   authorName?: string;
   authorProfileUrl?: string;
   setAuthorName: (name: string) => void;
   setAuthorProfileUrl: (url: string) => void;
-  authorId: number | null;
-  setAuthorId: (id: number | null) => void;
+  authorId: string | null;
+  setAuthorId: (id: string | null) => void;
   industry?: string;
   setIndustry: (name: string) => void;
   expand: boolean;
@@ -432,8 +432,8 @@ const RePostDraftContext = createContext<RePostDraftContextType | undefined>(
 export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [originalFeedId, setOriginalFeedId] = useState<number | null>(null);
-  const [authorId, setAuthorId] = useState<number | null>(null);
+  const [originalFeedId, setOriginalFeedId] = useState<string | null>(null);
+  const [authorId, setAuthorId] = useState<string | null>(null);
   const [authorName, setAuthorName] = useState<string>();
   const [authorProfileUrl, setAuthorProfileUrl] = useState<string>();
   const [industry, setIndustry] = useState<string>();

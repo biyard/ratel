@@ -18,13 +18,7 @@ import { useObserver } from '@/hooks/use-observer';
 // Duplicated from src/app/%28social%29/drafts/page.client.tsx
 // Should be moved to a shared location
 
-export default function TeamDraftPage({
-  teamId,
-  username,
-}: {
-  teamId: number;
-  username: string;
-}) {
+export default function TeamDraftPage({ username }: { username: string }) {
   const t = useTranslations('Team');
   const { data: team } = useTeamByUsername(username);
 

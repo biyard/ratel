@@ -1,9 +1,8 @@
 pub mod auth;
 pub mod axum;
 
-use http::Method;
 pub use tower_http::cors;
-use tower_http::cors::{AllowHeaders, AllowOrigin, CorsLayer};
+use tower_http::cors::{AllowHeaders, AllowMethods, AllowOrigin, CorsLayer};
 
 mod docs;
 use std::sync::Arc;
@@ -50,7 +49,7 @@ pub async fn serve(
         CorsLayer::new()
             .allow_origin(AllowOrigin::mirror_request())
             .allow_credentials(true)
-            .allow_methods([Method::GET, Method::POST, Method::OPTIONS])
+            .allow_methods(AllowMethods::mirror_request())
             .allow_headers(AllowHeaders::mirror_request()),
     );
     serve_wo_cors_layer(_tcp_listener, app).await

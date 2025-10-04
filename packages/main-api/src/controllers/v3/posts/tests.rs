@@ -88,6 +88,8 @@ async fn test_create_post_by_user() {
         path: &path,
         headers: test_user.1.clone(),
         body: {
+            "title": title,
+            "content": title,
             "publish": true
         }
     };

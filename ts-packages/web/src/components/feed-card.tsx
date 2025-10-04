@@ -8,10 +8,7 @@ import TimeAgo from './time-ago';
 import DOMPurify from 'dompurify';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useApiCall } from '@/lib/api/use-send';
-import { ratelApi } from '@/lib/api/ratel_api';
 import { UserType } from '@/lib/api/models/user';
-import Image from 'next/image';
 import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
 import { Button } from './ui/button';
@@ -28,31 +25,12 @@ import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { useTranslations } from 'next-intl';
-import { BoosterType } from '@/lib/api/models/notice';
 import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
+import { likePost, PostResponse } from '@/lib/api/ratel/posts.v3';
+import { BoosterType } from '@/types/booster-type';
 
 export interface FeedCardProps {
-  id: string;
-  industry: string;
-  title: string;
-  contents: string;
-  author_profile_url: string;
-  author_name: string;
-  author_type: UserType;
-  url: string[];
-  created_at: number;
-
-  likes: number;
-  is_liked: boolean;
-  comments: number;
-  rewards: number;
-  shares: number;
-
-  space_id?: string;
-  space_type?: SpaceType;
-  booster_type?: BoosterType;
-  author_id: string;
-  user_id: number;
+  post: PostResponse;
 
   onRepostThought?: () => void;
   onRepost?: (e: React.MouseEvent) => void;
@@ -62,21 +40,19 @@ export interface FeedCardProps {
 }
 
 export default function FeedCard(props: FeedCardProps) {
-  const { post } = useApiCall();
-  const { data: User } = useSuspenseUserInfo();
+  const { post } = props;
 
   const { openPostEditorPopup } = usePostEditorContext();
 
-  const [localLikes, setLocalLikes] = useState(props.likes);
-  const [localIsLiked, setLocalIsLiked] = useState(props.is_liked);
+  const [localLikes, setLocalLikes] = useState(post.likes);
+  const [localIsLiked, setLocalIsLiked] = useState(post.liked);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [localShares, setLocalShares] = useState(props.shares);
+  const [localShares, setLocalShares] = useState(post.shares);
 
   // const t = useTranslations('Feeds');
 
   const {
     setAuthorName,
-    setIndustry,
     setAuthorProfileUrl,
     setFeedContent,
     setFeedImageUrl,
@@ -87,10 +63,10 @@ export default function FeedCard(props: FeedCardProps) {
 
   // Sync with props when they change
   useEffect(() => {
-    setLocalLikes(props.likes);
-    setLocalIsLiked(props.is_liked);
-    setLocalShares(props.shares);
-  }, [props.likes, props.is_liked, props.shares]);
+    setLocalLikes(post.likes);
+    setLocalIsLiked(post.liked);
+    setLocalShares(post.shares);
+  }, [post.likes, post.liked, post.shares]);
 
   const handleLike = async (value: boolean) => {
     if (isProcessing) return; // Prevent multiple clicks
@@ -101,16 +77,14 @@ export default function FeedCard(props: FeedCardProps) {
     setLocalLikes((prev) => (value ? prev + 1 : prev - 1));
 
     try {
-      await post(ratelApi.feeds.likePost(props.id), {
-        like: { value },
-      });
+      await likePost(post.pk, value);
 
       // Success - trigger callbacks
       props.onLikeClick?.(value);
     } catch (error) {
       // Revert optimistic update on error
-      setLocalIsLiked(props.is_liked);
-      setLocalLikes(props.likes);
+      setLocalIsLiked(post.liked);
+      setLocalLikes(post.likes);
       console.error('Failed to update like:', error);
     } finally {
       setIsProcessing(false);
@@ -122,14 +96,15 @@ export default function FeedCard(props: FeedCardProps) {
     setIsProcessing(true);
 
     try {
-      await post(ratelApi.feeds.repost(), {
-        repost: {
-          parent_id: props.id,
-          user_id: User.id,
-          html_contents: '',
-          quote_feed_id: null,
-        },
-      });
+      // TODO: Implement repost with v3
+      /* await post(ratelApi.feeds.repost(), {
+       *   repost: {
+       *     parent_id: props.id,
+       *     user_id: User.id,
+       *     html_contents: '',
+       *     quote_feed_id: null,
+       *   },
+       * }); */
 
       setLocalShares((prev) => prev + 1);
       showSuccessToast('Reposted successfully');
@@ -142,17 +117,16 @@ export default function FeedCard(props: FeedCardProps) {
   };
 
   const handleRepostThought = () => {
-    setAuthorId(props.author_id);
-    setAuthorName(props.author_name);
-    setIndustry(props.industry);
-    setAuthorProfileUrl(props.author_profile_url);
-    setFeedContent(props.contents);
-    setFeedImageUrl(props.url || null);
-    setOriginalFeedId(props.id);
+    setAuthorId(post.author_pk);
+    setAuthorName(post.author_display_name);
+    setAuthorProfileUrl(post.author_profile_url);
+    setFeedContent(post.html_contents);
+    setFeedImageUrl(post.urls[0] || null);
+    setOriginalFeedId(post.pk);
     setExpand(true);
   };
 
-  const handleEditPost = (postId: number) => async (e: React.MouseEvent) => {
+  const handleEditPost = (postId: string) => async (e: React.MouseEvent) => {
     e?.preventDefault();
     e?.stopPropagation();
     try {
@@ -162,22 +136,22 @@ export default function FeedCard(props: FeedCardProps) {
     }
   };
 
-  const href = props.space_id
-    ? route.space(props.space_id)
-    : route.threadByFeedId(props.id);
+  const href = post.space_pk
+    ? route.space(post.space_pk)
+    : route.threadByFeedId(post.pk);
 
   return (
     <Col className="relative rounded-[10px] bg-card-bg-secondary border border-card-enable-border">
       <Link href={href} className="block">
-        <FeedBody {...props} onEdit={handleEditPost(props.id)} />
+        <FeedBody post={post} onEdit={handleEditPost(post.pk)} />
       </Link>
       <FeedFooter
-        space_id={props.space_id}
-        space_type={props.space_type}
-        booster_type={props.booster_type}
+        space_id={post.space_pk}
+        space_type={post.space_type}
+        booster_type={post.booster}
         likes={localLikes}
-        comments={props.comments}
-        rewards={props.rewards}
+        comments={post.comments}
+        rewards={post.rewards || 0}
         shares={localShares}
         is_liked={localIsLiked}
         isLikeProcessing={isProcessing}
@@ -190,50 +164,33 @@ export default function FeedCard(props: FeedCardProps) {
 }
 
 interface FeedBodyProps {
-  id: number;
-  industry: string;
-  title: string;
-  contents: string;
-  author_profile_url: string;
-  author_name: string;
-  author_type: UserType;
-  url?: string;
-  created_at: number;
-  author_id: number;
-  user_id: number;
-  onboard: boolean;
-  space_id?: number;
-  space_type?: SpaceType;
-  currentUserId?: number;
+  post: PostResponse;
   onEdit?: (e: React.MouseEvent) => void | Promise<void>;
 }
 
-export function FeedBody({
-  title,
-  contents,
-  author_name,
-  author_profile_url,
-  url,
-  created_at,
-  author_type,
-  space_id,
-  space_type,
-  onboard,
-  onEdit = () => {},
-  author_id,
-  user_id,
-}: FeedBodyProps) {
+export function FeedBody({ post, onEdit = () => {} }: FeedBodyProps) {
+  const { data: user } = useSuspenseUserInfo();
+  const {
+    title,
+    html_contents,
+    urls,
+    author_display_name: author_name,
+    author_profile_url,
+    author_type: author_user_type,
+    author_pk,
+    created_at,
+    space_pk,
+    space_type,
+  } = post;
+
   return (
     <Col className="pt-5 pb-2.5">
       <Row className="justify-between px-5">
         <div className="flex flex-row justify-start items-center gap-2.5">
-          {space_id && space_type ? <SpaceTag /> : <></>}
-          {/* FIXME: Currently, all posts are labeled as CRYPTO. */}
-          {/* <IndustryTag industry={industry} /> */}
-          {onboard && <OnboardingTag />}
+          {space_pk && space_type ? <SpaceTag /> : <></>}
         </div>
 
-        <div>{user_id === author_id && <EditButton onClick={onEdit} />}</div>
+        <div>{user?.pk === author_pk && <EditButton onClick={onEdit} />}</div>
       </Row>
       <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-text-primary px-5">
         {title}
@@ -242,12 +199,15 @@ export function FeedBody({
         <UserBadge
           profile_url={author_profile_url}
           name={author_name}
-          author_type={author_type}
+          author_type={author_user_type}
         />
         <TimeAgo timestamp={created_at} />
       </Row>
       <Row className="justify-between px-5"></Row>
-      <FeedContents contents={contents} url={url} />
+      <FeedContents
+        contents={html_contents}
+        url={urls.length > 0 ? urls[0] : undefined}
+      />
     </Col>
   );
 }
@@ -275,11 +235,10 @@ export function FeedContents({
       {url && (
         <div className="px-5">
           <div className="relative w-full max-h-80 aspect-video">
-            <Image
+            <img
               src={url}
               alt="Uploaded image"
-              fill
-              className="object-cover rounded-[8px]"
+              className="object-cover w-full rounded-[8px]"
               sizes="100vw"
             />
           </div>
@@ -315,11 +274,9 @@ export function UserBadge({
   return (
     <Row className="w-fit items-center med-16 text-text-primary">
       {profile_url != '' ? (
-        <Image
+        <img
           src={profile_url}
           alt="User Profile"
-          width={24}
-          height={24}
           className={
             author_type == UserType.Team
               ? 'w-6 h-6 rounded-sm object-cover'
@@ -398,7 +355,7 @@ export function JoinNowButton({ onClick }: { onClick: () => void }) {
 }
 
 interface FeedFooterProps {
-  space_id?: number;
+  space_id?: string;
   space_type?: SpaceType;
   booster_type?: BoosterType;
   likes: number;

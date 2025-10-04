@@ -30,6 +30,7 @@ pub struct Post {
     pub html_contents: String,
     pub post_type: PostType,
 
+    #[dynamo(index = "gsi5", sk)]
     pub status: PostStatus,
 
     #[dynamo(index = "gsi6", name = "find_by_visibility", pk)]
@@ -46,10 +47,17 @@ pub struct Post {
         index = "gsi2",
         pk
     )]
+    #[dynamo(
+        prefix = "USER_STATUS",
+        index = "gsi5",
+        name = "find_by_user_and_status",
+        pk
+    )]
     pub user_pk: Partition,
     pub author_display_name: String,
     pub author_profile_url: String,
     pub author_username: String,
+    pub author_type: UserType,
 
     // #[dynamo(prefix = "SPACE_PK", name = "find_by_space_pk", index = "gsi2", pk)]
     pub space_pk: Option<Partition>,
@@ -82,6 +90,7 @@ impl Post {
             display_name,
             profile_url,
             username,
+            user_type,
         } = author.into();
 
         Self {
@@ -102,6 +111,7 @@ impl Post {
             author_display_name: display_name,
             author_profile_url: profile_url,
             author_username: username,
+            author_type: user_type,
 
             space_pk: None,
             space_type: None,

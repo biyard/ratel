@@ -14,11 +14,12 @@ use bdk::prelude::*;
 #[repr(u8)]
 pub enum SpaceType {
     #[default]
-    None = 0,
-
-    Poll = 1,
-    Notice = 2,
+    Legislation = 1,
+    Poll = 2,
     Deliberation = 3,
-    SprintLeague = 4,
-    Artwork = 5,
+    Nft = 4,
+    Commitee = 5,
+    SprintLeague = 6,
+    Notice = 7,
+    Dagit = 8,
 }

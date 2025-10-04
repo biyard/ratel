@@ -29,116 +29,6 @@ use tower_sessions::{
     cookie::time::{Duration, OffsetDateTime},
 };
 
-macro_rules! migrate {
-    ($pool:ident, $($table:ident),* $(,)?) => {
-        {
-            $(
-                let t = $table::get_repository($pool.clone());
-                t.create_this_table().await?;
-            )*
-            $(
-                let t = $table::get_repository($pool.clone());
-                t.create_related_tables().await?;
-            )*
-        }
-    };
-}
-
-pub async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
-    tracing::info!("Running migration");
-
-    migrate!(
-        pool,
-        User,
-        Group,
-        GroupMember,
-        // AssemblyMember,
-        // BillWriter,
-        // Vote,
-        // Proposer,
-        // Support,
-        Subscription,
-        // PresidentialCandidate,
-        // ElectionPledge,
-        // ElectionPledgeLike,
-        Industry,
-        UserIndustry,
-        Feed,
-        FeedUser,
-        FeedShare,
-        RedeemCode,
-        Space,
-        SpaceLikeUser,
-        FeedBookmarkUser,
-        SpaceShareUser,
-        Survey,
-        SurveyResponse,
-        SpaceDraft,
-        Discussion,
-        DiscussionParticipant,
-        DiscussionMember,
-        Elearning,
-        SpaceUser,
-        SpaceContract,
-        SpaceHolder,
-        SpaceGroup,
-        SpaceMember,
-        SprintLeague,
-        SprintLeaguePlayer,
-        SprintLeagueVote,
-        TeamMember,
-        News,
-        Purchase,
-        // Quiz,
-        // QuizResult,
-        // ElectionPledgeQuizLike,
-        // ElectionPledgeQuizDislike,
-        Promotion,
-        // AdvocacyCampaign,
-        // AdvocacyCampaignAuthor,
-        // AdvocacyCampaignVoter,
-        EventLog,
-        Badge,
-        UserBadge,
-        UserPoint,
-        SpaceBadge,
-        Onboard,
-        Mynetwork,
-        ConnectionInvitationDecline,
-        UserSuggestionDismissal,
-        Verification,
-        Notification,
-        NoticeQuizAnswer,
-        NoticeQuizAttempt,
-        Dagit,
-        Artwork,
-        Oracle,
-        DagitOracle,
-        DagitArtwork,
-        Consensus,
-        ConsensusVote,
-        ArtworkCertification,
-        ArtworkDetail,
-        Conversation,
-        Message,
-        ConversationParticipant,
-        AuthClient,
-        AuthCode,
-        Post,
-        TelegramChannel,
-        TelegramToken,
-    );
-
-    // Create DynamoDB tables
-    // tracing::info!("Creating DynamoDB tables");
-    // let dynamo_tables = get_user_tables();
-    // create_dynamo_tables(dynamo_tables).await?;
-    // tracing::info!("DynamoDB tables created successfully");
-
-    tracing::info!("Migration done");
-    Ok(())
-}
-
 pub async fn db_init(url: &'static str, max_conn: u32) -> Result<PgPool> {
     let url = if let Ok(host) = env::var("PGHOST") {
         let url = if let Some(at_pos) = url.rfind('@') {
@@ -187,9 +77,6 @@ pub async fn api_main() -> Result<Router> {
         panic!("Database is not initialized. Call init() first.");
     };
 
-    // if conf.migrate {
-    //     migration(&pool).await?;
-    // }
     let is_local = conf.env == "local" || conf.env == "test";
     let aws_sdk_config = get_aws_config();
     let dynamo_client = DynamoClient::new(Some(aws_sdk_config.clone()));

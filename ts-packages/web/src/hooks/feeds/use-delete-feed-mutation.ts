@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api/apiFetch';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { config } from '@/config';
 import { removePostRequest } from '@/lib/api/models/feeds/remove-post';
+import { deletePost } from '@/lib/api/ratel/posts.v3';
 
 export async function deleteFeed(feedId: number): Promise<void> {
   const { data } = await apiFetch<void>(
@@ -31,11 +32,11 @@ export function useDeleteFeedMutation(status: FeedStatus, targetId: number) {
     mutationFn: async ({
       feedId,
     }: {
-      feedId: number;
+      feedId: string;
       feedType: FeedType;
       parentId?: number;
     }) => {
-      await deleteFeed(feedId);
+      await deletePost(feedId);
       return { feedId };
     },
 
