@@ -3,12 +3,12 @@ use crate::models::user::User;
 use crate::types::list_items_response::ListItemsResponse;
 use crate::types::{EntityType, Visibility};
 use crate::{AppState, Error2};
+use aide::NoApi;
 use bdk::prelude::*;
 use by_axum::axum::{
     Json,
     extract::{Query, State},
 };
-use dto::aide::NoApi;
 use serde::Deserialize;
 use validator::Validate;
 
@@ -37,18 +37,11 @@ pub async fn list_posts_handler(
     }
     let (posts, bookmark) =
         Post::find_by_visibility(&dynamo.client, Visibility::Public, query_options).await?;
-    tracing::info!(
+    tracing::debug!(
         "list_posts_handler: found {} posts, next bookmark = {:?}",
         posts.len(),
         bookmark
     );
-
-    if posts.is_empty() {
-        return Ok(Json(ListItemsResponse {
-            items: vec![],
-            bookmark: None,
-        }));
-    }
 
     let likes = if let Some(user) = user {
         let sk = EntityType::PostLike(user.pk.to_string());

@@ -1,30 +1,21 @@
-import Image from 'next/image';
 import Link from 'next/link';
 import { route } from '@/route';
 import { useTranslations } from 'next-intl';
+import { TopPromotionResponse } from '@/lib/api/ratel/promotions.v3';
 
 type PromotionCardProps = {
-  promotion: {
-    image_url: string;
-    name: string;
-  };
-  feed?: {
-    id: number;
-    spaces?: Array<{
-      id: number;
-      space_type: number;
-    }>;
-  };
+  promotion: TopPromotionResponse;
 };
 
-export default function PromotionCard({ promotion, feed }: PromotionCardProps) {
+export default function PromotionCard({ promotion }: PromotionCardProps) {
   const t = useTranslations('Home');
+  const { feed_id, image_url, name, space_id, space_type } = promotion;
   const getHref = () => {
-    if (!feed?.spaces?.length) return route.threadByFeedId(feed?.id || 0);
+    if (!space_id) return route.threadByFeedId(feed_id);
 
-    return feed.spaces[0].space_type === 3
-      ? route.deliberationSpaceById(feed.spaces[0].id)
-      : route.commiteeSpaceById(feed.spaces[0].id);
+    return space_type === 3
+      ? route.deliberationSpaceById(space_id)
+      : route.commiteeSpaceById(space_id);
   };
 
   return (
@@ -37,17 +28,14 @@ export default function PromotionCard({ promotion, feed }: PromotionCardProps) {
         className="flex items-center gap-2.5 hover:bg-btn-hover rounded p-2 transition-colors"
         aria-label={`View ${promotion.name} promotion`}
       >
-        <Image
-          src={promotion.image_url}
-          alt={promotion.name}
-          width={60}
-          height={60}
-          className="rounded object-cover cursor-pointer"
-          priority
+        <img
+          src={image_url}
+          alt={name}
+          className="w-25 h-25 rounded object-cover cursor-pointer"
         />
         <div>
           <div className="font-medium text-text-primary text-base/[25px]">
-            {promotion.name}
+            {name}
           </div>
         </div>
       </Link>

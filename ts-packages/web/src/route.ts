@@ -23,18 +23,21 @@ export const route = {
   teamMembers: (username: string) => `/teams/${username}/members`,
   teamSettings: (username: string) => `/teams/${username}/settings`,
   teamDrafts: (username: string) => `/teams/${username}/drafts`,
-  space: (spaceId: number) => `/spaces/${spaceId}`,
-  commiteeSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
-  deliberationSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
-  noticeSpaceById: (spaceId: number) => `/spaces/${spaceId}`,
-  threadByFeedId: (feedId: number) => {
-    return `/threads/${feedId}`;
+  space: (spaceId: number | string) => `/spaces/${encodeURIComponent(spaceId)}`,
+  commiteeSpaceById: (spaceId: number | string) =>
+    `/spaces/${encodeURIComponent(spaceId)}`,
+  deliberationSpaceById: (spaceId: number | string) =>
+    `/spaces/${encodeURIComponent(spaceId)}`,
+  noticeSpaceById: (spaceId: number | string) =>
+    `/spaces/${encodeURIComponent(spaceId)}`,
+  threadByFeedId: (feedId: number | string) => {
+    return `/threads/${encodeURIComponent(feedId)}`;
   },
   discussionById: (spaceId: number, discussionId: number) =>
     `/spaces/${spaceId}/discussions/${discussionId}`,
 
-  telegramSprintLeague: (space_id: number) =>
-    `/telegram/sprint-league/${space_id}`,
+  telegramSprintLeague: (space_id: number | string) =>
+    `/telegram/sprint-league/${encodeURIComponent(space_id)}`,
   telegramSubscribe: (chat_id: number, lang?: string) => {
     return `/telegram/subscribe?chat_id=${chat_id}${lang ? `&lang=${lang}` : ''}`;
   },

@@ -1,31 +1,21 @@
 import { useMutation, InfiniteData } from '@tanstack/react-query';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
-import {
-  Feed,
-  FeedListResponse,
-  FeedStatus,
-  FeedType,
-} from '@/lib/api/models/feeds';
+import { Feed, FeedListResponse, FeedStatus } from '@/lib/api/models/feeds';
 import { showErrorToast } from '@/lib/toast';
 import { apiFetch } from '@/lib/api/apiFetch';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { config } from '@/config';
-import { createDraftRequest } from '@/lib/api/models/feeds/create-draft';
 import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
 import { UpdatePostRequest } from '@/lib/api/models/feeds/update-post';
+import {
+  createPost,
+  CreatePostResponse,
+  publishPost,
+} from '@/lib/api/ratel/posts.v3';
 
-export async function createDraft(user_id: number): Promise<Feed> {
-  const res = await apiFetch<Feed>(
-    `${config.api_url}${ratelApi.feeds.createDraft()}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(createDraftRequest(FeedType.Post, user_id)),
-    },
-  );
-  if (!res.data) throw new Error('Failed to create draft');
-  return res.data;
+export async function createDraft(): Promise<CreatePostResponse> {
+  return createPost();
 }
 
 export async function updatePost(
@@ -73,34 +63,34 @@ export function useDraftMutations(listId: number) {
   const queryClient = getQueryClient();
 
   const createMutation = useMutation({
-    mutationFn: (targetId: number) => createDraft(targetId),
+    mutationFn: () => createDraft(),
     onSuccess: (newDraft) => {
-      queryClient.setQueryData(feedKeys.detail(newDraft.id), newDraft);
+      queryClient.setQueryData(feedKeys.detail(newDraft.post_pk), newDraft);
 
-      const listQueryKey = feedKeys.list({
-        userId: listId,
-        status: FeedStatus.Draft,
-      });
+      // const listQueryKey = feedKeys.list({
+      //   userId: listId,
+      //   status: FeedStatus.Draft,
+      // });
 
-      queryClient.setQueriesData<InfiniteData<FeedListResponse>>(
-        { queryKey: listQueryKey },
-        (oldData) => {
-          if (!oldData) {
-            return {
-              pageParams: [1],
-              pages: [{ posts: [newDraft], is_ended: false }],
-            };
-          }
-          const newPages = [...oldData.pages];
-          if (newPages.length === 0) {
-            newPages.push({ posts: [newDraft], is_ended: false });
-          } else {
-            const first = newPages[0];
-            newPages[0] = { ...first, posts: [newDraft, ...first.posts] };
-          }
-          return { ...oldData, pages: newPages };
-        },
-      );
+      // queryClient.setQueriesData<InfiniteData<FeedListResponse>>(
+      //   { queryKey: listQueryKey },
+      //   (oldData) => {
+      //     if (!oldData) {
+      //       return {
+      //         pageParams: [1],
+      //         pages: [{ posts: [newDraft], is_ended: false }],
+      //       };
+      //     }
+      //     const newPages = [...oldData.pages];
+      //     if (newPages.length === 0) {
+      //       newPages.push({ posts: [newDraft], is_ended: false });
+      //     } else {
+      //       const first = newPages[0];
+      //       newPages[0] = { ...first, posts: [newDraft, ...first.posts] };
+      //     }
+      //     return { ...oldData, pages: newPages };
+      //   },
+      // );
     },
     onError: (error: Error) => {
       throw new Error(error.message || 'Failed to create draft');
@@ -113,7 +103,7 @@ export function useDraftMutations(listId: number) {
       req,
       teamId = undefined,
     }: {
-      postId: number;
+      postId: string;
       req: Partial<UpdatePostRequest>;
       teamId?: number;
     }) => {
@@ -211,11 +201,11 @@ export function useDraftMutations(listId: number) {
   });
 
   const publishMutation = useMutation({
-    mutationFn: async ({ draftId }: { draftId: number }) => {
-      await publishDraft(draftId);
+    mutationFn: async ({ draftId }: { draftId: string }) => {
+      await publishPost(draftId);
       return draftId;
     },
-    onSuccess: (draftId: number) => {
+    onSuccess: (draftId: string) => {
       queryClient.invalidateQueries({ queryKey: feedKeys.lists() });
       queryClient.invalidateQueries({ queryKey: feedKeys.detail(draftId) });
     },

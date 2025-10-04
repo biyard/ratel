@@ -4,14 +4,9 @@ import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
 import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
 import { useObserver } from '@/hooks/use-observer';
-import { UserType } from '@/lib/api/models/user';
 import React, { useCallback } from 'react';
 
-interface TeamHomeProps {
-  teamId: number;
-}
-
-export default function TeamHome({ teamId }: TeamHomeProps) {
+export default function TeamHome() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteFeeds();
 
@@ -31,34 +26,31 @@ export default function TeamHome({ teamId }: TeamHomeProps) {
       </div>
     );
   }
-  const flattedPosts = data?.pages.flatMap((page) => page.posts) ?? [];
+  const flattedPosts = data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
     <div className="flex-1 flex max-mobile:px-[10px]">
       <Col className="flex-1">
         {flattedPosts.map((post) => (
           <FeedCard
-            key={`feed-${post.id}`}
-            contents={post.html_contents || ''}
-            author_profile_url={post?.author?.[0]?.profile_url || ''}
-            author_name={post?.author?.[0]?.nickname || ''}
-            author_type={post?.author?.[0]?.user_type || UserType.Anonymous}
-            author_id={post?.author?.[0]?.id || 0}
-            user_id={post.user_id || 0}
-            id={post.id}
-            url={post.url || ''}
-            industry={post.industry?.[0]?.name || ''}
-            title={post.title || ''}
-            created_at={post.created_at || 0}
-            likes={post.likes || 0}
-            is_liked={post.is_liked || false}
-            comments={post.comments || 0}
+            key={`feed-${post.pk}`}
+            contents={post.html_contents}
+            author_profile_url={post.author_profile_url}
+            author_name={post.author_display_name}
+            author_type={post.author_user_type}
+            author_id={post.author_pk}
+            id={post.pk}
+            url={post.urls}
+            title={post.title}
+            created_at={post.created_at}
+            likes={post.likes}
+            is_liked={post.liked}
+            comments={post.comments}
             rewards={post.rewards || 0}
-            shares={post.shares || 0}
-            onboard={post.onboard || false}
-            space_id={post.space?.[0]?.id}
-            space_type={post.space?.[0]?.space_type}
-            booster_type={post.space?.[0]?.booster_type}
+            shares={post.shares}
+            space_id={post.space_pk}
+            space_type={post.space_type}
+            booster_type={post.booster}
           />
         ))}
 

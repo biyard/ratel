@@ -9,27 +9,44 @@ export async function call<T, R>(
   body?: T,
 ): Promise<R> {
   const apiBaseUrl: string = config.api_url;
+  const isServer = typeof window === 'undefined';
+  let headers = undefined;
+
+  if (isServer) {
+    const { headers: getHeaders } = await import('next/headers');
+    const headersList = await getHeaders();
+    const clientCookies = headersList.get('cookie');
+    if (clientCookies) {
+      headers = new Headers();
+      headers.set('Cookie', clientCookies);
+    }
+  }
 
   let response;
   if (body) {
+    if (!headers) {
+      headers = new Headers();
+    }
+    headers.set('Content-Type', 'application/json');
     response = await fetch(`${apiBaseUrl}${path}`, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       credentials: 'include',
       body: body ? JSON.stringify(body) : undefined,
     });
   } else {
     response = await fetch(`${apiBaseUrl}${path}`, {
       method,
+      headers,
       credentials: 'include',
     });
   }
 
   if (!response.ok) {
     const errorData = await response
-      .text()
+      .json()
       .catch((e) => `Failed to fetch and parse error ${e}`);
-    logger.error('Failed to fetch and parse error ', errorData);
+    logger.error('request error on call', errorData);
 
     throw new RatelSdkError(errorData);
   }

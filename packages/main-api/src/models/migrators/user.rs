@@ -151,26 +151,26 @@ pub async fn migrate_user(
             serde_json::from_str(&(theme as i32).to_string()).unwrap_or(Theme::SystemDefault)
     };
 
-    user.create(cli).await?;
+    let _ = user.create(cli).await;
 
     let user_principal = UserPrincipal::new(pk.clone(), principal);
-    user_principal.create(cli).await?;
+    let _ = user_principal.create(cli).await;
     if !referral_code.is_empty() {
-        UserReferralCode::new(pk.clone(), referral_code)
+        let _ = UserReferralCode::new(pk.clone(), referral_code)
             .create(cli)
-            .await?;
+            .await;
     };
 
     if let Some(tid) = telegram_id {
-        UserTelegram::new(pk.clone(), tid, telegram_raw)
+        let _ = UserTelegram::new(pk.clone(), tid, telegram_raw)
             .create(cli)
-            .await?;
+            .await;
     };
 
     if !evm_address.is_empty() {
-        UserEvmAddress::new(pk.clone(), evm_address)
+        let _ = UserEvmAddress::new(pk.clone(), evm_address)
             .create(cli)
-            .await?;
+            .await;
     };
 
     for T {
@@ -181,7 +181,7 @@ pub async fn migrate_user(
         ..
     } in teams
     {
-        UserTeam::new(
+        let _ = UserTeam::new(
             pk.clone(),
             Team {
                 display_name: nickname,
@@ -192,7 +192,7 @@ pub async fn migrate_user(
             },
         )
         .create(cli)
-        .await?;
+        .await;
     }
 
     for G {
@@ -202,7 +202,7 @@ pub async fn migrate_user(
         ..
     } in groups
     {
-        UserTeamGroup::new(
+        let _ = UserTeamGroup::new(
             pk.clone(),
             TeamGroup {
                 pk: Partition::Team(creator_id.to_string()),
@@ -212,7 +212,7 @@ pub async fn migrate_user(
             },
         )
         .create(cli)
-        .await?;
+        .await;
     }
 
     let mut rels = vec![];

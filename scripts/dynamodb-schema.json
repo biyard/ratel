@@ -10,10 +10,6 @@
       "AttributeType": "S"
     },
     {
-      "AttributeName": "type",
-      "AttributeType": "S"
-    },
-    {
       "AttributeName": "gsi1_pk",
       "AttributeType": "S"
     },

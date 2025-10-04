@@ -26,7 +26,7 @@ export default function DraftPage() {
   const { openPostEditorPopup } = usePostEditorContext();
   const { mutateAsync } = useDeleteFeedMutation(user_id, FeedStatus.Draft);
   const removeDraft = async (
-    feedId: number,
+    postPk: string,
     feedType: FeedType,
     parentId?: number,
   ) => {

@@ -73,7 +73,7 @@ export const feedKeys = {
     return [...feedKeys.lists(), sortObjectKeys(nonNullFilters)] as const;
   },
   details: () => [...feedKeys.all, 'detail'] as const,
-  detail: (id: number) => [...feedKeys.details(), id] as const,
+  detail: (id: number | string) => [...feedKeys.details(), id] as const,
 };
 
 // Example Usage

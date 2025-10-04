@@ -79,6 +79,7 @@ impl SpaceCommon {
             display_name,
             profile_url,
             username,
+            ..
         } = author.into();
         Self {
             pk,

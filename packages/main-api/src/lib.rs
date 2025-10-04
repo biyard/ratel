@@ -4,9 +4,13 @@ pub type Error2 = crate::error::Error;
 
 pub mod constants;
 pub mod error;
+pub mod route_m3;
 pub mod controllers {
     pub mod mcp;
     pub mod v1;
+    pub mod m3 {
+        pub mod feeds;
+    }
     pub mod v2 {
         pub mod users {
             pub mod connect_telegram;
@@ -128,10 +132,14 @@ pub mod controllers {
         }
     }
     pub mod v3 {
+        pub mod promotions {
+            pub mod get_top_promotion;
+        }
         pub mod me {
             pub mod get_info;
             pub mod update_user;
 
+            pub mod list_my_posts;
             #[cfg(test)]
             pub mod tests;
         }
