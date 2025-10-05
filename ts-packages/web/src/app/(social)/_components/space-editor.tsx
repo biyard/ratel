@@ -70,17 +70,11 @@ export default function SpaceCommentEditor({
       // Prevent double submission
       if (isSubmitting) return;
 
-      // Compute guarded targetId with proper fallback
-      const targetId =
-        postId > 0
-          ? postId
-          : spaceId > 0
-            ? spaceId
-            : parentId > 0
-              ? parentId
-              : undefined;
+      // Determine the target ID based on whether this is a reply or a new comment
+      const targetId = parentId || postId || spaceId;
 
-      if (!targetId) {
+      // Validate that we have all required fields
+      if (!user?.id || !targetId) {
         showErrorToast('Missing required information to post comment');
         return;
       }
@@ -90,8 +84,8 @@ export default function SpaceCommentEditor({
 
         await mutateAsync({
           userId: user.id,
-          parentId: targetId, // Use computed targetId
-          postId: targetId, // Use the same targetId for both fields
+          parentId: parentId || 0,
+          postId: postId || spaceId,
           content,
         });
 
@@ -102,8 +96,8 @@ export default function SpaceCommentEditor({
         // Call onSuccess callback if provided
         onSuccess?.();
         showSuccessToast('Comment posted successfully');
-      } catch (error) {
-        logger.debug('Failed to post comment', error);
+      } catch (_error) {
+        logger.debug('Failed to post comment', _error);
         showErrorToast('Failed to post comment');
       } finally {
         setIsSubmitting(false);
@@ -111,7 +105,6 @@ export default function SpaceCommentEditor({
     },
     [
       content,
-      isContentValid,
       isSubmitting,
       mutateAsync,
       onSuccess,
@@ -148,8 +141,8 @@ export default function SpaceCommentEditor({
 
       // Return the normalized URL
       return url.toString();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
+      logger.debug('Failed to normalize and validate URL', error);
       // Return null for any parsing errors
       return null;
     }

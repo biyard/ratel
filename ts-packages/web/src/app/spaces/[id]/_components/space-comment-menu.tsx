@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useCallback } from 'react';
-import { useParams } from 'next/navigation';
+// import { useParams } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import CommentIcon from '@/assets/icons/comment.svg';
@@ -169,10 +169,9 @@ const CommentBox = ({
 };
 
 export default function SideCommentMenu() {
-  const params = useParams();
+  // const params = useParams();
   // Will be used when implementing the API call
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const spaceId = Number(params.id);
+  // const _spaceId = Number(params.id);
   const t = useTranslations('Threads');
 
   // For now, using empty data - to replace with actual API call in production
