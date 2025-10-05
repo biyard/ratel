@@ -4,7 +4,9 @@ use crate::{
 };
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
+#[derive(
+    Debug, Clone, Default, serde::Deserialize, serde::Serialize, JsonSchema, aide::OperationIo,
+)]
 pub struct PostResponse {
     pub pk: Partition,
 

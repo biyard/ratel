@@ -11,6 +11,7 @@ pub mod visibility;
 
 pub mod author;
 pub mod file;
+pub mod list_items_query;
 pub mod list_items_response;
 pub mod relationship;
 pub mod sorted_visibility;
@@ -46,6 +47,9 @@ pub use space_status::*;
 pub use space_type::*;
 
 pub use author::*;
+pub use list_items_query::*;
+pub use list_items_response::*;
+pub use sorted_visibility::*;
 pub use space_visibility::*;
 pub use survey_answer::*;
 pub use survey_question::*;

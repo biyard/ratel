@@ -1,6 +1,8 @@
 // use crate::controllers::v2::posts::list_posts::ListPostsQueryParams;
 use crate::controllers::v3::auth::verification::verify_code::VerifyCodeResponse;
+use crate::controllers::v3::me::list_my_drafts::list_my_drafts_handler;
 use crate::controllers::v3::me::list_my_posts::list_my_posts_handler;
+use crate::controllers::v3::posts::post_response::PostResponse;
 use crate::controllers::v3::promotions::get_top_promotion::get_top_promotion_handler;
 use crate::controllers::v3::spaces::create_space::{CreateSpaceResponse, create_space_handler};
 use crate::controllers::v3::spaces::delete_space::delete_space_handler;
@@ -139,7 +141,28 @@ pub fn route(
                         ),
                     ),
                 )
-                .route("/posts", get(list_my_posts_handler)),
+                .route(
+                    "/posts",
+                    get_with(
+                        list_my_posts_handler,
+                        api_docs!(
+                            Json<ListItemsResponse<PostResponse>>,
+                            "List My Posts",
+                            "List all posts created by the logged-in user"
+                        ),
+                    ),
+                )
+                .route(
+                    "/drafts",
+                    get_with(
+                        list_my_drafts_handler,
+                        api_docs!(
+                            Json<ListItemsResponse<PostResponse>>,
+                            "List My Posts",
+                            "List all posts created by the logged-in user"
+                        ),
+                    ),
+                ),
         )
         .nest(
             "/users",
@@ -160,7 +183,7 @@ pub fn route(
                     .get_with(
                         list_posts_handler,
                         api_docs!(
-                            Json<ListItemsResponse<Post>>,
+                            Json<ListItemsResponse<PostResponse>>,
                             "List Posts",
                             "List all posts"
                         ),
