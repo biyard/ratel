@@ -226,6 +226,7 @@ pub mod controllers {
             pub mod update_team;
 
             pub mod dto;
+            pub mod get_permissions;
             #[cfg(test)]
             pub mod tests;
 

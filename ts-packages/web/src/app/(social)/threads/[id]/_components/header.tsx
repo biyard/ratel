@@ -36,11 +36,11 @@ import { useTranslations } from 'next-intl';
 import { BoosterType } from '@/lib/api/models/notice';
 
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
-import { useLikeFeedMutation } from '@/hooks/feeds/use-like-feed-mutation';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { GroupPermission } from '@/lib/api/models/group';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
 import { useDeletePostMutation } from '@/hooks/feeds/use-delete-post-mutation';
+import { useLikePostMutation } from '@/hooks/feeds/use-like-post-mutation';
 
 export default function Header({ postId }: { postId: string }) {
   const t = useTranslations('Threads');
@@ -48,7 +48,7 @@ export default function Header({ postId }: { postId: string }) {
   const router = useRouter();
   const { teams } = useContext(TeamContext);
   const {
-    data: { post },
+    data: { post, is_liked },
   } = useFeedById(postId);
 
   const { data: user } = useSuspenseUserInfo();
@@ -62,7 +62,7 @@ export default function Header({ postId }: { postId: string }) {
     target = route.space(space_id!);
   }
 
-  const likeMutation = useLikeFeedMutation();
+  const likeMutation = useLikePostMutation();
   const deleteMutation = useDeletePostMutation(
     user.username,
     FeedStatus.Published,
@@ -90,9 +90,7 @@ export default function Header({ postId }: { postId: string }) {
     if (!likeMutation.isPending) {
       await likeMutation.mutateAsync({
         feedId: postId,
-        feedType: post.feed_type,
-        next,
-        parentId: undefined,
+        like: next,
       });
     }
   };
@@ -102,12 +100,12 @@ export default function Header({ postId }: { postId: string }) {
   };
 
   const writeGroupPermission = usePermission(
-    post.author[0]?.id ?? 0,
+    post.author_username,
     GroupPermission.WritePosts,
   ).data.has_permission;
 
   const deletePostPermission = usePermission(
-    post.author[0]?.id ?? 0,
+    post.author_username,
     GroupPermission.DeletePosts,
   ).data.has_permission;
 
@@ -246,13 +244,13 @@ export default function Header({ postId }: { postId: string }) {
         <div className="flex items-center justify-end w-full gap-4">
           {/* Feed Stats */}
           <button
-            onClick={() => handleLike(!post.is_liked)}
+            onClick={() => handleLike(!is_liked)}
             disabled={likeMutation.isPending}
             className={`flex items-center gap-1 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50`}
           >
             <ThumbUp
               className={
-                post.is_liked
+                is_liked
                   ? 'size-5 [&>path]:fill-primary [&>path]:stroke-primary'
                   : 'size-5 [&>path]:stroke-icon'
               }
@@ -295,9 +293,9 @@ export default function Header({ postId }: { postId: string }) {
       </div>
       <div className="flex flex-row justify-between">
         <ProposerProfile
-          profileUrl={post.author[0]?.profile_url ?? ''}
-          proposerName={post.author[0]?.nickname ?? ''}
-          userType={post.author[0]?.user_type || UserType.Individual}
+          profileUrl={post.author_profile_url ?? ''}
+          proposerName={post.author_display_name ?? ''}
+          userType={post.author_type || UserType.Individual}
         />
         <div className="font-light text-text-primary text-sm/[14px]">
           {post.created_at !== undefined ? getTimeAgo(post.created_at) : ''}

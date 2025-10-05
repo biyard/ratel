@@ -24,23 +24,24 @@ export default async function Provider({
 
   const userId = user?.data?.id ?? 0;
 
+  // TODO: Update to use v3 permissions API with team username
   const invitePermission = await getPermission(
-    team.data?.id ?? 0,
+    team.data?.username ?? '',
     GroupPermission.InviteMember,
   );
 
   const writePostPermission = await getPermission(
-    team.data?.id ?? 0,
+    team.data?.username ?? '',
     GroupPermission.WritePosts,
   );
 
   const updateGroupPermission = await getPermission(
-    team.data?.id ?? 0,
+    team.data?.username ?? '',
     GroupPermission.UpdateGroup,
   );
 
   const deleteGroupPermission = await getPermission(
-    team.data?.id ?? 0,
+    team.data?.username ?? '',
     GroupPermission.DeleteGroup,
   );
 

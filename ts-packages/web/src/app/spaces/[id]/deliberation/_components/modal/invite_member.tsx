@@ -42,16 +42,17 @@ export default function InviteMemberPopup({
 
   const ensureMe = (list: TotalUser[]) => {
     if (!me) return list;
-    return list.some((u) => u.id === me.id)
+    // TODO: Update to use v3 user API - compare by username or pk instead of id
+    return list.some((u) => u.username === me.username)
       ? list
       : [
           ...list,
           {
-            id: me.id,
-            created_at: me.created_at,
-            updated_at: me.updated_at,
+            id: 0, // TODO: Remove id field after v3 migration
+            created_at: 0,
+            updated_at: 0,
             nickname: me.nickname,
-            html_contents: me.html_contents,
+            html_contents: me.description,
             username: me.username,
             profile_url: me.profile_url,
             user_type: me.user_type,

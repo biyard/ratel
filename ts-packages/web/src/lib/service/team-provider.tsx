@@ -12,7 +12,24 @@ export const TeamProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (user) {
-      setTeams([{ ...user }, ...(user.teams ?? [])]);
+      // TODO: Update Team type to match v3 UserResponse or create proper conversion
+      const userAsTeam: Team = {
+        ...user,
+        id: 0,
+        created_at: 0,
+        updated_at: 0,
+        html_contents: user.description || '',
+      };
+
+      const userTeamsAsTeams: Team[] = (user.teams ?? []).map((team) => ({
+        ...team,
+        id: 0,
+        created_at: 0,
+        updated_at: 0,
+        html_contents: '',
+      }));
+
+      setTeams([userAsTeam, ...userTeamsAsTeams]);
     }
   }, [user]);
 

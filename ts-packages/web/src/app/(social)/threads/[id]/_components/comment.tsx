@@ -1,8 +1,8 @@
 'use client';
 
-import Comment, { NewComment } from '@/components/comment';
+import { NewComment } from '@/components/comment';
 import { CommentIcon } from '@/components/icons';
-import { useLoggedIn, useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useLoggedIn } from '@/lib/api/hooks/users';
 // import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -15,19 +15,19 @@ export default function ThreadComment({ postId }: { postId: string }) {
   const isLogin = useLoggedIn();
   const { data: feed } = useFeedById(postId);
   const [expand, setExpand] = useState(false);
-  const { data: user } = useSuspenseUserInfo();
   const {
     createComment: { mutateAsync },
-  } = useDraftMutations(user?.id || 0);
+  } = useDraftMutations(); // TODO: Removed listId parameter - no longer needed in v3
   const handleSubmit = async (
-    postId: number,
-    parentId: number,
+    postId: string,
+    parentId: string,
     content: string,
   ) => {
+    // TODO: Update comment API to use string IDs
     await mutateAsync({
-      userId: user.id,
-      postId: postId,
-      parentId: parentId,
+      userId: 0,
+      postId: 0,
+      parentId: 0,
       content: content,
     });
     setExpand(false);
@@ -43,8 +43,8 @@ export default function ThreadComment({ postId }: { postId: string }) {
             className="[&>path]:stroke-text-primary [&>line]:stroke-text-primary"
           />
           <span className="text-base/6 font-medium">
-            {(feed?.comments ?? 0).toLocaleString()}{' '}
-            {(feed?.comments ?? 0) > 1 ? t('replies') : t('reply')}
+            {(feed?.post?.comments ?? 0).toLocaleString()}{' '}
+            {(feed?.post?.comments ?? 0) > 1 ? t('replies') : t('reply')}
           </span>
         </div>
         {isLogin && (
@@ -75,9 +75,10 @@ export default function ThreadComment({ postId }: { postId: string }) {
           </>
         )}
       </div>
-      {(feed?.comment_list ?? []).map((comment) => (
-        <Comment key={comment.id} comment={comment} onSubmit={handleSubmit} />
-      ))}
+      {/* TODO: Implement v3 comments rendering */}
+      {/* {(feed?.comments ?? []).map((comment) => (
+        <Comment key={comment.pk} comment={comment} onSubmit={handleSubmit} />
+      ))} */}
     </>
   );
 }

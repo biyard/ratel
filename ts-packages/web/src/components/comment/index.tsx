@@ -19,9 +19,10 @@ import { useLikeFeedMutation } from '@/hooks/feeds/use-like-feed-mutation';
 
 interface CommentProps {
   comment: CommentType;
+  // TODO: Update to use v3 comment API with string IDs
   onSubmit?: (
-    postId: number,
-    commentId: number,
+    postId: string | number,
+    commentId: string | number,
     content: string,
   ) => Promise<void>;
 }

@@ -39,7 +39,8 @@ export function useSpaceMutation() {
     },
     onSuccess: async (space) => {
       const feedQueryKey = feedKeys.lists();
-      const postQueryKey = feedKeys.detail(space.feed_id);
+      // TODO: Update to use v3 feed API with string IDs
+      const postQueryKey = feedKeys.detail(space.feed_id.toString());
       const spaceQueryKey = getSpaceByIdQk(space.id);
 
       await queryClient.invalidateQueries({

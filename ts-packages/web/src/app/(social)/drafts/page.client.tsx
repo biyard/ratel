@@ -100,7 +100,10 @@ export default function DraftPage() {
                 <TimeAgo timestamp={post?.updated_at} />
               </Row>
               <Row className="justify-between px-5"></Row>
-              <FeedContents contents={post?.html_contents} url={post?.url} />
+              <FeedContents
+                contents={post?.html_contents}
+                urls={post?.urls ?? []}
+              />
             </Col>
           ))}
           <div ref={lastPostRef} />

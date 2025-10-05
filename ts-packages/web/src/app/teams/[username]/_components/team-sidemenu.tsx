@@ -16,7 +16,6 @@ import {
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useTranslations } from 'next-intl';
 import { useUserByUsername } from '@/app/(social)/_hooks/use-user';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import FollowButton from './follow-button';
@@ -43,9 +42,8 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
   }, [teams, username]);
 
   const { data: user } = useUserByUsername(username);
-  const data = useSuspenseUserInfo();
-  const userInfo = data.data;
-  const followings = userInfo?.followings ?? [];
+  // TODO: Implement followings in v3 API - using placeholder for now
+  const followings: never[] = [];
   const isFollowing = followings.some((f: { id: number }) => f.id === user.id);
 
   const handleFollow = async (userId: number) => {
@@ -56,12 +54,13 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
     await post(ratelApi.networks.unfollow(userId), unfollowRequest());
   };
 
+  // TODO: Update to use v3 permissions with username instead of id
   const writePostPermission =
-    usePermission(team?.id ?? 0, GroupPermission.WritePosts).data
+    usePermission(team?.username ?? '', GroupPermission.WritePosts).data
       .has_permission ?? false;
 
   const updateGroupPermission =
-    usePermission(team?.id ?? 0, GroupPermission.UpdateGroup).data
+    usePermission(team?.username ?? '', GroupPermission.UpdateGroup).data
       .has_permission ?? false;
 
   if (!team && !user) {
@@ -98,7 +97,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
             onClick={async () => {
               try {
                 await handleFollow(user.id);
-                data.refetch();
+                // TODO: Implement refetch after follow/unfollow in v3
 
                 showSuccessToast('success to follow user');
               } catch (err) {
@@ -112,7 +111,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
             onClick={async () => {
               try {
                 await handleUnFollow(user.id);
-                data.refetch();
+                // TODO: Implement refetch after follow/unfollow in v3
 
                 showSuccessToast('success to unfollow user');
               } catch (err) {

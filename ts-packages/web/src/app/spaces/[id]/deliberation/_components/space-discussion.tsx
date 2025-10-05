@@ -15,7 +15,6 @@ import { route } from '@/route';
 import { Extra2 } from '@/components/icons';
 import { DiscussionInfo } from '../types';
 import { TotalUser } from '@/lib/api/models/user';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { usePopup } from '@/lib/contexts/popup-service';
 import NewDiscussion from './modal/new-discussion';
 import {
@@ -46,8 +45,8 @@ function ViewDiscussion() {
 function DiscussionSchedules() {
   const t = useTranslations('DeliberationSpace');
   const { status, handleViewRecord } = useDeliberationSpaceContext();
-  const { data: userInfo } = useSuspenseUserInfo();
-  const userId = userInfo?.id || 0;
+  // TODO: Update to use v3 user API with string pk instead of numeric id
+  const userId = 0;
 
   const discussions = useDeliberationSpace().discussions;
 

@@ -32,7 +32,8 @@ export default function NoticeSpacePage() {
 function Page() {
   const t = useTranslations('Space');
   const space = useNoticeSpace();
-  const data = useFeedById(space.feed_id);
+  // TODO: Update space API to use string feed_id in v3
+  const data = useFeedById(space.feed_id.toString());
   const feed = data.data;
   const popup = usePopup();
   const {
@@ -143,11 +144,11 @@ function Page() {
           proposerName={proposerName}
           createdAt={createdAt}
           authorId={authorId}
-          rewards={feed.rewards}
-          likes={feed.likes}
-          shares={feed.shares}
-          comments={feed.comments}
-          isLiked={space?.is_liked}
+          rewards={feed.post.rewards ?? 0}
+          likes={feed.post.likes}
+          shares={feed.post.shares}
+          comments={feed.post.comments}
+          isLiked={feed.is_liked}
           isPrivatelyPublished={isPrivatelyPublished}
           onback={handleGoBack}
           onsave={handleSave}

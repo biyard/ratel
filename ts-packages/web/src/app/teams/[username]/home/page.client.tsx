@@ -32,26 +32,7 @@ export default function TeamHome() {
     <div className="flex-1 flex max-mobile:px-[10px]">
       <Col className="flex-1">
         {flattedPosts.map((post) => (
-          <FeedCard
-            key={`feed-${post.pk}`}
-            contents={post.html_contents}
-            author_profile_url={post.author_profile_url}
-            author_name={post.author_display_name}
-            author_type={post.author_user_type}
-            author_id={post.author_pk}
-            id={post.pk}
-            url={post.urls}
-            title={post.title}
-            created_at={post.created_at}
-            likes={post.likes}
-            is_liked={post.liked}
-            comments={post.comments}
-            rewards={post.rewards || 0}
-            shares={post.shares}
-            space_id={post.space_pk}
-            space_type={post.space_type}
-            booster_type={post.booster}
-          />
+          <FeedCard key={`feed-${post.pk}`} post={post} />
         ))}
 
         <div ref={observerRef} />

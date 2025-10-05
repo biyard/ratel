@@ -39,16 +39,17 @@ export default function TeamGroups({ username }: { username: string }) {
 
   const team = query.data;
 
+  // TODO: Update to use v3 permissions with username instead of id
   const inviteMemberPermission =
-    usePermission(team?.id ?? 0, GroupPermission.InviteMember).data
+    usePermission(team?.username ?? '', GroupPermission.InviteMember).data
       .has_permission ?? false;
 
   const updateGroupPermission =
-    usePermission(team?.id ?? 0, GroupPermission.UpdateGroup).data
+    usePermission(team?.username ?? '', GroupPermission.UpdateGroup).data
       .has_permission ?? false;
 
   const deleteGroupPermission =
-    usePermission(team?.id ?? 0, GroupPermission.DeleteGroup).data
+    usePermission(team?.username ?? '', GroupPermission.DeleteGroup).data
       .has_permission ?? false;
 
   const deleteGroup = async (groupId: number) => {

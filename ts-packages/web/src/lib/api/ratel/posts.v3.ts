@@ -19,8 +19,21 @@ export function deletePost(postPk: string): Promise<void> {
   return call('DELETE', `/v3/posts/${encodeURIComponent(postPk)}`);
 }
 
+export type PostComment = {
+  pk: string;
+  sk: string;
+  updated_at: number;
+  content: string;
+  author_pk: string;
+  author_display_name: string;
+  author_profile_url: string;
+  author_username: string;
+};
+
 export type PostDetailResponse = {
   post: Post;
+  is_liked: boolean;
+  comments: PostComment[];
   // FIXME: Define the type properly
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   artwork_metadata?: any;
