@@ -1,21 +1,14 @@
-use std::str::FromStr;
-
 use crate::{
     AppState, Error2,
     models::{feed::Post, user::User},
-    types::Partition,
+    types::{EntityType, Partition},
 };
 use aide::NoApi;
 use axum::extract::Query;
 use bdk::prelude::*;
-use by_axum::axum::extract::{Path, State};
+use by_axum::axum::extract::{Json, Path, State};
 use serde::Deserialize;
 use validator::Validate;
-
-#[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
-pub struct DeletePostPathParams {
-    pub post_pk: String,
-}
 
 #[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema, Validate)]
 pub struct DeletePostParams {
@@ -31,11 +24,10 @@ pub async fn delete_post_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
     Query(DeletePostParams { force }): Query<DeletePostParams>,
-    Path(params): Path<DeletePostPathParams>,
-) -> Result<(), Error2> {
+    Path(super::dto::PostPathParam { post_pk }): super::dto::PostPath,
+) -> Result<Json<Post>, Error2> {
     let cli = &dynamo.client;
 
-    let post_pk = Partition::from_str(&params.post_pk)?;
     if !Post::has_permission(
         cli,
         &post_pk,
@@ -49,14 +41,18 @@ pub async fn delete_post_handler(
     }
 
     // TODO: Check dependancies
+    let dependancies = vec![];
 
-    if force.unwrap_or(false) {
+    let force = force.unwrap_or(false);
+
+    if force {
         // TODO: delete all dependancies
-    } else {
-        unimplemented!()
+        tracing::warn!("Force delete is not implemented yet");
+    } else if !dependancies.is_empty() {
+        return Err(Error2::HasDependencies(dependancies));
     }
 
-    Post::delete(cli, post_pk, None::<String>).await?;
+    let post = Post::delete(cli, post_pk, Some(EntityType::Post)).await?;
 
-    Ok(())
+    Ok(Json(post))
 }

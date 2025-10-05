@@ -1,7 +1,7 @@
 use crate::types::*;
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, DynamoEntity)]
 pub struct PostLike {
     pub pk: Partition,
     pub sk: EntityType,
@@ -22,21 +22,5 @@ impl PostLike {
             created_at,
             user_pk,
         }
-    }
-
-    pub async fn like(
-        cli: &aws_sdk_dynamodb::Client,
-        post_pk: Partition,
-        user_pk: Partition,
-    ) -> Result<(), crate::Error2> {
-        PostLike::new(post_pk, user_pk).create(cli).await
-    }
-
-    pub async fn unlike(
-        cli: &aws_sdk_dynamodb::Client,
-        post_pk: Partition,
-        user_pk: Partition,
-    ) -> Result<(), crate::Error2> {
-        PostLike::delete(cli, post_pk, Some(user_pk)).await
     }
 }

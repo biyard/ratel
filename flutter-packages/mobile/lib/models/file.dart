@@ -1,3 +1,5 @@
+import 'package:ratel/exports.dart';
+
 class File {
   final String id;
   final String name;
@@ -15,6 +17,7 @@ class FileList {
   FileList({required this.files});
 
   factory FileList.fromJson(Map<String, dynamic> json) {
+    logger.d("file json: ${json}");
     return FileList(
       files: (json['files'] as List<dynamic>)
           .map((file) => File(id: file['id'], name: file['name']))

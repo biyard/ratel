@@ -1,4 +1,5 @@
 #![allow(warnings)]
+use crate::*;
 use aws_config::BehaviorVersion;
 use aws_credential_types::Credentials;
 use base64::{Engine as _, engine::general_purpose};
@@ -12,7 +13,6 @@ use tower_sessions::Session;
 use crate::{
     AppState,
     models::user::User,
-    post,
     types::UserType,
     utils::{
         aws::{DynamoClient, SesClient},
@@ -114,16 +114,6 @@ pub fn create_user_name() -> String {
 pub fn create_nick_name() -> String {
     let short_uuid = &uuid::Uuid::new_v4().simple().to_string()[..6];
     format!("nickname{}", short_uuid)
-}
-
-#[deprecated(note = "use create_test_user instead")]
-pub async fn get_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
-    create_test_user(cli).await
-}
-
-#[deprecated(note = "use get_auth instead")]
-pub async fn create_auth(user: User) -> Authorization {
-    get_auth(&user)
 }
 
 pub async fn create_user_session(

@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart' as crypto;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:ratel/exports.dart';
 import 'package:cryptography/cryptography.dart' as cg;
+import 'package:ratel/exports.dart';
 
 class LoginResult {
   final dynamic body;
@@ -23,16 +23,13 @@ class AuthApi extends GetConnect {
     httpClient.addRequestModifier<void>((req) async {
       final bypass = req.headers["_noCookieHeader"] == '1';
       req.headers.remove("_noCookieHeader");
-
       if (!bypass) {
         final cookie = await _buildCookieHeaderAsync();
-        logger.d('${req.method} ${req.url} | Cookie: $cookie');
         if (cookie?.isNotEmpty == true) {
           req.headers['Cookie'] = cookie!;
         }
       } else {
         req.headers.remove('Cookie');
-        logger.d('${req.method} ${req.url} | Cookie BYPASS');
       }
       return req;
     });
@@ -66,7 +63,6 @@ class AuthApi extends GetConnect {
     final auth = await _secure.read(key: _authKeyStorage);
     if (sid?.isNotEmpty == true) _cookieJar[_sidKeyStorage] = sid!;
     if (auth?.isNotEmpty == true) _cookieJar[_authKeyStorage] = auth!;
-    logger.d('loaded cookies: $_cookieJar');
   }
 
   Future<void> _lazyLoadJarIfEmpty() async {
@@ -99,21 +95,16 @@ class AuthApi extends GetConnect {
   String get _sidKeyStorage => '${env}_sid';
   String get _authKeyStorage => '${env}_auth_token';
 
-  final Map<String, String> _cookieJar = {};
+  static final Map<String, String> _cookieJar = {};
 
   Future<bool> tryAutoSignIn() async {
     final saved = await AuthDb.read();
-    logger.d('saved db session: $saved');
     if (saved == null) return false;
-
     final sid = saved['sid'] as String?;
     final auth = saved['auth_token'] as String?;
-
-    logger.d('read saved session: sid=$sid, auth=$auth');
     if ((sid == null || sid.isEmpty) && (auth == null || auth.isEmpty)) {
       return false;
     }
-
     if (sid?.isNotEmpty == true) _cookieJar[_sidKeyStorage] = sid!;
     if (auth?.isNotEmpty == true) _cookieJar[_authKeyStorage] = auth!;
     if (sid?.isNotEmpty == true) {
@@ -122,56 +113,78 @@ class AuthApi extends GetConnect {
     if (auth?.isNotEmpty == true) {
       await _secure.write(key: _authKeyStorage, value: auth);
     }
-
     return true;
   }
 
   Future<dynamic> sendVerificationCode(String email) async {
     final uri = Uri.parse(apiEndpoint).resolve('/v1/users/verifications');
-
     final headers = <String, String>{'Content-Type': 'application/json'};
     final body = {
       'send_verification_code': {'email': email},
     };
-
     final res = await post(uri.toString(), body, headers: headers);
-
     if (!res.isOk) return null;
-
-    logger.d('response body: ${res.body}');
-
     return res.isOk;
   }
 
   Future<dynamic> verifyCode(String email, String value) async {
     final uri = Uri.parse(apiEndpoint).resolve('/v1/users/verifications');
-
     final headers = <String, String>{'Content-Type': 'application/json'};
     final body = {
       'verify': {'email': email, 'value': value},
     };
-
     final res = await post(uri.toString(), body, headers: headers);
-
     if (!res.isOk) return null;
-
-    logger.d('response body: ${res.body}');
-
     return res.body;
   }
 
   Future<dynamic> logout() async {
     final uri = Uri.parse(apiEndpoint).resolve('/v2/users/logout');
+    try {
+      await post(
+        uri.toString(),
+        {},
+        headers: {'Content-Type': 'application/json'},
+      );
+    } finally {
+      await clearSession();
+      await AuthDb.clear();
+    }
+  }
 
+  Future<dynamic> socialSignup(
+    String email,
+    String displayName,
+    String userName,
+    String profileUrl,
+    bool agree,
+    String pkcs8B64,
+  ) async {
+    await ensureLoggedOut();
+    final uri = Uri.parse(apiEndpoint)
+        .resolve('/v1/users')
+        .replace(queryParameters: <String, String>{'action': 'signup'});
+    final authHeader = await _buildUserSigHeaderFromPkcs8(pkcs8B64);
+    final body = {
+      'signup': {
+        'nickname': displayName,
+        'email': email,
+        'profile_url': profileUrl,
+        'term_agreed': agree,
+        'informed_agreed': false,
+        'username': userName,
+        'evm_address': '',
+        'telegram_raw': '',
+      },
+    };
     final res = await post(
       uri.toString(),
-      {},
-      headers: {'Content-Type': 'application/json'},
+      body,
+      headers: _noCookieJson(auth: authHeader),
     );
-
-    logger.d("logout res: ${res}");
-
-    await AuthDb.clear();
+    if (!res.isOk) return null;
+    final loginRes = await socialLogin(email, pkcs8B64);
+    return loginRes;
   }
 
   Future<dynamic> signup(
@@ -184,13 +197,9 @@ class AuthApi extends GetConnect {
   ) async {
     await ensureLoggedOut();
     final hashed = '0x${sha256Hex(password)}';
-
     final uri = Uri.parse(apiEndpoint)
         .resolve('/v1/users')
         .replace(queryParameters: <String, String>{'action': 'signup'});
-
-    logger.d("signup url: $uri");
-
     final kp = await cg.Ed25519().newKeyPair();
     final authHeader = await _buildUserSigHeader(kp);
     final body = {
@@ -205,29 +214,49 @@ class AuthApi extends GetConnect {
         'telegram_raw': '',
       },
     };
-
-    logger.d("login header: $authHeader");
-
     final res = await post(
       uri.toString(),
       body,
       headers: _noCookieJson(auth: authHeader),
     );
-
-    logger.d("signup response status: ${res.statusCode}");
-    logger.d("signup response body: ${res.body}");
-
     if (!res.isOk) return null;
-
     final loginRes = await loginWithPassword(email, password);
-
     return loginRes;
+  }
+
+  Future<LoginResult?> socialLogin(String email, String pkcs8B64) async {
+    await ensureLoggedOut();
+    final uri = Uri.parse(apiEndpoint)
+        .resolve('/v1/users')
+        .replace(queryParameters: <String, String>{'action': 'login'});
+    final authHeader = await _buildUserSigHeaderFromPkcs8(pkcs8B64);
+    final res = await get(
+      uri.toString(),
+      headers: _noCookieJson(auth: authHeader),
+    );
+    if (!res.isOk) return null;
+    final cookies = _extractCookies(res.headers ?? {});
+    final sidName = _sidKeyStorage;
+    final authName = _authKeyStorage;
+    if (cookies[sidName] != null) _cookieJar[sidName] = cookies[sidName]!;
+    if (cookies[authName] != null) _cookieJar[authName] = cookies[authName]!;
+    if (cookies[sidName] != null) {
+      await _secure.write(key: sidName, value: cookies[sidName]!);
+    }
+    if (cookies[authName] != null) {
+      await _secure.write(key: authName, value: cookies[authName]!);
+    }
+    await AuthDb.save(email, cookies[sidName], cookies[authName]);
+    return LoginResult(
+      body: res.body,
+      sid: cookies[sidName],
+      authToken: cookies[authName],
+    );
   }
 
   Future<dynamic> loginWithPassword(String email, String password) async {
     await ensureLoggedOut();
     final hashed = '0x${sha256Hex(password)}';
-
     final uri = Uri.parse(apiEndpoint)
         .resolve('/v1/users')
         .replace(
@@ -237,42 +266,25 @@ class AuthApi extends GetConnect {
             'password': hashed,
           },
         );
-
-    logger.d("login url: $uri");
-
     final kp = await cg.Ed25519().newKeyPair();
     final authHeader = await _buildUserSigHeader(kp);
-
-    logger.d("login header: $authHeader");
-
     final res = await get(
       uri.toString(),
       headers: _noCookieJson(auth: authHeader),
     );
-
-    logger.d("response body: ${res.body}");
     if (!res.isOk) return null;
-
     final cookies = _extractCookies(res.headers ?? {});
     final sidName = _sidKeyStorage;
     final authName = _authKeyStorage;
-
     if (cookies[sidName] != null) _cookieJar[sidName] = cookies[sidName]!;
     if (cookies[authName] != null) _cookieJar[authName] = cookies[authName]!;
-
     if (cookies[sidName] != null) {
       await _secure.write(key: sidName, value: cookies[sidName]!);
     }
     if (cookies[authName] != null) {
       await _secure.write(key: authName, value: cookies[authName]!);
     }
-
-    logger.d('cookie jar updated: $_cookieJar');
-
-    logger.d("cookie: ${cookies}");
-
     await AuthDb.save(email, cookies[sidName], cookies[authName]);
-
     return LoginResult(
       body: res.body,
       sid: cookies[sidName],
@@ -284,28 +296,21 @@ class AuthApi extends GetConnect {
     final ed25519 = cg.Ed25519();
     final simple = await keyPair.extract() as cg.SimpleKeyPairData;
     final pkBytes = simple.publicKey.bytes;
-
     final timestamp = (DateTime.now().millisecondsSinceEpoch / 1000).floor();
     final msg = '$signDomain-$timestamp';
     final msgBytes = utf8.encode(msg);
-
     final sig = await ed25519.sign(msgBytes, keyPair: keyPair);
     final token =
         '$timestamp:eddsa:${base64Encode(pkBytes)}:${base64Encode(sig.bytes)}';
-
     return 'UserSig $token';
   }
 
   Map<String, String> _extractCookies(Map<String, String> headers) {
     final setCookie =
         headers['set-cookie'] ?? headers['Set-Cookie'] ?? headers['SET-COOKIE'];
-
-    logger.d("cookie: ${setCookie}");
     if (setCookie == null || setCookie.isEmpty) return {};
-
     final sidName = '${env}_sid';
     final authName = '${env}_auth_token';
-
     String? pick(String name) {
       final m = RegExp('$name=([^;]+)').firstMatch(setCookie);
       return m?.group(1);
@@ -323,7 +328,43 @@ class AuthApi extends GetConnect {
     _cookieJar.clear();
     await _secure.delete(key: _sidKeyStorage);
     await _secure.delete(key: _authKeyStorage);
-    logger.d('session cleared');
+  }
+
+  Future<String> _buildUserSigHeaderFromPkcs8(String pkcs8B64) async {
+    final pair = await _pairFromPkcs8B64(pkcs8B64);
+    return _buildUserSigHeader(pair);
+  }
+
+  Future<cg.SimpleKeyPair> _pairFromPkcs8B64(String b64) async {
+    final der = base64Decode(b64);
+    final seed = _extractSeed32FromPkcs8(der);
+    return cg.Ed25519().newKeyPairFromSeed(seed);
+  }
+
+  Future<void> absorbSetCookieHeaders(Map<String, String> headers) async {
+    final cookies = _extractCookies(headers);
+    if (cookies.isEmpty) return;
+
+    final sidName = _sidKeyStorage;
+    final authName = _authKeyStorage;
+
+    if (cookies[sidName] != null) {
+      _cookieJar[sidName] = cookies[sidName]!;
+      await _secure.write(key: sidName, value: cookies[sidName]!);
+    }
+    if (cookies[authName] != null) {
+      _cookieJar[authName] = cookies[authName]!;
+      await _secure.write(key: authName, value: cookies[authName]!);
+    }
+  }
+
+  Uint8List _extractSeed32FromPkcs8(Uint8List der) {
+    for (int i = 0; i + 34 <= der.length; i++) {
+      if (der[i] == 0x04 && der[i + 1] == 0x20) {
+        return Uint8List.fromList(der.sublist(i + 2, i + 34));
+      }
+    }
+    throw ArgumentError('Ed25519 seed not found in PKCS#8');
   }
 }
 

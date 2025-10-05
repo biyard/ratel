@@ -1,3 +1,5 @@
+import { SurveyStatus } from '../ratel/spaces/deliberation-spaces.v3';
+
 export interface Survey {
   id: number;
   created_at: number;
@@ -13,6 +15,14 @@ export interface Survey {
 export interface SurveyCreateRequest {
   started_at: number;
   ended_at: number;
+  questions: Question[];
+}
+
+export interface NewSurveyCreateRequest {
+  survey_pk: string | undefined;
+  started_at: number;
+  ended_at: number;
+  status: SurveyStatus;
   questions: Question[];
 }
 

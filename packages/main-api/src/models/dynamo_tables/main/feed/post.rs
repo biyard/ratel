@@ -5,8 +5,17 @@ use crate::{
 };
 use bdk::prelude::*;
 
+use super::PostLike;
+
 #[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema, aide::OperationIo,
+    Debug,
+    Default,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    DynamoEntity,
+    JsonSchema,
+    aide::OperationIo,
 )]
 pub struct Post {
     pub pk: Partition,
@@ -114,7 +123,11 @@ impl Post {
         let user_pk = if let Some(user_pk) = user_pk {
             user_pk
         } else {
-            if let Some(Visibility::Public) = post.visibility {
+            if post.visibility.is_some()
+                && post.visibility.as_ref().unwrap() == &Visibility::Public
+                && perm == TeamGroupPermission::PostRead
+                && post.status == PostStatus::Published
+            {
                 return Ok((post, true));
             } else {
                 return Ok((post, false));
@@ -134,68 +147,54 @@ impl Post {
             _ => Err(Error2::InternalServerError("Invalid post author".into())),
         }
     }
-}
 
-pub struct PostResponse {
-    pub pk: Partition,
-    pub title: String,
-    pub html_contents: String,
-    pub post_type: PostType,
-    pub status: PostStatus,
-    pub visibility: Option<Visibility>,
-    pub shares: i64,
-    pub likes: i64,
-    pub comments: i64,
+    pub async fn like(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: Partition,
+        user_pk: Partition,
+    ) -> Result<(), crate::Error2> {
+        tracing::info!("Liking post {} by user {}", post_pk, user_pk);
+        let post_tx = Self::updater(&post_pk, EntityType::Post)
+            .increase_likes(1)
+            .transact_write_item();
+        let pl_tx = PostLike::new(post_pk, user_pk).create_transact_write_item();
 
-    pub user_pk: Partition,
-    pub author_display_name: String,
-    pub author_profile_url: String,
-    pub author_username: String,
+        tracing::info!("Post like transact items: {:?}, {:?}", post_tx, pl_tx);
 
-    pub space_pk: Option<Partition>,
-    pub booster: Option<BoosterType>,
-    pub rewards: Option<i64>,
-}
+        cli.transact_write_items()
+            .set_transact_items(Some(vec![post_tx, pl_tx]))
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to like post: {}", e);
+                crate::Error2::PostLikeError
+            })?;
 
-impl From<Post> for PostResponse {
-    fn from(
-        Post {
-            pk,
-            title,
-            html_contents,
-            post_type,
-            status,
-            visibility,
-            shares,
-            likes,
-            comments,
-            user_pk,
-            author_display_name,
-            author_profile_url,
-            author_username,
-            space_pk,
-            booster,
-            rewards,
-            ..
-        }: Post,
-    ) -> Self {
-        Self {
-            pk,
-            title,
-            html_contents,
-            post_type,
-            status,
-            visibility,
-            shares,
-            likes,
-            comments,
-            user_pk,
-            author_display_name,
-            author_profile_url,
-            author_username,
-            space_pk,
-            booster,
-            rewards,
-        }
+        Ok(())
+    }
+
+    pub async fn unlike(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: Partition,
+        user_pk: Partition,
+    ) -> Result<(), crate::Error2> {
+        let post_tx = Self::updater(&post_pk, EntityType::Post)
+            .decrease_likes(1)
+            .transact_write_item();
+        let pl_tx = PostLike::delete_transact_write_item(
+            &post_pk,
+            EntityType::PostLike(user_pk.to_string()).to_string(),
+        );
+
+        cli.transact_write_items()
+            .set_transact_items(Some(vec![post_tx, pl_tx]))
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to unlike post: {}", e);
+                crate::Error2::PostLikeError
+            })?;
+
+        Ok(())
     }
 }

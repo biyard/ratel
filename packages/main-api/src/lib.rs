@@ -180,6 +180,8 @@ pub mod controllers {
                     pub mod start_meeting;
                     pub mod start_recording;
 
+                    pub mod get_discussion;
+
                     #[cfg(not(feature = "no-secret"))]
                     #[cfg(test)]
                     pub mod tests;
@@ -233,6 +235,7 @@ pub mod controllers {
         pub mod posts {
             pub mod create_post;
             pub mod delete_post;
+            pub mod dto;
             pub mod get_post;
             pub mod like_post;
             pub mod list_posts;

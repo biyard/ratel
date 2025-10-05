@@ -49,7 +49,7 @@ export class RegionalServiceStack extends Stack {
     const apiRepoName = props.apiRepoName ?? "ratel/main-api";
     const webRepoName = props.webRepoName ?? "ratel/web";
     const minCapacity = props.minCapacity ?? 2;
-    const maxCapacity = props.maxCapacity ?? 50;
+    const maxCapacity = props.maxCapacity ?? 2;
 
     const vpc = ec2.Vpc.fromLookup(this, "Vpc", { isDefault: true });
     const cluster = new ecs.Cluster(this, "Cluster", { vpc });
@@ -65,21 +65,20 @@ export class RegionalServiceStack extends Stack {
       ),
     );
 
-    // 5) Task Definition with multiple containers
-    const taskDefinition = new ecs.TaskDefinition(this, "TaskDefinition", {
+    // --- API Task Definition ---
+    const apiTaskDefinition = new ecs.TaskDefinition(this, "ApiTaskDefinition", {
       compatibility: ecs.Compatibility.FARGATE,
       cpu: "256",
       memoryMiB: "512",
       executionRole: taskExecutionRole,
     });
 
-    // API Container
     const apiRepository = Repository.fromRepositoryName(
       this,
       "ApiRepository",
       apiRepoName,
     );
-    const apiContainer = taskDefinition.addContainer("ApiContainer", {
+    const apiContainer = apiTaskDefinition.addContainer("ApiContainer", {
       image: ecs.ContainerImage.fromEcrRepository(apiRepository, props.commit),
       logging: new ecs.AwsLogDriver({
         streamPrefix: "ratel-api",
@@ -95,13 +94,20 @@ export class RegionalServiceStack extends Stack {
       protocol: ecs.Protocol.TCP,
     });
 
-    // Next.js Web Container
+    // --- Web Task Definition ---
+    const webTaskDefinition = new ecs.TaskDefinition(this, "WebTaskDefinition", {
+      compatibility: ecs.Compatibility.FARGATE,
+      cpu: "256",
+      memoryMiB: "512",
+      executionRole: taskExecutionRole,
+    });
+
     const webRepository = Repository.fromRepositoryName(
       this,
       "WebRepository",
       webRepoName,
     );
-    const webContainer = taskDefinition.addContainer("WebContainer", {
+    const webContainer = webTaskDefinition.addContainer("WebContainer", {
       image: ecs.ContainerImage.fromEcrRepository(webRepository, props.commit),
       logging: new ecs.AwsLogDriver({
         streamPrefix: "ratel-web",
@@ -123,23 +129,43 @@ export class RegionalServiceStack extends Stack {
       protocol: ecs.Protocol.TCP,
     });
 
-    // 6) Fargate Service
-    const fargate = new ecs.FargateService(this, "Service", {
+    // 6) Fargate Services (separate services for API and Web)
+    const apiService = new ecs.FargateService(this, "ApiService", {
       cluster,
-      taskDefinition,
+      taskDefinition: apiTaskDefinition,
       desiredCount: minCapacity,
       maxHealthyPercent: 200,
       minHealthyPercent: minCapacity === 1 ? 0 : 50,
       assignPublicIp: true,
     });
 
-    // 7) Auto Scaling
-    const scaling = fargate.autoScaleTaskCount({
+    const webService = new ecs.FargateService(this, "WebService", {
+      cluster,
+      taskDefinition: webTaskDefinition,
+      desiredCount: minCapacity,
+      maxHealthyPercent: 200,
+      minHealthyPercent: minCapacity === 1 ? 0 : 50,
+      assignPublicIp: true,
+    });
+
+    // 7) Auto Scaling (separate for each service)
+    const apiScaling = apiService.autoScaleTaskCount({
       minCapacity,
       maxCapacity,
     });
 
-    scaling.scaleOnCpuUtilization("CpuScaling", {
+    apiScaling.scaleOnCpuUtilization("ApiCpuScaling", {
+      targetUtilizationPercent: 70,
+      scaleInCooldown: Duration.seconds(60),
+      scaleOutCooldown: Duration.seconds(60),
+    });
+
+    const webScaling = webService.autoScaleTaskCount({
+      minCapacity,
+      maxCapacity,
+    });
+
+    webScaling.scaleOnCpuUtilization("WebCpuScaling", {
       targetUtilizationPercent: 70,
       scaleInCooldown: Duration.seconds(60),
       scaleOutCooldown: Duration.seconds(60),
@@ -152,7 +178,7 @@ export class RegionalServiceStack extends Stack {
       "WebTargetGroup",
       {
         targets: [
-          fargate.loadBalancerTarget({
+          webService.loadBalancerTarget({
             containerName: "WebContainer",
             containerPort: 8080,
           }),
@@ -178,7 +204,7 @@ export class RegionalServiceStack extends Stack {
       "ApiTargetGroup",
       {
         targets: [
-          fargate.loadBalancerTarget({
+          apiService.loadBalancerTarget({
             containerName: "ApiContainer",
             containerPort: 3000,
           }),

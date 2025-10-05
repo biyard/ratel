@@ -1,37 +1,24 @@
-use std::str::FromStr;
-
 use crate::{
     AppState, Error2,
     models::{
         feed::{Post, PostDetailResponse, PostMetadata},
         user::User,
     },
-    types::Partition,
 };
-use dto::{JsonSchema, aide, schemars};
-use dto::{
-    aide::NoApi,
-    by_axum::axum::{
-        Json,
-        extract::{Path, State},
-    },
+use aide::NoApi;
+use axum::{
+    Json,
+    extract::{Path, State},
 };
-use serde::Deserialize;
-
-#[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
-pub struct GetPostPathParams {
-    pub post_pk: String,
-}
-
-pub type GetPostResponse = PostDetailResponse;
+use bdk::prelude::*;
 
 pub async fn get_post_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-    Path(GetPostPathParams { post_pk }): Path<GetPostPathParams>,
-) -> Result<Json<GetPostResponse>, Error2> {
+    Path(super::dto::PostPathParam { post_pk }): super::dto::PostPath,
+) -> Result<Json<PostDetailResponse>, Error2> {
     let cli = &dynamo.client;
-    let post_pk = Partition::from_str(&post_pk)?;
+    tracing::info!("Get post for post_pk: {}", post_pk);
 
     if !Post::has_permission(
         cli,
