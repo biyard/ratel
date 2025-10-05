@@ -13,7 +13,6 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { ChevronDown } from 'lucide-react';
 import React, { useContext, useEffect } from 'react';
 import TeamCreationPopup from '../_popups/team-creation-popup';
-import { useUserInfo } from '@/lib/api/hooks/users';
 import { Team } from '@/lib/api/models/team';
 import Link from 'next/link';
 import { route } from '@/route';
@@ -21,6 +20,7 @@ import { useAuth } from '@/lib/contexts/auth-context';
 import { TeamContext } from '@/lib/contexts/team-context';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { useUserInfo } from '@/hooks/use-user-info';
 
 export interface TeamSelectorProps {
   onSelect?: (index: number) => void;

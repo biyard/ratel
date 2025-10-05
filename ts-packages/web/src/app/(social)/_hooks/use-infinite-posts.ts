@@ -1,4 +1,4 @@
-import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { ListPostResponse, listPosts } from '@/lib/api/ratel/posts.v3';
@@ -25,5 +25,5 @@ export async function prefetchInfinitePosts() {
 }
 
 export default function useInfinitePosts() {
-  return useSuspenseInfiniteQuery(getOptions());
+  return useInfiniteQuery(getOptions());
 }

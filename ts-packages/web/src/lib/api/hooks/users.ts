@@ -1,32 +1,22 @@
 import {
   QueryClient,
-  useQuery,
-  UseQueryResult,
   useSuspenseQuery,
   UseSuspenseQueryResult,
 } from '@tanstack/react-query';
 import { QK_USERS_GET_INFO } from '@/constants';
 import { getUserInfo, UserResponse } from '../ratel/me.v3';
 
-/**
- * @deprecated Use `useUserInfo` in '_hooks/user.ts'.
- */
-
-export function useUserInfo(): UseQueryResult<UserResponse | undefined> {
-  const query = useQuery({
-    queryKey: [QK_USERS_GET_INFO],
-    queryFn: () => getUserInfo(),
-    // enabled: !!principalText,
-    // refetchOnWindowFocus: false,
-  });
-
-  return query;
-}
-
-export function useSuspenseUserInfo(): UseSuspenseQueryResult<UserResponse> {
+export function useSuspenseUserInfo(): UseSuspenseQueryResult<UserResponse | null> {
   const query = useSuspenseQuery({
     queryKey: [QK_USERS_GET_INFO],
-    queryFn: () => getUserInfo(),
+    queryFn: async () => {
+      try {
+        const user = await getUserInfo();
+        return user;
+      } catch {
+        return null;
+      }
+    },
     // refetchOnWindowFocus: false,
   });
 

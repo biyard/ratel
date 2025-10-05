@@ -11,25 +11,25 @@ import Profile from './profile';
 import { LoginModal } from './popup/login-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { route } from '@/route';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { UserType } from '@/lib/api/models/user';
 import LoginIcon from '@/assets/icons/login.svg';
 import { useLocale, useTranslations } from 'next-intl';
 import { Us } from './icons';
 import { Kr } from '@/assets/icons/flags';
 import { useRouter } from 'next/navigation';
+import { useUserInfo } from '@/hooks/use-user-info';
 export interface HeaderProps {
   mobileExtends: boolean;
   setMobileExtends: (extend: boolean) => void;
 }
 
-function Header(props: HeaderProps) {
+export default function Header(props: HeaderProps) {
   const t = useTranslations('Nav');
   const popup = usePopup();
   const router = useRouter();
   const locale = useLocale() as 'en' | 'ko';
 
-  const { data } = useSuspenseUserInfo();
+  const { data } = useUserInfo();
   const loggedIn =
     data &&
     (data.user_type === UserType.Individual ||
@@ -204,5 +204,3 @@ function Header(props: HeaderProps) {
     </header>
   );
 }
-
-export default Header;
