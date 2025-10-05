@@ -8,12 +8,13 @@ import { prefetchInfinitePosts } from './_hooks/use-infinite-posts';
 
 export default async function Provider({ children }: { children: ReactNode }) {
   const queryClient = await getServerQueryClient();
-  const network = await getNetwork();
   const user = await getUserInfo();
-
   const news = await listNews();
-
-  const data: InitDataOptions[] = [network, user, news];
+  const data: InitDataOptions[] = [user, news];
+  const authenticated = user.data !== undefined;
+  if (authenticated) {
+    data.push(await getNetwork());
+  }
 
   try {
     // Initialize the query client with the space data

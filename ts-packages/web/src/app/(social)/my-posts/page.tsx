@@ -3,13 +3,13 @@ import React, { useCallback } from 'react';
 import { Col } from '@/components/ui/col';
 import FeedCard from '@/components/feed-card';
 import CreatePostButton from '../_components/create-post-button';
-import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
 import { useObserver } from '@/hooks/use-observer';
 import FeedEndMessage from '../_components/feed-end-message';
+import useInfiniteMyPosts from './_hooks/use-my-posts';
 
 export default function MyPostsPage() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteFeeds();
+    useInfiniteMyPosts();
 
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {

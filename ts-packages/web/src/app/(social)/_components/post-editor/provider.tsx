@@ -14,14 +14,10 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { route } from '@/route';
 import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
 import { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
-import {
-  getPost,
-  Post,
-  PostType as PT,
-  publishPost,
-  updatePostWithImage,
-  updatePostWithTitleAndContents,
-} from '@/lib/api/ratel/posts.v3';
+import { getPost, Post, PostType as PT } from '@/lib/api/ratel/posts.v3';
+import { useUpdateDraftMutation } from './use-update-draft-mutation';
+import { useUpdateDraftImageMutation } from './use-update-draft-image-mutation';
+import { usePublishDraftMutation } from './use-publish-draft';
 
 export enum Status {
   Idle = 'Idle',
@@ -178,6 +174,11 @@ export function PostEditorProvider({
     setIsModified(true);
   };
 
+  const { mutateAsync: handleUpdateWithTitleAndContent } =
+    useUpdateDraftMutation();
+  const { mutateAsync: handleUpdateImage } = useUpdateDraftImageMutation();
+  const { mutateAsync: publishDraft } = usePublishDraftMutation();
+
   const updateImage = async (image: string | null) => {
     if (!image) {
       return;
@@ -206,7 +207,7 @@ export function PostEditorProvider({
         });
         const imageUrl = res.data.uris[0];
 
-        await updatePostWithImage(feed!.pk, imageUrl);
+        await handleUpdateImage({ postPk: feed!.pk, image: imageUrl });
 
         setImage(imageUrl);
       }
@@ -281,7 +282,12 @@ export function PostEditorProvider({
     setStatus(Status.Saving);
 
     try {
-      await updatePostWithTitleAndContents(feed!.pk, title, content!);
+      await handleUpdateWithTitleAndContent({
+        postPk: feed!.pk,
+        title,
+        content,
+      });
+
       setIsModified(false);
     } catch (error) {
       console.error(error);
@@ -289,7 +295,14 @@ export function PostEditorProvider({
     } finally {
       setStatus(Status.Idle);
     }
-  }, [feed, content, title, status, isModified]);
+  }, [
+    feed,
+    content,
+    title,
+    status,
+    isModified,
+    handleUpdateWithTitleAndContent,
+  ]);
 
   useEffect(() => {
     const timeoutId = setInterval(async () => {
@@ -318,13 +331,28 @@ export function PostEditorProvider({
       if (checkString(title) || checkString(content || '')) {
         throw new Error('Please remove the test keyword');
       }
-      await publishPost(feed!.pk, title, content);
+
+      await publishDraft({
+        postPk: feed!.pk,
+        title,
+        content,
+      });
+
       router.push(route.threadByFeedId(feed!.pk));
       resetState();
     } catch {
       throw new Error('Failed to publish draft');
     }
-  }, [content, feed, isAllFieldsFilled, resetState, router, status, title]);
+  }, [
+    content,
+    feed,
+    isAllFieldsFilled,
+    resetState,
+    router,
+    status,
+    title,
+    publishDraft,
+  ]);
 
   const contextValue: PostEditorContextType = {
     openPostEditorPopup,
@@ -357,10 +385,5 @@ export function PostEditorProvider({
 
 export const usePostEditorContext = () => {
   const context = useContext(PostDraftContext);
-  if (context === undefined) {
-    throw new Error(
-      'usePostEditorContext must be used within a PostEditorProvider',
-    );
-  }
   return context;
 };

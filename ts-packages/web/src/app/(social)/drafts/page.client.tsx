@@ -10,8 +10,8 @@ import { FeedContents, UserBadge } from '@/components/feed-card';
 import { UserType } from '@/lib/api/models/user';
 import TimeAgo from '@/components/time-ago';
 import { Delete2 } from '@/components/icons';
-import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
 import { useDeletePostMutation } from '@/hooks/feeds/use-delete-post-mutation';
+import useInfiniteMyDrafts from './_hooks/use-my-drafts';
 
 export default function DraftPage() {
   const { data: user } = useSuspenseUserInfo();
@@ -20,7 +20,7 @@ export default function DraftPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteFeeds();
+  } = useInfiniteMyDrafts();
 
   const { openPostEditorPopup } = usePostEditorContext();
   const { mutateAsync: handleRemoveDraft } = useDeletePostMutation(
@@ -70,7 +70,7 @@ export default function DraftPage() {
                   <IndustryTag industry={'CRYPTO'} />
                 </Row> */}
                 <Row
-                  className="cursor-pointer w-[21px] h-[21px]"
+                  className="cursor-pointer w-[21px] h-[21px] hover-bg-white z-100"
                   onClick={async (e) => {
                     e.preventDefault();
                     e.stopPropagation();

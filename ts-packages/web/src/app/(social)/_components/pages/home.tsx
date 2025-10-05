@@ -47,9 +47,10 @@ export default function Home({
 }: {
   promotion?: TopPromotionResponse;
 }) {
-  const { close } = usePostEditorContext();
+  const postEditorContext = usePostEditorContext();
+  const close = postEditorContext?.close;
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfinitePosts();
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -60,10 +61,18 @@ export default function Home({
     threshold: 1,
   });
 
-  if (data.pages.length === 0) {
+  if (isLoading) {
     return (
       <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-gray-500">
-        No drafts available
+        Loading...
+      </div>
+    );
+  }
+
+  if (!data || data.pages.length === 0) {
+    return (
+      <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-gray-500">
+        No posts available
       </div>
     );
   }

@@ -68,15 +68,20 @@ export const feedKeys = {
   all: [QK_FEEDS] as const,
   lists: () => [...feedKeys.all, 'list'] as const,
   // {username, status}
-  // posts on Home: [status]
-  // posts on a specific user or team: [username, status]
+  // posts on Home: [list, status]
+  // posts on a specific user or team: [list, username, status]
   // invalidate: login/logout
+  // For my posts [list, username, FeedStatus.Published]
   list: (filters: { username?: string; status: FeedStatus }) => {
     const nonNullFilters = Object.fromEntries(
       Object.entries(filters).filter(([, value]) => value != null),
     );
     return [...feedKeys.lists(), sortObjectKeys(nonNullFilters)] as const;
   },
+  drafts: (username: string) =>
+    [...feedKeys.list({ username, status: FeedStatus.Draft })] as const,
+  my_posts: (username: string) =>
+    [...feedKeys.list({ username, status: FeedStatus.Published })] as const,
   details: () => [...feedKeys.all, 'detail'] as const,
   detail: (pk: string) => [...feedKeys.details(), pk] as const,
 };

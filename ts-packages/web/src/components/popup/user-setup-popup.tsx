@@ -9,7 +9,6 @@ import { ConfirmPopup } from './confirm-popup';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { logger } from '@/lib/logger';
-import { useUserInfo } from '@/lib/api/hooks/users';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
@@ -21,6 +20,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { OAuthProvider } from '@/types/oauth-provider';
 import { ratelSdk } from '@/lib/api/ratel';
+import { useUserInfo } from '@/hooks/use-user-info';
 
 export interface UserSetupPopupProps {
   id?: string;

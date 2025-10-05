@@ -8,7 +8,6 @@ import {
 } from 'react';
 import { Clear } from '@/components/icons';
 import { Loader } from '@/components/icons';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { useUserInfo } from '../_hooks/user';
 import Image from 'next/image';
 import { useApiCall } from '@/lib/api/use-send';
@@ -32,7 +31,14 @@ import CommentPaste from '@/assets/icons/editor/comment-paste.svg';
 import ShapeDownArrow from '@/assets/icons/editor/shape-arrow-down.svg';
 import ArrowDown from '@/assets/icons/editor/arr-down.svg';
 import SaveIcon from '@/assets/icons/save.svg';
+
 export function CreateRePost() {
+  const repostDraftContext = useRepostDraft();
+
+  if (!repostDraftContext) {
+    return null;
+  }
+
   const {
     expand,
     title,
@@ -58,9 +64,8 @@ export function CreateRePost() {
     setCommentUrl,
     setShowCommentUrlInput,
     authorId,
-  } = useRepostDraft();
+  } = repostDraftContext;
 
-  const { data: User } = useSuspenseUserInfo();
   const { data: userInfo } = useUserInfo();
   const { post } = useApiCall();
   const router = useRouter();
@@ -85,7 +90,7 @@ export function CreateRePost() {
           html_contents: editorRef.current!.getHTML(),
           quote_feed_id: originalFeedId,
           parent_id: authorId,
-          user_id: User?.pk,
+          user_id: userInfo?.pk,
         },
       });
 
@@ -506,9 +511,6 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
 
 export const useRepostDraft = () => {
   const context = useContext(RePostDraftContext);
-  if (context === undefined) {
-    throw new Error('useRepostDraft must be used within a RePostDraftProvider');
-  }
   return context;
 };
 

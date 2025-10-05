@@ -1,9 +1,9 @@
 import { useMutation } from '@tanstack/react-query';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
-import { Feed, FeedStatus } from '@/lib/api/models/feeds'; // FeedType 추가
+import { FeedStatus } from '@/lib/api/models/feeds'; // FeedType 추가
 import { showErrorToast } from '@/lib/toast';
-import { deletePost } from '@/lib/api/ratel/posts.v3';
+import { deletePost, PostResponse } from '@/lib/api/ratel/posts.v3';
 import { optimisticListUpdate, removeQueries } from '@/lib/hook-utils';
 
 export function useDeletePostMutation(username: string, status: FeedStatus) {
@@ -26,9 +26,9 @@ export function useDeletePostMutation(username: string, status: FeedStatus) {
         queryKey: detailQueryKey,
       });
 
-      const rollbackPosts = await optimisticListUpdate<Feed>(
+      const rollbackPosts = await optimisticListUpdate<PostResponse>(
         { queryKey: listQueryKey },
-        (post) => (post.id !== postPk ? undefined : post),
+        (post) => (post.pk !== postPk ? undefined : post),
       );
 
       return { rollbackPostDetail, rollbackPosts };

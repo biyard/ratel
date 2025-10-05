@@ -9,7 +9,6 @@ import {
   InvalidLowerAlphaNumeric,
   InvalidTooShort,
 } from '@/errors';
-import { useUserInfo } from '@/lib/api/hooks/users';
 import { createTeamRequest } from '@/lib/api/models/team';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
@@ -21,6 +20,7 @@ import { checkLowerAlphaNumeric } from '@/lib/valid-utils';
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
+import { useUserInfo } from '@/hooks/use-user-info';
 
 export default function TeamCreationPopup() {
   const t = useTranslations('Home');
