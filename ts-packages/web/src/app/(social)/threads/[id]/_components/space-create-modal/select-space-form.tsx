@@ -63,7 +63,7 @@ const SpaceForms: SpaceFormProps[] = [
   },
 ];
 
-export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
+export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
   const [isLoading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<SpaceType | null>(null);
   const [showConfigForm, setShowConfigForm] = useState(false);
@@ -92,7 +92,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
     boosterType = null,
   }: {
     spaceType: SpaceType;
-    feedId: number;
+    feedId: string;
     userIds: number[];
     startedAt: number | null;
     endedAt: number | null;
@@ -101,9 +101,10 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: number }) {
     if (isLoading) return;
     setLoading(true);
     try {
+      // FIXME: create space
       const req = createSpaceRequest(
         spaceType,
-        feedId,
+        Number(feedId),
         userIds,
         0,
         startedAt,

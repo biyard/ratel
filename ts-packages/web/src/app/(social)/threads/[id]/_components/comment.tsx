@@ -10,7 +10,7 @@ import { useState } from 'react';
 import { useDraftMutations } from '@/hooks/feeds/use-create-feed-mutation';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 
-export default function ThreadComment({ postId }: { postId: number }) {
+export default function ThreadComment({ postId }: { postId: string }) {
   const t = useTranslations('Threads');
   const isLogin = useLoggedIn();
   const { data: feed } = useFeedById(postId);
