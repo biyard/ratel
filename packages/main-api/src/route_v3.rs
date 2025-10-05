@@ -40,7 +40,7 @@ use crate::{
             },
         },
         me::{
-            get_info::{GetInfoResponse, get_info_handler},
+            get_info::get_info_handler,
             update_user::{UpdateUserResponse, update_user_handler},
         },
         posts::{
@@ -115,22 +115,22 @@ pub fn route(
     Ok(Router::new()
         .route(
             "/me",
-            get_with(
-                get_info_handler,
-                api_docs!(
-                    Json<GetInfoResponse>,
-                    "Get Logged-in User Info",
-                    "Get the user data of the logged-in user"
+            get_info_handler()
+                // get_with(
+                //     get_info_handler,
+                //     api_docs!(
+                //         Json<GetInfoResponse>,
+                //         "Get Logged-in User Info",
+                //         "Get the user data of the logged-in user"
+                //     ),
+                .patch_with(
+                    update_user_handler,
+                    api_docs!(
+                        Json<UpdateUserResponse>,
+                        "Update Logged-in User Info",
+                        "Update the user data of the logged-in user"
+                    ),
                 ),
-            )
-            .patch_with(
-                update_user_handler,
-                api_docs!(
-                    Json<UpdateUserResponse>,
-                    "Update Logged-in User Info",
-                    "Update the user data of the logged-in user"
-                ),
-            ),
         )
         .nest(
             "/users",
@@ -198,7 +198,7 @@ pub fn route(
         .nest(
             "/auth",
             Router::new()
-                .route("/login", post(login_handler))
+                .route("/login", login_handler())
                 .route("/logout", post(logout_handler))
                 .route("/signup", post(signup_handler))
                 .nest(

@@ -10,6 +10,7 @@ use crate::{
 };
 use bdk::prelude::*;
 
+use by_macros::openapi;
 use dto::{
     JsonSchema, aide,
     by_axum::axum::{
@@ -36,6 +37,7 @@ pub enum LoginRequest {
     },
 }
 
+#[openapi(method = "POST", tag = "Auth")]
 pub async fn login_handler(
     State(AppState { dynamo, pool, .. }): State<AppState>,
     Extension(session): Extension<Session>,
