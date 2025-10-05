@@ -24,7 +24,7 @@ pub async fn list_posts_handler(
     NoApi(user): NoApi<Option<User>>,
     Query(ListPostsQueryParams { bookmark }): Query<ListPostsQueryParams>,
 ) -> Result<Json<ListItemsResponse<PostResponse>>, Error2> {
-    tracing::info!(
+    tracing::debug!(
         "list_posts_handler: user = {:?} bookmark = {:?}",
         user,
         bookmark
@@ -57,7 +57,7 @@ pub async fn list_posts_handler(
         vec![]
     };
 
-    tracing::info!("list_posts_handler: returning {} items", posts.len());
+    tracing::debug!("list_posts_handler: returning {} items", posts.len());
     let items: Vec<PostResponse> = posts
         .into_iter()
         .map(|post| {

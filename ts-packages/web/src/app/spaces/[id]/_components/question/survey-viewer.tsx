@@ -8,7 +8,6 @@ import ObjectiveViewer from './_component/viewer/objective-viewer';
 import SubjectiveViewer from './_component/viewer/subjective-viewer';
 import DropdownViewer from './_component/viewer/dropdown-viewer';
 import LinearScaleViewer from './_component/viewer/linear-scale-viewer';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { Poll, SurveyAnswer } from '../../type';
 import { useTranslations } from 'next-intl';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
@@ -48,8 +47,8 @@ export default function SurveyViewer({
   space: Space;
 }) {
   const t = useTranslations('PollSpace');
-  const { data: userInfo } = useSuspenseUserInfo();
-  const userId = userInfo?.id || 0;
+  // TODO: Update to use v3 user API with string pk instead of numeric id
+  const userId = 0;
 
   // const members = space.discussions.flatMap((discussion) => discussion.members);
   // const isMember = members.some((member) => member.id === userId);

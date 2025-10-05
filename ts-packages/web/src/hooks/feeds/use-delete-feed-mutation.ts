@@ -5,7 +5,8 @@ import { Feed, FeedStatus, FeedType } from '@/lib/api/models/feeds'; // FeedType
 import { showErrorToast } from '@/lib/toast';
 import { deletePost } from '@/lib/api/ratel/posts.v3';
 
-export function useDeleteFeedMutation(status: FeedStatus, targetId: number) {
+// TODO: Update to use v3 feed query keys without targetId parameter
+export function useDeleteFeedMutation(status: FeedStatus) {
   const queryClient = getQueryClient();
 
   return useMutation({
@@ -24,7 +25,8 @@ export function useDeleteFeedMutation(status: FeedStatus, targetId: number) {
       const isReply = feedType === FeedType.Reply;
 
       if (isReply && parentId) {
-        const detailQueryKey = feedKeys.detail(parentId);
+        // TODO: Update to use v3 feed API with string IDs
+        const detailQueryKey = feedKeys.detail(String(parentId));
         await queryClient.cancelQueries({ queryKey: detailQueryKey });
         const previousFeedDetail =
           queryClient.getQueryData<Feed>(detailQueryKey);
@@ -41,8 +43,8 @@ export function useDeleteFeedMutation(status: FeedStatus, targetId: number) {
       }
 
       const detailQueryKey = feedKeys.detail(feedId);
+      // TODO: Update to use v3 feed query keys without userId
       const listQueryKey = feedKeys.list({
-        userId: targetId,
         status,
       });
 
@@ -74,7 +76,7 @@ export function useDeleteFeedMutation(status: FeedStatus, targetId: number) {
       if (context?.previousFeedDetail) {
         const { feedType, feedId, parentId } = variables;
         const detailQueryKey = feedKeys.detail(
-          feedType === FeedType.Reply ? parentId! : feedId,
+          String(feedType === FeedType.Reply ? parentId! : feedId),
         );
         queryClient.setQueryData(detailQueryKey, context.previousFeedDetail);
       }
@@ -89,7 +91,9 @@ export function useDeleteFeedMutation(status: FeedStatus, targetId: number) {
     onSettled: (data, error, variables) => {
       const { feedType, parentId } = variables;
       if (feedType === FeedType.Reply) {
-        queryClient.invalidateQueries({ queryKey: feedKeys.detail(parentId!) });
+        queryClient.invalidateQueries({
+          queryKey: feedKeys.detail(String(parentId!)),
+        });
       } else {
         queryClient.invalidateQueries({ queryKey: feedKeys.lists() });
       }

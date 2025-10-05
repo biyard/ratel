@@ -18,8 +18,9 @@ export async function createDraft(): Promise<CreatePostResponse> {
   return createPost();
 }
 
+// TODO: Update to use v3 post API with string IDs
 export async function updatePost(
-  post_id: number,
+  post_id: number | string,
   req: Partial<UpdatePostRequest>,
 ): Promise<Feed> {
   const res = await apiFetch<Feed>(
@@ -59,7 +60,8 @@ export async function createComment(
   });
 }
 
-export function useDraftMutations(listId: number) {
+// TODO: Update to use v3 feed query keys without userId parameter
+export function useDraftMutations() {
   const queryClient = getQueryClient();
 
   const createMutation = useMutation({
@@ -113,8 +115,8 @@ export function useDraftMutations(listId: number) {
 
     onMutate: async ({ postId, req }) => {
       const detailQueryKey = feedKeys.detail(postId);
+      // TODO: Update to use v3 feed query keys without userId
       const listQueryKey = feedKeys.list({
-        userId: listId,
         status: FeedStatus.Draft,
       });
 
@@ -201,8 +203,16 @@ export function useDraftMutations(listId: number) {
   });
 
   const publishMutation = useMutation({
-    mutationFn: async ({ draftId }: { draftId: string }) => {
-      await publishPost(draftId);
+    mutationFn: async ({
+      draftId,
+      title,
+      content,
+    }: {
+      draftId: string;
+      title: string;
+      content: string;
+    }) => {
+      await publishPost(draftId, title, content);
       return draftId;
     },
     onSuccess: (draftId: string) => {
@@ -226,7 +236,10 @@ export function useDraftMutations(listId: number) {
       content: string;
     }) => createComment(userId, parentId, content),
     onSuccess: (_, { postId }) => {
-      queryClient.invalidateQueries({ queryKey: feedKeys.detail(postId) });
+      // TODO: Update to use v3 feed API with string IDs
+      queryClient.invalidateQueries({
+        queryKey: feedKeys.detail(String(postId)),
+      });
     },
     onError: (error: Error) => {
       showErrorToast(error.message || 'Failed to create comment');

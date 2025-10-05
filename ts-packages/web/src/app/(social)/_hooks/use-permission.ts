@@ -13,13 +13,13 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const EMPTY_PERMISSION: Permission = { has_permission: false } as Permission;
 
 export function usePermission(
-  teamId: number,
+  teamUsername: string,
   permission: GroupPermission,
 ): UseSuspenseQueryResult<Permission> {
   const { get } = useApiCall();
 
   return useSuspenseQuery({
-    queryKey: [QK_GET_PERMISSION, teamId, permission],
+    queryKey: [QK_GET_PERMISSION, teamUsername, permission],
     queryFn: async () => {
       const maxAttempts = 3;
       const delayMs = 500;
@@ -28,7 +28,7 @@ export function usePermission(
 
       for (let i = 1; i <= maxAttempts; i++) {
         const p = (await get(
-          ratelApi.permissions.getPermissions(teamId, permission),
+          ratelApi.permissions.getPermissions(teamUsername, permission),
         )) as Permission | null | undefined;
 
         last = p ?? EMPTY_PERMISSION;

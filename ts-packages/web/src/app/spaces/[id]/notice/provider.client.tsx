@@ -787,7 +787,8 @@ export function useNoticeSpace() {
 }
 
 export function useNoticeFeed(feedId: number) {
-  const { data: feed } = useFeedById(feedId);
+  // TODO: Update to use v3 feed API with string IDs
+  const { data: feed } = useFeedById(feedId.toString());
   if (!feed) {
     throw new Error('Feed not found');
   }

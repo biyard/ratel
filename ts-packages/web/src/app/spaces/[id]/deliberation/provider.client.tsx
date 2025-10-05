@@ -723,13 +723,15 @@ export function useDeliberationSpace(): Space {
 }
 
 export function useDeliberationFeed(feedId: number): Feed {
-  const { data: feed } = useFeedById(feedId);
+  // TODO: Update to use v3 feed API with string IDs
+  const { data: feedDetail } = useFeedById(feedId.toString());
 
-  if (!feed) {
+  if (!feedDetail) {
     throw new Error('Feed data is not available');
   }
 
-  return feed;
+  // TODO: Update to properly type conversion after v3 migration
+  return feedDetail as unknown as Feed;
 }
 
 export function mapResponses(

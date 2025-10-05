@@ -48,5 +48,5 @@ export default async function Page({ params }: Props) {
   }
   await Promise.allSettled([prefetchInfiniteFeeds()]);
 
-  return <TeamHome teamId={user?.data?.id ?? 0} />;
+  return <TeamHome />;
 }

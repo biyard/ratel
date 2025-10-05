@@ -10,15 +10,17 @@ import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
   const { data: space } = useSpaceBySpaceId(spaceId);
-
-  const { data: feed } = useFeedById(space?.feed_id);
+  // TODO: Update space API to use string feed_id in v3
+  const { data: feed } = useFeedById(space?.feed_id.toString());
 
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-2.5">
-      {feed.url && feed.url !== '' ? (
+      {feed.post.urls &&
+      feed.post.urls.length > 0 &&
+      feed.post.urls[0] !== '' ? (
         <Image
-          src={feed.url}
-          alt={feed.title ?? ''}
+          src={feed.post.urls[0]}
+          alt={feed.post.title ?? ''}
           width={250}
           height={127}
           className="rounded-[10px] object-cover object-top"

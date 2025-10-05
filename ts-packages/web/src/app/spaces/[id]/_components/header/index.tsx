@@ -122,8 +122,9 @@ export default function SpaceHeader({
   const rewards = feed.rewards;
   const { isOpen, toggle, close, dropdownRef } = useDropdown();
 
+  // TODO: Update to use v3 space API with username-based permissions
   const writePostPermission = usePermission(
-    space.author[0]?.id ?? 0,
+    space.author[0]?.username ?? '',
     GroupPermission.WritePosts,
   ).data.has_permission;
 

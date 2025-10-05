@@ -4,7 +4,6 @@ import { Textarea } from '@/components/ui/textarea';
 import React, { useState } from 'react';
 import Comment from '@/assets/icons/comment.svg';
 import { useApiCall } from '@/lib/api/use-send';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { useSpaceBySpaceId } from '@/app/(social)/_hooks/use-spaces';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
@@ -35,14 +34,14 @@ export default function CreateCommentBox({ spaceId }: { spaceId: number }) {
   const { close, setClose, expand, setExpand } = useCommitteeSpaceByIdContext();
   const [description, setDescription] = useState('');
   const { post } = useApiCall();
-  const { data: user } = useSuspenseUserInfo();
   const space = useSpaceBySpaceId(spaceId);
   const feedId = space.data.feed_id;
 
   const handleSubmit = async (contents: string) => {
+    // TODO: Migrate comment API to v3 with string IDs
     await post(
       ratelApi.feeds.comment(),
-      writeCommentRequest(contents, user.id, feedId),
+      writeCommentRequest(contents, 0, feedId),
     );
     space.refetch();
   };

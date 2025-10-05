@@ -127,9 +127,9 @@ export const LoginModal = ({
     if (info) {
       console.log('Sign in user info:', info);
       refetchUserInfo(queryClient);
+      // TODO: Update to use v3 feed query keys without userId
       await queryClient.invalidateQueries({
         queryKey: feedKeys.list({
-          userId: 0,
           status: FeedStatus.Published,
         }),
       });
@@ -186,9 +186,9 @@ export const LoginModal = ({
         );
 
         refetchUserInfo(queryClient);
+        // TODO: Update to use v3 feed query keys without userId
         await queryClient.invalidateQueries({
           queryKey: feedKeys.list({
-            userId: 0,
             status: FeedStatus.Published,
           }),
         });
@@ -254,9 +254,9 @@ export const LoginModal = ({
         });
       } else {
         refetchUserInfo(queryClient);
+        // TODO: Update to use v3 feed query keys without userId
         await queryClient.invalidateQueries({
           queryKey: feedKeys.list({
-            userId: 0,
             status: FeedStatus.Published,
           }),
         });

@@ -16,5 +16,5 @@ export default async function Page({ params }: TeamLayoutProps) {
 
   await Promise.allSettled([prefetchInfiniteFeeds()]);
 
-  return <TeamDraftPage teamId={user?.data?.id ?? 0} username={username} />;
+  return <TeamDraftPage username={username} />;
 }
