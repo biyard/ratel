@@ -1,27 +1,20 @@
+use crate::AppState;
+use crate::controllers::v3::posts::post_response::PostResponse;
+use crate::models::feed::*;
+use crate::models::user::User;
 use crate::types::*;
-use crate::{
-    AppState,
-    controllers::v3::posts::post_response::PostResponse,
-    models::{
-        feed::{Post, PostQueryOption},
-        user::User,
-    },
-    types::{PostStatus, list_items_query::ListItemsQuery, list_items_response::ListItemsResponse},
-};
 use aide::NoApi;
-use axum::extract::Query;
-use axum::extract::State;
-use axum::*;
+use axum::extract::*;
 use bdk::prelude::*;
 
-pub async fn list_my_posts_handler(
+pub async fn list_my_drafts_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
     Query(Pagination { bookmark }): ListItemsQuery,
 ) -> Result<Json<ListItemsResponse<PostResponse>>, crate::Error2> {
     tracing::debug!("Handling request: {:?}", bookmark);
 
-    let mut opt = PostQueryOption::builder().sk(PostStatus::Published.to_string());
+    let mut opt = PostQueryOption::builder().sk(PostStatus::Draft.to_string());
 
     if let Some(bookmark) = bookmark {
         opt = opt.bookmark(bookmark);

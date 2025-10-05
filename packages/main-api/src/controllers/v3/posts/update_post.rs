@@ -16,6 +16,7 @@ pub enum UpdatePostRequest {
         title: String,
         content: String,
         publish: bool,
+        visibility: Option<Visibility>,
     },
     Writing {
         title: String,
@@ -86,12 +87,24 @@ pub async fn update_post_handler(
             publish,
             content,
             title,
+            visibility,
         } => {
             tracing::warn!(
                 "Publish request: publish = {}, title = {}, content = [REDACTED]",
                 publish,
                 title
             );
+            let visibility = visibility.unwrap_or_default();
+            let sorted_visibility = match visibility {
+                Visibility::TeamOnly(..) => {
+                    SortedVisibility::team_only(post.user_pk.clone(), post.created_at)?
+                }
+                Visibility::Public => SortedVisibility::public(post.created_at),
+            };
+
+            post.visibility = Some(visibility.clone());
+            post.sorted_visibility = sorted_visibility.clone();
+
             if !publish {
                 // TODO: support unpublish if no dependencies
                 return Err(Error2::NotSupported(
@@ -110,6 +123,8 @@ pub async fn update_post_handler(
                 .with_status(PostStatus::Published)
                 .with_title(title)
                 .with_html_contents(content)
+                .with_visibility(visibility)
+                .with_sorted_visibility(sorted_visibility)
         }
     };
 

@@ -139,6 +139,7 @@ pub mod controllers {
             pub mod get_info;
             pub mod update_user;
 
+            pub mod list_my_drafts;
             pub mod list_my_posts;
             #[cfg(test)]
             pub mod tests;
