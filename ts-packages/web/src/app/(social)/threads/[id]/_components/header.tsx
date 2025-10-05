@@ -37,45 +37,40 @@ import { BoosterType } from '@/lib/api/models/notice';
 
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import { useLikeFeedMutation } from '@/hooks/feeds/use-like-feed-mutation';
-import { useDeleteFeedMutation } from '@/hooks/feeds/use-delete-feed-mutation';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { GroupPermission } from '@/lib/api/models/group';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
+import { useDeletePostMutation } from '@/hooks/feeds/use-delete-post-mutation';
 
-export default function Header({ postId }: { postId: number }) {
+export default function Header({ postId }: { postId: string }) {
   const t = useTranslations('Threads');
   const popup = usePopup();
   const router = useRouter();
   const { teams } = useContext(TeamContext);
-  const { data: post } = useFeedById(postId);
+  const {
+    data: { post },
+  } = useFeedById(postId);
 
-  const user = useSuspenseUserInfo();
-
-  let author_id: number | undefined;
-  if (post?.author && post.author.length > 0) {
-    author_id = post.author[0]?.id;
-  }
+  const { data: user } = useSuspenseUserInfo();
 
   const { openPostEditorPopup } = usePostEditorContext();
 
-  let space_id: number | null = null;
-  let is_boost = false;
+  const space_id = post.space_pk;
+  const is_boost = post.booster && post.booster !== BoosterType.NoBoost;
   let target = '';
-  if (post.space?.length >= 1) {
-    const space = post.space[0];
-    space_id = space.id;
-    is_boost = Boolean(
-      space?.booster_type && space?.booster_type != BoosterType.NoBoost,
-    );
-    target = route.space(space_id);
+  if (post.space_pk) {
+    target = route.space(space_id!);
   }
-  const user_id = user.data ? user.data.id : 0;
 
   const likeMutation = useLikeFeedMutation();
-  const deleteMutation = useDeleteFeedMutation(user_id, FeedStatus.Published);
+  const deleteMutation = useDeletePostMutation(
+    user.username,
+    FeedStatus.Published,
+  );
 
   const isPostOwner =
-    author_id === user_id || teams.find((team) => team.id === author_id);
+    post.author_username === user.username ||
+    teams.find((team) => team.username === post.author_username);
 
   const handleCreateSpace = () => {
     popup
@@ -86,11 +81,7 @@ export default function Header({ postId }: { postId: number }) {
 
   const handleDelete = async () => {
     if (!deleteMutation.isPending) {
-      await deleteMutation.mutateAsync({
-        feedId: postId,
-        feedType: post.feed_type,
-        parentId: undefined,
-      });
+      await deleteMutation.mutateAsync(postId);
       router.push(route.home());
     }
   };

@@ -1,3 +1,5 @@
+import { FeedStatus } from './lib/api/models/feeds';
+
 // LocalStorage keys
 export const SK_IDENTITY_KEY = 'identity';
 export const SK_ANONYMOUS_IDENTITY_KEY = 'anonymous_identity';
@@ -50,7 +52,6 @@ export const QK_GET_ARTWORK = 'get-artwork';
 export const QK_GET_ARTWORK_CERTIFICATE = 'get-artwork-certificate';
 
 export const QK_GET_HOME_DATA = 'get-home-data';
-export const QK_INF_POSTS = 'infinite-posts';
 
 function sortObjectKeys<T extends object>(obj: T): T {
   const sortedKeys = Object.keys(obj).sort() as Array<keyof T>;
@@ -66,16 +67,16 @@ const QK_FEEDS = 'feeds';
 export const feedKeys = {
   all: [QK_FEEDS] as const,
   lists: () => [...feedKeys.all, 'list'] as const,
-  list: (filters: object) => {
+  // {username, status}
+  // posts on Home: [status]
+  // posts on a specific user or team: [username, status]
+  // invalidate: login/logout
+  list: (filters: { username?: string; status: FeedStatus }) => {
     const nonNullFilters = Object.fromEntries(
       Object.entries(filters).filter(([, value]) => value != null),
     );
     return [...feedKeys.lists(), sortObjectKeys(nonNullFilters)] as const;
   },
   details: () => [...feedKeys.all, 'detail'] as const,
-  detail: (id: number | string) => [...feedKeys.details(), id] as const,
+  detail: (pk: string) => [...feedKeys.details(), pk] as const,
 };
-
-// Example Usage
-// feedKeys.list({ feed_type: 'news', industry_id: 5 });
-// feedKeys.detail(1);

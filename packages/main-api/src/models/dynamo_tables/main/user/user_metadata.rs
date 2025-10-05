@@ -23,6 +23,7 @@ pub struct UserResponse {
     pub profile_url: String,
     pub description: String,
     pub user_type: u8,
+    pub username: String,
 
     pub followers_count: i64,
     pub followings_count: i64,
@@ -46,6 +47,7 @@ impl From<User> for UserResponse {
             membership: user.membership as u8,
             theme: user.theme as u8,
             point: user.points,
+            username: user.username,
         }
     }
 }

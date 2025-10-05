@@ -2,10 +2,11 @@ import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { ListPostResponse, listPosts } from '@/lib/api/ratel/posts.v3';
+import { FeedStatus } from '@/lib/api/models/feeds';
 
 export function getOptions() {
   return {
-    queryKey: feedKeys.list({ status }),
+    queryKey: feedKeys.list({ status: FeedStatus.Published }),
     queryFn: ({
       pageParam,
     }: {
@@ -17,12 +18,12 @@ export function getOptions() {
   };
 }
 
-export async function prefetchInfiniteFeeds() {
+export async function prefetchInfinitePosts() {
   const queryClient = getQueryClient();
   const options = getOptions();
   await queryClient.prefetchInfiniteQuery(options);
 }
 
-export default function useInfiniteFeeds() {
+export default function useInfinitePosts() {
   return useSuspenseInfiniteQuery(getOptions());
 }

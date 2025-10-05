@@ -9,7 +9,7 @@ import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import { ArtworkPost } from '@/app/(social)/_components/post-editor';
 import DisableBorderCard from '@/app/(social)/_components/disable-border-card';
 
-export default function Thread({ postId }: { postId: number }) {
+export default function Thread({ postId }: { postId: string }) {
   const t = useTranslations('Threads');
 
   const { data: post } = useFeedById(postId);

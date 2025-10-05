@@ -12,10 +12,10 @@ import PromotionCard from '../promotion-card';
 import Suggestions from '../suggestions';
 import DisableBorderCard from '../disable-border-card';
 import { usePostEditorContext } from '../post-editor/provider';
-import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
 import { useObserver } from '@/hooks/use-observer';
 import { useCallback } from 'react';
 import { TopPromotionResponse } from '@/lib/api/ratel/promotions.v3';
+import useInfinitePosts from '../../_hooks/use-infinite-posts';
 
 export const SIZE = 10;
 
@@ -50,7 +50,7 @@ export default function Home({
   const { close } = usePostEditorContext();
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-    useInfiniteFeeds();
+    useInfinitePosts();
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();

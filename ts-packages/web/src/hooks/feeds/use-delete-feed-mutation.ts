@@ -3,27 +3,7 @@ import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
 import { Feed, FeedStatus, FeedType } from '@/lib/api/models/feeds'; // FeedType 추가
 import { showErrorToast } from '@/lib/toast';
-import { apiFetch } from '@/lib/api/apiFetch';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { config } from '@/config';
-import { removePostRequest } from '@/lib/api/models/feeds/remove-post';
 import { deletePost } from '@/lib/api/ratel/posts.v3';
-
-export async function deleteFeed(feedId: number): Promise<void> {
-  const { data } = await apiFetch<void>(
-    `${config.api_url}${ratelApi.feeds.removeDraft(feedId)}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(removePostRequest()),
-    },
-  );
-  if (!data) {
-    throw new Error('Failed to delete post');
-  }
-}
 
 export function useDeleteFeedMutation(status: FeedStatus, targetId: number) {
   const queryClient = getQueryClient();

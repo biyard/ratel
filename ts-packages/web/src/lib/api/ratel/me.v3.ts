@@ -11,6 +11,7 @@ export type UserResponse = {
   profile_url: string;
   description: string;
   user_type: number;
+  username: string;
 
   followers_count: number;
   followings_count: number;

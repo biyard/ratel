@@ -204,20 +204,17 @@ export function FeedBody({ post, onEdit = () => {} }: FeedBodyProps) {
         <TimeAgo timestamp={created_at} />
       </Row>
       <Row className="justify-between px-5"></Row>
-      <FeedContents
-        contents={html_contents}
-        url={urls.length > 0 ? urls[0] : undefined}
-      />
+      <FeedContents contents={html_contents} urls={urls} />
     </Col>
   );
 }
 
 export function FeedContents({
   contents,
-  url,
+  urls,
 }: {
   contents: string;
-  url?: string;
+  urls: string[];
 }) {
   const [sanitized, setSanitized] = useState<string>('');
 
@@ -232,11 +229,11 @@ export function FeedContents({
         dangerouslySetInnerHTML={{ __html: sanitized }}
       ></p>
 
-      {url && (
+      {urls.length > 0 && (
         <div className="px-5">
           <div className="relative w-full max-h-80 aspect-video">
             <img
-              src={url}
+              src={urls[0]}
               alt="Uploaded image"
               className="object-cover w-full rounded-[8px]"
               sizes="100vw"
