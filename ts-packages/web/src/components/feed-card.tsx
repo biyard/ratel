@@ -234,7 +234,7 @@ export function FeedContents({
         dangerouslySetInnerHTML={{ __html: sanitized }}
       ></p>
 
-      {urls.length > 0 && (
+      {urls.length > 0 && urls[0] !== '' && (
         <div className="px-5">
           <div className="relative w-full max-h-80 aspect-video">
             <img

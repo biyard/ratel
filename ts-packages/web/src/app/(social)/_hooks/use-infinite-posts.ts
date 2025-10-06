@@ -1,8 +1,8 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
-import { getQueryClient } from '@/providers/getQueryClient';
 import { ListPostResponse, listPosts } from '@/lib/api/ratel/posts.v3';
 import { FeedStatus } from '@/lib/api/models/feeds';
+import { getServerQueryClient } from '@/lib/query-utils.server';
 
 export function getOptions() {
   return {
@@ -19,7 +19,7 @@ export function getOptions() {
 }
 
 export async function prefetchInfinitePosts() {
-  const queryClient = getQueryClient();
+  const queryClient = await getServerQueryClient();
   const options = getOptions();
   await queryClient.prefetchInfiniteQuery(options);
 }

@@ -52,6 +52,7 @@ export default function Home({
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfinitePosts();
+
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
