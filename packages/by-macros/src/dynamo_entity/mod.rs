@@ -906,6 +906,10 @@ fn generate_struct_impl(
                 cli: &aws_sdk_dynamodb::Client,
                 keys: Vec<#batch_get_param>,
             ) -> Result<Vec<Self>, #err_ctor> {
+                if keys.is_empty() {
+                    return Ok(vec![]);
+                }
+
                 let keys = keys
                     .iter()
                     .map(|key| {
