@@ -33,7 +33,7 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
   const selectedTeam = teams.some((t) => t.id === authorId);
 
   const { data: userInfo } = useUserInfo();
-  const userId = userInfo ? userInfo.id : 0;
+  const username = userInfo ? userInfo.username : '';
   const createdAt = space.created_at;
 
   return (
@@ -52,7 +52,8 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
             </div>
           </div>
 
-          {(space.author.some((a) => a.id === userId) || selectedTeam) &&
+          {(space.author.some((a) => a.username === username) ||
+            selectedTeam) &&
             status == SpaceStatus.InProgress && (
               <div
                 className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${

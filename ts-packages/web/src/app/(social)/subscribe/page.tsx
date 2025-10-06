@@ -85,6 +85,8 @@ export default function SubscribePage() {
 
   const t = useTranslations('Subscribe');
 
+  if (!user) return null;
+
   const selected =
     user.membership == 1
       ? 'Free'
