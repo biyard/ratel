@@ -23,8 +23,10 @@ export default function DraftPage() {
   } = useInfiniteMyDrafts();
 
   const p = usePostEditorContext();
+  const username = user?.username || '';
+
   const { mutateAsync: handleRemoveDraft } = useDeletePostMutation(
-    user!.username,
+    username,
     FeedStatus.Draft,
   );
 
@@ -44,6 +46,8 @@ export default function DraftPage() {
   );
 
   if (!p) return null;
+  if (!user) return null;
+
   const { openPostEditorPopup } = p;
 
   if (drafts.pages.length === 0) {
