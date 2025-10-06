@@ -63,12 +63,12 @@ function Page() {
   const selectedTeam = teams.some((t) => t.id === authorId);
   const { data: userInfo } = useUserInfo();
 
-  const userId = userInfo ? userInfo.id : 0;
+  const username = userInfo?.username || '';
 
   // Block access to draft notice spaces for unauthorized users
   if (
     space.status === SpaceStatus.Draft &&
-    !space.author.some((a) => a.id === userId) &&
+    !space.author.some((a) => a.username === username) &&
     !selectedTeam
   ) {
     return <div>{t('no_authorized_user')}</div>;
