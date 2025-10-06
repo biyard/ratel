@@ -12,7 +12,7 @@ export default function CreatePostButton({ team_pk }: { team_pk?: string }) {
   const { openPostEditorPopup, setClose } = usePostEditorContext();
 
   return (
-    <div
+    <button
       className="cursor-pointer flex flex-row w-full justify-start items-center gap-1 bg-create-button-bg rounded-[100px] px-4 py-3 mb-[10px] aria-hidden:hidden"
       aria-hidden={!loggedIn}
       onClick={async () => {
@@ -25,6 +25,6 @@ export default function CreatePostButton({ team_pk }: { team_pk?: string }) {
       <div className="font-bold text-base/[22px] text-text-third">
         {t('create_post')}
       </div>
-    </div>
+    </button>
   );
 }

@@ -11,10 +11,10 @@ services:
       timeout: 10s
       retries: 100
     depends_on:
-      postgres:
-        condition: service_healthy
-      postgres-init:
-        condition: service_healthy
+      # postgres:
+      #   condition: service_healthy
+      # postgres-init:
+      #   condition: service_healthy
       localstack:
         condition: service_healthy
       localstack-init:
@@ -59,10 +59,10 @@ services:
       timeout: 10s
       retries: 100
     depends_on:
-      postgres:
-        condition: service_healthy
-      postgres-init:
-        condition: service_healthy
+      # postgres:
+      #   condition: service_healthy
+      # postgres-init:
+        # condition: service_healthy
       localstack:
         condition: service_healthy
       localstack-init:
@@ -116,11 +116,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 100
-    depends_on:
-      postgres:
-        condition: service_healthy
-      postgres-init:
-        condition: service_healthy
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    #   postgres-init:
+    #     condition: service_healthy
     networks:
       - ratel-network
     profiles:
