@@ -11,10 +11,10 @@ services:
       timeout: 10s
       retries: 100
     depends_on:
-      # postgres:
-      #   condition: service_healthy
-      # postgres-init:
-      #   condition: service_healthy
+      postgres:
+        condition: service_healthy
+      postgres-init:
+        condition: service_healthy
       localstack:
         condition: service_healthy
       localstack-init:
@@ -59,10 +59,10 @@ services:
       timeout: 10s
       retries: 100
     depends_on:
-      # postgres:
-      #   condition: service_healthy
-      # postgres-init:
-        # condition: service_healthy
+      postgres:
+        condition: service_healthy
+      postgres-init:
+        condition: service_healthy
       localstack:
         condition: service_healthy
       localstack-init:
@@ -116,11 +116,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 100
-    # depends_on:
-    #   postgres:
-    #     condition: service_healthy
-    #   postgres-init:
-    #     condition: service_healthy
+    depends_on:
+      postgres:
+        condition: service_healthy
+      postgres-init:
+        condition: service_healthy
     networks:
       - ratel-network
     profiles:
@@ -191,63 +191,63 @@ services:
       - development
 
   # Database
-  # postgres:
-  #   image: postgres:16
-  #   restart: always
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: postgres
-  #     POSTGRES_DB: ratel
-  #   volumes:
-  #     - .build/postgres-data:/var/lib/postgresql/data
-  #   ports:
-  #     - "5432:5432"
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U postgres"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
-  #   networks:
-  #     - ratel-network
-  #   profiles:
-  #     - testing
-  #     - development
-  #     - infra
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ratel
+    volumes:
+      - .build/postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ratel-network
+    profiles:
+      - testing
+      - development
+      - infra
 
-  # postgres-init:
-  #   image: postgres:16
-  #   environment:
-  #     POSTGRES_USER: postgres
-  #     POSTGRES_PASSWORD: postgres
-  #     POSTGRES_DB: postgres
-  #     PGPASSWORD: postgres
-  #   volumes:
-  #     - ./scripts:/scripts
-  #   # Command will be overridden in specific compose files
-  #   healthcheck:
-  #     test: ["CMD", "test", "-f", "/tmp/init-complete"]
-  #     interval: 5s
-  #     timeout: 3s
-  #     retries: 10
-  #   command: >
-  #     sh -c "
-  #       echo 'Waiting for PostgreSQL to be ready...' &&
-  #       until pg_isready -h postgres -U postgres; do
-  #         sleep 2
-  #       done &&
-  #       echo 'Creating ratel database...' &&
-  #       psql -h postgres -U postgres -d postgres -c 'CREATE DATABASE ratel;' || echo 'Database might already exist' &&
-  #       echo 'Running init.sql...' &&
-  #       psql -h postgres -U postgres -d ratel -f /scripts/init.sql &&
-  #       echo 'Database initialization completed' &&
-  #       touch /tmp/init-complete &&
-  #       sleep infinity
-  #     "
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #   networks:
-  #     - ratel-network
+  postgres-init:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+      PGPASSWORD: postgres
+    volumes:
+      - ./scripts:/scripts
+    # Command will be overridden in specific compose files
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/init-complete"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    command: >
+      sh -c "
+        echo 'Waiting for PostgreSQL to be ready...' &&
+        until pg_isready -h postgres -U postgres; do
+          sleep 2
+        done &&
+        echo 'Creating ratel database...' &&
+        psql -h postgres -U postgres -d postgres -c 'CREATE DATABASE ratel;' || echo 'Database might already exist' &&
+        echo 'Running init.sql...' &&
+        psql -h postgres -U postgres -d ratel -f /scripts/init.sql &&
+        echo 'Database initialization completed' &&
+        touch /tmp/init-complete &&
+        sleep infinity
+      "
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ratel-network
 
   localstack:
     hostname: localstack
