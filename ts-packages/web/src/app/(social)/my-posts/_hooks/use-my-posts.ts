@@ -20,9 +20,9 @@ export function getOptions(username: string) {
 }
 
 export default function useInfiniteMyPosts() {
-  const {
-    data: { username },
-  } = useSuspenseUserInfo();
+  const { data } = useSuspenseUserInfo();
+
+  const username = data?.username || '';
 
   return useSuspenseInfiniteQuery(getOptions(username));
 }

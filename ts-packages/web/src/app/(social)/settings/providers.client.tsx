@@ -31,8 +31,8 @@ export default function ClientProviders({
   const userinfo = useSuspenseUserInfo();
   const { data: user } = userinfo;
   const [profileUrl, setProfileUrl] = useState(user?.profile_url || '');
-  const [nickname, setNickname] = useState(user?.nickname);
-  const [htmlContents, setHtmlContents] = useState(user?.description);
+  const [nickname, setNickname] = useState(user?.nickname || '');
+  const [htmlContents, setHtmlContents] = useState(user?.description || '');
   const [showWalletConnect, setShowWalletConnect] = useState(false);
   const handleContents = (evt: React.FormEvent<HTMLTextAreaElement>) => {
     setHtmlContents(evt.currentTarget.value);
