@@ -1,4 +1,5 @@
-use percent_encoding::{AsciiSet, NON_ALPHANUMERIC};
+use percent_encoding::NON_ALPHANUMERIC;
+use tokio::time::sleep;
 use validator::ValidateLength;
 
 use crate::{
@@ -21,15 +22,12 @@ async fn test_create_post_by_user() {
     assert_eq!(status, 200);
     assert!(create_body.post_pk.to_string().len() > 0);
 
-    tracing::info!("Create post response pk: {:?}", create_body.post_pk);
-
     let (status, _headers, body) = get! {
         app: app,
         path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
         headers: test_user.1.clone()
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "get post response {:?}", body);
     assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
     let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
@@ -101,8 +99,7 @@ async fn test_create_post_by_user() {
         app: app,
         path: format!("/v3/posts/{}", post_pk),
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "get post response {:?}", body);
     assert_eq!(body["post"]["pk"], post_pk);
 }
 
@@ -159,15 +156,12 @@ async fn test_post_like() {
     assert_eq!(status, 200);
     assert!(create_body.post_pk.to_string().len() > 0);
 
-    tracing::info!("Create post response pk: {:?}", create_body.post_pk);
-
     let (status, _headers, body) = get! {
         app: app,
         path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
         headers: test_user.1.clone()
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "get post response {:?}", body);
     assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
     let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
@@ -206,15 +200,12 @@ async fn test_delete_draft() {
     assert_eq!(status, 200);
     assert!(create_body.post_pk.to_string().len() > 0);
 
-    tracing::info!("Create post response pk: {:?}", create_body.post_pk);
-
     let (status, _headers, body) = get! {
         app: app,
         path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
         headers: test_user.1.clone()
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "get post response {:?}", body);
     assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
     let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
@@ -243,15 +234,12 @@ async fn test_delete_post() {
     assert_eq!(status, 200);
     assert!(create_body.post_pk.to_string().len() > 0);
 
-    tracing::info!("Create post response pk: {:?}", create_body.post_pk);
-
     let (status, _headers, body) = get! {
         app: app,
         path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
         headers: test_user.1.clone()
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "get post response {:?}", body);
     assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
     let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
@@ -261,6 +249,9 @@ async fn test_delete_post() {
         path: format!("/v3/posts/{}", post_pk),
         headers: test_user.1.clone(),
         body: {
+            "title": "",
+            "content": "",
+            "visibility": "PUBLIC",
             "publish": true
         }
     };
@@ -273,8 +264,7 @@ async fn test_delete_post() {
         path: format!("/v3/posts/{}", post_pk),
         headers: test_user.1.clone(),
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "get post response {:?}", body);
     assert_eq!(body["post"]["pk"], post_pk);
 
     let (status, _headers, body) = delete! {
@@ -291,8 +281,7 @@ async fn test_delete_post() {
         path: format!("/v3/posts/{}", post_pk),
         headers: test_user.1.clone()
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 404);
+    assert_eq!(status, 404, "get post response {:?}", body);
     assert_eq!(body["code"], 107);
 }
 
@@ -316,15 +305,12 @@ async fn test_list_posts() {
         assert_eq!(status, 200);
         assert!(create_body.post_pk.to_string().len() > 0);
 
-        tracing::info!("Create post response pk: {:?}", create_body.post_pk);
-
         let (status, _headers, body) = get! {
             app: app,
             path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
             headers: test_user.1.clone()
         };
-        tracing::info!("Get post response: {:?}", body);
-        assert_eq!(status, 200);
+        assert_eq!(status, 200, "get post response {:?}", body);
         assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
         let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
@@ -361,12 +347,17 @@ async fn test_list_posts() {
             path: format!("/v3/posts/{}", post_pk),
             headers: test_user.1.clone(),
             body: {
+                "title": title,
+                "content": content,
+                "visibility": "PUBLIC",
                 "publish": true
             }
         };
 
         assert_eq!(status, 200);
         assert_eq!(body["status"], 2);
+
+        sleep(std::time::Duration::from_secs(1)).await; // ensure the order by created_at
     }
 
     let (status, _headers, body) = get! {

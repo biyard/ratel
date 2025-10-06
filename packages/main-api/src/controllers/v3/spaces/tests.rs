@@ -35,7 +35,7 @@ async fn test_create_space() {
         path: "/v3/spaces",
         headers: headers.clone(),
         body: {
-            "space_type": 1,
+            "space_type": 2,
             "post_pk": post_pk,
         },
         response_type: CreateSpaceResponse

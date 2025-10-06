@@ -126,7 +126,7 @@ build:
 TEST_TARGET ?= controllers::v3 models::dynamo_tables
 
 test:
-	$(BUILD_ENV) cargo test $(RUST_FLAG) --lib -- $(TEST_TARGET) --show-output
+	$(BUILD_ENV) cargo test $(RUST_FLAG) --lib -j 1 --  --test-threads=1 $(TEST_TARGET) --show-output
 
 
 docker.build:
