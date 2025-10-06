@@ -42,7 +42,7 @@ export interface FeedCardProps {
 export default function FeedCard(props: FeedCardProps) {
   const { post } = props;
 
-  const { openPostEditorPopup } = usePostEditorContext();
+  const p = usePostEditorContext();
 
   const [localLikes, setLocalLikes] = useState(post.likes);
   const [localIsLiked, setLocalIsLiked] = useState(post.liked);
@@ -51,15 +51,7 @@ export default function FeedCard(props: FeedCardProps) {
 
   // const t = useTranslations('Feeds');
 
-  const {
-    setAuthorName,
-    setAuthorProfileUrl,
-    setFeedContent,
-    setFeedImageUrl,
-    setOriginalFeedId,
-    setExpand,
-    setAuthorId,
-  } = useRepostDraft();
+  const r = useRepostDraft();
 
   // Sync with props when they change
   useEffect(() => {
@@ -117,6 +109,19 @@ export default function FeedCard(props: FeedCardProps) {
   };
 
   const handleRepostThought = () => {
+    if (!r) {
+      showErrorToast('Incorrectly set up repost provider');
+      return;
+    }
+    const {
+      setAuthorName,
+      setAuthorProfileUrl,
+      setFeedContent,
+      setFeedImageUrl,
+      setOriginalFeedId,
+      setExpand,
+      setAuthorId,
+    } = r;
     setAuthorId(post.author_pk);
     setAuthorName(post.author_display_name);
     setAuthorProfileUrl(post.author_profile_url);
@@ -130,7 +135,7 @@ export default function FeedCard(props: FeedCardProps) {
     e?.preventDefault();
     e?.stopPropagation();
     try {
-      await openPostEditorPopup(postId);
+      await p?.openPostEditorPopup(postId);
     } catch (error) {
       console.error('Error editing post:', error);
     }

@@ -35,9 +35,14 @@ import SaveIcon from '@/assets/icons/save.svg';
 export function CreateRePost() {
   const repostDraftContext = useRepostDraft();
 
-  if (!repostDraftContext) {
-    return null;
-  }
+  const { data: userInfo } = useUserInfo();
+  const { post } = useApiCall();
+  const router = useRouter();
+  const editorRef = useRef<Editor | null>(null);
+  const [isReposting, setIsReposting] = useState(false);
+  const [isQuotedSectionExpanded, setIsQuotedSectionExpanded] = useState(true);
+
+  if (!repostDraftContext) return null;
 
   const {
     expand,
@@ -65,13 +70,6 @@ export function CreateRePost() {
     setShowCommentUrlInput,
     authorId,
   } = repostDraftContext;
-
-  const { data: userInfo } = useUserInfo();
-  const { post } = useApiCall();
-  const router = useRouter();
-  const editorRef = useRef<Editor | null>(null);
-  const [isReposting, setIsReposting] = useState(false);
-  const [isQuotedSectionExpanded, setIsQuotedSectionExpanded] = useState(true);
 
   const handlePublish = async () => {
     if (!title.trim() || !content) return;
