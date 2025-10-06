@@ -8,8 +8,12 @@ import { useParams } from 'next/navigation';
 
 export default function CreatePostButton() {
   const t = useTranslations('Team');
-  const { openPostEditorPopup, setClose } = usePostEditorContext();
+  const p = usePostEditorContext();
   const { username } = useParams();
+
+  if (!p) return null;
+
+  const { openPostEditorPopup, setClose } = p;
 
   return (
     <div

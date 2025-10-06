@@ -22,7 +22,7 @@ export default function TeamDraftPage({ username }: { username: string }) {
   const t = useTranslations('Team');
   const { data: team } = useTeamByUsername(username);
 
-  const { openPostEditorPopup } = usePostEditorContext();
+  const p = usePostEditorContext();
 
   const {
     data: drafts,
@@ -63,7 +63,7 @@ export default function TeamDraftPage({ username }: { username: string }) {
               key={post.pk}
               className="cursor-pointer pt-5 pb-2.5 bg-card-bg border border-card-border rounded-lg"
               onClick={async (evt) => {
-                await openPostEditorPopup(post.pk);
+                await p?.openPostEditorPopup(post.pk);
                 evt.preventDefault();
                 evt.stopPropagation();
               }}

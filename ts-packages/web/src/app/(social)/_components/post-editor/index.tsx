@@ -217,8 +217,14 @@ const editorConfig = {
 export function CreatePost() {
   const t = useTranslations('Home');
 
+  const p = usePostEditorContext();
+
+  const { data: userInfo, isLoading } = useUserInfo();
+
+  if (isLoading || !p || !p.expand) {
+    return null;
+  }
   const {
-    expand,
     toggleExpand,
     content,
     updateContent,
@@ -231,13 +237,7 @@ export function CreatePost() {
     image,
     updateImage,
     handleUpdate,
-  } = usePostEditorContext();
-
-  const { data: userInfo, isLoading } = useUserInfo();
-
-  if (isLoading || !expand) {
-    return null;
-  }
+  } = p;
   return (
     <div className="flex flex-col w-full">
       <div className="w-full bg-card-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
@@ -407,6 +407,10 @@ function SelectPostType({
 }
 
 function EditableArtworkPost() {
+  const p = usePostEditorContext();
+
+  if (!p) return null;
+
   const {
     title,
     updateTitle,
@@ -416,7 +420,7 @@ function EditableArtworkPost() {
     updateImage,
     traits,
     updateTrait,
-  } = usePostEditorContext();
+  } = p;
 
   return (
     <ArtworkPost

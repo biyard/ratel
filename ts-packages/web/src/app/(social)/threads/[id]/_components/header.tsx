@@ -52,8 +52,9 @@ export default function Header({ postId }: { postId: string }) {
   } = useFeedById(postId);
 
   const { data: user } = useSuspenseUserInfo();
+  const username = user?.username || '';
 
-  const { openPostEditorPopup } = usePostEditorContext();
+  const p = usePostEditorContext();
 
   const space_id = post.space_pk;
   const is_boost = post.booster && post.booster !== BoosterType.NoBoost;
@@ -63,13 +64,10 @@ export default function Header({ postId }: { postId: string }) {
   }
 
   const likeMutation = useLikePostMutation();
-  const deleteMutation = useDeletePostMutation(
-    user.username,
-    FeedStatus.Published,
-  );
+  const deleteMutation = useDeletePostMutation(username, FeedStatus.Published);
 
   const isPostOwner =
-    post.author_username === user.username ||
+    post.author_username === username ||
     teams.find((team) => team.username === post.author_username);
 
   const handleCreateSpace = () => {
@@ -96,7 +94,7 @@ export default function Header({ postId }: { postId: string }) {
   };
 
   const handleEditPost = async () => {
-    await openPostEditorPopup(postId);
+    await p?.openPostEditorPopup(postId);
   };
 
   const writeGroupPermission = usePermission(

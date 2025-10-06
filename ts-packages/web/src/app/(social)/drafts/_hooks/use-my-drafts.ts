@@ -20,9 +20,9 @@ export function getOptions(username: string) {
 }
 
 export default function useInfiniteMyDrafts() {
-  const {
-    data: { username },
-  } = useSuspenseUserInfo();
+  const user = useSuspenseUserInfo();
+
+  const username = user.data?.username || '';
 
   return useSuspenseInfiniteQuery(getOptions(username));
 }
