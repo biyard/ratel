@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { CONFIGS } from "../config";
+import { click } from "../utils";
 
 test.describe("Anonymous User Signup Flow", () => {
   test.beforeEach(async ({ page }) => {
@@ -143,7 +144,7 @@ test.describe("Anonymous User Signup Flow", () => {
     await page
       .getByPlaceholder("Verify code in your email.", { exact: true })
       .fill("000000");
-    await page.getByText("Verify").click();
+    await click(page, { text: "Verify" });
 
     await page.getByPlaceholder(/password/i).fill(password);
     await page.getByPlaceholder(/display name/i).fill(displayName);
