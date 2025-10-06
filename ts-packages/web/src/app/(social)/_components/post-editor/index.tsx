@@ -79,12 +79,14 @@ function Editor({
   content,
   updateContent,
   maxLines,
+  label,
 }: {
   disabled: boolean;
   placeholder: string;
   content: string | null;
   updateContent: (content: string) => void;
   maxLines?: number;
+  label?: string;
 }) {
   const editorRef = useRef<LexicalEditor | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
@@ -174,6 +176,7 @@ function Editor({
       <RichTextPlugin
         contentEditable={
           <ContentEditable
+            aria-label={label || 'editor'}
             ref={contentRef}
             disabled={disabled}
             className="outline-none resize-none w-full min-h-[60px]"
@@ -281,6 +284,7 @@ export function CreatePost() {
 
             <div className="px-4 pt-2 min-h-[80px] relative text-text-primary text-[15px] leading-relaxed">
               <Editor
+                label="general-post-editor"
                 disabled={false}
                 content={content}
                 updateContent={updateContent}
@@ -324,6 +328,7 @@ export function CreatePost() {
                 )}
 
                 <Button
+                  aria-label="Publish"
                   variant="rounded_primary"
                   size="default"
                   onClick={async () => {
@@ -354,6 +359,7 @@ export function CreatePost() {
                 )}
 
                 <Button
+                  aria-label="Publish"
                   variant="rounded_primary"
                   size="default"
                   onClick={async () => {
