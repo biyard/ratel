@@ -79,6 +79,7 @@ jobs:
           ENV: test
           RUST_FLAG: "--features no-secret"
           RUSTFLAGS: "-A warnings"
+          RUST_LOG: info
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/ratel
           DYNAMO_ENDPOINT: http://localhost:4566
           AWS_ACCESS_KEY_ID: test

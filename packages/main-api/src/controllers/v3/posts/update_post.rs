@@ -37,7 +37,7 @@ pub async fn update_post_handler(
     Path(super::dto::PostPathParam { post_pk }): super::dto::PostPath,
     Json(req): Json<UpdatePostRequest>,
 ) -> Result<Json<Post>, Error2> {
-    tracing::warn!(
+    tracing::debug!(
         "update_post_handler: user = {:?}, post_pk = {:?}, req = {:?}",
         user,
         post_pk,
@@ -89,7 +89,7 @@ pub async fn update_post_handler(
             title,
             visibility,
         } => {
-            tracing::warn!(
+            tracing::debug!(
                 "Publish request: publish = {}, title = {}, content = [REDACTED]",
                 publish,
                 title
@@ -115,7 +115,7 @@ pub async fn update_post_handler(
                 serde_dynamo::to_attribute_value(&PostStatus::Published)
                     .expect("failed to serialize field");
 
-            tracing::warn!("Publishing post with AV: {:?}", av);
+            tracing::debug!("Publishing post with AV: {:?}", av);
 
             post.status = PostStatus::Published;
 

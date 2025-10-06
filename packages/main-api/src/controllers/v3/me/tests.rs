@@ -1,9 +1,7 @@
 use crate::controllers::v3::me::update_user::{UpdateUserRequest, update_user_handler};
 use crate::controllers::v3::posts::create_post::CreatePostResponse;
-use crate::controllers::v3::posts::post_response::PostResponse;
 use crate::tests::v3_setup::{TestContextV3, setup_v3};
 use crate::tests::{create_nick_name, create_user_name};
-use crate::types::list_items_response::ListItemsResponse;
 use crate::{
     tests::{create_app_state, create_test_user, get_auth},
     types::Theme,
