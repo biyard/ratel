@@ -67,11 +67,11 @@ export async function optimisticListUpdate<T>(
     queryKey,
   });
 
-  queryClient.setQueriesData<InfiniteData<T[]>>({ queryKey }, (oldData) => {
+  queryClient.setQueriesData<InfiniteData<T>>({ queryKey }, (oldData) => {
     if (!oldData) return oldData;
-    const newPages = oldData.pages.map((v) => {
-      return v.map(updater).filter((page): page is T => page !== undefined);
-    });
+    const newPages = oldData.pages
+      .map(updater)
+      .filter((page): page is T => page !== undefined);
     return { ...oldData, pages: newPages };
   });
 
