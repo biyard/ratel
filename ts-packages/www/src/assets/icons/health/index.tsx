@@ -1,0 +1,9 @@
+export { default as Ambulance } from './ambulance.svg?react';
+export { default as Corona } from './corona.svg?react';
+export { default as HeartRate1 } from './heart-rate-1.svg?react';
+export { default as HeartRate } from './heart-rate.svg?react';
+export { default as Mask } from './mask.svg?react';
+export { default as Medicine } from './medicine.svg?react';
+export { default as Sanitizer } from './sanitizer.svg?react';
+export { default as Stethoscope } from './stethoscope.svg?react';
+export { default as Syringe } from './syringe.svg?react';

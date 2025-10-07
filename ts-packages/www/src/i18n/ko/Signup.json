@@ -1,0 +1,75 @@
+{
+  "verification_code": "이메일로 받은 인증코드",
+  "failed_verify_code": "인증 코드 확인에 실패했습니다. 잠시 후 다시 시도해주세요.",
+  "failed_send_code": "인증 코드 전송에 실패했습니다. 잠시 후 다시 시도해주세요.",
+  "signing_in": "로그인 중...",
+  "welcome_title": "Ratel에 오신 것을 환영합니다!",
+  "welcome_description": "정책은 시민 참여를 통해 형성됩니다. \n우리가 목소리를 내면 정책 입안자들은 경청합니다. \nRatel은 여러분이 직접 행동하고 암호화폐 정책을 수립할 수 있는 플랫폼을 제공합니다. \n여러분의 목소리는 소중합니다. 목소리를 내고 암호화폐의 밝은 미래를 만들어 나가세요.",
+  "failureMsg": "{serviceName} 연결에 실패했어요.\n다시 시도할까요?",
+  "login_failed": "로그인 실패",
+  "telegram_login_failed_description": "텔레그램 인증에 실패하셨습니다.",
+  "google_login_failed_description": "구글 인증에 실패하셨습니다.",
+  "login_failed_msg": "다시 시도해주세요.",
+  "start": "시작하기",
+  "clicked_image": "프로필 이미지 변경 클릭",
+  "email": "이메일",
+  "send": "전송하기",
+  "verify": "인증하기",
+  "password": "비밀번호",
+  "display_name": "이름",
+  "user_name": "사용자 이름",
+  "agree_tos": "<req>[필수]</req> <b>서비스 이용약관</b>을 읽고 동의합니다.",
+  "agree_news": "Ratel의 공지사항과 소식을 받아보고 싶습니다.",
+  "finish_signup": "회원가입하기",
+  "remove_test_keyword": "test와 관련된 글자를 제거해주세요.",
+  "invalid_password_format": "비밀번호는 문자, 숫자, 특수문자를 포함하여 최소 8자 이상 입력되어야 합니다.",
+  "display_name_warning": "이름에서 테스트 키워드를 제거해 주세요.",
+  "invalid_username_format": "숫자, 소문자, -, _ 및 두 개 이상의 문자만 입력할 수 있습니다.",
+  "user_name_warning": "사용자 이름에서 테스트 키워드를 제거해 주세요.",
+  "already_exists_user": "이미 존재하는 이름입니다.",
+  "sign_in": "로그인",
+  "CommonError": {
+    "test_word": "<b>테스트</b> 키워드를 제거해주세요.",
+    "required": "{fieldName}은(는) 필수 항목입니다."
+  },
+  "Email": {
+    "label": "이메일",
+    "placeholder": "이메일 주소를 입력하세요.",
+    "error": {
+      "invalid": "유효한 이메일 주소를 입력해주세요.",
+      "unregistered": "등록되지 않은 이메일입니다."
+    },
+    "send_button_label": "전송"
+  },
+  "Code": {
+    "placeholder": "인증 코드를 입력하세요.",
+    "error": {
+      "invalid": "인증 코드가 올바르지 않거나 만료되었습니다."
+    },
+    "verify_button_label": "인증"
+  },
+  "Username": {
+    "label": "사용자 이름",
+    "placeholder": "사용자 이름을 입력하세요."
+  },
+  "Nickname": {
+    "label": "닉네임",
+    "placeholder": "닉네임을 입력하세요.",
+    "error": {
+      "invalid": "숫자, 소문자, -, _ 및 두 글자 이상만 입력할 수 있습니다."
+    }
+  },
+  "Password": {
+    "label": "비밀번호",
+    "placeholder": "비밀번호를 입력하세요.",
+    "error": {
+      "required": "비밀번호는 필수 항목입니다.",
+      "invalid": "비밀번호는 문자, 숫자, 특수문자를 포함하여 최소 8자 이상이어야 합니다."
+    }
+  },
+  "Term": {
+    "error": {
+      "required": "서비스 이용약관에 동의해야 진행할 수 있습니다."
+    }
+  }
+}

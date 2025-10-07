@@ -1,0 +1,24 @@
+{
+  "join_the_movement": "참여하기",
+  "new_user": "신규 가입이신가요?",
+  "create_account": "계정 생성하기",
+  "email_address": "이메일 주소",
+  "email_address_hint": "이메일 주소를 입력하세요.",
+  "password": "비밀번호",
+  "password_hint": "비밀번호를 입력하세요.",
+  "sign_in": "로그인하기",
+  "continue": "계속하기",
+  "privacy_policy": "개인 정보 보호 정책",
+  "terms_of_service": "서비스 정책",
+  "invalid_email_format": "유효한 이메일 주소를 입력해주세요.",
+  "unregistered_email": "등록되지 않은 이메일입니다.",
+  "invalid_password_format": "비밀번호는 문자, 숫자, 특수문자를 포함하여 최소 8자 이상 입력되어야 합니다.",
+  "GoogleLogin": {
+    "label": "Sign in with Google",
+    "loading_description": "Signing in with Google..."
+  },
+  "EmailLogin": {
+    "label": "Sign in with Email",
+    "loading_description": "Signing in with Email..."
+  }
+}

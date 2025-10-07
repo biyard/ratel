@@ -1,0 +1,10 @@
+export { default as AddFolder } from './add-folder.svg?react';
+export { default as CheckFolder } from './check-folder.svg?react';
+export { default as DeleteFolder } from './delete-folder.svg?react';
+export { default as DownloadFolder } from './download-folder.svg?react';
+export { default as ExclamationFolder } from './exclamation-folder.svg?react';
+export { default as FavoriteFolder } from './favorite-folder.svg?react';
+export { default as FolderOff } from './folder-off.svg?react';
+export { default as folder } from './folder.svg?react';
+export { default as LockFolder } from './lock-folder.svg?react';
+export { default as RemoveFolder } from './remove-folder.svg?react';

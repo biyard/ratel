@@ -1,0 +1,8 @@
+{
+  "description": "Once published, this Space will be visible to everyone and cannot be made private again.",
+  "public_publish_label": "Public Publish",
+  "public_publish_description": "Anyone can access and participate in this space.",
+  "private_publish_label": "Private Publish",
+  "private_publish_description": "Only your team members will be able to access this space.",
+  "button_publish": "Publish"
+}

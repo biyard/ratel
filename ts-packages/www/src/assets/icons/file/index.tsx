@@ -1,0 +1,13 @@
+export { default as AddFile } from './add-file.svg?react';
+export { default as CheckFile } from './check-file.svg?react';
+export { default as CodeFile } from './code-file.svg?react';
+export { default as DeleteFile } from './delete-file.svg?react';
+export { default as DownloadFile1 } from './download-file-1.svg?react';
+export { default as DownloadFile } from './download-file.svg?react';
+export { default as FavoriteFile } from './favorite-file.svg?react';
+export { default as File } from './file.svg?react';
+export { default as GraphFile } from './graph-file.svg?react';
+export { default as LockFile } from './lock-file.svg?react';
+export { default as RemoveFile } from './remove-file.svg?react';
+export { default as UploadFile2 } from './upload-file-2.svg?react';
+export { default as UploadFile } from './upload-file.svg?react';

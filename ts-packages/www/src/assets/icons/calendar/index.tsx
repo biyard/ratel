@@ -1,0 +1,15 @@
+export { default as CalendarAdd } from './calendar-add.svg?react';
+export { default as CalendarBlock } from './calendar-block.svg?react';
+export { default as CalendarCheck } from './calendar-check.svg?react';
+export { default as CalendarDay } from './calendar-day.svg?react';
+export { default as CalendarDelete } from './calendar-delete.svg?react';
+export { default as CalendarDownload } from './calendar-download.svg?react';
+export { default as CalendarLock } from './calendar-lock.svg?react';
+export { default as CalendarNote } from './calendar-note.svg?react';
+export { default as CalendarOff } from './calendar-off.svg?react';
+export { default as CalendarSetting } from './calendar-setting.svg?react';
+export { default as CalendarStarred } from './calendar-starred.svg?react';
+export { default as CalendarToday } from './calendar-today.svg?react';
+export { default as CalendarUpload } from './calendar-upload.svg?react';
+export { default as Calendar } from './calendar.svg?react';
+export { default as DateRange } from './date-range.svg?react';

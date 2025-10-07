@@ -1,9 +1,0 @@
-export { default as Cube } from './cube.svg';
-export { default as Gift } from './gift.svg';
-export { default as Package } from './package.svg';
-export { default as Parcel } from './parcel.svg';
-export { default as ShoppingBag1 } from './shopping-bag-1.svg';
-export { default as ShoppingBag2 } from './shopping-bag-2.svg';
-export { default as ShoppingBag } from './shopping-bag.svg';
-export { default as ShoppingBags } from './shopping-bags.svg';
-export { default as ShoppingCart } from './shopping-cart.svg';

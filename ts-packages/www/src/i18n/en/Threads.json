@@ -1,0 +1,22 @@
+{
+  "edit": "Edit",
+  "make_public": "Make Public",
+  "create_space": "Create a Space",
+  "delete": "Delete",
+  "private": "Private",
+  "public": "Public",
+  "reply": "Reply",
+  "replies": "Replies",
+  "join_space": "Join Space",
+  "share_your_thoughts": "Share your thoughts...",
+  "attached_files": "Attached Files",
+  "contents_hint": "Type here, Use Markdown, BB code, or HTML to format.",
+  "select_space_type": "Select a Space Type",
+  "success_delete_post_message": "Post deleted successfully",
+  "failed_delete_post_message": "Failed to delete post. Please try again.",
+  "failed_edit_post_message": "Failed to load post for editing. Please try again.",
+  "failed_like_post_message": "Failed to update like. Please try again.",
+  "not_found_title": "Thread Not Found",
+  "not_found_description": "This thread does not exist.",
+  "go_home": "Go Home"
+}
