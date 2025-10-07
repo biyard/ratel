@@ -37,10 +37,9 @@ export default function MyFollower({ type }: { type: RelationType }) {
   }
   const [selectedType, setSelectedType] = useState<FollowTabType>(initTab);
 
-  const userInfo = data.data;
-
-  const followers = userInfo.followers;
-  const followings = userInfo.followings;
+  // TODO: Implement followers/followings in v3 API
+  const followers: Follower[] = [];
+  const followings: Follower[] = [];
   const handleUnFollow = async (userId: number) => {
     await post(ratelApi.networks.unfollow(userId), unfollowRequest());
   };

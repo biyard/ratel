@@ -1,6 +1,5 @@
 use crate::{models::user::User, types::*};
 use bdk::prelude::*;
-use serde_json;
 
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, schemars::JsonSchema,

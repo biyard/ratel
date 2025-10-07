@@ -25,6 +25,7 @@ import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { getTimeAgo } from '@/lib/time-utils';
 import { useTranslations } from 'next-intl';
 import { convertNumberToString } from '@/lib/number-utils';
+import { logger } from '@/lib/logger';
 
 export interface SpaceHeaderProps {
   title: string;
@@ -76,9 +77,12 @@ export default function SpaceHeader({
 }: SpaceHeaderProps) {
   const t = useTranslations('NoticeSpace');
   const { data: userInfo } = useUserInfo();
-  const userId = userInfo ? userInfo.id : 0;
+  const userId = userInfo ? userInfo.pk : '';
+  logger.debug('user id: ', userId);
   const { teams } = useContext(TeamContext);
   const selectedTeam = teams.some((t) => t.id === authorId);
+  // FIXME: authorId === userId
+  const is_owner = false;
 
   return (
     <div className="flex flex-col w-full gap-2.5 mb-10">
@@ -93,7 +97,7 @@ export default function SpaceHeader({
           )}
         </div>
 
-        {(authorId === userId || selectedTeam) && (
+        {(is_owner || selectedTeam) && (
           <div className="flex flex-row items-center gap-2 text-sm text-white">
             {isEdit ? (
               <>

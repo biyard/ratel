@@ -8,6 +8,7 @@ import { config } from '@/config';
 import { Feed } from '@/lib/api/models/feeds';
 import { feedKeys } from '@/constants';
 import { getQueryClient } from '@/providers/getQueryClient';
+import { getPost, PostDetailResponse } from '@/lib/api/ratel/posts.v3';
 
 export async function getFeedById(
   postId: number,
@@ -17,22 +18,19 @@ export async function getFeedById(
   );
 }
 
-export function getOption(postId: number) {
+export function getOption(postId: string) {
   return {
     queryKey: feedKeys.detail(postId),
     queryFn: async () => {
-      const { data } = await getFeedById(postId);
+      const post = await getPost(postId);
 
-      if (!data) {
-        throw new Error('Feed not found');
-      }
-      return data;
+      return post;
     },
     refetchOnWindowFocus: false,
   };
 }
 
-export async function prefetchFeedById(postId: number) {
+export async function prefetchFeedById(postId: string) {
   const queryClient = getQueryClient();
   const options = getOption(postId);
 
@@ -40,8 +38,8 @@ export async function prefetchFeedById(postId: number) {
 }
 
 export default function useFeedById(
-  postId: number,
-): UseSuspenseQueryResult<Feed> {
+  postId: string,
+): UseSuspenseQueryResult<PostDetailResponse> {
   const query = useSuspenseQuery(getOption(postId));
   return query;
 }

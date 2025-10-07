@@ -1,6 +1,6 @@
 use crate::models::{team::Team, user::User};
 
-use super::Partition;
+use super::{Partition, UserType};
 
 #[derive(Debug, Clone)]
 pub struct Author {
@@ -8,6 +8,7 @@ pub struct Author {
     pub display_name: String,
     pub profile_url: String,
     pub username: String,
+    pub user_type: UserType,
 }
 
 impl From<User> for Author {
@@ -25,6 +26,7 @@ impl From<User> for Author {
             display_name,
             profile_url,
             username,
+            user_type: UserType::Individual,
         }
     }
 }
@@ -43,6 +45,7 @@ impl From<Team> for Author {
             display_name,
             profile_url,
             username,
+            user_type: UserType::Team,
         }
     }
 }

@@ -12,8 +12,9 @@ export default async function DAgitPage({ spaceId }: { spaceId: number }) {
   const queryClient = getQueryClient();
   const { feed_id } = await queryClient.fetchQuery(getSpaceByIdOption(spaceId));
 
+  // TODO: Update space API to use string feed_id in v3
   await Promise.allSettled([
-    queryClient.prefetchQuery(getFeedByIdOption(feed_id)),
+    queryClient.prefetchQuery(getFeedByIdOption(feed_id.toString())),
     queryClient.prefetchQuery(getDagitByIdOption(spaceId)),
   ]);
 

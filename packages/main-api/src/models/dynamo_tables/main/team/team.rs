@@ -29,6 +29,9 @@ pub struct Team {
     )]
     pub username: String, // Team Name
 
+    pub followers: i64,
+    pub followings: i64,
+
     pub description: String,
 }
 
@@ -54,6 +57,8 @@ impl Team {
             profile_url,
             username,
             description,
+            followers: 0,
+            followings: 0,
         }
     }
 

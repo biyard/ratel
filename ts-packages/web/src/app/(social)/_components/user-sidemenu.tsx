@@ -7,8 +7,8 @@ import { route } from '@/route';
 import { Post, Draft, Settings } from '@/components/icons';
 import { UserType } from '@/lib/api/models/user';
 import { useTranslations } from 'next-intl';
-import { useUserInfo } from '@/lib/api/hooks/users';
 import { usePathname } from 'next/navigation';
+import { useUserInfo } from '@/hooks/use-user-info';
 // import DevTools from './dev-tools';
 
 export default function UserSidemenu() {

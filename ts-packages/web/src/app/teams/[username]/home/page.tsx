@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import TeamHome from './page.client';
 import { prefetchInfiniteFeeds } from '@/hooks/feeds/use-feeds-infinite-query';
-import { FeedStatus } from '@/lib/api/models/feeds';
 import { getTeamByUsername } from '@/lib/api/ratel_api.server';
 
 //FIXME: add Metadata
@@ -47,9 +46,7 @@ export default async function Page({ params }: Props) {
     // FIXME: fix this to use not-found.tsx
     return <div className="text-center">Team not found</div>;
   }
-  await Promise.allSettled([
-    prefetchInfiniteFeeds(user?.data?.id ?? 0, FeedStatus.Published),
-  ]);
+  await Promise.allSettled([prefetchInfiniteFeeds()]);
 
-  return <TeamHome teamId={user?.data?.id ?? 0} />;
+  return <TeamHome />;
 }

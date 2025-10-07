@@ -9,27 +9,55 @@ export async function call<T, R>(
   body?: T,
 ): Promise<R> {
   const apiBaseUrl: string = config.api_url;
+  const isServer = typeof window === 'undefined';
+  let headers = undefined;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const headers: any = { 'Content-Type': 'application/json' };
+  if (isServer) {
+    const { headers: getHeaders } = await import('next/headers');
+    const headersList = await getHeaders();
+    const clientCookies = headersList.get('cookie');
+    if (clientCookies) {
+      headers = new Headers();
+      headers.set('Cookie', clientCookies);
+    }
+  }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    method,
-    headers,
-    credentials: 'include',
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let response;
+  if (body) {
+    if (!headers) {
+      headers = new Headers();
+    }
+    headers.set('Content-Type', 'application/json');
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      method,
+      headers,
+      credentials: 'include',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } else {
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      method,
+      headers,
+      credentials: 'include',
+    });
+  }
 
   if (!response.ok) {
     const errorData = await response
-      .text()
+      .json()
       .catch((e) => `Failed to fetch and parse error ${e}`);
-    logger.error('Failed to fetch and parse error ', errorData);
+    logger.error('request error on call', errorData);
 
     throw new RatelSdkError(errorData);
   }
 
-  return response.json();
+  const json_body: R = await response.json();
+  logger.debug(
+    `API Response Body(${method} ${apiBaseUrl}${path}): `,
+    json_body,
+  );
+
+  return json_body;
 }
 
 export class RatelSdkError extends Error {

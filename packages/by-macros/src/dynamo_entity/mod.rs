@@ -906,6 +906,10 @@ fn generate_struct_impl(
                 cli: &aws_sdk_dynamodb::Client,
                 keys: Vec<#batch_get_param>,
             ) -> Result<Vec<Self>, #err_ctor> {
+                if keys.is_empty() {
+                    return Ok(vec![]);
+                }
+
                 let keys = keys
                     .iter()
                     .map(|key| {
@@ -1217,14 +1221,25 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
         pub fn encode_lek_all(
             lek: &std::collections::HashMap<String, aws_sdk_dynamodb::types::AttributeValue>,
         ) -> std::result::Result<String, crate::Error2> {
-            use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
+            let mut bookmark = vec![];
+            for (k, v) in lek.iter() {
+                match v {
+                    aws_sdk_dynamodb::types::AttributeValue::S(s) => {
+                        bookmark.push(format!("{};;;{}", k, s));
+                    }
+                    _ => {
+                        return Err(crate::Error2::InternalServerError(
+                            "Unsupported AttributeValue type in LEK".into(),
+                        ));
+                    }
+                }
+            }
+            let bookmark = bookmark.join(";;;").to_owned();
 
-            let v: serde_json::Value = serde_dynamo::from_item(lek.clone())?;
-
-            let encoded = B64.encode(v.to_string().as_bytes());
+            use base64::Engine as _;
+            let encoded = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bookmark);
 
             Ok(encoded)
-
         }
 
         pub fn decode_bookmark_all(
@@ -1233,12 +1248,25 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
             std::collections::HashMap<String, aws_sdk_dynamodb::types::AttributeValue>,
         crate::Error2,
         > {
-            use base64::{Engine as _, engine::general_purpose::STANDARD as B64};
+            use base64::Engine as _;
 
-            let bytes = B64.decode(bookmark).expect("failed to decode base64");
-            let v = serde_json::to_value(&bytes)?;
+            let bytes = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(bookmark)?;
+            let s = String::from_utf8(bytes).map_err(|e| e.to_string())?;
+            let parts: Vec<&str> = s.split(";;;").collect();
+            if parts.len() % 2 != 0 {
+                return Err(crate::Error2::InvalidBookmark);
+            }
+            let mut v = std::collections::HashMap::new();
+            for i in (0..parts.len()).step_by(2) {
+                let key = parts[i];
+                let value = parts[i + 1];
+                v.insert(
+                    key.to_string(),
+                    aws_sdk_dynamodb::types::AttributeValue::S(value.to_string()),
+                );
+            }
 
-            Ok(serde_dynamo::to_item(v)?)
+            Ok(v)
         }
 
     }

@@ -8,7 +8,6 @@ import {
 } from 'react';
 import { Clear } from '@/components/icons';
 import { Loader } from '@/components/icons';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { useUserInfo } from '../_hooks/user';
 import Image from 'next/image';
 import { useApiCall } from '@/lib/api/use-send';
@@ -32,7 +31,19 @@ import CommentPaste from '@/assets/icons/editor/comment-paste.svg';
 import ShapeDownArrow from '@/assets/icons/editor/shape-arrow-down.svg';
 import ArrowDown from '@/assets/icons/editor/arr-down.svg';
 import SaveIcon from '@/assets/icons/save.svg';
+
 export function CreateRePost() {
+  const repostDraftContext = useRepostDraft();
+
+  const { data: userInfo } = useUserInfo();
+  const { post } = useApiCall();
+  const router = useRouter();
+  const editorRef = useRef<Editor | null>(null);
+  const [isReposting, setIsReposting] = useState(false);
+  const [isQuotedSectionExpanded, setIsQuotedSectionExpanded] = useState(true);
+
+  if (!repostDraftContext) return null;
+
   const {
     expand,
     title,
@@ -58,15 +69,7 @@ export function CreateRePost() {
     setCommentUrl,
     setShowCommentUrlInput,
     authorId,
-  } = useRepostDraft();
-
-  const { data: User } = useSuspenseUserInfo();
-  const { data: userInfo } = useUserInfo();
-  const { post } = useApiCall();
-  const router = useRouter();
-  const editorRef = useRef<Editor | null>(null);
-  const [isReposting, setIsReposting] = useState(false);
-  const [isQuotedSectionExpanded, setIsQuotedSectionExpanded] = useState(true);
+  } = repostDraftContext;
 
   const handlePublish = async () => {
     if (!title.trim() || !content) return;
@@ -85,7 +88,7 @@ export function CreateRePost() {
           html_contents: editorRef.current!.getHTML(),
           quote_feed_id: originalFeedId,
           parent_id: authorId,
-          user_id: User?.id,
+          user_id: userInfo?.pk,
         },
       });
 
@@ -392,14 +395,14 @@ export function CreateRePost() {
 }
 
 interface RePostDraftContextType {
-  originalFeedId: number | null;
-  setOriginalFeedId: (id: number | null) => void;
+  originalFeedId: string | null;
+  setOriginalFeedId: (id: string | null) => void;
   authorName?: string;
   authorProfileUrl?: string;
   setAuthorName: (name: string) => void;
   setAuthorProfileUrl: (url: string) => void;
-  authorId: number | null;
-  setAuthorId: (id: number | null) => void;
+  authorId: string | null;
+  setAuthorId: (id: string | null) => void;
   industry?: string;
   setIndustry: (name: string) => void;
   expand: boolean;
@@ -432,8 +435,8 @@ const RePostDraftContext = createContext<RePostDraftContextType | undefined>(
 export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [originalFeedId, setOriginalFeedId] = useState<number | null>(null);
-  const [authorId, setAuthorId] = useState<number | null>(null);
+  const [originalFeedId, setOriginalFeedId] = useState<string | null>(null);
+  const [authorId, setAuthorId] = useState<string | null>(null);
   const [authorName, setAuthorName] = useState<string>();
   const [authorProfileUrl, setAuthorProfileUrl] = useState<string>();
   const [industry, setIndustry] = useState<string>();
@@ -506,9 +509,6 @@ export const RePostDraftProvider: React.FC<{ children: React.ReactNode }> = ({
 
 export const useRepostDraft = () => {
   const context = useContext(RePostDraftContext);
-  if (context === undefined) {
-    throw new Error('useRepostDraft must be used within a RePostDraftProvider');
-  }
   return context;
 };
 

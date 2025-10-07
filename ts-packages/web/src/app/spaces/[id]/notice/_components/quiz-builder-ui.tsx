@@ -69,7 +69,7 @@ interface QuizBuilderProps {
   onQuestionsChange: (questions: Question[]) => void;
   onSubmitQuiz?: (questions: Question[]) => Promise<void>;
   spaceId?: number;
-  userId?: number;
+  userId?: string;
   isOwner?: boolean;
   spaceStatus?: SpaceStatus;
 }

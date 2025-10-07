@@ -28,13 +28,14 @@ export default async function Provider({
 
   const team = await getTeamByUsername(space.data?.author[0].username ?? '');
 
+  // TODO: Update to use v3 permissions API with team username
   const writePostPermission = await getPermission(
-    team.data?.id ?? 0,
+    team.data?.username ?? '',
     GroupPermission.WritePosts,
   );
 
   const deletePostPermission = await getPermission(
-    team.data?.id ?? 0,
+    team.data?.username ?? '',
     GroupPermission.DeletePosts,
   );
 
@@ -52,7 +53,8 @@ export default async function Provider({
     throw error;
   }
 
-  await Promise.allSettled([prefetchFeedById(feedId)]);
+  // TODO: Update space API to use string feed_id in v3
+  await Promise.allSettled([prefetchFeedById(feedId.toString())]);
 
   const dehydratedState = dehydrate(queryClient);
 

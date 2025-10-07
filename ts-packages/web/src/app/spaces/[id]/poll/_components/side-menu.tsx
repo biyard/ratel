@@ -33,7 +33,7 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
   const selectedTeam = teams.some((t) => t.id === authorId);
 
   const { data: userInfo } = useUserInfo();
-  const userId = userInfo ? userInfo.id : 0;
+  const username = userInfo ? userInfo.username : '';
   const createdAt = space.created_at;
 
   return (
@@ -52,7 +52,8 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
             </div>
           </div>
 
-          {(space.author.some((a) => a.id === userId) || selectedTeam) &&
+          {(space.author.some((a) => a.username === username) ||
+            selectedTeam) &&
             status == SpaceStatus.InProgress && (
               <div
                 className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
@@ -146,19 +147,22 @@ export function SpaceTabsMobile({ spaceId }: { spaceId: number }) {
   const setActiveTab = usePollStore((s) => s.changeTab);
 
   const { data: userInfo } = useUserInfo();
-  const userId = userInfo?.id ?? 0;
   const { teams } = React.useContext(TeamContext);
 
   const authorId = space?.author?.[0]?.id;
+  const authorUsername = space?.author?.[0]?.username;
   const selectedTeam = !!authorId && teams.some((t) => t.id === authorId);
 
+  // TODO: Update to use v3 space API with username-based permissions
   const writePostPermission =
-    usePermission(authorId ?? 0, GroupPermission.WritePosts).data
+    usePermission(authorUsername ?? '', GroupPermission.WritePosts).data
       ?.has_permission ?? false;
 
+  // TODO: Update authorization check to use usernames instead of IDs
   const showAnalyze =
     !!space &&
-    (space.author.some((a) => a.id === userId) || selectedTeam) &&
+    (space.author.some((a) => a.username === userInfo?.username) ||
+      selectedTeam) &&
     space.status !== SpaceStatus.Draft &&
     writePostPermission;
 

@@ -1,11 +1,4 @@
-import {
-  ArtworkTrait,
-  ArtworkTraitDisplayType,
-  Feed,
-  FeedStatus,
-  FeedType,
-  UrlType,
-} from '@/lib/api/models/feeds';
+import { ArtworkTrait, ArtworkTraitDisplayType } from '@/lib/api/models/feeds';
 import { checkString } from '@/lib/string-filter-utils';
 import { useRouter, usePathname } from 'next/navigation';
 import {
@@ -19,12 +12,12 @@ import { apiFetch } from '@/lib/api/apiFetch';
 import { config } from '@/config';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { route } from '@/route';
-import { useUserInfo } from '../../_hooks/user';
-import { useTeamContext } from '@/lib/contexts/team-context';
-import { useDraftMutations } from '@/hooks/feeds/use-create-feed-mutation';
-import { UpdatePostRequest } from '@/lib/api/models/feeds/update-post';
 import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
 import { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
+import { getPost, Post, PostType as PT } from '@/lib/api/ratel/posts.v3';
+import { useUpdateDraftMutation } from './use-update-draft-mutation';
+import { useUpdateDraftImageMutation } from './use-update-draft-image-mutation';
+import { usePublishDraftMutation } from './use-publish-draft';
 
 export enum Status {
   Idle = 'Idle',
@@ -40,7 +33,7 @@ export enum PostType {
 
 const AUTO_SAVE_DELAY = 5000; // ms
 export interface PostEditorContextType {
-  openPostEditorPopup: (postId?: number) => Promise<void>;
+  openPostEditorPopup: (postId: string) => Promise<void>;
   // openPostEditorPopupWithState: (id: number) => Promise<void>;
 
   expand: boolean;
@@ -51,7 +44,7 @@ export interface PostEditorContextType {
   title: string;
   updateTitle: (title: string) => void;
   content: string | null;
-  updateContent: (content: string | null) => void;
+  updateContent: (content: string) => void;
   image: string | null;
   updateImage: (image: string | null) => void;
 
@@ -70,28 +63,11 @@ export const PostDraftContext = createContext<
   PostEditorContextType | undefined
 >(undefined);
 
-async function loadDraft(id: number): Promise<Feed> {
-  const res = await apiFetch<Feed>(
-    `${config.api_url}${ratelApi.feeds.getFeed(id)}`,
-  );
-  if (!res.data) {
-    throw new Error('Draft not found');
-  }
-  return res.data;
-}
-
 export function PostEditorProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { data: user } = useUserInfo();
-  const { selectedTeam } = useTeamContext();
-  const teamId = selectedTeam?.id || null;
-  const targetId = selectedTeam?.id || user?.id || 0;
-
-  const { createDraft, updateDraft, publishDraft } =
-    useDraftMutations(targetId);
   /*
     If Team is selected, use `team_id` as targetId
     Otherwise, use `user_id` as targetId
@@ -105,13 +81,13 @@ export function PostEditorProvider({
   const [close, setClose] = useState(true);
   const [expand, setExpand] = useState(false);
   const [status, setStatus] = useState<Status>(Status.Idle);
-  const [feed, setFeed] = useState<Feed | null>(null);
+  const [feed, setFeed] = useState<Post | null>(null);
   const [postType, setPostType] = useState<PostType>(PostType.General);
   const [isModified, setIsModified] = useState(false);
 
   //State
   const [title, setTitle] = useState('');
-  const [content, setContent] = useState<string | null>(null);
+  const [content, setContent] = useState('');
   const [image, setImage] = useState<string | null>(null);
   // const [artistName, setArtistName] = useState<string | null>(null);
   // const [backgroundColor, setBackgroundColor] = useState<string>('#ffffff');
@@ -171,7 +147,7 @@ export function PostEditorProvider({
   const resetState = useCallback(() => {
     setExpand(false);
     setFeed(null);
-    setContent(null);
+    setContent('');
     setTitle('');
     setImage(null);
     setStatus(Status.Idle);
@@ -188,7 +164,7 @@ export function PostEditorProvider({
     setIsModified(true);
   };
 
-  const updateContent = (newContent: string | null) => {
+  const updateContent = (newContent: string) => {
     setContent(newContent);
     setIsModified(true);
   };
@@ -198,10 +174,46 @@ export function PostEditorProvider({
     setIsModified(true);
   };
 
-  const updateImage = (newImage: string | null) => {
-    setImage(newImage);
-    setIsModified(true);
+  const { mutateAsync: handleUpdateWithTitleAndContent } =
+    useUpdateDraftMutation();
+  const { mutateAsync: handleUpdateImage } = useUpdateDraftImageMutation();
+  const { mutateAsync: publishDraft } = usePublishDraftMutation();
+
+  const updateImage = async (image: string | null) => {
+    if (!image) {
+      return;
+    }
+
+    const mime = image.match(/^data:([^;]+);base64,/);
+    if (mime && mime[1]) {
+      const res = await apiFetch<AssetPresignedUris>(
+        `${config.api_url}${ratelApi.assets.getPresignedUrl(parseFileType(mime[1]))}`,
+        {
+          method: 'GET',
+        },
+      );
+      if (
+        res.data &&
+        res.data.presigned_uris?.length > 0 &&
+        res.data.uris?.length > 0
+      ) {
+        const blob = await dataUrlToBlob(image);
+        await fetch(res.data.presigned_uris[0], {
+          method: 'PUT',
+          headers: {
+            'Content-Type': mime[1],
+          },
+          body: blob,
+        });
+        const imageUrl = res.data.uris[0];
+
+        await handleUpdateImage({ postPk: feed!.pk, image: imageUrl });
+
+        setImage(imageUrl);
+      }
+    }
   };
+
   const updateTrait = (
     trait_type: string,
     value: string,
@@ -226,37 +238,31 @@ export function PostEditorProvider({
     setIsModified(true);
   };
 
-  const openPostEditorPopup = async (id?: number) => {
-    if (!id) {
-      resetState();
-      setExpand(true);
-      return;
-    }
+  const openPostEditorPopup = async (id: string) => {
     if (status === Status.Loading) {
       return;
     }
     resetState();
     setStatus(Status.Loading);
     try {
-      const draft = await loadDraft(id);
+      const { post: draft, artwork_metadata } = await getPost(id);
       setFeed(draft);
       setTitle(draft.title || '');
-      if (draft.url_type === UrlType.Image && draft.url) {
-        setImage(draft.url);
+      if (draft.urls.length > 0) {
+        setImage(draft.urls[0]);
       }
       setContent(draft.html_contents || '');
 
       setPostType(
-        draft.feed_type === FeedType.Artwork
-          ? PostType.Artwork
-          : PostType.General,
+        draft.post_type === PT.Artwork ? PostType.Artwork : PostType.General,
       );
 
-      if (draft.feed_type === FeedType.Artwork && draft.artwork_metadata) {
-        setTraits(draft.artwork_metadata.traits || []);
+      if (draft.post_type === PT.Artwork && artwork_metadata) {
+        setTraits(artwork_metadata.traits || []);
       }
       setExpand(true);
-    } catch {
+    } catch (e) {
+      console.error(e);
       throw new Error('Failed to load draft');
     } finally {
       setStatus(Status.Idle);
@@ -264,66 +270,39 @@ export function PostEditorProvider({
     }
   };
 
-  const handleUpdateDraft = useCallback(
-    async (image_url?: string | null) => {
-      let id: number;
-      if (!feed) {
-        const newFeed = await createDraft.mutateAsync(targetId);
-        id = newFeed.id;
-        setFeed(newFeed);
-      } else {
-        id = feed.id;
-      }
-
-      const req: Partial<UpdatePostRequest> = {
-        title,
-        html_contents: content || undefined,
-        url: image_url ? image_url : image || undefined,
-        url_type: image ? UrlType.Image : UrlType.None,
-        feed_type:
-          postType === PostType.Artwork ? FeedType.Artwork : FeedType.Post,
-        artwork_metadata:
-          postType === PostType.Artwork ? { traits } : undefined,
-      };
-
-      await updateDraft.mutateAsync({
-        postId: id,
-        req,
-        teamId: teamId || undefined,
-      });
-      setClose(true);
-      return id;
-    },
-    [
-      feed,
-      title,
-      content,
-      image,
-      postType,
-      traits,
-      updateDraft,
-      createDraft,
-      targetId,
-      teamId,
-    ],
-  );
   const autoSaveDraft = useCallback(async () => {
-    if (status === Status.Saving || isModified === false) {
+    if (
+      status === Status.Saving ||
+      isModified === false ||
+      content.length < 50
+    ) {
       return;
     }
 
     setStatus(Status.Saving);
 
     try {
-      await handleUpdateDraft();
+      await handleUpdateWithTitleAndContent({
+        postPk: feed!.pk,
+        title,
+        content,
+      });
+
       setIsModified(false);
     } catch (error) {
       console.error(error);
-      throw new Error('Failed to auto save draft');
+      throw new Error(`Failed to auto save draft ${error}`);
     } finally {
       setStatus(Status.Idle);
     }
-  }, [status, isModified, handleUpdateDraft]);
+  }, [
+    feed,
+    content,
+    title,
+    status,
+    isModified,
+    handleUpdateWithTitleAndContent,
+  ]);
 
   useEffect(() => {
     const timeoutId = setInterval(async () => {
@@ -352,53 +331,27 @@ export function PostEditorProvider({
       if (checkString(title) || checkString(content || '')) {
         throw new Error('Please remove the test keyword');
       }
-      let image_url = image;
-      if (image && image.startsWith('data:')) {
-        const mime = image.match(/^data:([^;]+);base64,/);
-        if (mime && mime[1]) {
-          const res = await apiFetch<AssetPresignedUris>(
-            `${config.api_url}${ratelApi.assets.getPresignedUrl(parseFileType(mime[1]))}`,
-            {
-              method: 'GET',
-            },
-          );
-          if (
-            res.data &&
-            res.data.presigned_uris?.length > 0 &&
-            res.data.uris?.length > 0
-          ) {
-            const blob = await dataUrlToBlob(image);
-            await fetch(res.data.presigned_uris[0], {
-              method: 'PUT',
-              headers: {
-                'Content-Type': mime[1],
-              },
-              body: blob,
-            });
-            image_url = res.data.uris[0];
-          }
-        }
-      }
-      const finalDraftId = await handleUpdateDraft(image_url);
-      if (feed?.status !== FeedStatus.Published) {
-        await publishDraft.mutateAsync({ draftId: finalDraftId });
-        router.push(route.threadByFeedId(finalDraftId));
-      }
+
+      await publishDraft({
+        postPk: feed!.pk,
+        title,
+        content,
+      });
+
+      router.push(route.threadByFeedId(feed!.pk));
       resetState();
     } catch {
       throw new Error('Failed to publish draft');
     }
   }, [
     content,
-    feed?.status,
-    handleUpdateDraft,
-    image,
+    feed,
     isAllFieldsFilled,
-    publishDraft,
     resetState,
     router,
     status,
     title,
+    publishDraft,
   ]);
 
   const contextValue: PostEditorContextType = {
@@ -432,10 +385,5 @@ export function PostEditorProvider({
 
 export const usePostEditorContext = () => {
   const context = useContext(PostDraftContext);
-  if (context === undefined) {
-    throw new Error(
-      'usePostEditorContext must be used within a PostEditorProvider',
-    );
-  }
   return context;
 };

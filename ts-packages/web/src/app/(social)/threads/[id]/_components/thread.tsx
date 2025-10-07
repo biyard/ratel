@@ -1,27 +1,26 @@
 'use client';
 
 import Image from 'next/image';
-import { File } from '@/components/file';
 import LexicalHtmlViewer from '../../../../../components/lexical/lexical-html-viewer';
-import { useTranslations } from 'next-intl';
-import { Feed, FeedType } from '@/lib/api/models/feeds';
+import { Feed } from '@/lib/api/models/feeds';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import { ArtworkPost } from '@/app/(social)/_components/post-editor';
 import DisableBorderCard from '@/app/(social)/_components/disable-border-card';
 
-export default function Thread({ postId }: { postId: number }) {
-  const t = useTranslations('Threads');
-
+export default function Thread({ postId }: { postId: string }) {
   const { data: post } = useFeedById(postId);
   return (
     <div className="flex flex-col w-full gap-2.5">
       <DisableBorderCard>
-        {post?.feed_type === FeedType.Artwork ? (
-          <Artwork post={post} />
+        {post?.post?.post_type === 3 ? (
+          /* 3 = Artwork in v3 */
+          <Artwork post={post as unknown as Feed} />
         ) : (
-          <GeneralPost post={post} />
+          <GeneralPost post={post as unknown as Feed} />
         )}
       </DisableBorderCard>
+      {/* TODO: Implement files support in v3 */}
+      {/* Files section disabled until v3 API supports file attachments
       {post?.files && post.files.length > 0 && (
         <DisableBorderCard>
           <div className="flex flex-col w-full gap-5">
@@ -37,6 +36,7 @@ export default function Thread({ postId }: { postId: number }) {
           </div>
         </DisableBorderCard>
       )}
+      */}
     </div>
   );
 }

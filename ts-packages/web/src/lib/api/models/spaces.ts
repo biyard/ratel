@@ -25,6 +25,7 @@ export interface Space {
   html_contents: string;
   space_type: SpaceType;
   owner_id: number;
+  owner_username: string;
   industry_id: number;
   feed_id: number;
   author: Author[];

@@ -1,5 +1,6 @@
 pub mod team;
 pub mod team_group;
+pub mod team_member;
 pub mod team_metadata;
 pub mod team_owner;
 

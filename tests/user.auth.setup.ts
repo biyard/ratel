@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { CONFIGS } from "./config";
+import { click } from "./utils";
 
 test("create storage state", async ({ page }) => {
   const id = CONFIGS.PLAYWRIGHT.ID;
@@ -21,7 +22,7 @@ test("create storage state", async ({ page }) => {
   });
   await expect(codeInput).toBeVisible({ timeout: CONFIGS.PAGE_WAIT_TIME });
   await codeInput.fill("000000");
-  await page.getByText("Verify").click();
+  await click(page, { text: "Verify" });
 
   await page.getByPlaceholder(/password/i).fill(password);
   await page.getByPlaceholder(/display name/i).fill(displayName);

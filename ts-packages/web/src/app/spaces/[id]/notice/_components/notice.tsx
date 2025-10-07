@@ -24,7 +24,7 @@ const NoticePage: React.FC<NoticePageProps> = ({ onSubmitQuiz }) => {
   const { spaceId } = useSpaceByIdContext();
   const { data: userInfo } = useUserInfo();
 
-  const isOwner = userInfo?.id === space?.owner_id;
+  const isOwner = userInfo?.username === space?.owner_username;
 
   const handleQuestionsChange = (updatedQuestions: Question[]) => {
     setQuizQuestions(updatedQuestions);
@@ -44,7 +44,7 @@ const NoticePage: React.FC<NoticePageProps> = ({ onSubmitQuiz }) => {
           onQuestionsChange={handleQuestionsChange}
           onSubmitQuiz={onSubmitQuiz}
           spaceId={spaceId}
-          userId={userInfo?.id}
+          userId={userInfo?.pk}
           isOwner={isOwner}
           spaceStatus={space?.status}
         />

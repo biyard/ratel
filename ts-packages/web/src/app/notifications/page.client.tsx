@@ -21,7 +21,6 @@ import {
 import { useNotificationsInfinite } from '@/hooks/use-notifications';
 import NotificationDropdown from './notification-dropdown';
 import NotificationReadStatus from './notification-read-status';
-import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import DisableBorderCard from '../(social)/_components/disable-border-card';
 
 const NotificationTab = {
@@ -35,7 +34,6 @@ type NotificationTabType =
 export default function NotificationPage() {
   const router = useRouter();
   const { data: promotion } = usePromotion();
-  const { data: feed } = useFeedById(promotion.feed_id);
   const [filterType, setFilterType] = useState<NotificationsFilter>('all');
 
   const handleTabChange = (newType: NotificationTabType) => {
@@ -64,7 +62,7 @@ export default function NotificationPage() {
           {/* <CreatePostButton /> */}
 
           <DisableBorderCard>
-            <PromotionCard promotion={promotion} feed={feed} />
+            <PromotionCard promotion={promotion} />
           </DisableBorderCard>
 
           <News />

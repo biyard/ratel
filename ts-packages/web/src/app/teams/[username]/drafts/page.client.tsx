@@ -1,7 +1,7 @@
 'use client';
 import React, { useCallback } from 'react';
 import { Col } from '@/components/ui/col';
-import { FeedStatus, FeedType } from '@/lib/api/models/feeds';
+import { FeedStatus } from '@/lib/api/models/feeds';
 import { Row } from '@/components/ui/row';
 import { FeedContents, UserBadge } from '@/components/feed-card';
 import { UserType } from '@/lib/api/models/user';
@@ -12,30 +12,24 @@ import CreatePostButton from '../_components/create-post-button';
 import { useTranslations } from 'next-intl';
 import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
-import { useDeleteFeedMutation } from '@/hooks/feeds/use-delete-feed-mutation';
 import { useObserver } from '@/hooks/use-observer';
+import { useDeletePostMutation } from '@/hooks/feeds/use-delete-post-mutation';
 
 // Duplicated from src/app/%28social%29/drafts/page.client.tsx
 // Should be moved to a shared location
 
-export default function TeamDraftPage({
-  teamId,
-  username,
-}: {
-  teamId: number;
-  username: string;
-}) {
+export default function TeamDraftPage({ username }: { username: string }) {
   const t = useTranslations('Team');
   const { data: team } = useTeamByUsername(username);
 
-  const { openPostEditorPopup } = usePostEditorContext();
+  const p = usePostEditorContext();
 
   const {
     data: drafts,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteFeeds(teamId, FeedStatus.Draft);
+  } = useInfiniteFeeds();
 
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -46,19 +40,10 @@ export default function TeamDraftPage({
     threshold: 1,
   });
 
-  const { mutateAsync } = useDeleteFeedMutation(team.id, FeedStatus.Draft);
-
-  const removeDraft = async (
-    feedId: number,
-    feedType: FeedType,
-    parentId?: number,
-  ) => {
-    await mutateAsync({
-      feedId: feedId,
-      feedType: feedType,
-      parentId: parentId,
-    });
-  };
+  const { mutateAsync: handleRemoveDraft } = useDeletePostMutation(
+    team.username,
+    FeedStatus.Draft,
+  );
 
   if (drafts.pages.length === 0) {
     return (
@@ -67,7 +52,7 @@ export default function TeamDraftPage({
       </div>
     );
   }
-  const flattedDrafts = drafts?.pages.flatMap((page) => page.posts) ?? [];
+  const flattedDrafts = drafts?.pages.flatMap((page) => page.items) ?? [];
 
   return (
     <div className="flex flex-1 relative">
@@ -75,10 +60,10 @@ export default function TeamDraftPage({
         <Col className="flex-1">
           {flattedDrafts.map((post) => (
             <Col
-              key={post.id}
+              key={post.pk}
               className="cursor-pointer pt-5 pb-2.5 bg-card-bg border border-card-border rounded-lg"
               onClick={async (evt) => {
-                await openPostEditorPopup(post.id);
+                await p?.openPostEditorPopup(post.pk);
                 evt.preventDefault();
                 evt.stopPropagation();
               }}
@@ -93,11 +78,7 @@ export default function TeamDraftPage({
                     e.preventDefault();
                     e.stopPropagation();
 
-                    await removeDraft(
-                      post.id,
-                      post.feed_type,
-                      post.parent_id ?? undefined,
-                    );
+                    await handleRemoveDraft(post.pk);
                   }}
                 >
                   {
@@ -126,7 +107,7 @@ export default function TeamDraftPage({
                 <TimeAgo timestamp={post.updated_at} />
               </Row>
               <Row className="justify-between px-5"></Row>
-              <FeedContents contents={post.html_contents} url={post.url} />
+              <FeedContents contents={post.html_contents} urls={post.urls} />
             </Col>
           ))}
           <div ref={observerRef} />

@@ -53,6 +53,10 @@ pub enum Error {
     NotSupported(String),
     #[error("The item has dependencies and cannot be deleted: {0:?}")]
     HasDependencies(Vec<String>),
+    #[error("Bookmark is invalid")]
+    InvalidBookmark,
+    #[error("Base64 decode error: {0}")]
+    Base64Error(#[from] base64::DecodeError),
 
     // Authorization errors 400 ~
     #[error("No session found")]

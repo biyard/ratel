@@ -9,7 +9,11 @@ import { apiFetch } from '@/lib/api/apiFetch';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { showErrorToast } from '@/lib/toast';
 
-export async function likeFeed(feedId: number, value: boolean): Promise<Feed> {
+// TODO: Update to use v3 feed API with string IDs
+export async function likeFeed(
+  feedId: number | string,
+  value: boolean,
+): Promise<Feed> {
   const req = {
     like: {
       value,
@@ -40,8 +44,8 @@ export function useLikeFeedMutation() {
       next,
     }: {
       feedType: FeedType;
-      feedId: number;
-      parentId?: number;
+      feedId: number | string;
+      parentId?: number | string;
       next: boolean;
     }) => {
       const feed = await likeFeed(feedId, next);
@@ -52,7 +56,8 @@ export function useLikeFeedMutation() {
       const isReply = feedType === FeedType.Reply;
 
       if (isReply) {
-        const detailQueryKey = feedKeys.detail(parentId!);
+        // TODO: Update to use v3 feed API with string IDs
+        const detailQueryKey = feedKeys.detail(String(parentId!));
         await queryClient.cancelQueries({ queryKey: detailQueryKey });
         const previousFeedDetail =
           queryClient.getQueryData<Feed>(detailQueryKey);
@@ -77,7 +82,7 @@ export function useLikeFeedMutation() {
         return { previousFeedDetail };
       }
 
-      const detailQueryKey = feedKeys.detail(feedId);
+      const detailQueryKey = feedKeys.detail(String(feedId));
       const listQueryKey = feedKeys.lists();
 
       await queryClient.cancelQueries({ queryKey: detailQueryKey });
@@ -129,7 +134,7 @@ export function useLikeFeedMutation() {
       if (context?.previousFeedDetail) {
         const { feedType, feedId, parentId } = variables;
         const detailQueryKey = feedKeys.detail(
-          feedType === FeedType.Reply ? parentId! : feedId,
+          String(feedType === FeedType.Reply ? parentId! : feedId),
         );
         queryClient.setQueryData(detailQueryKey, context.previousFeedDetail);
       }
@@ -145,7 +150,7 @@ export function useLikeFeedMutation() {
     onSettled: (data, error, variables) => {
       const { feedType, feedId, parentId } = variables;
       const detailQueryKey = feedKeys.detail(
-        feedType === FeedType.Reply ? parentId! : feedId,
+        String(feedType === FeedType.Reply ? parentId! : feedId),
       );
 
       queryClient.invalidateQueries({ queryKey: detailQueryKey });
