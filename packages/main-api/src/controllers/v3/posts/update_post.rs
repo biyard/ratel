@@ -12,10 +12,22 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 #[serde(untagged)]
 pub enum UpdatePostRequest {
-    Writing { title: String, content: String },
-    Image { images: Vec<String> },
-    Info { visibility: Visibility },
-    Publish { publish: bool },
+    Publish {
+        title: String,
+        content: String,
+        publish: bool,
+        visibility: Option<Visibility>,
+    },
+    Writing {
+        title: String,
+        content: String,
+    },
+    Image {
+        images: Vec<String>,
+    },
+    Info {
+        visibility: Visibility,
+    },
     // TODO: Artwork metadata
 }
 
@@ -25,6 +37,12 @@ pub async fn update_post_handler(
     Path(super::dto::PostPathParam { post_pk }): super::dto::PostPath,
     Json(req): Json<UpdatePostRequest>,
 ) -> Result<Json<Post>, Error2> {
+    tracing::debug!(
+        "update_post_handler: user = {:?}, post_pk = {:?}, req = {:?}",
+        user,
+        post_pk,
+        req
+    );
     let cli = &dynamo.client;
     let (mut post, has_permission) =
         Post::has_permission(cli, &post_pk, Some(&user.pk), TeamGroupPermission::PostEdit).await?;
@@ -65,17 +83,48 @@ pub async fn update_post_handler(
                 .with_visibility(visibility)
                 .with_sorted_visibility(sorted_visibility)
         }
-        UpdatePostRequest::Publish { publish } => {
+        UpdatePostRequest::Publish {
+            publish,
+            content,
+            title,
+            visibility,
+        } => {
+            tracing::debug!(
+                "Publish request: publish = {}, title = {}, content = [REDACTED]",
+                publish,
+                title
+            );
+            let visibility = visibility.unwrap_or_default();
+            let sorted_visibility = match visibility {
+                Visibility::TeamOnly(..) => {
+                    SortedVisibility::team_only(post.user_pk.clone(), post.created_at)?
+                }
+                Visibility::Public => SortedVisibility::public(post.created_at),
+            };
+
+            post.visibility = Some(visibility.clone());
+            post.sorted_visibility = sorted_visibility.clone();
+
             if !publish {
                 // TODO: support unpublish if no dependencies
                 return Err(Error2::NotSupported(
                     "it does not support unpublished now".into(),
                 ));
             }
+            let av: aws_sdk_dynamodb::types::AttributeValue =
+                serde_dynamo::to_attribute_value(&PostStatus::Published)
+                    .expect("failed to serialize field");
+
+            tracing::debug!("Publishing post with AV: {:?}", av);
 
             post.status = PostStatus::Published;
 
-            updater.with_status(PostStatus::Published)
+            updater
+                .with_status(PostStatus::Published)
+                .with_title(title)
+                .with_html_contents(content)
+                .with_visibility(visibility)
+                .with_sorted_visibility(sorted_visibility)
         }
     };
 

@@ -87,7 +87,7 @@ export interface FeedComment {
 }
 
 export interface Feed {
-  id: number;
+  id: number | string;
   created_at: number;
   updated_at: number;
 
@@ -128,7 +128,7 @@ export interface Feed {
 }
 
 export interface Comment {
-  id: number;
+  id: number | string;
   created_at: number;
   feed_type: FeedType;
   user_id: number;

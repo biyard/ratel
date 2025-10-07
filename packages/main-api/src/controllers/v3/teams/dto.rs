@@ -1,6 +1,15 @@
 use bdk::prelude::*;
 
+use crate::types::*;
 use crate::{models::team::*, types::UserType};
+use axum::extract::Path;
+
+pub type TeamPath = Path<TeamPathParam>;
+
+#[derive(Debug, serde::Deserialize, aide::OperationIo, JsonSchema)]
+pub struct TeamPathParam {
+    pub team_pk: Partition,
+}
 
 #[derive(Debug, Default, serde::Serialize, schemars::JsonSchema)]
 pub struct TeamResponse {

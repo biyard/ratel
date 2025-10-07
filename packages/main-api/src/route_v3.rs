@@ -1,5 +1,9 @@
 // use crate::controllers::v2::posts::list_posts::ListPostsQueryParams;
 use crate::controllers::v3::auth::verification::verify_code::VerifyCodeResponse;
+use crate::controllers::v3::me::list_my_drafts::list_my_drafts_handler;
+use crate::controllers::v3::me::list_my_posts::list_my_posts_handler;
+use crate::controllers::v3::posts::post_response::PostResponse;
+use crate::controllers::v3::promotions::get_top_promotion::get_top_promotion_handler;
 use crate::controllers::v3::spaces::create_space::{CreateSpaceResponse, create_space_handler};
 use crate::controllers::v3::spaces::delete_space::delete_space_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
@@ -62,6 +66,7 @@ use crate::{
         teams::{
             create_team::{CreateTeamResponse, create_team_handler},
             find_team::{FindTeamResponse, find_team_handler},
+            get_permissions::{GetPermissionsResponse, get_permissions_handler},
             get_team::{GetTeamResponse, get_team_handler},
             groups::{
                 add_member::add_member_handler,
@@ -113,24 +118,51 @@ pub fn route(
     }: RouteDeps,
 ) -> Result<Router, Error2> {
     Ok(Router::new()
-        .route(
+        .route("/promotions/top", get(get_top_promotion_handler))
+        .nest(
             "/me",
-            get_with(
-                get_info_handler,
-                api_docs!(
-                    Json<GetInfoResponse>,
-                    "Get Logged-in User Info",
-                    "Get the user data of the logged-in user"
+            Router::new()
+                .route(
+                    "/",
+                    get_with(
+                        get_info_handler,
+                        api_docs!(
+                            Json<GetInfoResponse>,
+                            "Get Logged-in User Info",
+                            "Get the user data of the logged-in user"
+                        ),
+                    )
+                    .patch_with(
+                        update_user_handler,
+                        api_docs!(
+                            Json<UpdateUserResponse>,
+                            "Update Logged-in User Info",
+                            "Update the user data of the logged-in user"
+                        ),
+                    ),
+                )
+                .route(
+                    "/posts",
+                    get_with(
+                        list_my_posts_handler,
+                        api_docs!(
+                            Json<ListItemsResponse<PostResponse>>,
+                            "List My Posts",
+                            "List all posts created by the logged-in user"
+                        ),
+                    ),
+                )
+                .route(
+                    "/drafts",
+                    get_with(
+                        list_my_drafts_handler,
+                        api_docs!(
+                            Json<ListItemsResponse<PostResponse>>,
+                            "List My Posts",
+                            "List all posts created by the logged-in user"
+                        ),
+                    ),
                 ),
-            )
-            .patch_with(
-                update_user_handler,
-                api_docs!(
-                    Json<UpdateUserResponse>,
-                    "Update Logged-in User Info",
-                    "Update the user data of the logged-in user"
-                ),
-            ),
         )
         .nest(
             "/users",
@@ -151,7 +183,7 @@ pub fn route(
                     .get_with(
                         list_posts_handler,
                         api_docs!(
-                            Json<ListItemsResponse<Post>>,
+                            Json<ListItemsResponse<PostResponse>>,
                             "List Posts",
                             "List all posts"
                         ),
@@ -470,6 +502,17 @@ pub fn route(
                     .get_with(
                         find_team_handler,
                         api_docs!(Json<FindTeamResponse>, "Find team", "Find a team by ID"),
+                    ),
+                )
+                .route(
+                    "/permissions",
+                    get_with(
+                        get_permissions_handler,
+                        api_docs!(
+                            Json<GetPermissionsResponse>,
+                            "Get permissions",
+                            "Check if user has specific permission for a team"
+                        ),
                     ),
                 )
                 .nest(

@@ -1,3 +1,5 @@
+import { FeedStatus } from './lib/api/models/feeds';
+
 // LocalStorage keys
 export const SK_IDENTITY_KEY = 'identity';
 export const SK_ANONYMOUS_IDENTITY_KEY = 'anonymous_identity';
@@ -65,17 +67,21 @@ const QK_FEEDS = 'feeds';
 export const feedKeys = {
   all: [QK_FEEDS] as const,
   lists: () => [...feedKeys.all, 'list'] as const,
-  list: (filters: object) => {
-    // 빈 필터 객체는 제외하여 불필요한 복잡성을 줄입니다.
+  // {username, status}
+  // posts on Home: [list, status]
+  // posts on a specific user or team: [list, username, status]
+  // invalidate: login/logout
+  // For my posts [list, username, FeedStatus.Published]
+  list: (filters: { username?: string; status: FeedStatus }) => {
     const nonNullFilters = Object.fromEntries(
       Object.entries(filters).filter(([, value]) => value != null),
     );
     return [...feedKeys.lists(), sortObjectKeys(nonNullFilters)] as const;
   },
+  drafts: (username: string) =>
+    [...feedKeys.list({ username, status: FeedStatus.Draft })] as const,
+  my_posts: (username: string) =>
+    [...feedKeys.list({ username, status: FeedStatus.Published })] as const,
   details: () => [...feedKeys.all, 'detail'] as const,
-  detail: (id: number) => [...feedKeys.details(), id] as const,
+  detail: (pk: string) => [...feedKeys.details(), pk] as const,
 };
-
-// Example Usage
-// feedKeys.list({ feed_type: 'news', industry_id: 5 });
-// feedKeys.detail(1);

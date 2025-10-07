@@ -4,7 +4,7 @@ import { FileInfo } from './feeds';
 export default interface Artwork {
   id: number;
   created_at: number;
-  owner_id: number;
+  owner_username: string;
   title: string;
   description?: string;
   file: FileInfo;

@@ -1,42 +1,22 @@
 import {
   QueryClient,
-  useQuery,
-  UseQueryResult,
   useSuspenseQuery,
   UseSuspenseQueryResult,
 } from '@tanstack/react-query';
-import { User } from '../models/user';
-import { useApiCall } from '../use-send';
 import { QK_USERS_GET_INFO } from '@/constants';
-import { ratelApi } from '../ratel_api';
+import { getUserInfo, UserResponse } from '../ratel/me.v3';
 
-/**
- * @deprecated Use `useUserInfo` in '_hooks/user.ts'.
- */
-
-export function useUserInfo(): UseQueryResult<User | undefined> {
-  const { get } = useApiCall();
-  // const auth = useAuth();
-  // const principalText = auth.ed25519KeyPair?.getPrincipal().toText();
-
-  const query = useQuery({
-    queryKey: [QK_USERS_GET_INFO],
-    queryFn: () => get(ratelApi.users.getUserInfo()),
-    // enabled: !!principalText,
-    // refetchOnWindowFocus: false,
-  });
-
-  return query;
-}
-
-export function useSuspenseUserInfo(): UseSuspenseQueryResult<User> {
-  const { get } = useApiCall();
-  // const auth = useAuth();
-  // const principalText = auth.ed25519KeyPair?.getPrincipal().toText();
-
+export function useSuspenseUserInfo(): UseSuspenseQueryResult<UserResponse | null> {
   const query = useSuspenseQuery({
     queryKey: [QK_USERS_GET_INFO],
-    queryFn: () => get(ratelApi.users.getUserInfo()),
+    queryFn: async () => {
+      try {
+        const user = await getUserInfo();
+        return user;
+      } catch {
+        return null;
+      }
+    },
     // refetchOnWindowFocus: false,
   });
 

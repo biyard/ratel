@@ -9,10 +9,8 @@ import { Metadata } from 'next';
 import striptags from 'striptags';
 import { Suspense } from 'react';
 import { logger } from '@/lib/logger';
-import {
-  getOption as getFeedByIdOption,
-  getFeedById,
-} from '@/hooks/feeds/use-feed-by-id';
+import { getOption as getFeedByIdOption } from '@/hooks/feeds/use-feed-by-id';
+import { getPost } from '@/lib/api/ratel/posts.v3';
 
 export async function generateMetadata({
   params,
@@ -20,20 +18,19 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const postId = Number(id);
 
   let title = 'Ratel Thread';
   let description = 'Ratel Thread';
   let image = '';
   try {
-    const { data: feed } = await getFeedById(postId);
-    if (feed) {
-      title = feed.title || title;
-      description = striptags(feed.html_contents);
-      image = feed.url || '';
+    const { post } = await getPost(id);
+    title = post.title;
+    description = striptags(post.html_contents);
+    if (post.urls.length > 0) {
+      image = post.urls[0];
     }
   } catch (error) {
-    logger.error(`Failed to generate metadata for post ${postId}:`, error);
+    logger.error(`Failed to generate metadata for post ${id}:`, error);
   }
 
   return {
@@ -57,20 +54,17 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const feedId = Number(id);
   const queryClient = getQueryClient();
 
-  await Promise.allSettled([
-    queryClient.prefetchQuery(getFeedByIdOption(feedId)),
-  ]);
+  await Promise.allSettled([queryClient.prefetchQuery(getFeedByIdOption(id))]);
 
   return (
     <SSRHydration queryClient={queryClient}>
       <Suspense fallback={<div>Loading...</div>}>
         <div className="flex flex-col gap-6 w-full max-tablet:mr-[20px]">
-          <Header postId={feedId} />
-          <ThreadPost postId={feedId} />
-          <ThreadComment postId={feedId} />
+          <Header postId={id} />
+          <ThreadPost postId={id} />
+          <ThreadComment postId={id} />
         </div>
       </Suspense>
     </SSRHydration>

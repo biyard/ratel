@@ -86,6 +86,7 @@ pub async fn create_deliberation_handler(
             display_name: post.author_display_name,
             profile_url: post.author_profile_url,
             username: post.author_username,
+            user_type: post.author_type,
         },
     );
     common.create(&dynamo.client).await?;

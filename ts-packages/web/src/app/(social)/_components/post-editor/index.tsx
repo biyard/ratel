@@ -79,12 +79,14 @@ function Editor({
   content,
   updateContent,
   maxLines,
+  label,
 }: {
   disabled: boolean;
   placeholder: string;
   content: string | null;
   updateContent: (content: string) => void;
   maxLines?: number;
+  label?: string;
 }) {
   const editorRef = useRef<LexicalEditor | null>(null);
   const contentRef = useRef<HTMLDivElement | null>(null);
@@ -174,6 +176,7 @@ function Editor({
       <RichTextPlugin
         contentEditable={
           <ContentEditable
+            aria-label={label || 'editor'}
             ref={contentRef}
             disabled={disabled}
             className="outline-none resize-none w-full min-h-[60px]"
@@ -214,8 +217,14 @@ const editorConfig = {
 export function CreatePost() {
   const t = useTranslations('Home');
 
+  const p = usePostEditorContext();
+
+  const { data: userInfo, isLoading } = useUserInfo();
+
+  if (isLoading || !p || !p.expand) {
+    return null;
+  }
   const {
-    expand,
     toggleExpand,
     content,
     updateContent,
@@ -228,13 +237,7 @@ export function CreatePost() {
     image,
     updateImage,
     handleUpdate,
-  } = usePostEditorContext();
-
-  const { data: userInfo, isLoading } = useUserInfo();
-
-  if (isLoading || !expand) {
-    return null;
-  }
+  } = p;
   return (
     <div className="flex flex-col w-full">
       <div className="w-full bg-card-bg border-t-6 border-x border-b border-primary rounded-t-lg overflow-hidden">
@@ -281,6 +284,7 @@ export function CreatePost() {
 
             <div className="px-4 pt-2 min-h-[80px] relative text-text-primary text-[15px] leading-relaxed">
               <Editor
+                label="general-post-editor"
                 disabled={false}
                 content={content}
                 updateContent={updateContent}
@@ -324,6 +328,7 @@ export function CreatePost() {
                 )}
 
                 <Button
+                  aria-label="Publish"
                   variant="rounded_primary"
                   size="default"
                   onClick={async () => {
@@ -354,6 +359,7 @@ export function CreatePost() {
                 )}
 
                 <Button
+                  aria-label="Publish"
                   variant="rounded_primary"
                   size="default"
                   onClick={async () => {
@@ -401,6 +407,10 @@ function SelectPostType({
 }
 
 function EditableArtworkPost() {
+  const p = usePostEditorContext();
+
+  if (!p) return null;
+
   const {
     title,
     updateTitle,
@@ -410,7 +420,7 @@ function EditableArtworkPost() {
     updateImage,
     traits,
     updateTrait,
-  } = usePostEditorContext();
+  } = p;
 
   return (
     <ArtworkPost

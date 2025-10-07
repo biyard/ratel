@@ -30,6 +30,7 @@ pub struct Post {
     pub html_contents: String,
     pub post_type: PostType,
 
+    #[dynamo(index = "gsi5", sk)]
     pub status: PostStatus,
 
     #[dynamo(index = "gsi6", name = "find_by_visibility", pk)]
@@ -46,13 +47,21 @@ pub struct Post {
         index = "gsi2",
         pk
     )]
+    #[dynamo(
+        prefix = "USER_STATUS",
+        index = "gsi5",
+        name = "find_by_user_and_status",
+        pk
+    )]
     pub user_pk: Partition,
     pub author_display_name: String,
     pub author_profile_url: String,
     pub author_username: String,
+    pub author_type: UserType,
 
     // #[dynamo(prefix = "SPACE_PK", name = "find_by_space_pk", index = "gsi2", pk)]
     pub space_pk: Option<Partition>,
+    pub space_type: Option<SpaceType>,
     pub booster: Option<BoosterType>,
     // only for reward spaces
     pub rewards: Option<i64>,
@@ -75,12 +84,13 @@ impl Post {
         author: A,
     ) -> Self {
         let uid = uuid::Uuid::new_v4().to_string();
-        let now = chrono::Utc::now().timestamp_micros();
+        let now = chrono::Utc::now().timestamp();
         let Author {
             pk,
             display_name,
             profile_url,
             username,
+            user_type,
         } = author.into();
 
         Self {
@@ -101,8 +111,10 @@ impl Post {
             author_display_name: display_name,
             author_profile_url: profile_url,
             author_username: username,
+            author_type: user_type,
 
             space_pk: None,
+            space_type: None,
             booster: None,
             rewards: None,
             sorted_visibility: SortedVisibility::Draft(now.to_string()),

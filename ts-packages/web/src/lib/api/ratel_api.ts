@@ -200,18 +200,10 @@ export const proxy = {
 };
 export const ratelApi = {
   permissions: {
-    getPermissions: (teamId: number, permission: GroupPermission) =>
-      `/v2/permissions?team_id=${teamId}&permission=${permission}`,
+    getPermissions: (teamUsername: string, permission: GroupPermission) =>
+      `/v3/teams/permissions?team_username=${teamUsername}&permission=${permission}`,
   },
   users: {
-    login: () => '/v1/users?action=login',
-
-    logout: () => '/v2/users/logout',
-    loginWithPassword: (email: string, password: string) =>
-      `/v1/users?action=login-by-password&email=${encodeURIComponent(email)}&password=${password}`,
-    loginWithTelegram: (raw: string) =>
-      `/v1/users?action=login-by-telegram&telegram_raw=${raw}`,
-    // getUserInfo: () => '/v1/users?action=user-info',
     getUserInfo: () => '/v3/me',
     getUserByEmail: (email: string) =>
       `/v3/users?type=email&value=${encodeURIComponent(email)}`,
@@ -286,11 +278,13 @@ export const ratelApi = {
     comment: () => '/v1/feeds',
     writePost: () => '/v1/feeds',
     createDraft: () => '/v1/feeds',
-    updateDraft: (post_id: number) => `/v2/feeds/${post_id}`,
-    editPost: (post_id: number) => `/v1/feeds/${post_id}`,
-    publishDraft: (post_id: number) => `/v1/feeds/${post_id}`,
-    removeDraft: (post_id: number) => `/v1/feeds/${post_id}?action=delete`,
-    likePost: (post_id: number) => `/v1/feeds/${post_id}`,
+    // TODO: Update to use v3 feed API with string IDs
+    updateDraft: (post_id: number | string) => `/v2/feeds/${post_id}`,
+    editPost: (post_id: number | string) => `/v1/feeds/${post_id}`,
+    publishDraft: (post_id: number | string) => `/v1/feeds/${post_id}`,
+    removeDraft: (post_id: number | string) =>
+      `/v1/feeds/${post_id}?action=delete`,
+    likePost: (post_id: number | string) => `/v1/feeds/${post_id}`,
     repost: () => '/v1/feeds',
     unrepost: (post_id: number) => `/v1/feeds/${post_id}?action=unrepost`,
 

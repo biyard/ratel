@@ -3,12 +3,12 @@ use crate::models::user::User;
 use crate::types::list_items_response::ListItemsResponse;
 use crate::types::{EntityType, Visibility};
 use crate::{AppState, Error2};
+use aide::NoApi;
 use bdk::prelude::*;
 use by_axum::axum::{
     Json,
     extract::{Query, State},
 };
-use dto::aide::NoApi;
 use serde::Deserialize;
 use validator::Validate;
 
@@ -22,41 +22,44 @@ pub struct ListPostsQueryParams {
 pub async fn list_posts_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-    Query(params): Query<ListPostsQueryParams>,
+    Query(ListPostsQueryParams { bookmark }): Query<ListPostsQueryParams>,
 ) -> Result<Json<ListItemsResponse<PostResponse>>, Error2> {
-    tracing::debug!("list_posts_handler: user = {:?}", user);
-    params.validate()?;
+    tracing::debug!(
+        "list_posts_handler: user = {:?} bookmark = {:?}",
+        user,
+        bookmark
+    );
 
     let mut query_options = PostQueryOption::builder().limit(10);
 
-    if let Some(bookmark) = params.bookmark {
+    if let Some(bookmark) = bookmark {
         query_options = query_options.bookmark(bookmark);
     }
     let (posts, bookmark) =
         Post::find_by_visibility(&dynamo.client, Visibility::Public, query_options).await?;
+    tracing::debug!(
+        "list_posts_handler: found {} posts, next bookmark = {:?}",
+        posts.len(),
+        bookmark
+    );
 
-    if posts.is_empty() {
-        return Ok(Json(ListItemsResponse {
-            items: vec![],
-            bookmark: None,
-        }));
-    }
-
-    let likes = if let Some(user) = user {
-        let sk = EntityType::PostLike(user.pk.to_string());
-        PostLike::batch_get(
-            &dynamo.client,
-            posts
-                .iter()
-                .map(|post| (post.pk.clone(), sk.clone()))
-                .collect(),
-        )
-        .await?
-    } else {
-        vec![]
+    let likes = match (user, posts.is_empty()) {
+        (Some(user), false) => {
+            let sk = EntityType::PostLike(user.pk.to_string());
+            PostLike::batch_get(
+                &dynamo.client,
+                posts
+                    .iter()
+                    .map(|post| (post.pk.clone(), sk.clone()))
+                    .collect(),
+            )
+            .await?
+        }
+        _ => vec![],
     };
 
-    let items = posts
+    tracing::debug!("list_posts_handler: returning {} items", posts.len());
+    let items: Vec<PostResponse> = posts
         .into_iter()
         .map(|post| {
             let liked = likes.iter().any(|like| like.pk == post.pk);
@@ -66,73 +69,3 @@ pub async fn list_posts_handler(
 
     Ok(Json(ListItemsResponse { items, bookmark }))
 }
-
-// let (posts, next_bookmark) = match params.r#type {
-//     ListPostType::All => {
-//         Post::find_by_visibility(&dynamo.client, Visibility::Public, query_options).await?
-//     }
-//     ListPostType::Me => {
-//         let user = extract_user(&dynamo.client, session).await?;
-//         let user_pk = user.pk;
-//         let status = params.status.unwrap_or(PostStatus::Published);
-//         query_options = query_options.sk(status.to_string());
-
-//         Post::find_by_user_pk(&dynamo.client, &user_pk, query_options).await?
-//     }
-//     ListPostType::User => {
-//         let user_pk = params.value.ok_or(Error2::BadRequest(
-//             "value (user_pk) is required for type User".to_string(),
-//         ))?;
-//         query_options = query_options.sk(Visibility::Public.to_string());
-
-//         Post::find_by_user_pk_visibility(&dynamo.client, user_pk, query_options).await?
-//     }
-//     ListPostType::Team => {
-//         let team_pk = params.value.ok_or(Error2::BadRequest(
-//             "value (team_pk) is required for type Team".to_string(),
-//         ))?;
-
-//         // If team try to access draft, or User have permission to read the team,
-//         let mut has_permission = false;
-//         if check_any_permission(
-//             &dynamo.client,
-//             session,
-//             RatelResource::Team {
-//                 team_pk: team_pk.clone(),
-//             },
-//             vec![
-//                 TeamGroupPermission::PostRead,
-//                 TeamGroupPermission::PostWrite,
-//                 TeamGroupPermission::PostEdit,
-//             ],
-//         )
-//         .await
-//         .is_ok()
-//         {
-//             has_permission = true;
-//         }
-
-//         match params.status {
-//             Some(PostStatus::Draft) => {
-//                 if !has_permission {
-//                     return Err(Error2::Unauthorized(
-//                         "You do not have permission to access draft posts".to_string(),
-//                     ));
-//                 }
-//                 query_options = query_options.sk(PostStatus::Draft.to_string());
-
-//                 Post::find_by_user_pk(&dynamo.client, &team_pk, query_options).await?
-//             }
-//             _ => {
-//                 if has_permission {
-//                     query_options = query_options.sk(PostStatus::Published.to_string());
-//                     Post::find_by_user_pk(&dynamo.client, &team_pk, query_options).await?
-//                 } else {
-//                     query_options = query_options.sk(Visibility::Public.to_string());
-
-//                     Post::find_by_user_pk_visibility(&dynamo.client, &team_pk, query_options)
-//                         .await?
-//                 }
-//             }
-//         }
-//     }

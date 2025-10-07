@@ -224,7 +224,7 @@ export default function Artworks({ spaceId }: { spaceId: number }) {
             totalOracles={dagit.oracles.length}
             handleStartConsensus={handleStartConsensus}
             handleVote={handleVote}
-            isOwner={userInfo?.id === artwork.owner_id}
+            isOwner={userInfo?.username === artwork.owner_username}
           />
         ))}
         {insertedArtworks.map((artwork) => (

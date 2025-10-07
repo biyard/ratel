@@ -36,46 +36,39 @@ import { useTranslations } from 'next-intl';
 import { BoosterType } from '@/lib/api/models/notice';
 
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
-import { useLikeFeedMutation } from '@/hooks/feeds/use-like-feed-mutation';
-import { useDeleteFeedMutation } from '@/hooks/feeds/use-delete-feed-mutation';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { GroupPermission } from '@/lib/api/models/group';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
+import { useDeletePostMutation } from '@/hooks/feeds/use-delete-post-mutation';
+import { useLikePostMutation } from '@/hooks/feeds/use-like-post-mutation';
 
-export default function Header({ postId }: { postId: number }) {
+export default function Header({ postId }: { postId: string }) {
   const t = useTranslations('Threads');
   const popup = usePopup();
   const router = useRouter();
   const { teams } = useContext(TeamContext);
-  const { data: post } = useFeedById(postId);
+  const {
+    data: { post, is_liked },
+  } = useFeedById(postId);
 
-  const user = useSuspenseUserInfo();
+  const { data: user } = useSuspenseUserInfo();
+  const username = user?.username || '';
 
-  let author_id: number | undefined;
-  if (post?.author && post.author.length > 0) {
-    author_id = post.author[0]?.id;
-  }
+  const p = usePostEditorContext();
 
-  const { openPostEditorPopup } = usePostEditorContext();
-
-  let space_id: number | null = null;
-  let is_boost = false;
+  const space_id = post.space_pk;
+  const is_boost = post.booster && post.booster !== BoosterType.NoBoost;
   let target = '';
-  if (post.space?.length >= 1) {
-    const space = post.space[0];
-    space_id = space.id;
-    is_boost = Boolean(
-      space?.booster_type && space?.booster_type != BoosterType.NoBoost,
-    );
-    target = route.space(space_id);
+  if (post.space_pk) {
+    target = route.space(space_id!);
   }
-  const user_id = user.data ? user.data.id : 0;
 
-  const likeMutation = useLikeFeedMutation();
-  const deleteMutation = useDeleteFeedMutation(user_id, FeedStatus.Published);
+  const likeMutation = useLikePostMutation();
+  const deleteMutation = useDeletePostMutation(username, FeedStatus.Published);
 
   const isPostOwner =
-    author_id === user_id || teams.find((team) => team.id === author_id);
+    post.author_username === username ||
+    teams.find((team) => team.username === post.author_username);
 
   const handleCreateSpace = () => {
     popup
@@ -86,11 +79,7 @@ export default function Header({ postId }: { postId: number }) {
 
   const handleDelete = async () => {
     if (!deleteMutation.isPending) {
-      await deleteMutation.mutateAsync({
-        feedId: postId,
-        feedType: post.feed_type,
-        parentId: undefined,
-      });
+      await deleteMutation.mutateAsync(postId);
       router.push(route.home());
     }
   };
@@ -99,24 +88,22 @@ export default function Header({ postId }: { postId: number }) {
     if (!likeMutation.isPending) {
       await likeMutation.mutateAsync({
         feedId: postId,
-        feedType: post.feed_type,
-        next,
-        parentId: undefined,
+        like: next,
       });
     }
   };
 
   const handleEditPost = async () => {
-    await openPostEditorPopup(postId);
+    await p?.openPostEditorPopup(postId);
   };
 
   const writeGroupPermission = usePermission(
-    post.author[0]?.id ?? 0,
+    post.author_username,
     GroupPermission.WritePosts,
   ).data.has_permission;
 
   const deletePostPermission = usePermission(
-    post.author[0]?.id ?? 0,
+    post.author_username,
     GroupPermission.DeletePosts,
   ).data.has_permission;
 
@@ -255,13 +242,13 @@ export default function Header({ postId }: { postId: number }) {
         <div className="flex items-center justify-end w-full gap-4">
           {/* Feed Stats */}
           <button
-            onClick={() => handleLike(!post.is_liked)}
+            onClick={() => handleLike(!is_liked)}
             disabled={likeMutation.isPending}
             className={`flex items-center gap-1 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50`}
           >
             <ThumbUp
               className={
-                post.is_liked
+                is_liked
                   ? 'size-5 [&>path]:fill-primary [&>path]:stroke-primary'
                   : 'size-5 [&>path]:stroke-icon'
               }
@@ -304,9 +291,9 @@ export default function Header({ postId }: { postId: number }) {
       </div>
       <div className="flex flex-row justify-between">
         <ProposerProfile
-          profileUrl={post.author[0]?.profile_url ?? ''}
-          proposerName={post.author[0]?.nickname ?? ''}
-          userType={post.author[0]?.user_type || UserType.Individual}
+          profileUrl={post.author_profile_url ?? ''}
+          proposerName={post.author_display_name ?? ''}
+          userType={post.author_type || UserType.Individual}
         />
         <div className="font-light text-text-primary text-sm/[14px]">
           {post.created_at !== undefined ? getTimeAgo(post.created_at) : ''}

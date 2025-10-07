@@ -2,7 +2,6 @@
 import React, { useContext, useMemo } from 'react';
 import Image from 'next/image';
 import { TeamContext } from '@/lib/contexts/team-context';
-import { useUserInfo } from '@/lib/api/hooks/users';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { usePopup } from '@/lib/contexts/popup-service';
 import {
@@ -18,6 +17,7 @@ import Link from 'next/link';
 import { route } from '@/route';
 import TeamCreationPopup from '@/app/(social)/_popups/team-creation-popup';
 import { useTranslations } from 'next-intl';
+import { useUserInfo } from '@/hooks/use-user-info';
 
 interface ProfileProps {
   profileUrl?: string;

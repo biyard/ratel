@@ -47,7 +47,7 @@ function SpaceModifySection({
   spaceId,
   isDraft,
   isPublic,
-  authorId,
+  authorName,
   onEdit,
   onDelete,
 }: {
@@ -73,12 +73,15 @@ function SpaceModifySection({
   const { selectedTeam } = useContext(TeamContext);
   const { data: userInfo } = useSuspenseUserInfo();
 
+  // TODO: Update to use v3 space API with proper username/pk fields
   const writePostPermission = usePermission(
-    authorId ?? 0,
+    authorName ?? '',
     GroupPermission.WritePosts,
   ).data.has_permission;
+  // TODO: Update permission check to use usernames instead of IDs after v3 migration
   const hasEditPermission =
-    (authorId === userInfo?.id || selectedTeam?.id === authorId) &&
+    (userInfo?.username === authorName ||
+      selectedTeam?.username === authorName) &&
     writePostPermission;
 
   const publishSpace = usePublishSpace(spaceId);
@@ -260,7 +263,8 @@ export default function Header() {
   const { id } = useParams();
   const spaceId = Number(id);
   const { data: space } = useSpaceById(spaceId);
-  const { data: feed } = useFeedById(space.feed_id);
+  // TODO: Update space API to use string feed_id in v3
+  const { data: feed } = useFeedById(space.feed_id.toString());
   const author = space.author[0];
 
   const { isEdit, commonData, startEditing, updateCommonData } =
@@ -301,10 +305,10 @@ export default function Header() {
             onDelete={handleDelete}
           />
           <PostInfoSection
-            likes={feed.likes}
-            shares={feed.shares}
-            comments={feed.comments}
-            rewards={feed.rewards}
+            likes={feed.post.likes}
+            shares={feed.post.shares}
+            comments={feed.post.comments}
+            rewards={feed.post.rewards ?? 0}
             isDraft={isDraft}
             isPublic={isPublic}
           />

@@ -49,11 +49,13 @@ export default function SpaceSideMenu() {
   const selectedTeam = teams.some((t) => t.id === authorId);
 
   const { data: userInfo } = useUserInfo();
-  const userId = userInfo ? userInfo.id : 0;
+  // TODO: Update to use v3 user API with string pk instead of numeric id
+  const userId = userInfo ? 0 : 0;
   const createdAt = space.created_at;
 
+  // TODO: Update to use v3 space API with username-based permissions
   const writePostPermission = usePermission(
-    space.author[0]?.id ?? 0,
+    space.author[0]?.username ?? '',
     GroupPermission.WritePosts,
   ).data.has_permission;
 
@@ -203,17 +205,19 @@ export function SpaceTabsMobile() {
     useDeliberationSpaceContext();
   const space = useDeliberationSpace();
   const { data: userInfo } = useUserInfo();
-  const userId = userInfo ? userInfo.id : 0;
   const { teams } = useContext(TeamContext);
   const authorId = space?.author[0].id;
   const selectedTeam = teams.some((t) => t.id === authorId);
+  // TODO: Update to use v3 space API with username-based permissions
   const writePostPermission = usePermission(
-    space.author[0]?.id ?? 0,
+    space.author[0]?.username ?? '',
     GroupPermission.WritePosts,
   ).data.has_permission;
 
+  // TODO: Update authorization check to use usernames instead of IDs
   const showAnalyze =
-    (space.author.some((a) => a.id === userId) || selectedTeam) &&
+    (space.author.some((a) => a.username === (userInfo?.username ?? '')) ||
+      selectedTeam) &&
     space.status != SpaceStatus.Draft &&
     writePostPermission;
 

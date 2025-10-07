@@ -1,13 +1,8 @@
 'use client';
-import { LoadingIndicator } from '@/app/loading';
 import { Col } from '@/components/ui/col';
 import { useTranslations } from 'next-intl';
-import {
-  ErrorBoundary,
-  ErrorComponent,
-} from 'next/dist/client/components/error-boundary';
 import { useRouter } from 'next/navigation';
-import React, { Suspense } from 'react';
+import React from 'react';
 import DisableBorderCard from './disable-border-card';
 import { useNews } from '../_hooks/use-news';
 
@@ -18,19 +13,10 @@ export interface NewsItem {
   created_at: number;
 }
 
-const Error: ErrorComponent = ({ error }) => {
-  console.error('Error occurred:', error);
-  return <div></div>;
-};
 export default function Wrapper() {
-  return (
-    <ErrorBoundary errorComponent={Error}>
-      <Suspense fallback={<LoadingIndicator />}>
-        <News />
-      </Suspense>
-    </ErrorBoundary>
-  );
+  return <News />;
 }
+
 function News() {
   const t = useTranslations('Home');
   const router = useRouter();

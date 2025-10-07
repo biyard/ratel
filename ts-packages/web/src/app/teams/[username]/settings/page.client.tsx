@@ -48,8 +48,9 @@ export default function SettingsPage({ username }: { username: string }) {
   const [nickname, setNickname] = useState(team?.nickname);
   const [htmlContents, setHtmlContents] = useState(team?.html_contents);
 
+  // TODO: Update to use v3 permissions with username instead of id
   const deleteTeamPermission =
-    usePermission(team?.id ?? 0, GroupPermission.DeleteGroup).data
+    usePermission(team?.username ?? '', GroupPermission.DeleteGroup).data
       .has_permission ?? false;
 
   if (!team) {
@@ -78,9 +79,9 @@ export default function SettingsPage({ username }: { username: string }) {
                 deleteTeamRequest(team!.id),
               );
               showInfoToast(t('success_delete_team'));
+              // Invalidate all published feeds after deleting team
               await queryClient.invalidateQueries({
                 queryKey: feedKeys.list({
-                  userId: 0,
                   status: FeedStatus.Published,
                 }),
               });

@@ -188,13 +188,14 @@ export async function getUserInfo(): Promise<{
   );
 }
 
+// TODO: Update to use v3 permissions API with team username
 export function getPermission(
-  teamId: number,
+  teamUsername: string,
   permission: GroupPermission,
 ): Promise<{ key: (string | number)[]; data: Permission | null }> {
   return getDataFromServer<Permission>(
-    [QK_GET_PERMISSION, teamId, permission],
-    ratelApi.permissions.getPermissions(teamId, permission),
+    [QK_GET_PERMISSION, teamUsername, permission],
+    ratelApi.permissions.getPermissions(teamUsername, permission),
   );
 }
 

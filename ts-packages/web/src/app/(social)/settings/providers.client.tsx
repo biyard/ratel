@@ -31,8 +31,8 @@ export default function ClientProviders({
   const userinfo = useSuspenseUserInfo();
   const { data: user } = userinfo;
   const [profileUrl, setProfileUrl] = useState(user?.profile_url || '');
-  const [nickname, setNickname] = useState(user?.nickname);
-  const [htmlContents, setHtmlContents] = useState(user?.html_contents);
+  const [nickname, setNickname] = useState(user?.nickname || '');
+  const [htmlContents, setHtmlContents] = useState(user?.description || '');
   const [showWalletConnect, setShowWalletConnect] = useState(false);
   const handleContents = (evt: React.FormEvent<HTMLTextAreaElement>) => {
     setHtmlContents(evt.currentTarget.value);
@@ -57,7 +57,7 @@ export default function ClientProviders({
     }
 
     post(
-      ratelApi.users.editProfile(user!.id),
+      ratelApi.users.editProfile(0), // TODO: Migrate to v3 user update endpoint
       userEditProfileRequest(nickname!, htmlContents!, profileUrl),
     );
     userinfo.refetch();

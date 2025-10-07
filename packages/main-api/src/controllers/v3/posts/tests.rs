@@ -1,3 +1,5 @@
+use percent_encoding::NON_ALPHANUMERIC;
+use tokio::time::sleep;
 use validator::ValidateLength;
 
 use crate::{
@@ -20,15 +22,12 @@ async fn test_create_post_by_user() {
     assert_eq!(status, 200);
     assert!(create_body.post_pk.to_string().len() > 0);
 
-    tracing::info!("Create post response pk: {:?}", create_body.post_pk);
-
     let (status, _headers, body) = get! {
         app: app,
         path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
         headers: test_user.1.clone()
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "get post response {:?}", body);
     assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
     let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
@@ -87,6 +86,8 @@ async fn test_create_post_by_user() {
         path: &path,
         headers: test_user.1.clone(),
         body: {
+            "title": title,
+            "content": title,
             "publish": true
         }
     };
@@ -98,8 +99,7 @@ async fn test_create_post_by_user() {
         app: app,
         path: format!("/v3/posts/{}", post_pk),
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "get post response {:?}", body);
     assert_eq!(body["post"]["pk"], post_pk);
 }
 
@@ -156,15 +156,12 @@ async fn test_post_like() {
     assert_eq!(status, 200);
     assert!(create_body.post_pk.to_string().len() > 0);
 
-    tracing::info!("Create post response pk: {:?}", create_body.post_pk);
-
     let (status, _headers, body) = get! {
         app: app,
         path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
         headers: test_user.1.clone()
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "get post response {:?}", body);
     assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
     let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
@@ -203,15 +200,12 @@ async fn test_delete_draft() {
     assert_eq!(status, 200);
     assert!(create_body.post_pk.to_string().len() > 0);
 
-    tracing::info!("Create post response pk: {:?}", create_body.post_pk);
-
     let (status, _headers, body) = get! {
         app: app,
         path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
         headers: test_user.1.clone()
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "get post response {:?}", body);
     assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
     let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
@@ -240,15 +234,12 @@ async fn test_delete_post() {
     assert_eq!(status, 200);
     assert!(create_body.post_pk.to_string().len() > 0);
 
-    tracing::info!("Create post response pk: {:?}", create_body.post_pk);
-
     let (status, _headers, body) = get! {
         app: app,
         path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
         headers: test_user.1.clone()
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "get post response {:?}", body);
     assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
     let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
@@ -258,6 +249,9 @@ async fn test_delete_post() {
         path: format!("/v3/posts/{}", post_pk),
         headers: test_user.1.clone(),
         body: {
+            "title": "",
+            "content": "",
+            "visibility": "PUBLIC",
             "publish": true
         }
     };
@@ -270,8 +264,7 @@ async fn test_delete_post() {
         path: format!("/v3/posts/{}", post_pk),
         headers: test_user.1.clone(),
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "get post response {:?}", body);
     assert_eq!(body["post"]["pk"], post_pk);
 
     let (status, _headers, body) = delete! {
@@ -288,8 +281,7 @@ async fn test_delete_post() {
         path: format!("/v3/posts/{}", post_pk),
         headers: test_user.1.clone()
     };
-    tracing::info!("Get post response: {:?}", body);
-    assert_eq!(status, 404);
+    assert_eq!(status, 404, "get post response {:?}", body);
     assert_eq!(body["code"], 107);
 }
 
@@ -302,7 +294,7 @@ async fn test_list_posts() {
         ..
     } = TestContextV3::setup().await;
 
-    for i in 0..5 {
+    for i in 0..11 {
         let (status, _headers, create_body) = post! {
             app: app,
             path: "/v3/posts",
@@ -313,15 +305,12 @@ async fn test_list_posts() {
         assert_eq!(status, 200);
         assert!(create_body.post_pk.to_string().len() > 0);
 
-        tracing::info!("Create post response pk: {:?}", create_body.post_pk);
-
         let (status, _headers, body) = get! {
             app: app,
             path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
             headers: test_user.1.clone()
         };
-        tracing::info!("Get post response: {:?}", body);
-        assert_eq!(status, 200);
+        assert_eq!(status, 200, "get post response {:?}", body);
         assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
         let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
@@ -358,12 +347,17 @@ async fn test_list_posts() {
             path: format!("/v3/posts/{}", post_pk),
             headers: test_user.1.clone(),
             body: {
+                "title": title,
+                "content": content,
+                "visibility": "PUBLIC",
                 "publish": true
             }
         };
 
         assert_eq!(status, 200);
         assert_eq!(body["status"], 2);
+
+        sleep(std::time::Duration::from_secs(1)).await; // ensure the order by created_at
     }
 
     let (status, _headers, body) = get! {
@@ -374,13 +368,30 @@ async fn test_list_posts() {
 
     assert_eq!(status, 200);
     let items = body["items"].as_array().unwrap();
+    let bookmark = body["bookmark"].as_str().unwrap_or_default().to_string();
+    assert!(bookmark.len() > 0);
     assert!(items.length().unwrap_or_default() >= 5);
 
     let first = items[0].as_object().unwrap();
-    assert_eq!(first["title"], format!("Updated Title {} 4", now));
+    assert_eq!(first["title"], format!("Updated Title {} 10", now));
     assert_eq!(
         first["html_contents"],
-        format!("<p>Updated Content {} 4</p>", now)
+        format!("<p>Updated Content {} 10</p>", now)
+    );
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts?bookmark={}", percent_encoding::utf8_percent_encode(&bookmark, NON_ALPHANUMERIC).to_string()),
+        response_type: serde_json::Value,
+    };
+    assert_eq!(status, 200);
+    let items = body["items"].as_array().unwrap();
+    assert!(bookmark.len() > 0);
+    let first = items[0].as_object().unwrap();
+    assert_eq!(first["title"], format!("Updated Title {} 0", now));
+    assert_eq!(
+        first["html_contents"],
+        format!("<p>Updated Content {} 0</p>", now)
     );
 }
 

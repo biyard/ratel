@@ -32,17 +32,17 @@ services:
       - "3000:3000"
     environment:
       ENV: dev
-      RUST_LOG: ${RUST_LOG:-debug}
+      RUST_LOG: ${RUST_LOG:-info}
       RUSTFLAGS: ${RUSTFLAGS:--A warnings}
       RUST_FLAG: ${RUST_FLAG:---features bypass}
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
-      DYNAMO_ENDPOINT: http://localstack:4566
+      DYNAMO_ENDPOINT: ${DYNAMO_ENDPOINT:-http://localstack:4566}
       MIGRATE: ${MIGRATE:-true}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
       AWS_REGION: ${AWS_REGION:-us-east-1}
       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
-      DYNAMO_TABLE_PREFIX: ratel-local
+      DYNAMO_TABLE_PREFIX: ${DYNAMO_TABLE_PREFIX:-ratel-local}
       BINANCE_API_KEY: ${BINANCE_API_KEY:-dummy}
       BINANCE_SECRET_KEY: ${BINANCE_SECRET_KEY:-dummy}
       BINANCE_WEBHOOK: ${BINANCE_WEBHOOK:-dummy}

@@ -1,4 +1,5 @@
 use crate::models::feed::PostLike;
+use crate::types::sorted_visibility::SortedVisibility;
 use crate::types::*;
 use bdk::prelude::*;
 use sqlx::postgres::PgRow;
@@ -7,8 +8,6 @@ use crate::models::feed::Post;
 use crate::models::space::SpaceCommon;
 use dto::Feed as F;
 use dto::Space as S;
-
-use super::user::migrate_by_id;
 
 pub async fn migrate_posts(
     cli: &aws_sdk_dynamodb::Client,
@@ -23,6 +22,8 @@ pub async fn migrate_posts(
     };
     let posts = dto::Feed::query_builder(user_id)
         .feed_type_equals(dto::FeedType::Post)
+        .limit(100)
+        .with_count()
         .query()
         .map(|row: PgRow| {
             use sqlx::Row;
@@ -34,9 +35,10 @@ pub async fn migrate_posts(
         .await
         .expect("Failed to fetch posts from Postgres");
 
-    tracing::info!("Total posts to migrate: {}", total_count);
+    tracing::info!("Total posts to migrate: {} {}", total_count, posts.len());
 
     for post in posts {
+        tracing::info!("Migrating post ID: {:?}", post);
         let F {
             id,
             created_at,
@@ -66,13 +68,37 @@ pub async fn migrate_posts(
         } = post;
 
         let author = author.first().cloned().ok_or_else(|| {
+            tracing::error!("Post with ID {} has no associated author", id);
             crate::Error2::InternalServerError(format!(
                 "Post with ID {} has no associated author",
                 id
             ))
         })?;
 
-        let author = migrate_by_id(cli, pool, author.id).await?;
+        tracing::info!("Migrating author: {:?}", author);
+
+        let author: Author = match &author.user_type {
+            &dto::UserType::Individual => super::user::migrate_by_id(cli, pool, author.id)
+                .await
+                .map_err(|e| {
+                    tracing::error!(
+                        "Failed to migrate author with ID {}: {}",
+                        author.id,
+                        e.to_string()
+                    );
+                    crate::Error2::InternalServerError(format!(
+                        "Failed to migrate author with ID {}: {}",
+                        author.id, e
+                    ))
+                })
+                .unwrap()
+                .into(),
+            &dto::UserType::Team => super::team::migrate_by_id(cli, pool, author.id)
+                .await
+                .unwrap()
+                .into(),
+            _ => unimplemented!(),
+        };
 
         let mut post = Post::new(
             title.unwrap_or_default(),
@@ -95,7 +121,54 @@ pub async fn migrate_posts(
             dto::FeedStatus::Draft => crate::types::PostStatus::Draft,
             dto::FeedStatus::Published => crate::types::PostStatus::Published,
         };
+        post.visibility = if post.status == crate::types::PostStatus::Draft {
+            None
+        } else {
+            Some(crate::types::Visibility::Public)
+        };
+        post.sorted_visibility = if post.status == crate::types::PostStatus::Published {
+            SortedVisibility::Public(post.created_at.to_string())
+        } else {
+            SortedVisibility::Draft(post.created_at.to_string())
+        };
         post.user_pk = author.pk.clone();
+
+        if spaces.len() > 0 {
+            let space = &spaces[0];
+            post.space_pk = Some(Partition::Space(space.id.to_string()));
+            post.space_type = Some(match space.space_type {
+                dto::SpaceType::Legislation => crate::types::SpaceType::Legislation,
+                dto::SpaceType::Poll => crate::types::SpaceType::Poll,
+                dto::SpaceType::Deliberation => crate::types::SpaceType::Deliberation,
+                dto::SpaceType::Nft => crate::types::SpaceType::Nft,
+                dto::SpaceType::Commitee => crate::types::SpaceType::Commitee,
+                dto::SpaceType::SprintLeague => crate::types::SpaceType::SprintLeague,
+                dto::SpaceType::Notice => crate::types::SpaceType::Notice,
+                dto::SpaceType::Dagit => crate::types::SpaceType::Dagit,
+            });
+            post.booster = match space.booster_type.unwrap_or_default() {
+                dto::BoosterType::NoBoost => Some(crate::types::BoosterType::NoBoost),
+                dto::BoosterType::X2 => Some(crate::types::BoosterType::X2),
+                dto::BoosterType::X10 => Some(crate::types::BoosterType::X10),
+                dto::BoosterType::X100 => Some(crate::types::BoosterType::X100),
+            };
+
+            if let Some(ref space_type) = post.space_type {
+                match space_type {
+                    crate::types::SpaceType::Poll => {
+                        // TODO: migrate poll space
+                    }
+                    crate::types::SpaceType::Commitee => {
+                        // TODO: migrate committee space
+                    }
+                    crate::types::SpaceType::Notice => {
+                        // TODO: migrate notice space
+                    }
+                    crate::types::SpaceType::Deliberation => {}
+                    _ => unimplemented!("not used in production yet"),
+                }
+            }
+        }
 
         if let Err(e) = post.create(cli).await {
             tracing::error!("Failed to create post {}: {:?}", id, e);

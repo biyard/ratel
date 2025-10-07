@@ -27,10 +27,12 @@ export default function TeamProfile({ team }: TeamProfileProps) {
   }
 
   const userInfo = data.data;
-  const followings = userInfo.followings;
+  // TODO: Implement followings in v3 API - using placeholder for now
+  const followings: never[] = [];
 
   const isFollowing = followings.some((f: { id: number }) => f.id === team.id);
-  const enableFollowbutton = team.id != userInfo.id;
+  // TODO: Update to use username comparison instead of id
+  const enableFollowbutton = team.username !== userInfo?.username;
 
   const handleFollow = async (userId: number) => {
     await post(ratelApi.networks.follow(userId), followRequest());

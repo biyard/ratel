@@ -15,8 +15,9 @@ export default async function SprintLeaguePage({
     getSpaceByIdOption(space_id),
   );
 
+  // TODO: Update space API to use string feed_id in v3
   await Promise.allSettled([
-    queryClient.prefetchQuery(getFeedByIdOption(feed_id)),
+    queryClient.prefetchQuery(getFeedByIdOption(feed_id.toString())),
   ]);
 
   return (

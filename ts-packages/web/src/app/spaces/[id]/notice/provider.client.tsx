@@ -704,7 +704,7 @@ export default function ClientProviders({
       // Initialize quiz questions
       // For owners, let the quiz builder handle initialization with correct answers
       // For non-owners, use the read-only format
-      const isOwner = userInfo?.id === space?.owner_id;
+      const isOwner = userInfo?.username === space?.owner_username;
       if (!isOwner) {
         setQuizQuestions(
           convertQuizQuestionsToQuestions(space.notice_quiz) || [],
@@ -787,7 +787,8 @@ export function useNoticeSpace() {
 }
 
 export function useNoticeFeed(feedId: number) {
-  const { data: feed } = useFeedById(feedId);
+  // TODO: Update to use v3 feed API with string IDs
+  const { data: feed } = useFeedById(feedId.toString());
   if (!feed) {
     throw new Error('Feed not found');
   }
