@@ -1,0 +1,12 @@
+export { default as AddPhoto } from './add-photo.svg?react';
+export { default as Album } from './album.svg?react';
+export { default as CheckPhoto } from './check-photo.svg?react';
+export { default as DeletePhoto } from './delete-photo.svg?react';
+export { default as DownloadPhoto } from './download-photo.svg?react';
+export { default as ExpandPhoto } from './expand-photo.svg?react';
+export { default as FavouritePhoto } from './favourite-photo.svg?react';
+export { default as LockPhoto } from './lock-photo.svg?react';
+export { default as PhotoOff } from './photo-off.svg?react';
+export { default as Photo } from './photo.svg?react';
+export { default as RemovePhoto } from './remove-photo.svg?react';
+export { default as UploadPhoto } from './upload-photo.svg?react';

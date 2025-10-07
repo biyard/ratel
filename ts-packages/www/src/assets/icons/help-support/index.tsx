@@ -1,0 +1,12 @@
+export { default as Flag2 } from './flag-2.svg?react';
+export { default as HeadsetMic1 } from './headset-mic-1.svg?react';
+export { default as HeadsetMic2Off } from './headset-mic-2-off.svg?react';
+export { default as HeadsetMic2 } from './headset-mic-2.svg?react';
+export { default as HeadsetOff } from './headset-off.svg?react';
+export { default as Headset } from './headset.svg?react';
+export { default as Help2 } from './help-2.svg?react';
+export { default as Help } from './help.svg?react';
+export { default as Info } from './info.svg?react';
+export { default as Siren } from './siren.svg?react';
+export { default as Support } from './support.svg?react';
+export { default as Warning } from './warning.svg?react';

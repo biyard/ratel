@@ -1,0 +1,11 @@
+export { default as ArrowDown } from './arrow-down.svg?react';
+export { default as ArrowUp } from './arrow-up.svg?react';
+export { default as Controller } from './controller.svg?react';
+export { default as Fire } from './fire.svg?react';
+export { default as HexDown } from './hex-down.svg?react';
+export { default as HexUp } from './hex-up.svg?react';
+export { default as Plant } from './plant.svg?react';
+export { default as Present } from './present.svg?react';
+export { default as Rocket } from './rocket.svg?react';
+export { default as Sword } from './sword.svg?react';
+export { default as Trophy } from './trophy.svg?react';

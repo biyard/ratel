@@ -1,0 +1,10 @@
+export { default as Mega } from './mega.svg?react';
+export { default as MicOff } from './mic-off.svg?react';
+export { default as Mic } from './mic.svg?react';
+export { default as VolumeDown1 } from './volume-down-1.svg?react';
+export { default as VolumeDown } from './volume-down.svg?react';
+export { default as VolumeLow } from './volume-low.svg?react';
+export { default as VolumeMute } from './volume-mute.svg?react';
+export { default as VolumeOff } from './volume-off.svg?react';
+export { default as VolumeUp1 } from './volume-up-1.svg?react';
+export { default as VolumeUp } from './volume-up.svg?react';

@@ -1,0 +1,29 @@
+'use client';
+import { Edit1 } from '@/components/icons';
+import { useLoggedIn } from '@/lib/api/hooks/users';
+import { useTranslation } from 'react-i18next';
+import { usePostEditorContext } from './post-editor/provider';
+import { createPost } from '@/lib/api/ratel/posts.v3';
+
+export default function CreatePostButton({ team_pk }: { team_pk?: string }) {
+  const { t } = useTranslation('Home');
+  const loggedIn = useLoggedIn();
+  const p = usePostEditorContext();
+
+  return (
+    <button
+      className="cursor-pointer flex flex-row w-full justify-start items-center gap-1 bg-create-button-bg rounded-[100px] px-4 py-3 mb-[10px] aria-hidden:hidden"
+      aria-hidden={!loggedIn}
+      onClick={async () => {
+        p?.setClose(false);
+        const { post_pk } = await createPost(team_pk);
+        p?.openPostEditorPopup(post_pk);
+      }}
+    >
+      <Edit1 className="w-4 h-4 [&>path]:stroke-text-third" />
+      <div className="font-bold text-base/[22px] text-text-third">
+        {t('create_post')}
+      </div>
+    </button>
+  );
+}

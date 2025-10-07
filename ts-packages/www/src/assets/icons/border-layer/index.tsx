@@ -1,0 +1,17 @@
+export { default as AddLayer1 } from './add-layer-1.svg?react';
+export { default as AddLayer } from './add-layer.svg?react';
+export { default as BorderBottom } from './border-bottom.svg?react';
+export { default as BorderHorizontal } from './border-horizontal.svg?react';
+export { default as BorderInner } from './border-inner.svg?react';
+export { default as BorderLeft } from './border-left.svg?react';
+export { default as BorderRight } from './border-right.svg?react';
+export { default as BorderTopLeft } from './border-top-left.svg?react';
+export { default as BorderTop } from './border-top.svg?react';
+export { default as Layer1 } from './layer-1.svg?react';
+export { default as LayerCheck } from './layer-check.svg?react';
+export { default as LayerOff1 } from './layer-off-1.svg?react';
+export { default as LayerOff } from './layer-off.svg?react';
+export { default as Layer } from './layer.svg?react';
+export { default as NoBorder } from './no-border.svg?react';
+export { default as ZoomIn } from './zoom-in.svg?react';
+export { default as ZoomOut } from './zoom-out.svg?react';

@@ -1,0 +1,19 @@
+{
+  "my_info": "My Info",
+  "settings": "Settings",
+  "upload_logo": "Upload logo",
+  "username": "Username",
+  "evm_address": "EVM Address",
+  "display_name": "Display name",
+  "description": "Description",
+  "description_hint": "Please type description of your team.",
+  "save": "Save",
+  "change": "Change",
+  "hide": "Hide",
+  "connect_wallet": "Connect Wallet to Get Started",
+  "my_inventory_coming_soon": "My Inventory content coming soon.",
+  "appearance": "Appearance",
+  "language": "Language",
+  "select_language": "Select a language",
+  "cancel": "Cancel"
+}

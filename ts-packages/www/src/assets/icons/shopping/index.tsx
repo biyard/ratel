@@ -1,0 +1,9 @@
+export { default as Cube } from './cube.svg?react';
+export { default as Gift } from './gift.svg?react';
+export { default as Package } from './package.svg?react';
+export { default as Parcel } from './parcel.svg?react';
+export { default as ShoppingBag1 } from './shopping-bag-1.svg?react';
+export { default as ShoppingBag2 } from './shopping-bag-2.svg?react';
+export { default as ShoppingBag } from './shopping-bag.svg?react';
+export { default as ShoppingBags } from './shopping-bags.svg?react';
+export { default as ShoppingCart } from './shopping-cart.svg?react';

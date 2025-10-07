@@ -1,0 +1,10 @@
+export { default as BrokenHeart } from './broken-heart.svg?react';
+export { default as Depression } from './depression.svg?react';
+export { default as Grin } from './grin.svg?react';
+export { default as HandsClapping } from './hands-clapping.svg?react';
+export { default as Heart } from './heart.svg?react';
+export { default as Meh } from './meh.svg?react';
+export { default as Sad } from './sad.svg?react';
+export { default as Smile } from './smile.svg?react';
+export { default as ThumbsDown } from './thumbs-down.svg?react';
+export { default as ThumbsUp } from './thumbs-up.svg?react';

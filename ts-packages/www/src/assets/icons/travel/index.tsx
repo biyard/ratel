@@ -1,0 +1,11 @@
+export { default as Compass } from './compass.svg?react';
+export { default as Earth } from './earth.svg?react';
+export { default as Flag } from './flag.svg?react';
+export { default as FlightLanding } from './flight-landing.svg?react';
+export { default as FlightTakeoff } from './flight-takeoff.svg?react';
+export { default as Globe } from './globe.svg?react';
+export { default as LocationPoint } from './location-point.svg?react';
+export { default as Map } from './map.svg?react';
+export { default as MyLocation } from './my-location.svg?react';
+export { default as Navigation } from './navigation.svg?react';
+export { default as TravelBag } from './travel-bag.svg?react';
