@@ -73,6 +73,11 @@ jobs:
           mkdir -p .build
           docker-compose --profile infra up -d
 
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
+
       - name: Run Rust tests
         env:
           DYNAMO_TABLE_PREFIX: ratel-local
@@ -86,6 +91,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: test
           AWS_REGION: us-east-1
           MIGRATE: true
+          WEB_BUILD: false
         run: |
           make .build/evm-keys
           cd packages/main-api
@@ -120,6 +126,11 @@ jobs:
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
 
       - name: Build and cache Docker image
         id: build
@@ -176,6 +187,11 @@ jobs:
             main-api-build-
           path: |
             packages/main-api/target
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
 
       - name: Build and cache Docker image
         id: build
