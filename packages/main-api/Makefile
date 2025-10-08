@@ -114,6 +114,9 @@ BUILD_ENV ?= ENV=$(ENV) \
 .build/evm-keys:
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json
 
+dist:
+	cd ../../ts-packages/web && make build
+	cp -r ../../ts-packages/web/dist ./
 
 run:
 	$(BUILD_ENV) cargo watch -x "run $(RUST_FLAG)" -w src -w $(PWD)/..

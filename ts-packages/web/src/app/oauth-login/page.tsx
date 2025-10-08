@@ -1,6 +1,6 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'react-router';
 import { config } from '@/config';
 import { apiFetch } from '@/lib/api/apiFetch';
 import { Button } from '@/components/ui/button';
@@ -15,7 +15,7 @@ interface ApproveResponse {
   redirect_url: string;
 }
 export default function OAuthLoginPage() {
-  const params = useSearchParams();
+  const [params] = useSearchParams();
   const approveRequest: ApproveRequest = {
     client_id: params.get('client_id') || '',
     redirect_uri: params.get('redirect_uri') || '',

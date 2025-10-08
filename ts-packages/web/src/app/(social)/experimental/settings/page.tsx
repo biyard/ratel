@@ -17,7 +17,7 @@ export default function ExperimentalSettingsPage() {
   const { data } = useSuspenseUserInfo();
   const { t, i18n } = useTranslation('Settings');
   const popup = usePopup();
-  const router = useNavigate();
+  const navigate = useNavigate();
   const locale = i18n.language as 'en' | 'ko';
   const qc = useQueryClient();
 
@@ -41,7 +41,7 @@ export default function ExperimentalSettingsPage() {
           initialLocale={locale}
           onSave={(newLocale) => {
             document.cookie = `locale=${newLocale}; path=/; max-age=31536000; samesite=lax`;
-            router(-1);
+            navigate(-1);
             popup.close();
           }}
           onCancel={() => popup.close()}

@@ -43,13 +43,13 @@ export default function Client({
   const { t } = useTranslation('Connect');
   const [isLoading, setIsLoading] = useState(false);
 
-  const router = useNavigate();
+  const navigate = useNavigate();
 
   const finalService = service ? service : prevService;
   const finalRedirectUrl = redirectUrl ? redirectUrl : prevRedirectUrl;
   const finalToken = token ? token : prevToken;
   if (!finalService) {
-    router(route.home());
+    navigate(route.home());
     return null;
   }
 
@@ -104,7 +104,7 @@ export default function Client({
       window.close();
       return;
     }
-    router(route.home());
+    navigate(route.home());
   };
 
   return (

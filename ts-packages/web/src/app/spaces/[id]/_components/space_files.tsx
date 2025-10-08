@@ -4,7 +4,7 @@ import { FileInfo } from '@/lib/api/models/feeds';
 
 import { replacePdfLinks, UrlReplacement } from '@/lib/pdf-utils';
 import { useRedeemCode } from '@/lib/api/hooks/redeem-codes';
-import { useParams } from 'next/navigation';
+import { useParams } from 'react-router';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { NftSelectModal } from './nft-select-modal';
 import type { Badge } from '@/lib/api/models/badge';

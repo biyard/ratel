@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+
 import unknown from '@/assets/images/unknown.png';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,13 +8,26 @@ import { Input } from '@/components/ui/input';
 import { useSprintLeagueStore } from '../../sprint-league-store';
 import { openCharacterSelectModal } from './select-player-modal';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { PlayerImages } from '@/lib/api/models/sprint_league';
 import IsolatedCharacter from '../animation/isolated-character';
 
 import { pixiAssetManager } from '../animation/assets';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
+
+export type PlayerImages = {
+  alias: string;
+  run: {
+    json: string;
+    image: string;
+  };
+  win: string;
+  lose: string;
+  select: {
+    json: string;
+    image: string;
+  };
+};
 
 export const BasePlayerImages: PlayerImages[] = [
   {
@@ -197,7 +210,7 @@ function PlayerSelector({
         <div className="absolute inset-0 left-0 top-0">
           <IsolatedCharacter alias={alias} />
         </div>
-        {isEmpty && <Image src={unknown} alt="Unknown Player" />}
+        {isEmpty && <img src={unknown} alt="Unknown Player" />}
       </div>
     </div>
   );

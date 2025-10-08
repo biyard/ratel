@@ -1,4 +1,5 @@
-import { Group, Image as KonvaImage, Rect } from 'react-konva';
+import React from 'react';
+import { Image as KonvaImage, Group, Rect } from 'react-konva';
 import useImage from 'use-image';
 
 const BackButtonImage = '/images/sprint_league/button_back.png';

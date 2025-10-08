@@ -22,7 +22,7 @@ export default function MyInfo() {
   const { post } = useApiCall();
   const userInfo = useSuspenseUserInfo();
   const { data: user } = userInfo;
-  const router = useNavigate();
+  const navigate = useNavigate();
 
   const {
     profileUrl,
@@ -137,7 +137,7 @@ export default function MyInfo() {
             variant={'rounded_primary'}
             onClick={async () => {
               await handleSave();
-              router(route.home());
+              navigate(route.home());
             }}
           >
             {t('save')}

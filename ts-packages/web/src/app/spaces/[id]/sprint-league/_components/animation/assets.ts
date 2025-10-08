@@ -1,7 +1,7 @@
 'use client';
 
-import { PlayerImages } from '@/lib/api/models/sprint_league';
 import { Assets, AssetsBundle, Spritesheet } from 'pixi.js';
+import { PlayerImages } from '../player';
 
 class PixiAssetManager {
   private static instance: PixiAssetManager;

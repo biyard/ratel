@@ -54,7 +54,7 @@ export default function HomeSuggestions({
         ))}
       </div>
       <NavLink
-        href={route.myNetwork()}
+        to={route.myNetwork()}
         className="mt-5 text-xs text-more-text flex items-center hover:text-card-meta transition-colors"
         aria-label="View all suggestions"
       >

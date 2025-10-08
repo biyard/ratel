@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import type { Badge } from '@/lib/api/models/badge';
 import Loading from '@/app/loading';
 import RoundCheckIcon from '@/components/round-checkicon';
-import Image from 'next/image';
+
 
 interface NftSelectModalProps {
   id?: string;
@@ -52,7 +52,7 @@ export function NftSelectModal({
                   <RoundCheckIcon />
                 </div>
               )}
-              <Image src={image_url} alt={name} className="rounded-md" />
+              <img src={image_url} alt={name} className="rounded-md" />
             </div>
           </div>
         ))}

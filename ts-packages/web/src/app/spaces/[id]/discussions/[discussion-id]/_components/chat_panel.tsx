@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import { DiscussionParticipant } from '@/lib/api/models/discussion';
 import { Participant } from '@/lib/api/models/meeting';
-import Image from 'next/image';
 
 export default function ChatPanel({
   onClose,
@@ -111,9 +110,7 @@ export default function ChatPanel({
                 >
                   {!isMe &&
                     (senderInfo?.profile_url ? (
-                      <Image
-                        width={30}
-                        height={30}
+                      <img
                         src={senderInfo.profile_url}
                         alt={`${senderInfo?.username ?? 'user'}'s profile`}
                         className="w-7.5 h-7.5 object-cover rounded-full"

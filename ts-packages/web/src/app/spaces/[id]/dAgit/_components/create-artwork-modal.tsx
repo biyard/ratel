@@ -8,7 +8,7 @@ import FileUploaderMetadata from '@/components/file-uploader-metadata';
 import { UploadFile } from '@/assets/icons/file';
 import { FileInfo } from '@/lib/api/models/feeds';
 import { Input } from '@/components/ui/input';
-import Image from 'next/image';
+
 
 const openCreateArtworkModal = (
   popup: ReturnType<typeof usePopup>,
@@ -55,7 +55,7 @@ export default function CreateArtworkModal({
       <div className="flex flex-col gap-5">
         <div className="relative flex w-full aspect-square">
           {file && file.url ? (
-            <Image src={file.url} alt={file.name} fill />
+            <img src={file.url} alt={file.name} />
           ) : (
             <div className="flex items-center justify-center w-full h-full border border-dashed rounded">
               <span className="text-sm text-text-primary">

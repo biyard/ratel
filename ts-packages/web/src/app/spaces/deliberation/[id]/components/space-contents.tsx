@@ -20,7 +20,7 @@ export default function SpaceContents({
         className="rich-content"
         dangerouslySetInnerHTML={{ __html: htmlContents }}
       />
-      <style jsx global>{`
+      <style>{`
         .rich-content {
           color: #525252;
           font-size: 15px;

@@ -13,7 +13,6 @@ import UnderlineIcon from '@/assets/icons/editor/underline.svg?react';
 import Strike from '@/assets/icons/editor/strike.svg?react';
 import Paint2 from '@/assets/icons/editor/paint2.svg?react';
 import Paint from '@/assets/icons/editor/paint.svg?react';
-import ImageUpload from '@/assets/icons/editor/upload-image.svg?react';
 import LinkPaste from '@/assets/icons/editor/link-paste.svg?react';
 import CommentPaste from '@/assets/icons/editor/comment-paste.svg?react';
 import TableCells from '@/assets/icons/editor/tabe-cells.svg?react';
@@ -248,11 +247,15 @@ export default function ToolbarPlugin({
         )}
       </div>
 
-      {/* Image Upload - unchanged */}
-      {enableImage && (
+      {/* Image Upload */}
+      {enableImage && onImageUpload && (
         <FileUploader onUploadSuccess={onImageUpload}>
           <button type="button" aria-label="Upload image">
-            <ImageUpload />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
           </button>
         </FileUploader>
       )}

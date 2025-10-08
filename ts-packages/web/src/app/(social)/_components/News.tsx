@@ -17,11 +17,11 @@ export default function Wrapper() {
 
 function News() {
   const { t } = useTranslation('Home');
-  const router = useNavigate();
+  const navigate = useNavigate();
   const news = useNews().data.items;
 
   const handleNewsNavigation = (id: number) => {
-    router(`/news/${id}`);
+    navigate(`/news/${id}`);
   };
 
   if (!news || news.length === 0) {

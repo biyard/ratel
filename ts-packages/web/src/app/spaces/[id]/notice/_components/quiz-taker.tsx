@@ -22,7 +22,7 @@ import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { showErrorToast, showInfoToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
-import Image from 'next/image';
+
 import { useTranslation } from 'react-i18next';
 
 interface QuizTakerProps {
@@ -219,12 +219,10 @@ export default function QuizTaker({
                       className="relative w-full max-w-md mx-auto"
                     >
                       {imageUrl && (
-                        <Image
+                        <img
                           src={imageUrl}
                           alt={`Question ${questionIndex + 1} image ${imageIndex + 1}`}
-                          width={400}
-                          height={300}
-                          className="rounded-lg object-contain"
+                          className="w-100 h-75 rounded-lg object-contain"
                         />
                       )}
                     </div>

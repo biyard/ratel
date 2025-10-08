@@ -35,7 +35,7 @@ import Heart from '@/assets/icons/emoji/heart.svg?react';
 import BrokenHeart from '@/assets/icons/emoji/broken-heart.svg?react';
 import { QuizQuestion, NoticeQuizRequest } from '@/lib/api/models/notice';
 import { SpaceStatus } from '@/lib/api/models/spaces';
-import Image from 'next/image';
+
 import FileUploader from '@/components/file-uploader';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { showErrorToast } from '@/lib/toast';
@@ -877,11 +877,9 @@ function QuestionCard({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {question.imageUrls.map((imageUrl, index) => (
               <div key={`${question.id}-image-${index}`} className="relative">
-                <Image
+                <img
                   src={imageUrl}
                   alt={`${question.title} - Image ${index + 1}`}
-                  width={500}
-                  height={300}
                   className="w-full h-auto rounded-md object-contain"
                 />
                 {isEditMode && !isQuizEditingDisabled && (

@@ -92,21 +92,22 @@ export const resources = {
   },
 };
 
-i18next
-  .use(LanguageDetector)
-  .use(initReactI18next)
-  .on('failedLoading', (lng, ns, err) => {
-    console.error('[i18next] failedLoading:', { lng, ns, err });
-  })
-  .on('missingKey', (lngs, ns, key) => {
-    console.warn('[i18next] missingKey:', { lngs, ns, key });
-  })
-  .init({
-    lng: 'en',
-    debug: true,
-    resources,
-    fallbackLng: {
-      ko: ['ko'],
-      default: ['en'],
-    },
-  });
+i18next.use(LanguageDetector).use(initReactI18next);
+
+i18next.on('failedLoading', (lng, ns, err) => {
+  console.error('[i18next] failedLoading:', { lng, ns, err });
+});
+
+i18next.on('missingKey', (lngs, ns, key) => {
+  console.warn('[i18next] missingKey:', { lngs, ns, key });
+});
+
+i18next.init({
+  lng: 'en',
+  debug: true,
+  resources,
+  fallbackLng: {
+    ko: ['ko'],
+    default: ['en'],
+  },
+});

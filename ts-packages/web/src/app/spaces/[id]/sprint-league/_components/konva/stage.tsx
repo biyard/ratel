@@ -7,11 +7,11 @@ import { SprintLeaguePlayer } from '@/lib/api/models/sprint_league';
 import Background from './components/background';
 import DimOverlay from './components/dim-overlay';
 import CharacterSprite from './components/character';
+import StoppedImage from './components/image';
 import { Banner, BannerVote } from './components/banner';
 import { BackButton, StartButton, VoteButton } from './components/button';
 import VoteItem from './components/vote';
 import PlayerNameOverlay from './components/name-overlay';
-import StoppedImage from './components/image';
 import { showErrorToast } from '@/lib/toast';
 
 const BASE_POSITION = [

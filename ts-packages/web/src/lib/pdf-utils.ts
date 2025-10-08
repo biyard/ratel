@@ -63,9 +63,8 @@ export async function downloadPdfFromUrl({
 
   try {
     console.debug('Fetching PDF from:', url);
-    const proxyUrl = `/api/proxy-pdf?url=${encodeURIComponent(url)}`;
-
-    const pdfResponse = await fetch(proxyUrl);
+    // Direct fetch - if CORS issues occur, move this to backend API
+    const pdfResponse = await fetch(url);
     if (!pdfResponse.ok) {
       throw new Error(`Failed to fetch PDF: ${pdfResponse.statusText}`);
     }
@@ -110,9 +109,8 @@ export async function replacePdfLinks({
 
   try {
     logger.debug('Fetching PDF from:', url);
-    const proxyUrl = `/api/proxy-pdf?url=${encodeURIComponent(url)}`;
-
-    const pdfResponse = await fetch(proxyUrl);
+    // Direct fetch - if CORS issues occur, move this to backend API
+    const pdfResponse = await fetch(url);
     if (!pdfResponse.ok) {
       throw new Error(`Failed to fetch PDF: ${pdfResponse.statusText}`);
     }

@@ -29,7 +29,7 @@ export default function MyFollowerPage() {
   const { post } = useApiCall();
   const popup = usePopup();
   const data = useSuspenseUserInfo();
-  const router = useNavigate();
+  const navigate = useNavigate();
   let initTab: FollowTabType = FollowTab.FOLLOWERS;
 
   if (type === RelationType.FOLLOWING) {
@@ -54,7 +54,7 @@ export default function MyFollowerPage() {
         <div
           className="cursor-pointer w-fit h-fit"
           onClick={() => {
-            if (window.history.length > 1) router(-1);
+            if (window.history.length > 1) navigate(-1);
           }}
         >
           <ArrowLeft

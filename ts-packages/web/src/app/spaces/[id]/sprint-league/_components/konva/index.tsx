@@ -1,12 +1,10 @@
 'use client';
 
 import { SprintLeaguePlayer } from '@/lib/api/models/sprint_league';
-import dynamic from 'next/dynamic';
+import { lazy } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-const Base = dynamic(() => import('./stage'), {
-  ssr: false,
-});
+const Base = lazy(() => import('./stage'));
 
 //Set Name as Konva to avoid confusion
 

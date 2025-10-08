@@ -1,5 +1,3 @@
-'use client';
-
 import { createSpaceRequest, SpaceType } from '@/lib/api/models/spaces';
 import { BoosterType } from '@/lib/api/models/notice';
 
@@ -8,7 +6,7 @@ import { useState, useMemo, useCallback } from 'react';
 
 import { config } from '@/config';
 import { route } from '@/route';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { logger } from '@/lib/logger';
 import SpaceConfigForm from './space-config-form';
@@ -67,7 +65,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
   const [isLoading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<SpaceType | null>(null);
   const [showConfigForm, setShowConfigForm] = useState(false);
-  const router = useRouter();
+  const navigate = useNavigate();
   const popup = usePopup();
 
   const isBoosterEnabled =
@@ -122,7 +120,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
         spaceId = space.id;
       }
 
-      router.push(route.space(spaceId));
+      navigate(route.space(spaceId));
       popup.close();
     } catch {
       logger.error('Error creating space');

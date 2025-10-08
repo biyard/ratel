@@ -2,11 +2,10 @@
 
 import { usePopup } from '@/lib/contexts/popup-service';
 import IsolatedCharacter from '../animation/isolated-character';
-import { PlayerImages } from '@/lib/api/models/sprint_league';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { BasePlayerImages } from '.';
 import { useTranslation } from 'react-i18next';
+import { PlayerImages, BasePlayerImages } from '.';
 
 const openCharacterSelectModal = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
