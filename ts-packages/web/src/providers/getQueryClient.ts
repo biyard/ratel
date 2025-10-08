@@ -2,12 +2,15 @@ import { logger } from '@/lib/logger';
 import {
   defaultShouldDehydrateQuery,
   type InfiniteData,
-  isServer,
   QueryClient,
 } from '@tanstack/react-query';
 
+type BootData = {
+  react_query?: { key: unknown; data: unknown /* updatedAt?: number */ }[];
+};
+
 export function makeQueryClient() {
-  return new QueryClient({
+  const queryClient = new QueryClient({
     defaultOptions: {
       mutations: {
         onError(error) {
@@ -30,6 +33,22 @@ export function makeQueryClient() {
       },
     },
   });
+
+  // Hydrate from booststrap json
+  const el = document.getElementById('__BOOTSTRAP_DATA__');
+  if (el?.textContent) {
+    try {
+      const boot = JSON.parse(el.textContent) as BootData;
+      boot.react_query?.forEach(({ key, data }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        queryClient.setQueryData(key as any, data);
+      });
+    } catch (e) {
+      logger.error('hydration data parsing error', e);
+    }
+  }
+
+  return queryClient;
 }
 
 let browserQueryClient: QueryClient | undefined = undefined;
