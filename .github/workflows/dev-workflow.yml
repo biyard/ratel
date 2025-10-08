@@ -142,6 +142,7 @@ jobs:
           P256_CRV: ${{ secrets.P256_CRV }}
 
           DYNAMO_TABLE_PREFIX: ratel-dev
+          DYNAMO_ENDPOINT: none
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           RUST_FLAG: --features bypass
         run: |
