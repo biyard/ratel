@@ -136,11 +136,14 @@ build-only:
 TEST_TARGET ?= controllers::v3 models::dynamo_tables
 
 test:
-	$(BUILD_ENV) cargo test $(RUST_FLAG) --lib -j 1 --  --test-threads=1 $(TEST_TARGET) --show-output
+	$(BUILD_ENV) WEB_BUILD="false" cargo test $(RUST_FLAG) --lib -j 1 --  --test-threads=1 $(TEST_TARGET) --show-output
 
+docker.build: dist
+	$(eval WEB_INDEX_JS=$(shell basename $(shell ls dist/assets/index-*.js)))
+	$(eval WEB_INDEX_CSS=$(shell basename $(shell ls dist/assets/index-*.css)))
 
-docker.build:
-	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'apt-get update && apt-get install -y libssl-dev pkg-config ca-certificates && $(BUILD_ENV) CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release $(RUST_FLAG)'
+	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'apt-get update && apt-get install -y libssl-dev pkg-config ca-certificates && $(BUILD_ENV) WEB_BUILD=false WEB_INDEX_JS=$(WEB_INDEX_JS) WEB_INDEX_CSS=$(WEB_INDEX_CSS) CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release $(RUST_FLAG)'
+	cp -rf dist $(PWD)/target/release/
 	docker build -t $(ECR_NAME):$(COMMIT) --no-cache -f Dockerfile $(PWD)/target/release
 
 docker.push:
