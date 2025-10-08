@@ -65,9 +65,11 @@ jobs:
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
       - name: Cache builder
         id: main-api-build-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          key: main-api-build-cache
+          key: main-api-build-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            main-api-build-
           path: |
             packages/main-api/target
       - uses: aws-actions/configure-aws-credentials@v2
@@ -170,10 +172,12 @@ jobs:
         run: |
           cargo binstall toml-cli --force
       - name: Cache builder
-        id: image-worker-build-cache
-        uses: actions/cache@v3
+        id: fetcher-build-cache
+        uses: actions/cache@v4
         with:
-          key: image-worker-build-cache
+          key: image-worker-build-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            image-worker-build-
           path: |
             packages/image-worker/target
       - name: Deploy APIs
@@ -225,9 +229,11 @@ jobs:
           cargo binstall toml-cli
       - name: Cache builder
         id: fetcher-build-cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
-          key: fetcher-build-cache
+          key: fetcher-build-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            fetcher-build-
           path: |
             packages/fetcher/target
       - name: Deploy APIs
