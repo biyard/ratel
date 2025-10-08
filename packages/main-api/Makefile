@@ -122,6 +122,13 @@ build:
 	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda
 	mkdir -p $(WORKSPACE_ROOT)/.build/$(SERVICE)
 	cp $(CARGO_TARGET_DIR)/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap
+	@echo "Building web frontend..."
+	@cd $(WORKSPACE_ROOT)/ts-packages/web && ENV=$(ENV) make build
+
+build-only:
+	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda
+	mkdir -p $(WORKSPACE_ROOT)/.build/$(SERVICE)
+	cp $(CARGO_TARGET_DIR)/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap
 
 TEST_TARGET ?= controllers::v3 models::dynamo_tables
 

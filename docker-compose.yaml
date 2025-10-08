@@ -59,10 +59,10 @@ services:
       timeout: 10s
       retries: 100
     depends_on:
-      postgres:
-        condition: service_healthy
-      postgres-init:
-        condition: service_healthy
+      # postgres:
+      #   condition: service_healthy
+      # postgres-init:
+      #   condition: service_healthy
       localstack:
         condition: service_healthy
       localstack-init:
@@ -116,11 +116,11 @@ services:
       interval: 30s
       timeout: 10s
       retries: 100
-    depends_on:
-      postgres:
-        condition: service_healthy
-      postgres-init:
-        condition: service_healthy
+    # depends_on:
+    #   postgres:
+    #     condition: service_healthy
+    #   postgres-init:
+    #     condition: service_healthy
     networks:
       - ratel-network
     profiles:
@@ -157,7 +157,7 @@ services:
       - "8080:8080"
     volumes:
       - ./.build/node_modules:/app/node_modules
-      - ./.build/web_node_modules:/app/ts-packages/www/node_modules
+      - ./.build/web_node_modules:/app/ts-packages/web/node_modules
       - ./.build/pnpm-store:/app/.pnpm-store
       - .:/app
     working_dir: /app
@@ -211,7 +211,6 @@ services:
       - ratel-network
     profiles:
       - testing
-      - development
       - infra
 
   postgres-init:
@@ -248,6 +247,9 @@ services:
         condition: service_healthy
     networks:
       - ratel-network
+    profiles:
+      - testing
+      - infra
 
   localstack:
     hostname: localstack

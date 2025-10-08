@@ -54,6 +54,14 @@ build: clean
 	mkdir -p .build
 	cd packages/$(SERVICE) && ENV=$(ENV) ARTIFACT_DIR=$(PWD)/.build/$(SERVICE) make build$(DOCKER_COMMAND_SUFFUIX)
 
+.PHONY: build-with-web
+build-with-web: clean
+	mkdir -p .build
+	@echo "Building main-api..."
+	cd packages/main-api && ENV=$(ENV) ARTIFACT_DIR=$(PWD)/.build/main-api make build
+	@echo "Building web..."
+	cd ts-packages/web && ENV=$(ENV) make build
+
 cdk/.next:
 	docker create --name web-container $(ECR_NAME):$(COMMIT)
 	docker cp web-container:/app/ts-packages/web/.next cdk/.next
