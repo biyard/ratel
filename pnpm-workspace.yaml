@@ -1,2 +1,2 @@
 packages:
-  - 'ts-packages/www'
+  - 'ts-packages/*'
