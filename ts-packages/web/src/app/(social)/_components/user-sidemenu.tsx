@@ -1,20 +1,19 @@
-'use client';
-import React from 'react';
 import ProfileSection from './profile-section';
 
-import Link from 'next/link';
 import { route } from '@/route';
 import { Post, Draft, Settings } from '@/components/icons';
 import { UserType } from '@/lib/api/models/user';
-import { useTranslations } from 'next-intl';
-import { usePathname } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
+import { useLocation } from 'react-router';
 import { useUserInfo } from '@/hooks/use-user-info';
+import { NavLink } from 'react-router';
 // import DevTools from './dev-tools';
 
 export default function UserSidemenu() {
-  const t = useTranslations('Home');
+  const { t } = useTranslation('Home');
   const { data: user, isLoading } = useUserInfo();
-  const pathname = usePathname();
+  const location = useLocation();
+  const pathname = location.pathname;
 
   if (pathname.includes('/subscribe')) {
     return <div />;
@@ -34,24 +33,24 @@ export default function UserSidemenu() {
 
       {/* Navigation */}
       <nav className="py-5 px-3 w-full rounded-[10px] bg-card-bg border border-card-border text-text-primary">
-        <Link
-          href={route.myPosts()}
+        <NavLink  
+          to={route.myPosts()}
           className="sidemenu-link text-text-primary"
         >
           <Post className="w-[24px] h-[24px]" />
           <span>{t('my_posts')}</span>
-        </Link>
-        <Link href={route.drafts()} className="sidemenu-link text-text-primary">
+        </NavLink>
+        <NavLink to={route.drafts()} className="sidemenu-link text-text-primary">
           <Draft className="w-[24px] h-[24px]" />
           <span>{t('drafts')}</span>
-        </Link>
-        <Link
-          href={route.settings()}
+        </NavLink>
+        <NavLink
+          to={route.settings()}
           className="sidemenu-link text-text-primary"
         >
           <Settings className="w-[24px] h-[24px]" />
           <span>{t('settings')}</span>
-        </Link>
+        </NavLink>
       </nav>
 
       {/* <DevTools /> */}

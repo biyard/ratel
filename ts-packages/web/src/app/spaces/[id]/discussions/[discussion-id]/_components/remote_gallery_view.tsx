@@ -4,7 +4,7 @@ import { DiscussionParticipant } from '@/lib/api/models/discussion';
 import { Participant } from '@/lib/api/models/meeting';
 import { DefaultMeetingSession } from 'amazon-chime-sdk-js';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import React, { useRef, useState, useEffect, useMemo } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 
 export default function RemoteGalleryView({
   meetingSession,

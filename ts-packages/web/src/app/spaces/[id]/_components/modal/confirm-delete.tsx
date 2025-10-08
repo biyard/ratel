@@ -1,7 +1,7 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-import React, { useState } from 'react';
+import { useTranslation, Trans } from 'react-i18next';
+import { useState } from 'react';
 
 export default function DeleteSpacePopup({
   spaceName,
@@ -12,7 +12,7 @@ export default function DeleteSpacePopup({
   onDelete: () => void | Promise<void>;
   onClose?: () => void;
 }) {
-  const t = useTranslations('Space');
+  const { t } = useTranslation('Space');
   const [inputValue, setInputValue] = useState('');
   const [isConfirmed, setIsConfirmed] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -36,9 +36,14 @@ export default function DeleteSpacePopup({
   return (
     <div className="w-[500px] max-tablet:w-full flex flex-col mt-6">
       <div className="text-center font-bold text-modal-label-text text-[24px] mb-6">
-        {t.rich('delete_title', {
-          name: () => <span>'{spaceName}'</span>,
-        })}
+        <Trans
+          i18nKey="delete_title"
+          ns="Space"
+          values={{ name: `'${spaceName}'` }}
+          components={{
+            name: <span />,
+          }}
+        />
       </div>
 
       <div className="text-center font-medium text-desc-text text-base mb-6">

@@ -2,7 +2,6 @@
 import { Edit1, Extra } from '@/components/icons';
 import { User } from '@/components/icons';
 import { usePopup } from '@/lib/contexts/popup-service';
-import React from 'react';
 import CreateGroupPopup from './_components/create-group-popup';
 import {
   createGroupRequest,
@@ -18,7 +17,7 @@ import InviteMemberPopup from './_components/invite-member-popup';
 import { useTeamByUsername } from '../../_hooks/use-team';
 import { Folder } from 'lucide-react';
 import { checkString } from '@/lib/string-filter-utils';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
 import {
   DropdownMenu,
@@ -28,7 +27,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 export default function TeamGroups({ username }: { username: string }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   const query = useTeamByUsername(username);
   const popup = usePopup();
   const { post } = useApiCall();
@@ -147,7 +146,7 @@ function ListGroups({
   permission: boolean;
   deleteGroup: (groupId: number) => void;
 }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   return (
     <div className="flex flex-col w-full px-4 py-5 gap-[10px] bg-component-bg rounded-lg">
       {groups
@@ -207,7 +206,7 @@ function ListGroups({
 }
 
 function InviteMemberButton({ onClick }: { onClick: () => void }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   return (
     <div
       className="cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-primary rounded-[100px] gap-1"
@@ -222,7 +221,7 @@ function InviteMemberButton({ onClick }: { onClick: () => void }) {
 }
 
 function CreateGroupButton({ onClick }: { onClick: () => void }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   return (
     <div
       className="cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-white border border-foreground rounded-[100px] gap-1"

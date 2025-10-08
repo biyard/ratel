@@ -2,7 +2,7 @@
 
 import { format } from 'date-fns';
 import 'react-day-picker/dist/style.css';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Calendar } from 'lucide-react';
 import CalendarDayPicker from '../calendar-day-picker';
 import * as Popover from '@radix-ui/react-popover';

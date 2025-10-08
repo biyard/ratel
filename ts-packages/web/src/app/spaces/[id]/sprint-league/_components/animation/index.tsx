@@ -1,10 +1,8 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import { lazy } from 'react';
 
-const Base = dynamic(() => import('./base'), {
-  ssr: false,
-});
+const Base = lazy(() => import('./base'));
 
 import Background, { Dim } from './background';
 import { Banner, PlayerNameOverlay, VoteBanner } from './banner';
@@ -16,7 +14,7 @@ import { logger } from '@/lib/logger';
 import { SprintLeaguePlayer } from '@/lib/api/models/sprint_league';
 import { useApplication } from '@pixi/react';
 import { showInfoToast } from '@/lib/toast';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 const backgroundBundle = [
   {
@@ -74,12 +72,14 @@ export interface Player {
   vote_ratio: number;
 }
 
-export enum Status {
-  BEFORE_VOTE,
-  VOTING,
-  AFTER_VOTE,
-  GAME_END,
-}
+export const Status = {
+  BEFORE_VOTE: 'BEFORE_VOTE',
+  VOTING: 'VOTING',
+  AFTER_VOTE: 'AFTER_VOTE',
+  GAME_END: 'GAME_END',
+} as const;
+
+export type Status = (typeof Status)[keyof typeof Status];
 
 const SPEED = 1.4;
 
@@ -161,7 +161,7 @@ function Inner({
   onRepost,
   disabled = false,
 }: InnerProps) {
-  const t = useTranslations('SprintSpace');
+  const { t } = useTranslation('SprintSpace');
   const { app } = useApplication();
   const [baseSpeed, setBaseSpeed] = useState(
     initStatus !== Status.BEFORE_VOTE && initStatus !== Status.GAME_END

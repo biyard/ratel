@@ -5,7 +5,7 @@ import { Col } from '@/components/ui/col';
 
 import { UserType } from '@/lib/api/models/user';
 
-import { Space } from '@/lib/api/models/spaces';
+import { type Space } from '@/lib/api/models/spaces';
 import FeedEndMessage from '../feed-end-message';
 import CreatePostButton from '../create-post-button';
 import PromotionCard from '../promotion-card';
@@ -14,7 +14,7 @@ import DisableBorderCard from '../disable-border-card';
 import { usePostEditorContext } from '../post-editor/provider';
 import { useObserver } from '@/hooks/use-observer';
 import { useCallback } from 'react';
-import { TopPromotionResponse } from '@/lib/api/ratel/promotions.v3';
+import { type TopPromotionResponse } from '@/lib/api/ratel/promotions.v3';
 import useInfinitePosts from '../../_hooks/use-infinite-posts';
 
 export const SIZE = 10;

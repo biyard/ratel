@@ -1,4 +1,4 @@
-import { Group, User, UserType } from './user';
+import type { Group, User, UserType } from './user';
 
 export interface DeleteTeamRequest {
   team_id: number;

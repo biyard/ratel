@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { useNoticeSpace, useNoticeSpaceContext } from './provider.client';
 import { NoticeNotificationProvider } from './_components/notifications';
 
@@ -16,7 +16,7 @@ import { SpaceType, SpaceStatus } from '@/lib/api/models/spaces';
 import { PublishingScope } from '@/lib/api/models/notice';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 
 export default function NoticeSpacePage() {
@@ -30,7 +30,7 @@ export default function NoticeSpacePage() {
 }
 
 function Page() {
-  const t = useTranslations('Space');
+  const { t } = useTranslation('Space');
   const space = useNoticeSpace();
   // TODO: Update space API to use string feed_id in v3
   const data = useFeedById(space.feed_id.toString());

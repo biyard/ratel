@@ -1,6 +1,7 @@
 'use client';
+import * as React from 'react';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useSpaceByIdContext } from '../providers.client';
 import { useSpaceById } from '@/lib/api/ratel_api';
 import { UserType } from '@/lib/api/models/user';
@@ -79,7 +80,7 @@ import {
   convertQuestionsToNoticeQuizRequest,
   convertQuizQuestionsToQuestions,
 } from './_components/quiz-builder-ui';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 
 type ContextType = {
@@ -132,7 +133,7 @@ export default function ClientProviders({
 }: {
   children: React.ReactNode;
 }) {
-  const t = useTranslations('NoticeSpace');
+  const { t } = useTranslation('NoticeSpace');
   const { spaceId } = useSpaceByIdContext();
   const { data: space, refetch } = useSpaceById(spaceId);
   // We can ignore the feed variable since we're not using it here

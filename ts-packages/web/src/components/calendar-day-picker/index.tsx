@@ -1,6 +1,6 @@
 'use client';
 import { format } from 'date-fns';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DayPicker } from 'react-day-picker';
 
 export default function CalendarDayPicker({
@@ -46,10 +46,10 @@ export default function CalendarDayPicker({
           formatCaption: (date) => format(date, 'MMMM yyyy'),
         }}
       />
-      <style jsx global>{`
+      <style>{`
         .rdp-nav_button svg path {
           stroke: white !important;
-          fill: white !important;
+         : white !important;
         }
       `}</style>
     </>

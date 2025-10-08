@@ -1,10 +1,10 @@
 import { QK_GET_USER_BY_EMAIL } from '@/constants';
-import { TotalUser } from '@/lib/api/models/user';
+import type { TotalUser } from '@/lib/api/models/user';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import {
   useSuspenseQuery,
-  UseSuspenseQueryResult,
+  type UseSuspenseQueryResult,
 } from '@tanstack/react-query';
 
 export function useUserByEmail(

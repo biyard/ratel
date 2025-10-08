@@ -1,5 +1,4 @@
 'use client';
-import React from 'react';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { getTimeWithFormat } from '@/lib/time-utils';
 import { Settings } from '@/components/icons';

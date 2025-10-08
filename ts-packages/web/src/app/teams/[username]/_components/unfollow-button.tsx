@@ -1,8 +1,8 @@
-import { useTranslations } from 'next-intl';
-import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 
 export default function UnFollowButton({ onClick }: { onClick: () => void }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   const [isHovered, setIsHovered] = useState(false);
 
   return (

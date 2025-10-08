@@ -1,9 +1,9 @@
 import { useMutation } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
 import { showErrorToast } from '@/lib/toast';
-import { PostResponse, updatePostWithImage } from '@/lib/api/ratel/posts.v3';
 import { optimisticListUpdate, optimisticUpdate } from '@/lib/hook-utils';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { updatePostWithImage, type PostResponse } from '@/lib/api/ratel/posts.v3';
 
 export function useUpdateDraftImageMutation() {
   const { data: user } = useSuspenseUserInfo();

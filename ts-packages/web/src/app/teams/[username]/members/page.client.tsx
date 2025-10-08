@@ -1,8 +1,7 @@
 'use client';
-import React from 'react';
 import { useTeamByUsername } from '../../_hooks/use-team';
 import { User } from '@/lib/api/models/user';
-import Image from 'next/image';
+
 import { checkString } from '@/lib/string-filter-utils';
 
 export default function TeamMembers({ username }: { username: string }) {
@@ -35,7 +34,7 @@ export default function TeamMembers({ username }: { username: string }) {
             member.profile_url === '' ? (
               <div className="w-12 h-12 rounded-full bg-profile-bg" />
             ) : (
-              <Image
+              <img
                 src={member.profile_url}
                 alt={member.username}
                 width={48}

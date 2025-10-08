@@ -1,8 +1,0 @@
-{
-  "recommendations": [
-    "esbenp.prettier-vscode", // Prettier - Code formatter
-    "dbaeumer.vscode-eslint", // ESLint
-    "bradlc.vscode-tailwindcss" // Tailwind CSS IntelliSense
-  ],
-  "unwantedRecommendations": []
-}

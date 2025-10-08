@@ -6,8 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { GroupPermission } from '@/lib/api/models/group';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
-import { useTranslations } from 'next-intl';
-import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 
 const PERMISSION_GROUPS: Record<
   string,
@@ -105,7 +105,7 @@ function CreateButton({
   isEnabled: boolean;
   onClick: () => void;
 }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   return (
     <div
       className={`${isEnabled ? 'cursor-pointer bg-primary' : 'cursor-not-allowed bg-neutral-300'} flex flex-row w-fit h-fit px-[40px] py-[15px] rounded-[10px] font-bold text-bg text-base`}
@@ -131,7 +131,7 @@ function GroupPermissionSelector({
   groupNameRequired: boolean;
   groupImageRequired: boolean;
 }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   const hasPermission = (perm: GroupPermission) =>
     groupPermissions.includes(perm);
 
@@ -233,7 +233,7 @@ function GroupDescription({
   groupDescription: string;
   setGroupDescription: (groupDescription: string) => void;
 }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   return (
     <div className="flex flex-col w-full justify-start items-start gap-[5px]">
       <div className="font-bold text-[15px]/[28px] text-modal-label-text">
@@ -262,7 +262,7 @@ function GroupName({
   groupName: string;
   setGroupName: (groupName: string) => void;
 }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   return (
     <div className="flex flex-col w-full justify-start items-start gap-[5px]">
       <div className="flex flex-row gap-1 items-center">

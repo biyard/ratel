@@ -1,6 +1,6 @@
 'use client';
 
-import React, { ReactNode, createContext, useContext } from 'react';
+import { ReactNode, createContext, useContext } from 'react';
 
 type ContextType = object;
 

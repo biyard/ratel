@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslation, Trans } from 'react-i18next';
 
 export default function SaveThenPublishPopup({
   onJustPublish,
@@ -9,7 +9,7 @@ export default function SaveThenPublishPopup({
   onJustPublish: () => void;
   onSaveAndPublish: () => void;
 }) {
-  const t = useTranslations('NoticeSpace');
+  const { t } = useTranslation('NoticeSpace');
 
   return (
     <div className="w-[500px] flex flex-col">
@@ -27,9 +27,13 @@ export default function SaveThenPublishPopup({
         {t('unsaved_desc_line3')}
         <br />
         <br />
-        {t.rich('public_warning_rich', {
-          b: (chunks) => <span className="font-bold">{chunks}</span>,
-        })}
+        <Trans
+          i18nKey="public_warning_rich"
+          ns="NoticeSpace"
+          components={{
+            b: <span className="font-bold" />,
+          }}
+        />
       </div>
 
       {/* Buttons */}

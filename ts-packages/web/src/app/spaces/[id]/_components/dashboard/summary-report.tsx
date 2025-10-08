@@ -1,7 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function SummaryReport({
   responseCount,
@@ -12,7 +11,7 @@ export default function SummaryReport({
   startDate: number;
   endDate: number;
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   const now = Math.floor(Date.now() / 1000);
   const timeLeft = endDate - now;
 

@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { LoginPopupFooter } from './login-popup-footer';
 
 interface LoaderPopupProps {

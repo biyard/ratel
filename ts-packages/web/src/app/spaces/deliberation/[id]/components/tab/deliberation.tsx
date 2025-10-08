@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import SpaceDiscussion from '../space-discussion';
 import SpaceElearning from '../space-elearning';
 

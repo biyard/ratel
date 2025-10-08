@@ -1,6 +1,3 @@
-'use client';
-
-import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../store';
 import LoginForm from '../_components/login-form';
@@ -10,14 +7,16 @@ import { useAuth } from '@/lib/contexts/auth-context';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { useMutation } from '@tanstack/react-query';
 import { getKey as getUserKey } from '@/app/(social)/_hooks/user';
-import { AuthUserInfo } from '@/lib/service/firebase-service';
+import type { AuthUserInfo } from '@/lib/service/firebase-service';
 import { route } from '@/route';
-import { useTranslations } from 'next-intl';
-import GoogleIcon from '@/assets/icons/google.svg';
-import Logo from '@/assets/icons/logo.svg';
+import { useTranslation } from 'react-i18next';
+import GoogleIcon from '@/assets/icons/google.svg?react';
+import Logo from '@/assets/icons/logo.svg?react';
 import { useApiCall } from '@/lib/api/use-send';
+import { useLoaderData, useNavigate } from 'react-router';
+
 function LoginLoader({ type }: { type: LoginType }) {
-  const t = useTranslations('SignIn');
+  const { t } = useTranslation('SignIn');
 
   let logo = null;
   let description = '';
@@ -51,7 +50,7 @@ function LoginLoader({ type }: { type: LoginType }) {
 }
 
 export default function Client() {
-  const searchParams = useSearchParams();
+  const searchParams = useLoaderData();
   const { updateSearchParams } = useAuthStore();
 
   useEffect(() => {
@@ -78,16 +77,18 @@ export default function Client() {
   );
 }
 
-enum LoginType {
-  Email,
-  Google,
-}
+const LoginType = {
+  Email: 'Email',
+  Google: 'Google',
+} as const;
+
+type LoginType = (typeof LoginType)[keyof typeof LoginType];
 
 function useLoginMutation() {
   const queryClient = getQueryClient();
   const { ed25519KeyPair, login } = useAuth();
   const [isLoading, setLoading] = useState<LoginType | null>(null);
-  const router = useRouter();
+  const navigate = useNavigate();
   const { updateUserInfo, redirectUrl, service } = useAuthStore();
   const { post } = useApiCall();
 
@@ -98,11 +99,11 @@ function useLoginMutation() {
       queryKey: userQueryKey,
     });
     if (signupRequired) {
-      router.push(route.signup());
+      navigate(route.signup());
     } else if (service) {
-      router.push(route.connect());
+      navigate(route.connect());
     } else {
-      router.push(redirectUrl || route.home());
+      navigate(redirectUrl || route.home());
     }
   };
 

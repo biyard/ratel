@@ -1,12 +1,12 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface LoginPopupFooterProps {}
 
 export const LoginPopupFooter = ({}: LoginPopupFooterProps) => {
-  const t = useTranslations('SignIn');
+  const { t } = useTranslation('SignIn');
   return (
     <div className="flex flex-row w-full justify-center items-center gap-2.5">
       <div className="cursor-pointer text-neutral-400 text-xs/3.5 font-medium">

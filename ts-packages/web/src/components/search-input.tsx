@@ -8,7 +8,7 @@ import { X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import Search from '@/assets/icons/search.svg';
+import Search from '@/assets/icons/search.svg?react';
 interface Tag {
   id: string;
   label: string;

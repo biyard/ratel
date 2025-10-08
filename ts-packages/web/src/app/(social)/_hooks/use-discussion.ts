@@ -2,13 +2,13 @@ import {
   QK_GET_DISCUSSION_BY_DISCUSSION_ID,
   QK_GET_MEETING_BY_DISCUSSION_ID,
 } from '@/constants';
-import { Discussion } from '@/lib/api/models/discussion';
-import { MeetingData } from '@/lib/api/models/meeting';
+import type { Discussion } from '@/lib/api/models/discussion';
+import type { MeetingData } from '@/lib/api/models/meeting';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import {
   useSuspenseQuery,
-  UseSuspenseQueryResult,
+  type UseSuspenseQueryResult,
 } from '@tanstack/react-query';
 
 export function useDiscussionById(

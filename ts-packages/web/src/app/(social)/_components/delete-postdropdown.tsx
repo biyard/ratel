@@ -1,4 +1,3 @@
-'use client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,10 +6,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Trash2 } from 'lucide-react';
 import { Extra } from '@/components/icons';
-import { useRouter } from 'next/navigation';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import { useDeletePostMutation } from '@/hooks/feeds/use-delete-post-mutation';
+import { FeedStatus } from '@/lib/api/models/feeds';
+import { useUserInfo } from '@/hooks/use-user-info';
 
 export interface DeletePostDropdownProps {
   postId: number;
@@ -23,13 +24,18 @@ export default function DeletePostDropdown({
   userId,
   authorId,
 }: DeletePostDropdownProps) {
-  const router = useRouter();
   const { post: apiPost } = useApiCall();
+  const { data: user } = useUserInfo();
+  const { mutateAsync } = useDeletePostMutation(
+    user?.username || '',
+    FeedStatus.Draft,
+  );
 
   const handleDeletePost = async () => {
     try {
+      // FIXME: fix param types
+      await mutateAsync('');
       await apiPost(ratelApi.feeds.removeDraft(postId), { delete: {} });
-      router.refresh();
       showSuccessToast('Post deleted successfully');
     } catch (error) {
       console.error('Failed to delete post:', error);

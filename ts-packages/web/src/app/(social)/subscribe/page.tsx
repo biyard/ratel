@@ -2,8 +2,7 @@
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { useTranslations } from 'next-intl';
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_USERS_GET_INFO } from '@/constants';
 import { showSuccessToast } from '@/lib/toast';
@@ -83,7 +82,7 @@ export default function SubscribePage() {
   const userInfo = useSuspenseUserInfo();
   const { data: user } = userInfo;
 
-  const t = useTranslations('Subscribe');
+  const { t } = useTranslation('Subscribe');
 
   if (!user) return null;
 
@@ -178,7 +177,7 @@ function Card({
   onClick,
   onUnsubscribe,
 }: CardProps) {
-  const t = useTranslations('Subscribe');
+  const { t } = useTranslation('Subscribe');
   const isRefundable =
     selected && (title === 'Pro' || title === 'Premium' || title === 'VIP');
 

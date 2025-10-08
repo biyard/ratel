@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Space } from '@/lib/api/models/spaces';
+import type { Space } from '@/lib/api/models/spaces';
 
 type PageSaveHandler = (
   commonData: Partial<CommonEditableData>,

@@ -17,7 +17,7 @@ import { useContext } from 'react';
 import { spaceDeleteRequest, SpaceStatus } from '@/lib/api/models/spaces';
 import { PublishingScope } from '@/lib/api/models/notice';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useNavigate } from 'react-router';
 import {
   openModal as openPublishSpaceModal,
   PublishType,
@@ -33,7 +33,7 @@ import {
   SaveButton,
 } from '@/components/post-header/buttons';
 import { useEditCoordinatorStore } from '../space-store';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { GroupPermission } from '@/lib/api/models/group';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
@@ -60,7 +60,7 @@ function SpaceModifySection({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const router = useRouter();
+  const navigate = useNavigate();
   const popup = usePopup();
 
   const {
@@ -86,7 +86,7 @@ function SpaceModifySection({
 
   const publishSpace = usePublishSpace(spaceId);
   const makeSpacePublic = useMakePublicSpace(spaceId);
-  const t = useTranslations('SpaceHeader');
+  const { t } = useTranslation('SpaceHeader');
   // Save / Publish Flow
   // Before Publishing
   // -> If not modified, directly open Publish Modal
@@ -161,7 +161,7 @@ function SpaceModifySection({
     if (isEdit) {
       stopEditing();
     } else {
-      router.back();
+      navigate(-1);
     }
   };
 
@@ -259,7 +259,7 @@ function SpaceModifySection({
 }
 
 export default function Header() {
-  const router = useRouter();
+  const navigate = useNavigate();
   const { id } = useParams();
   const spaceId = Number(id);
   const { data: space } = useSpaceById(spaceId);
@@ -288,7 +288,7 @@ export default function Header() {
   };
   const handleDelete = async () => {
     await deleteSpace.mutateAsync(spaceDeleteRequest(space.title ?? ''));
-    router.push('/');
+    navigate('/');
   };
   return (
     <div>

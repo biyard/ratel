@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -192,7 +192,7 @@ export default function TextEditor({
     [&_ul]:list-disc [&_ol]:list-decimal [&_li]:ml-4
     [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg"
       />
-      <style jsx global>{`
+      <style>{`
         .ProseMirror:focus {
           outline: none;
         }

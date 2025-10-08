@@ -99,43 +99,43 @@ export class RegionalServiceStack extends Stack {
     });
 
     // --- Web Task Definition ---
-    const webTaskDefinition = new ecs.TaskDefinition(
-      this,
-      "WebTaskDefinition",
-      {
-        compatibility: ecs.Compatibility.FARGATE,
-        cpu: "256",
-        memoryMiB: "512",
-        executionRole: taskExecutionRole,
-      },
-    );
+    // const webTaskDefinition = new ecs.TaskDefinition(
+    //   this,
+    //   "WebTaskDefinition",
+    //   {
+    //     compatibility: ecs.Compatibility.FARGATE,
+    //     cpu: "256",
+    //     memoryMiB: "512",
+    //     executionRole: taskExecutionRole,
+    //   },
+    // );
 
-    const webRepository = Repository.fromRepositoryName(
-      this,
-      "WebRepository",
-      webRepoName,
-    );
-    const webContainer = webTaskDefinition.addContainer("WebContainer", {
-      image: ecs.ContainerImage.fromEcrRepository(webRepository, props.commit),
-      logging: new ecs.AwsLogDriver({
-        streamPrefix: "ratel-web",
-      }),
-      environment: {
-        NODE_ENV: "production",
-        PORT: "8080",
-        NEXT_PUBLIC_VERSION: props.commit,
-        NEXT_PUBLIC_LOG_LEVEL: process.env.NEXT_PUBLIC_LOG_LEVEL!,
-        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL!,
-        NEXT_PUBLIC_SIGN_DOMAIN: process.env.NEXT_PUBLIC_SIGN_DOMAIN!,
-        NEXT_PUBLIC_GRAPHQL_URL: process.env.NEXT_PUBLIC_GRAPHQL_URL!,
-        NEXT_PUBLIC_EXPERIMENT: process.env.NEXT_PUBLIC_EXPERIMENT!,
-      },
-    });
+    // const webRepository = Repository.fromRepositoryName(
+    //   this,
+    //   "WebRepository",
+    //   webRepoName,
+    // );
+    // const webContainer = webTaskDefinition.addContainer("WebContainer", {
+    //   image: ecs.ContainerImage.fromEcrRepository(webRepository, props.commit),
+    //   logging: new ecs.AwsLogDriver({
+    //     streamPrefix: "ratel-web",
+    //   }),
+    //   environment: {
+    //     NODE_ENV: "production",
+    //     PORT: "8080",
+    //     NEXT_PUBLIC_VERSION: props.commit,
+    //     NEXT_PUBLIC_LOG_LEVEL: process.env.NEXT_PUBLIC_LOG_LEVEL!,
+    //     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL!,
+    //     NEXT_PUBLIC_SIGN_DOMAIN: process.env.NEXT_PUBLIC_SIGN_DOMAIN!,
+    //     NEXT_PUBLIC_GRAPHQL_URL: process.env.NEXT_PUBLIC_GRAPHQL_URL!,
+    //     NEXT_PUBLIC_EXPERIMENT: process.env.NEXT_PUBLIC_EXPERIMENT!,
+    //   },
+    // });
 
-    webContainer.addPortMappings({
-      containerPort: 8080,
-      protocol: ecs.Protocol.TCP,
-    });
+    // webContainer.addPortMappings({
+    //   containerPort: 8080,
+    //   protocol: ecs.Protocol.TCP,
+    // });
 
     // 6) Fargate Services (separate services for API and Web)
     const apiService = new ecs.FargateService(this, "ApiService", {
@@ -147,14 +147,14 @@ export class RegionalServiceStack extends Stack {
       assignPublicIp: true,
     });
 
-    const webService = new ecs.FargateService(this, "WebService", {
-      cluster,
-      taskDefinition: webTaskDefinition,
-      desiredCount: minCapacity,
-      maxHealthyPercent: 200,
-      minHealthyPercent: minCapacity === 1 ? 0 : 50,
-      assignPublicIp: true,
-    });
+    // const webService = new ecs.FargateService(this, "WebService", {
+    //   cluster,
+    //   taskDefinition: webTaskDefinition,
+    //   desiredCount: minCapacity,
+    //   maxHealthyPercent: 200,
+    //   minHealthyPercent: minCapacity === 1 ? 0 : 50,
+    //   assignPublicIp: true,
+    // });
 
     // 7) Auto Scaling (separate for each service)
     const apiScaling = apiService.autoScaleTaskCount({
@@ -168,43 +168,43 @@ export class RegionalServiceStack extends Stack {
       scaleOutCooldown: Duration.seconds(60),
     });
 
-    const webScaling = webService.autoScaleTaskCount({
-      minCapacity,
-      maxCapacity,
-    });
+    // const webScaling = webService.autoScaleTaskCount({
+    //   minCapacity,
+    //   maxCapacity,
+    // });
 
-    webScaling.scaleOnCpuUtilization("WebCpuScaling", {
-      targetUtilizationPercent: 70,
-      scaleInCooldown: Duration.seconds(60),
-      scaleOutCooldown: Duration.seconds(60),
-    });
+    // webScaling.scaleOnCpuUtilization("WebCpuScaling", {
+    //   targetUtilizationPercent: 70,
+    //   scaleInCooldown: Duration.seconds(60),
+    //   scaleOutCooldown: Duration.seconds(60),
+    // });
 
     // 9) Target Groups
     // Web Target Group (Next.js)
-    const webTargetGroup = new elbv2.ApplicationTargetGroup(
-      this,
-      "WebTargetGroup",
-      {
-        targets: [
-          webService.loadBalancerTarget({
-            containerName: "WebContainer",
-            containerPort: 8080,
-          }),
-        ],
-        protocol: elbv2.ApplicationProtocol.HTTP,
-        vpc,
-        port: 8080,
-        deregistrationDelay: Duration.seconds(30),
-        healthCheck: {
-          path: "/api/version",
-          interval: Duration.seconds(30),
-          timeout: Duration.seconds(5),
-          healthyHttpCodes: "200",
-          healthyThresholdCount: 2,
-          unhealthyThresholdCount: 3,
-        },
-      },
-    );
+    // const webTargetGroup = new elbv2.ApplicationTargetGroup(
+    //   this,
+    //   "WebTargetGroup",
+    //   {
+    //     targets: [
+    //       webService.loadBalancerTarget({
+    //         containerName: "WebContainer",
+    //         containerPort: 8080,
+    //       }),
+    //     ],
+    //     protocol: elbv2.ApplicationProtocol.HTTP,
+    //     vpc,
+    //     port: 8080,
+    //     deregistrationDelay: Duration.seconds(30),
+    //     healthCheck: {
+    //       path: "/api/version",
+    //       interval: Duration.seconds(30),
+    //       timeout: Duration.seconds(5),
+    //       healthyHttpCodes: "200",
+    //       healthyThresholdCount: 2,
+    //       unhealthyThresholdCount: 3,
+    //     },
+    //   },
+    // );
 
     // API Target Group
     const apiTargetGroup = new elbv2.ApplicationTargetGroup(
@@ -253,9 +253,9 @@ export class RegionalServiceStack extends Stack {
 
     // 10) Listener Rules
     // Default action: forward to web (Next.js)
-    listener.addTargetGroups("TgRuleWebHost", {
-      targetGroups: [webTargetGroup],
-    });
+    // listener.addTargetGroups("TgRuleWebHost", {
+    //   targetGroups: [webTargetGroup],
+    // });
 
     // API Target Group
     listener.addTargetGroups("TgRuleApiHost", {

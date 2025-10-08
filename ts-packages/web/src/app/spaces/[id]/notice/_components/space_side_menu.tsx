@@ -1,16 +1,15 @@
 'use client';
 
 import { getTimeWithFormat } from '@/lib/time-utils';
-import React from 'react';
-import Clock from '@/assets/icons/clock.svg';
-import History from '@/assets/icons/history.svg';
-import Info from '@/assets/icons/info.svg';
-import Check from '@/assets/icons/check.svg';
-import Clear from '@/assets/icons/clear.svg';
-import Fire from '@/assets/icons/fire.svg';
-import Trophy from '@/assets/icons/trophy.svg';
-import HexDown from '@/assets/icons/hex-down.svg';
-import Remove from '@/assets/icons/remove.svg';
+import Clock from '@/assets/icons/clock.svg?react';
+import History from '@/assets/icons/history.svg?react';
+import Info from '@/assets/icons/info.svg?react';
+import Check from '@/assets/icons/check.svg?react';
+import Clear from '@/assets/icons/clear.svg?react';
+import Fire from '@/assets/icons/fire.svg?react';
+import Trophy from '@/assets/icons/trophy.svg?react';
+import HexDown from '@/assets/icons/hex-down.svg?react';
+import Remove from '@/assets/icons/remove.svg?react';
 import { Add } from '@/components/icons';
 import { Settings } from 'lucide-react';
 // import { File, Mega } from '@/components/icons';
@@ -27,11 +26,11 @@ import {
 import { usePopup } from '@/lib/contexts/popup-service';
 import SetSchedulePopup from './modal/set_schedule';
 import { useQuizDataRefresh } from '@/hooks/use-quiz-updates';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export default function SpaceSideMenu() {
-  const t = useTranslations('NoticeSpace');
+  const { t } = useTranslation('NoticeSpace');
   const popup = usePopup();
   const {
     startedAt,

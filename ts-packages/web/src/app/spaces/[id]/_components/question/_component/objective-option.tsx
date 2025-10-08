@@ -1,9 +1,8 @@
 'use client';
 import { DialPad2, Remove } from '@/components/icons';
 import { Input } from '@/components/ui/input';
-import React from 'react';
 import { AnswerType } from '../answer-type-select';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export default function ObjectiveOption({
   questionOptions,
@@ -20,7 +19,7 @@ export default function ObjectiveOption({
   handleRemoveOption: (index: number) => void;
   addOption: () => void;
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   return (
     <div className="flex flex-col gap-2">
       {questionOptions.map((opt, idx) => (

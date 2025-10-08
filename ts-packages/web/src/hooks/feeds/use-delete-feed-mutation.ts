@@ -88,7 +88,7 @@ export function useDeleteFeedMutation(status: FeedStatus) {
       showErrorToast(error.message || 'Failed to delete feed');
     },
 
-    onSettled: (data, error, variables) => {
+    onSettled: (_data, _error, variables) => {
       const { feedType, parentId } = variables;
       if (feedType === FeedType.Reply) {
         queryClient.invalidateQueries({

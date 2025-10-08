@@ -1,5 +1,4 @@
-'use client';
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { Col } from '@/components/ui/col';
 import FeedCard from '@/components/feed-card';
 import CreatePostButton from '../_components/create-post-button';

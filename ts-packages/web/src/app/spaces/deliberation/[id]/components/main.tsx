@@ -1,7 +1,6 @@
 'use client';
 
 import { useDeliberationSpaceById, usePostByIdV2 } from '@/lib/api/ratel_api';
-import React from 'react';
 import { useDeliberationSpaceByIdContext } from '../providers.client';
 import SpaceHeader from './header';
 import SpaceSideMenu, { SpaceTabsMobile } from './space_side_menu';

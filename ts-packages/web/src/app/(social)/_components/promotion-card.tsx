@@ -1,14 +1,14 @@
-import Link from 'next/link';
 import { route } from '@/route';
-import { useTranslations } from 'next-intl';
-import { TopPromotionResponse } from '@/lib/api/ratel/promotions.v3';
+import { useTranslation } from 'react-i18next';
+import type { TopPromotionResponse } from '@/lib/api/ratel/promotions.v3';
+import { NavLink } from 'react-router';
 
 type PromotionCardProps = {
   promotion: TopPromotionResponse;
 };
 
 export default function PromotionCard({ promotion }: PromotionCardProps) {
-  const t = useTranslations('Home');
+  const { t } = useTranslation('Home');
   const { feed_id, image_url, name, space_id, space_type } = promotion;
   const getHref = () => {
     if (!space_id) return route.threadByFeedId(feed_id);
@@ -23,8 +23,8 @@ export default function PromotionCard({ promotion }: PromotionCardProps) {
       <h3 className="font-bold text-text-primary text-[15px]/[20px]">
         {t('hot_promotion')}
       </h3>
-      <Link
-        href={getHref()}
+      <NavLink
+        to={getHref()}
         className="flex items-center gap-2.5 hover:bg-btn-hover rounded p-2 transition-colors"
         aria-label={`View ${promotion.name} promotion`}
       >
@@ -38,7 +38,7 @@ export default function PromotionCard({ promotion }: PromotionCardProps) {
             {name}
           </div>
         </div>
-      </Link>
+      </NavLink>
     </div>
   );
 }

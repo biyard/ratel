@@ -35,8 +35,6 @@ export class GlobalAccelStack extends Stack {
       validation: acm.CertificateValidation.fromDns(zone),
     });
 
-    const imageCachePolicy = `NextImageCachePolicy-${stage}`;
-
     // ALB Domain
     const origin = new origins.HttpOrigin(apiDomain, {
       protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
@@ -60,32 +58,7 @@ export class GlobalAccelStack extends Stack {
       },
     );
 
-    const nextImageCachePolicy = new cloudfront.CachePolicy(
-      this,
-      imageCachePolicy,
-      {
-        cachePolicyName: imageCachePolicy,
-        defaultTtl: cdk.Duration.days(1),
-        minTtl: cdk.Duration.seconds(60),
-        maxTtl: cdk.Duration.days(365),
-        queryStringBehavior: cloudfront.CacheQueryStringBehavior.allowList(
-          "url",
-          "w",
-          "q",
-        ),
-        headerBehavior: cloudfront.CacheHeaderBehavior.none(),
-        cookieBehavior: cloudfront.CacheCookieBehavior.none(),
-        enableAcceptEncodingBrotli: true,
-        enableAcceptEncodingGzip: true,
-      },
-    );
-
     // CloudFront cert (must be in us-east-1). Use provided ARN or create DNS‑validated one.
-    const cachedNextProp = {
-      origin,
-      cachePolicy: nextImageCachePolicy,
-      compress: true,
-    };
     const cachedS3Prop = {
       origin: s3Origin,
       cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
@@ -101,21 +74,24 @@ export class GlobalAccelStack extends Stack {
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
       additionalBehaviors: {
-        "/_next/image*": cachedNextProp,
-        "/_next/static/*": cachedNextProp,
-        "/metadata/*": cachedNextProp,
-        "/assets/*": cachedNextProp,
-        "/*.js": cachedNextProp,
-        "/*.css": cachedNextProp,
-        "/*.html": cachedNextProp,
-        "/*.ico": cachedNextProp,
-        "/*.svg": cachedNextProp,
-        "/*.avif": cachedNextProp,
-        "/*.png": cachedNextProp,
-        "/*.wasm": cachedNextProp,
-        "/icons/*": cachedNextProp,
-        "/images/*": cachedNextProp,
-        "/public/*": cachedNextProp,
+        "/metadata/*": cachedS3Prop,
+        "/assets/*": cachedS3Prop,
+        "/icons/*": cachedS3Prop,
+        "/images/*": cachedS3Prop,
+        "/public/*": cachedS3Prop,
+        "/animations/*": cachedS3Prop,
+        "/documents/*": cachedS3Prop,
+        "/logos/*": cachedS3Prop,
+        "/sounds/*": cachedS3Prop,
+        "/videos/*": cachedS3Prop,
+        "/*.js": cachedS3Prop,
+        "/*.css": cachedS3Prop,
+        "/*.html": cachedS3Prop,
+        "/*.ico": cachedS3Prop,
+        "/*.svg": cachedS3Prop,
+        "/*.avif": cachedS3Prop,
+        "/*.png": cachedS3Prop,
+        "/*.wasm": cachedS3Prop,
       },
 
       domainNames: [webDomain],
@@ -140,25 +116,12 @@ export class GlobalAccelStack extends Stack {
       ),
     });
 
-    new s3deploy.BucketDeployment(this, "NextStaticDeployStatic", {
-      destinationBucket: staticBucket,
-      distribution: distribution,
-      distributionPaths: ["/_next/static/*"],
-      sources: [
-        s3deploy.Source.asset(".next/static", {
-          assetHash: commit,
-          assetHashType: cdk.AssetHashType.CUSTOM,
-        }),
-      ],
-      destinationKeyPrefix: "_next/static",
-    });
-
     new s3deploy.BucketDeployment(this, "PublicDeployStatic", {
       destinationBucket: staticBucket,
       distribution: distribution,
       distributionPaths: ["/*"],
       sources: [
-        s3deploy.Source.asset("public", {
+        s3deploy.Source.asset("dist", {
           assetHash: commit,
           assetHashType: cdk.AssetHashType.CUSTOM,
         }),

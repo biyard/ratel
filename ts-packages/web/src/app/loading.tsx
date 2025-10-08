@@ -1,5 +1,4 @@
 'use client';
-import React from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { cn } from '@/lib/utils';
 

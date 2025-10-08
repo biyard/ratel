@@ -16,37 +16,37 @@ type Config = {
   version: string;
 };
 
-export enum Env {
-  Local = 'local',
-  Dev = 'dev',
-  Staging = 'stg',
-  Prod = 'prod',
-}
+export const Env = {
+  Local: 'local',
+  Dev: 'dev',
+  Staging: 'stg',
+  Prod: 'prod',
+} as const;
+
+export type Env = typeof Env[keyof typeof Env];
 
 export const config: Config = {
-  env: (process.env.NEXT_PUBLIC_ENV || 'local') as Env,
-  firebase_api_key: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
-  firebase_auth_domain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
-  firebase_project_id: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
+  env: (import.meta.env.VITE_ENV || 'local') as Env,
+  firebase_api_key: import.meta.env.VITE_FIREBASE_API_KEY || '',
+  firebase_auth_domain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
+  firebase_project_id: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
   firebase_storage_bucket:
-    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
+    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
   firebase_messaging_sender_id:
-    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '',
-  firebase_app_id: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '',
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
+  firebase_app_id: import.meta.env.VITE_FIREBASE_APP_ID || '',
   firebase_measurement_id:
-    process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || '',
+    import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
 
-  log_level: process.env.NEXT_PUBLIC_LOG_LEVEL || 'info',
-  sign_domain: process.env.NEXT_PUBLIC_SIGN_DOMAIN || 'dev.ratel.foundation',
-  experiment: process.env.NEXT_PUBLIC_EXPERIMENT === 'true',
+  log_level: import.meta.env.VITE_LOG_LEVEL || 'info',
+  sign_domain: import.meta.env.VITE_SIGN_DOMAIN || 'dev.ratel.foundation',
+  experiment: import.meta.env.VITE_EXPERIMENT === 'true',
 
-  version: process.env.NEXT_PUBLIC_VERSION || 'unknown',
+  version: import.meta.env.VITE_VERSION || 'unknown',
 
   // Server-customizable configuration
   api_url:
-    typeof window !== 'undefined'
-      ? process.env.NEXT_PUBLIC_API_URL!
-      : process.env.API_URL || process.env.NEXT_PUBLIC_API_URL!,
+    import.meta.env.VITE_API_URL || '',
   telegram_botname:
-    process.env.NEXT_PUBLIC_TELEGRAM_BOTNAME || 'cryto_ratel_dev_bot',
+    import.meta.env.VITE_TELEGRAM_BOTNAME || 'cryto_ratel_dev_bot',
 };

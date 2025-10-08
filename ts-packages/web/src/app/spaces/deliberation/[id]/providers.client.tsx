@@ -12,9 +12,9 @@ import {
   useDeliberationSpaceById,
   usePostByIdV2,
 } from '@/lib/api/ratel_api';
-import { useTranslations } from 'next-intl';
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router';
 import {
   Deliberation,
   DeliberationTab,
@@ -95,9 +95,9 @@ export default function ClientProviders({
   spaceId: string;
 }) {
   const queryClient = useQueryClient();
-  const router = useRouter();
+  const navigate = useNavigate();
   const { post } = useApiCall();
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
 
   const { data: space, refetch } = useDeliberationSpaceById(spaceId);
 
@@ -313,7 +313,7 @@ export default function ClientProviders({
       queryClient.invalidateQueries({
         queryKey: [QK_GET_DELIBERATION_SPACE_BY_SPACE_ID, spacePk],
       });
-      router.refresh();
+      window.location.reload();
       showSuccessToast(t('success_save_response'));
     } catch (err) {
       showErrorToast(t('failed_save_response'));
@@ -429,7 +429,7 @@ export default function ClientProviders({
     queryClient.invalidateQueries({
       queryKey: [QK_GET_DELIBERATION_SPACE_BY_SPACE_ID, spacePk],
     });
-    router.refresh();
+    window.location.reload();
   };
 
   const handleGoBack = () => {
@@ -437,7 +437,7 @@ export default function ClientProviders({
       setIsEdit(false);
       refetch();
     } else {
-      router.back();
+      navigate(-1);
     }
   };
 
@@ -524,7 +524,7 @@ export default function ClientProviders({
       queryClient.invalidateQueries({
         queryKey: [QK_GET_DELIBERATION_SPACE_BY_SPACE_ID, spacePk],
       });
-      router.refresh();
+      window.location.reload();
       refetch();
 
       showSuccessToast(t('success_post_space'));
@@ -614,7 +614,7 @@ export default function ClientProviders({
       queryClient.invalidateQueries({
         queryKey: [QK_GET_DELIBERATION_SPACE_BY_SPACE_ID, spacePk],
       });
-      router.refresh();
+      window.location.reload();
       refetch();
 
       showSuccessToast(t('success_update_space'));
@@ -633,7 +633,7 @@ export default function ClientProviders({
     try {
       await post(ratelApi.spaces.deleteDeliberationSpaceBySpaceId(spacePk), {});
       showSuccessToast(t('success_delete_space'));
-      router.push('/');
+      navigate('/');
     } catch (error) {
       logger.debug('Failed to delete space:', error);
       logger.error('Error deleting space:', error);

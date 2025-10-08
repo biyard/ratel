@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { ParsedResult } from './models/parsed';
 
 export default function BarChartResponse({ parsed }: { parsed: ParsedResult }) {

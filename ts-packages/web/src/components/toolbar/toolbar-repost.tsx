@@ -6,23 +6,22 @@ import { useState, useEffect, useRef } from 'react';
 import { HexColorPicker } from 'react-colorful';
 
 //Icons Import
-import CodesPen from '@/assets/icons/editor/codespen.svg';
-import BoldIcon from '@/assets/icons/editor/bold.svg';
-import Italics from '@/assets/icons/editor/italics.svg';
-import UnderlineIcon from '@/assets/icons/editor/underline.svg';
-import Strike from '@/assets/icons/editor/strike.svg';
-import Paint2 from '@/assets/icons/editor/paint2.svg';
-import Paint from '@/assets/icons/editor/paint.svg';
-import ImageUpload from '@/assets/icons/editor/upload-image.svg';
-import LinkPaste from '@/assets/icons/editor/link-paste.svg';
-import CommentPaste from '@/assets/icons/editor/comment-paste.svg';
-import TableCells from '@/assets/icons/editor/tabe-cells.svg';
-import LeftAlign from '@/assets/icons/editor/misc3-part.svg';
-import NumberBullet from '@/assets/icons/editor/misc2-part.svg';
-import Bullet from '@/assets/icons/editor/misc-parts.svg';
-import RightAlign from '@/assets/icons/editor/paragraph.svg';
-import RightAlignLight from '@/assets/icons/editor/paragraph-light.svg';
-import CapsLock from '@/assets/icons/editor/capslock.svg';
+import CodesPen from '@/assets/icons/editor/codespen.svg?react';
+import BoldIcon from '@/assets/icons/editor/bold.svg?react';
+import Italics from '@/assets/icons/editor/italics.svg?react';
+import UnderlineIcon from '@/assets/icons/editor/underline.svg?react';
+import Strike from '@/assets/icons/editor/strike.svg?react';
+import Paint2 from '@/assets/icons/editor/paint2.svg?react';
+import Paint from '@/assets/icons/editor/paint.svg?react';
+import LinkPaste from '@/assets/icons/editor/link-paste.svg?react';
+import CommentPaste from '@/assets/icons/editor/comment-paste.svg?react';
+import TableCells from '@/assets/icons/editor/tabe-cells.svg?react';
+import LeftAlign from '@/assets/icons/editor/misc3-part.svg?react';
+import NumberBullet from '@/assets/icons/editor/misc2-part.svg?react';
+import Bullet from '@/assets/icons/editor/misc-parts.svg?react';
+import RightAlign from '@/assets/icons/editor/paragraph.svg?react';
+import RightAlignLight from '@/assets/icons/editor/paragraph-light.svg?react';
+import CapsLock from '@/assets/icons/editor/capslock.svg?react';
 
 interface ToolbarPluginProps {
   editor: Editor | null;
@@ -248,11 +247,15 @@ export default function ToolbarPlugin({
         )}
       </div>
 
-      {/* Image Upload - unchanged */}
-      {enableImage && (
+      {/* Image Upload */}
+      {enableImage && onImageUpload && (
         <FileUploader onUploadSuccess={onImageUpload}>
           <button type="button" aria-label="Upload image">
-            <ImageUpload />
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <polyline points="21 15 16 10 5 21"/>
+            </svg>
           </button>
         </FileUploader>
       )}

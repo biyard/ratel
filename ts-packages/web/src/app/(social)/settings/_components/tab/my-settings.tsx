@@ -1,10 +1,8 @@
 'use client';
 
 import { usePopup } from '@/lib/contexts/popup-service';
-import React from 'react';
 import LocaleModal from '../modal/locale-modal';
-import { useRouter } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import ThemeModal from '../modal/theme-modal';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
@@ -18,10 +16,9 @@ import SpecBox from '@/app/(social)/_components/spec-box';
 export default function MySettings() {
   const { post } = useApiCall();
   const { data } = useSuspenseUserInfo();
-  const t = useTranslations('Settings');
+  const { t, i18n } = useTranslation('Settings');
   const popup = usePopup();
-  const router = useRouter();
-  const locale = useLocale() as 'en' | 'ko';
+  const locale = i18n.language as 'en' | 'ko';
   const qc = useQueryClient();
 
   const actionText = locale === 'ko' ? 'Korean' : 'English';
@@ -44,7 +41,7 @@ export default function MySettings() {
           initialLocale={locale}
           onSave={(newLocale) => {
             document.cookie = `locale=${newLocale}; path=/; max-age=31536000; samesite=lax`;
-            router.refresh();
+            i18n.changeLanguage(newLocale);
             popup.close();
           }}
           onCancel={() => popup.close()}

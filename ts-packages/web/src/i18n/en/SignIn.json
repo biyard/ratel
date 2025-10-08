@@ -1,0 +1,24 @@
+{
+  "join_the_movement": "Join the Movement",
+  "new_user": "New user?",
+  "create_account": "Create an account",
+  "email_address": "Email address",
+  "email_address_hint": "Enter your email address",
+  "password": "Password",
+  "password_hint": "Enter your password",
+  "sign_in": "Sign in",
+  "continue": "Continue",
+  "privacy_policy": "Privacy Policy",
+  "terms_of_service": "Terms of Service",
+  "invalid_email_format": "Please enter a valid email address.",
+  "unregistered_email": "This email is not registered.",
+  "invalid_password_format": "Password must contain letters, numbers, and special characters (min 8 chars).",
+  "GoogleLogin": {
+    "label": "Sign in with Google",
+    "loading_description": "Signing in with Google..."
+  },
+  "EmailLogin": {
+    "label": "Sign in with Email",
+    "loading_description": "Signing in with Email..."
+  }
+}

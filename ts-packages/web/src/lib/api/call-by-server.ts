@@ -2,7 +2,7 @@
 
 import { config } from '@/config';
 import { logger } from '../logger';
-import { getCookieContext } from '@/app/_providers/CookieProvider';
+import { getCookieContext } from '@/lib/contexts/cookie-context';
 
 export interface ApiCallFns {
   get: (path: string) => Promise<any>;

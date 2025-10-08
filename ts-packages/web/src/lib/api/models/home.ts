@@ -1,6 +1,6 @@
 import { User } from './user';
 import { Promotion } from './promotion';
-import { Follower } from './network';
+import type { Follower } from './network';
 
 // Interface for FeedSummary from the backend
 export interface FeedSummary {

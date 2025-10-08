@@ -7,7 +7,7 @@ import {
   GoogleAuthProvider,
   signOut,
   onAuthStateChanged,
-  User,
+  type User,
 } from 'firebase/auth';
 import { getFile, listFiles, uploadFile } from '../api/drive';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
@@ -102,10 +102,12 @@ if (isFirebaseConfigValid) {
   logger.warn('🔥 Skipping Firebase initialization');
 }
 
-export enum EventType {
-  Login = 1,
-  SignUp = 2,
-}
+export const EventType = {
+  Login: 1,
+  SignUp: 2,
+} as const;
+
+export type EventType = typeof EventType[keyof typeof EventType];
 export type GoogleLoginInfo = {
   eventType: EventType;
   keyPair: Ed25519KeyIdentity;
@@ -153,7 +155,7 @@ export const loginWithGoogle = async (
 
     logger.debug('file data: ', files);
 
-    let eventType = EventType.Login;
+    let eventType: EventType = EventType.Login;
     let keyPair;
     let contents;
 

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import CheckCircle from '@/assets/icons/check-circle.svg';
-import { useTranslations } from 'next-intl';
+import { useState } from 'react';
+import CheckCircle from '@/assets/icons/check-circle.svg?react';
+import { useTranslation } from 'react-i18next';
 
 export interface LocaleModalProps {
   onCancel: () => void;
@@ -15,7 +15,7 @@ export default function LocaleModal({
   onSave,
   initialLocale = 'en',
 }: LocaleModalProps) {
-  const t = useTranslations('Settings');
+  const { t } = useTranslation('Settings');
   const [selected, setSelected] = useState<'en' | 'ko'>(initialLocale);
 
   const options: { label: string; value: 'en' | 'ko' }[] = [

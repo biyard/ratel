@@ -1,5 +1,4 @@
-import React from 'react';
-import CharacterWithCircle from '@/assets/icons/character.svg';
+import CharacterWithCircle from '@/assets/icons/character.svg?react';
 
 interface WelcomeHeaderProps {
   title: string;

@@ -1,19 +1,16 @@
-'use client';
-
 import { ArrowLeft } from '@/components/icons';
 import { UserType } from '@/lib/api/models/user';
 import { getTimeAgo } from '@/lib/time-utils';
-import Image from 'next/image';
 import { BadgeIcon } from '@/components/icons';
-import { useRouter } from 'next/navigation';
 import { useNewsByID } from '@/app/(social)/_hooks/news';
+import { useNavigate } from 'react-router';
 
 export default function NewsHeader({ news_id }: { news_id: number }) {
   const { data: news } = useNewsByID(news_id);
-  const router = useRouter();
+  const navigate = useNavigate();
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <button onClick={router.back}>
+      <button onClick={() => navigate(-1)}>
         <ArrowLeft className="[&>path]:stroke-text-primary" />
       </button>
 
@@ -46,11 +43,9 @@ export function ProposerProfile({
   return (
     <div className="flex flex-row w-fit gap-2 justify-between items-center">
       {profileUrl && profileUrl !== '' ? (
-        <Image
+        <img
           src={profileUrl}
           alt={proposerName}
-          width={20}
-          height={20}
           className={
             userType == UserType.Team
               ? 'rounded-lg object-cover object-top w-6.25 h-6.25'

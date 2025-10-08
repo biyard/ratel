@@ -1,2 +1,2 @@
-export { default as Kr } from './kr.svg';
-export { default as Us } from './us.svg';
+export { default as Kr } from './kr.svg?react';
+export { default as Us } from './us.svg?react';

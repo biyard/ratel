@@ -2,12 +2,12 @@ import { Button } from '@/components/ui/button';
 import { Col } from '@/components/ui/col';
 import { Input } from '@/components/ui/input';
 import { Row } from '@/components/ui/row';
-import GoogleIcon from '@/assets/icons/google.svg';
+import GoogleIcon from '@/assets/icons/google.svg?react';
 // import { TelegramIcon } from '@/components/icons';
 import { route } from '@/route';
-import Link from 'next/link';
 import { useState } from 'react';
 import Footer from './footer';
+import { NavLink } from 'react-router';
 
 //FIXME: add telegram login
 
@@ -38,8 +38,7 @@ interface LoginFormProps {
 }
 export default function LoginForm({
   onGoogleLogin,
-  // eslint-disable-next-line unused-imports/no-unused-vars, @typescript-eslint/no-unused-vars
-  onTelegramLogin,
+  /* onTelegramLogin: _onTelegramLogin, */
   onLogin,
 }: LoginFormProps) {
   const [email, setEmail] = useState('');
@@ -48,11 +47,11 @@ export default function LoginForm({
     <div className="flex flex-col w-full gap-5">
       <Row className="justify-start items-center text-sm gap-1">
         <label className="text-white font-medium">New to Ratel?</label>
-        <Link href={route.signup()}>
+        <NavLink to={route.signup()}>
           <button className="text-primary/70 hover:text-primary">
             Create an account
           </button>
-        </Link>
+        </NavLink>
       </Row>
 
       <Col className="gap-4">

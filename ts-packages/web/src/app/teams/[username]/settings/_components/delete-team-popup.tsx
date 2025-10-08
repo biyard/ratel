@@ -1,8 +1,7 @@
 'use client';
 
-import React from 'react';
 import clsx from 'clsx';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export default function DeleteTeamPopup({
   onConfirm,
@@ -11,7 +10,7 @@ export default function DeleteTeamPopup({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   return (
     <div className="flex flex-col w-[480px] max-w-full gap-6 p-6">
       <div className="flex flex-col gap-2">

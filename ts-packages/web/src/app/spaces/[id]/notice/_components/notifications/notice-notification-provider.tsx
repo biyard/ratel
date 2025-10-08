@@ -1,6 +1,6 @@
 'use client';
 
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -10,7 +10,7 @@ import React, {
 import NoticeNotification, {
   NoticeNotificationData,
 } from './notice-notification';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 interface NoticeNotificationContextType {
   showSuccessNotification: (
@@ -34,7 +34,7 @@ export function NoticeNotificationProvider({
   const [notification, setNotification] =
     useState<NoticeNotificationData | null>(null);
 
-  const t = useTranslations('NoticeSpace');
+  const { t } = useTranslation('NoticeSpace');
 
   const showSuccessNotification = useCallback(
     (rewardAmount: number, penaltyCount?: number) => {

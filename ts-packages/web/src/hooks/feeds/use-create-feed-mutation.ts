@@ -194,7 +194,7 @@ export function useDraftMutations() {
       }
       showErrorToast(error.message || 'Failed to update draft');
     },
-    onSettled: (data, error, variables) => {
+    onSettled: (_data, _error, variables) => {
       queryClient.invalidateQueries({
         queryKey: feedKeys.detail(variables.postId),
       });

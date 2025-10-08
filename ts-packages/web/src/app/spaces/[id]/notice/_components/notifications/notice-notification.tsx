@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import Rewards from '@/assets/icons/rewards.svg';
-import HexDown from '@/assets/icons/hex-down.svg';
+import { useEffect, useState } from 'react';
+import Rewards from '@/assets/icons/rewards.svg?react';
+import HexDown from '@/assets/icons/hex-down.svg?react';
 
 export interface NoticeNotificationData {
   type: 'success' | 'failed';

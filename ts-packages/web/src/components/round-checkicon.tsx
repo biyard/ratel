@@ -1,4 +1,3 @@
-import React from 'react';
 export default function RoundCheckIcon() {
   return (
     <div className="w-[30px] h-[30px] rounded-full bg-[#FFB800] flex items-center justify-center">

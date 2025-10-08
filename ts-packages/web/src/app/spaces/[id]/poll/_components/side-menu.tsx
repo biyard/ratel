@@ -1,8 +1,9 @@
 'use client';
+import * as React from 'react';
 
 import { getTimeWithFormat } from '@/lib/time-utils';
-import React, { useContext } from 'react';
-import Clock from '@/assets/icons/clock.svg';
+import { useContext } from 'react';
+import Clock from '@/assets/icons/clock.svg?react';
 import { PieChart1, Vote } from '@/components/icons';
 // import { Settings } from 'lucide-react';
 import { SpaceStatus } from '@/lib/api/models/spaces';
@@ -10,7 +11,7 @@ import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { TeamContext } from '@/lib/contexts/team-context';
 // import { usePopup } from '@/lib/contexts/popup-service';
 // import SetSchedulePopup from '../../_components/modal/set-schedule';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import useSpaceById from '@/hooks/use-space-by-id';
 // import { useEditCoordinatorStore } from '../../space-store';
 import { Tab, usePollStore } from '../store';
@@ -19,7 +20,7 @@ import { usePermission } from '@/app/(social)/_hooks/use-permission';
 import { GroupPermission } from '@/lib/api/models/group';
 
 export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   // const popup = usePopup();
   const { data: space } = useSpaceById(spaceId);
   const { status } = space;
@@ -139,7 +140,7 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
 }
 
 export function SpaceTabsMobile({ spaceId }: { spaceId: number }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
 
   const { data: space } = useSpaceById(spaceId);
 

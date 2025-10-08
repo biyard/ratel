@@ -1,8 +1,5 @@
-'use client';
 import { usePopup } from '@/lib/contexts/popup-service';
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { ChangeThemeRequest } from '@/lib/api/models/themes/theme';
@@ -13,14 +10,15 @@ import { QK_USERS_GET_INFO } from '@/constants';
 import LocaleModal from '../../settings/_components/modal/locale-modal';
 import ThemeModal from '../../settings/_components/modal/theme-modal';
 import SpecBox from '../../_components/spec-box';
+import { useNavigate } from 'react-router';
 
 export default function ExperimentalSettingsPage() {
   const { post } = useApiCall();
   const { data } = useSuspenseUserInfo();
-  const t = useTranslations('Settings');
+  const { t, i18n } = useTranslation('Settings');
   const popup = usePopup();
-  const router = useRouter();
-  const locale = useLocale() as 'en' | 'ko';
+  const navigate = useNavigate();
+  const locale = i18n.language as 'en' | 'ko';
   const qc = useQueryClient();
 
   const actionText = locale === 'ko' ? 'Korean' : 'English';
@@ -43,7 +41,7 @@ export default function ExperimentalSettingsPage() {
           initialLocale={locale}
           onSave={(newLocale) => {
             document.cookie = `locale=${newLocale}; path=/; max-age=31536000; samesite=lax`;
-            router.refresh();
+            navigate(-1);
             popup.close();
           }}
           onCancel={() => popup.close()}

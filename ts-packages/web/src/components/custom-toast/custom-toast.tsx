@@ -1,4 +1,3 @@
-import React from 'react';
 import { CheckCircle2 } from '../icons';
 
 type CustomToastProps = {

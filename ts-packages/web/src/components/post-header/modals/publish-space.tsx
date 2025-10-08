@@ -2,18 +2,20 @@
 import { Lock2 } from '@/assets/icons/security';
 import { Internet } from '@/assets/icons/internet-script';
 import { Button } from '@/components/ui/button';
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import SelectableCardList, {
   CardItemProps,
 } from '@/components/selectable-card-list';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { LoadingIndicator } from '@/app/loading';
 
-export enum PublishType {
-  Private = 'private',
-  Public = 'public',
-}
+export const PublishType = {
+  Private: 'private',
+  Public: 'public',
+} as const;
+
+export type PublishType = typeof PublishType[keyof typeof PublishType];
 
 export const openModal = (
   popup: ReturnType<typeof usePopup>,
@@ -41,7 +43,7 @@ export default function PublishSpaceModal({
 }: {
   onPublish: (type: PublishType) => Promise<void>;
 }) {
-  const t = useTranslations('SpacePublishModal');
+  const { t } = useTranslation('SpacePublishModal');
 
   const items: CardItemProps[] = useMemo(
     () => [

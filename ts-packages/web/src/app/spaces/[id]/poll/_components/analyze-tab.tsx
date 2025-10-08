@@ -1,7 +1,6 @@
 'use client';
-import React from 'react';
 import { AnalyzePage } from '../../_components/page/analyze';
-import { Space } from '@/lib/api/models/spaces';
+import type { Space } from '@/lib/api/models/spaces';
 import { mapResponses } from '../../deliberation/provider.client';
 import { usePollStore } from '../store';
 import { Question } from '@/lib/api/models/survey';

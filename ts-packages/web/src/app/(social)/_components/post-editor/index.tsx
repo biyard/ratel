@@ -1,11 +1,9 @@
-'use client';
-
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { X, Loader2 } from 'lucide-react';
 
-import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg';
-import UserCircleIcon from '@/assets/icons/user-circle.svg';
-import Certified from '@/assets/icons/certified.svg';
+import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg?react';
+import UserCircleIcon from '@/assets/icons/user-circle.svg?react';
+import Certified from '@/assets/icons/certified.svg?react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -17,16 +15,15 @@ import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import {
-  LexicalEditor,
-  EditorState,
+  type LexicalEditor,
+  type EditorState,
   $getRoot,
   $createParagraphNode,
 } from 'lexical';
 import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
 import { logger } from '@/lib/logger';
-import Image from 'next/image';
 import ToolbarPlugin from '@/components/toolbar/toolbar';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -39,7 +36,8 @@ import { HexColorPicker } from 'react-colorful';
 import { useUserInfo } from '../../_hooks/user';
 
 import { PostType, Status, usePostEditorContext } from './provider';
-import { ArtworkTrait, ArtworkTraitDisplayType } from '@/lib/api/models/feeds';
+import type { ArtworkTrait } from '@/lib/api/models/feeds';
+import { ArtworkTraitDisplayType } from '@/lib/api/models/feeds';
 
 export {
   PostType,
@@ -215,7 +213,7 @@ const editorConfig = {
 };
 
 export function CreatePost() {
-  const t = useTranslations('Home');
+  const { t } = useTranslation('Home');
 
   const p = usePostEditorContext();
 
@@ -245,9 +243,7 @@ export function CreatePost() {
           <div className="flex items-center gap-3">
             <div className="flex flex-row items-center gap-2">
               {userInfo?.profile_url && userInfo?.profile_url !== '' ? (
-                <Image
-                  width={24}
-                  height={24}
+                <img
                   src={userInfo?.profile_url}
                   alt="Profile"
                   className="w-6 h-6 object-cover rounded-full"
@@ -297,12 +293,10 @@ export function CreatePost() {
               <div className="px-4 pt-2">
                 <div className="flex flex-wrap gap-2">
                   <div className="relative size-16">
-                    <Image
-                      width={64}
-                      height={64}
+                    <img
                       src={image}
                       alt="Uploaded image"
-                      className="object-cover rounded-lg border border-neutral-600"
+                      className="w-16 h-16 object-cover rounded-lg border border-neutral-600"
                     />
                     <button
                       onClick={() => updateImage(null)}
@@ -462,7 +456,7 @@ export function ArtworkPost({
     display_type?: ArtworkTraitDisplayType,
   ) => void;
 }) {
-  const t = useTranslations('EditArtworkPost');
+  const { t } = useTranslation('EditArtworkPost');
   const [showColorPicker, setShowColorPicker] = useState(false);
 
   const handleImageUpload = () => {
@@ -503,12 +497,10 @@ export function ArtworkPost({
           className="relative w-full h-[260px] md:h-full p-4 flex items-center justify-center"
         >
           {image ? (
-            <Image
-              layout="fill"
-              objectFit="contain"
+            <img
               src={image}
               alt="Artwork"
-              className="max-h-full max-w-full"
+              className="max-h-full max-w-full object-contain"
             />
           ) : (
             <div className="flex flex-col items-center">

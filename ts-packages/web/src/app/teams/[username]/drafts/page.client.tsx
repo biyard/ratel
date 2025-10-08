@@ -1,5 +1,5 @@
 'use client';
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 import { Col } from '@/components/ui/col';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { Row } from '@/components/ui/row';
@@ -9,7 +9,7 @@ import TimeAgo from '@/components/time-ago';
 import { Delete2 } from '@/components/icons';
 import { useTeamByUsername } from '../../_hooks/use-team';
 import CreatePostButton from '../_components/create-post-button';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
 import { useObserver } from '@/hooks/use-observer';
@@ -19,7 +19,7 @@ import { useDeletePostMutation } from '@/hooks/feeds/use-delete-post-mutation';
 // Should be moved to a shared location
 
 export default function TeamDraftPage({ username }: { username: string }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   const { data: team } = useTeamByUsername(username);
 
   const p = usePostEditorContext();

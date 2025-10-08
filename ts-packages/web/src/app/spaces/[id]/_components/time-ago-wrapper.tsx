@@ -1,6 +1,6 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import { lazy } from 'react';
 
-const TimeAgo = dynamic(() => import('./time-ago'), { ssr: false });
+const TimeAgo = lazy(() => import('./time-ago'));
 export default TimeAgo;

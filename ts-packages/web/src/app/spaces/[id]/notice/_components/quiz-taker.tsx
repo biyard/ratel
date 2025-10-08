@@ -1,6 +1,7 @@
 'use client';
+import * as React from 'react';
 
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import {
   QuizQuestion,
   spaceSubmitQuizAnswersRequest,
@@ -21,8 +22,8 @@ import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { showErrorToast, showInfoToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
-import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+
+import { useTranslation } from 'react-i18next';
 
 interface QuizTakerProps {
   spaceId: number;
@@ -46,7 +47,7 @@ export default function QuizTaker({
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { post } = useApiCall();
-  const t = useTranslations('NoticeSpace');
+  const { t } = useTranslation('NoticeSpace');
 
   // Initialize user answers when questions change
   React.useEffect(() => {
@@ -218,12 +219,10 @@ export default function QuizTaker({
                       className="relative w-full max-w-md mx-auto"
                     >
                       {imageUrl && (
-                        <Image
+                        <img
                           src={imageUrl}
                           alt={`Question ${questionIndex + 1} image ${imageIndex + 1}`}
-                          width={400}
-                          height={300}
-                          className="rounded-lg object-contain"
+                          className="w-100 h-75 rounded-lg object-contain"
                         />
                       )}
                     </div>

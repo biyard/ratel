@@ -1,0 +1,32 @@
+{
+  "poll": {
+    "label": "Poll",
+    "desc": "Collect quick opinions or preferences."
+  },
+  "notice": {
+    "label": "Notice",
+    "desc": "Post announcements or quizzes with optional point boosts"
+  },
+  "deliberation": {
+    "label": "Deliberation",
+    "desc": "Share perspectives and engage in in-depth discussion."
+  },
+  "sprintLeague": {
+    "label": "Sprint League",
+    "desc": "Mini social game where three runners compete in a race, and their speed is determined by community voting"
+  },
+  "dAgit": {
+    "label": "d.AGIT",
+    "desc": "Create d.AGIT space for managing artworks"
+  },
+  "SetBoostModal": {
+    "title": "Set a Boost",
+    "description": "Once the {spaceType} Space is created, <b>the booster settings cannot be changed.</b> Please make sure everything is correct before confirming."
+  },
+  "date": "Date",
+  "boost": "Boost",
+  "active_booster": "Activate Booster",
+  "active_booster_desc": "If a booster is used, only Ratel subscribers will earn boosted points based on the multiplier when the sprint ends. If you're interested in a subscription, please <btn>contact</btn> us for more details.",
+  "booster": "Booster",
+  "create": "Create"
+}

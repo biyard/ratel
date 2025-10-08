@@ -2,30 +2,24 @@
 
 import { useEffect, useState } from 'react';
 import Header from '@/components/header';
-import Link from 'next/link';
 import { route } from '@/route';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { LoginModal } from '@/components/popup/login-popup';
 import { useUserInfo } from '../_hooks/user';
-import { usePathname } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
+import { NavLink } from "react-router";
 
 export default function ClientLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const t = useTranslations('Nav');
+  const { t } = useTranslation('Nav');
   const popup = usePopup();
   const { data, refetch, isLoading } = useUserInfo();
   const { logout } = useAuth();
   const [mobileExtends, setMobileExtends] = useState(false);
-  const pathname = usePathname();
-
-  const isDiscussionPage = /^\/spaces\/[^\/]+\/discussions\/[^\/]+$/.test(
-    pathname,
-  );
 
   useEffect(() => {
     document.body.style.overflow = mobileExtends ? 'hidden' : '';
@@ -39,16 +33,13 @@ export default function ClientLayout({
 
   return (
     <>
-      {!isDiscussionPage && (
         <Header
           mobileExtends={mobileExtends}
           setMobileExtends={setMobileExtends}
         />
-      )}
 
       {children}
 
-      {!isDiscussionPage && (
         <div
           className={
             mobileExtends
@@ -56,20 +47,20 @@ export default function ClientLayout({
               : 'hidden'
           }
         >
-          <Link
-            href={route.settings()}
-            onClick={() => setMobileExtends(false)}
-            className={linkClass}
-          >
-            {data?.nickname}
-          </Link>
-          <Link
-            href={route.home()}
+          <NavLink
+          to={route.settings()}
+          onClick={() => setMobileExtends(false)}
+          className={linkClass}
+        >
+          {data?.nickname}
+        </NavLink>
+        <NavLink
+            to={route.home()}
             onClick={() => setMobileExtends(false)}
             className={linkClass}
           >
             {t('home')}
-          </Link>
+          </NavLink>
 
           {!isLoading && data ? (
             <div
@@ -96,7 +87,6 @@ export default function ClientLayout({
             </button>
           )}
         </div>
-      )}
     </>
   );
 }

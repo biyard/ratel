@@ -1,9 +1,8 @@
 'use client';
 import { Input } from '@/components/ui/input';
-import React from 'react';
 import { ShapeArrowDown } from '@/components/icons';
 import Select from '@/components/select';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export default function LinearScaleSelection({
   minValue,
@@ -18,7 +17,7 @@ export default function LinearScaleSelection({
   labels: Record<number, string>;
   setLabels: (val: number, label: string) => void;
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-row items-center gap-2">

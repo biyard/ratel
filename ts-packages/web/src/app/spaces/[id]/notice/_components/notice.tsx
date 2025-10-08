@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useNoticeSpaceContext } from '../provider.client';
 import { useSpaceByIdContext } from '../../providers.client';
 import { useUserInfo } from '@/app/(social)/_hooks/user';

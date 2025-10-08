@@ -2,11 +2,10 @@
 
 import { usePopup } from '@/lib/contexts/popup-service';
 import IsolatedCharacter from '../animation/isolated-character';
-import { PlayerImages } from '@/lib/api/models/sprint_league';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { BasePlayerImages } from '.';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
+import { PlayerImages, BasePlayerImages } from '.';
 
 const openCharacterSelectModal = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -53,7 +52,7 @@ export default function PlayerSelectModal({
   onSelect: (id: string) => void;
   players: Record<string, string>;
 }) {
-  const t = useTranslations('SprintSpace');
+  const { t } = useTranslation('SprintSpace');
   const [value, setValue] = useState<string | null>(null);
 
   return (

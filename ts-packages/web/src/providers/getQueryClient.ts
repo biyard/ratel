@@ -1,7 +1,7 @@
 import { logger } from '@/lib/logger';
 import {
   defaultShouldDehydrateQuery,
-  InfiniteData,
+  type InfiniteData,
   isServer,
   QueryClient,
 } from '@tanstack/react-query';
@@ -32,33 +32,11 @@ export function makeQueryClient() {
   });
 }
 
-const serverClients = new Map<string, QueryClient>();
-
-export function getOrMakeQueryClient(session: string) {
-  // FIXME: implement session cleanup to prevent memory leaks
-  if (serverClients.has(session)) {
-    return serverClients.get(session)!;
-  }
-
-  const queryClient = makeQueryClient();
-  serverClients.set(session, queryClient);
-
-  return queryClient;
-}
-
 let browserQueryClient: QueryClient | undefined = undefined;
 
 export function getQueryClient(): QueryClient {
-  if (isServer) {
-    return makeQueryClient();
-  } else {
-    // Browser: make a new query client if we don't already have one
-    // This is very important, so we don't re-make a new client if React
-    // suspends during the initial render. This may not be needed if we
-    // have a suspense boundary BELOW the creation of the query client
-    if (!browserQueryClient) browserQueryClient = makeQueryClient();
-    return browserQueryClient;
-  }
+  if (!browserQueryClient) browserQueryClient = makeQueryClient();
+  return browserQueryClient;
 }
 
 export interface InitDataOptions {

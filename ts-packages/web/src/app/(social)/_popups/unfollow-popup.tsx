@@ -1,7 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Col } from '@/components/ui/col';
 import { Row } from '@/components/ui/row';
-import React from 'react';
 
 export default function UnFollowPopup({
   username,

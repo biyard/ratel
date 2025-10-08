@@ -10,14 +10,14 @@ import { userEditProfileRequest } from '@/lib/api/models/user';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 
-import React, { useContext, useMemo, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { TeamContext } from '@/lib/contexts/team-context';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router';
 import { route } from '@/route';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast, showInfoToast } from '@/lib/toast';
-import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+
+import { useTranslation } from 'react-i18next';
 import { usePopup } from '@/lib/contexts/popup-service';
 import DeleteTeamPopup from './_components/delete-team-popup';
 import { deleteTeamRequest } from '@/lib/api/models/team';
@@ -30,7 +30,7 @@ import { GroupPermission } from '@/lib/api/models/group';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
 
 export default function SettingsPage({ username }: { username: string }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   const popup = usePopup();
   const queryClient = getQueryClient();
   const { teams, updateSelectedTeam, setSelectedTeam } =
@@ -41,7 +41,7 @@ export default function SettingsPage({ username }: { username: string }) {
   }, [teams, username]);
 
   const { post } = useApiCall();
-  const router = useRouter();
+  const navigate = useNavigate();
   const userInfo = useUserInfo();
 
   const [profileUrl, setProfileUrl] = useState(team?.profile_url || '');
@@ -87,7 +87,7 @@ export default function SettingsPage({ username }: { username: string }) {
               });
               userInfo.refetch();
               setSelectedTeam(0);
-              router.push('/');
+              navigate('/');
             } catch (e) {
               logger.error('failed to delete team with error: ', e);
               showErrorToast(t('failed_delete_team'));
@@ -121,7 +121,7 @@ export default function SettingsPage({ username }: { username: string }) {
       profile_url: profileUrl,
     });
 
-    router.push(route.teamByUsername(username));
+    navigate(route.teamByUsername(username));
   };
 
   const invalidInput =
@@ -131,7 +131,7 @@ export default function SettingsPage({ username }: { username: string }) {
     <div className="w-full max-tablet:w-full flex flex-col gap-10 items-center">
       <FileUploader onUploadSuccess={handleProfileUrl}>
         {profileUrl ? (
-          <Image
+          <img
             src={profileUrl}
             alt="Team Logo"
             width={80}

@@ -1,7 +1,7 @@
 'use client';
+import * as React from 'react';
 
-import Image from 'next/image';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 
 import { v4 as uuidv4 } from 'uuid';
@@ -10,7 +10,7 @@ import { Member } from '@/lib/api/models/discussion';
 import { Add } from './add';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router';
 import { route } from '@/route';
 import { Extra2 } from '@/components/icons';
 import { DiscussionInfo } from '../types';
@@ -21,7 +21,7 @@ import {
   useDeliberationSpace,
   useDeliberationSpaceContext,
 } from '../provider.client';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export default function SpaceDiscussion() {
@@ -43,17 +43,17 @@ function ViewDiscussion() {
 }
 
 function DiscussionSchedules() {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const { status, handleViewRecord } = useDeliberationSpaceContext();
   // TODO: Update to use v3 user API with string pk instead of numeric id
   const userId = 0;
 
   const discussions = useDeliberationSpace().discussions;
 
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleMoveDiscussion = (spaceId: number, discussionId: number) => {
-    router.push(route.discussionById(spaceId, discussionId));
+    navigate(route.discussionById(spaceId, discussionId));
   };
 
   return (
@@ -120,7 +120,7 @@ export function DiscussionRoom({
   onclick: () => void;
   viewRecordClick: () => void;
 }) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const now = Math.floor(Date.now() / 1000);
 
   const isLive = now >= startDate && now <= endDate;
@@ -140,10 +140,9 @@ export function DiscussionRoom({
   return (
     <div className="flex flex-row w-full items-start justify-between max-tablet:flex-col gap-5">
       <div className="relative w-[240px] h-[150px] rounded-lg overflow-hidden max-tablet:w-[350px] max-mobile:w-full max-tablet:aspect-[16/9] max-tablet:h-auto">
-        <Image
+        <img
           src={discussionImg}
           alt="Discussion Thumbnail"
-          fill
           className="object-cover"
         />
         {isLive && (
@@ -204,7 +203,7 @@ export function DiscussionRoom({
 }
 
 function ViewRecord({ onClick }: { onClick: () => void }) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   return (
     <div
       className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white light:bg-card-bg border border-card-border hover:bg-white/80 light:hover:bg-card-bg/50 rounded-lg"
@@ -219,7 +218,7 @@ function ViewRecord({ onClick }: { onClick: () => void }) {
 }
 
 function JoinButton({ onClick }: { onClick: () => void }) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   return (
     <div
       className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white light:bg-card-bg border border-card-border hover:bg-white/80 light:hover:bg-card-bg/50 rounded-lg"
@@ -234,7 +233,7 @@ function JoinButton({ onClick }: { onClick: () => void }) {
 }
 
 function EditableDiscussion() {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const { deliberation, handleUpdateDeliberation } =
     useDeliberationSpaceContext();
   const discussions = deliberation.discussions;
@@ -330,7 +329,7 @@ function EditableDiscussion() {
 }
 
 function AddDiscussion({ onadd }: { onadd: () => void }) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   return (
     <div
       onClick={() => {
@@ -366,7 +365,7 @@ function EditableDiscussionInfo({
   onupdate: (index: number, discussion: DiscussionInfo) => void;
   onremove: (index: number) => void;
 }) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const now = Math.floor(Date.now() / 1000);
 
   const popup = usePopup();
@@ -419,10 +418,9 @@ function EditableDiscussionInfo({
     <div className="w-full flex flex-col gap-4 relative">
       <div className="flex flex-row w-full items-start justify-between max-tablet:flex-col gap-5">
         <div className="relative w-[240px] h-[150px] rounded-lg overflow-hidden max-tablet:w-[350px] max-mobile:w-full max-tablet:aspect-[16/9] max-tablet:h-auto">
-          <Image
+          <img
             src={discussionImg}
             alt="Discussion Thumbnail"
-            fill
             className="object-cover"
           />
           {isLive && (

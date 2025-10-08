@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { PublishingScope } from '@/lib/api/models/notice';
-import Lock from '@/assets/icons/lock.svg';
-import Internet from '@/assets/icons/internet.svg';
-import { useTranslations } from 'next-intl';
+import Lock from '@/assets/icons/lock.svg?react';
+import Internet from '@/assets/icons/internet.svg?react';
+import { useTranslation } from 'react-i18next';
 
 export interface PublishFormProps {
   onPublish: (scope: PublishingScope) => void;
@@ -15,7 +15,7 @@ export default function PublishForm({
   onPublish,
   currentScope,
 }: PublishFormProps) {
-  const t = useTranslations('NoticeSpace');
+  const { t } = useTranslation('NoticeSpace');
   const [selectedScope, setSelectedScope] = useState<PublishingScope>(
     currentScope === PublishingScope.Public
       ? PublishingScope.Public

@@ -1,16 +1,14 @@
-'use client';
-
-import { useRouter } from 'next/navigation';
 import { route } from '@/route';
 import { Button } from '@/components/ui/button';
 import { TelegramIcon } from '@/components/icons';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { config } from '@/config';
 import { apiFetch } from '@/lib/api/apiFetch';
 import { isTMA, postEvent } from '@telegram-apps/sdk-react';
 import { Service, useAuthStore } from '../store';
+import { useNavigate } from 'react-router';
 
 function updateTelegramId(token: string) {
   return apiFetch<void>(
@@ -42,16 +40,16 @@ export default function Client({
     token: prevToken,
   } = useAuthStore();
 
-  const t = useTranslations('Connect');
+  const { t } = useTranslation('Connect');
   const [isLoading, setIsLoading] = useState(false);
 
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const finalService = service ? service : prevService;
   const finalRedirectUrl = redirectUrl ? redirectUrl : prevRedirectUrl;
   const finalToken = token ? token : prevToken;
   if (!finalService) {
-    router.push(route.home());
+    navigate(route.home());
     return null;
   }
 
@@ -106,7 +104,7 @@ export default function Client({
       window.close();
       return;
     }
-    router.push(route.home());
+    navigate(route.home());
   };
 
   return (

@@ -25,7 +25,7 @@ BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECR
 
 
 # Playwright test envs
-RATEL_TEST_PLAYWRIGHT_URL ?= http://localhost:8080
+RATEL_TEST_PLAYWRIGHT_URL ?= http://localhost:3000
 RATEL_TEST_PLAYWRIGHT_ID ?= $(shell date +%s)
 PLAYWRIGHT_ENV ?= RATEL_TEST_PLAYWRIGHT_URL=$(RATEL_TEST_PLAYWRIGHT_URL) \
 								RATEL_TEST_PLAYWRIGHT_ID=$(RATEL_TEST_PLAYWRIGHT_ID)
@@ -53,6 +53,14 @@ deploy: build cdk-deploy
 build: clean
 	mkdir -p .build
 	cd packages/$(SERVICE) && ENV=$(ENV) ARTIFACT_DIR=$(PWD)/.build/$(SERVICE) make build$(DOCKER_COMMAND_SUFFUIX)
+
+.PHONY: build-with-web
+build-with-web: clean
+	mkdir -p .build
+	@echo "Building main-api..."
+	cd packages/main-api && ENV=$(ENV) ARTIFACT_DIR=$(PWD)/.build/main-api make build
+	@echo "Building web..."
+	cd ts-packages/web && ENV=$(ENV) make build
 
 cdk/.next:
 	docker create --name web-container $(ECR_NAME):$(COMMIT)

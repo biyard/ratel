@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import SpaceSideMenu, { SpaceTabsMobile } from './_components/space-side-menu';
 import ThreadPage from './_components/thread';
 import DeliberationPage from './_components/deliberation';
@@ -20,7 +20,7 @@ import SpaceHeader from '../_components/header/index';
 import { SpaceProvider } from '../_components/header/provider';
 import DeliberationAnalyzePage from './_components/analyze-tab';
 import { DeliberationSurveyPage } from './_components/survey-tab';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export default function DeliberationSpacePage() {
   return (
@@ -31,7 +31,7 @@ export default function DeliberationSpacePage() {
 }
 
 function Page() {
-  const t = useTranslations('Space');
+  const { t } = useTranslation('Space');
   const space = useDeliberationSpace();
   const feed = useDeliberationFeed(space.feed_id);
   const context = useDeliberationSpaceContext();

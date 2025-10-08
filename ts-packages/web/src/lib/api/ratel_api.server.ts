@@ -1,6 +1,7 @@
 import { apiFetch } from './apiFetch';
-import { Feed, FeedStatus, FeedV2 } from './models/feeds';
-import { Space } from './models/spaces';
+import type { Feed, FeedV2 } from './models/feeds';
+import { FeedStatus } from './models/feeds';
+import type { Space } from './models/spaces';
 import { config } from '@/config';
 import {
   QK_GET_FEED_BY_FEED_ID,
@@ -20,21 +21,21 @@ import {
   QK_GET_FEED_BY_FEED_ID_V2,
 } from '@/constants';
 
-import { RedeemCode } from './models/redeem-code';
+import type { RedeemCode } from './models/redeem-code';
 import { ratelApi } from './ratel_api';
 import { getServerQueryClient } from '../query-utils.server';
 import { logger } from '../logger';
-import { NetworkData } from './models/network';
-import { Promotion } from './models/promotion';
-import { User } from './models/user';
-import { QueryResponse } from './models/common';
-import { Team } from './models/team';
-import { HomeGatewayResponse } from './models/home';
-import { InfiniteData } from '@tanstack/react-query';
+import type { NetworkData } from './models/network';
+import type { Promotion } from './models/promotion';
+import type { User } from './models/user';
+import type { QueryResponse } from './models/common';
+import type { Team } from './models/team';
+import type { HomeGatewayResponse } from './models/home';
+import type { InfiniteData } from '@tanstack/react-query';
 import { GroupPermission } from './models/group';
-import { Permission } from './models/permission';
-import { NewsDetailItem } from './models/news';
-import { DeliberationSpace } from './ratel/spaces/deliberation-spaces.v3';
+import type { Permission } from './models/permission';
+import type { NewsDetailItem } from './models/news';
+import type { DeliberationSpace } from './ratel/spaces/deliberation-spaces.v3';
 
 async function getDataFromServer<T>(
   key: (string | number)[],

@@ -2,9 +2,8 @@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Answer } from '@/lib/api/models/response';
-import React from 'react';
 import Wrapper from './_components/wrapper';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export default function SubjectiveViewer({
   title,
@@ -29,7 +28,7 @@ export default function SubjectiveViewer({
     type: 'short_answer' | 'subjective',
   ) => void;
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
 
   return (
     <div className="flex flex-col w-full gap-[10px]">

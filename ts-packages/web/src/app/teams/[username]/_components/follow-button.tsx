@@ -1,8 +1,7 @@
-import { useTranslations } from 'next-intl';
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function FollowButton({ onClick }: { onClick: () => void }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
 
   return (
     <div

@@ -1,6 +1,6 @@
 'use client';
-import React, { useState } from 'react';
-import CheckboxIcon from '@/assets/icons/checkbox-icon.svg';
+import { useState } from 'react';
+import CheckboxIcon from '@/assets/icons/checkbox-icon.svg?react';
 
 interface CheckboxProps {
   isRounded?: boolean;

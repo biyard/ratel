@@ -1,17 +1,16 @@
 'use client';
 
 import { usePopup } from '@/lib/contexts/popup-service';
-import React from 'react';
 import { WelcomeHeader } from './welcome-header';
 import { PrimaryButton } from '../button/primary-button';
 import { LoginPopupFooter } from './login-popup-footer';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 interface ConfirmPopupProps {}
 
 export const ConfirmPopup = ({}: ConfirmPopupProps) => {
-  const t = useTranslations('Signup');
+  const { t } = useTranslation('Signup');
   const popup = usePopup();
 
   const handleClose = () => {

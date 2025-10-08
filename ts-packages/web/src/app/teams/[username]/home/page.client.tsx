@@ -4,7 +4,7 @@ import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
 import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
 import { useObserver } from '@/hooks/use-observer';
-import React, { useCallback } from 'react';
+import { useCallback } from 'react';
 
 export default function TeamHome() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =

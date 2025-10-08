@@ -1,13 +1,12 @@
 'use client';
 import { Edit1 } from '@/components/icons';
-import React from 'react';
 import { useLoggedIn } from '@/lib/api/hooks/users';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { usePostEditorContext } from './post-editor/provider';
 import { createPost } from '@/lib/api/ratel/posts.v3';
 
 export default function CreatePostButton({ team_pk }: { team_pk?: string }) {
-  const t = useTranslations('Home');
+  const { t } = useTranslation('Home');
   const loggedIn = useLoggedIn();
   const p = usePostEditorContext();
 

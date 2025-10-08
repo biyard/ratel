@@ -2,7 +2,7 @@ import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 import { Settings2 } from '@/assets/icons/settings';
 import { Clock } from '@/assets/icons/time';
 import { getTimeWithFormat } from '@/lib/time-utils';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 interface TimeItems {
   label: string;
@@ -17,7 +17,7 @@ export default function TimelineMenu({
   isEditing: boolean;
   handleSetting: () => void;
 }) {
-  const s = useTranslations('SprintSpace');
+  const { t: s } = useTranslation('SprintSpace');
   const sortedItems = [...items].sort((a, b) => a.time - b.time);
   return (
     <BorderSpaceCard>

@@ -12,16 +12,6 @@ export async function call<T, R>(
   const isServer = typeof window === 'undefined';
   let headers = undefined;
 
-  if (isServer) {
-    const { headers: getHeaders } = await import('next/headers');
-    const headersList = await getHeaders();
-    const clientCookies = headersList.get('cookie');
-    if (clientCookies) {
-      headers = new Headers();
-      headers.set('Cookie', clientCookies);
-    }
-  }
-
   let response;
   if (body) {
     if (!headers) {

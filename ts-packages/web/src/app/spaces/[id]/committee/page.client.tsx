@@ -1,11 +1,10 @@
 'use client';
 
-import React from 'react';
 import SpaceHeader from '../_components/space-header';
 import SpaceCouponProgress from '../_components/coupon-progress';
 import SpaceContents from '../_components/space-contents';
 import SpaceFiles from '../_components/space_files';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router';
 import { useRedeemCode, useSpaceById } from '@/lib/api/ratel_api';
 import { useCommitteeSpaceByIdContext } from './providers.client';
 
@@ -13,7 +12,7 @@ export default function CommitteeSpacePage() {
   const { spaceId } = useCommitteeSpaceByIdContext();
   const { data: space } = useSpaceById(spaceId);
   const redeem = useRedeemCode(spaceId);
-  const router = useRouter();
+  const navigate = useNavigate();
 
   return (
     <div className="flex flex-row w-full h-full gap-5">
@@ -22,12 +21,12 @@ export default function CommitteeSpacePage() {
           <SpaceHeader
             title={space?.title ?? ''}
             status={space.status}
-            userType={space?.author[0].user_type ?? 0}
+            userType={(space?.author[0].user_type ?? 0) as any}
             proposerImage={space?.author[0].profile_url ?? ''}
             proposerName={space?.author[0].nickname ?? ''}
             createdAt={space?.created_at}
             onback={() => {
-              router.back();
+              navigate(-1);
             }}
           />
           <div className="flex flex-col w-full mt-7.5 gap-2.5">

@@ -1,9 +1,8 @@
-import React from 'react';
-import Badge from '@/assets/icons/badge.svg';
-import Image from 'next/image';
+import Badge from '@/assets/icons/badge.svg?react';
+
 import { Input } from '@/components/ui/input';
 import { ArrowLeft, Save } from 'lucide-react';
-import ArrowUp from '@/assets/icons/arrow-up.svg';
+import ArrowUp from '@/assets/icons/arrow-up.svg?react';
 import {
   Edit1,
   Unlock2,
@@ -20,7 +19,7 @@ import {
 import { getTimeAgo } from '@/lib/time-utils';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { FeedV2 } from '@/lib/api/models/feeds';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { PublishingScope } from '@/lib/api/models/notice';
 import { useDeliberationSpaceByIdContext } from '../providers.client';
 import PublishForm from '@/app/spaces/[id]/notice/_components/modal/publish-form';
@@ -45,7 +44,7 @@ export default function SpaceHeader({
   feed: FeedV2;
 }) {
   const { data: user } = useUserInfo();
-  const t = useTranslations('Space');
+  const { t } = useTranslation('Space');
 
   const {
     isEdit,
@@ -347,11 +346,9 @@ export default function SpaceHeader({
       <div className="flex flex-row justify-between items-center w-full text-sm text-c-wg-50">
         <div className="flex items-center gap-2">
           {proposerImage && proposerImage !== '' ? (
-            <Image
+            <img
               src={proposerImage}
               alt={proposerName}
-              width={24}
-              height={24}
               className={
                 'rounded-full object-cover object-top w-6 h-6'
                 // userType === UserType.Team

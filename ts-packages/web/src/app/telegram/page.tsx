@@ -7,7 +7,7 @@ import { proxy } from '@/lib/api/ratel_api';
 import { send } from '@/lib/api/send';
 
 import Loading from '../loading';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useNavigate, useSearchParams } from 'react-router';
 import { decode_base64 } from '@/lib/base64';
 import { route } from '@/route';
 import { TelegramWebCommand, TgWebParams } from '@/types/telegram';
@@ -60,8 +60,8 @@ function getRedirectPath(params: TgWebParams): string {
 function TelegramMiniAppMain() {
   const [isLoading, setIsLoading] = useState(true);
   const raw = useRawInitData();
-  const router = useRouter();
-  const searchParams = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const queryClient = getQueryClient();
   const { ed25519KeyPair } = useAuth();
   // const [token, setToken] = useState<string | null>(null);
@@ -85,7 +85,7 @@ function TelegramMiniAppMain() {
           const params = parseTelegramStartParam(tgWebAppStartParam);
           if (params) {
             const redirectPath = getRedirectPath(params);
-            router.replace(redirectPath);
+            navigate(redirectPath);
           }
         } else {
           //telegram Webview close command
@@ -98,7 +98,7 @@ function TelegramMiniAppMain() {
     };
 
     tryLoginWithTelegramRaw();
-  }, [raw, ed25519KeyPair, searchParams, router, queryClient]);
+  }, [raw, ed25519KeyPair, searchParams, navigate, queryClient]);
 
   return (
     <>{isLoading ? <Loading /> : <div>Failed to login with telegram</div>}</>

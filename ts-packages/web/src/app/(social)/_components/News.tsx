@@ -1,10 +1,8 @@
-'use client';
 import { Col } from '@/components/ui/col';
-import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 import DisableBorderCard from './disable-border-card';
 import { useNews } from '../_hooks/use-news';
+import { useNavigate } from 'react-router';
 
 export interface NewsItem {
   id: number;
@@ -18,12 +16,12 @@ export default function Wrapper() {
 }
 
 function News() {
-  const t = useTranslations('Home');
-  const router = useRouter();
+  const { t } = useTranslation('Home');
+  const navigate = useNavigate();
   const news = useNews().data.items;
 
   const handleNewsNavigation = (id: number) => {
-    router.push(`/news/${id}`);
+    navigate(`/news/${id}`);
   };
 
   if (!news || news.length === 0) {

@@ -1,19 +1,19 @@
-import { Badge } from './badge';
-import { SpaceComment } from './comments';
-import { Discussion, DiscussionCreateRequest } from './discussion';
-import { Elearning, ElearningCreateRequest } from './elearning';
-import { FileInfo } from './feeds';
-import { SurveyResponse } from './response';
-import { SpaceDraft, SpaceDraftCreateRequest } from './space_draft';
-import { SprintLeague } from './sprint_league';
-import { Survey, SurveyCreateRequest } from './survey';
-import { UserType } from './user';
-import {
+import type { Badge } from './badge';
+import type { SpaceComment } from './comments';
+import type { Discussion, DiscussionCreateRequest } from './discussion';
+import type { Elearning, ElearningCreateRequest } from './elearning';
+import type { FileInfo } from './feeds';
+import type { SurveyResponse } from './response';
+import type { SpaceDraft, SpaceDraftCreateRequest } from './space_draft';
+import type { SprintLeague } from './sprint_league';
+import type { Survey, SurveyCreateRequest } from './survey';
+import type { UserType } from './user';
+import type {
   QuizQuestion,
   BoosterType,
-  PublishingScope,
   NoticeQuizRequest,
 } from './notice';
+import { PublishingScope } from './notice';
 
 export interface Space {
   id: number;
@@ -166,19 +166,23 @@ export interface Author {
   user_type: UserType;
 }
 
-export enum SpaceType {
-  Legislation = 1,
-  Poll = 2,
-  Deliberation = 3,
-  Nft = 4,
-  Committee = 5,
-  SprintLeague = 6,
-  Notice = 7,
-  dAgit = 8,
-}
+export const SpaceType = {
+  Legislation: 1,
+  Poll: 2,
+  Deliberation: 3,
+  Nft: 4,
+  Committee: 5,
+  SprintLeague: 6,
+  Notice: 7,
+  dAgit: 8,
+} as const;
 
-export enum SpaceStatus {
-  Draft = 1,
-  InProgress = 2,
-  Finish = 3,
-}
+export type SpaceType = typeof SpaceType[keyof typeof SpaceType];
+
+export const SpaceStatus = {
+  Draft: 1,
+  InProgress: 2,
+  Finish: 3,
+} as const;
+
+export type SpaceStatus = typeof SpaceStatus[keyof typeof SpaceStatus];

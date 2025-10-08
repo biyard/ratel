@@ -1,7 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-import React from 'react';
+import { useTranslation, Trans } from 'react-i18next';
 
 export default function GoPublicPopup({
   onpublic,
@@ -10,7 +9,7 @@ export default function GoPublicPopup({
   onpublic: () => void;
   onclose: () => void;
 }) {
-  const t = useTranslations('Space');
+  const { t } = useTranslation('Space');
   return (
     <div className="w-[500px] flex flex-col mt-6">
       <div className="text-center font-bold text-modal-label-text text-[24px] mb-6">
@@ -18,11 +17,18 @@ export default function GoPublicPopup({
       </div>
 
       <div className="text-center font-medium text-desc-text text-base">
-        {t.rich('make_public_desc_line1')}
+        <Trans
+          i18nKey="make_public_desc_line1"
+          ns="Space"
+        />
         <br />
-        {t.rich('make_public_desc_line2', {
-          b: (chunks) => <span className="font-bold">{chunks}</span>,
-        })}
+        <Trans
+          i18nKey="make_public_desc_line2"
+          ns="Space"
+          components={{
+            b: <span className="font-bold" />,
+          }}
+        />
       </div>
 
       <div className="flex flex-row justify-end gap-4 mt-8.75">

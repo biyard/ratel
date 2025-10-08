@@ -1,4 +1,4 @@
-import { Author } from './spaces';
+import type { Author } from './spaces';
 
 export interface SpaceComment {
   id: number;

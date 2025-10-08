@@ -6,12 +6,14 @@ export default interface Oracle {
   oracle_type: OracleType;
 }
 
-export enum OracleType {
-  Artist = 1,
-  Gallery = 2,
-  Collector = 3,
-  Auction = 4,
-}
+export const OracleType = {
+  Artist: 1,
+  Gallery: 2,
+  Collector: 3,
+  Auction: 4,
+} as const;
+
+export type OracleType = typeof OracleType[keyof typeof OracleType];
 
 export const OracleTypeMap: Record<OracleType, string> = {
   [OracleType.Artist]: 'Artist',

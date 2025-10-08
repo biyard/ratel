@@ -1,11 +1,11 @@
-import React, { useContext } from 'react';
-import Badge from '@/assets/icons/badge.svg';
+import { useContext } from 'react';
+import Badge from '@/assets/icons/badge.svg?react';
 import { UserType } from '@/lib/api/models/user';
-import Image from 'next/image';
+
 import { Input } from '@/components/ui/input';
 import { Space, SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowLeft, Play, Save } from 'lucide-react';
-import ArrowUp from '@/assets/icons/arrow-up.svg';
+import ArrowUp from '@/assets/icons/arrow-up.svg?react';
 import {
   Edit1,
   Unlock2,
@@ -27,7 +27,7 @@ import { useSpaceContext } from './provider';
 import { useDropdown } from '../dropdown/dropdown-service';
 import DropdownMenu from '../dropdown/dropdown-menu';
 import DeleteSpacePopup from '../modal/confirm-delete';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import PublishForm from '../../notice/_components/modal/publish-form';
 import { PublishingScope } from '@/lib/api/models/notice';
 import GoPublicModal from '../../notice/_components/modal/go-public-modal';
@@ -41,7 +41,7 @@ export default function SpaceHeader({
   space: Space;
   feed: Feed;
 }) {
-  const t = useTranslations('Space');
+  const { t } = useTranslation('Space');
   const context = useSpaceContext();
   if (!context)
     throw new Error('SpaceHeader must be used within SpaceHeaderProvider');
@@ -369,11 +369,9 @@ export default function SpaceHeader({
       <div className="flex flex-row justify-between items-center w-full text-sm text-c-wg-50">
         <div className="flex items-center gap-2">
           {proposerImage && proposerImage !== '' ? (
-            <Image
+            <img
               src={proposerImage}
               alt={proposerName}
-              width={24}
-              height={24}
               className={
                 userType === UserType.Team
                   ? 'rounded-lg object-cover object-top w-6 h-6'
@@ -396,10 +394,10 @@ export default function SpaceHeader({
 }
 
 function Onboard() {
-  const t = useTranslations('Space');
+  const { t } = useTranslation('Space');
   return (
     <div className="flex flex-row items-center w-fit px-2 gap-1 border border-[#05df72] opacity-50 rounded-sm">
-      <Play className="w-2.5 h-2.5 stroke-[#00d492] fill-[#00d492]" />
+      <Play className="w-2.5 h-2.5 stroke-[#00d492]-[#00d492]" />
       <div className="font-semibold text-sm/[25px] text-[#05df72]">
         {t('onboard')}
       </div>

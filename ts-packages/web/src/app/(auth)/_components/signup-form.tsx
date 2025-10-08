@@ -1,11 +1,8 @@
-'use client';
-
 import { PrimaryButton } from '@/components/button/primary-button';
 import { Checkbox } from '@/components/checkbox/checkbox';
 import FileUploader from '@/components/file-uploader';
 import { Button } from '@/components/ui/button';
-import { useTranslations } from 'next-intl';
-import Image from 'next/image';
+import { useTranslation, Trans } from 'react-i18next';
 import { useState } from 'react';
 import { apiFetch } from '@/lib/api/apiFetch';
 import { config } from '@/config';
@@ -57,14 +54,16 @@ function verifyCode(email: string, code: string) {
   );
 }
 
-enum Warning {
-  Email,
-  Code,
-  Password,
-  DisplayName,
-  UserName,
-  Agree,
-}
+const Warning = {
+  Email: 'Email',
+  Code: 'Code',
+  Password: 'Password',
+  DisplayName: 'DisplayName',
+  UserName: 'UserName',
+  Agree: 'Agree',
+} as const;
+
+type Warning = (typeof Warning)[keyof typeof Warning];
 
 interface InitialData {
   email: string;
@@ -97,7 +96,7 @@ export default function SignupForm({
   initialData,
   updateUserInfo,
 }: SignupFormProps) {
-  const t = useTranslations('Signup');
+  const { t } = useTranslation('Signup');
 
   const {
     email: initialEmail,
@@ -243,10 +242,8 @@ export default function SignupForm({
     <div className="flex flex-col gap-5 w-full">
       <FileUploader onUploadSuccess={handleProfileImage}>
         <div className="group relative flex items-center justify-center size-40 max-mobile:size-20 mx-auto">
-          <Image
+          <img
             src={profileImage || defaultImage}
-            width={160}
-            height={160}
             alt="logo"
             className="w-40 h-40 rounded-full object-cover cursor-pointer relative group max-mobile:size-20"
           />
@@ -336,10 +333,14 @@ export default function SignupForm({
         <Checkbox id="agree_checkbox" onChange={setAgreed}>
           <div className="flex flex-col gap-1">
             <span className="text-sm text-gray-400">
-              {t.rich('agree_tos', {
-                req: (chunks) => <strong>{chunks}</strong>,
-                b: (chunks) => <strong>{chunks}</strong>,
-              })}
+              <Trans
+                i18nKey="agree_tos"
+                ns="Signup"
+                components={{
+                  req: <strong />,
+                  b: <strong />,
+                }}
+              />
             </span>
             {errors[Warning.Agree] && (
               <span className="text-sm text-red-500">

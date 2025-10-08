@@ -1,13 +1,15 @@
-import { redirect } from 'next/navigation';
 import { route } from '@/route';
-import { isLoggedIn } from '@/lib/auth';
 import Client from './client';
+import { useUserInfo } from '@/hooks/use-user-info';
+import { useNavigate } from 'react-router';
 
 export default async function LoginPage() {
-  const isLogin = await isLoggedIn();
+  const { data: user } = useUserInfo();
+  const nav = useNavigate();
+  const isLogin = user !== null;
 
   if (isLogin) {
-    redirect(route.home());
+    nav(route.home(), { replace: true });
   }
 
   return <Client />;

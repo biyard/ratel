@@ -1,9 +1,9 @@
 import { QK_GET_NETWORK } from '@/constants';
-import { NetworkData } from '@/lib/api/models/network';
+import type { NetworkData } from '@/lib/api/models/network';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import {
-  UseSuspenseQueryResult,
+  type UseSuspenseQueryResult,
   useSuspenseQuery,
 } from '@tanstack/react-query';
 

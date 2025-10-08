@@ -1,7 +1,5 @@
-'use client';
-import React, { useContext, useMemo } from 'react';
+import { useContext, useMemo } from 'react';
 import TeamSelector from './team-selector';
-import Image from 'next/image';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { TeamContext } from '@/lib/contexts/team-context';
 import UserFollows from './user-follows';
@@ -26,11 +24,9 @@ export default function ProfileSection() {
       <TeamSelector onSelect={handleTeamSelect} team={team} />
       <div className="relative">
         {user?.profile_url && user?.profile_url !== '' ? (
-          <Image
+          <img
             src={user?.profile_url}
             alt={user?.nickname ?? 'team profile'}
-            width={80}
-            height={80}
             className="w-20 h-20 rounded-full border-2 object-cover object-top"
           />
         ) : (

@@ -1,5 +1,5 @@
-import { Follower } from './network';
-import { Team } from './team';
+import type { Follower } from './network';
+import type { Team } from './team';
 
 export interface User {
   id: number;
@@ -38,26 +38,32 @@ export interface User {
   referral_code?: string;
 }
 
-export enum UserType {
-  Individual = 1,
-  Team = 2,
-  Bot = 3,
-  Anonymous = 99,
-}
+export const UserType = {
+  Individual: 1,
+  Team: 2,
+  Bot: 3,
+  Anonymous: 99,
+} as const;
 
-export enum ThemeType {
-  Light = 1,
-  Dark = 2,
-  SystemDefault = 3,
-}
+export type UserType = typeof UserType[keyof typeof UserType];
 
-export enum MembershipType {
-  Free = 1,
-  Paid1 = 2,
-  Paid2 = 3,
-  Paid3 = 4,
-  Admin = 99,
-}
+export const ThemeType = {
+  Light: 1,
+  Dark: 2,
+  SystemDefault: 3,
+} as const;
+
+export type ThemeType = typeof ThemeType[keyof typeof ThemeType];
+
+export const MembershipType = {
+  Free: 1,
+  Paid1: 2,
+  Paid2: 3,
+  Paid3: 4,
+  Admin: 99,
+} as const;
+
+export type MembershipType = typeof MembershipType[keyof typeof MembershipType];
 
 export interface Badge {
   id: number;
@@ -74,11 +80,13 @@ export interface Badge {
   token_id?: number;
 }
 
-export enum Scope {
-  Global = 1,
-  Space = 2,
-  Team = 3,
-}
+export const Scope = {
+  Global: 1,
+  Space: 2,
+  Team: 3,
+} as const;
+
+export type Scope = typeof Scope[keyof typeof Scope];
 export interface Group {
   id: number;
   created_at: number;

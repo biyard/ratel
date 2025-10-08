@@ -2,8 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { usePopup } from '@/lib/contexts/popup-service';
-import React from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslation, Trans } from 'react-i18next';
 
 export const openModal = (
   popup: ReturnType<typeof usePopup>,
@@ -31,14 +30,18 @@ export default function UnsaveAlertModal({
   handleNext: () => void;
   onSave: () => Promise<void> | void;
 }) {
-  const t = useTranslations('SpaceUnsaveModal');
+  const { t } = useTranslation('SpaceUnsaveModal');
   return (
     <div className="max-w-125 flex flex-col mt-6 gap-6">
       <div className="text-center font-medium text-desc-text text-[16px]">
-        {t.rich('description', {
-          b: (chunks) => <span className="font-bold">{chunks}</span>,
-          br: () => <br />,
-        })}
+        <Trans
+          i18nKey="description"
+          ns="SpaceUnsaveModal"
+          components={{
+            b: <span className="font-bold" />,
+            br: <br />,
+          }}
+        />
       </div>
 
       <div className="flex flex-row gap-4 h-12">

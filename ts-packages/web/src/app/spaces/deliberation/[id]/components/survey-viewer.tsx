@@ -1,10 +1,9 @@
-import React from 'react';
 import { Answer } from '@/lib/api/models/response';
 import { usePopup } from '@/lib/contexts/popup-service';
 
 import { logger } from '@/lib/logger';
 
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 import { Poll } from '../types';
 import { SurveyAnswer } from '@/app/spaces/[id]/type';
@@ -48,7 +47,7 @@ export default function SurveyViewer({
   handleSetAnswers: (answers: Answer[]) => void;
   handleSend: () => Promise<void>;
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   const { data: userInfo } = useUserInfo();
   const userPk = userInfo?.pk || '';
 

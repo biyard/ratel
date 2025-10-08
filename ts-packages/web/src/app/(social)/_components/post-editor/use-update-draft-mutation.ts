@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
 import { showErrorToast } from '@/lib/toast';
 import {
-  PostResponse,
+  type PostResponse,
   updatePostWithTitleAndContents,
 } from '@/lib/api/ratel/posts.v3';
 import { optimisticListUpdate, optimisticUpdate } from '@/lib/hook-utils';

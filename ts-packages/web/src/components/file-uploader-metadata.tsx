@@ -1,5 +1,5 @@
 // INFO: return file info
-import { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
+import type { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
 import { FileInfo } from '@/lib/api/models/feeds';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
@@ -7,9 +7,9 @@ import { getFileType, toContentType } from '@/lib/file-utils';
 import { logger } from '@/lib/logger';
 import { showErrorToast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 
-export interface FileUploaderMetadataProps {
+interface FileUploaderMetadataProps {
   onUploadSuccess?: (fileInfo: FileInfo) => void;
   isImage?: boolean; // true: image only / false: PDF only
   isMedia?: boolean;

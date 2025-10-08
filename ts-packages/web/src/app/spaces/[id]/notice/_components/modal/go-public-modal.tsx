@@ -1,7 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export interface GoPublicModalProps {
   onCancel: () => void;
@@ -12,7 +11,7 @@ export default function GoPublicModal({
   onCancel,
   onGoPublic,
 }: GoPublicModalProps) {
-  const t = useTranslations('NoticeSpace');
+  const { t } = useTranslation('NoticeSpace');
   return (
     <div className="w-[500px] max-tablet:w-full flex flex-col">
       {/* Header */}

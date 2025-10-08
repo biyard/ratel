@@ -12,7 +12,7 @@ import {
   ZoomVideoOff,
   ZoomVideoOn,
 } from '@/components/icons';
-import React, { JSX, useEffect, useRef, useState } from 'react';
+import { JSX, useEffect, useRef, useState } from 'react';
 
 export default function Bottom({
   isVideoOn,
