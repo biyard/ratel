@@ -1,7 +1,6 @@
 'use client';
 import * as React from 'react';
 
-import Image from 'next/image';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 
@@ -11,7 +10,7 @@ import { Member } from '@/lib/api/models/discussion';
 import { Add } from './add';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router';
 import { route } from '@/route';
 import { Extra2 } from '@/components/icons';
 import { DiscussionInfo } from '../types';
@@ -51,10 +50,10 @@ function DiscussionSchedules() {
 
   const discussions = useDeliberationSpace().discussions;
 
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleMoveDiscussion = (spaceId: number, discussionId: number) => {
-    router.push(route.discussionById(spaceId, discussionId));
+    navigate(route.discussionById(spaceId, discussionId));
   };
 
   return (
@@ -141,10 +140,9 @@ export function DiscussionRoom({
   return (
     <div className="flex flex-row w-full items-start justify-between max-tablet:flex-col gap-5">
       <div className="relative w-[240px] h-[150px] rounded-lg overflow-hidden max-tablet:w-[350px] max-mobile:w-full max-tablet:aspect-[16/9] max-tablet:h-auto">
-        <Image
+        <img
           src={discussionImg}
           alt="Discussion Thumbnail"
-          fill
           className="object-cover"
         />
         {isLive && (
@@ -420,10 +418,9 @@ function EditableDiscussionInfo({
     <div className="w-full flex flex-col gap-4 relative">
       <div className="flex flex-row w-full items-start justify-between max-tablet:flex-col gap-5">
         <div className="relative w-[240px] h-[150px] rounded-lg overflow-hidden max-tablet:w-[350px] max-mobile:w-full max-tablet:aspect-[16/9] max-tablet:h-auto">
-          <Image
+          <img
             src={discussionImg}
             alt="Discussion Thumbnail"
-            fill
             className="object-cover"
           />
           {isLive && (

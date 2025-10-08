@@ -72,7 +72,7 @@ export default function PieChartResponse({ parsed }: { parsed: ParsedResult }) {
             outerRadius={100}
             labelLine={false}
             label={renderCustomizedLabel}
-            stroke="none"
+            fill="none"
             strokeWidth={0}
             isAnimationActive={true}
           >

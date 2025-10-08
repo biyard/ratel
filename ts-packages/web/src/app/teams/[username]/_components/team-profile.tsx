@@ -1,4 +1,4 @@
-import Image from 'next/image';
+
 import type { Team } from '@/lib/api/models/team';
 import TeamSelector from '@/app/(social)/_components/team-selector';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
@@ -46,7 +46,7 @@ export default function TeamProfile({ team }: TeamProfileProps) {
       <TeamSelector team={team} />
       <div className="relative">
         {team.profile_url && team.profile_url !== '' ? (
-          <Image
+          <img
             src={team?.profile_url}
             alt={team?.nickname ?? 'team profile'}
             width={80}

@@ -42,7 +42,7 @@ import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
 import FileUploader from '@/components/file-uploader';
 import { logger } from '@/lib/logger';
 
-import Image from 'next/image';
+
 import { Button } from '../ui/button';
 import { CommentIcon } from '../icons';
 
@@ -296,7 +296,7 @@ export const LexicalHtmlEditor = forwardRef<
           <div className="px-4 pt-2">
             <div className="flex flex-wrap gap-2">
               <div className="relative size-16">
-                <Image
+                <img
                   width={64}
                   height={64}
                   src={image}

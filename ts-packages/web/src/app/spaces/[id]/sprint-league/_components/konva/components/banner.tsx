@@ -1,5 +1,5 @@
-import { Image as KonvaImage } from 'react-konva';
 import useImage from 'use-image';
+import { Image as KonvaImage } from 'react-konva';
 
 const BannerImage = '/images/sprint_league/banner.png';
 export function Banner({ y }: { y: number }) {

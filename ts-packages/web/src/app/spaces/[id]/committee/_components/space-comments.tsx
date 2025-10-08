@@ -1,10 +1,9 @@
-'use client';
 import Comment from '@/assets/icons/comment.svg?react';
 import { SpaceComment } from '@/lib/api/models/comments';
 import { getTimeAgo } from '@/lib/time-utils';
 import { useSpaceBySpaceId } from '@/app/(social)/_hooks/use-spaces';
 import { checkString } from '@/lib/string-filter-utils';
-import Image from 'next/image';
+
 import { useCommitteeSpaceByIdContext } from '../providers.client';
 
 export default function SpaceComments({ spaceId }: { spaceId: number }) {
@@ -59,12 +58,10 @@ function CommentInfo({ comment }: { comment: SpaceComment }) {
     <div className="flex flex-col gap-[14px]  border-b border-b-neutral-800">
       <div className="flex flex-row gap-2 items-center">
         {comment.author?.[0]?.profile_url ? (
-          <Image
+          <img
             alt={comment.author?.[0]?.nickname ?? ''}
             src={comment.author?.[0]?.profile_url ?? ''}
-            width={40}
-            height={40}
-            className="rounded-full object-cover object-top"
+            className="w-10 h-10 rounded-full object-cover object-top"
           />
         ) : (
           <div className="w-[40px] h-[40px] rounded-full bg-neutral-500" />

@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { ConsensusVoteType } from '@/lib/api/models/consensus';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
-import Image from 'next/image';
+
 
 const openVoteModal = (
   popup: ReturnType<typeof usePopup>,
@@ -51,7 +51,7 @@ export default function VoteModal({
         </p>
         <div className="flex flex-col w-full h-full justify-center items-center">
           <div className="relative flex w-full aspect-square">
-            <Image src={artworkImage} alt={artworkTitle} fill />
+            <img src={artworkImage} alt={artworkTitle} />
           </div>
         </div>
         <Input

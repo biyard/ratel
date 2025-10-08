@@ -3,14 +3,10 @@
 import { Suspense } from 'react';
 import Badge from '@/assets/icons/badge.svg?react';
 import { UserType } from '@/lib/api/models/user';
-import Image from 'next/image';
+
 import { Input } from '@/components/ui/input';
 
 import { getTimeAgo } from '@/lib/time-utils';
-import {
-  ErrorBoundary,
-  type ErrorComponent,
-} from 'next/dist/client/components/error-boundary';
 
 import { Unlock2, Lock2 } from '@/assets/icons/security';
 import { File } from '@/assets/icons/file';
@@ -23,25 +19,10 @@ import Loading from '@/app/loading';
 import { Button } from '../ui/button';
 import { useTranslation } from 'react-i18next';
 
-const ErrorComponent: ErrorComponent = ({ error, reset }) => {
-  console.error('Error occurred:', error);
-  return (
-    <div className="w-full min-h-20 flex items-center justify-center">
-      {reset && (
-        <Button variant="default" onClick={reset}>
-          Refresh
-        </Button>
-      )}
-    </div>
-  );
-};
-
 export function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
     <div className="w-full">
-      <ErrorBoundary errorComponent={ErrorComponent}>
-        <Suspense fallback={<Loading />}>{children}</Suspense>
-      </ErrorBoundary>
+      <Suspense fallback={<Loading />}>{children}</Suspense>
     </div>
   );
 }
@@ -182,7 +163,7 @@ export function AuthorSection({
   return (
     <div className="flex flex-row justify-between items-center w-full text-sm text-c-wg-50">
       <div className="flex items-center gap-2">
-        <Image
+        <img
           src={profileImage || '/default-profile.png'}
           alt={name}
           width={24}
@@ -207,7 +188,7 @@ function Onboard() {
   const { t } = useTranslation('SprintSpace');
   return (
     <div className="flex flex-row items-center w-fit px-2 gap-1 border border-[#05df72] opacity-50 rounded-sm">
-      <Play className="size-2.5 stroke-[#00d492] fill-[#00d492]" />
+      <Play className="size-2.5 stroke-[#00d492]-[#00d492]" />
       <div className="font-semibold text-sm/[25px] text-[#05df72]">
         {t('onboard')}
       </div>

@@ -2,7 +2,7 @@
 
 import { logger } from '@/lib/logger';
 import { route } from '@/route';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useNavigate } from 'react-router';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import {
@@ -64,7 +64,7 @@ function Page() {
   } = useDiscussionContext();
 
   const { post } = useApiCall();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   return (
     <div className="fixed top-0 left-0 flex flex-row w-full h-full">
@@ -78,7 +78,7 @@ function Page() {
                 exitMeetingRequest(),
               );
               changeRemoteContentTileOwner(null);
-              router.replace(route.deliberationSpaceById(discussion.space_id));
+              navigate(route.deliberationSpaceById(discussion.space_id));
             }}
           />
 
@@ -179,7 +179,7 @@ function Page() {
                 exitMeetingRequest(),
               );
               changeRemoteContentTileOwner(null);
-              router.replace(route.deliberationSpaceById(discussion.space_id));
+              navigate(route.deliberationSpaceById(discussion.space_id));
             }}
             onRecordClick={async () => {
               if (!meetingSession) return;

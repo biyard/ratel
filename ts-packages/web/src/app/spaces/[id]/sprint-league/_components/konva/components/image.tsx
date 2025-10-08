@@ -1,5 +1,5 @@
-import { Image as KonvaImage } from 'react-konva';
 import useImage from 'use-image';
+import { Image as KonvaImage } from 'react-konva';
 
 export default function StoppedImage({
   imageUrl,

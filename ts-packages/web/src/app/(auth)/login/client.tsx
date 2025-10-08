@@ -88,7 +88,7 @@ function useLoginMutation() {
   const queryClient = getQueryClient();
   const { ed25519KeyPair, login } = useAuth();
   const [isLoading, setLoading] = useState<LoginType | null>(null);
-  const router = useNavigate();
+  const navigate = useNavigate();
   const { updateUserInfo, redirectUrl, service } = useAuthStore();
   const { post } = useApiCall();
 
@@ -99,11 +99,11 @@ function useLoginMutation() {
       queryKey: userQueryKey,
     });
     if (signupRequired) {
-      router(route.signup());
+      navigate(route.signup());
     } else if (service) {
-      router(route.connect());
+      navigate(route.connect());
     } else {
-      router(redirectUrl || route.home());
+      navigate(redirectUrl || route.home());
     }
   };
 

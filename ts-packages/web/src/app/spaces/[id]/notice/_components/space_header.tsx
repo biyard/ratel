@@ -4,7 +4,7 @@ import { useContext } from 'react';
 // import Bookmark from '@/assets/icons/bookmark.svg?react';
 import Badge from '@/assets/icons/badge.svg?react';
 import { UserType } from '@/lib/api/models/user';
-import Image from 'next/image';
+
 import { Input } from '@/components/ui/input';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowLeft, Play, Save } from 'lucide-react';
@@ -260,11 +260,9 @@ export default function SpaceHeader({
       <div className="flex flex-row justify-between items-center w-full text-sm text-c-wg-50">
         <div className="flex items-center gap-2">
           {proposerImage && proposerImage !== '' ? (
-            <Image
+            <img
               src={proposerImage}
               alt={proposerName}
-              width={24}
-              height={24}
               className={
                 userType === UserType.Team
                   ? 'rounded-lg object-cover object-top w-6 h-6'
@@ -290,7 +288,7 @@ function Onboard() {
   const { t } = useTranslation('NoticeSpace');
   return (
     <div className="flex flex-row items-center w-fit px-2 gap-1 border border-[#05df72] opacity-50 rounded-sm">
-      <Play className="w-2.5 h-2.5 stroke-[#00d492] fill-[#00d492]" />
+      <Play className="w-2.5 h-2.5 stroke-[#00d492]-[#00d492]" />
       <div className="font-semibold text-sm/[25px] text-[#05df72]">
         {t('onboard')}
       </div>

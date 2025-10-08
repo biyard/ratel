@@ -1,10 +1,8 @@
 'use client';
 
-import dynamic from 'next/dynamic';
+import { lazy } from 'react';
 
-const Base = dynamic(() => import('./base'), {
-  ssr: false,
-});
+const Base = lazy(() => import('./base'));
 
 import Background, { Dim } from './background';
 import { Banner, PlayerNameOverlay, VoteBanner } from './banner';
@@ -81,7 +79,7 @@ export const Status = {
   GAME_END: 'GAME_END',
 } as const;
 
-export type Status = typeof Status[keyof typeof Status];
+export type Status = (typeof Status)[keyof typeof Status];
 
 const SPEED = 1.4;
 

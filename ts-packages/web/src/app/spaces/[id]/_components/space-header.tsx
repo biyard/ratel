@@ -3,7 +3,7 @@
 // import Bookmark from '@/assets/icons/bookmark.svg?react';
 import Badge from '@/assets/icons/badge.svg?react';
 import { UserType } from '@/lib/api/models/user';
-import Image from 'next/image';
+
 import { Input } from '@/components/ui/input';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { Play } from 'lucide-react';
@@ -59,11 +59,9 @@ export default function SpaceHeader({
       <div className="flex flex-row w-full justify-between items-center">
         <div className="flex flex-row w-fit gap-2 justify-between items-center">
           {proposerImage && proposerImage !== '' ? (
-            <Image
+            <img
               src={proposerImage}
               alt={proposerName}
-              width={20}
-              height={20}
               className={
                 userType == UserType.Team
                   ? 'rounded-lg object-cover object-top w-6.25 h-6.25'
@@ -88,7 +86,7 @@ export default function SpaceHeader({
 function Onboard() {
   return (
     <div className="flex flex-row items-center w-fit px-2 gap-1 border border-[#05df72] opacity-50 rounded-sm">
-      <Play className="w-[10px] h-[10px] stroke-[#00d492] fill-[#00d492]" />
+      <Play className="w-[10px] h-[10px] stroke-[#00d492]-[#00d492]" />
       <div className="font-semibold text-sm/[25px] text-[#00d492]">ONBOARD</div>
     </div>
   );

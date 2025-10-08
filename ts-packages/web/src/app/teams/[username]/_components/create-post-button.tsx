@@ -3,7 +3,7 @@ import { Edit1 } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 import { createPost } from '@/lib/api/ratel/posts.v3';
-import { useParams } from 'next/navigation';
+import { useParams } from 'react-router';
 
 export default function CreatePostButton() {
   const { t } = useTranslation('Team');

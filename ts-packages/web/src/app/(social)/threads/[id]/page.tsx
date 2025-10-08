@@ -5,48 +5,47 @@ import ThreadPost from './_components/thread';
 import ThreadComment from './_components/comment';
 
 // import { requestFeedByID } from '../../_hooks/feed';
-import { Metadata } from 'next';
 import striptags from 'striptags';
 import { Suspense } from 'react';
 import { logger } from '@/lib/logger';
 import { getOption as getFeedByIdOption } from '@/hooks/feeds/use-feed-by-id';
 import { getPost } from '@/lib/api/ratel/posts.v3';
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-  const { id } = await params;
-
-  let title = 'Ratel Thread';
-  let description = 'Ratel Thread';
-  let image = '';
-  try {
-    const { post } = await getPost(id);
-    title = post.title;
-    description = striptags(post.html_contents);
-    if (post.urls.length > 0) {
-      image = post.urls[0];
-    }
-  } catch (error) {
-    logger.error(`Failed to generate metadata for post ${id}:`, error);
-  }
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      images: [
-        {
-          url: image,
-        },
-      ],
-    },
-  };
-}
+// export async function generateMetadata({
+//   params,
+// }: {
+//   params: Promise<{ id: string }>;
+// }): Promise<Metadata> {
+//   const { id } = await params;
+//
+//   let title = 'Ratel Thread';
+//   let description = 'Ratel Thread';
+//   let image = '';
+//   try {
+//     const { post } = await getPost(id);
+//     title = post.title;
+//     description = striptags(post.html_contents);
+//     if (post.urls.length > 0) {
+//       image = post.urls[0];
+//     }
+//   } catch (error) {
+//     logger.error(`Failed to generate metadata for post ${id}:`, error);
+//   }
+//
+//   return {
+//     title,
+//     description,
+//     openGraph: {
+//       title,
+//       description,
+//       images: [
+//         {
+//           url: image,
+//         },
+//       ],
+//     },
+//   };
+// }
 
 export default async function Page({
   params,

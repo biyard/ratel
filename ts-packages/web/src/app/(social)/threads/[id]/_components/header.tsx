@@ -1,12 +1,10 @@
-'use client';
-
 import { ArrowLeft, Palace } from '@/components/icons';
 // import type { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { UserType } from '@/lib/api/models/user';
 import { getTimeAgo } from '@/lib/time-utils';
 import { Trash2, Edit } from 'lucide-react';
-import Image from 'next/image';
+
 import {
   BadgeIcon,
   Extra,
@@ -16,11 +14,11 @@ import {
   Shares,
   // Lock,
 } from '@/components/icons';
-import Link from 'next/link';
+import { Link } from 'react-router';
 import { route } from '@/route';
 import { usePopup } from '@/lib/contexts/popup-service';
 import SpaceCreateModal from './space-create-modal';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { useContext } from 'react';
 import { TeamContext } from '@/lib/contexts/team-context';
@@ -45,7 +43,7 @@ import { useLikePostMutation } from '@/hooks/feeds/use-like-post-mutation';
 export default function Header({ postId }: { postId: string }) {
   const { t } = useTranslation('Threads');
   const popup = usePopup();
-  const router = useRouter();
+  const navigate = useNavigate();
   const { teams } = useContext(TeamContext);
   const {
     data: { post, is_liked },
@@ -80,7 +78,7 @@ export default function Header({ postId }: { postId: string }) {
   const handleDelete = async () => {
     if (!deleteMutation.isPending) {
       await deleteMutation.mutateAsync(postId);
-      router.push(route.home());
+      navigate(route.home());
     }
   };
 
@@ -110,12 +108,12 @@ export default function Header({ postId }: { postId: string }) {
   return (
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-row justify-between items-center">
-        <button onClick={router.back}>
+        <button onClick={() => navigate(-1)}>
           <ArrowLeft className="[&>path]:stroke-back-icon" />
         </button>
         <div className="flex items-center space-x-2.5">
           {space_id ? (
-            <Link href={target ?? ''}>
+            <Link to={target ?? ''}>
               <Button
                 variant="rounded_secondary"
                 className="max-tablet:hidden bg-submit-button-bg text-submit-button-text"
@@ -173,7 +171,7 @@ export default function Header({ postId }: { postId: string }) {
                 <div className="hidden max-tablet:block">
                   {space_id ? (
                     <DropdownMenuItem>
-                      <Link href={target ?? ''}>
+                      <Link to={target ?? ''}>
                         <button className="flex items-center w-full px-4 py-2 text-sm max-tablet:hover:bg-transparent text-text-primary hover:bg-gray-700 cursor-pointer">
                           {t('join_space')}
                         </button>
@@ -315,11 +313,9 @@ export function ProposerProfile({
   return (
     <div className="flex flex-row w-fit gap-2 justify-between items-center">
       {profileUrl && profileUrl !== '' ? (
-        <Image
+        <img
           src={profileUrl}
           alt={proposerName}
-          width={20}
-          height={20}
           className={
             userType == UserType.Team
               ? 'rounded-lg object-cover object-top w-6.25 h-6.25'

@@ -73,7 +73,7 @@ export default function ClientPage() {
 
   const { clearState } = useAuthStore();
 
-  const router = useNavigate();
+  const navigate = useNavigate();
   // Wrap to enforce required fields and return a Promise
   const handleUserInfo = async ({
     email,
@@ -106,11 +106,11 @@ export default function ClientPage() {
     clearState();
 
     if (source) {
-      router(route.connect());
+      navigate(route.connect());
     } else if (redirectUrl) {
-      router(redirectUrl);
+      navigate(redirectUrl);
     }
-    router(route.home());
+    navigate(route.home());
   };
 
   return (

@@ -42,7 +42,7 @@ export function usePollMutation() {
         const submittedAnswer = answer.answers[index];
 
         if (question.is_required && !submittedAnswer) {
-          throw new Error('All required fields must be filled.');
+          throw new Error('All required fields must beed.');
         }
 
         if (submittedAnswer) {

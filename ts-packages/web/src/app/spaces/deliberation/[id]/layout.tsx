@@ -2,46 +2,46 @@ import {
   getDeliberationSpaceById,
   getFeedByIdV2,
 } from '@/lib/api/ratel_api.server';
-import { Metadata } from 'next';
 import { Suspense } from 'react';
 import striptags from 'striptags';
 import Loading from '@/app/loading';
 import Provider from './providers';
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-  const { id } = await params;
-
-  const { data } = await getDeliberationSpaceById(id);
-  const postPk = data?.post_pk ?? '';
-
-  const postId = decodeURIComponent(postPk).replace(/^.*#/, '');
-
-  const { data: feed } = await getFeedByIdV2(postId);
-
-  const title = feed?.title ?? undefined;
-  const description = data ? striptags(data.summary.html_contents) : undefined;
-  //   let images = undefined;
-  //   if (data) {
-  //     const { data: feed } = await getFeedById(data?.feed_id);
-  //     if (feed && feed.url) {
-  //       images = [{ url: feed.url }];
-  //     }
-  //   }
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      //   images,
-    },
-  };
-}
+// Metadata generation is not supported in React Router
+// export async function generateMetadata({
+//   params,
+// }: {
+//   params: Promise<{ id: string }>;
+// }): Promise<Metadata> {
+//   const { id } = await params;
+//
+//   const { data } = await getDeliberationSpaceById(id);
+//   const postPk = data?.post_pk ?? '';
+//
+//   const postId = decodeURIComponent(postPk).replace(/^.*#/, '');
+//
+//   const { data: feed } = await getFeedByIdV2(postId);
+//
+//   const title = feed?.title ?? undefined;
+//   const description = data ? striptags(data.summary.html_contents) : undefined;
+//   //   let images = undefined;
+//   //   if (data) {
+//   //     const { data: feed } = await getFeedById(data?.feed_id);
+//   //     if (feed && feed.url) {
+//   //       images = [{ url: feed.url }];
+//   //     }
+//   //   }
+//
+//   return {
+//     title,
+//     description,
+//     openGraph: {
+//       title,
+//       description,
+//       //   images,
+//     },
+//   };
+// }
 
 export default async function Layout({
   children,

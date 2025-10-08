@@ -7,10 +7,10 @@ import { useNavigate } from 'react-router';
 
 export default function NewsHeader({ news_id }: { news_id: number }) {
   const { data: news } = useNewsByID(news_id);
-  const router = useNavigate();
+  const navigate = useNavigate();
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <button onClick={() => router(-1)}>
+      <button onClick={() => navigate(-1)}>
         <ArrowLeft className="[&>path]:stroke-text-primary" />
       </button>
 

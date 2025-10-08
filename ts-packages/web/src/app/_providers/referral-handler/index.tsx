@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'react-router';
 
 const KEY = 'referral_code';
 
 function Handler() {
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     const referralCode = searchParams.get('referral');

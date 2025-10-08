@@ -9,7 +9,7 @@ import {
   ZoomVideoOn,
 } from '@/components/icons';
 import { useEffect, useMemo, useState } from 'react';
-import Image from 'next/image';
+
 import { DiscussionParticipant } from '@/lib/api/models/discussion';
 import { DefaultMeetingSession } from 'amazon-chime-sdk-js';
 import { Participant } from '@/lib/api/models/meeting';
@@ -89,9 +89,7 @@ export default function ParticipantsPanel({
             >
               <div className="flex flex-row w-fit items-center gap-1 min-w-0">
                 {participant.profile_url ? (
-                  <Image
-                    width={30}
-                    height={30}
+                  <img
                     src={participant.profile_url}
                     alt={`${participant.username}'s profile`}
                     className="w-7.5 h-7.5 object-cover rounded-full flex-shrink-0"

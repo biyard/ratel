@@ -23,10 +23,10 @@ const sanitizeHTML = (html: string): string => {
 
 export default function HomeNews({ newsData }: HomeNewsProps) {
   const { t } = useTranslation('Home');
-  const router = useNavigate();
+  const navigate = useNavigate();
 
   const handleNewsNavigation = (id: number) => {
-    router(`/news/${id}`);
+    navigate(`/news/${id}`);
   };
 
   // Don't render if no news data

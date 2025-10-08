@@ -9,7 +9,7 @@ import { showErrorToast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { useRef } from 'react';
 
-export interface FileUploaderMetadataProps {
+interface FileUploaderMetadataProps {
   onUploadSuccess?: (fileInfo: FileInfo) => void;
   isImage?: boolean; // true: image only / false: PDF only
   isMedia?: boolean;

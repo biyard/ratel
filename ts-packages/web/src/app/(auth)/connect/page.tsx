@@ -1,48 +1,33 @@
-import { isLoggedIn } from '@/lib/auth';
+'use client';
+
 import { route } from '@/route';
 import Client from './client';
 import { Service } from '../store';
-import { useNavigate } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
+import { useCookie } from '@/lib/contexts/cookie-context';
+import { useEffect } from 'react';
 
-export default async function ConnectPage({
-  searchParams,
-}: {
-  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const isLogin = await isLoggedIn();
-  const nav = useNavigate();
-  const paramsObj = searchParams ? await searchParams : {};
-  if (!isLogin) {
-    let url;
-    const currentParams = new URLSearchParams();
+export default function ConnectPage() {
+  const { isLoggedIn } = useCookie();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-    for (const [key, value] of Object.entries(paramsObj)) {
-      if (typeof value === 'string') {
-        currentParams.set(key, value);
+  useEffect(() => {
+    if (!isLoggedIn) {
+      let url;
+      const currentParams = new URLSearchParams(searchParams);
+      url = route.login();
+      const paramsString = currentParams.toString();
+      if (paramsString) {
+        url += `?${paramsString}`;
       }
+      navigate(url, { replace: true });
     }
+  }, [isLoggedIn, navigate, searchParams]);
 
-    url = route.login();
-    const paramsString = currentParams.toString();
-    if (paramsString) {
-      url += `?${paramsString}`;
-    }
-
-    nav(url, { replace: true });
-  }
-
-  const redirectUrl =
-    typeof paramsObj.redirectUrl === 'string'
-      ? paramsObj.redirectUrl
-      : undefined;
-
-  const serviceParam =
-    typeof paramsObj.service === 'string'
-      ? (paramsObj.service as Service)
-      : undefined;
-
-  const token =
-    typeof paramsObj.token === 'string' ? paramsObj.token : undefined;
+  const redirectUrl = searchParams.get('redirectUrl') ?? undefined;
+  const serviceParam = searchParams.get('service') as Service | undefined;
+  const token = searchParams.get('token') ?? undefined;
 
   return (
     <Client redirectUrl={redirectUrl} service={serviceParam} token={token} />

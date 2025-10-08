@@ -1,41 +1,41 @@
 import { getSpaceById } from '@/lib/api/ratel_api.server';
-import { Metadata } from 'next';
 import { Suspense } from 'react';
 import Provider from './providers';
 import striptags from 'striptags';
 import Loading from '@/app/loading';
 import { getFeedById } from '@/hooks/feeds/use-feed-by-id';
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}): Promise<Metadata> {
-  const { id } = await params;
-  const spaceId = Number(id);
-
-  const { data } = await getSpaceById(spaceId);
-
-  const title = data?.title ?? undefined;
-  const description = data ? striptags(data.html_contents) : undefined;
-  let images = undefined;
-  if (data) {
-    const { data: feed } = await getFeedById(data?.feed_id);
-    if (feed && feed.url) {
-      images = [{ url: feed.url }];
-    }
-  }
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      images,
-    },
-  };
-}
+// Metadata generation is not supported in React Router
+// export async function generateMetadata({
+//   params,
+// }: {
+//   params: Promise<{ id: string }>;
+// }): Promise<Metadata> {
+//   const { id } = await params;
+//   const spaceId = Number(id);
+//
+//   const { data } = await getSpaceById(spaceId);
+//
+//   const title = data?.title ?? undefined;
+//   const description = data ? striptags(data.html_contents) : undefined;
+//   let images = undefined;
+//   if (data) {
+//     const { data: feed } = await getFeedById(data?.feed_id);
+//     if (feed && feed.url) {
+//       images = [{ url: feed.url }];
+//     }
+//   }
+//
+//   return {
+//     title,
+//     description,
+//     openGraph: {
+//       title,
+//       description,
+//       images,
+//     },
+//   };
+// }
 
 export default async function Layout({
   children,

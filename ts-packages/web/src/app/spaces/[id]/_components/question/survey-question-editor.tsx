@@ -3,13 +3,13 @@ import { useState } from 'react';
 import AnswerTypeSelect, { AnswerType } from './answer-type-select';
 import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
-import { DialPad, Image2 } from '@/components/icons';
 import FileUploader from '@/components/file-uploader';
-import Image from 'next/image';
+
 import LinearScaleSelection from './_component/linear-scale-selection';
 import ObjectiveOption from './_component/objective-option';
 import LabelSwitchButton from './_component/label-switch-button';
 import { useTranslation } from 'react-i18next';
+import { DialPad, Image2 } from '@/components/icons';
 
 export default function SurveyQuestionEditor({
   index,
@@ -186,10 +186,7 @@ export default function SurveyQuestionEditor({
           )}
         </div>
         {imageUrl ? (
-          <Image
-            width={300}
-            height={300}
-            sizes="(max-width: 500px) 100vw, 300px"
+          <img
             className="object-contain max-w-75 max-mobile:max-w-full max-mobile:w-full h-auto"
             src={imageUrl}
             alt={title || 'Question Title'}
