@@ -66,6 +66,7 @@ services:
       - .:/app
       - ./.build/target:/app/target
       - ./.build/main-api/target:/app/packages/main-api/target
+      - ./.build/main-api/web-dist:/app/ts-packages/web/dist
       - ./.build/main-api/dist:/app/packages/main-api/dist
       - ./.build/main-api/node_modules:/app/node_modules
       - ./.build/main-api/web_node_modules:/app/ts-packages/web/node_modules
