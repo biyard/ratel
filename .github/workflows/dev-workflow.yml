@@ -67,8 +67,10 @@ jobs:
         id: main-api-build-cache
         uses: actions/cache@v4
         with:
-          key: main-api-build-${{ hashFiles('Cargo.lock') }}
+          key: main-api-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
+            main-api-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            main-api-build-${{ runner.os }}-
             main-api-build-
           path: |
             packages/main-api/target
@@ -175,8 +177,10 @@ jobs:
         id: fetcher-build-cache
         uses: actions/cache@v4
         with:
-          key: image-worker-build-${{ hashFiles('Cargo.lock') }}
+          key: image-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
+            image-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            image-worker-build-${{ runner.os }}-
             image-worker-build-
           path: |
             packages/image-worker/target
@@ -231,8 +235,10 @@ jobs:
         id: fetcher-build-cache
         uses: actions/cache@v4
         with:
-          key: fetcher-build-${{ hashFiles('Cargo.lock') }}
+          key: fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
+            fetcher-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            fetcher-build-${{ runner.os }}-
             fetcher-build-
           path: |
             packages/fetcher/target
