@@ -296,7 +296,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ratel-web-${{ github.sha }}
-          path: ${{ github.workspace }}/ts-packages/web/dist.tar.gz
+          path: ${{ github.workspace }}/dist.tar.gz
           if-no-files-found: error
           retention-days: 7
 
