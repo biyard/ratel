@@ -259,10 +259,10 @@ export class RegionalServiceStack extends Stack {
 
     // API Target Group
     listener.addTargetGroups("TgRuleApiHost", {
-      priority: 10,
-      conditions: [
-        elbv2.ListenerCondition.pathPatterns(["/v1/*", "/v2/*", "/version"]),
-      ],
+      // priority: 10,
+      // conditions: [
+      //   elbv2.ListenerCondition.pathPatterns(["/v1/*", "/v2/*", "/version"]),
+      // ],
       targetGroups: [apiTargetGroup],
     });
     const d = apiDomain.replace(`.${baseDomain}`, "");
