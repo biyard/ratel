@@ -114,6 +114,11 @@ pub enum Error {
     #[error("Team not found")]
     #[rest_error(status = 404, code = 4000)]
     TeamNotFound,
+
+    // web 1,000,000 ~
+    #[error("Web error: {0}")]
+    #[rest_error(code = 1_000_000)]
+    WebError(#[from] askama::Error),
 }
 
 impl From<String> for Error {
