@@ -1,15 +1,15 @@
 'use client';
 
 import { Textarea } from '@/components/ui/textarea';
-import React, { useState } from 'react';
-import Comment from '@/assets/icons/comment.svg';
+import { useState } from 'react';
+import Comment from '@/assets/icons/comment.svg?react';
 import { useApiCall } from '@/lib/api/use-send';
 import { useSpaceBySpaceId } from '@/app/(social)/_hooks/use-spaces';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
-import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg';
-import DoubleArrowUp from '@/assets/icons/double-arrow-up.svg';
-import Clear from '@/assets/icons/clear.svg';
+import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg?react';
+import DoubleArrowUp from '@/assets/icons/double-arrow-up.svg?react';
+import Clear from '@/assets/icons/clear.svg?react';
 import { useCommitteeSpaceByIdContext } from '../committee/providers.client';
 
 export interface CreateCommentBoxProps {

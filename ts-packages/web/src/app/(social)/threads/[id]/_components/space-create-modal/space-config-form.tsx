@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { SpaceType } from '@/lib/api/models/spaces';
 import { BoosterType } from '@/lib/api/models/notice';
 import { LoadablePrimaryButton } from '@/components/button/primary-button';
 import { ArrowLeft, Internet, Fire } from '@/components/icons';
 import TimeDropdown from '@/components/time-dropdown';
 import CalendarDropdown from '@/components/calendar-dropdown';
-import { useTranslations } from 'next-intl';
+import { useTranslation, Trans } from 'react-i18next';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -42,7 +42,7 @@ export default function SpaceConfigForm({
   onBack,
   onConfirm,
 }: SpaceConfigFormProps) {
-  const t = useTranslations('SpaceForms');
+  const { t } = useTranslation('SpaceForms');
 
   // Initial date setup - 1 hour from now and 2 hours from now
   const now = new Date();
@@ -124,12 +124,14 @@ export default function SpaceConfigForm({
       <div className="flex flex-col w-full gap-2 max-mobile:h-[350px] max-mobile:overflow-y-scroll">
         <div className="text-base text-create-space-desc pt-5">
           <p>
-            {t.rich('SetBoostModal.description', {
-              spaceType: getSpaceTypeTitle(spaceType),
-              b: (chunks) => (
-                <span className="font-semibold text-desc-text">{chunks}</span>
-              ),
-            })}
+            <Trans
+              i18nKey="SetBoostModal.description"
+              ns="SpaceForms"
+              values={{ spaceType: getSpaceTypeTitle(spaceType) }}
+              components={{
+                b: <span className="font-semibold text-desc-text" />,
+              }}
+            />
           </p>
         </div>
 
@@ -218,13 +220,13 @@ export default function SpaceConfigForm({
                 {t('active_booster')}
               </label>
               <p className="text-base text-desc-text mt-0.5">
-                {t.rich('active_booster_desc', {
-                  btn: (chunks) => (
-                    <button className="text-desc-text underline">
-                      {chunks}
-                    </button>
-                  ),
-                })}
+                <Trans
+                  i18nKey="active_booster_desc"
+                  ns="SpaceForms"
+                  components={{
+                    btn: <button className="text-desc-text underline" />,
+                  }}
+                />
               </p>
             </div>
           </div>

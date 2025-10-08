@@ -2,7 +2,7 @@
 
 import { createEd25519KeyPair } from '@/lib/wallet/ed25519';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 type KeyPair = {
   ed25519: Ed25519KeyIdentity;

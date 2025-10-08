@@ -3,7 +3,7 @@
 'use client';
 
 import * as XLSX from 'xlsx';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useSpaceByIdContext } from '../providers.client';
 import { ratelApi, useSpaceById } from '@/lib/api/ratel_api';
 import {
@@ -21,7 +21,7 @@ import {
   SpaceStatus,
   spaceUpdateRequest,
 } from '@/lib/api/models/spaces';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router';
 import {
   Answer,
   SurveyResponse,
@@ -38,7 +38,7 @@ import { SpaceDraftCreateRequest } from '@/lib/api/models/space_draft';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
 import { MappedResponse, Poll, SurveyAnswer } from '../type';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import { PublishingScope } from '@/lib/api/models/notice';
 
@@ -95,7 +95,7 @@ export default function ClientProviders({
 }: {
   children: React.ReactNode;
 }) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const queryClient = useQueryClient();
   const { spaceId } = useSpaceByIdContext();
   const { data: space, refetch } = useSpaceById(spaceId);
@@ -208,7 +208,7 @@ export default function ClientProviders({
     space?.responses ?? [],
   );
 
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handlePublishWithScope = async (scope: PublishingScope) => {
     if (!space) return;
@@ -304,7 +304,7 @@ export default function ClientProviders({
       setIsEdit(false);
       refetch();
     } else {
-      router.back();
+      navigate(-1);
     }
   };
 
@@ -368,7 +368,7 @@ export default function ClientProviders({
       queryClient.invalidateQueries({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
       });
-      router.refresh();
+      window.location.reload();
       showSuccessToast(t('success_save_response'));
     } catch (err) {
       showErrorToast(t('failed_save_response'));
@@ -385,7 +385,7 @@ export default function ClientProviders({
       queryClient.invalidateQueries({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
       });
-      router.refresh();
+      window.location.reload();
       refetch();
 
       showSuccessToast(t('success_post_space'));
@@ -517,7 +517,7 @@ export default function ClientProviders({
     queryClient.invalidateQueries({
       queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
     });
-    router.refresh();
+    window.location.reload();
   };
 
   const handleUpdateThread = (thread: Thread) => {
@@ -562,7 +562,7 @@ export default function ClientProviders({
         space_name: space.title,
       });
       showSuccessToast(t('success_delete_space'));
-      router.push('/');
+      navigate('/');
     } catch (error) {
       logger.debug('Failed to delete space:', error);
       logger.error('Error deleting space:', error);
@@ -639,7 +639,7 @@ export default function ClientProviders({
       queryClient.invalidateQueries({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
       });
-      router.refresh();
+      window.location.reload();
       refetch();
 
       showSuccessToast(t('success_update_space'));

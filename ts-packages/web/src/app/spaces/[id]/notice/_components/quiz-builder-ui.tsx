@@ -1,6 +1,7 @@
 'use client';
+import * as React from 'react';
 
-import React, { useCallback, useState, useEffect, useRef } from 'react';
+import { useCallback, useState, useEffect, useRef } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -30,11 +31,11 @@ import {
   DialPad,
   DialPad2,
 } from '@/components/icons';
-import Heart from '@/assets/icons/emoji/heart.svg';
-import BrokenHeart from '@/assets/icons/emoji/broken-heart.svg';
+import Heart from '@/assets/icons/emoji/heart.svg?react';
+import BrokenHeart from '@/assets/icons/emoji/broken-heart.svg?react';
 import { QuizQuestion, NoticeQuizRequest } from '@/lib/api/models/notice';
 import { SpaceStatus } from '@/lib/api/models/spaces';
-import Image from 'next/image';
+
 import FileUploader from '@/components/file-uploader';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { showErrorToast } from '@/lib/toast';
@@ -47,7 +48,7 @@ import QuizSubmitForm from './modal/quiz-submit-form';
 import { useNoticeNotification } from './notifications';
 import { calculateRewardWithPenalties } from '../_utils/reward-calculator';
 import { useNoticeSpace } from '../provider.client';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export interface Option {
   id: string;
@@ -124,7 +125,7 @@ export default function QuizBuilderUI({
   isOwner,
   spaceStatus,
 }: QuizBuilderProps) {
-  const t = useTranslations('NoticeSpace');
+  const { t } = useTranslation('NoticeSpace');
   const popup = usePopup();
 
   // Check if quiz editing should be disabled (when space is InProgress)
@@ -780,7 +781,7 @@ function QuestionCard({
   onToggleCorrect: (optionId: string) => void;
   onToggleSelected: (optionId: string) => void;
 }) {
-  const t = useTranslations('NoticeSpace');
+  const { t } = useTranslation('NoticeSpace');
   const {
     attributes,
     listeners,
@@ -876,11 +877,9 @@ function QuestionCard({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {question.imageUrls.map((imageUrl, index) => (
               <div key={`${question.id}-image-${index}`} className="relative">
-                <Image
+                <img
                   src={imageUrl}
                   alt={`${question.title} - Image ${index + 1}`}
-                  width={500}
-                  height={300}
                   className="w-full h-auto rounded-md object-contain"
                 />
                 {isEditMode && !isQuizEditingDisabled && (
@@ -1003,7 +1002,7 @@ function OptionItem({
   onToggleSelected: () => void;
   onRemove: () => void;
 }) {
-  const t = useTranslations('NoticeSpace');
+  const { t } = useTranslation('NoticeSpace');
   const {
     attributes,
     listeners,

@@ -1,7 +1,6 @@
 'use client';
 
 import { FileInfo } from '@/lib/api/models/feeds';
-import React from 'react';
 
 import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 import { checkString } from '@/lib/string-filter-utils';
@@ -21,7 +20,7 @@ import {
   Word,
   Zip,
 } from '@/components/icons';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 export interface SpaceFilesProps {
@@ -37,7 +36,7 @@ export default function SpaceFiles({
   onremove = () => {},
   onadd = () => {},
 }: SpaceFilesProps) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const handlePdfDownload = async (file: FileInfo) => {
     await downloadPdfFromUrl({
       url: file.url ?? '',

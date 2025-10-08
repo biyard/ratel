@@ -1,5 +1,5 @@
 import { call } from './call';
-import { ListPostResponse } from './posts.v3';
+import type { ListPostResponse } from './posts.v3';
 
 export async function getUserInfo(): Promise<UserResponse> {
   return call('GET', '/v3/me');

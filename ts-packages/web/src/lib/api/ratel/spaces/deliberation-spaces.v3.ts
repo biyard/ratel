@@ -29,16 +29,20 @@ export interface DeliberationSpace {
   recommendation: DeliberationContentResponse;
 }
 
-export enum SpacePublishState {
-  Draft = 'Draft',
-  Published = 'Published',
-}
+export const SpacePublishState = {
+  Draft: 'Draft',
+  Published: 'Published',
+} as const;
 
-export enum SpaceStatus {
-  Waiting = 'Waiting',
-  InProgress = 'InProgress',
-  Finish = 'Finish',
-}
+export type SpacePublishState = typeof SpacePublishState[keyof typeof SpacePublishState];
+
+export const SpaceStatus = {
+  Waiting: 'Waiting',
+  InProgress: 'InProgress',
+  Finish: 'Finish',
+} as const;
+
+export type SpaceStatus = typeof SpaceStatus[keyof typeof SpaceStatus];
 
 export interface ElearningResponse {
   files: File[];
@@ -94,17 +98,19 @@ export interface File {
   url?: string | null;
 }
 
-export enum FileExtension {
-  JPG = 'JPG',
-  PNG = 'PNG',
-  PDF = 'PDF',
-  ZIP = 'ZIP',
-  WORD = 'WORD',
-  PPTX = 'PPTX',
-  EXCEL = 'EXCEL',
-  MP4 = 'MP4',
-  MOV = 'MOV',
-}
+export const FileExtension = {
+  JPG: 'JPG',
+  PNG: 'PNG',
+  PDF: 'PDF',
+  ZIP: 'ZIP',
+  WORD: 'WORD',
+  PPTX: 'PPTX',
+  EXCEL: 'EXCEL',
+  MP4: 'MP4',
+  MOV: 'MOV',
+} as const;
+
+export type FileExtension = typeof FileExtension[keyof typeof FileExtension];
 
 export const FileExtensionMap: Record<FileExtension, string> = {
   [FileExtension.JPG]: 'JPG',

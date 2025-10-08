@@ -1,10 +1,10 @@
 'use client';
-import Image from 'next/image';
-import React, { useContext, useMemo } from 'react';
+
+import { useContext, useMemo } from 'react';
 // import { Users, MessageSquare } from 'lucide-react';
-// import { Team } from '@/lib/api/models/team';
+// import type { Team } from '@/lib/api/models/team';
 import TeamProfile from './team-profile';
-import Link from 'next/link';
+import { Link } from 'react-router';
 import { route } from '@/route';
 import {
   Home,
@@ -14,7 +14,7 @@ import {
   Folder,
 } from '@/components/icons';
 import { TeamContext } from '@/lib/contexts/team-context';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { useUserByUsername } from '@/app/(social)/_hooks/use-user';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
@@ -35,7 +35,7 @@ export interface TeamSidemenuProps {
 
 export default function TeamSidemenu({ username }: TeamSidemenuProps) {
   const { post } = useApiCall();
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   const { teams } = useContext(TeamContext);
   const team = useMemo(() => {
     return teams.find((t) => t.username === username);
@@ -72,7 +72,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
       <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-card-bg border border-card-border min-w-[250px] h-fit">
         <div className="relative">
           {user?.profile_url && user?.profile_url !== '' ? (
-            <Image
+            <img
               src={user?.profile_url}
               alt={user?.nickname ?? 'team profile'}
               width={80}
@@ -131,7 +131,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
 
       <nav className="py-5 px-3 w-full rounded-[10px] bg-card-bg border border-card-border">
         <Link
-          href={route.teamByUsername(team.username)}
+          to={route.teamByUsername(team.username)}
           className="sidemenu-link text-text-primary [&>path]:stroke-[#737373]"
         >
           <Home className="w-6 h-6" />
@@ -139,7 +139,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
         </Link>
         {writePostPermission ? (
           <Link
-            href={route.teamDrafts(team.username)}
+            to={route.teamDrafts(team.username)}
             className="sidemenu-link text-text-primary"
           >
             <EditContent className="w-6 h-6 [&>path]:stroke-[#737373]" />
@@ -149,14 +149,14 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           <></>
         )}
         <Link
-          href={route.teamGroups(team.username)}
+          to={route.teamGroups(team.username)}
           className="sidemenu-link text-text-primary "
         >
           <Folder className="w-6 h-6 [&>path]:stroke-[#737373]" />
           <span>{t('manage_group')}</span>
         </Link>
         <Link
-          href={route.teamMembers(team.username)}
+          to={route.teamMembers(team.username)}
           className="sidemenu-link text-text-primary"
         >
           <UserGroup className="w-6 h-6 [&>path]:stroke-[#737373]" />
@@ -164,7 +164,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
         </Link>
         {updateGroupPermission ? (
           <Link
-            href={route.teamSettings(team.username)}
+            to={route.teamSettings(team.username)}
             className="sidemenu-link text-text-primary"
           >
             <Settings className="w-6 h-6" />

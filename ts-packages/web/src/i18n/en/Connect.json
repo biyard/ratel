@@ -1,0 +1,11 @@
+{
+  "title": "Connect to {service}",
+  "description": "Do you want to connect your {service} account to Ratel?",
+  "ConfirmButton": {
+    "label": "Connect",
+    "loading": "Connecting..."
+  },
+  "CancelButton": {
+    "label": "Cancel"
+  }
+}

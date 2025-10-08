@@ -2,7 +2,7 @@
 
 import SelectBox from '@/components/selectbox/selectbox';
 import { Group, TotalUser } from '@/lib/api/models/user';
-import React, { useState } from 'react';
+import { useState } from 'react';
 // import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Clear } from '@/components/icons';
 import SearchInput from '@/components/input/search-input';
@@ -13,7 +13,7 @@ import clsx from 'clsx';
 import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export default function InviteMemberPopup({
   team_id,
@@ -24,7 +24,7 @@ export default function InviteMemberPopup({
   groups: Group[];
   onclick: (group_id: number, users: number[]) => void;
 }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   const { post, get } = useApiCall();
   const [groupIndex, setGroupIndex] = useState(0);
   const [selectedGroup, setSelectedGroup] = useState(groups[0]);
@@ -192,7 +192,7 @@ function InviteMemberButton({
   isError: boolean;
   onclick: () => void;
 }) {
-  const t = useTranslations('Team');
+  const { t } = useTranslation('Team');
   const containerClass = clsx(
     'flex flex-row w-full justify-center items-center my-[15px] py-[15px] rounded-lg font-bold text-[#000203] text-base',
     isError ? 'cursor-not-allowed bg-neutral-500' : 'cursor-pointer bg-primary',

@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
-import { ListPostResponse, listPosts } from '@/lib/api/ratel/posts.v3';
+import { type ListPostResponse, listPosts } from '@/lib/api/ratel/posts.v3';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { getServerQueryClient } from '@/lib/query-utils.server';
 

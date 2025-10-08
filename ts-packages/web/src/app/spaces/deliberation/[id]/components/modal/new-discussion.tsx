@@ -3,12 +3,12 @@ import { Internet } from '@/components/icons';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { usePopup } from '@/lib/contexts/popup-service';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { DiscussionInfo } from '../../types';
 import TimeDropdown from '@/components/time-dropdown';
 import CalendarDropdown from '@/components/calendar-dropdown';
 import { showErrorToast } from '@/lib/toast';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import InviteMemberPopup from './invite-member';
 
 export default function NewDiscussion({
@@ -18,7 +18,7 @@ export default function NewDiscussion({
   discussion: DiscussionInfo;
   onadd: (discussion: DiscussionInfo) => void;
 }) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const popup = usePopup();
   const [title, setTitle] = useState(discussion.name);
   const [description, setDescription] = useState(discussion.description);

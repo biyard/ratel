@@ -44,10 +44,12 @@ export interface ImgFile {
   url: string | null;
 }
 
-export enum ImgFileExtension {
-  JPG = 1,
-  PNG = 2,
-}
+export const ImgFileExtension = {
+  JPG: 1,
+  PNG: 2,
+} as const;
+
+export type ImgFileExtension = typeof ImgFileExtension[keyof typeof ImgFileExtension];
 
 // Quiz Attempt Types (matches backend NoticeQuizAttempt)
 export interface QuizAttempt {
@@ -84,17 +86,21 @@ export function spaceSubmitQuizAnswersRequest(
 }
 
 // Notice specific enums
-export enum BoosterType {
-  NoBoost = 1,
-  X2 = 2,
-  X10 = 3,
-  X100 = 4,
-}
+export const BoosterType = {
+  NoBoost: 1,
+  X2: 2,
+  X10: 3,
+  X100: 4,
+} as const;
 
-export enum PublishingScope {
-  Private = 1,
-  Public = 2,
-}
+export type BoosterType = typeof BoosterType[keyof typeof BoosterType];
+
+export const PublishingScope = {
+  Private: 1,
+  Public: 2,
+} as const;
+
+export type PublishingScope = typeof PublishingScope[keyof typeof PublishingScope];
 
 // We need to import SpaceType from spaces to avoid duplication
 import { SpaceType } from './spaces';

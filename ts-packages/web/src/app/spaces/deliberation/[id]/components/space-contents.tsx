@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import TextEditor from '@/components/text-editor/text-editor';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
@@ -21,7 +20,7 @@ export default function SpaceContents({
         className="rich-content"
         dangerouslySetInnerHTML={{ __html: htmlContents }}
       />
-      <style jsx global>{`
+      <style>{`
         .rich-content {
           color: #525252;
           font-size: 15px;

@@ -17,13 +17,12 @@ import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
 import { checkLowerAlphaNumeric } from '@/lib/valid-utils';
-import React, { useState } from 'react';
-import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useUserInfo } from '@/hooks/use-user-info';
 
 export default function TeamCreationPopup() {
-  const t = useTranslations('Home');
+  const { t } = useTranslation('Home');
   const popup = usePopup();
   const { post } = useApiCall();
   const userInfo = useUserInfo();
@@ -91,11 +90,9 @@ export default function TeamCreationPopup() {
     <div className="w-100 max-tablet:w-full flex flex-col gap-10 items-center">
       <FileUploader onUploadSuccess={setProfileUrl}>
         {profileUrl ? (
-          <Image
+          <img
             src={profileUrl}
             alt="Team Logo"
-            width={80}
-            height={80}
             className="w-40 h-40 rounded-full object-cover cursor-pointer"
           />
         ) : (

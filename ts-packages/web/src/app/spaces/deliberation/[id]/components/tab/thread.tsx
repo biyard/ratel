@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { useDeliberationSpaceByIdContext } from '../../providers.client';
 import SpaceContents from '../space-contents';
 import SpaceFiles from '../space-files';

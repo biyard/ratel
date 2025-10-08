@@ -1,8 +1,10 @@
 import { create } from 'zustand';
 
-export enum Service {
-  Telegram = 'Telegram',
-}
+export const Service = {
+  Telegram: 'Telegram',
+} as const;
+
+export type Service = typeof Service[keyof typeof Service];
 
 interface State {
   redirectUrl?: string;

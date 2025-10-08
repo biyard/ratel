@@ -1,7 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
 import { showErrorToast } from '@/lib/toast';
-import { PostResponse, publishPost } from '@/lib/api/ratel/posts.v3';
+import { type PostResponse, publishPost } from '@/lib/api/ratel/posts.v3';
 import { optimisticListUpdate, removeQueries } from '@/lib/hook-utils';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { getQueryClient } from '@/providers/getQueryClient';

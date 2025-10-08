@@ -1,8 +1,9 @@
 'use client';
+import * as React from 'react';
 
 import { getTimeWithFormat } from '@/lib/time-utils';
-import React, { useContext } from 'react';
-import Clock from '@/assets/icons/clock.svg';
+import { useContext } from 'react';
+import Clock from '@/assets/icons/clock.svg?react';
 import { Discuss, PieChart1, File, Vote } from '@/components/icons';
 import { CheckCircle, Settings } from 'lucide-react';
 import { DeliberationTab } from '../types';
@@ -15,13 +16,13 @@ import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { usePopup } from '@/lib/contexts/popup-service';
 import SetSchedulePopup from '../../_components/modal/set-schedule';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
 import { GroupPermission } from '@/lib/api/models/group';
 
 export default function SpaceSideMenu() {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const popup = usePopup();
   const {
     isEdit,
@@ -200,7 +201,7 @@ export default function SpaceSideMenu() {
 }
 
 export function SpaceTabsMobile() {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const { selectedType, handleUpdateSelectedType } =
     useDeliberationSpaceContext();
   const space = useDeliberationSpace();

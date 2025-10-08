@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { DefaultMeetingSession } from 'amazon-chime-sdk-js';
 
 type FitMode = 'contain' | 'cover';

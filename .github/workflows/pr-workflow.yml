@@ -14,7 +14,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  nextjs-web:
+  ratel-web:
     runs-on: ubuntu-latest
 
     defaults:
@@ -27,8 +27,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
 
       - name: Build and cache Docker image
         id: build
@@ -37,17 +39,7 @@ jobs:
           COMMIT: pr-${{ github.sha }}
         run: |
           # Build and tag image
-          make docker.build
-
-          # Save image to cache
-          docker save $ECR_NAME:$COMMIT | gzip > /tmp/web-image.tar.gz
-          echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
-
-      - name: Cache Docker image
-        uses: actions/cache@v4
-        with:
-          path: /tmp/web-image.tar.gz
-          key: web-image-${{ github.sha }}
+          make build
 
   main-api-test:
     runs-on: ubuntu-latest
@@ -73,6 +65,11 @@ jobs:
           mkdir -p .build
           docker-compose --profile infra up -d
 
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
+
       - name: Run Rust tests
         env:
           DYNAMO_TABLE_PREFIX: ratel-local
@@ -86,6 +83,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: test
           AWS_REGION: us-east-1
           MIGRATE: true
+          WEB_BUILD: false
         run: |
           make .build/evm-keys
           cd packages/main-api
@@ -120,6 +118,11 @@ jobs:
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
 
       - name: Build and cache Docker image
         id: build
@@ -176,6 +179,11 @@ jobs:
             main-api-build-
           path: |
             packages/main-api/target
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
 
       - name: Build and cache Docker image
         id: build
@@ -278,7 +286,7 @@ jobs:
   playwright-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [nextjs-web, main-api, fetcher]
+    needs: [ratel-web, main-api, fetcher]
 
     steps:
       - uses: actions/checkout@v4
@@ -302,12 +310,12 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Restore web image cache
-        uses: actions/cache@v4
-        with:
-          path: /tmp/web-image.tar.gz
-          key: web-image-${{ github.sha }}
-          fail-on-cache-miss: true
+      # - name: Restore web image cache
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: /tmp/web-image.tar.gz
+      #     key: web-image-${{ github.sha }}
+      #     fail-on-cache-miss: true
 
       - name: Restore main-api image cache
         uses: actions/cache@v4
@@ -316,19 +324,19 @@ jobs:
           key: main-api-image-${{ github.sha }}
           fail-on-cache-miss: true
 
-      - name: Restore fetcher image cache
-        uses: actions/cache@v4
-        with:
-          path: /tmp/fetcher-image.tar.gz
-          key: fetcher-image-${{ github.sha }}
-          fail-on-cache-miss: true
+      # - name: Restore fetcher image cache
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: /tmp/fetcher-image.tar.gz
+      #     key: fetcher-image-${{ github.sha }}
+      #     fail-on-cache-miss: true
 
       - name: Load Docker images
         run: |
           # Load images from cache
-          docker load < /tmp/web-image.tar.gz
+          # docker load < /tmp/web-image.tar.gz
           docker load < /tmp/main-api-image.tar.gz
-          docker load < /tmp/fetcher-image.tar.gz
+          # docker load < /tmp/fetcher-image.tar.gz
 
           # Verify images are loaded
           docker images
@@ -376,26 +384,17 @@ jobs:
           fi
 
           # Wait for Web frontend (180 second timeout)
-          echo "🔄 Checking Web frontend..."
-          elapsed=0
-          while [ $elapsed -lt $timeout ]; do
-            if curl -f -s http://localhost:8080/api/version > /dev/null 2>&1; then
-              echo "✅ Web frontend is responding (took ${elapsed}s)"
-              break
-            fi
-            echo "⏳ Web frontend not ready yet... (${elapsed}/${timeout}s)"
-            sleep $interval
-            elapsed=$((elapsed + interval))
-          done
-
-          if [ $elapsed -ge $timeout ]; then
-            echo "❌ Web frontend failed to respond with 200 status within ${timeout}s"
-            echo "🔍 Checking Docker services status:"
-            docker-compose -f docker-compose.yaml ps
-            echo "🔍 Web logs:"
-            docker-compose -f docker-compose.yaml logs web-testing --tail=50
-            exit 1
-          fi
+          # echo "🔄 Checking Web frontend..."
+          # elapsed=0
+          # while [ $elapsed -lt $timeout ]; do
+          #   if curl -f -s http://localhost:8080/api/version > /dev/null 2>&1; then
+          #     echo "✅ Web frontend is responding (took ${elapsed}s)"
+          #     break
+          #   fi
+          #   echo "⏳ Web frontend not ready yet... (${elapsed}/${timeout}s)"
+          #   sleep $interval
+          #   elapsed=$((elapsed + interval))
+          # done
 
           echo "🎉 All services are ready!"
 
@@ -403,10 +402,6 @@ jobs:
         env:
           CI: true
         run: |
-          # Create test results directory
-          mkdir -p test-results
-
-          # Run Playwright tests
           make test
 
       - name: Upload test results

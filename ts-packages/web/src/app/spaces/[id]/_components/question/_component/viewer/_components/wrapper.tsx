@@ -1,6 +1,5 @@
 import { Answer } from '@/lib/api/models/response';
-import { useTranslations } from 'next-intl';
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function Wrapper({
   isRequired,
@@ -13,7 +12,7 @@ export default function Wrapper({
   isMulti?: boolean;
   title: string;
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
 
   let choiceLabel = '';
   if (

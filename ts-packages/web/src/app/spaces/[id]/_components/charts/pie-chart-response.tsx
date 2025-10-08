@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { ParsedResult } from './models/parsed';
 
@@ -73,7 +72,7 @@ export default function PieChartResponse({ parsed }: { parsed: ParsedResult }) {
             outerRadius={100}
             labelLine={false}
             label={renderCustomizedLabel}
-            stroke="none"
+            fill="none"
             strokeWidth={0}
             isAnimationActive={true}
           >

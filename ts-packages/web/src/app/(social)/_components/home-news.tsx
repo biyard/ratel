@@ -1,11 +1,9 @@
-'use client';
 import { Col } from '@/components/ui/col';
-import { NewsSummary } from '@/lib/api/models/home';
-import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
-import React from 'react';
+import { type NewsSummary } from '@/lib/api/models/home';
+import { useTranslation } from 'react-i18next';
 import DisableBorderCard from './disable-border-card';
 import DOMPurify from 'dompurify';
+import { useNavigate } from 'react-router';
 
 interface HomeNewsProps {
   newsData: NewsSummary[];
@@ -24,11 +22,11 @@ const sanitizeHTML = (html: string): string => {
 };
 
 export default function HomeNews({ newsData }: HomeNewsProps) {
-  const t = useTranslations('Home');
-  const router = useRouter();
+  const { t } = useTranslation('Home');
+  const navigate = useNavigate();
 
   const handleNewsNavigation = (id: number) => {
-    router.push(`/news/${id}`);
+    navigate(`/news/${id}`);
   };
 
   // Don't render if no news data

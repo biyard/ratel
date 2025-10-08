@@ -1,14 +1,11 @@
 import { Suspense } from 'react';
-import Provider from './providers';
+import ClientProviders from './providers.client';
 import Loading from '@/app/loading';
+import { Outlet } from 'react-router';
 
-export default async function SettingLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function SettingLayout() {
   return (
-    <Provider>
+    <ClientProviders>
       <div className="flex flex-col w-full min-h-screen justify-between max-w-desktop mx-auto text-white pt-3 gap-5 max-tablet:px-5 mb-8">
         <Suspense
           fallback={
@@ -17,9 +14,9 @@ export default async function SettingLayout({
             </div>
           }
         >
-          {children}
+          <Outlet />
         </Suspense>
       </div>
-    </Provider>
+    </ClientProviders>
   );
 }

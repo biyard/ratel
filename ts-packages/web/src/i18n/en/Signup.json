@@ -1,0 +1,75 @@
+{
+  "verification_code": "Verify code in your email.",
+  "failed_verify_code": "Verification code is incorrect or has expired.",
+  "failed_send_code": "Failed to send verification code. Please try again.",
+  "signing_in": "Signing you in...",
+  "welcome_title": "Welcome to Ratel!",
+  "welcome_description": "Policy is shaped by civic engagement—when we speak up, policymakers listen. \nRatel gives you a platform to take action and shape crypto policy. \nYour voice matters, so make it heard and help secure a bright future for crypto.",
+  "failureMsg": "Failed to connect to {serviceName}.\nWould you like to try again?",
+  "login_failed": "Login failed",
+  "telegram_login_failed_description": "Telegram authentication failed",
+  "google_login_failed_description": "Google authentication failed",
+  "login_failed_msg": "Try again later.",
+  "start": "Start",
+  "clicked_image": "Click to change profile image",
+  "email": "Email",
+  "send": "Send",
+  "verify": "Verify",
+  "password": "Password",
+  "display_name": "Display Name",
+  "user_name": "User Name",
+  "agree_tos": "<req>[Required]</req> I have read and accept the <b>Terms of Service</b>.",
+  "agree_news": "I want to receive announcements and news from Ratel.",
+  "finish_signup": "Finished Sign-up",
+  "remove_test_keyword": "Please remove the test keyword",
+  "invalid_password_format": "Password must contain letters, numbers, and special characters\n(min 8 chars).",
+  "display_name_warning": "Please remove the test keyword from your display name.",
+  "invalid_username_format": "Only numbers, lowercase letters, -, _ and more than one character can be entered.",
+  "user_name_warning": "Please remove the test keyword from your username.",
+  "already_exists_user": "This username is already taken.",
+  "sign_in": "Sign in",
+  "CommonError": {
+    "test_word": "Please remove the <b>test</b> keyword",
+    "required": "{fieldName} is required."
+  },
+  "Email": {
+    "label": "Email",
+    "placeholder": "Enter your email address",
+    "error": {
+      "invalid": "Please enter a valid email address.",
+      "unregistered": "This email is not registered."
+    },
+    "send_button_label": "Send"
+  },
+  "Code": {
+    "placeholder": "Enter the verification code",
+    "error": {
+      "invalid": "The verification code is incorrect or has expired."
+    },
+    "verify_button_label": "Verify"
+  },
+  "Username": {
+    "label": "User Name",
+    "placeholder": "Enter your user name"
+  },
+  "Nickname": {
+    "label": "Nick Name",
+    "placeholder": "Enter your nickname",
+    "error": {
+      "invalid": "Only numbers, lowercase letters, -, _ and more than one character can be entered."
+    }
+  },
+  "Password": {
+    "label": "Password",
+    "placeholder": "Enter your password",
+    "error": {
+      "required": "Password is required.",
+      "invalid": "Password must contain letters, numbers, and special characters (min 8 chars)."
+    }
+  },
+  "Term": {
+    "error": {
+      "required": "You must agree to the Terms of Service to proceed."
+    }
+  }
+}

@@ -1,5 +1,4 @@
 'use client';
-import React from 'react';
 import { useDeliberationSpaceContext } from '../provider.client';
 import { AnalyzePage } from '../../_components/page/analyze';
 

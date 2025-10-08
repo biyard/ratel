@@ -1,5 +1,3 @@
-'use client';
-
 import { createSpaceRequest, SpaceType } from '@/lib/api/models/spaces';
 import { BoosterType } from '@/lib/api/models/notice';
 
@@ -8,13 +6,13 @@ import { useState, useMemo, useCallback } from 'react';
 
 import { config } from '@/config';
 import { route } from '@/route';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { logger } from '@/lib/logger';
 import SpaceConfigForm from './space-config-form';
 import RadioButton from '@/components/radio-button';
 import { Cube } from '@/assets/icons/shopping';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { useSpaceMutation } from '@/hooks/use-space';
 import { showErrorToast } from '@/lib/toast';
 import { useSprintLeagueSpaceMutation } from '@/hooks/use-sprint-league';
@@ -67,7 +65,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
   const [isLoading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<SpaceType | null>(null);
   const [showConfigForm, setShowConfigForm] = useState(false);
-  const router = useRouter();
+  const navigate = useNavigate();
   const popup = usePopup();
 
   const isBoosterEnabled =
@@ -122,7 +120,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
         spaceId = space.id;
       }
 
-      router.push(route.space(spaceId));
+      navigate(route.space(spaceId));
       popup.close();
     } catch {
       logger.error('Error creating space');
@@ -180,7 +178,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
         selected: boolean;
         onClick: () => void;
       }) {
-        const tt = useTranslations('SpaceForms');
+        const { t } = useTranslation('SpaceForms');
         const disabled = form.experiment && !config.experiment;
         if (disabled) {
           return null;
@@ -197,10 +195,10 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
             <div className="size-8 [&>svg]:size-8">{form.Icon}</div>
             <div className="flex flex-col flex-1 gap-1">
               <span className="font-bold text-[15px]/[20px] text-text-primary">
-                {tt(form.labelKey)}
+                {t(form.labelKey)}
               </span>
               <span className="font-normal text-[15px]/[24px] text-desc-text">
-                {tt(form.descKey)}
+                {t(form.descKey)}
               </span>
             </div>
             <RadioButton selected={selected} onClick={onClick} />

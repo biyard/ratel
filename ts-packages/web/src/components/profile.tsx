@@ -1,6 +1,5 @@
 'use client';
-import React, { useContext, useMemo } from 'react';
-import Image from 'next/image';
+import { useContext, useMemo } from 'react';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { usePopup } from '@/lib/contexts/popup-service';
@@ -13,10 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@radix-ui/react-dropdown-menu';
-import Link from 'next/link';
+import { NavLink } from "react-router";
 import { route } from '@/route';
 import TeamCreationPopup from '@/app/(social)/_popups/team-creation-popup';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { useUserInfo } from '@/hooks/use-user-info';
 
 interface ProfileProps {
@@ -25,7 +24,7 @@ interface ProfileProps {
 }
 
 export default function Profile({ profileUrl, name }: ProfileProps) {
-  const t = useTranslations('Home');
+  const { t } = useTranslation('Home');
   const { teams, selectedIndex, setSelectedTeam } = useContext(TeamContext);
   const team = useMemo(() => teams[selectedIndex], [teams, selectedIndex]);
   const userInfo = useUserInfo();
@@ -46,12 +45,10 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
         <button className="w-fit flex items-center justify-between">
           <div className="flex flex-col items-center justify-center p-2.5 group">
             {profileUrl && profileUrl !== '' ? (
-              <Image
+              <img
                 src={profileUrl}
                 alt="User Profile"
-                width={24}
-                height={24}
-                className="rounded-full object-cover w-6 h-6"
+                className="w-6 h-6 rounded-full object-cover w-6 h-6"
               />
             ) : (
               <div className="w-6 h-6 bg-neutral-500 rounded-full" />
@@ -79,8 +76,8 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
                 asChild
                 className="w-full px-2 py-1.5 hover:bg-hover rounded-md cursor-pointer focus-visible:outline-none"
               >
-                <Link
-                  href={
+                <NavLink
+                  to={
                     index === 0
                       ? route.home()
                       : route.teamByUsername(team.username)
@@ -92,11 +89,9 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
                   }}
                 >
                   {team.profile_url ? (
-                    <Image
+                    <img
                       src={team.profile_url}
                       alt={team.nickname}
-                      width={24}
-                      height={24}
                       className="w-6 h-6 rounded-full object-cover object-top"
                     />
                   ) : (
@@ -105,7 +100,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
                   <span className="text-sm text-text-primary-muted truncate">
                     {team.nickname}
                   </span>
-                </Link>
+                </NavLink>
               </DropdownMenuItem>
             ))}
           </DropdownMenuGroup>

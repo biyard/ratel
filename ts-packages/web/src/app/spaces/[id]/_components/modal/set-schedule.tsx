@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 // import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Internet } from '@/components/icons';
 import { showErrorToast } from '@/lib/toast';
 import TimeDropdown from '@/components/time-dropdown';
 import CalendarDropdown from '@/components/calendar-dropdown';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export default function SetSchedulePopup({
   startedAt,
@@ -17,7 +17,7 @@ export default function SetSchedulePopup({
   endedAt: number;
   onconfirm: (startDate: number, endDate: number) => void;
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   // const [autoSchedule, setAutoSchedule] = useState(true);
 
   // const initialDate = Math.floor(Date.now());

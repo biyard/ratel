@@ -4,10 +4,10 @@ import { BoosterType } from '@/lib/api/models/notice';
 import { Trophy } from '@/assets/icons/game';
 import useSpaceById from '@/hooks/use-space-by-id';
 import { RewardMenu, TimelineMenu } from '../../../_components/side-menu';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
-  const s = useTranslations('SprintSpace');
+  const { t: s } = useTranslation('SprintSpace');
   const { data: space } = useSpaceById(spaceId);
 
   const boosterType = space.booster_type ?? BoosterType.NoBoost;

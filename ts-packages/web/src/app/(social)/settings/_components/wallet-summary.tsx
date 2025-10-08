@@ -1,19 +1,16 @@
-'use client';
-
 import { useState } from 'react';
 import { Col } from '@/components/ui/col';
 import { useWallet } from '@/lib/api/hooks/wallet';
 import { ClipboardCopy } from 'lucide-react';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export type WalletSummaryProps = {
   onUpdate?: (address: string) => void;
 };
 
 export default function WalletSummary({ onUpdate }: WalletSummaryProps) {
-  const t = useTranslations('Settings');
+  const { t } = useTranslation('Settings');
   const { address, connectWallet } = useWallet();
   const [copied, setCopied] = useState(false);
 
@@ -33,10 +30,8 @@ export default function WalletSummary({ onUpdate }: WalletSummaryProps) {
           onClick={connectWallet}
         >
           <div className="flex items-center space-x-3">
-            <Image
+            <img
               src="/logos/meta-mask-icon.png"
-              width={40}
-              height={40}
               className="w-10 h-10 bg-[#D9D9D9] rounded-full p-2"
               alt="MetaMask"
             />

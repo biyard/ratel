@@ -1,6 +1,6 @@
-import { ArtworkTrait, ArtworkTraitDisplayType } from '@/lib/api/models/feeds';
+import type { ArtworkTrait } from '@/lib/api/models/feeds';
+import { ArtworkTraitDisplayType } from '@/lib/api/models/feeds';
 import { checkString } from '@/lib/string-filter-utils';
-import { useRouter, usePathname } from 'next/navigation';
 import {
   createContext,
   useCallback,
@@ -11,25 +11,30 @@ import {
 import { apiFetch } from '@/lib/api/apiFetch';
 import { config } from '@/config';
 import { ratelApi } from '@/lib/api/ratel_api';
-import { route } from '@/route';
 import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
-import { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
-import { getPost, Post, PostType as PT } from '@/lib/api/ratel/posts.v3';
+import type { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
+import { getPost, type Post, PostType as PT } from '@/lib/api/ratel/posts.v3';
 import { useUpdateDraftMutation } from './use-update-draft-mutation';
 import { useUpdateDraftImageMutation } from './use-update-draft-image-mutation';
 import { usePublishDraftMutation } from './use-publish-draft';
+import { useNavigate } from 'react-router';
+import { route } from '@/route';
 
-export enum Status {
-  Idle = 'Idle',
-  Loading = 'Loading',
-  Saving = 'Saving',
-  Publishing = 'Publishing',
-}
+export const Status = {
+  Idle: 'Idle',
+  Loading: 'Loading',
+  Saving: 'Saving',
+  Publishing: 'Publishing',
+} as const;
 
-export enum PostType {
-  Artwork = 'Artwork',
-  General = 'General',
-}
+export type Status = (typeof Status)[keyof typeof Status];
+
+export const PostType = {
+  Artwork: 'Artwork',
+  General: 'General',
+} as const;
+
+export type PostType = (typeof PostType)[keyof typeof PostType];
 
 const AUTO_SAVE_DELAY = 5000; // ms
 export interface PostEditorContextType {
@@ -74,10 +79,9 @@ export function PostEditorProvider({
     if Not Logged in, use `0` as targetId
   */
 
-  const pathname = usePathname();
+  const nav = useNavigate();
 
   //Interal State
-  const router = useRouter();
   const [close, setClose] = useState(true);
   const [expand, setExpand] = useState(false);
   const [status, setStatus] = useState<Status>(Status.Idle);
@@ -317,9 +321,10 @@ export function PostEditorProvider({
     }
   }, [expand, resetState]);
 
-  useEffect(() => {
-    resetState();
-  }, [pathname, resetState]);
+  // FIXME: reset
+  /* useEffect(() => {
+   *   resetState();
+   * }, [pathname, resetState]); */
 
   const handleUpdate = useCallback(async () => {
     if (status !== Status.Idle || !isAllFieldsFilled) {
@@ -338,7 +343,8 @@ export function PostEditorProvider({
         content,
       });
 
-      router.push(route.threadByFeedId(feed!.pk));
+      // TODO: Navigate to thread
+      nav(route.threadByFeedId(feed!.pk));
       resetState();
     } catch {
       throw new Error('Failed to publish draft');
@@ -348,7 +354,7 @@ export function PostEditorProvider({
     feed,
     isAllFieldsFilled,
     resetState,
-    router,
+    nav,
     status,
     title,
     publishDraft,

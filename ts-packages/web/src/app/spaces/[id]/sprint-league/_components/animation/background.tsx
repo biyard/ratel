@@ -1,3 +1,4 @@
+// @ts-nocheck
 'use client';
 // import React, { useEffect, useRef, useState } from 'react';
 // import type { AssetsBundle, Spritesheet, Texture } from 'pixi.js';

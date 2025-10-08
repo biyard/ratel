@@ -21,7 +21,7 @@ import { PublishingScope } from '@/lib/api/models/notice';
 import { PublishType } from '@/components/post-header/modals/publish-space';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { route } from '@/route';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export async function getSpace(
   space_id: number,
@@ -137,7 +137,7 @@ export default function useSpaceById(
 }
 
 export function useUpdateSpace(spaceId: number) {
-  const t = useTranslations('SprintSpace');
+  const { t } = useTranslation('SprintSpace');
   const queryClient = getQueryClient();
   const queryKey = getQueryKey(spaceId);
 
@@ -180,7 +180,7 @@ export function useUpdateSpace(spaceId: number) {
 }
 
 export function useDeleteSpace(spaceId: number) {
-  const t = useTranslations('SprintSpace');
+  const { t } = useTranslation('SprintSpace');
   const queryClient = getQueryClient();
   const queryKey = getQueryKey(spaceId);
 
@@ -210,7 +210,7 @@ export function useDeleteSpace(spaceId: number) {
 }
 
 export function useShareSpace(space_id: number) {
-  const t = useTranslations('SprintSpace');
+  const { t } = useTranslation('SprintSpace');
   const { data: userInfo } = useUserInfo();
   const queryClient = getQueryClient();
   const queryKey = getQueryKey(space_id);
@@ -260,7 +260,7 @@ export function useShareSpace(space_id: number) {
 // Making a draft space public means changing its scope to public, which is a simple update operation
 // Publishing a draft space means changing its status from draft to published, which is a more complex operation
 export function usePublishSpace(spaceId: number) {
-  const t = useTranslations('SprintSpace');
+  const { t } = useTranslation('SprintSpace');
   const queryClient = getQueryClient();
   const queryKey = getQueryKey(spaceId);
 
@@ -301,7 +301,7 @@ export function usePublishSpace(spaceId: number) {
 }
 
 export function useMakePublicSpace(spaceId: number) {
-  const t = useTranslations('SprintSpace');
+  const { t } = useTranslation('SprintSpace');
   const queryClient = getQueryClient();
   const queryKey = getQueryKey(spaceId);
 

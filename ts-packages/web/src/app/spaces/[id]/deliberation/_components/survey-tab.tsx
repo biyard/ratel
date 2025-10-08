@@ -1,7 +1,6 @@
 'use client';
-import React from 'react';
 import { useDeliberationSpaceContext } from '../provider.client';
-import { Space } from '@/lib/api/models/spaces';
+import type { Space } from '@/lib/api/models/spaces';
 import SpaceSurvey from '../../_components/space-survey';
 import { getTimeWithFormat } from '@/lib/time-utils';
 import { Settings } from '@/components/icons';

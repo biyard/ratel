@@ -1,7 +1,7 @@
 'use client';
 
 import { TotalUser } from '@/lib/api/models/user';
-import React, { useState } from 'react';
+import { useState } from 'react';
 // import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Clear } from '@/components/icons';
 import SearchInput from '@/components/input/search-input';
@@ -12,7 +12,7 @@ import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
 import { DiscussionInfo } from '../../types';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 
 export default function InviteMemberPopup({
@@ -31,7 +31,7 @@ export default function InviteMemberPopup({
   users: TotalUser[];
   onadd: (discussion: DiscussionInfo) => void;
 }) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const { get } = useApiCall();
   const { data: me } = useSuspenseUserInfo();
 
@@ -113,7 +113,7 @@ export default function InviteMemberPopup({
 
   const handleSend = async () => {
     const flushed = searchValue ? await setValue(searchValue, true) : undefined;
-    const participants = ensureMe(flushed ?? selectedUsers);
+    const participants = ensureMe((flushed ?? selectedUsers) as any);
 
     onadd({
       started_at: Math.floor(startTime),
@@ -192,7 +192,7 @@ function InviteMemberButton({
   isError: boolean;
   onclick: () => void;
 }) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const containerClass = clsx(
     'flex flex-row w-full justify-center items-center my-[15px] py-[15px] rounded-lg font-bold text-[#000203] text-base',
     isError

@@ -1,6 +1,5 @@
 'use client';
 import SwitchButton from '@/components/switch-button';
-import React from 'react';
 
 export default function LabelSwitchButton({
   label,

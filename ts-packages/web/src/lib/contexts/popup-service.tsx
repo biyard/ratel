@@ -1,10 +1,10 @@
 'use client';
-import React, {
+import {
   createContext,
   useContext,
   useRef,
   useState,
-  ReactNode,
+  type ReactNode,
 } from 'react';
 
 type PopupConfig = {

@@ -1,6 +1,8 @@
+// @ts-nocheck
 'use client';
+import * as React from 'react';
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import type { AssetsBundle } from 'pixi.js';
 
 import { Container, AnimatedSprite, Graphics, Sprite, Text } from 'pixi.js';

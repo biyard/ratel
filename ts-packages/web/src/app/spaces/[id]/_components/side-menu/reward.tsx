@@ -1,7 +1,7 @@
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 import { RewardCoin } from '@/assets/icons/money-payment';
 import { Settings2 } from '@/assets/icons/settings';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { ReactNode } from 'react';
 
 interface RewardProps {
@@ -30,7 +30,7 @@ export default function RewardMenu({
   rewardItems: RewardProps[];
   modifierItems: ModifierProps[];
 }) {
-  const s = useTranslations('SprintSpace');
+  const { t: s } = useTranslation('SprintSpace');
   return (
     <BorderSpaceCard>
       <div className="flex flex-col w-full text-neutral-500 gap-5">

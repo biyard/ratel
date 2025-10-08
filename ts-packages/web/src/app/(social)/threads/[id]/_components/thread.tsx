@@ -1,6 +1,3 @@
-'use client';
-
-import Image from 'next/image';
 import LexicalHtmlViewer from '../../../../../components/lexical/lexical-html-viewer';
 import { Feed } from '@/lib/api/models/feeds';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
@@ -65,8 +62,7 @@ function GeneralPost({ post }: { post: Feed }) {
       <LexicalHtmlViewer htmlString={post.html_contents || ''} />
       {post.url && (
         <div className="relative h-72 w-full rounded-[10px]">
-          <Image
-            fill
+          <img
             className="object-contain"
             src={post.url}
             alt={post.title || 'Post Image'}

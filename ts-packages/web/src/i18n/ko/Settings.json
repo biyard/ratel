@@ -1,0 +1,19 @@
+{
+  "my_info": "나의 정보",
+  "settings": "설정",
+  "upload_logo": "로고 업로드",
+  "username": "이름",
+  "evm_address": "EVM 주소",
+  "display_name": "Display 명",
+  "description": "설명",
+  "description_hint": "유저의 설명을 입력해주세요.",
+  "save": "저장",
+  "change": "변경",
+  "hide": "숨기기",
+  "connect_wallet": "지갑 연결",
+  "my_inventory_coming_soon": "내 인벤토리 기능은 곧 제공될 예정입니다.",
+  "appearance": "설정",
+  "language": "언어",
+  "select_language": "언어 선택",
+  "cancel": "취소"
+}

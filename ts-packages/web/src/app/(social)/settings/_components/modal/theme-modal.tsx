@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import CheckCircle from '@/assets/icons/check-circle.svg';
+import { useState } from 'react';
+import CheckCircle from '@/assets/icons/check-circle.svg?react';
 
 export interface ThemeModalProps {
   onCancel: () => void;

@@ -1,13 +1,11 @@
-'use client';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Col } from './ui/col';
 import { Row } from './ui/row';
 import { CommentIcon, Palace, Rewards, Shares, ThumbUp } from './icons';
 import { convertNumberToString } from '@/lib/number-utils';
 import TimeAgo from './time-ago';
 import DOMPurify from 'dompurify';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { NavLink, useNavigate } from 'react-router';
 import { UserType } from '@/lib/api/models/user';
 import { route } from '@/route';
 import { SpaceType } from '@/lib/api/models/spaces';
@@ -24,7 +22,7 @@ import { showSuccessToast, showErrorToast } from './custom-toast/toast';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 import { likePost, PostResponse } from '@/lib/api/ratel/posts.v3';
 import { BoosterType } from '@/types/booster-type';
@@ -49,7 +47,7 @@ export default function FeedCard(props: FeedCardProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [localShares, setLocalShares] = useState(post.shares);
 
-  // const t = useTranslations('Feeds');
+  // const { t } = useTranslation('Feeds');
 
   const r = useRepostDraft();
 
@@ -147,9 +145,9 @@ export default function FeedCard(props: FeedCardProps) {
 
   return (
     <Col className="relative rounded-[10px] bg-card-bg-secondary border border-card-enable-border">
-      <Link href={href} className="block">
+      <NavLink to={href} className="block">
         <FeedBody post={post} onEdit={handleEditPost(post.pk)} />
-      </Link>
+      </NavLink>
       <FeedFooter
         space_id={post.space_pk}
         space_type={post.space_type}
@@ -340,7 +338,7 @@ export function OnboardingTag() {
 }
 
 export function JoinNowButton({ onClick }: { onClick: () => void }) {
-  const t = useTranslations('Home');
+  const { t } = useTranslation('Home');
   return (
     <Button
       variant="rounded_primary"
@@ -385,8 +383,8 @@ export function FeedFooter({
   onRepost,
   onRepostThought,
 }: FeedFooterProps) {
-  const router = useRouter();
-  const t = useTranslations('Home');
+  const nav = useNavigate();
+  const { t } = useTranslation('Home');
 
   const [isReposting, setIsReposting] = useState(false);
 
@@ -422,7 +420,7 @@ export function FeedFooter({
         <div className="max-tablet:!hidden">
           <JoinNowButton
             onClick={() => {
-              router.push(route.space(space_id));
+              nav(route.space(space_id));
             }}
           />
         </div>

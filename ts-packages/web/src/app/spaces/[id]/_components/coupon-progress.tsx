@@ -1,24 +1,24 @@
 import DisableBorderCard from '@/app/(social)/_components/disable-border-card';
-import FirstActive from '@/assets/icons/progress/1_active.svg';
-import FirstInActive from '@/assets/icons/progress/1_inactive.svg';
+import FirstActive from '@/assets/icons/progress/1_active.svg?react';
+import FirstInActive from '@/assets/icons/progress/1_inactive.svg?react';
 
-import SecondActive from '@/assets/icons/progress/2_active.svg';
-import SecondInActive from '@/assets/icons/progress/2_inactive.svg';
+import SecondActive from '@/assets/icons/progress/2_active.svg?react';
+import SecondInActive from '@/assets/icons/progress/2_inactive.svg?react';
 
-import ThirdActive from '@/assets/icons/progress/3_active.svg';
-import ThirdInActive from '@/assets/icons/progress/3_inactive.svg';
+import ThirdActive from '@/assets/icons/progress/3_active.svg?react';
+import ThirdInActive from '@/assets/icons/progress/3_inactive.svg?react';
 
-import FourthActive from '@/assets/icons/progress/4_active.svg';
-import FourthInActive from '@/assets/icons/progress/4_inactive.svg';
+import FourthActive from '@/assets/icons/progress/4_active.svg?react';
+import FourthInActive from '@/assets/icons/progress/4_inactive.svg?react';
 
-import FifthActive from '@/assets/icons/progress/5_active.svg';
-import FifthInActive from '@/assets/icons/progress/5_inactive.svg';
+import FifthActive from '@/assets/icons/progress/5_active.svg?react';
+import FifthInActive from '@/assets/icons/progress/5_inactive.svg?react';
 
-import SixthActive from '@/assets/icons/progress/6_active.svg';
-import SixthInActive from '@/assets/icons/progress/6_inactive.svg';
+import SixthActive from '@/assets/icons/progress/6_active.svg?react';
+import SixthInActive from '@/assets/icons/progress/6_inactive.svg?react';
 
-import SeventhActive from '@/assets/icons/progress/7_active.svg';
-import SeventhInActive from '@/assets/icons/progress/7_inactive.svg';
+import SeventhActive from '@/assets/icons/progress/7_active.svg?react';
+import SeventhInActive from '@/assets/icons/progress/7_inactive.svg?react';
 
 export default function SpaceCouponProgress({
   progress,

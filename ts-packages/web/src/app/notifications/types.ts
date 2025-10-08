@@ -1,10 +1,12 @@
-export enum NotificationType {
-  UNKNOWN = 0,
-  INVITE_TEAM = 1,
-  INVITE_DISCUSSION = 2,
-  BOOSTING_SPACE = 3,
-  CONNECT_NETWORK = 4,
-}
+export const NotificationType = {
+  UNKNOWN: 0,
+  INVITE_TEAM: 1,
+  INVITE_DISCUSSION: 2,
+  BOOSTING_SPACE: 3,
+  CONNECT_NETWORK: 4,
+} as const;
+
+export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
 
 // Frontend-only filter type; compose with the enum instead of polluting it
 export type NotificationsFilter = NotificationType | 'all';

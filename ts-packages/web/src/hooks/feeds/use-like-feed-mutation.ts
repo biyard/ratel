@@ -147,7 +147,7 @@ export function useLikeFeedMutation() {
       showErrorToast(error.message || 'Failed to like feed');
     },
 
-    onSettled: (data, error, variables) => {
+    onSettled: (_data, _error, variables) => {
       const { feedType, feedId, parentId } = variables;
       const detailQueryKey = feedKeys.detail(
         String(feedType === FeedType.Reply ? parentId! : feedId),

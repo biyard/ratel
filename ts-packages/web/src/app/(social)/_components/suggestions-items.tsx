@@ -1,6 +1,5 @@
-import Image from 'next/image';
 import { UserType } from '@/lib/api/models/user';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 type SuggestionItemProps = {
   user: {
@@ -17,7 +16,7 @@ export default function SuggestionItem({
   user,
   onFollow,
 }: SuggestionItemProps) {
-  const t = useTranslations('Home');
+  const { t } = useTranslation('Home');
   const isTeam = user.user_type === UserType.Team;
   const imageClass = isTeam ? 'rounded-lg' : 'rounded-full';
 
@@ -25,9 +24,7 @@ export default function SuggestionItem({
     <div className="flex flex-col items-start gap-3">
       <div className="flex flex-row gap-2.5">
         {user.profile_url && user.profile_url !== '' ? (
-          <Image
-            width={32}
-            height={32}
+          <img
             src={user.profile_url}
             alt={`${user.username}'s profile`}
             className={`w-8 h-8 object-cover ${imageClass}`}

@@ -1,6 +1,5 @@
 import { config } from '@/config';
 import { Star } from 'lucide-react';
-import React from 'react';
 
 export default function UserTier() {
   return (

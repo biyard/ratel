@@ -2,9 +2,8 @@
 import { ShapeArrowDown } from '@/components/icons';
 import { Answer } from '@/lib/api/models/response';
 import { Question } from '@/lib/api/models/survey';
-import React from 'react';
 import Wrapper from './_components/wrapper';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export default function DropdownViewer({
   title,
@@ -27,7 +26,7 @@ export default function DropdownViewer({
     type: Question['answer_type'],
   ) => void;
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   return (
     <div className="flex flex-col w-full gap-2.5">
       <Wrapper

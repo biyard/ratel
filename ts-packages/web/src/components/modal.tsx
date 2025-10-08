@@ -1,6 +1,5 @@
-import React from 'react';
 import ReactDOM from 'react-dom';
-import RemoveIcon from '@/assets/icons/remove.svg';
+import RemoveIcon from '@/assets/icons/remove.svg?react';
 
 interface ModalProps {
   title: string;

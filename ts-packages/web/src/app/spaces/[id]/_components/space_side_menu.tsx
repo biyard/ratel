@@ -1,10 +1,7 @@
-'use client';
-
 import { useSpaceBySpaceId } from '@/app/(social)/_hooks/use-spaces';
 import { getTimeWithFormat } from '@/lib/time-utils';
-import React from 'react';
-import Clock from '@/assets/icons/clock.svg';
-import Image from 'next/image';
+import Clock from '@/assets/icons/clock.svg?react';
+
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
@@ -18,12 +15,10 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
       {feed.post.urls &&
       feed.post.urls.length > 0 &&
       feed.post.urls[0] !== '' ? (
-        <Image
+        <img
           src={feed.post.urls[0]}
           alt={feed.post.title ?? ''}
-          width={250}
-          height={127}
-          className="rounded-[10px] object-cover object-top"
+          className="rounded-[10px] w-full h-[127px] object-cover object-top"
         />
       ) : (
         <div className="w-6 h-6 rounded-[10px] border border-neutral-500 bg-neutral-600" />

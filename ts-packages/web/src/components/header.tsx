@@ -1,22 +1,18 @@
-'use client';
-import React from 'react';
-
-import Logo from '@/assets/icons/logo.svg';
-import HomeIcon from '@/assets/icons/home.svg';
-import UserGroupIcon from '@/assets/icons/user-group.svg';
-import Hamburger from '@/assets/icons/hamburger.svg';
-import CloseIcon from '@/assets/icons/remove.svg';
-import Link from 'next/link';
+import Logo from '@/assets/icons/logo.svg?react';
+import HomeIcon from '@/assets/icons/home.svg?react';
+import UserGroupIcon from '@/assets/icons/user-group.svg?react';
+import Hamburger from '@/assets/icons/hamburger.svg?react';
+import CloseIcon from '@/assets/icons/remove.svg?react';
+import { NavLink } from 'react-router';
 import Profile from './profile';
 import { LoginModal } from './popup/login-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { route } from '@/route';
 import { UserType } from '@/lib/api/models/user';
-import LoginIcon from '@/assets/icons/login.svg';
-import { useLocale, useTranslations } from 'next-intl';
+import LoginIcon from '@/assets/icons/login.svg?react';
+import { useTranslation } from 'react-i18next';
 import { Us } from './icons';
 import { Kr } from '@/assets/icons/flags';
-import { useRouter } from 'next/navigation';
 import { useUserInfo } from '@/hooks/use-user-info';
 export interface HeaderProps {
   mobileExtends: boolean;
@@ -24,10 +20,9 @@ export interface HeaderProps {
 }
 
 export default function Header(props: HeaderProps) {
-  const t = useTranslations('Nav');
+  const { t, i18n } = useTranslation('Nav');
   const popup = usePopup();
-  const router = useRouter();
-  const locale = useLocale() as 'en' | 'ko';
+  const locale = i18n.language;
 
   const { data } = useUserInfo();
   const loggedIn =
@@ -37,7 +32,7 @@ export default function Header(props: HeaderProps) {
 
   const handleChangeLanguage = (newLocale: string) => {
     document.cookie = `locale=${newLocale}; path=/; max-age=31536000; samesite=lax`;
-    router.refresh();
+    i18n.changeLanguage(newLocale);
   };
 
   const navItems = [
@@ -112,21 +107,21 @@ export default function Header(props: HeaderProps) {
     <header className="border-b border-divider px-2.5 py-2.5 flex items-center justify-center !bg-bg h-[var(--header-height)] z-999">
       <nav className="flex items-center justify-between mx-2.5 gap-12.5 w-full max-w-desktop">
         <div className="flex items-center gap-5">
-          <Link
-            href={route.home()}
+          <NavLink
+            to={route.home()}
             onClick={() => {
               props.setMobileExtends(false);
             }}
           >
             <Logo className="mobile:size-12 size-13.5" />
-          </Link>
+          </NavLink>
         </div>
 
         <div className="flex items-center justify-center gap-2.5 max-tablet:hidden">
           {navItems.map((item, index) => (
-            <Link
+            <NavLink
               key={`nav-item-${index}`}
-              href={item.href}
+              to={item.href}
               className="flex flex-col items-center justify-center group p-2.5"
               hidden={!item.visible || (item.authorized && !loggedIn)}
             >
@@ -135,7 +130,7 @@ export default function Header(props: HeaderProps) {
                 {' '}
                 {item.name}{' '}
               </span>
-            </Link>
+            </NavLink>
           ))}
 
           <button
@@ -163,7 +158,7 @@ export default function Header(props: HeaderProps) {
               </div>
               <span className="whitespace-nowrap text-menu-text group-hover:text-menu-text/80 text-[15px] font-medium transition-all">
                 {' '}
-                {locale == 'en' ? 'En' : 'Ko'}
+                {locale == 'en' ? 'EN' : 'KO'}
               </span>
             </div>
           </button>

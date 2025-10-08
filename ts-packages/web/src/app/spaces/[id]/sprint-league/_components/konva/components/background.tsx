@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Image as KonvaImage, Layer, Group } from 'react-konva';
+import { Group, Image as KonvaImage, Layer } from 'react-konva';
 import useImage from 'use-image';
 import { IRect } from 'konva/lib/types';
 import { VIEWPORT_HEIGHT, VIEWPORT_WIDTH } from '../';

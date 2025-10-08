@@ -1,5 +1,4 @@
 import { getTimeAgo } from '@/lib/time-utils';
-import React from 'react';
 
 export default function TimeAgo({ timestamp }: { timestamp: number }) {
   return (

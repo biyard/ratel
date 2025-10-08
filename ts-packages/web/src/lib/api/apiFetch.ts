@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server';
 import { logger } from '../logger';
 
 export type FetchResponse<T = unknown> = {
@@ -12,55 +11,15 @@ export type FetchResponse<T = unknown> = {
 export async function apiFetch<T = unknown>(
   url: string,
   options?: RequestInit & {
-    nextRequest?: NextRequest;
     ignoreError?: boolean;
     isServer?: boolean;
   },
 ): Promise<FetchResponse<T | null>> {
-  const isServer = options?.isServer ?? typeof window === 'undefined';
-
   const requestHeaders = new Headers(options?.headers);
-  let method = options?.method || 'GET';
+  const method = options?.method || 'GET';
   const body = options?.body;
 
-  // 서버사이드 처리
-  if (isServer) {
-    try {
-      const { headers: getHeaders } = await import('next/headers');
-      const headersList = await getHeaders();
-      const clientCookies = headersList.get('cookie');
-      let contentType = headersList.get('content-type') || 'application/json';
-
-      if (options?.nextRequest) {
-        method = options.nextRequest.method;
-        contentType =
-          options.nextRequest.headers.get('content-type') || contentType;
-      }
-
-      if (clientCookies) {
-        requestHeaders.set('Cookie', clientCookies);
-      }
-      if (
-        !requestHeaders.has('Content-Type') &&
-        body &&
-        typeof body === 'string'
-      ) {
-        requestHeaders.set('Content-Type', contentType);
-      }
-    } catch (error) {
-      logger.warn(
-        'Failed to get server headers, falling back to client mode',
-        error,
-      );
-    }
-  }
-
-  if (
-    !isServer &&
-    !requestHeaders.has('Content-Type') &&
-    body &&
-    typeof body === 'string'
-  ) {
+  if (!requestHeaders.has('Content-Type') && body && typeof body === 'string') {
     requestHeaders.set('Content-Type', 'application/json');
   }
 

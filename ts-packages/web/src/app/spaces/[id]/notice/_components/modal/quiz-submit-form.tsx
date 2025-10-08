@@ -1,8 +1,7 @@
 'use client';
 
-import React from 'react';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { useTranslations } from 'next-intl';
+import { useTranslation, Trans } from 'react-i18next';
 
 export interface QuizSubmitFormProps {
   onSubmit: () => void;
@@ -10,7 +9,7 @@ export interface QuizSubmitFormProps {
 
 export default function QuizSubmitForm({ onSubmit }: QuizSubmitFormProps) {
   const popup = usePopup();
-  const t = useTranslations('NoticeSpace');
+  const { t } = useTranslation('NoticeSpace');
 
   return (
     <div className="w-[500px] flex flex-col mt-2">
@@ -19,15 +18,21 @@ export default function QuizSubmitForm({ onSubmit }: QuizSubmitFormProps) {
       </div>
 
       <div className="text-center font-medium text-desc-text text-base">
-        {t.rich('quiz_submit_desc_line1', {
-          b: (chunks) => (
-            <span className="text-red-500 font-bold">{chunks}</span>
-          ),
-        })}
+        <Trans
+          i18nKey="quiz_submit_desc_line1"
+          ns="NoticeSpace"
+          components={{
+            b: <span className="text-red-500 font-bold" />,
+          }}
+        />
         <br />
-        {t.rich('quiz_submit_desc_line2', {
-          b: (chunks) => <span className="font-bold">{chunks}</span>,
-        })}
+        <Trans
+          i18nKey="quiz_submit_desc_line2"
+          ns="NoticeSpace"
+          components={{
+            b: <span className="font-bold" />,
+          }}
+        />
         <br />
         <br />
         <span className="text-desc-text text-lg font-medium">

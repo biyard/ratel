@@ -1,9 +1,9 @@
 'use client';
 
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { usePopup } from '@/lib/contexts/popup-service';
-import React from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslation, Trans } from 'react-i18next';
 import { LoadingIndicator } from '@/app/loading';
 
 export const openModal = (
@@ -29,15 +29,19 @@ export default function MakePublicModal({
   makePublic: () => Promise<void>;
   onCancel: () => void;
 }) {
-  const t = useTranslations('SpaceMakePublicModal');
+  const { t } = useTranslation('SpaceMakePublicModal');
   const [loading, setLoading] = React.useState(false);
   return (
     <div className="max-w-125 flex flex-col mt-6 gap-6">
       <div className="text-center font-medium text-desc-text text-base">
-        {t.rich('description', {
-          br: () => <br />,
-          b: (chunks) => <span className="font-bold">{chunks}</span>,
-        })}
+        <Trans
+          i18nKey="description"
+          ns="SpaceMakePublicModal"
+          components={{
+            br: <br />,
+            b: <span className="font-bold" />,
+          }}
+        />
       </div>
 
       <div className="flex flex-row gap-4 h-12">

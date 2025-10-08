@@ -1,7 +1,6 @@
 'use client';
 
 import { Clear, Logo } from '@/components/icons';
-import React from 'react';
 
 export function Header({
   name,

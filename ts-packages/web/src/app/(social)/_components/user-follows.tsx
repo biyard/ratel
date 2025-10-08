@@ -1,7 +1,6 @@
-import React from 'react';
-import Link from 'next/link';
 import { route } from '@/route';
 import { RelationType } from '@/types/relation-type';
+import { NavLink } from 'react-router';
 
 export interface UserFollowsProps {
   followers_count: number;
@@ -14,25 +13,25 @@ export default function UserFollows({
 }: UserFollowsProps) {
   return (
     <div className="flex flex-row w-full justify-around items-center gap-[20px] max-tablet:gap-[10px]">
-      <Link
+      <NavLink
         className="flex flex-col w-fit justify-start items-center gap-[2px] text-text-secondary hover:text-text-secondary/80"
-        href={route.myFollower(RelationType.FOLLOWER)}
+        to={route.myFollower(RelationType.FOLLOWER)}
       >
         <div className="font-bold text-sm">
           {followers_count.toLocaleString()}
         </div>
         <div className="font-medium text-xs">Followers</div>
-      </Link>
+      </NavLink>
 
-      <Link
+      <NavLink
         className="flex flex-col w-fit justify-start items-center gap-[2px] text-text-secondary hover:text-text-secondary/80"
-        href={route.myFollower(RelationType.FOLLOWING)}
+        to={route.myFollower(RelationType.FOLLOWING)}
       >
         <div className="font-bold text-sm">
           {followings_count.toLocaleString()}
         </div>
         <div className="font-medium text-xs">Followings</div>
-      </Link>
+      </NavLink>
     </div>
   );
 }

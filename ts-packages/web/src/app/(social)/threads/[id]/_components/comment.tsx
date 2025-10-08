@@ -4,14 +4,14 @@ import { NewComment } from '@/components/comment';
 import { CommentIcon } from '@/components/icons';
 import { useLoggedIn } from '@/lib/api/hooks/users';
 // import { writeCommentRequest } from '@/lib/api/models/feeds/comment';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 
 import { useDraftMutations } from '@/hooks/feeds/use-create-feed-mutation';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 
 export default function ThreadComment({ postId }: { postId: string }) {
-  const t = useTranslations('Threads');
+  const { t } = useTranslation('Threads');
   const isLogin = useLoggedIn();
   const { data: feed } = useFeedById(postId);
   const [expand, setExpand] = useState(false);

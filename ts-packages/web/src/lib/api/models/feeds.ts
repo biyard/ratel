@@ -1,11 +1,13 @@
-import { Industry } from './industry';
-import { Space } from './spaces';
-import { User } from './user';
+import type { Industry } from './industry';
+import type { Space } from './spaces';
+import type { User } from './user';
 
-export enum UrlType {
-  None = 0,
-  Image = 1,
-}
+export const UrlType = {
+  None: 0,
+  Image: 1,
+} as const;
+
+export type UrlType = typeof UrlType[keyof typeof UrlType];
 
 export interface ArtworkTrait {
   trait_type: string;
@@ -13,11 +15,13 @@ export interface ArtworkTrait {
   display_type?: ArtworkTraitDisplayType | null;
 }
 
-export enum ArtworkTraitDisplayType {
-  String = 'string',
-  Color = 'color',
-  Number = 'number',
-}
+export const ArtworkTraitDisplayType = {
+  String: 'string',
+  Color: 'color',
+  Number: 'number',
+} as const;
+
+export type ArtworkTraitDisplayType = typeof ArtworkTraitDisplayType[keyof typeof ArtworkTraitDisplayType];
 
 export interface ArtworkMetadata {
   traits: ArtworkTrait[];
@@ -148,18 +152,22 @@ export interface Reply {
   html_contents: string;
   author: [User];
 }
-export enum FeedType {
-  Artwork = 0,
-  Post = 1,
-  Reply = 2,
-  Repost = 3,
-  DocReview = 4,
-}
+export const FeedType = {
+  Artwork: 0,
+  Post: 1,
+  Reply: 2,
+  Repost: 3,
+  DocReview: 4,
+} as const;
 
-export enum FeedStatus {
-  Draft = 1,
-  Published = 2,
-}
+export type FeedType = typeof FeedType[keyof typeof FeedType];
+
+export const FeedStatus = {
+  Draft: 1,
+  Published: 2,
+} as const;
+
+export type FeedStatus = typeof FeedStatus[keyof typeof FeedStatus];
 
 export interface FileInfo {
   name: string;
@@ -168,17 +176,19 @@ export interface FileInfo {
   url?: string | null;
 }
 
-export enum FileExtension {
-  JPG = 'JPG',
-  PNG = 'PNG',
-  PDF = 'PDF',
-  ZIP = 'ZIP',
-  WORD = 'WORD',
-  PPTX = 'PPTX',
-  EXCEL = 'EXCEL',
-  MP4 = 'MP4',
-  MOV = 'MOV',
-}
+export const FileExtension = {
+  JPG: 'JPG',
+  PNG: 'PNG',
+  PDF: 'PDF',
+  ZIP: 'ZIP',
+  WORD: 'WORD',
+  PPTX: 'PPTX',
+  EXCEL: 'EXCEL',
+  MP4: 'MP4',
+  MOV: 'MOV',
+} as const;
+
+export type FileExtension = typeof FileExtension[keyof typeof FileExtension];
 
 export const FileExtensionLabel: Record<
   FileExtension,

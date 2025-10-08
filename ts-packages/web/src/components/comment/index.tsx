@@ -1,7 +1,6 @@
 'use client';
 
 import { getTimeAgo } from '@/lib/time-utils';
-import Image from 'next/image';
 import { ChevronDown } from 'lucide-react';
 import { BendArrowRight, ThumbUp } from '@/components/icons';
 import { Comment as CommentType, FeedType } from '@/lib/api/models/feeds';
@@ -14,7 +13,7 @@ import { validateString } from '@/lib/string-filter-utils';
 import { ChevronDoubleDownIcon } from '@heroicons/react/20/solid';
 import { useEffect, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { useLikeFeedMutation } from '@/hooks/feeds/use-like-feed-mutation';
 
 interface CommentProps {
@@ -28,7 +27,7 @@ interface CommentProps {
 }
 
 export default function Comment({ comment, onSubmit }: CommentProps) {
-  const t = useTranslations('Threads');
+  const { t } = useTranslation('Threads');
   const [expand, setExpand] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
 
@@ -48,12 +47,10 @@ export default function Comment({ comment, onSubmit }: CommentProps) {
     <div className="flex flex-col gap-[14px] pb-5 border-b border-b-divider">
       <div className="flex flex-row gap-2 items-center">
         {comment.author[0].profile_url ? (
-          <Image
+          <img
             alt={comment.author[0].nickname ?? ''}
             src={comment.author[0].profile_url ?? ''}
-            width={40}
-            height={40}
-            className="rounded-full object-cover object-top"
+            className="w-16 h-16 rounded-full object-cover object-top"
           />
         ) : (
           <div className="w-[40px] h-[40px] rounded-full bg-profile-bg" />
@@ -76,7 +73,7 @@ export default function Comment({ comment, onSubmit }: CommentProps) {
             <div className="flex flex-row space-between">
               <div className="flex flex-row gap-2 items-center">
                 {comment.quote_comment?.author?.[0]?.profile_url ? (
-                  <Image
+                  <img
                     alt={comment.quote_comment?.author?.[0]?.nickname ?? ''}
                     src={comment.quote_comment?.author?.[0]?.profile_url ?? ''}
                     width={40}
@@ -169,7 +166,7 @@ export default function Comment({ comment, onSubmit }: CommentProps) {
               >
                 <div className="flex flex-row gap-2 items-center">
                   {reply.author?.[0]?.profile_url ? (
-                    <Image
+                    <img
                       alt={reply.author?.[0]?.nickname ?? ''}
                       src={reply.author?.[0]?.profile_url ?? ''}
                       width={40}
@@ -216,7 +213,7 @@ export function NewComment({
   onClose: () => void;
   onSubmit?: (content: string) => Promise<void>;
 }) {
-  const t = useTranslations('Threads');
+  const { t } = useTranslation('Threads');
   const [isLoading, setLoading] = useState(false);
   const [disabled, setDisabled] = useState(true);
   const editorRef = useRef<LexicalHtmlEditorRef>(null);

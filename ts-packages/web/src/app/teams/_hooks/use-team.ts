@@ -1,5 +1,5 @@
 import { QK_GET_TEAM_BY_ID, QK_GET_TEAM_BY_USERNAME } from '@/constants';
-import { Team } from '@/lib/api/models/team';
+import type { Team } from '@/lib/api/models/team';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import {

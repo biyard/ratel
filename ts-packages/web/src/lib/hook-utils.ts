@@ -1,5 +1,5 @@
 import { getQueryClient } from '@/providers/getQueryClient';
-import { InfiniteData } from '@tanstack/react-query';
+import type { InfiniteData } from '@tanstack/react-query';
 
 export type Rollbackable<T> = T & {
   rollback: () => void;
@@ -67,11 +67,11 @@ export async function optimisticListUpdate<T>(
     queryKey,
   });
 
-  queryClient.setQueriesData<InfiniteData<T[]>>({ queryKey }, (oldData) => {
+  queryClient.setQueriesData<InfiniteData<T>>({ queryKey }, (oldData) => {
     if (!oldData) return oldData;
-    const newPages = oldData.pages.map((v) => {
-      return v.map(updater).filter((page): page is T => page !== undefined);
-    });
+    const newPages = oldData.pages
+      .map(updater)
+      .filter((page): page is T => page !== undefined);
     return { ...oldData, pages: newPages };
   });
 

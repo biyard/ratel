@@ -1,5 +1,4 @@
 import { FileInfo } from '@/lib/api/models/feeds';
-import React from 'react';
 import {
   Excel,
   Jpg,

@@ -1,12 +1,10 @@
 'use client';
 
 import { SprintLeaguePlayer } from '@/lib/api/models/sprint_league';
-import dynamic from 'next/dynamic';
+import { lazy } from 'react';
 import { useEffect, useRef, useState } from 'react';
 
-const Base = dynamic(() => import('./stage'), {
-  ssr: false,
-});
+const Base = lazy(() => import('./stage'));
 
 //Set Name as Konva to avoid confusion
 
@@ -66,9 +64,11 @@ export default function Game({
   );
 }
 
-export enum Status {
-  BEFORE_START = 0,
-  VOTE = 1,
-  AFTER_VOTE = 2,
-  GAME_END = 3,
-}
+export const Status = {
+  BEFORE_START: 0,
+  VOTE: 1,
+  AFTER_VOTE: 2,
+  GAME_END: 3,
+} as const;
+
+export type Status = typeof Status[keyof typeof Status];

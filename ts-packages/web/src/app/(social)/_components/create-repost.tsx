@@ -1,4 +1,3 @@
-'use client';
 import {
   createContext,
   useContext,
@@ -9,13 +8,11 @@ import {
 import { Clear } from '@/components/icons';
 import { Loader } from '@/components/icons';
 import { useUserInfo } from '../_hooks/user';
-import Image from 'next/image';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
-import { useRouter } from 'next/navigation';
 import { route } from '@/route';
-import Certified from '@/assets/icons/certified.svg';
-import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg';
+import Certified from '@/assets/icons/certified.svg?react';
+import DoubleArrowDown from '@/assets/icons/double-arrow-down.svg?react';
 import { logger } from '@/lib/logger';
 import { UserCircle } from '@/components/icons';
 import ToolbarPlugin from '@/components/toolbar/toolbar-repost';
@@ -26,18 +23,19 @@ import {
 import DOMPurify from 'dompurify';
 import { TiptapEditor } from '@/components/text-editor/tiptap-editor';
 import { Editor } from '@tiptap/core';
-import LinkPaste from '@/assets/icons/editor/link-paste.svg';
-import CommentPaste from '@/assets/icons/editor/comment-paste.svg';
-import ShapeDownArrow from '@/assets/icons/editor/shape-arrow-down.svg';
-import ArrowDown from '@/assets/icons/editor/arr-down.svg';
-import SaveIcon from '@/assets/icons/save.svg';
+import LinkPaste from '@/assets/icons/editor/link-paste.svg?react';
+import CommentPaste from '@/assets/icons/editor/comment-paste.svg?react';
+import ShapeDownArrow from '@/assets/icons/editor/shape-arrow-down.svg?react';
+import ArrowDown from '@/assets/icons/editor/arr-down.svg?react';
+import SaveIcon from '@/assets/icons/save.svg?react';
+import { useNavigate } from 'react-router';
 
 export function CreateRePost() {
   const repostDraftContext = useRepostDraft();
 
   const { data: userInfo } = useUserInfo();
   const { post } = useApiCall();
-  const router = useRouter();
+  const nav = useNavigate();
   const editorRef = useRef<Editor | null>(null);
   const [isReposting, setIsReposting] = useState(false);
   const [isQuotedSectionExpanded, setIsQuotedSectionExpanded] = useState(true);
@@ -97,7 +95,7 @@ export function CreateRePost() {
 
       showSuccessToast('Repost Successful!');
       resetDraft();
-      router.push(route.threadByFeedId(response.id));
+      nav(route.threadByFeedId(response.id));
     } catch (error) {
       setIsReposting(false);
       logger.debug('Failed to publish repost:', error);
@@ -138,9 +136,7 @@ export function CreateRePost() {
         <div className="flex items-center p-4 justify-between">
           <div className="flex items-center gap-3 relative">
             <div className="size-6 rounded-full">
-              <Image
-                width={40}
-                height={40}
+              <img
                 src={userInfo?.profile_url || '/images/default-profile.png'}
                 alt="Profile"
                 className="w-full h-full object-cover rounded-full"
@@ -177,9 +173,7 @@ export function CreateRePost() {
           <div className="px-4 pt-2 pb-2 bg-write-comment-box-bg rounded-sm mx-4 ">
             <div className="flex items-center gap-3 relative">
               <div className="size-6 rounded-full">
-                <Image
-                  width={40}
-                  height={40}
+                <img
                   src={authorProfileUrl || '/images/default-profile.png'}
                   alt="Profile"
                   className="w-full h-full object-cover rounded-full"
@@ -218,10 +212,9 @@ export function CreateRePost() {
                 {feedImageUrl && (
                   <div className="relative group">
                     <div className="relative w-full aspect-video rounded-md overflow-hidden max-h-40">
-                      <Image
+                      <img
                         src={feedImageUrl}
                         alt="Quoted content"
-                        fill
                         className="object-cover"
                         sizes="100vw"
                       />
@@ -373,10 +366,9 @@ export function CreateRePost() {
           {image && (
             <div className="px-4 pt-2">
               <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                <Image
+                <img
                   src={image}
                   alt="Uploaded content"
-                  fill
                   className="object-cover"
                 />
                 <button

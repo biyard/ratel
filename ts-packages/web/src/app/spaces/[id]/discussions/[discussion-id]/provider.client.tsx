@@ -13,7 +13,7 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import { logger } from '@/lib/logger';
 import { route } from '@/route';
-import { UseSuspenseQueryResult } from '@tanstack/react-query';
+import type { UseSuspenseQueryResult } from '@tanstack/react-query';
 import {
   ConsoleLogger,
   DefaultDeviceController,
@@ -21,8 +21,8 @@ import {
   LogLevel,
   MeetingSessionConfiguration,
 } from 'amazon-chime-sdk-js';
-import { useRouter } from 'next/navigation';
-import React, {
+import { useNavigate } from 'react-router';
+import {
   useContext,
   createContext,
   useRef,
@@ -123,7 +123,7 @@ export default function ClientProviders({
   );
 
   const { post, get } = useApiCall();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const data = useDiscussionById(spaceId, discussionId);
   const discussion = data.data;
@@ -177,7 +177,7 @@ export default function ClientProviders({
 
     const handlePopState = async () => {
       await cleanupMeetingSession();
-      router.replace(route.deliberationSpaceById(spaceId));
+      navigate(route.deliberationSpaceById(spaceId));
     };
 
     const handleBeforeUnload = async (e: BeforeUnloadEvent) => {

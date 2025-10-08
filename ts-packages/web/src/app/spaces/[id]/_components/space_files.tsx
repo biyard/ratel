@@ -1,14 +1,13 @@
 'use client';
 
 import { FileInfo } from '@/lib/api/models/feeds';
-import React from 'react';
 
 import { replacePdfLinks, UrlReplacement } from '@/lib/pdf-utils';
 import { useRedeemCode } from '@/lib/api/hooks/redeem-codes';
-import { useParams } from 'next/navigation';
+import { useParams } from 'react-router';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { NftSelectModal } from './nft-select-modal';
-import { Badge } from '@/lib/api/models/badge';
+import type { Badge } from '@/lib/api/models/badge';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useUserBadge } from '@/lib/api/hooks/user-badges';

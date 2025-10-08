@@ -2,13 +2,15 @@ import { Answer } from '@/lib/api/models/response';
 import { File } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 import { Question, SurveyCreateRequest } from '@/lib/api/models/survey';
 
-export enum DeliberationTab {
-  SUMMARY = 'Summary',
-  DELIBERATION = 'Deliberation',
-  POLL = 'Poll',
-  RECOMMANDATION = 'Recommendation',
-  ANALYZE = 'Analyze',
-}
+export const DeliberationTab = {
+  SUMMARY: 'Summary',
+  DELIBERATION: 'Deliberation',
+  POLL: 'Poll',
+  RECOMMANDATION: 'Recommendation',
+  ANALYZE: 'Analyze',
+} as const;
+
+export type DeliberationTab = typeof DeliberationTab[keyof typeof DeliberationTab];
 
 export type DeliberationTabType = DeliberationTab;
 

@@ -1,7 +1,7 @@
-import { Feed, FeedStatus, FeedV2 } from './models/feeds';
+import type { Feed, FeedStatus, FeedV2 } from './models/feeds';
 import { FileType } from './models/file-type';
-import { Space } from './models/spaces';
-import {
+import type { Space } from './models/spaces';
+import type {
   QuizAttempt,
   QuizAttemptsResponse,
   NoticeQuizAnswer,
@@ -20,16 +20,16 @@ import {
 } from '@/constants';
 import {
   useSuspenseQuery,
-  UseSuspenseQueryResult,
+  type UseSuspenseQueryResult,
   useQuery,
-  UseQueryResult,
+  type UseQueryResult,
 } from '@tanstack/react-query';
 import { useApiCall } from './use-send';
-import { RedeemCode } from './models/redeem-code';
-import { NetworkData } from './models/network';
-import { Promotion } from './models/promotion';
+import type { RedeemCode } from './models/redeem-code';
+import type { NetworkData } from './models/network';
+import type { Promotion } from './models/promotion';
 import { GroupPermission } from './models/group';
-import { DeliberationSpace } from './ratel/spaces/deliberation-spaces.v3';
+import type { DeliberationSpace } from './ratel/spaces/deliberation-spaces.v3';
 
 export function useDeliberationSpaceById(
   id: string,

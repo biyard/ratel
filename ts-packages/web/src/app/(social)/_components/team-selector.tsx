@@ -1,5 +1,3 @@
-'use client';
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,15 +9,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { ChevronDown } from 'lucide-react';
-import React, { useContext, useEffect } from 'react';
+import { useContext, useEffect } from 'react';
 import TeamCreationPopup from '../_popups/team-creation-popup';
-import { Team } from '@/lib/api/models/team';
-import Link from 'next/link';
+import type { Team } from '@/lib/api/models/team';
+import { NavLink } from 'react-router';
 import { route } from '@/route';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { TeamContext } from '@/lib/contexts/team-context';
-import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { useUserInfo } from '@/hooks/use-user-info';
 
 export interface TeamSelectorProps {
@@ -28,7 +25,7 @@ export interface TeamSelectorProps {
 }
 
 export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
-  const t = useTranslations('Home');
+  const { t } = useTranslation('Home');
   const popup = usePopup();
   const { logout } = useAuth();
   const { teams, selectedIndex, setSelectedTeam } = useContext(TeamContext);
@@ -73,8 +70,8 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
                   className="focus:bg-accent focus:text-text-primary [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2 hover:bg-hover"
                   asChild
                 >
-                  <Link
-                    href={
+                  <NavLink  
+                    to={
                       index === 0
                         ? route.home()
                         : route.teamByUsername(team.username)
@@ -86,7 +83,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
                     }}
                   >
                     {team.profile_url ? (
-                      <Image
+                      <img
                         src={team.profile_url}
                         alt={team.nickname}
                         width={24}
@@ -97,7 +94,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
                       <div className="w-6 h-6 rounded-full border border-neutral-600 bg-neutral-600" />
                     )}
                     <span className="text-text-primary">{team.nickname}</span>
-                  </Link>
+                  </NavLink>
                 </DropdownMenuItem>
               ) : null,
             )}

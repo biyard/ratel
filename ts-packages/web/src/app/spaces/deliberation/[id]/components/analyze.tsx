@@ -1,22 +1,23 @@
 'use client';
-import React from 'react';
 import { logger } from '@/lib/logger';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { MappedResponse, Poll } from '../types';
 import ObjectiveResponse from '@/app/spaces/[id]/_components/dashboard/objective-response';
 import SubjectiveResponse from '@/app/spaces/[id]/_components/dashboard/subjective-response';
 import SummaryReport from '@/app/spaces/[id]/_components/dashboard/summary-report';
 import { SurveyResponseResponse } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 
-enum AnswerType {
-  SingleChoice = 'single_choice',
-  MultipleChoice = 'multiple_choice',
-  ShortAnswer = 'short_answer',
-  Subjective = 'subjective',
-  Checkbox = 'checkbox',
-  Dropdown = 'dropdown',
-  LinearScale = 'linear_scale',
-}
+const AnswerType = {
+  SingleChoice: 'single_choice',
+  MultipleChoice: 'multiple_choice',
+  ShortAnswer: 'short_answer',
+  Subjective: 'subjective',
+  Checkbox: 'checkbox',
+  Dropdown: 'dropdown',
+  LinearScale: 'linear_scale',
+} as const;
+
+type AnswerType = typeof AnswerType[keyof typeof AnswerType];
 
 export function AnalyzePage({
   answers,
@@ -29,7 +30,7 @@ export function AnalyzePage({
   mappedResponses: MappedResponse[];
   handleDownloadExcel: () => void;
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   logger.debug('mapped responses: ', mappedResponses);
 
   const responseCount = answers.length;

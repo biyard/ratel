@@ -3,8 +3,7 @@ import {
   ShortAnswerQuestion,
   SubjectiveQuestion,
 } from '@/lib/api/models/survey';
-import { useTranslations } from 'next-intl';
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function SubjectiveResponse({
   question,
@@ -13,7 +12,7 @@ export default function SubjectiveResponse({
   question: ShortAnswerQuestion | SubjectiveQuestion;
   answers: Answer[];
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   const validAnswers = answers
     .filter(
       (a) =>

@@ -1,8 +1,11 @@
 'use client';
 
-import { ThemeProvider } from 'next-themes';
+import * as React from 'react';
 import { ThemeType } from '@/lib/api/models/user';
 import { useUserInfo } from '@/hooks/use-user-info';
+
+// Placeholder for ThemeProvider - next-themes is not available in this project
+const ThemeProvider = ({ children }: { children: React.ReactNode; attribute?: string; defaultTheme?: string; enableSystem?: boolean; forcedTheme?: string; disableTransitionOnChange?: boolean }) => <>{children}</>;
 
 export default function ThemeWrapper({
   children,

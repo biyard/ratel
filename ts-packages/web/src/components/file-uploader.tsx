@@ -1,10 +1,10 @@
-import { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
+import type { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import { getFileType, toContentType } from '@/lib/file-utils';
 import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 
 export interface FileUploaderProps {
   onUploadSuccess?: (url: string) => void;

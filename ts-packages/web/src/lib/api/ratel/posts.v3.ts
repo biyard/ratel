@@ -59,10 +59,12 @@ export function updatePostWithImage(
   });
 }
 
-export enum Visibility {
-  Public = 'PUBLIC',
-  TeamOnly = 'TEAM_ONLY',
-}
+export const Visibility = {
+  Public: 'PUBLIC',
+  TeamOnly: 'TEAM_ONLY',
+} as const;
+
+export type Visibility = typeof Visibility[keyof typeof Visibility];
 
 export function updatePostVisibility(
   postPk: string,
@@ -125,11 +127,13 @@ export type Post = {
   urls: string[];
 };
 
-export enum PostType {
-  Post = 1,
-  Repost = 2,
-  Artwork = 3,
-}
+export const PostType = {
+  Post: 1,
+  Repost: 2,
+  Artwork: 3,
+} as const;
+
+export type PostType = typeof PostType[keyof typeof PostType];
 
 export type CreatePostResponse = {
   post_pk: string;

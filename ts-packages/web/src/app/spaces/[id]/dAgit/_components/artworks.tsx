@@ -1,15 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-'use client';
 import { Button } from '@/components/ui/button';
 import { useArtworkDetailById } from '@/hooks/use-artwork-detail';
 import Artwork from '@/lib/api/models/artwork';
-import Image from 'next/image';
+
 import { useState } from 'react';
 import { openCreateArtworkModal } from './create-artwork-modal';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { useEditCoordinatorStore } from '../../space-store';
 import { useDagitStore } from '../dagit-store';
-import Certified from '@/assets/icons/certified.svg';
+import Certified from '@/assets/icons/certified.svg?react';
 import { openCertificationModal } from './certification-modal';
 import { useArtworkCertificateById } from '@/hooks/use-artwork-certificate';
 import useDagitBySpaceId, { useDagitByIdMutation } from '@/hooks/use-dagit';
@@ -77,21 +76,19 @@ function ArtworkViewer({
       <div className="flex flex-col w-full h-full justify-center items-center">
         <div className="relative w-full max-h-128 object-cover">
           {showOriginal && original?.image && (
-            <Image
+            <img
               src={original.image}
               alt={artwork.title}
-              width={500}
-              height={500}
-              className="object-cover"
+              className="w-125 h-125 object-cover"
             />
           )}
           {!showOriginal && !!artwork.file.url && (
-            <Image
+            <img
               src={artwork.file.url}
               alt={artwork.title}
               width={500}
               height={500}
-              className="object-cover"
+              className="w-125 h-125 object-cover"
             />
           )}
           {!artwork.file.url && !showOriginal && (

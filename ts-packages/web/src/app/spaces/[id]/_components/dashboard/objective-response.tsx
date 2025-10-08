@@ -8,10 +8,9 @@ import {
   SingleChoiceQuestion,
 } from '@/lib/api/models/survey';
 import { Answer } from '@/lib/api/models/response';
-import React from 'react';
 import BarChartResponse from '../charts/bar-chart-response';
 import PieChartResponse from '../charts/pie-chart-response';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 function parseObjectiveAnswers(
   question:
@@ -88,7 +87,7 @@ export default function ObjectiveResponse({
     | LinearScaleQuestion;
   answers: Answer[];
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   const parsed = parseObjectiveAnswers(question, answers);
   const validAnswers = answers
     .filter((a) => a.answer_type === question.answer_type && a.answer != null)

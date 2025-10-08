@@ -1,8 +1,8 @@
 'use client';
 
+import { useEffect, useRef, useMemo } from 'react';
 import { Group, Image as KonvaImage } from 'react-konva';
 import useImage from 'use-image';
-import { useEffect, useRef, useMemo } from 'react';
 import type { Group as KonvaGroupType } from 'konva/lib/Group';
 import type { Image as KonvaImageType } from 'konva/lib/shapes/Image';
 import CharacterSprite from './character';

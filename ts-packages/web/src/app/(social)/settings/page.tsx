@@ -1,11 +1,10 @@
-'use client';
-import React from 'react';
+import * as React from 'react';
 import MyInfo from './_components/tab/my-info';
 import MySettings from './_components/tab/my-settings';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export default function MyProfilePage() {
-  const t = useTranslations('Settings');
+  const { t } = useTranslation('Settings');
   const tabs = [t('my_info'), t('settings')] as const;
   const [activeIndex, setActiveIndex] = React.useState(0);
 

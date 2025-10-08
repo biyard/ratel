@@ -3,9 +3,9 @@ import { QK_GET_NEWS_BY_NEWS_ID } from '@/constants';
 import { ratelApi } from '@/lib/api/ratel_api';
 import {
   useSuspenseQuery,
-  UseSuspenseQueryResult,
+  type UseSuspenseQueryResult,
 } from '@tanstack/react-query';
-import { NewsDetailItem } from '@/lib/api/models/news';
+import type { NewsDetailItem } from '@/lib/api/models/news';
 import { useApiCall } from '@/lib/api/use-send';
 
 export function useNews(): UseSuspenseQueryResult<NewsDetailItem> {

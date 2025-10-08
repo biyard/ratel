@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { LoginPopupFooter } from './login-popup-footer';
 import { PrimaryButton } from '../button/primary-button';
@@ -16,8 +16,7 @@ import { Row } from '../ui/row';
 import { Button } from '../ui/button';
 import { sha3 } from '@/lib/utils';
 import FileUploader from '../file-uploader';
-import Image from 'next/image';
-import { useTranslations } from 'next-intl';
+import { useTranslation, Trans } from 'react-i18next';
 import { OAuthProvider } from '@/types/oauth-provider';
 import { ratelSdk } from '@/lib/api/ratel';
 import { useUserInfo } from '@/hooks/use-user-info';
@@ -51,7 +50,7 @@ const UserSetupPopup = ({
   provider,
   accessToken,
 }: UserSetupPopupProps) => {
-  const t = useTranslations('Signup');
+  const { t } = useTranslation('Signup');
   const { post } = useApiCall();
 
   const popup = usePopup();
@@ -177,10 +176,8 @@ const UserSetupPopup = ({
       <div className="flex flex-col max-w-100 w-full gap-4 tablet:gap-8.75 max-mobile:overflow-y-scroll">
         <FileUploader onUploadSuccess={handleProfileUrl}>
           <div className="group relative flex items-center justify-center size-40 max-mobile:size-20 mx-auto">
-            <Image
+            <img
               src={profileUrlState}
-              width={160}
-              height={160}
               alt="Team Logo"
               className="w-40 h-40 rounded-full object-cover cursor-pointer relative group max-mobile:size-20"
             />
@@ -341,10 +338,14 @@ const UserSetupPopup = ({
           <div className="flex flex-col gap-2.25 items-start mb-5 mt-5">
             <Checkbox id="agree_checkbox" onChange={setAgreed}>
               <span className="text-sm text-gray-400">
-                {t.rich('agree_tos', {
-                  req: (chunks) => <strong>{chunks}</strong>,
-                  b: (chunks) => <strong>{chunks}</strong>,
-                })}
+                <Trans
+                  i18nKey="agree_tos"
+                  ns="Signup"
+                  components={{
+                    req: <strong />,
+                    b: <strong />,
+                  }}
+                />
               </span>
             </Checkbox>
 

@@ -9,7 +9,7 @@ import {
   UpdateSprintLeaguePlayerRequest,
 } from '@/lib/api/models/sprint_league';
 import { getQueryKey as getSpaceByIdQk } from './use-space-by-id';
-import { Space } from '@/lib/api/models/spaces';
+import type { Space } from '@/lib/api/models/spaces';
 import { useReferralInfo } from '@/app/_providers/referral-handler';
 import { useSprintLeagueStore } from '@/app/spaces/[id]/sprint-league/sprint-league-store';
 

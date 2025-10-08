@@ -1,8 +1,8 @@
 'use client';
+import * as React from 'react';
 
 import { getTimeWithFormat } from '@/lib/time-utils';
-import React from 'react';
-import Clock from '@/assets/icons/clock.svg';
+import Clock from '@/assets/icons/clock.svg?react';
 import { Discuss, PieChart1, File, Vote } from '@/components/icons';
 import { CheckCircle, Settings } from 'lucide-react';
 import { DeliberationTab } from '../types';
@@ -10,7 +10,7 @@ import { DeliberationTab } from '../types';
 // import { useUserInfo } from '@/app/(social)/_hooks/user';
 // import { TeamContext } from '@/lib/contexts/team-context';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 // import { usePermission } from '@/app/(social)/_hooks/use-permission';
 // import { GroupPermission } from '@/lib/api/models/group';
@@ -23,7 +23,7 @@ import {
 import { useUserInfo } from '@/hooks/use-user-info';
 
 export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const popup = usePopup();
   const {
     isEdit,
@@ -198,7 +198,7 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
 }
 
 export function SpaceTabsMobile({ space }: { space: DeliberationSpace }) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const { selectedType, handleUpdateSelectedType } =
     useDeliberationSpaceByIdContext();
   const { data: userInfo } = useUserInfo();

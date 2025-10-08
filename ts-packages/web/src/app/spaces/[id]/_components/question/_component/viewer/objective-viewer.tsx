@@ -1,11 +1,10 @@
 'use client';
-import React from 'react';
-import Image from 'next/image';
+
 import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Answer } from '@/lib/api/models/response';
 import { Question } from '@/lib/api/models/survey';
 import Wrapper from './_components/wrapper';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export default function ObjectiveViewer({
   answerType,
@@ -37,7 +36,7 @@ export default function ObjectiveViewer({
     type: Question['answer_type'],
   ) => void;
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   return (
     <>
       <Wrapper
@@ -47,9 +46,7 @@ export default function ObjectiveViewer({
         title={title}
       />
       {imageUrl ? (
-        <Image
-          width={700}
-          height={280}
+        <img
           className="object-contain max-h-70 w-fit rounded-lg"
           src={imageUrl}
           alt={title || t('question_title')}

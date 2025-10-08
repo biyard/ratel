@@ -1,15 +1,13 @@
-import { redirect } from 'next/navigation';
 import { route } from '@/route';
-import { isLoggedIn } from '@/lib/auth';
 import Client from './client';
+import { useLoaderData, useNavigate } from 'react-router';
+import { useUserInfo } from '@/hooks/use-user-info';
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-  const isLogin = await isLoggedIn();
-  const paramsObj = searchParams ? await searchParams : {};
+export default function LoginPage() {
+  const paramsObj = useLoaderData();
+  const nav = useNavigate();
+  const { data: user } = useUserInfo();
+  const isLogin = user !== null;
 
   if (isLogin) {
     let url;
@@ -31,7 +29,7 @@ export default async function LoginPage({
       url = route.home();
     }
 
-    redirect(url);
+    nav(url, { replace: true });
   }
 
   return <Client />;

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Answer } from '@/lib/api/models/response';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CheckPopup from './check-popup';
@@ -9,7 +8,7 @@ import SubjectiveViewer from './_component/viewer/subjective-viewer';
 import DropdownViewer from './_component/viewer/dropdown-viewer';
 import LinearScaleViewer from './_component/viewer/linear-scale-viewer';
 import { Poll, SurveyAnswer } from '../../type';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 
 interface Question {
@@ -46,7 +45,7 @@ export default function SurveyViewer({
   handleSend: () => Promise<void>;
   space: Space;
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   // TODO: Update to use v3 user API with string pk instead of numeric id
   const userId = 0;
 

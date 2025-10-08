@@ -5,10 +5,12 @@ import { Answer } from '@/lib/api/models/response';
 
 // import { useEditCoordinatorStore } from '../space-store';
 
-export enum Tab {
-  Poll = 'Poll',
-  Analyze = 'Analyze',
-}
+export const Tab = {
+  Poll: 'Poll',
+  Analyze: 'Analyze',
+} as const;
+
+export type Tab = typeof Tab[keyof typeof Tab];
 
 type State = {
   activeTab: Tab;

@@ -1,9 +1,8 @@
 'use client';
 
-import React from 'react';
-import AlertCircle from '@/assets/icons/alert-circle.svg';
+import AlertCircle from '@/assets/icons/alert-circle.svg?react';
 import { LoginPopupFooter } from './login-popup-footer';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 interface LoginFailurePopupProps {
   id?: string;
@@ -24,7 +23,7 @@ export const LoginFailurePopup = ({
   onRetry,
 }: LoginFailurePopupProps) => {
   // const keyPair = useEd25519KeyPair();
-  const t = useTranslations('Signup');
+  const { t } = useTranslation('Signup');
   const failureMsg = t('failureMsg', { serviceName });
 
   return (

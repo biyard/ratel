@@ -1,6 +1,5 @@
 'use client';
-import { useTranslations } from 'next-intl';
-import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function CheckPopup({
   onContinue,
@@ -9,7 +8,7 @@ export default function CheckPopup({
   onContinue: () => void;
   onClose: () => void;
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   return (
     <div className="w-full max-w-[450px] px-[20px]">
       <div className="flex flex-col gap-[40px]">

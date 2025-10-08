@@ -7,10 +7,12 @@ export default interface Consensus {
   result?: ConsensusResult | null;
 }
 
-export enum ConsensusResult {
-  Accepted = 1,
-  Rejected = 2,
-}
+export const ConsensusResult = {
+  Accepted: 1,
+  Rejected: 2,
+} as const;
+
+export type ConsensusResult = typeof ConsensusResult[keyof typeof ConsensusResult];
 
 export interface ConsensusVote {
   id: number;
@@ -20,7 +22,9 @@ export interface ConsensusVote {
   description?: string | null;
 }
 
-export enum ConsensusVoteType {
-  Approved = 1,
-  Rejected = 2,
-}
+export const ConsensusVoteType = {
+  Approved: 1,
+  Rejected: 2,
+} as const;
+
+export type ConsensusVoteType = typeof ConsensusVoteType[keyof typeof ConsensusVoteType];

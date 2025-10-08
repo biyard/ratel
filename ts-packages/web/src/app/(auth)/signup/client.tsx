@@ -1,5 +1,3 @@
-'use client';
-import { useRouter, useSearchParams } from 'next/navigation';
 import SignupForm from '../_components/signup-form';
 import { useAuthStore } from '../store';
 import { apiFetch } from '@/lib/api/apiFetch';
@@ -8,6 +6,7 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { emailSignupRequest } from '@/lib/api/models/users/email-signup-request';
 import { signupRequest } from '@/lib/api/models/users/signup-request';
 import { route } from '@/route';
+import { useLoaderData, useNavigate } from 'react-router';
 
 interface SignupRequest {
   email: string;
@@ -67,14 +66,14 @@ async function signup({
 }
 
 export default function ClientPage() {
-  const searchParams = useSearchParams();
+  const searchParams = useLoaderData();
 
   const source = searchParams?.get('source');
   const redirectUrl = searchParams?.get('redirectUrl');
 
   const { clearState } = useAuthStore();
 
-  const router = useRouter();
+  const navigate = useNavigate();
   // Wrap to enforce required fields and return a Promise
   const handleUserInfo = async ({
     email,
@@ -107,11 +106,11 @@ export default function ClientPage() {
     clearState();
 
     if (source) {
-      router.push(route.connect());
+      navigate(route.connect());
     } else if (redirectUrl) {
-      router.push(redirectUrl);
+      navigate(redirectUrl);
     }
-    router.push(route.home());
+    navigate(route.home());
   };
 
   return (

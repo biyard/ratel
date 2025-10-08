@@ -1,6 +1,5 @@
-'use client';
-import React, { useCallback, useState } from 'react';
-import GoogleIcon from '@/assets/icons/google.svg';
+import { useCallback, useState } from 'react';
+import GoogleIcon from '@/assets/icons/google.svg?react';
 import { LoginPopupFooter } from './login-popup-footer';
 import { LoaderPopup } from './loader-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
@@ -22,7 +21,7 @@ import { isWebView } from '@/lib/webview-utils';
 import { TelegramIcon } from '../icons';
 import { type User as TelegramUser } from '@telegram-apps/sdk-react';
 import { getQueryClient } from '@/providers/getQueryClient';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { feedKeys } from '@/constants';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { useApiCall } from '@/lib/api/use-send';
@@ -46,8 +45,8 @@ export const LoginModal = ({
   id = 'login_popup',
   disableClose = false,
 }: LoginModalProps) => {
-  const t = useTranslations('SignIn');
-  const signupTranslate = useTranslations('Signup');
+  const { t } = useTranslation('SignIn');
+  const { t: signupTranslate } = useTranslation('Signup');
   const popup = usePopup();
   const network = useNetwork();
   const anonKeyPair = useEd25519KeyPair();

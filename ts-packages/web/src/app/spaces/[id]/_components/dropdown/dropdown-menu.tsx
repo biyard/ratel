@@ -1,4 +1,4 @@
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 
 export default function DropdownMenu({
   onclose,
@@ -7,7 +7,7 @@ export default function DropdownMenu({
   onclose: () => void;
   ondelete: () => void;
 }) {
-  const t = useTranslations('Space');
+  const { t } = useTranslation('Space');
 
   const menuItems = [
     // {

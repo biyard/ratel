@@ -4,17 +4,16 @@ import FileUploaderMetadata from '@/components/file-uploader-metadata';
 import { FileExtension, toFileExtension } from '@/lib/api/models/feeds';
 // import { checkString } from '@/lib/string-filter-utils';
 
-import React from 'react';
 import { ArrowRight, Upload } from 'lucide-react';
 import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 import { CircleClose } from '@/components/icons';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 import { useDeliberationSpaceByIdContext } from '../providers.client';
 import { File } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 
 export default function SpaceElearning() {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const { isEdit, deliberation, handleUpdateDeliberation } =
     useDeliberationSpaceByIdContext();
   const elearnings = deliberation.elearnings;
@@ -130,7 +129,7 @@ function EBook({ file, onClick }: { file: File; onClick: () => void }) {
 }
 
 function ReadButton({ onClick }: { onClick: () => void }) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   return (
     <div
       className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5  bg-white light:bg-card-bg border border-card-border hover:bg-white/80 light:hover:bg-card-bg/50 rounded-lg"
@@ -145,7 +144,7 @@ function ReadButton({ onClick }: { onClick: () => void }) {
 }
 
 function EditableFile({ file, onclick }: { file: File; onclick: () => void }) {
-  const t = useTranslations('DeliberationSpace');
+  const { t } = useTranslation('DeliberationSpace');
   return (
     <div className="cursor-pointer flex flex-row justify-start items-center w-full py-5 gap-2 bg-transparent rounded-[8px] mt-[10px]">
       <div className="flex flex-col w-full justify-start items-start gap-1">

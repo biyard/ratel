@@ -114,6 +114,9 @@ BUILD_ENV ?= ENV=$(ENV) \
 .build/evm-keys:
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json
 
+dist:
+	cd ../../ts-packages/web && make build
+	cp -r ../../ts-packages/web/dist ./
 
 run:
 	$(BUILD_ENV) cargo watch -x "run $(RUST_FLAG)" -w src -w $(PWD)/..
@@ -122,15 +125,26 @@ build:
 	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda
 	mkdir -p $(WORKSPACE_ROOT)/.build/$(SERVICE)
 	cp $(CARGO_TARGET_DIR)/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap
+	@echo "Building web frontend..."
+	@cd $(WORKSPACE_ROOT)/ts-packages/web && ENV=$(ENV) make build
+
+build-only:
+	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda
+	mkdir -p $(WORKSPACE_ROOT)/.build/$(SERVICE)
+	cp $(CARGO_TARGET_DIR)/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap
 
 TEST_TARGET ?= controllers::v3 models::dynamo_tables
 
 test:
-	$(BUILD_ENV) cargo test $(RUST_FLAG) --lib -j 1 --  --test-threads=1 $(TEST_TARGET) --show-output
+	$(BUILD_ENV) WEB_BUILD="false" cargo test $(RUST_FLAG) --lib -j 1 --  --test-threads=1 $(TEST_TARGET) --show-output
 
+docker.build: dist
+	$(eval WEB_INDEX_JS=$(shell basename $(shell ls dist/assets/index-*.js)))
+	$(eval WEB_INDEX_CSS=$(shell basename $(shell ls dist/assets/index-*.css)))
 
-docker.build:
-	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'apt-get update && apt-get install -y libssl-dev pkg-config ca-certificates && $(BUILD_ENV) CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release $(RUST_FLAG)'
+	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'apt-get update && apt-get install -y libssl-dev pkg-config ca-certificates && $(BUILD_ENV) WEB_BUILD=false WEB_INDEX_JS=$(WEB_INDEX_JS) WEB_INDEX_CSS=$(WEB_INDEX_CSS) CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release $(RUST_FLAG)'
+
+	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'cp -rf dist target/release/'
 	docker build -t $(ECR_NAME):$(COMMIT) --no-cache -f Dockerfile $(PWD)/target/release
 
 docker.push:

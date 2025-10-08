@@ -1,8 +1,8 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { User } from 'firebase/auth';
-import { AuthUserInfo } from '../service/firebase-service';
+import type { User } from 'firebase/auth';
+import type { AuthUserInfo } from '../service/firebase-service';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
 import { NoEd25519KeyPair } from '@/errors';
 import { HDNodeWallet } from 'ethers';

@@ -2,7 +2,7 @@
 'use client';
 
 import * as XLSX from 'xlsx';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useSpaceByIdContext } from '../providers.client';
 import { ratelApi, useSpaceById } from '@/lib/api/ratel_api';
 import { UserType } from '@/lib/api/models/user';
@@ -13,7 +13,7 @@ import {
   SpaceStatus,
   spaceUpdateRequest,
 } from '@/lib/api/models/spaces';
-import { useRouter } from 'next/navigation';
+import { useNavigate } from 'react-router';
 import {
   Answer,
   SurveyResponse,
@@ -30,7 +30,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { QK_GET_SPACE_BY_SPACE_ID } from '@/constants';
 import { PollTab, PollTabType } from './types';
 import { MappedResponse, Poll, SurveyAnswer } from '../type';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 
 type ContextType = {
@@ -77,7 +77,7 @@ export default function ClientProviders({
 }: {
   children: React.ReactNode;
 }) {
-  const t = useTranslations('PollSpace');
+  const { t } = useTranslation('PollSpace');
   const queryClient = useQueryClient();
   const { spaceId } = useSpaceByIdContext();
   const data = useSpaceById(spaceId);
@@ -129,7 +129,7 @@ export default function ClientProviders({
     space?.responses ?? [],
   );
 
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const handleShare = async () => {
     const space_id = space.id;
@@ -172,7 +172,7 @@ export default function ClientProviders({
       setIsEdit(false);
       data.refetch();
     } else {
-      router.back();
+      navigate(-1);
     }
   };
 
@@ -236,7 +236,7 @@ export default function ClientProviders({
       queryClient.invalidateQueries({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
       });
-      router.refresh();
+      window.location.reload();
       showSuccessToast(t('success_save_response'));
     } catch (err) {
       showErrorToast(t('failed_save_response'));
@@ -253,7 +253,7 @@ export default function ClientProviders({
       queryClient.invalidateQueries({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
       });
-      router.refresh();
+      window.location.reload();
       data.refetch();
 
       showSuccessToast(t('success_post_space'));
@@ -364,7 +364,7 @@ export default function ClientProviders({
     queryClient.invalidateQueries({
       queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
     });
-    router.refresh();
+    window.location.reload();
   };
 
   const handleUpdateSurvey = (survey: Poll) => {
@@ -397,7 +397,7 @@ export default function ClientProviders({
         space_name: space.title,
       });
       showSuccessToast(t('success_delete_space'));
-      router.push('/');
+      navigate('/');
     } catch (error) {
       logger.debug('Failed to delete space:', error);
       logger.error('Error deleting space:', error);
@@ -457,7 +457,7 @@ export default function ClientProviders({
       queryClient.invalidateQueries({
         queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
       });
-      router.refresh();
+      window.location.reload();
       data.refetch();
 
       showSuccessToast(t('success_update_space'));

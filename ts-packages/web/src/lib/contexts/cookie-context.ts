@@ -20,3 +20,8 @@ export function useCookie() {
   }
   return context;
 }
+
+export async function getCookieContext(): Promise<CookieContextType | undefined> {
+  // This is a placeholder - in a real app this would read from server cookies
+  return undefined;
+}

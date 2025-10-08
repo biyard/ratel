@@ -1,7 +1,7 @@
 'use client';
 import { usePopup } from '@/lib/contexts/popup-service';
-import React, { useEffect } from 'react';
-import RemoveIcon from '@/assets/icons/remove.svg';
+import { useEffect } from 'react';
+import RemoveIcon from '@/assets/icons/remove.svg?react';
 
 export const PopupZone = () => {
   const popup = usePopup();

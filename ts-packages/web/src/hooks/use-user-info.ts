@@ -1,6 +1,6 @@
 import { QK_USERS_GET_INFO } from '@/constants';
-import { getUserInfo, UserResponse } from '@/lib/api/ratel/me.v3';
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { getUserInfo, type UserResponse } from '@/lib/api/ratel/me.v3';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 
 export function useUserInfo(): UseQueryResult<UserResponse | null> {
   const query = useQuery({

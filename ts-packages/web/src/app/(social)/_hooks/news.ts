@@ -1,13 +1,13 @@
 import { QK_GET_NEWS_BY_NEWS_ID } from '@/constants';
 import { ratelApi } from '@/lib/api/ratel_api';
-import { apiFetch, FetchResponse } from '@/lib/api/apiFetch';
+import { apiFetch, type FetchResponse } from '@/lib/api/apiFetch';
 import { QueryClient } from '@tanstack/react-query';
 import { config } from '@/config';
 import {
   useSuspenseQuery,
-  UseSuspenseQueryResult,
+  type UseSuspenseQueryResult,
 } from '@tanstack/react-query';
-import { NewsDetail } from '@/lib/api/models/news';
+import type { NewsDetail } from '@/lib/api/models/news';
 
 export function getKey(id: number): [string, number] {
   return [QK_GET_NEWS_BY_NEWS_ID, id];

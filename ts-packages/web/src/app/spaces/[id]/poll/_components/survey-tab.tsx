@@ -1,6 +1,5 @@
 'use client';
-import React from 'react';
-import { Space } from '@/lib/api/models/spaces';
+import type { Space } from '@/lib/api/models/spaces';
 import SpaceSurvey from '../../_components/space-survey';
 import { useEditCoordinatorStore } from '../../space-store';
 import { usePollStore } from '../store';

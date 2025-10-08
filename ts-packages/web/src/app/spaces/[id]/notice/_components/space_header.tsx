@@ -1,15 +1,15 @@
-import React, { useContext } from 'react';
-// import Shared from '@/assets/icons/share.svg';
-// import Extra from '@/assets/icons/extra.svg';
-// import Bookmark from '@/assets/icons/bookmark.svg';
-import Badge from '@/assets/icons/badge.svg';
+import { useContext } from 'react';
+// import Shared from '@/assets/icons/share.svg?react';
+// import Extra from '@/assets/icons/extra.svg?react';
+// import Bookmark from '@/assets/icons/bookmark.svg?react';
+import Badge from '@/assets/icons/badge.svg?react';
 import { UserType } from '@/lib/api/models/user';
-import Image from 'next/image';
+
 import { Input } from '@/components/ui/input';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 import { ArrowLeft, Play, Save } from 'lucide-react';
-import ArrowUp from '@/assets/icons/arrow-up.svg';
-import Internet from '@/assets/icons/internet.svg';
+import ArrowUp from '@/assets/icons/arrow-up.svg?react';
+import Internet from '@/assets/icons/internet.svg?react';
 import {
   Edit1,
   Unlock2,
@@ -23,7 +23,7 @@ import {
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { getTimeAgo } from '@/lib/time-utils';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
 import { convertNumberToString } from '@/lib/number-utils';
 import { logger } from '@/lib/logger';
 
@@ -75,7 +75,7 @@ export default function SpaceHeader({
   onpost = () => {},
   onpublishwhileediting = () => {},
 }: SpaceHeaderProps) {
-  const t = useTranslations('NoticeSpace');
+  const { t } = useTranslation('NoticeSpace');
   const { data: userInfo } = useUserInfo();
   const userId = userInfo ? userInfo.pk : '';
   logger.debug('user id: ', userId);
@@ -260,11 +260,9 @@ export default function SpaceHeader({
       <div className="flex flex-row justify-between items-center w-full text-sm text-c-wg-50">
         <div className="flex items-center gap-2">
           {proposerImage && proposerImage !== '' ? (
-            <Image
+            <img
               src={proposerImage}
               alt={proposerName}
-              width={24}
-              height={24}
               className={
                 userType === UserType.Team
                   ? 'rounded-lg object-cover object-top w-6 h-6'
@@ -287,10 +285,10 @@ export default function SpaceHeader({
 }
 
 function Onboard() {
-  const t = useTranslations('NoticeSpace');
+  const { t } = useTranslation('NoticeSpace');
   return (
     <div className="flex flex-row items-center w-fit px-2 gap-1 border border-[#05df72] opacity-50 rounded-sm">
-      <Play className="w-2.5 h-2.5 stroke-[#00d492] fill-[#00d492]" />
+      <Play className="w-2.5 h-2.5 stroke-[#00d492]-[#00d492]" />
       <div className="font-semibold text-sm/[25px] text-[#05df72]">
         {t('onboard')}
       </div>

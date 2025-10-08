@@ -1,10 +1,10 @@
 import { QK_GET_PERMISSION } from '@/constants';
 import { GroupPermission } from '@/lib/api/models/group';
-import { Permission } from '@/lib/api/models/permission';
+import type { Permission } from '@/lib/api/models/permission';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import {
-  UseSuspenseQueryResult,
+  type UseSuspenseQueryResult,
   useSuspenseQuery,
 } from '@tanstack/react-query';
 

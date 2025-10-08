@@ -9,22 +9,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { checkString } from '@/lib/string-filter-utils';
 import { route } from '@/route';
-import React from 'react';
-import Image from 'next/image';
 import { logger } from '@/lib/logger';
 import { useApiCall } from '@/lib/api/use-send';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { useSettingsContext } from '../../providers.client';
 import WalletSummary from '../wallet-summary';
-import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router';
 
 export default function MyInfo() {
-  const t = useTranslations('Settings');
+  const { t } = useTranslation('Settings');
   const { post } = useApiCall();
   const userInfo = useSuspenseUserInfo();
   const { data: user } = userInfo;
-  const router = useRouter();
+  const navigate = useNavigate();
 
   const {
     profileUrl,
@@ -42,10 +40,8 @@ export default function MyInfo() {
     <div className="w-full max-tablet:w-full flex flex-col gap-10 items-center">
       <FileUploader onUploadSuccess={handleProfileUrl}>
         {profileUrl ? (
-          <Image
+          <img
             src={profileUrl}
-            width={40}
-            height={80}
             alt="Team Logo"
             className="w-40 h-40 rounded-full object-cover cursor-pointer"
           />
@@ -141,7 +137,7 @@ export default function MyInfo() {
             variant={'rounded_primary'}
             onClick={async () => {
               await handleSave();
-              router.push(route.home());
+              navigate(route.home());
             }}
           >
             {t('save')}

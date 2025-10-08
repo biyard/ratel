@@ -4,10 +4,12 @@ import Artwork from '@/lib/api/models/artwork';
 import { useEditCoordinatorStore } from '../space-store';
 import { FileInfo } from '@/lib/api/models/feeds';
 
-export enum Tab {
-  Content = 1,
-  Artwork = 2,
-}
+export const Tab = {
+  Content: 1,
+  Artwork: 2,
+} as const;
+
+export type Tab = typeof Tab[keyof typeof Tab];
 
 type DagitState = {
   artworks: Artwork[];

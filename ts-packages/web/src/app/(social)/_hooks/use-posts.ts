@@ -1,11 +1,11 @@
 import { ratelApi } from '@/lib/api/ratel_api';
-import { QueryResponse } from '@/lib/api/models/common';
-import { Feed } from '@/lib/api/models/feeds';
+import type { QueryResponse } from '@/lib/api/models/common';
+import type { Feed } from '@/lib/api/models/feeds';
 import { useApiCall } from '@/lib/api/use-send';
 import {
   useSuspenseInfiniteQuery,
   useSuspenseQuery,
-  UseSuspenseQueryResult,
+  type UseSuspenseQueryResult,
 } from '@tanstack/react-query';
 import {
   QK_GET_FEED_BY_FEED_ID,
@@ -69,7 +69,7 @@ export function usePostsByUserId(
   const query = useSuspenseQuery({
     queryKey: [QK_GET_POSTS_BY_USER_ID, user_id, page, size, status],
     queryFn: () =>
-      get(ratelApi.feeds.getPostsByUserId(user_id, page, size, status)),
+      get(ratelApi.feeds.getPostsByUserId(user_id, page, size, status as any)),
     refetchOnWindowFocus: false,
   });
 

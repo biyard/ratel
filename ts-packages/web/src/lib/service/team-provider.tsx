@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { Team } from '@/lib/api/models/team';
+import { useState, useMemo, useEffect } from 'react';
+import type { Team } from '@/lib/api/models/team';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/hooks/use-user-info';
@@ -34,6 +34,7 @@ export const TeamAuthProvider = ({
         created_at: 0,
         updated_at: 0,
         html_contents: user.description || '',
+        user_type: user.user_type as any, // Cast to satisfy Team type
       };
 
       const userTeamsAsTeams: Team[] = (user.teams ?? []).map((team) => ({
@@ -42,6 +43,7 @@ export const TeamAuthProvider = ({
         created_at: 0,
         updated_at: 0,
         html_contents: '',
+        user_type: team.user_type as any, // Cast to satisfy Team type
       }));
 
       setTeams([userAsTeam, ...userTeamsAsTeams]);
