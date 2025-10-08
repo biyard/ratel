@@ -119,7 +119,7 @@ dist:
 	cp -r ../../ts-packages/web/dist ./
 
 run:
-	$(BUILD_ENV) cargo watch -x "run $(RUST_FLAG)" -w src -w $(PWD)/..
+	$(BUILD_ENV) cargo watch -x "run $(RUST_FLAG)" -w src -w $(PWD)/.. -w $(PWD)/../../ts-packages/web
 
 build:
 	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda

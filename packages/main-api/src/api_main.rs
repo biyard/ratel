@@ -1,7 +1,8 @@
 use std::env;
 
 use crate::{
-    config, controllers,
+    AppState, config,
+    controllers::{self, web},
     route::{RouteDeps, route},
     utils::{
         aws::{
@@ -120,8 +121,16 @@ pub async fn api_main() -> Result<Router> {
     } else {
         None
     };
-    let api_router = route(RouteDeps {
+
+    let app_state = AppState {
+        dynamo: dynamo_client.clone(),
         pool: pool.clone(),
+        ses: ses_client.clone(),
+    };
+    let web = web::route(app_state)?;
+
+    let api_router = route(RouteDeps {
+        pool,
         sqs_client,
         bedrock_client,
         rek_client,
@@ -132,10 +141,14 @@ pub async fn api_main() -> Result<Router> {
         dynamo_client,
         ses_client,
     })
-    .await?
-    .layer(middleware::from_fn(authorization_middleware))
-    .layer(session_layer);
+    .await?;
 
-    let app = app.merge(mcp_router).merge(api_router);
+    let app = app
+        .merge(mcp_router)
+        .merge(web)
+        .merge(api_router)
+        .layer(middleware::from_fn(authorization_middleware))
+        .layer(session_layer);
+
     Ok(app)
 }
