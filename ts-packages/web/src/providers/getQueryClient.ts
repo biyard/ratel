@@ -39,6 +39,7 @@ export function makeQueryClient() {
   if (el?.textContent) {
     try {
       const boot = JSON.parse(el.textContent) as BootData;
+      logger.debug('loaded bootstrap data', boot);
       boot.react_query?.forEach(({ key, data }) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         queryClient.setQueryData(key as any, data);
