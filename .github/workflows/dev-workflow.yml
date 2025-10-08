@@ -54,6 +54,7 @@ jobs:
 
   main-api:
     runs-on: ubuntu-22.04
+    needs: [ratel-web]
     defaults:
       run:
         working-directory: packages/main-api
@@ -79,6 +80,13 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
+
+      - name: Download Next.js CDK .next
+        uses: actions/download-artifact@v4
+        with:
+          name: ratel-web-${{ github.sha }}
+          path: ./
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
@@ -88,11 +96,6 @@ jobs:
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
-
-      - name: Setup pnpm
-        run: |
-          corepack enable
-          corepack prepare pnpm@10.15.0 --activate
 
       - name: Building APIs
         env:
@@ -146,6 +149,9 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           RUST_FLAG: --features bypass
         run: |
+          tar xzvf dist.tar.gz
+          mv cdk/dist ./
+
           make docker.build
           make docker.login
           make docker.push

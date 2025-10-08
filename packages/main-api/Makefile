@@ -138,7 +138,7 @@ TEST_TARGET ?= controllers::v3 models::dynamo_tables
 test:
 	$(BUILD_ENV) WEB_BUILD="false" cargo test $(RUST_FLAG) --lib -j 1 --  --test-threads=1 $(TEST_TARGET) --show-output
 
-docker.build: dist
+docker.build:
 	$(eval WEB_INDEX_JS=$(shell basename $(shell ls dist/assets/index-*.js)))
 	$(eval WEB_INDEX_CSS=$(shell basename $(shell ls dist/assets/index-*.css)))
 
