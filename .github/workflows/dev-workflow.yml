@@ -20,7 +20,7 @@ jobs:
       - name: Download Next.js CDK .next
         uses: actions/download-artifact@v4
         with:
-          name: nextjs-web-cdk-next-${{ github.sha }}
+          name: ratel-web-${{ github.sha }}
           path: ./
       - name: Download image worker
         uses: actions/download-artifact@v4
@@ -48,8 +48,7 @@ jobs:
           STACK: ratel-dev-stack
         run: |
           npm i -g aws-cdk
-          tar xzvf next.tar.gz
-          make cdk/public
+          tar xzvf dist.tar.gz
           make cdk/.build/image-worker/bootstrap
           make cdk-deploy-v2
 
@@ -85,7 +84,13 @@ jobs:
       - name: Install toml-cli
         run: |
           cargo binstall toml-cli --force
-      - name: Deploy APIs
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
+
+      - name: Building APIs
         env:
           REGION: ap-northeast-2
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -94,7 +99,7 @@ jobs:
           ENV: dev
           RUST_LOG: info
           SERVICE: main-api
-          DOMAIN: api.dev.ratel.foundation
+          DOMAIN: dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
           DATABASE_TYPE: postgres
           DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
@@ -245,7 +250,7 @@ jobs:
           make docker.login
           make docker.push
 
-  nextjs-web:
+  ratel-web:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -260,35 +265,30 @@ jobs:
       - name: Build
         env:
           REGION: ap-northeast-2
-          NEXT_PUBLIC_LOG_LEVEL: info
-          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
-          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
-          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
-          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
-          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
-          NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+          VITE_LOG_LEVEL: info
+          VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
 
-          NEXT_PUBLIC_ENV: dev
-          NEXT_PUBLIC_SIGN_DOMAIN: dev.ratel.foundation
-          NEXT_PUBLIC_API_URL: https://api.dev.ratel.foundation
-          NEXT_PUBLIC_EXPERIMENT: true
-          NEXT_PUBLIC_GRAPHQL_URL: https://graphql.dev.ratel.foundation/v1/graphql
-          NEXT_PUBLIC_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
+          VITE_ENV: dev
+          VITE_SIGN_DOMAIN: dev.ratel.foundation
+          VITE_API_URL: https://dev.ratel.foundation
+          VITE_EXPERIMENT: true
+          VITE_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
 
         run: |
-          make docker.build
-          make docker.login
-          make docker.push
-          cd ../..
-          make cdk/.next
-          tar czvf next.tar.gz cdk/.next
+          make build
+          tar czvf dist.tar.gz dist
 
       - name: Upload Next.js CDK .next
         uses: actions/upload-artifact@v4
         with:
-          name: nextjs-web-cdk-next-${{ github.sha }}
-          path: ${{ github.workspace }}/next.tar.gz
+          name: ratel-web-${{ github.sha }}
+          path: ${{ github.workspace }}/ts-packages/dist.tar.gz
           if-no-files-found: error
           retention-days: 7
 
