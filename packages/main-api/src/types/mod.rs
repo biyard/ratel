@@ -11,6 +11,7 @@ pub mod visibility;
 
 pub mod author;
 pub mod file;
+pub mod index_tmpl;
 pub mod list_items_query;
 pub mod list_items_response;
 pub mod react_query;
@@ -61,3 +62,5 @@ pub use team_group_permission::*;
 pub use theme::*;
 pub use url_type::*;
 pub use user_type::*;
+
+pub use index_tmpl::*;

@@ -11,6 +11,7 @@ use tower_http::services::ServeDir;
 pub fn route(app_state: AppState) -> Result<Router, Error> {
     Ok(Router::new()
         .native_route("/", axum::native_routing::get(home_page_handler))
+        .fallback(home_page_handler)
         .with_state(app_state)
         .nest_service("/assets", get_service(ServeDir::new("dist/assets")))
         .nest_service(

@@ -31,7 +31,7 @@ export default function PromotionCard({ promotion }: PromotionCardProps) {
         <img
           src={image_url}
           alt={name}
-          className="w-25 h-25 rounded object-cover cursor-pointer"
+          className="w-15 h-15 rounded object-cover cursor-pointer"
         />
         <div>
           <div className="font-medium text-text-primary text-base/[25px]">

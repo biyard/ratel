@@ -3,6 +3,46 @@
   <head>
     <meta charset="UTF-8" />
     <title>{{title}}</title>
+    <meta property="og:title" content="{{ title }}">
+    <meta property="og:type" content="website">
+
+    {% match canonical_url %}
+    {% when Some with (curl) %}
+    <link rel="canonical" href="{{ curl }}">
+    <meta property="og:url" content="{{ curl }}">
+    {% when None %}
+    {% endmatch %}
+
+    {% match index_type %}
+    {% when IndexType::IndexAllPages %}
+    <meta name="robots" content="index, follow">
+    {% when IndexType::IndexOnlyThisPage %}
+    <meta name="robots" content="index, nofollow">
+    {% when IndexType::NoIndexThisPage %}
+    <meta name="robots" content="noindex, follow">
+    {% when IndexType::NoIndexAllPages %}
+    <meta name="robots" content="noindex, nofollow">
+    {% when IndexType::Block %}
+    <meta name="robots" content="disallow">
+    {% endmatch %}
+
+    {% match description %}
+    {% when Some with (desc) %}
+    <meta name="description" content="{{ desc }}">
+    <meta property="og:description" content="{{ desc }}">
+    <meta name="twitter:description" content="{{ desc }}">
+    {% when None %}
+    {% endmatch %}
+
+    {% match image_url %}
+    {% when Some with (img) %}
+    <meta property="og:image" content="{{ img }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ img }}">
+    {% when None %}
+    <meta name="twitter:card" content="summary">
+    {% endmatch %}
+
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
