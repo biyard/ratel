@@ -9,15 +9,13 @@ use crate::controllers::v3::me::get_info::GetInfoResponse;
 use crate::controllers::v3::posts::list_posts::{ListPostsQueryParams, list_posts_handler};
 use crate::controllers::v3::promotions;
 use crate::models::user::{User, UserMetadata};
-use crate::types::{BootData, InitialQuery};
+use crate::types::{BootData, IndexTmpl, InitialQuery};
 
 pub async fn home_page_handler(
     State(app_state): State<AppState>,
+    tmpl: IndexTmpl,
     user: Option<User>,
 ) -> Result<impl IntoResponse, crate::Error2> {
-    let index_js = option_env!("WEB_INDEX_JS").unwrap_or("index.js");
-    let index_css = option_env!("WEB_INDEX_CSS").unwrap_or("index.css");
-
     let user_info = if let Some(ref user) = user {
         let user = UserMetadata::query(&app_state.dynamo.client, &user.pk).await?;
         let user_info: GetInfoResponse = user.into();
@@ -49,21 +47,10 @@ pub async fn home_page_handler(
 
     let boot = BootData::new(query_results);
 
-    #[derive(Debug, Template)]
-    #[template(path = "index.html")]
-    struct Tmpl {
-        title: String,
-        index_js: &'static str,
-        index_css: &'static str,
-        boot_json: String,
-    }
-
-    let template = Tmpl {
-        title: "Ratel Foundation".to_string(),
-        index_js,
-        index_css,
-        boot_json: boot.to_json()?,
-    };
+    let template = tmpl
+        .with_boot_json(boot.to_json()?)
+        .with_description("The first platform connecting South Korea’s citizens with lawmakers to drive institutional reform for the crypto industry.Are you with us ?")
+        .with_image_url("https://metadata.ratel.foundation/logos/logo-symbol.png");
 
     Ok(Html(template.render()?))
 }

@@ -10,6 +10,7 @@ use aide::{
 use axum::{
     body::Body,
     extract::Request,
+    handler::Handler,
     response::IntoResponse,
     routing::{MethodRouter, Route},
 };
@@ -150,6 +151,15 @@ where
             inner: self.inner.with_state(state),
             open_api: self.open_api,
         }
+    }
+
+    pub fn fallback<H, T>(mut self, handler: H) -> Self
+    where
+        H: Handler<T, S>,
+        T: 'static,
+    {
+        self.inner = self.inner.fallback(handler);
+        self
     }
 }
 
