@@ -41,9 +41,9 @@ jobs:
           REGION: ap-northeast-2
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          PGHOST_EU: ${{ secrets.DEV_PGHOST_EU }}
-          PGHOST_US: ${{ secrets.DEV_PGHOST_US }}
-          PGHOST_AP: ${{ secrets.DEV_PGHOST_AP }}
+          PGHOST_EU: ${{ secrets.PGHOST_EU }}
+          PGHOST_US: ${{ secrets.PGHOST_US }}
+          PGHOST_AP: ${{ secrets.PGHOST_AP }}
           DOMAIN: dev.ratel.foundation
           STACK: ratel-dev-stack
         run: |
@@ -109,7 +109,7 @@ jobs:
           DOMAIN: dev.ratel.foundation
           AUTH_DOMAIN: dev.ratel.foundation
           DATABASE_TYPE: postgres
-          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.RO_DATABASE_URL }}
           OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
           AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
           JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
