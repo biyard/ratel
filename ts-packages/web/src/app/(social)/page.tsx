@@ -47,8 +47,21 @@ export default function HomePage() {
     );
   }
 
+  let feedSection = (
+    <Col className="flex-1 flex max-mobile:px-[10px]">
+      <Col className="flex-1">
+        {ctrl.posts.map((post) => (
+          <FeedCard key={`feed-${post.pk}`} post={post} />
+        ))}
+
+        <div ref={ctrl.observerRef} />
+        {!ctrl.hasNext && <FeedEndMessage />}
+      </Col>
+    </Col>
+  );
+
   if (ctrl.posts.length === 0) {
-    return (
+    feedSection = (
       <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-gray-500">
         No posts available
       </div>
@@ -57,16 +70,7 @@ export default function HomePage() {
 
   return (
     <div className="flex-1 flex relative">
-      <Col className="flex-1 flex max-mobile:px-[10px]">
-        <Col className="flex-1">
-          {ctrl.posts.map((post) => (
-            <FeedCard key={`feed-${post.pk}`} post={post} />
-          ))}
-
-          <div ref={ctrl.observerRef} />
-          {!ctrl.hasNext && <FeedEndMessage />}
-        </Col>
-      </Col>
+      {feedSection}
 
       {ctrl.close && (
         <div className="hidden max-tablet:!block fixed bottom-4 right-4 z-50">
