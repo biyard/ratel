@@ -258,7 +258,7 @@ export const ratelApi = {
       `/v1/teams/${team_id}/groups/${group_id}`,
   },
   networks: {
-    getNetworks: () => '/v1/network?param-type=read&action=find-one',
+    getNetworks: () => '/v3/networks/suggestions',
     follow: (user_id: number) => `/v1/my-networks/${user_id}`,
     unfollow: (user_id: number) => `/v1/my-networks/${user_id}`,
   },

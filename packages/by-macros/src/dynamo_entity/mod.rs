@@ -646,9 +646,10 @@ fn generate_updater(
                 }
             }
 
-            pub fn create_transact_write_item(self) -> aws_sdk_dynamodb::types::TransactWriteItem {
+            pub fn create_transact_write_item(&self) -> aws_sdk_dynamodb::types::TransactWriteItem {
                 let item = serde_dynamo::to_item(self)
                     .expect("failed to serialize struct to dynamodb item");
+                let item = self.indexed_fields(item);
 
                 let req = aws_sdk_dynamodb::types::Put::builder()
                     .table_name(Self::table_name())

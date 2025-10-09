@@ -10,6 +10,7 @@ pub struct Team {
         index = "gsi1",
         pk
     )]
+    #[dynamo(index = "gsi6", name = "find_by_follwers", pk)]
     pub sk: EntityType,
 
     #[dynamo(prefix = "TS", index = "gsi2", sk)]
@@ -29,6 +30,7 @@ pub struct Team {
     )]
     pub username: String, // Team Name
 
+    #[dynamo(index = "gsi6", sk)]
     pub followers: i64,
     pub followings: i64,
 

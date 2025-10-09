@@ -6,6 +6,7 @@ use bdk::prelude::*;
 
 use crate::AppState;
 use crate::controllers::v3::me::get_info::GetInfoResponse;
+use crate::controllers::v3::networks::get_suggestions::get_suggestions_handler;
 use crate::controllers::v3::posts::list_posts::{ListPostsQueryParams, list_posts_handler};
 use crate::controllers::v3::promotions;
 use crate::models::user::{User, UserMetadata};
@@ -30,10 +31,13 @@ pub async fn home_page_handler(
         Query(ListPostsQueryParams { bookmark: None }),
     );
 
+    let suggestions = get_suggestions_handler(State(app_state.clone()));
+
     let top_promotion = promotions::get_top_promotion::get_top_promotion_handler();
 
     // resolve all async
-    let (Json(posts), Json(top_promotion)) = tokio::try_join!(posts, top_promotion)?;
+    let (Json(posts), Json(top_promotion), Json(suggestions)) =
+        tokio::try_join!(posts, top_promotion, suggestions)?;
 
     let query_results = vec![
         InitialQuery::new_infinite_list(
@@ -43,6 +47,7 @@ pub async fn home_page_handler(
         )?,
         InitialQuery::new(["ratel-top-promotion"], top_promotion)?,
         InitialQuery::new(serde_json::json!(["user-get-info"]), user_info)?,
+        InitialQuery::new(serde_json::json!(["get-networks"]), suggestions)?,
     ];
 
     let boot = BootData::new(query_results);

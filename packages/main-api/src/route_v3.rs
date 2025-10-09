@@ -118,6 +118,20 @@ pub fn route(
     }: RouteDeps,
 ) -> Result<Router, Error2> {
     Ok(Router::new()
+        .nest(
+            "/networks",
+            Router::new().route(
+                "/suggestions",
+                get_with(
+                    crate::controllers::v3::networks::get_suggestions_handler,
+                    api_docs!(
+                        crate::controllers::v3::networks::GetSuggestionsResponse,
+                        "Get Suggestions",
+                        "Get user and team suggestions for the logged-in user"
+                    ),
+                ),
+            ),
+        )
         .route("/promotions/top", get(get_top_promotion_handler))
         .nest(
             "/me",

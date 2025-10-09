@@ -1,7 +1,6 @@
 use crate::{
     AppState, constants::SESSION_KEY_USER_ID, types::*, utils::time::get_now_timestamp_millis,
 };
-// use async_trait::async_trait;
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use bdk::prelude::*;
@@ -19,6 +18,7 @@ use tower_sessions::Session;
 )]
 pub struct User {
     pub pk: Partition,
+    #[dynamo(index = "gsi6", name = "find_by_follwers", pk)]
     pub sk: EntityType,
 
     #[dynamo(prefix = "TS", index = "gsi2", sk)]
@@ -45,6 +45,7 @@ pub struct User {
 
     pub user_type: UserType,
 
+    #[dynamo(index = "gsi6", sk)]
     pub followers_count: i64,
     pub followings_count: i64,
 
@@ -57,6 +58,84 @@ pub struct User {
     pub theme: Theme,
     pub points: i64,
 }
+
+// impl User {
+//     pub async fn migrate(cli: &aws_sdk_dynamodb::Client) -> Result<(), crate::Error2> {
+//         use aws_sdk_dynamodb::operation::get_item::GetItemOutput;
+
+//         let GetItemOutput { item, .. } = cli
+//             .get_item()
+//             .table_name(Self::table_name())
+//             .key(
+//                 "pk",
+//                 aws_sdk_dynamodb::types::AttributeValue::S("MIGRATE#USER".to_string()),
+//             )
+//             .key(
+//                 "sk",
+//                 aws_sdk_dynamodb::types::AttributeValue::S("MIGRATE".to_string()),
+//             )
+//             .send()
+//             .await
+//             .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+//         let last_migrated_version = if let Some(item) = item {
+//             item.get("last_migrated_version")
+//                 .and_then(|v| v.as_n().ok())
+//                 .and_then(|v| v.parse::<i64>().ok())
+//                 .unwrap_or(0)
+//         } else {
+//             0
+//         };
+
+//         if last_migrated_version >= 1 {
+//             tracing::info!("User table already migrated to the latest version.");
+//             return Ok(());
+//         }
+
+//         let resp = cli
+//             .query()
+//             .table_name(Self::table_name())
+//             .index_name("type-index")
+//             .expression_attribute_names("#pk", "sk")
+//             .expression_attribute_values(
+//                 ":pk",
+//                 aws_sdk_dynamodb::types::AttributeValue::S("USER".to_string()),
+//             )
+//             .key_condition_expression("#pk = :pk")
+//             .send()
+//             .await
+//             .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+//         let items: Vec<Self> = resp
+//             .items
+//             .unwrap_or_default()
+//             .into_iter()
+//             .map(|item| serde_dynamo::from_item(item))
+//             .collect::<Result<Vec<_>, _>>()?;
+
+//         let bookmark = if let Some(ref last_evaluated_key) = resp.last_evaluated_key {
+//             Some(Self::encode_lek_all(last_evaluated_key)?)
+//         } else {
+//             None
+//         };
+
+//         items
+//             .iter()
+//             .map(|user| {
+//                 let item = serde_dynamo::to_item(user)?;
+//                 let item = user.indexed_fields(item);
+
+//                 let req = aws_sdk_dynamodb::types::Put::builder()
+//                     .table_name(Self::table_name())
+//                     .set_item(Some(item))
+//                     .build()
+//                     .unwrap();
+//             })
+//             .collect::<Result<Vec<_>, _>>()?;
+
+//         Ok(())
+//     }
+// }
 
 impl User {
     pub fn new(
