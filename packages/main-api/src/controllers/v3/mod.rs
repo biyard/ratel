@@ -90,8 +90,10 @@ pub mod spaces {
 
 pub mod teams {
     pub mod create_team;
+    pub mod delete_team;
     pub mod find_team;
     pub mod get_team;
+    pub mod list_members;
     pub mod update_team;
 
     pub mod dto;
@@ -102,6 +104,7 @@ pub mod teams {
     pub mod groups {
         pub mod add_member;
         pub mod create_group;
+        pub mod delete_group;
         pub mod remove_member;
         pub mod update_group;
 
