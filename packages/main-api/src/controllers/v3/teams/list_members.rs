@@ -108,8 +108,9 @@ pub async fn list_members_handler(
     .await?;
 
     // Get all team groups for name mapping
-    let (team_groups, _) =
-        TeamGroup::query(&dynamo.client, team_pk.clone(), Default::default()).await?;
+    let (team_groups, _) = TeamGroup::query(&dynamo.client, team_pk.clone(), Default::default())
+        .await
+        .unwrap_or_else(|_| (Vec::new(), None)); // Handle case where no groups exist
     let group_map: HashMap<String, TeamGroup> = team_groups
         .into_iter()
         .map(|group| (group.sk.to_string(), group))

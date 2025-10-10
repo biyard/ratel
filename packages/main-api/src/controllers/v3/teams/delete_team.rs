@@ -61,8 +61,9 @@ pub async fn delete_team_handler(
     let mut deleted_count = 0;
 
     // Delete all team groups and their user relationships
-    let (team_groups, _) =
-        TeamGroup::query(&dynamo.client, team_pk.clone(), Default::default()).await?;
+    let (team_groups, _) = TeamGroup::query(&dynamo.client, team_pk.clone(), Default::default())
+        .await
+        .unwrap_or_else(|_| (Vec::new(), None)); // Handle case where no groups exist
 
     for group in &team_groups {
         // Delete all UserTeamGroup relationships for this group
