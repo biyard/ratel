@@ -27,7 +27,7 @@ export class ThreadController {
   };
 
   handleReplyToComment = async (commentSk: string, content: string) => {
-    logger.debug('handleComment', this.postId);
+    logger.debug('handleReplyToComment', this.postId);
     await this.mutateReplyToComment({
       postPk: this.postId,
       commentSk,

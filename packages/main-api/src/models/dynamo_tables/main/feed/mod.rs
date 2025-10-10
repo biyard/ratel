@@ -9,6 +9,7 @@ pub mod post_summary;
 pub use post::*;
 pub use post_artwork::*;
 pub use post_comment::*;
+pub use post_comment_like::*;
 pub use post_like::*;
 pub use post_repost::*;
 pub use post_summary::*;

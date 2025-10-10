@@ -123,7 +123,7 @@ export function Comment({ comment, onComment, onLike }: CommentProps) {
               if (onLike) {
                 onLike(comment.pk, !comment.liked);
               } else {
-                throw new Error('onLike does not be set');
+                throw new Error('onLike is not set');
               }
             }}
           >
