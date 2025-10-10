@@ -1,11 +1,11 @@
 use crate::{
     Error2,
-    models::team::Team,
+    models::{team::Team, user::User},
     types::{author::Author, sorted_visibility::SortedVisibility, *},
 };
 use bdk::prelude::*;
 
-use super::PostLike;
+use super::{PostComment, PostLike};
 
 #[derive(
     Debug,
@@ -130,21 +130,17 @@ impl Post {
     ) -> Result<(Self, bool), crate::Error2> {
         let post = Post::get(cli, post_pk, Some(EntityType::Post))
             .await?
-            .ok_or(Error2::NotFound("Post not found".to_string()))?;
+            .ok_or(Error2::PostNotFound)?;
 
-        let user_pk = if let Some(user_pk) = user_pk {
-            user_pk
-        } else {
-            if post.visibility.is_some()
-                && post.visibility.as_ref().unwrap() == &Visibility::Public
-                && perm == TeamGroupPermission::PostRead
-                && post.status == PostStatus::Published
-            {
-                return Ok((post, true));
-            } else {
-                return Ok((post, false));
-            }
-        };
+        if post.status == PostStatus::Published && post.visibility == Some(Visibility::Public) {
+            return Ok((post, true));
+        }
+
+        if user_pk.is_none() {
+            return Ok((post, false));
+        }
+
+        let user_pk = user_pk.unwrap();
 
         match post.user_pk.clone() {
             Partition::Team(pk) => {
@@ -208,5 +204,29 @@ impl Post {
             })?;
 
         Ok(())
+    }
+
+    pub async fn comment(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: Partition,
+        content: String,
+        user: User,
+    ) -> Result<PostComment, crate::Error2> {
+        let post = Post::updater(&post_pk, EntityType::Post)
+            .increase_comments(1)
+            .transact_write_item();
+        let comment = PostComment::new(post_pk, content, user);
+        let comment_tx = comment.create_transact_write_item();
+
+        cli.transact_write_items()
+            .set_transact_items(Some(vec![comment_tx, post]))
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to add comment: {}", e);
+                crate::Error2::PostCommentError
+            })?;
+
+        Ok(comment)
     }
 }
