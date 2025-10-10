@@ -87,6 +87,7 @@ pub enum Error {
     #[rest_error(code = 2000)]
     PostIncorrectConfiguredVisibility(String),
     #[error("Post not found")]
+    #[rest_error(status = 404)]
     PostNotFound,
     #[error("You do not have permission to access this post")]
     PostLikeError,
