@@ -239,14 +239,10 @@ async fn test_post_like() {
     let res = post_like.create(&cli).await;
     assert!(res.is_ok(), "Failed to create post like: {:?}", res);
 
-    let is_liked = PostLike::get(
-        &cli,
-        post.pk.clone(),
-        Some(EntityType::PostLike(user2.pk.to_string())),
-    )
-    .await
-    .expect("Failed to get post like")
-    .is_some();
+    let is_liked = PostLike::find_one(&cli, &post.pk, &user2.pk)
+        .await
+        .expect("Failed to get post like")
+        .is_some();
 
     assert!(is_liked, "Expected post to be liked");
 
