@@ -88,3 +88,11 @@ export const feedKeys = {
   repliesOfComment: (postPk: string, commentSk: string) =>
     [QK_FEEDS, 'comments', postPk, commentSk] as const,
 };
+
+const QK_SPACES = 'spaces';
+const QK_POLL_SPACES = [QK_SPACES, 'poll'];
+
+export const pollSpaceKeys = {
+  all: [QK_POLL_SPACES] as const,
+  detail: (pk: string) => [...pollSpaceKeys.all, 'detail', pk] as const,
+};

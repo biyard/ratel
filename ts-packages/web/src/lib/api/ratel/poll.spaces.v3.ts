@@ -3,7 +3,7 @@ import { call } from './call';
 import { TimeRange } from '@/types/time-range';
 import { SpaceCommon } from '@/types/space-common';
 
-export function getPollSpace(spacePk: string) {
+export function getPollSpace(spacePk: string): Promise<PollSpaceResponse> {
   return call('GET', `/v3/spaces/poll/${encodeURIComponent(spacePk)}`);
 }
 
