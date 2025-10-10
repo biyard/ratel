@@ -87,6 +87,7 @@ jobs:
         run: |
           make .build/evm-keys
           cd packages/main-api
+          make dist
           make test
 
   main-api-clean-build:
@@ -138,6 +139,7 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-local
         run: |
           # Build and tag image
+          make dist
           make docker.build
 
   main-api:
@@ -202,6 +204,7 @@ jobs:
           RUST_FLAG: "--features bypass,no-secret"
         run: |
           # Build and tag image
+          make dist
           make docker.build
 
           # Save image to cache
