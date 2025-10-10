@@ -867,6 +867,7 @@ fn generate_struct_impl(
                 }
 
                 let resp = req
+                    .limit(opt.limit)
                     .scan_index_forward(opt.scan_index_forward)
                     .key_condition_expression(key_condition)
                     .send()

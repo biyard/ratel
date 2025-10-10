@@ -29,7 +29,6 @@ export type PostComment = {
   author_profile_url: string;
   author_username: string;
 
-  // FIXME: add
   likes: number;
   replies: number;
 
