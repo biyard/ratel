@@ -27,4 +27,17 @@ impl PostLike {
             user_pk,
         }
     }
+
+    pub async fn find_one(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: &Partition,
+        user_pk: &Partition,
+    ) -> Result<Option<Self>, crate::Error2> {
+        let pk = match post_pk {
+            Partition::Feed(s) if !s.is_empty() => Partition::PostLike(s.clone()),
+            _ => panic!("post_pk must be Partition::Post with non-empty inner value"),
+        };
+
+        PostLike::get(&cli, pk, Some(EntityType::PostLike(user_pk.to_string()))).await
+    }
 }
