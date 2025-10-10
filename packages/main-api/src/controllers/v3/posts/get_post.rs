@@ -36,7 +36,18 @@ pub async fn get_post_handler(
         return Err(Error2::NoPermission);
     };
 
+    // let post_like_pk = match post_pk {
+    //     Partition::Feed(ref post_pk) => Partition::PostLike(post_pk.clone()),
+    //     None => Partition::None,
+    // };
+
     let post_metadata = PostMetadata::query(cli, &post_pk).await?;
+    // TODO: query with sk
+    // let post_likes = PostLikeMetadata::query(cli, &post_like_pk);
+
+    // let (post_metadata, post_likes) = tokio::try_join!(post_metadata, post_likes)?;
+
+    // TODO: Check if the user has liked the post and set is_liked accordingly
 
     Ok(Json(post_metadata.into()))
 }

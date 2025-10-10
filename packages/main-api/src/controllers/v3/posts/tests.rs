@@ -282,7 +282,7 @@ async fn test_delete_post() {
         headers: test_user.1.clone()
     };
     assert_eq!(status, 404, "get post response {:?}", body);
-    assert_eq!(body["code"], 107);
+    assert_eq!(body["code"], 2001);
 }
 
 #[tokio::test]

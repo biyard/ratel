@@ -45,6 +45,7 @@ export default function LexicalHtmlViewer({
   id?: string;
   htmlString: string;
 }) {
+  logger.debug('LexicalHtmlViewer: htmlString  ', htmlString);
   const editorConfig = {
     namespace: `lexical-html-viewer-${id}`,
     editable: false,
