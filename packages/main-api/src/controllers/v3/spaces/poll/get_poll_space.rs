@@ -1,26 +1,23 @@
 use crate::{
     AppState, Error2,
-    models::space::{PollSpaceMetadata, PollSpaceResponse, PollSpaceSurveyResponse, SpaceCommon},
-    types::{EntityType, Partition, SpaceVisibility, TeamGroupPermission},
-    utils::{
-        dynamo_extractor::extract_user_from_session,
-        security::{RatelResource, check_permission_from_session},
+    models::{
+        space::{
+            PollSpaceMetadata, PollSpacePathParam, PollSpaceResponse, PollSpaceSurveyResponse,
+            SpaceCommon,
+        },
+        user::User,
     },
+    types::{EntityType, Partition, TeamGroupPermission},
 };
 
 use bdk::prelude::*;
 use by_axum::axum::{
-    Extension, Json,
+    Json,
     extract::{Path, State},
 };
 
+use aide::NoApi;
 use serde::Deserialize;
-
-#[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
-pub struct GetPollSpacePathParams {
-    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
-    pub poll_space_pk: Partition,
-}
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct GetPollSpaceQueryParams {}
@@ -29,40 +26,30 @@ pub type GetPollSpaceResponse = PollSpaceResponse;
 
 pub async fn get_poll_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(session): Extension<tower_sessions::Session>,
-    Path(GetPollSpacePathParams {
+    NoApi(user): NoApi<Option<User>>,
+    Path(PollSpacePathParam {
         poll_space_pk: space_pk,
-    }): Path<GetPollSpacePathParams>,
+    }): Path<PollSpacePathParam>,
 ) -> Result<Json<GetPollSpaceResponse>, Error2> {
+    // Request Validation
     if !matches!(space_pk, Partition::PollSpace(_)) {
         return Err(Error2::NotFoundPollSpace);
     }
-    let space = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
-        .await?
-        .ok_or(Error2::NotFoundSpace)?;
-    match space.visibility {
-        SpaceVisibility::Private => {
-            let user = extract_user_from_session(&dynamo.client, &session).await?;
-            if user.pk != space.user_pk {
-                return Err(Error2::Unauthorized(
-                    "No permission to access this private space".to_string(),
-                ));
-            }
-        }
-        SpaceVisibility::Team(team_pk) => {
-            check_permission_from_session(
-                &dynamo.client,
-                &session,
-                RatelResource::Team { team_pk },
-                vec![TeamGroupPermission::SpaceRead],
-            )
-            .await?;
-        }
-        _ => {}
+
+    let (_, has_perm) = SpaceCommon::has_permission(
+        &dynamo.client,
+        &space_pk,
+        user.as_ref().map(|u| &u.pk),
+        TeamGroupPermission::SpaceRead,
+    )
+    .await?;
+    if !has_perm {
+        return Err(Error2::NoPermission);
     }
+
     let metadata = PollSpaceMetadata::query(&dynamo.client, &space_pk).await?;
     let mut poll_space_response = PollSpaceResponse::from(metadata);
-    if let Ok(user) = extract_user_from_session(&dynamo.client, &session).await {
+    if let Some(user) = user {
         let my_survey_response = PollSpaceSurveyResponse::get(
             &dynamo.client,
             Partition::PollSpaceResponse(user.pk.to_string()),

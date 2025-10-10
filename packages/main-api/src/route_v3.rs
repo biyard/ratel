@@ -21,14 +21,14 @@ use crate::controllers::v3::spaces::deliberations::responses::create_response_an
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
 use crate::models::feed::{Post, PostDetailResponse};
 // use crate::models::feed::Post;
-use crate::controllers::v3::spaces::poll::list_responses::{
-    ListSurveyResponse, list_responses_handler,
-};
+use crate::controllers::v3::spaces::poll::list_responses::list_responses_handler;
 use crate::controllers::v3::spaces::poll::respond_poll_space::respond_poll_space_handler;
 use crate::controllers::v3::spaces::poll::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
-use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
+use crate::models::space::{
+    DeliberationDiscussionResponse, DeliberationSpaceResponse, PollSpaceSurveyAnswerDto,
+};
 use crate::types::list_items_response::ListItemsResponse;
 // use crate::types::list_items_response::ListItemsResponse;
 use crate::{
@@ -496,7 +496,7 @@ pub fn route(
                             .get_with(
                                 list_responses_handler,
                                 api_docs!(
-                                    Json<ListSurveyResponse>,
+                                    Json<ListItemsResponse<PollSpaceSurveyAnswerDto>>,
                                     "List poll responses",
                                     "List all responses for the poll with ID"
                                 ),
