@@ -1,3 +1,9 @@
+/*
+ * DEPRECATED: This file is deprecated. Please use the v3 space API hooks instead.
+ * TODO: Migrate to v3 space API with proper username/pk fields and correct types.
+ * All functions in this file are disabled. Use alternative implementations from the new API.
+ */
+
 import { QK_GET_SPACE } from '@/constants';
 import { apiFetch, FetchResponse } from '@/lib/api/apiFetch';
 import {

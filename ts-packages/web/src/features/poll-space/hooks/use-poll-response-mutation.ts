@@ -1,4 +1,4 @@
-import { pollSpaceKeys } from '@/constants';
+import { spaceKeys } from '@/constants';
 import {
   PollSpaceResponse,
   submitPollSurveyResponse,
@@ -20,7 +20,7 @@ export function usePollResponseMutation() {
       await submitPollSurveyResponse(spacePk, answers);
     },
     onSuccess: async (_, { spacePk, answers }) => {
-      const pollSpaceQK = pollSpaceKeys.detail(spacePk);
+      const pollSpaceQK = spaceKeys.detail(spacePk);
       await optimisticUpdate<PollSpaceResponse>(
         { queryKey: pollSpaceQK },
         (space) => {

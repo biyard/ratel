@@ -88,7 +88,7 @@ export const routes = createBrowserRouter([
       // Space Layout
       {
         id: 'space-layout',
-        path: 'spaces/:spaceId',
+        path: 'spaces/:spacePk',
         Component: SpaceLayout,
         children: [
           {

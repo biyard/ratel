@@ -36,9 +36,14 @@ export const route = {
   discussionById: (spaceId: number, discussionId: number) =>
     `/spaces/${spaceId}/discussions/${discussionId}`,
 
+  pollSpaceByPk: (pollPk: string) => {
+    return `spaces/poll/${encodeURIComponent(pollPk)}`;
+  },
   telegramSprintLeague: (space_id: number | string) =>
     `/telegram/sprint-league/${encodeURIComponent(space_id)}`,
   telegramSubscribe: (chat_id: number, lang?: string) => {
-    return `/telegram/subscribe?chat_id=${chat_id}${lang ? `&lang=${lang}` : ''}`;
+    return `/telegram/subscribe?chat_id=${chat_id}${
+      lang ? `&lang=${lang}` : ''
+    }`;
   },
 };
