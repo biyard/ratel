@@ -14,7 +14,7 @@ import ThreadPage from './app/(social)/threads/[id]/page';
 
 // Space
 import SpaceLayout from './app/spaces/layout';
-import PollSpacePage from './app/spaces/poll/page';
+import PollSpacePage from './app/spaces/poll/[id]/page';
 
 export const routes = createBrowserRouter([
   {
