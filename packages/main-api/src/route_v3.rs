@@ -2,7 +2,9 @@
 use crate::controllers::v3::auth::verification::verify_code::VerifyCodeResponse;
 use crate::controllers::v3::me::list_my_drafts::list_my_drafts_handler;
 use crate::controllers::v3::me::list_my_posts::list_my_posts_handler;
+use crate::controllers::v3::posts::list_comments::list_comments_handler;
 use crate::controllers::v3::posts::post_response::PostResponse;
+use crate::controllers::v3::posts::reply_to_comment::reply_to_comment_handler;
 use crate::controllers::v3::promotions::get_top_promotion::get_top_promotion_handler;
 use crate::controllers::v3::spaces::create_space::{CreateSpaceResponse, create_space_handler};
 use crate::controllers::v3::spaces::delete_space::delete_space_handler;
@@ -19,7 +21,7 @@ use crate::controllers::v3::spaces::deliberations::posting_deliberation::{
 };
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
-use crate::models::feed::{Post, PostDetailResponse};
+use crate::models::feed::{Post, PostComment, PostDetailResponse};
 // use crate::models::feed::Post;
 use crate::controllers::v3::spaces::poll::list_responses::{
     ListSurveyResponse, list_responses_handler,
@@ -48,7 +50,7 @@ use crate::{
             update_user::{UpdateUserResponse, update_user_handler},
         },
         posts::{
-            comments::add_comment::{AddCommentResponse, add_comment_handler},
+            comments::add_comment::add_comment_handler,
             create_post::{CreatePostResponse, create_post_handler},
             delete_post::delete_post_handler,
             get_post::get_post_handler,
@@ -219,9 +221,28 @@ pub fn route(
                     post_with(
                         add_comment_handler,
                         api_docs!(
-                            Json<AddCommentResponse>,
+                            Json<PostComment>,
                             "Add Comment",
                             "Add a comment to a post by ID"
+                        ),
+                    ),
+                )
+                .route(
+                    "/:post_pk/comments/:comment_sk",
+                    post_with(
+                        reply_to_comment_handler,
+                        api_docs!(
+                            Json<PostComment>,
+                            "Reply to Comment",
+                            "Add a comment to a comment"
+                        ),
+                    )
+                    .get_with(
+                        list_comments_handler,
+                        api_docs!(
+                            Json<ListItemsResponse<PostComment>>,
+                            "List Comments on a comment",
+                            "List all comments on a comment"
                         ),
                     ),
                 )

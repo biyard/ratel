@@ -1,4 +1,4 @@
-use super::*;
+use super::{post_comment_like::PostCommentLike, *};
 use bdk::prelude::*;
 
 /*
@@ -21,7 +21,13 @@ pub enum PostMetadata {
     PostComment(PostComment),
     PostArtwork(PostArtwork),
     PostRepost(PostRepost),
+}
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
+#[serde(untagged)]
+pub enum PostLikeMetadata {
     PostLike(PostLike),
+    PostCommentLike(PostCommentLike),
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
@@ -36,13 +42,13 @@ pub struct PostDetailResponse {
 impl From<Vec<PostMetadata>> for PostDetailResponse {
     fn from(items: Vec<PostMetadata>) -> Self {
         let mut res = Self::default();
+
         for item in items {
             match item {
                 PostMetadata::Post(post) => res.post = Some(post),
                 PostMetadata::PostComment(comment) => res.comments.push(comment),
                 PostMetadata::PostArtwork(artwork) => res.artwork_metadata = artwork.metadata,
                 PostMetadata::PostRepost(repost) => res.repost = Some(repost),
-                _ => { /* Ignore PostLike in this context */ }
             }
         }
         res
