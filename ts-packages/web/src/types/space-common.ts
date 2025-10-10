@@ -1,8 +1,15 @@
 import { BoosterType } from './booster-type';
 
-export type SpacePublishState = 'Draft' | 'Published';
+export enum SpacePublishState {
+  Draft = 'Draft',
+  Published = 'Published',
+}
 
-export type SpaceStatus = 'Waiting' | 'InProgress' | 'Finished';
+export enum SpaceStatus {
+  Waiting = 'Waiting',
+  InProgress = 'InProgress',
+  Finished = 'Finished',
+}
 
 export type SpaceVisibility =
   | { type: 'Private' }
