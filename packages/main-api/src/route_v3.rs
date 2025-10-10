@@ -6,8 +6,6 @@ use crate::controllers::v3::posts::list_comments::list_comments_handler;
 use crate::controllers::v3::posts::post_response::PostResponse;
 use crate::controllers::v3::posts::reply_to_comment::reply_to_comment_handler;
 use crate::controllers::v3::promotions::get_top_promotion::get_top_promotion_handler;
-use crate::controllers::v3::spaces::create_space::{CreateSpaceResponse, create_space_handler};
-use crate::controllers::v3::spaces::delete_space::delete_space_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
@@ -30,6 +28,7 @@ use crate::controllers::v3::spaces::poll::update_poll_space::{
 };
 use crate::models::space::{
     DeliberationDiscussionResponse, DeliberationSpaceResponse, PollSpaceSurveyAnswerDto,
+    SpaceCommonResponse,
 };
 use crate::types::list_items_response::ListItemsResponse;
 // use crate::types::list_items_response::ListItemsResponse;
@@ -65,6 +64,11 @@ use crate::{
             update_deliberation::update_deliberation_handler,
         },
         spaces::poll::get_poll_space::{GetPollSpaceResponse, get_poll_space_handler},
+        spaces::{
+            create_space::{CreateSpaceResponse, create_space_handler},
+            delete_space::delete_space_handler,
+            update_space::update_space_handler,
+        },
         teams::{
             create_team::{CreateTeamResponse, create_team_handler},
             find_team::{FindTeamResponse, find_team_handler},
@@ -314,6 +318,14 @@ pub fn route(
                     delete_with(
                         delete_space_handler,
                         api_docs!((), "Delete Space", "Delete a space by ID"),
+                    )
+                    .post_with(
+                        update_space_handler,
+                        api_docs!(
+                            Json<SpaceCommonResponse>,
+                            "Update Space",
+                            "Update space details"
+                        ),
                     ),
                 )
                 .nest(
