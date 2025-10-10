@@ -36,10 +36,13 @@ pub enum EntityType {
     Post,
     PostAuthor, // from User
     PostSpace,
-    PostComment(String), // PostComment should be sorted by timestamp
+    PostComment(String),              // PostComment should be sorted by timestamp
+    PostCommentReply(String, String), // PostCommentReply#${PostComment ID}#${uuid}
     PostArtwork,
-    PostRepost,       //Unique
-    PostLike(String), // PostLike#${User Pk}
+    PostRepost, //Unique
+    // TODO: suffix based strategy
+    PostLike(String),                // PostLike#${User Pk}
+    PostCommentLike(String, String), // PostCommentLike#${User Pk}#${PostComment Sk}
     // Team entity types
     // TEAM_PK index is aligned by gsi1-index
     // TEAM_GROUP_PK index is aligned by gsi1-index

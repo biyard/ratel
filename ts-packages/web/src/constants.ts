@@ -85,4 +85,6 @@ export const feedKeys = {
     [...feedKeys.list({ username, status: FeedStatus.Published })] as const,
   details: () => [...feedKeys.all, 'detail'] as const,
   detail: (pk: string) => [...feedKeys.details(), pk] as const,
+  repliesOfComment: (postPk: string, commentSk: string) =>
+    [QK_FEEDS, 'comments', postPk, commentSk] as const,
 };
