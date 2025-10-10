@@ -118,8 +118,14 @@ dist:
 	cd ../../ts-packages/web && make build
 	cp -r ../../ts-packages/web/dist ./
 
+WATCH_TARGET = -w src -w $(PWD)/.. 
+# if web build is true, then also watch web files
+ifeq ($(WEB_BUILD),"false")
+	WATCH_TARGET += -w $(PWD)/../../ts-packages/web
+endif
+
 run:
-	$(BUILD_ENV) cargo watch -x "run $(RUST_FLAG)" -w src -w $(PWD)/.. -w $(PWD)/../../ts-packages/web
+	$(BUILD_ENV) cargo watch -x "run $(RUST_FLAG)" $(WATCH_TARGET)
 
 build:
 	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda
