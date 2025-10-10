@@ -1,12 +1,12 @@
-use crate::models::team::TeamGroup;
+use crate::models::{team::TeamGroup, user::User};
 use crate::types::{TeamGroupPermission, TeamGroupPermissions};
-use crate::utils::security::{RatelResource, check_any_permission};
+use crate::utils::security::{RatelResource, check_any_permission_with_user};
 use crate::{AppState, Error2};
 use dto::by_axum::{
-    auth::Authorization,
+    aide::NoApi,
     axum::{
-        Extension,
-        extract::{Json, Path, State},
+        Json,
+        extract::{Path, State},
     },
 };
 use dto::{JsonSchema, aide, schemars};
@@ -32,10 +32,12 @@ pub struct UpdateGroupRequest {
 
 pub async fn update_group_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    NoApi(user): NoApi<Option<User>>,
     Path(params): Path<UpdateGroupPathParams>,
     Json(req): Json<UpdateGroupRequest>,
 ) -> Result<(), Error2> {
+    let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
+    
     let required_permissions = if req.permissions.is_some() {
         vec![TeamGroupPermission::TeamAdmin]
     } else {
@@ -45,9 +47,10 @@ pub async fn update_group_handler(
             TeamGroupPermission::TeamEdit,
         ]
     };
-    check_any_permission(
+    
+    check_any_permission_with_user(
         &dynamo.client,
-        auth,
+        &user,
         RatelResource::Team {
             team_pk: params.team_pk.clone(),
         },

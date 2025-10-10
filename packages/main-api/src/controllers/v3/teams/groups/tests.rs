@@ -12,25 +12,27 @@ use crate::{
             },
         },
     },
-    tests::{create_app_state, create_test_user, get_auth},
+    tests::{create_app_state, create_test_user},
     types::TeamGroupPermission,
 };
-use dto::by_axum::axum::{
-    Json,
-    extract::{Extension, Path, State},
+use dto::by_axum::{
+    aide::NoApi,
+    axum::{
+        Json,
+        extract::{Path, State},
+    },
 };
 #[tokio::test]
 async fn test_update_group_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
     let user = create_test_user(&cli).await;
-    let auth = get_auth(&user);
 
     let team_username = format!("TEAM{}", uuid::Uuid::new_v4().to_string());
     // Create a team
     let team = create_team_handler(
         State(app_state.clone()),
-        Extension(Some(auth.clone())),
+        NoApi(Some(user.clone())),
         Json(CreateTeamRequest {
             username: team_username.clone(),
             nickname: format!("{}'s Team", team_username),
@@ -46,7 +48,7 @@ async fn test_update_group_handler() {
     // Create a team group
     let team_group = create_group_handler(
         State(app_state.clone()),
-        Extension(Some(auth.clone())),
+        NoApi(Some(user.clone())),
         Path(CreateGroupPathParams {
             team_pk: team.team_pk.clone(),
         }),
@@ -68,7 +70,7 @@ async fn test_update_group_handler() {
 
     let res = update_group_handler(
         State(app_state.clone()),
-        Extension(Some(auth.clone())),
+        NoApi(Some(user.clone())),
         Path(UpdateGroupPathParams {
             team_pk: team.team_pk.clone(),
             group_sk: team_group.group_sk.clone(),
@@ -91,13 +93,12 @@ async fn test_update_with_permisison() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
     let user = create_test_user(&cli).await;
-    let auth = get_auth(&user);
 
     let team_username = format!("TEAM{}", uuid::Uuid::new_v4().to_string());
     // Create a team
     let team = create_team_handler(
         State(app_state.clone()),
-        Extension(Some(auth.clone())),
+        NoApi(Some(user.clone())),
         Json(CreateTeamRequest {
             username: team_username.clone(),
             nickname: format!("{}'s Team", team_username),
@@ -113,7 +114,7 @@ async fn test_update_with_permisison() {
     // Create a team group
     let team_group = create_group_handler(
         State(app_state.clone()),
-        Extension(Some(auth.clone())),
+        NoApi(Some(user.clone())),
         Path(CreateGroupPathParams {
             team_pk: team.team_pk.clone(),
         }),
@@ -137,7 +138,7 @@ async fn test_update_with_permisison() {
 
     let res = add_member_handler(
         State(app_state.clone()),
-        Extension(Some(auth.clone())),
+        NoApi(Some(user.clone())),
         Path(AddMemberPathParams {
             team_pk: team.team_pk.clone(),
             group_sk: team_group.group_sk.clone(),
@@ -160,12 +161,10 @@ async fn test_update_with_permisison() {
         res.total_added
     );
 
-    let auth2 = get_auth(&user2);
-
     // Try to update permission with user2 (should fail)
     let res = update_group_handler(
         State(app_state.clone()),
-        Extension(Some(auth2.clone())),
+        NoApi(Some(user2.clone())),
         Path(UpdateGroupPathParams {
             team_pk: team.team_pk.clone(),
             group_sk: team_group.group_sk.clone(),
@@ -188,7 +187,7 @@ async fn test_update_with_permisison() {
     // Update permission with user2 (should succeed)
     let res = update_group_handler(
         State(app_state.clone()),
-        Extension(Some(auth2.clone())),
+        NoApi(Some(user2.clone())),
         Path(UpdateGroupPathParams {
             team_pk: team.team_pk.clone(),
             group_sk: team_group.group_sk.clone(),
@@ -208,12 +207,11 @@ async fn test_add_member_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
     let user = create_test_user(&cli).await;
-    let auth = get_auth(&user);
     let team_username = format!("TEAM{}", uuid::Uuid::new_v4().to_string());
     // Create a team
     let team = create_team_handler(
         State(app_state.clone()),
-        Extension(Some(auth.clone())),
+        NoApi(Some(user.clone())),
         Json(CreateTeamRequest {
             username: team_username.clone(),
             nickname: format!("{}'s Team", team_username),
@@ -229,7 +227,7 @@ async fn test_add_member_handler() {
     // Create a team group
     let team_group = create_group_handler(
         State(app_state.clone()),
-        Extension(Some(auth.clone())),
+        NoApi(Some(user.clone())),
         Path(CreateGroupPathParams {
             team_pk: team.team_pk.clone(),
         }),
@@ -251,14 +249,12 @@ async fn test_add_member_handler() {
 
     // Create Some users to be added
     let user2 = create_test_user(&cli).await;
-    let auth2 = get_auth(&user2);
-
     let user3 = create_test_user(&cli).await;
 
     // Call add_member_handler
     let add_member_res = add_member_handler(
         State(app_state.clone()),
-        Extension(Some(auth.clone())),
+        NoApi(Some(user.clone())),
         Path(AddMemberPathParams {
             team_pk: team.team_pk.clone(),
             group_sk: team_group.group_sk.clone(),
@@ -277,7 +273,7 @@ async fn test_add_member_handler() {
 
     let team = get_team_handler(
         State(app_state.clone()),
-        Extension(Some(auth.clone())),
+        NoApi(Some(user.clone())),
         Path(GetTeamPathParams {
             team_pk: team.team_pk.clone(),
         }),
