@@ -90,9 +90,8 @@ export const feedKeys = {
 };
 
 const QK_SPACES = 'spaces';
-const QK_POLL_SPACES = [QK_SPACES, 'poll'];
 
-export const pollSpaceKeys = {
-  all: [QK_POLL_SPACES] as const,
-  detail: (pk: string) => [...pollSpaceKeys.all, 'detail', pk] as const,
+export const spaceKeys = {
+  all: [QK_SPACES] as const,
+  detail: (pk: string) => [...spaceKeys.all, 'detail', pk] as const,
 };

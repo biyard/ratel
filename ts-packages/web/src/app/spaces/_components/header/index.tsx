@@ -1,58 +1,112 @@
+import { useNavigate } from 'react-router';
+import SpaceModifySection from './modify-section';
+
+import { openModal as openPublishSpaceModal } from '@/components/post-header/modals/publish-space';
+import { openModal as openMakePublicModal } from '@/components/post-header/modals/make-public';
+import { openModal as openUnsaveAlertModal } from '@/components/post-header/modals/unsave-alert-modal';
+import { SpacePublishState } from '@/types/space-common';
 import {
-  BackButton,
-  EditButton,
-  MakePublicButton,
-  PublishSpaceButton,
-  SaveButton,
-} from '@/components/post-header/buttons';
+  AuthorSection,
+  PostInfoSection,
+  TitleSection,
+} from '@/components/post-header';
+import { useTranslation } from 'react-i18next';
+import { usePopup } from '@/lib/contexts/popup-service';
 import { useSpaceHeaderContext } from './context';
 
-export function SpaceModifySection() {
-  // Context로부터 필요한 모든 상태와 함수를 가져옵니다.
+export default function SpaceHeader() {
   const {
-    space,
-    isEditing,
-    isDraft,
-    isPublic,
-    isModified,
+    post,
+    title,
+    isEditable,
     hasEditPermission,
-    onGoBack,
+
+    isEditingMode,
+    hasUnsavedChanges,
+
+    visibility,
+    publishState,
+
+    onStartEdit,
     onSave,
-    onEdit,
+    onStopEdit,
+
+    onMakePublic,
+    onPublish,
+
+    // onShare,
+    // onLike,
+
+    updateTitle,
   } = useSpaceHeaderContext();
+  const navigate = useNavigate();
+  const { t } = useTranslation('SpaceHeader');
+  const popup = usePopup();
+
+  const handleGoBack = () => {
+    if (isEditingMode) {
+      onStopEdit();
+    } else {
+      navigate(-1);
+    }
+  };
+
+  const handlePublish = () => {
+    if (hasUnsavedChanges) {
+      openUnsaveAlertModal(
+        popup,
+        onSave,
+        () => {
+          openPublishSpaceModal(popup, onPublish, t('publish_modal_title'));
+        },
+        t('unsave_notice_modal'),
+      );
+    } else {
+      openPublishSpaceModal(popup, onPublish, t('publish_modal_title'));
+    }
+  };
+
+  const handleMakePublic = () => {
+    openMakePublicModal(popup, onMakePublic, t('make_public_modal_title'));
+  };
 
   return (
     <div className="flex flex-col w-full gap-2.5">
       <SpaceModifySection
-        title={isEdit ? commonData?.title ?? '' : space.title}
-        isDraft={isDraft}
-        isPublic={isPublic}
-        authorId={space.author[0]?.id}
-        authorName={space.author[0]?.username}
-        spaceId={spaceId}
-        onEdit={handleStartEdit}
-        onDelete={handleDelete}
+        isEditable={isEditable}
+        hasEditPermission={hasEditPermission}
+        isEditingMode={isEditingMode}
+        hasUnsavedChanges={hasUnsavedChanges}
+        isPublished={publishState === SpacePublishState.Published}
+        canMakePublic={visibility.type !== 'Public'}
+        onGoBack={handleGoBack}
+        onStartEdit={onStartEdit}
+        onSave={onSave}
+        onMakePublicButtonClick={handleMakePublic}
+        onPublishButtonClick={handlePublish}
       />
       <PostInfoSection
-        likes={feed.post.likes}
-        shares={feed.post.shares}
-        comments={feed.post.comments}
-        rewards={feed.post.rewards ?? 0}
-        isDraft={isDraft}
-        isPublic={isPublic}
+        likes={post.likes}
+        shares={post.shares}
+        comments={post.comments}
+        rewards={post.rewards ?? 0}
+        isDraft={publishState === SpacePublishState.Draft}
+        isPublic={visibility.type === 'Public'}
       />
       <TitleSection
-        isEdit={isEdit}
-        title={isEdit ? commonData?.title ?? '' : space.title}
-        setTitle={(newTitle) => updateCommonData({ title: newTitle })}
-        handleShare={handleShare}
+        isEdit={isEditingMode}
+        title={title}
+        setTitle={(newTitle) => updateTitle(newTitle)}
+        handleShare={async () => {
+          console.error('handleShare not implemented');
+        }}
       />
       <AuthorSection
-        type={author.user_type}
-        profileImage={author.profile_url}
-        name={author.nickname}
+        type={post.author_type}
+        profileImage={post.author_profile_url}
+        name={post.author_display_name}
         isCertified={true}
-        createdAt={space.created_at}
+        createdAt={post.created_at}
       />
     </div>
   );

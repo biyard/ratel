@@ -3,7 +3,7 @@ import {
   UseSuspenseQueryResult,
 } from '@tanstack/react-query';
 
-import { pollSpaceKeys } from '@/constants';
+import { spaceKeys } from '@/constants';
 import {
   getPollSpace,
   PollSpaceResponse,
@@ -11,7 +11,7 @@ import {
 
 export function getOption(spacePk: string) {
   return {
-    queryKey: pollSpaceKeys.detail(spacePk),
+    queryKey: spaceKeys.detail(spacePk),
     queryFn: async () => {
       const post = await getPollSpace(spacePk);
       return post;
