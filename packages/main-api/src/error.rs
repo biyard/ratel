@@ -87,9 +87,14 @@ pub enum Error {
     #[rest_error(code = 2000)]
     PostIncorrectConfiguredVisibility(String),
     #[error("Post not found")]
+    #[rest_error(status = 404)]
     PostNotFound,
     #[error("You do not have permission to access this post")]
     PostLikeError,
+    #[error("Failed to comment on the post")]
+    PostCommentError,
+    #[error("Failed to reply to the comment")]
+    PostReplyError,
 
     // /v3/spaces endpoints 3000 ~
     #[error("Space not found")]

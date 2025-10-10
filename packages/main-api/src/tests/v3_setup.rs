@@ -7,6 +7,7 @@ use std::time::SystemTime;
 
 use crate::{api_main, config, models::user::User, tests::create_user_session};
 
+#[derive(Clone)]
 pub struct TestContextV3 {
     pub app: AxumRouter,
     pub now: u64,

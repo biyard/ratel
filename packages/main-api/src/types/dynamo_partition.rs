@@ -24,6 +24,7 @@ pub enum Partition {
     User(String),
     Email(String),
     Feed(String),
+    PostReply(String), // POST_REPLY#{{post_pk}}
     PostLike(String),
     Session(String),
 

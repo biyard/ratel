@@ -10,6 +10,7 @@ import SettingLayout from './app/(social)/settings/layout';
 import MyNetwork from './app/(social)/my-network/page';
 import MyFollowerPage from './app/(social)/my-follower/page';
 import { z } from 'zod';
+import ThreadPage from './app/(social)/threads/[id]/page';
 
 // Space
 import SpaceLayout from './app/spaces/layout';
@@ -54,6 +55,14 @@ export const routes = createBrowserRouter([
               },
             ],
           },
+
+          // Threads
+          {
+            id: 'thread-page',
+            path: 'threads/:post_id',
+            Component: ThreadPage,
+          },
+
           // My network
           {
             id: 'my-network-page',
