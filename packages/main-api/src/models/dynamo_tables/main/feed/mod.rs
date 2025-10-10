@@ -1,6 +1,7 @@
 pub mod post;
 pub mod post_artwork;
 pub mod post_comment;
+pub mod post_comment_like;
 pub mod post_like;
 pub mod post_repost;
 pub mod post_summary;

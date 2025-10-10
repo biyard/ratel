@@ -90,6 +90,10 @@ pub enum Error {
     PostNotFound,
     #[error("You do not have permission to access this post")]
     PostLikeError,
+    #[error("Failed to comment on the post")]
+    PostCommentError,
+    #[error("Failed to reply to the comment")]
+    PostReplyError,
 
     // /v3/spaces endpoints 3000 ~
     #[error("Space not found")]

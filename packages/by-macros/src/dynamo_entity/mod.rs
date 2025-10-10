@@ -811,6 +811,8 @@ fn generate_struct_impl(
     let query_fn = generate_query_fn(&st_name, &s_cfg, &fields, &indice_fn);
     let key_composers = generate_key_composers(&fields);
     let updater = generate_updater(&ident, &s_cfg, &fields);
+    let opt_name = format!("{}QueryOption", st_name.to_case(convert_case::Case::Pascal));
+    let opt_ident = Ident::new(&opt_name, proc_macro2::Span::call_site());
 
     let out = quote! {
         #st_query_option
@@ -830,6 +832,61 @@ fn generate_struct_impl(
             pub fn pk_field() -> &'static str { #pk_field_name }
             pub fn sk_field() -> Option<&'static str> {
                 #sk_field_method
+            }
+
+            pub async fn query(
+                cli: &aws_sdk_dynamodb::Client,
+                pk: impl std::fmt::Display,
+                opt: #opt_ident,
+            ) -> #result_ty <(Vec<#ident>, Option<String>), #err_ctor> {
+                let key_condition = if opt.sk.is_some() {
+                    "#pk = :pk AND begins_with(#sk, :sk)"
+                } else {
+                    "#pk = :pk"
+                };
+
+                let mut req = cli
+                    .query()
+                    .table_name(#table_lit_str)
+                    .key_condition_expression(key_condition)
+                    .expression_attribute_names("#pk", #pk_field_name)
+                    .expression_attribute_values(
+                        ":pk",
+                        aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
+                    );
+
+                if let Some(sk) = opt.sk {
+                    req = req
+                        .expression_attribute_names("#sk", "sk")
+                        .expression_attribute_values(":sk", aws_sdk_dynamodb::types::AttributeValue::S(sk.to_string()));
+                }
+
+                if let Some(bookmark) = opt.bookmark {
+                    let lek = Self::decode_bookmark_all(&bookmark)?;
+                    req = req.set_exclusive_start_key(Some(lek));
+                }
+
+                let resp = req
+                    .scan_index_forward(opt.scan_index_forward)
+                    .key_condition_expression(key_condition)
+                    .send()
+                    .await
+                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                let items = resp
+                    .items
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|item| serde_dynamo::from_item(item))
+                    .collect::<Result<Vec<_>, _>>()?;
+
+                let bookmark = if let Some(ref last_evaluated_key) = resp.last_evaluated_key {
+                    Some(Self::encode_lek_all(last_evaluated_key)?)
+                } else {
+                    None
+                };
+
+                Ok((items, bookmark))
             }
 
             pub async fn create(
