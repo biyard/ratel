@@ -28,6 +28,13 @@ export type PostComment = {
   author_display_name: string;
   author_profile_url: string;
   author_username: string;
+
+  likes: number;
+  replies: number;
+
+  parent_comment_pk: string;
+
+  liked: boolean;
 };
 
 export type PostDetailResponse = {
@@ -64,7 +71,7 @@ export const Visibility = {
   TeamOnly: 'TEAM_ONLY',
 } as const;
 
-export type Visibility = typeof Visibility[keyof typeof Visibility];
+export type Visibility = (typeof Visibility)[keyof typeof Visibility];
 
 export function updatePostVisibility(
   postPk: string,
@@ -133,7 +140,7 @@ export const PostType = {
   Artwork: 3,
 } as const;
 
-export type PostType = typeof PostType[keyof typeof PostType];
+export type PostType = (typeof PostType)[keyof typeof PostType];
 
 export type CreatePostResponse = {
   post_pk: string;

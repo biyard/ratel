@@ -10,6 +10,8 @@ import { Suspense } from 'react';
 import { logger } from '@/lib/logger';
 import { getOption as getFeedByIdOption } from '@/hooks/feeds/use-feed-by-id';
 import { getPost } from '@/lib/api/ratel/posts.v3';
+import { useParams } from 'react-router';
+import { useThreadController } from './_components/use-thread-controller';
 
 // export async function generateMetadata({
 //   params,
@@ -47,25 +49,16 @@ import { getPost } from '@/lib/api/ratel/posts.v3';
 //   };
 // }
 
-export default async function Page({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const queryClient = getQueryClient();
-
-  await Promise.allSettled([queryClient.prefetchQuery(getFeedByIdOption(id))]);
+export default function ThreadPage() {
+  const ctrl = useThreadController();
 
   return (
-    <SSRHydration queryClient={queryClient}>
-      <Suspense fallback={<div>Loading...</div>}>
-        <div className="flex flex-col gap-6 w-full max-tablet:mr-[20px]">
-          <Header postId={id} />
-          <ThreadPost postId={id} />
-          <ThreadComment postId={id} />
-        </div>
-      </Suspense>
-    </SSRHydration>
+    <>
+      <div className="flex flex-col gap-6 w-full max-tablet:mr-[20px]">
+        <Header postId={ctrl.postId} />
+        <ThreadPost postId={ctrl.postId} />
+        <ThreadComment ctrl={ctrl} />
+      </div>
+    </>
   );
 }

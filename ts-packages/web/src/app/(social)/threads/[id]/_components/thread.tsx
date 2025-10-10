@@ -6,14 +6,15 @@ import DisableBorderCard from '@/app/(social)/_components/disable-border-card';
 
 export default function Thread({ postId }: { postId: string }) {
   const { data: post } = useFeedById(postId);
+
   return (
     <div className="flex flex-col w-full gap-2.5">
       <DisableBorderCard>
         {post?.post?.post_type === 3 ? (
           /* 3 = Artwork in v3 */
-          <Artwork post={post as unknown as Feed} />
+          <Artwork post={post.post as unknown as Feed} />
         ) : (
-          <GeneralPost post={post as unknown as Feed} />
+          <GeneralPost post={post.post as unknown as Feed} />
         )}
       </DisableBorderCard>
       {/* TODO: Implement files support in v3 */}
