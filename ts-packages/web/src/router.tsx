@@ -11,6 +11,10 @@ import MyNetwork from './app/(social)/my-network/page';
 import MyFollowerPage from './app/(social)/my-follower/page';
 import { z } from 'zod';
 
+// Space
+import SpaceLayout from './app/spaces/layout';
+import PollSpacePage from './app/spaces/poll/page';
+
 export const routes = createBrowserRouter([
   {
     id: 'root-layout',
@@ -50,7 +54,6 @@ export const routes = createBrowserRouter([
               },
             ],
           },
-
           // My network
           {
             id: 'my-network-page',
@@ -73,6 +76,19 @@ export const routes = createBrowserRouter([
           },
         ],
       }, // End of Social Layout
+      // Space Layout
+      {
+        id: 'space-layout',
+        path: 'spaces/:spaceId',
+        Component: SpaceLayout,
+        children: [
+          {
+            id: 'poll-space',
+            path: 'poll',
+            Component: PollSpacePage,
+          },
+        ],
+      }, // End of Space Layout
     ],
   },
 ]);
