@@ -10,6 +10,7 @@ import SettingLayout from './app/(social)/settings/layout';
 import MyNetwork from './app/(social)/my-network/page';
 import MyFollowerPage from './app/(social)/my-follower/page';
 import { z } from 'zod';
+import ThreadPage from './app/(social)/threads/[id]/page';
 
 export const routes = createBrowserRouter([
   {
@@ -49,6 +50,13 @@ export const routes = createBrowserRouter([
                 Component: MyProfilePage,
               },
             ],
+          },
+
+          // Threads
+          {
+            id: 'thread-page',
+            path: 'threads/:post_id',
+            Component: ThreadPage,
           },
 
           // My network
