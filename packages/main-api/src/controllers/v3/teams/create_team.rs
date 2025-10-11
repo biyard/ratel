@@ -61,7 +61,13 @@ pub async fn create_team_handler(
         .await?;
     let team_pk = team.pk.clone();
     UserTeam::new(user_pk, team).create(&dynamo.client).await?;
-    Ok(Json(CreateTeamResponse {
-        team_pk: team_pk.to_string(),
-    }))
+
+    // Extract just the UUID from the Partition::Team
+    let team_uuid = match &team_pk {
+        Partition::Team(uuid) => uuid.clone(),
+        _ => return Err(Error2::InternalServerError("Invalid team partition".into())),
+    };
+
+    Ok(Json(CreateTeamResponse { team_pk: team_uuid }))
+
 }
