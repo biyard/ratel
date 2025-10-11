@@ -14,7 +14,7 @@ RUSTFLAGS ?= -D warnings
 API_MODEL_ARTIFACT_DIR ?= $(PWD)/.build
 CARGO_TARGET_DIR ?= $(PWD)/target
 
-RUST_FLAG ?=
+RUST_FLAG ?= --features bypass,no-secret
 
 SECRET_TOKEN ?=
 RUST_LOG ?= debug
