@@ -373,6 +373,17 @@ fn generate_updater(
         quote! {}
     };
 
+    let create_key_condition = if let Some(sk_name) = &s_cfg.sk_name {
+        let condition = format!(
+            "attribute_not_exists(#{}) AND attribute_not_exists(#{})",
+            &s_cfg.pk_name, sk_name
+        );
+        syn::LitStr::new(&condition, proc_macro2::Span::call_site())
+    } else {
+        let condition = format!("attribute_not_exists(#{})", &s_cfg.pk_name);
+        syn::LitStr::new(&condition, proc_macro2::Span::call_site())
+    };
+
     let mut update_fns = vec![];
 
     for f in fields.iter() {
@@ -653,6 +664,7 @@ fn generate_updater(
 
                 let req = aws_sdk_dynamodb::types::Put::builder()
                     .table_name(Self::table_name())
+                    .condition_expression(#create_key_condition)
                     .set_item(Some(item))
                     .build().unwrap();
 
@@ -813,6 +825,16 @@ fn generate_struct_impl(
     let updater = generate_updater(&ident, &s_cfg, &fields);
     let opt_name = format!("{}QueryOption", st_name.to_case(convert_case::Case::Pascal));
     let opt_ident = Ident::new(&opt_name, proc_macro2::Span::call_site());
+    let create_key_condition = if let Some(sk_name) = &s_cfg.sk_name {
+        let condition = format!(
+            "attribute_not_exists(#{}) AND attribute_not_exists(#{})",
+            &s_cfg.pk_name, sk_name
+        );
+        syn::LitStr::new(&condition, proc_macro2::Span::call_site())
+    } else {
+        let condition = format!("attribute_not_exists(#{})", &s_cfg.pk_name);
+        syn::LitStr::new(&condition, proc_macro2::Span::call_site())
+    };
 
     let out = quote! {
         #st_query_option
@@ -900,6 +922,7 @@ fn generate_struct_impl(
 
                 cli.put_item()
                     .table_name(Self::table_name())
+                    .condition_expression(#create_key_condition)
                     .set_item(Some(item))
                     .send()
                     .await.map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
