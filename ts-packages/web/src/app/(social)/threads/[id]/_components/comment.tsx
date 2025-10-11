@@ -1,12 +1,29 @@
-import { NewComment, Comment } from '@/components/comment';
 import { CommentIcon } from '@/components/icons';
-import { useTranslation } from 'react-i18next';
+import { NewComment, Comment } from '@/components/comment';
 
-import { ThreadController } from './use-thread-controller';
+import { TFunction } from 'i18next';
+import { PostDetailResponse } from '@/lib/api/ratel/posts.v3';
+import { State } from '@/types/state';
 
-export default function ThreadComment({ ctrl }: { ctrl: ThreadController }) {
-  const { t } = useTranslation('Threads');
+export type ThreadCommentProps = {
+  t: TFunction<'Thread', undefined>;
+  feed: PostDetailResponse;
+  isLoggedIn: boolean;
+  expandComment: State<boolean>;
+  handleComment: (content: string) => Promise<void>;
+  handleReplyToComment: (commentSk: string, content: string) => Promise<void>;
+  handleLikeComment: (commentId: string) => Promise<void>;
+};
 
+export default function ThreadComment({
+  t,
+  feed,
+  isLoggedIn,
+  expandComment,
+  handleComment,
+  handleReplyToComment,
+  handleLikeComment,
+}: ThreadCommentProps) {
   return (
     <>
       <div className="flex flex-col gap-2.5">
@@ -17,15 +34,15 @@ export default function ThreadComment({ ctrl }: { ctrl: ThreadController }) {
             className="[&>path]:stroke-text-primary [&>line]:stroke-text-primary"
           />
           <span className="text-base/6 font-medium">
-            {(ctrl.feed.post.comments ?? 0).toLocaleString()}{' '}
-            {(ctrl.feed.post.comments ?? 0) > 1 ? t('replies') : t('reply')}
+            {(feed.post.comments ?? 0).toLocaleString()}{' '}
+            {(feed.post.comments ?? 0) > 1 ? t('replies') : t('reply')}
           </span>
         </div>
-        {ctrl.isLoggedIn && (
+        {isLoggedIn && (
           <>
-            {!ctrl.expandComment.get() && (
+            {!expandComment.get() && (
               <button
-                onClick={() => ctrl.expandComment.set(true)}
+                onClick={() => expandComment.set(true)}
                 className="flex flex-row w-full px-3.5 py-2 gap-2 bg-write-comment-box-bg border border-write-comment-box-border items-center rounded-lg"
               >
                 <CommentIcon
@@ -38,22 +55,22 @@ export default function ThreadComment({ ctrl }: { ctrl: ThreadController }) {
                 </span>
               </button>
             )}
-            {ctrl.expandComment.get() && (
+            {expandComment.get() && (
               <NewComment
-                onClose={() => ctrl.expandComment.set(false)}
-                onSubmit={ctrl.handleComment}
+                onClose={() => expandComment.set(false)}
+                onSubmit={handleComment}
               />
             )}
           </>
         )}
       </div>
       {/* TODO: Implement v3 comments rendering */}
-      {ctrl.feed.comments.map((comment) => (
+      {feed.comments.map((comment) => (
         <Comment
           key={comment.pk}
           comment={comment}
-          onComment={ctrl.handleReplyToComment}
-          onLike={ctrl.handleLikeComment}
+          onComment={handleReplyToComment}
+          onLike={handleLikeComment}
         />
       ))}
     </>

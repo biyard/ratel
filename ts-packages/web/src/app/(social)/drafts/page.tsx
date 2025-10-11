@@ -9,7 +9,7 @@ import { FeedContents, UserBadge } from '@/components/feed-card';
 import { UserType } from '@/lib/api/models/user';
 import TimeAgo from '@/components/time-ago';
 import { Delete2 } from '@/components/icons';
-import { useDeletePostMutation } from '@/hooks/feeds/use-delete-post-mutation';
+import { useDeletePostMutation } from '@/features/posts/hooks/use-delete-post-mutation';
 import useInfiniteMyDrafts from './_hooks/use-my-drafts';
 
 export default function MyDraftPage() {

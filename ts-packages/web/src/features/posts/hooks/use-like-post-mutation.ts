@@ -3,35 +3,9 @@ import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
 import { Feed } from '@/lib/api/models/feeds';
 
-// FIXME: Move to lib/api/feeds/like-feed.ts
-import { config } from '@/config';
-import { apiFetch } from '@/lib/api/apiFetch';
-import { ratelApi } from '@/lib/api/ratel_api';
 import { showErrorToast } from '@/lib/toast';
 import { likePost } from '@/lib/api/ratel/posts.v3';
 import { optimisticListUpdate, optimisticUpdate } from '@/lib/hook-utils';
-
-export async function likeFeed(feedId: number, value: boolean): Promise<Feed> {
-  const req = {
-    like: {
-      value,
-    },
-  };
-  const { data } = await apiFetch<Feed | null>(
-    `${config.api_url}${ratelApi.feeds.likePost(feedId)}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(req),
-    },
-  );
-  if (!data) {
-    throw new Error('Failed to like post');
-  }
-  return data;
-}
 
 export function useLikePostMutation() {
   const queryClient = getQueryClient();
