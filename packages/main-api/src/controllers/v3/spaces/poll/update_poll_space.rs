@@ -1,29 +1,26 @@
-use crate::models::space::{PollSpaceMetadata, PollSpaceResponse, PollSpaceSurvey, SpaceCommon};
-use crate::types::{BoosterType, Partition, SpacePublishState, SpaceStatus, SurveyQuestion};
-use crate::utils::dynamo_extractor::extract_user_from_session;
-use crate::utils::security::{RatelResource, check_permission_from_session};
+use crate::models::feed::Post;
+use crate::models::space::{
+    PollSpaceMetadata, PollSpacePathParam, PollSpaceResponse, PollSpaceSurvey, SpaceCommon,
+    TimeRange,
+};
+use crate::types::{
+    EntityType, Partition, SpacePublishState, SpaceStatus, SurveyQuestion, TeamGroupPermission,
+};
 use crate::{AppState, Error2};
 
 use bdk::prelude::*;
 
-use by_axum::axum::{
-    Extension,
-    extract::{Json, Path, State},
-};
+use by_axum::axum::extract::{Json, Path, State};
 
+use crate::models::user::User;
+use aide::NoApi;
 use serde::Deserialize;
-
-#[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
-pub struct UpdatePollSpacePathParams {
-    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
-    pub poll_space_pk: Partition,
-}
 
 #[derive(Debug, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct UpdatePollSpaceRequest {
-    pub started_at: i64,
-    pub ended_at: i64,
-    pub booster: Option<BoosterType>,
+    pub title: String,
+    pub html_content: String,
+    pub time_range: TimeRange,
     pub questions: Vec<SurveyQuestion>,
 }
 
@@ -31,22 +28,32 @@ pub type UpdatePollSpaceResponse = PollSpaceResponse;
 
 pub async fn update_poll_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(session): Extension<tower_sessions::Session>,
-    Path(UpdatePollSpacePathParams { poll_space_pk }): Path<UpdatePollSpacePathParams>,
+    NoApi(user): NoApi<User>,
+    Path(PollSpacePathParam { poll_space_pk }): Path<PollSpacePathParam>,
     Json(UpdatePollSpaceRequest {
+        title,
+        html_content,
         questions,
-        started_at,
-        ended_at,
-        booster,
+        time_range,
     }): Json<UpdatePollSpaceRequest>,
 ) -> Result<Json<UpdatePollSpaceResponse>, Error2> {
-    let user = extract_user_from_session(&dynamo.client, &session).await?;
-
+    //Request Validation
     if !matches!(poll_space_pk, Partition::PollSpace(_)) {
         return Err(Error2::NotFoundPollSpace);
     }
 
-    if started_at >= ended_at {
+    // Check Permissions
+    let (space, has_perm) = SpaceCommon::has_permission(
+        &dynamo.client,
+        &poll_space_pk,
+        Some(&user.pk),
+        TeamGroupPermission::SpaceEdit,
+    )
+    .await?;
+    if !has_perm {
+        return Err(Error2::NoPermission);
+    }
+    if time_range.is_valid() {
         return Err(Error2::InvalidTimeRange);
     }
 
@@ -57,34 +64,7 @@ pub async fn update_poll_space_handler(
         Some(crate::types::EntityType::SpaceCommon),
     )
     .await?
-    .ok_or(Error2::NotFoundSpace)?;
-
-    // Check Permissions
-    match space_common.user_pk {
-        Partition::User(_) => {
-            if user.pk != space_common.user_pk {
-                return Err(Error2::Unauthorized(
-                    "No permission to update this poll space".to_string(),
-                ));
-            }
-        }
-        Partition::Team(_) => {
-            check_permission_from_session(
-                &dynamo.client,
-                &session,
-                RatelResource::Team {
-                    team_pk: space_common.user_pk.to_string(),
-                },
-                vec![crate::types::TeamGroupPermission::SpaceEdit],
-            )
-            .await?;
-        }
-        _ => {
-            return Err(Error2::InternalServerError(
-                "Invalid user_pk in space_common".to_string(),
-            ));
-        }
-    }
+    .ok_or(Error2::SpaceNotFound)?;
 
     // Only Draft or Published+Waiting state can be updated
     let is_updatable = match space_common.publish_state {
@@ -97,19 +77,32 @@ pub async fn update_poll_space_handler(
         return Err(Error2::ImmutablePollSpaceState);
     }
 
-    PollSpaceSurvey::new(poll_space_pk.clone(), questions)
-        .create(&dynamo.client)
-        .await?;
+    // Update Poll Space
 
-    let mut updater = SpaceCommon::updater(&poll_space_pk, &space_common.sk)
-        .with_started_at(started_at)
-        .with_ended_at(ended_at);
-    updater = if let Some(booster) = booster {
-        updater.with_booster(booster)
-    } else {
-        updater.remove_booster()
-    };
-    updater.execute(&dynamo.client).await?;
+    let poll_space_tx =
+        PollSpaceSurvey::new(poll_space_pk.clone(), questions).create_transact_write_item();
+
+    let space_tx = SpaceCommon::updater(&poll_space_pk, &space_common.sk)
+        .with_started_at(time_range.0)
+        .with_ended_at(time_range.1)
+        .transact_write_item();
+
+    let post_tx = Post::updater(&space.post_pk, &EntityType::Post)
+        .with_title(title)
+        .with_html_contents(html_content)
+        .transact_write_item();
+
+    dynamo
+        .client
+        .transact_write_items()
+        .set_transact_items(Some(vec![poll_space_tx, space_tx, post_tx]))
+        .send()
+        .await
+        .map_err(|e| {
+            tracing::error!("Failed to update poll space: {}", e);
+            Error2::InternalServerError("Failed to update poll space".into())
+        })?;
+
     let poll_metadata = PollSpaceMetadata::query(&dynamo.client, &poll_space_pk).await?;
     let response = PollSpaceResponse::from(poll_metadata);
     Ok(Json(response))

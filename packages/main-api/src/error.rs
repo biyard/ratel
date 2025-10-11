@@ -99,7 +99,7 @@ pub enum Error {
     // /v3/spaces endpoints 3000 ~
     #[error("Space not found")]
     #[rest_error(code = 3000)]
-    NotFoundSpace,
+    SpaceNotFound,
     #[error("InvalidTimeRange")]
     InvalidTimeRange,
     // /v3/spaces/deliberations endpoints 3100 ~

@@ -26,7 +26,7 @@ pub async fn delete_space_handler(
     // FIXME: ADD PERMISSION CHECK
     let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
         .await?
-        .ok_or(Error2::NotFoundSpace)?;
+        .ok_or(Error2::SpaceNotFound)?;
 
     SpaceCommon::delete(&dynamo.client, &space_common.pk, Some(space_common.sk)).await?;
 
