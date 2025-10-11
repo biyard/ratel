@@ -1,130 +1,78 @@
-use crate::AppState;
-use crate::models::user::User;
-use crate::models::user::user_team_group::{UserTeamGroup, UserTeamGroupQueryOption};
-use crate::types::{Partition, TeamGroupPermission, TeamGroupPermissions};
-use aide::NoApi;
-use axum::extract::{Query, State};
-use axum::*;
-use bdk::prelude::*;
+use crate::{
+    AppState, Error2,
+    models::user::User,
+    types::TeamGroupPermission,
+    utils::security::{RatelResource, check_any_permission_from_user},
+};
+use dto::by_axum::{
+    aide::NoApi,
+    axum::extract::{Json, Query, State},
+};
+use dto::{JsonSchema, aide, schemars};
+use serde::{Deserialize, Serialize};
 
 #[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, aide::OperationIo, schemars::JsonSchema,
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    PartialEq,
+    Default,
+    aide::OperationIo,
+    JsonSchema,
 )]
-pub struct GetPermissionsQuery {
-    #[schemars(description = "Team username")]
-    pub team_username: String,
-    #[schemars(description = "Permission to check")]
-    pub permission: String,
+pub struct HasTeamPermissionQuery {
+    #[schemars(description = "Team ID (string)")]
+    pub team_pk: Option<String>,
+    #[schemars(description = "Team Group Permission")]
+    pub permission: Option<TeamGroupPermission>,
 }
 
-#[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, aide::OperationIo, schemars::JsonSchema,
-)]
-pub struct GetPermissionsResponse {
-    #[schemars(description = "Whether the user has the permission")]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, aide::OperationIo, JsonSchema)]
+pub struct HasTeamPermissionResponse {
     pub has_permission: bool,
 }
 
-pub async fn get_permissions_handler(
+pub async fn has_team_permission_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-    Query(GetPermissionsQuery {
-        team_username,
+    Query(HasTeamPermissionQuery {
+        team_pk,
         permission,
-    }): Query<GetPermissionsQuery>,
-) -> Result<Json<GetPermissionsResponse>, crate::Error2> {
-    tracing::debug!(
-        "Checking permission: team_username={}, permission={}, user={:?}",
-        team_username,
-        permission,
-        user
-    );
-
-    // If no user is logged in, they have no permissions
-    let user = match user {
-        Some(u) => u,
-        None => {
-            return Ok(Json(GetPermissionsResponse {
-                has_permission: false,
-            }));
-        }
-    };
-
-    // If the username matches the user's username, they have all permissions on their own account
-    if user.username == team_username {
-        return Ok(Json(GetPermissionsResponse {
-            has_permission: true,
-        }));
-    }
-
-    // Check if the user is a member of any team groups for this team
-    let team_pk = Partition::Team(team_username.clone());
-    let user_team_groups = UserTeamGroup::find_by_team_pk(
-        &dynamo.client,
-        team_pk.to_string(),
-        UserTeamGroupQueryOption::builder().limit(100),
-    )
-    .await?;
-
-    // If no team groups found, user has no permissions
-    if user_team_groups.0.is_empty() {
-        return Ok(Json(GetPermissionsResponse {
+    }): Query<HasTeamPermissionQuery>,
+) -> Result<Json<HasTeamPermissionResponse>, Error2> {
+    // Early return if no team_pk or permission provided
+    if team_pk.is_none() || team_pk.as_ref().unwrap().is_empty() || permission.is_none() {
+        return Ok(Json(HasTeamPermissionResponse {
             has_permission: false,
         }));
     }
 
-    // Check if any of the user's team groups have the requested permission
-    let permission_flag = match permission.as_str() {
-        // Post Permissions
-        "read_posts" => TeamGroupPermission::PostRead,
-        "write_posts" => TeamGroupPermission::PostWrite,
-        "edit_posts" => TeamGroupPermission::PostEdit,
-        "delete_posts" => TeamGroupPermission::PostDelete,
-
-        // Space Permissions
-        "read_space" => TeamGroupPermission::SpaceRead,
-        "write_space" => TeamGroupPermission::SpaceWrite,
-        "edit_space" => TeamGroupPermission::SpaceEdit,
-        "delete_space" => TeamGroupPermission::SpaceDelete,
-
-        // Team/Group Management Permissions
-        "team_admin" => TeamGroupPermission::TeamAdmin,
-        "edit_team" => TeamGroupPermission::TeamEdit,
-        "manage_group" => TeamGroupPermission::GroupEdit,
-
-        // Admin Permissions
-        "manage_promotions" => TeamGroupPermission::ManagePromotions,
-        "manage_news" => TeamGroupPermission::ManageNews,
-
-        // Legacy compatibility mappings (keeping old strings for backward compatibility)
-        "WritePosts" => TeamGroupPermission::PostWrite,
-        "DeletePosts" => TeamGroupPermission::PostDelete,
-        "ReadPosts" => TeamGroupPermission::PostRead,
-        "EditPosts" => TeamGroupPermission::PostEdit,
-        "InviteMember" => TeamGroupPermission::GroupEdit, // Group edit includes member management
-        "ManageGroup" => TeamGroupPermission::GroupEdit,
-        "UpdateGroup" => TeamGroupPermission::GroupEdit,
-        "DeleteGroup" => TeamGroupPermission::TeamEdit, // Team edit includes group management
-        "ManageSpace" => TeamGroupPermission::SpaceEdit,
-
-        _ => {
-            tracing::warn!("Unknown permission requested: {}", permission);
-            return Ok(Json(GetPermissionsResponse {
-                has_permission: false,
-            }));
-        }
-    };
-
-    for user_team_group in user_team_groups.0 {
-        let permissions = TeamGroupPermissions::from(user_team_group.team_group_permissions);
-        if permissions.0.contains(&permission_flag) {
-            return Ok(Json(GetPermissionsResponse {
-                has_permission: true,
-            }));
-        }
+    // If no user is authenticated, return false
+    if user.is_none() {
+        return Ok(Json(HasTeamPermissionResponse {
+            has_permission: false,
+        }));
     }
 
-    Ok(Json(GetPermissionsResponse {
-        has_permission: false,
-    }))
+    let team_pk = team_pk.unwrap();
+    let permission = permission.unwrap();
+    let user = user.unwrap();
+
+    // Use v3 permission checking with DynamoDB
+    match check_any_permission_from_user(
+        &dynamo.client,
+        user.pk.to_string(),
+        RatelResource::Team { team_pk },
+        vec![permission],
+    )
+    .await
+    {
+        Ok(()) => Ok(Json(HasTeamPermissionResponse {
+            has_permission: true,
+        })),
+        Err(_) => Ok(Json(HasTeamPermissionResponse {
+            has_permission: false,
+        })),
+    }
 }
