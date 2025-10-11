@@ -3,13 +3,8 @@ use crate::{
     models::space::{
         DeliberationDetailResponse, DeliberationMetadata, DeliberationSpaceResponse, SpaceCommon,
     },
-    types::{
-        EntityType, Partition, SpaceVisibility, SurveyAnswer, SurveyType, TeamGroupPermission,
-    },
-    utils::{
-        dynamo_extractor::extract_user_from_session,
-        security::{RatelResource, check_permission_from_session},
-    },
+    types::{Partition, SurveyAnswer, SurveyType, TeamGroupPermission},
+    utils::dynamo_extractor::extract_user_from_session,
 };
 use bdk::prelude::axum::{
     Extension,
@@ -59,37 +54,15 @@ pub async fn create_response_answer_handler(
         _ => "".to_string(),
     };
 
-    let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
-        .await?
-        .ok_or(Error2::NotFound("Space not found".to_string()))?;
-
-    if space_common.visibility != SpaceVisibility::Public {
-        match space_common.user_pk.clone() {
-            Partition::Team(_) => {
-                check_permission_from_session(
-                    &dynamo.client,
-                    &session,
-                    RatelResource::Team {
-                        team_pk: space_common.user_pk.to_string(),
-                    },
-                    vec![TeamGroupPermission::SpaceRead],
-                )
-                .await?;
-            }
-            Partition::User(_) => {
-                let user = extract_user_from_session(&dynamo.client, &session).await?;
-                if user.pk != space_common.user_pk {
-                    return Err(Error2::Unauthorized(
-                        "You do not have permission to create response answer".into(),
-                    ));
-                }
-            }
-            _ => {
-                return Err(Error2::InternalServerError(
-                    "Invalid deliberation author".into(),
-                ));
-            }
-        };
+    let (_, has_perm) = SpaceCommon::has_permission(
+        &dynamo.client,
+        &space_pk,
+        Some(&user.pk),
+        TeamGroupPermission::SpaceRead,
+    )
+    .await?;
+    if !has_perm {
+        return Err(Error2::NoPermission);
     }
 
     let response = DeliberationSpaceResponse::new(
