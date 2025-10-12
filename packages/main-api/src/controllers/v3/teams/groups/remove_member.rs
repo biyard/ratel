@@ -5,13 +5,13 @@ use crate::{
         user::{User, UserTeam, UserTeamGroup},
     },
     types::{EntityType, TeamGroupPermission},
-    utils::security::{RatelResource, check_any_permission},
+    utils::security::{RatelResource, check_any_permission_with_user},
 };
 use dto::by_axum::{
-    auth::Authorization,
+    aide::NoApi,
     axum::{
-        Extension,
-        extract::{Json, Path, State},
+        Json,
+        extract::{Path, State},
     },
 };
 use dto::{JsonSchema, aide, schemars};
@@ -40,13 +40,15 @@ pub struct RemoveMemberResponse {
 //
 pub async fn remove_member_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    NoApi(user): NoApi<Option<User>>,
     Path(params): Path<RemoveMemberPathParams>,
     Json(req): Json<RemoveMemberRequest>,
 ) -> Result<Json<RemoveMemberResponse>, Error2> {
-    check_any_permission(
+    let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
+    
+    check_any_permission_with_user(
         &dynamo.client,
-        auth,
+        &user,
         RatelResource::Team {
             team_pk: params.team_pk.clone(),
         },

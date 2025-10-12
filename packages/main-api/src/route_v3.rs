@@ -71,15 +71,18 @@ use crate::{
         },
         teams::{
             create_team::{CreateTeamResponse, create_team_handler},
+            delete_team::{DeleteTeamResponse, delete_team_handler},
             find_team::{FindTeamResponse, find_team_handler},
             get_permissions::{GetPermissionsResponse, get_permissions_handler},
             get_team::{GetTeamResponse, get_team_handler},
             groups::{
                 add_member::add_member_handler,
                 create_group::{CreateGroupResponse, create_group_handler},
+                delete_group::{DeleteGroupResponse, delete_group_handler},
                 remove_member::remove_member_handler,
                 update_group::update_group_handler,
             },
+            list_members::{ListMembersResponse, list_members_handler},
             update_team::{UpdateTeamResponse, update_team_handler},
         },
         users::find_user::{FindUserResponse, find_user_handler},
@@ -582,6 +585,25 @@ pub fn route(
                                     "Update team",
                                     "Update team information"
                                 ),
+                            )
+                            .delete_with(
+                                delete_team_handler,
+                                api_docs!(
+                                    Json<DeleteTeamResponse>,
+                                    "Delete team",
+                                    "Delete a team and all related data (owner only)"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/members",
+                            get_with(
+                                list_members_handler,
+                                api_docs!(
+                                    Json<ListMembersResponse>,
+                                    "List team members",
+                                    "List all members of a team with their groups"
+                                ),
                             ),
                         )
                         .nest(
@@ -609,6 +631,14 @@ pub fn route(
                                                     (),
                                                     "Update group",
                                                     "Update group information"
+                                                ),
+                                            )
+                                            .delete_with(
+                                                delete_group_handler,
+                                                api_docs!(
+                                                    Json<DeleteGroupResponse>,
+                                                    "Delete group",
+                                                    "Delete a group and all related data (owner only)"
                                                 ),
                                             ),
                                         )
