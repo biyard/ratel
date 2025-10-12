@@ -1,10 +1,38 @@
-#![allow(warnings)]
 use super::*;
 use crate::{
     tests::{create_nick_name, create_test_user, get_test_aws_config},
     types::*,
     utils::aws::DynamoClient,
 };
+
+#[tokio::test]
+async fn tests_create_duplicated_user() {
+    let cli = DynamoClient::mock(get_test_aws_config()).client;
+    let profile = "https://ratel.foundation/images/default-profile.png".to_string();
+    let now = chrono::Utc::now().timestamp_micros();
+    let username = format!("usn-dup-{}", now);
+    let nickname = format!("nn-dup-{}", now);
+    let email = format!("u-dup+{}@example.com", now);
+
+    let user = User::new(
+        nickname,
+        email,
+        profile,
+        true,
+        true,
+        UserType::Individual,
+        username,
+        Some("password".to_string()),
+    );
+
+    let user2 = user.clone();
+
+    assert!(user.create(&cli).await.is_ok());
+    assert!(
+        user2.create(&cli).await.is_err(),
+        "should fail to create duplicated user"
+    );
+}
 
 #[tokio::test]
 async fn tests_create_user() {

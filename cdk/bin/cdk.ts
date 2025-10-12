@@ -3,6 +3,7 @@ import { RegionalServiceStack } from "../lib/regional-service-stack";
 import { GlobalAccelStack } from "../lib/global-accel-stack";
 import { GlobalTableStack } from "../lib/dynamodb-stack";
 import { ImageWorkerStack } from "../lib/image-worker-stack";
+import { StorybookStack } from "../lib/storybook-stack";
 
 const app = new App();
 
@@ -14,6 +15,9 @@ const host = process.env.DOMAIN || "dev.ratel.foundation";
 const webDomain = host;
 const apiDomain = `api.${host}`;
 const baseDomain = "ratel.foundation";
+const deployStorybook =
+  (process.env.DEPLOY_STORYBOOK && process.env.DEPLOY_STORYBOOK === "true") ||
+  false;
 
 new ImageWorkerStack(app, `ratel-${env}-image-worker`, {
   env: {
@@ -21,6 +25,18 @@ new ImageWorkerStack(app, `ratel-${env}-image-worker`, {
     region: "ap-northeast-2",
   },
 });
+
+if (deployStorybook) {
+  new StorybookStack(app, `ratel-${env}-storybook`, {
+    env: {
+      account: process.env.CDK_DEFAULT_ACCOUNT,
+      region: "us-east-1",
+    },
+    commit: process.env.COMMIT!,
+    webDomain: `storybook.${host}`,
+    baseDomain,
+  });
+}
 
 new GlobalTableStack(app, `ratel-${env}-dynamodb`, {
   env: {

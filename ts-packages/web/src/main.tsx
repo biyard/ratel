@@ -4,8 +4,9 @@ import './index.css';
 import { RouterProvider } from 'react-router';
 import { routes } from './router';
 import './i18n/config';
-import { ErrorBoundary } from './components/error-boundary';
 
 createRoot(document.getElementById('root')!).render(
-  <RouterProvider router={routes} />,
+  <StrictMode>
+    <RouterProvider router={routes} />
+  </StrictMode>,
 );

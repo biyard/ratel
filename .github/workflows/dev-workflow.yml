@@ -17,10 +17,15 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-      - name: Download Next.js CDK .next
+      - name: Download Web CDK .dist
         uses: actions/download-artifact@v4
         with:
           name: ratel-web-${{ github.sha }}
+          path: ./
+      - name: Download Storybook CDK storybook-static
+        uses: actions/download-artifact@v4
+        with:
+          name: ratel-storybook-${{ github.sha }}
           path: ./
       - name: Download image worker
         uses: actions/download-artifact@v4
@@ -46,9 +51,11 @@ jobs:
           PGHOST_AP: ${{ secrets.PGHOST_AP }}
           DOMAIN: dev.ratel.foundation
           STACK: ratel-dev-stack
+          DEPLOY_STORYBOOK: true
         run: |
           npm i -g aws-cdk
           tar xzvf dist.tar.gz
+          tar xzvf storybook.tar.gz
           make cdk/.build/image-worker/bootstrap
           make cdk-deploy-v2
 
@@ -304,7 +311,7 @@ jobs:
           VITE_API_URL: https://dev.ratel.foundation
           VITE_EXPERIMENT: true
           VITE_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
-
+          VITE_STORYBOOK_URL: https://storybook.dev.ratel.foundation
         run: |
           make build
           mv dist ../../cdk/
@@ -316,6 +323,57 @@ jobs:
         with:
           name: ratel-web-${{ github.sha }}
           path: ${{ github.workspace }}/dist.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
+
+  ratel-storybook:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ts-packages/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
+
+      - name: Build
+        env:
+          REGION: ap-northeast-2
+          VITE_LOG_LEVEL: info
+          VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
+
+          VITE_ENV: dev
+          VITE_SIGN_DOMAIN: dev.ratel.foundation
+          VITE_API_URL: https://dev.ratel.foundation
+          VITE_EXPERIMENT: true
+          VITE_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
+
+        run: |
+          pnpm storybook build
+          mv storybook-static ../../cdk/
+          cd ../..
+          tar czvf storybook.tar.gz cdk/storybook-static
+
+      - name: Upload Next.js CDK .next
+        uses: actions/upload-artifact@v4
+        with:
+          name: ratel-storybook-${{ github.sha }}
+          path: ${{ github.workspace }}/storybook.tar.gz
           if-no-files-found: error
           retention-days: 7
 
