@@ -92,7 +92,7 @@ export class StorybookStack extends Stack {
       ),
     });
 
-    new s3deploy.BucketDeployment(this, "PublicDeployStatic", {
+    new s3deploy.BucketDeployment(this, "PublicStorybookDeployStatic", {
       destinationBucket: staticBucket,
       distribution: distribution,
       distributionPaths: ["/*"],
