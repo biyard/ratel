@@ -116,7 +116,7 @@ export class GlobalAccelStack extends Stack {
       ),
     });
 
-    new s3deploy.BucketDeployment(this, "PublicDeployStatic", {
+    new s3deploy.BucketDeployment(this, `RatelWebBucketDeployment-${stage}`, {
       destinationBucket: staticBucket,
       distribution: distribution,
       distributionPaths: ["/*"],

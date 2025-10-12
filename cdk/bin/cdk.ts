@@ -32,6 +32,7 @@ if (deployStorybook) {
       account: process.env.CDK_DEFAULT_ACCOUNT,
       region: "us-east-1",
     },
+    stage: env,
     commit: process.env.COMMIT!,
     webDomain: `storybook.${host}`,
     baseDomain,
