@@ -244,6 +244,18 @@ pub fn route(
                     ),
                 )
                 .route(
+                    "/:post_pk/comments/:comment_sk/likes",
+                    post_with(
+                        like_comment_handler,
+                        api_docs!(
+                            Json<LikeCommentResponse>,
+                            "Like Comment",
+                            "Like a comment"
+                        ),
+                    )
+                )
+
+                .route(
                     "/:post_pk",
                     get_with(
                         get_post_handler,

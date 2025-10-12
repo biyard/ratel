@@ -1,6 +1,6 @@
 use crate::{
     Error2,
-    models::{team::Team, user::User},
+    models::{PostCommentLike, team::Team, user::User},
     types::{author::Author, sorted_visibility::SortedVisibility, *},
 };
 use bdk::prelude::*;
@@ -276,5 +276,50 @@ impl Post {
             })?;
 
         Ok(comment)
+    }
+
+    pub async fn like_comment(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: Partition,
+        comment_pk: EntityType,
+        user_pk: Partition,
+    ) -> Result<(), crate::Error2> {
+        let comment_tx = PostComment::updater(&post_pk, &comment_pk)
+            .increase_likes(1)
+            .transact_write_item();
+        let pl_tx = PostCommentLike::new(post_pk, comment_pk, user_pk).create_transact_write_item();
+
+        cli.transact_write_items()
+            .set_transact_items(Some(vec![comment_tx, pl_tx]))
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to like comment: {}", e);
+                crate::Error2::PostLikeError
+            })?;
+        Ok(())
+    }
+
+    pub async fn unlike_comment(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: Partition,
+        comment_pk: EntityType,
+        user_pk: Partition,
+    ) -> Result<(), crate::Error2> {
+        let comment_tx = PostComment::updater(&post_pk, &comment_pk)
+            .decrease_likes(1)
+            .transact_write_item();
+        let pcl = PostCommentLike::new(post_pk, comment_pk, user_pk);
+        let pl_tx = PostCommentLike::delete_transact_write_item(&pcl.pk, &pcl.sk);
+
+        cli.transact_write_items()
+            .set_transact_items(Some(vec![comment_tx, pl_tx]))
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to unlike comment: {}", e);
+                crate::Error2::PostLikeError
+            })?;
+        Ok(())
     }
 }

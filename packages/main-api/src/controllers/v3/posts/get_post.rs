@@ -1,9 +1,6 @@
 use crate::{
     AppState, Error2,
-    models::{
-        feed::{Post, PostMetadata},
-        user::User,
-    },
+    models::{PostCommentLike, feed::PostMetadata, user::User},
 };
 use aide::NoApi;
 use axum::{
@@ -23,21 +20,22 @@ pub async fn get_post_handler(
     tracing::debug!("Get post for post_pk: {}", post_pk);
 
     let post_metadata = PostMetadata::query(cli, &post_pk).await?;
-    let post = post_metadata
-        .iter()
-        .filter(|p| matches!(p, PostMetadata::Post(_)))
-        .map(|p| {
-            if let PostMetadata::Post(post) = p {
-                Some(post.clone())
-            } else {
-                None
+    let mut comment_keys = vec![];
+    let mut post = None;
+
+    for metadata in &post_metadata {
+        match metadata {
+            PostMetadata::PostComment(comment) => {
+                if let Some(user) = &user {
+                    comment_keys.push(comment.like_keys(&user.pk));
+                }
             }
-        })
-        .collect::<Vec<Option<Post>>>()
-        .first()
-        .ok_or(Error2::PostNotFound)?
-        .clone()
-        .ok_or(Error2::PostNotFound)?;
+            PostMetadata::Post(p) => post = Some(p.clone()),
+            _ => {}
+        }
+    }
+
+    let post = post.ok_or(Error2::PostNotFound)?;
 
     let permissions = post.get_permissions(cli, user.clone()).await?;
     if !permissions.contains(crate::types::TeamGroupPermission::PostRead) {
@@ -46,10 +44,14 @@ pub async fn get_post_handler(
         ));
     }
 
-    let is_liked = if let Some(user) = &user {
-        post.is_liked(cli, &user.pk).await?
+    let (is_liked, comment_likes) = if let Some(user) = &user {
+        let is_liked = post.is_liked(cli, &user.pk);
+        let comment_likes = PostCommentLike::batch_get(cli, comment_keys);
+        let ret = tokio::try_join!(is_liked, comment_likes)?;
+
+        ret
     } else {
-        false
+        (false, vec![])
     };
 
     // TODO: query with sk
@@ -59,5 +61,7 @@ pub async fn get_post_handler(
 
     // TODO: Check if the user has liked the post and set is_liked accordingly
 
-    Ok(Json((post_metadata, permissions.into(), is_liked).into()))
+    Ok(Json(
+        (post_metadata, permissions.into(), is_liked, comment_likes).into(),
+    ))
 }
