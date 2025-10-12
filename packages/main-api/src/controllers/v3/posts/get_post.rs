@@ -18,30 +18,37 @@ pub async fn get_post_handler(
     Path(super::dto::PostPathParam { post_pk }): super::dto::PostPath,
 ) -> Result<Json<PostDetailResponse>, Error2> {
     let cli = &dynamo.client;
-    tracing::info!("Get post for post_pk: {}", post_pk);
+    tracing::debug!("Get post for post_pk: {}", post_pk);
 
-    if !Post::has_permission(
-        cli,
-        &post_pk,
-        if let Some(ref user) = user {
-            Some(&user.pk)
-        } else {
-            None
-        },
-        crate::types::TeamGroupPermission::PostRead,
-    )
-    .await?
-    .1
-    {
-        return Err(Error2::NoPermission);
-    };
+    let post_metadata = PostMetadata::query(cli, &post_pk).await?;
+    let post = post_metadata
+        .iter()
+        .filter(|p| matches!(p, PostMetadata::Post(_)))
+        .map(|p| {
+            if let PostMetadata::Post(post) = p {
+                Some(post.clone())
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<Option<Post>>>()
+        .first()
+        .ok_or(Error2::PostNotFound)?
+        .clone()
+        .ok_or(Error2::PostNotFound)?;
+
+    let permissions = post.get_permissions(cli, user).await?;
+    if !permissions.contains(crate::types::TeamGroupPermission::PostRead) {
+        return Err(Error2::Unauthorized(
+            "You do not have permission to view this post".into(),
+        ));
+    }
 
     // let post_like_pk = match post_pk {
     //     Partition::Feed(ref post_pk) => Partition::PostLike(post_pk.clone()),
     //     None => Partition::None,
     // };
 
-    let post_metadata = PostMetadata::query(cli, &post_pk).await?;
     // TODO: query with sk
     // let post_likes = PostLikeMetadata::query(cli, &post_like_pk);
 
@@ -49,5 +56,5 @@ pub async fn get_post_handler(
 
     // TODO: Check if the user has liked the post and set is_liked accordingly
 
-    Ok(Json(post_metadata.into()))
+    Ok(Json((post_metadata, permissions.into()).into()))
 }
