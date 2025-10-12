@@ -237,10 +237,8 @@ impl Post {
         let post_tx = Self::updater(&post_pk, EntityType::Post)
             .decrease_likes(1)
             .transact_write_item();
-        let pl_tx = PostLike::delete_transact_write_item(
-            &post_pk,
-            EntityType::PostLike(user_pk.to_string()).to_string(),
-        );
+        let (p, s) = PostLike::keys(&post_pk, &user_pk);
+        let pl_tx = PostLike::delete_transact_write_item(p, s);
 
         cli.transact_write_items()
             .set_transact_items(Some(vec![post_tx, pl_tx]))
