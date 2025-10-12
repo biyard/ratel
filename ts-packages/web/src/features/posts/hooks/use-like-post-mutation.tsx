@@ -26,7 +26,10 @@ export function useLikePostMutation() {
           const delta = like ? 1 : -1;
           return {
             ...old,
-            likes: Math.max(0, old.post.likes + delta),
+            post: {
+              ...old.post,
+              likes: Math.max(0, old.post.likes + delta),
+            },
             is_liked: like,
           };
         },
@@ -36,12 +39,15 @@ export function useLikePostMutation() {
         { queryKey: listQueryKey },
         (post) => {
           if (post.post.pk === feedId) {
-            const likeCount = post.post.likes ?? post.post.likes ?? 0;
+            const likeCount = post.post.likes ?? 0;
             const delta = like ? 1 : -1;
             return {
               ...post,
+              post: {
+                ...post.post,
+                likes: Math.max(0, likeCount + delta),
+              },
               is_liked: like,
-              likes: Math.max(0, likeCount + delta),
             };
           }
           return post;

@@ -64,11 +64,23 @@ export function useLikeCommentMutation() {
         (replies) => {
           const items = replies.items.map((c) => {
             if (c.sk === commentSk) {
-              return {
-                ...c,
-                liked: like,
-                likes: c.likes + 1,
-              };
+              if (c.liked === like) {
+                return c;
+              }
+
+              if (like) {
+                return {
+                  ...c,
+                  liked: like,
+                  likes: c.likes + 1,
+                };
+              } else {
+                return {
+                  ...c,
+                  liked: like,
+                  likes: Math.max(0, c.likes - 1),
+                };
+              }
             }
 
             return c;
