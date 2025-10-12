@@ -364,6 +364,7 @@ jobs:
           VITE_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
 
         run: |
+          pnpm i
           pnpm storybook build
           mv storybook-static ../../cdk/
           cd ../..
