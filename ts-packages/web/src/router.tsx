@@ -10,7 +10,7 @@ import SettingLayout from './app/(social)/settings/layout';
 import MyNetwork from './app/(social)/my-network/page';
 import MyFollowerPage from './app/(social)/my-follower/page';
 import { z } from 'zod';
-import ThreadPage from './app/(social)/threads/[id]/page';
+import ThreadPage from './app/(social)/threads/[id]/thread-page';
 
 // Space
 import SpaceLayout from './app/spaces/layout';

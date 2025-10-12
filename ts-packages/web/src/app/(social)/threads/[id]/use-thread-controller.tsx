@@ -2,7 +2,7 @@ import { useDeletePostMutation } from '@/features/posts/hooks/use-delete-post-mu
 import { useLikePostMutation } from '@/features/posts/hooks/use-like-post-mutation';
 import { useCommentMutation } from '@/hooks/feeds/use-comment-mutation';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
-import { useReplyCommentMutation } from '@/hooks/feeds/use-reply-comment-mutation';
+import { useReplyCommentMutation } from '@/features/comments/hooks/use-reply-comment-mutation';
 import { useLoggedIn, useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { GroupPermission } from '@/lib/api/models/group';
@@ -19,6 +19,7 @@ import { usePostEditorContext } from '../../_components/post-editor';
 import SpaceCreateModal from './_components/space-create-modal';
 import { useThreadData } from './use-thread-data';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
+import { useLikeCommentMutation } from '@/features/comments/hooks/use-like-comment-mutation';
 
 export class ThreadController {
   readonly isPostOwner: boolean;
@@ -43,6 +44,7 @@ export class ThreadController {
     public user,
     public teams,
     public postEditor,
+    public likeComment,
   ) {
     this.username = this.user?.username || '';
     this.isPostOwner =
@@ -72,8 +74,13 @@ export class ThreadController {
     });
   };
 
-  handleLikeComment = async (commentId: string) => {
+  handleLikeComment = async (commentId: string, like: boolean) => {
     logger.debug('handleLikeComment', commentId);
+    this.likeComment.mutateAsync({
+      postPk: this.postId,
+      commentSk: commentId,
+      like,
+    });
   };
 
   handleLikePost = async () => {
@@ -137,6 +144,7 @@ export function useThreadController() {
   const { teams } = useContext(TeamContext);
 
   const postEditor = usePostEditorContext();
+  const likeComment = useLikeCommentMutation();
 
   useEffect(() => {
     if (feed.post.space_pk) {
@@ -160,5 +168,6 @@ export function useThreadController() {
     user,
     teams,
     postEditor,
+    likeComment,
   );
 }

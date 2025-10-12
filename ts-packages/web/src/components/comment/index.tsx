@@ -121,7 +121,7 @@ export function Comment({ comment, onComment, onLike }: CommentProps) {
             className="flex flex-row gap-2 justify-center items-center"
             onClick={() => {
               if (onLike) {
-                onLike(comment.pk, !comment.liked);
+                onLike(comment.sk, !comment.liked);
               } else {
                 throw new Error('onLike is not set');
               }
