@@ -2,6 +2,7 @@ import type { StorybookConfig } from '@storybook/react-vite';
 import svgr from 'vite-plugin-svgr';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
+// import tsconfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
@@ -18,22 +19,9 @@ const config: StorybookConfig = {
   },
   viteFinal: async (viteConfig) => {
     viteConfig.plugins = (viteConfig.plugins ?? []).concat([
+      // tsconfigPaths(),
       tailwindcss(),
-      svgr({
-        // optional SVGR options
-        svgrOptions: {
-          icon: true,
-          // Example SVGO tweak: keep viewBox, remove width/height
-          svgoConfig: {
-            plugins: [
-              { name: 'removeViewBox', active: false },
-              'removeDimensions',
-            ],
-          },
-        },
-        // Export as React component with ?react OR default for all .svg
-        include: '**/*.svg',
-      }),
+      svgr(),
       react(),
     ]);
     return viteConfig;

@@ -14,6 +14,33 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  ratel-storybook:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ts-packages/web
+
+    outputs:
+      image: ${{ steps.build.outputs.image }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.15.0 --activate
+
+      - name: Build and cache Docker image
+        id: build
+        env:
+          ECR_NAME: web
+          COMMIT: pr-${{ github.sha }}
+        run: |
+          pnpm i
+          npx storybook build
+
   ratel-web:
     runs-on: ubuntu-latest
 
