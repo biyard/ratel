@@ -120,12 +120,7 @@ export class GlobalAccelStack extends Stack {
       destinationBucket: staticBucket,
       distribution: distribution,
       distributionPaths: ["/*"],
-      sources: [
-        s3deploy.Source.asset("dist", {
-          assetHash: commit,
-          assetHashType: cdk.AssetHashType.CUSTOM,
-        }),
-      ],
+      sources: [s3deploy.Source.asset("dist")],
     });
   }
 }

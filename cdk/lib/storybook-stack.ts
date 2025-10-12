@@ -100,12 +100,7 @@ export class StorybookStack extends Stack {
         destinationBucket: staticBucket,
         distribution: distribution,
         distributionPaths: ["/*"],
-        sources: [
-          s3deploy.Source.asset("storybook-static", {
-            assetHash: commit,
-            assetHashType: cdk.AssetHashType.CUSTOM,
-          }),
-        ],
+        sources: [s3deploy.Source.asset("storybook-static")],
       },
     );
   }
