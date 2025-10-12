@@ -4,6 +4,8 @@ use crate::{
 };
 use bdk::prelude::*;
 
+use super::PostCommentLike;
+
 #[derive(
     Debug,
     Clone,
@@ -137,5 +139,9 @@ impl PostComment {
             })?;
 
         Ok(comment)
+    }
+
+    pub fn like_keys(&self, user_pk: &Partition) -> (Partition, EntityType) {
+        PostCommentLike::keys(self.pk.clone(), self.sk.clone(), user_pk)
     }
 }

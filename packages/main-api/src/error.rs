@@ -89,7 +89,7 @@ pub enum Error {
     #[error("Post not found")]
     #[rest_error(status = 404)]
     PostNotFound,
-    #[error("You do not have permission to access this post")]
+    #[error("Failed to like/unlike the post")]
     PostLikeError,
     #[error("Failed to comment on the post")]
     PostCommentError,

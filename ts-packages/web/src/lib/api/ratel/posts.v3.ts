@@ -44,6 +44,7 @@ export type PostDetailResponse = {
   // FIXME: Define the type properly
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   artwork_metadata?: any;
+  permissions: bigint;
 };
 
 export function updatePostWithTitleAndContents(
@@ -107,7 +108,9 @@ export async function likePost(
   postPk: string,
   like: boolean,
 ): Promise<LikePostResponse> {
-  return call('POST', `/v3/posts/${encodeURIComponent(postPk)}/like`, { like });
+  return call('POST', `/v3/posts/${encodeURIComponent(postPk)}/likes`, {
+    like,
+  });
 }
 
 export type Post = {

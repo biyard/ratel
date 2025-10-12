@@ -13,6 +13,7 @@ use bdk::prelude::*;
     JsonSchema,
 )]
 #[repr(u8)]
+// NOTE: If you add a new permission, you must update @/ts-packages/web/src/features/utils/tem-group-permissions.tsx too.
 pub enum TeamGroupPermission {
     //Avaliable Permission Value: 0 ~ 63
     #[default]
@@ -41,6 +42,41 @@ pub enum TeamGroupPermission {
 
 #[derive(Debug)]
 pub struct TeamGroupPermissions(pub Vec<TeamGroupPermission>);
+
+impl TeamGroupPermissions {
+    pub fn all() -> Self {
+        Self(vec![
+            TeamGroupPermission::PostRead,
+            TeamGroupPermission::PostWrite,
+            TeamGroupPermission::PostEdit,
+            TeamGroupPermission::PostDelete,
+            TeamGroupPermission::SpaceRead,
+            TeamGroupPermission::SpaceWrite,
+            TeamGroupPermission::SpaceEdit,
+            TeamGroupPermission::SpaceDelete,
+            TeamGroupPermission::TeamAdmin,
+            TeamGroupPermission::TeamEdit,
+            TeamGroupPermission::GroupEdit,
+            TeamGroupPermission::ManagePromotions,
+            TeamGroupPermission::ManageNews,
+        ])
+    }
+
+    pub fn empty() -> Self {
+        Self(vec![])
+    }
+
+    pub fn read() -> Self {
+        Self(vec![
+            TeamGroupPermission::PostRead,
+            TeamGroupPermission::SpaceRead,
+        ])
+    }
+
+    pub fn contains(&self, permission: TeamGroupPermission) -> bool {
+        self.0.contains(&permission)
+    }
+}
 
 impl Default for TeamGroupPermissions {
     fn default() -> Self {

@@ -12,7 +12,7 @@ export type ThreadCommentProps = {
   expandComment: State<boolean>;
   handleComment: (content: string) => Promise<void>;
   handleReplyToComment: (commentSk: string, content: string) => Promise<void>;
-  handleLikeComment: (commentId: string) => Promise<void>;
+  handleLikeComment: (commentId: string, like: boolean) => Promise<void>;
 };
 
 export default function ThreadComment({
