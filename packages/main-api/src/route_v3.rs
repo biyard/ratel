@@ -19,19 +19,17 @@ use crate::controllers::v3::spaces::deliberations::posting_deliberation::{
 };
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
-use crate::models::feed::{Post, PostComment, PostDetailResponse};
-// use crate::models::feed::Post;
 use crate::controllers::v3::spaces::poll::list_responses::list_responses_handler;
 use crate::controllers::v3::spaces::poll::respond_poll_space::respond_poll_space_handler;
 use crate::controllers::v3::spaces::poll::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
+use crate::models::feed::*;
 use crate::models::space::{
     DeliberationDiscussionResponse, DeliberationSpaceResponse, PollSpaceSurveyAnswerDto,
     SpaceCommonResponse,
 };
 use crate::types::list_items_response::ListItemsResponse;
-// use crate::types::list_items_response::ListItemsResponse;
 use crate::{
     Error2,
     controllers::v3::{
@@ -48,15 +46,7 @@ use crate::{
             get_info::{GetInfoResponse, get_info_handler},
             update_user::{UpdateUserResponse, update_user_handler},
         },
-        posts::{
-            comments::add_comment::add_comment_handler,
-            create_post::{CreatePostResponse, create_post_handler},
-            delete_post::delete_post_handler,
-            get_post::get_post_handler,
-            like_post::{LikePostResponse, like_post_handler},
-            list_posts::list_posts_handler,
-            update_post::update_post_handler,
-        },
+        posts::*,
         spaces::deliberations::{
             create_deliberation::{CreateDeliberationResponse, create_deliberation_handler},
             delete_deliberation::delete_deliberation_handler,

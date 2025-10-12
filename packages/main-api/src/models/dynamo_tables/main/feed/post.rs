@@ -162,6 +162,14 @@ impl Post {
         TeamGroupPermissions::empty()
     }
 
+    pub async fn is_liked(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        user_pk: &Partition,
+    ) -> Result<bool, crate::Error2> {
+        Ok(PostLike::find_one(cli, &self.pk, user_pk).await?.is_some())
+    }
+
     pub async fn has_permission(
         cli: &aws_sdk_dynamodb::Client,
         post_pk: &Partition,
