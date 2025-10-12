@@ -52,8 +52,7 @@ export class StorybookStack extends Stack {
       defaultBehavior: {
         origin,
         cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED, // API/SSR default; tune if you want caching
-        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
-        allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
 
