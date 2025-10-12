@@ -1,5 +1,5 @@
-use crate::controllers::v3::posts::CreatePostResponse;
-use crate::models::feed::{PostComment, PostDetailResponse};
+use crate::controllers::v3::posts::{CreatePostResponse, PostDetailResponse};
+use crate::models::feed::PostComment;
 use crate::tests::v3_setup::TestContextV3;
 use crate::types::ListItemsResponse;
 use crate::*;
