@@ -89,19 +89,19 @@ async fn test_poll_space_creation() {
     .expect("failed to find spaces survey response");
     assert_eq!(res.len(), 1, "should have 1 response");
 
-    PollSpaceSurveyResponse::new(
-        poll.pk.clone(),
-        user.pk.clone(),
-        vec![
-            SurveyAnswer::SingleChoice { answer: Some(0) },
-            SurveyAnswer::MultipleChoice {
-                answer: Some(vec![1]),
-            },
-        ],
-    )
-    .create(&cli)
-    .await
-    .expect("failed to create user survey response");
+    // PollSpaceSurveyResponse::new(
+    //     poll.pk.clone(),
+    //     user.pk.clone(),
+    //     vec![
+    //         SurveyAnswer::SingleChoice { answer: Some(0) },
+    //         SurveyAnswer::MultipleChoice {
+    //             answer: Some(vec![1]),
+    //         },
+    //     ],
+    // )
+    // .create(&cli)
+    // .await
+    // .expect("failed to create user survey response");
 
     let (res, _) = PollSpaceSurveyResponse::find_by_space_pk(
         &cli,

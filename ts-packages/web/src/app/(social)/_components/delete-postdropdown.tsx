@@ -9,7 +9,7 @@ import { Extra } from '@/components/icons';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
-import { useDeletePostMutation } from '@/hooks/feeds/use-delete-post-mutation';
+import { useDeletePostMutation } from '@/features/posts/hooks/use-delete-post-mutation';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { useUserInfo } from '@/hooks/use-user-info';
 

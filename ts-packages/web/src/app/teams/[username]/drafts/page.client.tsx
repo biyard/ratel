@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 import useInfiniteFeeds from '@/hooks/feeds/use-feeds-infinite-query';
 import { useObserver } from '@/hooks/use-observer';
-import { useDeletePostMutation } from '@/hooks/feeds/use-delete-post-mutation';
+import { useDeletePostMutation } from '@/features/posts/hooks/use-delete-post-mutation';
 
 // Duplicated from src/app/%28social%29/drafts/page.client.tsx
 // Should be moved to a shared location
