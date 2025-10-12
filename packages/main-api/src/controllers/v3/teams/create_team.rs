@@ -2,18 +2,17 @@ use crate::{
     AppState, Error2,
     models::{
         team::{Team, TeamOwner},
-        user::UserTeam,
+        user::{User, UserTeam},
     },
     utils::{
-        dynamo_extractor::extract_user,
         validator::{validate_description, validate_image_url, validate_username},
     },
 };
 use dto::by_axum::{
-    auth::Authorization,
+    aide::NoApi,
     axum::{
-        Extension,
-        extract::{Json, State},
+        Json,
+        extract::{State},
     },
 };
 use dto::{JsonSchema, aide, schemars};
@@ -44,10 +43,10 @@ pub struct CreateTeamResponse {
 
 pub async fn create_team_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    NoApi(user): NoApi<Option<User>>,
     Json(req): Json<CreateTeamRequest>,
 ) -> Result<Json<CreateTeamResponse>, Error2> {
-    let user = extract_user(&dynamo.client, auth).await?;
+    let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
     let (team, _) =
         Team::find_by_username_prefix(&dynamo.client, &req.username, Default::default()).await?;
 

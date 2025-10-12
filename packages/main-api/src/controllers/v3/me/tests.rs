@@ -3,12 +3,12 @@ use crate::controllers::v3::posts::create_post::CreatePostResponse;
 use crate::tests::v3_setup::{TestContextV3, setup_v3};
 use crate::tests::{create_nick_name, create_user_name};
 use crate::{
-    tests::{create_app_state, create_test_user, get_auth},
+    tests::{create_app_state, create_test_user},
     types::Theme,
 };
-use dto::by_axum::axum::{
-    Json,
-    extract::{Extension, State},
+use dto::by_axum::{
+    aide::NoApi,
+    axum::{Json, extract::State},
 };
 use validator::ValidateLength;
 
@@ -24,7 +24,6 @@ async fn test_update_user_with_team_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
     let user = create_test_user(&cli).await;
-    let auth = get_auth(&user);
     let username = create_user_name();
     let team_display_name = format!("test_team_{}", username);
     let team_username = format!("test_username_{}", username);
@@ -32,7 +31,7 @@ async fn test_update_user_with_team_handler() {
     // Create Team
     let create_res = create_team_handler(
         State(app_state.clone()),
-        Extension(Some(auth.clone())),
+        NoApi(Some(user.clone())),
         Json(CreateTeamRequest {
             nickname: team_display_name.clone(),
             username: team_username.clone(),
@@ -57,7 +56,7 @@ async fn test_update_user_with_team_handler() {
     // Update Profile
     let update_user_res = update_user_handler(
         State(app_state.clone()),
-        Extension(Some(auth.clone())),
+        NoApi(Some(user.clone())),
         Json(UpdateUserRequest::Profile {
             nickname: new_nickname.clone(),
             profile_url: new_profile_url,
@@ -73,7 +72,7 @@ async fn test_update_user_with_team_handler() {
 
     let team = get_team_handler(
         State(app_state.clone()),
-        Extension(Some(auth.clone())),
+        NoApi(Some(user.clone())),
         Path(GetTeamPathParams {
             team_pk: team.team_pk.clone(),
         }),
@@ -94,7 +93,6 @@ async fn test_update_user_handler() {
     let app_state = create_app_state();
     let cli = app_state.dynamo.client.clone();
     let user = create_test_user(&cli).await;
-    let auth = get_auth(&user);
 
     let new_theme = if user.theme == Theme::Light {
         Theme::Dark
@@ -104,7 +102,7 @@ async fn test_update_user_handler() {
 
     let res = update_user_handler(
         State(app_state),
-        Extension(Some(auth)),
+        NoApi(Some(user)),
         Json(UpdateUserRequest::Theme { theme: new_theme }),
     )
     .await;
