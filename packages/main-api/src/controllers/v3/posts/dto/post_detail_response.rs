@@ -46,9 +46,7 @@ impl From<(Vec<PostMetadata>, i64, bool, Vec<PostCommentLike>)> for PostDetailRe
             match item {
                 PostMetadata::Post(post) => res.post = Some(post),
                 PostMetadata::PostComment(comment) => {
-                    let liked = post_comment_likes
-                        .iter()
-                        .any(|like| if like == comment { true } else { false });
+                    let liked = post_comment_likes.iter().any(|like| like == comment);
 
                     res.comments.push((comment, liked).into());
                 }

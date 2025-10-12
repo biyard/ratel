@@ -82,25 +82,6 @@ impl PartialEq<PostComment> for PostCommentLike {
 
 impl PartialEq<PostComment> for &PostCommentLike {
     fn eq(&self, post: &PostComment) -> bool {
-        let cid = match &post.sk {
-            EntityType::PostComment(id) => id,
-            _ => return false,
-        };
-
-        match &self.sk {
-            EntityType::PostCommentLike(_, comment_id) if comment_id == cid => {}
-            _ => return false,
-        }
-        let feed_id = match &self.pk {
-            Partition::PostLike(id) => id,
-            _ => return false,
-        };
-
-        let op_feed_id = match &post.pk {
-            Partition::Feed(id) => id,
-            _ => return false,
-        };
-
-        feed_id == op_feed_id
+        (**self).eq(post)
     }
 }
