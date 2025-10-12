@@ -2,21 +2,21 @@ use crate::{
     AppState, Error2,
     models::{
         team::Team,
-        user::{UserTeam, UserTeamQueryOption},
+        user::{User, UserTeam, UserTeamQueryOption},
     },
     types::{EntityType, TeamGroupPermission},
     utils::{
-        security::{RatelResource, check_any_permission},
+        security::{RatelResource, check_any_permission_with_user},
         validator::{validate_description, validate_image_url},
     },
 };
 
 use super::dto::*;
 use dto::by_axum::{
-    auth::Authorization,
+    aide::NoApi,
     axum::{
-        Extension,
-        extract::{Json, Path, State},
+        Json,
+        extract::{Path, State},
     },
 };
 use dto::{JsonSchema, aide, schemars};
@@ -45,13 +45,15 @@ pub type UpdateTeamResponse = TeamResponse;
 
 pub async fn update_team_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    NoApi(user): NoApi<Option<User>>,
     Path(params): Path<UpdateTeamPathParams>,
     Json(req): Json<UpdateTeamRequest>,
 ) -> Result<Json<UpdateTeamResponse>, Error2> {
-    check_any_permission(
+    let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
+
+    check_any_permission_with_user(
         &dynamo.client,
-        auth,
+        &user,
         RatelResource::Team {
             team_pk: params.team_pk.clone(),
         },
