@@ -22,6 +22,20 @@ export function reply(
   );
 }
 
+export function likeComment(
+  postPk: string,
+  commentSk: string,
+  like: boolean,
+): Promise<PostComment> {
+  return call(
+    'POST',
+    `/v3/posts/${encodeURIComponent(postPk)}/comments/${encodeURIComponent(commentSk)}/likes`,
+    {
+      like,
+    },
+  );
+}
+
 export function listReplies(
   postPk: string,
   commentSk: string,
