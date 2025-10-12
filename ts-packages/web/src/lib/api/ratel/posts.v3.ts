@@ -108,7 +108,9 @@ export async function likePost(
   postPk: string,
   like: boolean,
 ): Promise<LikePostResponse> {
-  return call('POST', `/v3/posts/${encodeURIComponent(postPk)}/like`, { like });
+  return call('POST', `/v3/posts/${encodeURIComponent(postPk)}/likes`, {
+    like,
+  });
 }
 
 export type Post = {
