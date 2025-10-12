@@ -1,10 +1,11 @@
+use super::*;
 use crate::models::feed::*;
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct PostDetailResponse {
     pub post: Option<Post>,
-    pub comments: Vec<PostComment>,
+    pub comments: Vec<PostCommentResponse>,
     pub artwork_metadata: Vec<PostArtworkMetadata>,
     pub repost: Option<PostRepost>,
     pub is_liked: bool,
@@ -18,7 +19,7 @@ impl From<Vec<PostMetadata>> for PostDetailResponse {
         for item in items {
             match item {
                 PostMetadata::Post(post) => res.post = Some(post),
-                PostMetadata::PostComment(comment) => res.comments.push(comment),
+                PostMetadata::PostComment(comment) => res.comments.push(comment.into()),
                 PostMetadata::PostArtwork(artwork) => res.artwork_metadata = artwork.metadata,
                 PostMetadata::PostRepost(repost) => res.repost = Some(repost),
             }
@@ -28,8 +29,15 @@ impl From<Vec<PostMetadata>> for PostDetailResponse {
 }
 
 // (PostMetadata, permissions, is_liked)
-impl From<(Vec<PostMetadata>, i64, bool)> for PostDetailResponse {
-    fn from((items, perms, is_liked): (Vec<PostMetadata>, i64, bool)) -> Self {
+impl From<(Vec<PostMetadata>, i64, bool, Vec<PostCommentLike>)> for PostDetailResponse {
+    fn from(
+        (items, perms, is_liked, post_comment_likes): (
+            Vec<PostMetadata>,
+            i64,
+            bool,
+            Vec<PostCommentLike>,
+        ),
+    ) -> Self {
         let mut res = Self::default();
         res.permissions = perms;
         res.is_liked = is_liked;
@@ -37,7 +45,13 @@ impl From<(Vec<PostMetadata>, i64, bool)> for PostDetailResponse {
         for item in items {
             match item {
                 PostMetadata::Post(post) => res.post = Some(post),
-                PostMetadata::PostComment(comment) => res.comments.push(comment),
+                PostMetadata::PostComment(comment) => {
+                    let liked = post_comment_likes
+                        .iter()
+                        .any(|like| if like == comment { true } else { false });
+
+                    res.comments.push((comment, liked).into());
+                }
                 PostMetadata::PostArtwork(artwork) => res.artwork_metadata = artwork.metadata,
                 PostMetadata::PostRepost(repost) => res.repost = Some(repost),
             }
