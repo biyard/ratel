@@ -68,7 +68,7 @@ export class GlobalAccelStack extends Stack {
     const distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultBehavior: {
         origin,
-        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED, // API/SSR default; tune if you want caching
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
         originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
