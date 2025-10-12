@@ -16,13 +16,16 @@ import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import { usePostEditorContext } from '../../_components/post-editor';
-import { usePermission } from '../../_hooks/use-permission';
 import SpaceCreateModal from './_components/space-create-modal';
 import { useThreadData } from './use-thread-data';
+import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
 
 export class ThreadController {
   readonly isPostOwner: boolean;
   readonly username: string;
+  permissions: TeamGroupPermissions;
+  readonly canEdit: boolean;
+  readonly canDelete: boolean;
 
   constructor(
     public postId: string,
@@ -40,8 +43,6 @@ export class ThreadController {
     public user,
     public teams,
     public postEditor,
-    public canEdit,
-    public canDelete,
   ) {
     this.username = this.user?.username || '';
     this.isPostOwner =
@@ -49,6 +50,11 @@ export class ThreadController {
       this.teams.find(
         (team) => team.username === this.feed.post.author_username,
       );
+    this.permissions = new TeamGroupPermissions(this.feed.permissions);
+    this.canEdit =
+      this.isPostOwner || this.permissions.has(GroupPermission.WritePosts);
+    this.canDelete =
+      this.isPostOwner || this.permissions.has(GroupPermission.DeletePosts);
   }
 
   handleComment = async (content: string) => {
@@ -132,16 +138,6 @@ export function useThreadController() {
 
   const postEditor = usePostEditorContext();
 
-  // FIXME: refactoring
-  const writeGroupPermission = usePermission(
-    feed.post.author_username,
-    GroupPermission.WritePosts,
-  ).data.has_permission;
-  const deletePostPermission = usePermission(
-    feed.post.author_username,
-    GroupPermission.DeletePosts,
-  ).data.has_permission;
-
   useEffect(() => {
     if (feed.post.space_pk) {
       navigate(route.space(feed.post.space_pk));
@@ -164,7 +160,5 @@ export function useThreadController() {
     user,
     teams,
     postEditor,
-    writeGroupPermission,
-    deletePostPermission,
   );
 }

@@ -122,6 +122,46 @@ impl Post {
         }
     }
 
+    pub async fn get_permissions(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        user: Option<User>,
+    ) -> Result<TeamGroupPermissions, crate::Error2> {
+        if user.is_none() {
+            return Ok(self.get_permissions_for_guest());
+        }
+
+        let user = user.unwrap();
+
+        if self.user_pk == user.pk {
+            return Ok(TeamGroupPermissions::all());
+        }
+
+        if self.author_type == UserType::Individual {
+            return Ok(self.get_permissions_for_guest());
+        }
+
+        match self.user_pk.clone() {
+            team_pk if matches!(team_pk, Partition::Team(_)) => {
+                return Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk).await;
+            }
+            _ => {
+                return Err(Error2::NotSupported(format!(
+                    "Post({}) author type {:?} is not supported",
+                    self.pk, self.author_type
+                )));
+            }
+        }
+    }
+
+    fn get_permissions_for_guest(&self) -> TeamGroupPermissions {
+        if self.status == PostStatus::Published && self.visibility == Some(Visibility::Public) {
+            return TeamGroupPermissions::read();
+        }
+
+        TeamGroupPermissions::empty()
+    }
+
     pub async fn has_permission(
         cli: &aws_sdk_dynamodb::Client,
         post_pk: &Partition,
@@ -161,13 +201,13 @@ impl Post {
         post_pk: Partition,
         user_pk: Partition,
     ) -> Result<(), crate::Error2> {
-        tracing::info!("Liking post {} by user {}", post_pk, user_pk);
+        tracing::debug!("Liking post {} by user {}", post_pk, user_pk);
         let post_tx = Self::updater(&post_pk, EntityType::Post)
             .increase_likes(1)
             .transact_write_item();
         let pl_tx = PostLike::new(post_pk, user_pk).create_transact_write_item();
 
-        tracing::info!("Post like transact items: {:?}, {:?}", post_tx, pl_tx);
+        tracing::debug!("Post like transact items: {:?}, {:?}", post_tx, pl_tx);
 
         cli.transact_write_items()
             .set_transact_items(Some(vec![post_tx, pl_tx]))

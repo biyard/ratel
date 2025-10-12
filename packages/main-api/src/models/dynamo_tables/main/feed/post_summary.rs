@@ -36,7 +36,8 @@ pub struct PostDetailResponse {
     pub comments: Vec<PostComment>,
     pub artwork_metadata: Vec<PostArtworkMetadata>,
     pub repost: Option<PostRepost>,
-    pub is_liked: bool, // Should be set externally
+    pub is_liked: bool,
+    pub permissions: i64,
 }
 
 impl From<Vec<PostMetadata>> for PostDetailResponse {
@@ -51,6 +52,25 @@ impl From<Vec<PostMetadata>> for PostDetailResponse {
                 PostMetadata::PostRepost(repost) => res.repost = Some(repost),
             }
         }
+        res
+    }
+}
+
+// With permissions
+impl From<(Vec<PostMetadata>, i64)> for PostDetailResponse {
+    fn from((items, perms): (Vec<PostMetadata>, i64)) -> Self {
+        let mut res = Self::default();
+        res.permissions = perms;
+
+        for item in items {
+            match item {
+                PostMetadata::Post(post) => res.post = Some(post),
+                PostMetadata::PostComment(comment) => res.comments.push(comment),
+                PostMetadata::PostArtwork(artwork) => res.artwork_metadata = artwork.metadata,
+                PostMetadata::PostRepost(repost) => res.repost = Some(repost),
+            }
+        }
+
         res
     }
 }
