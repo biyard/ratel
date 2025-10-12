@@ -29,28 +29,28 @@ pub struct HasTeamPermissionQuery {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, aide::OperationIo, JsonSchema)]
-pub struct HasTeamPermissionResponse {
+pub struct GetPermissionsResponse {
     pub has_permission: bool,
 }
 
-pub async fn has_team_permission_handler(
+pub async fn get_permissions_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Query(HasTeamPermissionQuery {
         team_pk,
         permission,
     }): Query<HasTeamPermissionQuery>,
-) -> Result<Json<HasTeamPermissionResponse>, Error2> {
+) -> Result<Json<GetPermissionsResponse>, Error2> {
     // Early return if no team_pk or permission provided
     if team_pk.is_none() || team_pk.as_ref().unwrap().is_empty() || permission.is_none() {
-        return Ok(Json(HasTeamPermissionResponse {
+        return Ok(Json(GetPermissionsResponse {
             has_permission: false,
         }));
     }
 
     // If no user is authenticated, return false
     if user.is_none() {
-        return Ok(Json(HasTeamPermissionResponse {
+        return Ok(Json(GetPermissionsResponse {
             has_permission: false,
         }));
     }
@@ -68,10 +68,10 @@ pub async fn has_team_permission_handler(
     )
     .await
     {
-        Ok(()) => Ok(Json(HasTeamPermissionResponse {
+        Ok(()) => Ok(Json(GetPermissionsResponse {
             has_permission: true,
         })),
-        Err(_) => Ok(Json(HasTeamPermissionResponse {
+        Err(_) => Ok(Json(GetPermissionsResponse {
             has_permission: false,
         })),
     }

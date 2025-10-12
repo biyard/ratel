@@ -7,6 +7,7 @@ use crate::{
     utils::{
         validator::{validate_description, validate_image_url, validate_username},
     },
+    types::Partition,
 };
 use dto::by_axum::{
     aide::NoApi,
