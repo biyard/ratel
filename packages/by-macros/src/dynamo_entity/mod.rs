@@ -375,12 +375,12 @@ fn generate_updater(
 
     let create_key_condition = if let Some(sk_name) = &s_cfg.sk_name {
         let condition = format!(
-            "attribute_not_exists(#{}) AND attribute_not_exists(#{})",
+            "attribute_not_exists({}) AND attribute_not_exists({})",
             &s_cfg.pk_name, sk_name
         );
         syn::LitStr::new(&condition, proc_macro2::Span::call_site())
     } else {
-        let condition = format!("attribute_not_exists(#{})", &s_cfg.pk_name);
+        let condition = format!("attribute_not_exists({})", &s_cfg.pk_name);
         syn::LitStr::new(&condition, proc_macro2::Span::call_site())
     };
 
@@ -827,12 +827,12 @@ fn generate_struct_impl(
     let opt_ident = Ident::new(&opt_name, proc_macro2::Span::call_site());
     let create_key_condition = if let Some(sk_name) = &s_cfg.sk_name {
         let condition = format!(
-            "attribute_not_exists(#{}) AND attribute_not_exists(#{})",
+            "attribute_not_exists({}) AND attribute_not_exists({})",
             &s_cfg.pk_name, sk_name
         );
         syn::LitStr::new(&condition, proc_macro2::Span::call_site())
     } else {
-        let condition = format!("attribute_not_exists(#{})", &s_cfg.pk_name);
+        let condition = format!("attribute_not_exists({})", &s_cfg.pk_name);
         syn::LitStr::new(&condition, proc_macro2::Span::call_site())
     };
 
