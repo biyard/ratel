@@ -15,6 +15,8 @@ import ThreadPage from './app/(social)/threads/[id]/page';
 // Space
 import SpaceLayout from './app/spaces/layout';
 import PollSpacePage from './app/spaces/poll/[id]/page';
+import { TestReportPage } from './app/test-report/test-report-page';
+import { StorybookPage } from './app/storybook/stroybook-page';
 
 export const routes = createBrowserRouter([
   {
@@ -85,6 +87,7 @@ export const routes = createBrowserRouter([
           },
         ],
       }, // End of Social Layout
+
       // Space Layout
       {
         id: 'space-layout',
@@ -98,6 +101,19 @@ export const routes = createBrowserRouter([
           },
         ],
       }, // End of Space Layout
+
+      // Test Report Page
+      {
+        id: 'test-report-page',
+        path: 'test-report',
+        Component: TestReportPage,
+      }, // End of TestReportPage
+
+      {
+        id: 'storybook-page',
+        path: 'storybook',
+        Component: StorybookPage,
+      }, // End of StorybookPage
     ],
   },
 ]);
