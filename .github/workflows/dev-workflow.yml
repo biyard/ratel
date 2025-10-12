@@ -11,7 +11,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [main-api, ratel-web, fetcher, image-worker]
+    needs: [main-api, ratel-web, fetcher, image-worker, ratel-storybook]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -365,7 +365,7 @@ jobs:
 
         run: |
           pnpm i
-          pnpm storybook build
+          npx storybook build
           mv storybook-static ../../cdk/
           cd ../..
           tar czvf storybook.tar.gz cdk/storybook-static
