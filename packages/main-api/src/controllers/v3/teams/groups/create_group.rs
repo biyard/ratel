@@ -2,19 +2,16 @@ use crate::{
     AppState, Error2,
     models::{
         team::{Team, TeamGroup},
-        user::UserTeamGroup,
+        user::{User, UserTeamGroup},
     },
     types::{EntityType, TeamGroupPermission, TeamGroupPermissions},
-    utils::{
-        dynamo_extractor::extract_user,
-        security::{RatelResource, check_any_permission},
-    },
+    utils::security::{RatelResource, check_any_permission_with_user},
 };
 use dto::by_axum::{
-    auth::Authorization,
+    aide::NoApi,
     axum::{
-        Extension,
-        extract::{Json, Path, State},
+        Json,
+        extract::{Path, State},
     },
 };
 use dto::{JsonSchema, aide, schemars};
@@ -41,10 +38,11 @@ pub struct CreateGroupResponse {
 
 pub async fn create_group_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    NoApi(user): NoApi<Option<User>>,
     Path(params): Path<CreateGroupPathParams>,
     Json(req): Json<CreateGroupRequest>,
 ) -> Result<Json<CreateGroupResponse>, Error2> {
+    let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
     // If Admin permissions are requested, require TeamAdmin
     let required_permissions = if req
         .permissions
@@ -59,18 +57,15 @@ pub async fn create_group_handler(
         ]
     };
 
-    check_any_permission(
+    check_any_permission_with_user(
         &dynamo.client,
-        auth.clone(),
+        &user,
         RatelResource::Team {
             team_pk: params.team_pk.clone(),
         },
         required_permissions,
     )
     .await?;
-    //If
-
-    let user = extract_user(&dynamo.client, auth).await?;
 
     let team = Team::get(
         &dynamo.client,

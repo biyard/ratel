@@ -1,7 +1,7 @@
-use crate::models::user::user_team_group::{UserTeamGroup, UserTeamGroupQueryOption};
-use crate::types::{Partition, TeamGroupPermission, TeamGroupPermissions};
 use crate::AppState;
 use crate::models::user::User;
+use crate::models::user::user_team_group::{UserTeamGroup, UserTeamGroupQueryOption};
+use crate::types::{Partition, TeamGroupPermission, TeamGroupPermissions};
 use aide::NoApi;
 use axum::extract::{Query, State};
 use axum::*;
@@ -28,9 +28,17 @@ pub struct GetPermissionsResponse {
 pub async fn get_permissions_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-    Query(GetPermissionsQuery { team_username, permission }): Query<GetPermissionsQuery>,
+    Query(GetPermissionsQuery {
+        team_username,
+        permission,
+    }): Query<GetPermissionsQuery>,
 ) -> Result<Json<GetPermissionsResponse>, crate::Error2> {
-    tracing::debug!("Checking permission: team_username={}, permission={}, user={:?}", team_username, permission, user);
+    tracing::debug!(
+        "Checking permission: team_username={}, permission={}, user={:?}",
+        team_username,
+        permission,
+        user
+    );
 
     // If no user is logged in, they have no permissions
     let user = match user {
@@ -67,9 +75,40 @@ pub async fn get_permissions_handler(
 
     // Check if any of the user's team groups have the requested permission
     let permission_flag = match permission.as_str() {
+        // Post Permissions
+        "read_posts" => TeamGroupPermission::PostRead,
         "write_posts" => TeamGroupPermission::PostWrite,
+        "edit_posts" => TeamGroupPermission::PostEdit,
         "delete_posts" => TeamGroupPermission::PostDelete,
+
+        // Space Permissions
+        "read_space" => TeamGroupPermission::SpaceRead,
+        "write_space" => TeamGroupPermission::SpaceWrite,
+        "edit_space" => TeamGroupPermission::SpaceEdit,
+        "delete_space" => TeamGroupPermission::SpaceDelete,
+
+        // Team/Group Management Permissions
+        "team_admin" => TeamGroupPermission::TeamAdmin,
+        "edit_team" => TeamGroupPermission::TeamEdit,
+        "manage_group" => TeamGroupPermission::GroupEdit,
+
+        // Admin Permissions
+        "manage_promotions" => TeamGroupPermission::ManagePromotions,
+        "manage_news" => TeamGroupPermission::ManageNews,
+
+        // Legacy compatibility mappings (keeping old strings for backward compatibility)
+        "WritePosts" => TeamGroupPermission::PostWrite,
+        "DeletePosts" => TeamGroupPermission::PostDelete,
+        "ReadPosts" => TeamGroupPermission::PostRead,
+        "EditPosts" => TeamGroupPermission::PostEdit,
+        "InviteMember" => TeamGroupPermission::GroupEdit, // Group edit includes member management
+        "ManageGroup" => TeamGroupPermission::GroupEdit,
+        "UpdateGroup" => TeamGroupPermission::GroupEdit,
+        "DeleteGroup" => TeamGroupPermission::TeamEdit, // Team edit includes group management
+        "ManageSpace" => TeamGroupPermission::SpaceEdit,
+
         _ => {
+            tracing::warn!("Unknown permission requested: {}", permission);
             return Ok(Json(GetPermissionsResponse {
                 has_permission: false,
             }));

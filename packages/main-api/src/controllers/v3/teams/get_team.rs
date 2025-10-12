@@ -1,9 +1,9 @@
 use super::dto::*;
-use crate::{AppState, Error2, models::team::TeamMetadata};
+use crate::{AppState, Error2, models::{team::TeamMetadata, user::User}};
 use dto::by_axum::{
-    auth::Authorization,
+    aide::NoApi,
     axum::{
-        Extension, Json,
+        Json,
         extract::{Path, State},
     },
 };
@@ -19,7 +19,7 @@ pub type GetTeamResponse = TeamDetailResponse;
 
 pub async fn get_team_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(_auth): Extension<Option<Authorization>>,
+    NoApi(_user): NoApi<Option<User>>,
     Path(path): Path<GetTeamPathParams>,
 ) -> Result<Json<GetTeamResponse>, Error2> {
     let team = TeamMetadata::query(&dynamo.client, path.team_pk).await?;

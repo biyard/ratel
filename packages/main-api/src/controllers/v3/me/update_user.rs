@@ -6,15 +6,14 @@ use crate::{
     },
     types::Theme,
     utils::{
-        dynamo_extractor::extract_user,
         validator::{validate_description, validate_image_url, validate_username},
     },
 };
 use dto::by_axum::{
-    auth::Authorization,
+    aide::NoApi,
     axum::{
-        Extension,
-        extract::{Json, State},
+        Json,
+        extract::{State},
     },
 };
 use dto::{JsonSchema, aide, schemars};
@@ -43,10 +42,13 @@ pub type UpdateUserResponse = UserDetailResponse;
 
 pub async fn update_user_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(auth): Extension<Option<Authorization>>,
+    NoApi(user): NoApi<Option<User>>,
     Json(req): Json<UpdateUserRequest>,
 ) -> Result<Json<UpdateUserResponse>, Error2> {
-    let user = extract_user(&dynamo.client, auth).await?;
+    let user = match user {
+        Some(u) => u,
+        None => return Err(Error2::Unauthorized("Authentication required".into())),
+    };
 
     match req {
         UpdateUserRequest::Theme { theme } => {

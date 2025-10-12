@@ -1,8 +1,8 @@
-use crate::{AppState, Error2, models::team::Team};
+use crate::{AppState, Error2, models::{team::Team, user::User}};
 use dto::by_axum::{
-    auth::Authorization,
+    aide::NoApi,
     axum::{
-        Extension, Json,
+        Json,
         extract::{Query, State},
     },
 };
@@ -24,7 +24,7 @@ pub struct FindTeamResponse {
 
 pub async fn find_team_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(_auth): Extension<Option<Authorization>>,
+    NoApi(_user): NoApi<Option<User>>,
     Query(params): Query<FindTeamQueryParams>,
 ) -> Result<Json<FindTeamResponse>, Error2> {
     if let Some(username) = params.username {
