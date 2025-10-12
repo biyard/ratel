@@ -51,8 +51,7 @@ export class StorybookStack extends Stack {
     const distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultBehavior: {
         origin,
-        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED, // API/SSR default; tune if you want caching
-        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
 
