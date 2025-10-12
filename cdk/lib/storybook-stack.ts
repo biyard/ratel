@@ -13,6 +13,7 @@ import * as s3 from "aws-cdk-lib/aws-s3";
 import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 
 export interface StorybookStackProps extends StackProps {
+  stage: string;
   commit: string;
 
   webDomain: string;
@@ -23,7 +24,7 @@ export class StorybookStack extends Stack {
   constructor(scope: Construct, id: string, props: StorybookStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
-    const { commit, webDomain, baseDomain } = props;
+    const { commit, webDomain, baseDomain, stage } = props;
     const zone = route53.HostedZone.fromLookup(this, "RootZone", {
       domainName: baseDomain,
     });
@@ -92,16 +93,20 @@ export class StorybookStack extends Stack {
       ),
     });
 
-    new s3deploy.BucketDeployment(this, "PublicStorybookDeployStatic", {
-      destinationBucket: staticBucket,
-      distribution: distribution,
-      distributionPaths: ["/*"],
-      sources: [
-        s3deploy.Source.asset("storybook-static", {
-          assetHash: commit,
-          assetHashType: cdk.AssetHashType.CUSTOM,
-        }),
-      ],
-    });
+    new s3deploy.BucketDeployment(
+      this,
+      `RatelStoryBookBucketDeployment-${stage}`,
+      {
+        destinationBucket: staticBucket,
+        distribution: distribution,
+        distributionPaths: ["/*"],
+        sources: [
+          s3deploy.Source.asset("storybook-static", {
+            assetHash: commit,
+            assetHashType: cdk.AssetHashType.CUSTOM,
+          }),
+        ],
+      },
+    );
   }
 }
