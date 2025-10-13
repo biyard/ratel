@@ -205,8 +205,15 @@ export function DiscussionRoom({
             <div className="text-sm text-neutral-400 light:text-[#737373] font-normal">
               {statusLabel}
             </div>
-            <div className="relative w-fit h-fit hidden max-tablet:block">
-              <Extra2 className="cursor-pointer w-6 h-6" onClick={() => {}} />
+            <div
+              className="relative w-fit h-fit hidden max-tablet:block"
+              id="discussion-option"
+            >
+              <Extra2
+                className="cursor-pointer w-6 h-6"
+                onClick={() => {}}
+                id="discussion-option"
+              />
             </div>
           </div>
           <div className="text-lg text-text-primary font-bold">{title}</div>
@@ -386,6 +393,7 @@ function AddDiscussion({ onadd }: { onadd: () => void }) {
   const { t } = useTranslation('DeliberationSpace');
   return (
     <div
+      id="add-discussion-btn"
       onClick={() => {
         onadd();
       }}
@@ -561,6 +569,7 @@ function EditableDiscussionInfo({
 
         <div className="relative w-fit h-fit max-tablet:hidden" ref={menuRef}>
           <Extra2
+            id="editable-discussion-option"
             className="cursor-pointer w-6 h-6"
             onClick={() => setMenuOpen(!menuOpen)}
           />

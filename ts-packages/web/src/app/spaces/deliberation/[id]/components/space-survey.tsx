@@ -283,6 +283,7 @@ function EditableSurvey({
         />
 
         <div
+          id="add-question-btn"
           className="cursor-pointer z-10 bg-background flex items-center justify-center w-fit h-fit p-[13px] border border-neutral-500 rounded-full"
           onClick={handleAddQuestion}
         >

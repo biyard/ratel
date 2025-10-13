@@ -91,7 +91,7 @@ Object.entries({ Threads: i18nThreadPage }).forEach(([key, value]) => {
   resources.ko[key] = value.ko;
 });
 
-Object.entries({ Deliberations: i18nDeliberationPage }).forEach(
+Object.entries({ DeliberationSpace: i18nDeliberationPage }).forEach(
   ([key, value]) => {
     resources.en[key] = value.en;
     resources.ko[key] = value.ko;
