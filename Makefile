@@ -23,13 +23,6 @@ ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(WEB_REPO_
 
 BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY) AWS_REGION=$(REGION) DOMAIN=$(DOMAIN) TABLE_NAME=$(TABLE_NAME) WORKSPACE_ROOT=$(WORKSPACE_ROOT) SERVICE=$(SERVICE) VPC_ID=$(VPC_ID) AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) COMMIT=$(COMMIT) ENV=$(ENV) ENABLE_S3=$(ENABLE_S3) ENABLE_DYNAMO=$(ENABLE_DYNAMO) ENABLE_FARGATE=$(ENABLE_FARGATE) ENABLE_LAMBDA=$(ENABLE_LAMBDA) ENABLE_OPENSEARCH=$(ENABLE_OPENSEARCH) BASE_DOMAIN=$(BASE_DOMAIN) PROJECT=$(PROJECT) STACK=$(STACK) HOSTED_ZONE_ID=$(HOSTED_ZONE_ID)
 
-
-# Playwright test envs
-RATEL_TEST_PLAYWRIGHT_URL ?= http://localhost:3000
-RATEL_TEST_PLAYWRIGHT_ID ?= $(shell date +%s)
-PLAYWRIGHT_ENV ?= RATEL_TEST_PLAYWRIGHT_URL=$(RATEL_TEST_PLAYWRIGHT_URL) \
-								RATEL_TEST_PLAYWRIGHT_ID=$(RATEL_TEST_PLAYWRIGHT_ID)
-
 .build/evm-keys:
 	mkdir -p .build
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json
@@ -87,13 +80,6 @@ cdk-deploy: deps/rust-sdk/cdk/node_modules
 
 node_modules:
 	pnpm i
-
-test: node_modules
-	$(PLAYWRIGHT_ENV) npx playwright test
-
-test-head: node_modules
-	$(PLAYWRIGHT_ENV) npx playwright test --headed --project=chromium
-
 
 infra: .build/evm-keys
 	docker compose --profile infra up -d --remove-orphans
