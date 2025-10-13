@@ -159,8 +159,8 @@ export async function updateTeam(
   return await call('PATCH', `/v3/teams/${encodeURIComponent(teamPk)}`, request);
 }
 
-export async function deleteTeam(teamPk: string): Promise<void> {
-  return await call('DELETE', `/v3/teams/${encodeURIComponent(teamPk)}`);
+export async function deleteTeam(teamUsername: string): Promise<void> {
+  return await call('DELETE', `/v3/teams/${encodeURIComponent(teamUsername)}`);
 }
 
 // Group management functions
