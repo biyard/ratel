@@ -1,5 +1,4 @@
 import { test, expect, Locator } from '@playwright/test';
-import { CONFIGS } from '@tests/config';
 import { click, fill, waitForVisible } from '@tests/utils';
 
 test.describe.serial('[ThreadPage] Authenticated Users ', () => {
