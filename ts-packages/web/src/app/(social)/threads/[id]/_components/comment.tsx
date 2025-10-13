@@ -65,7 +65,6 @@ export default function ThreadComment({
           </>
         )}
       </div>
-      {/* TODO: Implement v3 comments rendering */}
       {feed.comments.map((comment) => (
         <Comment
           key={comment.pk}

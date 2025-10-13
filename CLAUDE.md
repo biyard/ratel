@@ -11,8 +11,6 @@ Ratel is a decentralized legislative platform built with Rust and TypeScript, de
 This is a monorepo with a workspace structure:
 - **packages/** - Rust workspace packages (APIs, workers, shared DTOs)
 - **ts-packages/** - TypeScript packages (Next.js web frontend)
-- **deps/** - Shared Rust SDK dependencies
-- **benchmark/** - Performance testing tools
 - **kaia/** - Blockchain contracts
 - **tests/** - Playwright integration tests
 
@@ -25,6 +23,21 @@ This is a monorepo with a workspace structure:
 - **dto** (`packages/dto/`) - Shared data transfer objects
 - **web** (`ts-packages/web/`) - Next.js frontend with React 19
 
+### Frontend
+- All page implementations are placed in `ts-packages/web/src/app` as similar tree of routes.
+- Each page directory will contains below
+  - `{name}-page.tsx` is a main component for the page.
+  - `use-{name}-page-controller.tsx` implement controller class to manage and handle events on the page. And also it manage `use-{name}-data.tsx`.
+  - `use-{name}-data.tsx` fetches all remote data needed by the page.
+  - `{name}-page-i18n.tsx` defines `ko` and `en` languages.
+  - `{name}-page.anon.spec.tsx` is Playwright tests for anonymous users for the page.
+  - `{name}-page.auth.spec.tsx` is Playwright tests for authenticated users for the page.
+  - `{name}-page.stories.tsx` is for Storybook file for the page.
+- `ts-packages/web/src/features` defines `feature`-based modules.
+  - `features/{name}/components` implements feature components and their storybook files
+  - `features/{name}/hooks` implements hooks for the feature
+  - `features/{name}/utils` provides utility functions for the feature
+
 ## Build System
 
 ### Rust Services
@@ -34,7 +47,7 @@ This is a monorepo with a workspace structure:
 - Common dependencies defined in workspace Cargo.toml
 
 ### Frontend
-- Next.js with TypeScript
+- Vite/React19 with TypeScript
 - Package manager: pnpm
 - Uses Tailwind CSS v4
 
@@ -93,9 +106,9 @@ ENV=dev make build SERVICE=main-api
 cd packages/main-api && make test
 
 # Run Playwright tests (from root)
-make test
+cd ts-packages/web && make test
 # or
-npx playwright test
+cd ts-packages/web && npx playwright test
 ```
 
 ### Linting/Formatting
@@ -106,57 +119,17 @@ cd ts-packages/web && npm run lint
 
 ## Key Technologies
 
-- **Backend**: Rust, Axum, DynamoDB (with deprecated SQLx (PostgreSQL)), Tokio
-- **Frontend**: Next.js 15, React 19, TailwindCSS v4, Apollo GraphQL
+- **Backend**: Rust, Axum, DynamoDB, Tokio, Askama(for SSR)
+- **Frontend**: Vite, React 19, TailwindCSS v4, Apollo GraphQL
 - **Testing**: Playwright for E2E tests
 - **Infrastructure**: AWS (Lambda, S3, RDS), Docker
 - **Blockchain**: Ethereum-compatible contracts
-
-## Testing
-
-### Playwright Tests
-
-Playwright tests are located in the `tests/` directory and follow a specific structure that mirrors the app router structure:
-
-#### Directory Structure
-Tests should be organized to match the Next.js app router directory structure:
-- `tests/(social)/` - Tests for pages in `ts-packages/web/src/app/(social)/`
-- `tests/teams/` - Tests for pages in `ts-packages/web/src/app/teams/`
-- etc.
-
-#### Naming Convention
-Test files should follow this naming pattern:
-- `{test-name}.auth.spec.ts` - Tests for authenticated users
-- `{test-name}.anon.spec.ts` - Tests for anonymous/guest users
-
-#### Examples
-- Tests for `ts-packages/web/src/app/(social)/page.tsx` → `tests/(social)/homepage.auth.spec.ts` and `tests/(social)/homepage.anon.spec.ts`
-- Tests for `ts-packages/web/src/app/teams/[username]/page.tsx` → `tests/teams/[username]/team-page.auth.spec.ts`
-
-#### Test Structure
-All test files should use the standard Playwright test structure with describe blocks:
-
-```typescript
-import { test, expect } from '@playwright/test';
-
-test.describe('Feature Name', () => {
-  test('should perform specific action', async ({ page }) => {
-    // Test implementation
-  });
-});
-```
-
-## Database
-
-- Now, SQLx has been deprecated.
-- Under development of migration to DynamoDB.
 
 ## Docker Services
 
 The docker-compose.yaml provides:
 
 - **postgres** - PostgreSQL database (port 5432)
-- **hasura** - GraphQL API (port 28080)
 - **main-api** - REST API (port 3000)
 - **fetcher** - Legislative data fetching (port 3001)
 - **image-worker** - Image processing service
@@ -167,7 +140,6 @@ The docker-compose.yaml provides:
 Access points:
 - Web Application: http://localhost:3002
 - Main API: http://localhost:3000
-- Hasura Console: http://localhost:28080
 - Fetcher API: http://localhost:3001
 
 ## Environment Configuration
@@ -191,22 +163,10 @@ Main Api package is the main backend APIs for Ratel written by Rust.
 - location: `packages/main-api`
 - Language: Rust
 
-### `v1` endpoints
-- `v1` has been implemented based on RPC endpoints convention.
-- `v1` endpoints has used postgres database models implemented in `dto` packages, which is deprecated.
-
-### `v2` endpoints
-- `v2` has been implemented based on Axum native convention instead of RPC.
-- `v1` endpoints has used postgres database models implemented in `packages/main-api/src/models`
-
 ### `v3` endpoints
 - `v3` will be implemented based on Axum native convention.
 - `v3` endpoints will use DynamoDB models implemented in `packages/main-api/src/models/dynamo_tables/main`
 
-
-## DTO
-DTO package is deprecated.
-- location: `packages/dto`
 
 ## by_macro
 `by_macro` package provides macros to simplify the code.
