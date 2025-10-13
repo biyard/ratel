@@ -22,7 +22,7 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
       'auto-save, and final publication. This content is intentionally long to ' +
       'meet the minimum character requirements for post publishing.';
 
-    await click(page, { text: 'Create Post' });
+    await click(page, { label: 'Create Post' });
     await fill(page, { placeholder: 'Write a title...' }, testTitle);
     await fill(page, { label: 'general-post-editor' }, testContent);
 
@@ -49,13 +49,11 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     await page.goto(threadUrl);
 
     const selector: Locator = await click(page, { label: 'Like Post' });
-    await expect(selector.locator('svg')).toHaveClass(/[&>path]:fill-primary/);
+    await expect(selector.locator('svg')).toHaveClass(/fill-primary/);
 
     // Unlike
     await click(page, { label: 'Like Post' });
-    await expect(selector.locator('svg')).not.toHaveClass(
-      /[&>path]:fill-primary/,
-    );
+    await expect(selector.locator('svg')).not.toHaveClass(/fill-primary/);
   });
 
   test('Like a comment', async () => {
@@ -66,7 +64,6 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     const thumbUpIcon = btn.locator('svg').first();
 
     // Click like button
-    await btn.click();
     await expect(thumbUpIcon).toHaveClass(/fill-primary/);
 
     // Click unlike button

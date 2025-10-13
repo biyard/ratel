@@ -72,29 +72,27 @@ export default function HomePage() {
     <div className="flex-1 flex relative">
       {feedSection}
 
-      {ctrl.close && (
-        <div className="hidden max-tablet:!block fixed bottom-4 right-4 z-50">
-          <CreatePostButton />
-        </div>
-      )}
+      <div
+        className="flex-col w-70 pl-4 max-tablet:fixed bottom-4 max-tablet:right-4 max-tablet:z-50 max-tablet:pl-0"
+        aria-label="Sidebar"
+      >
+        <CreatePostButton expanded={ctrl.close} />
+        <div className="max-tablet:hidden">
+          {ctrl.topPromotion && (
+            <DisableBorderCard>
+              <PromotionCard promotion={ctrl.topPromotion} />
+            </DisableBorderCard>
+          )}
 
-      <aside className="w-70 pl-4 max-tablet:!hidden" aria-label="Sidebar">
-        <CreatePostButton />
-
-        {ctrl.topPromotion && (
-          <DisableBorderCard>
-            <PromotionCard promotion={ctrl.topPromotion} />
-          </DisableBorderCard>
-        )}
-
-        {/* TODO: implement with v3
+          {/* TODO: implement with v3
             <div className="mt-[10px]">
           <News />
         </div> */}
-        <div className="mt-[10px]">
-          <Suggestions />
+          <div className="mt-[10px]">
+            <Suggestions />
+          </div>
         </div>
-      </aside>
+      </div>
     </div>
   );
 }

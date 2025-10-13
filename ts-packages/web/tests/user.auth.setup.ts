@@ -34,6 +34,7 @@ test('create storage state', async ({ page }) => {
   await page.getByRole('button', { name: /finished sign-up/i }).click();
 
   // Wait for redirect to home page after signup
+  await expect(page.getByText(/start/i)).toBeVisible();
   await page.waitForURL('/', { timeout: CONFIGS.PAGE_WAIT_TIME });
 
   // Save Playwright storage state for authenticated tests
