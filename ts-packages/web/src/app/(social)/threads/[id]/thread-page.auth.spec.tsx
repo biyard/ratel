@@ -5,7 +5,7 @@ import { click, fill, waitForVisible } from '@tests/utils';
 test.describe.serial('[ThreadPage] Authenticated Users ', () => {
   let threadUrl = '';
 
-  test('Create a post', async ({ page }) => {
+  test('[TP-001] Create a post', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
@@ -27,7 +27,7 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     threadUrl = page.url();
   });
 
-  test('Write a comment', async ({ page }) => {
+  test('[TP-002] Write a comment', async ({ page }) => {
     await page.goto(threadUrl);
 
     const testComment = 'This is automated comment for automation';
@@ -40,7 +40,7 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     await waitForVisible(page, { text: testComment });
   });
 
-  test('Like the post', async ({ page }) => {
+  test('[TP-003] Like the post', async ({ page }) => {
     await page.goto(threadUrl);
 
     const selector: Locator = await click(page, { label: 'Like Post' });
@@ -51,7 +51,7 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     await expect(selector.locator('svg')).not.toHaveClass(/fill-primary/);
   });
 
-  test('Like a comment', async ({ page }) => {
+  test('[TP-004] Like a comment', async ({ page }) => {
     await page.goto(threadUrl);
 
     const btn = await click(page, { label: 'Like Comment' });
@@ -66,7 +66,7 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     await expect(thumbUpIcon).not.toHaveClass(/fill-primary/);
   });
 
-  test('Reply to a comment', async ({ page }) => {
+  test('[TP-005] Reply to a comment', async ({ page }) => {
     await page.goto(threadUrl);
 
     const testReply = 'This is an automated reply to a comment';
@@ -88,7 +88,7 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     await waitForVisible(page, { text: testReply });
   });
 
-  test('Edit a post', async ({ page }) => {
+  test('[TP-006] Edit a post', async ({ page }) => {
     await page.goto(threadUrl);
 
     // Click the Edit button
@@ -115,7 +115,7 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     });
   });
 
-  test('Delete a post', async ({ page }) => {
+  test('[TP-007] Delete a post', async ({ page }) => {
     await page.goto(threadUrl);
 
     await click(page, { label: 'Post options for desktop' });
