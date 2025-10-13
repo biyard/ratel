@@ -1,29 +1,13 @@
-'use client';
-
-import TextEditor from '@/components/text-editor/text-editor';
-import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
-
-export interface SpaceContentsProps {
-  isEdit?: boolean;
-  htmlContents: string;
-  setContents?: (htmlContents: string) => void;
-}
-
-// Set Deprecated
-
-/**
- * @deprecated use ContentEditor from '@/features/spaces/components/content-editor' instead
- */
-export default function SpaceContents({
-  isEdit = false,
-  htmlContents,
-  setContents = () => {},
-}: SpaceContentsProps) {
-  const html = (
-    <BorderSpaceCard>
+export default function HtmlContentViewer({
+  htmlContent,
+}: {
+  htmlContent: string;
+}) {
+  return (
+    <>
       <div
         className="rich-content"
-        dangerouslySetInnerHTML={{ __html: htmlContents }}
+        dangerouslySetInnerHTML={{ __html: htmlContent }}
       />
       <style>{`
         .rich-content {
@@ -83,17 +67,6 @@ export default function SpaceContents({
           margin-bottom: 5px;
         }
       `}</style>
-    </BorderSpaceCard>
-  );
-
-  return isEdit ? (
-    <TextEditor
-      content={htmlContents}
-      onChange={(text: string) => {
-        setContents(text);
-      }}
-    />
-  ) : (
-    html
+    </>
   );
 }
