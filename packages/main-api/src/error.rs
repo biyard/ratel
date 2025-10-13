@@ -108,6 +108,8 @@ pub enum Error {
     #[rest_error(code = 3200)]
     #[error("Poll space not found")]
     NotFoundPollSpace,
+    #[error("Deliberation space not found")]
+    NotFoundDeliberationSpace,
     #[error("Space is not in progress")]
     SpaceNotInProgress,
     #[error("Answers do not match with questions")]

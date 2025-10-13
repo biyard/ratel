@@ -36,6 +36,9 @@ pub async fn create_deliberation_handler(
     Extension(session): Extension<Session>,
     Json(req): Json<CreateDeliberationRequest>,
 ) -> Result<Json<CreateDeliberationResponse>, Error2> {
+    let user = extract_user_from_session(&dynamo.client, &session).await?;
+    tracing::debug!("User extracted: {:?}", user);
+
     let feed_pk = req.clone().feed_pk;
     let feed_id = match feed_pk.clone() {
         Partition::Feed(v) => v,
@@ -71,8 +74,6 @@ pub async fn create_deliberation_handler(
     };
 
     tracing::debug!("create_deliberation_handler called with req: {:?}", req,);
-    let user = extract_user_from_session(&dynamo.client, &session).await?;
-    tracing::debug!("User extracted: {:?}", user);
 
     let deliberation = DeliberationSpace::new();
 
