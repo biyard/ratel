@@ -37,3 +37,4 @@ benchmark/**/*.csv
 /ts-packages/web/playwright-report/
 /cdk/cdk.context.json
 /user.json
+user.json
