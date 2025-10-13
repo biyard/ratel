@@ -21,39 +21,43 @@ fn newest_match(pattern: &str) -> Option<PathBuf> {
 }
 
 fn main() {
-    if env::var("WEB_BUILD").unwrap_or_default() == "false" {
-        println!("cargo:warning=Skipping web build (WEB_BUILD==false)");
-        println!("cargo:rerun-if-env-changed=WEB_BUILD");
-        return;
-    }
-    println!("cargo:rerun-if-env-changed=ENV");
-
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
-    let workspace_root = manifest_dir
-        .parent()
-        .and_then(|p| p.parent())
-        .unwrap_or(&manifest_dir);
-    let web_dir = workspace_root.join("ts-packages/web");
-
-    let status = Command::new("make")
-        .arg("build")
-        .current_dir(&web_dir)
-        .status()
-        .expect("failed to run `make build` for web");
-    if !status.success() {
-        panic!("web build failed with status: {status}");
-    }
-
-    let dist_src = web_dir.join("dist");
     let dist_dst = manifest_dir.join("dist");
-    let _ = fs::remove_dir_all(&dist_dst);
-    copy_dir_all(&dist_src, &dist_dst).expect("failed to copy dist/");
-
     let assets_dir = dist_dst.join("assets");
     let css = newest_match(&format!("{}/index-*.css", assets_dir.display()))
         .expect("no index-*.css found");
     let js =
         newest_match(&format!("{}/index-*.js", assets_dir.display())).expect("no index-*.js found");
+
+    if env::var("WEB_BUILD").unwrap_or_default() != "false"
+        || !fs::exists(&dist_dst).unwrap_or_default()
+    {
+        println!("cargo:rerun-if-env-changed=ENV");
+
+        let workspace_root = manifest_dir
+            .parent()
+            .and_then(|p| p.parent())
+            .unwrap_or(&manifest_dir);
+        let web_dir = workspace_root.join("ts-packages/web");
+
+        let status = Command::new("make")
+            .arg("build")
+            .current_dir(&web_dir)
+            .status()
+            .expect("failed to run `make build` for web");
+        if !status.success() {
+            panic!("web build failed with status: {status}");
+        }
+
+        let dist_src = web_dir.join("dist");
+        let _ = fs::remove_dir_all(&dist_dst);
+        copy_dir_all(&dist_src, &dist_dst).expect("failed to copy dist/");
+
+        println!("cargo:rerun-if-changed={}", web_dir.display());
+        println!("cargo:rerun-if-changed={}", assets_dir.display());
+        println!("cargo:rerun-if-changed={}", css.display());
+        println!("cargo:rerun-if-changed={}", js.display());
+    }
 
     println!(
         "cargo:rustc-env=WEB_INDEX_CSS={}",
@@ -63,14 +67,8 @@ fn main() {
         "cargo:rustc-env=WEB_INDEX_JS={}",
         js.file_name().unwrap().to_string_lossy()
     );
-
-    println!("cargo:rerun-if-changed={}", web_dir.display());
-    println!("cargo:rerun-if-changed={}", assets_dir.display());
-    println!("cargo:rerun-if-changed={}", css.display());
-    println!("cargo:rerun-if-changed={}", js.display());
 }
 
-// --- 폴더 재귀 복사 (크로스플랫폼) ---
 fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
     fs::create_dir_all(dst)?;
     for entry in fs::read_dir(src)? {
