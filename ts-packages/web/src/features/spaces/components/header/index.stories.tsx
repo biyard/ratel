@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import SpaceHeader, { SpaceHeaderProps } from './index';
 import { Post } from '@/lib/api/ratel/posts.v3';
+import { PopupProvider } from '@/lib/contexts/popup-service';
 import { SpacePublishState, SpaceVisibility } from '@/types/space-common';
+import { MemoryRouter } from 'react-router';
 
 const mockPost: Post = {
   id: 1,
@@ -24,16 +26,27 @@ const meta: Meta<typeof SpaceHeader> = {
   title: 'Features/Spaces/SpaceHeader',
   component: SpaceHeader,
   parameters: {
-    layout: 'fullscreen',
+    layout: 'centered',
   },
+  tags: ['autodocs'],
   argTypes: {
     isEditable: { control: 'boolean' },
     hasEditPermission: { control: 'boolean' },
     isEditingMode: { control: 'boolean' },
     hasUnsavedChanges: { control: 'boolean' },
-    visibility: { control: 'object' },
     publishState: { control: 'select', options: ['Draft', 'Published'] },
   },
+  decorators: [
+    (Story) => (
+      <div className="max-w-desktop w-full p-4">
+        <MemoryRouter>
+          <PopupProvider>
+            <Story />
+          </PopupProvider>
+        </MemoryRouter>
+      </div>
+    ),
+  ],
 };
 
 export default meta;
