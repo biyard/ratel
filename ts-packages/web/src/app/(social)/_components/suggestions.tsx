@@ -64,7 +64,11 @@ export default function Suggestions() {
       <h3 className="font-medium mb-3 text-text-primary">{t('suggested')}</h3>
       <div className="flex flex-col gap-[35px]">
         {suggestions.map((user) => (
-          <SuggestionItem key={user.id} user={user} onFollow={handleFollow} />
+          <SuggestionItem
+            key={`suggestion-${user.username}`}
+            user={user}
+            onFollow={handleFollow}
+          />
         ))}
       </div>
       <NavLink
