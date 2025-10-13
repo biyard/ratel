@@ -1,19 +1,30 @@
 import { call } from './call';
 
-// Types based on the v3 API DTOs
-export interface TeamGroupPermission {
-  PostRead: 0;
-  PostWrite: 1;
-  PostEdit: 2;
-  PostDelete: 3;
-  SpaceRead: 10;
-  SpaceWrite: 11;
-  SpaceEdit: 12;
-  SpaceDelete: 13;
-  TeamAdmin: 20;
-  TeamEdit: 21;
-  GroupEdit: 22;
-}
+// Types based on the v3 API DTOs - must match backend enum exactly
+export const TeamGroupPermission = {
+  // Post Permissions
+  PostRead: 0,
+  PostWrite: 1,
+  PostEdit: 2, 
+  PostDelete: 3,
+  
+  // Space Permissions
+  SpaceRead: 10,
+  SpaceWrite: 11,
+  SpaceEdit: 12,
+  SpaceDelete: 13,
+  
+  // Team Permission
+  TeamAdmin: 20, // Change Group Permissions + All Other Permissions
+  TeamEdit: 21,  // Edit Team Info, Add/Remove Group
+  GroupEdit: 22, // Edit Group Members (Invite/Kick), Change Group Info
+  
+  // Admin
+  ManagePromotions: 62,
+  ManageNews: 63,
+} as const;
+
+export type TeamGroupPermission = typeof TeamGroupPermission[keyof typeof TeamGroupPermission];
 
 export interface CreateTeamRequest {
   username: string;
@@ -111,22 +122,45 @@ export async function createTeam(
 
 export async function findTeam(username?: string): Promise<FindTeamResponse> {
   const params = username ? `?username=${encodeURIComponent(username)}` : '';
+  console.log('findTeam calling:', `/v3/teams${params}`);
   return await call('GET', `/v3/teams${params}`);
 }
 
 export async function getTeam(teamPk: string): Promise<TeamDetailResponse> {
-  return await call('GET', `/v3/teams/${teamPk}`);
+  return await call('GET', `/v3/teams/${encodeURIComponent(teamPk)}`);
+}
+
+export async function getTeamByUsername(username: string): Promise<TeamDetailResponse> {
+  console.log('getTeamByUsername called with username:', username);
+  
+  // First find the team to get its ID
+  const findResult = await findTeam(username);
+  console.log('findTeam result:', findResult);
+  
+  if (!findResult.teams || findResult.teams.length === 0) {
+    throw new Error(`Team with username '${username}' not found`);
+  }
+  
+  const team = findResult.teams.find(t => t.username === username);
+  if (!team) {
+    throw new Error(`Team with username '${username}' not found`);
+  }
+  
+  console.log('Found team from findTeam:', team);
+  
+  // Now get full team details including groups using the team ID
+  return await getTeam(team.id);
 }
 
 export async function updateTeam(
   teamPk: string,
   request: UpdateTeamRequest,
 ): Promise<TeamDetailResponse> {
-  return await call('POST', `/v3/teams/${teamPk}`, request);
+  return await call('POST', `/v3/teams/${encodeURIComponent(teamPk)}`, request);
 }
 
 export async function deleteTeam(teamPk: string): Promise<void> {
-  return await call('POST', `/v3/teams/${teamPk}`, {});
+  return await call('POST', `/v3/teams/${encodeURIComponent(teamPk)}`, {});
 }
 
 // Group management functions
@@ -134,7 +168,7 @@ export async function createGroup(
   teamPk: string,
   request: CreateGroupRequest,
 ): Promise<CreateGroupResponse> {
-  return await call('POST', `/v3/teams/${teamPk}/groups`, request);
+  return await call('POST', `/v3/teams/${encodeURIComponent(teamPk)}/groups`, request);
 }
 
 export async function updateGroup(
@@ -142,7 +176,14 @@ export async function updateGroup(
   groupSk: string,
   request: UpdateGroupRequest,
 ): Promise<void> {
-  return await call('POST', `/v3/teams/${teamPk}/groups/${groupSk}`, request);
+  return await call('POST', `/v3/teams/${encodeURIComponent(teamPk)}/groups/${encodeURIComponent(groupSk)}`, request);
+}
+
+export async function deleteGroup(
+  teamPk: string,
+  groupSk: string,
+): Promise<void> {
+  return await call('DELETE', `/v3/teams/${encodeURIComponent(teamPk)}/groups/${encodeURIComponent(groupSk)}`, {});
 }
 
 // Member management functions
@@ -153,7 +194,7 @@ export async function addGroupMember(
 ): Promise<AddMemberResponse> {
   return await call(
     'POST',
-    `/v3/teams/${teamPk}/groups/${groupSk}/member`,
+    `/v3/teams/${encodeURIComponent(teamPk)}/groups/${encodeURIComponent(groupSk)}/member`,
     request,
   );
 }
@@ -165,7 +206,47 @@ export async function removeGroupMember(
 ): Promise<AddMemberResponse> {
   return await call(
     'POST',
-    `/v3/teams/${teamPk}/groups/${groupSk}/member`,
+    `/v3/teams/${encodeURIComponent(teamPk)}/groups/${encodeURIComponent(groupSk)}/member`,
     request,
   );
+}
+
+// Team permissions
+export interface HasTeamPermissionResponse {
+  has_permission: boolean;
+}
+
+export async function checkTeamPermission(
+  teamPk: string,
+  permission: TeamGroupPermission,
+): Promise<HasTeamPermissionResponse> {
+  return await call(
+    'GET',
+    `/v3/teams/permissions?team_pk=${encodeURIComponent(teamPk)}&permission=${permission}`,
+  );
+}
+
+// Team members
+export interface MemberGroup {
+  group_id: string;
+  group_name: string;
+  description: string;
+}
+
+export interface TeamMember {
+  user_id: string;
+  username: string;
+  display_name: string;
+  profile_url: string;
+  groups: MemberGroup[];
+  is_owner: boolean;
+}
+
+export interface ListMembersResponse {
+  members: TeamMember[];
+  total_count: number;
+}
+
+export async function getTeamMembers(teamUsername: string): Promise<ListMembersResponse> {
+  return await call('GET', `/v3/teams/${encodeURIComponent(teamUsername)}/members`);
 }
