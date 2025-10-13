@@ -59,6 +59,7 @@ export default function ThreadComment({
               <NewComment
                 onClose={() => expandComment.set(false)}
                 onSubmit={handleComment}
+                t={t}
               />
             )}
           </>
@@ -71,6 +72,7 @@ export default function ThreadComment({
           comment={comment}
           onComment={handleReplyToComment}
           onLike={handleLikeComment}
+          t={t}
         />
       ))}
     </>
