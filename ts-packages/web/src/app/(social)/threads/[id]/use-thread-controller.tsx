@@ -57,6 +57,7 @@ export class ThreadController {
       this.isPostOwner || this.permissions.has(GroupPermission.WritePosts);
     this.canDelete =
       this.isPostOwner || this.permissions.has(GroupPermission.DeletePosts);
+    logger.debug('ThreadController', this);
   }
 
   handleComment = async (content: string) => {
