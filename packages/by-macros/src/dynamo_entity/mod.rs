@@ -373,6 +373,28 @@ fn generate_updater(
         quote! {}
     };
 
+    let create_key_condition = if let Some(sk_name) = &s_cfg.sk_name {
+        let condition = format!(
+            "attribute_not_exists({}) AND attribute_not_exists({})",
+            &s_cfg.pk_name, sk_name
+        );
+        syn::LitStr::new(&condition, proc_macro2::Span::call_site())
+    } else {
+        let condition = format!("attribute_not_exists({})", &s_cfg.pk_name);
+        syn::LitStr::new(&condition, proc_macro2::Span::call_site())
+    };
+
+    let update_key_condition = if let Some(sk_name) = &s_cfg.sk_name {
+        let condition = format!(
+            "attribute_exists({}) AND attribute_exists({})",
+            &s_cfg.pk_name, sk_name
+        );
+        syn::LitStr::new(&condition, proc_macro2::Span::call_site())
+    } else {
+        let condition = format!("attribute_exists({})", &s_cfg.pk_name);
+        syn::LitStr::new(&condition, proc_macro2::Span::call_site())
+    };
+
     let mut update_fns = vec![];
 
     for f in fields.iter() {
@@ -653,6 +675,7 @@ fn generate_updater(
 
                 let req = aws_sdk_dynamodb::types::Put::builder()
                     .table_name(Self::table_name())
+                    .condition_expression(#create_key_condition)
                     .set_item(Some(item))
                     .build().unwrap();
 
@@ -672,6 +695,7 @@ fn generate_updater(
 
                 let req = aws_sdk_dynamodb::types::Delete::builder()
                     .table_name(Self::table_name())
+                    .condition_expression(#update_key_condition)
                     .set_key(Some(k))
                     .build().unwrap();
 
@@ -687,6 +711,7 @@ fn generate_updater(
             pub fn transact_write_item(self) -> aws_sdk_dynamodb::types::TransactWriteItem {
                 let mut req = aws_sdk_dynamodb::types::Update::builder()
                     .table_name(#ident::table_name())
+                    .condition_expression(#update_key_condition)
                     .set_key(Some(self.k));
 
                 let mut update_expr = "".to_string();
@@ -813,6 +838,27 @@ fn generate_struct_impl(
     let updater = generate_updater(&ident, &s_cfg, &fields);
     let opt_name = format!("{}QueryOption", st_name.to_case(convert_case::Case::Pascal));
     let opt_ident = Ident::new(&opt_name, proc_macro2::Span::call_site());
+    let create_key_condition = if let Some(sk_name) = &s_cfg.sk_name {
+        let condition = format!(
+            "attribute_not_exists({}) AND attribute_not_exists({})",
+            &s_cfg.pk_name, sk_name
+        );
+        syn::LitStr::new(&condition, proc_macro2::Span::call_site())
+    } else {
+        let condition = format!("attribute_not_exists({})", &s_cfg.pk_name);
+        syn::LitStr::new(&condition, proc_macro2::Span::call_site())
+    };
+
+    let update_key_condition = if let Some(sk_name) = &s_cfg.sk_name {
+        let condition = format!(
+            "attribute_exists({}) AND attribute_exists({})",
+            &s_cfg.pk_name, sk_name
+        );
+        syn::LitStr::new(&condition, proc_macro2::Span::call_site())
+    } else {
+        let condition = format!("attribute_exists({})", &s_cfg.pk_name);
+        syn::LitStr::new(&condition, proc_macro2::Span::call_site())
+    };
 
     let out = quote! {
         #st_query_option
@@ -900,6 +946,7 @@ fn generate_struct_impl(
 
                 cli.put_item()
                     .table_name(Self::table_name())
+                    .condition_expression(#create_key_condition)
                     .set_item(Some(item))
                     .send()
                     .await.map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
@@ -940,10 +987,12 @@ fn generate_struct_impl(
                 pk: impl std::fmt::Display,
                 #sk_param
             ) -> #result_ty <Self, #err_ctor> {
-                let mut req = cli.delete_item().table_name(Self::table_name()).key(
-                    Self::pk_field(),
-                    aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
-                );
+                let mut req = cli.delete_item().table_name(Self::table_name())
+                    .condition_expression(#update_key_condition)
+                    .key(
+                        Self::pk_field(),
+                        aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
+                    );
 
                 #sk_condition
 

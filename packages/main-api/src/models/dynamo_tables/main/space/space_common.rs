@@ -1,4 +1,4 @@
-use crate::{types::*, utils::time::get_now_timestamp_millis};
+use crate::{Error2, models::team::Team, types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
 #[derive(
@@ -111,4 +111,44 @@ impl SpaceCommon {
     //     self.visibility = Some(visibility);
     //     self
     // }
+}
+
+impl SpaceCommon {
+    pub async fn has_permission(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: &Partition,
+        user_pk: Option<&Partition>,
+        perm: TeamGroupPermission,
+    ) -> Result<(Self, bool), crate::Error2> {
+        let space = SpaceCommon::get(cli, space_pk, Some(EntityType::SpaceCommon))
+            .await?
+            .ok_or(Error2::SpaceNotFound)?;
+
+        let author_pk = &space.user_pk;
+
+        let user_pk = if let Some(user_pk) = user_pk {
+            user_pk
+        } else {
+            if space.visibility == SpaceVisibility::Public
+                && perm == TeamGroupPermission::SpaceRead
+                && space.publish_state == SpacePublishState::Published
+            {
+                return Ok((space, true));
+            } else {
+                return Ok((space, false));
+            }
+        };
+
+        match user_pk {
+            Partition::User(_) => {
+                let has_perm = user_pk == author_pk;
+                Ok((space, has_perm))
+            }
+            Partition::Team(_) => {
+                let has_perm = Team::has_permission(cli, author_pk, user_pk, perm).await?;
+                Ok((space, has_perm))
+            }
+            _ => Err(Error2::InternalServerError("Invalid space author".into())),
+        }
+    }
 }

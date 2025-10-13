@@ -16,7 +16,6 @@ import { RewardCoin } from '@/assets/icons/money-payment';
 import { ThumbsUp } from '@/assets/icons/emoji';
 import { Play, Expand } from '@/assets/icons';
 import Loading from '@/app/loading';
-import { Button } from '../ui/button';
 import { useTranslation } from 'react-i18next';
 
 export function SuspenseWrapper({ children }: { children: React.ReactNode }) {
@@ -84,10 +83,10 @@ export function PostInfoSection({
   const { t } = useTranslation('SprintSpace');
   return (
     <div className="flex flex-row w-full justify-between items-center max-mobile:flex-col">
-      <div className="flex flex-row gap-2.5 items-center max-tablet:hidden">
-        {/* <SpaceType /> */}
-        {!isDraft ? <Onboard /> : <></>}
-      </div>
+      {/* <div className="flex flex-row gap-2.5 items-center max-tablet:hidden"> */}
+      {/* <SpaceType /> */}
+      {/* {!isDraft ? <Onboard /> : <></>} */}
+      {/* </div> */}
       <div className="flex flex-row gap-5 [&>*>svg>*]:stroke-neutral-500 [&>*>svg]:size-5">
         <div className="flex flex-row gap-1">
           <ThumbsUp className="[&>path]:stroke-neutral-500" />
@@ -184,17 +183,17 @@ export function AuthorSection({
   );
 }
 
-function Onboard() {
-  const { t } = useTranslation('SprintSpace');
-  return (
-    <div className="flex flex-row items-center w-fit px-2 gap-1 border border-[#05df72] opacity-50 rounded-sm">
-      <Play className="size-2.5 stroke-[#00d492]-[#00d492]" />
-      <div className="font-semibold text-sm/[25px] text-[#05df72]">
-        {t('onboard')}
-      </div>
-    </div>
-  );
-}
+// function Onboard() {
+//   const { t } = useTranslation('SprintSpace');
+//   return (
+//     <div className="flex flex-row items-center w-fit px-2 gap-1 border border-[#05df72] opacity-50 rounded-sm">
+//       <Play className="size-2.5 stroke-[#00d492]-[#00d492]" />
+//       <div className="font-semibold text-sm/[25px] text-[#05df72]">
+//         {t('onboard')}
+//       </div>
+//     </div>
+//   );
+// }
 
 // FIXME: use Industry ID.
 // function SpaceType() {

@@ -1,11 +1,9 @@
-import { Unlock2, Lock2 } from '@/assets/icons/security';
+import { Unlock2 } from '@/assets/icons/security';
 import { ArrowLeft } from '@/assets/icons/arrows';
 import { Save } from '@/assets/icons/other-devices';
 import { ArrowUp } from '@/assets/icons/game';
 import { Edit1 } from '@/assets/icons/edit';
-import { Palace } from '@/assets/icons/home';
 import { Button } from '@/components/ui/button';
-import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
 function ButtonWithIcon({
@@ -55,27 +53,27 @@ function SaveButton({
   );
 }
 
-function JoinSpaceButton({ target }: { target: string }) {
-  const { t } = useTranslation('SprintSpace');
-  return (
-    <Link to={target}>
-      <Button variant="default" className="px-3 py-2 [&>svg]:!size-5">
-        <Lock2 className="stroke-neutral-500 [&>path]:stroke-2 !size-5" />
-        <div className="font-bold text-zinc-900 text-sm">{t('join_space')}</div>
-      </Button>
-    </Link>
-  );
-}
+// function JoinSpaceButton({ target }: { target: string }) {
+//   const { t } = useTranslation('SprintSpace');
+//   return (
+//     <Link to={target}>
+//       <Button variant="default" className="px-3 py-2 [&>svg]:!size-5">
+//         <Lock2 className="stroke-neutral-500 [&>path]:stroke-2 !size-5" />
+//         <div className="font-bold text-zinc-900 text-sm">{t('join_space')}</div>
+//       </Button>
+//     </Link>
+//   );
+// }
 
-function CreateSpaceButton({ onClick }: { onClick: () => void }) {
-  const { t } = useTranslation('SprintSpace');
-  return (
-    <ButtonWithIcon onClick={onClick}>
-      <Palace className="stroke-neutral-500 [&>path]:stroke-2 !size-5" />
-      <div>{t('create_space')}</div>
-    </ButtonWithIcon>
-  );
-}
+// function CreateSpaceButton({ onClick }: { onClick: () => void }) {
+//   const { t } = useTranslation('SprintSpace');
+//   return (
+//     <ButtonWithIcon onClick={onClick}>
+//       <Palace className="stroke-neutral-500 [&>path]:stroke-2 !size-5" />
+//       <div>{t('create_space')}</div>
+//     </ButtonWithIcon>
+//   );
+// }
 
 function PublishSpaceButton({ onClick }: { onClick: () => void }) {
   const { t } = useTranslation('SprintSpace');
@@ -108,8 +106,6 @@ function BackButton({ onClick }: { onClick: () => void }) {
 export {
   EditButton,
   SaveButton,
-  JoinSpaceButton,
-  CreateSpaceButton,
   BackButton,
   PublishSpaceButton,
   MakePublicButton,

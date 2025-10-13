@@ -39,6 +39,8 @@ pub mod auth {
 pub mod spaces {
     pub mod create_space;
     pub mod delete_space;
+    pub mod update_space;
+
     #[cfg(test)]
     pub mod tests;
 

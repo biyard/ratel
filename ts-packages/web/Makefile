@@ -57,6 +57,10 @@ DOCKER_FLAGS ?= --build-arg VITE_ENV=$(VITE_ENV) \
                   --build-arg VITE_VERSION=$(VERSION) \
 									--build-arg VITE_TELEGRAM_BOTNAME=$(VITE_TELEGRAM_BOTNAME)
 
+RATEL_TEST_PLAYWRIGHT_URL ?= http://localhost:8080
+RATEL_TEST_PLAYWRIGHT_ID ?= $(shell date +%s)
+PLAYWRIGHT_ENV ?= RATEL_TEST_PLAYWRIGHT_URL=$(RATEL_TEST_PLAYWRIGHT_URL) \
+								RATEL_TEST_PLAYWRIGHT_ID=$(RATEL_TEST_PLAYWRIGHT_ID)
 
 .PHONY: run node_module
 node_module:
@@ -76,3 +80,6 @@ docker.push:
 
 docker.login:
 	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
+
+test: node_modules
+	$(PLAYWRIGHT_ENV) npx playwright test

@@ -15,16 +15,21 @@ pub struct UserTeamGroup {
     #[dynamo(index = "gsi1", sk)]
     pub team_group_permissions: i64,
 
-    #[dynamo(index = "gsi2", name = "find_by_team_pk", pk)]
+    #[dynamo(
+        prefix = "USER_TEAM_GROUP",
+        index = "gsi2",
+        name = "find_by_team_pk",
+        pk
+    )]
     pub team_pk: Partition,
 }
 
 impl UserTeamGroup {
     pub fn new(
-        pk: Partition, // User Pk
+        pk: Partition,
         TeamGroup {
-            pk: team_pk,       // Team Pk
-            sk: team_group_sk, // EntityType::TeamGroup(new Uuid)
+            pk: team_pk,
+            sk: team_group_sk,
             permissions: team_group_permissions,
             ..
         }: TeamGroup,
