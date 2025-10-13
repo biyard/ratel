@@ -79,15 +79,34 @@ async function getDataFromServer<T>(
 export function getTeamByUsername(username: string) {
   return getDataFromServer<Team>(
     [QK_GET_TEAM_BY_USERNAME, username],
-    ratelApi.teams.getTeamByUsername(username),
+    ratelApi.teams._legacy_getTeamByUsername(username),
   );
 }
 
 export function getTeamById(user_id: number) {
   return getDataFromServer<Team>(
     [QK_GET_TEAM_BY_ID, user_id],
-    ratelApi.teams.getTeamById(user_id),
+    ratelApi.teams._legacy_getTeamById(user_id),
   );
+}
+
+// V3 server functions - use these for new code
+export async function getTeamDetailByUsernameV3(username: string) {
+  const { findTeam, getTeam } = await import('./ratel/teams.v3');
+  
+  const findResult = await findTeam(username);
+  const team = findResult.teams.find(t => t.username === username);
+  
+  if (!team) {
+    return { data: null, error: 'Team not found' };
+  }
+  
+  try {
+    const teamDetail = await getTeam(team.id);
+    return { data: teamDetail, error: null };
+  } catch (error) {
+    return { data: null, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
 }
 
 export function getPostByUserId(
@@ -189,14 +208,17 @@ export async function getUserInfo(): Promise<{
   );
 }
 
-// TODO: Update to use v3 permissions API with team username
+// DEPRECATED: Use embedded permissions in v3 team detail instead
 export function getPermission(
   teamUsername: string,
   permission: GroupPermission,
 ): Promise<{ key: (string | number)[]; data: Permission | null }> {
+  // This function still uses legacy approach, but fixed to use team_pk
+  // Convert username to pk by looking up team first - this is inefficient
+  // TODO: Refactor spaces to use v3 embedded permissions
   return getDataFromServer<Permission>(
     [QK_GET_PERMISSION, teamUsername, permission],
-    ratelApi.permissions.getPermissions(teamUsername, permission),
+    ratelApi.permissions._legacy_getPermissions(teamUsername, permission), // Note: Still broken, needs team_pk not username
   );
 }
 

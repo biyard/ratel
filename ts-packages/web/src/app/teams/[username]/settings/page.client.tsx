@@ -6,9 +6,6 @@ import { Col } from '@/components/ui/col';
 import { Input } from '@/components/ui/input';
 import { Row } from '@/components/ui/row';
 import { Textarea } from '@/components/ui/textarea';
-import { userEditProfileRequest } from '@/lib/api/models/user';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { useApiCall } from '@/lib/api/use-send';
 
 import { useContext, useMemo, useState } from 'react';
 import { TeamContext } from '@/lib/contexts/team-context';
@@ -20,14 +17,14 @@ import { showErrorToast, showInfoToast } from '@/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { usePopup } from '@/lib/contexts/popup-service';
 import DeleteTeamPopup from './_components/delete-team-popup';
-import { deleteTeamRequest } from '@/lib/api/models/team';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { logger } from '@/lib/logger';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
 import { FeedStatus } from '@/lib/api/models/feeds';
-import { GroupPermission } from '@/lib/api/models/group';
-import { usePermission } from '@/app/(social)/_hooks/use-permission';
+import { useTeamDetailByUsername } from '../../_hooks/use-team';
+import { useCanManageTeam } from '../../_hooks/use-team-permissions';
+import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
 
 export default function SettingsPage({ username }: { username: string }) {
   const { t } = useTranslation('Team');
@@ -36,22 +33,25 @@ export default function SettingsPage({ username }: { username: string }) {
   const { teams, updateSelectedTeam, setSelectedTeam } =
     useContext(TeamContext);
 
+  // Use v3 API to get team details with permissions
+  const teamDetailQuery = useTeamDetailByUsername(username);
+  const userInfo = useUserInfo();
+
+  // Get legacy team from context for backward compatibility
   const team = useMemo(() => {
     return teams.find((t) => t.username === username);
   }, [teams, username]);
 
-  const { post } = useApiCall();
   const navigate = useNavigate();
-  const userInfo = useUserInfo();
 
   const [profileUrl, setProfileUrl] = useState(team?.profile_url || '');
   const [nickname, setNickname] = useState(team?.nickname);
   const [htmlContents, setHtmlContents] = useState(team?.html_contents);
 
-  // TODO: Update to use v3 permissions with username instead of id
-  const deleteTeamPermission =
-    usePermission(team?.username ?? '', GroupPermission.DeleteGroup).data
-      .has_permission ?? false;
+  // Get permissions directly from v3 API
+  const canManageTeam = useCanManageTeam(teamDetailQuery.data?.id || '');
+  
+  const deleteTeamPermission = canManageTeam.data ?? false;
 
   if (!team) {
     return <></>;
@@ -73,11 +73,10 @@ export default function SettingsPage({ username }: { username: string }) {
       .open(
         <DeleteTeamPopup
           onConfirm={async () => {
+            if (!teamDetailQuery.data) return;
+            
             try {
-              await post(
-                ratelApi.teams.deleteTeam(),
-                deleteTeamRequest(team!.id),
-              );
+              await teamsV3Api.deleteTeam(teamDetailQuery.data.id);
               showInfoToast(t('success_delete_team'));
               // Invalidate all published feeds after deleting team
               await queryClient.invalidateQueries({
@@ -104,24 +103,35 @@ export default function SettingsPage({ username }: { username: string }) {
   };
 
   const handleSave = async () => {
+    if (!teamDetailQuery.data) return;
+    
     if (checkString(nickname ?? '') || checkString(htmlContents ?? '')) {
       showErrorToast(t('remove_test_keyword'));
       return;
     }
 
-    await post(
-      ratelApi.users.editProfile(team!.id),
-      userEditProfileRequest(nickname!, htmlContents!, profileUrl),
-    );
+    try {
+      await teamsV3Api.updateTeam(teamDetailQuery.data.id, {
+        nickname: nickname || undefined,
+        description: htmlContents || undefined,
+        profile_url: profileUrl || undefined,
+      });
+      
+      // Refetch team data
+      teamDetailQuery.refetch();
 
-    updateSelectedTeam({
-      ...team!,
-      nickname: nickname!,
-      html_contents: htmlContents!,
-      profile_url: profileUrl,
-    });
+      updateSelectedTeam({
+        ...team!,
+        nickname: nickname!,
+        html_contents: htmlContents!,
+        profile_url: profileUrl,
+      });
 
-    navigate(route.teamByUsername(username));
+      navigate(route.teamByUsername(username));
+    } catch (e) {
+      logger.error('Failed to update team:', e);
+      showErrorToast(t('failed_update_team') || 'Failed to update team');
+    }
   };
 
   const invalidInput =

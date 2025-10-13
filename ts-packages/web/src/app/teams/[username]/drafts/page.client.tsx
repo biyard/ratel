@@ -7,7 +7,7 @@ import { FeedContents, UserBadge } from '@/components/feed-card';
 import { UserType } from '@/lib/api/models/user';
 import TimeAgo from '@/components/time-ago';
 import { Delete2 } from '@/components/icons';
-import { useTeamByUsername } from '../../_hooks/use-team';
+import { useTeamDetailByUsername } from '../../_hooks/use-team';
 import CreatePostButton from '../_components/create-post-button';
 import { useTranslation } from 'react-i18next';
 import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
@@ -20,7 +20,7 @@ import { useDeletePostMutation } from '@/hooks/feeds/use-delete-post-mutation';
 
 export default function TeamDraftPage({ username }: { username: string }) {
   const { t } = useTranslation('Team');
-  const { data: team } = useTeamByUsername(username);
+  const { data: team } = useTeamDetailByUsername(username);
 
   const p = usePostEditorContext();
 

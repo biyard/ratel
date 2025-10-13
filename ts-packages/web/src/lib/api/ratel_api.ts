@@ -200,8 +200,9 @@ export const proxy = {
 };
 export const ratelApi = {
   permissions: {
-    getPermissions: (teamUsername: string, permission: GroupPermission) =>
-      `/v3/teams/permissions?team_username=${teamUsername}&permission=${permission}`,
+    // DEPRECATED: Use embedded permissions in v3 team detail instead
+    _legacy_getPermissions: (teamPk: string, permission: GroupPermission) =>
+      `/v3/teams/permissions?team_pk=${teamPk}&permission=${permission}`,
   },
   users: {
     getUserInfo: () => '/v3/me',
@@ -229,10 +230,20 @@ export const ratelApi = {
     createMultipartUpload: () => `/v1/assets/multipart/complete`,
   },
   teams: {
-    createTeam: () => '/v1/teams',
-    deleteTeam: () => '/v2/teams',
-    getTeamById: (team_id: number) => `/v1/teams/${team_id}`,
-    getTeamByUsername: (username: string) =>
+    // v3 endpoints - using string IDs (use these for new code)
+    createTeam: () => '/v3/teams',
+    deleteTeam: (teamPk: string) => `/v3/teams/${teamPk}`,
+    getTeamByPk: (teamPk: string) => `/v3/teams/${teamPk}`,
+    getTeamByUsername: (username: string) => `/v3/teams?username=${username}`,
+    updateTeam: (teamPk: string) => `/v3/teams/${teamPk}`,
+    getTeamMembers: (teamPk: string) => `/v3/teams/${teamPk}/members`,
+    
+    // Legacy v1/v2 endpoints - DEPRECATED: Use v3 endpoints instead
+    // These are kept for backward compatibility during migration
+    _legacy_createTeam: () => '/v1/teams',
+    _legacy_deleteTeam: () => '/v2/teams', 
+    _legacy_getTeamById: (team_id: number) => `/v1/teams/${team_id}`,
+    _legacy_getTeamByUsername: (username: string) =>
       `/v1/teams?param-type=read&action=get-by-username&username=${username}`,
   },
   subscription: {
@@ -249,12 +260,21 @@ export const ratelApi = {
       `/v3/spaces/deliberation/${spacePk}/responses`,
   },
   groups: {
-    create_group: (team_id: number) => `/v1/teams/${team_id}/groups`,
-    invite_member: (team_id: number, group_id: number) =>
+    // v3 endpoints - using string IDs (use these for new code)
+    createGroup: (teamPk: string) => `/v3/teams/${teamPk}/groups`,
+    updateGroup: (teamPk: string, groupSk: string) => `/v3/teams/${teamPk}/groups/${groupSk}`,
+    deleteGroup: (teamPk: string, groupSk: string) => `/v3/teams/${teamPk}/groups/${groupSk}`,
+    addMember: (teamPk: string, groupSk: string) => `/v3/teams/${teamPk}/groups/${groupSk}/member`,
+    removeMember: (teamPk: string, groupSk: string) => `/v3/teams/${teamPk}/groups/${groupSk}/member`,
+    
+    // Legacy v1 endpoints - DEPRECATED: Use v3 endpoints instead  
+    // These are kept for backward compatibility during migration
+    _legacy_create_group: (team_id: number) => `/v1/teams/${team_id}/groups`,
+    _legacy_invite_member: (team_id: number, group_id: number) =>
       `/v1/teams/${team_id}/groups/${group_id}`,
-    check_email: (team_id: number, group_id: number) =>
+    _legacy_check_email: (team_id: number, group_id: number) =>
       `/v1/teams/${team_id}/groups/${group_id}`,
-    delete_group: (team_id: number, group_id: number) =>
+    _legacy_delete_group: (team_id: number, group_id: number) =>
       `/v1/teams/${team_id}/groups/${group_id}`,
   },
   networks: {

@@ -11,6 +11,13 @@ import MyNetwork from './app/(social)/my-network/page';
 import MyFollowerPage from './app/(social)/my-follower/page';
 import { z } from 'zod';
 import ThreadPage from './app/(social)/threads/[id]/page';
+// Team components
+import TeamLayout from './app/teams/[username]/layout';
+import TeamHome from './app/teams/[username]/home/page';
+import TeamGroups from './app/teams/[username]/groups/page';
+import TeamMembers from './app/teams/[username]/members/page';
+import TeamSettings from './app/teams/[username]/settings/page';
+import TeamDrafts from './app/teams/[username]/drafts/page';
 
 export const routes = createBrowserRouter([
   {
@@ -81,6 +88,40 @@ export const routes = createBrowserRouter([
           },
         ],
       }, // End of Social Layout
+      
+      // Team routes
+      {
+        id: 'teams-layout',
+        path: 'teams/:username',
+        Component: TeamLayout,
+        children: [
+          {
+            id: 'team-home',
+            path: 'home',
+            Component: TeamHome,
+          },
+          {
+            id: 'team-groups',
+            path: 'groups', 
+            Component: TeamGroups,
+          },
+          {
+            id: 'team-members',
+            path: 'members',
+            Component: TeamMembers,
+          },
+          {
+            id: 'team-settings',
+            path: 'settings',
+            Component: TeamSettings,
+          },
+          {
+            id: 'team-drafts',
+            path: 'drafts',
+            Component: TeamDrafts,
+          },
+        ],
+      },
     ],
   },
 ]);
