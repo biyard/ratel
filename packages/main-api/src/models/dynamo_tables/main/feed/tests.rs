@@ -1,5 +1,6 @@
 use super::*;
 use crate::{
+    controllers::v3::posts::PostDetailResponse,
     tests::{create_test_user, get_test_aws_config},
     types::*,
     utils::aws::DynamoClient,

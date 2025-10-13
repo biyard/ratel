@@ -122,7 +122,7 @@ async fn test_block_read_draft_post_from_guest() {
         path: format!("/v3/posts/{}", body.post_pk.to_string()),
     };
     assert_eq!(status, 401);
-    assert_eq!(body["code"], 403);
+    assert_eq!(body["code"], 110);
 }
 
 #[tokio::test]
@@ -184,6 +184,7 @@ async fn test_post_like() {
 
     assert_eq!(status, 200);
     assert_eq!(body["post"]["likes"], 1);
+    assert_eq!(body["is_liked"], true);
 }
 
 #[tokio::test]

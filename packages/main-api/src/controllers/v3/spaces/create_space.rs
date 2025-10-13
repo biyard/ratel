@@ -1,13 +1,10 @@
 use crate::models::feed::Post;
-use crate::models::space::{PollSpace, SpaceCommon};
-use crate::types::{BoosterType, EntityType, Partition, SpaceType};
-use crate::utils::dynamo_extractor::extract_user_from_session;
+use crate::models::space::{DeliberationSpace, PollSpace, SpaceCommon, TimeRange};
+use crate::models::user::User;
+use crate::types::{BoosterType, Partition, SpaceType, TeamGroupPermission};
 use crate::{AppState, Error2};
-
-use axum::{
-    Extension,
-    extract::{Json, State},
-};
+use aide::NoApi;
+use axum::extract::{Json, State};
 use bdk::prelude::*;
 
 use serde::{Deserialize, Serialize};
@@ -21,8 +18,8 @@ use serde::{Deserialize, Serialize};
 pub struct CreateSpaceRequest {
     pub(crate) space_type: SpaceType,
     pub(crate) post_pk: Partition,
-    started_at: Option<i64>,
-    ended_at: Option<i64>,
+
+    time_range: Option<TimeRange>,
     booster: Option<BoosterType>,
 }
 
@@ -33,23 +30,42 @@ pub struct CreateSpaceResponse {
 
 pub async fn create_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(session): Extension<tower_sessions::Session>,
+    NoApi(user): NoApi<User>,
     Json(CreateSpaceRequest {
         space_type,
         post_pk,
-        started_at,
-        ended_at,
+        time_range,
         booster,
     }): Json<CreateSpaceRequest>,
 ) -> Result<Json<CreateSpaceResponse>, Error2> {
-    let user = extract_user_from_session(&dynamo.client, &session).await?;
-    // FIXME: Check Post Visibility
-    let post = Post::get(&dynamo.client, &post_pk, Some(EntityType::Post))
-        .await?
-        .ok_or(Error2::PostNotFound)?;
+    let (post, has_perm) = Post::has_permission(
+        &dynamo.client,
+        &post_pk,
+        Some(&user.pk),
+        TeamGroupPermission::PostEdit,
+    )
+    .await?;
+    if !has_perm {
+        return Err(Error2::NoPermission);
+    }
+
+    let (started_at, ended_at) = if let Some(tr) = &time_range {
+        if !tr.is_valid() {
+            return Err(Error2::InvalidTimeRange);
+        }
+        (Some(tr.0), Some(tr.1))
+    } else {
+        (None, None)
+    };
+
     let space_pk = match space_type {
         SpaceType::Poll => {
             let space = PollSpace::new();
+            space.create(&dynamo.client).await?;
+            space.pk
+        }
+        SpaceType::Deliberation => {
+            let space = DeliberationSpace::new();
             space.create(&dynamo.client).await?;
             space.pk
         }

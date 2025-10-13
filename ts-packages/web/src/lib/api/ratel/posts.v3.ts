@@ -3,6 +3,7 @@ import { SpaceType } from '../models/spaces';
 import { UserType } from '../models/user';
 import { call } from './call';
 import { ListResponse } from './common';
+import { TeamGroupPermission } from '@/features/auth/utils/team-group-permissions';
 
 export function createPost(team_pk?: string): Promise<CreatePostResponse> {
   if (team_pk) {
@@ -44,6 +45,7 @@ export type PostDetailResponse = {
   // FIXME: Define the type properly
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   artwork_metadata?: any;
+  permissions: bigint;
 };
 
 export function updatePostWithTitleAndContents(
@@ -107,7 +109,9 @@ export async function likePost(
   postPk: string,
   like: boolean,
 ): Promise<LikePostResponse> {
-  return call('POST', `/v3/posts/${encodeURIComponent(postPk)}/like`, { like });
+  return call('POST', `/v3/posts/${encodeURIComponent(postPk)}/likes`, {
+    like,
+  });
 }
 
 export type Post = {

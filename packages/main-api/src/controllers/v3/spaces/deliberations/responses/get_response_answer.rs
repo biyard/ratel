@@ -1,19 +1,15 @@
 use crate::{
     AppState, Error2,
-    models::space::{DeliberationSpaceResponse, SpaceCommon},
-    types::{EntityType, Partition, SpaceVisibility, TeamGroupPermission},
-    utils::{
-        dynamo_extractor::extract_user_from_session,
-        security::{RatelResource, check_permission_from_session},
+    models::{
+        space::{DeliberationSpaceResponse, SpaceCommon},
+        user::User,
     },
+    types::{EntityType, Partition, TeamGroupPermission},
 };
-use bdk::prelude::axum::{
-    Extension,
-    extract::{Json, Path, State},
-};
+use aide::NoApi;
+use bdk::prelude::axum::extract::{Json, Path, State};
 use bdk::prelude::*;
 use serde::Deserialize;
-use tower_sessions::Session;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -34,7 +30,7 @@ pub struct DeliberationResponseByIdPath {
 
 pub async fn get_response_answer_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(session): Extension<Session>,
+    NoApi(user): NoApi<User>,
     Path(DeliberationResponseByIdPath {
         space_pk,
         response_pk,
@@ -55,37 +51,15 @@ pub async fn get_response_answer_handler(
         Err(Error2::NotFound("Response not found".to_string()))?;
     }
 
-    let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
-        .await?
-        .ok_or(Error2::NotFound("Space not found".to_string()))?;
-
-    if space_common.visibility != SpaceVisibility::Public {
-        let _ = match space_common.user_pk.clone() {
-            Partition::Team(_) => {
-                check_permission_from_session(
-                    &dynamo.client,
-                    &session,
-                    RatelResource::Team {
-                        team_pk: space_common.user_pk.to_string(),
-                    },
-                    vec![TeamGroupPermission::SpaceRead],
-                )
-                .await?;
-            }
-            Partition::User(_) => {
-                let user = extract_user_from_session(&dynamo.client, &session).await?;
-                if user.pk != space_common.user_pk {
-                    return Err(Error2::Unauthorized(
-                        "You do not have permission to get response answer".into(),
-                    ));
-                }
-            }
-            _ => {
-                return Err(Error2::InternalServerError(
-                    "Invalid deliberation author".into(),
-                ));
-            }
-        };
+    let (_, has_perm) = SpaceCommon::has_permission(
+        &dynamo.client,
+        &space_pk,
+        Some(&user.pk),
+        TeamGroupPermission::SpaceRead,
+    )
+    .await?;
+    if !has_perm {
+        return Err(Error2::NoPermission);
     }
 
     let response = response.unwrap();

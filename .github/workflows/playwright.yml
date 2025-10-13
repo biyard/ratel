@@ -28,7 +28,10 @@ jobs:
           URL_TIMEOUT: 15000
           RATEL_TEST_PLAYWRIGHT_URL: https://dev.ratel.foundation
         run: |
+          cd ts-packages/web
           make test
+          mv playwright-report ../../
+
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:

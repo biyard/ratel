@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router';
 import RootLayout from './app/layout';
-import HomePage from './app/(social)/page';
+import HomePage from './app/(social)/home-page';
 import SocialLayout from './app/(social)/layout';
 import { ErrorBoundary } from './components/error-boundary';
 import MyPostsPage from './app/(social)/my-posts/page';
@@ -18,6 +18,14 @@ import TeamGroups from './app/teams/[username]/groups/page';
 import TeamMembers from './app/teams/[username]/members/page';
 import TeamSettings from './app/teams/[username]/settings/page';
 import TeamDrafts from './app/teams/[username]/drafts/page';
+import ThreadPage from './app/(social)/threads/[id]/thread-page';
+
+// Space
+import SpaceLayout from './app/spaces/layout';
+import PollSpacePage from './app/spaces/poll/[id]/page';
+import { TestReportPage } from './app/test-report/test-report-page';
+import { StorybookPage } from './app/storybook/stroybook-page';
+import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
 
 export const routes = createBrowserRouter([
   {
@@ -64,6 +72,7 @@ export const routes = createBrowserRouter([
             id: 'thread-page',
             path: 'threads/:post_id',
             Component: ThreadPage,
+            ErrorBoundary: ThreadNotFound,
           },
 
           // My network
@@ -122,6 +131,33 @@ export const routes = createBrowserRouter([
           },
         ],
       },
+
+      // Space Layout
+      {
+        id: 'space-layout',
+        path: 'spaces/:spacePk',
+        Component: SpaceLayout,
+        children: [
+          {
+            id: 'poll-space',
+            path: 'poll',
+            Component: PollSpacePage,
+          },
+        ],
+      }, // End of Space Layout
+
+      // Test Report Page
+      {
+        id: 'test-report-page',
+        path: 'test-report',
+        Component: TestReportPage,
+      }, // End of TestReportPage
+
+      {
+        id: 'storybook-page',
+        path: 'storybook',
+        Component: StorybookPage,
+      }, // End of StorybookPage
     ],
   },
 ]);

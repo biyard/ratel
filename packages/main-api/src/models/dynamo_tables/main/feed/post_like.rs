@@ -15,17 +15,23 @@ pub struct PostLike {
 impl PostLike {
     pub fn new(post_pk: Partition, user_pk: Partition) -> Self {
         let created_at = chrono::Utc::now().timestamp();
-        let pk = match post_pk {
-            Partition::Feed(s) if !s.is_empty() => Partition::PostLike(s),
-            _ => panic!("post_pk must be Partition::Post with non-empty inner value"),
-        };
+        let (pk, sk) = Self::keys(&post_pk, &user_pk);
 
         Self {
             pk,
-            sk: EntityType::PostLike(user_pk.to_string()),
+            sk,
             created_at,
             user_pk,
         }
+    }
+
+    pub fn keys(post_pk: &Partition, user_pk: &Partition) -> (Partition, EntityType) {
+        let pk = match post_pk {
+            Partition::Feed(s) if !s.is_empty() => Partition::PostLike(s.clone()),
+            _ => panic!("post_pk must be Partition::Post with non-empty inner value"),
+        };
+
+        (pk, EntityType::PostLike(user_pk.to_string()))
     }
 
     pub async fn find_one(

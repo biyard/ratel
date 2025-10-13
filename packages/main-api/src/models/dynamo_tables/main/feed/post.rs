@@ -1,6 +1,6 @@
 use crate::{
     Error2,
-    models::{team::Team, user::User},
+    models::{PostCommentLike, team::Team, user::User},
     types::{author::Author, sorted_visibility::SortedVisibility, *},
 };
 use bdk::prelude::*;
@@ -122,6 +122,54 @@ impl Post {
         }
     }
 
+    pub async fn get_permissions(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        user: Option<User>,
+    ) -> Result<TeamGroupPermissions, crate::Error2> {
+        if user.is_none() {
+            return Ok(self.get_permissions_for_guest());
+        }
+
+        let user = user.unwrap();
+
+        if self.user_pk == user.pk {
+            return Ok(TeamGroupPermissions::all());
+        }
+
+        if self.author_type == UserType::Individual {
+            return Ok(self.get_permissions_for_guest());
+        }
+
+        match self.user_pk.clone() {
+            team_pk if matches!(team_pk, Partition::Team(_)) => {
+                return Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk).await;
+            }
+            _ => {
+                return Err(Error2::NotSupported(format!(
+                    "Post({}) author type {:?} is not supported",
+                    self.pk, self.author_type
+                )));
+            }
+        }
+    }
+
+    fn get_permissions_for_guest(&self) -> TeamGroupPermissions {
+        if self.status == PostStatus::Published && self.visibility == Some(Visibility::Public) {
+            return TeamGroupPermissions::read();
+        }
+
+        TeamGroupPermissions::empty()
+    }
+
+    pub async fn is_liked(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        user_pk: &Partition,
+    ) -> Result<bool, crate::Error2> {
+        Ok(PostLike::find_one(cli, &self.pk, user_pk).await?.is_some())
+    }
+
     pub async fn has_permission(
         cli: &aws_sdk_dynamodb::Client,
         post_pk: &Partition,
@@ -161,13 +209,13 @@ impl Post {
         post_pk: Partition,
         user_pk: Partition,
     ) -> Result<(), crate::Error2> {
-        tracing::info!("Liking post {} by user {}", post_pk, user_pk);
+        tracing::debug!("Liking post {} by user {}", post_pk, user_pk);
         let post_tx = Self::updater(&post_pk, EntityType::Post)
             .increase_likes(1)
             .transact_write_item();
         let pl_tx = PostLike::new(post_pk, user_pk).create_transact_write_item();
 
-        tracing::info!("Post like transact items: {:?}, {:?}", post_tx, pl_tx);
+        tracing::debug!("Post like transact items: {:?}, {:?}", post_tx, pl_tx);
 
         cli.transact_write_items()
             .set_transact_items(Some(vec![post_tx, pl_tx]))
@@ -189,10 +237,8 @@ impl Post {
         let post_tx = Self::updater(&post_pk, EntityType::Post)
             .decrease_likes(1)
             .transact_write_item();
-        let pl_tx = PostLike::delete_transact_write_item(
-            &post_pk,
-            EntityType::PostLike(user_pk.to_string()).to_string(),
-        );
+        let (p, s) = PostLike::keys(&post_pk, &user_pk);
+        let pl_tx = PostLike::delete_transact_write_item(p, s);
 
         cli.transact_write_items()
             .set_transact_items(Some(vec![post_tx, pl_tx]))
@@ -228,5 +274,50 @@ impl Post {
             })?;
 
         Ok(comment)
+    }
+
+    pub async fn like_comment(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: Partition,
+        comment_pk: EntityType,
+        user_pk: Partition,
+    ) -> Result<(), crate::Error2> {
+        let comment_tx = PostComment::updater(&post_pk, &comment_pk)
+            .increase_likes(1)
+            .transact_write_item();
+        let pl_tx = PostCommentLike::new(post_pk, comment_pk, user_pk).create_transact_write_item();
+
+        cli.transact_write_items()
+            .set_transact_items(Some(vec![comment_tx, pl_tx]))
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to like comment: {}", e);
+                crate::Error2::PostLikeError
+            })?;
+        Ok(())
+    }
+
+    pub async fn unlike_comment(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: Partition,
+        comment_pk: EntityType,
+        user_pk: Partition,
+    ) -> Result<(), crate::Error2> {
+        let comment_tx = PostComment::updater(&post_pk, &comment_pk)
+            .decrease_likes(1)
+            .transact_write_item();
+        let pcl = PostCommentLike::new(post_pk, comment_pk, user_pk);
+        let pl_tx = PostCommentLike::delete_transact_write_item(&pcl.pk, &pcl.sk);
+
+        cli.transact_write_items()
+            .set_transact_items(Some(vec![comment_tx, pl_tx]))
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to unlike comment: {}", e);
+                crate::Error2::PostLikeError
+            })?;
+        Ok(())
     }
 }
