@@ -49,6 +49,76 @@ export class DeliberationSpaceController {
     this.deps = deps;
   }
 
+  get threadProps() {
+    return {
+      t: this.t,
+      thread: this.thread,
+      setThread: this.setThread,
+    };
+  }
+
+  get deliberationProps() {
+    return {
+      t: this.t,
+      space: this.space,
+      deliberation: this.deliberation,
+      setDeliberation: this.setDeliberation,
+      handleViewRecord: this.handleViewRecord,
+    };
+  }
+
+  get deliberationSurveyProps() {
+    return {
+      t: this.t,
+      space: this.space,
+      startedAt: this.startedAt,
+      endedAt: this.endedAt,
+      survey: this.survey,
+      answer: this.answer,
+      setStartDate: this.setStartDate,
+      setEndDate: this.setEndDate,
+      setSurvey: this.setSurvey,
+      setAnswers: this.setAnswersForSubmit,
+      handleSend: this.handleSend,
+    };
+  }
+
+  get finalConsensusProps() {
+    return {
+      t: this.t,
+      draft: this.draft,
+      setDraft: this.setDraft,
+    };
+  }
+
+  get deliberationAnalyzeProps() {
+    return {
+      t: this.t,
+      answers: this.answers,
+      survey: this.survey,
+      mappedResponses: this.mappedResponses,
+      handleDownloadExcel: this.handleDownloadExcel,
+    };
+  }
+
+  get spaceSidemenuProps() {
+    return {
+      t: this.t,
+      space: this.space,
+      deliberation: this.deliberation,
+      selectedType: this.selectedType,
+      handleUpdateSelectedType: this.setSelectedType,
+      startedAt: this.startedAt,
+      endedAt: this.endedAt,
+      handleUpdateStartDate: this.setStartDate,
+      handleUpdateEndDate: this.setEndDate,
+    };
+  }
+
+  get t() {
+    return this.deps.t;
+  }
+
   get post() {
     return this.deps.post;
   }
@@ -731,6 +801,7 @@ function buildDeps(spacePk: string) {
     state,
     handlers,
     token,
+    t,
   };
 }
 

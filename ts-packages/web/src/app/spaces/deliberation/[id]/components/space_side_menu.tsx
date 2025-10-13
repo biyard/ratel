@@ -5,15 +5,9 @@ import Clock from '@/assets/icons/clock.svg?react';
 import { Discuss, PieChart1, File, Vote } from '@/components/icons';
 import { CheckCircle, Settings } from 'lucide-react';
 import { Deliberation, DeliberationTab, DeliberationTabType } from '../types';
-// import { SpaceStatus } from '@/lib/api/models/spaces';
-// import { useUserInfo } from '@/app/(social)/_hooks/user';
-// import { TeamContext } from '@/lib/contexts/team-context';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
-// import { usePermission } from '@/app/(social)/_hooks/use-permission';
-// import { GroupPermission } from '@/lib/api/models/group';
-import { useDeliberationSpaceByIdContext } from '../providers.client';
 import SetSchedulePopup from '@/app/spaces/[id]/_components/modal/set-schedule';
 import {
   DeliberationSpace,
@@ -22,6 +16,19 @@ import {
 import { useUserInfo } from '@/hooks/use-user-info';
 import { DeliberationSpaceResponse } from '@/lib/api/ratel/deliberation.spaces.v3';
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
+import { TFunction } from 'i18next';
+
+export type SpaceSideMenuProps = {
+  t: TFunction<'DeliberationSpace', undefined>;
+  space: DeliberationSpaceResponse;
+  deliberation: Deliberation;
+  selectedType: DeliberationTabType;
+  handleUpdateSelectedType: (type: DeliberationTabType) => void;
+  startedAt: number;
+  endedAt: number;
+  handleUpdateStartDate: (startDate: number) => void;
+  handleUpdateEndDate: (endDate: number) => void;
+};
 
 export default function SpaceSideMenu({
   space,
@@ -32,16 +39,7 @@ export default function SpaceSideMenu({
   endedAt,
   handleUpdateEndDate,
   handleUpdateStartDate,
-}: {
-  space: DeliberationSpaceResponse;
-  deliberation: Deliberation;
-  selectedType: DeliberationTabType;
-  handleUpdateSelectedType: (type: DeliberationTabType) => void;
-  startedAt: number;
-  endedAt: number;
-  handleUpdateStartDate: (startDate: number) => void;
-  handleUpdateEndDate: (endDate: number) => void;
-}) {
+}: SpaceSideMenuProps) {
   const store = useSpaceHeaderStore();
   const isEdit = store.isEditingMode;
 
@@ -225,10 +223,17 @@ export default function SpaceSideMenu({
   );
 }
 
-export function SpaceTabsMobile({ space }: { space: DeliberationSpace }) {
+export function SpaceTabsMobile({
+  space,
+  selectedType,
+  handleUpdateSelectedType,
+}: {
+  space: DeliberationSpace;
+  selectedType: DeliberationTabType;
+  handleUpdateSelectedType: (type: DeliberationTabType) => void;
+}) {
   const { t } = useTranslation('DeliberationSpace');
-  const { selectedType, handleUpdateSelectedType } =
-    useDeliberationSpaceByIdContext();
+
   const { data: userInfo } = useUserInfo();
   const userPk = userInfo ? userInfo.pk : '';
   const authorPk = space.user_pk;

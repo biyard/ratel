@@ -3,14 +3,15 @@ import { Thread } from '../../types';
 import SpaceContents from '../space-contents';
 import SpaceFiles from '../space-files';
 import { File } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { TFunction } from 'i18next';
 
-export default function ThreadPage({
-  thread,
-  setThread,
-}: {
+export type ThreadPageProps = {
+  t: TFunction<'DeliberationSpace', undefined>;
   thread: Thread;
   setThread: (thread: Thread) => void;
-}) {
+};
+
+export default function ThreadPage({ thread, setThread }: ThreadPageProps) {
   const store = useSpaceHeaderStore();
   const isEdit = store.isEditingMode;
 

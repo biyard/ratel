@@ -3,6 +3,13 @@ import { FinalConsensus } from '../../types';
 import SpaceContents from '../space-contents';
 import SpaceFiles from '../space-files';
 import { File } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { TFunction } from 'i18next';
+
+export type ThreadPageProps = {
+  t: TFunction<'DeliberationSpace', undefined>;
+  draft: FinalConsensus;
+  setDraft: (draft: FinalConsensus) => void;
+};
 
 export default function FinalConsensusPage({
   draft,

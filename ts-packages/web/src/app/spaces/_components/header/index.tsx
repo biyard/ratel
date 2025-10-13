@@ -77,7 +77,7 @@ export default function SpaceHeader() {
         hasEditPermission={hasEditPermission}
         isEditingMode={isEditingMode}
         hasUnsavedChanges={hasUnsavedChanges}
-        isPublished={publishState === SpacePublishState.Published}
+        isPublished={publishState === SpacePublishState.Published.toUpperCase()}
         canMakePublic={visibility.type !== 'Public'}
         onGoBack={handleGoBack}
         onStartEdit={onStartEdit}
@@ -90,7 +90,7 @@ export default function SpaceHeader() {
         shares={post.shares}
         comments={post.comments}
         rewards={post.rewards ?? 0}
-        isDraft={publishState === SpacePublishState.Draft}
+        isDraft={publishState === SpacePublishState.Draft.toUpperCase()}
         isPublic={visibility.type === 'Public'}
       />
       <TitleSection
