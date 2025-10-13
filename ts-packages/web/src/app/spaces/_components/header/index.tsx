@@ -17,9 +17,9 @@ import { useSpaceHeaderContext } from './context';
 // Set Deprecated
 
 /**
- * @deprecated use SpaceHeader from '@/features/spaces/components/header' instead
+ * @deprecated
+ * use `SpaceHeader` from '@/features/spaces/components/header' instead
  */
-
 export default function SpaceHeader() {
   const {
     post,
