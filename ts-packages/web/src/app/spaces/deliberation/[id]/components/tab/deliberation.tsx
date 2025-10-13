@@ -1,14 +1,34 @@
 'use client';
 
+import { DeliberationSpaceResponse } from '@/lib/api/ratel/deliberation.spaces.v3';
+import { Deliberation } from '../../types';
 import SpaceDiscussion from '../space-discussion';
 import SpaceElearning from '../space-elearning';
 
-export default function DeliberationPage() {
+export default function DeliberationPage({
+  space,
+  deliberation,
+  setDeliberation,
+  handleViewRecord,
+}: {
+  space: DeliberationSpaceResponse;
+  deliberation: Deliberation;
+  setDeliberation: (deliberation: Deliberation) => void;
+  handleViewRecord: (discussionPk: string, record: string) => void;
+}) {
   return (
     <div className="flex flex-col w-full">
       <div className="flex flex-col gap-2.5">
-        <SpaceDiscussion />
-        <SpaceElearning />
+        <SpaceDiscussion
+          space={space}
+          deliberation={deliberation}
+          setDeliberation={setDeliberation}
+          handleViewRecord={handleViewRecord}
+        />
+        <SpaceElearning
+          deliberation={deliberation}
+          setDeliberation={setDeliberation}
+        />
       </div>
     </div>
   );

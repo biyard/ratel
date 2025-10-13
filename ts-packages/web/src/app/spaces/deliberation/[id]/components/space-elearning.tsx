@@ -1,5 +1,3 @@
-'use client';
-
 import FileUploaderMetadata from '@/components/file-uploader-metadata';
 import { FileExtension, toFileExtension } from '@/lib/api/models/feeds';
 // import { checkString } from '@/lib/string-filter-utils';
@@ -9,13 +7,20 @@ import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 import { CircleClose } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
-import { useDeliberationSpaceByIdContext } from '../providers.client';
 import { File } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { Deliberation } from '../types';
+import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 
-export default function SpaceElearning() {
+export default function SpaceElearning({
+  deliberation,
+  setDeliberation,
+}: {
+  deliberation: Deliberation;
+  setDeliberation: (deliberation: Deliberation) => void;
+}) {
+  const store = useSpaceHeaderStore();
+  const isEdit = store.isEditingMode;
   const { t } = useTranslation('DeliberationSpace');
-  const { isEdit, deliberation, handleUpdateDeliberation } =
-    useDeliberationSpaceByIdContext();
   const elearnings = deliberation.elearnings;
 
   const handlePdfDownload = async (file: File) => {
@@ -45,12 +50,14 @@ export default function SpaceElearning() {
                   url: file.url,
                 };
 
-                handleUpdateDeliberation({
+                setDeliberation({
                   ...deliberation,
                   elearnings: {
                     files: [...deliberation.elearnings.files, f],
                   },
                 });
+
+                store.onModifyContent();
               }}
             >
               <div className="cursor-pointer flex flex-row w-fit gap-1 items-center bg-white light:bg-card-bg border border-card-border hover:bg-white/80 light:hover:bg-card-bg/50 rounded-[6px] px-[14px] py-[8px]">
@@ -73,7 +80,7 @@ export default function SpaceElearning() {
                   <EditableFile
                     file={file}
                     onclick={() => {
-                      handleUpdateDeliberation({
+                      setDeliberation({
                         ...deliberation,
                         elearnings: {
                           files: deliberation.elearnings.files.filter(
@@ -81,6 +88,8 @@ export default function SpaceElearning() {
                           ),
                         },
                       });
+
+                      store.onModifyContent();
                     }}
                   />
 

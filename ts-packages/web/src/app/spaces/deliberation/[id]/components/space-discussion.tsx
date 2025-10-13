@@ -10,14 +10,12 @@ import { ArrowRight } from 'lucide-react';
 // import { useNavigate } from 'react-router';
 // import { route } from '@/route';
 import { Add, Extra2 } from '@/components/icons';
-import { DiscussionInfo, DiscussionUser } from '../types';
+import { Deliberation, DiscussionInfo, DiscussionUser } from '../types';
 // import { TotalUser } from '@/lib/api/models/user';
 import { usePopup } from '@/lib/contexts/popup-service';
 
 import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
-import { useDeliberationSpaceByIdContext } from '../providers.client';
-import { useDeliberationSpaceById } from '@/lib/api/ratel_api';
 import { logger } from '@/lib/logger';
 import NewDiscussion from './modal/new-discussion';
 import { useUserInfo } from '@/hooks/use-user-info';
@@ -25,34 +23,72 @@ import {
   DiscussionMemberResponse,
   SpacePublishState,
 } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
+import { DeliberationSpaceResponse } from '@/lib/api/ratel/deliberation.spaces.v3';
 
-export default function SpaceDiscussion() {
-  const { isEdit } = useDeliberationSpaceByIdContext();
+export default function SpaceDiscussion({
+  space,
+  deliberation,
+  setDeliberation,
+  handleViewRecord,
+}: {
+  space: DeliberationSpaceResponse;
+  deliberation: Deliberation;
+  setDeliberation: (deliberation: Deliberation) => void;
+  handleViewRecord: (discussionPk: string, record: string) => void;
+}) {
+  const store = useSpaceHeaderStore();
+  const isEdit = store.isEditingMode;
 
   return (
     <div className="flex flex-col w-full">
-      {isEdit ? <EditableDiscussion /> : <ViewDiscussion />}
+      {isEdit ? (
+        <EditableDiscussion
+          deliberation={deliberation}
+          setDeliberation={(deliberation: Deliberation) => {
+            setDeliberation(deliberation);
+            store.onModifyContent();
+          }}
+        />
+      ) : (
+        <ViewDiscussion
+          space={space}
+          handleViewRecord={async (discussionPk: string, record: string) => {
+            await handleViewRecord(discussionPk, record);
+            store.onModifyContent();
+          }}
+        />
+      )}
     </div>
   );
 }
 
-function ViewDiscussion() {
+function ViewDiscussion({
+  space,
+  handleViewRecord,
+}: {
+  space: DeliberationSpaceResponse;
+  handleViewRecord: (discussionPk: string, record: string) => void;
+}) {
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <DiscussionSchedules />
+      <DiscussionSchedules space={space} handleViewRecord={handleViewRecord} />
     </div>
   );
 }
 
-function DiscussionSchedules() {
+function DiscussionSchedules({
+  space,
+  handleViewRecord,
+}: {
+  space: DeliberationSpaceResponse;
+  handleViewRecord: (discussionPk: string, record: string) => void;
+}) {
   const { t } = useTranslation('DeliberationSpace');
-  const { handleViewRecord, spaceId } = useDeliberationSpaceByIdContext();
   const { data: userInfo } = useUserInfo();
   const userPk = userInfo?.pk || '';
 
-  const space = useDeliberationSpaceById(spaceId);
-
-  const discussions = space.data.discussions;
+  const discussions = space.discussions;
 
   //   const navigate = useNavigate();
 
@@ -73,7 +109,7 @@ function DiscussionSchedules() {
               <React.Fragment key={index}>
                 <DiscussionRoom
                   userPk={userPk}
-                  published={space.data.publish_state}
+                  published={space.publish_state}
                   startDate={discussion.started_at}
                   endDate={discussion.ended_at}
                   title={discussion.name}
@@ -81,7 +117,7 @@ function DiscussionSchedules() {
                   members={discussion.members}
                   record={discussion.record ?? ''}
                   onclick={() => {
-                    handleMoveDiscussion(space.data.pk, discussion.pk ?? '');
+                    handleMoveDiscussion(space.pk, discussion.pk ?? '');
                   }}
                   viewRecordClick={() => {
                     handleViewRecord(
@@ -135,13 +171,16 @@ export function DiscussionRoom({
   const isUpcoming = now < startDate;
   const isFinished = now > endDate;
 
-  const formattedDate = `${format(new Date(startDate * 1000), 'dd MMM, yyyy HH:mm')} - ${format(new Date(endDate * 1000), 'dd MMM, yyyy HH:mm')}`;
+  const formattedDate = `${format(
+    new Date(startDate * 1000),
+    'dd MMM, yyyy HH:mm',
+  )} - ${format(new Date(endDate * 1000), 'dd MMM, yyyy HH:mm')}`;
 
   const statusLabel = isUpcoming
     ? t('upcoming_discussion')
     : isFinished
-      ? t('finished_discussion')
-      : t('ongoing_discussion');
+    ? t('finished_discussion')
+    : t('ongoing_discussion');
 
   const isMember = members.some((member) => member.user_pk === userPk);
 
@@ -186,15 +225,17 @@ export function DiscussionRoom({
           </div>
         </div>
 
-        {isLive && isMember && published !== SpacePublishState.Draft && (
-          <div className="flex flex-row w-full justify-end">
-            <JoinButton
-              onClick={() => {
-                onclick();
-              }}
-            />
-          </div>
-        )}
+        {isLive &&
+          isMember &&
+          published !== SpacePublishState.Draft.toUpperCase() && (
+            <div className="flex flex-row w-full justify-end">
+              <JoinButton
+                onClick={() => {
+                  onclick();
+                }}
+              />
+            </div>
+          )}
 
         {isFinished && isMember && record && (
           <div className="flex flex-row w-full justify-end items-end">
@@ -240,10 +281,15 @@ function JoinButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function EditableDiscussion() {
+function EditableDiscussion({
+  deliberation,
+  setDeliberation,
+}: {
+  deliberation: Deliberation;
+  setDeliberation: (deliberation: Deliberation) => void;
+}) {
   const { t } = useTranslation('DeliberationSpace');
-  const { deliberation, handleUpdateDeliberation } =
-    useDeliberationSpaceByIdContext();
+
   const discussions = deliberation.discussions;
   const popup = usePopup();
   const stableKeys = useMemo(
@@ -253,7 +299,7 @@ function EditableDiscussion() {
   );
 
   const handleAddDiscussion = (discussion: DiscussionInfo) => {
-    handleUpdateDeliberation({
+    setDeliberation({
       ...deliberation,
       discussions: [...deliberation.discussions, discussion],
     });
@@ -262,7 +308,7 @@ function EditableDiscussion() {
   const handleRemoveDiscussion = (index: number) => {
     const updated = deliberation.discussions.filter((_, i) => i !== index);
 
-    handleUpdateDeliberation({
+    setDeliberation({
       ...deliberation,
       discussions: updated,
     });
@@ -275,7 +321,7 @@ function EditableDiscussion() {
     const updated = [...deliberation.discussions];
     updated[index] = discussion;
 
-    handleUpdateDeliberation({
+    setDeliberation({
       ...deliberation,
       discussions: updated,
     });
@@ -390,13 +436,16 @@ function EditableDiscussionInfo({
   const isUpcoming = now < startTime;
   const isFinished = now > endTime;
 
-  const formattedDate = `${format(new Date(startTime * 1000), 'dd MMM, yyyy HH:mm')} - ${format(new Date(endTime * 1000), 'dd MMM, yyyy HH:mm')}`;
+  const formattedDate = `${format(
+    new Date(startTime * 1000),
+    'dd MMM, yyyy HH:mm',
+  )} - ${format(new Date(endTime * 1000), 'dd MMM, yyyy HH:mm')}`;
 
   const statusLabel = isUpcoming
     ? t('upcoming_discussion')
     : isFinished
-      ? t('finished_discussion')
-      : t('ongoing_discussion');
+    ? t('finished_discussion')
+    : t('ongoing_discussion');
 
   useEffect(() => {
     setTitle(name);
