@@ -31,6 +31,7 @@ export type SpaceSideMenuProps = {
 };
 
 export default function SpaceSideMenu({
+  t,
   space,
   deliberation,
   selectedType,
@@ -43,7 +44,6 @@ export default function SpaceSideMenu({
   const store = useSpaceHeaderStore();
   const isEdit = store.isEditingMode;
 
-  const { t } = useTranslation('DeliberationSpace');
   const popup = usePopup();
   const authorPk = space.user_pk;
 
@@ -183,6 +183,7 @@ export default function SpaceSideMenu({
                 }}
               >
                 <Settings
+                  id="timeline-setting"
                   width={20}
                   height={20}
                   className="text-neutral-500 w-5 h-5"
