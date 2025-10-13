@@ -1,29 +1,19 @@
-import { NewDiscussionCreateRequest } from '../../models/discussion';
-import { Answer } from '../../models/response';
-import { NewSurveyCreateRequest, Question } from '../../models/survey';
+import { SpaceCommon } from '@/types/space-common';
+import { Answer } from '../models/response';
+import { NewSurveyCreateRequest, Question } from '../models/survey';
+import { NewDiscussionCreateRequest } from '../models/discussion';
+import { call } from './call';
 
 export type PartitionString = string;
 
-export interface DeliberationSpace {
-  pk: string;
-  sk: string;
-  created_at: number;
-  updated_at: number;
-  status: SpaceStatus | undefined | null;
-  publish_state: SpacePublishState;
-  visibility: SpaceVisibility;
-  post_pk: string;
+export function getDeliberationSpace(
+  spacePk: string,
+): Promise<DeliberationSpaceResponse> {
+  return call('GET', `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}`);
+}
 
-  user_pk: string;
-  author_display_name: string;
-  author_profile_url: string;
-  author_username: string;
-
-  likes: number;
-  comments: number;
-  rewards: number;
-  shares: number;
-
+// FIXME: separate each file under types
+export interface DeliberationSpaceResponse extends SpaceCommon {
   info: DeliberationSpace;
   summary: DeliberationContentResponse;
   discussions: DeliberationDiscussionResponse[];
