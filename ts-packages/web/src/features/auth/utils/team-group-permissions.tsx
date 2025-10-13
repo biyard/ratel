@@ -1,10 +1,14 @@
+import { logger } from '@/lib/logger';
+
 export class TeamGroupPermissions {
   private readonly set: Set<TeamGroupPermission>;
 
   constructor(public permissions: bigint) {
     this.set = new Set<TeamGroupPermission>();
+
     for (const perm of ALL_PERMISSIONS) {
       if ((BigInt(permissions) & (1n << BigInt(perm))) !== 0n) {
+        logger.debug('Added permission: ', perm);
         this.set.add(perm);
       }
     }
