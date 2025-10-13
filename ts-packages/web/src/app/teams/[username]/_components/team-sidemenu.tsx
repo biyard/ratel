@@ -33,14 +33,18 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
   // Get team data using v3 API
   const teamDetailQuery = useTeamDetailByUsername(username);
 
-  // Use v3 team data if available, otherwise fall back to context team
-  const displayTeam = teamDetailQuery.data || team;
-
   // Get permissions using v3 API
-  const teamPk = displayTeam?.id ? String(displayTeam.id) : '';
+  const teamPk = teamDetailQuery.data?.id ? String(teamDetailQuery.data.id) : '';
   const permissions = useTeamPermissions(teamPk);
 
   const writePostPermission = permissions.canWritePosts;
+
+  // Use v3 team data if available, otherwise fall back to context team
+  const displayTeam = teamDetailQuery.data || team;
+
+  if (teamDetailQuery.isLoading) {
+    return <div className="flex justify-center p-4">Loading...</div>;
+  }
 
   if (!displayTeam) {
     return <></>;

@@ -20,8 +20,7 @@ import { useDeletePostMutation } from '@/hooks/feeds/use-delete-post-mutation';
 
 export default function TeamDraftPage({ username }: { username: string }) {
   const { t } = useTranslation('Team');
-  const { data: team } = useTeamDetailByUsername(username);
-
+  const teamQuery = useTeamDetailByUsername(username);
   const p = usePostEditorContext();
 
   const {
@@ -36,14 +35,29 @@ export default function TeamDraftPage({ username }: { username: string }) {
       fetchNextPage();
     }
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
   const observerRef = useObserver<HTMLDivElement>(handleIntersect, {
     threshold: 1,
   });
 
+  // Need to get team data for the mutation, but handle loading states
+  const team = teamQuery.data;
   const { mutateAsync: handleRemoveDraft } = useDeletePostMutation(
-    team.username,
+    team?.username || username,
     FeedStatus.Draft,
   );
+
+  if (teamQuery.isLoading) {
+    return <div className="flex justify-center p-8">Loading drafts...</div>;
+  }
+
+  if (teamQuery.error) {
+    return <div className="flex justify-center p-8 text-red-500">Error loading team</div>;
+  }
+
+  if (!team) {
+    return <div className="flex justify-center p-8 text-red-500">Team not found</div>;
+  }
 
   if (drafts.pages.length === 0) {
     return (

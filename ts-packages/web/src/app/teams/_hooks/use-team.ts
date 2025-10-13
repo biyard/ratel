@@ -63,10 +63,8 @@ export function useTeamByUsernameV3(
 }
 
 // Helper hook to get a single team by username using v3 API
-export function useTeamDetailByUsername(
-  username: string,
-): UseSuspenseQueryResult<TeamDetailResponse | null> {
-  const query = useSuspenseQuery({
+export function useTeamDetailByUsername(username: string) {
+  return useQuery({
     queryKey: [QK_GET_TEAM_BY_USERNAME + '_detail_v3_fix2', username],
     queryFn: async () => {
       try {
@@ -81,8 +79,6 @@ export function useTeamDetailByUsername(
     retry: 1, // Only retry once
     refetchOnWindowFocus: false,
   });
-
-  return query;
 }
 
 // REMOVED: No more legacy compatibility hooks
@@ -155,8 +151,8 @@ export function useTeamPermissions(teamPk: string): TeamPermissions {
 }
 
 // V3 Team Members Hook
-export function useTeamMembers(teamUsername: string): UseSuspenseQueryResult<teamsV3Api.ListMembersResponse> {
-  return useSuspenseQuery({
+export function useTeamMembers(teamUsername: string) {
+  return useQuery({
     queryKey: ['team-members-v3', teamUsername],
     queryFn: () => teamsV3Api.getTeamMembers(teamUsername),
   });
