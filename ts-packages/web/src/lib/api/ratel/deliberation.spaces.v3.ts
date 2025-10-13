@@ -12,6 +12,22 @@ export function getDeliberationSpace(
   return call('GET', `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}`);
 }
 
+export function updateDeliberationResponseSpace(
+  spacePk: string,
+  survey_pk: string,
+  answers: Answer[],
+): Promise<DeliberationSpaceResponse> {
+  return call(
+    'POST',
+    `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}/responses`,
+    {
+      survey_pk,
+      survey_type: 'SURVEY',
+      answers,
+    },
+  );
+}
+
 export function deleteDeliberationSpace(
   spacePk: string,
 ): Promise<DeleteDeliberationResponse> {
