@@ -50,7 +50,7 @@ pub fn create_app_state() -> AppState {
 pub async fn create_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
     use crate::types::UserType;
 
-    let profile = "http://example.com/profile.png".to_string();
+    let profile = "https://ratel.foundation/images/default-profile.png".to_string();
     let username = create_user_name();
     let nickname = create_nick_name();
     let email = format!("a+{}@example.com", nickname);

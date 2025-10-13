@@ -6,8 +6,6 @@ use crate::controllers::v3::posts::list_comments::list_comments_handler;
 use crate::controllers::v3::posts::post_response::PostResponse;
 use crate::controllers::v3::posts::reply_to_comment::reply_to_comment_handler;
 use crate::controllers::v3::promotions::get_top_promotion::get_top_promotion_handler;
-use crate::controllers::v3::spaces::create_space::{CreateSpaceResponse, create_space_handler};
-use crate::controllers::v3::spaces::delete_space::delete_space_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
@@ -21,18 +19,17 @@ use crate::controllers::v3::spaces::deliberations::posting_deliberation::{
 };
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
-use crate::models::feed::{Post, PostComment, PostDetailResponse};
-// use crate::models::feed::Post;
-use crate::controllers::v3::spaces::poll::list_responses::{
-    ListSurveyResponse, list_responses_handler,
-};
+use crate::controllers::v3::spaces::poll::list_responses::list_responses_handler;
 use crate::controllers::v3::spaces::poll::respond_poll_space::respond_poll_space_handler;
 use crate::controllers::v3::spaces::poll::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
-use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
+use crate::models::feed::*;
+use crate::models::space::{
+    DeliberationDiscussionResponse, DeliberationSpaceResponse, PollSpaceSurveyAnswerDto,
+    SpaceCommonResponse,
+};
 use crate::types::list_items_response::ListItemsResponse;
-// use crate::types::list_items_response::ListItemsResponse;
 use crate::{
     Error2,
     controllers::v3::{
@@ -49,15 +46,7 @@ use crate::{
             get_info::{GetInfoResponse, get_info_handler},
             update_user::{UpdateUserResponse, update_user_handler},
         },
-        posts::{
-            comments::add_comment::add_comment_handler,
-            create_post::{CreatePostResponse, create_post_handler},
-            delete_post::delete_post_handler,
-            get_post::get_post_handler,
-            like_post::{LikePostResponse, like_post_handler},
-            list_posts::list_posts_handler,
-            update_post::update_post_handler,
-        },
+        posts::*,
         spaces::deliberations::{
             create_deliberation::{CreateDeliberationResponse, create_deliberation_handler},
             delete_deliberation::delete_deliberation_handler,
@@ -65,6 +54,11 @@ use crate::{
             update_deliberation::update_deliberation_handler,
         },
         spaces::poll::get_poll_space::{GetPollSpaceResponse, get_poll_space_handler},
+        spaces::{
+            create_space::{CreateSpaceResponse, create_space_handler},
+            delete_space::delete_space_handler,
+            update_space::update_space_handler,
+        },
         teams::{
             create_team::{CreateTeamResponse, create_team_handler},
             delete_team::{DeleteTeamResponse, delete_team_handler},
@@ -250,6 +244,18 @@ pub fn route(
                     ),
                 )
                 .route(
+                    "/:post_pk/comments/:comment_sk/likes",
+                    post_with(
+                        like_comment_handler,
+                        api_docs!(
+                            Json<LikeCommentResponse>,
+                            "Like Comment",
+                            "Like a comment"
+                        ),
+                    )
+                )
+
+                .route(
                     "/:post_pk",
                     get_with(
                         get_post_handler,
@@ -317,6 +323,14 @@ pub fn route(
                     delete_with(
                         delete_space_handler,
                         api_docs!((), "Delete Space", "Delete a space by ID"),
+                    )
+                    .post_with(
+                        update_space_handler,
+                        api_docs!(
+                            Json<SpaceCommonResponse>,
+                            "Update Space",
+                            "Update space details"
+                        ),
                     ),
                 )
                 .nest(
@@ -520,7 +534,7 @@ pub fn route(
                             .get_with(
                                 list_responses_handler,
                                 api_docs!(
-                                    Json<ListSurveyResponse>,
+                                    Json<ListItemsResponse<PollSpaceSurveyAnswerDto>>,
                                     "List poll responses",
                                     "List all responses for the poll with ID"
                                 ),

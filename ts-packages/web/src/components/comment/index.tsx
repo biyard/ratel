@@ -1,9 +1,6 @@
-'use client';
-
 import { getTimeAgo } from '@/lib/time-utils';
 import { ChevronDown } from 'lucide-react';
 import { BendArrowRight, ThumbUp } from '@/components/icons';
-import { FeedType } from '@/lib/api/models/feeds';
 import LexicalHtmlViewer from '@/components/lexical/lexical-html-viewer';
 import {
   LexicalHtmlEditor,
@@ -13,19 +10,19 @@ import { validateString } from '@/lib/string-filter-utils';
 import { ChevronDoubleDownIcon } from '@heroicons/react/20/solid';
 import { useEffect, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
-import { useTranslation } from 'react-i18next';
 import { PostComment } from '@/lib/api/ratel/posts.v3';
 import { ReplyList } from './reply-list';
+import { TFunction } from 'i18next';
 
 interface CommentProps {
   comment: PostComment;
   // TODO: Update to use v3 comment API with string IDs
   onComment?: (commentId: string, content: string) => Promise<void>;
   onLike?: (commentId: string, like: boolean) => Promise<void>;
+  t: TFunction<'Thread', undefined>;
 }
 
-export function Comment({ comment, onComment, onLike }: CommentProps) {
-  const { t } = useTranslation('Threads');
+export function Comment({ comment, onComment, onLike, t }: CommentProps) {
   const [expand, setExpand] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
 
@@ -85,6 +82,7 @@ export function Comment({ comment, onComment, onLike }: CommentProps) {
           <div className="flex flex-row gap-5">
             {/* Expand Reply Button */}
             <button
+              aria-label="Expand Replies"
               className="gap-2 text-primary flex flex-row justify-center items-center disabled:cursor-not-allowed"
               disabled={comment.replies === 0}
               onClick={() => {
@@ -101,7 +99,8 @@ export function Comment({ comment, onComment, onLike }: CommentProps) {
               )}
             </button>
             {/* Reply Button */}
-            <div
+            <button
+              aria-label="Reply to Comment"
               onClick={() => {
                 setExpand((prev) => !prev);
                 setShowReplies(true);
@@ -114,14 +113,15 @@ export function Comment({ comment, onComment, onLike }: CommentProps) {
                 className="[&>path]:stroke-text-primary"
               />
               {t('reply')}
-            </div>
+            </button>
           </div>
           {/* Like Button */}
           <button
+            aria-label="Like Comment"
             className="flex flex-row gap-2 justify-center items-center"
             onClick={() => {
               if (onLike) {
-                onLike(comment.pk, !comment.liked);
+                onLike(comment.sk, !comment.liked);
               } else {
                 throw new Error('onLike is not set');
               }
@@ -153,6 +153,7 @@ export function Comment({ comment, onComment, onLike }: CommentProps) {
                 await onComment(comment.sk, content);
               }
             }}
+            t={t}
           />
         )}
       </div>
@@ -164,12 +165,13 @@ export function NewComment({
   className = '',
   onClose,
   onSubmit,
+  t,
 }: {
   className?: string;
   onClose: () => void;
   onSubmit?: (content: string) => Promise<void>;
+  t: TFunction<'Thread', undefined>;
 }) {
-  const { t } = useTranslation('Threads');
   const [isLoading, setLoading] = useState(false);
   const [disabled, setDisabled] = useState(true);
   const editorRef = useRef<LexicalHtmlEditorRef>(null);
@@ -205,7 +207,11 @@ export function NewComment({
       className="flex flex-col w-full justify-end items-end bg-comment-box-bg border rounded-lg border-primary max-w-desktop"
     >
       <div className="p-3 flex flex-col justify-between">
-        <button className="p-1 flex flex-row justify-center" onClick={onClose}>
+        <button
+          aria-labe="Reply"
+          className="p-1 flex flex-row justify-center"
+          onClick={onClose}
+        >
           <ChevronDoubleDownIcon
             width={24}
             height={24}

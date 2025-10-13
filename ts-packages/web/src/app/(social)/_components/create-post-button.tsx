@@ -4,16 +4,27 @@ import { useLoggedIn } from '@/lib/api/hooks/users';
 import { useTranslation } from 'react-i18next';
 import { usePostEditorContext } from './post-editor/provider';
 import { createPost } from '@/lib/api/ratel/posts.v3';
+import { Button } from '@/components/ui/button';
 
-export default function CreatePostButton({ team_pk }: { team_pk?: string }) {
+export default function CreatePostButton({
+  team_pk,
+  expanded,
+}: {
+  team_pk?: string;
+  expanded?: boolean;
+}) {
   const { t } = useTranslation('Home');
   const loggedIn = useLoggedIn();
   const p = usePostEditorContext();
 
   return (
-    <button
-      className="cursor-pointer flex flex-row w-full justify-start items-center gap-1 bg-create-button-bg rounded-[100px] px-4 py-3 mb-[10px] aria-hidden:hidden"
+    <Button
+      aria-expanded={expanded}
+      aria-label="Create Post"
+      variant="rounded_secondary"
       aria-hidden={!loggedIn}
+      size="lg"
+      className="w-full justify-start max-tablet:aria-[expanded=false]:hidden aria-hidden:hidden"
       onClick={async () => {
         p?.setClose(false);
         const { post_pk } = await createPost(team_pk);
@@ -24,6 +35,6 @@ export default function CreatePostButton({ team_pk }: { team_pk?: string }) {
       <div className="font-bold text-base/[22px] text-text-third">
         {t('create_post')}
       </div>
-    </button>
+    </Button>
   );
 }

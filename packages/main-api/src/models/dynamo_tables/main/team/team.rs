@@ -1,4 +1,7 @@
-use crate::types::*;
+use crate::{
+    models::user::{UserTeamGroup, UserTeamGroupQueryOption},
+    types::*,
+};
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
@@ -62,6 +65,34 @@ impl Team {
             followers: 0,
             followings: 0,
         }
+    }
+
+    pub async fn get_permissions_by_team_pk(
+        cli: &aws_sdk_dynamodb::Client,
+        team_pk: &Partition,
+        user_pk: &Partition,
+    ) -> Result<TeamGroupPermissions, crate::Error2> {
+        // NOTE: it only fetches up to 50 UserTeamGroup items.
+        let (groups, _bookmark) = UserTeamGroup::find_by_team_pk(
+            cli,
+            team_pk,
+            UserTeamGroupQueryOption::builder()
+                .sk(user_pk.to_string())
+                .limit(50),
+        )
+        .await?;
+
+        let mut perms = 0i64;
+
+        for UserTeamGroup {
+            team_group_permissions,
+            ..
+        } in groups
+        {
+            perms |= team_group_permissions;
+        }
+
+        Ok(perms.into())
     }
 
     pub async fn get_permitted_team(
