@@ -14,6 +14,12 @@ import { useTranslation } from 'react-i18next';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { useSpaceHeaderContext } from './context';
 
+// Set Deprecated
+
+/**
+ * @deprecated use SpaceHeader from '@/features/spaces/components/header' instead
+ */
+
 export default function SpaceHeader() {
   const {
     post,
