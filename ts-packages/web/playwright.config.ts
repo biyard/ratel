@@ -1,5 +1,5 @@
-import { defineConfig, devices } from "@playwright/test";
-import { CONFIGS } from "./tests/config";
+import { defineConfig, devices } from '@playwright/test';
+import { CONFIGS } from './tests/config';
 
 /**
  * Read environment variables from file.
@@ -13,7 +13,7 @@ import { CONFIGS } from "./tests/config";
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  testDir: "./tests",
+  testDir: './',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -23,7 +23,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [["html", { host: "0.0.0.0", port: 8900 }]],
+  reporter: [['html', { host: '0.0.0.0', port: 8900 }]],
   timeout: CONFIGS.PLAYWRIGHT.TIMEOUT,
   /* Global setup and teardown */
   // globalSetup: require.resolve("./tests/global-setup"),
@@ -33,18 +33,18 @@ export default defineConfig({
     baseURL: CONFIGS.PLAYWRIGHT.BASE_URL,
     navigationTimeout: CONFIGS.PLAYWRIGHT.NAVIGATION_TIME_OUT,
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: "on",
-    video: "on",
+    trace: 'on',
+    video: 'on',
   },
 
   /* Configure projects for major browsers */
   projects: [
     // Anonymous tests (no setup required)
     {
-      name: "anonymous",
-      testMatch: "**/*.anon.spec.ts",
+      name: 'anonymous',
+      testMatch: ['**/*.anon.spec.ts', '**/*.anon.spec.tsx'],
       use: {
-        ...devices["Desktop Chrome"],
+        ...devices['Desktop Chrome'],
         viewport: {
           width: 1440,
           height: 950,
@@ -54,70 +54,22 @@ export default defineConfig({
 
     // Authenticated tests (requires global setup)
     {
-      name: "auth-setup",
-      testMatch: "**/*.auth.setup.ts",
+      name: 'auth-setup',
+      testMatch: ['**/*.auth.setup.ts', '**/*.auth.setup.tsx'],
     },
     {
-      name: "authenticated",
-      testMatch: "**/*.auth.spec.ts",
-      dependencies: ["auth-setup"],
+      name: 'authenticated',
+      testMatch: ['**/*.auth.spec.ts', '**/*.auth.spec.tsx'],
+      dependencies: ['auth-setup'],
       use: {
-        ...devices["Desktop Chrome"],
+        ...devices['Desktop Chrome'],
         viewport: {
           width: 1440,
           height: 950,
         },
         // This will be loaded in the beforeEach of authenticated tests
-        storageState: "user.json",
+        storageState: 'user.json',
       },
     },
-
-    // {
-    //   name: "firefox",
-    //   use: {
-    //     ...devices["Desktop Firefox"],
-    //     viewport: {
-    //       width: 1440,
-    //       height: 900,
-    //     },
-    //   },
-    // },
-
-    // {
-    //   name: "mobile-chrome",
-    //   use: { ...devices["Pixel 5"] },
-    // },
-
-    // {
-    //   name: "webkit",
-    //   use: { ...devices["Desktop Safari"] },
-    // },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
   ],
-
-  /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://127.0.0.1:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
 });

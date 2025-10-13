@@ -28,13 +28,15 @@
     /* Path aliases */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@tests/*": ["./tests/*"]
     }
   },
   "include": ["src"],
   "exclude": [
     "node_modules",
     "**/*.spec.ts",
+    "**/*.spec.tsx",
     "**/*.test.ts",
     "**/*.stories.tsx"
   ]
