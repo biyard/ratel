@@ -114,7 +114,9 @@ export class DeliberationSpaceController {
   setTitle = (title: string) => this.deps.setters.setTitle(title);
   setThread = (thread: Thread) => this.deps.setters.setThread(thread);
   setDeliberation = (d: Deliberation) => this.deps.setters.setDeliberation(d);
-  setSurvey = (s: Poll) => this.deps.setters.setSurvey(s);
+  setSurvey = (s: Poll) => {
+    this.deps.setters.setSurvey(s);
+  };
   setDraft = (d: FinalConsensus) => this.deps.setters.setDraft(d);
   setAnswersForSubmit = (answers: Answer[]) =>
     this.deps.setters.setAnswersForSubmit(answers);
@@ -148,7 +150,7 @@ export function useDeliberationSpaceController(
   spacePk: string,
 ): DeliberationSpaceController {
   const deps = buildDeps(spacePk);
-  return useMemo(() => new DeliberationSpaceController(deps), [deps.token]);
+  return new DeliberationSpaceController(deps);
 }
 
 function buildDeps(spacePk: string) {
@@ -716,6 +718,7 @@ function buildDeps(spacePk: string) {
     deliberation.discussions.length,
     deliberation.elearnings.files.length,
     survey.surveys.length,
+    survey.surveys[0]?.questions.length ?? 0,
     answers.length,
     draft.drafts.html_contents,
     draft.drafts.files.length,

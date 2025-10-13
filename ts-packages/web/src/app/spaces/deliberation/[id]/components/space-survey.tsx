@@ -1,5 +1,3 @@
-'use client';
-
 import { Question, ShortAnswerQuestion } from '@/lib/api/models/survey';
 import { useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
@@ -12,7 +10,7 @@ import { AnswerType } from '@/app/spaces/[id]/_components/question/answer-type-s
 import SurveyQuestionEditor from '@/app/spaces/[id]/_components/question/survey-question-editor';
 import { Add } from '@/components/icons';
 import SurveyViewer from './survey-viewer';
-import { DeliberationSpace } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { DeliberationSpaceResponse } from '@/lib/api/ratel/deliberation.spaces.v3';
 
 export default function SpaceSurvey({
   isEdit,
@@ -32,7 +30,7 @@ export default function SpaceSurvey({
   survey: Poll;
   answer: SurveyAnswer;
   status: SpaceStatus;
-  space: DeliberationSpace;
+  space: DeliberationSpaceResponse;
   handleUpdateSurvey: (survey: Poll) => void;
   handleSetAnswers: (answers: Answer[]) => void;
   handleSend: () => Promise<void>;
@@ -79,7 +77,7 @@ function ViewSurvey({
   status: SpaceStatus;
   handleSetAnswers: (answers: Answer[]) => void;
   handleSend: () => Promise<void>;
-  space: DeliberationSpace;
+  space: DeliberationSpaceResponse;
 }) {
   return (
     <div className="flex flex-col w-full gap-[10px]">
@@ -138,12 +136,17 @@ function EditableSurvey({
   };
 
   const handleRemoveQuestion = (index: number) => {
-    const updatedSurvey = [...survey.surveys];
-    const updatedQuestions = updatedSurvey[0].questions.filter(
-      (_, i) => i !== index,
+    const nextSurveys = survey.surveys.map((sv, i) =>
+      i === 0
+        ? { ...sv, questions: sv.questions.filter((_, qi) => qi !== index) }
+        : sv,
     );
-    updatedSurvey[0].questions = updatedQuestions;
-    handleUpdateSurvey({ ...survey, surveys: updatedSurvey });
+
+    handleUpdateSurvey({
+      ...survey,
+      surveys: nextSurveys,
+    });
+
     setStableKeys((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -162,9 +165,6 @@ function EditableSurvey({
       is_required?: boolean;
     },
   ) => {
-    const updatedSurvey = [...survey.surveys];
-    const updatedQuestions = [...updatedSurvey[0].questions];
-
     let newQuestion: Question;
 
     if (
@@ -215,11 +215,21 @@ function EditableSurvey({
       };
     }
 
-    updatedQuestions[index] = newQuestion;
+    const nextSurveys = survey.surveys.map((sv, i) =>
+      i === 0
+        ? {
+            ...sv,
+            questions: sv.questions.map((q, qi) =>
+              qi === index ? newQuestion : q,
+            ),
+          }
+        : sv,
+    );
 
-    updatedSurvey[0].questions = updatedQuestions;
-
-    handleUpdateSurvey({ ...survey, surveys: updatedSurvey });
+    handleUpdateSurvey({
+      ...survey,
+      surveys: nextSurveys,
+    });
   };
 
   return (
