@@ -26,7 +26,7 @@ export interface CheckboxQuestion {
   description?: string;
   image_url?: string;
   options: string[];
-  is_multi: boolean; // Corresponds to the is_multi field
+  is_multi?: boolean; // Corresponds to the is_multi field
   is_required?: boolean;
 }
 
@@ -64,19 +64,29 @@ export interface LinearScaleQuestion {
  * #[serde(rename_all = "snake_case")] ensures the type names are snake_cased.
  */
 export type SurveyQuestion =
-  | { answer_type: 'single_choice'; content: ChoiceQuestion }
-  | { answer_type: 'multiple_choice'; content: ChoiceQuestion }
-  | { answer_type: 'short_answer'; content: SubjectiveQuestion }
-  | { answer_type: 'subjective'; content: SubjectiveQuestion }
-  | { answer_type: 'checkbox'; content: CheckboxQuestion }
-  | { answer_type: 'dropdown'; content: DropdownQuestion }
-  | { answer_type: 'linear_scale'; content: LinearScaleQuestion };
+  | { answer_type: SurveyAnswerType.SingleChoice; content: ChoiceQuestion }
+  | { answer_type: SurveyAnswerType.MultipleChoice; content: ChoiceQuestion }
+  | { answer_type: SurveyAnswerType.ShortAnswer; content: SubjectiveQuestion }
+  | { answer_type: SurveyAnswerType.Subjective; content: SubjectiveQuestion }
+  | { answer_type: SurveyAnswerType.Checkbox; content: CheckboxQuestion }
+  | { answer_type: SurveyAnswerType.Dropdown; content: DropdownQuestion }
+  | { answer_type: SurveyAnswerType.LinearScale; content: LinearScaleQuestion };
 
 export type SurveyAnswer =
-  | { answer_type: 'single_choice'; answer?: number }
-  | { answer_type: 'multiple_choice'; answer?: number[] }
-  | { answer_type: 'short_answer'; answer?: string }
-  | { answer_type: 'subjective'; answer?: string }
-  | { answer_type: 'checkbox'; answer?: number[] }
-  | { answer_type: 'dropdown'; answer?: number }
-  | { answer_type: 'linear_scale'; answer?: number };
+  | { answer_type: SurveyAnswerType.SingleChoice; answer?: number }
+  | { answer_type: SurveyAnswerType.MultipleChoice; answer?: number[] }
+  | { answer_type: SurveyAnswerType.ShortAnswer; answer?: string }
+  | { answer_type: SurveyAnswerType.Subjective; answer?: string }
+  | { answer_type: SurveyAnswerType.Checkbox; answer?: number[] }
+  | { answer_type: SurveyAnswerType.Dropdown; answer?: number }
+  | { answer_type: SurveyAnswerType.LinearScale; answer?: number };
+
+export enum SurveyAnswerType {
+  SingleChoice = 'single_choice',
+  MultipleChoice = 'multiple_choice',
+  ShortAnswer = 'short_answer',
+  Subjective = 'subjective',
+  Checkbox = 'checkbox',
+  Dropdown = 'dropdown',
+  LinearScale = 'linear_scale',
+}

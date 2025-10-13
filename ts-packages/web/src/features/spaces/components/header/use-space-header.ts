@@ -72,6 +72,7 @@ export const useSpaceHeader = (
   space: SpaceCommon,
   hasEditPermission: boolean,
   onSave: (title: string, html_content: string) => Promise<void>,
+  onStartEdit: () => void,
 ): SpaceHeaderController => {
   const store = useSpaceHeaderStore();
 
@@ -105,7 +106,10 @@ export const useSpaceHeader = (
     publishState: space.publish_state,
     isEditable,
     hasEditPermission,
-    onStartEdit: () => store.startEdit(post),
+    onStartEdit: () => {
+      store.startEdit(post);
+      onStartEdit();
+    },
     onStopEdit: store.stopEdit,
     onSave: handleSave,
     onGoBack: () => {

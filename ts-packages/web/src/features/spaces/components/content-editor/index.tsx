@@ -1,9 +1,8 @@
 import Card from '@/components/card';
 import HtmlContentViewer from '@/components/html-content-viewer';
-import HtmlContentViewr from '@/components/html-content-viewer';
 import TextEditor from '@/components/text-editor/text-editor';
 
-export default function SpaceContentEditor({
+export default function SpaceHTMLContentEditor({
   htmlContent,
   isEditMode,
   onContentChange,
