@@ -1,5 +1,5 @@
-import { expect, Locator, Page, TestInfo } from "@playwright/test";
-import { CONFIGS } from "./config";
+import { expect, Locator, Page, TestInfo } from '@playwright/test';
+import { CONFIGS } from './config';
 // Screenshot util class
 export type BiyardPage = Page & {
   order: number;
@@ -14,14 +14,14 @@ export function wrap(page: Page, project: string, baseDir: string): BiyardPage {
   pageWithCapture.order = 1;
 
   pageWithCapture.fullCapture = async (name: string) => {
-    const paddedOrder = String(pageWithCapture.order).padStart(3, "0");
+    const paddedOrder = String(pageWithCapture.order).padStart(3, '0');
     const filename = `screenshots/${project}/${baseDir}/${paddedOrder}-${name}.png`;
     pageWithCapture.order += 1;
     await page.screenshot({ path: filename, fullPage: true });
   };
 
   pageWithCapture.capture = async (name: string) => {
-    const paddedOrder = String(pageWithCapture.order).padStart(3, "0");
+    const paddedOrder = String(pageWithCapture.order).padStart(3, '0');
     const filename = `screenshots/${project}/${baseDir}/${paddedOrder}-${name}.png`;
     pageWithCapture.order += 1;
     await page.screenshot({ path: filename });
@@ -56,9 +56,9 @@ export async function click(
   if (label) {
     selected = page.getByLabel(label, { exact: true });
   } else if (text) {
-    selected = page.getByRole("button", { name: text, exact: true });
+    selected = page.getByRole('button', { name: text, exact: true });
   } else {
-    throw new Error("Either text or id must be provided");
+    throw new Error('Either text or id must be provided');
   }
 
   await expect(selected).toBeVisible(timeout);
@@ -88,7 +88,7 @@ export async function fill(
   } else if (label) {
     selected = page.getByLabel(label, opt);
   } else {
-    throw new Error("unsupported selector");
+    throw new Error('unsupported selector');
   }
   await expect(selected).toBeVisible(timeout);
 

@@ -1,9 +1,6 @@
-'use client';
-
 import { getTimeAgo } from '@/lib/time-utils';
 import { ChevronDown } from 'lucide-react';
 import { BendArrowRight, ThumbUp } from '@/components/icons';
-import { FeedType } from '@/lib/api/models/feeds';
 import LexicalHtmlViewer from '@/components/lexical/lexical-html-viewer';
 import {
   LexicalHtmlEditor,
@@ -13,19 +10,19 @@ import { validateString } from '@/lib/string-filter-utils';
 import { ChevronDoubleDownIcon } from '@heroicons/react/20/solid';
 import { useEffect, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
-import { useTranslation } from 'react-i18next';
 import { PostComment } from '@/lib/api/ratel/posts.v3';
 import { ReplyList } from './reply-list';
+import { TFunction } from 'i18next';
 
 interface CommentProps {
   comment: PostComment;
   // TODO: Update to use v3 comment API with string IDs
   onComment?: (commentId: string, content: string) => Promise<void>;
   onLike?: (commentId: string, like: boolean) => Promise<void>;
+  t: TFunction<'Thread', undefined>;
 }
 
-export function Comment({ comment, onComment, onLike }: CommentProps) {
-  const { t } = useTranslation('Threads');
+export function Comment({ comment, onComment, onLike, t }: CommentProps) {
   const [expand, setExpand] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
 
@@ -153,6 +150,7 @@ export function Comment({ comment, onComment, onLike }: CommentProps) {
                 await onComment(comment.sk, content);
               }
             }}
+            t={t}
           />
         )}
       </div>
@@ -164,12 +162,13 @@ export function NewComment({
   className = '',
   onClose,
   onSubmit,
+  t,
 }: {
   className?: string;
   onClose: () => void;
   onSubmit?: (content: string) => Promise<void>;
+  t: TFunction<'Thread', undefined>;
 }) {
-  const { t } = useTranslation('Threads');
   const [isLoading, setLoading] = useState(false);
   const [disabled, setDisabled] = useState(true);
   const editorRef = useRef<LexicalHtmlEditorRef>(null);
