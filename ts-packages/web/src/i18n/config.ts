@@ -40,7 +40,7 @@ import koSpaceUnsaveModal from './ko/SpaceUnsaveModal.json';
 import koSpacePublishModal from './ko/SpacePublishModal.json';
 import koSpaceMakePublicModal from './ko/SpaceMakePublicModal.json';
 import koEditArtworkPost from './ko/EditArtworkPost.json';
-import { i18nThreadPage } from '@/app/(social)/threads/[id]/i18n';
+import { i18nThreadPage } from '@/app/(social)/threads/[id]/thread-page-i18n';
 
 export const LANGUAGES = ['en', 'ko'];
 
