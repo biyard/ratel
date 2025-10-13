@@ -3,14 +3,9 @@ import { CONFIGS } from '@tests/config';
 import { click, fill, waitForVisible } from '@tests/utils';
 
 test.describe.serial('[ThreadPage] Authenticated Users ', () => {
-  let context: import('@playwright/test').BrowserContext;
-  let page: import('@playwright/test').Page;
-
   let threadUrl = '';
 
-  test.beforeAll('Create a post', async ({ browser }) => {
-    context = await browser.newContext({ storageState: 'user.json' });
-    page = await context.newPage();
+  test('Create a post', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
@@ -32,7 +27,7 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     threadUrl = page.url();
   });
 
-  test('Write a comment', async () => {
+  test('Write a comment', async ({ page }) => {
     await page.goto(threadUrl);
 
     const testComment = 'This is automated comment for automation';
@@ -45,7 +40,7 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     await waitForVisible(page, { text: testComment });
   });
 
-  test('Like the post', async () => {
+  test('Like the post', async ({ page }) => {
     await page.goto(threadUrl);
 
     const selector: Locator = await click(page, { label: 'Like Post' });
@@ -56,7 +51,7 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     await expect(selector.locator('svg')).not.toHaveClass(/fill-primary/);
   });
 
-  test('Like a comment', async () => {
+  test('Like a comment', async ({ page }) => {
     await page.goto(threadUrl);
 
     const btn = await click(page, { label: 'Like Comment' });
@@ -71,21 +66,19 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     await expect(thumbUpIcon).not.toHaveClass(/fill-primary/);
   });
 
-  test('Reply to a comment', async () => {
+  test('Reply to a comment', async ({ page }) => {
     await page.goto(threadUrl);
 
     const testReply = 'This is an automated reply to a comment';
 
     // Find and click the first comment's reply button
-    const replyButton = page.getByText('Reply', { exact: true }).first();
-    await replyButton.waitFor({ state: 'visible' });
-    await replyButton.click();
+    await click(page, { label: 'Reply to Comment' });
 
     // Wait for editor to appear and fill in the reply
     const editor = page
       .locator('div[contenteditable="true"][role="textbox"]')
-      .last();
-    await editor.waitFor({ state: 'visible' });
+      .filter({ visible: true })
+      .first();
     await editor.fill(testReply);
 
     // Click the Publish button
@@ -95,14 +88,11 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     await waitForVisible(page, { text: testReply });
   });
 
-  test('Edit a post', async () => {
+  test('Edit a post', async ({ page }) => {
     await page.goto(threadUrl);
 
     // Click the Edit button
-    await click(page, { text: 'Edit' });
-
-    // Wait for editor to load
-    await page.waitForLoadState('networkidle');
+    await click(page, { label: 'Edit Post' });
 
     // Modify the content - add additional text
     const additionalText = ' [EDITED by automation]';
@@ -114,32 +104,23 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
     await editor.fill(currentText + additionalText);
 
     // Click Update button
-    await click(page, { text: 'Update' });
+    await click(page, { text: 'Publish' });
 
     // Wait to navigate back to the thread page
-    await page.waitForURL(/\/threads\/.+/, { timeout: 15000 });
+    await page.waitForLoadState('networkidle');
 
     // Verify the edited text appears
-    await waitForVisible(page, { text: additionalText });
+    await waitForVisible(page, {
+      text: 'This is an automated post content created by Playwright E2E. The purpose of this is to verify that the post creation functionality works correctly from end to end, including title input, content editing, auto-save, and final publication. This content is intentionally long to meet the minimum character requirements for post publishing. [EDITED by automation]',
+    });
   });
 
-  test('Delete a post', async () => {
+  test('Delete a post', async ({ page }) => {
     await page.goto(threadUrl);
 
-    // Click the dropdown menu button (Extra icon)
-    const menuButton = page.locator('button[aria-label="Post options"]');
-    await menuButton.waitFor({ state: 'visible' });
-    await menuButton.click();
+    await click(page, { label: 'Post options for desktop' });
+    await click(page, { label: 'Delete Post' });
 
-    // Click the Delete button from the dropdown
-    const deleteButton = page.getByText('Delete', { exact: true });
-    await deleteButton.waitFor({ state: 'visible' });
-    await deleteButton.click();
-
-    // Wait for navigation away from the thread page (should redirect to home or posts list)
-    await page.waitForURL(/^(?!.*\/threads\/)/, { timeout: 15000 });
-
-    // Verify we're no longer on the thread page
-    expect(page.url()).not.toMatch(/\/threads\/.+/);
+    await page.waitForURL('/', { timeout: 15000 });
   });
 });

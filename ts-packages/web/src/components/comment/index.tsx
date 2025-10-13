@@ -82,6 +82,7 @@ export function Comment({ comment, onComment, onLike, t }: CommentProps) {
           <div className="flex flex-row gap-5">
             {/* Expand Reply Button */}
             <button
+              aria-label="Expand Replies"
               className="gap-2 text-primary flex flex-row justify-center items-center disabled:cursor-not-allowed"
               disabled={comment.replies === 0}
               onClick={() => {
@@ -98,7 +99,8 @@ export function Comment({ comment, onComment, onLike, t }: CommentProps) {
               )}
             </button>
             {/* Reply Button */}
-            <div
+            <button
+              aria-label="Reply to Comment"
               onClick={() => {
                 setExpand((prev) => !prev);
                 setShowReplies(true);
@@ -111,7 +113,7 @@ export function Comment({ comment, onComment, onLike, t }: CommentProps) {
                 className="[&>path]:stroke-text-primary"
               />
               {t('reply')}
-            </div>
+            </button>
           </div>
           {/* Like Button */}
           <button
@@ -205,7 +207,11 @@ export function NewComment({
       className="flex flex-col w-full justify-end items-end bg-comment-box-bg border rounded-lg border-primary max-w-desktop"
     >
       <div className="p-3 flex flex-col justify-between">
-        <button className="p-1 flex flex-row justify-center" onClick={onClose}>
+        <button
+          aria-labe="Reply"
+          className="p-1 flex flex-row justify-center"
+          onClick={onClose}
+        >
           <ChevronDoubleDownIcon
             width={24}
             height={24}
