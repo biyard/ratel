@@ -1,21 +1,45 @@
-import { test, expect } from "@playwright/test";
+import { expect, test } from '@playwright/test';
+import { click, fill } from '@tests/utils';
 
-test.describe("Social Page - Authenticated User", () => {
+test.describe('Create Post - Authenticated User', () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to homepage
-    await page.goto("/");
-    // Wait for page to load completely
-    await page.waitForLoadState("networkidle");
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
   });
 
-  test("should load more posts when scrolling", async ({ page }) => {
+  test('should create a general post successfully', async ({ page }) => {
+    const testTitle = 'Automated Post Creation - E2E';
+    const testContent =
+      'This is an automated post content created by Playwright E2E. ' +
+      'The purpose of this is to verify that the post creation functionality ' +
+      'works correctly from end to end, including title input, content editing, ' +
+      'auto-save, and final publication. This content is intentionally long to ' +
+      'meet the minimum character requirements for post publishing.';
+
+    await click(page, { text: 'Create Post' });
+    await fill(page, { placeholder: 'Write a title...' }, testTitle);
+    await fill(page, { label: 'general-post-editor' }, testContent);
+
+    await click(page, { label: 'Publish' });
+
+    await page.waitForURL(/\/threads\/.+/, { timeout: 15000 });
+  });
+});
+
+test.describe('Home page - Authenticated User', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+  });
+
+  test('should load more posts when scrolling', async ({ page }) => {
     // Wait for initial posts to load
     await page.waitForTimeout(3000);
 
     // Count initial posts
     const initialPosts = await page
       .locator('[key*="feed-"]')
-      .or(page.locator(".feed-card"))
+      .or(page.locator('.feed-card'))
       .count();
 
     if (initialPosts > 0) {
@@ -28,12 +52,12 @@ test.describe("Social Page - Authenticated User", () => {
       // Check if more posts loaded
       const newPostCount = await page
         .locator('[key*="feed-"]')
-        .or(page.locator(".feed-card"))
+        .or(page.locator('.feed-card'))
         .count();
 
       // Either more posts loaded or we hit the end
       const feedEndMessage = await page
-        .locator("text=/end|no more/i")
+        .locator('text=/end|no more/i')
         .isVisible()
         .catch(() => false);
 
@@ -41,7 +65,7 @@ test.describe("Social Page - Authenticated User", () => {
     }
   });
 
-  test("should display create post button in sidebar", async ({ page }) => {
+  test('should display create post button in sidebar', async ({ page }) => {
     // Check if create post button is visible in sidebar
     const sidebarCreateButton = page.locator(
       'aside [data-testid="create-post-button"]',
@@ -59,7 +83,7 @@ test.describe("Social Page - Authenticated User", () => {
     }
   });
 
-  test("should display floating create post button on mobile", async ({
+  test('should display floating create post button on mobile', async ({
     page,
   }) => {
     // Resize to mobile viewport
@@ -83,7 +107,7 @@ test.describe("Social Page - Authenticated User", () => {
     await page.setViewportSize({ width: 1280, height: 720 });
   });
 
-  test("should display promotional content when available", async ({
+  test('should display promotional content when available', async ({
     page,
   }) => {
     // Wait for content to load
@@ -91,7 +115,7 @@ test.describe("Social Page - Authenticated User", () => {
 
     // Check for promotion card in sidebar
     const promotionCard = page
-      .locator(".promotion-card")
+      .locator('.promotion-card')
       .or(page.locator('[data-testid="promotion"]'));
 
     // Promotion may or may not be present
@@ -102,12 +126,12 @@ test.describe("Social Page - Authenticated User", () => {
     }
   });
 
-  test("should display news section in sidebar", async ({ page }) => {
+  test('should display news section in sidebar', async ({ page }) => {
     // Check for news section in sidebar
     const newsSection = page
-      .locator("aside")
-      .locator("text=/news|News/i")
-      .or(page.locator(".news-section"));
+      .locator('aside')
+      .locator('text=/news|News/i')
+      .or(page.locator('.news-section'));
 
     const hasNews = await newsSection.isVisible().catch(() => false);
 
@@ -116,12 +140,12 @@ test.describe("Social Page - Authenticated User", () => {
     }
   });
 
-  test("should display suggestions section in sidebar", async ({ page }) => {
+  test('should display suggestions section in sidebar', async ({ page }) => {
     // Check for suggestions section in sidebar
     const suggestionsSection = page
-      .locator("aside")
-      .locator("text=/suggest|Suggest|recommend/i")
-      .or(page.locator(".suggestions-section"));
+      .locator('aside')
+      .locator('text=/suggest|Suggest|recommend/i')
+      .or(page.locator('.suggestions-section'));
 
     const hasSuggestions = await suggestionsSection
       .isVisible()
@@ -132,19 +156,19 @@ test.describe("Social Page - Authenticated User", () => {
     }
   });
 
-  test("should handle post interactions", async ({ page }) => {
+  test('should handle post interactions', async ({ page }) => {
     // Wait for posts to load
     await page.waitForTimeout(3000);
 
     const firstPost = page
       .locator('[key*="feed-"]')
-      .or(page.locator(".feed-card"))
+      .or(page.locator('.feed-card'))
       .first();
 
     if (await firstPost.isVisible()) {
       // Look for like button
       const likeButton = firstPost
-        .locator("button")
+        .locator('button')
         .filter({ hasText: /like|heart/i })
         .or(firstPost.locator('[aria-label*="like"]'));
 
@@ -156,7 +180,7 @@ test.describe("Social Page - Authenticated User", () => {
 
       // Look for comment button
       const commentButton = firstPost
-        .locator("button")
+        .locator('button')
         .filter({ hasText: /comment|reply/i })
         .or(firstPost.locator('[aria-label*="comment"]'));
 
@@ -166,7 +190,7 @@ test.describe("Social Page - Authenticated User", () => {
 
       // Look for share button
       const shareButton = firstPost
-        .locator("button")
+        .locator('button')
         .filter({ hasText: /share|repost/i })
         .or(firstPost.locator('[aria-label*="share"]'));
 
@@ -176,7 +200,7 @@ test.describe("Social Page - Authenticated User", () => {
     }
   });
 
-  test("should respond to responsive design changes", async ({ page }) => {
+  test('should respond to responsive design changes', async ({ page }) => {
     // Test desktop view
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.waitForTimeout(1000);
@@ -203,7 +227,7 @@ test.describe("Social Page - Authenticated User", () => {
 
     // On mobile, sidebar should be hidden or floating elements should appear
     expect(
-      mobileSidebar === false || (await page.locator(".fixed").isVisible()),
+      mobileSidebar === false || (await page.locator('.fixed').isVisible()),
     ).toBeTruthy();
 
     // Reset viewport
