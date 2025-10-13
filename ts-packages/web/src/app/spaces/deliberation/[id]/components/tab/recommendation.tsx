@@ -1,19 +1,18 @@
-'use client';
-
-import { useDeliberationSpaceByIdContext } from '../../providers.client';
+import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
+import { FinalConsensus } from '../../types';
 import SpaceContents from '../space-contents';
 import SpaceFiles from '../space-files';
 import { File } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 
-export default function FinalConsensusPage() {
-  const { draft, handleUpdateDraft, isEdit, title } =
-    useDeliberationSpaceByIdContext();
-
-  const contents = {
-    title: title,
-    html_contents: draft.drafts.html_contents,
-    files: draft.drafts.files,
-  };
+export default function FinalConsensusPage({
+  draft,
+  setDraft,
+}: {
+  draft: FinalConsensus;
+  setDraft: (draft: FinalConsensus) => void;
+}) {
+  const store = useSpaceHeaderStore();
+  const isEdit = store.isEditingMode;
 
   return (
     <div className="flex flex-row w-full gap-5">
@@ -21,39 +20,48 @@ export default function FinalConsensusPage() {
         <div className="flex flex-col w-full gap-2.5">
           <SpaceContents
             isEdit={isEdit}
-            htmlContents={contents.html_contents}
+            htmlContents={draft.drafts.html_contents}
             setContents={(html_contents: string) => {
-              handleUpdateDraft({
+              setDraft({
                 ...draft,
                 drafts: {
-                  ...contents,
+                  ...draft,
                   html_contents,
+                  files: draft.drafts.files,
                 },
               });
+
+              store.onModifyContent();
             }}
           />
           <SpaceFiles
             isEdit={isEdit}
-            files={contents.files}
+            files={draft.drafts.files}
             onremove={(index: number) => {
-              const newFiles = [...contents.files];
+              const newFiles = [...draft.drafts.files];
               newFiles.splice(index, 1);
-              handleUpdateDraft({
+              setDraft({
                 ...draft,
                 drafts: {
-                  ...contents,
+                  ...draft,
+                  html_contents: draft.drafts.html_contents,
                   files: newFiles,
                 },
               });
+
+              store.onModifyContent();
             }}
             onadd={(file: File) => {
-              handleUpdateDraft({
+              setDraft({
                 ...draft,
                 drafts: {
-                  ...contents,
-                  files: [...contents.files, file],
+                  ...draft,
+                  html_contents: draft.drafts.html_contents,
+                  files: [...draft.drafts.files, file],
                 },
               });
+
+              store.onModifyContent();
             }}
           />
         </div>

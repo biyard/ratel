@@ -1,37 +1,33 @@
-'use client';
-
-import { useDeliberationSpaceByIdContext } from '../../providers.client';
+import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
+import { Thread } from '../../types';
 import SpaceContents from '../space-contents';
 import SpaceFiles from '../space-files';
 import { File } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 
-export default function ThreadPage() {
-  const { isEdit, thread, handleUpdateThread } =
-    useDeliberationSpaceByIdContext();
+export default function ThreadPage({
+  thread,
+  setThread,
+}: {
+  thread: Thread;
+  setThread: (thread: Thread) => void;
+}) {
+  const store = useSpaceHeaderStore();
+  const isEdit = store.isEditingMode;
 
   return (
     <div className="flex flex-row w-full gap-5">
       <div className="flex flex-col w-full">
-        {/* <SpaceHeader
-          isEdit={isEdit}
-          title={title}
-          status={status}
-          userType={userType}
-          proposerImage={proposerImage}
-          proposerName={proposerName}
-          createdAt={createdAt}
-          onback={handleGoBack}
-          setTitle={setTitle}
-        /> */}
         <div className="flex flex-col w-full gap-2.5">
           <SpaceContents
             isEdit={isEdit}
             htmlContents={thread.html_contents}
             setContents={(html_contents: string) => {
-              handleUpdateThread({
+              setThread({
                 ...thread,
                 html_contents,
               });
+
+              store.onModifyContent();
             }}
           />
           <SpaceFiles
@@ -40,16 +36,20 @@ export default function ThreadPage() {
             onremove={(index: number) => {
               const newFiles = [...thread.files];
               newFiles.splice(index, 1);
-              handleUpdateThread({
+              setThread({
                 ...thread,
                 files: newFiles,
               });
+
+              store.onModifyContent();
             }}
             onadd={(file: File) => {
-              handleUpdateThread({
+              setThread({
                 ...thread,
                 files: [...thread.files, file],
               });
+
+              store.onModifyContent();
             }}
           />
         </div>
