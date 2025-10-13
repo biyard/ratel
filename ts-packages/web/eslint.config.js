@@ -6,54 +6,66 @@ import tseslint from 'typescript-eslint';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 import storybook from 'eslint-plugin-storybook';
-import prettierPlugin from 'eslint-plugin-prettier'; // Added import
+import prettierPlugin from 'eslint-plugin-prettier';
 import unusedImports from 'eslint-plugin-unused-imports';
-
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { FlatCompat } from '@eslint/eslintrc';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import reactPlugin from 'eslint-plugin-react';
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores([
+    'dist',
+    'node_modules',
+    'build',
+    'coverage',
+    'public',
+    'storybook-static',
+    '*.config.*',
+  ]),
   ...storybook.configs['flat/recommended'],
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      js.configs.recommended,
-      tseslint.configs.recommended,
-      reactHooks.configs['recommended-latest'],
-      reactRefresh.configs.vite,
-    ],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
-    },
-  },
-
-  // ESLint plugin Prettier configuration
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
-      prettier: prettierPlugin,
+      '@typescript-eslint': tseslint.plugin,
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
       'unused-imports': unusedImports,
+      prettier: prettierPlugin,
+      react: reactPlugin,
+    },
+    languageOptions: {
+      ecmaVersion: 2020,
+      sourceType: 'module',
+      globals: {
+        ...globals.browser,
+        ...globals.es2020,
+      },
+      parser: tseslint.parser,
+      parserOptions: {
+        ecmaFeatures: {
+          jsx: true,
+        },
+      },
+    },
+    settings: {
+      react: {
+        version: 'detect',
+      },
     },
     rules: {
+      ...js.configs.recommended.rules,
+      ...tseslint.configs.recommended.rules,
+      ...reactPlugin.configs.recommended.rules,
+      ...reactHooks.configs.recommended.rules,
       ...prettierPlugin.configs.recommended.rules,
+
       'prettier/prettier': 'error',
+      'react/react-in-jsx-scope': 'off',
       'react/no-unescaped-entities': [
         'error',
         {
           forbid: ['>', '}', '"'],
         },
       ],
-      'no-unused-vars': 'off', // or "@typescript-eslint/no-unused-vars": "off",
+      'no-unused-vars': 'off',
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
         'error',
@@ -66,6 +78,4 @@ export default defineConfig([
       ],
     },
   },
-
-  ...compat.extends('prettier'),
 ]);
