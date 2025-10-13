@@ -10,7 +10,7 @@ import SettingLayout from './app/(social)/settings/layout';
 import MyNetwork from './app/(social)/my-network/page';
 import MyFollowerPage from './app/(social)/my-follower/page';
 import { z } from 'zod';
-import ThreadPage from './app/(social)/threads/[id]/page';
+import ThreadPage from './app/(social)/threads/[id]/thread-page';
 // Team components
 import TeamLayout from './app/teams/[username]/layout';
 import TeamHome from './app/teams/[username]/home/page';
@@ -18,7 +18,6 @@ import TeamGroups from './app/teams/[username]/groups/page';
 import TeamMembers from './app/teams/[username]/members/page';
 import TeamSettings from './app/teams/[username]/settings/page';
 import TeamDrafts from './app/teams/[username]/drafts/page';
-import ThreadPage from './app/(social)/threads/[id]/thread-page';
 
 // Space
 import SpaceLayout from './app/spaces/layout';

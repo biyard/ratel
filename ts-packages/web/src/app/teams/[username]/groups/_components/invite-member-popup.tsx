@@ -67,19 +67,10 @@ export default function InviteMemberPopup({
           if (data) {
             const exists = selectedUsers.some((u) => u.id === data.id);
             if (!exists) {
-              const result = await post(
-                ratelApi.groups.check_email(team_id, selectedGroup.id),
-                checkEmailRequest(input),
-              );
-
-              const valueIsError: boolean = !result && isEmail ? true : false;
-
+              // In v3 migration, we skip the legacy check_email validation
+              // and directly add the user to the selected list
               setSelectedUsers((prev) => [...prev, data]);
-              setIsError((prev) => [...prev, valueIsError]);
-
-              if (valueIsError) {
-                setErrorCount((prev) => Math.max(prev + 1, 0));
-              }
+              setIsError((prev) => [...prev, false]); // No error for v3
 
               added.push(data);
             }
