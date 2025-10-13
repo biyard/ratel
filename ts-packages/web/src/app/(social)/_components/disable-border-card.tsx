@@ -1,7 +1,11 @@
-
 export interface DisableBorderCardProps {
   children: React.ReactNode;
 }
+
+/**
+ * @deprecated use Card from '@/components/card' instead
+ * <Card variant="secondary" />
+ */
 
 export default function DisableBorderCard({
   children,
