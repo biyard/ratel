@@ -14,6 +14,7 @@ type Config = {
   experiment: boolean;
   telegram_botname: string;
   version: string;
+  storybookUrl: string;
 };
 
 export const Env = {
@@ -23,20 +24,18 @@ export const Env = {
   Prod: 'prod',
 } as const;
 
-export type Env = typeof Env[keyof typeof Env];
+export type Env = (typeof Env)[keyof typeof Env];
 
 export const config: Config = {
   env: (import.meta.env.VITE_ENV || 'local') as Env,
   firebase_api_key: import.meta.env.VITE_FIREBASE_API_KEY || '',
   firebase_auth_domain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
   firebase_project_id: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  firebase_storage_bucket:
-    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
+  firebase_storage_bucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
   firebase_messaging_sender_id:
     import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
   firebase_app_id: import.meta.env.VITE_FIREBASE_APP_ID || '',
-  firebase_measurement_id:
-    import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
+  firebase_measurement_id: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
 
   log_level: import.meta.env.VITE_LOG_LEVEL || 'info',
   sign_domain: import.meta.env.VITE_SIGN_DOMAIN || 'dev.ratel.foundation',
@@ -45,8 +44,8 @@ export const config: Config = {
   version: import.meta.env.VITE_VERSION || 'unknown',
 
   // Server-customizable configuration
-  api_url:
-    import.meta.env.VITE_API_URL || '',
+  api_url: import.meta.env.VITE_API_URL || '',
   telegram_botname:
     import.meta.env.VITE_TELEGRAM_BOTNAME || 'cryto_ratel_dev_bot',
+  storybookUrl: import.meta.env.VITE_STORYBOOK_URL || 'http://localhost:6006',
 };

@@ -1,21 +1,17 @@
-use crate::models::space::{PollSpaceSurveyResponse, PollSpaceSurveyResponseQueryOption};
-use crate::types::{EntityType, Partition};
-use crate::utils::dynamo_extractor::extract_user_from_session;
+use crate::models::space::{
+    PollSpacePathParam, PollSpaceSurveyAnswerDto, PollSpaceSurveyResponse,
+    PollSpaceSurveyResponseQueryOption, SpaceCommon,
+};
+use crate::models::user::User;
+use crate::types::{EntityType, ListItemsResponse, TeamGroupPermission};
 use crate::{AppState, Error2};
 
 use bdk::prelude::*;
-use by_axum::axum::{
-    Extension,
-    extract::{Json, Path, Query, State},
-};
+use by_axum::axum::extract::{Json, Path, Query, State};
 
-use serde::{Deserialize, Serialize};
+use aide::NoApi;
 
-#[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
-pub struct ListResponsesPathParams {
-    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
-    poll_space_pk: Partition,
-}
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct ListResponsesQueryParams {
@@ -23,20 +19,22 @@ pub struct ListResponsesQueryParams {
     limit: Option<i32>,
 }
 
-#[derive(Debug, Serialize, Default, aide::OperationIo, JsonSchema)]
-pub struct ListSurveyResponse {
-    items: Vec<PollSpaceSurveyResponse>,
-    bookmark: Option<String>,
-}
-
 pub async fn list_responses_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(session): Extension<tower_sessions::Session>,
-    Path(ListResponsesPathParams { poll_space_pk }): Path<ListResponsesPathParams>,
+    NoApi(user): NoApi<User>,
+    Path(PollSpacePathParam { poll_space_pk }): Path<PollSpacePathParam>,
     Query(ListResponsesQueryParams { bookmark, limit }): Query<ListResponsesQueryParams>,
-) -> Result<Json<ListSurveyResponse>, Error2> {
-    let _user = extract_user_from_session(&dynamo.client, &session).await;
-    // FIXME: Need to check if the user has permission to view the responses
+) -> Result<Json<ListItemsResponse<PollSpaceSurveyAnswerDto>>, Error2> {
+    let (_, has_perm) = SpaceCommon::has_permission(
+        &dynamo.client,
+        &poll_space_pk,
+        Some(&user.pk),
+        TeamGroupPermission::SpaceRead,
+    )
+    .await?;
+    if !has_perm {
+        return Err(Error2::NoPermission);
+    }
 
     let mut option = PollSpaceSurveyResponseQueryOption::builder().limit(limit.unwrap_or(20));
 
@@ -50,9 +48,9 @@ pub async fn list_responses_handler(
         option,
     )
     .await?;
-
-    Ok(Json(ListSurveyResponse {
-        items: responses,
+    let items = responses.into_iter().map(|e| e.into()).collect();
+    Ok(Json(ListItemsResponse {
+        items,
         bookmark: next_bookmark,
     }))
 }

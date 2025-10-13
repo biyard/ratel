@@ -1,4 +1,4 @@
-import { createSpaceRequest, SpaceType } from '@/lib/api/models/spaces';
+import { SpaceType } from '@/lib/api/models/spaces';
 import { BoosterType } from '@/lib/api/models/notice';
 
 import { Discuss, Palace, Mega, Vote } from '@/components/icons';
@@ -13,9 +13,8 @@ import SpaceConfigForm from './space-config-form';
 import RadioButton from '@/components/radio-button';
 import { Cube } from '@/assets/icons/shopping';
 import { useTranslation } from 'react-i18next';
-import { useSpaceMutation } from '@/hooks/use-space';
 import { showErrorToast } from '@/lib/toast';
-import { useSprintLeagueSpaceMutation } from '@/hooks/use-sprint-league';
+import { useCreateSpaceMutation } from '@/features/spaces/hooks/use-create-space-mutation';
 
 interface SpaceFormProps {
   type: SpaceType;
@@ -73,25 +72,18 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
     selectedType === SpaceType.Notice ||
     selectedType === SpaceType.SprintLeague;
 
-  const {
-    create: { mutateAsync },
-  } = useSpaceMutation();
-
-  const {
-    create: { mutateAsync: mutateSprintAsync },
-  } = useSprintLeagueSpaceMutation();
+  const createSpace = useCreateSpaceMutation().mutateAsync;
 
   const handleCreateSpace = async ({
     spaceType,
-    feedId,
-    userIds = [],
+    postPk,
     startedAt = null,
     endedAt = null,
     boosterType = null,
   }: {
     spaceType: SpaceType;
-    feedId: string;
-    userIds: number[];
+    postPk: string;
+    userPk?: string;
     startedAt: number | null;
     endedAt: number | null;
     boosterType: BoosterType | null;
@@ -100,27 +92,22 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
     setLoading(true);
     try {
       // FIXME: create space
-      const req = createSpaceRequest(
+
+      const { space_pk } = await createSpace({
+        postPk,
         spaceType,
-        Number(feedId),
-        userIds,
-        0,
         startedAt,
         endedAt,
-        boosterType,
-      );
-      let spaceId = 0;
-      if (spaceType === SpaceType.SprintLeague) {
-        const space = await mutateSprintAsync({
-          spaceReq: req,
-        });
-        spaceId = space.id;
-      } else {
-        const space = await mutateAsync(req);
-        spaceId = space.id;
-      }
+        booster: boosterType,
+      });
 
-      navigate(route.space(spaceId));
+      switch (spaceType) {
+        case SpaceType.Poll:
+          navigate(route.pollSpaceByPk(space_pk));
+          break;
+        default:
+          navigate(route.space(space_pk));
+      }
       popup.close();
     } catch {
       logger.error('Error creating space');
@@ -144,8 +131,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
       } else {
         await handleCreateSpace({
           spaceType: selectedType,
-          feedId: feed_id,
-          userIds: [],
+          postPk: feed_id,
           startedAt: null,
           endedAt: null,
           boosterType: null,
@@ -187,7 +173,11 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
           <div
             className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] transition-colors
               ${selected ? 'border-primary' : 'border-modal-card-border'}
-              ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary'}`}
+              ${
+                disabled
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'cursor-pointer hover:border-primary'
+              }`}
             onClick={() => {
               if (!disabled) onClick();
             }}
@@ -234,8 +224,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
             onConfirm={(startedAt, endedAt, boosterType) => {
               return handleCreateSpace({
                 spaceType: selectedType,
-                feedId: feed_id,
-                userIds: [],
+                postPk: feed_id,
                 startedAt,
                 endedAt,
                 boosterType,

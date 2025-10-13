@@ -68,7 +68,7 @@ export class GlobalAccelStack extends Stack {
     const distribution = new cloudfront.Distribution(this, "Distribution", {
       defaultBehavior: {
         origin,
-        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED, // API/SSR default; tune if you want caching
+        cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
         originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
@@ -116,16 +116,11 @@ export class GlobalAccelStack extends Stack {
       ),
     });
 
-    new s3deploy.BucketDeployment(this, "PublicDeployStatic", {
+    new s3deploy.BucketDeployment(this, `RatelWebBucketDeployment-${stage}`, {
       destinationBucket: staticBucket,
       distribution: distribution,
       distributionPaths: ["/*"],
-      sources: [
-        s3deploy.Source.asset("dist", {
-          assetHash: commit,
-          assetHashType: cdk.AssetHashType.CUSTOM,
-        }),
-      ],
+      sources: [s3deploy.Source.asset("dist")],
     });
   }
 }

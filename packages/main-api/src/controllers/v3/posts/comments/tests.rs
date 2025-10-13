@@ -1,5 +1,5 @@
-use crate::controllers::v3::posts::CreatePostResponse;
-use crate::models::feed::{PostComment, PostDetailResponse};
+use crate::controllers::v3::posts::{CreatePostResponse, PostDetailResponse};
+use crate::models::feed::PostComment;
 use crate::tests::v3_setup::TestContextV3;
 use crate::types::ListItemsResponse;
 use crate::*;
@@ -101,6 +101,58 @@ async fn test_reply_to_comment() {
     assert_eq!(body.items.len(), 1);
     assert_eq!(body.items[0].content, reply_content);
     assert_eq!(body.items[0].parent_comment_sk, Some(comment_sk));
+}
+
+#[tokio::test]
+async fn test_like_comment() {
+    let (ctx, post_pk) = setup_post().await;
+    let TestContextV3 {
+        app,
+        test_user,
+        now,
+        ..
+    } = ctx;
+
+    let content = format!("<p>This is a comment {now}</p>");
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: format!("/v3/posts/{}/comments", post_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "content": &content
+        },
+        response_type: PostComment,
+    };
+
+    assert_eq!(status, 200);
+
+    let comment_sk = body.sk;
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: format!("/v3/posts/{}/comments/{}/likes", post_pk.to_string(), comment_sk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "like": true
+        }
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body["liked"], true);
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk.to_string()),
+        headers: test_user.1.clone(),
+        response_type: PostDetailResponse,
+    };
+
+    assert_eq!(status, 200);
+    assert!(body.comments.len() >= 1);
+    assert_eq!(body.comments[0].content, content);
+    assert_eq!(body.comments[0].likes, 1);
+    assert_eq!(body.comments[0].liked, true);
 }
 
 async fn setup_post() -> (TestContextV3, String) {

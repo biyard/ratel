@@ -1,6 +1,7 @@
 import Logo from '@/assets/icons/logo.svg?react';
 import HomeIcon from '@/assets/icons/home.svg?react';
 import UserGroupIcon from '@/assets/icons/user-group.svg?react';
+import InternetIcon from '@/assets/icons/internet.svg?react';
 import Hamburger from '@/assets/icons/hamburger.svg?react';
 import CloseIcon from '@/assets/icons/remove.svg?react';
 import { NavLink } from 'react-router';
@@ -14,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { Us } from './icons';
 import { Kr } from '@/assets/icons/flags';
 import { useUserInfo } from '@/hooks/use-user-info';
+import { config, Env } from '@/config';
 export interface HeaderProps {
   mobileExtends: boolean;
   setMobileExtends: (extend: boolean) => void;
@@ -101,6 +103,32 @@ export default function Header(props: HeaderProps) {
      *   href: route.notifications(),
      *   authorized: true,
      * }, */
+    {
+      name: 'Test Report',
+      icon: (
+        <InternetIcon
+          className="group-hover:[&>path]:stroke-white group-hover:[&>circle]:stroke-white transition-all"
+          width="24"
+          height="24"
+        />
+      ),
+      visible: config.env !== Env.Prod,
+      href: '/test-report',
+      authorized: false,
+    },
+    {
+      name: 'Stroybook',
+      icon: (
+        <InternetIcon
+          className="group-hover:[&>path]:stroke-white group-hover:[&>circle]:stroke-white transition-all"
+          width="24"
+          height="24"
+        />
+      ),
+      visible: config.env !== Env.Prod,
+      href: '/storybook',
+      authorized: false,
+    },
   ];
 
   return (
