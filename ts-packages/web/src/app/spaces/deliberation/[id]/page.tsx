@@ -6,6 +6,7 @@ import { DeliberationTab, DeliberationTabType } from './types';
 import SpaceSideMenu from './components/space_side_menu';
 import ThreadPage from './components/tab/thread';
 import FinalConsensusPage from './components/tab/recommendation';
+import { DeliberationSurveyPage } from './components/tab/poll';
 
 export default function DeliberationSpacePage() {
   const { spacePk } = useParams<{ spacePk: string }>();
@@ -31,7 +32,18 @@ export default function DeliberationSpacePage() {
             ) : ctrl.selectedType == DeliberationTab.DELIBERATION ? (
               <div className="text-white">deliberation</div>
             ) : ctrl.selectedType == DeliberationTab.POLL ? (
-              <div className="text-white">poll</div>
+              <DeliberationSurveyPage
+                space={ctrl.space}
+                startedAt={ctrl.startedAt}
+                endedAt={ctrl.endedAt}
+                survey={ctrl.survey}
+                answer={ctrl.answer}
+                setStartDate={ctrl.setStartDate}
+                setEndDate={ctrl.setEndDate}
+                setSurvey={ctrl.setSurvey}
+                setAnswers={ctrl.setAnswersForSubmit}
+                handleSend={ctrl.handleSend}
+              />
             ) : ctrl.selectedType == DeliberationTab.RECOMMANDATION ? (
               <FinalConsensusPage draft={ctrl.draft} setDraft={ctrl.setDraft} />
             ) : (
