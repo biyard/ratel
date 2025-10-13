@@ -84,7 +84,7 @@ export default function SettingsPage({ username }: { username: string }) {
             if (!teamDetailQuery.data) return;
             
             try {
-              await teamsV3Api.deleteTeam(teamDetailQuery.data.id);
+              await teamsV3Api.deleteTeam(username);
               showInfoToast(t('success_delete_team'));
               // Invalidate all published feeds after deleting team
               await queryClient.invalidateQueries({
