@@ -275,7 +275,7 @@ export const LexicalHtmlEditor = forwardRef<
           <RichTextPlugin
             contentEditable={
               <ContentEditable
-                aria-role="Comment Editor"
+                aria-label="Comment Editor"
                 className="outline-none resize-none w-full flex-1"
               />
             }

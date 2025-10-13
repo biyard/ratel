@@ -5,6 +5,7 @@ import { CONFIGS } from '../../../tests/config';
 test.describe('Create Post - Authenticated User', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
   });
 
   test('should create a general post successfully', async ({ page }) => {
@@ -16,7 +17,7 @@ test.describe('Create Post - Authenticated User', () => {
       'auto-save, and final publication. This content is intentionally long to ' +
       'meet the minimum character requirements for post publishing.';
 
-    await click(page, { text: 'Create Post' });
+    await click(page, { label: 'Create Post' });
     await fill(page, { placeholder: 'Write a title...' }, testTitle);
     await fill(page, { label: 'general-post-editor' }, testContent);
 

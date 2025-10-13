@@ -1,4 +1,4 @@
-const timeout = 30000;
+const timeout = 5000;
 export const CONFIGS = {
   PAGE_WAIT_TIME: timeout,
   MODAL_WAIT_TIME: timeout,
