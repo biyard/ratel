@@ -2,11 +2,12 @@ import { useParams } from 'react-router';
 import { SpaceHeaderProvider } from '../../_components/header/provider';
 import SpaceHeader from '../../_components/header';
 import { useDeliberationSpaceController } from './use-deliberation-space-controller';
-import { DeliberationTab, DeliberationTabType } from './types';
+import { DeliberationTab } from './types';
 import SpaceSideMenu from './components/space_side_menu';
 import ThreadPage from './components/tab/thread';
 import FinalConsensusPage from './components/tab/recommendation';
 import { DeliberationSurveyPage } from './components/tab/poll';
+import DeliberationPage from './components/tab/deliberation';
 
 export default function DeliberationSpacePage() {
   const { spacePk } = useParams<{ spacePk: string }>();
@@ -30,7 +31,12 @@ export default function DeliberationSpacePage() {
             {ctrl.selectedType == DeliberationTab.SUMMARY ? (
               <ThreadPage thread={ctrl.thread} setThread={ctrl.setThread} />
             ) : ctrl.selectedType == DeliberationTab.DELIBERATION ? (
-              <div className="text-white">deliberation</div>
+              <DeliberationPage
+                space={ctrl.space}
+                deliberation={ctrl.deliberation}
+                setDeliberation={ctrl.setDeliberation}
+                handleViewRecord={ctrl.handleViewRecord}
+              />
             ) : ctrl.selectedType == DeliberationTab.POLL ? (
               <DeliberationSurveyPage
                 space={ctrl.space}
