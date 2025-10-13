@@ -136,7 +136,11 @@ export class DeliberationSpaceController {
   handleDelete = () => this.deps.handlers.handleDelete();
 
   onSave = async (title: string, html_content: string) => {
-    await this.deps.handlers.handleUpdateQuick(title, html_content);
+    logger.debug('html contents: ', html_content);
+    await this.deps.handlers.handleUpdateQuick(
+      title,
+      this.thread.html_contents,
+    );
   };
 }
 
@@ -300,7 +304,7 @@ function buildDeps(spacePk: string) {
     const payloadRecommendationFiles = recommendation_files.map(toBackendFile);
 
     await mutation.mutateAsync({
-      spacePk: recalSpacePk,
+      spacePk,
       html_contents,
       files: payloadFiles,
       discussions,

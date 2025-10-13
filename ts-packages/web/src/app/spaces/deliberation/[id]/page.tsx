@@ -4,6 +4,8 @@ import SpaceHeader from '../../_components/header';
 import { useDeliberationSpaceController } from './use-deliberation-space-controller';
 import { DeliberationTab, DeliberationTabType } from './types';
 import SpaceSideMenu from './components/space_side_menu';
+import ThreadPage from './components/tab/thread';
+import FinalConsensusPage from './components/tab/recommendation';
 
 export default function DeliberationSpacePage() {
   const { spacePk } = useParams<{ spacePk: string }>();
@@ -25,13 +27,13 @@ export default function DeliberationSpacePage() {
         <div className="flex-1 flex w-full">
           <div className="flex flex-row w-full gap-5">
             {ctrl.selectedType == DeliberationTab.SUMMARY ? (
-              <div className="text-white">thread</div>
+              <ThreadPage thread={ctrl.thread} setThread={ctrl.setThread} />
             ) : ctrl.selectedType == DeliberationTab.DELIBERATION ? (
               <div className="text-white">deliberation</div>
             ) : ctrl.selectedType == DeliberationTab.POLL ? (
               <div className="text-white">poll</div>
             ) : ctrl.selectedType == DeliberationTab.RECOMMANDATION ? (
-              <div className="text-white">final consensus</div>
+              <FinalConsensusPage draft={ctrl.draft} setDraft={ctrl.setDraft} />
             ) : (
               <div className="text-white">analyze</div>
             )}

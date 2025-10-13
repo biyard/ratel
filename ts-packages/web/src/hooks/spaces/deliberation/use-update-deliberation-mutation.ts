@@ -9,7 +9,7 @@ import {
 import { showErrorToast } from '@/lib/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
-type Vars = {
+type SpaceProps = {
   spacePk: string;
   html_contents: string;
   files: BackendFile[];
@@ -28,7 +28,7 @@ export function useUpdateDeliberationMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (vars: Vars) => {
+    mutationFn: async (vars: SpaceProps) => {
       const {
         spacePk,
         html_contents,
