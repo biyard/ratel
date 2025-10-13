@@ -115,6 +115,7 @@ export function Comment({ comment, onComment, onLike, t }: CommentProps) {
           </div>
           {/* Like Button */}
           <button
+            aria-label="Like Comment"
             className="flex flex-row gap-2 justify-center items-center"
             onClick={() => {
               if (onLike) {

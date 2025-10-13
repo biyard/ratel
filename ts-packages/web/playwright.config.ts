@@ -23,7 +23,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['html', { host: '0.0.0.0', port: 8900 }]],
+  reporter: [['html', { open: 'never', host: '0.0.0.0', port: 8900 }]],
   timeout: CONFIGS.PLAYWRIGHT.TIMEOUT,
   /* Global setup and teardown */
   // globalSetup: require.resolve("./tests/global-setup"),

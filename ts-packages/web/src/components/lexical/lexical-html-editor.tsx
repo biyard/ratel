@@ -42,7 +42,6 @@ import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
 import FileUploader from '@/components/file-uploader';
 import { logger } from '@/lib/logger';
 
-
 import { Button } from '../ui/button';
 import { CommentIcon } from '../icons';
 
@@ -275,7 +274,10 @@ export const LexicalHtmlEditor = forwardRef<
         <div className="relative flex flex-1 text-text-primary">
           <RichTextPlugin
             contentEditable={
-              <ContentEditable className="outline-none resize-none w-full flex-1" />
+              <ContentEditable
+                aria-role="Comment Editor"
+                className="outline-none resize-none w-full flex-1"
+              />
             }
             placeholder={
               <div className="absolute text-neutral-500 pointer-events-none select-none">
@@ -320,6 +322,7 @@ export const LexicalHtmlEditor = forwardRef<
           <ToolbarPlugin onImageUpload={(url) => setImage(url)} />
           <div>
             <Button
+              aria-label="Publish"
               variant="rounded_primary"
               size="default"
               onClick={handleSubmit}

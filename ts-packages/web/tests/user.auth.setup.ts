@@ -32,7 +32,9 @@ test('create storage state', async ({ page }) => {
   const tosCheckbox = page.locator('label[for="agree_checkbox"]');
   await tosCheckbox.click();
   await page.getByRole('button', { name: /finished sign-up/i }).click();
-  await expect(page.getByText(/start/i)).toBeVisible();
+
+  // Wait for redirect to home page after signup
+  await page.waitForURL('/', { timeout: CONFIGS.PAGE_WAIT_TIME });
 
   // Save Playwright storage state for authenticated tests
   await page.context().storageState({ path: 'user.json' });
