@@ -4,8 +4,16 @@ import { checkString } from '@/lib/string-filter-utils';
 
 export default function TeamMembers({ username }: { username: string }) {
   const query = useTeamMembers(username);
-  const membersData = query.data;
 
+  if (query.isLoading) {
+    return <div className="flex justify-center p-8">Loading members...</div>;
+  }
+
+  if (query.error) {
+    return <div className="flex justify-center p-8 text-red-500">Error loading members</div>;
+  }
+
+  const membersData = query.data;
   const members = membersData?.members?.filter(
     (member) =>
       member !== undefined &&

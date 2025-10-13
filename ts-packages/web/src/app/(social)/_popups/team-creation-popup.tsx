@@ -9,9 +9,7 @@ import {
   InvalidLowerAlphaNumeric,
   InvalidTooShort,
 } from '@/errors';
-import { createTeamRequest } from '@/lib/api/models/team';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { useApiCall } from '@/lib/api/use-send';
+import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
@@ -24,7 +22,6 @@ import { useUserInfo } from '@/hooks/use-user-info';
 export default function TeamCreationPopup() {
   const { t } = useTranslation('Home');
   const popup = usePopup();
-  const { post } = useApiCall();
   const userInfo = useUserInfo();
 
   const [profileUrl, setProfileUrl] = useState('');
@@ -46,14 +43,22 @@ export default function TeamCreationPopup() {
       showErrorToast('Please remove the test keyword');
       return;
     }
-    logger.debug('Team creation button clicked');
-    await post(
-      ratelApi.teams.createTeam(),
-      createTeamRequest(profileUrl, username, nickname, htmlContents),
-    );
-    userInfo.refetch();
-
-    popup.close();
+    
+    try {
+      logger.debug('Team creation button clicked');
+      await teamsV3Api.createTeam({
+        username,
+        nickname,
+        profile_url: profileUrl,
+        description: htmlContents,
+      });
+      
+      userInfo.refetch();
+      popup.close();
+    } catch (error) {
+      logger.error('Failed to create team:', error);
+      showErrorToast('Failed to create team. Please try again.');
+    }
   };
 
   const handleUsername = async (evt: React.FormEvent<HTMLInputElement>) => {

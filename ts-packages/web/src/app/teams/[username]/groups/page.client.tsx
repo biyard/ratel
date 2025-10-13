@@ -28,14 +28,22 @@ export default function TeamGroups({ username }: { username: string }) {
   const popup = usePopup();
   const queryClient = useQueryClient();
 
+  // Get permissions directly from v3 API using individual hooks - must be called before early returns
+  const canCreateGroup = useCanCreateGroup(teamDetailQuery.data?.id || '');
+  const canDeleteGroup = useCanDeleteGroup(teamDetailQuery.data?.id || '');
+
+  if (teamDetailQuery.isLoading) {
+    return <div className="flex justify-center p-8">Loading team...</div>;
+  }
+
+  if (teamDetailQuery.error) {
+    return <div className="flex justify-center p-8 text-red-500">Error loading team</div>;
+  }
+
   const teamDetail = teamDetailQuery.data;
 
   // Use v3 groups directly - no more legacy conversion
   const groups = teamDetail?.groups ?? [];
-
-  // Get permissions directly from v3 API using individual hooks
-  const canCreateGroup = useCanCreateGroup(teamDetail?.id || '');
-  const canDeleteGroup = useCanDeleteGroup(teamDetail?.id || '');
   
   console.log('DEBUG: Using v3 permissions API');
   console.log('DEBUG: canCreateGroup:', canCreateGroup.data);
@@ -45,7 +53,11 @@ export default function TeamGroups({ username }: { username: string }) {
     if (!teamDetail) return;
 
     try {
-      await teamsV3Api.deleteGroup(teamDetail.id, groupSk);
+      // Extract the UUID from groupSk (format: TEAM_GROUP#uuid)
+      const groupId = groupSk.split('#')[1];
+      
+      // Use team username and group ID for the delete API
+      await teamsV3Api.deleteGroup(username, groupId);
       
       // Invalidate all team-related queries to ensure fresh data
       await queryClient.invalidateQueries({

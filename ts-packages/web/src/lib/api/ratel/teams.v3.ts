@@ -156,11 +156,11 @@ export async function updateTeam(
   teamPk: string,
   request: UpdateTeamRequest,
 ): Promise<TeamDetailResponse> {
-  return await call('POST', `/v3/teams/${encodeURIComponent(teamPk)}`, request);
+  return await call('PATCH', `/v3/teams/${encodeURIComponent(teamPk)}`, request);
 }
 
 export async function deleteTeam(teamPk: string): Promise<void> {
-  return await call('POST', `/v3/teams/${encodeURIComponent(teamPk)}`, {});
+  return await call('DELETE', `/v3/teams/${encodeURIComponent(teamPk)}`);
 }
 
 // Group management functions
@@ -180,10 +180,10 @@ export async function updateGroup(
 }
 
 export async function deleteGroup(
-  teamPk: string,
-  groupSk: string,
+  teamUsername: string,
+  groupId: string,
 ): Promise<void> {
-  return await call('DELETE', `/v3/teams/${encodeURIComponent(teamPk)}/groups/${encodeURIComponent(groupSk)}`, {});
+  return await call('DELETE', `/v3/teams/${encodeURIComponent(teamUsername)}/groups/${encodeURIComponent(groupId)}`, {});
 }
 
 // Member management functions

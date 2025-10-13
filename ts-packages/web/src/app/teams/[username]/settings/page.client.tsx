@@ -50,6 +50,14 @@ export default function SettingsPage({ username }: { username: string }) {
 
   // Get permissions directly from v3 API
   const canManageTeam = useCanManageTeam(teamDetailQuery.data?.id || '');
+
+  if (teamDetailQuery.isLoading) {
+    return <div className="flex justify-center p-8">Loading team settings...</div>;
+  }
+
+  if (teamDetailQuery.error) {
+    return <div className="flex justify-center p-8 text-red-500">Error loading team settings</div>;
+  }
   
   const deleteTeamPermission = canManageTeam.data ?? false;
 
