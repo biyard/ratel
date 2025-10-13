@@ -43,7 +43,7 @@ export default function DeliberationSpacePage() {
               <DeliberationAnalyzePage />
             )}
 
-            <SpaceSideMenu space={space.data} />
+            {/* <SpaceSideMenu space={space.data} /> */}
           </div>
         </div>
       </div>

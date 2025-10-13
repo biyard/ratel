@@ -12,6 +12,62 @@ export function getDeliberationSpace(
   return call('GET', `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}`);
 }
 
+export function deleteDeliberationSpace(
+  spacePk: string,
+): Promise<DeleteDeliberationResponse> {
+  return call(
+    'POST',
+    `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}/delete`,
+    {},
+  );
+}
+
+export function updateDeliberationSpace(
+  spacePk: string,
+
+  html_contents: string,
+  files: BackendFile[],
+
+  discussions: NewDiscussionCreateRequest[],
+  elearning_files: BackendFile[],
+
+  surveys: NewSurveyCreateRequest[],
+
+  recommendation_files: BackendFile[],
+
+  visibility: SpaceVisibility,
+  started_at: number,
+  ended_at: number,
+  title?: string,
+  recommendation_html_contents?: string,
+): Promise<DeliberationSpaceResponse> {
+  return call(
+    'POST',
+    `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}`,
+    {
+      title,
+      html_contents,
+      files,
+
+      discussions,
+      elearning_files,
+
+      surveys,
+
+      recommendation_files,
+      recommendation_html_contents,
+
+      visibility: visibility == 'PUBLIC' ? 'Public' : 'Private',
+      started_at,
+      ended_at,
+    },
+  );
+}
+
+export interface DeleteDeliberationResponse {
+  space_pk: string;
+}
+
 // FIXME: separate each file under types
 export interface DeliberationSpaceResponse extends SpaceCommon {
   info: DeliberationSpace;
@@ -118,7 +174,7 @@ export const FileExtensionMap: Record<FileExtension, string> = {
   [FileExtension.MOV]: 'MOV',
 };
 
-type BackendFile = Omit<File, 'ext'> & { ext: string };
+export type BackendFile = Omit<File, 'ext'> & { ext: string };
 
 export const toBackendFile = (f: File): BackendFile => ({
   ...f,
