@@ -12,6 +12,7 @@ export default function CreatePostButton({ team_pk }: { team_pk?: string }) {
 
   return (
     <button
+      aria-label="Create Post"
       className="cursor-pointer flex flex-row w-full justify-start items-center gap-1 bg-create-button-bg rounded-[100px] px-4 py-3 mb-[10px] aria-hidden:hidden"
       aria-hidden={!loggedIn}
       onClick={async () => {

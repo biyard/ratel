@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router';
 import RootLayout from './app/layout';
-import HomePage from './app/(social)/page';
+import HomePage from './app/(social)/home-page';
 import SocialLayout from './app/(social)/layout';
 import { ErrorBoundary } from './components/error-boundary';
 import MyPostsPage from './app/(social)/my-posts/page';

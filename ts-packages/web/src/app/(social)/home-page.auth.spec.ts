@@ -1,10 +1,10 @@
 import { expect, test } from '@playwright/test';
 import { click, fill } from '@tests/utils';
+import { CONFIGS } from '../../../tests/config';
 
 test.describe('Create Post - Authenticated User', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
   });
 
   test('should create a general post successfully', async ({ page }) => {
@@ -22,20 +22,16 @@ test.describe('Create Post - Authenticated User', () => {
 
     await click(page, { label: 'Publish' });
 
-    await page.waitForURL(/\/threads\/.+/, { timeout: 15000 });
+    await page.waitForURL(/\/threads\/.+/, { timeout: CONFIGS.PAGE_WAIT_TIME });
   });
 });
 
 test.describe('Home page - Authenticated User', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.waitForLoadState('networkidle');
   });
 
   test('should load more posts when scrolling', async ({ page }) => {
-    // Wait for initial posts to load
-    await page.waitForTimeout(3000);
-
     // Count initial posts
     const initialPosts = await page
       .locator('[key*="feed-"]')
@@ -47,7 +43,7 @@ test.describe('Home page - Authenticated User', () => {
       await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
 
       // Wait for new posts to potentially load
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(CONFIGS.PAGE_WAIT_TIME);
 
       // Check if more posts loaded
       const newPostCount = await page

@@ -55,6 +55,7 @@ export default function ThreadHeader(props: ThreadHeaderProps) {
         <div className="flex items-center justify-end w-full gap-4">
           {/* Feed Stats */}
           <button
+            aria-label="Like Post"
             onClick={handleLikePost}
             className={`flex items-center gap-1 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50`}
           >
