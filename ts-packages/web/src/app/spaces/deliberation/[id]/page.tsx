@@ -8,6 +8,7 @@ import ThreadPage from './components/tab/thread';
 import FinalConsensusPage from './components/tab/recommendation';
 import { DeliberationSurveyPage } from './components/tab/poll';
 import DeliberationPage from './components/tab/deliberation';
+import DeliberationAnalyzePage from './components/tab/analyze';
 
 export default function DeliberationSpacePage() {
   const { spacePk } = useParams<{ spacePk: string }>();
@@ -29,43 +30,18 @@ export default function DeliberationSpacePage() {
         <div className="flex-1 flex w-full">
           <div className="flex flex-row w-full gap-5">
             {ctrl.selectedType == DeliberationTab.SUMMARY ? (
-              <ThreadPage thread={ctrl.thread} setThread={ctrl.setThread} />
+              <ThreadPage {...ctrl.threadProps} />
             ) : ctrl.selectedType == DeliberationTab.DELIBERATION ? (
-              <DeliberationPage
-                space={ctrl.space}
-                deliberation={ctrl.deliberation}
-                setDeliberation={ctrl.setDeliberation}
-                handleViewRecord={ctrl.handleViewRecord}
-              />
+              <DeliberationPage {...ctrl.deliberationProps} />
             ) : ctrl.selectedType == DeliberationTab.POLL ? (
-              <DeliberationSurveyPage
-                space={ctrl.space}
-                startedAt={ctrl.startedAt}
-                endedAt={ctrl.endedAt}
-                survey={ctrl.survey}
-                answer={ctrl.answer}
-                setStartDate={ctrl.setStartDate}
-                setEndDate={ctrl.setEndDate}
-                setSurvey={ctrl.setSurvey}
-                setAnswers={ctrl.setAnswersForSubmit}
-                handleSend={ctrl.handleSend}
-              />
+              <DeliberationSurveyPage {...ctrl.deliberationSurveyProps} />
             ) : ctrl.selectedType == DeliberationTab.RECOMMANDATION ? (
-              <FinalConsensusPage draft={ctrl.draft} setDraft={ctrl.setDraft} />
+              <FinalConsensusPage {...ctrl.finalConsensusProps} />
             ) : (
-              <div className="text-white">analyze</div>
+              <DeliberationAnalyzePage {...ctrl.deliberationAnalyzeProps} />
             )}
 
-            <SpaceSideMenu
-              space={ctrl.space}
-              deliberation={ctrl.deliberation}
-              selectedType={ctrl.selectedType}
-              handleUpdateSelectedType={ctrl.setSelectedType}
-              startedAt={ctrl.startedAt}
-              endedAt={ctrl.endedAt}
-              handleUpdateStartDate={ctrl.setStartDate}
-              handleUpdateEndDate={ctrl.setEndDate}
-            />
+            <SpaceSideMenu {...ctrl.spaceSidemenuProps} />
           </div>
         </div>
       </div>

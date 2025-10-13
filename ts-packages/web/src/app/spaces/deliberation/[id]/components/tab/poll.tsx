@@ -10,6 +10,22 @@ import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 import { Poll } from '../../types';
 import { SurveyAnswer } from '@/app/spaces/[id]/type';
 import { Answer } from '@/lib/api/models/response';
+import { TFunction } from 'i18next';
+
+export type DeliberationSurveyPageProps = {
+  t: TFunction<'DeliberationSpace', undefined>;
+  space: DeliberationSpaceResponse;
+  startedAt: number;
+  endedAt: number;
+  survey: Poll;
+  answer: SurveyAnswer;
+
+  setStartDate: (startedAt: number) => void;
+  setEndDate: (endedAt: number) => void;
+  setSurvey: (survey: Poll) => void;
+  setAnswers: (answers: Answer[]) => void;
+  handleSend: () => Promise<void>;
+};
 
 export function DeliberationSurveyPage({
   space,
@@ -22,19 +38,7 @@ export function DeliberationSurveyPage({
   setSurvey,
   setAnswers,
   handleSend,
-}: {
-  space: DeliberationSpaceResponse;
-  startedAt: number;
-  endedAt: number;
-  survey: Poll;
-  answer: SurveyAnswer;
-
-  setStartDate: (startedAt: number) => void;
-  setEndDate: (endedAt: number) => void;
-  setSurvey: (survey: Poll) => void;
-  setAnswers: (answers: Answer[]) => void;
-  handleSend: () => Promise<void>;
-}) {
+}: DeliberationSurveyPageProps) {
   const store = useSpaceHeaderStore();
   const isEdit = store.isEditingMode;
   const popup = usePopup();
