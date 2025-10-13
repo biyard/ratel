@@ -9,7 +9,6 @@ import useFeedById from '@/hooks/feeds/use-feed-by-id';
 
 import {
   File,
-  responseCreateRequest,
   SpacePublishState,
   toBackendFile,
   SurveyResponseResponse,
@@ -42,6 +41,7 @@ import { SpaceVisibilityValue } from '@/types/space-common';
 import { SpaceVisibility as UiVisibility } from '@/types/space-common';
 import { SpaceVisibility as ApiVisibility } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
 import { useUpdateDeliberationMutation } from '@/hooks/spaces/deliberation/use-update-deliberation-mutation';
+import { useSendDeliberationResponseMutation } from '@/hooks/spaces/deliberation/use-send-response-mutation';
 
 export class DeliberationSpaceController {
   private deps: ReturnType<typeof buildDeps>;
@@ -225,6 +225,7 @@ export function useDeliberationSpaceController(
 
 function buildDeps(spacePk: string) {
   const mutation = useUpdateDeliberationMutation();
+  const resMutation = useSendDeliberationResponseMutation();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { post } = useApiCall();
@@ -491,17 +492,17 @@ function buildDeps(spacePk: string) {
     }
 
     try {
-      await post(
-        ratelApi.responses.deliberation_response_answer(recalSpacePk),
-        responseCreateRequest(space.surveys.pk, a),
-      );
+      await resMutation.mutateAsync({
+        spacePk: recalSpacePk,
+        survey_pk: space.surveys.pk,
+        answers: a,
+      });
       queryClient.invalidateQueries({
         queryKey: [QK_GET_DELIBERATION_SPACE_BY_SPACE_ID, recalSpacePk],
       });
       window.location.reload();
       showSuccessToast(t('success_save_response'));
     } catch (err) {
-      showErrorToast(t('failed_save_response'));
       logger.error('failed to create response with error: ', err);
     }
   };
