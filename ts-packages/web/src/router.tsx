@@ -91,12 +91,12 @@ export const routes = createBrowserRouter([
       // Space Layout
       {
         id: 'space-layout',
-        path: 'spaces/:spacePk',
+        path: 'spaces',
         Component: SpaceLayout,
         children: [
           {
             id: 'poll-space',
-            path: 'poll',
+            path: 'poll/:spacePk',
             Component: PollSpacePage,
           },
         ],

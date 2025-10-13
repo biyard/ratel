@@ -140,7 +140,7 @@ export default function FeedCard(props: FeedCardProps) {
   };
 
   const href = post.space_pk
-    ? route.space(post.space_pk)
+    ? route.spaceByType(post.space_type, post.space_pk)
     : route.threadByFeedId(post.pk);
 
   return (
@@ -254,7 +254,9 @@ export function IconText({
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
   return (
     <Row
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-text-primary text-[15px] px-3 py-3 ${className || ''}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-text-primary text-[15px] px-3 py-3 ${
+        className || ''
+      }`}
       {...props}
     >
       {children}
@@ -414,13 +416,15 @@ export function FeedFooter({
 
   return (
     <Row
-      className={`items-center justify-between border-t w-full px-5 ${space_id && space_type ? 'border-divider' : 'border-divider'} `}
+      className={`items-center justify-between border-t w-full px-5 ${
+        space_id && space_type ? 'border-divider' : 'border-divider'
+      } `}
     >
       {space_id && space_type ? (
         <div className="max-tablet:!hidden">
           <JoinNowButton
             onClick={() => {
-              nav(route.space(space_id));
+              nav(route.spaceByType(space_type, space_id));
             }}
           />
         </div>
@@ -428,7 +432,11 @@ export function FeedFooter({
         <div></div>
       )}
       <div
-        className={`flex flex-row ${space_id && space_type ? 'w-fit items-center max-tablet:!w-full max-tablet:!justify-between max-tablet:!items-center' : 'w-full justify-between items-center'}`}
+        className={`flex flex-row ${
+          space_id && space_type
+            ? 'w-fit items-center max-tablet:!w-full max-tablet:!justify-between max-tablet:!items-center'
+            : 'w-full justify-between items-center'
+        }`}
       >
         <IconText
           onClick={(evt) => {
