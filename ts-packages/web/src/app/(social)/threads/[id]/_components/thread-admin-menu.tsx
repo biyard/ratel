@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Extra, Palace } from '@/components/icons';
+import { logger } from '@/lib/logger';
 
 export type ThreadAdminMenuProps = {
   t: TFunction<'Thread', undefined>;
@@ -32,11 +33,14 @@ export default function ThreadAdminMenu(props: ThreadAdminMenuProps) {
 
   if (!isPostOwner || (!canDelete && !canEdit)) return null;
 
+  logger.debug('Rendering ThreadAdminMenu:', props);
+
   return (
-    <div className="flex items-center space-x-2.5">
+    <div aria-label="Post Admin Menu" className="flex items-center space-x-2.5">
       {canEdit && (
         <>
           <Button
+            aria-label="Edit Post"
             variant="rounded_secondary"
             className="rounded-md max-tablet:hidden text-sm px-3 py-1.5 text-button-text bg-button-bg hover:bg-button-bg/80"
             onClick={handleEditPost}
@@ -52,6 +56,7 @@ export default function ThreadAdminMenu(props: ThreadAdminMenuProps) {
                 {t('make_public')}
               </Button> */}
           <Button
+            aria-label="Create Space"
             variant="rounded_primary"
             onClick={handleCreateSpace}
             className="max-tablet:hidden bg-submit-button-bg hover:bg-submit-button-bg/80 text-sm px-3 py-1.5 text-submit-button-text"
@@ -62,7 +67,10 @@ export default function ThreadAdminMenu(props: ThreadAdminMenuProps) {
         </>
       )}
 
-      <DesktopContextMenus className="block min-tablet:hidden" {...props} />
+      {canDelete && (
+        <DesktopContextMenus className="block max-tablet:hidden" {...props} />
+      )}
+
       <MobileContextMenus className="hidden max-tablet:block" {...props} />
     </div>
   );
@@ -83,7 +91,7 @@ export function DesktopContextMenus({
           <button
             className="p-1 hover:bg-hover rounded-full focus:outline-none transition-colors"
             aria-haspopup="true"
-            aria-label="Post options"
+            aria-label="Post options for desktop"
           >
             <Extra className="size-6 text-gray-400" />
           </button>
@@ -94,6 +102,7 @@ export function DesktopContextMenus({
         >
           <DropdownMenuItem>
             <button
+              aria-label="Delete Post"
               onClick={handleDeletePost}
               className="flex items-center w-full px-4 max-tablet:justify-start max-tablet:gap-1 max-tablet:hover:bg-transparent max-tablet:px-0 py-2 text-sm text-red-400 hover:bg-gray-700 cursor-pointer"
             >
@@ -123,7 +132,7 @@ export function MobileContextMenus({
           <button
             className="p-1 hover:bg-hover rounded-full focus:outline-none transition-colors"
             aria-haspopup="true"
-            aria-label="Post options"
+            aria-label="Post options for mobile"
           >
             <Extra className="size-6 text-gray-400" />
           </button>

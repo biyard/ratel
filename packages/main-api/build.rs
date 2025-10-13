@@ -24,10 +24,6 @@ fn main() {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
     let dist_dst = manifest_dir.join("dist");
     let assets_dir = dist_dst.join("assets");
-    let css = newest_match(&format!("{}/index-*.css", assets_dir.display()))
-        .expect("no index-*.css found");
-    let js =
-        newest_match(&format!("{}/index-*.js", assets_dir.display())).expect("no index-*.js found");
 
     if env::var("WEB_BUILD").unwrap_or_default() != "false"
         || !fs::exists(&dist_dst).unwrap_or_default()
@@ -55,9 +51,15 @@ fn main() {
 
         println!("cargo:rerun-if-changed={}", web_dir.display());
         println!("cargo:rerun-if-changed={}", assets_dir.display());
-        println!("cargo:rerun-if-changed={}", css.display());
-        println!("cargo:rerun-if-changed={}", js.display());
     }
+
+    let css = newest_match(&format!("{}/index-*.css", assets_dir.display()))
+        .expect("no index-*.css found");
+    let js =
+        newest_match(&format!("{}/index-*.js", assets_dir.display())).expect("no index-*.js found");
+
+    println!("cargo:rerun-if-changed={}", css.display());
+    println!("cargo:rerun-if-changed={}", js.display());
 
     println!(
         "cargo:rustc-env=WEB_INDEX_CSS={}",
