@@ -2,8 +2,9 @@ import { route } from '@/route';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 
-export default function NotFound() {
+export default function ThreadNotFound() {
   const { t } = useTranslation('Threads');
+
   return (
     <div className="flex flex-col items-center w-full">
       <h1 className="text-4xl font-bold mb-4">{t('not_found_title')}</h1>

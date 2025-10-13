@@ -4,7 +4,6 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import enNav from './en/Nav.json';
 import enSignIn from './en/SignIn.json';
 import enSignup from './en/Signup.json';
-import enThreads from './en/Threads.json';
 import enSpaceForms from './en/SpaceForms.json';
 import enHome from './en/Home.json';
 import enTeam from './en/Team.json';
@@ -25,7 +24,6 @@ import enEditArtworkPost from './en/EditArtworkPost.json';
 import koNav from './ko/Nav.json';
 import koSignIn from './ko/SignIn.json';
 import koSignup from './ko/Signup.json';
-import koThreads from './ko/Threads.json';
 import koSpaceForms from './ko/SpaceForms.json';
 import koHome from './ko/Home.json';
 import koTeam from './ko/Team.json';
@@ -42,6 +40,7 @@ import koSpaceUnsaveModal from './ko/SpaceUnsaveModal.json';
 import koSpacePublishModal from './ko/SpacePublishModal.json';
 import koSpaceMakePublicModal from './ko/SpaceMakePublicModal.json';
 import koEditArtworkPost from './ko/EditArtworkPost.json';
+import { i18nThreadPage } from '@/app/(social)/threads/[id]/thread-page-i18n';
 
 export const LANGUAGES = ['en', 'ko'];
 
@@ -50,7 +49,6 @@ export const resources = {
     Nav: enNav,
     SignIn: enSignIn,
     Signup: enSignup,
-    Threads: enThreads,
     SpaceForms: enSpaceForms,
     Home: enHome,
     Team: enTeam,
@@ -72,7 +70,6 @@ export const resources = {
     Nav: koNav,
     SignIn: koSignIn,
     Signup: koSignup,
-    Threads: koThreads,
     SpaceForms: koSpaceForms,
     Home: koHome,
     Team: koTeam,
@@ -91,6 +88,11 @@ export const resources = {
     EditArtworkPost: koEditArtworkPost,
   },
 };
+
+Object.entries({ Threads: i18nThreadPage }).forEach(([key, value]) => {
+  resources.en[key] = value.en;
+  resources.ko[key] = value.ko;
+});
 
 i18next.use(LanguageDetector).use(initReactI18next);
 
