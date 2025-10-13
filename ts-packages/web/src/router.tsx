@@ -17,6 +17,7 @@ import SpaceLayout from './app/spaces/layout';
 import PollSpacePage from './app/spaces/poll/[id]/page';
 import { TestReportPage } from './app/test-report/test-report-page';
 import { StorybookPage } from './app/storybook/stroybook-page';
+import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
 
 export const routes = createBrowserRouter([
   {
@@ -63,6 +64,7 @@ export const routes = createBrowserRouter([
             id: 'thread-page',
             path: 'threads/:post_id',
             Component: ThreadPage,
+            ErrorBoundary: ThreadNotFound,
           },
 
           // My network
