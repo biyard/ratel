@@ -1,4 +1,5 @@
 import { RelationType } from './types/relation-type';
+import { SpaceType } from './types/space-type';
 
 export const route = {
   home: () => '/',
@@ -24,6 +25,7 @@ export const route = {
   teamSettings: (username: string) => `/teams/${username}/settings`,
   teamDrafts: (username: string) => `/teams/${username}/drafts`,
   space: (spaceId: number | string) => `/spaces/${encodeURIComponent(spaceId)}`,
+
   commiteeSpaceById: (spaceId: number | string) =>
     `/spaces/${encodeURIComponent(spaceId)}`,
   deliberationSpaceById: (spaceId: number | string) =>
@@ -36,9 +38,19 @@ export const route = {
   discussionById: (spaceId: number, discussionId: number) =>
     `/spaces/${spaceId}/discussions/${discussionId}`,
 
-  pollSpaceByPk: (pollPk: string) => {
-    return `spaces/poll/${encodeURIComponent(pollPk)}`;
+  spaceByType: (spaceType: SpaceType, spaceId: number | string) => {
+    switch (spaceType) {
+      case SpaceType.Poll:
+        return `/spaces/poll/${encodeURIComponent(spaceId)}`;
+      case SpaceType.Notice:
+        return `/spaces/notice/${encodeURIComponent(spaceId)}`;
+      case SpaceType.Deliberation:
+        return `/spaces/deliberation/${encodeURIComponent(spaceId)}`;
+      default:
+        throw new Error(`Unknown space type: ${spaceType}`);
+    }
   },
+
   telegramSprintLeague: (space_id: number | string) =>
     `/telegram/sprint-league/${encodeURIComponent(space_id)}`,
   telegramSubscribe: (chat_id: number, lang?: string) => {

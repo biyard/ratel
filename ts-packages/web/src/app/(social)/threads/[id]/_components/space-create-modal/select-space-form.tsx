@@ -101,13 +101,8 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
         booster: boosterType,
       });
 
-      switch (spaceType) {
-        case SpaceType.Poll:
-          navigate(route.pollSpaceByPk(space_pk));
-          break;
-        default:
-          navigate(route.space(space_pk));
-      }
+      navigate(route.spaceByType(spaceType, space_pk));
+
       popup.close();
     } catch {
       logger.error('Error creating space');
