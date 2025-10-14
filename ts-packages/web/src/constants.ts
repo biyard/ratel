@@ -101,4 +101,6 @@ const QK_DISCUSSION = 'discussions';
 export const discussionKeys = {
   detail: (spacePk: string, discussionPk: string) =>
     [QK_DISCUSSION, spacePk, discussionPk] as const,
+  meeting: (spacePk: string, discussionPk: string) =>
+    [QK_DISCUSSION, 'meeting', spacePk, discussionPk] as const,
 };

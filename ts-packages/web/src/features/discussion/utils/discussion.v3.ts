@@ -1,3 +1,4 @@
+import { AttendeeInfo, MeetingInfo } from '@/lib/api/models/meeting';
 import { call } from '@/lib/api/ratel/call';
 
 export type PartitionString = string;
@@ -9,6 +10,16 @@ export function getDiscussionById(
   return call(
     'GET',
     `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}`,
+  );
+}
+
+export function getMeetingByDiscussionId(
+  spacePk: string,
+  discussionPk: string,
+): Promise<MeetingData> {
+  return call(
+    'GET',
+    `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}/meeting`,
   );
 }
 
@@ -43,6 +54,19 @@ export function discussionExitMeeting(
     `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}/exit-meeting`,
     {},
   );
+}
+
+export interface MeetingData {
+  meeting: MeetingInfo;
+  attendee: AttendeeInfo;
+  participants: DiscussionUser[];
+}
+
+export interface DiscussionUser {
+  user_pk: string;
+  author_display_name: string;
+  author_profile_url: string;
+  author_username: string;
 }
 
 export interface DeliberationDiscussionResponse {
