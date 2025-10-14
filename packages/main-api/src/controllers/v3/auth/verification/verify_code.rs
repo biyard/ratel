@@ -5,10 +5,7 @@ use crate::{
     utils::time::get_now_timestamp,
 };
 use bdk::prelude::*;
-use dto::{
-    JsonSchema, aide,
-    by_axum::axum::extract::{Json, State},
-};
+use by_axum::axum::extract::{Json, State};
 use serde::Deserialize;
 
 #[derive(Debug, Clone, serde::Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]

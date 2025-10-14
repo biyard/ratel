@@ -7,8 +7,9 @@ use crate::{
     },
     types::{EntityType, Partition},
 };
+use bdk::prelude::*;
 use bdk::prelude::axum::extract::{Json, Path, State};
-use dto::aide::NoApi;
+use aide::NoApi;
 
 pub async fn get_discussion_handler(
     State(AppState { dynamo, .. }): State<AppState>,

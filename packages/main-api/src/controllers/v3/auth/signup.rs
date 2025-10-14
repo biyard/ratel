@@ -13,12 +13,9 @@ use crate::{
     },
 };
 use bdk::prelude::*;
-use dto::{
-    JsonSchema, aide,
-    by_axum::axum::{
-        Extension,
-        extract::{Json, State},
-    },
+use by_axum::axum::{
+    Extension,
+    extract::{Json, State},
 };
 use serde::Deserialize;
 use tower_sessions::Session;

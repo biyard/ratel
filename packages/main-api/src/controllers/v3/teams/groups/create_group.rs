@@ -7,15 +7,15 @@ use crate::{
     types::{EntityType, TeamGroupPermission, TeamGroupPermissions},
     utils::security::{RatelResource, check_any_permission_with_user},
 };
-use dto::by_axum::{
+use by_axum::{
     aide::NoApi,
     axum::{
         Json,
         extract::{Path, State},
     },
 };
-use dto::{JsonSchema, aide, schemars};
 use serde::{Deserialize, Serialize};
+use bdk::prelude::*;
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct CreateGroupPathParams {

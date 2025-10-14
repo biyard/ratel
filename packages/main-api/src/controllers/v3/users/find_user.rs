@@ -3,12 +3,9 @@ use crate::{
     models::user::{User, UserDetailResponse, UserMetadata, UserPhoneNumber},
 };
 use bdk::prelude::*;
-use dto::{
-    JsonSchema, aide,
-    by_axum::axum::{
-        Json,
-        extract::{Query, State},
-    },
+use by_axum::axum::{
+    Json,
+    extract::{Query, State},
 };
 use serde::Deserialize;
 

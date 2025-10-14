@@ -7,7 +7,7 @@ use aws_sdk_rdsdata::{
 };
 use serde::de::DeserializeOwned;
 
-use dto::{Error, Result};
+use crate::{Error, Result};
 
 pub struct RdsClient {
     pub client: RdsDataClient,
@@ -105,7 +105,7 @@ impl RdsClient {
         T: DeserializeOwned,
     {
         let mut items = self.query::<T>(sql, parameters).await?;
-        items.pop().ok_or(Error::NotFound)
+        items.pop().ok_or(Error::NotFound("Item not found".to_string()))
     }
 
     pub async fn query_optional<T>(

@@ -10,7 +10,7 @@ use aws_sdk_rekognition::{
 };
 // use aws_sdk_textract::types::Document;
 
-use dto::{Error, Result};
+use crate::{Error, Result};
 #[derive(Clone)]
 pub struct RekognitionClient {
     client: Client,
