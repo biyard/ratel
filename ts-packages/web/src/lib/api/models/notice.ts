@@ -49,7 +49,8 @@ export const ImgFileExtension = {
   PNG: 2,
 } as const;
 
-export type ImgFileExtension = typeof ImgFileExtension[keyof typeof ImgFileExtension];
+export type ImgFileExtension =
+  (typeof ImgFileExtension)[keyof typeof ImgFileExtension];
 
 // Quiz Attempt Types (matches backend NoticeQuizAttempt)
 export interface QuizAttempt {
@@ -85,7 +86,9 @@ export function spaceSubmitQuizAnswersRequest(
   };
 }
 
-// Notice specific enums
+/**
+ * @deprecated The type are deprecated. Use BoosterType from /features/space/types/booster-type.tsx
+ */
 export const BoosterType = {
   NoBoost: 1,
   X2: 2,
@@ -93,14 +96,18 @@ export const BoosterType = {
   X100: 4,
 } as const;
 
-export type BoosterType = typeof BoosterType[keyof typeof BoosterType];
+/**
+ * @deprecated The type are deprecated. Use BoosterType from /features/space/types/booster-type.tsx
+ */
+export type BoosterType = (typeof BoosterType)[keyof typeof BoosterType];
 
 export const PublishingScope = {
   Private: 1,
   Public: 2,
 } as const;
 
-export type PublishingScope = typeof PublishingScope[keyof typeof PublishingScope];
+export type PublishingScope =
+  (typeof PublishingScope)[keyof typeof PublishingScope];
 
 // We need to import SpaceType from spaces to avoid duplication
 import { SpaceType } from './spaces';
