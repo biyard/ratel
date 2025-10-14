@@ -19,18 +19,14 @@ use crate::{
 use bdk::prelude::{by_axum::axum::Router, *};
 use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
-use dto::{
-    by_axum::auth::{authorization_middleware, set_auth_token_key},
-    sqlx::PgPool,
-    *,
-};
+use bdk::prelude::sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use tower_sessions::{
     SessionManagerLayer,
     cookie::time::{Duration, OffsetDateTime},
 };
 
-pub async fn db_init(url: &'static str, max_conn: u32) -> Result<PgPool> {
+pub async fn db_init(url: &'static str, max_conn: u32) -> PgPool {
     let url = if let Ok(host) = env::var("PGHOST") {
         let url = if let Some(at_pos) = url.rfind('@') {
             let (before_at, after_at) = url.split_at(at_pos + 1);
@@ -53,22 +49,17 @@ pub async fn db_init(url: &'static str, max_conn: u32) -> Result<PgPool> {
     let pool = PgPoolOptions::new()
         .max_connections(max_conn)
         .connect(&url)
-        .await?;
+        .await.expect("Failed to create Postgres connection pool");
 
-    Ok(pool)
+    pool
 }
 
-pub async fn api_main() -> Result<Router> {
+pub async fn api_main() -> Result<Router, crate::Error2> {
     let app = by_axum::new();
     let conf = config::get();
-    by_axum::auth::set_auth_config(conf.auth.clone());
-
-    let auth_token_key = format!("{}_auth_token", conf.env);
-    let auth_token_key = Box::leak(Box::new(auth_token_key));
-    set_auth_token_key(auth_token_key);
 
     let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
-        let pool = db_init(url, pool_size).await?;
+        let pool = db_init(url, pool_size).await;
         tracing::info!(
             "Connected to Postgres at {}",
             pool.connect_options().get_host()
@@ -108,7 +99,7 @@ pub async fn api_main() -> Result<Router> {
                 .unwrap(),
         ));
     let mcp_router = by_axum::axum::Router::new()
-        .nest_service("/mcp", controllers::mcp::route(pool.clone()).await?)
+        .nest_service("/mcp", controllers::mcp::route(pool.clone()).await.expect("MCP router"))
         .layer(middleware::from_fn(mcp_middleware));
     let bot = if let Some(token) = conf.telegram_token {
         let res = TelegramBot::new(token).await;
@@ -147,7 +138,7 @@ pub async fn api_main() -> Result<Router> {
         .merge(mcp_router)
         .merge(web)
         .merge(api_router)
-        .layer(middleware::from_fn(authorization_middleware))
+        // .layer(middleware::from_fn(authorization_middleware))
         .layer(session_layer);
 
     Ok(app)
