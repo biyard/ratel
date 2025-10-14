@@ -2,7 +2,10 @@ import type { Meta, StoryObj } from '@storybook/react';
 import SpaceHeader, { SpaceHeaderProps } from './index';
 import { Post } from '@/lib/api/ratel/posts.v3';
 import { PopupProvider } from '@/lib/contexts/popup-service';
-import { SpacePublishState, SpaceVisibility } from '@/types/space-common';
+import {
+  SpacePublishState,
+  SpaceVisibility,
+} from '@/features/spaces/types/space-common';
 import { MemoryRouter } from 'react-router';
 
 const mockPost: Post = {

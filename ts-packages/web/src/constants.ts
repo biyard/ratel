@@ -1,5 +1,5 @@
+import { SpaceType } from './features/spaces/types/space-type';
 import { FeedStatus } from './lib/api/models/feeds';
-import { SpaceType } from './types/space-type';
 
 // LocalStorage keys
 export const SK_IDENTITY_KEY = 'identity';

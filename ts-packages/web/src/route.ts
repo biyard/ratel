@@ -1,5 +1,5 @@
 import { RelationType } from './types/relation-type';
-import { SpaceType } from './types/space-type';
+import { SpaceType } from './features/spaces/types/space-type';
 
 export const route = {
   home: () => '/',
