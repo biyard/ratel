@@ -377,7 +377,7 @@ pub fn route(
                                     ),
                                 )
                                 .route(
-                                    "/:discussion_pk/start-meeting",
+                                    "/:discussion_pk",
                                     get_with(
                                         get_discussion_handler,
                                         api_docs!(

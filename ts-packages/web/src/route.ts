@@ -36,6 +36,10 @@ export const route = {
   discussionById: (spaceId: number, discussionId: number) =>
     `/spaces/${spaceId}/discussions/${discussionId}`,
 
+  discussionByPk: (spacePk: string, discussionPk: string) => {
+    `/spaces/${encodeURIComponent(spacePk)}/discussion/${encodeURIComponent(discussionPk)}`;
+  },
+
   pollSpaceByPk: (pollPk: string) => {
     return `spaces/${encodeURIComponent(pollPk)}/poll`;
   },

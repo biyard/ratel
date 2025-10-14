@@ -19,12 +19,10 @@ import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 import { logger } from '@/lib/logger';
 import NewDiscussion from './modal/new-discussion';
 import { useUserInfo } from '@/hooks/use-user-info';
-import {
-  DiscussionMemberResponse,
-  SpacePublishState,
-} from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { SpacePublishState } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { DiscussionMemberResponse } from '@/features/discussion/utils/discussion.v3';
 
 export default function SpaceDiscussion({
   space,
@@ -179,8 +177,8 @@ export function DiscussionRoom({
   const statusLabel = isUpcoming
     ? t('upcoming_discussion')
     : isFinished
-    ? t('finished_discussion')
-    : t('ongoing_discussion');
+      ? t('finished_discussion')
+      : t('ongoing_discussion');
 
   const isMember = members.some((member) => member.user_pk === userPk);
 
@@ -452,8 +450,8 @@ function EditableDiscussionInfo({
   const statusLabel = isUpcoming
     ? t('upcoming_discussion')
     : isFinished
-    ? t('finished_discussion')
-    : t('ongoing_discussion');
+      ? t('finished_discussion')
+      : t('ongoing_discussion');
 
   useEffect(() => {
     setTitle(name);

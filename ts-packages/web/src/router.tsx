@@ -19,6 +19,7 @@ import { TestReportPage } from './app/test-report/test-report-page';
 import { StorybookPage } from './app/storybook/stroybook-page';
 import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
 import DeliberationSpacePage from './app/spaces/deliberation/[id]/page';
+import DiscussionPage from './app/spaces/deliberation/[id]/discussion/[discussion-id]/page';
 
 export const routes = createBrowserRouter([
   {
@@ -106,6 +107,11 @@ export const routes = createBrowserRouter([
             id: 'deliberation-space',
             path: 'deliberation',
             Component: DeliberationSpacePage,
+          },
+          {
+            id: 'discussion',
+            path: 'discussion/:discussionPk',
+            Component: DiscussionPage,
           },
         ],
       }, // End of Space Layout
