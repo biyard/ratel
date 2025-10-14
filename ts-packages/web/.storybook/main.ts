@@ -1,7 +1,5 @@
 import type { StorybookConfig } from '@storybook/react-vite';
-import svgr from 'vite-plugin-svgr';
-import tailwindcss from '@tailwindcss/vite';
-// import tsconfigPaths from 'vite-tsconfig-paths';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 const config: StorybookConfig = {
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|mjs|ts|tsx)'],
@@ -17,11 +15,7 @@ const config: StorybookConfig = {
     options: {},
   },
   viteFinal: async (viteConfig) => {
-    viteConfig.plugins = (viteConfig.plugins ?? []).concat([
-      // tsconfigPaths(),
-      tailwindcss(),
-      svgr(),
-    ]);
+    viteConfig.plugins = (viteConfig.plugins ?? []).concat([tsconfigPaths()]);
     return viteConfig;
   },
 };

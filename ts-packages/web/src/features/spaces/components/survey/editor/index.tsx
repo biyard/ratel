@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
 import ObjectiveQuestionEditor from './objective-question';
 import LinearScaleQuestionEditor from './linear-scale-question';
-import LabelSwitchButton from './label-switch-button';
 import { Add } from '@/assets/icons/validations';
+import SwitchButton from '@/components/switch-button';
 
 function createDefaultQuestion(type: SurveyAnswerType): SurveyQuestion {
   switch (type) {
@@ -273,5 +273,30 @@ export function QuestionFooter({
         </div>
       </div>
     </div>
+  );
+}
+
+function LabelSwitchButton({
+  label,
+  bgColor,
+  textColor,
+  value,
+  onChange,
+}: {
+  label: string;
+  bgColor: string;
+  textColor: string;
+  value: boolean;
+  onChange: (val: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center cursor-pointer gap-2 select-none">
+      <span
+        className={`font-medium text-[15px]/[24px] ${value ? textColor : 'text-gray-400'}`}
+      >
+        {label}
+      </span>
+      <SwitchButton value={value} onChange={onChange} color={bgColor} />
+    </label>
   );
 }

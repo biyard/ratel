@@ -3,7 +3,7 @@ import SurveyViewer from './viewer';
 import SurveyEditor from './editor';
 import { useTranslation } from 'react-i18next';
 
-export interface SpaceSurveyProps {
+export interface SurveyProps {
   isEditMode: boolean;
   questions: SurveyQuestion[];
   answers: SurveyAnswer[];
@@ -12,7 +12,7 @@ export interface SpaceSurveyProps {
   handleDeleteQuestion: (index: number) => void;
   handleUpdateAnswer: (questionIdx: number, answer: SurveyAnswer) => void;
 }
-export default function SpaceSurvey({
+export default function Survey({
   isEditMode,
   questions,
   answers,
@@ -20,7 +20,7 @@ export default function SpaceSurvey({
   handleUpdateQuestion,
   handleDeleteQuestion,
   handleUpdateAnswer,
-}: SpaceSurveyProps) {
+}: SurveyProps) {
   const { t } = useTranslation('Survey');
   return (
     <div className="flex flex-col w-full">
