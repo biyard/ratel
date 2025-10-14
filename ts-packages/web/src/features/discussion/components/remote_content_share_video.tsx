@@ -105,7 +105,7 @@ export default function RemoteContentShareVideo({
         lastReportedTileIdRef.current = null;
       }
     };
-  }, [meetingSession]); // 콜백을 의존성에서 제거
+  }, [meetingSession]);
 
   useLayoutEffect(() => {
     const vEl = videoRef.current;

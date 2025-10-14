@@ -76,6 +76,7 @@ export default function ContentShareVideo({
           console.log('[CS] bind on update tileId=', id);
           av.bindVideoElement(id, videoRef.current);
           boundContentTileIdRef.current = id;
+          setTimeout(() => videoRef.current?.play().catch(() => {}), 0);
           setTimeout(() => {
             const v = videoRef.current!;
             console.log(
@@ -250,7 +251,7 @@ export default function ContentShareVideo({
   return (
     <div
       ref={wrapRef}
-      className={`absolute inset-0 overflow-hidden bg-black touch-none select-none ${fit === 'cover' ? 'cursor-grab' : ''}`}
+      className={`absolute inset-0 overflow-hidden bg-black touch-none select-none z-30 ${fit === 'cover' ? 'cursor-grab' : ''}`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}

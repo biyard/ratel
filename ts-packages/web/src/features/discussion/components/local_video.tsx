@@ -95,12 +95,12 @@ export default function LocalVideo({
     }
   }, [isVideoOn, started, meetingSession]);
 
-  useEffect(() => {
-    const av = meetingSession.audioVideo;
-    if (!started) return;
-    if (isVideoOn) av.startLocalVideoTile();
-    else av.stopLocalVideoTile();
-  }, [isVideoOn, started, meetingSession.audioVideo]);
+  // useEffect(() => {
+  //   const av = meetingSession.audioVideo;
+  //   if (!started) return;
+  //   if (isVideoOn) av.startLocalVideoTile();
+  //   else av.stopLocalVideoTile();
+  // }, [isVideoOn, started, meetingSession.audioVideo]);
 
   useLayoutEffect(() => {
     const vEl = videoRef.current;
