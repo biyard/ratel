@@ -1,8 +1,4 @@
-'use client';
-
 import { useState } from 'react';
-import { SpaceType } from '@/lib/api/models/spaces';
-import { BoosterType } from '@/lib/api/models/notice';
 import { LoadablePrimaryButton } from '@/components/button/primary-button';
 import { ArrowLeft, Internet, Fire } from '@/components/icons';
 import TimeDropdown from '@/components/time-dropdown';
@@ -14,6 +10,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@radix-ui/react-dropdown-menu';
+import { SpaceType } from '../types/space-type';
+import { BoosterType } from '../types/booster-type';
 
 interface SpaceConfigFormProps {
   spaceType: SpaceType;
@@ -99,20 +97,20 @@ export default function SpaceConfigForm({
   };
 
   return (
-    <div className="-mt-16 flex flex-col gap-4 w-full max-w-[906px] overflow-y-auto pt-1 pr-1 pb-1 pl-1 px-4 sm:px-1">
+    <div className="flex overflow-y-auto flex-col gap-4 px-4 pt-1 pr-1 pb-1 pl-1 -mt-16 w-full sm:px-1 max-w-[906px]">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="flex justify-between items-center">
+        <div className="flex gap-2 items-center">
           <button onClick={onBack} className="p-1 rounded-md transition-colors">
             <ArrowLeft className="w-7 h-7 text-neutral-500" />
           </button>
-          {/* <h2 className="text-xl sm:text-3xl font-semibold text-white">
+          {/* <h2 className="text-xl font-semibold text-white sm:text-3xl">
             {t('SetBoostModal.title')}
           </h2>
         </div>
         <button
           onClick={() => popup.close()}
-          className="p-1 hover:bg-gray-800 rounded-md transition-colors"
+          className="p-1 rounded-md transition-colors hover:bg-gray-800"
         >
           <Remove className="w-7 h-7 text-[var(--color-neutral-500)]" />
         </button> */}
@@ -121,8 +119,8 @@ export default function SpaceConfigForm({
 
       {/* Warning Message */}
 
-      <div className="flex flex-col w-full gap-2 max-mobile:h-[350px] max-mobile:overflow-y-scroll">
-        <div className="text-base text-create-space-desc pt-5">
+      <div className="flex flex-col gap-2 w-full max-mobile:h-[350px] max-mobile:overflow-y-scroll">
+        <div className="pt-5 text-base text-create-space-desc">
           <p>
             <Trans
               i18nKey="SetBoostModal.description"
@@ -136,8 +134,8 @@ export default function SpaceConfigForm({
         </div>
 
         {/* Date and Time Section */}
-        <div className="flex gap-2 flex-row max-tablet:flex-wrap max-tabletitems-center">
-          <div className="flex flex-col w-full gap-2 sm:flex-row sm:w-auto sm:items-center">
+        <div className="flex flex-row gap-2 max-tablet:flex-wrap max-tabletitems-center">
+          <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:w-auto">
             <div className="w-full max-tablet:w-auto">
               <CalendarDropdown
                 value={startTimestamp}
@@ -160,9 +158,9 @@ export default function SpaceConfigForm({
             </div>
           </div>
 
-          <div className="hidden sm:block w-[15px] h-0.5 self-center bg-neutral-600" />
+          <div className="hidden self-center h-0.5 sm:block w-[15px] bg-neutral-600" />
 
-          <div className="flex flex-col w-full gap-2 sm:flex-row sm:w-auto sm:items-center max-tablet:mt-2.5">
+          <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:w-auto max-tablet:mt-2.5">
             <div className="w-full sm:w-auto">
               <CalendarDropdown
                 value={endTimestamp}
@@ -177,7 +175,7 @@ export default function SpaceConfigForm({
             </div>
           </div>
 
-          <div className="w-full sm:w-fit flex flex-row items-center border border-select-date-border bg-select-date-bg rounded-lg px-5 py-[10.5px] gap-2.5 mt-2 sm:mt-0">
+          <div className="flex flex-row gap-2.5 items-center px-5 mt-2 w-full rounded-lg border sm:mt-0 border-select-date-border bg-select-date-bg py-[10.5px] sm:w-fit">
             <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
               Pacific Time
             </div>
@@ -191,11 +189,11 @@ export default function SpaceConfigForm({
 
         {/* Boost Section */}
         <div className="flex flex-col gap-3">
-          <h3 className="text-base font-semibold text-modal-label-text py-1">
+          <h3 className="py-1 text-base font-semibold text-modal-label-text">
             {t('boost')}
           </h3>
 
-          <div className="flex items-start gap-2">
+          <div className="flex gap-2 items-start">
             <input
               type="checkbox"
               id="activateBooster"
@@ -206,7 +204,7 @@ export default function SpaceConfigForm({
                   activateBooster: e.target.checked,
                 })
               }
-              className="mt-0.5 w-4 h-4 rounded border-[var(--color-c-wg-70)] checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)] focus:ring-[var(--color-primary)] focus:ring-offset-0 accent-[var(--color-primary)] cursor-pointer"
+              className="mt-0.5 w-4 h-4 rounded cursor-pointer focus:ring-offset-0 border-[var(--color-c-wg-70)] accent-[var(--color-primary)] checked:bg-[var(--color-primary)] checked:border-[var(--color-primary)] focus:ring-[var(--color-primary)]"
               style={{
                 accentColor: 'var(--color-primary)',
                 backgroundColor: 'inherit',
@@ -215,16 +213,16 @@ export default function SpaceConfigForm({
             <div className="flex-1">
               <label
                 htmlFor="activateBooster"
-                className="text-base font-medium text-text-primary cursor-pointer"
+                className="text-base font-medium cursor-pointer text-text-primary"
               >
                 {t('active_booster')}
               </label>
-              <p className="text-base text-desc-text mt-0.5">
+              <p className="mt-0.5 text-base text-desc-text">
                 <Trans
                   i18nKey="active_booster_desc"
                   ns="SpaceForms"
                   components={{
-                    btn: <button className="text-desc-text underline" />,
+                    btn: <button className="underline text-desc-text" />,
                   }}
                 />
               </p>
@@ -232,8 +230,8 @@ export default function SpaceConfigForm({
           </div>
 
           {formConfig.activateBooster && (
-            <div className="ml-7 flex flex-col gap-2">
-              <label className="text-base font-medium text-text-primary py-1">
+            <div className="flex flex-col gap-2 ml-7">
+              <label className="py-1 text-base font-medium text-text-primary">
                 {t('booster')}
               </label>
 
@@ -241,9 +239,9 @@ export default function SpaceConfigForm({
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="border border-[var(--color-c-wg-70)] bg-transparent text-text-primary pl-14 pr-4 py-3 rounded-md focus:outline-none focus:ring-2 focus:ring-primary w-full text-base font-medium cursor-pointer relative z-1"
+                    className="relative py-3 pr-4 pl-14 w-full text-base font-medium bg-transparent rounded-md border cursor-pointer focus:ring-2 focus:outline-none border-[var(--color-c-wg-70)] text-text-primary z-1 focus:ring-primary"
                   >
-                    <div className="flex items-center justify-between">
+                    <div className="flex justify-between items-center">
                       <span className="text-text-primary">
                         Booster x{' '}
                         {Object.entries(BoosterType)
@@ -260,7 +258,7 @@ export default function SpaceConfigForm({
                         <path d="M7 10l5 5 5-5z" />
                       </svg>
                     </div>
-                    <Fire className="absolute left-5 top-1/2 transform -translate-y-1/2 w-6 h-6 text-[var(--color-primary)] pointer-events-none" />
+                    <Fire className="absolute left-5 top-1/2 w-6 h-6 transform -translate-y-1/2 pointer-events-none text-[var(--color-primary)]" />
                   </button>
                 </DropdownMenuTrigger>
 
@@ -287,7 +285,7 @@ export default function SpaceConfigForm({
                           }}
                           className={`px-4 py-3 hover:bg-black/10 flex items-center w-full ${formConfig.boosterType === value ? 'bg-black/10' : ''}`}
                         >
-                          <Fire className="w-5 h-5 mr-3 text-[var(--color-primary)]" />
+                          <Fire className="mr-3 w-5 h-5 text-[var(--color-primary)]" />
                           <span>Booster x {multiplier}</span>
                         </DropdownMenuItem>
                       );
@@ -300,7 +298,7 @@ export default function SpaceConfigForm({
       </div>
 
       {/* Create Button */}
-      <div className="border-t border-divider pt-5 pb-1">
+      <div className="pt-5 pb-1 border-t border-divider">
         <div className="flex justify-end">
           <LoadablePrimaryButton
             className="rounded-md w-[132px] h-[48px] flex items-center justify-center font-raleway font-bold text-[16px] leading-[100%] tracking-normal text-center cursor-pointer"
