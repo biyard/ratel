@@ -71,11 +71,14 @@ async fn test_update_user_with_team_handler() {
         update_user_res.err()
     );
 
+    // Construct the full team PK from the returned UUID
+    let full_team_pk = format!("TEAM#{}", team.team_pk);
+
     let team = get_team_handler(
         State(app_state.clone()),
         NoApi(Some(user.clone())),
         Path(GetTeamPathParams {
-            team_pk: team.team_pk.clone(),
+            team_pk: full_team_pk,
         }),
     )
     .await;
