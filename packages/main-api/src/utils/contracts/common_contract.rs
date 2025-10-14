@@ -45,10 +45,10 @@ impl<T: KaiaWallet, W: KaiaWallet> CommonContract<T, W> {
     }
 
     pub async fn sign_and_send_transaction_with_feepayer(&self, input: Bytes) -> Result<String> {
-        let chain_id = self.provider.get_chainid().await?;
+        let chain_id = self.provider.get_chainid().await.map_err(|e| Error::Klaytn(e.to_string()))?;
         tracing::debug!("chain id: {}", chain_id);
         let gas = 9000000;
-        let gas_price = match parse_units("750", "gwei")? {
+        let gas_price = match parse_units("750", "gwei").map_err(|e| Error::Klaytn(e.to_string()))? {
             ParseUnits::U256(x) => x,
             ParseUnits::I256(_) => return Err(Error::Klaytn("parse_units error".to_string())),
         };
@@ -61,7 +61,7 @@ impl<T: KaiaWallet, W: KaiaWallet> CommonContract<T, W> {
         let from = w.address();
         let to = self.contract.address();
         let tx_type = TransactionType::FeeDelegatedSmartContractExecution;
-        let nonce = self.provider.get_transaction_count(from, None).await?;
+        let nonce = self.provider.get_transaction_count(from, None).await.map_err(|e| Error::Klaytn(e.to_string()))?;
 
         let tx = KaiaTransaction::new(
             tx_type,
@@ -85,16 +85,22 @@ impl<T: KaiaWallet, W: KaiaWallet> CommonContract<T, W> {
         let rlp = format!("0x{}", hex::encode(rlp).to_string());
         tracing::debug!("rlp: {}", rlp);
 
-        let res: std::result::Result<JsonRpcResponse<String>, Error> = rest_api::post(
-            self.provider.url().as_str(),
-            serde_json::json!({
+        let res: std::result::Result<JsonRpcResponse<String>, Error> =
+            reqwest::Client::new()
+            .post(self.provider.url().as_str())
+            .json(&serde_json::json!({
                 "jsonrpc": "2.0",
                 "method": "kaia_sendRawTransaction",
                 "id": 1,
                 "params": [rlp],
-            }),
-        )
-        .await;
+            }))
+            .send()
+            .await
+            .map_err(|e| Error::Klaytn(e.to_string()))?
+            .json()
+            .await
+            .map_err(|e| Error::Klaytn(e.to_string()));
+
 
         let tx_hash = match res {
             Ok(res) => {
@@ -116,16 +122,27 @@ impl<T: KaiaWallet, W: KaiaWallet> CommonContract<T, W> {
         for _ in 0..3 {
             sleep(Duration::from_secs(1)).await;
             let res: std::result::Result<JsonRpcResponse<TransactionReceipt>, Error> =
-                rest_api::post(
-                    self.provider.url().as_str(),
-                    serde_json::json!({
+                reqwest::Client::new()
+                    .post(self.provider.url().as_str())
+                    .json(&serde_json::json!({
                         "jsonrpc": "2.0",
                         "id": 1,
                         "method": "kaia_getTransactionReceipt",
                         "params": [tx_hash],
-                    }),
-                )
-                .await;
+                    }))
+                    .send()
+                    .await
+                    .map_err(|e| {
+                        tracing::warn!("getTransactionReceipt request error: {}", e);
+                        Error::Klaytn(e.to_string())
+                    })?
+                    .json::<JsonRpcResponse<TransactionReceipt>>()
+                    .await
+                    .map_err(|e| {
+                        tracing::warn!("getTransactionReceipt parse error: {}", e);
+                        Error::Klaytn(e.to_string())
+                    });
+
             let res = match res {
                 Ok(res) => res,
                 Err(e) => {

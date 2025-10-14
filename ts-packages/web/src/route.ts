@@ -27,7 +27,7 @@ export const route = {
   commiteeSpaceById: (spaceId: number | string) =>
     `/spaces/${encodeURIComponent(spaceId)}`,
   deliberationSpaceById: (spaceId: number | string) =>
-    `/spaces/${encodeURIComponent(spaceId)}`,
+    `/spaces/${encodeURIComponent(spaceId)}/deliberation`,
   noticeSpaceById: (spaceId: number | string) =>
     `/spaces/${encodeURIComponent(spaceId)}`,
   threadByFeedId: (feedId: number | string) => {
@@ -37,7 +37,7 @@ export const route = {
     `/spaces/${spaceId}/discussions/${discussionId}`,
 
   pollSpaceByPk: (pollPk: string) => {
-    return `spaces/poll/${encodeURIComponent(pollPk)}`;
+    return `spaces/${encodeURIComponent(pollPk)}/poll`;
   },
   telegramSprintLeague: (space_id: number | string) =>
     `/telegram/sprint-league/${encodeURIComponent(space_id)}`,

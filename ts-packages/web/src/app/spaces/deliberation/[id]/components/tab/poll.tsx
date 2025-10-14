@@ -3,31 +3,46 @@ import { SpaceStatus } from '@/lib/api/models/spaces';
 import { getTimeWithFormat } from '@/lib/time-utils';
 import { Settings } from '@/components/icons';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { useDeliberationSpaceByIdContext } from '../../providers.client';
 import SetSchedulePopup from '@/app/spaces/[id]/_components/modal/set-schedule';
 import SpaceSurvey from '../space-survey';
-import { DeliberationSpace } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
+import { Poll } from '../../types';
+import { SurveyAnswer } from '@/app/spaces/[id]/type';
+import { Answer } from '@/lib/api/models/response';
+import { TFunction } from 'i18next';
+
+export type DeliberationSurveyPageProps = {
+  t: TFunction<'DeliberationSpace', undefined>;
+  space: DeliberationSpaceResponse;
+  startedAt: number;
+  endedAt: number;
+  survey: Poll;
+  answer: SurveyAnswer;
+
+  setStartDate: (startedAt: number) => void;
+  setEndDate: (endedAt: number) => void;
+  setSurvey: (survey: Poll) => void;
+  setAnswers: (answers: Answer[]) => void;
+  handleSend: () => Promise<void>;
+};
 
 export function DeliberationSurveyPage({
   space,
-}: {
-  space: DeliberationSpace;
-}) {
+  startedAt,
+  endedAt,
+  survey,
+  answer,
+  setStartDate,
+  setEndDate,
+  setSurvey,
+  setAnswers,
+  handleSend,
+}: DeliberationSurveyPageProps) {
+  const store = useSpaceHeaderStore();
+  const isEdit = store.isEditingMode;
   const popup = usePopup();
 
-  const {
-    isEdit,
-    startedAt,
-    endedAt,
-    survey,
-    answer,
-    // status,
-    handleUpdateEndDate,
-    handleUpdateStartDate,
-    handleSetAnswers,
-    handleSend,
-    handleUpdateSurvey,
-  } = useDeliberationSpaceByIdContext();
   return (
     <div className="flex flex-col w-full">
       <div className="flex flex-col gap-2.5 w-full">
@@ -46,8 +61,9 @@ export function DeliberationSurveyPage({
                       startedAt={startedAt}
                       endedAt={endedAt}
                       onconfirm={(startDate: number, endDate: number) => {
-                        handleUpdateStartDate(Math.floor(startDate / 1000));
-                        handleUpdateEndDate(Math.floor(endDate / 1000));
+                        setStartDate(Math.floor(startDate / 1000));
+                        setEndDate(Math.floor(endDate / 1000));
+                        store.onModifyContent();
                         popup.close();
                       }}
                     />,
@@ -73,9 +89,12 @@ export function DeliberationSurveyPage({
           answer={answer}
           status={SpaceStatus.Draft}
           space={space}
-          handleSetAnswers={handleSetAnswers}
+          handleSetAnswers={setAnswers}
           handleSend={handleSend}
-          handleUpdateSurvey={handleUpdateSurvey}
+          handleUpdateSurvey={(survey: Poll) => {
+            setSurvey(survey);
+            store.onModifyContent();
+          }}
         />
       </div>
     </div>

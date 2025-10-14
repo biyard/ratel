@@ -7,7 +7,7 @@ pub use noop::*;
 #[cfg(not(feature = "no-secret"))]
 mod r {
     use chrono::Utc;
-    use dto::reqwest;
+    use bdk::prelude::reqwest;
     use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode, decode_header};
     use once_cell::sync::Lazy;
     use serde::Deserialize;

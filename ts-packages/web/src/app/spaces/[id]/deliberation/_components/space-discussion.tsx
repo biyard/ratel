@@ -127,13 +127,16 @@ export function DiscussionRoom({
   const isUpcoming = now < startDate;
   const isFinished = now > endDate;
 
-  const formattedDate = `${format(new Date(startDate * 1000), 'dd MMM, yyyy HH:mm')} - ${format(new Date(endDate * 1000), 'dd MMM, yyyy HH:mm')}`;
+  const formattedDate = `${format(
+    new Date(startDate * 1000),
+    'dd MMM, yyyy HH:mm',
+  )} - ${format(new Date(endDate * 1000), 'dd MMM, yyyy HH:mm')}`;
 
   const statusLabel = isUpcoming
     ? t('upcoming_discussion')
     : isFinished
-      ? t('finished_discussion')
-      : t('ongoing_discussion');
+    ? t('finished_discussion')
+    : t('ongoing_discussion');
 
   const isMember = members.some((member) => member.id === userId);
 
@@ -382,13 +385,16 @@ function EditableDiscussionInfo({
   const isUpcoming = now < startTime;
   const isFinished = now > endTime;
 
-  const formattedDate = `${format(new Date(startTime * 1000), 'dd MMM, yyyy HH:mm')} - ${format(new Date(endTime * 1000), 'dd MMM, yyyy HH:mm')}`;
+  const formattedDate = `${format(
+    new Date(startTime * 1000),
+    'dd MMM, yyyy HH:mm',
+  )} - ${format(new Date(endTime * 1000), 'dd MMM, yyyy HH:mm')}`;
 
   const statusLabel = isUpcoming
     ? t('upcoming_discussion')
     : isFinished
-      ? t('finished_discussion')
-      : t('ongoing_discussion');
+    ? t('finished_discussion')
+    : t('ongoing_discussion');
 
   useEffect(() => {
     setTitle(name);
@@ -441,6 +447,7 @@ function EditableDiscussionInfo({
                 ref={mobileMenuRef}
               >
                 <Extra2
+                  id="discussion-option"
                   className="cursor-pointer w-6 h-6"
                   onClick={() => setMenuOpen(!menuOpen)}
                 />

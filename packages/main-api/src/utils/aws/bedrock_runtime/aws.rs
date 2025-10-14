@@ -8,7 +8,7 @@ use aws_sdk_bedrockruntime::{
     types::{ContentBlock, ConversationRole, Message},
 };
 
-use dto::{Error, Result};
+use crate::{Error, Result};
 
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub enum BedrockModel {

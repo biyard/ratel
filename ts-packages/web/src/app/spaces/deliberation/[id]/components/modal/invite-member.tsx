@@ -142,13 +142,15 @@ export default function InviteMemberPopup({
     <div className="flex flex-col min-h-[300px] w-[900px] max-w-[900px] max-tablet:!w-full max-tablet:!max-w-full gap-5">
       <div className="flex flex-col w-full">
         <div className="font-bold text-[15px]/[28px] text-modal-label-text">
-          {t('invite_label')}
+          Email, Username, or Phone Number
         </div>
         <div className="flex flex-col w-full max-mobile:max-h-[350px] max-mobile:overflow-y-auto">
           <div className="mt-[10px]">
             <SearchInput
               value={searchValue}
-              placeholder={t('invite_hint')}
+              placeholder={
+                'Enter email, username, or phone number (ex: john@example.com or john or 01012345678)'
+              }
               setValue={async (value) => {
                 setValue(value, false);
               }}

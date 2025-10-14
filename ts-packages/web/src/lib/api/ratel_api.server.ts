@@ -35,7 +35,7 @@ import type { InfiniteData } from '@tanstack/react-query';
 import { GroupPermission } from './models/group';
 import type { Permission } from './models/permission';
 import type { NewsDetailItem } from './models/news';
-import type { DeliberationSpace } from './ratel/spaces/deliberation-spaces.v3';
+import type { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 
 async function getDataFromServer<T>(
   key: (string | number)[],
@@ -133,7 +133,7 @@ export function getFeedByIdV2(id: string) {
 export function getDeliberationSpaceById(id: string) {
   const spacePk = 'DELIBERATION_SPACE%23' + id;
 
-  return getDataFromServer<DeliberationSpace>(
+  return getDataFromServer<DeliberationSpaceResponse>(
     [QK_GET_DELIBERATION_SPACE_BY_SPACE_ID, spacePk],
     ratelApi.spaces.getDeliberationSpaceBySpaceId(spacePk),
     true,
