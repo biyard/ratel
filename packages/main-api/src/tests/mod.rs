@@ -11,7 +11,7 @@ pub mod test_utils;
 pub mod v3_setup;
 
 // Re-export commonly used items for backward compatibility
-pub use test_utils::*;
+// pub use test_utils::*;
 
 pub mod dynamo_test;
 pub use dynamo_test::*;
