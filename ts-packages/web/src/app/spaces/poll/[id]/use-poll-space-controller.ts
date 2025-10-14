@@ -156,7 +156,6 @@ export function usePollSpaceController(spacePk: string): PollSpaceController {
     headerCtrl.onModifyContent();
   };
   const onUpdateAnswer = (questionIdx: number, answer: SurveyAnswer) => {
-    console.log(answer);
     setAnswers((prev) => {
       return { ...prev, [questionIdx]: answer };
     });

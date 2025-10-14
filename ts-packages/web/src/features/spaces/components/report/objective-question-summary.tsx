@@ -14,9 +14,7 @@ export default function ObjectiveQuestionSummary({
   question,
   summary,
 }: ObjectiveResponseProps) {
-  console.log('Rendering ObjectiveQuestionSummary', summary);
   const { answers, total_count } = summary;
-  console.log('answers', answers);
 
   const options: Record<string, number> = Object.fromEntries(
     Object.entries(answers).map(([key, count]) => {
