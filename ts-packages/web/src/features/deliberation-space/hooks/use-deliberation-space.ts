@@ -2,7 +2,7 @@ import { spaceKeys } from '@/constants';
 import {
   DeliberationSpaceResponse,
   getDeliberationSpace,
-} from '@/lib/api/ratel/deliberation.spaces.v3';
+} from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import {
   useSuspenseQuery,
   UseSuspenseQueryResult,

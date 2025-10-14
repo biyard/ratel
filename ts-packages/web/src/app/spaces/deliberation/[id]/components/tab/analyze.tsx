@@ -1,7 +1,7 @@
 import { AnalyzePage } from '../analyze';
 import { MappedResponse, Poll } from '../../types';
 import { TFunction } from 'i18next';
-import { SurveyResponseResponse } from '@/lib/api/ratel/deliberation.spaces.v3';
+import { SurveyResponseResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 
 export type DeliberationAnalyzePageProps = {
   t: TFunction<'DeliberationSpace', undefined>;

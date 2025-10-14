@@ -7,7 +7,7 @@ import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 import { CircleClose } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
-import { File } from '@/lib/api/ratel/deliberation.spaces.v3';
+import { File } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { Deliberation } from '../types';
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 

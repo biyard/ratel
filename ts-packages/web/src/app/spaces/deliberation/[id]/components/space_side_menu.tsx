@@ -9,12 +9,9 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 import SetSchedulePopup from '@/app/spaces/[id]/_components/modal/set-schedule';
-import {
-  DeliberationSpace,
-  SpacePublishState,
-} from '@/lib/api/ratel/deliberation.spaces.v3';
+import { SpacePublishState } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { useUserInfo } from '@/hooks/use-user-info';
-import { DeliberationSpaceResponse } from '@/lib/api/ratel/deliberation.spaces.v3';
+import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 import { TFunction } from 'i18next';
 

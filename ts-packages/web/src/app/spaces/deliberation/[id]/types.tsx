@@ -1,5 +1,5 @@
 import { Answer } from '@/lib/api/models/response';
-import { File } from '@/lib/api/ratel/deliberation.spaces.v3';
+import { File } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { Question, SurveyCreateRequest } from '@/lib/api/models/survey';
 
 export const DeliberationTab = {

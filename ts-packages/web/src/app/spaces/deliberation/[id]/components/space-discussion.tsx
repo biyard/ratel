@@ -22,9 +22,9 @@ import { useUserInfo } from '@/hooks/use-user-info';
 import {
   DiscussionMemberResponse,
   SpacePublishState,
-} from '@/lib/api/ratel/deliberation.spaces.v3';
+} from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
-import { DeliberationSpaceResponse } from '@/lib/api/ratel/deliberation.spaces.v3';
+import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 
 export default function SpaceDiscussion({
   space,
