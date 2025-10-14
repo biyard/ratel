@@ -4,7 +4,7 @@ import { MappedResponse, Poll } from '../types';
 import ObjectiveResponse from '@/app/spaces/[id]/_components/dashboard/objective-response';
 import SubjectiveResponse from '@/app/spaces/[id]/_components/dashboard/subjective-response';
 import SummaryReport from '@/app/spaces/[id]/_components/dashboard/summary-report';
-import { SurveyResponseResponse } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { SurveyResponseResponse } from '@/lib/api/ratel/deliberation.spaces.v3';
 
 const AnswerType = {
   SingleChoice: 'single_choice',

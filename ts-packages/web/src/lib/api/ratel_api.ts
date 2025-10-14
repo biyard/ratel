@@ -29,7 +29,7 @@ import type { RedeemCode } from './models/redeem-code';
 import type { NetworkData } from './models/network';
 import type { Promotion } from './models/promotion';
 import { GroupPermission } from './models/group';
-import type { DeliberationSpace } from './ratel/spaces/deliberation-spaces.v3';
+import type { DeliberationSpace } from '@/lib/api/ratel/deliberation.spaces.v3';
 
 export function useDeliberationSpaceById(
   id: string,

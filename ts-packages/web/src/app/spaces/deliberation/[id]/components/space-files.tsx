@@ -21,7 +21,7 @@ import {
 } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
-import { File } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { File } from '@/lib/api/ratel/deliberation.spaces.v3';
 
 export interface SpaceFilesProps {
   isEdit?: boolean;

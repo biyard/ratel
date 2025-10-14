@@ -13,7 +13,7 @@ import DropdownViewer from '@/app/spaces/[id]/_components/question/_component/vi
 import SubjectiveViewer from '@/app/spaces/[id]/_components/question/_component/viewer/subjective-viewer';
 import CheckPopup from '@/app/spaces/[id]/_components/question/check-popup';
 import { useUserInfo } from '@/hooks/use-user-info';
-import { SpacePublishState } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { SpacePublishState } from '@/lib/api/ratel/deliberation.spaces.v3';
 
 interface Question {
   title: string;
