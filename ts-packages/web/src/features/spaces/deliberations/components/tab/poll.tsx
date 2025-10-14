@@ -10,7 +10,7 @@ import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 import { SurveyAnswer } from '@/app/spaces/[id]/type';
 import { Answer } from '@/lib/api/models/response';
 import { TFunction } from 'i18next';
-import { Poll } from '@/app/spaces/deliberation/[id]/types';
+import { Poll } from '../../types/poll-type';
 
 export type DeliberationSurveyPageProps = {
   t: TFunction<'DeliberationSpace', undefined>;

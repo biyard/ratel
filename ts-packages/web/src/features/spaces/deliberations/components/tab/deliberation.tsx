@@ -4,7 +4,7 @@ import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/d
 import SpaceDiscussion from '../space-discussion';
 import SpaceElearning from '../space-elearning';
 import { TFunction } from 'i18next';
-import { Deliberation } from '@/app/spaces/deliberation/[id]/types';
+import { Deliberation } from '../../types/deliberation-type';
 
 export type DeliberationPageProps = {
   t: TFunction<'DeliberationSpace', undefined>;

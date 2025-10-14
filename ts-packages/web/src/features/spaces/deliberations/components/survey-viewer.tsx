@@ -13,7 +13,7 @@ import SubjectiveViewer from '@/app/spaces/[id]/_components/question/_component/
 import CheckPopup from '@/app/spaces/[id]/_components/question/check-popup';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { SpacePublishState } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
-import { Poll } from '@/app/spaces/deliberation/[id]/types';
+import { Poll } from '../types/poll-type';
 
 interface Question {
   title: string;

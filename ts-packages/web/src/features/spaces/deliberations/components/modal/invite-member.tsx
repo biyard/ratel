@@ -13,10 +13,7 @@ import { showErrorToast } from '@/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { User } from '@/lib/api/ratel/auth.v3';
-import {
-  DiscussionInfo,
-  DiscussionUser,
-} from '@/app/spaces/deliberation/[id]/types';
+import { DiscussionInfo, DiscussionUser } from '../../types/deliberation-type';
 
 export default function InviteMemberPopup({
   title,

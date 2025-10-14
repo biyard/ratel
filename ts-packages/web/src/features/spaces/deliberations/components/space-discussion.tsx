@@ -26,7 +26,7 @@ import {
   Deliberation,
   DiscussionInfo,
   DiscussionUser,
-} from '@/app/spaces/deliberation/[id]/types';
+} from '../types/deliberation-type';
 
 export default function SpaceDiscussion({
   space,

@@ -1,9 +1,9 @@
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 import SpaceContents from '../space-contents';
 import SpaceFiles from '../space-files';
-import { File } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { TFunction } from 'i18next';
-import { FinalConsensus } from '@/app/spaces/deliberation/[id]/types';
+import { FinalConsensus } from '../../types/final-consensus-type';
+import { File } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 
 export type ThreadPageProps = {
   t: TFunction<'DeliberationSpace', undefined>;
