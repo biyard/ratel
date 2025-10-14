@@ -3,16 +3,15 @@ import {
   UseSuspenseQueryResult,
 } from '@tanstack/react-query';
 
-import { spaceKeys } from '@/constants';
 import {
   getPollSurveySummaries,
   PollSurveySummariesResponse,
 } from '@/lib/api/ratel/poll.spaces.v3';
-import { SpaceType } from '@/types/space-type';
+import { pollSpaceKeys } from '@/constants';
 
 export function getOption(spacePk: string) {
   return {
-    queryKey: [...spaceKeys.detail(spacePk, SpaceType.Poll), 'summary'],
+    queryKey: pollSpaceKeys.summary(spacePk),
     queryFn: async () => {
       const post = await getPollSurveySummaries(spacePk);
       return post;

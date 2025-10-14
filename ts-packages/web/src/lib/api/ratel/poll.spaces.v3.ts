@@ -14,13 +14,13 @@ export function getPollSpace(spacePk: string): Promise<PollSpaceResponse> {
 export function updatePollSpace(
   spacePk: string,
   title: string,
-  htmlContents: string,
+  htmlContent: string,
   timeRange: TimeRange,
   questions: SurveyQuestion[],
 ) {
   return call('PUT', `/v3/spaces/poll/${encodeURIComponent(spacePk)}`, {
     title,
-    html_contents: htmlContents,
+    html_content: htmlContent,
     time_range: timeRange,
     questions,
   });

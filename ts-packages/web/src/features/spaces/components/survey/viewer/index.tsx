@@ -2,159 +2,173 @@ import {
   SurveyAnswer,
   SurveyAnswerType,
   SurveyQuestion,
+  SurveyQuestionWithAnswer,
 } from '@/types/survey-type';
 import ObjectiveViewer from './objective-viewer';
-import { useTranslation } from 'react-i18next';
 import DropdownViewer from './dropdown-viewer';
 import LinearScaleViewer from './linear-scale-viewer';
 import SubjectiveViewer from './subjective-viewer';
 import React from 'react';
+import { I18nFunction } from '../index';
+import Card from '@/components/card';
 
 export interface SurveyViewerProps {
+  t: I18nFunction;
   questions: SurveyQuestion[];
-  selectedAnswers: SurveyAnswer[];
-  updateAnswer: (questionIdx: number, answer: SurveyAnswer) => void;
+  selectedAnswers: Record<number, SurveyAnswer>;
+  onUpdateAnswer: (questionIdx: number, answer: SurveyAnswer) => void;
+  disabled?: boolean;
 }
 export default function SurveyViewer({
+  t,
+  disabled,
   questions,
   selectedAnswers,
-  updateAnswer,
+  onUpdateAnswer,
 }: SurveyViewerProps) {
+  const questionsWithAnswers = questions.map((q, index) => {
+    return {
+      answer_type: q.answer_type,
+      question: q,
+      answer: selectedAnswers[index],
+    } as SurveyQuestionWithAnswer;
+  });
+
   return (
-    <div>
-      {questions.map((question, idx) => (
-        <QuestionViewer
-          key={`survey-question-${idx}`}
-          question={question}
-          answer={selectedAnswers[idx]}
-          disabled={false}
-          updateAnswer={(answer) => updateAnswer(idx, answer)}
-        />
+    <div className="flex flex-col gap-2.5 w-full">
+      {questionsWithAnswers.map((questionAnswer, idx) => (
+        <Card key={`survey-question-${idx}`}>
+          <QuestionViewer
+            t={t}
+            questionAnswer={questionAnswer}
+            disabled={disabled}
+            updateAnswer={(answer) => onUpdateAnswer(idx, answer)}
+          />
+        </Card>
       ))}
     </div>
   );
 }
 
 function QuestionViewer({
+  t,
   disabled = false,
-  question,
-  answer,
+  questionAnswer,
   updateAnswer,
 }: {
+  t: I18nFunction;
   disabled?: boolean;
-  question: SurveyQuestion;
-  answer: SurveyAnswer;
+  questionAnswer: SurveyQuestionWithAnswer;
   updateAnswer: (answer: SurveyAnswer) => void;
 }): React.JSX.Element | null {
-  const { t } = useTranslation('PollSpace');
+  switch (questionAnswer.answer_type) {
+    case SurveyAnswerType.SingleChoice: {
+      const { question, answer } = questionAnswer;
+      const prevAnswers = answer?.answer !== undefined ? [answer.answer] : [];
 
-  const updateAnswerHandler = (
-    type: SurveyAnswerType,
-    currentAnswer: SurveyAnswer,
-  ) => {
-    if (type === SurveyAnswerType.SingleChoice) {
-      return (index: number) => {
-        updateAnswer({
-          answer_type: SurveyAnswerType.SingleChoice,
-          answer: index,
-        });
-      };
-    } else if (
-      type === SurveyAnswerType.MultipleChoice ||
-      type === SurveyAnswerType.Checkbox
-    ) {
-      return (index: number) => {
-        const prev = Array.isArray(currentAnswer.answer)
-          ? (currentAnswer.answer as number[])
-          : [];
-        const next = prev.includes(index)
-          ? prev.filter((i) => i !== index)
-          : [...prev, index];
-        updateAnswer({
-          answer_type: type,
-          answer: next,
-        });
-      };
-    } else if (type === SurveyAnswerType.Dropdown) {
-      return (optIndex: number) => {
-        updateAnswer({
-          answer_type: SurveyAnswerType.Dropdown,
-          answer: optIndex,
-        });
-      };
-    } else if (type === SurveyAnswerType.LinearScale) {
-      return (value: number) => {
-        updateAnswer({
-          answer_type: SurveyAnswerType.LinearScale,
-          answer: value,
-        });
-      };
-    } else if (
-      type === SurveyAnswerType.ShortAnswer ||
-      type === SurveyAnswerType.Subjective
-    ) {
-      return (value: string) => {
-        updateAnswer({
-          answer_type: type,
-          answer: value,
-        });
-      };
-    }
-    return () => {};
-  };
-
-  const handleSelect = updateAnswerHandler(question.answer_type, answer);
-
-  switch (question.answer_type) {
-    case SurveyAnswerType.Checkbox:
-    case SurveyAnswerType.MultipleChoice:
-    case SurveyAnswerType.SingleChoice:
       return (
         <ObjectiveViewer
           t={t}
-          {...question.content}
+          {...question}
           answer_type={question.answer_type}
           disabled={disabled}
-          selectedIndexes={answer.answer as number[]}
-          onSelect={handleSelect as (index: number) => void}
+          selectedIndexes={prevAnswers}
+          onSelect={(idx) => {
+            let nextAnswer = idx;
+            if (prevAnswers.includes(idx)) {
+              nextAnswer = undefined;
+            }
+
+            updateAnswer({
+              answer_type: question.answer_type,
+              answer: nextAnswer,
+            });
+          }}
         />
       );
-    case SurveyAnswerType.Dropdown:
+    }
+    case SurveyAnswerType.Checkbox:
+    case SurveyAnswerType.MultipleChoice: {
+      const { question, answer } = questionAnswer;
+      const prevAnswers = answer?.answer ?? [];
+      return (
+        <ObjectiveViewer
+          t={t}
+          {...question}
+          answer_type={question.answer_type}
+          disabled={disabled}
+          selectedIndexes={prevAnswers}
+          onSelect={(idx) => {
+            const next = prevAnswers.includes(idx)
+              ? prevAnswers.filter((i) => i !== idx)
+              : [...prevAnswers, idx];
+            updateAnswer({
+              answer_type: question.answer_type,
+              answer: next,
+            });
+          }}
+        />
+      );
+    }
+
+    case SurveyAnswerType.Dropdown: {
+      const { question, answer } = questionAnswer;
       return (
         <DropdownViewer
           t={t}
-          {...question.content}
+          {...question}
           answer_type={question.answer_type}
           disabled={disabled}
-          selectedOption={
-            answer.answer !== undefined ? (answer.answer as number) : null
-          }
-          onSelect={handleSelect as (optIndex: number) => void}
+          selectedOption={answer?.answer}
+          onSelect={(optIndex) => {
+            updateAnswer({
+              answer_type: question.answer_type,
+              answer: optIndex,
+            });
+          }}
         />
       );
-    case SurveyAnswerType.LinearScale:
+    }
+
+    case SurveyAnswerType.LinearScale: {
+      const { question, answer } = questionAnswer;
       return (
         <LinearScaleViewer
           t={t}
-          {...question.content}
+          {...question}
           answer_type={question.answer_type}
           disabled={disabled}
-          selectedValue={answer.answer as number}
-          onSelect={handleSelect as (value: number) => void}
+          selectedValue={answer?.answer}
+          onSelect={(value) =>
+            updateAnswer({
+              answer_type: question.answer_type,
+              answer: value,
+            })
+          }
         />
       );
+    }
+
     case SurveyAnswerType.ShortAnswer:
-    case SurveyAnswerType.Subjective:
+    case SurveyAnswerType.Subjective: {
+      const { question, answer } = questionAnswer;
       return (
         <SubjectiveViewer
           t={t}
-          {...question.content}
+          {...question}
           answer_type={question.answer_type}
           disabled={disabled}
-          inputValue={answer.answer as string}
-          onInputChange={handleSelect as (value: string) => void}
+          inputValue={answer?.answer ?? ''}
+          onInputChange={(value) =>
+            updateAnswer({
+              answer_type: question.answer_type,
+              answer: value,
+            })
+          }
         />
       );
+    }
+
     default:
       return <div></div>;
   }

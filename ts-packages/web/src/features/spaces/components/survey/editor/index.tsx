@@ -1,6 +1,9 @@
 import { DialPad } from '@/assets/icons/security';
-import { SurveyAnswerType, SurveyQuestion } from '@/types/survey-type';
-import { TFunction } from 'i18next';
+import {
+  createDefaultQuestion,
+  SurveyAnswerType,
+  SurveyQuestion,
+} from '@/types/survey-type';
 import TypeSelect from './type-select';
 import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
@@ -8,68 +11,10 @@ import ObjectiveQuestionEditor from './objective-question';
 import LinearScaleQuestionEditor from './linear-scale-question';
 import { Add } from '@/assets/icons/validations';
 import SwitchButton from '@/components/switch-button';
-
-function createDefaultQuestion(type: SurveyAnswerType): SurveyQuestion {
-  switch (type) {
-    case SurveyAnswerType.SingleChoice:
-    case SurveyAnswerType.MultipleChoice:
-      return {
-        answer_type: type,
-        content: {
-          title: '',
-          options: [''],
-          is_required: false,
-        },
-      };
-    case SurveyAnswerType.Checkbox:
-      return {
-        answer_type: type,
-        content: {
-          title: '',
-          description: '',
-          options: [''],
-          is_multi: false,
-          is_required: false,
-        },
-      };
-    case SurveyAnswerType.Dropdown:
-      return {
-        answer_type: type,
-        content: {
-          title: '',
-          is_required: false,
-          options: [''],
-        },
-      };
-    case SurveyAnswerType.LinearScale:
-      return {
-        answer_type: type,
-        content: {
-          title: '',
-          min_value: 1,
-          max_value: 5,
-          min_label: '',
-          max_label: '',
-          is_required: false,
-        },
-      };
-    case SurveyAnswerType.ShortAnswer:
-    case SurveyAnswerType.Subjective:
-      return {
-        answer_type: type,
-        content: {
-          title: '',
-          description: '',
-          is_required: false,
-        },
-      };
-    default:
-      throw new Error(`Unsupported answer type: ${type}`);
-  }
-}
+import { I18nFunction } from '..';
 
 interface SurveyEditorProps {
-  t: TFunction<'Survey', undefined>;
+  t: I18nFunction;
   questions: SurveyQuestion[];
   onAddQuestion: () => void;
   onDeleteQuestion: (questionIdx: number) => void;
@@ -120,7 +65,7 @@ function QuestionContent({
   question,
   onUpdate,
 }: {
-  t: TFunction<'Survey', undefined>;
+  t: I18nFunction;
   question: SurveyQuestion;
   onUpdate: (newQuestion: SurveyQuestion) => void;
 }) {
@@ -159,7 +104,7 @@ export function SurveyEditorItem({
   onUpdate,
   onDelete,
 }: {
-  t: TFunction<'Survey', undefined>;
+  t: I18nFunction;
   question: SurveyQuestion;
   onUpdate: (newQuestion: SurveyQuestion) => void;
   onDelete: () => void;
@@ -170,10 +115,9 @@ export function SurveyEditorItem({
   };
 
   const handleTitleChange = (value: string) => {
-    onUpdate({
-      ...question,
-      content: { ...question.content, title: value } as any,
-    });
+    const next_question = question;
+    next_question.title = value;
+    onUpdate(next_question);
   };
 
   return (
@@ -191,8 +135,8 @@ export function SurveyEditorItem({
           <Input
             className="bg-input-box-bg border border-input-box-border rounded-lg w-full px-4 !py-5.5 font-medium text-[15px]/[22.5px] text-text-primary placeholder:text-neutral-600 "
             type="text"
-            placeholder={t('title_hint')}
-            value={question.content.title}
+            placeholder={t('question_title_placeholder')}
+            value={question.title}
             onChange={(e) => handleTitleChange(e.target.value)}
           />
         </div>
@@ -213,7 +157,7 @@ export function SurveyEditorItem({
 }
 
 interface QuestionFooterProps {
-  t: TFunction<'Survey', undefined>;
+  t: I18nFunction;
   question: SurveyQuestion;
   onUpdate: (newQuestion: SurveyQuestion) => void;
   onDelete: () => void;
@@ -226,18 +170,16 @@ export function QuestionFooter({
   onDelete,
 }: QuestionFooterProps) {
   const handleRequiredChange = (value: boolean) => {
-    onUpdate({
-      ...question,
-      content: { ...question.content, is_required: value } as any,
-    });
+    const next_question = question;
+    next_question.is_required = value;
+    onUpdate(next_question);
   };
 
   const handleMultiChange = (value: boolean) => {
     if (question.answer_type === SurveyAnswerType.Checkbox) {
-      onUpdate({
-        ...question,
-        content: { ...question.content, is_multi: value },
-      });
+      const next_question = question;
+      next_question.is_multi = value;
+      onUpdate(next_question);
     }
   };
 
@@ -248,8 +190,8 @@ export function QuestionFooter({
           <LabelSwitchButton
             bgColor="bg-blue-500"
             textColor="text-blue-500"
-            label={t('multiple_selection')}
-            value={question.content.is_multi ?? false}
+            label={t('multiple_choice_label')}
+            value={question.is_multi ?? false}
             onChange={handleMultiChange}
           />
         )}
@@ -257,8 +199,8 @@ export function QuestionFooter({
         <LabelSwitchButton
           bgColor="bg-red-500"
           textColor="text-red-500"
-          label={t('required')}
-          value={question.content.is_required ?? false}
+          label={t('is_required_true_label')}
+          value={question.is_required ?? false}
           onChange={handleRequiredChange}
         />
 
@@ -267,7 +209,7 @@ export function QuestionFooter({
           onClick={onDelete}
         >
           <div className="text-[15px] text-neutral-500 font-medium cursor-pointer">
-            {t('delete')}
+            {t('delete_button_label')}
           </div>
           <Trash2 className="w-4.5 h-4.5 stroke-white light:stroke-neutral-500 cursor-pointer" />
         </div>

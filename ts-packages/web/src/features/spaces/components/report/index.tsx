@@ -10,42 +10,42 @@ import SummaryReport from './report';
 import SubjectiveQuestionSummary from './subjective-question-summary';
 import ObjectiveQuestionSummary from './objective-question-summary';
 import { useTranslation } from 'react-i18next';
+import { Button } from '@/components/ui/button';
 
 const handleDownloadExcel = (summaries: SurveySummary[]) => {
   logger.debug('Download Excel clicked with summaries: ', summaries);
   // FIXME: Implement download excel for Survey
 };
 
-export type I18nFunction = TFunction<'Analyze', undefined>;
-export interface AnalyzeProps {
+export type I18nFunction = TFunction<'SpaceSurveyReport', undefined>;
+export interface ReportProps {
   startedAt: number;
   endedAt: number;
   totalResponses: number;
   questions: SurveyQuestion[];
   summaries: SurveySummary[];
 }
-export function Analyze({
+export default function Report({
   startedAt,
   endedAt,
   totalResponses,
   questions,
   summaries,
-}: AnalyzeProps) {
-  const { t } = useTranslation('Analyze');
-
+}: ReportProps) {
+  const { t } = useTranslation('SpaceSurveyReport');
+  console.log('Report summaries', summaries);
   return (
     <div className="flex flex-col w-full">
       <div className="flex flex-row w-full justify-end mb-[20px]">
         <div className="w-fit">
-          <button
-            className="w-full px-[20px] py-[10px] rounded-[10px] bg-[#fcb300] hover:bg-[#ca8f00] text-black text-bold text-[16px] hover:text-black cursor-pointer"
-            disabled={false}
+          <Button
+            variant="rounded_primary"
             onClick={() => {
               handleDownloadExcel(summaries);
             }}
           >
-            {t('download_excel')}
-          </button>
+            {t('download_excel_button_label')}
+          </Button>
         </div>
       </div>
 
@@ -77,15 +77,11 @@ interface SummaryItemProps {
   summary: SurveySummary;
 }
 
-export default function SummaryItem({
-  t,
-  question,
-  summary,
-}: SummaryItemProps) {
+function SummaryItem({ t, question, summary }: SummaryItemProps) {
   if (
-    (summary.type === SurveyAnswerType.Subjective &&
+    (summary.answer_type === SurveyAnswerType.Subjective &&
       question.answer_type === SurveyAnswerType.Subjective) ||
-    (summary.type === SurveyAnswerType.ShortAnswer &&
+    (summary.answer_type === SurveyAnswerType.ShortAnswer &&
       question.answer_type === SurveyAnswerType.ShortAnswer)
   ) {
     return (
@@ -94,8 +90,8 @@ export default function SummaryItem({
   }
 
   if (
-    summary.type !== SurveyAnswerType.Subjective &&
-    summary.type !== SurveyAnswerType.ShortAnswer &&
+    summary.answer_type !== SurveyAnswerType.Subjective &&
+    summary.answer_type !== SurveyAnswerType.ShortAnswer &&
     question.answer_type !== SurveyAnswerType.Subjective &&
     question.answer_type !== SurveyAnswerType.ShortAnswer
   ) {

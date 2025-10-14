@@ -28,10 +28,13 @@ export default function SummaryReport({
 
   return (
     <div className="flex flex-row w-full justify-start items-center gap-[10px] max-tablet:hidden">
-      <SummaryBox label={t('participants')} value={totalResponses.toString()} />
-      <SummaryBox label={t('remainings')} value={dueDate} />
+      <SummaryBox
+        label={t('total_participants_label')}
+        value={totalResponses.toString()}
+      />
+      <SummaryBox label={t('remaining_days_label')} value={dueDate} />
       {(startedAt > 0 || endedAt > 0) && (
-        <SummaryBox label={t('date')} value={dateRange} />
+        <SummaryBox label={t('date_range_label')} value={dateRange} />
       )}
     </div>
   );

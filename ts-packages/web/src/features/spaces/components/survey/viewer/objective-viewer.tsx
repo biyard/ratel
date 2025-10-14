@@ -3,10 +3,10 @@
 import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 // import { Answer } from '@/lib/api/models/response';
 // import { Question } from '@/lib/api/models/survey';
-import Wrapper, { type WrapperProps } from './wrapper';
+import Title, { type TitleProps } from './title';
 import { ChoiceQuestion } from '@/types/survey-type';
 
-interface ObjectiveViewerProps extends ChoiceQuestion, WrapperProps {
+interface ObjectiveViewerProps extends ChoiceQuestion, TitleProps {
   disabled?: boolean;
   selectedIndexes: number[];
   onSelect: (index: number) => void;
@@ -23,7 +23,7 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
   } = props;
   return (
     <>
-      <Wrapper {...props} />
+      <Title {...props} />
       {image_url ? (
         <img
           className="object-contain max-h-70 w-fit rounded-lg"

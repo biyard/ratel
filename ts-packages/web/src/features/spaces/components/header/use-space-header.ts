@@ -63,6 +63,7 @@ export interface SpaceHeaderController {
   onPublish: (type: PublishType) => Promise<void>;
   onMakePublic: () => Promise<void>;
   onGoBack: () => void;
+  onModifyContent: () => void;
   updateTitle: (newTitle: string) => void;
   updateContent: (newContent: string) => void;
 }
@@ -82,8 +83,9 @@ export const useSpaceHeader = (
   const navigate = useNavigate();
 
   const isEditable =
-    space.status !== SpaceStatus.Waiting ||
-    space.publish_state === SpacePublishState.Published;
+    space.publish_state === SpacePublishState.Draft ||
+    (space.publish_state === SpacePublishState.Published &&
+      (space.status === null || space.status === SpaceStatus.Waiting));
 
   const title = store.isEditingMode ? store.title : post.title;
   const html_content = store.isEditingMode
@@ -132,5 +134,6 @@ export const useSpaceHeader = (
         visibility: { type: 'Public' },
       });
     },
+    onModifyContent: store.onModifyContent,
   };
 };

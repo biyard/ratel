@@ -11,17 +11,15 @@ interface SubjectiveResponseProps {
 }
 export default function SubjectiveQuestionSummary({
   t,
-  question: {
-    content: { title },
-  },
-  summary: { answers },
+  question: { title },
+  summary: { answers, total_count },
 }: SubjectiveResponseProps) {
   return (
     <div className="w-full p-5 bg-transparent rounded-xl flex flex-col gap-5 border border-neutral-500">
       <div className="flex items-center justify-between border-b border-divider pb-2">
         <div className="text-base font-semibold text-neutral-400">{title}</div>
         <div className="text-sm font-medium text-neutral-400">
-          {answers.length} {t('responses')}
+          {total_count} {t('total_response_count_unit')}
         </div>
       </div>
 
