@@ -15,7 +15,6 @@ pub mod types;
 pub mod utils;
 
 pub use bdk::prelude::*;
-pub use dto::*;
 
 mod route_v3;
 pub use route_v3::*;

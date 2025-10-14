@@ -2,7 +2,7 @@ use std::env;
 
 use crate::{
     AppState, config,
-    controllers::{self, web},
+    controllers::{web},
     route::{RouteDeps, route},
     utils::{
         aws::{
@@ -10,14 +10,12 @@ use crate::{
             get_aws_config,
         },
         dynamo_session_store::DynamoSessionStore,
-        mcp_middleware::mcp_middleware,
         sqs_client,
         telegram::TelegramBot,
     },
 };
 
 use bdk::prelude::{by_axum::axum::Router, *};
-use by_axum::axum::middleware;
 use by_types::DatabaseConfig;
 use bdk::prelude::sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
@@ -98,9 +96,9 @@ pub async fn api_main() -> Result<Router, crate::Error2> {
                 .checked_add(Duration::days(30))
                 .unwrap(),
         ));
-    let mcp_router = by_axum::axum::Router::new()
-        .nest_service("/mcp", controllers::mcp::route(pool.clone()).await.expect("MCP router"))
-        .layer(middleware::from_fn(mcp_middleware));
+    // let mcp_router = by_axum::axum::Router::new()
+    //     .nest_service("/mcp", controllers::mcp::route(pool.clone()).await.expect("MCP router"))
+    //     .layer(middleware::from_fn(mcp_middleware));
     let bot = if let Some(token) = conf.telegram_token {
         let res = TelegramBot::new(token).await;
         if let Err(err) = res {
@@ -135,7 +133,7 @@ pub async fn api_main() -> Result<Router, crate::Error2> {
     .await?;
 
     let app = app
-        .merge(mcp_router)
+        // .merge(mcp_router)
         .merge(web)
         .merge(api_router)
         // .layer(middleware::from_fn(authorization_middleware))
