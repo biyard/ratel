@@ -7,8 +7,8 @@ import { logger } from '@/lib/logger';
 import ParticipantsPanel from '@/features/discussion/components/participants_panel';
 import ChatPanel from '@/features/discussion/components/chat_panel';
 import RemoteContentShareVideo from '@/features/discussion/components/remote_content_share_video';
-import ContentShareVideo from '@/features/discussion/components/content_share_video';
 import LocalVideo from '@/features/discussion/components/local_video';
+import RemoteGalleryView from '@/features/discussion/components/remote_gallery_view';
 
 export default function DiscussionPage() {
   const { spacePk, discussionPk } = useParams<{
@@ -58,11 +58,6 @@ export default function DiscussionPage() {
                   />
                 )}
 
-                {/* {ctrl.meetingSession && ctrl.isSharing && (
-                  <div className="text-white">gggg</div>
-                  // <ContentShareVideo meetingSession={ctrl.meetingSession} />
-                )} */}
-
                 {ctrl.focusedAttendeeId && ctrl.meetingSession && (
                   <div className="w-full h-full z-100 bg-black border-4 border-white rounded-xl ">
                     <video
@@ -107,18 +102,20 @@ export default function DiscussionPage() {
             </div>
           </div>
 
-          {/* <div className="flex flex-row w-full max-tablet:hidden">
-            {meetingSession && !isSharing && !remoteContentTileOwner && (
-              <RemoteGalleryView
-                meetingSession={meetingSession}
-                videoTiles={videoTiles}
-                participants={participants}
-                u={users}
-                focusedAttendeeId={focusedAttendeeId}
-                setFocusedAttendeeId={changeFocusedAttendeeId}
-              />
-            )}
-          </div> */}
+          <div className="flex flex-row w-full max-tablet:hidden">
+            {ctrl.meetingSession &&
+              !ctrl.isSharing &&
+              !ctrl.remoteContentTileOwner && (
+                <RemoteGalleryView
+                  meetingSession={ctrl.meetingSession}
+                  videoTiles={ctrl.videoTiles}
+                  participants={ctrl.participants}
+                  u={ctrl.users}
+                  focusedAttendeeId={ctrl.focusedAttendeeId}
+                  setFocusedAttendeeId={ctrl.changeFocusedAttendeeId}
+                />
+              )}
+          </div>
 
           <Bottom
             isVideoOn={ctrl.isVideoOn}
