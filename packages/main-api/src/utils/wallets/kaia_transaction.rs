@@ -71,7 +71,7 @@ impl TransactionType {
 }
 
 impl TryFrom<&str> for TransactionType {
-    type Error = String;
+    type Error = crate::Error;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
@@ -94,7 +94,7 @@ impl TryFrom<&str> for TransactionType {
             "CANCEL" => Ok(TransactionType::Cancel),
             "FEE_DELEGATED_CANCEL" => Ok(TransactionType::FeeDelegatedCancel),
             "LEGACY" => Ok(TransactionType::Legacy),
-            _ => Err(format!("Unknown transaction type: {}", value)),
+            _ => Err(crate::Error::WalletError(format!("Unknown transaction type: {}", value))),
         }
     }
 }

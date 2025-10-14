@@ -119,7 +119,7 @@ async fn fetch_all_cert_pems(base: &str, api_key: &str, secret: &str) -> Result<
 pub fn sign_for_binance(
     secret: &str,
     body_json: &serde_json::Value,
-) -> dto::Result<(String, String, String)> {
+) -> crate::Result<(String, String, String)> {
     let timestamp_ms = (OffsetDateTime::now_utc().unix_timestamp_nanos() / 1_000_000).to_string();
 
     let mut rnd = [0u8; 16];
@@ -130,7 +130,7 @@ pub fn sign_for_binance(
     let sign_content = compose_sign_content(&timestamp_ms, &nonce, &payload);
 
     let mut mac = Hmac::<Sha512>::new_from_slice(secret.as_bytes())
-        .map_err(|e| dto::Error::HMacInitError(format!("HMAC init err: {:?}", e)))?;
+        .map_err(|e| crate::Error::HMacInitError(format!("HMAC init err: {:?}", e)))?;
     mac.update(sign_content.as_bytes());
     let sig = mac.finalize().into_bytes();
     let signature = hex::encode_upper(sig);
@@ -147,11 +147,11 @@ pub async fn verify_webhook_signature(
     sig_b64: &str,
     cert_sn_header: Option<&str>,
     raw_body: &str,
-) -> Result<(), dto::Error> {
+) -> Result<(), crate::Error> {
     let payload = compose_sign_content(ts, nonce, raw_body);
     let certs = fetch_all_cert_pems(base, api_key, secret)
         .await
-        .map_err(|e| dto::Error::ServerError(format!("certificates failed: {e}")))?;
+        .map_err(|e| crate::Error::ServerError(format!("certificates failed: {e}")))?;
 
     if let Some(sn) = cert_sn_header {
         if let Some(pem) = certs
@@ -174,7 +174,7 @@ pub async fn verify_webhook_signature(
             return Ok(());
         }
     }
-    Err(dto::Error::Unauthorized)
+    Err(crate::Error::Unauthorized("signature verification failed".to_string()))
 }
 
 pub fn apply_binance_headers(

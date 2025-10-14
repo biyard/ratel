@@ -54,7 +54,7 @@ impl<T: KaiaWallet, W: KaiaWallet> Erc1155Contract<T, W> {
         let input = self
             .contract
             .contract
-            .method::<(H160, Vec<U256>, Vec<U256>), ()>("mintBatch", (addr, ids, values))?
+            .method::<(H160, Vec<U256>, Vec<U256>), ()>("mintBatch", (addr, ids, values)).map_err(|e| Error::Klaytn(e.to_string()))?
             .calldata()
             .ok_or(Error::Klaytn("calldata error".to_string()))?;
 
@@ -77,7 +77,7 @@ impl<T: KaiaWallet, W: KaiaWallet> Erc1155Contract<T, W> {
         let input = self
             .contract
             .contract
-            .method::<_, ()>("mint", (addr, ids, values))?
+            .method::<_, ()>("mint", (addr, ids, values)).map_err(|e| Error::Klaytn(e.to_string()))?
             .calldata()
             .ok_or(Error::Klaytn("calldata error".to_string()))?;
 

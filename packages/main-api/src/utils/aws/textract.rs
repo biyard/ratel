@@ -5,7 +5,7 @@ use aws_config::{Region, retry::RetryConfig, timeout::TimeoutConfig};
 
 use aws_sdk_textract::{Client, Config, config::Credentials, types::Document};
 
-use dto::{Error, Result};
+use crate::{Error, Result};
 #[derive(Clone)]
 pub struct TextractClient {
     client: Client,
