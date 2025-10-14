@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 
-import useDeliberationSpace from '@/features/deliberation-space/hooks/use-deliberation-space';
+import useDeliberationSpace from '@/features/spaces/deliberations/hooks/use-deliberation-space';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 
 import {
@@ -40,8 +40,8 @@ import { SpaceVisibilityValue } from '@/types/space-common';
 
 import { SpaceVisibility as UiVisibility } from '@/types/space-common';
 import { SpaceVisibility as ApiVisibility } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
-import { useUpdateDeliberationMutation } from '@/hooks/spaces/deliberation/use-update-deliberation-mutation';
-import { useSendDeliberationResponseMutation } from '@/hooks/spaces/deliberation/use-send-response-mutation';
+import { useUpdateDeliberationMutation } from '@/features/spaces/deliberations/hooks/use-update-deliberation-mutation';
+import { useSendDeliberationResponseMutation } from '@/features/spaces/deliberations/hooks/use-send-deliberation-response-mutation';
 
 export class DeliberationSpaceController {
   private deps: ReturnType<typeof buildDeps>;
