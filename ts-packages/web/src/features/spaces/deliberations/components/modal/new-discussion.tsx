@@ -9,7 +9,7 @@ import CalendarDropdown from '@/components/calendar-dropdown';
 import { showErrorToast } from '@/lib/toast';
 import { useTranslation } from 'react-i18next';
 import InviteMemberPopup from './invite-member';
-import { DiscussionInfo } from '@/app/spaces/deliberation/[id]/types';
+import { DiscussionInfo } from '../../types/deliberation-type';
 
 export default function NewDiscussion({
   discussion,

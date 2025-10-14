@@ -2,13 +2,13 @@ import { useParams } from 'react-router';
 import { SpaceHeaderProvider } from '../../_components/header/provider';
 import SpaceHeader from '../../_components/header';
 import { useDeliberationSpaceController } from './use-deliberation-space-controller';
-import { DeliberationTab } from './types';
 import ThreadPage from '@/features/spaces/deliberations/components/tab/thread';
 import DeliberationPage from '@/features/spaces/deliberations/components/tab/deliberation';
 import { DeliberationSurveyPage } from '@/features/spaces/deliberations/components/tab/poll';
 import FinalConsensusPage from '@/features/spaces/deliberations/components/tab/recommendation';
 import DeliberationAnalyzePage from '@/features/spaces/deliberations/components/tab/analyze';
 import SpaceSideMenu from '@/features/spaces/deliberations/components/space_side_menu';
+import { DeliberationTab } from '@/features/spaces/deliberations/types/deliberation-tab';
 
 export default function DeliberationSpacePage() {
   const { spacePk } = useParams<{ spacePk: string }>();

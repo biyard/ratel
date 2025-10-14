@@ -26,15 +26,6 @@ import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
 
-import {
-  Deliberation,
-  DeliberationTab,
-  DeliberationTabType,
-  Thread,
-  Poll,
-  MappedResponse,
-  FinalConsensus,
-} from './types';
 import { Answer } from '@/lib/api/models/response';
 import { SpaceVisibilityValue } from '@/types/space-common';
 
@@ -42,6 +33,17 @@ import { SpaceVisibility as UiVisibility } from '@/types/space-common';
 import { SpaceVisibility as ApiVisibility } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { useUpdateDeliberationMutation } from '@/features/spaces/deliberations/hooks/use-update-deliberation-mutation';
 import { useSendDeliberationResponseMutation } from '@/features/spaces/deliberations/hooks/use-send-deliberation-response-mutation';
+import {
+  DeliberationTab,
+  DeliberationTabType,
+} from '@/features/spaces/deliberations/types/deliberation-tab';
+import { Thread } from '@/features/spaces/deliberations/types/thread-type';
+import {
+  MappedResponse,
+  Poll,
+} from '@/features/spaces/deliberations/types/poll-type';
+import { Deliberation } from '@/features/spaces/deliberations/types/deliberation-type';
+import { FinalConsensus } from '@/features/spaces/deliberations/types/final-consensus-type';
 
 export class DeliberationSpaceController {
   private deps: ReturnType<typeof buildDeps>;
@@ -322,7 +324,7 @@ function buildDeps(spacePk: string) {
   }>({
     answers:
       space.surveys.user_responses.length != 0
-        ? space.surveys.user_responses[0].answers ?? []
+        ? (space.surveys.user_responses[0].answers ?? [])
         : [],
     is_completed:
       space.surveys.user_responses.length !== 0

@@ -13,11 +13,11 @@ import { useUserInfo } from '@/hooks/use-user-info';
 import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 import { TFunction } from 'i18next';
+import { Deliberation } from '../types/deliberation-type';
 import {
-  Deliberation,
   DeliberationTab,
   DeliberationTabType,
-} from '@/app/spaces/deliberation/[id]/types';
+} from '../types/deliberation-tab';
 
 export type SpaceSideMenuProps = {
   t: TFunction<'DeliberationSpace', undefined>;
