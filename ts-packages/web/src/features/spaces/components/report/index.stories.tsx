@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 
-import { Analyze, I18nFunction } from './index';
+import { Report, I18nFunction } from './index';
 import {
   SurveyAnswerType,
   SurveyQuestion,
@@ -42,9 +42,9 @@ const mockSummaries: SurveySummary[] = [
   },
 ];
 
-const meta: Meta<typeof Analyze> = {
+const meta: Meta<typeof Report> = {
   title: 'Features/Spaces/Analyze',
-  component: Analyze,
+  component: Report,
   parameters: {
     layout: 'padded',
   },
@@ -59,7 +59,7 @@ const meta: Meta<typeof Analyze> = {
 };
 
 export default meta;
-type Story = StoryObj<typeof Analyze>;
+type Story = StoryObj<typeof Report>;
 
 export const Default: Story = {};
 
