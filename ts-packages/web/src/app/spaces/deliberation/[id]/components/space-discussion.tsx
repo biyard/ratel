@@ -22,7 +22,7 @@ import { useUserInfo } from '@/hooks/use-user-info';
 import {
   DiscussionMemberResponse,
   SpacePublishState,
-} from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+} from '@/lib/api/ratel/deliberation.spaces.v3';
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 import { DeliberationSpaceResponse } from '@/lib/api/ratel/deliberation.spaces.v3';
 

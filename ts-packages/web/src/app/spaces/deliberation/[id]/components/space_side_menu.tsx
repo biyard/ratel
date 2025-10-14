@@ -12,7 +12,7 @@ import SetSchedulePopup from '@/app/spaces/[id]/_components/modal/set-schedule';
 import {
   DeliberationSpace,
   SpacePublishState,
-} from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+} from '@/lib/api/ratel/deliberation.spaces.v3';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { DeliberationSpaceResponse } from '@/lib/api/ratel/deliberation.spaces.v3';
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
@@ -229,7 +229,7 @@ export function SpaceTabsMobile({
   selectedType,
   handleUpdateSelectedType,
 }: {
-  space: DeliberationSpace;
+  space: DeliberationSpaceResponse;
   selectedType: DeliberationTabType;
   handleUpdateSelectedType: (type: DeliberationTabType) => void;
 }) {
