@@ -65,45 +65,33 @@ export enum SurveyAnswerType {
   LinearScale = 'linear_scale',
 }
 
-// --- SurveyQuestion Enum Mapping ---
-
 /**
- * The core SurveyQuestion type, mapped from the Rust enum.
- * It uses a discriminated union based on the 'answer_type' tag,
- * which is derived from the #[serde(tag = "answer_type")] attribute.
- * #[serde(rename_all = "snake_case")] ensures the type names are snake_cased.
+ * SurveyQuestions
  */
 
-export interface SingleChoiceQuestionType {
+export interface SingleChoiceQuestionType extends ChoiceQuestion {
   answer_type: SurveyAnswerType.SingleChoice;
-  content: ChoiceQuestion;
 }
-export interface MultipleChoiceQuestionType {
+export interface MultipleChoiceQuestionType extends ChoiceQuestion {
   answer_type: SurveyAnswerType.MultipleChoice;
-  content: ChoiceQuestion;
 }
-export interface ShortAnswerQuestionType {
+export interface ShortAnswerQuestionType extends SubjectiveQuestion {
   answer_type: SurveyAnswerType.ShortAnswer;
-  content: SubjectiveQuestion;
 }
-export interface SubjectiveQuestionType {
+export interface SubjectiveQuestionType extends SubjectiveQuestion {
   answer_type: SurveyAnswerType.Subjective;
-  content: SubjectiveQuestion;
 }
-export interface CheckboxQuestionType {
+export interface CheckboxQuestionType extends CheckboxQuestion {
   answer_type: SurveyAnswerType.Checkbox;
-  content: CheckboxQuestion;
 }
-export interface DropdownQuestionType {
+export interface DropdownQuestionType extends DropdownQuestion {
   answer_type: SurveyAnswerType.Dropdown;
-  content: DropdownQuestion;
 }
-export interface LinearScaleQuestionType {
+export interface LinearScaleQuestionType extends LinearScaleQuestion {
   answer_type: SurveyAnswerType.LinearScale;
-  content: LinearScaleQuestion;
 }
 
-export type ObejctiveQuestionUnion =
+export type ObjectiveQuestionUnion =
   | SingleChoiceQuestionType
   | MultipleChoiceQuestionType
   | CheckboxQuestionType
@@ -114,7 +102,7 @@ export type SubjectiveQuestionUnion =
   | ShortAnswerQuestionType
   | SubjectiveQuestionType;
 
-export type SurveyQuestion = ObejctiveQuestionUnion | SubjectiveQuestionUnion;
+export type SurveyQuestion = ObjectiveQuestionUnion | SubjectiveQuestionUnion;
 
 export type SurveyAnswer =
   | { answer_type: SurveyAnswerType.SingleChoice; answer?: number }
@@ -125,6 +113,14 @@ export type SurveyAnswer =
   | { answer_type: SurveyAnswerType.Dropdown; answer?: number }
   | { answer_type: SurveyAnswerType.LinearScale; answer?: number };
 
+export type SurveyQuestionWithAnswer = {
+  [T in SurveyAnswerType]: {
+    answer_type: T;
+    question: Extract<SurveyQuestion, { answer_type: T }>;
+    answer?: Extract<SurveyAnswer, { answer_type: T }>;
+  };
+}[SurveyAnswerType];
+
 export interface BaseSubjectiveSummary {
   type: SurveyAnswerType.ShortAnswer | SurveyAnswerType.Subjective;
   total_count: number;
@@ -132,15 +128,15 @@ export interface BaseSubjectiveSummary {
 }
 
 export interface ShortAnswerSummary extends BaseSubjectiveSummary {
-  type: SurveyAnswerType.ShortAnswer;
+  answer_type: SurveyAnswerType.ShortAnswer;
 }
 
 export interface SubjectiveSummary extends BaseSubjectiveSummary {
-  type: SurveyAnswerType.Subjective;
+  answer_type: SurveyAnswerType.Subjective;
 }
 
 export interface BaseObjectiveSummary {
-  type:
+  answer_type:
     | SurveyAnswerType.SingleChoice
     | SurveyAnswerType.MultipleChoice
     | SurveyAnswerType.Checkbox
@@ -151,19 +147,19 @@ export interface BaseObjectiveSummary {
 }
 
 export interface SingleChoiceSummary extends BaseObjectiveSummary {
-  type: SurveyAnswerType.SingleChoice;
+  answer_type: SurveyAnswerType.SingleChoice;
 }
 export interface MultipleChoiceSummary extends BaseObjectiveSummary {
-  type: SurveyAnswerType.MultipleChoice;
+  answer_type: SurveyAnswerType.MultipleChoice;
 }
 export interface CheckboxSummary extends BaseObjectiveSummary {
-  type: SurveyAnswerType.Checkbox;
+  answer_type: SurveyAnswerType.Checkbox;
 }
 export interface DropdownSummary extends BaseObjectiveSummary {
-  type: SurveyAnswerType.Dropdown;
+  answer_type: SurveyAnswerType.Dropdown;
 }
 export interface LinearScaleSummary extends BaseObjectiveSummary {
-  type: SurveyAnswerType.LinearScale;
+  answer_type: SurveyAnswerType.LinearScale;
 }
 
 // The final discriminated union type
@@ -175,3 +171,73 @@ export type SurveySummary =
   | CheckboxSummary
   | DropdownSummary
   | LinearScaleSummary;
+
+export function createEmptyAnswer(type: SurveyAnswerType): SurveyAnswer {
+  switch (type) {
+    case SurveyAnswerType.SingleChoice:
+      return { answer_type: type, answer: undefined };
+    case SurveyAnswerType.MultipleChoice:
+      return { answer_type: type, answer: undefined };
+    case SurveyAnswerType.ShortAnswer:
+      return { answer_type: type, answer: undefined };
+    case SurveyAnswerType.Subjective:
+      return { answer_type: type, answer: undefined };
+    case SurveyAnswerType.Checkbox:
+      return { answer_type: type, answer: undefined };
+    case SurveyAnswerType.Dropdown:
+      return { answer_type: type, answer: undefined };
+    case SurveyAnswerType.LinearScale:
+      return { answer_type: type, answer: undefined };
+    default:
+      throw new Error(`Unsupported SurveyAnswerType: ${type}`);
+  }
+}
+
+export function createDefaultQuestion(type: SurveyAnswerType): SurveyQuestion {
+  switch (type) {
+    case SurveyAnswerType.SingleChoice:
+    case SurveyAnswerType.MultipleChoice:
+      return {
+        answer_type: type,
+        title: '',
+        options: [''],
+        is_required: false,
+      };
+    case SurveyAnswerType.Checkbox:
+      return {
+        answer_type: type,
+        title: '',
+        description: '',
+        options: [''],
+        is_multi: false,
+        is_required: false,
+      };
+    case SurveyAnswerType.Dropdown:
+      return {
+        answer_type: type,
+        title: '',
+        is_required: false,
+        options: [''],
+      };
+    case SurveyAnswerType.LinearScale:
+      return {
+        answer_type: type,
+        title: '',
+        min_value: 1,
+        max_value: 5,
+        min_label: '',
+        max_label: '',
+        is_required: false,
+      };
+    case SurveyAnswerType.ShortAnswer:
+    case SurveyAnswerType.Subjective:
+      return {
+        answer_type: type,
+        title: '',
+        description: '',
+        is_required: false,
+      };
+    default:
+      throw new Error(`Unsupported answer type: ${type}`);
+  }
+}

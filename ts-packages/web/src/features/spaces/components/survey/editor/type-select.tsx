@@ -6,14 +6,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SurveyAnswerType } from '@/types/survey-type';
-import { TFunction } from 'i18next';
+import { I18nFunction } from '..';
 
 export default function TypeSelect({
   t,
   value,
   onChange,
 }: {
-  t: TFunction<'Survey', undefined>;
+  t: I18nFunction;
   value: SurveyAnswerType;
   onChange: (val: SurveyAnswerType) => void;
 }) {
@@ -25,7 +25,7 @@ export default function TypeSelect({
       <SelectContent>
         {Object.values(SurveyAnswerType).map((type) => (
           <SelectItem key={type} value={type} className="text-neutral-600">
-            {t(type)}
+            {t(`${type}_label`)}
           </SelectItem>
         ))}
       </SelectContent>

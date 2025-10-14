@@ -94,12 +94,10 @@ const QK_SPACES = 'spaces';
 
 export const spaceKeys = {
   all: [QK_SPACES] as const,
-  // detail: (pk: string) => [...spaceKeys.all, 'detail', pk] as const,
-  detail: (pk: string, type?: SpaceType) => {
-    if (type) {
-      return [...spaceKeys.all, 'detail', type, pk] as const;
-    } else {
-      return [...spaceKeys.all, 'detail', pk] as const;
-    }
-  },
+  detail: (pk: string) => [...spaceKeys.all, 'detail', pk] as const,
+};
+
+export const pollSpaceKeys = {
+  all: [QK_SPACES, SpaceType.Poll] as const,
+  summary: (pk: string) => [...pollSpaceKeys.all, pk, 'summary'] as const,
 };

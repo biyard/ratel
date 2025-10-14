@@ -1,24 +1,28 @@
 import {
-  ObejctiveQuestionUnion,
+  ObjectiveQuestionUnion,
   BaseObjectiveSummary,
   SurveyAnswerType,
 } from '@/types/survey-type';
 
 interface ObjectiveResponseProps {
   t: I18nFunction;
-  question: ObejctiveQuestionUnion;
+  question: ObjectiveQuestionUnion;
   summary: BaseObjectiveSummary;
 }
 export default function ObjectiveQuestionSummary({
   t,
   question,
-  summary: { total_count, answers },
+  summary,
 }: ObjectiveResponseProps) {
+  console.log('Rendering ObjectiveQuestionSummary', summary);
+  const { answers, total_count } = summary;
+  console.log('answers', answers);
+
   const options: Record<string, number> = Object.fromEntries(
     Object.entries(answers).map(([key, count]) => {
       let label = key;
       if (question.answer_type !== SurveyAnswerType.LinearScale) {
-        label = question.content.options[parseInt(key)];
+        label = question.options[parseInt(key)];
       }
 
       return [label, count] as [string, number];
@@ -29,10 +33,10 @@ export default function ObjectiveQuestionSummary({
     <div className="w-full p-5 bg-transparent rounded-xl flex flex-col gap-5 border border-neutral-500">
       <div className="flex items-center justify-between border-b border-input-box-border pb-2">
         <div className="text-base font-semibold text-neutral-400">
-          {question.content.title}
+          {question.title}
         </div>
         <div className="text-sm font-medium text-neutral-400">
-          {total_count} {t('responses')}
+          {total_count} {t('total_response_count_unit')}
         </div>
       </div>
 
@@ -90,7 +94,7 @@ interface PieChartProps {
 }
 
 function PieChart({ answers, total_count }: PieChartProps) {
-  let options = Object.entries(answers).map(([label, count]) => ({
+  const options = Object.entries(answers).map(([label, count]) => ({
     label,
     count,
     ratio: (count / total_count) * 100,
@@ -103,6 +107,7 @@ function PieChart({ answers, total_count }: PieChartProps) {
     outerRadius,
     percent,
     index,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }: any) => {
     if (
       cx === undefined ||

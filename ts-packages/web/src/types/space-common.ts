@@ -1,14 +1,14 @@
 import { BoosterType } from './booster-type';
 
 export enum SpacePublishState {
-  Draft = 'Draft',
-  Published = 'Published',
+  Draft = 'DRAFT',
+  Published = 'PUBLISHED',
 }
 
 export enum SpaceStatus {
-  Waiting = 'Waiting',
-  InProgress = 'InProgress',
-  Finished = 'Finished',
+  Waiting = 'WAITING',
+  InProgress = 'IN_PROGRESS',
+  Finished = 'FINISHED',
 }
 
 export type SpaceVisibility =
@@ -19,7 +19,7 @@ export type SpaceVisibility =
 export const SpaceVisibilityValue = {
   Private: { type: 'Private' } as const,
   Public: { type: 'Public' } as const,
-  Team: (team_pk: string) => ({ type: 'Team', team_pk } as const),
+  Team: (team_pk: string) => ({ type: 'Team', team_pk }) as const,
 };
 
 export interface SpaceCommon {

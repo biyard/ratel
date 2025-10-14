@@ -10,6 +10,7 @@ import {
 import { TFunction } from 'i18next';
 
 import { SurveyQuestion } from '@/types/survey-type';
+import { I18nFunction } from '..';
 
 type LinearScaleQuestion = Extract<
   SurveyQuestion,
@@ -17,7 +18,7 @@ type LinearScaleQuestion = Extract<
 >;
 
 interface LinearScaleQuestionEditorProps {
-  t: TFunction<'Survey', undefined>;
+  t: I18nFunction;
   question: LinearScaleQuestion;
   onUpdate: (newQuestion: LinearScaleQuestion) => void;
 }
@@ -27,17 +28,15 @@ export default function LinearScaleQuestionEditor({
   question,
   onUpdate,
 }: LinearScaleQuestionEditorProps) {
-  const { content } = question;
-
   const handleMaxValueChange = (val: number) => {
-    onUpdate({ ...question, content: { ...content, max_value: val } });
+    onUpdate({ ...question, max_value: val });
   };
 
   const handleLabelChange = (target: 'min' | 'max', label: string) => {
     if (target === 'min') {
-      onUpdate({ ...question, content: { ...content, min_label: label } });
+      onUpdate({ ...question, min_label: label });
     } else {
-      onUpdate({ ...question, content: { ...content, max_label: label } });
+      onUpdate({ ...question, max_label: label });
     }
   };
 
@@ -45,11 +44,11 @@ export default function LinearScaleQuestionEditor({
     <div className="flex flex-col gap-4">
       <div className="flex flex-row items-center gap-2">
         <div className="bg-input-box-bg border border-input-box-border rounded-md px-3 py-2 text-text-primary text-sm text-start min-w-20 ">
-          {content.min_value}
+          {question.min_value}
         </div>
         <span className="text-text-primary text-sm">~</span>
         <Select
-          value={content.max_value.toString()}
+          value={question.max_value.toString()}
           onValueChange={(value) => {
             const parsed = parseInt(value, 10);
             if (!isNaN(parsed)) {
@@ -58,7 +57,7 @@ export default function LinearScaleQuestionEditor({
           }}
         >
           <SelectTrigger className="w-full max-w-70">
-            <SelectValue placeholder={t('choose')} />
+            <SelectValue placeholder={t('dropdown_select_placeholder')} />
           </SelectTrigger>
           <SelectContent>
             {Array.from({ length: 9 }, (_, i) => i + 2).map(
@@ -78,12 +77,12 @@ export default function LinearScaleQuestionEditor({
       <div className="flex flex-col justify-start items-start w-full">
         <div className="flex flex-row items-center justify-start gap-5 w-full mb-3">
           <span className="font-medium text-text-primary text-sm w-5 text-center">
-            {content.min_value}
+            {question.min_value}
           </span>
           <Input
             className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 light:text-text-primary rounded-none"
-            placeholder={t('label_hint')}
-            value={content.min_label || ''}
+            placeholder={t('option_input_placeholder')}
+            value={question.min_label || ''}
             onChange={(e) => {
               const val = e.target.value;
               handleLabelChange('min', val);
@@ -93,12 +92,12 @@ export default function LinearScaleQuestionEditor({
 
         <div className="flex flex-row items-center justify-start gap-5 w-full">
           <span className="font-medium text-text-primary text-sm w-5 text-center">
-            {content.max_value}
+            {question.max_value}
           </span>
           <Input
             className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 light:text-text-primary rounded-none"
-            placeholder={t('label_hint')}
-            value={content.max_label || ''}
+            placeholder={t('option_input_placeholder')}
+            value={question.max_label || ''}
             onChange={(e) => {
               const val = e.target.value;
               handleLabelChange('max', val);

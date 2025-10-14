@@ -1,9 +1,9 @@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import Wrapper, { type WrapperProps } from './wrapper';
+import Title, { type TitleProps } from './title';
 import { SubjectiveQuestion, SurveyAnswerType } from '@/types/survey-type';
 
-interface SubjectiveViewerProps extends SubjectiveQuestion, WrapperProps {
+interface SubjectiveViewerProps extends SubjectiveQuestion, TitleProps {
   inputValue: string;
   disabled?: boolean;
 
@@ -14,11 +14,11 @@ export default function SubjectiveViewer(props: SubjectiveViewerProps) {
 
   return (
     <div className="flex flex-col w-full gap-[10px]">
-      <Wrapper {...props} />
+      <Title {...props} />
       {answer_type === SurveyAnswerType.ShortAnswer ? (
         <Input
           type="text"
-          placeholder={t('subjective_hint')}
+          placeholder={t('subjective_input_placeholder')}
           className=" bg-input-box-bg border border-input-box-border text-base text-text-primary placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
           value={inputValue}
           onChange={(e) => onInputChange(e.target.value)}
@@ -27,7 +27,7 @@ export default function SubjectiveViewer(props: SubjectiveViewerProps) {
       ) : (
         <Textarea
           rows={7}
-          placeholder={t('subjective_hint')}
+          placeholder={t('subjective_input_placeholder')}
           className="bg-input-box-bg border border-input-box-border min-h-[185px]  text-base text-text-primary placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
           value={inputValue}
           onChange={(e) => onInputChange(e.target.value)}

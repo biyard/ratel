@@ -1,10 +1,10 @@
 import RadioButton from '@/components/radio-button';
-import Wrapper, { WrapperProps } from './wrapper';
+import Title, { type TitleProps } from './title';
 import { logger } from '@/lib/logger';
 import { LinearScaleQuestion } from '@/types/survey-type';
 import React from 'react';
 
-interface LinearScaleViewerProps extends LinearScaleQuestion, WrapperProps {
+interface LinearScaleViewerProps extends LinearScaleQuestion, TitleProps {
   disabled?: boolean;
   selectedValue?: number;
   onSelect: (value: number) => void;
@@ -62,7 +62,7 @@ export default function LinearScaleViewer(props: LinearScaleViewerProps) {
 
   return (
     <div className="flex flex-col w-full gap-4">
-      <Wrapper {...props} />
+      <Title {...props} />
 
       <div
         ref={wrapRef}
