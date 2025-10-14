@@ -80,7 +80,7 @@ mod noop {
             Arc::new(Self {})
         }
 
-        pub async fn send_message(&self, _message: &str) -> dto::Result<()> {
+        pub async fn send_message(&self, _message: &str) -> crate::Result<()> {
             Ok(())
         }
     }
