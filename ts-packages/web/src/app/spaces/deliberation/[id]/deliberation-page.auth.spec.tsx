@@ -34,6 +34,7 @@ test.describe.serial('[DeliberationPage] Authenticated Users ', () => {
 
   test('Create a deliberation Space', async () => {
     await page.goto(threadUrl);
+    await page.waitForTimeout(3000);
 
     await click(page, { text: 'Create a Space' });
 
@@ -53,6 +54,7 @@ test.describe.serial('[DeliberationPage] Authenticated Users ', () => {
 
   test('Edit Summary', async () => {
     await page.goto(deliberationUrl);
+    await page.waitForTimeout(3000);
 
     const newTitle = `E2E Edited Title ${Date.now()}`;
     const bodyL1 = 'This summary was edited by Playwright';
@@ -105,6 +107,7 @@ test.describe.serial('[DeliberationPage] Authenticated Users ', () => {
 
   test('Edit Deliberation', async () => {
     await page.goto(deliberationUrl);
+    await page.waitForTimeout(3000);
 
     const title = 'deliberation discussion title';
     const description = 'deliberation discussion description';
@@ -141,6 +144,7 @@ test.describe.serial('[DeliberationPage] Authenticated Users ', () => {
 
   test('Update Deliberation Discussion', async () => {
     await page.goto(deliberationUrl);
+    await page.waitForTimeout(3000);
 
     const title = 'update deliberation discussion title';
     const description = 'update deliberation discussion description';
@@ -199,6 +203,7 @@ test.describe.serial('[DeliberationPage] Authenticated Users ', () => {
 
   test('Edit Poll', async () => {
     await page.goto(deliberationUrl);
+    await page.waitForTimeout(3000);
 
     await page.locator('div.cursor-pointer', { hasText: 'Poll' }).click();
 
@@ -295,6 +300,7 @@ test.describe.serial('[DeliberationPage] Authenticated Users ', () => {
 
   test('Edit Recommendation', async () => {
     await page.goto(deliberationUrl);
+    await page.waitForTimeout(3000);
 
     await page
       .locator('div.cursor-pointer', { hasText: 'Recommendation' })
@@ -351,6 +357,7 @@ test.describe.serial('[DeliberationPage] Authenticated Users ', () => {
 
   test('Publish', async () => {
     await page.goto(deliberationUrl);
+    await page.waitForTimeout(3000);
     await page.getByRole('button', { name: 'Publish' }).click();
 
     const modal = page.locator('#popup-zone');
