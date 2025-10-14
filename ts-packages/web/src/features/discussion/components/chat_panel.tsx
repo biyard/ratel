@@ -48,8 +48,6 @@ export default function ChatPanel({
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
   };
 
-  console.log('users: ', users, ', participants: ', participants);
-
   return (
     <aside
       role="dialog"
