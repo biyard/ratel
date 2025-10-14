@@ -3,6 +3,7 @@ import { NewSurveyCreateRequest, Question } from '@/lib/api/models/survey';
 import { NewDiscussionCreateRequest } from '@/lib/api/models/discussion';
 import { Answer } from '@/lib/api/models/response';
 import { call } from '@/lib/api/ratel/call';
+import { DeliberationDiscussionResponse } from '@/features/discussion/utils/discussion.v3';
 
 export type PartitionString = string;
 
@@ -112,39 +113,6 @@ export type SpaceStatus = (typeof SpaceStatus)[keyof typeof SpaceStatus];
 
 export interface ElearningResponse {
   files: File[];
-}
-
-export interface DiscussionMemberResponse {
-  user_pk: PartitionString;
-  author_display_name: string;
-  author_profile_url: string;
-  author_username: string;
-}
-
-export interface DiscussionParticipantResponse {
-  user_pk: PartitionString;
-  author_display_name: string;
-  author_profile_url: string;
-  author_username: string;
-  participant_id: string;
-}
-
-export interface DeliberationDiscussionResponse {
-  pk: string | undefined;
-  started_at: number;
-  ended_at: number;
-  name: string;
-  description: string;
-  meeting_id: string | null;
-  pipeline_id: string;
-  media_pipeline_arn: string | null;
-  record: string | null;
-  user_pk: PartitionString;
-  author_display_name: string;
-  author_profile_url: string;
-  author_username: string;
-  members: DiscussionMemberResponse[];
-  participants: DiscussionParticipantResponse[];
 }
 
 export interface DeliberationSpace {

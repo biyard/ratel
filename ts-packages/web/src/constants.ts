@@ -95,3 +95,10 @@ export const spaceKeys = {
   all: [QK_SPACES] as const,
   detail: (pk: string) => [...spaceKeys.all, 'detail', pk] as const,
 };
+
+const QK_DISCUSSION = 'discussions';
+
+export const discussionKeys = {
+  detail: (spacePk: string, discussionPk: string) =>
+    [QK_DISCUSSION, spacePk, discussionPk] as const,
+};
