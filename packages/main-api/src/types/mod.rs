@@ -31,6 +31,8 @@ pub mod team_group_permission;
 pub mod theme;
 pub mod url_type;
 pub mod user_type;
+pub mod meeting_info;
+pub mod media_placement_info;
 
 pub use booster_type::*;
 pub use dynamo_entity_type::*;

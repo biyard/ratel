@@ -26,7 +26,7 @@ impl KaiaLocalWallet {
             .await
             .map_err(|e| crate::Error::Klaytn(e.to_string()))?;
         let wallet = private_key
-            .parse::<LocalWallet>()?
+            .parse::<LocalWallet>().map_err(|e| crate::Error::Klaytn(e.to_string()))?
             .with_chain_id(chain_id.as_u64());
         let provider = provider.with_signer(wallet.clone());
         tracing::debug!("wallet chain id: {:?}", wallet.chain_id());

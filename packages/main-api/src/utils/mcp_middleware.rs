@@ -8,7 +8,7 @@ use by_axum::axum::{
     middleware::Next,
     response::{IntoResponse, Response},
 };
-use dto::by_axum::auth::verify_jwt;
+use by_axum::auth::verify_jwt;
 
 pub async fn mcp_middleware(mut req: Request<Body>, next: Next) -> Response {
     // Extract the access token from the Authorization header
