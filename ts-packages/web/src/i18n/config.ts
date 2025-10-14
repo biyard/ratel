@@ -86,17 +86,13 @@ export const resources = {
   },
 };
 
-Object.entries({ Threads: i18nThreadPage }).forEach(([key, value]) => {
+Object.entries({
+  Threads: i18nThreadPage,
+  DeliberationSpace: i18nDeliberationPage,
+}).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
 });
-
-Object.entries({ DeliberationSpace: i18nDeliberationPage }).forEach(
-  ([key, value]) => {
-    resources.en[key] = value.en;
-    resources.ko[key] = value.ko;
-  },
-);
 
 i18next.use(LanguageDetector).use(initReactI18next);
 
