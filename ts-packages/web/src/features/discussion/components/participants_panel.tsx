@@ -1,5 +1,3 @@
-'use client';
-
 import {
   Clear,
   Logo,
@@ -9,7 +7,6 @@ import {
   ZoomVideoOn,
 } from '@/components/icons';
 import { useEffect, useMemo, useState } from 'react';
-
 import { DefaultMeetingSession } from 'amazon-chime-sdk-js';
 import {
   DiscussionParticipantResponse,
@@ -21,6 +18,8 @@ export default function ParticipantsPanel({
   videoStates,
   users,
   participants,
+  setFocusedAttendeeId,
+  meetingSession,
   onClose,
 }: {
   micStates: Record<string, boolean>;
@@ -40,9 +39,21 @@ export default function ParticipantsPanel({
 
   const userIdToAttendeeId = useMemo(() => {
     const map = new Map<string, string>();
-    users.forEach((u) => map.set(u.user_pk, u.participant_id));
+    for (const u of users) map.set(u.user_pk, u.participant_id);
     return map;
   }, [users]);
+
+  const uniqueParticipants = useMemo(() => {
+    const seen = new Set<string>();
+    const out: DiscussionUser[] = [];
+    for (const p of participants) {
+      if (p?.user_pk && !seen.has(p.user_pk)) {
+        seen.add(p.user_pk);
+        out.push(p);
+      }
+    }
+    return out;
+  }, [participants]);
 
   const handleClose = () => {
     setVisible(false);
@@ -79,14 +90,14 @@ export default function ParticipantsPanel({
       </div>
 
       <div className="flex flex-col flex-1 px-[10px] py-[20px] gap-[20px]">
-        {participants.map((participant, index) => {
-          const attendeeId = userIdToAttendeeId.get(participant.user_pk);
-          const isMicOn = micStates[attendeeId ?? ''] ?? false;
-          const isVideoOn = videoStates[attendeeId ?? ''] ?? false;
+        {uniqueParticipants.map((participant) => {
+          const attendeeId = userIdToAttendeeId.get(participant.user_pk) ?? '';
+          const isMicOn = micStates[attendeeId] ?? false;
+          const isVideoOn = videoStates[attendeeId] ?? false;
 
           return (
             <div
-              key={index}
+              key={participant.user_pk}
               className="flex flex-row w-full justify-between items-center"
             >
               <div className="flex flex-row w-fit items-center gap-1 min-w-0">

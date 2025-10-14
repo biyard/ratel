@@ -58,9 +58,10 @@ export default function DiscussionPage() {
                   />
                 )}
 
-                {ctrl.meetingSession && ctrl.isSharing && (
-                  <ContentShareVideo meetingSession={ctrl.meetingSession} />
-                )}
+                {/* {ctrl.meetingSession && ctrl.isSharing && (
+                  <div className="text-white">gggg</div>
+                  // <ContentShareVideo meetingSession={ctrl.meetingSession} />
+                )} */}
 
                 {ctrl.focusedAttendeeId && ctrl.meetingSession && (
                   <div className="w-full h-full z-100 bg-black border-4 border-white rounded-xl ">

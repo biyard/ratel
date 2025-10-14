@@ -57,9 +57,9 @@ export function discussionExitMeeting(
 }
 
 export interface MeetingData {
-  meeting: MeetingInfo;
-  attendee: AttendeeInfo;
-  participants: DiscussionUser[];
+  Meeting: MeetingInfo;
+  Attendee: AttendeeInfo;
+  Participants: DiscussionUser[];
 }
 
 export interface DiscussionUser {

@@ -268,22 +268,17 @@ function buildDeps(spacePk: string, discussionPk: string) {
         discussionPk,
       });
 
-      data.refetch();
-
       const joinInfo = await discussionMeetingMutation.mutateAsync({
         spacePk,
         discussionPk,
       });
 
-      console.log('join info: ', joinInfo);
-
-      setParticipants(joinInfo.participants);
+      setParticipants(joinInfo.Participants);
       const chimeLogger = new ConsoleLogger('ChimeLogs', LogLevel.INFO);
       const deviceController = new DefaultDeviceController(chimeLogger);
 
       const raw = joinInfo as any;
 
-      // 1) 응답 모양 다양성 대응 (snake/pascal/data 래핑 모두 케이스 핸들)
       const meeting =
         raw?.meeting ??
         raw?.Meeting ??
@@ -486,15 +481,21 @@ function buildDeps(spacePk: string, discussionPk: string) {
         });
 
         setParticipants((prev) => {
-          const incoming = new Set(
-            joinInfo.participants.map((p: any) => p.user_pk),
+          const list = (
+            Array.isArray(joinInfo?.Participants) ? joinInfo.Participants : []
+          ) as Array<{ user_pk?: string }>;
+
+          const incomingIds = new Set(
+            list.map((p) => p?.user_pk).filter(Boolean) as string[],
           );
-          return [
-            ...prev.filter((p) => incoming.has(p.user_pk)),
-            ...joinInfo.participants.filter(
-              (p: any) => !prev.some((pp) => pp.user_pk === p.id),
-            ),
-          ];
+
+          const keepExisting = prev.filter((p) => incomingIds.has(p.user_pk));
+
+          const addNew = list.filter(
+            (p) => p?.user_pk && !prev.some((pp) => pp.user_pk === p.user_pk),
+          ) as any[];
+
+          return [...keepExisting, ...addNew];
         });
       } catch (err) {}
     };
