@@ -139,9 +139,12 @@ export default function FeedCard(props: FeedCardProps) {
     }
   };
 
-  const href = post.space_pk
-    ? route.space(post.space_pk)
-    : route.threadByFeedId(post.pk);
+  const href =
+    post.space_pk == null
+      ? route.threadByFeedId(post.pk)
+      : post?.space_pk?.includes('DELIBERATION')
+      ? route.deliberationSpaceById(post.space_pk)
+      : route.pollSpaceByPk(post.space_pk);
 
   return (
     <Col className="relative rounded-[10px] bg-card-bg-secondary border border-card-enable-border">
@@ -254,7 +257,9 @@ export function IconText({
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
   return (
     <Row
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-text-primary text-[15px] px-3 py-3 ${className || ''}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-text-primary text-[15px] px-3 py-3 ${
+        className || ''
+      }`}
       {...props}
     >
       {children}
@@ -414,7 +419,9 @@ export function FeedFooter({
 
   return (
     <Row
-      className={`items-center justify-between border-t w-full px-5 ${space_id && space_type ? 'border-divider' : 'border-divider'} `}
+      className={`items-center justify-between border-t w-full px-5 ${
+        space_id && space_type ? 'border-divider' : 'border-divider'
+      } `}
     >
       {space_id && space_type ? (
         <div className="max-tablet:!hidden">
@@ -428,7 +435,11 @@ export function FeedFooter({
         <div></div>
       )}
       <div
-        className={`flex flex-row ${space_id && space_type ? 'w-fit items-center max-tablet:!w-full max-tablet:!justify-between max-tablet:!items-center' : 'w-full justify-between items-center'}`}
+        className={`flex flex-row ${
+          space_id && space_type
+            ? 'w-fit items-center max-tablet:!w-full max-tablet:!justify-between max-tablet:!items-center'
+            : 'w-full justify-between items-center'
+        }`}
       >
         <IconText
           onClick={(evt) => {

@@ -1,15 +1,15 @@
 use crate::{
     AppState, Error2,
-    models::space::{DeliberationDetailResponse, DeliberationMetadata, SpaceCommon},
+    models::{
+        User,
+        space::{DeliberationDetailResponse, DeliberationMetadata, SpaceCommon},
+    },
     types::{Partition, TeamGroupPermission},
-    utils::dynamo_extractor::extract_user_from_session,
 };
-use bdk::prelude::axum::{
-    Extension,
-    extract::{Json, Path, State},
-};
+use bdk::prelude::axum::extract::{Json, Path, State};
 use bdk::prelude::*;
-use tower_sessions::Session;
+
+use aide::NoApi;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -21,15 +21,17 @@ pub struct DeliberationGetPath {
 
 pub async fn get_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(session): Extension<Session>,
+    NoApi(user): NoApi<Option<User>>,
     Path(DeliberationGetPath { space_pk }): Path<DeliberationGetPath>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
-    let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
-    let user = extract_user_from_session(&dynamo.client, &session).await?;
+    if !matches!(space_pk, Partition::DeliberationSpace(_)) {
+        return Err(Error2::NotFoundDeliberationSpace);
+    }
+
     let (_, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
-        Some(&user.pk),
+        user.as_ref().map(|u| &u.pk),
         TeamGroupPermission::SpaceRead,
     )
     .await?;
@@ -37,6 +39,7 @@ pub async fn get_deliberation_handler(
         return Err(Error2::NoPermission);
     }
 
+    let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
     tracing::debug!("Deliberation metadata retrieved: {:?}", metadata);
     let mut metadata: DeliberationDetailResponse = metadata.into();
 
@@ -44,7 +47,7 @@ pub async fn get_deliberation_handler(
     let responses = metadata.clone().surveys.responses;
 
     for response in responses {
-        if response.user_pk == user.pk {
+        if response.user_pk == user.clone().unwrap_or_default().pk {
             metadata.surveys.user_responses.push(response);
         }
     }

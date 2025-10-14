@@ -1,24 +1,21 @@
 use crate::{
     AppState, Error2,
-    models::space::{
-        DeliberationMetadata, DeliberationSpace, DeliberationSpaceContent,
-        DeliberationSpaceDiscussion, DeliberationSpaceElearning, DeliberationSpaceMember,
-        DeliberationSpaceParticipant, DeliberationSpaceQuestion, DeliberationSpaceResponse,
-        DeliberationSpaceSurvey, SpaceCommon,
+    models::{
+        User,
+        space::{
+            DeliberationMetadata, DeliberationSpace, DeliberationSpaceContent,
+            DeliberationSpaceDiscussion, DeliberationSpaceElearning, DeliberationSpaceMember,
+            DeliberationSpaceParticipant, DeliberationSpaceQuestion, DeliberationSpaceResponse,
+            DeliberationSpaceSurvey, SpaceCommon,
+        },
     },
-    types::{EntityType, Partition, TeamGroupPermission},
-    utils::{
-        dynamo_extractor::extract_user_from_session,
-        security::{RatelResource, check_permission_from_session},
-    },
+    types::{Partition, TeamGroupPermission},
 };
-use bdk::prelude::axum::{
-    Extension,
-    extract::{Json, Path, State},
-};
+use bdk::prelude::axum::extract::{Json, Path, State};
 use bdk::prelude::*;
 use serde::{Deserialize, Serialize};
-use tower_sessions::Session;
+
+use aide::NoApi;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct DeleteDeliberationResponse {
@@ -35,41 +32,25 @@ pub struct DeliberationDeletePath {
 
 pub async fn delete_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(session): Extension<Session>,
+    NoApi(user): NoApi<Option<User>>,
     Path(DeliberationDeletePath { space_pk }): Path<DeliberationDeletePath>,
 ) -> Result<Json<DeleteDeliberationResponse>, Error2> {
+    if !matches!(space_pk, Partition::DeliberationSpace(_)) {
+        return Err(Error2::NotFoundDeliberationSpace);
+    }
+
+    let (_, has_perm) = SpaceCommon::has_permission(
+        &dynamo.client,
+        &space_pk,
+        user.as_ref().map(|u| &u.pk),
+        TeamGroupPermission::SpaceDelete,
+    )
+    .await?;
+    if !has_perm {
+        return Err(Error2::NoPermission);
+    }
+
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
-
-    let space = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
-        .await?
-        .ok_or(Error2::NotFound("Space not found".to_string()))?;
-
-    let _ = match space.user_pk.clone() {
-        Partition::Team(_) => {
-            check_permission_from_session(
-                &dynamo.client,
-                &session,
-                RatelResource::Team {
-                    team_pk: space.user_pk.to_string(),
-                },
-                vec![TeamGroupPermission::SpaceDelete],
-            )
-            .await?;
-        }
-        Partition::User(_) => {
-            let user = extract_user_from_session(&dynamo.client, &session).await?;
-            if user.pk != space.user_pk {
-                return Err(Error2::Unauthorized(
-                    "You do not have permission to delete this deliberation".into(),
-                ));
-            }
-        }
-        _ => {
-            return Err(Error2::InternalServerError(
-                "Invalid deliberation author".into(),
-            ));
-        }
-    };
 
     for data in metadata.into_iter() {
         match data {

@@ -1,4 +1,4 @@
-import { SurveyStatus } from '../ratel/spaces/deliberation-spaces.v3';
+import { SurveyStatus } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 
 export interface Survey {
   id: number;
