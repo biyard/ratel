@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { DefaultMeetingSession, VideoTileState } from 'amazon-chime-sdk-js';
 
