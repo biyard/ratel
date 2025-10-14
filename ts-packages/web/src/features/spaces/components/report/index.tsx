@@ -33,7 +33,6 @@ export default function Report({
   summaries,
 }: ReportProps) {
   const { t } = useTranslation('SpaceSurveyReport');
-  console.log('Report summaries', summaries);
   return (
     <div className="flex flex-col w-full">
       <div className="flex flex-row w-full justify-end mb-[20px]">

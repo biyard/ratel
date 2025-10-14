@@ -52,8 +52,6 @@ export function useSpaceMutation() {
       await queryClient.invalidateQueries({
         queryKey: spaceQueryKey,
       });
-
-      console.log('Space created and related queries invalidated.');
     },
     onError: (error) => {
       showErrorToast(error.message || 'Failed to create space');

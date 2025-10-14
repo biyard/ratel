@@ -77,7 +77,6 @@ function AnalyzeTab(
   const {
     data: { summaries },
   } = usePollSpaceSummaries(props.spacePk);
-  console.log('summaries', summaries);
   return <Report {...props} summaries={summaries} />;
 }
 
@@ -93,9 +92,8 @@ function SideMenu({ ...ctrl }: PollSpaceController) {
   ];
 
   if (
-    (ctrl.space.status === SpaceStatus.Finished &&
-      ctrl.headerCtrl.hasEditPermission) ||
-    true
+    ctrl.space.status === SpaceStatus.Finished &&
+    ctrl.headerCtrl.hasEditPermission
   ) {
     items.push({
       icon: <PieChart1 className="[&>path]:stroke-neutral-80 w-5 h-5" />,
