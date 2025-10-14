@@ -12,6 +12,7 @@ import DeliberationAnalyzePage from './components/tab/analyze';
 
 export default function DeliberationSpacePage() {
   const { spacePk } = useParams<{ spacePk: string }>();
+
   const ctrl = useDeliberationSpaceController(spacePk);
   const hasEditPermission = true;
 
