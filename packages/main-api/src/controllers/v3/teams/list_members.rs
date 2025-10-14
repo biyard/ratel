@@ -6,14 +6,13 @@ use crate::models::{
 use crate::types::EntityType;
 use crate::{AppState, Error2};
 use bdk::prelude::*;
-use dto::by_axum::{
+use by_axum::{
     aide::NoApi,
     axum::{
         Json,
         extract::{Path, State},
     },
 };
-use dto::{JsonSchema, aide, schemars};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

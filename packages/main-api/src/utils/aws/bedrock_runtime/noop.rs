@@ -18,7 +18,7 @@ impl BedrockClient {
         _model: BedrockModel,
         prompt: String,
         _content: Option<Vec<ContentBlock>>,
-    ) -> dto::Result<String> {
+    ) -> crate::Result<String> {
         Ok(prompt)
     }
 }

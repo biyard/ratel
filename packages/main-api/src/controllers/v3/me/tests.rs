@@ -6,7 +6,8 @@ use crate::{
     tests::{create_app_state, create_test_user},
     types::Theme,
 };
-use dto::by_axum::{
+use bdk::prelude::*;
+use by_axum::{
     aide::NoApi,
     axum::{Json, extract::State},
 };
@@ -17,7 +18,7 @@ use crate::controllers::v3::teams::{
     get_team::{GetTeamPathParams, get_team_handler},
 };
 use crate::*;
-use dto::by_axum::axum::extract::Path;
+use by_axum::axum::extract::Path;
 
 #[tokio::test]
 async fn test_update_user_with_team_handler() {

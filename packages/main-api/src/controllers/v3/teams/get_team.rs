@@ -1,14 +1,15 @@
-use super::dto::*;
+use bdk::prelude::*;
 use crate::{AppState, Error2, models::{team::TeamMetadata, user::User}};
-use dto::by_axum::{
+use by_axum::{
     aide::NoApi,
     axum::{
         Json,
         extract::{Path, State},
     },
 };
-use dto::{JsonSchema, aide, schemars};
 use serde::Deserialize;
+
+use super::dto::TeamDetailResponse;
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct GetTeamPathParams {

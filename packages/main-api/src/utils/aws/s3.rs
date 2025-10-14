@@ -4,7 +4,7 @@ use aws_sdk_s3::{
     config::Credentials,
     types::{Delete, ObjectIdentifier},
 };
-use dto::{Error, Result};
+use crate::{Error, Result};
 
 use crate::config;
 
