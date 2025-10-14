@@ -1,4 +1,4 @@
-import { BoosterType } from './booster-type';
+import { BoosterType } from '../features/spaces/types/booster-type';
 
 export enum SpacePublishState {
   Draft = 'DRAFT',
