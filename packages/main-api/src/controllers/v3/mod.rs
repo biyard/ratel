@@ -81,7 +81,7 @@ pub mod spaces {
     pub mod poll {
         // pub mod create_poll_space;
         pub mod get_poll_space;
-        pub mod list_responses;
+        pub mod get_survey_summary;
         pub mod respond_poll_space;
         pub mod update_poll_space;
 
