@@ -1,21 +1,16 @@
 use crate::{
-    AppState, Error2,
-    controllers::v3::spaces::deliberations::discussions::start_meeting::DeliberationDiscussionByIdPath,
-    models::space::{
+    controllers::v3::spaces::deliberations::discussions::start_meeting::DeliberationDiscussionByIdPath, models::space::{
         DeliberationDiscussionResponse, DeliberationSpaceDiscussion, DeliberationSpaceMember,
         DeliberationSpaceMemberQueryOption, DeliberationSpaceParticipant,
         DeliberationSpaceParticipantQueryOption, DiscussionMemberResponse,
         DiscussionParticipantResponse,
-    },
-    types::{EntityType, Partition},
-    utils::{aws::DynamoClient, dynamo_extractor::extract_user_from_session},
+    }, types::{media_placement_info::MediaPlacementInfo, meeting_info::MeetingInfo, EntityType, Partition}, utils::{aws::DynamoClient, dynamo_extractor::extract_user_from_session}, AppState, Error2
 };
 use bdk::prelude::axum::{
     Extension,
     extract::{Json, Path, State},
 };
 use bdk::prelude::*;
-use dto::{MediaPlacementInfo, MeetingInfo};
 use tower_sessions::Session;
 
 pub async fn participant_meeting_handler(

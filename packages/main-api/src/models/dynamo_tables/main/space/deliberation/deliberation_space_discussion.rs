@@ -86,7 +86,7 @@ impl DeliberationSpaceDiscussion {
     }
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema, aide::OperationIo)]
 pub struct DeliberationDiscussionResponse {
     pub pk: Partition,
 

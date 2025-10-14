@@ -2,15 +2,15 @@ use crate::models::{team::TeamGroup, user::User};
 use crate::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::utils::security::{RatelResource, check_any_permission_with_user};
 use crate::{AppState, Error2};
-use dto::by_axum::{
+use by_axum::{
     aide::NoApi,
     axum::{
         Json,
         extract::{Path, State},
     },
 };
-use dto::{JsonSchema, aide, schemars};
 use serde::Deserialize;
+use bdk::prelude::*;
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct UpdateGroupPathParams {
@@ -37,7 +37,7 @@ pub async fn update_group_handler(
     Json(req): Json<UpdateGroupRequest>,
 ) -> Result<(), Error2> {
     let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
-    
+
     let required_permissions = if req.permissions.is_some() {
         vec![TeamGroupPermission::TeamAdmin]
     } else {
@@ -47,7 +47,7 @@ pub async fn update_group_handler(
             TeamGroupPermission::TeamEdit,
         ]
     };
-    
+
     check_any_permission_with_user(
         &dynamo.client,
         &user,

@@ -11,17 +11,18 @@ use crate::{
     },
 };
 
-use super::dto::*;
-use dto::by_axum::{
+use bdk::prelude::*;
+use by_axum::{
     aide::NoApi,
     axum::{
         Json,
         extract::{Path, State},
     },
 };
-use dto::{JsonSchema, aide, schemars};
 use serde::Deserialize;
 use validator::Validate;
+
+use super::dto::TeamResponse;
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct UpdateTeamPathParams {

@@ -16,7 +16,7 @@ use by_axum::{
 use reqwest::StatusCode;
 
 use crate::{
-    route_m3, route_v3,
+    route_v3,
     utils::{
         aws::{
             BedrockClient, DynamoClient, RekognitionClient, S3Client, SesClient, TextractClient,
@@ -109,14 +109,14 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Erro
                 ses_client: ses_client.clone(),
             })?,
         )
-        .nest(
-            "/m3",
-            route_m3::route(route_v3::RouteDeps {
-                pool: pool.clone(),
-                dynamo_client: dynamo_client.clone(),
-                ses_client: ses_client.clone(),
-            })?,
-        )
+        // .nest(
+        //     "/m3",
+        //     route_m3::route(route_v3::RouteDeps {
+        //         pool: pool.clone(),
+        //         dynamo_client: dynamo_client.clone(),
+        //         ses_client: ses_client.clone(),
+        //     })?,
+        // )
         // .nest(
         //     "/v1",
         //     controllers::v1::route(pool.clone())

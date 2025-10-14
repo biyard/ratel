@@ -1,9 +1,15 @@
+pub mod web;
+pub mod v3;
+pub mod well_known {
+    pub mod get_did_document;
+}
+
 // pub mod mcp;
 // pub mod v1;
-pub mod web;
-pub mod m3 {
-    pub mod feeds;
-}
+
+// pub mod m3 {
+//     pub mod feeds;
+// }
 // pub mod v2 {
 //     pub mod users {
 //         pub mod connect_telegram;
@@ -124,7 +130,6 @@ pub mod m3 {
 //         pub mod unsubscribe;
 //     }
 // }
-pub mod v3;
 
 // pub mod m2 {
 //     pub mod noncelab {
@@ -136,9 +141,6 @@ pub mod v3;
 //         pub mod get_merchant_balance;
 //     }
 // }
-pub mod well_known {
-    pub mod get_did_document;
-}
 // pub mod wg {
 //     pub mod get_home;
 // }

@@ -1,5 +1,5 @@
 use bdk::prelude::*;
-use dto::schemars::JsonSchema_repr;
+use schemars::JsonSchema_repr;
 
 #[derive(
     Debug,
