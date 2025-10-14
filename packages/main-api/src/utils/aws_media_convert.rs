@@ -1,4 +1,4 @@
-use dto::*;
+use crate::*;
 
 pub async fn merge_recording_chunks(
     _meeting_id: &str,

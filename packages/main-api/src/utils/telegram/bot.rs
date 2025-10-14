@@ -1,5 +1,5 @@
 use base64::{Engine, engine::general_purpose};
-use dto::Result;
+use crate::Result;
 use serde::Serialize;
 use teloxide::{
     prelude::*,

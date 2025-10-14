@@ -5,10 +5,7 @@ use crate::{
     utils::time::get_now_timestamp,
 };
 use bdk::prelude::*;
-use dto::{
-    aide,
-    by_axum::axum::{Json, extract::State},
-};
+use by_axum::axum::{Json, extract::State};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
