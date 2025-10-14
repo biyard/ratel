@@ -37,7 +37,9 @@ async fn test_update_team_without_permission() {
     .await;
     assert!(team.is_ok(), "Failed to create team {:?}", team.err());
     let team = team.unwrap().0;
-    let team_pk = team.team_pk;
+
+    // Construct the full team PK from the returned UUID
+    let full_team_pk = format!("TEAM#{}", team.team_pk);
 
     let another_user = create_test_user(&cli).await;
 
@@ -45,7 +47,7 @@ async fn test_update_team_without_permission() {
         State(app_state.clone()),
         NoApi(Some(another_user)),
         Path(UpdateTeamPathParams {
-            team_pk: team_pk.clone(),
+            team_pk: full_team_pk.clone(),
         }),
         Json(UpdateTeamRequest {
             nickname: Some("updated_team".into()),
@@ -60,7 +62,7 @@ async fn test_update_team_without_permission() {
         State(app_state),
         NoApi(None),
         Path(UpdateTeamPathParams {
-            team_pk: team_pk.clone(),
+            team_pk: full_team_pk.clone(),
         }),
         Json(UpdateTeamRequest {
             nickname: Some("updated_team".into()),
@@ -99,7 +101,9 @@ async fn test_update_team() {
         create_res.err()
     );
     let team = create_res.unwrap().0;
-    let team_pk = team.team_pk;
+
+    // Construct the full team PK from the returned UUID
+    let full_team_pk = format!("TEAM#{}", team.team_pk);
 
     // Update Team
     let new_team_display_name = format!("updated_team_{}", username);
@@ -109,7 +113,7 @@ async fn test_update_team() {
         State(app_state.clone()),
         NoApi(Some(user.clone())),
         Path(UpdateTeamPathParams {
-            team_pk: team_pk.clone(),
+            team_pk: full_team_pk.clone(),
         }),
         Json(UpdateTeamRequest {
             nickname: Some(new_team_display_name.clone()),
@@ -128,7 +132,9 @@ async fn test_update_team() {
     let get_res = get_team_handler(
         State(app_state),
         NoApi(Some(user)),
-        Path(GetTeamPathParams { team_pk }),
+        Path(GetTeamPathParams {
+            team_pk: full_team_pk,
+        }),
     )
     .await;
     assert!(get_res.is_ok(), "Failed to get team {:?}", get_res.err());
@@ -168,13 +174,17 @@ async fn test_get_team() {
         create_res.err()
     );
     let team = create_res.unwrap().0;
-    let team_pk = team.team_pk;
+
+    // Construct the full team PK from the returned UUID
+    let full_team_pk = format!("TEAM#{}", team.team_pk);
 
     // Get Team
     let get_res = get_team_handler(
         State(app_state),
         NoApi(Some(user.clone())),
-        Path(GetTeamPathParams { team_pk }),
+        Path(GetTeamPathParams {
+            team_pk: full_team_pk,
+        }),
     )
     .await;
     assert!(get_res.is_ok(), "Failed to get team {:?}", get_res.err());

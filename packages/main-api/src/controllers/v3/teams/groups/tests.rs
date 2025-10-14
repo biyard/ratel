@@ -1,5 +1,4 @@
 #![allow(warnings)]
-use bdk::prelude::*;
 use crate::{
     controllers::v3::{
         me::get_info::get_info_handler,
@@ -16,6 +15,7 @@ use crate::{
     tests::{create_app_state, create_test_user},
     types::TeamGroupPermission,
 };
+use bdk::prelude::*;
 use by_axum::{
     aide::NoApi,
     axum::{
@@ -46,12 +46,15 @@ async fn test_update_group_handler() {
     assert!(team.is_ok(), "Failed to create team: {:?}", team.err());
     let team = team.unwrap().0;
 
+    // Construct the full team PK from the returned UUID
+    let full_team_pk = format!("TEAM#{}", team.team_pk);
+
     // Create a team group
     let team_group = create_group_handler(
         State(app_state.clone()),
         NoApi(Some(user.clone())),
         Path(CreateGroupPathParams {
-            team_pk: team.team_pk.clone(),
+            team_pk: full_team_pk.clone(),
         }),
         Json(CreateGroupRequest {
             name: "Test Group".into(),
@@ -73,7 +76,7 @@ async fn test_update_group_handler() {
         State(app_state.clone()),
         NoApi(Some(user.clone())),
         Path(UpdateGroupPathParams {
-            team_pk: team.team_pk.clone(),
+            team_pk: full_team_pk.clone(),
             group_sk: team_group.group_sk.clone(),
         }),
         Json(UpdateGroupRequest {
@@ -112,12 +115,15 @@ async fn test_update_with_permisison() {
     assert!(team.is_ok(), "Failed to create team: {:?}", team.err());
     let team = team.unwrap().0;
 
+    // Construct the full team PK from the returned UUID
+    let full_team_pk = format!("TEAM#{}", team.team_pk);
+
     // Create a team group
     let team_group = create_group_handler(
         State(app_state.clone()),
         NoApi(Some(user.clone())),
         Path(CreateGroupPathParams {
-            team_pk: team.team_pk.clone(),
+            team_pk: full_team_pk.clone(),
         }),
         Json(CreateGroupRequest {
             name: "Test Group".into(),
@@ -141,7 +147,7 @@ async fn test_update_with_permisison() {
         State(app_state.clone()),
         NoApi(Some(user.clone())),
         Path(AddMemberPathParams {
-            team_pk: team.team_pk.clone(),
+            team_pk: full_team_pk.clone(),
             group_sk: team_group.group_sk.clone(),
         }),
         Json(AddMemberRequest {
@@ -167,7 +173,7 @@ async fn test_update_with_permisison() {
         State(app_state.clone()),
         NoApi(Some(user2.clone())),
         Path(UpdateGroupPathParams {
-            team_pk: team.team_pk.clone(),
+            team_pk: full_team_pk.clone(),
             group_sk: team_group.group_sk.clone(),
         }),
         Json(UpdateGroupRequest {
@@ -190,7 +196,7 @@ async fn test_update_with_permisison() {
         State(app_state.clone()),
         NoApi(Some(user2.clone())),
         Path(UpdateGroupPathParams {
-            team_pk: team.team_pk.clone(),
+            team_pk: full_team_pk.clone(),
             group_sk: team_group.group_sk.clone(),
         }),
         Json(UpdateGroupRequest {
@@ -225,12 +231,15 @@ async fn test_add_member_handler() {
     assert!(team.is_ok(), "Failed to create team: {:?}", team.err());
     let team = team.unwrap().0;
 
+    // Construct the full team PK from the returned UUID
+    let full_team_pk = format!("TEAM#{}", team.team_pk);
+
     // Create a team group
     let team_group = create_group_handler(
         State(app_state.clone()),
         NoApi(Some(user.clone())),
         Path(CreateGroupPathParams {
-            team_pk: team.team_pk.clone(),
+            team_pk: full_team_pk.clone(),
         }),
         Json(CreateGroupRequest {
             name: "Test Group".into(),
@@ -257,7 +266,7 @@ async fn test_add_member_handler() {
         State(app_state.clone()),
         NoApi(Some(user.clone())),
         Path(AddMemberPathParams {
-            team_pk: team.team_pk.clone(),
+            team_pk: full_team_pk.clone(),
             group_sk: team_group.group_sk.clone(),
         }),
         Json(AddMemberRequest {
@@ -276,7 +285,7 @@ async fn test_add_member_handler() {
         State(app_state.clone()),
         NoApi(Some(user.clone())),
         Path(GetTeamPathParams {
-            team_pk: team.team_pk.clone(),
+            team_pk: full_team_pk.clone(),
         }),
     )
     .await;
