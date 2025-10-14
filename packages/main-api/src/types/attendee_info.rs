@@ -1,4 +1,3 @@
-use super::media_placement_info::MediaPlacementInfo;
 use bdk::prelude::*;
 
 #[derive(
@@ -11,8 +10,8 @@ use bdk::prelude::*;
     aide::OperationIo,
 )]
 #[serde(rename_all = "PascalCase")]
-pub struct MeetingInfo {
-    pub meeting_id: String,
-    pub media_placement: MediaPlacementInfo,
-    pub media_region: String,
+pub struct AttendeeInfo {
+    pub attendee_id: String,
+    pub external_user_id: String,
+    pub join_token: String,
 }
