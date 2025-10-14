@@ -2,8 +2,8 @@ import { feedKeys } from '@/constants';
 import { PostDetailResponse } from '@/lib/api/ratel/posts.v3';
 import { createSpace } from '@/lib/api/ratel/spaces.v3';
 import { optimisticUpdate } from '@/lib/hook-utils';
-import { BoosterType } from '@/types/booster-type';
-import { SpaceType } from '@/types/space-type';
+import { BoosterType } from '@/features/spaces/types/booster-type';
+import { SpaceType } from '@/features/spaces/types/space-type';
 import { useMutation } from '@tanstack/react-query';
 
 export function useCreateSpaceMutation() {

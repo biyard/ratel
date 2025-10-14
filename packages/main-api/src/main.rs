@@ -1,12 +1,11 @@
 use std::env;
 
 use bdk::prelude::*;
-use dto::Result;
-use main_api::api_main::api_main;
+use main_api::{api_main::api_main, Error};
 use tokio::net::TcpListener;
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), Error> {
     let app = api_main().await?;
 
     let port = env::var("PORT").unwrap_or("3000".to_string());

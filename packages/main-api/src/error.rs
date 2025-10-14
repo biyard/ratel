@@ -57,6 +57,26 @@ pub enum Error {
     InvalidBookmark,
     #[error("Base64 decode error: {0}")]
     Base64Error(#[from] base64::DecodeError),
+    #[error("Klaytn error: {0}")]
+    Klaytn(String),
+    #[error("AWS S3 error: {0}")]
+    AwsS3Error(String),
+    #[error("AWS MediaConvert error: {0}")]
+    AwsMediaPipelinesError(String),
+    #[error("Kaia Wallet error: {0}")]
+    AssetError(String),
+    #[error("Textract error: {0}")]
+    AwsTextractError(String),
+    #[error("Server error: {0}")]
+    ServerError(String),
+    #[error("AWS Rekognition error: {0}")]
+    AwsRekognitionError(String),
+    #[error("AWS Bedrock error: {0}")]
+    AwsBedrockError(String),
+    #[error("HMac initialization error: {0}")]
+    HMacInitError(String),
+    #[error("Telegram wallet error: {0}")]
+    TelegramError(#[from] teloxide::RequestError),
 
     // Authorization errors 400 ~
     #[error("No session found")]
@@ -68,6 +88,8 @@ pub enum Error {
     #[error("No permission to access this resource")]
     #[rest_error(status = 401, code = 403)]
     NoPermission,
+    #[error("Wallet error: {0}")]
+    WalletError(String),
 
     // /v3/auth endpoints 1000 ~
     #[error("Exceeded maximum attempt for email verification")]
@@ -108,6 +130,8 @@ pub enum Error {
     #[rest_error(code = 3200)]
     #[error("Poll space not found")]
     NotFoundPollSpace,
+    #[error("Deliberation space not found")]
+    NotFoundDeliberationSpace,
     #[error("Space is not in progress")]
     SpaceNotInProgress,
     #[error("Answers do not match with questions")]

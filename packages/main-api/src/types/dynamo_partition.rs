@@ -15,6 +15,7 @@ use std::str::FromStr;
     JsonSchema,
     PartialEq,
     Eq,
+    aide::OperationIo
 )]
 #[dynamo_enum(error = "crate::Error2")]
 pub enum Partition {

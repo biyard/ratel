@@ -1,5 +1,4 @@
-#![allow(dead_code)]
-use crate::{Error, models::folder_type::folder_type::FolderType};
+use crate::{models::folder_type::folder_type::FolderType, types::meeting_info::MeetingInfo, *};
 use aws_config::{BehaviorVersion, load_defaults};
 use aws_sdk_chimesdkmediapipelines::{
     Client as MediaPipelinesClient,
@@ -10,7 +9,6 @@ use aws_sdk_chimesdkmeetings::{
     types::{Attendee, Meeting},
 };
 use aws_sdk_s3::Client as S3Client;
-use dto::*;
 use tokio::time::{Duration, sleep};
 
 #[derive(Debug)]

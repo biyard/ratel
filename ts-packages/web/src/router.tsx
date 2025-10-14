@@ -25,6 +25,7 @@ import PollSpacePage from './app/spaces/poll/[id]/page';
 import { TestReportPage } from './app/test-report/test-report-page';
 import { StorybookPage } from './app/storybook/stroybook-page';
 import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
+import DeliberationSpacePage from './app/spaces/deliberation/[id]/page';
 
 export const routes = createBrowserRouter([
   {
@@ -141,6 +142,11 @@ export const routes = createBrowserRouter([
             id: 'poll-space',
             path: 'poll',
             Component: PollSpacePage,
+          },
+          {
+            id: 'deliberation-space',
+            path: 'deliberation',
+            Component: DeliberationSpacePage,
           },
         ],
       }, // End of Space Layout

@@ -1,11 +1,10 @@
-'use client';
 import { logger } from '@/lib/logger';
 import { useTranslation } from 'react-i18next';
 import { MappedResponse, Poll } from '../types';
 import ObjectiveResponse from '@/app/spaces/[id]/_components/dashboard/objective-response';
 import SubjectiveResponse from '@/app/spaces/[id]/_components/dashboard/subjective-response';
 import SummaryReport from '@/app/spaces/[id]/_components/dashboard/summary-report';
-import { SurveyResponseResponse } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { SurveyResponseResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 
 const AnswerType = {
   SingleChoice: 'single_choice',
@@ -17,7 +16,7 @@ const AnswerType = {
   LinearScale: 'linear_scale',
 } as const;
 
-type AnswerType = typeof AnswerType[keyof typeof AnswerType];
+type AnswerType = (typeof AnswerType)[keyof typeof AnswerType];
 
 export function AnalyzePage({
   answers,

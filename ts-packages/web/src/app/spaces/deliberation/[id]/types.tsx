@@ -1,5 +1,5 @@
 import { Answer } from '@/lib/api/models/response';
-import { File } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { File } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { Question, SurveyCreateRequest } from '@/lib/api/models/survey';
 
 export const DeliberationTab = {
@@ -10,7 +10,8 @@ export const DeliberationTab = {
   ANALYZE: 'Analyze',
 } as const;
 
-export type DeliberationTab = typeof DeliberationTab[keyof typeof DeliberationTab];
+export type DeliberationTab =
+  (typeof DeliberationTab)[keyof typeof DeliberationTab];
 
 export type DeliberationTabType = DeliberationTab;
 

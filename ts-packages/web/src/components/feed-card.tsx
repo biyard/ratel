@@ -25,7 +25,7 @@ import { logger } from '@/lib/logger';
 import { useTranslation } from 'react-i18next';
 import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 import { likePost, PostResponse } from '@/lib/api/ratel/posts.v3';
-import { BoosterType } from '@/types/booster-type';
+import { BoosterType } from '@/features/spaces/types/booster-type';
 
 export interface FeedCardProps {
   post: PostResponse;
@@ -139,12 +139,15 @@ export default function FeedCard(props: FeedCardProps) {
     }
   };
 
-  const href = post.space_pk
-    ? route.space(post.space_pk)
-    : route.threadByFeedId(post.pk);
+  const href =
+    post.space_pk == null
+      ? route.threadByFeedId(post.pk)
+      : post?.space_pk?.includes('DELIBERATION')
+        ? route.deliberationSpaceById(post.space_pk)
+        : route.pollSpaceByPk(post.space_pk);
 
   return (
-    <Col className="relative rounded-[10px] bg-card-bg-secondary border border-card-enable-border">
+    <Col className="relative border rounded-[10px] bg-card-bg-secondary border-card-enable-border">
       <NavLink to={href} className="block">
         <FeedBody post={post} onEdit={handleEditPost(post.pk)} />
       </NavLink>
@@ -189,13 +192,13 @@ export function FeedBody({ post, onEdit = () => {} }: FeedBodyProps) {
   return (
     <Col className="pt-5 pb-2.5">
       <Row className="justify-between px-5">
-        <div className="flex flex-row justify-start items-center gap-2.5">
+        <div className="flex flex-row gap-2.5 justify-start items-center">
           {space_pk && space_type ? <SpaceTag /> : <></>}
         </div>
 
         <div>{user?.pk === author_pk && <EditButton onClick={onEdit} />}</div>
       </Row>
-      <h2 className="w-full line-clamp-2 font-bold text-xl/[25px] tracking-[0.5px] align-middle text-text-primary px-5">
+      <h2 className="px-5 w-full font-bold align-middle line-clamp-2 text-xl/[25px] tracking-[0.5px] text-text-primary">
         {title}
       </h2>
       <Row className="justify-between items-center px-5">
@@ -228,7 +231,7 @@ export function FeedContents({
   return (
     <div className="text-desc-text">
       <p
-        className="feed-content font-normal text-[15px]/[24px] align-middle tracking-[0.5px] text-c-wg-30 px-5"
+        className="px-5 font-normal align-middle feed-content text-[15px]/[24px] tracking-[0.5px] text-c-wg-30"
         dangerouslySetInnerHTML={{ __html: sanitized }}
       ></p>
 
@@ -254,7 +257,9 @@ export function IconText({
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
   return (
     <Row
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-text-primary text-[15px] px-3 py-3 ${className || ''}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-text-primary text-[15px] px-3 py-3 ${
+        className || ''
+      }`}
       {...props}
     >
       {children}
@@ -272,7 +277,7 @@ export function UserBadge({
   name: string;
 }) {
   return (
-    <Row className="w-fit items-center med-16 text-text-primary">
+    <Row className="items-center w-fit med-16 text-text-primary">
       {profile_url != '' ? (
         <img
           src={profile_url}
@@ -293,7 +298,7 @@ export function UserBadge({
 
 export function SpaceTag() {
   return (
-    <span className="flex flex-row justify-start items-center px-2 border border-label-color-border bg-label-color-bg gap-1 rounded-sm">
+    <span className="flex flex-row gap-1 justify-start items-center px-2 rounded-sm border border-label-color-border bg-label-color-bg">
       <Palace className="w-3.5 h-3.5 [&>path]:stroke-label-color-text [&_g>path:nth-child(n+2)]:stroke-web-bg" />
       <div className="font-semibold text-xs/[25px] text-label-color-text">
         SPACE
@@ -304,7 +309,7 @@ export function SpaceTag() {
 
 export function IndustryTag({ industry }: { industry: string }) {
   return (
-    <span className="rounded-sm border border-label-color-border-secondary bg-label-color-bg-secondary text-label-text px-2 text-xs/[25px] font-semibold align-middle uppercase">
+    <span className="px-2 font-semibold uppercase align-middle rounded-sm border border-label-color-border-secondary bg-label-color-bg-secondary text-label-text text-xs/[25px]">
       {industry}
     </span>
   );
@@ -322,7 +327,7 @@ export function EditButton({ onClick }: EditButtonProps) {
         e.preventDefault();
         onClick?.(e);
       }}
-      className="rounded-full p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800"
+      className="p-1.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
     >
       <Edit1 className="w-4 h-4" />
     </button>
@@ -331,7 +336,7 @@ export function EditButton({ onClick }: EditButtonProps) {
 
 export function OnboardingTag() {
   return (
-    <span className="rounded-sm bg-label-color-bg border border-label-color-border text-label-color-text px-2 text-xs/[25px] font-semibold align-middle uppercase">
+    <span className="px-2 font-semibold uppercase align-middle rounded-sm border bg-label-color-bg border-label-color-border text-label-color-text text-xs/[25px]">
       Onboard
     </span>
   );
@@ -342,7 +347,7 @@ export function JoinNowButton({ onClick }: { onClick: () => void }) {
   return (
     <Button
       variant="rounded_primary"
-      className="cursor-pointer bg-enable-button-bg hover:bg-enable-button-bg/80 flex my-2.5 flex-row w-fit px-5 py-3 rounded-[10px] font-bold text-enable-button-text text-[15px]"
+      className="flex flex-row py-3 px-5 my-2.5 font-bold cursor-pointer bg-enable-button-bg w-fit rounded-[10px] text-enable-button-text text-[15px] hover:bg-enable-button-bg/80"
       onClick={(e) => {
         e.stopPropagation();
         e.preventDefault();
@@ -414,7 +419,9 @@ export function FeedFooter({
 
   return (
     <Row
-      className={`items-center justify-between border-t w-full px-5 ${space_id && space_type ? 'border-divider' : 'border-divider'} `}
+      className={`items-center justify-between border-t w-full px-5 ${
+        space_id && space_type ? 'border-divider' : 'border-divider'
+      } `}
     >
       {space_id && space_type ? (
         <div className="max-tablet:!hidden">
@@ -428,7 +435,11 @@ export function FeedFooter({
         <div></div>
       )}
       <div
-        className={`flex flex-row ${space_id && space_type ? 'w-fit items-center max-tablet:!w-full max-tablet:!justify-between max-tablet:!items-center' : 'w-full justify-between items-center'}`}
+        className={`flex flex-row ${
+          space_id && space_type
+            ? 'w-fit items-center max-tablet:!w-full max-tablet:!justify-between max-tablet:!items-center'
+            : 'w-full justify-between items-center'
+        }`}
       >
         <IconText
           onClick={(evt) => {
@@ -467,7 +478,7 @@ export function FeedFooter({
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <button
-                className="flex flex-row w-fit justify-center items-center gap-1.25"
+                className="flex flex-row justify-center items-center w-fit gap-1.25"
                 onClick={(e) => e.stopPropagation()}
               >
                 <Shares />
@@ -476,13 +487,13 @@ export function FeedFooter({
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="w-84 border-0 transition ease-out duration-100 py-4 px-2"
+              className="py-4 px-2 border-0 transition duration-100 ease-out w-84"
             >
               <DropdownMenuItem asChild>
                 <button
                   onClick={handleRepostWithThoughts}
                   disabled={isReposting}
-                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-hover transition-colors text-text-primary text-lg font-semibold"
+                  className="flex gap-3 items-center py-2 px-4 w-full text-lg font-semibold rounded transition-colors text-text-primary hover:bg-hover"
                 >
                   {isReposting ? <Loader2 /> : <Edit1 />}
                   {t('repost_with_your_thoughts')}
@@ -493,7 +504,7 @@ export function FeedFooter({
                 <button
                   onClick={handleRepost}
                   disabled={isReposting}
-                  className="flex items-center gap-3 w-full px-4 py-2 rounded hover:bg-hover transition-colors text-text-primary text-lg font-semibold"
+                  className="flex gap-3 items-center py-2 px-4 w-full text-lg font-semibold rounded transition-colors text-text-primary hover:bg-hover"
                 >
                   {isReposting ? <Loader2 /> : <Shares />}
                   {t('repost')}
