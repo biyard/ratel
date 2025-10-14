@@ -4,10 +4,8 @@ use aws_config::BehaviorVersion;
 use aws_credential_types::Credentials;
 use base64::{Engine as _, engine::general_purpose};
 use bdk::prelude::*;
-use dto::{
-    axum::AxumRouter,
-    by_axum::auth::{Authorization, DynamoUserSession},
-};
+use axum::AxumRouter;
+use by_axum::auth::{Authorization, DynamoUserSession};
 use tower_sessions::Session;
 
 use crate::{

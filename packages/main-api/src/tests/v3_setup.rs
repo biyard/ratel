@@ -2,7 +2,7 @@ use aws_config::Region;
 use aws_sdk_dynamodb::{Client, Config, config::Credentials};
 use axum::AxumRouter;
 use bdk::prelude::*;
-use dto::by_types::DatabaseConfig;
+use by_types::DatabaseConfig;
 use std::time::SystemTime;
 
 use crate::{api_main, config, models::user::User, tests::create_user_session};

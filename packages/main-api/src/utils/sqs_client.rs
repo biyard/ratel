@@ -12,7 +12,7 @@ mod r {
     use aws_config::{Region, retry::RetryConfig, timeout::TimeoutConfig};
     use aws_sdk_sqs::{Config, config::Credentials};
 
-    use dto::{Error, Result};
+    use crate::{Error, Result};
     pub struct SqsClient {
         client: aws_sdk_sqs::Client,
         queue_url: String,
@@ -80,7 +80,7 @@ mod noop {
             Arc::new(Self {})
         }
 
-        pub async fn send_message(&self, _message: &str) -> dto::Result<()> {
+        pub async fn send_message(&self, _message: &str) -> crate::Result<()> {
             Ok(())
         }
     }
