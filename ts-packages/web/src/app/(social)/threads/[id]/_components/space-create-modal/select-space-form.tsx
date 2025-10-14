@@ -106,7 +106,7 @@ export default function SelectSpaceForm({ feed_id }: { feed_id: string }) {
           navigate(route.pollSpaceByPk(space_pk));
           break;
         default:
-          navigate(route.space(space_pk));
+          navigate(route.deliberationSpaceById(space_pk));
       }
       popup.close();
     } catch {

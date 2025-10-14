@@ -1,41 +1,47 @@
-'use client';
 import * as React from 'react';
 
 import { getTimeWithFormat } from '@/lib/time-utils';
 import Clock from '@/assets/icons/clock.svg?react';
 import { Discuss, PieChart1, File, Vote } from '@/components/icons';
 import { CheckCircle, Settings } from 'lucide-react';
-import { DeliberationTab } from '../types';
-// import { SpaceStatus } from '@/lib/api/models/spaces';
-// import { useUserInfo } from '@/app/(social)/_hooks/user';
-// import { TeamContext } from '@/lib/contexts/team-context';
+import { Deliberation, DeliberationTab, DeliberationTabType } from '../types';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
-// import { usePermission } from '@/app/(social)/_hooks/use-permission';
-// import { GroupPermission } from '@/lib/api/models/group';
-import { useDeliberationSpaceByIdContext } from '../providers.client';
 import SetSchedulePopup from '@/app/spaces/[id]/_components/modal/set-schedule';
-import {
-  DeliberationSpace,
-  SpacePublishState,
-} from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { SpacePublishState } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { useUserInfo } from '@/hooks/use-user-info';
+import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
+import { TFunction } from 'i18next';
 
-export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
-  const { t } = useTranslation('DeliberationSpace');
+export type SpaceSideMenuProps = {
+  t: TFunction<'DeliberationSpace', undefined>;
+  space: DeliberationSpaceResponse;
+  deliberation: Deliberation;
+  selectedType: DeliberationTabType;
+  handleUpdateSelectedType: (type: DeliberationTabType) => void;
+  startedAt: number;
+  endedAt: number;
+  handleUpdateStartDate: (startDate: number) => void;
+  handleUpdateEndDate: (endDate: number) => void;
+};
+
+export default function SpaceSideMenu({
+  t,
+  space,
+  deliberation,
+  selectedType,
+  handleUpdateSelectedType,
+  startedAt,
+  endedAt,
+  handleUpdateEndDate,
+  handleUpdateStartDate,
+}: SpaceSideMenuProps) {
+  const store = useSpaceHeaderStore();
+  const isEdit = store.isEditingMode;
+
   const popup = usePopup();
-  const {
-    isEdit,
-    deliberation,
-    selectedType,
-    handleUpdateSelectedType,
-    startedAt,
-    endedAt,
-    handleUpdateEndDate,
-    handleUpdateStartDate,
-  } = useDeliberationSpaceByIdContext();
-  //   const { teams } = useContext(TeamContext);
   const authorPk = space.user_pk;
 
   const discussions = deliberation.discussions;
@@ -47,7 +53,7 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
           .reduce((latest, current) => (current > latest ? current : latest))
       : 0;
 
-  //   const selectedTeam = teams.some((t) => t.id === authorId);
+  // const selectedTeam = teams.some((t) => t.id === authorId);
 
   const { data: userInfo } = useUserInfo();
   const userPk = userInfo ? userInfo.pk : '';
@@ -63,7 +69,11 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
       <BorderSpaceCard>
         <div className="flex flex-col gap-2.5 w-full">
           <div
-            className={`cursor-pointer flex flex-row w-full gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.SUMMARY ? 'bg-neutral-800 light:bg-[#f5f5f5]' : ''}`}
+            className={`cursor-pointer flex flex-row w-full gap-1 items-center px-1 py-2 rounded-sm ${
+              selectedType == DeliberationTab.SUMMARY
+                ? 'bg-neutral-800 light:bg-[#f5f5f5]'
+                : ''
+            }`}
             onClick={() => {
               handleUpdateSelectedType(DeliberationTab.SUMMARY);
             }}
@@ -75,7 +85,11 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
           </div>
 
           <div
-            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.DELIBERATION ? 'bg-neutral-800 light:bg-[#f5f5f5]' : ''}`}
+            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
+              selectedType == DeliberationTab.DELIBERATION
+                ? 'bg-neutral-800 light:bg-[#f5f5f5]'
+                : ''
+            }`}
             onClick={() => {
               handleUpdateSelectedType(DeliberationTab.DELIBERATION);
             }}
@@ -87,7 +101,11 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
           </div>
 
           <div
-            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.POLL ? 'bg-neutral-800 light:bg-[#f5f5f5]' : ''}`}
+            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
+              selectedType == DeliberationTab.POLL
+                ? 'bg-neutral-800 light:bg-[#f5f5f5]'
+                : ''
+            }`}
             onClick={() => {
               handleUpdateSelectedType(DeliberationTab.POLL);
             }}
@@ -99,7 +117,11 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
           </div>
 
           <div
-            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${selectedType == DeliberationTab.RECOMMANDATION ? 'bg-neutral-800 light:bg-[#f5f5f5]' : ''}`}
+            className={`cursor-pointer flex flex-row gap-1 items-center px-1 py-2 rounded-sm ${
+              selectedType == DeliberationTab.RECOMMANDATION
+                ? 'bg-neutral-800 light:bg-[#f5f5f5]'
+                : ''
+            }`}
             onClick={() => {
               handleUpdateSelectedType(DeliberationTab.RECOMMANDATION);
             }}
@@ -149,6 +171,7 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
                         onconfirm={(startDate: number, endDate: number) => {
                           handleUpdateStartDate(Math.floor(startDate / 1000));
                           handleUpdateEndDate(Math.floor(endDate / 1000));
+                          store.onModifyContent();
                           popup.close();
                         }}
                       />,
@@ -157,6 +180,7 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
                 }}
               >
                 <Settings
+                  id="timeline-setting"
                   width={20}
                   height={20}
                   className="text-neutral-500 w-5 h-5"
@@ -197,10 +221,17 @@ export default function SpaceSideMenu({ space }: { space: DeliberationSpace }) {
   );
 }
 
-export function SpaceTabsMobile({ space }: { space: DeliberationSpace }) {
+export function SpaceTabsMobile({
+  space,
+  selectedType,
+  handleUpdateSelectedType,
+}: {
+  space: DeliberationSpaceResponse;
+  selectedType: DeliberationTabType;
+  handleUpdateSelectedType: (type: DeliberationTabType) => void;
+}) {
   const { t } = useTranslation('DeliberationSpace');
-  const { selectedType, handleUpdateSelectedType } =
-    useDeliberationSpaceByIdContext();
+
   const { data: userInfo } = useUserInfo();
   const userPk = userInfo ? userInfo.pk : '';
   const authorPk = space.user_pk;
