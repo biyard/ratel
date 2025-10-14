@@ -1,4 +1,5 @@
 import { FeedStatus } from './lib/api/models/feeds';
+import { SpaceType } from './types/space-type';
 
 // LocalStorage keys
 export const SK_IDENTITY_KEY = 'identity';
@@ -93,5 +94,12 @@ const QK_SPACES = 'spaces';
 
 export const spaceKeys = {
   all: [QK_SPACES] as const,
-  detail: (pk: string) => [...spaceKeys.all, 'detail', pk] as const,
+  // detail: (pk: string) => [...spaceKeys.all, 'detail', pk] as const,
+  detail: (pk: string, type?: SpaceType) => {
+    if (type) {
+      return [...spaceKeys.all, 'detail', type, pk] as const;
+    } else {
+      return [...spaceKeys.all, 'detail', pk] as const;
+    }
+  },
 };

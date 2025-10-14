@@ -6,7 +6,9 @@ import {
 } from './use-poll-space-controller';
 import SpaceHeader from '@/features/spaces/components/header';
 import SpaceHTMLContentEditor from '@/features/spaces/components/content-editor';
-import SpaceSurvey from '@/features/spaces/components/survey';
+import Survey from '@/features/spaces/components/survey';
+import { Analyze, AnalyzeProps } from '@/features/spaces/components/analyze';
+import usePollSpaceSummaries from '@/features/poll-space/hooks/use-poll-space-summary';
 
 export default function PollSpacePage() {
   const { spacePk } = useParams<{ spacePk: string }>();
@@ -33,9 +35,24 @@ function MainContent({
 } & PollSpaceController) {
   switch (activeTab) {
     case Tab.Poll:
-      return <SpaceSurvey {...ctrl} />;
+      return <Survey {...ctrl} />;
     case Tab.Analyze:
-      return <div></div>;
-    // return <PollAnalyzePage space={space} />;
+      return (
+        <AnalyzeTab
+          startedAt={ctrl.space.started_at}
+          endedAt={ctrl.space.ended_at}
+          totalResponses={ctrl.space.user_response_count}
+          {...ctrl}
+        />
+      );
   }
+}
+
+function AnalyzeTab(
+  props: Omit<AnalyzeProps, 'summaries'> & { spacePk: string },
+) {
+  const {
+    data: { summaries },
+  } = usePollSpaceSummaries(props.spacePk);
+  return <Analyze {...props} summaries={summaries} />;
 }

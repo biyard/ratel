@@ -55,6 +55,16 @@ export interface LinearScaleQuestion {
   is_required?: boolean;
 }
 
+export enum SurveyAnswerType {
+  SingleChoice = 'single_choice',
+  MultipleChoice = 'multiple_choice',
+  ShortAnswer = 'short_answer',
+  Subjective = 'subjective',
+  Checkbox = 'checkbox',
+  Dropdown = 'dropdown',
+  LinearScale = 'linear_scale',
+}
+
 // --- SurveyQuestion Enum Mapping ---
 
 /**
@@ -63,14 +73,48 @@ export interface LinearScaleQuestion {
  * which is derived from the #[serde(tag = "answer_type")] attribute.
  * #[serde(rename_all = "snake_case")] ensures the type names are snake_cased.
  */
-export type SurveyQuestion =
-  | { answer_type: SurveyAnswerType.SingleChoice; content: ChoiceQuestion }
-  | { answer_type: SurveyAnswerType.MultipleChoice; content: ChoiceQuestion }
-  | { answer_type: SurveyAnswerType.ShortAnswer; content: SubjectiveQuestion }
-  | { answer_type: SurveyAnswerType.Subjective; content: SubjectiveQuestion }
-  | { answer_type: SurveyAnswerType.Checkbox; content: CheckboxQuestion }
-  | { answer_type: SurveyAnswerType.Dropdown; content: DropdownQuestion }
-  | { answer_type: SurveyAnswerType.LinearScale; content: LinearScaleQuestion };
+
+export interface SingleChoiceQuestionType {
+  answer_type: SurveyAnswerType.SingleChoice;
+  content: ChoiceQuestion;
+}
+export interface MultipleChoiceQuestionType {
+  answer_type: SurveyAnswerType.MultipleChoice;
+  content: ChoiceQuestion;
+}
+export interface ShortAnswerQuestionType {
+  answer_type: SurveyAnswerType.ShortAnswer;
+  content: SubjectiveQuestion;
+}
+export interface SubjectiveQuestionType {
+  answer_type: SurveyAnswerType.Subjective;
+  content: SubjectiveQuestion;
+}
+export interface CheckboxQuestionType {
+  answer_type: SurveyAnswerType.Checkbox;
+  content: CheckboxQuestion;
+}
+export interface DropdownQuestionType {
+  answer_type: SurveyAnswerType.Dropdown;
+  content: DropdownQuestion;
+}
+export interface LinearScaleQuestionType {
+  answer_type: SurveyAnswerType.LinearScale;
+  content: LinearScaleQuestion;
+}
+
+export type ObejctiveQuestionUnion =
+  | SingleChoiceQuestionType
+  | MultipleChoiceQuestionType
+  | CheckboxQuestionType
+  | DropdownQuestionType
+  | LinearScaleQuestionType;
+
+export type SubjectiveQuestionUnion =
+  | ShortAnswerQuestionType
+  | SubjectiveQuestionType;
+
+export type SurveyQuestion = ObejctiveQuestionUnion | SubjectiveQuestionUnion;
 
 export type SurveyAnswer =
   | { answer_type: SurveyAnswerType.SingleChoice; answer?: number }
@@ -81,12 +125,53 @@ export type SurveyAnswer =
   | { answer_type: SurveyAnswerType.Dropdown; answer?: number }
   | { answer_type: SurveyAnswerType.LinearScale; answer?: number };
 
-export enum SurveyAnswerType {
-  SingleChoice = 'single_choice',
-  MultipleChoice = 'multiple_choice',
-  ShortAnswer = 'short_answer',
-  Subjective = 'subjective',
-  Checkbox = 'checkbox',
-  Dropdown = 'dropdown',
-  LinearScale = 'linear_scale',
+export interface BaseSubjectiveSummary {
+  type: SurveyAnswerType.ShortAnswer | SurveyAnswerType.Subjective;
+  total_count: number;
+  answers: Record<string, number>; // (answer, count)
 }
+
+export interface ShortAnswerSummary extends BaseSubjectiveSummary {
+  type: SurveyAnswerType.ShortAnswer;
+}
+
+export interface SubjectiveSummary extends BaseSubjectiveSummary {
+  type: SurveyAnswerType.Subjective;
+}
+
+export interface BaseObjectiveSummary {
+  type:
+    | SurveyAnswerType.SingleChoice
+    | SurveyAnswerType.MultipleChoice
+    | SurveyAnswerType.Checkbox
+    | SurveyAnswerType.Dropdown
+    | SurveyAnswerType.LinearScale;
+  total_count: number;
+  answers: Record<number, number>; // (option_idx or scale_value, count)
+}
+
+export interface SingleChoiceSummary extends BaseObjectiveSummary {
+  type: SurveyAnswerType.SingleChoice;
+}
+export interface MultipleChoiceSummary extends BaseObjectiveSummary {
+  type: SurveyAnswerType.MultipleChoice;
+}
+export interface CheckboxSummary extends BaseObjectiveSummary {
+  type: SurveyAnswerType.Checkbox;
+}
+export interface DropdownSummary extends BaseObjectiveSummary {
+  type: SurveyAnswerType.Dropdown;
+}
+export interface LinearScaleSummary extends BaseObjectiveSummary {
+  type: SurveyAnswerType.LinearScale;
+}
+
+// The final discriminated union type
+export type SurveySummary =
+  | SingleChoiceSummary
+  | MultipleChoiceSummary
+  | ShortAnswerSummary
+  | SubjectiveSummary
+  | CheckboxSummary
+  | DropdownSummary
+  | LinearScaleSummary;

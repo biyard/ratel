@@ -8,87 +8,115 @@ use bdk::prelude::*;
 )]
 pub enum SurveySummary {
     SingleChoice {
-        question: ChoiceQuestion,
+        total_count: i64,
         answers: HashMap<i32, i64>, // (option_idx, count)
     },
     MultipleChoice {
-        question: ChoiceQuestion,
+        total_count: i64,
         answers: HashMap<i32, i64>, // (option_idx, count)
     },
     ShortAnswer {
-        question: SubjectiveQuestion,
+        total_count: i64,
         answers: HashMap<String, i64>, // (answer, count)
     },
     Subjective {
-        question: SubjectiveQuestion,
+        total_count: i64,
         answers: HashMap<String, i64>, // (answer, count)
     },
     Checkbox {
-        question: CheckboxQuestion,
+        total_count: i64,
         answers: HashMap<i32, i64>, // (option_idx, count)
     },
     Dropdown {
-        question: DropdownQuestion,
+        total_count: i64,
         answers: HashMap<i32, i64>, // (option_idx, count)
     },
     LinearScale {
-        question: LinearScaleQuestion,
+        total_count: i64,
         answers: HashMap<i32, i64>, // (scale_value, count)
     },
 }
 impl SurveySummary {
     pub fn aggregate_answer(&mut self, answer: SurveyAnswer) {
         match self {
-            SurveySummary::SingleChoice { answers, .. } => {
+            SurveySummary::SingleChoice {
+                answers,
+                total_count,
+            } => {
                 if let SurveyAnswer::SingleChoice { answer } = answer {
                     if let Some(idx) = answer {
                         *answers.entry(idx).or_insert(0) += 1;
+                        *total_count += 1;
                     }
                 }
             }
-            SurveySummary::MultipleChoice { answers, .. } => {
+            SurveySummary::MultipleChoice {
+                answers,
+                total_count,
+            } => {
                 if let SurveyAnswer::MultipleChoice { answer } = answer {
                     if let Some(idxs) = answer {
                         for idx in idxs {
                             *answers.entry(idx).or_insert(0) += 1;
                         }
+                        *total_count += 1;
                     }
                 }
             }
-            SurveySummary::ShortAnswer { answers, .. } => {
+            SurveySummary::ShortAnswer {
+                answers,
+                total_count,
+            } => {
                 if let SurveyAnswer::ShortAnswer { answer } = answer {
                     if let Some(answer) = answer {
                         *answers.entry(answer).or_insert(0) += 1;
+                        *total_count += 1;
                     }
                 }
             }
-            SurveySummary::Subjective { answers, .. } => {
+            SurveySummary::Subjective {
+                answers,
+                total_count,
+            } => {
                 if let SurveyAnswer::Subjective { answer } = answer {
                     if let Some(answer) = answer {
                         *answers.entry(answer).or_insert(0) += 1;
+                        *total_count += 1;
                     }
                 }
             }
-            SurveySummary::Checkbox { answers, .. } => {
+            SurveySummary::Checkbox {
+                answers,
+                total_count,
+            } => {
                 if let SurveyAnswer::Checkbox { answer } = answer {
                     if let Some(idxs) = answer {
                         for idx in idxs {
                             *answers.entry(idx).or_insert(0) += 1;
                         }
+                        *total_count += 1;
                     }
                 }
             }
-            SurveySummary::Dropdown { answers, .. } => {
+            SurveySummary::Dropdown {
+                answers,
+                total_count,
+            } => {
                 if let SurveyAnswer::Dropdown { answer } = answer {
                     if let Some(idx) = answer {
                         *answers.entry(idx).or_insert(0) += 1;
+                        *total_count += 1;
                     }
                 }
             }
-            SurveySummary::LinearScale { answers, .. } => {
+            SurveySummary::LinearScale {
+                answers,
+                total_count,
+            } => {
                 if let SurveyAnswer::LinearScale { answer } = answer {
                     if let Some(idx) = answer {
                         *answers.entry(idx).or_insert(0) += 1;
+                        *total_count += 1;
                     }
                 }
             }
@@ -98,32 +126,32 @@ impl SurveySummary {
 impl From<SurveyQuestion> for SurveySummary {
     fn from(question: SurveyQuestion) -> Self {
         match question {
-            SurveyQuestion::SingleChoice(question) => SurveySummary::SingleChoice {
-                question,
+            SurveyQuestion::SingleChoice(_) => SurveySummary::SingleChoice {
+                answers: HashMap::new(),
+                total_count: 0,
+            },
+            SurveyQuestion::MultipleChoice(_) => SurveySummary::MultipleChoice {
+                answers: HashMap::new(),
+                total_count: 0,
+            },
+            SurveyQuestion::ShortAnswer(_) => SurveySummary::ShortAnswer {
+                answers: HashMap::new(),
+                total_count: 0,
+            },
+            SurveyQuestion::Subjective(_) => SurveySummary::Subjective {
+                total_count: 0,
                 answers: HashMap::new(),
             },
-            SurveyQuestion::MultipleChoice(question) => SurveySummary::MultipleChoice {
-                question,
+            SurveyQuestion::Checkbox(_) => SurveySummary::Checkbox {
+                total_count: 0,
                 answers: HashMap::new(),
             },
-            SurveyQuestion::ShortAnswer(question) => SurveySummary::ShortAnswer {
-                question,
+            SurveyQuestion::Dropdown(_) => SurveySummary::Dropdown {
+                total_count: 0,
                 answers: HashMap::new(),
             },
-            SurveyQuestion::Subjective(question) => SurveySummary::Subjective {
-                question,
-                answers: HashMap::new(),
-            },
-            SurveyQuestion::Checkbox(question) => SurveySummary::Checkbox {
-                question,
-                answers: HashMap::new(),
-            },
-            SurveyQuestion::Dropdown(question) => SurveySummary::Dropdown {
-                question,
-                answers: HashMap::new(),
-            },
-            SurveyQuestion::LinearScale(question) => SurveySummary::LinearScale {
-                question,
+            SurveyQuestion::LinearScale(_) => SurveySummary::LinearScale {
+                total_count: 0,
                 answers: HashMap::new(),
             },
         }

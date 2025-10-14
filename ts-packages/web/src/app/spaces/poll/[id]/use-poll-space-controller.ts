@@ -5,18 +5,21 @@ import {
   useSpaceHeader,
 } from '@/features/spaces/components/header/use-space-header';
 import { useState } from 'react';
-import { SpaceCommon } from '@/types/space-common';
 import { Post } from '@/lib/api/ratel/posts.v3';
-import { SpaceSurveyProps } from '@/features/spaces/components/survey';
+import { SurveyProps } from '@/features/spaces/components/survey';
 import {
   SurveyAnswer,
   SurveyAnswerType,
   SurveyQuestion,
 } from '@/types/survey-type';
+import { AnalyzeProps } from '@/features/spaces/components/analyze';
+import { PollSpaceResponse } from '@/lib/api/ratel/poll.spaces.v3';
 
-export interface ISpaceController extends SpaceSurveyProps {
+export interface ISpaceController
+  extends SurveyProps,
+    Omit<AnalyzeProps, 'summaries'> {
   post: Post;
-  space: SpaceCommon;
+  space: PollSpaceResponse;
   headerCtrl: SpaceHeaderController;
   isEditMode: boolean;
   activeTab: Tab;
@@ -25,13 +28,17 @@ export interface ISpaceController extends SpaceSurveyProps {
 
 export class PollSpaceController implements ISpaceController {
   public post: Post;
-  public space: SpaceCommon;
+  public space: PollSpaceResponse;
   public headerCtrl: SpaceHeaderController;
+  public startedAt: number;
+  public endedAt: number;
+  public totalResponses: number;
 
   isEditMode: boolean;
   constructor(
+    public spacePk: string,
     post: Post,
-    space: SpaceCommon,
+    space: PollSpaceResponse,
     headerCtrl: SpaceHeaderController,
     public activeTab: Tab,
     public onSelectTab: (tab: Tab) => void,
@@ -52,6 +59,9 @@ export class PollSpaceController implements ISpaceController {
     this.space = space;
     this.headerCtrl = headerCtrl;
     this.isEditMode = headerCtrl.isEditingMode;
+    this.startedAt = space.started_at;
+    this.endedAt = space.ended_at;
+    this.totalResponses = space.user_response_count;
   }
 }
 
@@ -116,8 +126,9 @@ export function usePollSpaceController(spacePk: string): PollSpaceController {
   };
 
   return new PollSpaceController(
+    spacePk,
     feed.post,
-    space as SpaceCommon,
+    space,
     headerCtrl,
     activeTab,
     handleSelectTab,
