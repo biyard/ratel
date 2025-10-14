@@ -10,11 +10,16 @@ use aide::NoApi;
 
 use axum::extract::{Json, Path, State};
 use bdk::prelude::*;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct RespondPollSpaceRequest {
     answers: Vec<SurveyAnswer>,
+}
+
+#[derive(Debug, Serialize, Default, aide::OperationIo, JsonSchema)]
+pub struct RespondPollSpaceResponse {
+    poll_space_pk: Partition,
 }
 
 pub async fn respond_poll_space_handler(
@@ -22,7 +27,7 @@ pub async fn respond_poll_space_handler(
     NoApi(user): aide::NoApi<User>,
     Path(PollSpacePathParam { poll_space_pk }): Path<PollSpacePathParam>,
     Json(req): Json<RespondPollSpaceRequest>,
-) -> Result<(), Error2> {
+) -> Result<Json<RespondPollSpaceResponse>, Error2> {
     //Validate Request
 
     let poll_space = PollSpace::get(&dynamo.client, &poll_space_pk, Some(EntityType::Space))
@@ -57,26 +62,33 @@ pub async fn respond_poll_space_handler(
     if !validate_answers(poll_space_survey.questions, req.answers.clone()) {
         return Err(Error2::AnswersMismatchQuestions);
     }
-    let existing_response = PollSpaceSurveyResponse::get(
+
+    let mut transact_items = vec![];
+
+    if let Some(response) = PollSpaceSurveyResponse::get(
         &dynamo.client,
         Partition::PollSpaceResponse(user.pk.to_string()),
         Some(EntityType::PollSpaceSurveyResponse(
             poll_space_pk.to_string(),
         )),
     )
-    .await?;
+    .await?
+    {
+        // Update existing response
+        let update_tx = PollSpaceSurveyResponse::updater(&response.pk, &response.sk)
+            .with_answers(req.answers)
+            .transact_write_item();
+        transact_items.push(update_tx);
+    } else {
+        let create_tx =
+            PollSpaceSurveyResponse::new(poll_space_pk.clone(), user.pk.clone(), req.answers)
+                .create_transact_write_item();
+        transact_items.push(create_tx);
 
-    let poll_space_response_tx =
-        PollSpaceSurveyResponse::new(poll_space_pk.clone(), user.pk.clone(), req.answers)
-            .create_transact_write_item();
-
-    let mut transact_items = vec![poll_space_response_tx];
-    if existing_response.is_none() {
-        transact_items.push(
-            PollSpace::updater(&poll_space.pk, &poll_space.sk)
-                .increase_user_response_count(1)
-                .transact_write_item(),
-        );
+        let space_increment_tx = PollSpace::updater(&poll_space_pk, &poll_space.sk)
+            .increase_user_response_count(1)
+            .transact_write_item();
+        transact_items.push(space_increment_tx);
     }
 
     dynamo
@@ -89,5 +101,5 @@ pub async fn respond_poll_space_handler(
             tracing::error!("Failed to respond poll space: {}", e);
             Error2::InternalServerError("Failed to respond poll space".into())
         })?;
-    Ok(())
+    Ok(Json(RespondPollSpaceResponse { poll_space_pk }))
 }
