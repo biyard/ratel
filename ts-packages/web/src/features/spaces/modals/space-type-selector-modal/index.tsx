@@ -1,5 +1,6 @@
 import SpaceTypeItem from '@/features/spaces/components/space-type-item';
 import { useSpaceTypeSelectModalController } from './use-space-type-selector-modal-controller';
+import { Button } from '@/components/ui/button';
 
 export default function SpaceCreateModal({ feed_id }: { feed_id: string }) {
   const ctrl = useSpaceTypeSelectModalController(feed_id);
@@ -22,24 +23,17 @@ export default function SpaceCreateModal({ feed_id }: { feed_id: string }) {
           </div>
 
           <div className="flex flex-row gap-2.5">
-            <button
-              type="button"
-              onClick={ctrl.handleClose}
-              className="px-10 text-base font-bold bg-transparent transition-colors hover:text-white min-w-[50px] py-[14.5px] text-neutral-400"
-            >
+            <Button variant="text" onClick={ctrl.handleClose}>
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="primary"
               onClick={ctrl.handleNext}
               disabled={ctrl.isLoading.get()}
-              className={`w-full py-[14.5px] font-bold text-base rounded-[10px] ${
-                !ctrl.isLoading.get()
-                  ? 'bg-primary text-black hover:bg-primary/80'
-                  : 'bg-disabled-button-bg text-disabled-button-text cursor-not-allowed'
-              } transition-colors`}
+              className="flex-1"
             >
               {ctrl.isLoading.get() ? 'Sending...' : 'Send'}
-            </button>
+            </Button>
           </div>
         </div>
       </div>
