@@ -9,7 +9,6 @@ import enHome from './en/Home.json';
 import enTeam from './en/Team.json';
 import enSprintSpace from './en/SprintSpace.json';
 import enNoticeSpace from './en/NoticeSpace.json';
-import enDeliberationSpace from './en/DeliberationSpace.json';
 import enPollSpace from './en/PollSpace.json';
 import enSpace from './en/Space.json';
 import enSettings from './en/Settings.json';
@@ -29,7 +28,6 @@ import koHome from './ko/Home.json';
 import koTeam from './ko/Team.json';
 import koSprintSpace from './ko/SprintSpace.json';
 import koNoticeSpace from './ko/NoticeSpace.json';
-import koDeliberationSpace from './ko/DeliberationSpace.json';
 import koPollSpace from './ko/PollSpace.json';
 import koSpace from './ko/Space.json';
 import koSettings from './ko/Settings.json';
@@ -41,6 +39,7 @@ import koSpacePublishModal from './ko/SpacePublishModal.json';
 import koSpaceMakePublicModal from './ko/SpaceMakePublicModal.json';
 import koEditArtworkPost from './ko/EditArtworkPost.json';
 import { i18nThreadPage } from '@/app/(social)/threads/[id]/thread-page-i18n';
+import { i18nDeliberationPage } from '@/app/spaces/deliberation/[id]/deliberation-page-i18n';
 
 export const LANGUAGES = ['en', 'ko'];
 
@@ -54,7 +53,6 @@ export const resources = {
     Team: enTeam,
     SprintSpace: enSprintSpace,
     NoticeSpace: enNoticeSpace,
-    DeliberationSpace: enDeliberationSpace,
     PollSpace: enPollSpace,
     Space: enSpace,
     Settings: enSettings,
@@ -75,7 +73,6 @@ export const resources = {
     Team: koTeam,
     SprintSpace: koSprintSpace,
     NoticeSpace: koNoticeSpace,
-    DeliberationSpace: koDeliberationSpace,
     PollSpace: koPollSpace,
     Space: koSpace,
     Settings: koSettings,
@@ -89,7 +86,10 @@ export const resources = {
   },
 };
 
-Object.entries({ Threads: i18nThreadPage }).forEach(([key, value]) => {
+Object.entries({
+  Threads: i18nThreadPage,
+  DeliberationSpace: i18nDeliberationPage,
+}).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
 });

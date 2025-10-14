@@ -3,6 +3,7 @@ import { SpaceType } from '../models/spaces';
 import { UserType } from '../models/user';
 import { call } from './call';
 import { ListResponse } from './common';
+import { TeamGroupPermission } from '@/features/auth/utils/team-group-permissions';
 
 export function createPost(team_pk?: string): Promise<CreatePostResponse> {
   if (team_pk) {

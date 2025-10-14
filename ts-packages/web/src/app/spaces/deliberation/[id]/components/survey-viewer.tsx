@@ -13,7 +13,7 @@ import DropdownViewer from '@/app/spaces/[id]/_components/question/_component/vi
 import SubjectiveViewer from '@/app/spaces/[id]/_components/question/_component/viewer/subjective-viewer';
 import CheckPopup from '@/app/spaces/[id]/_components/question/check-popup';
 import { useUserInfo } from '@/hooks/use-user-info';
-import { SpacePublishState } from '@/lib/api/ratel/spaces/deliberation-spaces.v3';
+import { SpacePublishState } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 
 interface Question {
   title: string;
@@ -156,16 +156,6 @@ export default function SurveyViewer({
   return (
     <div className="flex flex-col gap-2.5 w-full">
       {questions.map((q, index) => {
-        console.log(
-          'ddsds: ',
-          is_completed,
-          !isLive,
-          userPk === '',
-          publish === SpacePublishState.Draft.toUpperCase(),
-          isEdit,
-          questions.length == 0,
-        );
-
         const selected = answers[index];
 
         let selectedIndexes =
@@ -248,7 +238,16 @@ export default function SurveyViewer({
       })}
 
       <div
-        className={`flex flex-row w-full justify-end ${is_completed || !isLive || userPk === '' || publish === SpacePublishState.Draft.toUpperCase() || isEdit || questions.length == 0 ? 'hidden' : ''}`}
+        className={`flex flex-row w-full justify-end ${
+          is_completed ||
+          !isLive ||
+          userPk === '' ||
+          publish === SpacePublishState.Draft.toUpperCase() ||
+          isEdit ||
+          questions.length == 0
+            ? 'hidden'
+            : ''
+        }`}
       >
         <div
           className="cursor-pointer flex flex-row w-[180px] h-fit py-[14px] px-[40px] justify-center items-center bg-primary hover:opacity-70 rounded-lg font-bold text-[15px] text-[#000203]"

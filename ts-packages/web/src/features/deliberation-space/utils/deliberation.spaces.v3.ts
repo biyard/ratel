@@ -1,26 +1,91 @@
-import { NewDiscussionCreateRequest } from '../../models/discussion';
-import { Answer } from '../../models/response';
-import { NewSurveyCreateRequest, Question } from '../../models/survey';
+import { SpaceCommon } from '@/types/space-common';
+import { NewSurveyCreateRequest, Question } from '@/lib/api/models/survey';
+import { NewDiscussionCreateRequest } from '@/lib/api/models/discussion';
+import { Answer } from '@/lib/api/models/response';
+import { call } from '@/lib/api/ratel/call';
 
 export type PartitionString = string;
 
-export interface DeliberationSpace {
-  pk: string;
-  sk: string;
-  created_at: number;
-  updated_at: number;
-  status: SpaceStatus | undefined | null;
-  publish_state: SpacePublishState;
-  likes: number;
-  comments: number;
-  rewards: number;
-  shares: number;
-  visibility: SpaceVisibility;
-  post_pk: string;
-  user_pk: string;
-  author_display_name: string;
-  author_profile_url: string;
-  author_username: string;
+export function getDeliberationSpace(
+  spacePk: string,
+): Promise<DeliberationSpaceResponse> {
+  return call('GET', `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}`);
+}
+
+export function updateDeliberationResponseSpace(
+  spacePk: string,
+  survey_pk: string,
+  answers: Answer[],
+): Promise<DeliberationSpaceResponse> {
+  return call(
+    'POST',
+    `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}/responses`,
+    {
+      survey_pk,
+      survey_type: 'SURVEY',
+      answers,
+    },
+  );
+}
+
+export function deleteDeliberationSpace(
+  spacePk: string,
+): Promise<DeleteDeliberationResponse> {
+  return call(
+    'POST',
+    `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}/delete`,
+    {},
+  );
+}
+
+export function updateDeliberationSpace(
+  spacePk: string,
+
+  html_contents: string,
+  files: BackendFile[],
+
+  discussions: NewDiscussionCreateRequest[],
+  elearning_files: BackendFile[],
+
+  surveys: NewSurveyCreateRequest[],
+
+  recommendation_files: BackendFile[],
+
+  visibility: SpaceVisibility,
+  started_at: number,
+  ended_at: number,
+  title?: string,
+  recommendation_html_contents?: string,
+): Promise<DeliberationSpaceResponse> {
+  return call(
+    'POST',
+    `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}`,
+    {
+      title,
+      html_contents,
+      files,
+
+      discussions,
+      elearning_files,
+
+      surveys,
+
+      recommendation_files,
+      recommendation_html_contents,
+
+      visibility: visibility == 'PUBLIC' ? 'Public' : 'Private',
+      started_at,
+      ended_at,
+    },
+  );
+}
+
+export interface DeleteDeliberationResponse {
+  space_pk: string;
+}
+
+// FIXME: separate each file under types
+export interface DeliberationSpaceResponse extends SpaceCommon {
   info: DeliberationSpace;
   summary: DeliberationContentResponse;
   discussions: DeliberationDiscussionResponse[];
@@ -34,7 +99,8 @@ export const SpacePublishState = {
   Published: 'Published',
 } as const;
 
-export type SpacePublishState = typeof SpacePublishState[keyof typeof SpacePublishState];
+export type SpacePublishState =
+  (typeof SpacePublishState)[keyof typeof SpacePublishState];
 
 export const SpaceStatus = {
   Waiting: 'Waiting',
@@ -42,7 +108,7 @@ export const SpaceStatus = {
   Finish: 'Finish',
 } as const;
 
-export type SpaceStatus = typeof SpaceStatus[keyof typeof SpaceStatus];
+export type SpaceStatus = (typeof SpaceStatus)[keyof typeof SpaceStatus];
 
 export interface ElearningResponse {
   files: File[];
@@ -110,7 +176,7 @@ export const FileExtension = {
   MOV: 'MOV',
 } as const;
 
-export type FileExtension = typeof FileExtension[keyof typeof FileExtension];
+export type FileExtension = (typeof FileExtension)[keyof typeof FileExtension];
 
 export const FileExtensionMap: Record<FileExtension, string> = {
   [FileExtension.JPG]: 'JPG',
@@ -124,7 +190,7 @@ export const FileExtensionMap: Record<FileExtension, string> = {
   [FileExtension.MOV]: 'MOV',
 };
 
-type BackendFile = Omit<File, 'ext'> & { ext: string };
+export type BackendFile = Omit<File, 'ext'> & { ext: string };
 
 export const toBackendFile = (f: File): BackendFile => ({
   ...f,

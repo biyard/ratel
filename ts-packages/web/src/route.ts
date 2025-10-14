@@ -29,7 +29,7 @@ export const route = {
   commiteeSpaceById: (spaceId: number | string) =>
     `/spaces/${encodeURIComponent(spaceId)}`,
   deliberationSpaceById: (spaceId: number | string) =>
-    `/spaces/${encodeURIComponent(spaceId)}`,
+    `/spaces/${encodeURIComponent(spaceId)}/deliberation`,
   noticeSpaceById: (spaceId: number | string) =>
     `/spaces/${encodeURIComponent(spaceId)}`,
   threadByFeedId: (feedId: number | string) => {
@@ -41,11 +41,11 @@ export const route = {
   spaceByType: (spaceType: SpaceType, spaceId: number | string) => {
     switch (spaceType) {
       case SpaceType.Poll:
-        return `/spaces/poll/${encodeURIComponent(spaceId)}`;
+        return `/spaces/${encodeURIComponent(spaceId)}/poll`;
       case SpaceType.Notice:
-        return `/spaces/notice/${encodeURIComponent(spaceId)}`;
+        return `/spaces/${encodeURIComponent(spaceId)}/notice`;
       case SpaceType.Deliberation:
-        return `/spaces/deliberation/${encodeURIComponent(spaceId)}`;
+        return `/spaces/${encodeURIComponent(spaceId)}/deliberation`;
       default:
         throw new Error(`Unknown space type: ${spaceType}`);
     }

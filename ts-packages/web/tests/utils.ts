@@ -96,3 +96,26 @@ export async function fill(
 
   return selected;
 }
+
+export async function waitForVisible(
+  page: Page,
+  {
+    text,
+  }: {
+    text?: string;
+  },
+): Promise<Locator> {
+  let opt = { exact: true };
+  let timeout = { timeout: CONFIGS.PAGE_WAIT_TIME };
+
+  let selected: Locator;
+
+  if (text) {
+    selected = page.getByText(text, opt);
+  } else {
+    throw new Error('unsupported selector');
+  }
+  await expect(selected).toBeVisible(timeout);
+
+  return selected;
+}

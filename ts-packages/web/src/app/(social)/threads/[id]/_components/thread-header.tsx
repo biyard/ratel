@@ -44,10 +44,10 @@ export default function ThreadHeader(props: ThreadHeaderProps) {
   return (
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-row justify-between items-center">
-        <button onClick={goBack}>
+        <button aria-label="Go back" onClick={goBack}>
           <ArrowLeft className="[&>path]:stroke-back-icon" />
         </button>
-        {isPostOwner && (canEdit || canDelete) && (
+        {(isPostOwner || canEdit || canDelete) && (
           <ThreadAdminMenu {...props} />
         )}
       </div>
@@ -55,6 +55,7 @@ export default function ThreadHeader(props: ThreadHeaderProps) {
         <div className="flex items-center justify-end w-full gap-4">
           {/* Feed Stats */}
           <button
+            aria-label="Like Post"
             onClick={handleLikePost}
             className={`flex items-center gap-1 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50`}
           >
