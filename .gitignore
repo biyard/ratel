@@ -11,6 +11,7 @@ target/
 dist/
 node_modules/
 .build/
+trace.zip
 
 # Playwright
 /test-results/
