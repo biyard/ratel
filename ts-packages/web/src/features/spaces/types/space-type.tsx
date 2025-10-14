@@ -6,5 +6,5 @@ export enum SpaceType {
   Commitee = 5,
   SprintLeague = 6,
   Notice = 7,
-  Dagit = 8,
+  dAgit = 8,
 }

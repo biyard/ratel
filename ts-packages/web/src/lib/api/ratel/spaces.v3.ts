@@ -1,5 +1,5 @@
-import { BoosterType } from '@/types/booster-type';
-import { SpaceType } from '@/types/space-type';
+import { BoosterType } from '@/features/spaces/types/booster-type';
+import { SpaceType } from '@/features/spaces/types/space-type';
 import { call } from './call';
 import { SpaceVisibility, SpaceVisibilityValue } from '@/types/space-common';
 
