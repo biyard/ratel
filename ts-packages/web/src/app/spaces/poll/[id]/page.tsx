@@ -14,7 +14,7 @@ import TabSelector from '@/features/spaces/components/side-menu/tab-selector';
 import { Vote } from '@/assets/icons/email';
 import TimelineMenu from '@/features/spaces/components/side-menu/timeline';
 import { PieChart1 } from '@/assets/icons/graph';
-import { SpaceStatus } from '@/types/space-common';
+import { SpaceStatus } from '@/features/spaces/types/space-common';
 
 export default function PollSpacePage() {
   const { spacePk } = useParams<{ spacePk: string }>();

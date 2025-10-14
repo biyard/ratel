@@ -15,7 +15,7 @@ import {
 } from '@/types/survey-type';
 import { ReportProps } from '@/features/spaces/components/report';
 import { PollSpaceResponse } from '@/lib/api/ratel/poll.spaces.v3';
-import { SpaceStatus } from '@/types/space-common';
+import { SpaceStatus } from '@/features/spaces/types/space-common';
 import { useUpdatePollSpaceMutation } from '@/features/spaces/polls/hooks/use-update-poll-mutation';
 import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';

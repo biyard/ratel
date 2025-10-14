@@ -5,7 +5,7 @@ import {
   SpacePublishState,
   SpaceStatus,
   SpaceVisibility,
-} from '@/types/space-common';
+} from '@/features/spaces/types/space-common';
 import { useNavigate } from 'react-router';
 import { usePublishSpaceMutation } from '@/features/spaces/hooks/use-publish-mutation';
 import { useUpdateSpaceVisibilityMutation } from '@/features/spaces/hooks/use-update-visibility-mutation';

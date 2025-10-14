@@ -54,13 +54,8 @@ export class SpaceTypeSelectFormController {
         booster: boosterType,
       });
 
-      switch (spaceType) {
-        case SpaceType.Poll:
-          this.navigate(route.pollSpaceByPk(space_pk));
-          break;
-        default:
-          this.navigate(route.deliberationSpaceById(space_pk));
-      }
+      this.navigate(route.spaceByType(spaceType, space_pk));
+
       this.popup.close();
     } catch {
       logger.error('Error creating space');

@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router';
 import { openModal as openPublishSpaceModal } from '@/components/post-header/modals/publish-space';
 import { openModal as openMakePublicModal } from '@/components/post-header/modals/make-public';
 import { openModal as openUnsaveAlertModal } from '@/components/post-header/modals/unsave-alert-modal';
-import { SpacePublishState, SpaceVisibility } from '@/types/space-common';
+import {
+  SpacePublishState,
+  SpaceVisibility,
+} from '@/features/spaces/types/space-common';
 import {
   AuthorSection,
   PostInfoSection,
