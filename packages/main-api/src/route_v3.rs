@@ -19,7 +19,9 @@ use crate::controllers::v3::spaces::deliberations::posting_deliberation::{
 };
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
-use crate::controllers::v3::spaces::poll::respond_poll_space::respond_poll_space_handler;
+use crate::controllers::v3::spaces::poll::respond_poll_space::{
+    RespondPollSpaceResponse, respond_poll_space_handler,
+};
 use crate::controllers::v3::spaces::poll::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
@@ -527,7 +529,7 @@ pub fn route(
                             post_with(
                                 respond_poll_space_handler,
                                 api_docs!(
-                                    Json<()>,
+                                    Json<RespondPollSpaceResponse>,
                                     "Respond to poll",
                                     "Submit a response to the poll with Pk"
                                 ),

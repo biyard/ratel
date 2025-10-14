@@ -6,6 +6,7 @@ use bdk::prelude::*;
 #[derive(
     Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
 )]
+#[serde(rename_all = "snake_case", tag = "answer_type")]
 pub enum SurveySummary {
     SingleChoice {
         total_count: i64,
