@@ -368,12 +368,55 @@ test.describe.serial('[DeliberationPage] Authenticated Users ', () => {
 
     await modal.getByText('Private Publish').click();
     await modal.getByRole('button', { name: 'Publish' }).click();
+    await page.waitForTimeout(3000);
 
     await page.reload();
+    await page.waitForTimeout(3000);
     await expect(page.getByRole('button', { name: 'Publish' })).toHaveCount(0);
   });
 
-  //TODO: add implement survey logic and public publish logic
+  test('Implement Survey', async () => {
+    const values = ['answer1', 'answer2', 'answer3'];
+    await page.goto(deliberationUrl);
+    await page.waitForTimeout(3000);
+
+    await page.locator('div.cursor-pointer', { hasText: 'Poll' }).click();
+
+    const answers = page.getByPlaceholder('Please share your opinion.');
+    await expect(answers.first()).toBeVisible({ timeout: 10000 });
+    await expect(answers).toHaveCount(3);
+
+    for (let i = 0; i < values.length; i++) {
+      const box = answers.nth(i);
+      await box.click({ clickCount: 3 });
+      const mod = process.platform === 'darwin' ? 'Meta' : 'Control';
+      await box.press(`${mod}+KeyA`);
+      await box.press('Backspace');
+      await box.fill(values[i]);
+    }
+
+    await page.getByText('Save').click();
+
+    const modal = page.locator('#popup-zone');
+    await modal.waitFor();
+
+    await modal.getByText('Confirm').click();
+    await page.waitForTimeout(3000);
+
+    await page.locator('div.cursor-pointer', { hasText: 'Poll' }).click();
+    await expect(page.getByText('Save')).toBeHidden();
+
+    await page.locator('div.cursor-pointer', { hasText: 'Analyze' }).click();
+    const participantsValue = page.locator(
+      '//div[normalize-space()="Participants"]/following-sibling::div[1]',
+    );
+
+    await expect(participantsValue).toHaveText(/^1$/);
+
+    await expect(page.getByText('answer1', { exact: true })).toBeVisible();
+    await expect(page.getByText('answer2', { exact: true })).toBeVisible();
+    await expect(page.getByText('answer3', { exact: true })).toBeVisible();
+  });
 });
 
 async function clearAndType(input: Locator, text: string) {
