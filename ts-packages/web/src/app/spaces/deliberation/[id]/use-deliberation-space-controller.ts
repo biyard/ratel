@@ -13,7 +13,7 @@ import {
   toBackendFile,
   SurveyResponseResponse,
   SpaceVisibility,
-} from '@/lib/api/ratel/deliberation.spaces.v3';
+} from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 
 import { ratelApi } from '@/lib/api/ratel_api';
 import { NewSurveyCreateRequest, Question } from '@/lib/api/models/survey';
@@ -39,7 +39,7 @@ import { Answer } from '@/lib/api/models/response';
 import { SpaceVisibilityValue } from '@/types/space-common';
 
 import { SpaceVisibility as UiVisibility } from '@/types/space-common';
-import { SpaceVisibility as ApiVisibility } from '@/lib/api/ratel/deliberation.spaces.v3';
+import { SpaceVisibility as ApiVisibility } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { useUpdateDeliberationMutation } from '@/hooks/spaces/deliberation/use-update-deliberation-mutation';
 import { useSendDeliberationResponseMutation } from '@/hooks/spaces/deliberation/use-send-response-mutation';
 

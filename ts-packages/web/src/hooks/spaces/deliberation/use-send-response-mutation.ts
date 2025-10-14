@@ -1,13 +1,6 @@
 import { spaceKeys } from '@/constants';
-import { NewDiscussionCreateRequest } from '@/lib/api/models/discussion';
 import { Answer } from '@/lib/api/models/response';
-import { NewSurveyCreateRequest } from '@/lib/api/models/survey';
-import {
-  BackendFile,
-  SpaceVisibility,
-  updateDeliberationResponseSpace,
-  updateDeliberationSpace,
-} from '@/lib/api/ratel/deliberation.spaces.v3';
+import { updateDeliberationResponseSpace } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { showErrorToast } from '@/lib/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 

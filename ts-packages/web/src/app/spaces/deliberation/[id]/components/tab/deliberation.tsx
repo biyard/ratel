@@ -1,6 +1,6 @@
 'use client';
 
-import { DeliberationSpaceResponse } from '@/lib/api/ratel/deliberation.spaces.v3';
+import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { Deliberation } from '../../types';
 import SpaceDiscussion from '../space-discussion';
 import SpaceElearning from '../space-elearning';

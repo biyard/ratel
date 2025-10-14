@@ -5,7 +5,7 @@ import {
   BackendFile,
   SpaceVisibility,
   updateDeliberationSpace,
-} from '@/lib/api/ratel/deliberation.spaces.v3';
+} from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { showErrorToast } from '@/lib/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
