@@ -134,6 +134,8 @@ export class DiscussionMeetingController {
 
   sendMessage = (text: string) => this.deps.handlers.sendMessage(text);
 
+  cleanUpMeetingSession = () => this.deps.handlers.cleanupMeetingSession();
+
   get focusedUser() {
     return this.deps.derived.focusedUser;
   }
@@ -145,10 +147,7 @@ export class DiscussionMeetingController {
   }
 }
 
-export function useDiscussionMeetingController(
-  spacePk: string,
-  discussionPk: string,
-) {
+export function useDiscussionController(spacePk: string, discussionPk: string) {
   const deps = buildDeps(spacePk, discussionPk);
   return useMemo(() => new DiscussionMeetingController(deps), [deps.token]);
 }
@@ -193,6 +192,8 @@ function buildDeps(spacePk: string, discussionPk: string) {
 
   const discussion = data.data;
   const users = discussion.participants;
+
+  const startedRef = useRef(false);
 
   useEffect(() => {
     if (!isFirstClicked) {
@@ -253,6 +254,9 @@ function buildDeps(spacePk: string, discussionPk: string) {
   }, [spacePk, discussionPk, meetingSession, navigate, post]);
 
   useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+
     async function startChime() {
       await startMeetingMutation.mutateAsync({
         spacePk,
@@ -271,12 +275,80 @@ function buildDeps(spacePk: string, discussionPk: string) {
         discussionPk,
       });
 
+      console.log('join info: ', joinInfo);
+
       setParticipants(joinInfo.participants);
       const chimeLogger = new ConsoleLogger('ChimeLogs', LogLevel.INFO);
       const deviceController = new DefaultDeviceController(chimeLogger);
+
+      const raw = joinInfo as any;
+
+      // 1) 응답 모양 다양성 대응 (snake/pascal/data 래핑 모두 케이스 핸들)
+      const meeting =
+        raw?.meeting ??
+        raw?.Meeting ??
+        raw?.data?.meeting ??
+        raw?.data?.Meeting;
+
+      const attendee =
+        raw?.attendee ??
+        raw?.Attendee ??
+        raw?.data?.attendee ??
+        raw?.data?.Attendee;
+
+      const participants =
+        raw?.participants ??
+        raw?.Participants ??
+        raw?.data?.participants ??
+        raw?.data?.Participants;
+
+      if (!meeting || !attendee) {
+        console.error('[startChime] invalid joinInfo shape:', { raw });
+        throw new Error('Invalid joinInfo: meeting/attendee missing');
+      }
+
+      if (participants) setParticipants(participants);
+      const meetingForChime = {
+        Meeting: {
+          MeetingId: meeting.meeting_id ?? meeting.MeetingId,
+          MediaRegion: meeting.media_region ?? meeting.MediaRegion,
+          MediaPlacement: {
+            AudioHostUrl:
+              meeting.media_placement?.audio_host_url ??
+              meeting.MediaPlacement?.AudioHostUrl,
+            AudioFallbackUrl:
+              meeting.media_placement?.audio_fallback_url ??
+              meeting.MediaPlacement?.AudioFallbackUrl,
+            ScreenDataUrl:
+              meeting.media_placement?.screen_data_url ??
+              meeting.MediaPlacement?.ScreenDataUrl,
+            ScreenSharingUrl:
+              meeting.media_placement?.screen_sharing_url ??
+              meeting.MediaPlacement?.ScreenSharingUrl,
+            ScreenViewingUrl:
+              meeting.media_placement?.screen_viewing_url ??
+              meeting.MediaPlacement?.ScreenViewingUrl,
+            SignalingUrl:
+              meeting.media_placement?.signaling_url ??
+              meeting.MediaPlacement?.SignalingUrl,
+            TurnControlUrl:
+              meeting.media_placement?.turn_control_url ??
+              meeting.MediaPlacement?.TurnControlUrl,
+          },
+        },
+      };
+
+      const attendeeForChime = {
+        Attendee: {
+          AttendeeId: attendee.attendee_id ?? attendee.AttendeeId,
+          ExternalUserId: attendee.external_user_id ?? attendee.ExternalUserId,
+          JoinToken: attendee.join_token ?? attendee.JoinToken,
+        },
+      };
+
       const configuration = new MeetingSessionConfiguration(
-        joinInfo.meeting,
-        joinInfo.attendee,
+        meetingForChime,
+        attendeeForChime,
       );
       const session = new DefaultMeetingSession(
         configuration,
@@ -299,7 +371,7 @@ function buildDeps(spacePk: string, discussionPk: string) {
       setMeetingSession(session);
     }
     startChime();
-  }, [spacePk, discussionPk, post, get]);
+  }, [spacePk, discussionPk]);
 
   useEffect(() => {
     if (!meetingSession) return;
@@ -485,6 +557,32 @@ function buildDeps(spacePk: string, discussionPk: string) {
     [focusedParticipant],
   );
 
+  const cleanupMeetingSession = async () => {
+    if (meetingSession) {
+      const av = meetingSession.audioVideo;
+      const dc = meetingSession.deviceController;
+      av.stopLocalVideoTile();
+      av.stop();
+      try {
+        const videoDevices = await dc.listVideoInputDevices();
+        for (const device of videoDevices) {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { deviceId: { exact: device.deviceId } },
+          });
+          stream.getTracks().forEach((track) => track.stop());
+        }
+      } catch (err) {}
+      dc.destroy?.();
+    }
+    try {
+      await exitMeetingMutation.mutateAsync({
+        spacePk,
+        discussionPk,
+      });
+    } catch (err) {}
+    setRemoteContentTileOwner(null);
+  };
+
   const token = [
     spacePk,
     discussionPk,
@@ -541,7 +639,7 @@ function buildDeps(spacePk: string, discussionPk: string) {
       setParticipants,
       setFocusedAttendeeId,
     },
-    handlers: { sendMessage },
+    handlers: { sendMessage, cleanupMeetingSession },
     data,
     discussion,
     users,
