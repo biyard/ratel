@@ -41,7 +41,7 @@ export default function SpaceTypeSelectForm({ feed_id }: SelectSpaceFormProps) {
                 : 'bg-disabled-button-bg text-disabled-button-text cursor-not-allowed'
             } transition-colors`}
           >
-            {ctrl.isLoading.get() ? 'Sending...' : 'Next'}
+            {ctrl.isLoading.get() ? 'Sending...' : 'Send'}
           </button>
         </div>
       </div>
