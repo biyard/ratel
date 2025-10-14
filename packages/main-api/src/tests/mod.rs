@@ -7,7 +7,7 @@
 //! - API endpoint testing
 
 pub mod macros;
-pub mod test_utils;
+// pub mod test_utils;
 pub mod v3_setup;
 
 // Re-export commonly used items for backward compatibility
