@@ -1,6 +1,6 @@
 import { createBrowserRouter } from 'react-router';
 import RootLayout from './app/layout';
-import HomePage from './app/(social)/page';
+import HomePage from './app/(social)/home-page';
 import SocialLayout from './app/(social)/layout';
 import { ErrorBoundary } from './components/error-boundary';
 import MyPostsPage from './app/(social)/my-posts/page';
@@ -18,6 +18,7 @@ import PollSpacePage from './app/spaces/poll/[id]/page';
 import { TestReportPage } from './app/test-report/test-report-page';
 import { StorybookPage } from './app/storybook/stroybook-page';
 import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
+import DeliberationSpacePage from './app/spaces/deliberation/[id]/page';
 
 export const routes = createBrowserRouter([
   {
@@ -93,13 +94,18 @@ export const routes = createBrowserRouter([
       // Space Layout
       {
         id: 'space-layout',
-        path: 'spaces',
+        path: 'spaces/:spacePk',
         Component: SpaceLayout,
         children: [
           {
             id: 'poll-space',
-            path: 'poll/:spacePk',
+            path: 'poll',
             Component: PollSpacePage,
+          },
+          {
+            id: 'deliberation-space',
+            path: 'deliberation',
+            Component: DeliberationSpacePage,
           },
         ],
       }, // End of Space Layout

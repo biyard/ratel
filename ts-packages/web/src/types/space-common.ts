@@ -16,6 +16,12 @@ export type SpaceVisibility =
   | { type: 'Public' }
   | { type: 'Team'; team_pk: string };
 
+export const SpaceVisibilityValue = {
+  Private: { type: 'Private' } as const,
+  Public: { type: 'Public' } as const,
+  Team: (team_pk: string) => ({ type: 'Team', team_pk } as const),
+};
+
 export interface SpaceCommon {
   pk: string;
   sk: string;

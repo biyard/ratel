@@ -1,5 +1,8 @@
 use super::*;
-use crate::models::feed::*;
+use crate::{
+    models::feed::*,
+    // types::{TeamGroupPermission, TeamGroupPermissions},
+};
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]

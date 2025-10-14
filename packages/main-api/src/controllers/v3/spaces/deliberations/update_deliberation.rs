@@ -14,20 +14,14 @@ use crate::{
         user::User,
     },
     types::{EntityType, Partition, SpaceVisibility, TeamGroupPermission},
-    utils::{
-        aws::DynamoClient,
-        dynamo_extractor::extract_user_from_session,
-        security::{RatelResource, check_permission_from_session},
-    },
+    utils::aws::DynamoClient,
 };
-use bdk::prelude::axum::{
-    Extension,
-    extract::{Json, Path, State},
-};
+use bdk::prelude::axum::extract::{Json, Path, State};
 use bdk::prelude::*;
 use serde::Deserialize;
-use tower_sessions::Session;
 use validator::Validate;
+
+use aide::NoApi;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
 pub struct UpdateDeliberationRequest {
@@ -69,44 +63,30 @@ pub struct DeliberationPath {
 
 pub async fn update_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(session): Extension<Session>,
+    NoApi(user): NoApi<Option<User>>,
     Path(DeliberationPath { space_pk }): Path<DeliberationPath>,
     Json(req): Json<UpdateDeliberationRequest>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
-    let user = extract_user_from_session(&dynamo.client, &session).await?;
+    if !matches!(space_pk, Partition::DeliberationSpace(_)) {
+        return Err(Error2::NotFoundDeliberationSpace);
+    }
+
+    let (_, has_perm) = SpaceCommon::has_permission(
+        &dynamo.client,
+        &space_pk,
+        user.as_ref().map(|u| &u.pk),
+        TeamGroupPermission::SpaceEdit,
+    )
+    .await?;
+    if !has_perm {
+        return Err(Error2::NoPermission);
+    }
 
     let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
         .await?
         .ok_or(Error2::NotFound("Space Common not found".to_string()))?;
 
     let post_pk = space_common.post_pk;
-
-    let _ = match space_common.user_pk.clone() {
-        Partition::Team(_) => {
-            check_permission_from_session(
-                &dynamo.client,
-                &session,
-                RatelResource::Team {
-                    team_pk: space_common.user_pk.to_string(),
-                },
-                vec![TeamGroupPermission::SpaceEdit],
-            )
-            .await?;
-        }
-        Partition::User(_) => {
-            let user = extract_user_from_session(&dynamo.client, &session).await?;
-            if user.pk != space_common.user_pk {
-                return Err(Error2::Unauthorized(
-                    "You do not have permission to update this deliberation".into(),
-                ));
-            }
-        }
-        _ => {
-            return Err(Error2::InternalServerError(
-                "Invalid deliberation author".into(),
-            ));
-        }
-    };
 
     SpaceCommon::updater(&space_pk, EntityType::SpaceCommon)
         .with_visibility(req.visibility)
@@ -130,7 +110,7 @@ pub async fn update_deliberation_handler(
     .await?;
     update_discussion(
         dynamo.clone(),
-        user.clone(),
+        user.clone().unwrap_or_default(),
         space_pk.to_string(),
         req.discussions,
     )

@@ -23,10 +23,15 @@ const buttonVariants = cva(
         sm: 'h-auto px-4 py-2 text-xs',
         lg: 'h-auto px-6 py-3 text-base',
       },
+      platform: {
+        web: 'web',
+        mobile: 'mobile',
+      },
     },
     defaultVariants: {
       variant: 'default',
       size: 'default',
+      platform: 'web',
     },
   },
 );
@@ -35,6 +40,7 @@ function Button({
   className,
   variant,
   size,
+  platform,
   asChild = false,
   ...props
 }: React.ComponentProps<'button'> &
@@ -45,6 +51,7 @@ function Button({
 
   return (
     <Comp
+      data-platform={platform}
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
       {...props}
