@@ -1,21 +1,15 @@
 use crate::{
     AppState, Error2,
     constants::SESSION_KEY_USER_ID,
-    models::{
-        migrators::user::{migrate_by_email, migrate_by_email_password},
-        user::{User, UserQueryOption},
-    },
+    models::user::{User, UserQueryOption},
     types::Provider,
     utils::password::hash_password,
 };
 use bdk::prelude::*;
 
-use dto::{
-    JsonSchema, aide,
-    by_axum::axum::{
-        Extension,
-        extract::{Json, State},
-    },
+use by_axum::axum::{
+    Extension,
+    extract::{Json, State},
 };
 use serde::Deserialize;
 use tower_sessions::Session;
@@ -37,18 +31,18 @@ pub enum LoginRequest {
 }
 
 pub async fn login_handler(
-    State(AppState { dynamo, pool, .. }): State<AppState>,
+    State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<Session>,
     Json(req): Json<LoginRequest>,
 ) -> Result<Json<User>, Error2> {
     let user = match req {
         LoginRequest::Email { email, password } => {
-            login_with_email(&dynamo.client, &pool, email, password).await?
+            login_with_email(&dynamo.client, email, password).await?
         }
         LoginRequest::OAuth {
             provider,
             access_token,
-        } => login_with_oauth(&dynamo.client, &pool, provider, access_token).await?,
+        } => login_with_oauth(&dynamo.client, provider, access_token).await?,
         LoginRequest::Telegram { .. } => {
             // Handle Telegram login
             // Not implemented yet
@@ -65,7 +59,6 @@ pub async fn login_handler(
 
 pub async fn login_with_oauth(
     cli: &aws_sdk_dynamodb::Client,
-    pool: &sqlx::PgPool,
     provider: Provider,
     access_token: String,
 ) -> Result<User, Error2> {
@@ -75,22 +68,15 @@ pub async fn login_with_oauth(
         .await?
         .0
         .get(0)
-        .cloned();
+        .cloned().ok_or(Error2::Unauthorized(
+            "No user found with the given email".into(),
+        ))?;
 
-    if let Some(user) = user {
-        return Ok(user);
-    }
-
-    // FIXME(migrate): fallback to tricky migration from postgres
-    migrate_by_email(cli, pool, email).await.map_err(|e| {
-        tracing::error!("Failed to migrate user by email: {}", e);
-        Error2::Unauthorized("Invalid email or password".into())
-    })
+    Ok(user)
 }
 
 pub async fn login_with_email(
     cli: &aws_sdk_dynamodb::Client,
-    pool: &sqlx::PgPool,
     email: String,
     password: String,
 ) -> Result<User, Error2> {
@@ -101,19 +87,21 @@ pub async fn login_with_email(
         UserQueryOption::builder().sk(hashed_password),
     )
     .await?;
-    let user = u.get(0).cloned();
+    let user = u.get(0).cloned().ok_or(Error2::Unauthorized(
+        "Invalid email or password".into(),
+    ))?;
 
     // FIXME(migrate): fallback to tricky migration from postgres
-    let user = if user.is_none() {
-        migrate_by_email_password(cli, pool, email, password)
-            .await
-            .map_err(|e| {
-                tracing::error!("Failed to migrate user by email: {}", e);
-                Error2::Unauthorized("Invalid email or password".into())
-            })?
-    } else {
-        user.unwrap()
-    };
+    // let user = if user.is_none() {
+    //     migrate_by_email_password(cli, pool, email, password)
+    //         .await
+    //         .map_err(|e| {
+    //             tracing::error!("Failed to migrate user by email: {}", e);
+    //             Error2::Unauthorized("Invalid email or password".into())
+    //         })?
+    // } else {
+    //     user.unwrap()
+    // };
 
     Ok(user)
 }

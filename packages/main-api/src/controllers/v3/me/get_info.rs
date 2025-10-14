@@ -4,7 +4,8 @@ use crate::{
     models::user::{UserDetailResponse, UserMetadata},
     types::Partition,
 };
-use dto::by_axum::axum::{Extension, Json, extract::State};
+use bdk::prelude::*;
+use by_axum::axum::{Extension, Json, extract::State};
 
 pub type GetInfoResponse = UserDetailResponse;
 

@@ -1,6 +1,6 @@
 /// Depprecated: use `S3Client::get_put_object_uri` instead.
 /// This function will be removed in future versions.
-use dto::{Error, Result, by_types::AwsConfig};
+use crate::{Error, Result, by_types::AwsConfig};
 
 use crate::config::BucketConfig;
 

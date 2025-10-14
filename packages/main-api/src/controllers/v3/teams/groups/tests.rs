@@ -1,4 +1,5 @@
 #![allow(warnings)]
+use bdk::prelude::*;
 use crate::{
     controllers::v3::{
         me::get_info::get_info_handler,
@@ -15,7 +16,7 @@ use crate::{
     tests::{create_app_state, create_test_user},
     types::TeamGroupPermission,
 };
-use dto::by_axum::{
+use by_axum::{
     aide::NoApi,
     axum::{
         Json,
