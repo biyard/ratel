@@ -4,7 +4,6 @@ import { getTimeWithFormat } from '@/lib/time-utils';
 import Clock from '@/assets/icons/clock.svg?react';
 import { Discuss, PieChart1, File, Vote } from '@/components/icons';
 import { CheckCircle, Settings } from 'lucide-react';
-import { Deliberation, DeliberationTab, DeliberationTabType } from '../types';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
@@ -14,6 +13,11 @@ import { useUserInfo } from '@/hooks/use-user-info';
 import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 import { TFunction } from 'i18next';
+import {
+  Deliberation,
+  DeliberationTab,
+  DeliberationTabType,
+} from '@/app/spaces/deliberation/[id]/types';
 
 export type SpaceSideMenuProps = {
   t: TFunction<'DeliberationSpace', undefined>;

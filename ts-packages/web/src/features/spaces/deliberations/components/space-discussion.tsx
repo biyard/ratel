@@ -9,7 +9,6 @@ import { ArrowRight } from 'lucide-react';
 // import { useNavigate } from 'react-router';
 // import { route } from '@/route';
 import { Add, Extra2 } from '@/components/icons';
-import { Deliberation, DiscussionInfo, DiscussionUser } from '../types';
 // import { TotalUser } from '@/lib/api/models/user';
 import { usePopup } from '@/lib/contexts/popup-service';
 
@@ -23,6 +22,11 @@ import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/d
 import { DiscussionMemberResponse } from '@/features/discussion/utils/discussion.v3';
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
+import {
+  Deliberation,
+  DiscussionInfo,
+  DiscussionUser,
+} from '@/app/spaces/deliberation/[id]/types';
 
 export default function SpaceDiscussion({
   space,

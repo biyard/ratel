@@ -10,10 +10,13 @@ import clsx from 'clsx';
 import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
-import { DiscussionInfo, DiscussionUser } from '../../types';
 import { useTranslation } from 'react-i18next';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { User } from '@/lib/api/ratel/auth.v3';
+import {
+  DiscussionInfo,
+  DiscussionUser,
+} from '@/app/spaces/deliberation/[id]/types';
 
 export default function InviteMemberPopup({
   title,

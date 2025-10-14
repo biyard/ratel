@@ -3,12 +3,12 @@ import { SpaceHeaderProvider } from '../../_components/header/provider';
 import SpaceHeader from '../../_components/header';
 import { useDeliberationSpaceController } from './use-deliberation-space-controller';
 import { DeliberationTab } from './types';
-import SpaceSideMenu from './components/space_side_menu';
-import ThreadPage from './components/tab/thread';
-import FinalConsensusPage from './components/tab/recommendation';
-import { DeliberationSurveyPage } from './components/tab/poll';
-import DeliberationPage from './components/tab/deliberation';
-import DeliberationAnalyzePage from './components/tab/analyze';
+import ThreadPage from '@/features/spaces/deliberations/components/tab/thread';
+import DeliberationPage from '@/features/spaces/deliberations/components/tab/deliberation';
+import { DeliberationSurveyPage } from '@/features/spaces/deliberations/components/tab/poll';
+import FinalConsensusPage from '@/features/spaces/deliberations/components/tab/recommendation';
+import DeliberationAnalyzePage from '@/features/spaces/deliberations/components/tab/analyze';
+import SpaceSideMenu from '@/features/spaces/deliberations/components/space_side_menu';
 
 export default function DeliberationSpacePage() {
   const { spacePk } = useParams<{ spacePk: string }>();
