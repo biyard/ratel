@@ -36,7 +36,10 @@ test.describe.serial('[DeliberationPage] Authenticated Users ', () => {
     await page.goto(threadUrl);
     await page.waitForTimeout(3000);
 
-    await click(page, { text: 'Create a Space' });
+    await expect(page.getByText('Create a Space', { exact: true })).toBeVisible(
+      { timeout: 20000 },
+    );
+    await page.getByText('Create a Space', { exact: true }).click();
 
     const modal = page.getByRole('dialog', { name: 'Select a Space Type' });
     await modal
