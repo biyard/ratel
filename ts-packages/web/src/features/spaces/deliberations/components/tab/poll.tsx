@@ -7,10 +7,10 @@ import SetSchedulePopup from '@/app/spaces/[id]/_components/modal/set-schedule';
 import SpaceSurvey from '../space-survey';
 import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
-import { Poll } from '../../types';
 import { SurveyAnswer } from '@/app/spaces/[id]/type';
 import { Answer } from '@/lib/api/models/response';
 import { TFunction } from 'i18next';
+import { Poll } from '@/app/spaces/deliberation/[id]/types';
 
 export type DeliberationSurveyPageProps = {
   t: TFunction<'DeliberationSpace', undefined>;

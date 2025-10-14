@@ -4,12 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { useState } from 'react';
-import { DiscussionInfo } from '../../types';
 import TimeDropdown from '@/components/time-dropdown';
 import CalendarDropdown from '@/components/calendar-dropdown';
 import { showErrorToast } from '@/lib/toast';
 import { useTranslation } from 'react-i18next';
 import InviteMemberPopup from './invite-member';
+import { DiscussionInfo } from '@/app/spaces/deliberation/[id]/types';
 
 export default function NewDiscussion({
   discussion,

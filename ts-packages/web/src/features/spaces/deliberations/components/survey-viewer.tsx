@@ -5,7 +5,6 @@ import { logger } from '@/lib/logger';
 
 import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
-import { Poll } from '../types';
 import { SurveyAnswer } from '@/app/spaces/[id]/type';
 import ObjectiveViewer from '@/app/spaces/[id]/_components/question/_component/viewer/objective-viewer';
 import LinearScaleViewer from '@/app/spaces/[id]/_components/question/_component/viewer/linear-scale-viewer';
@@ -14,6 +13,7 @@ import SubjectiveViewer from '@/app/spaces/[id]/_components/question/_component/
 import CheckPopup from '@/app/spaces/[id]/_components/question/check-popup';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { SpacePublishState } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { Poll } from '@/app/spaces/deliberation/[id]/types';
 
 interface Question {
   title: string;

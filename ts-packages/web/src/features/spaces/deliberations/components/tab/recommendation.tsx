@@ -1,17 +1,23 @@
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
-import { Thread } from '../../types';
 import SpaceContents from '../space-contents';
 import SpaceFiles from '../space-files';
 import { File } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { TFunction } from 'i18next';
+import { FinalConsensus } from '@/app/spaces/deliberation/[id]/types';
 
 export type ThreadPageProps = {
   t: TFunction<'DeliberationSpace', undefined>;
-  thread: Thread;
-  setThread: (thread: Thread) => void;
+  draft: FinalConsensus;
+  setDraft: (draft: FinalConsensus) => void;
 };
 
-export default function ThreadPage({ thread, setThread }: ThreadPageProps) {
+export default function FinalConsensusPage({
+  draft,
+  setDraft,
+}: {
+  draft: FinalConsensus;
+  setDraft: (draft: FinalConsensus) => void;
+}) {
   const store = useSpaceHeaderStore();
   const isEdit = store.isEditingMode;
 
@@ -21,11 +27,15 @@ export default function ThreadPage({ thread, setThread }: ThreadPageProps) {
         <div className="flex flex-col w-full gap-2.5">
           <SpaceContents
             isEdit={isEdit}
-            htmlContents={thread.html_contents}
+            htmlContents={draft.drafts.html_contents}
             setContents={(html_contents: string) => {
-              setThread({
-                ...thread,
-                html_contents,
+              setDraft({
+                ...draft,
+                drafts: {
+                  ...draft,
+                  html_contents,
+                  files: draft.drafts.files,
+                },
               });
 
               store.onModifyContent();
@@ -33,21 +43,29 @@ export default function ThreadPage({ thread, setThread }: ThreadPageProps) {
           />
           <SpaceFiles
             isEdit={isEdit}
-            files={thread.files}
+            files={draft.drafts.files}
             onremove={(index: number) => {
-              const newFiles = [...thread.files];
+              const newFiles = [...draft.drafts.files];
               newFiles.splice(index, 1);
-              setThread({
-                ...thread,
-                files: newFiles,
+              setDraft({
+                ...draft,
+                drafts: {
+                  ...draft,
+                  html_contents: draft.drafts.html_contents,
+                  files: newFiles,
+                },
               });
 
               store.onModifyContent();
             }}
             onadd={(file: File) => {
-              setThread({
-                ...thread,
-                files: [...thread.files, file],
+              setDraft({
+                ...draft,
+                drafts: {
+                  ...draft,
+                  html_contents: draft.drafts.html_contents,
+                  files: [...draft.drafts.files, file],
+                },
               });
 
               store.onModifyContent();

@@ -4,13 +4,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { SpaceStatus } from '@/lib/api/models/spaces';
 
 import { Answer } from '@/lib/api/models/response';
-import { Poll } from '../types';
 import { SurveyAnswer } from '@/app/spaces/[id]/type';
 import { AnswerType } from '@/app/spaces/[id]/_components/question/answer-type-select';
 import SurveyQuestionEditor from '@/app/spaces/[id]/_components/question/survey-question-editor';
 import { Add } from '@/components/icons';
 import SurveyViewer from './survey-viewer';
 import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { Poll } from '@/app/spaces/deliberation/[id]/types';
 
 export default function SpaceSurvey({
   isEdit,

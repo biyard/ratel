@@ -12,16 +12,16 @@ import {
 import { useApiCall } from '@/lib/api/use-send';
 import { logger } from '@/lib/logger';
 import { route } from '@/route';
-import useDiscussionById from '@/features/spaces/discussions/hooks/use-discussion';
-import { useExitMeetingMutation } from '@/features/spaces/discussions/hooks/use-exit-meeting-mutation';
-import { useStartMeetingMutation } from '@/features/spaces/discussions/hooks/use-start-meeting-mutation';
-import { useParticipantMeetingMutation } from '@/features/spaces/discussions/hooks/use-participant-meeting-mutation';
-import { useDiscussionMeetingMutation } from '@/features/spaces/discussions/hooks/use-discussion-meeting';
 import {
   DeliberationDiscussionResponse,
   DiscussionParticipantResponse,
   DiscussionUser,
 } from '@/features/discussion/utils/discussion.v3';
+import { useExitMeetingMutation } from '@/features/discussion/hooks/use-exit-meeting-mutation';
+import { useStartMeetingMutation } from '@/features/discussion/hooks/use-start-meeting-mutation';
+import { useParticipantMeetingMutation } from '@/features/discussion/hooks/use-participant-meeting-mutation';
+import useDiscussionById from '@/features/discussion/hooks/use-discussion';
+import { useDiscussionMeetingMutation } from '@/features/discussion/hooks/use-discussion-meeting';
 
 type ControllerDeps = ReturnType<typeof buildDeps>;
 
