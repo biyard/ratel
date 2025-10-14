@@ -1,4 +1,3 @@
-'use client';
 import * as React from 'react';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -16,13 +15,14 @@ import { usePopup } from '@/lib/contexts/popup-service';
 
 import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
-import { logger } from '@/lib/logger';
 import NewDiscussion from './modal/new-discussion';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { SpacePublishState } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { DiscussionMemberResponse } from '@/features/discussion/utils/discussion.v3';
+import { useNavigate } from 'react-router';
+import { route } from '@/route';
 
 export default function SpaceDiscussion({
   space,
@@ -88,11 +88,10 @@ function DiscussionSchedules({
 
   const discussions = space.discussions;
 
-  //   const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const handleMoveDiscussion = (spacePk: string, discussionPk: string) => {
-    logger.debug('spacePk: ', spacePk, ', discussionPk: ', discussionPk);
-    // navigate(route.discussionById(spaceId, discussionId));
+    navigate(route.discussionByPk(spacePk, discussionPk));
   };
 
   return (
