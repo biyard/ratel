@@ -8,11 +8,7 @@ import type { SpaceDraft, SpaceDraftCreateRequest } from './space_draft';
 import type { SprintLeague } from './sprint_league';
 import type { Survey, SurveyCreateRequest } from './survey';
 import type { UserType } from './user';
-import type {
-  QuizQuestion,
-  BoosterType,
-  NoticeQuizRequest,
-} from './notice';
+import type { QuizQuestion, BoosterType, NoticeQuizRequest } from './notice';
 import { PublishingScope } from './notice';
 
 export interface Space {
@@ -177,7 +173,10 @@ export const SpaceType = {
   dAgit: 8,
 } as const;
 
-export type SpaceType = typeof SpaceType[keyof typeof SpaceType];
+/**
+ * @deprecated The type are deprecated. Use SpaceType from /features/space/types/space-type.tsx
+ */
+export type SpaceType = (typeof SpaceType)[keyof typeof SpaceType];
 
 export const SpaceStatus = {
   Draft: 1,
@@ -185,4 +184,4 @@ export const SpaceStatus = {
   Finish: 3,
 } as const;
 
-export type SpaceStatus = typeof SpaceStatus[keyof typeof SpaceStatus];
+export type SpaceStatus = (typeof SpaceStatus)[keyof typeof SpaceStatus];
