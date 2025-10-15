@@ -18,6 +18,13 @@ pub mod users {
     #[cfg(test)]
     pub mod tests;
 }
+
+pub mod assets {
+    pub mod complete_multipart_upload;
+    pub mod get_put_multi_object_uri;
+    pub mod get_put_object_uri;
+}
+
 pub mod auth {
     pub mod health;
     pub mod login;
