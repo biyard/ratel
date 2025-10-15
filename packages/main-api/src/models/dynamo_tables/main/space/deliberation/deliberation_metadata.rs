@@ -28,7 +28,7 @@ pub enum DeliberationMetadata {
     DeliberationSpaceResponse(DeliberationSpaceResponse),
     DeliberationSpaceContent(DeliberationSpaceContent),
     DeliberationSpaceQuestion(DeliberationSpaceQuestion),
-    DeliberationSpaceParticipant(DeliberationSpaceParticipant),
+    // DeliberationSpaceParticipant(DeliberationSpaceParticipant),
     DeliberationSpaceMember(DeliberationDiscussionMember),
     DeliberationSpaceElearning(DeliberationSpaceElearning),
     DeliberationSpaceDiscussion(DeliberationSpaceDiscussion),
@@ -121,23 +121,23 @@ impl From<Vec<DeliberationMetadata>> for DeliberationDetailResponse {
                 DeliberationMetadata::DeliberationSpaceQuestion(question) => {
                     res.surveys.questions = question.question();
                 }
-                DeliberationMetadata::DeliberationSpaceParticipant(participant) => {
-                    match participant.sk {
-                        EntityType::DeliberationDiscussionParticipant(..) => {
-                            participants_by_discussion
-                                .entry(discussion_id_of(&participant.discussion_pk))
-                                .or_default()
-                                .push(participant_resp_from_dsp(&participant));
-                        }
-                        EntityType::DeliberationDiscussionMember(..) => {
-                            members_by_discussion
-                                .entry(discussion_id_of(&participant.discussion_pk))
-                                .or_default()
-                                .push(member_resp_from_dsp(&participant));
-                        }
-                        _ => {}
-                    }
-                }
+                // DeliberationMetadata::DeliberationSpaceParticipant(participant) => {
+                //     match participant.sk {
+                //         EntityType::DeliberationDiscussionParticipant(..) => {
+                //             participants_by_discussion
+                //                 .entry(discussion_id_of(&participant.discussion_pk))
+                //                 .or_default()
+                //                 .push(participant_resp_from_dsp(&participant));
+                //         }
+                //         EntityType::DeliberationDiscussionMember(..) => {
+                //             members_by_discussion
+                //                 .entry(discussion_id_of(&participant.discussion_pk))
+                //                 .or_default()
+                //                 .push(member_resp_from_dsp(&participant));
+                //         }
+                //         _ => {}
+                //     }
+                // }
                 DeliberationMetadata::DeliberationSpaceMember(member) => match member.sk {
                     EntityType::DeliberationDiscussionParticipant(..) => {
                         participants_by_discussion

@@ -1,4 +1,3 @@
-use crate::models::space::DeliberationSpaceParticipant;
 use crate::types::File;
 use crate::{
     AppState, Error2,
@@ -125,9 +124,21 @@ pub async fn update_deliberation_handler(
     )
     .await?;
 
-    let metadata = DeliberationMetadata::query(&dynamo.client, space_pk).await?;
+    // tracing::debug!("hello!!!: {:?}", space_pk.to_string());
+
+    let metadata = match DeliberationMetadata::query(&dynamo.client, space_pk).await {
+        Ok(v) => v,
+        Err(e) => {
+            tracing::debug!("deliberation metadata error: {:?}", e);
+            return Err(e);
+        }
+    };
+
+    // tracing::debug!("deliberation metadata: {:?}", metadata);
 
     let metadata: DeliberationDetailResponse = metadata.into();
+
+    // tracing::debug!("deliberation metadata 1111: {:?}", metadata);
 
     Ok(Json(metadata))
 }
@@ -225,9 +236,9 @@ pub async fn update_discussion(
 
     for data in metadata.into_iter() {
         match data {
-            DeliberationMetadata::DeliberationSpaceParticipant(v) => {
-                DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            }
+            // DeliberationMetadata::DeliberationSpaceParticipant(v) => {
+            //     DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            // }
             DeliberationMetadata::DeliberationSpaceMember(v) => {
                 DeliberationDiscussionMember::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
