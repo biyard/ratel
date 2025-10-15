@@ -70,7 +70,7 @@ pub async fn get_meeting_handler(
     let discussion = DeliberationSpaceDiscussion::get(
         &dynamo.client,
         &space_pk,
-        Some(EntityType::DeliberationSpaceDiscussion(
+        Some(EntityType::DeliberationDiscussion(
             discussion_id.to_string(),
         )),
     )
@@ -165,7 +165,7 @@ pub async fn get_meeting_handler(
 
         DeliberationSpaceDiscussion::updater(
             &space_pk,
-            EntityType::DeliberationSpaceDiscussion(discussion_id.clone()),
+            EntityType::DeliberationDiscussion(discussion_id.clone()),
         )
         .with_meeting_id(meeting.meeting_id().unwrap().to_string())
         .execute(&dynamo.client)

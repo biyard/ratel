@@ -5,6 +5,7 @@ pub mod invitation_status;
 pub mod membership;
 pub mod oauth_provider;
 
+pub mod file_type;
 pub mod post_status;
 pub mod post_type;
 pub mod visibility;

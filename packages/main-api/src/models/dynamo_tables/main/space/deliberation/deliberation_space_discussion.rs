@@ -66,7 +66,7 @@ impl DeliberationSpaceDiscussion {
 
         Self {
             pk: deliberation_pk,
-            sk: EntityType::DeliberationSpaceDiscussion(uid),
+            sk: EntityType::DeliberationDiscussion(uid),
             started_at,
             ended_at,
 
@@ -86,7 +86,15 @@ impl DeliberationSpaceDiscussion {
     }
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema, aide::OperationIo)]
+#[derive(
+    Debug,
+    Clone,
+    Default,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    aide::OperationIo,
+)]
 pub struct DeliberationDiscussionResponse {
     pub pk: Partition,
 
@@ -114,7 +122,7 @@ impl From<DeliberationSpaceDiscussion> for DeliberationDiscussionResponse {
     fn from(discussion: DeliberationSpaceDiscussion) -> Self {
         Self {
             pk: match discussion.sk {
-                EntityType::DeliberationSpaceDiscussion(v) => Partition::Discussion(v.to_string()),
+                EntityType::DeliberationDiscussion(v) => Partition::Discussion(v.to_string()),
                 _ => Partition::Discussion("".to_string()),
             },
             started_at: discussion.started_at,
