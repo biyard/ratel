@@ -5,11 +5,11 @@ use crate::{
     models::{
         feed::Post,
         space::{
-            DeliberationDetailResponse, DeliberationMetadata, DeliberationSpaceContent,
-            DeliberationSpaceDiscussion, DeliberationSpaceElearning, DeliberationSpaceMember,
-            DeliberationSpaceMemberQueryOption, DeliberationSpaceQuestion,
-            DeliberationSpaceQuestionQueryOption, DeliberationSpaceSurvey, DiscussionCreateRequest,
-            SpaceCommon, SurveyCreateRequest,
+            DeliberationDetailResponse, DeliberationDiscussionMember,
+            DeliberationDiscussionMemberQueryOption, DeliberationMetadata,
+            DeliberationSpaceContent, DeliberationSpaceDiscussion, DeliberationSpaceElearning,
+            DeliberationSpaceQuestion, DeliberationSpaceQuestionQueryOption,
+            DeliberationSpaceSurvey, DiscussionCreateRequest, SpaceCommon, SurveyCreateRequest,
         },
         user::User,
     },
@@ -67,7 +67,7 @@ pub async fn update_deliberation_handler(
     Path(DeliberationPath { space_pk }): Path<DeliberationPath>,
     Json(req): Json<UpdateDeliberationRequest>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
-    if !matches!(space_pk, Partition::DeliberationSpace(_)) {
+    if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error2::NotFoundDeliberationSpace);
     }
 
@@ -157,7 +157,7 @@ pub async fn update_survey(
 
             DeliberationSpaceSurvey::updater(
                 &space_pk,
-                EntityType::DeliberationSpaceSurvey(survey_id.clone()),
+                EntityType::DeliberationSurvey(survey_id.clone()),
             )
             .with_started_at(survey.started_at)
             .with_ended_at(survey.ended_at)
@@ -181,7 +181,7 @@ pub async fn update_survey(
             }
 
             let question = DeliberationSpaceQuestion::new(
-                Partition::DeliberationSpace(id.clone()),
+                Partition::Space(id.clone()),
                 Partition::Survey(survey_id.clone()),
                 survey.questions,
             );
@@ -189,7 +189,7 @@ pub async fn update_survey(
             question.create(&dynamo.client).await?;
         } else {
             let sur = DeliberationSpaceSurvey::new(
-                Partition::DeliberationSpace(id.clone()),
+                Partition::Space(id.clone()),
                 survey.status,
                 survey.started_at,
                 survey.ended_at,
@@ -198,12 +198,12 @@ pub async fn update_survey(
             sur.create(&dynamo.client).await?;
 
             let survey_id = match sur.clone().sk {
-                EntityType::DeliberationSpaceSurvey(v) => v,
+                EntityType::DeliberationSurvey(v) => v,
                 _ => "".to_string(),
             };
 
             let question = DeliberationSpaceQuestion::new(
-                Partition::DeliberationSpace(id.clone()),
+                Partition::Space(id.clone()),
                 Partition::Survey(survey_id),
                 survey.questions,
             );
@@ -229,7 +229,7 @@ pub async fn update_discussion(
                 DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
             DeliberationMetadata::DeliberationSpaceMember(v) => {
-                DeliberationSpaceMember::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+                DeliberationDiscussionMember::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
             DeliberationMetadata::DeliberationSpaceDiscussion(v) => {
                 DeliberationSpaceDiscussion::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
@@ -257,7 +257,7 @@ pub async fn update_discussion(
                 .to_string();
             DeliberationSpaceDiscussion::updater(
                 &space_pk.clone(),
-                EntityType::DeliberationSpaceDiscussion(discussion_id.to_string()),
+                EntityType::DeliberationDiscussion(discussion_id.to_string()),
             )
             .with_started_at(discussion.started_at)
             .with_ended_at(discussion.ended_at)
@@ -266,9 +266,9 @@ pub async fn update_discussion(
             .execute(&dynamo.client)
             .await?;
 
-            let option = DeliberationSpaceMemberQueryOption::builder();
+            let option = DeliberationDiscussionMemberQueryOption::builder();
 
-            let deleted_members = DeliberationSpaceMember::find_by_discussion_pk(
+            let deleted_members = DeliberationDiscussionMember::find_by_discussion_pk(
                 &dynamo.client,
                 discussion.discussion_pk.unwrap(),
                 option,
@@ -277,7 +277,8 @@ pub async fn update_discussion(
             .0;
 
             for member in deleted_members {
-                DeliberationSpaceMember::delete(&dynamo.client, member.pk, Some(member.sk)).await?;
+                DeliberationDiscussionMember::delete(&dynamo.client, member.pk, Some(member.sk))
+                    .await?;
             }
 
             for member in discussion.user_ids {
@@ -285,8 +286,8 @@ pub async fn update_discussion(
                     .await?
                     .ok_or(Error2::NotFound("User not found".into()))?;
 
-                let m = DeliberationSpaceMember::new(
-                    Partition::DeliberationSpace(id.to_string()),
+                let m = DeliberationDiscussionMember::new(
+                    Partition::Space(id.to_string()),
                     Partition::Discussion(discussion_id.to_string()),
                     user,
                 );
@@ -295,7 +296,7 @@ pub async fn update_discussion(
             }
         } else {
             let disc = DeliberationSpaceDiscussion::new(
-                Partition::DeliberationSpace(id.clone()),
+                Partition::Space(id.clone()),
                 discussion.name,
                 discussion.description,
                 discussion.started_at,
@@ -308,7 +309,7 @@ pub async fn update_discussion(
             );
 
             let disc_id = match disc.clone().sk {
-                EntityType::DeliberationSpaceDiscussion(v) => v,
+                EntityType::DeliberationDiscussion(v) => v,
                 _ => "".to_string(),
             };
 
@@ -319,8 +320,8 @@ pub async fn update_discussion(
                     .await?
                     .ok_or(Error2::NotFound("User not found".into()))?;
 
-                let m = DeliberationSpaceMember::new(
-                    Partition::DeliberationSpace(id.to_string()),
+                let m = DeliberationDiscussionMember::new(
+                    Partition::Space(id.to_string()),
                     Partition::Discussion(disc_id.clone()),
                     user,
                 );
@@ -342,12 +343,12 @@ pub async fn update_recommendation(
     let recommendation = DeliberationSpaceContent::get(
         &dynamo.client,
         &space_pk,
-        Some(EntityType::DeliberationSpaceRecommendation),
+        Some(EntityType::DeliberationRecommendation),
     )
     .await?;
 
     if recommendation.is_some() {
-        DeliberationSpaceContent::updater(&space_pk, EntityType::DeliberationSpaceRecommendation)
+        DeliberationSpaceContent::updater(&space_pk, EntityType::DeliberationRecommendation)
             .with_html_contents(html_contents)
             .with_files(files)
             .execute(&dynamo.client)
@@ -360,8 +361,8 @@ pub async fn update_recommendation(
             .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
             .to_string();
         let recommendation = DeliberationSpaceContent::new(
-            Partition::DeliberationSpace(id.to_string()),
-            EntityType::DeliberationSpaceRecommendation,
+            Partition::Space(id.to_string()),
+            EntityType::DeliberationRecommendation,
             html_contents,
             files,
         );
@@ -379,21 +380,19 @@ pub async fn update_elearning(
     let elearning = DeliberationSpaceElearning::get(
         &dynamo.client,
         &space_pk,
-        Some(EntityType::DeliberationSpaceElearning),
+        Some(EntityType::DeliberationElearning),
     )
     .await?;
 
     if elearning.is_some() {
-        DeliberationSpaceElearning::updater(&space_pk, EntityType::DeliberationSpaceElearning)
+        DeliberationSpaceElearning::updater(&space_pk, EntityType::DeliberationElearning)
             .with_files(elearning_files)
             .execute(&dynamo.client)
             .await?;
     } else {
         let pk = space_pk.split("#").last().unwrap_or_default().to_string();
-        let elearning = DeliberationSpaceElearning::new(
-            Partition::DeliberationSpace(pk.to_string()),
-            elearning_files,
-        );
+        let elearning =
+            DeliberationSpaceElearning::new(Partition::Space(pk.to_string()), elearning_files);
         elearning.create(&dynamo.client).await?;
     }
 
@@ -409,12 +408,12 @@ pub async fn update_summary(
     let deliberation_summary = DeliberationSpaceContent::get(
         &dynamo.client,
         &space_pk,
-        Some(EntityType::DeliberationSpaceSummary),
+        Some(EntityType::DeliberationSummary),
     )
     .await?;
 
     if deliberation_summary.is_some() {
-        DeliberationSpaceContent::updater(&space_pk, EntityType::DeliberationSpaceSummary)
+        DeliberationSpaceContent::updater(&space_pk, EntityType::DeliberationSummary)
             .with_html_contents(html_contents.unwrap_or_default())
             .with_files(files)
             .execute(&dynamo.client)
@@ -427,8 +426,8 @@ pub async fn update_summary(
             .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
             .to_string();
         let summary = DeliberationSpaceContent::new(
-            Partition::DeliberationSpace(id),
-            EntityType::DeliberationSpaceSummary,
+            Partition::Space(id),
+            EntityType::DeliberationSummary,
             html_contents.unwrap_or_default(),
             files,
         );

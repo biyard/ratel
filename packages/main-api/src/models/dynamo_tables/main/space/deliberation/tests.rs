@@ -23,17 +23,13 @@ async fn tests_create_deliberation() {
     //FIXME: fix to real post data when post is implemented
     let post_pk = uuid::Uuid::new_v4().to_string();
 
-    let space_common = SpaceCommon::new(
-        deliberation.pk.clone(),
-        crate::types::Partition::Feed(post_pk),
-        user.clone(),
-    );
+    let space_common = SpaceCommon::new(crate::types::Partition::Feed(post_pk), user.clone());
     let res = space_common.create(&cli).await;
     assert!(res.is_ok());
 
     let deliberation_summary = DeliberationSpaceContent::new(
         deliberation.pk.clone(),
-        EntityType::DeliberationSpaceSummary,
+        EntityType::DeliberationSummary,
         "<div>deliberation space</div>".to_string(),
         [File {
             name: "excel file".to_string(),
@@ -63,11 +59,11 @@ async fn tests_create_deliberation() {
     assert!(res.is_ok());
 
     let discussion_pk = match deliberation_discussion.sk {
-        EntityType::DeliberationSpaceDiscussion(v) => v,
+        EntityType::DeliberationDiscussion(v) => v,
         _ => "".to_string(),
     };
 
-    let deliberation_member = DeliberationSpaceMember::new(
+    let deliberation_member = DeliberationDiscussionMember::new(
         deliberation.pk.clone(),
         crate::types::Partition::Discussion(discussion_pk.clone()),
         user.clone(),
@@ -108,7 +104,7 @@ async fn tests_create_deliberation() {
     assert!(res.is_ok());
 
     let survey_pk = match deliberation_survey.sk {
-        EntityType::DeliberationSpaceSurvey(v) => v,
+        EntityType::DeliberationSurvey(v) => v,
         _ => "".to_string(),
     };
 
@@ -156,7 +152,7 @@ async fn tests_create_deliberation() {
 
     let deliberation_recommendation = DeliberationSpaceContent::new(
         deliberation.pk.clone(),
-        crate::types::EntityType::DeliberationSpaceRecommendation,
+        crate::types::EntityType::DeliberationRecommendation,
         "<div>deliberation space recommendation</div>".to_string(),
         [File {
             name: "excel file recommendation".to_string(),

@@ -28,7 +28,7 @@ async fn test_poll_space_creation() {
 
     poll.create(&cli).await.expect("failed to create poll");
 
-    let common = SpaceCommon::new(poll.pk.clone(), post.pk, user.clone());
+    let common = SpaceCommon::new(post.pk, user.clone());
 
     common
         .create(&cli)

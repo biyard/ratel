@@ -32,7 +32,7 @@ pub async fn posting_deliberation_handler(
     Path(DeliberationPath { space_pk }): Path<DeliberationPath>,
     Json(req): Json<PostingDeliberationRequest>,
 ) -> Result<Json<PostingDeliberationResponse>, Error2> {
-    if !matches!(space_pk, Partition::DeliberationSpace(_)) {
+    if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error2::NotFoundDeliberationSpace);
     }
 

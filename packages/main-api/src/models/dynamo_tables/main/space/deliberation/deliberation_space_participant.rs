@@ -62,7 +62,6 @@ impl DeliberationSpaceParticipant {
             ..
         }: User,
     ) -> Self {
-        let uid = uuid::Uuid::new_v4().to_string();
         let discussion_id = match &discussion_pk {
             Partition::Discussion(v) => v.as_str(),
             _ => "",
@@ -74,7 +73,10 @@ impl DeliberationSpaceParticipant {
 
         Self {
             pk: deliberation_pk,
-            sk: EntityType::DeliberationSpaceParticipant(uid),
+            sk: EntityType::DeliberationDiscussionParticipant(
+                discussion_id.to_string(),
+                participant_id.clone(),
+            ),
             participant_id: Some(participant_id),
             discussion_user_pk: Some(Partition::DiscussionUser(format!(
                 "{discussion_id}#{user_id}"
@@ -91,7 +93,7 @@ impl DeliberationSpaceParticipant {
         if let Some(id) = &self.participant_id {
             return id.clone();
         }
-        if let EntityType::DeliberationSpaceParticipant(v) = &self.sk {
+        if let EntityType::DeliberationDiscussionParticipant(_, v) = &self.sk {
             return v.clone();
         }
         String::new()
@@ -113,7 +115,15 @@ impl DeliberationSpaceParticipant {
     }
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema, aide::OperationIo)]
+#[derive(
+    Debug,
+    Clone,
+    Default,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    aide::OperationIo,
+)]
 pub struct DiscussionParticipantResponse {
     pub user_pk: Partition,
     pub author_display_name: String,

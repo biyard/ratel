@@ -52,7 +52,7 @@ pub struct DeliberationSurveyResponse {
 impl From<DeliberationSpaceSurvey> for DeliberationSurveyResponse {
     fn from(survey: DeliberationSpaceSurvey) -> Self {
         let pk = match survey.sk {
-            EntityType::DeliberationSpaceSurvey(v) => v,
+            EntityType::DeliberationSurvey(v) => v,
             _ => "".to_string(),
         };
         Self {
@@ -70,7 +70,7 @@ impl From<DeliberationSpaceSurvey> for DeliberationSurveyResponse {
 impl DeliberationSpaceSurvey {
     pub fn new(pk: Partition, status: SurveyStatus, started_at: i64, ended_at: i64) -> Self {
         let uid = uuid::Uuid::new_v4().to_string();
-        let sk = EntityType::DeliberationSpaceSurvey(uid);
+        let sk = EntityType::DeliberationSurvey(uid);
 
         Self {
             pk,
