@@ -101,3 +101,12 @@ export const pollSpaceKeys = {
   all: [QK_SPACES, SpaceType.Poll] as const,
   summary: (pk: string) => [...pollSpaceKeys.all, pk, 'summary'] as const,
 };
+
+const QK_DISCUSSION = 'discussions';
+
+export const discussionKeys = {
+  detail: (spacePk: string, discussionPk: string) =>
+    [QK_DISCUSSION, spacePk, discussionPk] as const,
+  meeting: (spacePk: string, discussionPk: string) =>
+    [QK_DISCUSSION, 'meeting', spacePk, discussionPk] as const,
+};

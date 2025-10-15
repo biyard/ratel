@@ -55,6 +55,7 @@ pub mod spaces {
             pub mod create_discussion;
             pub mod end_recording;
             pub mod exit_meeting;
+            pub mod get_meeting;
             pub mod participant_meeting;
             pub mod start_meeting;
             pub mod start_recording;

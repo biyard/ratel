@@ -2,7 +2,7 @@ import { spaceKeys } from '@/constants';
 import {
   DeliberationSpaceResponse,
   getDeliberationSpace,
-} from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+} from '../utils/deliberation.spaces.v3';
 import {
   useSuspenseQuery,
   UseSuspenseQueryResult,

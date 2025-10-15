@@ -36,7 +36,7 @@ export default function ObjectiveViewer({
     type: Question['answer_type'],
   ) => void;
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
   return (
     <>
       <Wrapper
