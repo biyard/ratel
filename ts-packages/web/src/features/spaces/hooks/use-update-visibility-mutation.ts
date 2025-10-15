@@ -1,7 +1,10 @@
 import { spaceKeys } from '@/constants';
 import { updateSpaceVisibility } from '@/lib/api/ratel/spaces.v3';
 import { optimisticUpdate } from '@/lib/hook-utils';
-import { SpaceCommon, SpaceVisibility } from '@/types/space-common';
+import {
+  SpaceCommon,
+  SpaceVisibility,
+} from '@/features/spaces/types/space-common';
 import { useMutation } from '@tanstack/react-query';
 
 export function useUpdateSpaceVisibilityMutation<T extends SpaceCommon>() {

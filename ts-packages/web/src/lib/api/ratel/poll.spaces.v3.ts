@@ -1,7 +1,11 @@
-import { SurveyQuestion, SurveyAnswer } from '@/types/survey-type';
+import {
+  SurveyQuestion,
+  SurveyAnswer,
+  SurveySummary,
+} from '@/types/survey-type';
 import { call } from './call';
 import { TimeRange } from '@/types/time-range';
-import { SpaceCommon } from '@/types/space-common';
+import { SpaceCommon } from '@/features/spaces/types/space-common';
 
 export function getPollSpace(spacePk: string): Promise<PollSpaceResponse> {
   return call('GET', `/v3/spaces/poll/${encodeURIComponent(spacePk)}`);
@@ -10,34 +14,44 @@ export function getPollSpace(spacePk: string): Promise<PollSpaceResponse> {
 export function updatePollSpace(
   spacePk: string,
   title: string,
-  htmlContents: string,
+  htmlContent: string,
   timeRange: TimeRange,
   questions: SurveyQuestion[],
 ) {
   return call('PUT', `/v3/spaces/poll/${encodeURIComponent(spacePk)}`, {
     title,
-    html_contents: htmlContents,
+    html_content: htmlContent,
     time_range: timeRange,
     questions,
   });
 }
 
-export function listPollSurveyAnswers(
-  spacePk: string,
-  bookmark?: string,
-  limit?: number,
-) {
-  const params = new URLSearchParams();
-  if (bookmark) params.append('bookmark', bookmark);
-  if (limit) params.append('limit', limit.toString());
-
-  const queryString = params.toString();
-  const url = `/v3/spaces/poll/${encodeURIComponent(spacePk)}/response${
-    queryString ? `?${queryString}` : ''
-  }`;
-
-  return call('GET', url);
+export interface PollSurveySummariesResponse {
+  created_at: string;
+  summaries: SurveySummary[];
 }
+export function getPollSurveySummaries(
+  spacePk: string,
+): Promise<PollSurveySummariesResponse> {
+  return call('GET', `/v3/spaces/poll/${encodeURIComponent(spacePk)}/summary`);
+}
+
+// export function listPollSurveyAnswers(
+//   spacePk: string,
+//   bookmark?: string,
+//   limit?: number,
+// ) {
+//   const params = new URLSearchParams();
+//   if (bookmark) params.append('bookmark', bookmark);
+//   if (limit) params.append('limit', limit.toString());
+
+//   const queryString = params.toString();
+//   const url = `/v3/spaces/poll/${encodeURIComponent(spacePk)}/response${
+//     queryString ? `?${queryString}` : ''
+//   }`;
+
+//   return call('GET', url);
+// }
 
 export function submitPollSurveyResponse(
   spacePk: string,

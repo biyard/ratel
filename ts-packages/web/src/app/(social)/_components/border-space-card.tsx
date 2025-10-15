@@ -1,8 +1,14 @@
-
+import React from 'react';
 export interface BorderSpaceCardProps {
   children: React.ReactNode;
 }
 
+/**
+ * @deprecated
+ * use `<Card />`
+ * ---
+ * **import Card from '@/components/card'**
+ */
 export default function BorderSpaceCard({ children }: BorderSpaceCardProps) {
   return (
     <div

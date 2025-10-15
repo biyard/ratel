@@ -9,6 +9,11 @@ export interface SpaceContentsProps {
   setContents?: (htmlContents: string) => void;
 }
 
+// Set Deprecated
+
+/**
+ * @deprecated use ContentEditor from '@/features/spaces/components/content-editor' instead
+ */
 export default function SpaceContents({
   isEdit = false,
   htmlContents,

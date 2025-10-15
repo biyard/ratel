@@ -138,6 +138,8 @@ pub enum Error {
     AnswersMismatchQuestions,
     #[error("Space cannot be updated in its current status")]
     ImmutablePollSpaceState,
+    #[error("Survey summary not found")]
+    NotFoundSurveySummary,
 
     // teams 4000 ~
     #[error("Team not found")]

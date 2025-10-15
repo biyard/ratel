@@ -1,13 +1,14 @@
-import { spaceKeys } from '@/constants';
+import { pollSpaceKeys, spaceKeys } from '@/constants';
 import {
   PollSpaceResponse,
   submitPollSurveyResponse,
 } from '@/lib/api/ratel/poll.spaces.v3';
 import { optimisticUpdate } from '@/lib/hook-utils';
 import { SurveyAnswer } from '@/types/survey-type';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export function usePollResponseMutation() {
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationKey: ['poll-response'],
     mutationFn: async ({
@@ -24,11 +25,17 @@ export function usePollResponseMutation() {
       await optimisticUpdate<PollSpaceResponse>(
         { queryKey: pollSpaceQK },
         (space) => {
-          space.user_response_count += 1;
+          if (!space.my_response) {
+            space.user_response_count += 1;
+          }
           space.my_response = answers;
           return space;
         },
       );
+
+      queryClient.invalidateQueries({
+        queryKey: pollSpaceKeys.summary(spacePk),
+      });
     },
   });
 

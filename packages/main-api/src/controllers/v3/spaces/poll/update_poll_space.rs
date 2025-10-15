@@ -77,10 +77,22 @@ pub async fn update_poll_space_handler(
         return Err(Error2::ImmutablePollSpaceState);
     }
 
-    // Update Poll Space
-
-    let poll_space_tx =
-        PollSpaceSurvey::new(poll_space_pk.clone(), questions).create_transact_write_item();
+    let poll_survey_tx = if PollSpaceSurvey::get(
+        &dynamo.client,
+        &poll_space_pk,
+        Some(EntityType::PollSpaceSurvey),
+    )
+    .await?
+    .is_some()
+    {
+        // Update existing survey
+        PollSpaceSurvey::updater(&poll_space_pk, &EntityType::PollSpaceSurvey)
+            .with_questions(questions)
+            .transact_write_item()
+    } else {
+        // Create new survey
+        PollSpaceSurvey::new(poll_space_pk.clone(), questions.clone()).create_transact_write_item()
+    };
 
     let space_tx = SpaceCommon::updater(&poll_space_pk, &space_common.sk)
         .with_started_at(time_range.0)
@@ -95,11 +107,11 @@ pub async fn update_poll_space_handler(
     dynamo
         .client
         .transact_write_items()
-        .set_transact_items(Some(vec![poll_space_tx, space_tx, post_tx]))
+        .set_transact_items(Some(vec![poll_survey_tx, space_tx, post_tx]))
         .send()
         .await
         .map_err(|e| {
-            tracing::error!("Failed to update poll space: {}", e);
+            tracing::error!("Failed to update poll space: {:?}", e);
             Error2::InternalServerError("Failed to update poll space".into())
         })?;
 

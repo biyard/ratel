@@ -1,5 +1,5 @@
 use crate::{
-    models::space::{PollSpaceMetadata, PollSpaceSurveyResponse, SpaceCommon},
+    models::space::{PollSpaceMetadata, SpaceCommon},
     types::*,
 };
 use bdk::prelude::*;
@@ -37,17 +37,23 @@ impl From<Vec<PollSpaceMetadata>> for PollSpaceResponse {
     }
 }
 
-#[derive(
-    Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema, aide::OperationIo,
-)]
-pub struct PollSpaceSurveyAnswerDto {
-    pub answers: Vec<SurveyAnswer>,
-}
+// #[derive(
+//     Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema, aide::OperationIo,
+// )]
+// pub struct PollSpaceSurveyAnswerDto {
+//     pub answers: Vec<SurveyAnswer>,
+// }
 
-impl From<PollSpaceSurveyResponse> for PollSpaceSurveyAnswerDto {
-    fn from(entity: PollSpaceSurveyResponse) -> Self {
-        Self {
-            answers: entity.answers,
-        }
-    }
+// impl From<PollSpaceSurveyResponse> for PollSpaceSurveyAnswerDto {
+//     fn from(entity: PollSpaceSurveyResponse) -> Self {
+//         Self {
+//             answers: entity.answers,
+//         }
+//     }
+// }
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+pub struct PollSpaceSurveySummary {
+    pub created_at: i64,
+    pub summaries: Vec<SurveySummary>,
 }
