@@ -48,7 +48,7 @@ export default function SurveyViewer({
   handleSetAnswers: (answers: Answer[]) => void;
   handleSend: () => Promise<void>;
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const { data: userInfo } = useUserInfo();
   const userPk = userInfo?.pk || '';
 

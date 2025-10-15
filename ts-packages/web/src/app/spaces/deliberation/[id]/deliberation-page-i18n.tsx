@@ -63,6 +63,28 @@ export const i18nDeliberationPage = {
     fill_label_required: 'Please fill in the labels for the linear scale.',
     success_update_space: 'Space has been updated successfully.',
     failed_update_space: 'Failed to update the space. Please try again.',
+    question_title_placeholder: 'Title',
+    required: 'required',
+    optional: 'optional',
+    multiple_choice: 'multiple choice',
+    multiple_selection: 'multiple choice',
+    save: 'Save',
+    subjective_hint: 'Please share your opinion.',
+    add_option: 'Add Option',
+    choose: 'Choose',
+    label_hint: 'option',
+    option_hint: 'option',
+
+    check_title: 'Submit final survey',
+    check_desc:
+      'Once you submit your response, it cannot be changed. \nPlease double-check before submitting.',
+    confirm: 'Confirm',
+    cancel: 'Cancel',
+
+    download_excel: 'Download Excel',
+    participants: 'Participants',
+    remainings: 'Remainings',
+    responses: 'Responses',
   },
   ko: {
     attached_files: '첨부 파일',
@@ -128,5 +150,27 @@ export const i18nDeliberationPage = {
     success_update_space: '스페이스를 성공적으로 업데이트했습니다.',
     failed_update_space:
       '스페이스 업데이트에 실패했습니다. 잠시 후 다시 시도해주세요.',
+    question_title_placeholder: '제목',
+    required: '필수',
+    optional: '선택',
+    multiple_choice: '복수 선택',
+    multiple_selection: '복수',
+    save: '저장',
+    subjective_hint: '당신의 생각을 공유해주세요.',
+    add_option: '옵션 추가',
+    choose: '선택',
+    label_hint: '옵션',
+    option_hint: '옵션',
+
+    check_title: '최종 설문 제출',
+    check_desc:
+      '한번 제출한 응답은 변경할 수 없습니다. \n제출하기 전에 다시 확인해주세요.',
+    confirm: '확인',
+    cancel: '취소',
+
+    download_excel: '엑셀 다운로드',
+    participants: '참가자 수',
+    remainings: '남은 기간',
+    responses: '명 응답',
   },
 };
