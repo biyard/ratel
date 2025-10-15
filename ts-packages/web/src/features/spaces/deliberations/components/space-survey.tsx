@@ -9,7 +9,7 @@ import { AnswerType } from '@/app/spaces/[id]/_components/question/answer-type-s
 import SurveyQuestionEditor from '@/app/spaces/[id]/_components/question/survey-question-editor';
 import { Add } from '@/components/icons';
 import SurveyViewer from './survey-viewer';
-import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { DeliberationSpaceResponse } from '../utils/deliberation.spaces.v3';
 import { Poll } from '../types/poll-type';
 
 export default function SpaceSurvey({

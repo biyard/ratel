@@ -1,7 +1,7 @@
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 import SpaceContents from '../space-contents';
 import SpaceFiles from '../space-files';
-import { File } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { File } from '../../utils/deliberation.spaces.v3';
 import { TFunction } from 'i18next';
 import { Thread } from '../../types/thread-type';
 

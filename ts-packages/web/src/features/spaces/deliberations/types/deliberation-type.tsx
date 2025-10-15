@@ -1,4 +1,4 @@
-import { File } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { File } from '../utils/deliberation.spaces.v3';
 
 export interface DiscussionInfo {
   started_at: number;

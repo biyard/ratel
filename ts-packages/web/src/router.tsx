@@ -19,7 +19,7 @@ import { TestReportPage } from './app/test-report/test-report-page';
 import { StorybookPage } from './app/storybook/stroybook-page';
 import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
 import DeliberationSpacePage from './app/spaces/deliberation/[id]/page';
-import DiscussionPage from './app/spaces/deliberation/[id]/discussion/[discussion-id]/page';
+import DiscussionPage from './app/spaces/deliberation/[id]/discussion/[discussion-id]/discussion-page';
 
 export const routes = createBrowserRouter([
   {

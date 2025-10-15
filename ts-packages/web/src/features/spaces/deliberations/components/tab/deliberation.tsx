@@ -1,6 +1,6 @@
 'use client';
 
-import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { DeliberationSpaceResponse } from '../../utils/deliberation.spaces.v3';
 import SpaceDiscussion from '../space-discussion';
 import SpaceElearning from '../space-elearning';
 import { TFunction } from 'i18next';

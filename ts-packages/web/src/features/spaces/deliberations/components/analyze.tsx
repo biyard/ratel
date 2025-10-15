@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import ObjectiveResponse from '@/app/spaces/[id]/_components/dashboard/objective-response';
 import SubjectiveResponse from '@/app/spaces/[id]/_components/dashboard/subjective-response';
 import SummaryReport from '@/app/spaces/[id]/_components/dashboard/summary-report';
-import { SurveyResponseResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { MappedResponse, Poll } from '../types/poll-type';
+import { SurveyResponseResponse } from '../utils/deliberation.spaces.v3';
 
 const AnswerType = {
   SingleChoice: 'single_choice',

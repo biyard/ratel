@@ -12,7 +12,7 @@ import DropdownViewer from '@/app/spaces/[id]/_components/question/_component/vi
 import SubjectiveViewer from '@/app/spaces/[id]/_components/question/_component/viewer/subjective-viewer';
 import CheckPopup from '@/app/spaces/[id]/_components/question/check-popup';
 import { useUserInfo } from '@/hooks/use-user-info';
-import { SpacePublishState } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { SpacePublishState } from '../utils/deliberation.spaces.v3';
 import { Poll } from '../types/poll-type';
 
 interface Question {

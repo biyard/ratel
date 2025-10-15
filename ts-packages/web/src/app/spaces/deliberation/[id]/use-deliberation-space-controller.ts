@@ -7,14 +7,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import useDeliberationSpace from '@/features/spaces/deliberations/hooks/use-deliberation-space';
 import useFeedById from '@/hooks/feeds/use-feed-by-id';
 
-import {
-  File,
-  SpacePublishState,
-  toBackendFile,
-  SurveyResponseResponse,
-  SpaceVisibility,
-} from '@/features/deliberation-space/utils/deliberation.spaces.v3';
-
 import { ratelApi } from '@/lib/api/ratel_api';
 import { NewSurveyCreateRequest, Question } from '@/lib/api/models/survey';
 import { PublishingScope } from '@/lib/api/models/notice';
@@ -30,7 +22,7 @@ import { Answer } from '@/lib/api/models/response';
 import { SpaceVisibilityValue } from '@/types/space-common';
 
 import { SpaceVisibility as UiVisibility } from '@/types/space-common';
-import { SpaceVisibility as ApiVisibility } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { SpaceVisibility as ApiVisibility } from '@/features/spaces/deliberations/utils/deliberation.spaces.v3';
 import { useUpdateDeliberationMutation } from '@/features/spaces/deliberations/hooks/use-update-deliberation-mutation';
 import { useSendDeliberationResponseMutation } from '@/features/spaces/deliberations/hooks/use-send-deliberation-response-mutation';
 import {
@@ -44,6 +36,13 @@ import {
 } from '@/features/spaces/deliberations/types/poll-type';
 import { Deliberation } from '@/features/spaces/deliberations/types/deliberation-type';
 import { FinalConsensus } from '@/features/spaces/deliberations/types/final-consensus-type';
+import {
+  SpacePublishState,
+  SpaceVisibility,
+  SurveyResponseResponse,
+  toBackendFile,
+  File,
+} from '@/features/spaces/deliberations/utils/deliberation.spaces.v3';
 
 export class DeliberationSpaceController {
   private deps: ReturnType<typeof buildDeps>;
