@@ -11,13 +11,18 @@ const meta = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['default', 'rounded_primary', 'rounded_secondary', 'outline'],
+      options: ['default', 'primary', 'rounded_primary', 'rounded_secondary', 'outline', 'text'],
       description: 'The visual style variant of the button',
     },
     size: {
       control: 'select',
       options: ['sm', 'default', 'lg'],
       description: 'The size of the button',
+    },
+    platform: {
+      control: 'select',
+      options: ['web', 'mobile'],
+      description: 'The platform target for the button',
     },
     disabled: {
       control: 'boolean',
@@ -42,10 +47,19 @@ export const Default: Story = {
   },
 };
 
+// Primary variant
+export const Primary: Story = {
+  args: {
+    children: 'Primary Button',
+    variant: 'primary',
+    size: 'default',
+  },
+};
+
 // Rounded Primary variant
 export const RoundedPrimary: Story = {
   args: {
-    children: 'Primary Button',
+    children: 'Rounded Primary',
     variant: 'rounded_primary',
     size: 'default',
   },
@@ -65,6 +79,18 @@ export const Outline: Story = {
   args: {
     children: 'Outline Button',
     variant: 'outline',
+    size: 'default',
+  },
+  parameters: {
+    backgrounds: { default: 'dark' },
+  },
+};
+
+// Text variant
+export const Text: Story = {
+  args: {
+    children: 'Text Button',
+    variant: 'text',
     size: 'default',
   },
   parameters: {
@@ -176,13 +202,15 @@ export const IconOnly: Story = {
 export const AllVariants: Story = {
   render: () => (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-4 items-center">
+      <div className="flex gap-4 items-center flex-wrap">
         <Button variant="default">Default</Button>
+        <Button variant="primary">Primary</Button>
         <Button variant="rounded_primary">Rounded Primary</Button>
         <Button variant="rounded_secondary">Rounded Secondary</Button>
       </div>
       <div className="flex gap-4 items-center bg-gray-800 p-4 rounded-lg">
         <Button variant="outline">Outline</Button>
+        <Button variant="text">Text</Button>
       </div>
     </div>
   ),
@@ -216,9 +244,31 @@ export const AllStates: Story = {
         </Button>
       </div>
       <div className="flex gap-4 items-center">
+        <Button variant="primary">Normal</Button>
+        <Button variant="primary" disabled>
+          Disabled
+        </Button>
+      </div>
+      <div className="flex gap-4 items-center">
         <Button variant="default">Normal</Button>
         <Button variant="default" disabled>
           Disabled
+        </Button>
+      </div>
+    </div>
+  ),
+};
+
+// Platform showcase
+export const Platforms: Story = {
+  render: () => (
+    <div className="flex flex-col gap-4">
+      <div className="flex gap-4 items-center">
+        <Button variant="rounded_primary" platform="web">
+          Web Platform
+        </Button>
+        <Button variant="rounded_primary" platform="mobile">
+          Mobile Platform
         </Button>
       </div>
     </div>

@@ -16,7 +16,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import { usePostEditorContext } from '../../_components/post-editor';
-import SpaceCreateModal from '../../../../features/spaces/components/space-create-modal';
+import SpaceCreateModal from '../../../../features/spaces/modals/space-type-selector-modal';
 import { useThreadData } from './use-thread-data';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
 import { useLikeCommentMutation } from '@/features/comments/hooks/use-like-comment-mutation';
