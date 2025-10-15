@@ -14,11 +14,15 @@ export function createSpace(
   endedAt: number | null,
   booster: BoosterType | null,
 ): Promise<CreateSpaceResponse> {
+  let time_range = null;
+
+  if (startedAt && endedAt) {
+    time_range = [startedAt, endedAt];
+  }
   return call('POST', '/v3/spaces', {
     space_type: spaceType,
     post_pk: postPk,
-    started_at: startedAt,
-    ended_at: endedAt,
+    time_range,
     booster: booster,
   });
 }

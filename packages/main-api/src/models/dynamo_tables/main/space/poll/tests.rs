@@ -24,16 +24,16 @@ async fn test_poll_space_creation() {
         user.clone(),
     );
 
-    let poll = PollSpace::new();
-
-    poll.create(&cli).await.expect("failed to create poll");
-
     let common = SpaceCommon::new(post.pk, user.clone());
 
     common
         .create(&cli)
         .await
         .expect("failed to create space common");
+
+    let poll = PollSpace::new(common.pk).unwrap();
+
+    poll.create(&cli).await.expect("failed to create poll");
 
     let questions = vec![
         SurveyQuestion::SingleChoice(ChoiceQuestion {
