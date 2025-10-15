@@ -1,10 +1,10 @@
 export function getCurrentTime(): number {
-  return Math.floor(Date.now() / 1000);
+  return Date.now();
 }
 
 export function getTimeWithFormat(timestamp: number): string {
-  const date = new Date(timestamp * 1000);
-
+  // Milis to formatted string
+  const date = new Date(timestamp);
   const monthNames = [
     'Jan',
     'Feb',
