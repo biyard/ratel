@@ -51,9 +51,11 @@ export function usePublishDraftMutation() {
     },
 
     onSettled: () => {
-      const queryKey = feedKeys.my_posts(username!);
       const queryClient = getQueryClient();
-      queryClient.invalidateQueries({ queryKey });
+      // Invalidate all feed list queries to refresh both drafts and published posts
+      queryClient.invalidateQueries({
+        queryKey: feedKeys.lists(),
+      });
     },
   });
 }

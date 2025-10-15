@@ -5,26 +5,27 @@ export const TeamGroupPermission = {
   // Post Permissions
   PostRead: 0,
   PostWrite: 1,
-  PostEdit: 2, 
+  PostEdit: 2,
   PostDelete: 3,
-  
+
   // Space Permissions
   SpaceRead: 10,
   SpaceWrite: 11,
   SpaceEdit: 12,
   SpaceDelete: 13,
-  
+
   // Team Permission
   TeamAdmin: 20, // Change Group Permissions + All Other Permissions
-  TeamEdit: 21,  // Edit Team Info, Add/Remove Group
+  TeamEdit: 21, // Edit Team Info, Add/Remove Group
   GroupEdit: 22, // Edit Group Members (Invite/Kick), Change Group Info
-  
+
   // Admin
   ManagePromotions: 62,
   ManageNews: 63,
 } as const;
 
-export type TeamGroupPermission = typeof TeamGroupPermission[keyof typeof TeamGroupPermission];
+export type TeamGroupPermission =
+  (typeof TeamGroupPermission)[keyof typeof TeamGroupPermission];
 
 export interface CreateTeamRequest {
   username: string;
@@ -130,24 +131,26 @@ export async function getTeam(teamPk: string): Promise<TeamDetailResponse> {
   return await call('GET', `/v3/teams/${encodeURIComponent(teamPk)}`);
 }
 
-export async function getTeamByUsername(username: string): Promise<TeamDetailResponse> {
+export async function getTeamByUsername(
+  username: string,
+): Promise<TeamDetailResponse> {
   console.log('getTeamByUsername called with username:', username);
-  
+
   // First find the team to get its ID
   const findResult = await findTeam(username);
   console.log('findTeam result:', findResult);
-  
+
   if (!findResult.teams || findResult.teams.length === 0) {
     throw new Error(`Team with username '${username}' not found`);
   }
-  
-  const team = findResult.teams.find(t => t.username === username);
+
+  const team = findResult.teams.find((t) => t.username === username);
   if (!team) {
     throw new Error(`Team with username '${username}' not found`);
   }
-  
+
   console.log('Found team from findTeam:', team);
-  
+
   // Now get full team details including groups using the team ID
   return await getTeam(team.id);
 }
@@ -156,7 +159,11 @@ export async function updateTeam(
   teamPk: string,
   request: UpdateTeamRequest,
 ): Promise<TeamDetailResponse> {
-  return await call('PATCH', `/v3/teams/${encodeURIComponent(teamPk)}`, request);
+  return await call(
+    'PATCH',
+    `/v3/teams/${encodeURIComponent(teamPk)}`,
+    request,
+  );
 }
 
 export async function deleteTeam(teamUsername: string): Promise<void> {
@@ -168,7 +175,11 @@ export async function createGroup(
   teamPk: string,
   request: CreateGroupRequest,
 ): Promise<CreateGroupResponse> {
-  return await call('POST', `/v3/teams/${encodeURIComponent(teamPk)}/groups`, request);
+  return await call(
+    'POST',
+    `/v3/teams/${encodeURIComponent(teamPk)}/groups`,
+    request,
+  );
 }
 
 export async function updateGroup(
@@ -176,14 +187,22 @@ export async function updateGroup(
   groupSk: string,
   request: UpdateGroupRequest,
 ): Promise<void> {
-  return await call('POST', `/v3/teams/${encodeURIComponent(teamPk)}/groups/${encodeURIComponent(groupSk)}`, request);
+  return await call(
+    'POST',
+    `/v3/teams/${encodeURIComponent(teamPk)}/groups/${encodeURIComponent(groupSk)}`,
+    request,
+  );
 }
 
 export async function deleteGroup(
   teamUsername: string,
   groupId: string,
 ): Promise<void> {
-  return await call('DELETE', `/v3/teams/${encodeURIComponent(teamUsername)}/groups/${encodeURIComponent(groupId)}`, {});
+  return await call(
+    'DELETE',
+    `/v3/teams/${encodeURIComponent(teamUsername)}/groups/${encodeURIComponent(groupId)}`,
+    {},
+  );
 }
 
 // Member management functions
@@ -205,7 +224,7 @@ export async function removeGroupMember(
   request: AddMemberRequest,
 ): Promise<AddMemberResponse> {
   return await call(
-    'POST',
+    'DELETE',
     `/v3/teams/${encodeURIComponent(teamPk)}/groups/${encodeURIComponent(groupSk)}/member`,
     request,
   );
@@ -247,6 +266,11 @@ export interface ListMembersResponse {
   total_count: number;
 }
 
-export async function getTeamMembers(teamUsername: string): Promise<ListMembersResponse> {
-  return await call('GET', `/v3/teams/${encodeURIComponent(teamUsername)}/members`);
+export async function getTeamMembers(
+  teamUsername: string,
+): Promise<ListMembersResponse> {
+  return await call(
+    'GET',
+    `/v3/teams/${encodeURIComponent(teamUsername)}/members`,
+  );
 }

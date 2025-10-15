@@ -28,7 +28,11 @@ pub async fn home_page_handler(
     let posts = list_posts_handler(
         State(app_state.clone()),
         NoApi(user),
-        Query(ListPostsQueryParams { bookmark: None }),
+        Query(ListPostsQueryParams {
+            bookmark: None,
+            author_pk: None,
+            status: None,
+        }),
     );
 
     let suggestions = get_suggestions_handler(State(app_state.clone()));

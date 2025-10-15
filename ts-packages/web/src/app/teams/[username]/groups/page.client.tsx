@@ -1,18 +1,20 @@
 'use client';
-import { Edit1, Extra } from '@/components/icons';
-// import { User } from '@/components/icons'; // TODO: Re-add when invite member is restored
+import { Edit1, Extra, User } from '@/components/icons';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CreateGroupPopup from './_components/create-group-popup';
 import { GroupPermission } from '@/lib/api/models/group';
 import { logger } from '@/lib/logger';
 import type { TeamGroupResponse } from '@/lib/api/ratel/teams.v3';
-// import InviteMemberPopup from './_components/invite-member-popup'; // TODO: Update to v3 API
+import InviteMemberPopup from './_components/invite-member-popup';
 import { useTeamDetailByUsername } from '../../_hooks/use-team';
 import { Folder } from 'lucide-react';
 import { checkString } from '@/lib/string-filter-utils';
 import { useTranslation } from 'react-i18next';
 // No more legacy compatibility imports
-import { useCanCreateGroup, useCanDeleteGroup } from '../../_hooks/use-team-permissions';
+import {
+  useCanCreateGroup,
+  useCanDeleteGroup,
+} from '../../_hooks/use-team-permissions';
 import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -37,14 +39,18 @@ export default function TeamGroups({ username }: { username: string }) {
   }
 
   if (teamDetailQuery.error) {
-    return <div className="flex justify-center p-8 text-red-500">Error loading team</div>;
+    return (
+      <div className="flex justify-center p-8 text-red-500">
+        Error loading team
+      </div>
+    );
   }
 
   const teamDetail = teamDetailQuery.data;
 
   // Use v3 groups directly - no more legacy conversion
   const groups = teamDetail?.groups ?? [];
-  
+
   console.log('DEBUG: Using v3 permissions API');
   console.log('DEBUG: canCreateGroup:', canCreateGroup.data);
   console.log('DEBUG: canDeleteGroup:', canDeleteGroup.data);
@@ -55,20 +61,22 @@ export default function TeamGroups({ username }: { username: string }) {
     try {
       // Extract the UUID from groupSk (format: TEAM_GROUP#uuid)
       const groupId = groupSk.split('#')[1];
-      
+
       // Use team username and group ID for the delete API
       await teamsV3Api.deleteGroup(username, groupId);
-      
+
       // Invalidate all team-related queries to ensure fresh data
       await queryClient.invalidateQueries({
         predicate: (query) => {
           const queryKey = query.queryKey;
-          return queryKey.includes(username) || 
-                 queryKey.includes('team') ||
-                 queryKey.includes('group');
-        }
+          return (
+            queryKey.includes(username) ||
+            queryKey.includes('team') ||
+            queryKey.includes('group')
+          );
+        },
       });
-      
+
       // Also force refetch the current query
       await teamDetailQuery.refetch();
     } catch (error) {
@@ -79,7 +87,21 @@ export default function TeamGroups({ username }: { username: string }) {
   return (
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-row w-full justify-end items-end gap-[10px]">
-        {/* TODO: Update InviteMemberPopup to use v3 API - temporarily disabled */}
+        <InviteMemberButton
+          onClick={() => {
+            if (!teamDetail) return;
+
+            popup
+              .open(
+                <InviteMemberPopup
+                  teamId={teamDetail.id}
+                  username={username}
+                  groups={groups}
+                />,
+              )
+              .withoutBackdropClose();
+          }}
+        />
         {canCreateGroup.data && (
           <CreateGroupButton
             onClick={() => {
@@ -119,10 +141,12 @@ export default function TeamGroups({ username }: { username: string }) {
                         await queryClient.invalidateQueries({
                           predicate: (query) => {
                             const queryKey = query.queryKey;
-                            return queryKey.includes(username) || 
-                                   queryKey.includes('team') ||
-                                   queryKey.includes('group');
-                          }
+                            return (
+                              queryKey.includes(username) ||
+                              queryKey.includes('team') ||
+                              queryKey.includes('group')
+                            );
+                          },
                         });
 
                         // Also force refetch the current query
@@ -218,7 +242,20 @@ function ListGroups({
   );
 }
 
-// TODO: Update InviteMemberButton to use v3 API - temporarily removed
+function InviteMemberButton({ onClick }: { onClick: () => void }) {
+  const { t } = useTranslation('Team');
+  return (
+    <div
+      className="cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-white border border-foreground rounded-[100px] gap-1"
+      onClick={onClick}
+    >
+      <User className="w-4 h-4" />
+      <div className="font-bold text-base/[22px] text-neutral-900 light:text-black">
+        {t('invite_member')}
+      </div>
+    </div>
+  );
+}
 
 function CreateGroupButton({ onClick }: { onClick: () => void }) {
   const { t } = useTranslation('Team');

@@ -1,5 +1,8 @@
 use crate::{
-    models::user::{UserTeamGroup, UserTeamGroupQueryOption},
+    models::{
+        TeamOwner,
+        user::{UserTeamGroup, UserTeamGroupQueryOption},
+    },
     types::*,
 };
 use bdk::prelude::*;
@@ -72,6 +75,15 @@ impl Team {
         team_pk: &Partition,
         user_pk: &Partition,
     ) -> Result<TeamGroupPermissions, crate::Error2> {
+        // Check if the user is the team owner first
+        let owner = TeamOwner::get(cli, team_pk, Some(EntityType::TeamOwner)).await?;
+        if let Some(owner) = owner {
+            if owner.user_pk == *user_pk {
+                // Team owner has all permissions
+                return Ok(TeamGroupPermissions::all());
+            }
+        }
+
         // NOTE: it only fetches up to 50 UserTeamGroup items.
         let (groups, _bookmark) = UserTeamGroup::find_by_team_pk(
             cli,

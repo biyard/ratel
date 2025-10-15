@@ -52,13 +52,19 @@ export default function SettingsPage({ username }: { username: string }) {
   const canManageTeam = useCanManageTeam(teamDetailQuery.data?.id || '');
 
   if (teamDetailQuery.isLoading) {
-    return <div className="flex justify-center p-8">Loading team settings...</div>;
+    return (
+      <div className="flex justify-center p-8">Loading team settings...</div>
+    );
   }
 
   if (teamDetailQuery.error) {
-    return <div className="flex justify-center p-8 text-red-500">Error loading team settings</div>;
+    return (
+      <div className="flex justify-center p-8 text-red-500">
+        Error loading team settings
+      </div>
+    );
   }
-  
+
   const deleteTeamPermission = canManageTeam.data ?? false;
 
   if (!team) {
@@ -82,16 +88,25 @@ export default function SettingsPage({ username }: { username: string }) {
         <DeleteTeamPopup
           onConfirm={async () => {
             if (!teamDetailQuery.data) return;
-            
+
             try {
               await teamsV3Api.deleteTeam(username);
               showInfoToast(t('success_delete_team'));
+
+              // Invalidate all team-related queries
+              await queryClient.invalidateQueries({
+                predicate: (query) =>
+                  query.queryKey[0]?.toString().includes('team') ||
+                  query.queryKey[0]?.toString().includes('user-info'),
+              });
+
               // Invalidate all published feeds after deleting team
               await queryClient.invalidateQueries({
                 queryKey: feedKeys.list({
                   status: FeedStatus.Published,
                 }),
               });
+
               userInfo.refetch();
               setSelectedTeam(0);
               navigate('/');
@@ -112,7 +127,7 @@ export default function SettingsPage({ username }: { username: string }) {
 
   const handleSave = async () => {
     if (!teamDetailQuery.data) return;
-    
+
     if (checkString(nickname ?? '') || checkString(htmlContents ?? '')) {
       showErrorToast(t('remove_test_keyword'));
       return;
@@ -124,7 +139,7 @@ export default function SettingsPage({ username }: { username: string }) {
         description: htmlContents || undefined,
         profile_url: profileUrl || undefined,
       });
-      
+
       // Refetch team data
       teamDetailQuery.refetch();
 

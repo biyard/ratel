@@ -16,8 +16,10 @@ import {
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useTranslation } from 'react-i18next';
 
-import { useTeamDetailByUsername, useTeamPermissions } from '../../_hooks/use-team';
-
+import {
+  useTeamDetailByUsername,
+  useTeamPermissions,
+} from '../../_hooks/use-team';
 
 export interface TeamSidemenuProps {
   username: string;
@@ -34,7 +36,9 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
   const teamDetailQuery = useTeamDetailByUsername(username);
 
   // Get permissions using v3 API
-  const teamPk = teamDetailQuery.data?.id ? String(teamDetailQuery.data.id) : '';
+  const teamPk = teamDetailQuery.data?.id
+    ? String(teamDetailQuery.data.id)
+    : '';
   const permissions = useTeamPermissions(teamPk);
 
   const writePostPermission = permissions.canWritePosts;
@@ -54,7 +58,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
   if (teamDetailQuery.isLoading) {
     return <div>Loading team...</div>;
   }
-  
+
   if (teamDetailQuery.isError || !displayTeam) {
     return <div>Team not found</div>;
   }
@@ -82,7 +86,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
         ) : (
           <></>
         )}
-        {(permissions.canEditGroups || permissions.canAdminTeam) ? (
+        {permissions.canEditGroups || permissions.canAdminTeam ? (
           <Link
             to={route.teamGroups(displayTeam.username)}
             className="sidemenu-link text-text-primary "
@@ -91,7 +95,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
             <span>{t('manage_group')}</span>
           </Link>
         ) : null}
-        {(permissions.canManageMembers || permissions.canAdminTeam) ? (
+        {permissions.canManageMembers || permissions.canAdminTeam ? (
           <Link
             to={route.teamMembers(displayTeam.username)}
             className="sidemenu-link text-text-primary"
@@ -100,7 +104,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
             <span>{t('members')}</span>
           </Link>
         ) : null}
-        {(permissions.canEditTeam || permissions.canAdminTeam) ? (
+        {permissions.canEditTeam || permissions.canAdminTeam ? (
           <Link
             to={route.teamSettings(displayTeam.username)}
             className="sidemenu-link text-text-primary"

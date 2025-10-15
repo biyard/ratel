@@ -12,8 +12,6 @@ import {
   QK_GET_PROMOTION,
   QK_GET_REDEEM_CODE,
   QK_GET_SPACE_BY_SPACE_ID,
-  QK_GET_TEAM_BY_ID,
-  QK_GET_TEAM_BY_USERNAME,
   QK_GET_PERMISSION,
   QK_USERS_GET_INFO,
   QK_GET_NEWS_BY_NEWS_ID,
@@ -29,7 +27,6 @@ import type { NetworkData } from './models/network';
 import type { Promotion } from './models/promotion';
 import type { User } from './models/user';
 import type { QueryResponse } from './models/common';
-import type { Team } from './models/team';
 import type { HomeGatewayResponse } from './models/home';
 import type { InfiniteData } from '@tanstack/react-query';
 import { GroupPermission } from './models/group';
@@ -76,36 +73,25 @@ async function getDataFromServer<T>(
   };
 }
 
-export function getTeamByUsername(username: string) {
-  return getDataFromServer<Team>(
-    [QK_GET_TEAM_BY_USERNAME, username],
-    ratelApi.teams._legacy_getTeamByUsername(username),
-  );
-}
-
-export function getTeamById(user_id: number) {
-  return getDataFromServer<Team>(
-    [QK_GET_TEAM_BY_ID, user_id],
-    ratelApi.teams._legacy_getTeamById(user_id),
-  );
-}
-
 // V3 server functions - use these for new code
 export async function getTeamDetailByUsernameV3(username: string) {
   const { findTeam, getTeam } = await import('./ratel/teams.v3');
-  
+
   const findResult = await findTeam(username);
-  const team = findResult.teams.find(t => t.username === username);
-  
+  const team = findResult.teams.find((t) => t.username === username);
+
   if (!team) {
     return { data: null, error: 'Team not found' };
   }
-  
+
   try {
     const teamDetail = await getTeam(team.id);
     return { data: teamDetail, error: null };
   } catch (error) {
-    return { data: null, error: error instanceof Error ? error.message : 'Unknown error' };
+    return {
+      data: null,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 }
 
