@@ -1,5 +1,6 @@
 use crate::controllers::v3::posts::create_post::CreatePostResponse;
-use crate::types::File;
+use crate::controllers::v3::spaces::CreateSpaceResponse;
+use crate::types::{File, SpaceType};
 use crate::{
     controllers::v3::spaces::deliberations::responses::create_response_answer::CreateDeliberationResponse,
     models::space::{
@@ -33,20 +34,21 @@ async fn test_create_response_answer_handler() {
     // SPACE
     let (status, _headers, body) = post! {
         app: app,
-        path: "/v3/spaces/deliberation",
+        path: "/v3/spaces",
         headers: headers.clone(),
         body: {
-            "feed_pk": feed_pk
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
         },
-        response_type: CreateDeliberationResponse
+        response_type: CreateSpaceResponse
     };
 
     assert_eq!(status, 200);
 
     let now = chrono::Utc::now().timestamp();
-    let space_pk = body.metadata.deliberation.pk.clone();
+    let space_pk = body.space_pk.clone();
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/deliberation/{}", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/deliberation", space_pk_encoded);
 
     let (status, _headers, body) = post! {
         app: app,
@@ -135,11 +137,10 @@ async fn test_create_response_answer_handler() {
 
     assert_eq!(status, 200);
 
-    let space_pk = body.clone().deliberation.pk;
     let survey_pk = body.clone().surveys.pk;
 
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/deliberation/{}/responses", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/deliberation/responses", space_pk_encoded);
 
     let (status, _headers, body) = post! (
         app: app,
@@ -192,23 +193,23 @@ async fn test_get_response_answer_handler() {
     let feed_pk = post.post_pk.clone();
 
     // SPACE
-
     let (status, _headers, body) = post! {
         app: app,
-        path: "/v3/spaces/deliberation",
+        path: "/v3/spaces",
         headers: headers.clone(),
         body: {
-            "feed_pk": feed_pk
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
         },
-        response_type: CreateDeliberationResponse
+        response_type: CreateSpaceResponse
     };
 
     assert_eq!(status, 200);
 
     let now = chrono::Utc::now().timestamp();
-    let space_pk = body.metadata.deliberation.pk.clone();
+    let space_pk = body.space_pk.clone();
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/deliberation/{}", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/deliberation", space_pk_encoded);
 
     let (status, _headers, body) = post! {
         app: app,
@@ -297,11 +298,10 @@ async fn test_get_response_answer_handler() {
 
     assert_eq!(status, 200);
 
-    let space_pk = body.deliberation.pk;
     let survey_pk = body.surveys.pk;
 
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/deliberation/{}/responses", space_pk_encoded);
+    tracing::debug!("responses: {:?}", body.surveys.responses);
+    let path = format!("/v3/spaces/{}/deliberation/responses", space_pk_encoded);
 
     let (status, _headers, body) = post! (
         app: app,
@@ -322,15 +322,13 @@ async fn test_get_response_answer_handler() {
 
     assert_eq!(status, 200);
 
-    let meta = &body.metadata;
-
     assert_eq!(
-        meta.surveys.user_responses.len(),
+        body.metadata.surveys.user_responses.len(),
         1,
         "Failed to match user response answer length"
     );
     assert_eq!(
-        meta.surveys.responses.len(),
+        body.metadata.surveys.responses.len(),
         1,
         "Failed to match response answer length"
     );
@@ -339,7 +337,7 @@ async fn test_get_response_answer_handler() {
 
     let response_pk_encoded = response_pk.to_string().replace('#', "%23");
     let path = format!(
-        "/v3/spaces/deliberation/{}/responses/{}",
+        "/v3/spaces/{}/deliberation/responses/{}",
         space_pk_encoded, response_pk_encoded
     );
 

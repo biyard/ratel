@@ -3,7 +3,7 @@ use crate::{models::user::User, types::*};
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-pub struct DeliberationSpaceMember {
+pub struct DeliberationDiscussionMember {
     pub pk: Partition,
     #[dynamo(index = "gsi1", sk)]
     #[dynamo(index = "gsi2", sk)]
@@ -24,7 +24,7 @@ pub struct DeliberationSpaceMember {
     pub discussion_pk: Partition,
 }
 
-impl DeliberationSpaceMember {
+impl DeliberationDiscussionMember {
     pub fn new(
         deliberation_pk: Partition,
         discussion_pk: Partition,
@@ -36,11 +36,19 @@ impl DeliberationSpaceMember {
             ..
         }: User,
     ) -> Self {
-        let uid = uuid::Uuid::new_v4().to_string();
+        let user_id = match &pk {
+            Partition::User(user_id) => user_id.clone(),
+            _ => panic!("requires a user Partition"),
+        };
+
+        let discussion_id = match &discussion_pk {
+            Partition::Discussion(discussion_id) => discussion_id.clone(),
+            _ => panic!("requires a discussion Partition"),
+        };
 
         Self {
             pk: deliberation_pk,
-            sk: EntityType::DeliberationSpaceMember(uid),
+            sk: EntityType::DeliberationDiscussionMember(discussion_id, user_id),
             user_pk: pk,
             author_display_name: display_name,
             author_profile_url: profile_url,
@@ -50,7 +58,15 @@ impl DeliberationSpaceMember {
     }
 }
 
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema, aide::OperationIo)]
+#[derive(
+    Debug,
+    Clone,
+    Default,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    aide::OperationIo,
+)]
 pub struct DiscussionMemberResponse {
     pub user_pk: Partition,
     pub author_display_name: String,
@@ -58,8 +74,8 @@ pub struct DiscussionMemberResponse {
     pub author_username: String,
 }
 
-impl From<DeliberationSpaceMember> for DiscussionMemberResponse {
-    fn from(member: DeliberationSpaceMember) -> Self {
+impl From<DeliberationDiscussionMember> for DiscussionMemberResponse {
+    fn from(member: DeliberationDiscussionMember) -> Self {
         Self {
             user_pk: member.user_pk,
             author_display_name: member.author_display_name,

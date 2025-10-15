@@ -18,7 +18,7 @@ pub struct DeliberationSpaceQuestion {
 impl DeliberationSpaceQuestion {
     pub fn new(pk: Partition, survey_pk: Partition, questions: Vec<SurveyQuestion>) -> Self {
         let uid = uuid::Uuid::new_v4().to_string();
-        let sk = EntityType::DeliberationSpaceQuestion(uid);
+        let sk = EntityType::DeliberationQuestion(uid);
         let questions = Self::serialize_question(&questions);
         Self {
             pk,

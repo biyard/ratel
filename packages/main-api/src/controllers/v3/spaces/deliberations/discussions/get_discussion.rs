@@ -2,9 +2,9 @@ use crate::{
     AppState, Error2,
     controllers::v3::spaces::deliberations::discussions::start_meeting::DeliberationDiscussionByIdPath,
     models::{
-        DeliberationSpaceMember, DeliberationSpaceMemberQueryOption, DeliberationSpaceParticipant,
-        DeliberationSpaceParticipantQueryOption, DiscussionMemberResponse,
-        DiscussionParticipantResponse,
+        DeliberationDiscussionMember, DeliberationDiscussionMemberQueryOption,
+        DeliberationSpaceParticipant, DeliberationSpaceParticipantQueryOption,
+        DiscussionMemberResponse, DiscussionParticipantResponse,
         space::{DeliberationDiscussionResponse, DeliberationSpaceDiscussion},
         user::User,
     },
@@ -31,7 +31,7 @@ pub async fn get_discussion_handler(
     let disc = DeliberationSpaceDiscussion::get(
         &dynamo.client,
         &space_pk,
-        Some(EntityType::DeliberationSpaceDiscussion(
+        Some(EntityType::DeliberationDiscussion(
             discussion_id.to_string(),
         )),
     )
@@ -51,8 +51,8 @@ async fn list_members_resp(
     dynamo: &DynamoClient,
     disc_pk: Partition,
 ) -> Result<Vec<DiscussionMemberResponse>, Error2> {
-    let opt = DeliberationSpaceMemberQueryOption::builder();
-    let members = DeliberationSpaceMember::find_by_discussion_pk(&dynamo.client, disc_pk, opt)
+    let opt = DeliberationDiscussionMemberQueryOption::builder();
+    let members = DeliberationDiscussionMember::find_by_discussion_pk(&dynamo.client, disc_pk, opt)
         .await?
         .0;
     Ok(members.into_iter().map(Into::into).collect())

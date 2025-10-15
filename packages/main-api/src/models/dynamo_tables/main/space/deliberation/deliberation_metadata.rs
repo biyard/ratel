@@ -12,7 +12,7 @@ use std::collections::HashMap;
 pub struct DeliberationDetailResponse {
     #[serde(flatten)]
     pub space_common: SpaceCommon,
-    pub deliberation: DeliberationSpace,
+    // pub deliberation: DeliberationSpace,
     pub summary: DeliberationContentResponse,
     pub discussions: Vec<DeliberationDiscussionResponse>,
     pub elearnings: ElearningResponse,
@@ -29,10 +29,10 @@ pub enum DeliberationMetadata {
     DeliberationSpaceContent(DeliberationSpaceContent),
     DeliberationSpaceQuestion(DeliberationSpaceQuestion),
     DeliberationSpaceParticipant(DeliberationSpaceParticipant),
-    DeliberationSpaceMember(DeliberationSpaceMember),
+    DeliberationSpaceMember(DeliberationDiscussionMember),
     DeliberationSpaceElearning(DeliberationSpaceElearning),
     DeliberationSpaceDiscussion(DeliberationSpaceDiscussion),
-    DeliberationSpace(DeliberationSpace),
+    // DeliberationSpace(DeliberationSpace),
 }
 
 fn discussion_id_of(pk: &Partition) -> String {
@@ -60,7 +60,7 @@ fn member_resp_from_dsp(p: &DeliberationSpaceParticipant) -> DiscussionMemberRes
         author_username: p.author_username.clone(),
     }
 }
-fn participant_resp_from_dsm(m: &DeliberationSpaceMember) -> DiscussionParticipantResponse {
+fn participant_resp_from_dsm(m: &DeliberationDiscussionMember) -> DiscussionParticipantResponse {
     DiscussionParticipantResponse {
         user_pk: m.user_pk.clone(),
         author_display_name: m.author_display_name.clone(),
@@ -69,7 +69,7 @@ fn participant_resp_from_dsm(m: &DeliberationSpaceMember) -> DiscussionParticipa
         participant_id: String::new(),
     }
 }
-fn member_resp_from_dsm(m: &DeliberationSpaceMember) -> DiscussionMemberResponse {
+fn member_resp_from_dsm(m: &DeliberationDiscussionMember) -> DiscussionMemberResponse {
     DiscussionMemberResponse {
         user_pk: m.user_pk.clone(),
         author_display_name: m.author_display_name.clone(),
@@ -88,9 +88,9 @@ impl From<Vec<DeliberationMetadata>> for DeliberationDetailResponse {
 
         for item in items {
             match item {
-                DeliberationMetadata::DeliberationSpace(space) => {
-                    res.deliberation = space;
-                }
+                // DeliberationMetadata::DeliberationSpace(space) => {
+                //     res.deliberation = space;
+                // }
                 DeliberationMetadata::DeliberationSpaceSurvey(survey) => {
                     let prev = res.surveys.clone();
 
@@ -100,13 +100,13 @@ impl From<Vec<DeliberationMetadata>> for DeliberationDetailResponse {
                     res.surveys.user_responses = prev.user_responses;
                 }
                 DeliberationMetadata::DeliberationSpaceContent(content) => match content.sk {
-                    EntityType::DeliberationSpaceSummary => {
+                    EntityType::DeliberationSummary => {
                         res.summary = DeliberationContentResponse {
                             html_contents: content.html_contents,
                             files: content.files,
                         };
                     }
-                    EntityType::DeliberationSpaceRecommendation => {
+                    EntityType::DeliberationRecommendation => {
                         res.recommendation = DeliberationContentResponse {
                             html_contents: content.html_contents,
                             files: content.files,
@@ -123,13 +123,13 @@ impl From<Vec<DeliberationMetadata>> for DeliberationDetailResponse {
                 }
                 DeliberationMetadata::DeliberationSpaceParticipant(participant) => {
                     match participant.sk {
-                        EntityType::DeliberationSpaceParticipant(_) => {
+                        EntityType::DeliberationDiscussionParticipant(..) => {
                             participants_by_discussion
                                 .entry(discussion_id_of(&participant.discussion_pk))
                                 .or_default()
                                 .push(participant_resp_from_dsp(&participant));
                         }
-                        EntityType::DeliberationSpaceMember(_) => {
+                        EntityType::DeliberationDiscussionMember(..) => {
                             members_by_discussion
                                 .entry(discussion_id_of(&participant.discussion_pk))
                                 .or_default()
@@ -139,13 +139,13 @@ impl From<Vec<DeliberationMetadata>> for DeliberationDetailResponse {
                     }
                 }
                 DeliberationMetadata::DeliberationSpaceMember(member) => match member.sk {
-                    EntityType::DeliberationSpaceParticipant(_) => {
+                    EntityType::DeliberationDiscussionParticipant(..) => {
                         participants_by_discussion
                             .entry(discussion_id_of(&member.discussion_pk))
                             .or_default()
                             .push(participant_resp_from_dsm(&member));
                     }
-                    EntityType::DeliberationSpaceMember(_) => {
+                    EntityType::DeliberationDiscussionMember(..) => {
                         members_by_discussion
                             .entry(discussion_id_of(&member.discussion_pk))
                             .or_default()

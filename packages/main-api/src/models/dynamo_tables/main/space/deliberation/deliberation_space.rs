@@ -12,7 +12,7 @@ impl DeliberationSpace {
         let uid = uuid::Uuid::new_v4().to_string();
 
         Self {
-            pk: Partition::DeliberationSpace(uid),
+            pk: Partition::Space(uid),
             sk: EntityType::Space,
         }
     }
