@@ -40,6 +40,10 @@ pub async fn create_deliberation_handler(
     tracing::debug!("User extracted: {:?}", user);
 
     let feed_pk = req.clone().feed_pk;
+    let feed_id = match feed_pk.clone() {
+        Partition::Feed(v) => v,
+        _ => "".to_string(),
+    };
 
     let post = Post::get(&dynamo.client, &feed_pk, Some(EntityType::Post))
         .await?
@@ -74,6 +78,18 @@ pub async fn create_deliberation_handler(
     let deliberation = DeliberationSpace::new();
 
     deliberation.create(&dynamo.client).await?;
+
+    let common = SpaceCommon::new(
+        crate::types::Partition::Feed(feed_id),
+        Author {
+            pk: post.user_pk,
+            display_name: post.author_display_name,
+            profile_url: post.author_profile_url,
+            username: post.author_username,
+            user_type: post.author_type,
+        },
+    );
+    common.create(&dynamo.client).await?;
 
     let metadata = DeliberationMetadata::query(&dynamo.client, deliberation.pk.clone()).await?;
 

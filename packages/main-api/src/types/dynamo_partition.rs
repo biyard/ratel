@@ -31,7 +31,7 @@ pub enum Partition {
 
     // Spaces
     Space(String),
-    // DeliberationSpace(String),
+    DeliberationSpace(String),
     SurveySpace(String),
 
     Discussion(String),
