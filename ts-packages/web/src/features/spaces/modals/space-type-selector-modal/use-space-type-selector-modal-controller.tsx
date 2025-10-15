@@ -46,8 +46,6 @@ export class SpaceTypeSelectModalController {
     if (this.isLoading.get()) return;
     this.isLoading.set(true);
 
-    startedAt = Math.floor(startedAt / 1000);
-    endedAt = Math.floor(endedAt / 1000);
     try {
       const { space_pk } = await this.createSpace.mutateAsync({
         postPk,

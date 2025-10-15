@@ -27,7 +27,7 @@ export const Default = () => {
       max_label="Very satisfied"
       max_value={5}
       selectedValue={selectedValue}
-      onSelectValue={setSelectedValue}
+      onSelect={setSelectedValue}
     />
   );
 };
@@ -47,7 +47,7 @@ export const WithCustomRange = () => {
       max_label="Hard"
       max_value={10}
       selectedValue={selectedValue}
-      onSelectValue={setSelectedValue}
+      onSelect={setSelectedValue}
     />
   );
 };
@@ -64,8 +64,10 @@ export const WithoutLabels = () => {
       is_required={false}
       min_value={1}
       max_value={7}
+      min_label={''}
+      max_label={''}
       selectedValue={selectedValue}
-      onSelectValue={setSelectedValue}
+      onSelect={setSelectedValue}
     />
   );
 };
