@@ -24,7 +24,7 @@ pub async fn get_deliberation_handler(
     NoApi(user): NoApi<Option<User>>,
     Path(DeliberationGetPath { space_pk }): Path<DeliberationGetPath>,
 ) -> Result<Json<DeliberationDetailResponse>, Error2> {
-    if !matches!(space_pk, Partition::DeliberationSpace(_)) {
+    if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error2::NotFoundDeliberationSpace);
     }
 

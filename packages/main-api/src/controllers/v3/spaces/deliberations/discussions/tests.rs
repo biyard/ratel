@@ -1,9 +1,8 @@
+use crate::controllers::v3::spaces::CreateSpaceResponse;
+use crate::types::SpaceType;
 use crate::*;
 use crate::{
-    controllers::v3::{
-        posts::create_post::CreatePostResponse,
-        spaces::deliberations::create_deliberation::CreateDeliberationResponse,
-    },
+    controllers::v3::posts::create_post::CreatePostResponse,
     models::space::DeliberationDiscussionResponse,
     tests::{
         create_app_state, create_test_user, get_auth,
@@ -37,12 +36,13 @@ async fn test_create_discussion_handler() {
     // SPACE
     let (status, _headers, body) = post! {
         app: app,
-        path: "/v3/spaces/deliberation",
+        path: "/v3/spaces",
         headers: headers.clone(),
         body: {
-            "feed_pk": feed_pk
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
         },
-        response_type: CreateDeliberationResponse
+        response_type: CreateSpaceResponse
     };
 
     assert_eq!(status, 200);
@@ -59,11 +59,11 @@ async fn test_create_discussion_handler() {
     };
 
     let members = vec![team_1, team_2];
-    let space_pk = body.metadata.deliberation.pk;
+    let space_pk = body.space_pk;
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/deliberation/{}/discussions", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/deliberation/discussions", space_pk_encoded);
 
-    eprintln!("space_pk_encoded: {:?}", space_pk_encoded);
+    println!("space_pk_encoded: {:?}", space_pk_encoded);
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
@@ -108,12 +108,13 @@ async fn test_start_meeting_handler() {
     // SPACE
     let (status, _headers, body) = post! {
         app: app,
-        path: "/v3/spaces/deliberation",
+        path: "/v3/spaces",
         headers: headers.clone(),
         body: {
-            "feed_pk": feed_pk
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
         },
-        response_type: CreateDeliberationResponse
+        response_type: CreateSpaceResponse
     };
 
     assert_eq!(status, 200);
@@ -130,9 +131,9 @@ async fn test_start_meeting_handler() {
     };
 
     let members = vec![team_1, team_2];
-    let space_pk = body.metadata.deliberation.pk;
+    let space_pk = body.space_pk;
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/deliberation/{}/discussions", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/deliberation/discussions", space_pk_encoded);
 
     let (status, _headers, body) = post! {
         app: app,
@@ -154,7 +155,7 @@ async fn test_start_meeting_handler() {
     let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
 
     let path = format!(
-        "/v3/spaces/deliberation/{}/discussions/{}/start-meeting",
+        "/v3/spaces/{}/deliberation/discussions/{}/start-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
 
@@ -196,12 +197,13 @@ async fn test_create_participants_handler() {
     // SPACE
     let (status, _headers, body) = post! {
         app: app,
-        path: "/v3/spaces/deliberation",
+        path: "/v3/spaces",
         headers: headers.clone(),
         body: {
-            "feed_pk": feed_pk
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
         },
-        response_type: CreateDeliberationResponse
+        response_type: CreateSpaceResponse
     };
 
     assert_eq!(status, 200);
@@ -218,9 +220,9 @@ async fn test_create_participants_handler() {
     };
 
     let members = vec![team_1, team_2];
-    let space_pk = body.metadata.deliberation.pk;
+    let space_pk = body.space_pk;
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/deliberation/{}/discussions", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/deliberation/discussions", space_pk_encoded);
 
     let (status, _headers, body) = post! {
         app: app,
@@ -242,7 +244,7 @@ async fn test_create_participants_handler() {
     let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
 
     let path = format!(
-        "/v3/spaces/deliberation/{}/discussions/{}/participant-meeting",
+        "/v3/spaces/{}/deliberation/discussions/{}/participant-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
 
@@ -289,12 +291,13 @@ async fn test_exit_meeting_handler() {
     // SPACE
     let (status, _headers, body) = post! {
         app: app,
-        path: "/v3/spaces/deliberation",
+        path: "/v3/spaces",
         headers: headers.clone(),
         body: {
-            "feed_pk": feed_pk
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
         },
-        response_type: CreateDeliberationResponse
+        response_type: CreateSpaceResponse
     };
 
     assert_eq!(status, 200);
@@ -311,9 +314,9 @@ async fn test_exit_meeting_handler() {
     };
 
     let members = vec![team_1, team_2];
-    let space_pk = body.metadata.deliberation.pk;
+    let space_pk = body.space_pk;
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/deliberation/{}/discussions", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/deliberation/discussions", space_pk_encoded);
 
     let (status, _headers, body) = post! {
         app: app,
@@ -335,7 +338,7 @@ async fn test_exit_meeting_handler() {
     let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
 
     let path = format!(
-        "/v3/spaces/deliberation/{}/discussions/{}/start-meeting",
+        "/v3/spaces/{}/deliberation/discussions/{}/start-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
 
@@ -350,7 +353,7 @@ async fn test_exit_meeting_handler() {
     assert_eq!(status, 200);
 
     let path = format!(
-        "/v3/spaces/deliberation/{}/discussions/{}/participant-meeting",
+        "/v3/spaces/{}/deliberation/discussions/{}/participant-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
 
@@ -379,7 +382,7 @@ async fn test_exit_meeting_handler() {
     );
 
     let path = format!(
-        "/v3/spaces/deliberation/{}/discussions/{}/exit-meeting",
+        "/v3/spaces/{}/deliberation/discussions/{}/exit-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
 
@@ -423,14 +426,17 @@ async fn test_start_recording_handler() {
     // SPACE
     let (status, _headers, body) = post! {
         app: app,
-        path: "/v3/spaces/deliberation",
+        path: "/v3/spaces",
         headers: headers.clone(),
-        body: { "feed_pk": feed_pk },
-        response_type: CreateDeliberationResponse
+        body: {
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
+        },
+        response_type: CreateSpaceResponse
     };
     assert_eq!(status, 200);
 
-    let space_pk = body.metadata.deliberation.pk.clone();
+    let space_pk = body.space_pk.clone();
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {
@@ -444,7 +450,7 @@ async fn test_start_recording_handler() {
     let members = vec![team_1, team_2];
 
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let create_disc_path = format!("/v3/spaces/deliberation/{}/discussions", space_pk_encoded);
+    let create_disc_path = format!("/v3/spaces/{}/deliberation/discussions", space_pk_encoded);
 
     let (status, _headers, disc_body) = post! {
         app: app,
@@ -465,7 +471,7 @@ async fn test_start_recording_handler() {
     let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
 
     let start_meeting_path = format!(
-        "/v3/spaces/deliberation/{}/discussions/{}/start-meeting",
+        "/v3/spaces/{}/deliberation/discussions/{}/start-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
     let (status, _headers, _started_meeting) = post! {
@@ -478,7 +484,7 @@ async fn test_start_recording_handler() {
     assert_eq!(status, 200);
 
     let start_recording_path = format!(
-        "/v3/spaces/deliberation/{}/discussions/{}/start-recording",
+        "/v3/spaces/{}/deliberation/discussions/{}/start-recording",
         space_pk_encoded, discussion_pk_encoded
     );
     let (status, _headers, resp) = post! {
@@ -518,16 +524,19 @@ async fn test_end_recording_handler() {
     let feed_pk = post.post_pk.clone();
 
     // SPACE
-    let (status, _headers, created_space) = post! {
+    let (status, _headers, body) = post! {
         app: app,
-        path: "/v3/spaces/deliberation",
+        path: "/v3/spaces",
         headers: headers.clone(),
-        body: { "feed_pk": feed_pk },
-        response_type: CreateDeliberationResponse
+        body: {
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
+        },
+        response_type: CreateSpaceResponse
     };
     assert_eq!(status, 200);
 
-    let space_pk = created_space.metadata.deliberation.pk.clone();
+    let space_pk = body.space_pk.clone();
     let now = chrono::Utc::now().timestamp();
 
     let team_1 = match create_test_user(&cli).await.pk {
@@ -541,7 +550,7 @@ async fn test_end_recording_handler() {
     let members = vec![team_1, team_2];
 
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let create_disc_path = format!("/v3/spaces/deliberation/{}/discussions", space_pk_encoded);
+    let create_disc_path = format!("/v3/spaces/{}/deliberation/discussions", space_pk_encoded);
 
     let (status, _headers, disc_body) = post! {
         app: app,
@@ -562,7 +571,7 @@ async fn test_end_recording_handler() {
     let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
 
     let start_meeting_path = format!(
-        "/v3/spaces/deliberation/{}/discussions/{}/start-meeting",
+        "/v3/spaces/{}/deliberation/discussions/{}/start-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
     let (status, _, _) = post! {
@@ -575,7 +584,7 @@ async fn test_end_recording_handler() {
     assert_eq!(status, 200);
 
     let start_recording_path = format!(
-        "/v3/spaces/deliberation/{}/discussions/{}/start-recording",
+        "/v3/spaces/{}/deliberation/discussions/{}/start-recording",
         space_pk_encoded, discussion_pk_encoded
     );
     let (status, _, _) = post! {
@@ -588,7 +597,7 @@ async fn test_end_recording_handler() {
     assert_eq!(status, 200);
 
     let end_recording_path = format!(
-        "/v3/spaces/deliberation/{}/discussions/{}/end-recording",
+        "/v3/spaces/{}/deliberation/discussions/{}/end-recording",
         space_pk_encoded, discussion_pk_encoded
     );
     let (status, _headers, resp) = post! {

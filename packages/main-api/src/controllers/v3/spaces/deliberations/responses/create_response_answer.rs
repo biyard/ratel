@@ -38,15 +38,20 @@ pub struct DeliberationResponsePath {
     pub space_pk: Partition,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
+pub struct DeliberationResponse {
+    pub metadata: DeliberationDetailResponse,
+}
+
 pub async fn create_response_answer_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<Session>,
     Path(DeliberationResponsePath { space_pk }): Path<DeliberationResponsePath>,
     Json(req): Json<CreateResponseAnswerRequest>,
-) -> Result<Json<CreateDeliberationResponse>, Error2> {
+) -> Result<Json<DeliberationResponse>, Error2> {
     let user = extract_user_from_session(&dynamo.client, &session).await?;
     let pk_id = match space_pk.clone() {
-        Partition::DeliberationSpace(v) => v,
+        Partition::Space(v) => v,
         _ => "".to_string(),
     };
     let survey_pk_id = match req.survey_pk {
@@ -66,7 +71,7 @@ pub async fn create_response_answer_handler(
     }
 
     let response = DeliberationSpaceResponse::new(
-        Partition::DeliberationSpace(pk_id.to_string()),
+        Partition::Space(pk_id.to_string()),
         Partition::Survey(survey_pk_id.to_string()),
         req.survey_type,
         req.answers,
@@ -84,5 +89,5 @@ pub async fn create_response_answer_handler(
         }
     }
 
-    Ok(Json(CreateDeliberationResponse { metadata }))
+    Ok(Json(DeliberationResponse { metadata }))
 }
