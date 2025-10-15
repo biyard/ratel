@@ -43,7 +43,7 @@ pub async fn get_response_answer_handler(
     let response = DeliberationSpaceResponse::get(
         &dynamo.client,
         &space_pk,
-        Some(EntityType::DeliberationSpaceResponse(id.to_string())),
+        Some(EntityType::DeliberationResponse(id.to_string())),
     )
     .await?;
 

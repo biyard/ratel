@@ -12,7 +12,7 @@ pub struct DeliberationSpaceElearning {
 
 impl DeliberationSpaceElearning {
     pub fn new(pk: Partition, files: Vec<File>) -> Self {
-        let sk = EntityType::DeliberationSpaceElearning;
+        let sk = EntityType::DeliberationElearning;
 
         Self { pk, sk, files }
     }

@@ -66,15 +66,15 @@ pub enum EntityType {
 
     // Deliberation space entity types
     // DeliberationSpace,
-    DeliberationSpaceSummary,
-    DeliberationSpaceElearning,
-    DeliberationSpaceRecommendation,
-    DeliberationSpaceSurvey(String),
-    DeliberationSpaceDiscussion(String),
-    DeliberationSpaceParticipant(String),
-    DeliberationSpaceMember(String),
-    DeliberationSpaceQuestion(String),
-    DeliberationSpaceResponse(String),
+    DeliberationSummary,
+    DeliberationElearning,
+    DeliberationRecommendation,
+    DeliberationSurvey(String),
+    DeliberationDiscussion(String),
+    DeliberationDiscussionParticipant(String, String),
+    DeliberationDiscussionMember(String, String),
+    DeliberationQuestion(String),
+    DeliberationResponse(String),
 
     // Sprint league space entity types
     SprintLeagueSpace,
