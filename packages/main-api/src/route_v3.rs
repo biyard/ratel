@@ -517,10 +517,10 @@ pub fn route(
                         ),
                 )
                 .nest(
-                    "/poll",
+                    "/:space_pk/polls",
                     Router::new()
                         .route(
-                            "/:poll_space_pk",
+                            "",
                             get_with(
                                 get_poll_space_handler,
                                 api_docs!(
@@ -539,7 +539,7 @@ pub fn route(
                             ),
                         )
                         .route(
-                            "/:poll_space_pk/response",
+                            "/responses",
                             post_with(
                                 respond_poll_space_handler,
                                 api_docs!(
@@ -548,7 +548,7 @@ pub fn route(
                                     "Submit a response to the poll with Pk"
                                 ),
                             )
-                        ).route("/:poll_space_pk/summary", get_with(
+                        ).route("/summary", get_with(
                             get_poll_space_survey_summary,
                             api_docs!(
                                 Json<PollSpaceSurveySummary>,
