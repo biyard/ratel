@@ -1,3 +1,4 @@
+import { SpaceType } from './features/spaces/types/space-type';
 import { FeedStatus } from './lib/api/models/feeds';
 
 // LocalStorage keys
@@ -94,4 +95,9 @@ const QK_SPACES = 'spaces';
 export const spaceKeys = {
   all: [QK_SPACES] as const,
   detail: (pk: string) => [...spaceKeys.all, 'detail', pk] as const,
+};
+
+export const pollSpaceKeys = {
+  all: [QK_SPACES, SpaceType.Poll] as const,
+  summary: (pk: string) => [...pollSpaceKeys.all, pk, 'summary'] as const,
 };

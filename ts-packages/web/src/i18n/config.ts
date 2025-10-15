@@ -40,7 +40,9 @@ import koSpaceMakePublicModal from './ko/SpaceMakePublicModal.json';
 import koEditArtworkPost from './ko/EditArtworkPost.json';
 import { i18nThreadPage } from '@/app/(social)/threads/[id]/thread-page-i18n';
 import { i18nDeliberationPage } from '@/app/spaces/deliberation/[id]/deliberation-page-i18n';
-
+import i18nPollSpacePage from '@/app/spaces/poll/[id]/i18n';
+import i18nSpaceSurveyComponent from '@/features/spaces/components/survey/i18n';
+import i18nSpaceSurveyReportComponent from '@/features/spaces/components/report/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 export const resources = {
@@ -89,6 +91,9 @@ export const resources = {
 Object.entries({
   Threads: i18nThreadPage,
   DeliberationSpace: i18nDeliberationPage,
+  PollSpace: i18nPollSpacePage,
+  SpaceSurvey: i18nSpaceSurveyComponent,
+  SpaceSurveyReport: i18nSpaceSurveyReportComponent,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;

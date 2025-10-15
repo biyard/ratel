@@ -1,7 +1,7 @@
 import { BoosterType } from '@/features/spaces/types/booster-type';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { call } from './call';
-import { SpaceVisibility, SpaceVisibilityValue } from '@/types/space-common';
+import { SpaceVisibility } from '@/features/spaces/types/space-common';
 
 export type CreateSpaceResponse = {
   space_pk: string;
@@ -23,14 +23,19 @@ export function createSpace(
   });
 }
 
+function encodeVisibility(visibility: SpaceVisibility) {
+  if (visibility.type === 'Team') {
+    return `TEAM#${visibility.team_pk}`;
+  }
+  return visibility.type.toUpperCase();
+}
 export function publishSpace(
   spacePk: string,
   visibility: SpaceVisibility,
 ): Promise<void> {
   return call('POST', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
     publish: true,
-    visibility:
-      visibility == SpaceVisibilityValue.Private ? 'Private' : 'Public',
+    visibility: encodeVisibility(visibility),
   });
 }
 
