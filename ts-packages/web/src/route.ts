@@ -47,7 +47,7 @@ export const route = {
       case SpaceType.Deliberation:
         return `/spaces/${encodeURIComponent(spaceId)}/deliberation`;
       default:
-        throw new Error(`Unknown space type: ${spaceType}`);
+        console.warn('Unknown space type:', spaceType);
     }
   },
 
