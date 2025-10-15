@@ -1,27 +1,47 @@
 import { BoosterType } from '../features/spaces/types/booster-type';
 
+/**
+ * @deprecated import { SpacePublishState } from '@/features/spaces/types/space-common';
+ * Use `SpacePublishState` from `features/spaces/types/space-common` instead.
+ */
 export enum SpacePublishState {
-  Draft = 'Draft',
-  Published = 'Published',
+  Draft = 'DRAFT',
+  Published = 'PUBLISHED',
 }
+
+/**
+ * @deprecated import { SpaceStatus } from '@/features/spaces/types/space-common';
+ * Use `SpaceStatus` from `features/spaces/types/space-common` instead.
+ */
 
 export enum SpaceStatus {
-  Waiting = 'Waiting',
-  InProgress = 'InProgress',
-  Finished = 'Finished',
+  Waiting = 'WAITING',
+  InProgress = 'IN_PROGRESS',
+  Finished = 'FINISHED',
 }
 
+/**
+ * @deprecated import { SpaceVisibility } from '@/features/spaces/types/space-common';
+ * Use `SpaceVisibility` from `features/spaces/types/space-common` instead.
+ */
 export type SpaceVisibility =
   | { type: 'Private' }
   | { type: 'Public' }
   | { type: 'Team'; team_pk: string };
 
+/**
+ * @deprecated
+ */
 export const SpaceVisibilityValue = {
   Private: { type: 'Private' } as const,
   Public: { type: 'Public' } as const,
   Team: (team_pk: string) => ({ type: 'Team', team_pk }) as const,
 };
 
+/**
+ * @deprecated import { SpaceCommon } from '@/features/spaces/types/space-common';
+ * Use `SpaceCommon` from `features/spaces/types/space-common` instead.
+ */
 export interface SpaceCommon {
   pk: string;
   sk: string;

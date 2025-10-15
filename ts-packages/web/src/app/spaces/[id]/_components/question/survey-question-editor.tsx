@@ -51,7 +51,7 @@ export default function SurveyQuestionEditor({
   }) => void;
   onremove?: (index: number) => void;
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const [questionType, setQuestionType] = useState<AnswerType>(answerType);
   const [questionTitle, setQuestionTitle] = useState(title);
   const [questionOptions, setQuestionOptions] = useState<string[]>(
@@ -167,7 +167,7 @@ export default function SurveyQuestionEditor({
           <Input
             className="bg-input-box-bg border border-input-box-border rounded-lg w-full px-4 !py-5.5 font-medium text-[15px]/[22.5px] text-text-primary placeholder:text-neutral-600 "
             type="text"
-            placeholder={t('title_hint')}
+            placeholder={t('question_title_placeholder')}
             value={questionTitle}
             onChange={(e) => handleTitleChange(e.target.value)}
           />

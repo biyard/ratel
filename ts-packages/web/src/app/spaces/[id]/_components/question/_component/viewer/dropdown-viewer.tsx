@@ -26,7 +26,7 @@ export default function DropdownViewer({
     type: Question['answer_type'],
   ) => void;
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
   return (
     <div className="flex flex-col w-full gap-2.5">
       <Wrapper

@@ -28,7 +28,7 @@ export default function SubjectiveViewer({
     type: 'short_answer' | 'subjective',
   ) => void;
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
 
   return (
     <div className="flex flex-col w-full gap-[10px]">

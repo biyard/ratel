@@ -1,4 +1,4 @@
-import { SurveyStatus } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { SurveyStatus } from '@/features/spaces/deliberations/utils/deliberation.spaces.v3';
 
 export interface Survey {
   id: number;
