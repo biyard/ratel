@@ -12,7 +12,7 @@ export default function Wrapper({
   isMulti?: boolean;
   title: string;
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
 
   let choiceLabel = '';
   if (

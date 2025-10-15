@@ -1,8 +1,8 @@
 import { spaceKeys } from '@/constants';
 import { Answer } from '@/lib/api/models/response';
-import { updateDeliberationResponseSpace } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { showErrorToast } from '@/lib/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { updateDeliberationResponseSpace } from '../utils/deliberation.spaces.v3';
 
 type SpaceResponseProps = {
   spacePk: string;

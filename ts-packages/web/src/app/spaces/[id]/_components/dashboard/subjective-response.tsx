@@ -12,7 +12,7 @@ export default function SubjectiveResponse({
   question: ShortAnswerQuestion | SubjectiveQuestion;
   answers: Answer[];
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const validAnswers = answers
     .filter(
       (a) =>

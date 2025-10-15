@@ -8,7 +8,7 @@ export default function CheckPopup({
   onContinue: () => void;
   onClose: () => void;
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
   return (
     <div className="w-full max-w-[450px] px-[20px]">
       <div className="flex flex-col gap-[40px]">

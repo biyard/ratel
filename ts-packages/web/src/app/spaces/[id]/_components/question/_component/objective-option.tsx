@@ -19,7 +19,7 @@ export default function ObjectiveOption({
   handleRemoveOption: (index: number) => void;
   addOption: () => void;
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
   return (
     <div className="flex flex-col gap-2">
       {questionOptions.map((opt, idx) => (
