@@ -16,9 +16,12 @@ import {
 export default function TeamLayout() {
   const { username } = useParams<{ username: string }>();
   console.log('TeamLayout: useParams result:', { username });
-  console.log('TeamLayout: window.location.pathname:', window.location.pathname);
+  console.log(
+    'TeamLayout: window.location.pathname:',
+    window.location.pathname,
+  );
   logger.debug('TeamLayout: username', username);
-  
+
   if (!username) {
     return <div>Team not found</div>;
   }

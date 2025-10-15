@@ -43,7 +43,7 @@ export default function TeamCreationPopup() {
       showErrorToast('Please remove the test keyword');
       return;
     }
-    
+
     try {
       logger.debug('Team creation button clicked');
       await teamsV3Api.createTeam({
@@ -52,7 +52,7 @@ export default function TeamCreationPopup() {
         profile_url: profileUrl,
         description: htmlContents,
       });
-      
+
       userInfo.refetch();
       popup.close();
     } catch (error) {

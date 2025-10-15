@@ -1,24 +1,79 @@
 'use client';
-import { useTeamMembers } from '../../_hooks/use-team';
+import { useTeamMembers, useTeamDetailByUsername } from '../../_hooks/use-team';
 import { checkString } from '@/lib/string-filter-utils';
+import { X } from 'lucide-react';
+import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
+import { useQueryClient } from '@tanstack/react-query';
+import { showSuccessToast, showErrorToast } from '@/lib/toast';
+import { logger } from '@/lib/logger';
+import { useState } from 'react';
 
 export default function TeamMembers({ username }: { username: string }) {
   const query = useTeamMembers(username);
+  const teamDetailQuery = useTeamDetailByUsername(username);
+  const queryClient = useQueryClient();
+  const [removingMember, setRemovingMember] = useState<string | null>(null);
 
-  if (query.isLoading) {
+  if (query.isLoading || teamDetailQuery.isLoading) {
     return <div className="flex justify-center p-8">Loading members...</div>;
   }
 
-  if (query.error) {
-    return <div className="flex justify-center p-8 text-red-500">Error loading members</div>;
+  if (query.error || teamDetailQuery.error) {
+    return (
+      <div className="flex justify-center p-8 text-red-500">
+        Error loading members
+      </div>
+    );
   }
 
   const membersData = query.data;
-  const members = membersData?.members?.filter(
-    (member) =>
-      member !== undefined &&
-      !(checkString(member.display_name) || checkString(member.username))
-  ) ?? [];
+  const teamDetail = teamDetailQuery.data;
+  const members =
+    membersData?.members?.filter(
+      (member) =>
+        member !== undefined &&
+        !(checkString(member.display_name) || checkString(member.username)),
+    ) ?? [];
+
+  const handleRemoveFromGroup = async (
+    memberUserId: string,
+    groupId: string,
+    groupName: string,
+  ) => {
+    if (!teamDetail) return;
+
+    const key = `${memberUserId}-${groupId}`;
+    if (removingMember === key) return; // Prevent double clicks
+
+    setRemovingMember(key);
+    try {
+      // Extract team UUID from teamDetail.id (format: TEAM#uuid)
+      const teamUuid = teamDetail.id.split('#')[1];
+
+      await teamsV3Api.removeGroupMember(teamUuid, groupId, {
+        user_pks: [memberUserId],
+      });
+
+      showSuccessToast(`Member removed from ${groupName}`);
+
+      // Invalidate queries to refresh member list
+      await queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = query.queryKey;
+          return (
+            queryKey.includes(username) ||
+            queryKey.includes('team') ||
+            queryKey.includes('members')
+          );
+        },
+      });
+    } catch (err) {
+      logger.error('Failed to remove member from group:', err);
+      showErrorToast('Failed to remove member from group');
+    } finally {
+      setRemovingMember(null);
+    }
+  };
 
   return (
     <div className="flex flex-col w-full max-w-[1152px] px-4 py-5 gap-[10px] bg-card-bg border border-card-border rounded-lg h-fit">
@@ -63,14 +118,34 @@ export default function TeamMembers({ username }: { username: string }) {
           <div className="flex flex-wrap w-full justify-start items-center gap-[10px]">
             {member.groups
               .filter((group) => !checkString(group.group_name))
-              .map((group) => (
-                <div
-                  key={group.group_id}
-                  className="flex flex-row w-fit h-fit px-[5px] py-[3px] border border-neutral-800 bg-black light:bg-neutral-600 light:border-transparent rounded-lg font-medium text-base text-white"
-                >
-                  {group.group_name}
-                </div>
-              ))}
+              .map((group) => {
+                const isRemoving =
+                  removingMember === `${member.user_id}-${group.group_id}`;
+                return (
+                  <div
+                    key={group.group_id}
+                    className="flex flex-row w-fit h-fit items-center gap-1 px-[8px] py-[4px] border border-neutral-800 bg-black light:bg-neutral-600 light:border-transparent rounded-lg font-medium text-sm text-white"
+                  >
+                    <span>{group.group_name}</span>
+                    {!member.is_owner && (
+                      <button
+                        onClick={() =>
+                          handleRemoveFromGroup(
+                            member.user_id,
+                            group.group_id,
+                            group.group_name,
+                          )
+                        }
+                        disabled={isRemoving}
+                        className="ml-1 hover:bg-neutral-700 rounded-full p-0.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Remove from group"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
           </div>
         </div>
       ))}

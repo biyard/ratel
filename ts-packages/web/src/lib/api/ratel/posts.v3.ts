@@ -95,11 +95,24 @@ export function publishPost(
   });
 }
 
-export async function listPosts(bookmark?: string): Promise<ListPostResponse> {
-  let path = '/v3/posts';
+export async function listPosts(
+  bookmark?: string,
+  authorPk?: string,
+  status?: number,
+): Promise<ListPostResponse> {
+  const params = new URLSearchParams();
   if (bookmark) {
-    path += `?bookmark=${encodeURIComponent(bookmark)}`;
+    params.append('bookmark', bookmark);
   }
+  if (authorPk) {
+    params.append('author_pk', authorPk);
+  }
+  if (status !== undefined) {
+    params.append('status', status.toString());
+  }
+
+  const queryString = params.toString();
+  const path = `/v3/posts${queryString ? `?${queryString}` : ''}`;
 
   return call('GET', path);
 }

@@ -4,15 +4,18 @@ import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
 import { TeamGroupPermission } from '@/lib/api/ratel/teams.v3';
 
 // Helper function to check team permission and return boolean
-async function checkPermission(teamPk: string, permission: TeamGroupPermission): Promise<boolean> {
+async function checkPermission(
+  teamPk: string,
+  permission: TeamGroupPermission,
+): Promise<boolean> {
   const result = await teamsV3Api.checkTeamPermission(teamPk, permission);
   return result.has_permission;
 }
 
 // Individual permission hooks following the established pattern
 export function useTeamPermission(
-  teamPk: string, 
-  permission: TeamGroupPermission
+  teamPk: string,
+  permission: TeamGroupPermission,
 ): UseQueryResult<boolean> {
   return useQuery({
     queryKey: [QK_GET_PERMISSION, teamPk, permission],

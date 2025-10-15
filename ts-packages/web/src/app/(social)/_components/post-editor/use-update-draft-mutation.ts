@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
 import { showErrorToast } from '@/lib/toast';
 import {
@@ -10,6 +10,7 @@ import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 
 export function useUpdateDraftMutation() {
   const { data: user } = useSuspenseUserInfo();
+  const queryClient = useQueryClient();
 
   const username = user?.username;
 
@@ -66,9 +67,10 @@ export function useUpdateDraftMutation() {
     },
 
     onSettled: () => {
-      // TODO: Run after completed, as invalidation
-      // const queryClient = getQueryClient();
-      // queryClient.invalidateQueries({ queryKey });
+      // Invalidate all feed list queries to refresh drafts/posts lists
+      queryClient.invalidateQueries({
+        queryKey: feedKeys.lists(),
+      });
     },
   });
 }

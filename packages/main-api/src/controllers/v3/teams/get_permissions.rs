@@ -2,7 +2,7 @@ use crate::{
     AppState, Error2,
     models::user::User,
     types::TeamGroupPermission,
-    utils::security::{RatelResource, check_any_permission_from_user},
+    utils::security::{RatelResource, check_any_permission_with_user},
 };
 use bdk::prelude::*;
 use by_axum::{
@@ -61,9 +61,9 @@ pub async fn get_permissions_handler(
     let user = user.unwrap();
 
     // Use v3 permission checking with DynamoDB
-    match check_any_permission_from_user(
+    match check_any_permission_with_user(
         &dynamo.client,
-        user.pk.to_string(),
+        &user,
         RatelResource::Team { team_pk },
         vec![permission],
     )

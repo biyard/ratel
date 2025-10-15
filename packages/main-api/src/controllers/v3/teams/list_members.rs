@@ -1,6 +1,6 @@
 use crate::models::{
     dynamo_tables::main::user::user_team_group::{UserTeamGroup, UserTeamGroupQueryOption},
-    team::{Team, TeamGroup, TeamOwner},
+    team::{Team, TeamGroup, TeamMetadata, TeamOwner},
     user::User,
 };
 use crate::types::EntityType;
@@ -55,8 +55,6 @@ pub async fn list_members_handler(
     NoApi(user): NoApi<Option<User>>,
     Path(team_username): Path<String>,
 ) -> Result<Json<ListMembersResponse>, Error2> {
-    tracing::debug!("Listing members for team: {}", team_username);
-
     // Check if user is authenticated
     let auth_user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
 
@@ -106,13 +104,32 @@ pub async fn list_members_handler(
     )
     .await?;
 
-    // Get all team groups for name mapping
-    let (team_groups, _) = TeamGroup::query(&dynamo.client, team_pk.clone(), Default::default())
+    // Get all team groups for name mapping using TeamMetadata
+    let metadata_results = TeamMetadata::query(&dynamo.client, team_pk.clone())
         .await
-        .unwrap_or_else(|_| (Vec::new(), None)); // Handle case where no groups exist
+        .unwrap_or_else(|_| Vec::new());
+
+    // Extract only TeamGroup entries from metadata
+    let team_groups: Vec<TeamGroup> = metadata_results
+        .into_iter()
+        .filter_map(|m| match m {
+            TeamMetadata::TeamGroup(group) => Some(group),
+            _ => None,
+        })
+        .collect();
+
+    // Create map using the TeamGroup SK directly (EntityType enum)
+    // This will match against the inner string from UserTeamGroup
     let group_map: HashMap<String, TeamGroup> = team_groups
         .into_iter()
-        .map(|group| (group.sk.to_string(), group))
+        .map(|group| {
+            // Extract the inner UUID from EntityType::TeamGroup(uuid) and format as TEAM_GROUP#uuid
+            let key = match &group.sk {
+                EntityType::TeamGroup(uuid) => format!("TEAM_GROUP#{}", uuid),
+                _ => group.sk.to_string(),
+            };
+            (key, group)
+        })
         .collect();
 
     // Group members by user
@@ -121,7 +138,15 @@ pub async fn list_members_handler(
     for utg in all_user_team_groups {
         let user_pk = utg.pk.clone();
         let user_pk_str = user_pk.to_string();
-        let group_sk = utg.sk.to_string();
+
+        // Extract the actual group SK from UserTeamGroup SK
+        // UserTeamGroup.sk is EntityType::UserTeamGroup("TEAM_GROUP#{uuid}")
+        // We need to extract "TEAM_GROUP#{uuid}" and find the matching TeamGroup
+        let group_sk_string = if let EntityType::UserTeamGroup(inner) = &utg.sk {
+            inner.clone()
+        } else {
+            continue; // Skip if not the expected format
+        };
 
         // Get user details
         let user_details = User::get(&dynamo.client, &user_pk, Some(&EntityType::User)).await?;
@@ -139,9 +164,17 @@ pub async fn list_members_handler(
             });
 
             // Add group information if group exists
-            if let Some(group) = group_map.get(&group_sk) {
+            // Look up by the full TEAM_GROUP#{uuid} string
+            if let Some(group) = group_map.get(&group_sk_string) {
+                // Extract just the UUID for the group_id
+                let group_id = if let EntityType::TeamGroup(uuid) = &group.sk {
+                    uuid.clone()
+                } else {
+                    group.sk.to_string()
+                };
+
                 entry.groups.push(MemberGroup {
-                    group_id: group_sk,
+                    group_id,
                     group_name: group.name.clone(),
                     description: group.description.clone(),
                 });
@@ -170,6 +203,7 @@ pub async fn list_members_handler(
     }
 
     let mut members: Vec<TeamMember> = members_map.into_values().collect();
+
     members.sort_by(|a, b| {
         // Sort by owner first, then by username
         match (a.is_owner, b.is_owner) {
@@ -180,8 +214,6 @@ pub async fn list_members_handler(
     });
 
     let total_count = members.len();
-
-    tracing::debug!("Found {} members for team {}", total_count, team_username);
 
     Ok(Json(ListMembersResponse {
         members,

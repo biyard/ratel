@@ -146,24 +146,3 @@ pub async fn check_any_permission_from_session(
 
     Ok(())
 }
-
-pub async fn check_any_permission_from_user(
-    client: &aws_sdk_dynamodb::Client,
-    user_pk: String,
-    rsc: RatelResource,
-    permissions: Vec<TeamGroupPermission>,
-) -> Result<(), Error2> {
-    let verifier: Box<dyn PermissionVerifier> = match rsc {
-        RatelResource::Team { team_pk } => {
-            Box::new(TeamPermissionVerifier::new(client, user_pk, team_pk).await?)
-        }
-    };
-    let required_mask = permissions_mask(&permissions);
-    if !verifier.has_any_permissions(required_mask) {
-        return Err(Error2::Unauthorized(
-            "You do not have permission to perform this action".into(),
-        ));
-    }
-
-    Ok(())
-}

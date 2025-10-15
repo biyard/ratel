@@ -98,7 +98,7 @@ export const routes = createBrowserRouter([
           },
         ],
       }, // End of Social Layout
-      
+
       // Team routes
       {
         id: 'teams-layout',
@@ -112,7 +112,7 @@ export const routes = createBrowserRouter([
           },
           {
             id: 'team-groups',
-            path: 'groups', 
+            path: 'groups',
             Component: TeamGroups,
           },
           {

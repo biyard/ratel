@@ -1,6 +1,6 @@
 use crate::models::{
-    dynamo_tables::main::user::user_team_group::{UserTeamGroup, UserTeamGroupQueryOption},
-    team::{Team, TeamGroup, TeamOwner},
+    dynamo_tables::main::user::user_team_group::UserTeamGroup,
+    team::{Team, TeamGroup, TeamMetadata, TeamOwner},
     user::User,
 };
 use crate::types::EntityType;
@@ -57,9 +57,18 @@ pub async fn delete_group_handler(
         ));
     }
 
-    // Find the specific group by ID
-    let (team_groups, _) =
-        TeamGroup::query(&dynamo.client, team_pk.clone(), Default::default()).await?;
+    // Find the specific group by ID using TeamMetadata::query
+    let metadata_results = TeamMetadata::query(&dynamo.client, &team_pk).await?;
+
+    // Filter to get only TeamGroup entries
+    let team_groups: Vec<TeamGroup> = metadata_results
+        .into_iter()
+        .filter_map(|m| match m {
+            TeamMetadata::TeamGroup(group) => Some(group),
+            _ => None,
+        })
+        .collect();
+
     let target_group = team_groups
         .into_iter()
         .find(|group| {
@@ -72,18 +81,17 @@ pub async fn delete_group_handler(
         .ok_or(Error2::NotFound("Group not found".into()))?;
 
     // Delete all UserTeamGroup relationships for this specific group
-    let (user_team_groups, _) = UserTeamGroup::find_by_team_pk(
-        &dynamo.client,
-        team_pk.clone(),
-        UserTeamGroupQueryOption::builder().limit(1000),
-    )
-    .await?;
+    // We need to query by team_pk and then filter for the specific group
+    let group_sk_string = target_group.sk.to_string();
+
+    let (all_user_team_groups, _) =
+        UserTeamGroup::find_by_team_pk(&dynamo.client, &team_pk, Default::default()).await?;
 
     let mut removed_members = 0;
-    for utg in user_team_groups {
+    for utg in all_user_team_groups {
         // Check if this UserTeamGroup is for the target group
-        if let EntityType::UserTeamGroup(utg_group_id) = &utg.sk {
-            if *utg_group_id == group_id {
+        if let EntityType::UserTeamGroup(utg_group_sk) = &utg.sk {
+            if *utg_group_sk == group_sk_string {
                 UserTeamGroup::delete(&dynamo.client, utg.pk, Some(utg.sk)).await?;
                 removed_members += 1;
             }
