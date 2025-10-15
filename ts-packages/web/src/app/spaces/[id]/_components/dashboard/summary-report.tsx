@@ -11,7 +11,7 @@ export default function SummaryReport({
   startDate: number;
   endDate: number;
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const now = Math.floor(Date.now() / 1000);
   const timeLeft = endDate - now;
 

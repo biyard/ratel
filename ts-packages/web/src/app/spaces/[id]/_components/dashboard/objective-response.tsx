@@ -87,7 +87,7 @@ export default function ObjectiveResponse({
     | LinearScaleQuestion;
   answers: Answer[];
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const parsed = parseObjectiveAnswers(question, answers);
   const validAnswers = answers
     .filter((a) => a.answer_type === question.answer_type && a.answer != null)

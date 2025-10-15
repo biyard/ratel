@@ -45,7 +45,7 @@ export default function SurveyViewer({
   handleSend: () => Promise<void>;
   space: Space;
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
   // TODO: Update to use v3 user API with string pk instead of numeric id
   const userId = 0;
 

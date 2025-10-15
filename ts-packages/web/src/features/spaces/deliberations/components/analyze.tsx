@@ -29,7 +29,7 @@ export function AnalyzePage({
   mappedResponses: MappedResponse[];
   handleDownloadExcel: () => void;
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
   logger.debug('mapped responses: ', mappedResponses);
 
   const responseCount = answers.length;
