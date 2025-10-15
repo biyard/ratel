@@ -2,6 +2,7 @@ pub mod create_space;
 pub mod delete_space;
 pub mod update_space;
 
+pub mod dto;
 #[cfg(test)]
 pub mod tests;
 
