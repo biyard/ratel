@@ -17,7 +17,7 @@ export default function LinearScaleSelection({
   labels: Record<number, string>;
   setLabels: (val: number, label: string) => void;
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-row items-center gap-2">

@@ -9,11 +9,14 @@ pub mod post_status;
 pub mod post_type;
 pub mod visibility;
 
+pub mod attendee_info;
 pub mod author;
 pub mod file;
 pub mod index_tmpl;
 pub mod list_items_query;
 pub mod list_items_response;
+pub mod media_placement_info;
+pub mod meeting_info;
 pub mod react_query;
 pub mod relationship;
 pub mod sorted_visibility;
@@ -31,8 +34,6 @@ pub mod team_group_permission;
 pub mod theme;
 pub mod url_type;
 pub mod user_type;
-pub mod meeting_info;
-pub mod media_placement_info;
 
 pub use booster_type::*;
 pub use dynamo_entity_type::*;
