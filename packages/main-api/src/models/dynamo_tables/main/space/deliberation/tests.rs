@@ -23,11 +23,7 @@ async fn tests_create_deliberation() {
     //FIXME: fix to real post data when post is implemented
     let post_pk = uuid::Uuid::new_v4().to_string();
 
-    let space_common = SpaceCommon::new(
-        deliberation.pk.clone(),
-        crate::types::Partition::Feed(post_pk),
-        user.clone(),
-    );
+    let space_common = SpaceCommon::new(crate::types::Partition::Feed(post_pk), user.clone());
     let res = space_common.create(&cli).await;
     assert!(res.is_ok());
 

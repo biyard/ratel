@@ -15,7 +15,7 @@ use std::str::FromStr;
     JsonSchema,
     PartialEq,
     Eq,
-    aide::OperationIo
+    aide::OperationIo,
 )]
 #[dynamo_enum(error = "crate::Error2")]
 pub enum Partition {
@@ -40,7 +40,7 @@ pub enum Partition {
     SurveyResponse(String),
 
     // Poll Space
-    PollSpace(String),
+    // PollSpace(String),
     PollSpaceResponse(String), // user_pk
 
     Team(String),
