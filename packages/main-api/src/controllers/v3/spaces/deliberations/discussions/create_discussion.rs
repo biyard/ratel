@@ -2,7 +2,8 @@ use crate::{
     AppState, Error2,
     models::{
         space::{
-            DeliberationDiscussionResponse, DeliberationSpaceDiscussion, DeliberationSpaceMember,
+            DeliberationDiscussionMember, DeliberationDiscussionResponse,
+            DeliberationSpaceDiscussion,
         },
         user::User,
     },
@@ -52,14 +53,14 @@ pub async fn create_discussion_handler(
     Json(req): Json<CreateDiscussionRequest>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
     let deliberation_id = match space_pk.clone() {
-        Partition::DeliberationSpace(v) => v,
+        Partition::Space(v) => v,
         _ => "".to_string(),
     };
 
     let user = extract_user_from_session(&dynamo.client, &session).await?;
 
     let disc = DeliberationSpaceDiscussion::new(
-        crate::types::Partition::DeliberationSpace(deliberation_id.clone()),
+        crate::types::Partition::Space(deliberation_id.clone()),
         req.name,
         req.description,
         req.started_at,
@@ -72,7 +73,7 @@ pub async fn create_discussion_handler(
     );
 
     let disc_id = match disc.clone().sk {
-        EntityType::DeliberationSpaceDiscussion(v) => v,
+        EntityType::DeliberationDiscussion(v) => v,
         _ => "".to_string(),
     };
 
@@ -87,8 +88,8 @@ pub async fn create_discussion_handler(
         .await?
         .ok_or(Error2::NotFound("User not found".into()))?;
 
-        let m = DeliberationSpaceMember::new(
-            Partition::DeliberationSpace(deliberation_id.to_string()),
+        let m = DeliberationDiscussionMember::new(
+            Partition::Space(deliberation_id.to_string()),
             Partition::Discussion(disc_id.clone()),
             user,
         );
@@ -99,7 +100,7 @@ pub async fn create_discussion_handler(
     let disc = DeliberationSpaceDiscussion::get(
         &dynamo.client,
         &space_pk,
-        Some(EntityType::DeliberationSpaceDiscussion(disc_id.to_string())),
+        Some(EntityType::DeliberationDiscussion(disc_id.to_string())),
     )
     .await?;
 
