@@ -1,7 +1,7 @@
 use crate::{
     AppState, Error2,
     models::{
-        User,
+        DeliberationSpaceParticipant, User,
         space::{
             DeliberationDiscussionMember, DeliberationMetadata, DeliberationSpaceContent,
             DeliberationSpaceDiscussion, DeliberationSpaceElearning, DeliberationSpaceQuestion,
@@ -68,9 +68,9 @@ pub async fn delete_deliberation_handler(
             DeliberationMetadata::DeliberationSpaceQuestion(v) => {
                 DeliberationSpaceQuestion::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
-            // DeliberationMetadata::DeliberationSpaceParticipant(v) => {
-            //     DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            // }
+            DeliberationMetadata::DeliberationSpaceParticipant(v) => {
+                DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
             DeliberationMetadata::DeliberationSpaceMember(v) => {
                 DeliberationDiscussionMember::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
