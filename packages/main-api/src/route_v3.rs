@@ -1,3 +1,6 @@
+use crate::controllers::v3::assets::complete_multipart_upload::complete_multipart_upload;
+use crate::controllers::v3::assets::get_put_multi_object_uri::get_put_multi_object_uri;
+use crate::controllers::v3::assets::get_put_object_uri::get_put_object_uri;
 // use crate::controllers::v2::posts::list_posts::ListPostsQueryParams;
 use crate::controllers::v3::auth::verification::verify_code::VerifyCodeResponse;
 use crate::controllers::v3::me::list_my_drafts::list_my_drafts_handler;
@@ -87,6 +90,7 @@ use crate::{
     utils::aws::{DynamoClient, SesClient},
 };
 
+use crate::controllers::v3::assets::get_put_object_uri::AssetPresignedUris;
 use bdk::prelude::*;
 use by_axum::aide::axum::routing::*;
 use by_axum::axum::*;
@@ -683,6 +687,38 @@ pub fn route(
                         ),
                 ),
         )
+        .nest("/assets", Router::new()
+                .route(
+                    "/",
+                    get_with(
+                        get_put_object_uri,
+                        api_docs!(
+                            Json<AssetPresignedUris>,
+                            "Get Presigned Url",
+                            "Get Presigned Url"
+                        ),
+                    )
+                ).route(
+                    "/multiparts",
+                    get_with(
+                        get_put_multi_object_uri,
+                        api_docs!(
+                            Json<AssetPresignedUris>,
+                            "Get Multi Object Presigned Url",
+                            "Get Multi Object Presigned Url"
+                        ),
+                    )
+                ).route(
+                    "/multiparts/complete",
+                    post_with(
+                        complete_multipart_upload,
+                        api_docs!(
+                            Json<String>,
+                            "Checking Multipart upload complete",
+                            "Checking Multipart upload complete"
+                        ),
+                    )
+                ))
         .with_state(AppState {
             dynamo: dynamo_client,
             ses: ses_client,
