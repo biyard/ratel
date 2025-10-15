@@ -38,7 +38,7 @@ pub async fn update_poll_space_handler(
     }): Json<UpdatePollSpaceRequest>,
 ) -> Result<Json<UpdatePollSpaceResponse>, Error2> {
     //Request Validation
-    if !matches!(poll_space_pk, Partition::PollSpace(_)) {
+    if !matches!(poll_space_pk, Partition::Space(_)) {
         return Err(Error2::NotFoundPollSpace);
     }
 

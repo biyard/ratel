@@ -80,7 +80,6 @@ pub async fn create_deliberation_handler(
     deliberation.create(&dynamo.client).await?;
 
     let common = SpaceCommon::new(
-        deliberation.pk.clone(),
         crate::types::Partition::Feed(feed_id),
         Author {
             pk: post.user_pk,
