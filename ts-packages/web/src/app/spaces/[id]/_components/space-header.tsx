@@ -22,6 +22,10 @@ export interface SpaceHeaderProps {
   setTitle?: (title: string) => void;
 }
 
+/**
+ * @deprecated
+ * Use `SpaceHeader` from features/spaces/components/header instead.
+ */
 export default function SpaceHeader({
   title,
   status,

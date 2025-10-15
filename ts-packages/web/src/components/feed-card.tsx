@@ -139,12 +139,9 @@ export default function FeedCard(props: FeedCardProps) {
     }
   };
 
-  const href =
-    post.space_pk == null
-      ? route.threadByFeedId(post.pk)
-      : post?.space_pk?.includes('DELIBERATION')
-        ? route.deliberationSpaceById(post.space_pk)
-        : route.pollSpaceByPk(post.space_pk);
+  const href = post.space_pk
+    ? route.spaceByType(post.space_type, post.space_pk)
+    : route.threadByFeedId(post.pk);
 
   return (
     <Col className="relative border rounded-[10px] bg-card-bg-secondary border-card-enable-border">
@@ -427,7 +424,7 @@ export function FeedFooter({
         <div className="max-tablet:!hidden">
           <JoinNowButton
             onClick={() => {
-              nav(route.space(space_id));
+              nav(route.spaceByType(space_type, space_id));
             }}
           />
         </div>

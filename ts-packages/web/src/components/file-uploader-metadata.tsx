@@ -63,6 +63,10 @@ export default function FileUploaderMetadata({
     const partSize = 5 * 1024 * 1024;
     const totalParts = Math.ceil(file.size / partSize);
 
+    const res = await get(
+      ratelApi.assets.getMultipartPresignedUrl(fileTypeKey, totalParts),
+    );
+
     if (totalParts === 1) {
       const res: AssetPresignedUris = await get(
         ratelApi.assets.getPresignedUrl(fileTypeKey, totalParts),
@@ -99,7 +103,6 @@ export default function FileUploaderMetadata({
       const res: AssetPresignedUris = await get(
         ratelApi.assets.getMultipartPresignedUrl(fileTypeKey, totalParts),
       );
-
       logger.debug('Presigned URL response:', res);
 
       const { presigned_uris, uris, upload_id, key } = res;

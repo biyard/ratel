@@ -35,7 +35,7 @@ import type { InfiniteData } from '@tanstack/react-query';
 import { GroupPermission } from './models/group';
 import type { Permission } from './models/permission';
 import type { NewsDetailItem } from './models/news';
-import type { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { DeliberationSpaceResponse } from '@/features/spaces/deliberations/utils/deliberation.spaces.v3';
 
 async function getDataFromServer<T>(
   key: (string | number)[],

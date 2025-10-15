@@ -10,6 +10,9 @@ use crate::controllers::v3::spaces::deliberations::discussions::create_discussio
 use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::get_discussion::get_discussion_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::get_meeting::{
+    MeetingData, get_meeting_handler,
+};
 use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
 // use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::start_meeting::start_meeting_handler;
@@ -19,16 +22,16 @@ use crate::controllers::v3::spaces::deliberations::posting_deliberation::{
 };
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
-use crate::controllers::v3::spaces::poll::list_responses::list_responses_handler;
-use crate::controllers::v3::spaces::poll::respond_poll_space::respond_poll_space_handler;
-use crate::controllers::v3::spaces::poll::update_poll_space::{
+use crate::controllers::v3::spaces::polls::respond_poll_space::{
+    RespondPollSpaceResponse, respond_poll_space_handler,
+};
+use crate::controllers::v3::spaces::polls::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
-use crate::models::feed::*;
 use crate::models::space::{
-    DeliberationDiscussionResponse, DeliberationSpaceResponse, PollSpaceSurveyAnswerDto,
-    SpaceCommonResponse,
+    DeliberationDiscussionResponse, DeliberationSpaceResponse, SpaceCommonResponse,
 };
+use crate::models::{PollSpaceSurveySummary, feed::*};
 use crate::types::list_items_response::ListItemsResponse;
 use crate::{
     Error2,
@@ -53,7 +56,10 @@ use crate::{
             get_deliberation::get_deliberation_handler,
             update_deliberation::update_deliberation_handler,
         },
-        spaces::poll::get_poll_space::{GetPollSpaceResponse, get_poll_space_handler},
+        spaces::polls::{
+            get_poll_space::{GetPollSpaceResponse, get_poll_space_handler},
+            get_survey_summary::get_poll_space_survey_summary,
+        },
         spaces::{
             create_space::{CreateSpaceResponse, create_space_handler},
             delete_space::delete_space_handler,
@@ -377,13 +383,24 @@ pub fn route(
                                     ),
                                 )
                                 .route(
-                                    "/:discussion_pk/start-meeting",
+                                    "/:discussion_pk",
                                     get_with(
                                         get_discussion_handler,
                                         api_docs!(
                                             Json<DeliberationDiscussionResponse>,
                                             "Get Discussion",
                                             "Get Discussion with id"
+                                        ),
+                                    ),
+                                )
+                                .route(
+                                    "/:discussion_pk/meeting",
+                                    get_with(
+                                        get_meeting_handler,
+                                        api_docs!(
+                                            Json<MeetingData>,
+                                            "Get Discussion Meeting",
+                                            "Get Discussion Meeting with discussion id"
                                         ),
                                     ),
                                 )
@@ -500,10 +517,10 @@ pub fn route(
                         ),
                 )
                 .nest(
-                    "/poll",
+                    "/:space_pk/polls",
                     Router::new()
                         .route(
-                            "/:poll_space_pk",
+                            "/",
                             get_with(
                                 get_poll_space_handler,
                                 api_docs!(
@@ -522,24 +539,23 @@ pub fn route(
                             ),
                         )
                         .route(
-                            "/:poll_space_pk/response",
+                            "/responses",
                             post_with(
                                 respond_poll_space_handler,
                                 api_docs!(
-                                    Json<()>,
+                                    Json<RespondPollSpaceResponse>,
                                     "Respond to poll",
-                                    "Submit a response to the poll with ID"
+                                    "Submit a response to the poll with Pk"
                                 ),
                             )
-                            .get_with(
-                                list_responses_handler,
-                                api_docs!(
-                                    Json<ListItemsResponse<PollSpaceSurveyAnswerDto>>,
-                                    "List poll responses",
-                                    "List all responses for the poll with ID"
-                                ),
+                        ).route("/summary", get_with(
+                            get_poll_space_survey_summary,
+                            api_docs!(
+                                Json<PollSpaceSurveySummary>,
+                                "Get poll survey summary",
+                                "Get survey summary for the poll with Pk"
                             ),
-                        ),
+                        )),
                 ),
         )
         .nest(

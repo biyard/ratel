@@ -9,7 +9,6 @@ export async function call<T, R>(
   body?: T,
 ): Promise<R> {
   const apiBaseUrl: string = config.api_url;
-  const isServer = typeof window === 'undefined';
   let headers = undefined;
 
   let response;
