@@ -10,13 +10,17 @@ pub struct PollSpace {
 }
 
 impl PollSpace {
-    pub fn new() -> Self {
-        let uid = uuid::Uuid::new_v4().to_string();
+    pub fn new(pk: Partition) -> crate::Result<Self> {
+        if !matches!(pk, Partition::Space(_)) {
+            return Err(crate::Error::InvalidPartitionKey(
+                "PollSpace must be under Space partition".to_string(),
+            ));
+        }
 
-        Self {
-            pk: Partition::PollSpace(uid),
+        Ok(Self {
+            pk,
             sk: EntityType::Space,
             user_response_count: 0,
-        }
+        })
     }
 }
