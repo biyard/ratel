@@ -34,6 +34,10 @@ import GoPublicModal from '../../notice/_components/modal/go-public-modal';
 import { GroupPermission } from '@/lib/api/models/group';
 import { usePermission } from '@/app/(social)/_hooks/use-permission';
 
+/**
+ * @deprecated
+ * Use `SpaceHeader` from features/spaces/components/header instead.
+ */
 export default function SpaceHeader({
   space,
   feed,

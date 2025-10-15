@@ -16,10 +16,8 @@ import { useTranslation } from 'react-i18next';
 import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
 import NewDiscussion from './modal/new-discussion';
 import { useUserInfo } from '@/hooks/use-user-info';
-import { SpacePublishState } from '../utils/deliberation.spaces.v3';
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 import { DeliberationSpaceResponse } from '../utils/deliberation.spaces.v3';
-import { DiscussionMemberResponse } from '@/features/discussion/utils/discussion.v3';
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
 import {
@@ -27,6 +25,8 @@ import {
   DiscussionInfo,
   DiscussionUser,
 } from '../types/deliberation-type';
+import { SpacePublishState } from '@/types/space-common';
+import { DiscussionMemberResponse } from '@/features/discussion/utils/discussion.v3';
 
 export default function SpaceDiscussion({
   space,

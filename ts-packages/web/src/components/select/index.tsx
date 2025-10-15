@@ -1,6 +1,5 @@
 'use client';
 
-
 interface SelectProps {
   value: number | string;
   onChange: (val: number | string) => void;
@@ -8,6 +7,9 @@ interface SelectProps {
   className?: string;
 }
 
+/**
+ * @deprecated Use Select from '@/components/ui/select' instead.
+ */
 export default function Select({
   value,
   onChange,

@@ -75,7 +75,9 @@ pub async fn create_space_handler(
     };
 
     let mut space_common = SpaceCommon::new(space_pk.clone(), post_pk, user.clone());
-    let mut post_updater = Post::updater(&post.pk, &post.sk).with_space_pk(space_pk.clone());
+    let mut post_updater = Post::updater(&post.pk, &post.sk)
+        .with_space_pk(space_pk.clone())
+        .with_space_type(space_type);
     if started_at.is_some() && ended_at.is_some() {
         space_common = space_common.with_time(started_at.unwrap(), ended_at.unwrap());
     }

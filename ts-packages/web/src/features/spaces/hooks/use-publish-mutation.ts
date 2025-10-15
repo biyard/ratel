@@ -5,7 +5,7 @@ import {
   SpaceCommon,
   SpacePublishState,
   SpaceVisibility,
-} from '@/types/space-common';
+} from '@/features/spaces/types/space-common';
 import { useMutation } from '@tanstack/react-query';
 
 export function usePublishSpaceMutation<T extends SpaceCommon>() {
