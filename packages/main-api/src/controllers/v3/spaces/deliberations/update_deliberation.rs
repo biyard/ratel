@@ -1,3 +1,4 @@
+use crate::models::DeliberationSpaceParticipant;
 use crate::types::File;
 use crate::{
     AppState, Error2,
@@ -236,15 +237,15 @@ pub async fn update_discussion(
 
     for data in metadata.into_iter() {
         match data {
-            // DeliberationMetadata::DeliberationSpaceParticipant(v) => {
-            //     DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            // }
+            DeliberationMetadata::DeliberationSpaceParticipant(v) => {
+                DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            }
             DeliberationMetadata::DeliberationSpaceMember(v) => {
                 DeliberationDiscussionMember::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
-            DeliberationMetadata::DeliberationSpaceDiscussion(v) => {
-                DeliberationSpaceDiscussion::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            }
+            // DeliberationMetadata::DeliberationSpaceDiscussion(v) => {
+            //     DeliberationSpaceDiscussion::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            // }
             _ => {}
         }
     }
@@ -266,6 +267,8 @@ pub async fn update_discussion(
                 .last()
                 .ok_or_else(|| Error2::BadRequest("Invalid discussion_pk format".into()))?
                 .to_string();
+
+            tracing::debug!("discussion debug");
             DeliberationSpaceDiscussion::updater(
                 &space_pk.clone(),
                 EntityType::DeliberationDiscussion(discussion_id.to_string()),
@@ -353,10 +356,12 @@ pub async fn update_recommendation(
 ) -> Result<(), Error2> {
     let recommendation = DeliberationSpaceContent::get(
         &dynamo.client,
-        &space_pk,
+        &space_pk.clone(),
         Some(EntityType::DeliberationRecommendation),
     )
     .await?;
+
+    tracing::debug!("recommendation: {:?}", recommendation);
 
     if recommendation.is_some() {
         DeliberationSpaceContent::updater(&space_pk, EntityType::DeliberationRecommendation)
@@ -365,6 +370,7 @@ pub async fn update_recommendation(
             .execute(&dynamo.client)
             .await?;
     } else {
+        tracing::debug!("recommendation: 121212");
         let id = space_pk
             .clone()
             .split("#")
