@@ -2,8 +2,8 @@ use crate::{
     AppState, Error2,
     controllers::v3::spaces::deliberations::discussions::start_meeting::DeliberationDiscussionByIdPath,
     models::space::{
-        DeliberationDiscussionResponse, DeliberationSpaceDiscussion, DeliberationSpaceMember,
-        DeliberationSpaceMemberQueryOption, DeliberationSpaceParticipant,
+        DeliberationDiscussionMember, DeliberationDiscussionMemberQueryOption,
+        DeliberationDiscussionResponse, DeliberationSpaceDiscussion, DeliberationSpaceParticipant,
         DeliberationSpaceParticipantQueryOption, DiscussionMemberResponse,
         DiscussionParticipantResponse,
     },
@@ -26,7 +26,7 @@ pub async fn exit_meeting_handler(
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
     let user = extract_user_from_session(&dynamo.client, &session).await?;
     let space_id = match space_pk.clone() {
-        Partition::DeliberationSpace(v) => v,
+        Partition::Space(v) => v,
         _ => "".to_string(),
     };
     let discussion_id = match discussion_pk {
@@ -72,15 +72,15 @@ async fn fetch_discussion_and_pk(
 ) -> Result<(DeliberationSpaceDiscussion, String), Error2> {
     let disc = DeliberationSpaceDiscussion::get(
         &dynamo.client,
-        &Partition::DeliberationSpace(deliberation_id.to_string()),
-        Some(EntityType::DeliberationSpaceDiscussion(
+        &Partition::Space(deliberation_id.to_string()),
+        Some(EntityType::DeliberationDiscussion(
             discussion_id.to_string(),
         )),
     )
     .await?
     .ok_or_else(|| Error2::NotFound("Discussion not found".into()))?;
     let disc_pk = match disc.sk.clone() {
-        EntityType::DeliberationSpaceDiscussion(v) => v,
+        EntityType::DeliberationDiscussion(v) => v,
         _ => String::new(),
     };
     Ok((disc, disc_pk))
@@ -90,8 +90,8 @@ async fn list_members_resp(
     dynamo: &DynamoClient,
     disc_pk: &str,
 ) -> Result<Vec<DiscussionMemberResponse>, Error2> {
-    let opt = DeliberationSpaceMemberQueryOption::builder();
-    let members = DeliberationSpaceMember::find_by_discussion_pk(
+    let opt = DeliberationDiscussionMemberQueryOption::builder();
+    let members = DeliberationDiscussionMember::find_by_discussion_pk(
         &dynamo.client,
         Partition::Discussion(disc_pk.to_string()),
         opt,

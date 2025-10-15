@@ -3,10 +3,10 @@ use crate::{
     models::{
         User,
         space::{
-            DeliberationMetadata, DeliberationSpace, DeliberationSpaceContent,
-            DeliberationSpaceDiscussion, DeliberationSpaceElearning, DeliberationSpaceMember,
-            DeliberationSpaceParticipant, DeliberationSpaceQuestion, DeliberationSpaceResponse,
-            DeliberationSpaceSurvey, SpaceCommon,
+            DeliberationDiscussionMember, DeliberationMetadata, DeliberationSpaceContent,
+            DeliberationSpaceDiscussion, DeliberationSpaceElearning, DeliberationSpaceParticipant,
+            DeliberationSpaceQuestion, DeliberationSpaceResponse, DeliberationSpaceSurvey,
+            SpaceCommon,
         },
     },
     types::{Partition, TeamGroupPermission},
@@ -35,7 +35,7 @@ pub async fn delete_deliberation_handler(
     NoApi(user): NoApi<Option<User>>,
     Path(DeliberationDeletePath { space_pk }): Path<DeliberationDeletePath>,
 ) -> Result<Json<DeleteDeliberationResponse>, Error2> {
-    if !matches!(space_pk, Partition::DeliberationSpace(_)) {
+    if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error2::NotFoundDeliberationSpace);
     }
 
@@ -54,9 +54,9 @@ pub async fn delete_deliberation_handler(
 
     for data in metadata.into_iter() {
         match data {
-            DeliberationMetadata::DeliberationSpace(v) => {
-                DeliberationSpace::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            }
+            // DeliberationMetadata::DeliberationSpace(v) => {
+            //     DeliberationSpace::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+            // }
             DeliberationMetadata::DeliberationSpaceSurvey(v) => {
                 DeliberationSpaceSurvey::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
@@ -73,7 +73,7 @@ pub async fn delete_deliberation_handler(
                 DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
             DeliberationMetadata::DeliberationSpaceMember(v) => {
-                DeliberationSpaceMember::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
+                DeliberationDiscussionMember::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
             DeliberationMetadata::DeliberationSpaceElearning(v) => {
                 DeliberationSpaceElearning::delete(&dynamo.client, v.pk, Some(v.sk)).await?;

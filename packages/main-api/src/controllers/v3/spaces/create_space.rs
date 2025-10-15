@@ -1,5 +1,5 @@
 use crate::models::feed::Post;
-use crate::models::space::{DeliberationSpace, PollSpace, SpaceCommon, TimeRange};
+use crate::models::space::{SpaceCommon, TimeRange};
 use crate::models::user::User;
 use crate::types::{BoosterType, Partition, SpaceType, TeamGroupPermission};
 use crate::{AppState, Error2};
@@ -58,25 +58,25 @@ pub async fn create_space_handler(
         (None, None)
     };
 
-    let space_pk = match space_type {
-        SpaceType::Poll => {
-            let space = PollSpace::new();
-            space.create(&dynamo.client).await?;
-            space.pk
-        }
-        SpaceType::Deliberation => {
-            let space = DeliberationSpace::new();
-            space.create(&dynamo.client).await?;
-            space.pk
-        }
-        _ => {
-            unimplemented!("Space type {:?} is not implemented yet", space_type)
-        }
-    };
+    // let space_pk = match space_type {
+    //     SpaceType::Poll => {
+    //         let space = PollSpace::new();
+    //         space.create(&dynamo.client).await?;
+    //         space.pk
+    //     }
+    //     SpaceType::Deliberation => {
+    //         let space = DeliberationSpace::new();
+    //         space.create(&dynamo.client).await?;
+    //         space.pk
+    //     }
+    //     _ => {
+    //         unimplemented!("Space type {:?} is not implemented yet", space_type)
+    //     }
+    // };
 
-    let mut space_common = SpaceCommon::new(space_pk.clone(), post_pk, user.clone());
+    let mut space_common = SpaceCommon::new(post_pk, user.clone());
     let mut post_updater = Post::updater(&post.pk, &post.sk)
-        .with_space_pk(space_pk.clone())
+        .with_space_pk(space_common.pk.clone())
         .with_space_type(space_type);
     if started_at.is_some() && ended_at.is_some() {
         space_common = space_common.with_time(started_at.unwrap(), ended_at.unwrap());
@@ -89,5 +89,7 @@ pub async fn create_space_handler(
     space_common.create(&dynamo.client).await?;
     post_updater.execute(&dynamo.client).await?;
 
-    Ok(Json(CreateSpaceResponse { space_pk }))
+    Ok(Json(CreateSpaceResponse {
+        space_pk: space_common.pk,
+    }))
 }

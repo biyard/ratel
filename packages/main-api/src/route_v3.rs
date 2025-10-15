@@ -23,7 +23,9 @@ use crate::controllers::v3::spaces::deliberations::discussions::start_recording:
 use crate::controllers::v3::spaces::deliberations::posting_deliberation::{
     PostingDeliberationResponse, posting_deliberation_handler,
 };
-use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
+use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::{
+    DeliberationResponse, create_response_answer_handler,
+};
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
 use crate::controllers::v3::spaces::poll::respond_poll_space::{
     RespondPollSpaceResponse, respond_poll_space_handler,
@@ -54,7 +56,7 @@ use crate::{
         },
         posts::*,
         spaces::deliberations::{
-            create_deliberation::{CreateDeliberationResponse, create_deliberation_handler},
+            // create_deliberation::CreateDeliberationResponse,
             delete_deliberation::delete_deliberation_handler,
             get_deliberation::get_deliberation_handler,
             update_deliberation::update_deliberation_handler,
@@ -344,17 +346,17 @@ pub fn route(
                     ),
                 )
                 .nest(
-                    "/deliberation",
+                    "/:space_pk/deliberation",
                     Router::new()
                         .nest(
-                            "/:space_pk/responses",
+                            "/responses",
                             Router::new()
                                 .route(
                                     "/",
                                     post_with(
                                         create_response_answer_handler,
                                         api_docs!(
-                                            Json<CreateDeliberationResponse>,
+                                            Json<DeliberationResponse>,
                                             "Create response answer",
                                             "Create response answer with survey id"
                                         ),
@@ -373,7 +375,7 @@ pub fn route(
                                 ),
                         )
                         .nest(
-                            "/:space_pk/discussions",
+                            "/discussions",
                             Router::new()
                                 .route(
                                     "/",
@@ -467,33 +469,27 @@ pub fn route(
                         .route(
                             "/",
                             post_with(
-                                create_deliberation_handler,
-                                api_docs!(
-                                    Json<CreateDeliberationResponse>,
-                                    "Create deliberation",
-                                    "Create a new deliberation"
-                                ),
-                            ),
-                        )
-                        .route(
-                            "/:space_pk",
-                            post_with(
                                 update_deliberation_handler,
                                 api_docs!(
                                     Json<DeliberationDetailResponse>,
                                     "Update deliberation",
                                     "Update a deliberation"
                                 ),
-                            ),
-                        )
-                        .route(
-                            "/:space_pk",
-                            get_with(
+                            )
+                            .get_with(
                                 get_deliberation_handler,
                                 api_docs!(
                                     Json<DeliberationDetailResponse>,
                                     "Get deliberation",
                                     "Get deliberation with ID"
+                                ),
+                            )
+                            .delete_with(
+                                delete_deliberation_handler,
+                                api_docs!(
+                                    Json<String>,
+                                    "Delete deliberation",
+                                    "Delete deliberation with id"
                                 ),
                             ),
                         )
@@ -508,17 +504,6 @@ pub fn route(
                                 ),
                             ),
                         )
-                        .route(
-                            "/:space_pk/delete",
-                            post_with(
-                                delete_deliberation_handler,
-                                api_docs!(
-                                    Json<String>,
-                                    "Delete deliberation",
-                                    "Delete deliberation with id"
-                                ),
-                            ),
-                        ),
                 )
                 .nest(
                     "/poll",
