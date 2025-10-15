@@ -51,7 +51,7 @@ export default function SurveyQuestionEditor({
   }) => void;
   onremove?: (index: number) => void;
 }) {
-  const { t } = useTranslation('PollSpace');
+  const { t } = useTranslation('DeliberationSpace');
   const [questionType, setQuestionType] = useState<AnswerType>(answerType);
   const [questionTitle, setQuestionTitle] = useState(title);
   const [questionOptions, setQuestionOptions] = useState<string[]>(

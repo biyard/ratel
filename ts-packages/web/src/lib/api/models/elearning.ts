@@ -1,5 +1,5 @@
 import { FileInfo } from './feeds';
-import { File } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { File } from '@/features/spaces/deliberations/utils/deliberation.spaces.v3';
 
 export interface Elearning {
   id: number;

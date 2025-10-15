@@ -1,13 +1,13 @@
 import { spaceKeys } from '@/constants';
 import { NewDiscussionCreateRequest } from '@/lib/api/models/discussion';
 import { NewSurveyCreateRequest } from '@/lib/api/models/survey';
+import { showErrorToast } from '@/lib/toast';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   BackendFile,
   SpaceVisibility,
   updateDeliberationSpace,
-} from '@/features/deliberation-space/utils/deliberation.spaces.v3';
-import { showErrorToast } from '@/lib/toast';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+} from '../utils/deliberation.spaces.v3';
 
 type SpaceProps = {
   spacePk: string;

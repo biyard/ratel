@@ -10,6 +10,9 @@ use crate::controllers::v3::spaces::deliberations::discussions::create_discussio
 use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::get_discussion::get_discussion_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::get_meeting::{
+    MeetingData, get_meeting_handler,
+};
 use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
 // use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::start_meeting::start_meeting_handler;
@@ -380,13 +383,24 @@ pub fn route(
                                     ),
                                 )
                                 .route(
-                                    "/:discussion_pk/start-meeting",
+                                    "/:discussion_pk",
                                     get_with(
                                         get_discussion_handler,
                                         api_docs!(
                                             Json<DeliberationDiscussionResponse>,
                                             "Get Discussion",
                                             "Get Discussion with id"
+                                        ),
+                                    ),
+                                )
+                                .route(
+                                    "/:discussion_pk/meeting",
+                                    get_with(
+                                        get_meeting_handler,
+                                        api_docs!(
+                                            Json<MeetingData>,
+                                            "Get Discussion Meeting",
+                                            "Get Discussion Meeting with discussion id"
                                         ),
                                     ),
                                 )
