@@ -72,7 +72,9 @@ pub struct SpaceCommon {
 }
 
 impl SpaceCommon {
-    pub fn new<A: Into<Author>>(pk: Partition, post_pk: Partition, author: A) -> Self {
+    pub fn new<A: Into<Author>>(post_pk: Partition, author: A) -> Self {
+        let uid = uuid::Uuid::new_v4().to_string();
+
         let now = get_now_timestamp_millis();
         let Author {
             pk: user_pk,
@@ -82,7 +84,7 @@ impl SpaceCommon {
             ..
         } = author.into();
         Self {
-            pk,
+            pk: Partition::Space(uid),
             sk: EntityType::SpaceCommon,
             created_at: now,
             updated_at: now,
