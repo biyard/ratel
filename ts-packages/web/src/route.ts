@@ -1,3 +1,4 @@
+import { SpaceType } from './features/spaces/types/space-type';
 import { RelationType } from './types/relation-type';
 import { SpaceType } from './features/spaces/types/space-type';
 
@@ -60,5 +61,13 @@ export const route = {
     return `/telegram/subscribe?chat_id=${chat_id}${
       lang ? `&lang=${lang}` : ''
     }`;
+  },
+  spaceByPkAndType: (spacePk: string, spaceType: SpaceType) => {
+    switch (spaceType) {
+      case SpaceType.Poll:
+        return route.pollSpaceByPk(spacePk);
+      default:
+        return route.deliberationSpaceById(spacePk);
+    }
   },
 };

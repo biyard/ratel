@@ -89,7 +89,12 @@ export class SpaceTypeSelectModalController {
     try {
       if (this.selectedSpace.canBoost) {
         this.popup
-          .open(<SpaceBoosterConfigModal ctrl={this} />)
+          .open(
+            <SpaceBoosterConfigModal
+              postId={this.feed_id}
+              spaceType={this.selectedSpace.type}
+            />,
+          )
           .withTitle(this.t('select_space_type'));
         return;
       }

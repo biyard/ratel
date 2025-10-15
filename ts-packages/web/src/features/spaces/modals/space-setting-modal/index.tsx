@@ -1,10 +1,5 @@
-import { SpaceTypeSelectModalController } from '../space-type-selector-modal/use-space-type-selector-modal-controller';
 import { useSpaceSettingModalController } from './use-space-setting-modal-controller';
 
-export type SpaceBoosterConfigModalProps =
-  React.HTMLAttributes<HTMLDivElement> & {
-    ctrl: SpaceTypeSelectModalController;
-  };
 import { LoadablePrimaryButton } from '@/components/button/primary-button';
 import { ArrowLeft, Internet, Fire } from '@/components/icons';
 import TimeDropdown from '@/components/time-dropdown';
@@ -16,36 +11,20 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@radix-ui/react-dropdown-menu';
-import { getSpaceTypeLabel } from '../../types/space-type';
+import { getSpaceTypeLabel, SpaceType } from '../../types/space-type';
 import { BoosterType } from '../../types/booster-type';
 
-export default function SpaceBoosterConfigModal({
-  ctrl: parentCtrl,
-}: SpaceBoosterConfigModalProps) {
-  const ctrl = useSpaceSettingModalController();
-  const spaceType = parentCtrl.selectedSpace.type;
-  const onBack = parentCtrl.handleBackToSelection;
-  const onConfirm = (startedAt, endedAt, boosterType) => {
-    return parentCtrl.handleCreateSpace({
-      spaceType: parentCtrl.selectedSpace.type,
-      postPk: parentCtrl.feed_id,
-      startedAt,
-      endedAt,
-      boosterType,
-    });
-  };
-  const isLoading = parentCtrl.isLoading.get();
-  const { t } = useTranslation('SpaceForms');
+export type SpaceBoosterConfigModalProps = {
+  postId: string;
+  spaceType: SpaceType;
+};
 
-  // Initial date setup - round down to nearest 30 minutes, then 1 hour duration
-  const handleSubmit = async () => {
-    // Set booster type based on user selection
-    onConfirm(
-      ctrl.startTimestamp.get(),
-      ctrl.endTimestamp.get(),
-      ctrl.boosterType.get(),
-    );
-  };
+export default function SpaceBoosterConfigModal({
+  postId,
+  spaceType,
+}: SpaceBoosterConfigModalProps) {
+  const ctrl = useSpaceSettingModalController(postId, spaceType);
+  const { t } = useTranslation('SpaceForms');
 
   return (
     <div className="w-full max-w-[95vw] max-tablet:w-fit">
@@ -55,7 +34,7 @@ export default function SpaceBoosterConfigModal({
           <div className="flex justify-between items-center">
             <div className="flex gap-2 items-center">
               <button
-                onClick={onBack}
+                onClick={ctrl.handleBackToSelection}
                 className="p-1 rounded-md transition-colors"
               >
                 <ArrowLeft className="w-7 h-7 text-neutral-500" />
@@ -242,8 +221,8 @@ export default function SpaceBoosterConfigModal({
             <div className="flex justify-end">
               <LoadablePrimaryButton
                 className="rounded-md w-[132px] h-[48px] flex items-center justify-center font-raleway font-bold text-[16px] leading-[100%] tracking-normal text-center cursor-pointer"
-                onClick={handleSubmit}
-                isLoading={isLoading}
+                onClick={ctrl.handleCreate}
+                isLoading={ctrl.isLoading.get()}
               >
                 {t('create')}
               </LoadablePrimaryButton>
