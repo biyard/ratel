@@ -5,7 +5,7 @@ import { Settings } from '@/components/icons';
 import { usePopup } from '@/lib/contexts/popup-service';
 import SetSchedulePopup from '@/app/spaces/[id]/_components/modal/set-schedule';
 import SpaceSurvey from '../space-survey';
-import { DeliberationSpaceResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { DeliberationSpaceResponse } from '../../utils/deliberation.spaces.v3';
 import { useSpaceHeaderStore } from '@/app/spaces/_components/header/store';
 import { SurveyAnswer } from '@/app/spaces/[id]/type';
 import { Answer } from '@/lib/api/models/response';

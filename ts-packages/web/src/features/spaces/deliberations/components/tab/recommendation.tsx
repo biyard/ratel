@@ -3,7 +3,7 @@ import SpaceContents from '../space-contents';
 import SpaceFiles from '../space-files';
 import { TFunction } from 'i18next';
 import { FinalConsensus } from '../../types/final-consensus-type';
-import { File } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
+import { File } from '../../utils/deliberation.spaces.v3';
 
 export type ThreadPageProps = {
   t: TFunction<'DeliberationSpace', undefined>;

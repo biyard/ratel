@@ -1,7 +1,7 @@
 import { AnalyzePage } from '../analyze';
 import { TFunction } from 'i18next';
-import { SurveyResponseResponse } from '@/features/deliberation-space/utils/deliberation.spaces.v3';
 import { MappedResponse, Poll } from '@/app/spaces/[id]/type';
+import { SurveyResponseResponse } from '../../utils/deliberation.spaces.v3';
 
 export type DeliberationAnalyzePageProps = {
   t: TFunction<'DeliberationSpace', undefined>;
