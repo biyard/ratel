@@ -38,7 +38,7 @@
     "node_modules",
     "**/*.spec.ts",
     "**/*.spec.tsx",
-    "**/*.test.ts"
-    // "**/*.stories.tsx"
+    "**/*.test.ts",
+    "**/*.stories.tsx"
   ]
 }
