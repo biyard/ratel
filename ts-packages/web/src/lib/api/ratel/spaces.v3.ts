@@ -17,8 +17,7 @@ export function createSpace(
   return call('POST', '/v3/spaces', {
     space_type: spaceType,
     post_pk: postPk,
-    started_at: startedAt,
-    ended_at: endedAt,
+    time_range: [startedAt, endedAt],
     booster: booster,
   });
 }
