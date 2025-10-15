@@ -27,16 +27,16 @@ use crate::controllers::v3::spaces::deliberations::responses::create_response_an
     DeliberationResponse, create_response_answer_handler,
 };
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
+use crate::controllers::v3::spaces::dto::*;
+use crate::controllers::v3::spaces::polls::dto::*;
 use crate::controllers::v3::spaces::polls::respond_poll_space::{
     RespondPollSpaceResponse, respond_poll_space_handler,
 };
 use crate::controllers::v3::spaces::polls::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
-use crate::models::space::{
-    DeliberationDiscussionResponse, DeliberationSpaceResponse, SpaceCommonResponse,
-};
-use crate::models::{PollSpaceSurveySummary, feed::*};
+use crate::models::feed::*;
+use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
 use crate::types::list_items_response::ListItemsResponse;
 use crate::{
     Error2,
