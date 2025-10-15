@@ -23,7 +23,7 @@ export const Default = () => {
       is_required={false}
       options={['Red', 'Blue', 'Green', 'Yellow']}
       selectedOption={selectedOption}
-      handleSelect={setSelectedOption}
+      onSelect={setSelectedOption}
     />
   );
 };
@@ -38,7 +38,7 @@ export const WithSelected = () => {
       is_required={true}
       options={['JavaScript', 'Python', 'Java', 'C++']}
       selectedOption={selectedOption}
-      handleSelect={setSelectedOption}
+      onSelect={setSelectedOption}
     />
   );
 };
@@ -53,7 +53,7 @@ export const Disabled = () => {
       is_required={false}
       options={['Option 1', 'Option 2', 'Option 3']}
       selectedOption={selectedOption}
-      handleSelect={setSelectedOption}
+      onSelect={setSelectedOption}
       disabled={true}
     />
   );

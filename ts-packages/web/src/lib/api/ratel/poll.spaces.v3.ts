@@ -8,7 +8,7 @@ import { TimeRange } from '@/types/time-range';
 import { SpaceCommon } from '@/features/spaces/types/space-common';
 
 export function getPollSpace(spacePk: string): Promise<PollSpaceResponse> {
-  return call('GET', `/v3/spaces/poll/${encodeURIComponent(spacePk)}`);
+  return call('GET', `/v3/spaces/${encodeURIComponent(spacePk)}/polls`);
 }
 
 export function updatePollSpace(
@@ -18,7 +18,7 @@ export function updatePollSpace(
   timeRange: TimeRange,
   questions: SurveyQuestion[],
 ) {
-  return call('PUT', `/v3/spaces/poll/${encodeURIComponent(spacePk)}`, {
+  return call('PUT', `/v3/spaces/${encodeURIComponent(spacePk)}/polls`, {
     title,
     html_content: htmlContent,
     time_range: timeRange,
@@ -33,7 +33,7 @@ export interface PollSurveySummariesResponse {
 export function getPollSurveySummaries(
   spacePk: string,
 ): Promise<PollSurveySummariesResponse> {
-  return call('GET', `/v3/spaces/poll/${encodeURIComponent(spacePk)}/summary`);
+  return call('GET', `/v3/spaces/${encodeURIComponent(spacePk)}/polls/summary`);
 }
 
 // export function listPollSurveyAnswers(
@@ -59,7 +59,7 @@ export function submitPollSurveyResponse(
 ) {
   return call(
     'POST',
-    `/v3/spaces/poll/${encodeURIComponent(spacePk)}/response`,
+    `/v3/spaces/${encodeURIComponent(spacePk)}/polls/responses`,
     {
       answers,
     },

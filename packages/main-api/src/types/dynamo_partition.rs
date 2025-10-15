@@ -39,7 +39,7 @@ pub enum Partition {
     SurveyResponse(String),
 
     // Poll Space
-    PollSpace(String),
+    // PollSpace(String),
     PollSpaceResponse(String), // user_pk
 
     Team(String),

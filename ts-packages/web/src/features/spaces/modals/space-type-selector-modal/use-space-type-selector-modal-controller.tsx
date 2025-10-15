@@ -46,8 +46,6 @@ export class SpaceTypeSelectModalController {
     if (this.isLoading.get()) return;
     this.isLoading.set(true);
 
-    startedAt = Math.floor(startedAt / 1000);
-    endedAt = Math.floor(endedAt / 1000);
     try {
       const { space_pk } = await this.createSpace.mutateAsync({
         postPk,
@@ -91,7 +89,12 @@ export class SpaceTypeSelectModalController {
     try {
       if (this.selectedSpace.canBoost) {
         this.popup
-          .open(<SpaceBoosterConfigModal ctrl={this} />)
+          .open(
+            <SpaceBoosterConfigModal
+              postId={this.feed_id}
+              spaceType={this.selectedSpace.type}
+            />,
+          )
           .withTitle(this.t('select_space_type'));
         return;
       }

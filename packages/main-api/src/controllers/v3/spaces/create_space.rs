@@ -57,39 +57,29 @@ pub async fn create_space_handler(
     } else {
         (None, None)
     };
+    let mut space = SpaceCommon::new(post_pk, user.clone());
 
-    // let space_pk = match space_type {
-    //     SpaceType::Poll => {
-    //         let space = PollSpace::new();
-    //         space.create(&dynamo.client).await?;
-    //         space.pk
-    //     }
-    //     SpaceType::Deliberation => {
-    //         let space = DeliberationSpace::new();
-    //         space.create(&dynamo.client).await?;
-    //         space.pk
-    //     }
-    //     _ => {
-    //         unimplemented!("Space type {:?} is not implemented yet", space_type)
-    //     }
-    // };
-
-    let mut space_common = SpaceCommon::new(post_pk, user.clone());
     let mut post_updater = Post::updater(&post.pk, &post.sk)
-        .with_space_pk(space_common.pk.clone())
+        .with_space_pk(space.pk.clone())
         .with_space_type(space_type);
+
     if started_at.is_some() && ended_at.is_some() {
-        space_common = space_common.with_time(started_at.unwrap(), ended_at.unwrap());
+        space = space.with_time(started_at.unwrap(), ended_at.unwrap());
     }
     if booster.is_some() {
-        space_common = space_common.with_booster(booster.unwrap());
+        space = space.with_booster(booster.unwrap());
         post_updater = post_updater.with_booster(booster.unwrap());
     }
+    let space_tx = space.create_transact_write_item();
+    let post_tx = post_updater.transact_write_item();
 
-    space_common.create(&dynamo.client).await?;
-    post_updater.execute(&dynamo.client).await?;
+    dynamo
+        .client
+        .transact_write_items()
+        .set_transact_items(Some(vec![space_tx, post_tx]))
+        .send()
+        .await
+        .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
 
-    Ok(Json(CreateSpaceResponse {
-        space_pk: space_common.pk,
-    }))
+    Ok(Json(CreateSpaceResponse { space_pk: space.pk }))
 }

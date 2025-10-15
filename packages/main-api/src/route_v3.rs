@@ -27,10 +27,10 @@ use crate::controllers::v3::spaces::deliberations::responses::create_response_an
     DeliberationResponse, create_response_answer_handler,
 };
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
-use crate::controllers::v3::spaces::poll::respond_poll_space::{
+use crate::controllers::v3::spaces::polls::respond_poll_space::{
     RespondPollSpaceResponse, respond_poll_space_handler,
 };
-use crate::controllers::v3::spaces::poll::update_poll_space::{
+use crate::controllers::v3::spaces::polls::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
 use crate::models::space::{
@@ -61,7 +61,7 @@ use crate::{
             get_deliberation::get_deliberation_handler,
             update_deliberation::update_deliberation_handler,
         },
-        spaces::poll::{
+        spaces::polls::{
             get_poll_space::{GetPollSpaceResponse, get_poll_space_handler},
             get_survey_summary::get_poll_space_survey_summary,
         },
@@ -506,10 +506,10 @@ pub fn route(
                         )
                 )
                 .nest(
-                    "/poll",
+                    "/:space_pk/polls",
                     Router::new()
                         .route(
-                            "/:poll_space_pk",
+                            "/",
                             get_with(
                                 get_poll_space_handler,
                                 api_docs!(
@@ -528,7 +528,7 @@ pub fn route(
                             ),
                         )
                         .route(
-                            "/:poll_space_pk/response",
+                            "/responses",
                             post_with(
                                 respond_poll_space_handler,
                                 api_docs!(
@@ -537,7 +537,7 @@ pub fn route(
                                     "Submit a response to the poll with Pk"
                                 ),
                             )
-                        ).route("/:poll_space_pk/summary", get_with(
+                        ).route("/summary", get_with(
                             get_poll_space_survey_summary,
                             api_docs!(
                                 Json<PollSpaceSurveySummary>,
