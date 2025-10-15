@@ -27,7 +27,9 @@ pub mod space_visibility;
 pub mod survey_answer;
 pub mod survey_question;
 pub mod survey_status;
+pub mod survey_summary;
 pub mod survey_type;
+
 pub mod team_group_permission;
 pub mod theme;
 pub mod url_type;
@@ -60,6 +62,7 @@ pub use space_visibility::*;
 pub use survey_answer::*;
 pub use survey_question::*;
 pub use survey_status::*;
+pub use survey_summary::*;
 pub use survey_type::*;
 pub use team_group_permission::*;
 pub use theme::*;

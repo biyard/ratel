@@ -22,16 +22,16 @@ use crate::controllers::v3::spaces::deliberations::posting_deliberation::{
 };
 use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::create_response_answer_handler;
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
-use crate::controllers::v3::spaces::poll::list_responses::list_responses_handler;
-use crate::controllers::v3::spaces::poll::respond_poll_space::respond_poll_space_handler;
+use crate::controllers::v3::spaces::poll::respond_poll_space::{
+    RespondPollSpaceResponse, respond_poll_space_handler,
+};
 use crate::controllers::v3::spaces::poll::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
-use crate::models::feed::*;
 use crate::models::space::{
-    DeliberationDiscussionResponse, DeliberationSpaceResponse, PollSpaceSurveyAnswerDto,
-    SpaceCommonResponse,
+    DeliberationDiscussionResponse, DeliberationSpaceResponse, SpaceCommonResponse,
 };
+use crate::models::{PollSpaceSurveySummary, feed::*};
 use crate::types::list_items_response::ListItemsResponse;
 use crate::{
     Error2,
@@ -56,7 +56,10 @@ use crate::{
             get_deliberation::get_deliberation_handler,
             update_deliberation::update_deliberation_handler,
         },
-        spaces::poll::get_poll_space::{GetPollSpaceResponse, get_poll_space_handler},
+        spaces::poll::{
+            get_poll_space::{GetPollSpaceResponse, get_poll_space_handler},
+            get_survey_summary::get_poll_space_survey_summary,
+        },
         spaces::{
             create_space::{CreateSpaceResponse, create_space_handler},
             delete_space::delete_space_handler,
@@ -540,20 +543,19 @@ pub fn route(
                             post_with(
                                 respond_poll_space_handler,
                                 api_docs!(
-                                    Json<()>,
+                                    Json<RespondPollSpaceResponse>,
                                     "Respond to poll",
-                                    "Submit a response to the poll with ID"
+                                    "Submit a response to the poll with Pk"
                                 ),
                             )
-                            .get_with(
-                                list_responses_handler,
-                                api_docs!(
-                                    Json<ListItemsResponse<PollSpaceSurveyAnswerDto>>,
-                                    "List poll responses",
-                                    "List all responses for the poll with ID"
-                                ),
+                        ).route("/:poll_space_pk/summary", get_with(
+                            get_poll_space_survey_summary,
+                            api_docs!(
+                                Json<PollSpaceSurveySummary>,
+                                "Get poll survey summary",
+                                "Get survey summary for the poll with Pk"
                             ),
-                        ),
+                        )),
                 ),
         )
         .nest(
