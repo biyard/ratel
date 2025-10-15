@@ -16,19 +16,16 @@ async fn tests_create_deliberation() {
     let fetched_user = User::get(&cli, user.clone().pk.clone(), Some(user.clone().sk)).await;
     assert!(fetched_user.is_ok());
 
-    let deliberation = DeliberationSpace::new();
-    let res = deliberation.create(&cli).await;
-    assert!(res.is_ok());
-
     //FIXME: fix to real post data when post is implemented
     let post_pk = uuid::Uuid::new_v4().to_string();
 
     let space_common = SpaceCommon::new(crate::types::Partition::Feed(post_pk), user.clone());
     let res = space_common.create(&cli).await;
+
     assert!(res.is_ok());
 
     let deliberation_summary = DeliberationSpaceContent::new(
-        deliberation.pk.clone(),
+        space_common.pk.clone(),
         EntityType::DeliberationSummary,
         "<div>deliberation space</div>".to_string(),
         [File {
@@ -44,7 +41,7 @@ async fn tests_create_deliberation() {
 
     let now = chrono::Utc::now().timestamp();
     let deliberation_discussion = DeliberationSpaceDiscussion::new(
-        deliberation.pk.clone(),
+        space_common.pk.clone(),
         "discussion title".to_string(),
         "discussion desc".to_string(),
         now,
@@ -64,7 +61,7 @@ async fn tests_create_deliberation() {
     };
 
     let deliberation_member = DeliberationDiscussionMember::new(
-        deliberation.pk.clone(),
+        space_common.pk.clone(),
         crate::types::Partition::Discussion(discussion_pk.clone()),
         user.clone(),
     );
@@ -73,7 +70,7 @@ async fn tests_create_deliberation() {
     let uid = uuid::Uuid::new_v4().to_string();
 
     let deliberation_participant = DeliberationSpaceParticipant::new(
-        deliberation.pk.clone(),
+        space_common.pk.clone(),
         crate::types::Partition::Discussion(discussion_pk.clone()),
         uid.clone(),
         user.clone(),
@@ -82,7 +79,7 @@ async fn tests_create_deliberation() {
     assert!(res.is_ok());
 
     let deliberation_elearning = DeliberationSpaceElearning::new(
-        deliberation.pk.clone(),
+        space_common.pk.clone(),
         [File {
             name: "elearning file".to_string(),
             size: "50KB".to_string(),
@@ -95,7 +92,7 @@ async fn tests_create_deliberation() {
     assert!(res.is_ok());
 
     let deliberation_survey = DeliberationSpaceSurvey::new(
-        deliberation.pk.clone(),
+        space_common.pk.clone(),
         crate::types::SurveyStatus::Ready,
         now,
         now + 1000,
@@ -109,7 +106,7 @@ async fn tests_create_deliberation() {
     };
 
     let deliberation_question_1 = DeliberationSpaceQuestion::new(
-        deliberation.pk.clone(),
+        space_common.pk.clone(),
         crate::types::Partition::Survey(survey_pk.clone()),
         vec![
             crate::types::SurveyQuestion::Checkbox(CheckboxQuestion {
@@ -134,7 +131,7 @@ async fn tests_create_deliberation() {
     assert!(res.is_ok());
 
     let deliberation_response = DeliberationSpaceResponse::new(
-        deliberation.pk.clone(),
+        space_common.pk.clone(),
         crate::types::Partition::Survey(survey_pk.clone()),
         crate::types::SurveyType::Sample,
         vec![
@@ -151,7 +148,7 @@ async fn tests_create_deliberation() {
     assert!(res.is_ok());
 
     let deliberation_recommendation = DeliberationSpaceContent::new(
-        deliberation.pk.clone(),
+        space_common.pk.clone(),
         crate::types::EntityType::DeliberationRecommendation,
         "<div>deliberation space recommendation</div>".to_string(),
         [File {
@@ -165,7 +162,7 @@ async fn tests_create_deliberation() {
     let res = deliberation_recommendation.create(&cli).await;
     assert!(res.is_ok());
 
-    let metadata = DeliberationMetadata::query(&cli, deliberation.pk.clone()).await;
+    let metadata = DeliberationMetadata::query(&cli, space_common.pk.clone()).await;
     assert!(
         metadata.is_ok(),
         "failed to query user metadata {:?}",
@@ -173,7 +170,7 @@ async fn tests_create_deliberation() {
     );
     let metadatas = metadata.unwrap();
 
-    assert_eq!(metadatas.len(), 11);
+    assert_eq!(metadatas.len(), 10);
     println!("Metadatas: {:?}", metadatas);
     let deliberation: DeliberationDetailResponse = metadatas.into();
 
