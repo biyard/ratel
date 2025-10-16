@@ -1,46 +1,45 @@
 use crate::{
     AppState, Error2,
     controllers::v3::spaces::deliberations::discussions::start_meeting::DeliberationDiscussionByIdPath,
-    models::space::{
-        DeliberationDiscussionMember, DeliberationDiscussionMemberQueryOption,
-        DeliberationDiscussionResponse, DeliberationSpaceDiscussion, DeliberationSpaceParticipant,
-        DeliberationSpaceParticipantQueryOption, DiscussionMemberResponse,
-        DiscussionParticipantResponse,
+    models::{
+        User,
+        space::{
+            DeliberationDiscussionMember, DeliberationDiscussionMemberQueryOption,
+            DeliberationDiscussionResponse, DeliberationSpaceDiscussion,
+            DeliberationSpaceParticipant, DeliberationSpaceParticipantQueryOption,
+            DiscussionMemberResponse, DiscussionParticipantResponse,
+        },
     },
     types::{EntityType, Partition},
     utils::aws::DynamoClient,
 };
 use aws_sdk_chimesdkmeetings::types::Meeting;
-use bdk::prelude::axum::{
-    Extension,
-    extract::{Json, Path, State},
-};
 use bdk::prelude::*;
-use tower_sessions::Session;
+use bdk::prelude::{
+    aide::NoApi,
+    axum::extract::{Json, Path, State},
+};
 
 pub async fn start_recording_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(_session): Extension<Session>,
+    NoApi(_user): NoApi<Option<User>>,
     Path(DeliberationDiscussionByIdPath {
         space_pk,
         discussion_pk,
     }): Path<DeliberationDiscussionByIdPath>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
-    let space_id = match space_pk.clone() {
-        Partition::Space(v) => v,
-        _ => "".to_string(),
-    };
+
     let discussion_id = match discussion_pk {
         Partition::Discussion(v) => v,
         _ => "".to_string(),
     };
     let (disc_initial, _disc_pk_initial) =
-        fetch_discussion_and_pk(&dynamo, &space_id, &discussion_id).await?;
+        fetch_discussion_and_pk(&dynamo, space_pk.clone(), &discussion_id).await?;
     let meeting_id = ensure_current_meeting(
         dynamo.clone(),
         &client,
-        space_id.clone(),
+        space_pk.clone(),
         discussion_id.clone(),
         &disc_initial,
     )
@@ -56,7 +55,7 @@ pub async fn start_recording_handler(
         })?;
 
     DeliberationSpaceDiscussion::updater(
-        &Partition::Space(space_id.clone()),
+        &space_pk.clone(),
         EntityType::DeliberationDiscussion(discussion_id.clone()),
     )
     .with_meeting_id(meeting_id.clone())
@@ -65,7 +64,8 @@ pub async fn start_recording_handler(
     .execute(&dynamo.client)
     .await?;
 
-    let (disc_final, disc_pk) = fetch_discussion_and_pk(&dynamo, &space_id, &discussion_id).await?;
+    let (disc_final, disc_pk) =
+        fetch_discussion_and_pk(&dynamo, space_pk.clone(), &discussion_id).await?;
     let members_resp = list_members_resp(&dynamo, &disc_pk).await?;
     let participants_resp = list_participants_resp(&dynamo, &disc_pk).await?;
 
@@ -77,12 +77,12 @@ pub async fn start_recording_handler(
 
 async fn fetch_discussion_and_pk(
     dynamo: &DynamoClient,
-    deliberation_id: &str,
+    space_pk: Partition,
     discussion_id: &str,
 ) -> Result<(DeliberationSpaceDiscussion, String), Error2> {
     let disc = DeliberationSpaceDiscussion::get(
         &dynamo.client,
-        &Partition::Space(deliberation_id.to_string()),
+        &space_pk,
         Some(EntityType::DeliberationDiscussion(
             discussion_id.to_string(),
         )),
@@ -133,7 +133,7 @@ async fn list_participants_resp(
 async fn ensure_current_meeting(
     dynamo: DynamoClient,
     client: &crate::utils::aws_chime_sdk_meeting::ChimeMeetingService,
-    deliberation_id: String,
+    space_pk: Partition,
     discussion_id: String,
     discussion: &DeliberationSpaceDiscussion,
 ) -> Result<String, Error2> {
@@ -148,7 +148,7 @@ async fn ensure_current_meeting(
     })?;
     let new_id = created.meeting_id().unwrap_or_default().to_string();
     DeliberationSpaceDiscussion::updater(
-        &Partition::Space(deliberation_id.to_string()),
+        &space_pk.clone(),
         EntityType::DeliberationDiscussion(discussion_id.to_string()),
     )
     .with_meeting_id(new_id.clone())
