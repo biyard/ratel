@@ -33,14 +33,17 @@ export default function UserSidemenu() {
 
       {/* Navigation */}
       <nav className="py-5 px-3 w-full rounded-[10px] bg-card-bg border border-card-border text-text-primary">
-        <NavLink  
+        <NavLink
           to={route.myPosts()}
           className="sidemenu-link text-text-primary"
         >
           <Post className="w-[24px] h-[24px]" />
           <span>{t('my_posts')}</span>
         </NavLink>
-        <NavLink to={route.drafts()} className="sidemenu-link text-text-primary">
+        <NavLink
+          to={route.drafts()}
+          className="sidemenu-link text-text-primary"
+        >
           <Draft className="w-[24px] h-[24px]" />
           <span>{t('drafts')}</span>
         </NavLink>

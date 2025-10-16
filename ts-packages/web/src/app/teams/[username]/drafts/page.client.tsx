@@ -23,20 +23,12 @@ export default function TeamDraftPage({ username }: { username: string }) {
   const team = teamQuery.data;
   const teamPk = team?.id || '';
 
-  console.log('TeamDraftPage:', { username, team, teamPk });
-
   const {
     data: drafts,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
   } = useTeamInfiniteFeeds(teamPk, FeedStatus.Draft);
-
-  console.log('Drafts query result:', {
-    drafts,
-    hasNextPage,
-    isFetchingNextPage,
-  });
 
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {

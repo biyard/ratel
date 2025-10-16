@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { click } from './utils';
+import { click } from '../../../tests/utils';
 
 test('create and navigate through team sections', async ({ page }) => {
   const timestamp = Date.now();

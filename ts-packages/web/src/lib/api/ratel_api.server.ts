@@ -194,20 +194,6 @@ export async function getUserInfo(): Promise<{
   );
 }
 
-// DEPRECATED: Use embedded permissions in v3 team detail instead
-export function getPermission(
-  teamUsername: string,
-  permission: GroupPermission,
-): Promise<{ key: (string | number)[]; data: Permission | null }> {
-  // This function still uses legacy approach, but fixed to use team_pk
-  // Convert username to pk by looking up team first - this is inefficient
-  // TODO: Refactor spaces to use v3 embedded permissions
-  return getDataFromServer<Permission>(
-    [QK_GET_PERMISSION, teamUsername, permission],
-    ratelApi.permissions._legacy_getPermissions(teamUsername, permission), // Note: Still broken, needs team_pk not username
-  );
-}
-
 export async function getPosts(
   page: number,
   size: number,

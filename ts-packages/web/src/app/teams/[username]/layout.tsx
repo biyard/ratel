@@ -15,11 +15,7 @@ import {
 
 export default function TeamLayout() {
   const { username } = useParams<{ username: string }>();
-  console.log('TeamLayout: useParams result:', { username });
-  console.log(
-    'TeamLayout: window.location.pathname:',
-    window.location.pathname,
-  );
+
   logger.debug('TeamLayout: username', username);
 
   if (!username) {
