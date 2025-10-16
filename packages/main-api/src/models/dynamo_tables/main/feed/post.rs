@@ -1,7 +1,7 @@
 use crate::{
     Error2,
     models::{PostCommentLike, team::Team, user::User},
-    types::{author::Author, sorted_visibility::SortedVisibility, *},
+    types::{author::Author, *},
 };
 use bdk::prelude::*;
 
@@ -24,6 +24,7 @@ pub struct Post {
     #[dynamo(index = "gsi6", sk)]
     #[dynamo(index = "gsi1", sk)]
     pub created_at: i64,
+    #[dynamo(index = "gsi2", order = 2, sk)]
     pub updated_at: i64,
 
     pub title: String,
@@ -34,6 +35,7 @@ pub struct Post {
     pub status: PostStatus,
 
     #[dynamo(index = "gsi6", name = "find_by_visibility", pk)]
+    #[dynamo(index = "gsi2", order = 1, sk)]
     pub visibility: Option<Visibility>,
 
     pub shares: i64,
@@ -62,13 +64,11 @@ pub struct Post {
     // #[dynamo(prefix = "SPACE_PK", name = "find_by_space_pk", index = "gsi2", pk)]
     pub space_pk: Option<Partition>,
     pub space_type: Option<SpaceType>,
+    pub space_visibility: Option<SpaceVisibility>,
     pub booster: Option<BoosterType>,
     // only for reward spaces
     pub rewards: Option<i64>,
 
-    // Only for list posts Composed key
-    #[dynamo(index = "gsi2", sk)]
-    pub sorted_visibility: SortedVisibility,
     pub urls: Vec<String>,
 }
 
@@ -117,8 +117,8 @@ impl Post {
             space_type: None,
             booster: None,
             rewards: None,
-            sorted_visibility: SortedVisibility::Draft(now.to_string()),
             urls: vec![],
+            space_visibility: None,
         }
     }
 
