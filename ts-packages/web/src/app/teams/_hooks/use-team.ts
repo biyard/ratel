@@ -43,10 +43,6 @@ export function useTeamDetailByUsername(username: string) {
     queryKey: [QK_GET_TEAM_BY_USERNAME + '_detail_v3_fix2', username],
     queryFn: async () => {
       try {
-        console.log(
-          'useTeamDetailByUsername: called with username parameter:',
-          username,
-        );
         logger.debug(
           'useTeamDetailByUsername: calling with username:',
           username,

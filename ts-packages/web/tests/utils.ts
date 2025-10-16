@@ -1,4 +1,4 @@
-import { expect, Locator, Page } from '@playwright/test';
+import { expect, Locator, Page, TestInfo } from '@playwright/test';
 import { CONFIGS } from './config';
 // Screenshot util class
 export type BiyardPage = Page & {
