@@ -50,10 +50,6 @@ pub async fn create_response_answer_handler(
     Json(req): Json<CreateResponseAnswerRequest>,
 ) -> Result<Json<DeliberationResponse>, Error2> {
     let user = extract_user_from_session(&dynamo.client, &session).await?;
-    let pk_id = match space_pk.clone() {
-        Partition::Space(v) => v,
-        _ => "".to_string(),
-    };
     let survey_pk_id = match req.survey_pk {
         Partition::Survey(v) => v,
         _ => "".to_string(),
@@ -71,7 +67,7 @@ pub async fn create_response_answer_handler(
     }
 
     let response = DeliberationSpaceResponse::new(
-        Partition::Space(pk_id.to_string()),
+        space_pk.clone(),
         Partition::Survey(survey_pk_id.to_string()),
         req.survey_type,
         req.answers,
