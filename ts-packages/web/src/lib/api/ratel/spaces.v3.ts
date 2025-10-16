@@ -6,6 +6,10 @@ export type CreateSpaceResponse = {
   space_pk: string;
 };
 
+export function getSpaceByPostPk(postPk: string): Promise<unknown> {
+  return call('GET', `/v3/spaces/${encodeURIComponent(postPk)}`);
+}
+
 export function createSpace(
   postPk: string,
   spaceType: SpaceType,
