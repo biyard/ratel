@@ -20,7 +20,7 @@ export const SPACE_DEFINITIONS: SpaceDefinition[] = [
     canBoost: true,
   },
   {
-    type: SpaceType.Notice,
+    type: SpaceType.Quiz,
     Icon: <Mega />,
     labelKey: 'notice.label',
     descKey: 'notice.desc',

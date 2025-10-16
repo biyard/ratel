@@ -17,6 +17,10 @@ export class TeamGroupPermissions {
   has(permission: TeamGroupPermission): boolean {
     return this.set.has(permission);
   }
+
+  isAdmin(): boolean {
+    return this.has(TeamGroupPermission.TeamAdmin);
+  }
 }
 
 export enum TeamGroupPermission {
