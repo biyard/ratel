@@ -1,7 +1,11 @@
+mod dynamo_index;
+
 use std::collections::HashMap;
 
 use convert_case::Casing;
+use dynamo_index::DynamoIndex;
 use proc_macro::TokenStream;
+use proc_macro2::Span;
 use quote::{quote, ToTokens};
 use syn::{
     parse_macro_input, Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Ident,
@@ -57,6 +61,7 @@ struct FieldInfo {
 }
 
 impl FieldInfo {
+    // #[allow(dead_code)]
     pub fn is_option(&self) -> bool {
         use syn::{Type, TypePath};
         match &self.ty {
@@ -68,12 +73,6 @@ impl FieldInfo {
             _ => false,
         }
     }
-    // pub fn is_option(&self) -> bool {
-    //     self.ty
-    //         .to_token_stream()
-    //         .to_string()
-    //         .starts_with("Option <")
-    // }
 
     // Parse Option<A> => A, otherwise return original type
     pub fn inner_type(&self) -> Type {
@@ -217,11 +216,19 @@ fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
 fn parse_fields(
     ds: &DataStruct,
     cfg: &StructCfg,
-) -> Result<(Vec<FieldInfo>, HashMap<String, String>), syn::Error> {
+) -> Result<
+    (
+        Vec<FieldInfo>,
+        HashMap<String, String>,
+        HashMap<String, DynamoIndex>,
+    ),
+    syn::Error,
+> {
     let mut out = vec![];
     let pk = &cfg.pk_name;
     let sk = cfg.sk_name.clone().unwrap_or_default();
     let mut indice_fn: HashMap<String, String> = HashMap::new();
+    let mut indice_v2: HashMap<String, DynamoIndex> = HashMap::new();
 
     if let Fields::Named(named) = &ds.fields {
         for f in &named.named {
@@ -243,6 +250,7 @@ fn parse_fields(
                 let mut idx_pk = false;
                 let mut idx_sk = false;
                 let mut idx_prefix: Option<String> = None;
+                let mut order: Option<i32> = None;
 
                 let _ = attr.parse_nested_meta(|meta| {
                     if meta.path.is_ident("pk") {
@@ -267,6 +275,12 @@ fn parse_fields(
                                 fn_name = Some(s.value());
                             }
                         }
+                    } else if meta.path.is_ident("order") {
+                        if let Ok(value) = meta.value() {
+                            if let Ok(lit) = value.parse::<syn::LitInt>() {
+                                order = lit.base10_parse::<i32>().ok();
+                            }
+                        }
                     }
 
                     Ok(())
@@ -282,36 +296,113 @@ fn parse_fields(
                 }
 
                 if idx_name.is_some() && (idx_pk || idx_sk) {
+                    let idx_name = idx_name.clone().unwrap();
+
                     info.indice.push(IndexInfo {
-                        name: fn_name,
-                        base_index_name: idx_name.unwrap(),
+                        name: fn_name.clone(),
+                        base_index_name: idx_name.clone(),
                         pk: idx_pk,
                         sk: idx_sk,
                         prefix: idx_prefix.clone(),
                     });
+
+                    let idx = if let Some(idx) = indice_v2.get_mut(&idx_name) {
+                        idx
+                    } else {
+                        indice_v2.insert(
+                            idx_name.clone(),
+                            DynamoIndex {
+                                name: format!("query_on_{}", &idx_name),
+                                base_index_name: idx_name.clone(),
+                                ..Default::default()
+                            },
+                        );
+                        indice_v2.get_mut(&idx_name).unwrap()
+                    };
+
+                    if let Some(fn_name) = fn_name {
+                        idx.name = fn_name.clone();
+                    }
+
+                    if idx_pk {
+                        if let Some(prefix) = idx_prefix {
+                            idx.pk.prefix = Some(prefix.to_case(convert_case::Case::UpperSnake));
+                        }
+
+                        let order = if let Some(i) = order {
+                            i
+                        } else {
+                            if let Some(ref last) = idx.pk.fields.last() {
+                                last.2 + 1
+                            } else {
+                                0
+                            }
+                        };
+
+                        idx.pk.fields.push((ident.clone(), f.ty.clone(), order));
+                        idx.pk.fields.sort_by_key(|t| t.2);
+                    } else if idx_sk {
+                        let sk = if let Some(ref mut sk) = idx.sk {
+                            sk
+                        } else {
+                            idx.sk = Some(dynamo_index::DynamoIndexKey {
+                                prefix: None,
+                                fields: vec![],
+                            });
+                            idx.sk.as_mut().unwrap()
+                        };
+
+                        if let Some(prefix) = idx_prefix {
+                            sk.prefix = Some(prefix.to_case(convert_case::Case::UpperSnake));
+                        }
+
+                        let order = if let Some(i) = order {
+                            i
+                        } else {
+                            if let Some(ref last) = sk.fields.last() {
+                                last.2 + 1
+                            } else {
+                                0
+                            }
+                        };
+
+                        sk.fields.push((ident.clone(), f.ty.clone(), order));
+                        sk.fields.sort_by_key(|t| t.2);
+                    }
                 }
             }
             out.push(info);
         }
     }
 
-    Ok((out, indice_fn))
+    Ok((out, indice_fn, indice_v2))
 }
 
 fn generate_key_composers(fields: &Vec<FieldInfo>) -> Vec<proc_macro2::TokenStream> {
     let mut out = vec![];
+    let mut created_functions = HashMap::new();
 
     for f in fields.iter() {
         for idx in f.indice.iter() {
             let idx_base = idx.base_index_name.clone();
-            let cname = Ident::new(
-                &format!("compose_{}_{}", idx_base, if idx.pk { "pk" } else { "sk" }),
-                proc_macro2::Span::call_site(),
-            );
+            let fk = format!("compose_{}_{}", idx_base, if idx.pk { "pk" } else { "sk" });
+            let cname = Ident::new(&fk, proc_macro2::Span::call_site());
+
+            if created_functions.contains_key(&fk) {
+                continue;
+            }
+            created_functions.insert(fk.clone(), true);
 
             let token = if let Some(ref prefix) = idx.prefix {
+                let comp = syn::LitStr::new(&format!("{}#", prefix), Span::call_site());
+
                 quote! {
                     pub fn #cname(key: impl std::fmt::Display) -> String {
+                        let key = key.to_string();
+                        if key.starts_with(#comp) {
+                            return key;
+                        }
+
                         format!("{}#{}", #prefix, key)
                     }
                 }
@@ -410,6 +501,16 @@ fn generate_updater(
             ),
             proc_macro2::Span::call_site(),
         );
+        let is_opt = f.is_option();
+        let inner_setter = if is_opt {
+            quote! {
+                self.inner.#var_name = Some(#var_name);
+            }
+        } else {
+            quote! {
+                self.inner.#var_name = #var_name;
+            }
+        };
         let fn_increase = Ident::new(
             &format!(
                 "increase_{}",
@@ -437,9 +538,9 @@ fn generate_updater(
             let idx_base_snake = &idx.base_index_name;
             let composer_ident = Ident::new(
                 &format!(
-                    "compose_{}_{}",
+                    "get_{}_for_{}",
+                    if idx.pk { "pk" } else { "sk" },
                     idx_base_snake,
-                    if idx.pk { "pk" } else { "sk" }
                 ),
                 proc_macro2::Span::call_site(),
             );
@@ -470,21 +571,26 @@ fn generate_updater(
             );
 
             gsi_put_updates.push(quote! {
-                self.m.insert(
-                    #idx_key_name.to_string(),
-                    aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
-                        .value(aws_sdk_dynamodb::types::AttributeValue::S(
-                            #ident::#composer_ident(#var_name.clone())
-                        ))
-                        .action(aws_sdk_dynamodb::types::AttributeAction::Put)
-                        .build(),
-                );
+                let value = self.inner.#composer_ident();
 
-                self.set_update_expressions.push(#f_str.to_string());
-                self.expression_attribute_names.insert(#an_var.to_string(), stringify!(#idx_key_name).to_string());
-                self.expression_attribute_values.insert(#av_var.to_string(), aws_sdk_dynamodb::types::AttributeValue::S(
-                    #ident::#composer_ident(#var_name.clone())
-                ));
+                if !value.is_empty() {
+                    self.m.insert(
+                        #idx_key_name.to_string(),
+                        aws_sdk_dynamodb::types::AttributeValueUpdate::builder()
+                            .value(aws_sdk_dynamodb::types::AttributeValue::S(
+                                self.inner.#composer_ident()
+                            ))
+                            .action(aws_sdk_dynamodb::types::AttributeAction::Put)
+                            .build(),
+                    );
+
+                    self.set_update_expressions.push(#f_str.to_string());
+                    self.expression_attribute_names.insert(#an_var.to_string(), stringify!(#idx_key_name).to_string());
+                    self.expression_attribute_values.insert(#av_var.to_string(), aws_sdk_dynamodb::types::AttributeValue::S(
+                        self.inner.#composer_ident()
+                    ));
+
+                }
             });
         }
 
@@ -547,6 +653,8 @@ fn generate_updater(
                     .action(aws_sdk_dynamodb::types::AttributeAction::Put)
                     .build();
                 self.m.insert(stringify!(#var_name).to_string(), v);
+
+                #inner_setter
 
                 self.set_update_expressions.push(#f_str.to_string());
                 self.expression_attribute_names.insert(#an_var.to_string(), stringify!(#var_name).to_string());
@@ -640,6 +748,7 @@ fn generate_updater(
     quote! {
         pub struct #updater_ident {
             #key_fields
+            inner: #ident,
             m: std::collections::HashMap<String, aws_sdk_dynamodb::types::AttributeValueUpdate>,
             set_update_expressions: Vec<String>,
             remove_update_expressions: Vec<String>,
@@ -659,6 +768,7 @@ fn generate_updater(
                 ]);
 
                 #updater_ident {
+                    inner: Default::default(),
                     m: std::collections::HashMap::new(),
                     k,
                     set_update_expressions: vec![],
@@ -763,7 +873,7 @@ fn generate_struct_impl(
 ) -> proc_macro2::TokenStream {
     let st_name = ident.to_string();
 
-    let (fields, indice_fn) = match parse_fields(ds, &s_cfg) {
+    let (fields, indice_fn, indice_v2) = match parse_fields(ds, &s_cfg) {
         Ok(v) => v,
         Err(e) => return e.to_compile_error(),
     };
@@ -833,7 +943,7 @@ fn generate_struct_impl(
     };
 
     let st_query_option = generate_query_option(&st_name, &s_cfg);
-    let query_fn = generate_query_fn(&st_name, &s_cfg, &fields, &indice_fn);
+    let query_fn = generate_query_fn(&st_name, &s_cfg, &fields, &indice_fn, &indice_v2);
     let key_composers = generate_key_composers(&fields);
     let updater = generate_updater(&ident, &s_cfg, &fields);
     let opt_name = format!("{}QueryOption", st_name.to_case(convert_case::Case::Pascal));
@@ -860,6 +970,11 @@ fn generate_struct_impl(
         syn::LitStr::new(&condition, proc_macro2::Span::call_site())
     };
 
+    let mut idx_fns_v2 = vec![];
+    for (_, idx) in indice_v2.iter() {
+        idx_fns_v2.push(idx.generate());
+    }
+
     let out = quote! {
         #st_query_option
 
@@ -870,6 +985,8 @@ fn generate_struct_impl(
 
         impl #ident {
             #(#key_composers)*
+
+            #(#idx_fns_v2)*
 
             pub fn table_name() -> &'static str {
                 #table_lit_str
@@ -1380,61 +1497,6 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
     }
 }
 
-fn get_additional_fields_for_indice(field: &FieldInfo) -> Vec<proc_macro2::TokenStream> {
-    let mut out = vec![];
-    let is_option = field.is_option();
-
-    for idx in field.indice.iter() {
-        let key_name = format!(
-            "{}_{}",
-            idx.base_index_name,
-            if idx.pk { "pk" } else { "sk" }
-        );
-        let key_name = syn::LitStr::new(&key_name, proc_macro2::Span::call_site());
-        let var_name = &field.ident;
-        if let Some(ref prefix) = idx.prefix {
-            out.push(
-                if is_option {
-                    quote! {
-                        if let Some(ref v) = self.#var_name {
-                            item.insert(
-                                #key_name.to_string(),
-                                aws_sdk_dynamodb::types::AttributeValue::S(format!("{}#{}", #prefix, v)),
-                            );
-                        }
-                    }
-                } else {
-                    quote! {
-                        item.insert(
-                            #key_name.to_string(),
-                            aws_sdk_dynamodb::types::AttributeValue::S(format!("{}#{}", #prefix, self.#var_name)),
-                        );
-                    }
-                });
-        } else {
-            out.push(if is_option {
-                quote! {
-                    if let Some(ref v) = self.#var_name {
-                        item.insert(
-                            #key_name.to_string(),
-                            aws_sdk_dynamodb::types::AttributeValue::S(v.to_string()),
-                        );
-                    }
-                }
-            } else {
-                quote! {
-                    item.insert(
-                        #key_name.to_string(),
-                        aws_sdk_dynamodb::types::AttributeValue::S(self.#var_name.to_string()),
-                    );
-                }
-            });
-        };
-    }
-
-    out.into()
-}
-
 fn generate_index_fn(
     st_name: &str,
     cfg: &StructCfg,
@@ -1567,6 +1629,7 @@ fn generate_query_fn(
     cfg: &StructCfg,
     fields: &Vec<FieldInfo>,
     indice_name_map: &HashMap<String, String>,
+    indice: &HashMap<String, DynamoIndex>,
 ) -> proc_macro2::TokenStream {
     let opt_name = format!("{}QueryOption", st_name.to_case(convert_case::Case::Pascal));
     let _opt_ident = Ident::new(&opt_name, proc_macro2::Span::call_site());
@@ -1575,9 +1638,13 @@ fn generate_query_fn(
     let _sk = cfg.sk_name.clone().unwrap_or_default();
     let mut idx_fields_insert = vec![];
 
-    for f in fields.iter() {
-        let mut idx_fields = get_additional_fields_for_indice(f);
-        idx_fields_insert.append(&mut idx_fields);
+    // for f in fields.iter() {
+    //     let mut idx_fields = get_additional_fields_for_indice(f);
+    //     idx_fields_insert.append(&mut idx_fields);
+    // }
+
+    for (_, idx) in indice.iter() {
+        idx_fields_insert.push(idx.get_additional_fields());
     }
 
     let common_query_fn = generate_query_common_fn();

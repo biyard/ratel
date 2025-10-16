@@ -1,10 +1,8 @@
 use crate::{
     AppState, Error2,
+    controllers::v3::spaces::dto::*,
     models::{
-        space::{
-            PollSpaceMetadata, PollSpacePathParam, PollSpaceResponse, PollSpaceSurveyResponse,
-            SpaceCommon,
-        },
+        space::{PollSpaceMetadata, SpaceCommon},
         user::User,
     },
     types::{EntityType, Partition, TeamGroupPermission},
@@ -16,6 +14,7 @@ use by_axum::axum::{
     extract::{Path, State},
 };
 
+use super::dto::*;
 use aide::NoApi;
 use serde::Deserialize;
 
@@ -27,9 +26,7 @@ pub type GetPollSpaceResponse = PollSpaceResponse;
 pub async fn get_poll_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-    Path(PollSpacePathParam {
-        poll_space_pk: space_pk,
-    }): Path<PollSpacePathParam>,
+    Path(SpacePathParam { space_pk }): SpacePath,
 ) -> Result<Json<GetPollSpaceResponse>, Error2> {
     // Request Validation
     if !matches!(space_pk, Partition::Space(_)) {

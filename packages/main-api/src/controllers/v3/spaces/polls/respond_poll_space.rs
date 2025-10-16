@@ -1,6 +1,5 @@
-use crate::models::space::{
-    PollSpace, PollSpacePathParam, PollSpaceSurvey, PollSpaceSurveyResponse, SpaceCommon,
-};
+use crate::controllers::v3::spaces::dto::*;
+use crate::models::space::{PollSpace, PollSpaceSurvey, SpaceCommon};
 
 use crate::models::user::User;
 use crate::types::{EntityType, Partition, SurveyAnswer, TeamGroupPermission, validate_answers};
@@ -8,6 +7,7 @@ use crate::{AppState, Error2};
 
 use aide::NoApi;
 
+use super::dto::*;
 use axum::extract::{Json, Path, State};
 use bdk::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -17,7 +17,7 @@ pub struct RespondPollSpaceRequest {
     answers: Vec<SurveyAnswer>,
 }
 
-#[derive(Debug, Serialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct RespondPollSpaceResponse {
     poll_space_pk: Partition,
 }
@@ -25,18 +25,18 @@ pub struct RespondPollSpaceResponse {
 pub async fn respond_poll_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): aide::NoApi<User>,
-    Path(PollSpacePathParam { poll_space_pk }): Path<PollSpacePathParam>,
+    Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<RespondPollSpaceRequest>,
 ) -> Result<Json<RespondPollSpaceResponse>, Error2> {
     //Validate Request
 
-    let poll_space = PollSpace::get(&dynamo.client, &poll_space_pk, Some(EntityType::Space))
+    let poll_space = PollSpace::get(&dynamo.client, &space_pk, Some(EntityType::Space))
         .await?
         .ok_or(Error2::NotFoundPollSpace)?;
 
     let (space, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
-        &poll_space_pk,
+        &space_pk,
         Some(&user.pk),
         TeamGroupPermission::SpaceRead,
     )
@@ -51,13 +51,10 @@ pub async fn respond_poll_space_handler(
     }
 
     //Validate Answers
-    let poll_space_survey = PollSpaceSurvey::get(
-        &dynamo.client,
-        &poll_space_pk,
-        Some(EntityType::PollSpaceSurvey),
-    )
-    .await?
-    .ok_or(Error2::NotFoundPollSpace)?;
+    let poll_space_survey =
+        PollSpaceSurvey::get(&dynamo.client, &space_pk, Some(EntityType::PollSpaceSurvey))
+            .await?
+            .ok_or(Error2::NotFoundPollSpace)?;
 
     if !validate_answers(poll_space_survey.questions, req.answers.clone()) {
         return Err(Error2::AnswersMismatchQuestions);
@@ -68,9 +65,7 @@ pub async fn respond_poll_space_handler(
     if let Some(response) = PollSpaceSurveyResponse::get(
         &dynamo.client,
         Partition::PollSpaceResponse(user.pk.to_string()),
-        Some(EntityType::PollSpaceSurveyResponse(
-            poll_space_pk.to_string(),
-        )),
+        Some(EntityType::PollSpaceSurveyResponse(space_pk.to_string())),
     )
     .await?
     {
@@ -81,11 +76,11 @@ pub async fn respond_poll_space_handler(
         transact_items.push(update_tx);
     } else {
         let create_tx =
-            PollSpaceSurveyResponse::new(poll_space_pk.clone(), user.pk.clone(), req.answers)
+            PollSpaceSurveyResponse::new(space_pk.clone(), user.pk.clone(), req.answers)
                 .create_transact_write_item();
         transact_items.push(create_tx);
 
-        let space_increment_tx = PollSpace::updater(&poll_space_pk, &poll_space.sk)
+        let space_increment_tx = PollSpace::updater(&space_pk, &poll_space.sk)
             .increase_user_response_count(1)
             .transact_write_item();
         transact_items.push(space_increment_tx);
@@ -101,5 +96,7 @@ pub async fn respond_poll_space_handler(
             tracing::error!("Failed to respond poll space: {}", e);
             Error2::InternalServerError("Failed to respond poll space".into())
         })?;
-    Ok(Json(RespondPollSpaceResponse { poll_space_pk }))
+    Ok(Json(RespondPollSpaceResponse {
+        poll_space_pk: space_pk,
+    }))
 }
