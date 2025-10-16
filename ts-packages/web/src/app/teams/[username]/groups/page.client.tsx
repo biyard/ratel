@@ -58,7 +58,7 @@ export default function TeamGroups({ username }: { username: string }) {
       // Extract the UUID from groupSk (format: TEAM_GROUP#uuid)
       const groupId = groupSk.split('#')[1];
 
-      // Use team username and group ID for the delete API
+      // Use team username (not team_pk) for the delete API
       await teamsV3Api.deleteGroup(username, groupId);
 
       // Invalidate all team-related queries to ensure fresh data

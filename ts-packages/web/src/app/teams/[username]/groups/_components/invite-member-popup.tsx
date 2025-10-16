@@ -145,10 +145,8 @@ export default function InviteMemberPopup({
       const originalGroup = groups[groupIndex];
       const groupId = originalGroup.sk.split('#')[1];
 
-      // Extract just the UUID from teamId (format: TEAM#uuid)
-      const teamUuid = teamId.split('#')[1];
-
-      const result = await teamsV3Api.addGroupMember(teamUuid, groupId, {
+      // Use team PK (with TEAM# prefix) directly - no need to extract UUID
+      const result = await teamsV3Api.addGroupMember(teamId, groupId, {
         user_pks: selectedUsers.map((u) => u.pk),
       });
 

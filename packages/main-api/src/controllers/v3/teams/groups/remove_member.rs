@@ -46,14 +46,11 @@ pub async fn remove_member_handler(
 ) -> Result<Json<RemoveMemberResponse>, Error2> {
     let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
 
-    // Construct the full team PK from the UUID
-    let team_pk = format!("TEAM#{}", params.team_pk);
-
     check_any_permission_with_user(
         &dynamo.client,
         &user,
         RatelResource::Team {
-            team_pk: team_pk.clone(),
+            team_pk: params.team_pk.clone(),
         },
         vec![
             TeamGroupPermission::GroupEdit,
@@ -63,10 +60,10 @@ pub async fn remove_member_handler(
     )
     .await?;
 
-    let team = Team::get(&dynamo.client, &team_pk, Some(EntityType::Team)).await?;
+    let team = Team::get(&dynamo.client, &params.team_pk, Some(EntityType::Team)).await?;
     let team_group = TeamGroup::get(
         &dynamo.client,
-        &team_pk,
+        &params.team_pk,
         Some(EntityType::TeamGroup(params.group_sk.clone())),
     )
     .await?;

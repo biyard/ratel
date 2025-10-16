@@ -1,5 +1,8 @@
+use crate::{
+    AppState, Error2,
+    models::{team::TeamMetadata, user::User},
+};
 use bdk::prelude::*;
-use crate::{AppState, Error2, models::{team::TeamMetadata, user::User}};
 use by_axum::{
     aide::NoApi,
     axum::{

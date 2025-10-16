@@ -2,6 +2,7 @@ use crate::models::{team::TeamGroup, user::User};
 use crate::types::{TeamGroupPermission, TeamGroupPermissions};
 use crate::utils::security::{RatelResource, check_any_permission_with_user};
 use crate::{AppState, Error2};
+use bdk::prelude::*;
 use by_axum::{
     aide::NoApi,
     axum::{
@@ -10,7 +11,6 @@ use by_axum::{
     },
 };
 use serde::Deserialize;
-use bdk::prelude::*;
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct UpdateGroupPathParams {

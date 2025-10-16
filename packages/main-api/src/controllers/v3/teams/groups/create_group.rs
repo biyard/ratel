@@ -7,6 +7,7 @@ use crate::{
     types::{EntityType, TeamGroupPermission, TeamGroupPermissions},
     utils::security::{RatelResource, check_any_permission_with_user},
 };
+use bdk::prelude::*;
 use by_axum::{
     aide::NoApi,
     axum::{
@@ -15,7 +16,6 @@ use by_axum::{
     },
 };
 use serde::{Deserialize, Serialize};
-use bdk::prelude::*;
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct CreateGroupPathParams {
@@ -43,6 +43,7 @@ pub async fn create_group_handler(
     Json(req): Json<CreateGroupRequest>,
 ) -> Result<Json<CreateGroupResponse>, Error2> {
     let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
+
     // If Admin permissions are requested, require TeamAdmin
     let required_permissions = if req
         .permissions
@@ -99,8 +100,15 @@ pub async fn create_group_handler(
         .execute(&dynamo.client)
         .await?;
 
+    // Extract just the UUID from EntityType::TeamGroup(uuid)
+    let group_uuid = if let EntityType::TeamGroup(uuid) = &group_sk {
+        uuid.clone()
+    } else {
+        group_sk.to_string()
+    };
+
     Ok(Json(CreateGroupResponse {
         group_pk: group_pk.to_string(),
-        group_sk: group_sk.to_string(),
+        group_sk: group_uuid,
     }))
 }
