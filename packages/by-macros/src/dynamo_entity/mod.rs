@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use convert_case::Casing;
 use dynamo_index::DynamoIndex;
 use proc_macro::TokenStream;
+use proc_macro2::Span;
 use quote::{quote, ToTokens};
 use syn::{
     parse_macro_input, Attribute, Data, DataEnum, DataStruct, DeriveInput, Fields, Ident,
@@ -339,6 +340,7 @@ fn parse_fields(
                         };
 
                         idx.pk.fields.push((ident.clone(), f.ty.clone(), order));
+                        idx.pk.fields.sort_by_key(|t| t.2);
                     } else if idx_sk {
                         let sk = if let Some(ref mut sk) = idx.sk {
                             sk
@@ -365,6 +367,7 @@ fn parse_fields(
                         };
 
                         sk.fields.push((ident.clone(), f.ty.clone(), order));
+                        sk.fields.sort_by_key(|t| t.2);
                     }
                 }
             }
@@ -377,18 +380,29 @@ fn parse_fields(
 
 fn generate_key_composers(fields: &Vec<FieldInfo>) -> Vec<proc_macro2::TokenStream> {
     let mut out = vec![];
+    let mut created_functions = HashMap::new();
 
     for f in fields.iter() {
         for idx in f.indice.iter() {
             let idx_base = idx.base_index_name.clone();
-            let cname = Ident::new(
-                &format!("compose_{}_{}", idx_base, if idx.pk { "pk" } else { "sk" }),
-                proc_macro2::Span::call_site(),
-            );
+            let fk = format!("compose_{}_{}", idx_base, if idx.pk { "pk" } else { "sk" });
+            let cname = Ident::new(&fk, proc_macro2::Span::call_site());
+
+            if created_functions.contains_key(&fk) {
+                continue;
+            }
+            created_functions.insert(fk.clone(), true);
 
             let token = if let Some(ref prefix) = idx.prefix {
+                let comp = syn::LitStr::new(&format!("{}#", prefix), Span::call_site());
+
                 quote! {
                     pub fn #cname(key: impl std::fmt::Display) -> String {
+                        let key = key.to_string();
+                        if key.starts_with(#comp) {
+                            return key;
+                        }
+
                         format!("{}#{}", #prefix, key)
                     }
                 }
@@ -1482,61 +1496,6 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
 
     }
 }
-
-// fn get_additional_fields_for_indice(field: &FieldInfo) -> Vec<proc_macro2::TokenStream> {
-//     let mut out = vec![];
-//     let is_option = field.is_option();
-
-//     for idx in field.indice.iter() {
-//         let key_name = format!(
-//             "{}_{}",
-//             idx.base_index_name,
-//             if idx.pk { "pk" } else { "sk" }
-//         );
-//         let key_name = syn::LitStr::new(&key_name, proc_macro2::Span::call_site());
-//         let var_name = &field.ident;
-//         if let Some(ref prefix) = idx.prefix {
-//             out.push(
-//                 if is_option {
-//                     quote! {
-//                         if let Some(ref v) = self.#var_name {
-//                             item.insert(
-//                                 #key_name.to_string(),
-//                                 aws_sdk_dynamodb::types::AttributeValue::S(format!("{}#{}", #prefix, v)),
-//                             );
-//                         }
-//                     }
-//                 } else {
-//                     quote! {
-//                         item.insert(
-//                             #key_name.to_string(),
-//                             aws_sdk_dynamodb::types::AttributeValue::S(format!("{}#{}", #prefix, self.#var_name)),
-//                         );
-//                     }
-//                 });
-//         } else {
-//             out.push(if is_option {
-//                 quote! {
-//                     if let Some(ref v) = self.#var_name {
-//                         item.insert(
-//                             #key_name.to_string(),
-//                             aws_sdk_dynamodb::types::AttributeValue::S(v.to_string()),
-//                         );
-//                     }
-//                 }
-//             } else {
-//                 quote! {
-//                     item.insert(
-//                         #key_name.to_string(),
-//                         aws_sdk_dynamodb::types::AttributeValue::S(self.#var_name.to_string()),
-//                     );
-//                 }
-//             });
-//         };
-//     }
-
-//     out.into()
-// }
 
 fn generate_index_fn(
     st_name: &str,

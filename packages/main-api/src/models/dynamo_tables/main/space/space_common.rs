@@ -58,14 +58,17 @@ pub struct SpaceCommon {
     pub updated_at: i64,
 
     pub status: Option<SpaceStatus>, // Waiting, InProgress, Finished
-    pub publish_state: SpacePublishState, // Draft, Published
+
     #[dynamo(
         prefix = "SPACE_COMMON_VIS",
         name = "find_by_visibility",
         index = "gsi6",
+        order = 2,
         pk
     )]
     pub visibility: SpaceVisibility, // Private, Public, Team(team_pk)
+    #[dynamo(index = "gsi6", order = 1, pk)]
+    pub publish_state: SpacePublishState, // Draft, Published
     #[dynamo(prefix = "POST_PK", name = "find_by_post_pk", index = "gsi2", pk)]
     pub post_pk: Partition,
 
