@@ -43,6 +43,7 @@ import { i18nDeliberationPage } from '@/app/spaces/deliberation/[id]/deliberatio
 import i18nPollSpacePage from '@/app/spaces/poll/[id]/i18n';
 import i18nSpaceSurveyComponent from '@/features/spaces/components/survey/i18n';
 import i18nSpaceSurveyReportComponent from '@/features/spaces/components/report/i18n';
+import { i18nSpaceTypeSelectModal } from '@/features/spaces/modals/space-type-selector-modal';
 export const LANGUAGES = ['en', 'ko'];
 
 export const resources = {
@@ -94,6 +95,7 @@ Object.entries({
   PollSpace: i18nPollSpacePage,
   SpaceSurvey: i18nSpaceSurveyComponent,
   SpaceSurveyReport: i18nSpaceSurveyReportComponent,
+  SpaceTypeSelectModal: i18nSpaceTypeSelectModal,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
