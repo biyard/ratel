@@ -1,4 +1,6 @@
-use crate::models::space::{SpaceCommon, SpaceCommonResponse, SpacePathParam};
+use crate::controllers::v3::spaces::dto::*;
+use crate::models::space::SpaceCommon;
+
 use crate::models::user::User;
 use crate::types::{SpacePublishState, SpaceVisibility, TeamGroupPermission};
 use crate::{AppState, Error2};

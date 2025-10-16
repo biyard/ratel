@@ -46,7 +46,7 @@ impl DeliberationSpaceResponse {
         // So, We can make USER_PK + SURVEY_SK is unique.
 
         let uid = uuid::Uuid::new_v4().to_string();
-        let sk = EntityType::DeliberationSpaceResponse(uid);
+        let sk = EntityType::DeliberationResponse(uid);
 
         Self {
             pk: deliberation_pk,
@@ -78,7 +78,7 @@ pub struct SurveyResponseResponse {
 impl From<DeliberationSpaceResponse> for SurveyResponseResponse {
     fn from(responses: DeliberationSpaceResponse) -> Self {
         let pk = match responses.clone().sk {
-            EntityType::DeliberationSpaceResponse(v) => v,
+            EntityType::DeliberationResponse(v) => v,
             _ => "".to_string(),
         };
 

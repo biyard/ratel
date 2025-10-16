@@ -128,11 +128,7 @@ run:
 	$(BUILD_ENV) cargo watch -x "run $(RUST_FLAG)" $(WATCH_TARGET)
 
 build:
-	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda
-	mkdir -p $(WORKSPACE_ROOT)/.build/$(SERVICE)
-	cp $(CARGO_TARGET_DIR)/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap
-	@echo "Building web frontend..."
-	@cd $(WORKSPACE_ROOT)/ts-packages/web && ENV=$(ENV) make build
+	$(BUILD_ENV) cargo build $(RUST_FLAG)
 
 build-only:
 	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda

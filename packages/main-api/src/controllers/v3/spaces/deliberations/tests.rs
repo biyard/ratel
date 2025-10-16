@@ -1,11 +1,9 @@
 use crate::controllers::v3::posts::create_post::CreatePostResponse;
-use crate::types::File;
+use crate::controllers::v3::spaces::CreateSpaceResponse;
+use crate::types::{File, SpaceType};
 use crate::*;
 use crate::{
-    controllers::v3::spaces::deliberations::{
-        create_deliberation::CreateDeliberationResponse,
-        delete_deliberation::DeleteDeliberationResponse,
-    },
+    controllers::v3::spaces::deliberations::delete_deliberation::DeleteDeliberationResponse,
     models::space::{DeliberationDetailResponse, DiscussionCreateRequest, SurveyCreateRequest},
     tests::{
         create_app_state, create_test_user, get_auth,
@@ -13,43 +11,6 @@ use crate::{
     },
     types::{ChoiceQuestion, LinearScaleQuestion, SpaceVisibility, SurveyQuestion, SurveyStatus},
 };
-
-#[tokio::test]
-async fn test_create_space_handler() {
-    let TestContextV3 {
-        app,
-        test_user: (user, headers),
-        ..
-    } = setup_v3().await;
-
-    //FIXME: fix by session and one test code
-    let _app_state = create_app_state();
-    let _auth = get_auth(&user);
-
-    let (_status, _headers, post) = post! {
-        app: app,
-        path: "/v3/posts",
-        headers: headers.clone(),
-        response_type: CreatePostResponse
-    };
-
-    let feed_pk = post.post_pk.clone();
-
-    println!("feed pk: {:?}", feed_pk);
-
-    // SPACE
-    let (status, _headers, _body) = post! {
-        app: app,
-        path: "/v3/spaces/deliberation",
-        headers: headers,
-        body: {
-            "feed_pk": feed_pk
-        },
-        response_type: CreateDeliberationResponse
-    };
-
-    assert_eq!(status, 200);
-}
 
 #[tokio::test]
 async fn test_update_space_handler() {
@@ -74,31 +35,30 @@ async fn test_update_space_handler() {
     let feed_pk = post.post_pk.clone();
 
     // SPACE
-
     let (_status, _headers, body) = post! {
         app: app,
-        path: "/v3/spaces/deliberation",
+        path: "/v3/spaces",
         headers: headers.clone(),
         body: {
-            "feed_pk": feed_pk
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
         },
-        response_type: CreateDeliberationResponse
+        response_type: CreateSpaceResponse
     };
 
-    let space_pk = body.metadata.deliberation.pk.clone();
+    let space_pk = body.space_pk.clone();
 
     println!("space_pk: {:?}", space_pk);
 
-    // create user
+    // // create user
     let team_1 = create_test_user(&cli).await.pk;
     let team_2 = create_test_user(&cli).await.pk;
 
-    let users = vec![team_1.clone(), team_2];
+    let users = vec![team_1.clone(), team_2.clone()];
 
     let now = chrono::Utc::now().timestamp();
-    let space_pk = body.metadata.deliberation.pk;
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/deliberation/{}", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/deliberation", space_pk_encoded);
 
     let (status, _headers, body) = post! {
         app: app,
@@ -187,6 +147,8 @@ async fn test_update_space_handler() {
 
     assert_eq!(status, 200);
 
+    println!("first body: {:?}", body);
+
     assert_eq!(
         body.summary.html_contents,
         "<div>deliberation description</div>".to_string()
@@ -206,7 +168,7 @@ async fn test_update_space_handler() {
     let discussion_id = body.discussions[0].pk.clone();
     let survey_id = body.surveys.pk.clone();
 
-    let updated_users = vec![team_1];
+    let updated_users = vec![team_1, team_2];
 
     let (status, _headers, body) = post! {
         app: app,
@@ -283,6 +245,8 @@ async fn test_update_space_handler() {
         response_type: DeliberationDetailResponse
     };
 
+    println!("body: {:?}", body);
+
     assert_eq!(status, 200);
 
     assert_eq!(
@@ -328,12 +292,13 @@ async fn test_delete_space_handler() {
 
     let (status, _headers, body) = post! {
         app: app,
-        path: "/v3/spaces/deliberation",
+        path: "/v3/spaces",
         headers: headers.clone(),
         body: {
-            "feed_pk": feed_pk
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
         },
-        response_type: CreateDeliberationResponse
+        response_type: CreateSpaceResponse
     };
 
     assert_eq!(status, 200);
@@ -345,9 +310,9 @@ async fn test_delete_space_handler() {
     let users = vec![team_1.clone(), team_2];
 
     let now = chrono::Utc::now().timestamp();
-    let space_pk = body.metadata.deliberation.pk;
+    let space_pk = body.space_pk;
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/deliberation/{}", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/deliberation", space_pk_encoded);
 
     let (status, _headers, _body) = post! {
         app: app,
@@ -437,9 +402,9 @@ async fn test_delete_space_handler() {
     assert_eq!(status, 200);
 
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/deliberation/{}/delete", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/deliberation", space_pk_encoded);
 
-    let (status, _headers, _body) = post! {
+    let (status, _headers, _body) = delete! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
@@ -472,24 +437,26 @@ async fn test_get_space_handler() {
     let feed_pk = post.post_pk.clone();
 
     // SPACE
+
     let (status, _headers, body) = post! {
         app: app,
-        path: "/v3/spaces/deliberation",
+        path: "/v3/spaces",
         headers: headers.clone(),
         body: {
-            "feed_pk": feed_pk
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
         },
-        response_type: CreateDeliberationResponse
+        response_type: CreateSpaceResponse
     };
 
     assert_eq!(status, 200);
 
-    let space_pk = body.metadata.deliberation.pk;
+    let space_pk = body.space_pk;
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
 
     println!("Created deliberation with space_pk: {}", space_pk_encoded);
 
-    let path = format!("/v3/spaces/deliberation/{}", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/deliberation", space_pk_encoded);
 
     let (status, _headers, body) = get! {
         app: app,

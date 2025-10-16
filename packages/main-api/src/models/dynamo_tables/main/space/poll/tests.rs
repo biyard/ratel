@@ -1,10 +1,8 @@
 use crate::{
+    controllers::v3::spaces::polls::dto::*,
     models::{
         feed::Post,
-        space::{
-            PollSpace, PollSpaceMetadata, PollSpaceResponse, PollSpaceSurvey,
-            PollSpaceSurveyResponse, SpaceCommon,
-        },
+        space::{PollSpace, PollSpaceMetadata, PollSpaceSurvey, SpaceCommon},
     },
     tests::{create_test_user, get_test_aws_config},
     types::{ChoiceQuestion, EntityType, Partition, SurveyAnswer, SurveyQuestion},
