@@ -5,14 +5,14 @@ export enum SpaceType {
   Nft = 4,
   Commitee = 5,
   SprintLeague = 6,
-  Notice = 7,
+  Quiz = 7,
   dAgit = 8,
 }
 
 export function getSpaceTypeLabel(type: SpaceType): string {
   switch (type) {
-    case SpaceType.Notice:
-      return 'Notice';
+    case SpaceType.Quiz:
+      return 'Quiz';
     case SpaceType.Deliberation:
       return 'Deliberation';
     case SpaceType.SprintLeague:

@@ -13,13 +13,15 @@ import { z } from 'zod';
 import ThreadPage from './app/(social)/threads/[id]/thread-page';
 
 // Space
-import SpaceLayout from './app/spaces/layout';
 import PollSpacePage from './app/spaces/poll/[id]/page';
 import { TestReportPage } from './app/test-report/test-report-page';
 import { StorybookPage } from './app/storybook/stroybook-page';
 import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
 import DeliberationSpacePage from './app/spaces/deliberation/[id]/page';
 import DiscussionPage from './app/spaces/deliberation/[id]/discussion/[discussion-id]/discussion-page';
+import SpaceByIdLayout from './app/spaces/[id]/space-by-id-layout';
+import { SpaceHomePage } from './app/spaces/[id]/space-home-page';
+import { SpaceSettingsPage } from './app/spaces/[id]/settings/space-settings-page';
 
 export const routes = createBrowserRouter([
   {
@@ -96,8 +98,21 @@ export const routes = createBrowserRouter([
       {
         id: 'space-layout',
         path: 'spaces/:spacePk',
-        Component: SpaceLayout,
+        Component: SpaceByIdLayout,
         children: [
+          // Space Common
+          {
+            id: 'space-home-page',
+            path: '',
+            Component: SpaceHomePage,
+          },
+          {
+            id: 'space-settings-page',
+            path: 'settings',
+            Component: SpaceSettingsPage,
+          },
+
+          // Space Features
           {
             id: 'poll-space',
             path: 'poll',
