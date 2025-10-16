@@ -35,6 +35,7 @@ use crate::controllers::v3::spaces::deliberations::responses::create_response_an
     DeliberationResponse, create_response_answer_handler,
 };
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
+use crate::controllers::v3::spaces::get_space_handler;
 use crate::controllers::v3::spaces::polls::dto::*;
 use crate::controllers::v3::spaces::deliberations::update_deliberation_deliberation::{
     UpdateDeliberationDeliberationResponse, update_deliberation_deliberation_handler,
@@ -368,7 +369,7 @@ pub fn route(
                             "Update Space",
                             "Update space details"
                         ),
-                    ),
+                    ).get(get_space_handler),
                 )
                 .nest(
                     "/:space_pk/deliberation",
@@ -426,7 +427,7 @@ pub fn route(
                                 )
                                 .route(
                                     "/:discussion_pk/meeting",
-                                    patch_with(
+                                    post_with(
                                         get_meeting_handler,
                                         api_docs!(
                                             Json<MeetingData>,
@@ -437,7 +438,7 @@ pub fn route(
                                 )
                                 .route(
                                     "/:discussion_pk/start-meeting",
-                                    patch_with(
+                                    post_with(
                                         start_meeting_handler,
                                         api_docs!(
                                             Json<DeliberationDiscussionResponse>,
@@ -448,7 +449,7 @@ pub fn route(
                                 )
                                 .route(
                                     "/:discussion_pk/participant-meeting",
-                                    patch_with(
+                                    post_with(
                                         participant_meeting_handler,
                                         api_docs!(
                                             Json<DeliberationDiscussionResponse>,
@@ -459,7 +460,7 @@ pub fn route(
                                 )
                                 .route(
                                     "/:discussion_pk/start-recording",
-                                    patch_with(
+                                    post_with(
                                         start_recording_handler,
                                         api_docs!(
                                             Json<DeliberationDiscussionResponse>,
@@ -470,7 +471,7 @@ pub fn route(
                                 )
                                 .route(
                                     "/:discussion_pk/end-recording",
-                                    patch_with(
+                                    post_with(
                                         end_recording_handler,
                                         api_docs!(
                                             Json<DeliberationDiscussionResponse>,
@@ -481,7 +482,7 @@ pub fn route(
                                 )
                                 .route(
                                     "/:discussion_pk/exit-meeting",
-                                    patch_with(
+                                    post_with(
                                         exit_meeting_handler,
                                         api_docs!(
                                             Json<DeliberationDiscussionResponse>,

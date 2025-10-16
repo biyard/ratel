@@ -4,12 +4,10 @@ import { useNavigate } from 'react-router';
 import { SpaceType } from '../../types/space-type';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { useCreateSpaceMutation } from '../../hooks/use-create-space-mutation';
-import { BoosterType } from '../../types/booster-type';
 import { showErrorToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { route } from '@/route';
 import { SPACE_DEFINITIONS } from '../../types/space-definition';
-import SpaceBoosterConfigModal from '../space-setting-modal';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import SpaceCreateModal from '.';
@@ -32,16 +30,9 @@ export class SpaceTypeSelectModalController {
   handleCreateSpace = async ({
     spaceType,
     postPk,
-    startedAt = null,
-    endedAt = null,
-    boosterType = null,
   }: {
     spaceType: SpaceType;
     postPk: string;
-    userPk?: string;
-    startedAt: number | null;
-    endedAt: number | null;
-    boosterType: BoosterType | null;
   }) => {
     if (this.isLoading.get()) return;
     this.isLoading.set(true);
@@ -50,9 +41,6 @@ export class SpaceTypeSelectModalController {
       const { space_pk } = await this.createSpace.mutateAsync({
         postPk,
         spaceType: this.selectedSpace.type,
-        startedAt,
-        endedAt,
-        booster: boosterType,
       });
 
       this.navigate(route.spaceByType(spaceType, space_pk));
@@ -87,26 +75,11 @@ export class SpaceTypeSelectModalController {
     }
 
     try {
-      if (this.selectedSpace.canBoost) {
-        this.popup
-          .open(
-            <SpaceBoosterConfigModal
-              postId={this.feed_id}
-              spaceType={this.selectedSpace.type}
-            />,
-          )
-          .withTitle(this.t('select_space_type'));
-        return;
-      }
-
       this.isLoading.set(true);
 
       await this.handleCreateSpace({
         spaceType: this.selectedSpace.type,
         postPk: this.feed_id,
-        startedAt: null,
-        endedAt: null,
-        boosterType: null,
       });
     } catch (error) {
       logger.error('Error in handleSend:', error);

@@ -21,15 +21,13 @@ pub async fn list_spaces_handler(
 ) -> Result<Json<ListItemsResponse<SpaceCommon>>, Error2> {
     let cli = &dynamo.client;
 
-    let spaces = SpaceCommon::find_by_visibility(
-        cli,
-        SpaceCommon::generate_pk_for_find_by_visibility(
-            crate::types::SpacePublishState::Published,
-            SpaceVisibility::Public,
-        ),
-        SpaceCommonQueryOption::builder().limit(10),
-    )
-    .await?;
+    let pk = SpaceCommon::generate_pk_for_find_by_visibility(
+        crate::types::SpacePublishState::Published,
+        SpaceVisibility::Public,
+    );
+    let spaces =
+        SpaceCommon::find_by_visibility(cli, pk, SpaceCommonQueryOption::builder().limit(10))
+            .await?;
 
     Ok(Json(spaces.into()))
 }

@@ -1,6 +1,5 @@
 use crate::models::feed::Post;
 use crate::models::user::User;
-use crate::types::sorted_visibility::SortedVisibility;
 use crate::types::{PostStatus, TeamGroupPermission, Visibility};
 use crate::utils::validator::{validate_content, validate_title};
 use crate::{AppState, Error2};
@@ -69,19 +68,8 @@ pub async fn update_post_handler(
             updater.with_urls(images)
         }
         UpdatePostRequest::Info { visibility } => {
-            let sorted_visibility = match visibility {
-                Visibility::TeamOnly(..) => {
-                    SortedVisibility::team_only(post.user_pk.clone(), post.created_at)?
-                }
-                Visibility::Public => SortedVisibility::public(post.created_at),
-            };
-
             post.visibility = Some(visibility.clone());
-            post.sorted_visibility = sorted_visibility.clone();
-
-            updater
-                .with_visibility(visibility)
-                .with_sorted_visibility(sorted_visibility)
+            updater.with_visibility(visibility)
         }
         UpdatePostRequest::Publish {
             publish,
@@ -95,15 +83,8 @@ pub async fn update_post_handler(
                 title
             );
             let visibility = visibility.unwrap_or_default();
-            let sorted_visibility = match visibility {
-                Visibility::TeamOnly(..) => {
-                    SortedVisibility::team_only(post.user_pk.clone(), post.created_at)?
-                }
-                Visibility::Public => SortedVisibility::public(post.created_at),
-            };
 
             post.visibility = Some(visibility.clone());
-            post.sorted_visibility = sorted_visibility.clone();
 
             if !publish {
                 // TODO: support unpublish if no dependencies
@@ -124,7 +105,6 @@ pub async fn update_post_handler(
                 .with_title(title)
                 .with_html_contents(content)
                 .with_visibility(visibility)
-                .with_sorted_visibility(sorted_visibility)
         }
     };
 

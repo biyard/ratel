@@ -11,6 +11,7 @@ pub mod error;
 pub mod models;
 pub mod route;
 // pub mod route_m3;
+pub(crate) mod macros;
 pub mod security;
 pub mod types;
 pub mod utils;
