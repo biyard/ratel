@@ -120,3 +120,13 @@ impl From<i64> for TeamGroupPermissions {
         Self(vec)
     }
 }
+
+impl Into<i64> for &TeamGroupPermissions {
+    fn into(self) -> i64 {
+        let mut result = 0;
+        for permission in &self.0 {
+            result |= 1 << *permission as i32;
+        }
+        result
+    }
+}

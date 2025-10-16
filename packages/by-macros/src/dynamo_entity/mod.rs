@@ -584,8 +584,11 @@ fn generate_updater(
                             .build(),
                     );
 
-                    self.set_update_expressions.push(#f_str.to_string());
-                    self.expression_attribute_names.insert(#an_var.to_string(), stringify!(#idx_key_name).to_string());
+                    if !self.set_update_expressions.contains(&#f_str.to_string()) {
+                        self.set_update_expressions.push(#f_str.to_string());
+                    }
+
+                    self.expression_attribute_names.insert(#an_var.to_string(), #idx_key_name.to_string());
                     self.expression_attribute_values.insert(#av_var.to_string(), aws_sdk_dynamodb::types::AttributeValue::S(
                         self.inner.#composer_ident()
                     ));
@@ -623,7 +626,7 @@ fn generate_updater(
                 );
 
                 self.remove_update_expressions.push(#f_str.to_string());
-                self.expression_attribute_names.insert(#an_var.to_string(), stringify!(#idx_key_name).to_string());
+                self.expression_attribute_names.insert(#an_var.to_string(), #idx_key_name.to_string());
 
             });
         }
@@ -866,6 +869,50 @@ fn generate_updater(
     }
 }
 
+fn generate_builder_functions(fields: &Vec<FieldInfo>) -> proc_macro2::TokenStream {
+    let mut fns = vec![];
+
+    for f in fields.iter() {
+        let var_name = &f.ident;
+        let var_ty = f.inner_type();
+        let fn_setter = Ident::new(
+            &format!(
+                "with_{}",
+                var_name.to_string().to_case(convert_case::Case::Snake)
+            ),
+            proc_macro2::Span::call_site(),
+        );
+
+        let is_opt = f.is_option();
+        let inner_setter = if is_opt {
+            quote! {
+                self.#var_name = Some(#var_name);
+            }
+        } else {
+            quote! {
+                self.#var_name = #var_name;
+            }
+        };
+
+        fns.push(quote! {
+            pub fn #fn_setter(mut self, #var_name: #var_ty) -> Self {
+                #inner_setter
+                self
+            }
+        });
+    }
+
+    quote! {
+        pub fn builder() -> Self {
+            Self {
+                ..Default::default()
+            }
+        }
+
+        #(#fns)*
+    }
+}
+
 fn generate_struct_impl(
     ident: Ident,
     ds: &DataStruct,
@@ -974,6 +1021,7 @@ fn generate_struct_impl(
     for (_, idx) in indice_v2.iter() {
         idx_fns_v2.push(idx.generate());
     }
+    let builder_fns = generate_builder_functions(&fields);
 
     let out = quote! {
         #st_query_option
@@ -985,6 +1033,8 @@ fn generate_struct_impl(
 
         impl #ident {
             #(#key_composers)*
+
+            #builder_fns
 
             #(#idx_fns_v2)*
 

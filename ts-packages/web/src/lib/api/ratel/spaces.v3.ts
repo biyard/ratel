@@ -1,4 +1,3 @@
-import { BoosterType } from '@/features/spaces/types/booster-type';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { call } from './call';
 import { SpaceVisibility } from '@/features/spaces/types/space-common';
@@ -7,23 +6,17 @@ export type CreateSpaceResponse = {
   space_pk: string;
 };
 
+export function getSpaceByPostPk(postPk: string): Promise<unknown> {
+  return call('GET', `/v3/spaces/${encodeURIComponent(postPk)}`);
+}
+
 export function createSpace(
   postPk: string,
   spaceType: SpaceType,
-  startedAt: number | null,
-  endedAt: number | null,
-  booster: BoosterType | null,
 ): Promise<CreateSpaceResponse> {
-  let time_range = null;
-
-  if (startedAt && endedAt) {
-    time_range = [startedAt, endedAt];
-  }
   return call('POST', '/v3/spaces', {
     space_type: spaceType,
     post_pk: postPk,
-    time_range,
-    booster: booster,
   });
 }
 
