@@ -4,7 +4,7 @@ use crate::models::space::SpaceCommon;
 use crate::models::Post;
 use crate::models::user::User;
 use crate::types::{EntityType, SpacePublishState, SpaceVisibility, TeamGroupPermission};
-use crate::{AppState, Error2};
+use crate::{AppState, Error2, transact_write_items};
 use aide::NoApi;
 use axum::extract::{Json, Path, State};
 use bdk::prelude::*;
@@ -50,31 +50,25 @@ pub async fn update_space_handler(
                 ));
             }
             // FIXME: check validation if it is well designed to be published.
-            space.publish_state = SpacePublishState::Published;
-            let mut updater: crate::models::space::SpaceCommonUpdater =
-                SpaceCommon::updater(&space.pk, &space.sk)
-                    .with_publish_state(SpacePublishState::Published);
-
-            updater = updater.with_visibility(visibility.clone());
-            space.visibility = visibility;
+            let updater = SpaceCommon::updater(&space.pk, &space.sk)
+                .with_publish_state(SpacePublishState::Published)
+                .with_visibility(visibility.clone());
 
             let mut tx = vec![updater.transact_write_item()];
 
             if space.visibility == SpaceVisibility::Public {
                 tx.push(
                     Post::updater(space.pk.clone().to_post_key()?, EntityType::Post)
+                        .with_updated_at(chrono::Utc::now().timestamp_millis())
                         .with_space_visibility(SpaceVisibility::Public)
                         .transact_write_item(),
                 );
             }
 
-            dynamo
-                .client
-                .transact_write_items()
-                .set_transact_items(Some(tx))
-                .send()
-                .await
-                .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+            transact_write_items!(dynamo.client, tx)?;
+
+            space.publish_state = SpacePublishState::Published;
+            space.visibility = visibility;
 
             Ok(Json(SpaceCommonResponse::from(space)))
         }
