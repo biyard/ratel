@@ -9,27 +9,14 @@ use crate::{
 
 #[tokio::test]
 async fn test_create_space() {
+    let (ctx, post_pk) = setup_post().await;
+
     let TestContextV3 {
         app,
         test_user: (user, headers),
         ddb,
         ..
-    } = setup_v3().await;
-    //FIXME: After Post using session, create a post first
-    // let (status, _, res) = post! {
-    //     app: app,
-    //     path: "/v3/posts",
-    //     headers: headers.clone(),
-    //     body: {
-    //     }
-    // };
-    // tracing::debug!("Create post response: {:?}", res);
-    // assert_eq!(status, 200);
-    // let post_pk = res.post_pk;
-
-    let post = Post::new("AA", "BB", PostType::Post, user);
-    post.create(&ddb).await.expect("Failed to create post");
-    let post_pk = post.pk;
+    } = ctx;
 
     let (status, _, res) = post! {
         app: app,
@@ -60,6 +47,52 @@ async fn test_create_space() {
     tracing::debug!("Delete space response: {:?}", res);
     assert_eq!(status, 200);
 }
+
+#[tokio::test]
+async fn test_list_spaces() {
+    let (ctx, post_pk) = setup_post().await;
+
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ddb,
+        now,
+        ..
+    } = ctx;
+
+    let title_base = format!("List Space Post {now}");
+    let content_base = format!("This is content for List Space Post {now}");
+
+    for i in 0..11 {
+        let (ctx, post_pk) = setup_post().await;
+
+        let TestContextV3 {
+            app,
+            test_user: (user, headers),
+            ddb,
+            ..
+        } = ctx;
+
+        let title = format!("{} {}", title_base, i);
+        let content = format!("{} {}", content_base, i);
+
+        let (status, _, res) = post! {
+            app: app,
+            path: "/v3/spaces",
+            headers: headers.clone(),
+            body: {
+                "space_type": 2,
+                "post_pk": post_pk,
+            },
+            response_type: CreateSpaceResponse
+        };
+        tracing::debug!("Create space response: {:?}", res);
+        assert_eq!(status, 200);
+    }
+}
+
+#[tokio::test]
+async fn test_get_space() {}
 
 pub async fn setup_post() -> (TestContextV3, String) {
     let ctx = TestContextV3::setup().await;
