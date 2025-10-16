@@ -46,8 +46,9 @@ async fn test_update_group_handler() {
     assert!(team.is_ok(), "Failed to create team: {:?}", team.err());
     let team = team.unwrap().0;
 
-    // Construct the full team PK from the returned UUID
-    let full_team_pk = format!("TEAM#{}", team.team_pk);
+    // Use just the UUID for path params (handlers will add TEAM# prefix)
+    let team_uuid = team.team_pk.clone();
+    let full_team_pk = format!("TEAM#{}", team_uuid);
 
     // Create a team group
     let team_group = create_group_handler(
@@ -115,8 +116,9 @@ async fn test_update_with_permisison() {
     assert!(team.is_ok(), "Failed to create team: {:?}", team.err());
     let team = team.unwrap().0;
 
-    // Construct the full team PK from the returned UUID
-    let full_team_pk = format!("TEAM#{}", team.team_pk);
+    // Use just the UUID for path params (handlers will add TEAM# prefix)
+    let team_uuid = team.team_pk.clone();
+    let full_team_pk = format!("TEAM#{}", team_uuid);
 
     // Create a team group
     let team_group = create_group_handler(
@@ -231,8 +233,10 @@ async fn test_add_member_handler() {
     assert!(team.is_ok(), "Failed to create team: {:?}", team.err());
     let team = team.unwrap().0;
 
-    // Construct the full team PK from the returned UUID
-    let full_team_pk = format!("TEAM#{}", team.team_pk);
+    // Use just the UUID for path params (handlers will add TEAM# prefix)
+    let team_uuid = team.team_pk.clone();
+    // Full PK for internal operations
+    let full_team_pk = format!("TEAM#{}", team_uuid);
 
     // Create a team group
     let team_group = create_group_handler(
@@ -300,7 +304,10 @@ async fn test_add_member_handler() {
     let res = team.groups.unwrap_or_default();
     let team_group = res
         .into_iter()
-        .find(|g| g.sk == team_group.group_sk)
+        .find(|g| {
+            // Compare the UUID part of sk (format: "TEAM_GROUP#uuid") with group_sk (just uuid)
+            g.sk.split('#').last().unwrap_or("") == team_group.group_sk
+        })
         .expect("Team group should exist");
 
     assert_eq!(

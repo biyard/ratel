@@ -47,10 +47,8 @@ export default function TeamMembers({ username }: { username: string }) {
 
     setRemovingMember(key);
     try {
-      // Extract team UUID from teamDetail.id (format: TEAM#uuid)
-      const teamUuid = teamDetail.id.split('#')[1];
-
-      await teamsV3Api.removeGroupMember(teamUuid, groupId, {
+      // Use team PK (with TEAM# prefix) directly - no need to extract UUID
+      await teamsV3Api.removeGroupMember(teamDetail.id, groupId, {
         user_pks: [memberUserId],
       });
 
