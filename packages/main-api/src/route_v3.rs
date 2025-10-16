@@ -1,7 +1,7 @@
 use crate::controllers::v3::assets::complete_multipart_upload::complete_multipart_upload;
 use crate::controllers::v3::assets::get_put_multi_object_uri::get_put_multi_object_uri;
+use crate::controllers::v3::assets::get_put_object_uri::AssetPresignedUris;
 use crate::controllers::v3::assets::get_put_object_uri::get_put_object_uri;
-// use crate::controllers::v2::posts::list_posts::ListPostsQueryParams;
 use crate::controllers::v3::auth::verification::verify_code::VerifyCodeResponse;
 use crate::controllers::v3::me::list_my_drafts::list_my_drafts_handler;
 use crate::controllers::v3::me::list_my_posts::list_my_posts_handler;
@@ -17,9 +17,17 @@ use crate::controllers::v3::spaces::deliberations::discussions::get_meeting::{
     MeetingData, get_meeting_handler,
 };
 use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
-// use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::start_meeting::start_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::start_recording::start_recording_handler;
+use crate::controllers::v3::spaces::deliberations::get_deliberation_common::{
+    GetDeliberationCommonResponse, get_deliberation_common_handler,
+};
+use crate::controllers::v3::spaces::deliberations::get_deliberation_deliberation::{
+    GetDeliberationDeliberationResponse, get_deliberation_deliberation_handler,
+};
+use crate::controllers::v3::spaces::deliberations::get_deliberation_poll::get_deliberation_poll_handler;
+use crate::controllers::v3::spaces::deliberations::get_deliberation_recommendation::get_deliberation_recommendation_handler;
+use crate::controllers::v3::spaces::deliberations::get_deliberation_summary::get_deliberation_summary_handler;
 use crate::controllers::v3::spaces::deliberations::posting_deliberation::{
     PostingDeliberationResponse, posting_deliberation_handler,
 };
@@ -28,6 +36,18 @@ use crate::controllers::v3::spaces::deliberations::responses::create_response_an
 };
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
 use crate::controllers::v3::spaces::polls::dto::*;
+use crate::controllers::v3::spaces::deliberations::update_deliberation_deliberation::{
+    UpdateDeliberationDeliberationResponse, update_deliberation_deliberation_handler,
+};
+use crate::controllers::v3::spaces::deliberations::update_deliberation_poll::{
+    UpdateDeliberationPollResponse, update_deliberation_poll_handler,
+};
+use crate::controllers::v3::spaces::deliberations::update_deliberation_recommendation::{
+    UpdateDeliberationRecommendationResponse, update_deliberation_recommendation_handler,
+};
+use crate::controllers::v3::spaces::deliberations::update_deliberation_summary::{
+    UpdateDeliberationSummaryResponse, update_deliberation_summary_handler,
+};
 use crate::controllers::v3::spaces::polls::respond_poll_space::{
     RespondPollSpaceResponse, respond_poll_space_handler,
 };
@@ -36,7 +56,9 @@ use crate::controllers::v3::spaces::polls::update_poll_space::{
 };
 use crate::controllers::v3::spaces::{dto::*, list_spaces_handler};
 use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
-use crate::models::{SpaceCommon, feed::*};
+use crate::models::{
+    DeliberationContentResponse, DeliberationSurveyResponse, SpaceCommon, feed::*,
+};
 use crate::types::list_items_response::ListItemsResponse;
 use crate::{
     Error2,
@@ -56,7 +78,6 @@ use crate::{
         },
         posts::*,
         spaces::deliberations::{
-            // create_deliberation::CreateDeliberationResponse,
             delete_deliberation::delete_deliberation_handler,
             get_deliberation::get_deliberation_handler,
             update_deliberation::update_deliberation_handler,
@@ -91,8 +112,6 @@ use crate::{
     models::space::DeliberationDetailResponse,
     utils::aws::{DynamoClient, SesClient},
 };
-
-use crate::controllers::v3::assets::get_put_object_uri::AssetPresignedUris;
 use bdk::prelude::*;
 use by_axum::aide::axum::routing::*;
 use by_axum::axum::*;
@@ -266,7 +285,6 @@ pub fn route(
                         ),
                     )
                 )
-
                 .route(
                     "/:post_pk",
                     get_with(
@@ -474,7 +492,108 @@ pub fn route(
                                 ),
                         )
                         .route(
+                            "/common",
+                            get_with(
+                                get_deliberation_common_handler,
+                                api_docs!(
+                                    Json<GetDeliberationCommonResponse>,
+                                    "Deliberation Common",
+                                    "Get Deliberation Common Response"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/summary",
+                            get_with(
+                                get_deliberation_summary_handler,
+                                api_docs!(
+                                    Json<DeliberationContentResponse>,
+                                    "Deliberation Summary",
+                                    "Get Deliberation Summary Response"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/deliberation",
+                            get_with(
+                                get_deliberation_deliberation_handler,
+                                api_docs!(
+                                    Json<GetDeliberationDeliberationResponse>,
+                                    "Deliberation Deliberation",
+                                    "Get Deliberation Deliberation Response"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/poll",
+                            get_with(
+                                get_deliberation_poll_handler,
+                                api_docs!(
+                                    Json<DeliberationSurveyResponse>,
+                                    "Deliberation Poll",
+                                    "Get Deliberation Poll Response"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/recommendation",
+                            get_with(
+                                get_deliberation_recommendation_handler,
+                                api_docs!(
+                                    Json<DeliberationContentResponse>,
+                                    "Deliberation Recommendation",
+                                    "Get Deliberation Recommendation Response"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/summary",
+                            patch_with(
+                                update_deliberation_summary_handler,
+                                api_docs!(
+                                    Json<UpdateDeliberationSummaryResponse>,
+                                    "Deliberation Summary",
+                                    "Update Deliberation Summary with space id"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/deliberation",
+                            patch_with(
+                                update_deliberation_deliberation_handler,
+                                api_docs!(
+                                    Json<UpdateDeliberationDeliberationResponse>,
+                                    "Deliberation Deliberation",
+                                    "Update Deliberation Deliberation with space id"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/poll",
+                            patch_with(
+                                update_deliberation_poll_handler,
+                                api_docs!(
+                                    Json<UpdateDeliberationPollResponse>,
+                                    "Deliberation Poll",
+                                    "Update Deliberation Poll with space id"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/recommendation",
+                            patch_with(
+                                update_deliberation_recommendation_handler,
+                                api_docs!(
+                                    Json<UpdateDeliberationRecommendationResponse>,
+                                    "Deliberation Recommendation",
+                                    "Update Deliberation Recommendation with space id"
+                                ),
+                            ),
+                        )
+                        
+                        .route(
                             "/",
+                            // FIXME: this method will be deprecated
                             post_with(
                                 update_deliberation_handler,
                                 api_docs!(
@@ -483,6 +602,7 @@ pub fn route(
                                     "Update a deliberation"
                                 ),
                             )
+                            // FIXME: this method will be deprecated
                             .get_with(
                                 get_deliberation_handler,
                                 api_docs!(
@@ -510,7 +630,7 @@ pub fn route(
                                     "Posting deliberation with id"
                                 ),
                             ),
-                        )
+                        ),
                 )
                 .nest(
                     "/:space_pk/polls",
@@ -543,15 +663,19 @@ pub fn route(
                                     "Respond to poll",
                                     "Submit a response to the poll with Pk"
                                 ),
-                            )
-                        ).route("/summary", get_with(
-                            get_poll_space_survey_summary,
-                            api_docs!(
-                                Json<PollSpaceSurveySummary>,
-                                "Get poll survey summary",
-                                "Get survey summary for the poll with Pk"
                             ),
-                        )),
+                        )
+                        .route(
+                            "/summary",
+                            get_with(
+                                get_poll_space_survey_summary,
+                                api_docs!(
+                                    Json<PollSpaceSurveySummary>,
+                                    "Get poll survey summary",
+                                    "Get survey summary for the poll with Pk"
+                                ),
+                            ),
+                        ),
                 ),
         )
         .nest(
@@ -680,37 +804,40 @@ pub fn route(
                 ),
         )
         .nest("/assets", Router::new()
-                .route(
-                    "/",
-                    get_with(
-                        get_put_object_uri,
-                        api_docs!(
-                            Json<AssetPresignedUris>,
-                            "Get Presigned Url",
-                            "Get Presigned Url"
-                        ),
-                    )
-                ).route(
-                    "/multiparts",
-                    get_with(
-                        get_put_multi_object_uri,
-                        api_docs!(
-                            Json<AssetPresignedUris>,
-                            "Get Multi Object Presigned Url",
-                            "Get Multi Object Presigned Url"
-                        ),
-                    )
-                ).route(
-                    "/multiparts/complete",
-                    post_with(
-                        complete_multipart_upload,
-                        api_docs!(
-                            Json<String>,
-                            "Checking Multipart upload complete",
-                            "Checking Multipart upload complete"
-                        ),
-                    )
-                ))
+            .route(
+                "/",
+                get_with(
+                    get_put_object_uri,
+                    api_docs!(
+                        Json<AssetPresignedUris>,
+                        "Get Presigned Url",
+                        "Get Presigned Url"
+                    ),
+                ),
+            )
+            .route(
+                "/multiparts",
+                get_with(
+                    get_put_multi_object_uri,
+                    api_docs!(
+                        Json<AssetPresignedUris>,
+                        "Get Multi Object Presigned Url",
+                        "Get Multi Object Presigned Url"
+                    ),
+                ),
+            )
+            .route(
+                "/multiparts/complete",
+                post_with(
+                    complete_multipart_upload,
+                    api_docs!(
+                        Json<String>,
+                        "Checking Multipart upload complete",
+                        "Checking Multipart upload complete"
+                    ),
+                ),
+            ),
+        )
         .with_state(AppState {
             dynamo: dynamo_client,
             ses: ses_client,
