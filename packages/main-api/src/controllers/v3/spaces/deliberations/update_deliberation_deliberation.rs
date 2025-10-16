@@ -46,6 +46,7 @@ pub struct UpdateDeliberationDeliberationResponse {
     pub elearnings: ElearningResponse,
 }
 
+//FIXME: implement with dynamodb upsert method
 pub async fn update_deliberation_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
@@ -136,16 +137,12 @@ pub async fn update_discussion(
     for data in metadata.into_iter() {
         match data {
             DeliberationMetadata::DeliberationSpaceParticipant(v) => {
-                let d = DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk))
-                    .await?
-                    .create_transact_write_item();
-                tx.push(d);
+                //FIXME: fix deliberation delete logic with transaction code
+                DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
             DeliberationMetadata::DeliberationSpaceMember(v) => {
-                let d = DeliberationDiscussionMember::delete(&dynamo.client, v.pk, Some(v.sk))
-                    .await?
-                    .create_transact_write_item();
-                tx.push(d);
+                //FIXME: fix deliberation delete logic with transaction code
+                DeliberationDiscussionMember::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
             // DeliberationMetadata::DeliberationSpaceDiscussion(v) => {
             //     DeliberationSpaceDiscussion::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
@@ -189,15 +186,9 @@ pub async fn update_discussion(
             .0;
 
             for member in deleted_members {
-                let d = DeliberationDiscussionMember::delete(
-                    &dynamo.client,
-                    member.pk,
-                    Some(member.sk),
-                )
-                .await?
-                .create_transact_write_item();
-
-                tx.push(d);
+                //FIXME: fix deliberation delete logic with transaction code
+                DeliberationDiscussionMember::delete(&dynamo.client, member.pk, Some(member.sk))
+                    .await?;
             }
 
             for member in discussion.user_ids {
@@ -227,6 +218,8 @@ pub async fn update_discussion(
                 None,
                 user.clone(),
             );
+
+            disc.create(&dynamo.client).await?;
 
             let disc_id = match disc.clone().sk {
                 EntityType::DeliberationDiscussion(v) => v,

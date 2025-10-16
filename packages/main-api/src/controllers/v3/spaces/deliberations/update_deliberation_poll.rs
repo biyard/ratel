@@ -42,6 +42,7 @@ pub struct UpdateDeliberationPollResponse {
     pub surveys: DeliberationSurveyResponse,
 }
 
+//FIXME: implement with dynamodb upsert method
 pub async fn update_deliberation_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
@@ -149,15 +150,9 @@ pub async fn update_survey(
             .0;
 
             for question in deleted_questions {
-                let d = DeliberationSpaceQuestion::delete(
-                    &dynamo.client,
-                    question.pk,
-                    Some(question.sk),
-                )
-                .await?
-                .create_transact_write_item();
-
-                tx.push(d);
+                //FIXME: fix deliberation delete logic with transaction code
+                DeliberationSpaceQuestion::delete(&dynamo.client, question.pk, Some(question.sk))
+                    .await?;
             }
 
             let d = DeliberationSpaceQuestion::new(
