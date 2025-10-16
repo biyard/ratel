@@ -43,6 +43,7 @@ pub enum Partition {
     PollSpaceResponse(String), // user_pk
 
     // Sprint League Space
+    SprintLeague(String),
     SprintLeagueVote(String), // user_pk
 
     Team(String),

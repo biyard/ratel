@@ -6,35 +6,35 @@ use uuid::Uuid;
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, schemars::JsonSchema,
 )]
-pub struct SprintLeagueSpacePlayer {
+pub struct SprintLeaguePlayer {
     pub pk: Partition,
     pub sk: EntityType,
 
     pub name: String,
     pub description: String,
 
-    pub player_images: PlayerImages,
+    pub player_images: PlayerImage,
 
     pub voter: i64,
 }
 
-impl SprintLeagueSpacePlayer {
+impl SprintLeaguePlayer {
     pub fn new(
         pk: Partition,
         name: String,
         description: String,
-        player_images: PlayerImages,
+        player_images: PlayerImage,
     ) -> crate::Result<Self> {
         let uuid = Uuid::new_v4().to_string();
-        if !matches!(pk, Partition::Space(_)) {
+        if !matches!(pk, Partition::SprintLeague(_)) {
             return Err(crate::Error::InvalidPartitionKey(
-                "SprintLeagueSpacePlayer must be under Space partition".to_string(),
+                "SprintLeaguePlayer must be under SprintLeague partition".to_string(),
             ));
         }
 
         Ok(Self {
             pk,
-            sk: EntityType::SprintLeagueSpacePlayer(uuid),
+            sk: EntityType::SprintLeaguePlayer(uuid),
             player_images,
             name,
             description,
@@ -44,7 +44,7 @@ impl SprintLeagueSpacePlayer {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, schemars::JsonSchema)]
-pub struct PlayerImages {
+pub struct PlayerImage {
     pub select: SpriteSheet,
     pub run: SpriteSheet,
     pub win: String,
