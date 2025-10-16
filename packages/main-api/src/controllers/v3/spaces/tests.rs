@@ -13,7 +13,6 @@ async fn test_create_space() {
     let TestContextV3 {
         app,
         test_user: (_user, headers),
-        ddb,
         ..
     } = ctx;
 
