@@ -1,8 +1,7 @@
-// TODO: this controller will be migrated to individual tab
 use crate::{
     AppState, Error2,
     models::{
-        User,
+        DeliberationDiscussionResponse, DeliberationPath, ElearningResponse, User,
         space::{DeliberationDetailResponse, DeliberationMetadata, SpaceCommon},
     },
     types::{Partition, TeamGroupPermission},
@@ -12,19 +11,17 @@ use bdk::prelude::*;
 
 use aide::NoApi;
 
-#[derive(
-    Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
-)]
-pub struct DeliberationGetPath {
-    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
-    pub space_pk: Partition,
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
+pub struct GetDeliberationDeliberationResponse {
+    pub discussions: Vec<DeliberationDiscussionResponse>,
+    pub elearnings: ElearningResponse,
 }
 
-pub async fn get_deliberation_handler(
+pub async fn get_deliberation_deliberation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-    Path(DeliberationGetPath { space_pk }): Path<DeliberationGetPath>,
-) -> Result<Json<DeliberationDetailResponse>, Error2> {
+    Path(DeliberationPath { space_pk }): Path<DeliberationPath>,
+) -> Result<Json<GetDeliberationDeliberationResponse>, Error2> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error2::NotFoundDeliberationSpace);
     }
@@ -42,16 +39,12 @@ pub async fn get_deliberation_handler(
 
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
     tracing::debug!("Deliberation metadata retrieved: {:?}", metadata);
-    let mut metadata: DeliberationDetailResponse = metadata.into();
+    let metadata: DeliberationDetailResponse = metadata.into();
 
     tracing::debug!("DeliberationDetailResponse formed: {:?}", metadata);
-    let responses = metadata.clone().surveys.responses;
 
-    for response in responses {
-        if response.user_pk == user.clone().unwrap_or_default().pk {
-            metadata.surveys.user_responses.push(response);
-        }
-    }
-
-    Ok(Json(metadata))
+    Ok(Json(GetDeliberationDeliberationResponse {
+        discussions: metadata.discussions,
+        elearnings: metadata.elearnings,
+    }))
 }

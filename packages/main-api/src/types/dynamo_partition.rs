@@ -51,6 +51,26 @@ pub enum Partition {
     Promotion(String),
 }
 
+impl Partition {
+    pub fn to_space_pk(self) -> crate::Result<Partition> {
+        match self {
+            Partition::Feed(pk) => Ok(Partition::Space(pk)),
+            _ => Err(crate::Error2::InvalidPartitionKey(
+                "Space key can be only extracted from Feed key".to_string(),
+            )),
+        }
+    }
+
+    pub fn to_post_key(self) -> crate::Result<Partition> {
+        match self {
+            Partition::Space(pk) => Ok(Partition::Feed(pk)),
+            _ => Err(crate::Error2::InvalidPartitionKey(
+                "Post(Feed) key can be only extracted from Space key".to_string(),
+            )),
+        }
+    }
+}
+
 pub fn path_param_string_to_partition<'de, D>(deserializer: D) -> Result<Partition, D::Error>
 where
     D: Deserializer<'de>,
