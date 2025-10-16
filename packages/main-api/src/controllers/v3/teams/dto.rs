@@ -11,7 +11,7 @@ pub struct TeamPathParam {
     pub team_pk: Partition,
 }
 
-#[derive(Debug, Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Debug, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct TeamResponse {
     pub id: String,
     pub created_at: i64,
@@ -40,7 +40,7 @@ impl From<Team> for TeamResponse {
     }
 }
 
-#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct TeamGroupResponse {
     pub sk: String,
     pub name: String,
@@ -61,7 +61,7 @@ impl From<TeamGroup> for TeamGroupResponse {
     }
 }
 
-#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct TeamOwnerResponse {
     pub user_pk: String,
     pub display_name: String,
@@ -79,7 +79,7 @@ impl From<TeamOwner> for TeamOwnerResponse {
         }
     }
 }
-#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct TeamDetailResponse {
     #[serde(flatten)]
     pub team: TeamResponse,

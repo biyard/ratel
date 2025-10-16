@@ -42,7 +42,7 @@ pub struct TeamMember {
     pub is_owner: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct ListMembersResponse {
     #[schemars(description = "List of team members")]
     pub members: Vec<TeamMember>,

@@ -15,7 +15,7 @@ use by_axum::{
 };
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct DeleteGroupResponse {
     #[schemars(description = "Success message")]
     pub message: String,
