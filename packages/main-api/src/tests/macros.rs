@@ -20,7 +20,7 @@ macro_rules! call {
         if let Some(headers_mut) = req_builder.headers_mut() {
             headers_mut.extend($headers);
             let size = $body.size_hint().exact().unwrap_or_default();
-            tracing::info!("Request Body Size: {}", size);
+            tracing::debug!("Request Body Size: {}", size);
             if $body.size_hint().exact().unwrap_or_default() > 0 {
                 headers_mut
                     .entry(header::CONTENT_TYPE)
@@ -40,7 +40,7 @@ macro_rules! call {
             .to_vec();
 
         let body_str = String::from_utf8(body_bytes).unwrap();
-        tracing::info!("Response Body: {}", body_str);
+        tracing::debug!("Response Body: {}", body_str);
         let body = serde_json::from_str::<$resp_ty>(&body_str);
         if let Err(e) = body {
             tracing::error!("Failed to parse response body: {}\nBody: {}", e, body_str);

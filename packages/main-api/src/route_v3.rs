@@ -35,6 +35,7 @@ use crate::controllers::v3::spaces::deliberations::responses::create_response_an
     DeliberationResponse, create_response_answer_handler,
 };
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
+use crate::controllers::v3::spaces::polls::dto::*;
 use crate::controllers::v3::spaces::deliberations::update_deliberation_deliberation::{
     UpdateDeliberationDeliberationResponse, update_deliberation_deliberation_handler,
 };
@@ -53,11 +54,10 @@ use crate::controllers::v3::spaces::polls::respond_poll_space::{
 use crate::controllers::v3::spaces::polls::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
-use crate::models::space::{
-    DeliberationDiscussionResponse, DeliberationSpaceResponse, SpaceCommonResponse,
-};
+use crate::controllers::v3::spaces::{dto::*, list_spaces_handler};
+use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
 use crate::models::{
-    DeliberationContentResponse, DeliberationSurveyResponse, PollSpaceSurveySummary, feed::*,
+    DeliberationContentResponse, DeliberationSurveyResponse, SpaceCommon, feed::*,
 };
 use crate::types::list_items_response::ListItemsResponse;
 use crate::{
@@ -346,6 +346,13 @@ pub fn route(
                             "Create Space",
                             "Create a new space"
                         ),
+                    ).get_with(
+                        list_spaces_handler,
+                        api_docs!(
+                            Json<ListItemsResponse<SpaceCommon>>,
+                            "List Spaces",
+                            "List all spaces"
+                        ),
                     ),
                 )
                 .route(
@@ -354,7 +361,7 @@ pub fn route(
                         delete_space_handler,
                         api_docs!((), "Delete Space", "Delete a space by ID"),
                     )
-                    .post_with(
+                    .patch_with(
                         update_space_handler,
                         api_docs!(
                             Json<SpaceCommonResponse>,

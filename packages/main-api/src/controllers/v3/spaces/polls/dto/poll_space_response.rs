@@ -4,11 +4,6 @@ use crate::{
 };
 use bdk::prelude::*;
 
-#[derive(Debug, serde::Deserialize, aide::OperationIo, JsonSchema)]
-pub struct PollSpacePathParam {
-    pub poll_space_pk: Partition,
-}
-
 #[derive(Default, serde::Serialize, schemars::JsonSchema)]
 pub struct PollSpaceResponse {
     #[serde(flatten)]
@@ -52,7 +47,9 @@ impl From<Vec<PollSpaceMetadata>> for PollSpaceResponse {
 //     }
 // }
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+#[derive(
+    Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema, aide::OperationIo,
+)]
 pub struct PollSpaceSurveySummary {
     pub created_at: i64,
     pub summaries: Vec<SurveySummary>,
