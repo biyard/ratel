@@ -541,7 +541,7 @@ pub fn route(
                         )
                         .route(
                             "/summary",
-                            post_with(
+                            patch_with(
                                 update_deliberation_summary_handler,
                                 api_docs!(
                                     Json<UpdateDeliberationSummaryResponse>,
@@ -552,7 +552,7 @@ pub fn route(
                         )
                         .route(
                             "/deliberation",
-                            post_with(
+                            patch_with(
                                 update_deliberation_deliberation_handler,
                                 api_docs!(
                                     Json<UpdateDeliberationDeliberationResponse>,
@@ -563,7 +563,7 @@ pub fn route(
                         )
                         .route(
                             "/poll",
-                            post_with(
+                            patch_with(
                                 update_deliberation_poll_handler,
                                 api_docs!(
                                     Json<UpdateDeliberationPollResponse>,
@@ -574,7 +574,7 @@ pub fn route(
                         )
                         .route(
                             "/recommendation",
-                            post_with(
+                            patch_with(
                                 update_deliberation_recommendation_handler,
                                 api_docs!(
                                     Json<UpdateDeliberationRecommendationResponse>,
@@ -583,8 +583,10 @@ pub fn route(
                                 ),
                             ),
                         )
+                        
                         .route(
                             "/",
+                            // FIXME: this method will be deprecated
                             post_with(
                                 update_deliberation_handler,
                                 api_docs!(
@@ -593,6 +595,7 @@ pub fn route(
                                     "Update a deliberation"
                                 ),
                             )
+                            // FIXME: this method will be deprecated
                             .get_with(
                                 get_deliberation_handler,
                                 api_docs!(

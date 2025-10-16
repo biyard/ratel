@@ -41,7 +41,7 @@ async fn test_update_summary_handler() {
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
     let path = format!("/v3/spaces/{}/deliberation/summary", space_pk_encoded);
 
-    let (status, _headers, _body) = post! {
+    let (status, _headers, _body) = patch! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
@@ -75,7 +75,7 @@ async fn test_update_summary_handler() {
     assert_eq!(body.files.len(), 1);
     assert_eq!(body.html_contents, "<div>deliberation description</div>");
 
-    let (status, _headers, _body) = post! {
+    let (status, _headers, _body) = patch! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
@@ -136,7 +136,7 @@ async fn test_update_deliberation_handler() {
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
     let path = format!("/v3/spaces/{}/deliberation/deliberation", space_pk_encoded);
 
-    let (status, _headers, body) = post! {
+    let (status, _headers, body) = patch! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
@@ -185,7 +185,7 @@ async fn test_update_deliberation_handler() {
 
     let discussion_id = body.discussions[0].pk.clone();
 
-    let (status, _headers, _body) = post! {
+    let (status, _headers, _body) = patch! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
@@ -252,7 +252,7 @@ async fn test_update_poll_handler() {
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
     let path = format!("/v3/spaces/{}/deliberation/poll", space_pk_encoded);
 
-    let (status, _headers, _body) = post! {
+    let (status, _headers, _body) = patch! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
@@ -324,7 +324,7 @@ async fn test_update_poll_handler() {
 
     let survey_id = body.pk.clone();
 
-    let (status, _headers, _body) = post! {
+    let (status, _headers, _body) = patch! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
@@ -406,7 +406,7 @@ async fn test_update_recommendation_handler() {
         space_pk_encoded
     );
 
-    let (status, _headers, _body) = post! {
+    let (status, _headers, _body) = patch! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
@@ -445,7 +445,7 @@ async fn test_update_recommendation_handler() {
         "<div>deliberation recommendation description</div>"
     );
 
-    let (status, _headers, _body) = post! {
+    let (status, _headers, _body) = patch! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
