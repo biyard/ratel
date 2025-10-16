@@ -1,11 +1,11 @@
 use crate::{
-    models::{SprintLeagueSpacePlayer, SprintLeagueSpaceVote},
+    models::{SprintLeaguePlayer, SprintLeagueVote},
     types::*,
 };
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-pub struct SprintLeagueSpace {
+pub struct SprintLeague {
     pub pk: Partition,
     pub sk: EntityType,
 
@@ -13,24 +13,27 @@ pub struct SprintLeagueSpace {
     pub win_player: Option<EntityType>,
 }
 
-impl SprintLeagueSpace {
-    pub fn new(pk: Partition) -> crate::Result<Self> {
-        if !matches!(pk, Partition::Space(_)) {
-            return Err(crate::Error::InvalidPartitionKey(
-                "SprintLeagueSpace must be under Space partition".to_string(),
-            ));
-        }
+impl SprintLeague {
+    pub fn new(space_pk: Partition) -> crate::Result<Self> {
+        let post_id = match space_pk {
+            Partition::Space(id) => id,
+            _ => {
+                return Err(crate::Error::InvalidPartitionKey(
+                    "SprintLeague must be under Space partition".to_string(),
+                ));
+            }
+        };
 
         Ok(Self {
-            pk,
-            sk: EntityType::SprintLeagueSpace,
+            pk: Partition::SprintLeague(post_id),
+            sk: EntityType::SprintLeague,
             voters: 0,
             win_player: None,
         })
     }
 }
 
-impl SprintLeagueSpace {
+impl SprintLeague {
     pub fn increment_voters(&mut self) {
         self.voters += 1;
     }
@@ -40,7 +43,7 @@ impl SprintLeagueSpace {
         cli: &aws_sdk_dynamodb::Client,
         user_pk: &Partition,
     ) -> crate::Result<bool> {
-        let vote = SprintLeagueSpaceVote::find_one(cli, &self.pk, user_pk).await?;
+        let vote = SprintLeagueVote::find_one(cli, &self.pk, user_pk).await?;
         Ok(vote.is_some())
     }
 
@@ -51,20 +54,20 @@ impl SprintLeagueSpace {
         player_sk: &EntityType,
         referral_code: Option<String>,
     ) -> crate::Result<()> {
-        let vote = SprintLeagueSpaceVote::find_one(cli, &self.pk, user_pk).await?;
+        let vote = SprintLeagueVote::find_one(cli, &self.pk, user_pk).await?;
         if vote.is_some() {
             return Err(crate::Error::AlreadyVoted);
         }
 
-        let sprint_league_tx = SprintLeagueSpace::updater(&self.pk, &self.sk)
+        let sprint_league_tx = SprintLeague::updater(&self.pk, &self.sk)
             .increase_voters(1)
             .transact_write_item();
 
         let sprint_league_player_tx =
-            SprintLeagueSpacePlayer::updater(self.pk.clone(), player_sk.clone())
+            SprintLeaguePlayer::updater(self.pk.clone(), player_sk.clone())
                 .increase_voter(1)
                 .transact_write_item();
-        let sprint_league_vote_tx = SprintLeagueSpaceVote::new(
+        let sprint_league_vote_tx = SprintLeagueVote::new(
             self.pk.clone(),
             user_pk.clone(),
             player_sk.clone(),

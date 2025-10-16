@@ -1,27 +1,23 @@
 use bdk::prelude::*;
 
-use crate::models::{SpaceCommon, SprintLeagueSpaceMetadata, SprintLeagueSpacePlayer};
+use crate::models::{SprintLeagueMetadata, SprintLeaguePlayer};
 
 #[derive(Default, serde::Serialize, schemars::JsonSchema)]
 pub struct SprintLeagueResponse {
-    #[serde(flatten)]
-    pub common: SpaceCommon,
-
-    pub players: Vec<SprintLeagueSpacePlayer>,
+    pub players: Vec<SprintLeaguePlayer>,
     pub votes: i64,
     pub is_voted: bool,
 }
 
-impl From<Vec<SprintLeagueSpaceMetadata>> for SprintLeagueResponse {
-    fn from(entity: Vec<SprintLeagueSpaceMetadata>) -> Self {
+impl From<Vec<SprintLeagueMetadata>> for SprintLeagueResponse {
+    fn from(entity: Vec<SprintLeagueMetadata>) -> Self {
         let mut res = Self::default();
         for entry in entity {
             match entry {
-                SprintLeagueSpaceMetadata::Common(common) => res.common = common,
-                SprintLeagueSpaceMetadata::Space(sprint) => {
+                SprintLeagueMetadata::Space(sprint) => {
                     res.votes = sprint.voters;
                 }
-                SprintLeagueSpaceMetadata::Player(player) => {
+                SprintLeagueMetadata::Player(player) => {
                     res.players.push(player);
                 }
             }

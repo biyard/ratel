@@ -2,7 +2,7 @@ use crate::{Error, types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-pub struct SprintLeagueSpaceVote {
+pub struct SprintLeagueVote {
     pub pk: Partition,
     pub sk: EntityType,
     pub created_at: i64,
@@ -14,7 +14,7 @@ pub struct SprintLeagueSpaceVote {
     pub referral_code: Option<String>,
 }
 
-impl SprintLeagueSpaceVote {
+impl SprintLeagueVote {
     pub fn new(
         space_pk: Partition,
         user_pk: Partition,
@@ -40,16 +40,17 @@ impl SprintLeagueSpaceVote {
         user_pk: &Partition,
     ) -> crate::Result<(Partition, EntityType)> {
         let pk = match space_pk {
-            Partition::Space(s) if !s.is_empty() => Partition::SprintLeagueVote(s.clone()),
+            Partition::SprintLeague(s) if !s.is_empty() => Partition::SprintLeagueVote(s.clone()),
             _ => {
                 return Err(Error::InvalidPartitionKey(
-                    "space_pk must be Partition::Space with non-empty inner value".to_string(),
+                    "space_pk must be Partition::SprintLeague with non-empty inner value"
+                        .to_string(),
                 ));
             }
         };
 
         let sk = match user_pk {
-            Partition::User(id) => EntityType::SprintLeagueSpaceVote(id.clone()),
+            Partition::User(id) => EntityType::SprintLeagueVote(id.clone()),
             _ => {
                 return Err(Error::InvalidPartitionKey(
                     "user_pk must be Partition::User".to_string(),
@@ -67,6 +68,6 @@ impl SprintLeagueSpaceVote {
     ) -> crate::Result<Option<Self>> {
         let (pk, sk) = Self::keys(space_pk, user_pk)?;
 
-        SprintLeagueSpaceVote::get(&cli, pk, Some(sk)).await
+        SprintLeagueVote::get(&cli, pk, Some(sk)).await
     }
 }
