@@ -30,7 +30,11 @@ jobs:
         run: |
           cd ts-packages/web
           make test
-          mv playwright-report ../../
+
+      - name: Move Playwright test results
+        if: ${{ !cancelled() }}
+        run: |
+          mv ts-packages/web/playwright-report ./
 
       - uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
