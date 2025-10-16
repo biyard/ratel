@@ -1,4 +1,4 @@
-use bdk::prelude::*;
+use bdk::prelude::{axum::extract::Path, *};
 use serde::Deserialize;
 
 use crate::{
@@ -15,7 +15,9 @@ impl TimeRange {
     }
 }
 
-#[derive(Debug, serde::Deserialize, aide::OperationIo, JsonSchema)]
+pub type SpacePath = Path<SpacePathParam>;
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, aide::OperationIo, JsonSchema)]
 pub struct SpacePathParam {
     pub space_pk: Partition,
 }

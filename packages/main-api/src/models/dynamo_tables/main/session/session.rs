@@ -2,7 +2,7 @@ use bdk::prelude::*;
 
 use crate::types::{EntityType, Partition};
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
+#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct Session {
     pub pk: Partition,
     pub sk: EntityType,
