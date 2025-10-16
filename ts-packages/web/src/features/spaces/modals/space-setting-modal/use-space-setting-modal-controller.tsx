@@ -52,9 +52,6 @@ export class SpaceSettingModalController {
       const { space_pk } = await this.createSpace.mutateAsync({
         postPk: this.postId,
         spaceType: this.spaceType,
-        startedAt,
-        endedAt,
-        booster: this.boosterType.get(),
       });
 
       const url = route.spaceByType(this.spaceType, space_pk);
@@ -70,26 +67,15 @@ export class SpaceSettingModalController {
   handleCreateSpace = async ({
     spaceType,
     postPk,
-    startedAt = null,
-    endedAt = null,
-    boosterType = null,
   }: {
     spaceType: SpaceType;
     postPk: string;
     userPk?: string;
-    startedAt: number | null;
-    endedAt: number | null;
-    boosterType: BoosterType | null;
   }) => {
-    startedAt = Math.floor(startedAt / 1000);
-    endedAt = Math.floor(endedAt / 1000);
     try {
       const { space_pk } = await this.createSpace.mutateAsync({
         postPk,
         spaceType: this.spaceType,
-        startedAt,
-        endedAt,
-        booster: boosterType,
       });
 
       switch (spaceType) {

@@ -38,8 +38,10 @@ impl DynamoIndex {
     }
 
     pub fn get_additional_fields(&self) -> proc_macro2::TokenStream {
-        let pk_key_name = format!("{}_pk", self.base_index_name);
-        let sk_key_name = format!("{}_sk", self.base_index_name);
+        let pk_key_name =
+            syn::LitStr::new(&format!("{}_pk", self.base_index_name), Span::call_site());
+        let sk_key_name =
+            syn::LitStr::new(&format!("{}_sk", self.base_index_name), Span::call_site());
         let get_pk_fn_name =
             syn::Ident::new(&format!("get_pk_for_{}", self.name), Span::call_site());
         let get_sk_fn_name =
