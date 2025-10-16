@@ -31,7 +31,7 @@ pub struct AddMemberRequest {
     pub user_pks: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct AddMemberResponse {
     pub total_added: i64,
     pub failed_pks: Vec<String>,

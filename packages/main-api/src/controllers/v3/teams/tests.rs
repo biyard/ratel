@@ -1,391 +1,365 @@
-use bdk::prelude::*;
-use by_axum::{
-    aide::NoApi,
-    axum::{
-        Json,
-        extract::{Path, State},
-    },
-};
-
 use crate::{
     controllers::v3::teams::{
-        create_team::{CreateTeamRequest, create_team_handler},
-        delete_team::delete_team_handler,
-        get_team::{GetTeamPathParams, get_team_handler},
-        groups::delete_group::delete_group_handler,
-        list_members::list_members_handler,
-        update_team::{UpdateTeamPathParams, UpdateTeamRequest, update_team_handler},
+        create_team::CreateTeamResponse,
+        delete_team::DeleteTeamResponse,
+        get_team::GetTeamResponse,
+        groups::{create_group::CreateGroupResponse, delete_group::DeleteGroupResponse},
+        list_members::ListMembersResponse,
+        update_team::UpdateTeamResponse,
     },
-    tests::{create_app_state, create_test_user, create_user_name},
+    tests::v3_setup::TestContextV3,
+    types::{EntityType, TeamGroupPermission},
 };
+
+use crate::*;
+
 #[tokio::test]
 async fn test_update_team_without_permission() {
-    let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
-    let username = create_user_name();
-    let team = create_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Json(CreateTeamRequest {
-            nickname: format!("team_{}", username),
-            username: format!("test_username_{}", username),
-            description: "This is a test team".into(),
-            profile_url: "https://example.com/profile.png".into(),
-        }),
-    )
-    .await;
-    assert!(team.is_ok(), "Failed to create team {:?}", team.err());
-    let team = team.unwrap().0;
+    let TestContextV3 {
+        app,
+        test_user,
+        user2,
+        ..
+    } = TestContextV3::setup().await;
 
-    // Construct the full team PK from the returned UUID
-    let full_team_pk = format!("TEAM#{}", team.team_pk);
+    let team_username = format!("testteam{}", uuid::Uuid::new_v4());
 
-    let another_user = create_test_user(&cli).await;
+    // Create team
+    let (status, _headers, team) = post! {
+        app: app,
+        path: "/v3/teams",
+        headers: test_user.1.clone(),
+        body: {
+            "username": team_username,
+            "nickname": format!("{}'s Squad", team_username),
+            "profile_url": "https://example.com/profile.png",
+            "description": "This is a squad for verification"
+        },
+        response_type: CreateTeamResponse
+    };
 
-    let res = update_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(another_user)),
-        Path(UpdateTeamPathParams {
-            team_pk: full_team_pk.clone(),
-        }),
-        Json(UpdateTeamRequest {
-            nickname: Some("updated_team".into()),
-            description: Some("This is an updated test team".into()),
-            profile_url: Some("https://example.com/updated_profile.png".into()),
-        }),
-    )
-    .await;
-    assert!(res.is_err(), "Update should fail without permission");
+    assert_eq!(status, 200, "Failed to create team");
 
-    let res = update_team_handler(
-        State(app_state),
-        NoApi(None),
-        Path(UpdateTeamPathParams {
-            team_pk: full_team_pk.clone(),
-        }),
-        Json(UpdateTeamRequest {
-            nickname: Some("updated_team".into()),
-            description: Some("This is an updated test team".into()),
-            profile_url: Some("https://example.com/updated_profile.png".into()),
-        }),
-    )
-    .await;
-    assert!(res.is_err(), "Update should fail without auth");
+    // Try to update with another user (should fail)
+    let (status, _headers, _body) = patch! {
+        app: app,
+        path: format!("/v3/teams/{}", team.team_pk),
+        headers: user2.1.clone(),
+        body: {
+            "nickname": "Updated Squad",
+            "description": "This is an updated squad"
+        }
+    };
+
+    assert_eq!(status, 401, "Update should fail without permission");
+
+    // Try to update without auth (should fail)
+    let (status, _headers, _body) = patch! {
+        app: app,
+        path: format!("/v3/teams/{}", team.team_pk),
+        body: {
+            "nickname": "Updated Squad"
+        }
+    };
+
+    assert_eq!(status, 401, "Update should fail without auth");
 }
 
 #[tokio::test]
 async fn test_update_team() {
-    let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
-    let username = create_user_name();
-    let team_username = format!("team_{}", username);
-    let team_display_name = format!("team_{}", username);
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
 
-    // Create Team
-    let create_res = create_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Json(CreateTeamRequest {
-            nickname: team_display_name.clone(),
-            username: team_username.clone(),
-            description: "This is a test team".into(),
-            profile_url: "https://example.com/profile.png".into(),
-        }),
-    )
-    .await;
-    assert!(
-        create_res.is_ok(),
-        "Failed to create team {:?}",
-        create_res.err()
-    );
-    let team = create_res.unwrap().0;
+    let team_username = format!("testteam{}", uuid::Uuid::new_v4());
 
-    // Construct the full team PK from the returned UUID
-    let full_team_pk = format!("TEAM#{}", team.team_pk);
+    // Create team
+    let (status, _headers, team) = post! {
+        app: app,
+        path: "/v3/teams",
+        headers: test_user.1.clone(),
+        body: {
+            "username": team_username,
+            "nickname": format!("{}'s Squad", team_username),
+            "profile_url": "https://example.com/profile.png",
+            "description": "This is a squad for verification"
+        },
+        response_type: CreateTeamResponse
+    };
 
-    // Update Team
-    let new_team_display_name = format!("updated_team_{}", username);
-    let new_team_description = "This is an updated test team".to_string();
-    let new_team_profile_url = "https://example.com/updated_profile.png".to_string();
-    let update_res = update_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Path(UpdateTeamPathParams {
-            team_pk: full_team_pk.clone(),
-        }),
-        Json(UpdateTeamRequest {
-            nickname: Some(new_team_display_name.clone()),
-            description: Some(new_team_description.clone()),
-            profile_url: Some(new_team_profile_url.clone()),
-        }),
-    )
-    .await;
-    assert!(
-        update_res.is_ok(),
-        "Failed to update team {:?}",
-        update_res.err()
-    );
+    assert_eq!(status, 200, "Failed to create team");
 
-    // Get Team
-    let get_res = get_team_handler(
-        State(app_state),
-        NoApi(Some(user)),
-        Path(GetTeamPathParams {
-            team_pk: full_team_pk,
-        }),
-    )
-    .await;
-    assert!(get_res.is_ok(), "Failed to get team {:?}", get_res.err());
-    let team_detail = get_res.unwrap().0;
-    let team = &team_detail.team;
+    // Update team
+    let new_nickname = "Updated Squad Name";
+    let new_description = "Updated squad description";
+    let new_profile_url = "https://example.com/updated_profile.png";
 
-    assert_eq!(
-        team.nickname, new_team_display_name,
-        "Failed to match team nickname"
-    );
+    let (status, _headers, updated_team) = patch! {
+        app: app,
+        path: format!("/v3/teams/{}", team.team_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "nickname": new_nickname,
+            "description": new_description,
+            "profile_url": new_profile_url
+        },
+        response_type: UpdateTeamResponse
+    };
+
+    assert_eq!(status, 200, "Failed to update team");
+
+    // Get team to verify updates
+    let (status, _headers, team_response) = get! {
+        app: app,
+        path: format!("/v3/teams/{}", team.team_pk),
+        headers: test_user.1.clone(),
+        response_type: GetTeamResponse
+    };
+
+    assert_eq!(status, 200, "Failed to get team");
+    assert_eq!(team_response.team.nickname, new_nickname);
+    assert_eq!(team_response.team.html_contents, new_description);
+    assert_eq!(team_response.team.profile_url.unwrap(), new_profile_url);
 }
 
 #[tokio::test]
 async fn test_get_team() {
-    let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
-    let now = chrono::Utc::now().timestamp();
-    let team_display_name = format!("test_team_{}", now);
-    let team_username = format!("test_username_{}", now);
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
 
-    // Create Team
-    let create_res = create_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Json(CreateTeamRequest {
-            nickname: team_display_name.clone(),
-            username: team_username.clone(),
-            description: "This is a test team".into(),
-            profile_url: "https://example.com/profile.png".into(),
-        }),
-    )
-    .await;
-    assert!(
-        create_res.is_ok(),
-        "Failed to create team {:?}",
-        create_res.err()
-    );
-    let team = create_res.unwrap().0;
+    let team_username = format!("testteam{}", uuid::Uuid::new_v4());
+    let team_nickname = format!("{}'s Squad", team_username);
 
-    // Construct the full team PK from the returned UUID
-    let full_team_pk = format!("TEAM#{}", team.team_pk);
+    // Create team
+    let (status, _headers, team) = post! {
+        app: app,
+        path: "/v3/teams",
+        headers: test_user.1.clone(),
+        body: {
+            "username": team_username,
+            "nickname": team_nickname,
+            "profile_url": "https://example.com/profile.png",
+            "description": "This is a squad for verification"
+        },
+        response_type: CreateTeamResponse
+    };
 
-    // Get Team
-    let get_res = get_team_handler(
-        State(app_state),
-        NoApi(Some(user.clone())),
-        Path(GetTeamPathParams {
-            team_pk: full_team_pk,
-        }),
-    )
-    .await;
-    assert!(get_res.is_ok(), "Failed to get team {:?}", get_res.err());
-    let team_detail = get_res.unwrap().0;
-    let team = &team_detail.team;
-    let owner = team_detail.owner.as_ref().expect("Owner should exist");
+    assert_eq!(status, 200, "Failed to create team");
 
-    assert_eq!(
-        team.nickname, team_display_name,
-        "Failed to match team nickname"
-    );
-    assert_eq!(
-        team.username, team_username,
-        "Failed to match team username"
-    );
-    assert_eq!(
-        owner.user_pk.to_string(),
-        user.pk.to_string(),
-        "Failed to match `owner pk`"
-    );
+    // Get team
+    let (status, _headers, team_response) = get! {
+        app: app,
+        path: format!("/v3/teams/{}", team.team_pk),
+        headers: test_user.1.clone(),
+        response_type: GetTeamResponse
+    };
+
+    assert_eq!(status, 200, "Failed to get team");
+    assert_eq!(team_response.team.nickname, team_nickname);
+    assert_eq!(team_response.team.username, team_username);
+
+    let owner = team_response.owner.expect("Owner should exist");
+    assert_eq!(owner.user_pk, test_user.0.pk.to_string());
 }
 
 #[tokio::test]
 async fn test_list_members() {
-    let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
-    let username = create_user_name();
+    let TestContextV3 {
+        app,
+        test_user,
+        user2,
+        ..
+    } = TestContextV3::setup().await;
+
+    let team_username = format!("testteam{}", uuid::Uuid::new_v4());
 
     // Create team
-    let _team = create_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Json(CreateTeamRequest {
-            nickname: format!("team_{}", username),
-            username: format!("test_username_{}", username),
-            description: "This is a test team".into(),
-            profile_url: "https://example.com/profile.png".into(),
-        }),
-    )
-    .await
-    .expect("Failed to create team")
-    .0;
+    let (status, _headers, team) = post! {
+        app: app,
+        path: "/v3/teams",
+        headers: test_user.1.clone(),
+        body: {
+            "username": team_username,
+            "nickname": format!("{}'s Squad", team_username),
+            "profile_url": "https://example.com/profile.png",
+            "description": "This is a squad for verification"
+        },
+        response_type: CreateTeamResponse
+    };
 
-    // Get team username for the list_members call
-    let team_username = format!("test_username_{}", username);
+    assert_eq!(status, 200, "Failed to create team");
 
-    // Test list members as team owner
-    let list_res = list_members_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Path(team_username.clone()),
-    )
-    .await;
+    // Create a group
+    let (status, _headers, group) = post! {
+        app: app,
+        path: format!("/v3/teams/{}/groups", team.team_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "name": "Group for Verification",
+            "description": "A group for verification purposes",
+            "image_url": "https://example.com/image.png",
+            "permissions": [TeamGroupPermission::PostWrite]
+        },
+        response_type: CreateGroupResponse
+    };
 
-    assert!(
-        list_res.is_ok(),
-        "Failed to list members: {:?}",
-        list_res.err()
+    assert_eq!(status, 200, "Failed to create group");
+
+    // Extract UUID from EntityType for path parameter
+    let group_id = match group.group_sk {
+        EntityType::TeamGroup(ref id) => id.clone(),
+        _ => panic!("Expected TeamGroup EntityType"),
+    };
+
+    // Add user2 as member
+    let (status, _headers, _add_result) = post! {
+        app: app,
+        path: format!("/v3/teams/{}/groups/{}/member", team.team_pk, group_id),
+        headers: test_user.1.clone(),
+        body: {
+            "user_pks": [user2.0.pk.to_string()]
+        }
+    };
+
+    assert_eq!(status, 200, "Failed to add member");
+
+    // List members
+    let (status, _headers, members_response) = get! {
+        app: app,
+        path: format!("/v3/teams/{}/members", team_username),
+        headers: test_user.1.clone(),
+        response_type: ListMembersResponse
+    };
+
+    assert_eq!(status, 200, "Failed to list members");
+    assert_eq!(
+        members_response.total_count, 2,
+        "Should have 2 members (owner + added)"
     );
-    let members_response = list_res.unwrap().0;
 
-    // Should have at least the owner in the member list
-    assert!(
-        !members_response.members.is_empty(),
-        "Members list should not be empty"
-    );
-
-    // Test unauthorized access
-    let other_user = create_test_user(&cli).await;
-    let unauthorized_res = list_members_handler(
-        State(app_state.clone()),
-        NoApi(Some(other_user)),
-        Path(team_username),
-    )
-    .await;
-
-    // Should fail for unauthorized user
-    assert!(
-        unauthorized_res.is_err(),
-        "Unauthorized user should not be able to list members"
-    );
+    let owner_member = members_response
+        .members
+        .iter()
+        .find(|m| m.is_owner)
+        .expect("Should have owner");
+    assert_eq!(owner_member.user_id, test_user.0.pk.to_string());
 }
 
 #[tokio::test]
 async fn test_delete_team() {
-    let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
-    let username = create_user_name();
-    let team_username = format!("test_username_{}", username);
+    let TestContextV3 {
+        app,
+        test_user,
+        user2,
+        ..
+    } = TestContextV3::setup().await;
+
+    let team_username = format!("testteam{}", uuid::Uuid::new_v4());
 
     // Create team
-    let _team = create_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Json(CreateTeamRequest {
-            nickname: format!("team_{}", username),
-            username: team_username.clone(),
-            description: "This is a test team".into(),
-            profile_url: "https://example.com/profile.png".into(),
-        }),
-    )
-    .await
-    .expect("Failed to create team")
-    .0;
+    let (status, _headers, _team) = post! {
+        app: app,
+        path: "/v3/teams",
+        headers: test_user.1.clone(),
+        body: {
+            "username": team_username,
+            "nickname": format!("{}'s Squad", team_username),
+            "profile_url": "https://example.com/profile.png",
+            "description": "This is a squad for verification"
+        },
+        response_type: CreateTeamResponse
+    };
 
-    // Test unauthorized deletion
-    let other_user = create_test_user(&cli).await;
-    let unauthorized_res = delete_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(other_user)),
-        Path(team_username.clone()),
-    )
-    .await;
+    assert_eq!(status, 200, "Failed to create team");
 
-    assert!(
-        unauthorized_res.is_err(),
-        "Non-owner should not be able to delete team"
-    );
+    // Try to delete with non-owner (should fail)
+    let (status, _headers, _body) = delete! {
+        app: app,
+        path: format!("/v3/teams/{}", team_username),
+        headers: user2.1.clone()
+    };
 
-    // Test successful deletion by owner
-    let delete_res = delete_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Path(team_username.clone()),
-    )
-    .await;
+    assert_eq!(status, 401, "Delete should fail for non-owner");
 
-    assert!(
-        delete_res.is_ok(),
-        "Owner should be able to delete team: {:?}",
-        delete_res.err()
-    );
-    let delete_response = delete_res.unwrap().0;
+    // Delete with owner (should succeed)
+    let (status, _headers, delete_response) = delete! {
+        app: app,
+        path: format!("/v3/teams/{}", team_username),
+        headers: test_user.1.clone(),
+        response_type: DeleteTeamResponse
+    };
+
+    assert_eq!(status, 200, "Failed to delete team");
     assert!(
         delete_response.deleted_count > 0,
-        "Should have deleted at least one entity"
-    );
-
-    // Test that team no longer exists by trying to list members
-    let list_after_delete =
-        list_members_handler(State(app_state), NoApi(Some(user)), Path(team_username)).await;
-
-    assert!(
-        list_after_delete.is_err(),
-        "Team should no longer exist after deletion"
+        "Should have deleted entities"
     );
 }
 
 #[tokio::test]
 async fn test_delete_group() {
-    let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
-    let username = create_user_name();
-    let team_username = format!("test_username_{}", username);
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
+
+    let team_username = format!("testteam{}", uuid::Uuid::new_v4());
 
     // Create team
-    let _team = create_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Json(CreateTeamRequest {
-            nickname: format!("team_{}", username),
-            username: team_username.clone(),
-            description: "This is a test team".into(),
-            profile_url: "https://example.com/profile.png".into(),
-        }),
-    )
-    .await
-    .expect("Failed to create team")
-    .0;
+    let (status, _headers, team) = post! {
+        app: app,
+        path: "/v3/teams",
+        headers: test_user.1.clone(),
+        body: {
+            "username": team_username,
+            "nickname": format!("{}'s Squad", team_username),
+            "profile_url": "https://example.com/profile.png",
+            "description": "This is a squad for verification"
+        },
+        response_type: CreateTeamResponse
+    };
 
-    // For this test, we'll use a placeholder group_id since we'd need to create a group first
-    let group_id = "test-group-id".to_string();
+    assert_eq!(status, 200, "Failed to create team");
 
-    // Test unauthorized deletion
-    let other_user = create_test_user(&cli).await;
-    let unauthorized_res = delete_group_handler(
-        State(app_state.clone()),
-        NoApi(Some(other_user)),
-        Path((team_username.clone(), group_id.clone())),
-    )
-    .await;
+    // Create a group
+    let (status, _headers, group) = post! {
+        app: app,
+        path: format!("/v3/teams/{}/groups", team.team_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "name": "Group for Verification",
+            "description": "A group for verification purposes",
+            "image_url": "https://example.com/image.png",
+            "permissions": [TeamGroupPermission::PostWrite]
+        },
+        response_type: CreateGroupResponse
+    };
 
+    assert_eq!(status, 200, "Failed to create group");
+
+    // Extract UUID from EntityType for path parameter
+    let group_id = match group.group_sk {
+        EntityType::TeamGroup(ref id) => id.clone(),
+        _ => panic!("Expected TeamGroup EntityType"),
+    };
+
+    // Delete group
+    let (status, _headers, delete_response) = delete! {
+        app: app,
+        path: format!("/v3/teams/{}/groups/{}", team_username, group_id),
+        headers: test_user.1.clone(),
+        response_type: DeleteGroupResponse
+    };
+
+    assert_eq!(status, 200, "Failed to delete group");
+    assert!(delete_response.message.contains("successfully deleted"));
+
+    // Verify group is deleted - get team should not include the group
+    let (status, _headers, team_response) = get! {
+        app: app,
+        path: format!("/v3/teams/{}", team.team_pk),
+        headers: test_user.1.clone(),
+        response_type: GetTeamResponse
+    };
+
+    assert_eq!(status, 200);
+    let groups = team_response.groups.unwrap_or_default();
     assert!(
-        unauthorized_res.is_err(),
-        "Non-owner should not be able to delete group"
-    );
-
-    // Test deletion by owner (this will fail gracefully since group doesn't exist)
-    let delete_res = delete_group_handler(
-        State(app_state.clone()),
-        NoApi(Some(user)),
-        Path((team_username, group_id)),
-    )
-    .await;
-
-    // This should fail because the group doesn't exist, but with proper auth
-    assert!(
-        delete_res.is_err(),
-        "Should fail gracefully when group doesn't exist"
+        !groups.iter().any(|g| g.sk == group.group_sk.to_string()),
+        "Group should be deleted"
     );
 }

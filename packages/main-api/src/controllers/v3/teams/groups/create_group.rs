@@ -4,7 +4,7 @@ use crate::{
         team::{Team, TeamGroup},
         user::{User, UserTeamGroup},
     },
-    types::{EntityType, TeamGroupPermission, TeamGroupPermissions},
+    types::{EntityType, Partition, TeamGroupPermission, TeamGroupPermissions},
     utils::security::{RatelResource, check_any_permission_with_user},
 };
 use bdk::prelude::*;
@@ -30,10 +30,12 @@ pub struct CreateGroupRequest {
     pub permissions: Vec<TeamGroupPermission>,
 }
 
-#[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreateGroupResponse {
-    pub group_pk: String,
-    pub group_sk: String,
+    #[schemars(description = "Group PK (Team PK)")]
+    pub group_pk: Partition,
+    #[schemars(description = "Group SK (Unique identifier)")]
+    pub group_sk: EntityType,
 }
 
 pub async fn create_group_handler(
@@ -100,15 +102,8 @@ pub async fn create_group_handler(
         .execute(&dynamo.client)
         .await?;
 
-    // Extract just the UUID from EntityType::TeamGroup(uuid)
-    let group_uuid = if let EntityType::TeamGroup(uuid) = &group_sk {
-        uuid.clone()
-    } else {
-        group_sk.to_string()
-    };
-
     Ok(Json(CreateGroupResponse {
-        group_pk: group_pk.to_string(),
-        group_sk: group_uuid,
+        group_pk,
+        group_sk,
     }))
 }
