@@ -123,7 +123,6 @@ export async function createTeam(
 
 export async function findTeam(username?: string): Promise<FindTeamResponse> {
   const params = username ? `?username=${encodeURIComponent(username)}` : '';
-  console.log('findTeam calling:', `/v3/teams${params}`);
   return await call('GET', `/v3/teams${params}`);
 }
 
@@ -134,11 +133,8 @@ export async function getTeam(teamPk: string): Promise<TeamDetailResponse> {
 export async function getTeamByUsername(
   username: string,
 ): Promise<TeamDetailResponse> {
-  console.log('getTeamByUsername called with username:', username);
-
   // First find the team to get its ID
   const findResult = await findTeam(username);
-  console.log('findTeam result:', findResult);
 
   if (!findResult.teams || findResult.teams.length === 0) {
     throw new Error(`Team with username '${username}' not found`);
@@ -148,8 +144,6 @@ export async function getTeamByUsername(
   if (!team) {
     throw new Error(`Team with username '${username}' not found`);
   }
-
-  console.log('Found team from findTeam:', team);
 
   // Now get full team details including groups using the team ID
   return await getTeam(team.id);

@@ -51,10 +51,6 @@ export default function TeamGroups({ username }: { username: string }) {
   // Use v3 groups directly - no more legacy conversion
   const groups = teamDetail?.groups ?? [];
 
-  console.log('DEBUG: Using v3 permissions API');
-  console.log('DEBUG: canCreateGroup:', canCreateGroup.data);
-  console.log('DEBUG: canDeleteGroup:', canDeleteGroup.data);
-
   const deleteGroup = async (groupSk: string) => {
     if (!teamDetail) return;
 
