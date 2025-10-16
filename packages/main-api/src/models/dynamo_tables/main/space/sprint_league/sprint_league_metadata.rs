@@ -1,4 +1,4 @@
-use crate::models::{SprintLeagueSpace, space::SpaceCommon};
+use crate::models::{SprintLeagueSpace, SprintLeagueSpacePlayer, space::SpaceCommon};
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]

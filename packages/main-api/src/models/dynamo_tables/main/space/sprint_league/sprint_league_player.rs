@@ -1,8 +1,11 @@
 use crate::types::*;
 use bdk::prelude::*;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[derive(
+    Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, schemars::JsonSchema,
+)]
 pub struct SprintLeagueSpacePlayer {
     pub pk: Partition,
     pub sk: EntityType,
@@ -40,7 +43,7 @@ impl SprintLeagueSpacePlayer {
     }
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct PlayerImages {
     pub select: SpriteSheet,
     pub run: SpriteSheet,
@@ -48,7 +51,7 @@ pub struct PlayerImages {
     pub lose: String,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, schemars::JsonSchema)]
 pub struct SpriteSheet {
     // For Animation
     pub json: String,

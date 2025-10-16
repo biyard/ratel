@@ -1,4 +1,4 @@
-use crate::{types::*, utils::time::get_now_timestamp_millis};
+use crate::{Error, types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
@@ -27,7 +27,7 @@ impl SprintLeagueSpaceVote {
 
         Ok(Self {
             pk,
-            sk: EntityType::SprintLeagueSpaceVote(user_id),
+            sk,
             created_at: now,
             player_sk: player_sk.clone(),
             user_pk,
@@ -42,7 +42,7 @@ impl SprintLeagueSpaceVote {
         let pk = match space_pk {
             Partition::Space(s) if !s.is_empty() => Partition::SprintLeagueVote(s.clone()),
             _ => {
-                return Err(Error2::InvalidPartitionKey(
+                return Err(Error::InvalidPartitionKey(
                     "space_pk must be Partition::Space with non-empty inner value".to_string(),
                 ));
             }
@@ -51,7 +51,7 @@ impl SprintLeagueSpaceVote {
         let sk = match user_pk {
             Partition::User(id) => EntityType::SprintLeagueSpaceVote(id.clone()),
             _ => {
-                return Err(Error2::InvalidPartitionKey(
+                return Err(Error::InvalidPartitionKey(
                     "user_pk must be Partition::User".to_string(),
                 ));
             }

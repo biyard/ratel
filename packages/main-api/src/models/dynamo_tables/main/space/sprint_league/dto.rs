@@ -1,13 +1,13 @@
 use bdk::prelude::*;
 
-use crate::models::SpaceCommon;
+use crate::models::{SpaceCommon, SprintLeagueSpaceMetadata, SprintLeagueSpacePlayer};
 
 #[derive(Default, serde::Serialize, schemars::JsonSchema)]
 pub struct SprintLeagueResponse {
     #[serde(flatten)]
     pub common: SpaceCommon,
 
-    pub players: Vec<SprintLeaguePlayer>,
+    pub players: Vec<SprintLeagueSpacePlayer>,
     pub votes: i64,
     pub is_voted: bool,
 }
