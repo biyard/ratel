@@ -20,7 +20,8 @@ import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
 import DeliberationSpacePage from './app/spaces/deliberation/[id]/page';
 import DiscussionPage from './app/spaces/deliberation/[id]/discussion/[discussion-id]/discussion-page';
 import SpaceByIdLayout from './app/spaces/[id]/space-by-id-layout';
-import SpaceHomePage from './app/spaces/[id]/space-home-page';
+import { SpaceHomePage } from './app/spaces/[id]/space-home-page';
+import { SpaceSettingsPage } from './app/spaces/[id]/settings/space-settings-page';
 
 export const routes = createBrowserRouter([
   {
@@ -99,12 +100,19 @@ export const routes = createBrowserRouter([
         path: 'spaces/:spacePk',
         Component: SpaceByIdLayout,
         children: [
+          // Space Common
           {
             id: 'space-home-page',
             path: '',
             Component: SpaceHomePage,
           },
+          {
+            id: 'space-settings-page',
+            path: 'settings',
+            Component: SpaceSettingsPage,
+          },
 
+          // Space Features
           {
             id: 'poll-space',
             path: 'poll',
