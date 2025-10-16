@@ -8,15 +8,13 @@ use crate::{
         user::User,
     },
     types::{EntityType, Partition},
-    utils::dynamo_extractor::extract_user_from_session,
-};
-use bdk::prelude::axum::{
-    Extension,
-    extract::{Json, Path, State},
 };
 use bdk::prelude::*;
+use bdk::prelude::{
+    aide::NoApi,
+    axum::extract::{Json, Path, State},
+};
 use serde::{Deserialize, Serialize};
-use tower_sessions::Session;
 use validator::Validate;
 
 #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
@@ -48,19 +46,14 @@ pub struct CreateDiscussionResponse {
 
 pub async fn create_discussion_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(session): Extension<Session>,
+    NoApi(user): NoApi<Option<User>>,
     Path(DeliberationDiscussionPath { space_pk }): Path<DeliberationDiscussionPath>,
     Json(req): Json<CreateDiscussionRequest>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
-    let deliberation_id = match space_pk.clone() {
-        Partition::Space(v) => v,
-        _ => "".to_string(),
-    };
-
-    let user = extract_user_from_session(&dynamo.client, &session).await?;
+    let user = user.unwrap_or_default();
 
     let disc = DeliberationSpaceDiscussion::new(
-        crate::types::Partition::Space(deliberation_id.clone()),
+        space_pk.clone(),
         req.name,
         req.description,
         req.started_at,
@@ -89,7 +82,7 @@ pub async fn create_discussion_handler(
         .ok_or(Error2::NotFound("User not found".into()))?;
 
         let m = DeliberationDiscussionMember::new(
-            Partition::Space(deliberation_id.to_string()),
+            space_pk.clone(),
             Partition::Discussion(disc_id.clone()),
             user,
         );
@@ -97,12 +90,8 @@ pub async fn create_discussion_handler(
         m.create(&dynamo.client).await?;
     }
 
-    let disc = DeliberationSpaceDiscussion::get(
-        &dynamo.client,
-        &space_pk,
-        Some(EntityType::DeliberationDiscussion(disc_id.to_string())),
-    )
-    .await?;
+    let disc =
+        DeliberationSpaceDiscussion::get(&dynamo.client, &space_pk, Some(disc.clone().sk)).await?;
 
     let disc = disc.unwrap().into();
 
