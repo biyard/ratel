@@ -584,7 +584,10 @@ fn generate_updater(
                             .build(),
                     );
 
-                    self.set_update_expressions.push(#f_str.to_string());
+                    if !self.set_update_expressions.contains(&#f_str.to_string()) {
+                        self.set_update_expressions.push(#f_str.to_string());
+                    }
+
                     self.expression_attribute_names.insert(#an_var.to_string(), stringify!(#idx_key_name).to_string());
                     self.expression_attribute_values.insert(#av_var.to_string(), aws_sdk_dynamodb::types::AttributeValue::S(
                         self.inner.#composer_ident()
