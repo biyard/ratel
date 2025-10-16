@@ -18,11 +18,14 @@ import { checkLowerAlphaNumeric } from '@/lib/valid-utils';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUserInfo } from '@/hooks/use-user-info';
+import { useNavigate } from 'react-router';
+import { route } from '@/route';
 
 export default function TeamCreationPopup() {
   const { t } = useTranslation('Home');
   const popup = usePopup();
   const userInfo = useUserInfo();
+  const navigate = useNavigate();
 
   const [profileUrl, setProfileUrl] = useState('');
   const [username, setUsername] = useState('');
@@ -55,6 +58,9 @@ export default function TeamCreationPopup() {
 
       userInfo.refetch();
       popup.close();
+
+      // Redirect to the newly created team's home page
+      navigate(route.teamByUsername(username));
     } catch (error) {
       logger.error('Failed to create team:', error);
       showErrorToast('Failed to create team. Please try again.');
@@ -112,6 +118,7 @@ export default function TeamCreationPopup() {
           type="text"
           placeholder={t('team_display_name')}
           onInput={handleNickname}
+          data-pw="team-nickname-input"
         />
         <Col className="gap-0.25">
           <div className="relative">
@@ -124,6 +131,7 @@ export default function TeamCreationPopup() {
               placeholder={`${t('team_id')} (ex. ratel)`}
               onChange={handleUsername}
               aria-invalid={invalid !== undefined}
+              data-pw="team-username-input"
             />
           </div>
           {invalid && (
@@ -135,6 +143,7 @@ export default function TeamCreationPopup() {
         <Textarea
           placeholder={t('team_description')}
           onChange={handleContents}
+          data-pw="team-description-input"
         />
       </Col>
       <Row className="w-full grid grid-cols-2">
@@ -155,6 +164,7 @@ export default function TeamCreationPopup() {
           }
           variant={'rounded_primary'}
           onClick={handleCreate}
+          data-pw="team-create-button"
         >
           {t('create')}
         </Button>

@@ -71,6 +71,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
         <Link
           to={route.teamByUsername(displayTeam.username)}
           className="sidemenu-link text-text-primary [&>path]:stroke-[#737373]"
+          data-pw="team-nav-home"
         >
           <Home className="w-6 h-6" />
           <span>{t('home')}</span>
@@ -79,6 +80,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           <Link
             to={route.teamDrafts(displayTeam.username)}
             className="sidemenu-link text-text-primary"
+            data-pw="team-nav-drafts"
           >
             <EditContent className="w-6 h-6 [&>path]:stroke-[#737373]" />
             <span>{t('drafts')}</span>
@@ -90,6 +92,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           <Link
             to={route.teamGroups(displayTeam.username)}
             className="sidemenu-link text-text-primary "
+            data-pw="team-nav-groups"
           >
             <Folder className="w-6 h-6 [&>path]:stroke-[#737373]" />
             <span>{t('manage_group')}</span>
@@ -99,6 +102,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           <Link
             to={route.teamMembers(displayTeam.username)}
             className="sidemenu-link text-text-primary"
+            data-pw="team-nav-members"
           >
             <UserGroup className="w-6 h-6 [&>path]:stroke-[#737373]" />
             <span>{t('members')}</span>
@@ -108,6 +112,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           <Link
             to={route.teamSettings(displayTeam.username)}
             className="sidemenu-link text-text-primary"
+            data-pw="team-nav-settings"
           >
             <Settings className="w-6 h-6" />
             <span>{t('settings')}</span>

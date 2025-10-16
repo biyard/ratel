@@ -48,7 +48,10 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="w-full flex items-center justify-between px-2 py-2 focus:outline-none">
+        <button
+          className="w-full flex items-center justify-between px-2 py-2 focus:outline-none"
+          data-pw="team-selector-trigger"
+        >
           <span className="font-bold text-[18px] text-text-primary truncate">
             {teams[selectedIndex].nickname}
           </span>
@@ -70,7 +73,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
                   className="focus:bg-accent focus:text-text-primary [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2 hover:bg-hover"
                   asChild
                 >
-                  <NavLink  
+                  <NavLink
                     to={
                       index === 0
                         ? route.home()
@@ -108,6 +111,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
             onClick={() =>
               popup.open(<TeamCreationPopup />).withTitle(t('create_new_team'))
             }
+            data-pw="open-team-creation-popup"
           >
             <span className="text-text-primary">{t('create_team')}</span>
           </DropdownMenuItem>
