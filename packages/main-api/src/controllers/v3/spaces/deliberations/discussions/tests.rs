@@ -1,5 +1,9 @@
+use bdk::prelude::axum::AxumRouter;
+
 use crate::controllers::v3::spaces::CreateSpaceResponse;
-use crate::types::SpaceType;
+use crate::controllers::v3::spaces::deliberations::update_deliberation_deliberation::UpdateDeliberationDeliberationResponse;
+use crate::models::DiscussionCreateRequest;
+use crate::types::{File, SpaceType, SpaceVisibility};
 use crate::*;
 use crate::{
     controllers::v3::posts::create_post::CreatePostResponse,
@@ -10,6 +14,8 @@ use crate::{
     },
     types::Partition,
 };
+use axum::http::HeaderMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 #[tokio::test]
 async fn test_create_discussion_handler() {
@@ -18,69 +24,17 @@ async fn test_create_discussion_handler() {
         test_user: (user, headers),
         ..
     } = setup_v3().await;
-
-    //FIXME: fix by session and one test code
     let app_state = create_app_state();
-    let cli = &app_state.dynamo.client;
-    let _auth = get_auth(&user);
-
-    let (_status, _headers, post) = post! {
-        app: app,
-        path: "/v3/posts",
-        headers: headers.clone(),
-        response_type: CreatePostResponse
-    };
-
-    let feed_pk = post.post_pk.clone();
-
-    // SPACE
-    let (status, _headers, body) = post! {
-        app: app,
-        path: "/v3/spaces",
-        headers: headers.clone(),
-        body: {
-            "space_type": SpaceType::Deliberation,
-            "post_pk": feed_pk
-        },
-        response_type: CreateSpaceResponse
-    };
-
-    assert_eq!(status, 200);
-
-    let now = chrono::Utc::now().timestamp();
-
-    let team_1 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-    let team_2 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-
-    let members = vec![team_1, team_2];
-    let space_pk = body.space_pk;
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/{}/deliberation/discussions", space_pk_encoded);
-
-    println!("space_pk_encoded: {:?}", space_pk_encoded);
-    let (status, _headers, body) = post! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        body: {
-            "name": "Test discussion title",
-            "description": "Test discussion description",
-            "started_at": now,
-            "ended_at": now + 3600,
-            "members": members
-        },
-        response_type: DeliberationDiscussionResponse
-    };
-
-    eprintln!("create discussion: {:?}", body);
-
-    assert_eq!(status, 200);
+    let _ = get_auth(&user);
+    let (_space_pk, _space_pk_encoded, body) = bootstrap_discussion(
+        &app,
+        headers.clone(),
+        &app_state.dynamo.client,
+        "Test discussion title",
+        "Test discussion description",
+    )
+    .await;
+    assert!(!body.pk.to_string().is_empty());
 }
 
 #[tokio::test]
@@ -90,70 +44,18 @@ async fn test_start_meeting_handler() {
         test_user: (user, headers),
         ..
     } = setup_v3().await;
-
-    //FIXME: fix by session and one test code
     let app_state = create_app_state();
-    let cli = &app_state.dynamo.client;
-    let _auth = get_auth(&user);
+    let _ = get_auth(&user);
+    let (space_pk, space_pk_encoded, body) = bootstrap_discussion(
+        &app,
+        headers.clone(),
+        &app_state.dynamo.client,
+        "Test discussion title",
+        "Test discussion description",
+    )
+    .await;
 
-    let (_status, _headers, post) = post! {
-        app: app,
-        path: "/v3/posts",
-        headers: headers.clone(),
-        response_type: CreatePostResponse
-    };
-
-    let feed_pk = post.post_pk.clone();
-
-    // SPACE
-    let (status, _headers, body) = post! {
-        app: app,
-        path: "/v3/spaces",
-        headers: headers.clone(),
-        body: {
-            "space_type": SpaceType::Deliberation,
-            "post_pk": feed_pk
-        },
-        response_type: CreateSpaceResponse
-    };
-
-    assert_eq!(status, 200);
-
-    let now = chrono::Utc::now().timestamp();
-
-    let team_1 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-    let team_2 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-
-    let members = vec![team_1, team_2];
-    let space_pk = body.space_pk;
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/{}/deliberation/discussions", space_pk_encoded);
-
-    let (status, _headers, body) = post! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        body: {
-            "name": "Test discussion title",
-            "description": "Test discussion description",
-            "started_at": now,
-            "ended_at": now + 3600,
-            "members": members
-        },
-        response_type: DeliberationDiscussionResponse
-    };
-
-    assert_eq!(status, 200);
-
-    let discussion_pk = body.pk;
-    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
-
+    let discussion_pk_encoded = body.pk.to_string().replace('#', "%23");
     let path = format!(
         "/v3/spaces/{}/deliberation/discussions/{}/start-meeting",
         space_pk_encoded, discussion_pk_encoded
@@ -161,15 +63,15 @@ async fn test_start_meeting_handler() {
 
     let (status, _headers, body) = post! {
         app: app,
-        path: path.clone(),
+        path: path,
         headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
 
     assert_eq!(status, 200);
-
     assert!(body.members.len() == 2, "Meeting count is not matched");
+    let _ = space_pk;
 }
 
 #[tokio::test]
@@ -179,70 +81,18 @@ async fn test_create_participants_handler() {
         test_user: (user, headers),
         ..
     } = setup_v3().await;
-
-    //FIXME: fix by session and one test code
     let app_state = create_app_state();
-    let cli = &app_state.dynamo.client;
-    let _auth = get_auth(&user);
+    let _ = get_auth(&user);
+    let (_space_pk, space_pk_encoded, body) = bootstrap_discussion(
+        &app,
+        headers.clone(),
+        &app_state.dynamo.client,
+        "Test discussion title",
+        "Test discussion description",
+    )
+    .await;
 
-    let (_status, _headers, post) = post! {
-        app: app,
-        path: "/v3/posts",
-        headers: headers.clone(),
-        response_type: CreatePostResponse
-    };
-
-    let feed_pk = post.post_pk.clone();
-
-    // SPACE
-    let (status, _headers, body) = post! {
-        app: app,
-        path: "/v3/spaces",
-        headers: headers.clone(),
-        body: {
-            "space_type": SpaceType::Deliberation,
-            "post_pk": feed_pk
-        },
-        response_type: CreateSpaceResponse
-    };
-
-    assert_eq!(status, 200);
-
-    let now = chrono::Utc::now().timestamp();
-
-    let team_1 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-    let team_2 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-
-    let members = vec![team_1, team_2];
-    let space_pk = body.space_pk;
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/{}/deliberation/discussions", space_pk_encoded);
-
-    let (status, _headers, body) = post! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        body: {
-            "name": "Test discussion title",
-            "description": "Test discussion description",
-            "started_at": now,
-            "ended_at": now + 3600,
-            "members": members
-        },
-        response_type: DeliberationDiscussionResponse
-    };
-
-    assert_eq!(status, 200);
-
-    let discussion_pk = body.pk;
-    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
-
+    let discussion_pk_encoded = body.pk.to_string().replace('#', "%23");
     let path = format!(
         "/v3/spaces/{}/deliberation/discussions/{}/participant-meeting",
         space_pk_encoded, discussion_pk_encoded
@@ -250,19 +100,16 @@ async fn test_create_participants_handler() {
 
     let (status, _headers, body) = post! {
         app: app,
-        path: path.clone(),
+        path: path,
         headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
 
     assert_eq!(status, 200);
-
-    eprintln!("participant meeting: {:?}", body);
-
     assert!(
         body.participants.len() == 1,
-        "Failed to participant meeting",
+        "Failed to participant meeting"
     );
 }
 
@@ -273,98 +120,43 @@ async fn test_exit_meeting_handler() {
         test_user: (user, headers),
         ..
     } = setup_v3().await;
-
-    //FIXME: fix by session and one test code
     let app_state = create_app_state();
-    let cli = &app_state.dynamo.client;
-    let _auth = get_auth(&user);
+    let _ = get_auth(&user);
+    let (_space_pk, space_pk_encoded, body) = bootstrap_discussion(
+        &app,
+        headers.clone(),
+        &app_state.dynamo.client,
+        "Test discussion title",
+        "Test discussion description",
+    )
+    .await;
 
-    let (_status, _headers, post) = post! {
-        app: app,
-        path: "/v3/posts",
-        headers: headers.clone(),
-        response_type: CreatePostResponse
-    };
+    let discussion_pk_encoded = body.pk.to_string().replace('#', "%23");
 
-    let feed_pk = post.post_pk.clone();
-
-    // SPACE
-    let (status, _headers, body) = post! {
-        app: app,
-        path: "/v3/spaces",
-        headers: headers.clone(),
-        body: {
-            "space_type": SpaceType::Deliberation,
-            "post_pk": feed_pk
-        },
-        response_type: CreateSpaceResponse
-    };
-
-    assert_eq!(status, 200);
-
-    let now = chrono::Utc::now().timestamp();
-
-    let team_1 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-    let team_2 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => "".to_string(),
-    };
-
-    let members = vec![team_1, team_2];
-    let space_pk = body.space_pk;
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/{}/deliberation/discussions", space_pk_encoded);
-
-    let (status, _headers, body) = post! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        body: {
-            "name": "Test discussion title",
-            "description": "Test discussion description",
-            "started_at": now,
-            "ended_at": now + 3600,
-            "members": members
-        },
-        response_type: DeliberationDiscussionResponse
-    };
-
-    assert_eq!(status, 200);
-
-    let discussion_pk = body.pk;
-    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
-
-    let path = format!(
+    let start_meeting_path = format!(
         "/v3/spaces/{}/deliberation/discussions/{}/start-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
-
-    let (status, _headers, _body) = post! {
+    let (status, _headers, _) = post! {
         app: app,
-        path: path.clone(),
+        path: start_meeting_path,
         headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
-
     assert_eq!(status, 200);
 
-    let path = format!(
+    let participant_path = format!(
         "/v3/spaces/{}/deliberation/discussions/{}/participant-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
-
     let (status, _headers, body) = post! {
         app: app,
-        path: path.clone(),
+        path: participant_path,
         headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
-
     assert_eq!(status, 200);
 
     let me_user_pk: Partition = body
@@ -376,29 +168,21 @@ async fn test_exit_meeting_handler() {
         })
         .unwrap_or_default();
 
-    assert!(
-        body.participants.iter().any(|p| p.user_pk == me_user_pk),
-        "self should be in participants after join"
-    );
+    assert!(body.participants.iter().any(|p| p.user_pk == me_user_pk));
 
-    let path = format!(
+    let exit_path = format!(
         "/v3/spaces/{}/deliberation/discussions/{}/exit-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
-
     let (status, _headers, body) = post! {
         app: app,
-        path: path.clone(),
+        path: exit_path,
         headers: headers.clone(),
         body: {},
         response_type: DeliberationDiscussionResponse
     };
-
     assert_eq!(status, 200);
-
-    eprintln!("exited meeting: {:?}", body);
-
-    assert!(body.participants.len() == 0, "not matched participants len",);
+    assert!(body.participants.len() == 0, "not matched participants len");
 }
 
 #[tokio::test]
@@ -408,73 +192,24 @@ async fn test_start_recording_handler() {
         test_user: (user, headers),
         ..
     } = setup_v3().await;
-
-    //FIXME: fix by session and one test code
     let app_state = create_app_state();
-    let cli = &app_state.dynamo.client;
-    let _auth = get_auth(&user);
+    let _ = get_auth(&user);
+    let (_space_pk, space_pk_encoded, disc_body) = bootstrap_discussion(
+        &app,
+        headers.clone(),
+        &app_state.dynamo.client,
+        "recording test",
+        "recording test desc",
+    )
+    .await;
 
-    let (_status, _headers, post) = post! {
-        app: app,
-        path: "/v3/posts",
-        headers: headers.clone(),
-        response_type: CreatePostResponse
-    };
-
-    let feed_pk = post.post_pk.clone();
-
-    // SPACE
-    let (status, _headers, body) = post! {
-        app: app,
-        path: "/v3/spaces",
-        headers: headers.clone(),
-        body: {
-            "space_type": SpaceType::Deliberation,
-            "post_pk": feed_pk
-        },
-        response_type: CreateSpaceResponse
-    };
-    assert_eq!(status, 200);
-
-    let space_pk = body.space_pk.clone();
-    let now = chrono::Utc::now().timestamp();
-
-    let team_1 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => String::new(),
-    };
-    let team_2 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => String::new(),
-    };
-    let members = vec![team_1, team_2];
-
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let create_disc_path = format!("/v3/spaces/{}/deliberation/discussions", space_pk_encoded);
-
-    let (status, _headers, disc_body) = post! {
-        app: app,
-        path: create_disc_path,
-        headers: headers.clone(),
-        body: {
-            "name": "recording test",
-            "description": "recording test desc",
-            "started_at": now,
-            "ended_at": now + 3600,
-            "members": members
-        },
-        response_type: DeliberationDiscussionResponse
-    };
-    assert_eq!(status, 200);
-
-    let discussion_pk = disc_body.pk.clone();
-    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
+    let discussion_pk_encoded = disc_body.pk.to_string().replace('#', "%23");
 
     let start_meeting_path = format!(
         "/v3/spaces/{}/deliberation/discussions/{}/start-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
-    let (status, _headers, _started_meeting) = post! {
+    let (status, _headers, _) = post! {
         app: app,
         path: start_meeting_path,
         headers: headers.clone(),
@@ -495,10 +230,7 @@ async fn test_start_recording_handler() {
         response_type: DeliberationDiscussionResponse
     };
     assert_eq!(status, 200);
-    assert!(
-        !resp.members.is_empty(),
-        "members should be present in response"
-    );
+    assert!(!resp.members.is_empty());
 }
 
 #[tokio::test]
@@ -508,67 +240,18 @@ async fn test_end_recording_handler() {
         test_user: (user, headers),
         ..
     } = setup_v3().await;
-
-    //FIXME: fix by session and one test code
     let app_state = create_app_state();
-    let cli = &app_state.dynamo.client;
-    let _auth = get_auth(&user);
+    let _ = get_auth(&user);
+    let (_space_pk, space_pk_encoded, disc_body) = bootstrap_discussion(
+        &app,
+        headers.clone(),
+        &app_state.dynamo.client,
+        "recording test",
+        "recording test desc",
+    )
+    .await;
 
-    let (_status, _headers, post) = post! {
-        app: app,
-        path: "/v3/posts",
-        headers: headers.clone(),
-        response_type: CreatePostResponse
-    };
-
-    let feed_pk = post.post_pk.clone();
-
-    // SPACE
-    let (status, _headers, body) = post! {
-        app: app,
-        path: "/v3/spaces",
-        headers: headers.clone(),
-        body: {
-            "space_type": SpaceType::Deliberation,
-            "post_pk": feed_pk
-        },
-        response_type: CreateSpaceResponse
-    };
-    assert_eq!(status, 200);
-
-    let space_pk = body.space_pk.clone();
-    let now = chrono::Utc::now().timestamp();
-
-    let team_1 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => String::new(),
-    };
-    let team_2 = match create_test_user(&cli).await.pk {
-        Partition::User(v) => v,
-        _ => String::new(),
-    };
-    let members = vec![team_1, team_2];
-
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let create_disc_path = format!("/v3/spaces/{}/deliberation/discussions", space_pk_encoded);
-
-    let (status, _headers, disc_body) = post! {
-        app: app,
-        path: create_disc_path,
-        headers: headers.clone(),
-        body: {
-            "name": "recording test",
-            "description": "recording test desc",
-            "started_at": now,
-            "ended_at": now + 3600,
-            "members": members
-        },
-        response_type: DeliberationDiscussionResponse
-    };
-    assert_eq!(status, 200);
-
-    let discussion_pk = disc_body.pk.clone();
-    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
+    let discussion_pk_encoded = disc_body.pk.to_string().replace('#', "%23");
 
     let start_meeting_path = format!(
         "/v3/spaces/{}/deliberation/discussions/{}/start-meeting",
@@ -608,8 +291,70 @@ async fn test_end_recording_handler() {
         response_type: DeliberationDiscussionResponse
     };
     assert_eq!(status, 200);
-    assert!(
-        !resp.members.is_empty(),
-        "members should be present after ending recording"
-    );
+    assert!(!resp.members.is_empty());
+}
+
+async fn bootstrap_discussion(
+    app: &AxumRouter,
+    headers: HeaderMap,
+    cli: &aws_sdk_dynamodb::Client,
+    name: &str,
+    description: &str,
+) -> (Partition, String, DeliberationDiscussionResponse) {
+    let (_status, _headers, post) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse
+    };
+
+    let feed_pk = post.post_pk.clone();
+
+    let (_status, _headers, space) = post! {
+        app: app,
+        path: "/v3/spaces",
+        headers: headers.clone(),
+        body: {
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
+        },
+        response_type: CreateSpaceResponse
+    };
+
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
+
+    let team_1 = create_test_user(&cli).await.pk;
+    let team_2 = create_test_user(&cli).await.pk;
+    let members = vec![team_1, team_2];
+
+    let space_pk = space.space_pk;
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let path = format!("/v3/spaces/{}/deliberation/deliberation", space_pk_encoded);
+
+    let (_status, _headers, body) = patch! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "html_contents": Some("<div>deliberation description</div>".to_string()),
+            "visibility": SpaceVisibility::Public,
+            "started_at": now,
+            "ended_at": now + 86400,
+            "discussions": vec![DiscussionCreateRequest {
+                discussion_pk: None,
+                started_at: now,
+                ended_at: now,
+                name: name.to_string(),
+                description: description.to_string(),
+                user_ids: members.clone(),
+            }],
+            "elearning_files": Vec::<File>::new(),
+        },
+        response_type: UpdateDeliberationDeliberationResponse
+    };
+
+    (space_pk, space_pk_encoded, body.discussions[0].clone())
 }

@@ -76,6 +76,7 @@ pub struct SpaceCommon {
     pub publish_state: SpacePublishState, // Draft, Published
     #[dynamo(prefix = "POST_PK", name = "find_by_post_pk", index = "gsi2", pk)]
     pub post_pk: Partition,
+    pub space_type: SpaceType,
 
     #[dynamo(prefix = "USER_PK", name = "find_by_user_pk", index = "gsi1", pk)]
     pub user_pk: Partition,
@@ -93,7 +94,12 @@ pub struct SpaceCommon {
 
 impl SpaceCommon {
     pub fn new<A: Into<Author>>(post_pk: Partition, author: A) -> Self {
-        let uid = uuid::Uuid::new_v4().to_string();
+        let uid = match post_pk {
+            Partition::Feed(ref id) => id.clone(),
+            _ => {
+                panic!("post_pk must be Partition::Feed");
+            }
+        };
 
         let now = get_now_timestamp_millis();
         let Author {

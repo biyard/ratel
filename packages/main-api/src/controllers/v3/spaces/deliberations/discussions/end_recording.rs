@@ -1,41 +1,40 @@
 use crate::{
     AppState, Error2,
     controllers::v3::spaces::deliberations::discussions::start_meeting::DeliberationDiscussionByIdPath,
-    models::space::{
-        DeliberationDiscussionMember, DeliberationDiscussionMemberQueryOption,
-        DeliberationDiscussionResponse, DeliberationSpaceDiscussion, DeliberationSpaceParticipant,
-        DeliberationSpaceParticipantQueryOption, DiscussionMemberResponse,
-        DiscussionParticipantResponse,
+    models::{
+        User,
+        space::{
+            DeliberationDiscussionMember, DeliberationDiscussionMemberQueryOption,
+            DeliberationDiscussionResponse, DeliberationSpaceDiscussion,
+            DeliberationSpaceParticipant, DeliberationSpaceParticipantQueryOption,
+            DiscussionMemberResponse, DiscussionParticipantResponse,
+        },
     },
     types::{EntityType, Partition},
     utils::aws::DynamoClient,
 };
-use bdk::prelude::axum::{
-    Extension,
-    extract::{Json, Path, State},
-};
 use bdk::prelude::*;
-use tower_sessions::Session;
+use bdk::prelude::{
+    aide::NoApi,
+    axum::extract::{Json, Path, State},
+};
 
 pub async fn end_recording_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(_session): Extension<Session>,
+    NoApi(_user): NoApi<Option<User>>,
     Path(DeliberationDiscussionByIdPath {
         space_pk,
         discussion_pk,
     }): Path<DeliberationDiscussionByIdPath>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
-    let space_id = match space_pk.clone() {
-        Partition::Space(v) => v,
-        _ => "".to_string(),
-    };
     let discussion_id = match discussion_pk {
         Partition::Discussion(v) => v,
         _ => "".to_string(),
     };
 
-    let (disc, _disc_pk) = fetch_discussion_and_pk(&dynamo, &space_id, &discussion_id).await?;
+    let (disc, _disc_pk) =
+        fetch_discussion_and_pk(&dynamo, space_pk.clone(), &discussion_id).await?;
 
     let meeting_id = disc
         .meeting_id
@@ -55,7 +54,7 @@ pub async fn end_recording_handler(
         })?;
 
     DeliberationSpaceDiscussion::updater(
-        &Partition::Space(space_id.clone()),
+        space_pk.clone(),
         EntityType::DeliberationDiscussion(discussion_id.clone()),
     )
     .with_pipeline_id(String::new())
@@ -63,7 +62,8 @@ pub async fn end_recording_handler(
     .execute(&dynamo.client)
     .await?;
 
-    let (disc_final, disc_pk) = fetch_discussion_and_pk(&dynamo, &space_id, &discussion_id).await?;
+    let (disc_final, disc_pk) =
+        fetch_discussion_and_pk(&dynamo, space_pk.clone(), &discussion_id).await?;
     let members_resp = list_members_resp(&dynamo, &disc_pk).await?;
     let participants_resp = list_participants_resp(&dynamo, &disc_pk).await?;
 
@@ -75,12 +75,12 @@ pub async fn end_recording_handler(
 
 async fn fetch_discussion_and_pk(
     dynamo: &DynamoClient,
-    deliberation_id: &str,
+    space_pk: Partition,
     discussion_id: &str,
 ) -> Result<(DeliberationSpaceDiscussion, String), Error2> {
     let disc = DeliberationSpaceDiscussion::get(
         &dynamo.client,
-        &Partition::Space(deliberation_id.to_string()),
+        &space_pk,
         Some(EntityType::DeliberationDiscussion(
             discussion_id.to_string(),
         )),
