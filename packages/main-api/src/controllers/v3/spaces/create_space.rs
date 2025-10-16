@@ -44,27 +44,17 @@ pub async fn create_space_handler(
         return Err(Error2::NoPermission);
     }
 
-    let space = SpaceCommon::new(post_pk, user);
+    let space = SpaceCommon::new(post_pk, user).with_space_type(space_type);
 
     let post_updater = Post::updater(&post.pk, &post.sk)
         .with_space_pk(space.pk.clone())
         .with_space_type(space_type);
-
-    // let space_tx = space.create_transact_write_item();
-    // let post_tx = post_updater.transact_write_item();
 
     transact_write!(
         dynamo.client,
         space.create_transact_write_item(),
         post_updater.transact_write_item()
     )?;
-    // dynamo
-    //     .client
-    //     .transact_write_items()
-    //     .set_transact_items(Some(vec![space_tx, post_tx]))
-    //     .send()
-    //     .await
-    //     .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
 
     Ok(Json(CreateSpaceResponse { space_pk: space.pk }))
 }
