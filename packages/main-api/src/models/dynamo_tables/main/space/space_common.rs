@@ -1,4 +1,9 @@
-use crate::{Error2, models::team::Team, types::*, utils::time::get_now_timestamp_millis};
+use crate::{
+    Error2,
+    models::{Post, TimeRange, team::Team},
+    types::*,
+    utils::time::get_now_timestamp_millis,
+};
 use bdk::prelude::*;
 
 #[derive(
@@ -152,5 +157,33 @@ impl SpaceCommon {
             }
             _ => Err(Error2::InternalServerError("Invalid space author".into())),
         }
+    }
+
+    pub async fn update_transact_write_items(
+        &self,
+        title: String,
+        html_content: String,
+        time_range: TimeRange,
+        booster: BoosterType,
+    ) -> crate::Result<Vec<aws_sdk_dynamodb::types::TransactWriteItem>> {
+        if time_range.is_valid() {
+            return Err(Error2::InvalidTimeRange);
+        }
+        let now = get_now_timestamp_millis();
+        let space_tx = SpaceCommon::updater(&self.pk, &self.sk)
+            .with_updated_at(now)
+            .with_started_at(time_range.0)
+            .with_ended_at(time_range.1)
+            .with_booster(booster)
+            .transact_write_item();
+
+        let post_tx = Post::updater(&self.post_pk, &EntityType::Post)
+            .with_updated_at(now)
+            .with_title(title)
+            .with_html_contents(html_content)
+            .with_booster(booster)
+            .transact_write_item();
+
+        Ok(vec![space_tx, post_tx])
     }
 }

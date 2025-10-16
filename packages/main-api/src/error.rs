@@ -141,6 +141,12 @@ pub enum Error {
     #[error("Survey summary not found")]
     NotFoundSurveySummary,
 
+    // /v3/spaces/sprint_leagues endpoints 3400 ~
+    #[error("User has already voted")]
+    #[rest_error(code = 3400)]
+    AlreadyVoted,
+    #[error("User has already voted {0}")]
+    SprintLeagueVoteError(String),
     // teams 4000 ~
     #[error("Team not found")]
     #[rest_error(status = 404, code = 4000)]
