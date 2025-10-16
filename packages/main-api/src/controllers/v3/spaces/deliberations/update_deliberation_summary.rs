@@ -39,6 +39,7 @@ pub struct UpdateDeliberationSummaryResponse {
     pub summaries: DeliberationContentResponse,
 }
 
+//FIXME: implement with dynamodb upsert method
 pub async fn update_deliberation_summary_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
