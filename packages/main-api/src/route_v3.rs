@@ -426,7 +426,7 @@ pub fn route(
                                 )
                                 .route(
                                     "/:discussion_pk/meeting",
-                                    get_with(
+                                    patch_with(
                                         get_meeting_handler,
                                         api_docs!(
                                             Json<MeetingData>,
@@ -437,7 +437,7 @@ pub fn route(
                                 )
                                 .route(
                                     "/:discussion_pk/start-meeting",
-                                    post_with(
+                                    patch_with(
                                         start_meeting_handler,
                                         api_docs!(
                                             Json<DeliberationDiscussionResponse>,
@@ -448,7 +448,7 @@ pub fn route(
                                 )
                                 .route(
                                     "/:discussion_pk/participant-meeting",
-                                    post_with(
+                                    patch_with(
                                         participant_meeting_handler,
                                         api_docs!(
                                             Json<DeliberationDiscussionResponse>,
@@ -459,7 +459,7 @@ pub fn route(
                                 )
                                 .route(
                                     "/:discussion_pk/start-recording",
-                                    post_with(
+                                    patch_with(
                                         start_recording_handler,
                                         api_docs!(
                                             Json<DeliberationDiscussionResponse>,
@@ -470,7 +470,7 @@ pub fn route(
                                 )
                                 .route(
                                     "/:discussion_pk/end-recording",
-                                    post_with(
+                                    patch_with(
                                         end_recording_handler,
                                         api_docs!(
                                             Json<DeliberationDiscussionResponse>,
@@ -481,7 +481,7 @@ pub fn route(
                                 )
                                 .route(
                                     "/:discussion_pk/exit-meeting",
-                                    post_with(
+                                    patch_with(
                                         exit_meeting_handler,
                                         api_docs!(
                                             Json<DeliberationDiscussionResponse>,

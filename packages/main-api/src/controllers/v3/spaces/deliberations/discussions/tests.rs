@@ -98,7 +98,7 @@ async fn test_create_participants_handler() {
         space_pk_encoded, discussion_pk_encoded
     );
 
-    let (status, _headers, body) = post! {
+    let (status, _headers, body) = patch! {
         app: app,
         path: path,
         headers: headers.clone(),
@@ -137,7 +137,7 @@ async fn test_exit_meeting_handler() {
         "/v3/spaces/{}/deliberation/discussions/{}/start-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
-    let (status, _headers, _) = post! {
+    let (status, _headers, _) = patch! {
         app: app,
         path: start_meeting_path,
         headers: headers.clone(),
@@ -150,7 +150,7 @@ async fn test_exit_meeting_handler() {
         "/v3/spaces/{}/deliberation/discussions/{}/participant-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
-    let (status, _headers, body) = post! {
+    let (status, _headers, body) = patch! {
         app: app,
         path: participant_path,
         headers: headers.clone(),
@@ -174,7 +174,7 @@ async fn test_exit_meeting_handler() {
         "/v3/spaces/{}/deliberation/discussions/{}/exit-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
-    let (status, _headers, body) = post! {
+    let (status, _headers, body) = patch! {
         app: app,
         path: exit_path,
         headers: headers.clone(),
@@ -209,7 +209,7 @@ async fn test_start_recording_handler() {
         "/v3/spaces/{}/deliberation/discussions/{}/start-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
-    let (status, _headers, _) = post! {
+    let (status, _headers, _) = patch! {
         app: app,
         path: start_meeting_path,
         headers: headers.clone(),
@@ -222,7 +222,7 @@ async fn test_start_recording_handler() {
         "/v3/spaces/{}/deliberation/discussions/{}/start-recording",
         space_pk_encoded, discussion_pk_encoded
     );
-    let (status, _headers, resp) = post! {
+    let (status, _headers, resp) = patch! {
         app: app,
         path: start_recording_path,
         headers: headers.clone(),
@@ -257,7 +257,7 @@ async fn test_end_recording_handler() {
         "/v3/spaces/{}/deliberation/discussions/{}/start-meeting",
         space_pk_encoded, discussion_pk_encoded
     );
-    let (status, _, _) = post! {
+    let (status, _, _) = patch! {
         app: app,
         path: start_meeting_path,
         headers: headers.clone(),
@@ -270,7 +270,7 @@ async fn test_end_recording_handler() {
         "/v3/spaces/{}/deliberation/discussions/{}/start-recording",
         space_pk_encoded, discussion_pk_encoded
     );
-    let (status, _, _) = post! {
+    let (status, _, _) = patch! {
         app: app,
         path: start_recording_path,
         headers: headers.clone(),
@@ -283,7 +283,7 @@ async fn test_end_recording_handler() {
         "/v3/spaces/{}/deliberation/discussions/{}/end-recording",
         space_pk_encoded, discussion_pk_encoded
     );
-    let (status, _headers, resp) = post! {
+    let (status, _headers, resp) = patch! {
         app: app,
         path: end_recording_path,
         headers: headers.clone(),

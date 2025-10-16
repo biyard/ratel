@@ -86,7 +86,6 @@ pub enum EntityType {
     SpaceMember,
     Feed,
     Group,
-    Discussion,
     Metadata,
     Member,
     Follower,
@@ -96,4 +95,11 @@ pub enum EntityType {
     Comment,
     Badge,
     Industry,
+
+    //SPACE FEATURE
+    File,
+    Discussion(String),
+    DiscussionMember(String),
+    DiscussionParticipant(String),
+    Question(String),
 }
