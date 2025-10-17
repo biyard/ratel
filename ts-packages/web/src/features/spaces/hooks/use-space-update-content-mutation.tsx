@@ -2,7 +2,7 @@ import { spaceKeys } from '@/constants';
 import { updateSpaceContent } from '@/lib/api/ratel/spaces.v3';
 import { optimisticUpdate } from '@/lib/hook-utils';
 import { useMutation } from '@tanstack/react-query';
-import { Space } from '../types/Space';
+import { Space } from '../types/space';
 
 export function useSpaceUpdateContentMutation<T extends Space>() {
   const mutation = useMutation({
