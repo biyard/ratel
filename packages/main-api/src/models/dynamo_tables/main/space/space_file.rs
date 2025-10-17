@@ -44,7 +44,7 @@ impl SpaceFile {
 
         Ok(Self {
             pk,
-            sk: EntityType::File,
+            sk: EntityType::SpaceFile,
             name,
             size,
             ext,

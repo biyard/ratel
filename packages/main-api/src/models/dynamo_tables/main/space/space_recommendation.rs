@@ -11,7 +11,7 @@ pub struct SpaceRecommendation {
 
 impl SpaceRecommendation {
     pub fn new(pk: Partition, html_contents: String) -> Self {
-        let sk = EntityType::Recommendation;
+        let sk = EntityType::SpaceRecommendation;
 
         Self {
             pk,

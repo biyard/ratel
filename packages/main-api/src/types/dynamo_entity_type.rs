@@ -97,12 +97,12 @@ pub enum EntityType {
     Industry,
 
     //SPACE FEATURE
-    File,
-    Discussion(String),
-    DiscussionMember(String),
-    DiscussionParticipant(String),
-    Survey(String),
-    Question(String),
-    Recommendation,
-    SurveyResponse(String, String), //Survey pk, User Pk
+    SpaceFile,
+    SpaceDiscussion(String),
+    SpaceDiscussionMember(String),
+    SpaceDiscussionParticipant(String),
+    SpacePoll(String),
+    SpaceQuiz(String),
+    SpaceRecommendation,
+    SpaceSurveyResponse(String), //Space pk
 }
