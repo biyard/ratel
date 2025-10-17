@@ -101,5 +101,8 @@ pub enum EntityType {
     Discussion(String),
     DiscussionMember(String),
     DiscussionParticipant(String),
+    Survey(String),
     Question(String),
+    Recommendation,
+    SurveyResponse(String, String), //Survey pk, User Pk
 }
