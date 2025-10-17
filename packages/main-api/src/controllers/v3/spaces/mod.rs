@@ -4,6 +4,7 @@ pub mod list_spaces;
 pub mod update_space;
 
 pub mod deliberations;
+pub mod discussions;
 pub mod polls;
 
 pub mod dto;
@@ -15,6 +16,7 @@ pub mod tests;
 pub use create_space::*;
 pub use delete_space::*;
 pub use deliberations::*;
+pub use discussions::*;
 pub use dto::*;
 pub use get_space::*;
 pub use list_spaces::*;
