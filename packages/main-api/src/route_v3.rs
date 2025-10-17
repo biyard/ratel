@@ -35,6 +35,8 @@ use crate::controllers::v3::spaces::deliberations::responses::create_response_an
     DeliberationResponse, create_response_answer_handler,
 };
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
+use crate::controllers::v3::spaces::get_files::get_files_handler;
+use crate::controllers::v3::spaces::get_files::GetSpaceFileResponse;
 use crate::controllers::v3::spaces::get_space_handler;
 use crate::controllers::v3::spaces::polls::dto::*;
 use crate::controllers::v3::spaces::deliberations::update_deliberation_deliberation::{
@@ -55,6 +57,8 @@ use crate::controllers::v3::spaces::polls::respond_poll_space::{
 use crate::controllers::v3::spaces::polls::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
+use crate::controllers::v3::spaces::update_files::update_files_handler;
+use crate::controllers::v3::spaces::update_files::UpdateSpaceFileResponse;
 use crate::controllers::v3::spaces::{dto::*, list_spaces_handler};
 use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
 use crate::models::{
@@ -370,6 +374,35 @@ pub fn route(
                             "Update space details"
                         ),
                     ).get(get_space_handler),
+                )
+                .nest("/:space_pk", Router::new()
+                    // FILE feature
+                    .nest(
+                        "/files", 
+                        Router::new()
+                            .route(
+                                "/",
+                                patch_with(
+                                    update_files_handler,
+                                    api_docs!(
+                                            Json<UpdateSpaceFileResponse>,
+                                            "Update Files",
+                                            "Update Files by space pk"
+                                        ),
+                                )
+                            )
+                            .route(
+                                "/",
+                                get_with(
+                                    get_files_handler,
+                                    api_docs!(
+                                            Json<GetSpaceFileResponse>,
+                                            "Get Files",
+                                            "Get Files by space pk"
+                                        ),
+                                )
+                            )
+                    )
                 )
                 .nest(
                     "/:space_pk/deliberation",
