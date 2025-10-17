@@ -17,6 +17,12 @@ pub enum UpdateSpaceRequest {
         publish: bool,
         visibility: SpaceVisibility,
     },
+    Content {
+        content: String,
+    },
+    Title {
+        title: String,
+    },
     Visibility {
         visibility: SpaceVisibility,
     },
@@ -78,6 +84,20 @@ pub async fn update_space_handler(
             updater.execute(&dynamo.client).await?;
 
             space.visibility = visibility;
+            Ok(Json(SpaceCommonResponse::from(space)))
+        }
+        UpdateSpaceRequest::Content { content } => {
+            let updater = SpaceCommon::updater(&space.pk, &space.sk).with_content(content.clone());
+            updater.execute(&dynamo.client).await?;
+
+            space.content = content;
+            Ok(Json(SpaceCommonResponse::from(space)))
+        }
+        UpdateSpaceRequest::Title { title } => {
+            let post_pk = space.pk.clone().to_post_key()?;
+            let updater = Post::updater(&post_pk, EntityType::Post).with_title(title.clone());
+            updater.execute(&dynamo.client).await?;
+
             Ok(Json(SpaceCommonResponse::from(space)))
         }
     }
