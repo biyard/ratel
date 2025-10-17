@@ -101,7 +101,7 @@ export default function SpaceHeader({
     openMakePublicModal(popup, onMakePublic, t('make_public_modal_title'));
   };
   return (
-    <div className="flex flex-col w-full gap-2.5">
+    <div className="flex flex-col gap-2.5 w-full">
       <SpaceModifySection
         isEditable={isEditable}
         hasEditPermission={hasEditPermission}
@@ -124,7 +124,7 @@ export default function SpaceHeader({
         isPublic={visibility.type === 'Public'}
       />
       <TitleSection
-        isEdit={isEditingMode}
+        canEdit={isEditingMode}
         title={title}
         setTitle={(newTitle) => updateTitle(newTitle)}
         handleShare={async () => {
@@ -178,12 +178,12 @@ function SpaceModifySection({
 }: SpaceModifySectionProps) {
   return (
     <div className="flex flex-row justify-between items-center w-full">
-      <div className="flex flex-row items-center gap-1 text-sm text-c-wg-50 cursor-pointer">
+      <div className="flex flex-row gap-1 items-center text-sm cursor-pointer text-c-wg-50">
         <BackButton onClick={onGoBack} />
       </div>
 
       {hasEditPermission && (
-        <div className="flex flex-row items-center gap-2 text-sm text-white">
+        <div className="flex flex-row gap-2 items-center text-sm text-white">
           {isEditable ? (
             isEditingMode ? (
               <SaveButton onClick={onSave} disabled={!hasUnsavedChanges} />

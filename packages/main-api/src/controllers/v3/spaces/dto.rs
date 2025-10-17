@@ -34,6 +34,7 @@ pub struct SpaceCommonResponse {
     pub publish_state: SpacePublishState,
     pub visibility: SpaceVisibility,
     pub post_pk: Partition,
+    pub content: String,
 
     pub user_pk: Partition,
     pub author_display_name: String,
@@ -68,6 +69,7 @@ impl From<SpaceCommon> for SpaceCommonResponse {
             booster: value.booster,
             custom_booster: value.custom_booster,
             rewards: value.rewards,
+            content: value.content,
         }
     }
 }
