@@ -4,7 +4,14 @@ use crate::types::*;
 use bdk::prelude::*;
 
 #[derive(
-    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    aide::OperationIo,
 )]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
 pub enum SurveySummary {

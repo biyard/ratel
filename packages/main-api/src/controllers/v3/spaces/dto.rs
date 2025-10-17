@@ -1,4 +1,4 @@
-use bdk::prelude::*;
+use bdk::prelude::{axum::extract::Path, *};
 use serde::Deserialize;
 
 use crate::{
@@ -15,7 +15,9 @@ impl TimeRange {
     }
 }
 
-#[derive(Debug, serde::Deserialize, aide::OperationIo, JsonSchema)]
+pub type SpacePath = Path<SpacePathParam>;
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, aide::OperationIo, JsonSchema)]
 pub struct SpacePathParam {
     pub space_pk: Partition,
 }
@@ -32,6 +34,7 @@ pub struct SpaceCommonResponse {
     pub publish_state: SpacePublishState,
     pub visibility: SpaceVisibility,
     pub post_pk: Partition,
+    pub content: String,
 
     pub user_pk: Partition,
     pub author_display_name: String,
@@ -66,6 +69,7 @@ impl From<SpaceCommon> for SpaceCommonResponse {
             booster: value.booster,
             custom_booster: value.custom_booster,
             rewards: value.rewards,
+            content: value.content,
         }
     }
 }

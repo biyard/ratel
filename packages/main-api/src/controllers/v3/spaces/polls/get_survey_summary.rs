@@ -1,10 +1,12 @@
-use crate::models::PollSpaceSurveyResponse;
-use crate::models::space::{PollSpacePathParam, PollSpaceSurveySummary, SpaceCommon};
+use crate::models::space::SpaceCommon;
 use crate::models::user::User;
+
+use crate::controllers::v3::spaces::dto::*;
 use crate::types::TeamGroupPermission;
 use crate::utils::time::get_now_timestamp_millis;
 use crate::{AppState, Error2};
 
+use super::dto::*;
 use bdk::prelude::*;
 use by_axum::axum::extract::{Json, Path, State};
 
@@ -13,11 +15,11 @@ use aide::NoApi;
 pub async fn get_poll_space_survey_summary(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
-    Path(PollSpacePathParam { poll_space_pk }): Path<PollSpacePathParam>,
+    Path(SpacePathParam { space_pk }): SpacePath,
 ) -> Result<Json<PollSpaceSurveySummary>, Error2> {
     let (_, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
-        &poll_space_pk,
+        &space_pk,
         Some(&user.pk),
         TeamGroupPermission::SpaceRead,
     )
@@ -29,8 +31,7 @@ pub async fn get_poll_space_survey_summary(
     // This logic is extremely computationally intensive.
     // This needs to be changed to perform a summary at the end of the call or at specific intervals and store the results.
     // Currently, the summary is always recalculated from the response.
-    let summaries =
-        PollSpaceSurveyResponse::summarize_responses(&dynamo.client, &poll_space_pk).await?;
+    let summaries = PollSpaceSurveyResponse::summarize_responses(&dynamo.client, &space_pk).await?;
     Ok(Json(PollSpaceSurveySummary {
         created_at: get_now_timestamp_millis(),
         summaries,

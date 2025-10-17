@@ -10,7 +10,6 @@ import enTeam from './en/Team.json';
 import enSprintSpace from './en/SprintSpace.json';
 import enNoticeSpace from './en/NoticeSpace.json';
 import enPollSpace from './en/PollSpace.json';
-import enSpace from './en/Space.json';
 import enSettings from './en/Settings.json';
 import enSubscribe from './en/Subscribe.json';
 import enConnect from './en/Connect.json';
@@ -29,7 +28,6 @@ import koTeam from './ko/Team.json';
 import koSprintSpace from './ko/SprintSpace.json';
 import koNoticeSpace from './ko/NoticeSpace.json';
 import koPollSpace from './ko/PollSpace.json';
-import koSpace from './ko/Space.json';
 import koSettings from './ko/Settings.json';
 import koSubscribe from './ko/Subscribe.json';
 import koConnect from './ko/Connect.json';
@@ -43,6 +41,8 @@ import { i18nDeliberationPage } from '@/app/spaces/deliberation/[id]/deliberatio
 import i18nPollSpacePage from '@/app/spaces/poll/[id]/i18n';
 import i18nSpaceSurveyComponent from '@/features/spaces/components/survey/i18n';
 import i18nSpaceSurveyReportComponent from '@/features/spaces/components/report/i18n';
+import { i18nSpaceTypeSelectModal } from '@/features/spaces/modals/space-type-selector-modal';
+import { i18nSpaceHome } from '@/app/spaces/[id]/space-home-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 export const resources = {
@@ -56,7 +56,6 @@ export const resources = {
     SprintSpace: enSprintSpace,
     NoticeSpace: enNoticeSpace,
     PollSpace: enPollSpace,
-    Space: enSpace,
     Settings: enSettings,
     Subscribe: enSubscribe,
     Connect: enConnect,
@@ -76,7 +75,6 @@ export const resources = {
     SprintSpace: koSprintSpace,
     NoticeSpace: koNoticeSpace,
     PollSpace: koPollSpace,
-    Space: koSpace,
     Settings: koSettings,
     Subscribe: koSubscribe,
     Connect: koConnect,
@@ -94,6 +92,8 @@ Object.entries({
   PollSpace: i18nPollSpacePage,
   SpaceSurvey: i18nSpaceSurveyComponent,
   SpaceSurveyReport: i18nSpaceSurveyReportComponent,
+  SpaceTypeSelectModal: i18nSpaceTypeSelectModal,
+  Space: i18nSpaceHome,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;

@@ -41,16 +41,12 @@ export const route = {
   discussionByPk: (spacePk: string, discussionPk: string) =>
     `/spaces/${encodeURIComponent(spacePk)}/discussion/${encodeURIComponent(discussionPk)}`,
 
+  spaceSetting: (spacePk: string) =>
+    `/spaces/${encodeURIComponent(spacePk)}/settings`,
   spaceByType: (spaceType: SpaceType, spaceId: number | string) => {
     switch (spaceType) {
-      case SpaceType.Poll:
-        return `/spaces/${encodeURIComponent(spaceId)}/poll`;
-      case SpaceType.Notice:
-        return `/spaces/${encodeURIComponent(spaceId)}/notice`;
-      case SpaceType.Deliberation:
-        return `/spaces/${encodeURIComponent(spaceId)}/deliberation`;
       default:
-        console.warn('Unknown space type:', spaceType);
+        return `/spaces/${encodeURIComponent(spaceId)}`;
     }
   },
 
