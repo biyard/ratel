@@ -21,5 +21,6 @@ pub use bdk::prelude::*;
 mod route_v3;
 pub use route_v3::*;
 
+pub mod features;
 #[cfg(test)]
 pub mod tests;

@@ -1,4 +1,3 @@
-pub mod dto;
 pub mod get_poll;
 pub mod get_poll_result;
 pub mod respond_poll;

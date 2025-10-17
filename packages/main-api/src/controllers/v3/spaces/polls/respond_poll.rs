@@ -1,11 +1,9 @@
 use crate::controllers::v3::spaces::dto::*;
 use crate::models::space::SpaceCommon;
 
+use crate::features::spaces::polls::{Poll, PollQuestion, PollStatus, PollUserResponse};
 use crate::models::user::User;
-use crate::models::{Poll, PollQuestion, PollUserResponse};
-use crate::types::{
-    Answer, EntityType, Partition, PollStatus, TeamGroupPermission, validate_answers,
-};
+use crate::types::{Answer, EntityType, Partition, TeamGroupPermission, validate_answers};
 use crate::{AppState, Error};
 
 use aide::NoApi;

@@ -1,13 +1,8 @@
+use super::{super::PollResponse, Poll, PollMetadata, PollQuestion, PollUserResponse};
 use crate::{
-    controllers::v3::spaces::polls::dto::*,
-    models::{
-        PollQuestion, PollUserResponse,
-        feed::Post,
-        poll::{Poll, PollMetadata},
-        space::SpaceCommon,
-    },
+    models::{feed::Post, space::SpaceCommon},
     tests::{create_test_user, get_test_aws_config},
-    types::{Answer, ChoiceQuestion, EntityType, Partition, Question},
+    types::{Answer, ChoiceQuestion, EntityType, Question},
     utils::{aws::DynamoClient, time::get_now_timestamp_millis},
 };
 

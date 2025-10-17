@@ -1,8 +1,8 @@
+use crate::features::spaces::polls::{PollResultResponse, PollUserResponse};
 use crate::models::space::SpaceCommon;
 use crate::models::user::User;
 
 use crate::controllers::v3::spaces::dto::*;
-use crate::models::PollUserResponse;
 use crate::types::TeamGroupPermission;
 use crate::utils::time::get_now_timestamp_millis;
 use crate::{AppState, Error2};
@@ -10,7 +10,6 @@ use crate::{AppState, Error2};
 use bdk::prelude::*;
 use by_axum::axum::extract::{Json, Path, State};
 
-use super::dto::PollResultResponse;
 use aide::NoApi;
 
 pub async fn get_poll_result(
