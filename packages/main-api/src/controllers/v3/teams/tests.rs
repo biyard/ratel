@@ -4,11 +4,11 @@ use crate::{
         delete_team::DeleteTeamResponse,
         get_team::GetTeamResponse,
         groups::{create_group::CreateGroupResponse, delete_group::DeleteGroupResponse},
-        list_members::ListMembersResponse,
+        list_members::TeamMember,
         update_team::UpdateTeamResponse,
     },
     tests::v3_setup::TestContextV3,
-    types::{EntityType, TeamGroupPermission},
+    types::{EntityType, TeamGroupPermission, list_items_response::ListItemsResponse},
 };
 
 use crate::*;
@@ -220,22 +220,23 @@ async fn test_list_members() {
 
     assert_eq!(status, 200, "Failed to add member");
 
-    // List members
+    // List members - using query parameter with team_pk
     let (status, _headers, members_response) = get! {
         app: app,
-        path: format!("/v3/teams/{}/members", team_username),
+        path: format!("/v3/teams/{}/members?team_pk={}", team.team_pk, percent_encoding::utf8_percent_encode(&team.team_pk.to_string(), percent_encoding::NON_ALPHANUMERIC).to_string()),
         headers: test_user.1.clone(),
-        response_type: ListMembersResponse
+        response_type: ListItemsResponse<TeamMember>
     };
 
     assert_eq!(status, 200, "Failed to list members");
     assert_eq!(
-        members_response.total_count, 2,
+        members_response.items.len(),
+        2,
         "Should have 2 members (owner + added)"
     );
 
     let owner_member = members_response
-        .members
+        .items
         .iter()
         .find(|m| m.is_owner)
         .expect("Should have owner");
@@ -362,4 +363,76 @@ async fn test_delete_group() {
         !groups.iter().any(|g| g.sk == group.group_sk.to_string()),
         "Group should be deleted"
     );
+}
+
+#[tokio::test]
+async fn test_list_team_posts() {
+    use crate::controllers::v3::posts::create_post::CreatePostResponse;
+    use crate::controllers::v3::posts::post_response::PostResponse;
+    use crate::types::list_items_response::ListItemsResponse;
+
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
+
+    let team_username = format!("testteam{}", uuid::Uuid::new_v4());
+
+    // Create team
+    let (status, _headers, team) = post! {
+        app: app,
+        path: "/v3/teams",
+        headers: test_user.1.clone(),
+        body: {
+            "username": team_username,
+            "nickname": format!("{}'s Squad", team_username),
+            "profile_url": "https://example.com/profile.png",
+            "description": "This is a squad for verification"
+        },
+        response_type: CreateTeamResponse
+    };
+
+    assert_eq!(status, 200, "Failed to create team");
+
+    // Create a post for the team
+    let (status, _headers, post) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: test_user.1.clone(),
+        body: {
+            "team_pk": team.team_pk.to_string()
+        },
+        response_type: CreatePostResponse
+    };
+
+    assert_eq!(status, 200, "Failed to create post");
+
+    // Update the post to publish it
+    let (status, _headers, _body) = patch! {
+        app: app,
+        path: format!("/v3/posts/{}", post.post_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "title": "Test Post",
+            "content": "<p>Test Content</p>",
+            "publish": true
+        }
+    };
+
+    assert_eq!(status, 200, "Failed to publish post");
+
+    // List team posts with status filter for published
+    let (status, _headers, posts_response) = get! {
+        app: app,
+        path: format!("/v3/teams/{}/posts?status=2", team.team_pk),
+        headers: test_user.1.clone(),
+        response_type: ListItemsResponse<PostResponse>
+    };
+
+    assert_eq!(status, 200, "Failed to list team posts");
+    assert_eq!(
+        posts_response.items.len(),
+        1,
+        "Should have 1 published post"
+    );
+
+    let post_item = &posts_response.items[0];
+    assert_eq!(post_item.user_pk, team.team_pk.to_string());
 }

@@ -166,9 +166,9 @@ export function useTeamPermissions(teamPk: string): TeamPermissions {
 }
 
 // V3 Team Members Hook
-export function useTeamMembers(teamUsername: string) {
+export function useTeamMembers(teamPkOrUsername: string) {
   return useQuery({
-    queryKey: ['team-members-v3', teamUsername],
-    queryFn: () => teamsV3Api.getTeamMembers(teamUsername),
+    queryKey: ['team-members-v3', teamPkOrUsername],
+    queryFn: () => teamsV3Api.getTeamMembers(teamPkOrUsername),
   });
 }

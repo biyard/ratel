@@ -3,20 +3,20 @@ use crate::models::{
     team::{Team, TeamGroup, TeamMetadata, TeamOwner},
     user::User,
 };
-use crate::types::EntityType;
+use crate::types::{EntityType, Partition, list_items_response::ListItemsResponse};
 use crate::{AppState, Error2};
 use bdk::prelude::*;
 use by_axum::{
     aide::NoApi,
     axum::{
         Json,
-        extract::{Path, State},
+        extract::{Query, State},
     },
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Serialize, Deserialize, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct MemberGroup {
     #[schemars(description = "Group ID")]
     pub group_id: String,
@@ -26,7 +26,7 @@ pub struct MemberGroup {
     pub description: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct TeamMember {
     #[schemars(description = "User ID")]
     pub user_id: String,
@@ -42,37 +42,59 @@ pub struct TeamMember {
     pub is_owner: bool,
 }
 
+#[derive(Debug, Serialize, Deserialize, aide::OperationIo, JsonSchema)]
+pub struct ListMembersQueryParams {
+    #[schemars(description = "Team PK or username to list members for")]
+    pub team_pk: String,
+    #[schemars(description = "Pagination bookmark")]
+    pub bookmark: Option<String>,
+    #[schemars(description = "Number of items to return (default: 50, max: 100)")]
+    pub limit: Option<i32>,
+}
+
 #[derive(Debug, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
-pub struct ListMembersResponse {
+pub struct TeamMemberResponse {
     #[schemars(description = "List of team members")]
     pub members: Vec<TeamMember>,
     #[schemars(description = "Total member count")]
     pub total_count: usize,
+    #[schemars(description = "Pagination bookmark for next page")]
+    pub bookmark: Option<String>,
 }
 
 pub async fn list_members_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-    Path(team_username): Path<String>,
-) -> Result<Json<ListMembersResponse>, Error2> {
+    Query(ListMembersQueryParams {
+        team_pk,
+        bookmark,
+        limit,
+    }): Query<ListMembersQueryParams>,
+) -> Result<Json<ListItemsResponse<TeamMember>>, Error2> {
     // Check if user is authenticated
     let auth_user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
 
-    // Get team by username
-    let team_results =
-        Team::find_by_username_prefix(&dynamo.client, team_username.clone(), Default::default())
-            .await?;
+    // Parse team_pk - it can be either a Partition (TEAM#uuid) or a username
+    let team_partition: Partition = if team_pk.starts_with("TEAM#") {
+        Partition::Team(team_pk.strip_prefix("TEAM#").unwrap().to_string())
+    } else {
+        // If it's not a partition, treat it as username and find the team
+        let team_results =
+            Team::find_by_username_prefix(&dynamo.client, team_pk.clone(), Default::default())
+                .await?;
+        let team = team_results
+            .0
+            .into_iter()
+            .find(|t| t.username == team_pk)
+            .ok_or(Error2::NotFound("Team not found".into()))?;
+        team.pk.clone()
+    };
 
-    let team = team_results
-        .0
-        .into_iter()
-        .find(|t| t.username == team_username)
-        .ok_or(Error2::NotFound("Team not found".into()))?;
-
-    let team_pk = team.pk.clone();
+    let team_pk_str = team_partition.to_string();
 
     // Check if authenticated user is member or owner
-    let team_owner = TeamOwner::get(&dynamo.client, &team_pk, Some(&EntityType::TeamOwner)).await?;
+    let team_owner =
+        TeamOwner::get(&dynamo.client, &team_pk_str, Some(&EntityType::TeamOwner)).await?;
     let is_auth_user_owner = team_owner
         .as_ref()
         .map(|owner| owner.user_pk == auth_user.pk)
@@ -81,7 +103,7 @@ pub async fn list_members_handler(
     // Check if authenticated user is a team member
     let auth_user_memberships = UserTeamGroup::find_by_team_pk(
         &dynamo.client,
-        team_pk.clone(),
+        team_partition.clone(),
         UserTeamGroupQueryOption::builder()
             .sk(auth_user.pk.to_string())
             .limit(1),
@@ -96,16 +118,21 @@ pub async fn list_members_handler(
         ));
     }
 
-    // Get all team members
-    let (all_user_team_groups, _) = UserTeamGroup::find_by_team_pk(
-        &dynamo.client,
-        team_pk.clone(),
-        UserTeamGroupQueryOption::builder().limit(1000),
-    )
-    .await?;
+    // Set up pagination
+    let page_limit = limit.unwrap_or(50).min(100);
+    let mut query_options = UserTeamGroupQueryOption::builder().limit(page_limit);
+
+    if let Some(bookmark_str) = bookmark {
+        query_options = query_options.bookmark(bookmark_str);
+    }
+
+    // Get team members with pagination
+    let (all_user_team_groups, next_bookmark) =
+        UserTeamGroup::find_by_team_pk(&dynamo.client, team_partition.clone(), query_options)
+            .await?;
 
     // Get all team groups for name mapping using TeamMetadata
-    let metadata_results = TeamMetadata::query(&dynamo.client, team_pk.clone())
+    let metadata_results = TeamMetadata::query(&dynamo.client, team_partition.clone())
         .await
         .unwrap_or_else(|_| Vec::new());
 
@@ -213,10 +240,10 @@ pub async fn list_members_handler(
         }
     });
 
-    let total_count = members.len();
+    // let total_count = members.len();
 
-    Ok(Json(ListMembersResponse {
-        members,
-        total_count,
+    Ok(Json(ListItemsResponse {
+        items: members,
+        bookmark: next_bookmark,
     }))
 }
