@@ -1,15 +1,15 @@
 use bdk::prelude::*;
 
 use crate::types::{
-    CheckboxQuestion, ChoiceQuestion, DropdownQuestion, LinearScaleQuestion, SubjectiveQuestion,
-    SurveyQuestion,
+    CheckboxQuestion, ChoiceQuestion, DropdownQuestion, LinearScaleQuestion, Question,
+    SubjectiveQuestion,
 };
 
 #[derive(
     Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
 )]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
-pub enum SurveyAnswer {
+pub enum Answer {
     SingleChoice { answer: Option<i32> },
     MultipleChoice { answer: Option<Vec<i32>> },
     ShortAnswer { answer: Option<String> },
@@ -19,25 +19,25 @@ pub enum SurveyAnswer {
     LinearScale { answer: Option<i32> },
 }
 
-impl Default for SurveyAnswer {
+impl Default for Answer {
     fn default() -> Self {
         Self::SingleChoice { answer: None }
     }
 }
 
-pub fn validate_answers(questions: Vec<SurveyQuestion>, answers: Vec<SurveyAnswer>) -> bool {
+pub fn validate_answers(questions: Vec<Question>, answers: Vec<Answer>) -> bool {
     if questions.len() != answers.len() {
         return false;
     }
     for question_answer in questions.into_iter().zip(answers.into_iter()) {
         match question_answer {
             (
-                SurveyQuestion::SingleChoice(ChoiceQuestion {
+                Question::SingleChoice(ChoiceQuestion {
                     is_required,
                     options,
                     ..
                 }),
-                SurveyAnswer::SingleChoice { answer },
+                Answer::SingleChoice { answer },
             ) => {
                 // If required, answer must be present
                 if is_required.unwrap_or_default() && answer.is_none() {
@@ -51,12 +51,12 @@ pub fn validate_answers(questions: Vec<SurveyQuestion>, answers: Vec<SurveyAnswe
                 }
             }
             (
-                SurveyQuestion::MultipleChoice(ChoiceQuestion {
+                Question::MultipleChoice(ChoiceQuestion {
                     is_required,
                     options,
                     ..
                 }),
-                SurveyAnswer::MultipleChoice { answer },
+                Answer::MultipleChoice { answer },
             ) => {
                 let answers = answer.unwrap_or_default();
                 // If required, answer must be present
@@ -71,8 +71,8 @@ pub fn validate_answers(questions: Vec<SurveyQuestion>, answers: Vec<SurveyAnswe
                 }
             }
             (
-                SurveyQuestion::ShortAnswer(SubjectiveQuestion { is_required, .. }),
-                SurveyAnswer::ShortAnswer { answer },
+                Question::ShortAnswer(SubjectiveQuestion { is_required, .. }),
+                Answer::ShortAnswer { answer },
             ) => {
                 // If required, answer must be present
                 if is_required.unwrap_or_default() && answer.is_none() {
@@ -80,8 +80,8 @@ pub fn validate_answers(questions: Vec<SurveyQuestion>, answers: Vec<SurveyAnswe
                 }
             }
             (
-                SurveyQuestion::Subjective(SubjectiveQuestion { is_required, .. }),
-                SurveyAnswer::Subjective { answer },
+                Question::Subjective(SubjectiveQuestion { is_required, .. }),
+                Answer::Subjective { answer },
             ) => {
                 // If required, answer must be present
                 if is_required.unwrap_or_default() && answer.is_none() {
@@ -89,13 +89,13 @@ pub fn validate_answers(questions: Vec<SurveyQuestion>, answers: Vec<SurveyAnswe
                 }
             }
             (
-                SurveyQuestion::Checkbox(CheckboxQuestion {
+                Question::Checkbox(CheckboxQuestion {
                     is_required,
                     options,
                     is_multi,
                     ..
                 }),
-                SurveyAnswer::Checkbox { answer },
+                Answer::Checkbox { answer },
             ) => {
                 // If is_required is true, answer Vector must be present and not empty
                 let answers = answer.unwrap_or_default();
@@ -115,12 +115,12 @@ pub fn validate_answers(questions: Vec<SurveyQuestion>, answers: Vec<SurveyAnswe
                 }
             }
             (
-                SurveyQuestion::Dropdown(DropdownQuestion {
+                Question::Dropdown(DropdownQuestion {
                     is_required,
                     options,
                     ..
                 }),
-                SurveyAnswer::Dropdown { answer },
+                Answer::Dropdown { answer },
             ) => {
                 // If required, answer must be present
                 if is_required.unwrap_or_default() && answer.is_none() {
@@ -134,13 +134,13 @@ pub fn validate_answers(questions: Vec<SurveyQuestion>, answers: Vec<SurveyAnswe
                 }
             }
             (
-                SurveyQuestion::LinearScale(LinearScaleQuestion {
+                Question::LinearScale(LinearScaleQuestion {
                     is_required,
                     min_value,
                     max_value,
                     ..
                 }),
-                SurveyAnswer::LinearScale { answer },
+                Answer::LinearScale { answer },
             ) => {
                 // If required, answer must be present
                 if is_required.unwrap_or_default() && answer.is_none() {
@@ -164,7 +164,7 @@ pub fn validate_answers(questions: Vec<SurveyQuestion>, answers: Vec<SurveyAnswe
 
 #[test]
 fn test_validate_answers() {
-    let questions = vec![SurveyQuestion::SingleChoice(ChoiceQuestion {
+    let questions = vec![Question::SingleChoice(ChoiceQuestion {
         title: "What is your favorite color?".to_string(),
         description: None,
         image_url: None,
@@ -176,13 +176,13 @@ fn test_validate_answers() {
         ],
         is_required: Some(false),
     })];
-    let answers = vec![SurveyAnswer::SingleChoice { answer: Some(1) }];
+    let answers = vec![Answer::SingleChoice { answer: Some(1) }];
     assert!(validate_answers(questions.clone(), answers));
 
-    let invalid_answers = vec![SurveyAnswer::SingleChoice { answer: Some(5) }];
+    let invalid_answers = vec![Answer::SingleChoice { answer: Some(5) }];
     assert!(!validate_answers(questions.clone(), invalid_answers));
 
-    let required_questions = vec![SurveyQuestion::SingleChoice(ChoiceQuestion {
+    let required_questions = vec![Question::SingleChoice(ChoiceQuestion {
         title: "What is your favorite color?".to_string(),
         description: None,
         image_url: None,
@@ -194,7 +194,7 @@ fn test_validate_answers() {
         ],
         is_required: Some(true),
     })];
-    let missing_answers = vec![SurveyAnswer::SingleChoice { answer: None }];
+    let missing_answers = vec![Answer::SingleChoice { answer: None }];
 
     assert!(!validate_answers(required_questions, missing_answers));
 }

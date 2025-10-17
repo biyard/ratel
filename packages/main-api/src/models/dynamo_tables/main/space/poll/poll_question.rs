@@ -2,18 +2,18 @@ use crate::types::*;
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
-pub struct PollSpaceSurvey {
+pub struct PollQuestion {
     pub pk: Partition,
     pub sk: EntityType,
 
-    pub questions: Vec<SurveyQuestion>, // Questions in the survey
+    pub questions: Vec<Question>, // Questions in the survey
 }
 
-impl PollSpaceSurvey {
-    pub fn new(space_pk: Partition, questions: Vec<SurveyQuestion>) -> Self {
+impl PollQuestion {
+    pub fn new(space_pk: Partition, questions: Vec<Question>) -> Self {
         Self {
             pk: space_pk,
-            sk: EntityType::PollSpaceSurvey,
+            sk: EntityType::SpacePollQuestion,
             questions,
         }
     }
