@@ -869,6 +869,50 @@ fn generate_updater(
     }
 }
 
+fn generate_builder_functions(fields: &Vec<FieldInfo>) -> proc_macro2::TokenStream {
+    let mut fns = vec![];
+
+    for f in fields.iter() {
+        let var_name = &f.ident;
+        let var_ty = f.inner_type();
+        let fn_setter = Ident::new(
+            &format!(
+                "with_{}",
+                var_name.to_string().to_case(convert_case::Case::Snake)
+            ),
+            proc_macro2::Span::call_site(),
+        );
+
+        let is_opt = f.is_option();
+        let inner_setter = if is_opt {
+            quote! {
+                self.#var_name = Some(#var_name);
+            }
+        } else {
+            quote! {
+                self.#var_name = #var_name;
+            }
+        };
+
+        fns.push(quote! {
+            pub fn #fn_setter(mut self, #var_name: #var_ty) -> Self {
+                #inner_setter
+                self
+            }
+        });
+    }
+
+    quote! {
+        pub fn builder() -> Self {
+            Self {
+                ..Default::default()
+            }
+        }
+
+        #(#fns)*
+    }
+}
+
 fn generate_struct_impl(
     ident: Ident,
     ds: &DataStruct,
@@ -977,6 +1021,7 @@ fn generate_struct_impl(
     for (_, idx) in indice_v2.iter() {
         idx_fns_v2.push(idx.generate());
     }
+    let builder_fns = generate_builder_functions(&fields);
 
     let out = quote! {
         #st_query_option
@@ -988,6 +1033,8 @@ fn generate_struct_impl(
 
         impl #ident {
             #(#key_composers)*
+
+            #builder_fns
 
             #(#idx_fns_v2)*
 
@@ -1303,6 +1350,47 @@ fn generate_enum_impl(ident: Ident, _ds: &DataEnum, s_cfg: StructCfg) -> proc_ma
     );
 
     let pk_field_name = syn::LitStr::new(&s_cfg.pk_name, proc_macro2::Span::call_site());
+    let sk_fn = if let Some(ref sk) = s_cfg.sk_name {
+        let sk_field_name = syn::LitStr::new(sk, proc_macro2::Span::call_site());
+
+        quote! {
+            pub async fn query_begins_with_sk(
+                cli: &aws_sdk_dynamodb::Client,
+                pk: impl std::fmt::Display,
+                sk: impl std::fmt::Display,
+            ) -> #result_ty <Vec<#ident>, #err_ctor> {
+                let resp = cli
+                    .query()
+                    .table_name(#table_lit_str)
+                    .key_condition_expression("#pk = :pk AND begins_with(#sk, :sk)")
+                    .expression_attribute_names("#pk", #pk_field_name)
+                    .expression_attribute_names("#sk", #sk_field_name)
+                    .expression_attribute_values(
+                        ":pk",
+                        aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
+                    )
+                    .expression_attribute_values(
+                        ":sk",
+                        aws_sdk_dynamodb::types::AttributeValue::S(sk.to_string()),
+                    )
+                    .send()
+                    .await
+                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                let items = resp
+                    .items
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|item| serde_dynamo::from_item(item))
+                    .collect::<Result<Vec<#ident>, _>>()?;
+                Ok(items)
+            }
+
+        }
+    } else {
+        quote! {}
+    };
+
     let idx_fn = generate_index_fn_for_enum(&s_cfg);
 
     quote! {
@@ -1341,6 +1429,9 @@ fn generate_enum_impl(ident: Ident, _ds: &DataEnum, s_cfg: StructCfg) -> proc_ma
                     .collect::<Result<Vec<#ident>, _>>()?;
                 Ok(items)
             }
+
+            #sk_fn
+
         }
     }
 }

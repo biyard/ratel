@@ -159,6 +159,11 @@ pub enum Error {
     #[rest_error(status = 404, code = 4000)]
     TeamNotFound,
 
+    // /v3/spaces endpoints 5000 ~
+    #[rest_error(code = 5000)]
+    #[error("space not found")]
+    NotFoundSpace,
+
     // web 1,000,000 ~
     #[error("Web error: {0}")]
     #[rest_error(code = 1_000_000)]
