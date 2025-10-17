@@ -9,11 +9,10 @@ use crate::controllers::v3::posts::list_comments::list_comments_handler;
 use crate::controllers::v3::posts::post_response::PostResponse;
 use crate::controllers::v3::posts::reply_to_comment::reply_to_comment_handler;
 use crate::controllers::v3::promotions::get_top_promotion::get_top_promotion_handler;
+use crate::controllers::v3::spaces::create_discussion::create_discussion_handler;
 use crate::controllers::v3::spaces::delete_discussion::delete_discussion_handler;
-use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
-use crate::controllers::v3::spaces::deliberations::discussions::get_discussion::get_discussion_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::get_meeting::{
     MeetingData, get_meeting_handler,
 };
@@ -36,6 +35,7 @@ use crate::controllers::v3::spaces::deliberations::responses::create_response_an
     DeliberationResponse, create_response_answer_handler,
 };
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
+use crate::controllers::v3::spaces::get_discussion::get_discussion_handler;
 use crate::controllers::v3::spaces::get_files::get_files_handler;
 use crate::controllers::v3::spaces::get_space_handler;
 use crate::controllers::v3::spaces::list_discussions::list_discussions_handler;

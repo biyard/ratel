@@ -5,11 +5,12 @@ use crate::features::dto::SpaceDiscussionMemberResponse;
 use crate::features::dto::SpaceDiscussionParticipantResponse;
 use crate::features::dto::SpaceDiscussionResponse;
 use crate::features::models::space_discussion::SpaceDiscussion;
-use crate::features::models::space_discussion::SpaceDiscussionQueryOption;
 use crate::features::models::space_discussion_member::SpaceDiscussionMember;
 use crate::features::models::space_discussion_member::SpaceDiscussionMemberQueryOption;
 use crate::features::models::space_discussion_participant::SpaceDiscussionParticipant;
 use crate::features::models::space_discussion_participant::SpaceDiscussionParticipantQueryOption;
+use crate::features::models::space_metadata::SpaceMetadata;
+use crate::types::EntityType;
 use crate::types::Partition;
 use crate::{AppState, Error2, models::user::User};
 use aide::NoApi;
@@ -22,16 +23,12 @@ pub async fn list_discussions_handler(
     Path(SpacePathParam { space_pk }): SpacePath,
 ) -> Result<Json<ListDiscussionResponse>, Error2> {
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundDeliberationSpace);
+        return Err(Error2::NotFoundSpace);
     }
 
-    let responses = SpaceDiscussion::query(
-        &dynamo.client,
-        space_pk.clone(),
-        SpaceDiscussionQueryOption::builder(),
-    )
-    .await?
-    .0;
+    let responses = SpaceDiscussion::query(&dynamo.client, space_pk.clone(), Default::default())
+        .await?
+        .0;
 
     let mut discussions = vec![];
 
@@ -55,7 +52,12 @@ pub async fn list_discussions_handler(
             .await?;
 
             for response in responses {
-                discussion_members.push(response.into());
+                match response.sk {
+                    EntityType::SpaceDiscussionMember(_) => {
+                        discussion_members.push(response.into());
+                    }
+                    _ => {}
+                }
             }
 
             match new_bookmark {
@@ -80,7 +82,12 @@ pub async fn list_discussions_handler(
             .await?;
 
             for response in responses {
-                discussion_participants.push(response.into());
+                match response.sk {
+                    EntityType::SpaceDiscussionParticipant(_) => {
+                        discussion_participants.push(response.into());
+                    }
+                    _ => {}
+                }
             }
 
             match new_bookmark {
