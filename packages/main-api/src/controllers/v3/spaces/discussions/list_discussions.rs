@@ -5,11 +5,11 @@ use crate::features::dto::SpaceDiscussionMemberResponse;
 use crate::features::dto::SpaceDiscussionParticipantResponse;
 use crate::features::dto::SpaceDiscussionResponse;
 use crate::features::models::space_discussion::SpaceDiscussion;
+use crate::features::models::space_discussion::SpaceDiscussionQueryOption;
 use crate::features::models::space_discussion_member::SpaceDiscussionMember;
 use crate::features::models::space_discussion_member::SpaceDiscussionMemberQueryOption;
 use crate::features::models::space_discussion_participant::SpaceDiscussionParticipant;
 use crate::features::models::space_discussion_participant::SpaceDiscussionParticipantQueryOption;
-use crate::features::models::space_metadata::SpaceMetadata;
 use crate::types::EntityType;
 use crate::types::Partition;
 use crate::{AppState, Error2, models::user::User};
@@ -26,9 +26,13 @@ pub async fn list_discussions_handler(
         return Err(Error2::NotFoundSpace);
     }
 
-    let responses = SpaceDiscussion::query(&dynamo.client, space_pk.clone(), Default::default())
-        .await?
-        .0;
+    let responses = SpaceDiscussion::query(
+        &dynamo.client,
+        space_pk.clone(),
+        SpaceDiscussionQueryOption::builder().sk("SPACE_DISCUSSION#".into()),
+    )
+    .await?
+    .0;
 
     let mut discussions = vec![];
 

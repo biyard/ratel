@@ -7,8 +7,8 @@ use crate::features::models::space_discussion_member::{
 use crate::features::models::space_discussion_participant::{
     SpaceDiscussionParticipant, SpaceDiscussionParticipantQueryOption,
 };
-use crate::models::User;
-use crate::types::{EntityType, Partition};
+use crate::models::{SpaceCommon, User};
+use crate::types::{EntityType, Partition, TeamGroupPermission};
 use crate::{AppState, Error2};
 use axum::extract::{Path, State};
 use bdk::prelude::aide::NoApi;
@@ -17,7 +17,7 @@ use bdk::prelude::*;
 
 pub async fn delete_discussion_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(_user): NoApi<Option<User>>,
+    NoApi(user): NoApi<Option<User>>,
     Path(SpaceDiscussionPathParam {
         space_pk,
         discussion_pk,
@@ -25,6 +25,17 @@ pub async fn delete_discussion_handler(
 ) -> Result<Json<DeleteDiscussionResponse>, Error2> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error2::NotFoundSpace);
+    }
+
+    let (_, has_perm) = SpaceCommon::has_permission(
+        &dynamo.client,
+        &space_pk,
+        Some(&user.unwrap_or_default().pk),
+        TeamGroupPermission::SpaceEdit,
+    )
+    .await?;
+    if !has_perm {
+        return Err(Error2::NoPermission);
     }
 
     let discussion_id = match discussion_pk.clone() {
