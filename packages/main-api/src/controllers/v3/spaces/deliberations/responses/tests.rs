@@ -1,12 +1,13 @@
+use bdk::prelude::axum::AxumRouter;
+
 use crate::controllers::v3::posts::create_post::CreatePostResponse;
 use crate::controllers::v3::spaces::CreateSpaceResponse;
-use crate::types::{File, SpaceType};
+use crate::controllers::v3::spaces::deliberations::update_deliberation_poll::UpdateDeliberationPollResponse;
+use crate::tests::create_app_state;
+use crate::types::{Partition, SpaceType};
 use crate::{
     controllers::v3::spaces::deliberations::responses::create_response_answer::CreateDeliberationResponse,
-    models::space::{
-        DeliberationDetailResponse, DeliberationSpaceResponse, DiscussionCreateRequest,
-        SurveyCreateRequest,
-    },
+    models::space::{DeliberationSpaceResponse, SurveyCreateRequest},
     tests::v3_setup::{TestContextV3, setup_v3},
     types::{ChoiceQuestion, LinearScaleQuestion, SpaceVisibility, SurveyQuestion, SurveyStatus},
 };
@@ -22,64 +23,24 @@ async fn test_create_response_answer_handler() {
         ..
     } = setup_v3().await;
 
-    let (_status, _headers, post) = post! {
-        app: app,
-        path: "/v3/posts",
-        headers: headers.clone(),
-        response_type: CreatePostResponse
-    };
+    let app_state = create_app_state();
+    let _cli = &app_state.dynamo.client;
 
-    let feed_pk = post.post_pk.clone();
-
-    // SPACE
-    let (status, _headers, body) = post! {
-        app: app,
-        path: "/v3/spaces",
-        headers: headers.clone(),
-        body: {
-            "space_type": SpaceType::Deliberation,
-            "post_pk": feed_pk
-        },
-        response_type: CreateSpaceResponse
-    };
-
-    assert_eq!(status, 200);
+    let space_pk = bootstrap_deliberation_space(&app, headers.clone()).await;
 
     let now = chrono::Utc::now().timestamp();
-    let space_pk = body.space_pk.clone();
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/{}/deliberation", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/deliberation/poll", space_pk_encoded);
 
-    let (status, _headers, body) = post! {
+    let (status, _headers, body) = patch! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "title": Some("deliberation title".to_string()),
             "html_contents": Some("<div>deliberation description</div>".to_string()),
             "visibility": SpaceVisibility::Public,
             "started_at": now,
             "ended_at": now + 86400,
-            "files": vec![File {
-                name: "deliberation summary file title".to_string(),
-                size: "15KB".to_string(),
-                ext: crate::types::FileExtension::PDF,
-                url: None,
-            }],
-            "discussions": vec![DiscussionCreateRequest {
-                discussion_pk: None,
-                started_at: now,
-                ended_at: now,
-                name: "discussion title".to_string(),
-                description: "discussion description".to_string(),
-                user_ids: vec![],
-            }],
-            "elearning_files": vec![File {
-                name: "deliberation elearning file title".to_string(),
-                size: "15KB".to_string(),
-                ext: crate::types::FileExtension::PDF,
-                url: None,
-            }],
             "surveys": vec![SurveyCreateRequest {
                 survey_pk: None,
                 started_at: now,
@@ -122,17 +83,8 @@ async fn test_create_response_answer_handler() {
                     }),
                 ],
             }],
-            "recommendation_html_contents": Some(
-                "<div>deliberation recommendation description</div>".to_string(),
-            ),
-            "recommendation_files": vec![File {
-                name: "deliberation recommendation file title".to_string(),
-                size: "15KB".to_string(),
-                ext: crate::types::FileExtension::PDF,
-                url: None,
-            }],
         },
-        response_type: DeliberationDetailResponse
+        response_type: UpdateDeliberationPollResponse
     };
 
     assert_eq!(status, 200);
@@ -183,64 +135,24 @@ async fn test_get_response_answer_handler() {
         ..
     } = setup_v3().await;
 
-    let (_status, _headers, post) = post! {
-        app: app,
-        path: "/v3/posts",
-        headers: headers.clone(),
-        response_type: CreatePostResponse
-    };
+    let app_state = create_app_state();
+    let _cli = &app_state.dynamo.client;
 
-    let feed_pk = post.post_pk.clone();
-
-    // SPACE
-    let (status, _headers, body) = post! {
-        app: app,
-        path: "/v3/spaces",
-        headers: headers.clone(),
-        body: {
-            "space_type": SpaceType::Deliberation,
-            "post_pk": feed_pk
-        },
-        response_type: CreateSpaceResponse
-    };
-
-    assert_eq!(status, 200);
+    let space_pk = bootstrap_deliberation_space(&app, headers.clone()).await;
 
     let now = chrono::Utc::now().timestamp();
-    let space_pk = body.space_pk.clone();
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/{}/deliberation", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/deliberation/poll", space_pk_encoded);
 
-    let (status, _headers, body) = post! {
+    let (status, _headers, body) = patch! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "title": Some("deliberation title".to_string()),
             "html_contents": Some("<div>deliberation description</div>".to_string()),
-            "files": vec![File {
-                name: "deliberation summary file title".to_string(),
-                size: "15KB".to_string(),
-                ext: crate::types::FileExtension::PDF,
-                url: None,
-            }],
             "visibility": SpaceVisibility::Public,
             "started_at": now,
             "ended_at": now + 86400,
-            "discussions": vec![DiscussionCreateRequest {
-                discussion_pk: None,
-                started_at: now,
-                ended_at: now,
-                name: "discussion title".to_string(),
-                description: "discussion description".to_string(),
-                user_ids: vec![],
-            }],
-            "elearning_files": vec![File {
-                name: "deliberation elearning file title".to_string(),
-                size: "15KB".to_string(),
-                ext: crate::types::FileExtension::PDF,
-                url: None,
-            }],
             "surveys": vec![SurveyCreateRequest {
                 survey_pk: None,
                 started_at: now,
@@ -283,17 +195,8 @@ async fn test_get_response_answer_handler() {
                     }),
                 ],
             }],
-            "recommendation_html_contents": Some(
-                "<div>deliberation recommendation description</div>".to_string(),
-            ),
-            "recommendation_files": vec![File {
-                name: "deliberation recommendation file title".to_string(),
-                size: "15KB".to_string(),
-                ext: crate::types::FileExtension::PDF,
-                url: None,
-            }],
         },
-        response_type: DeliberationDetailResponse
+        response_type: UpdateDeliberationPollResponse
     };
 
     assert_eq!(status, 200);
@@ -367,4 +270,31 @@ async fn test_get_response_answer_handler() {
         ),
         "Failed to match updated multiple choice answer"
     );
+}
+
+async fn bootstrap_deliberation_space(
+    app: &AxumRouter,
+    headers: axum::http::HeaderMap,
+) -> Partition {
+    let (_status, _headers, post) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse
+    };
+
+    let feed_pk = post.post_pk.clone();
+
+    let (_status, _headers, space) = post! {
+        app: app,
+        path: "/v3/spaces",
+        headers: headers.clone(),
+        body: {
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
+        },
+        response_type: CreateSpaceResponse
+    };
+
+    space.space_pk
 }

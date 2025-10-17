@@ -20,15 +20,15 @@ export default function PollSpacePage() {
   const { spacePk } = useParams<{ spacePk: string }>();
   const ctrl = usePollSpaceController(spacePk);
   return (
-    <div className="flex flex-col w-full gap-6">
+    <div className="flex flex-col gap-6 w-full">
       <SpaceHeader {...ctrl.headerCtrl} />
       <SpaceHTMLContentEditor
         htmlContent={ctrl.headerCtrl.html_content}
-        isEditMode={ctrl.isEditMode}
+        canEdit={ctrl.isEditMode}
         onContentChange={ctrl.headerCtrl.updateContent}
       />
 
-      <div className="flex flex-row w-full gap-5">
+      <div className="flex flex-row gap-5 w-full">
         <MainContent {...ctrl} />
         <SideMenu {...ctrl} />
       </div>
@@ -45,7 +45,7 @@ function MainContent({
   switch (activeTab) {
     case Tab.Poll:
       return (
-        <div className="flex flex-col w-full gap-4">
+        <div className="flex flex-col gap-4 w-full">
           <Survey {...ctrl} />
           {!ctrl.isEditMode && (
             <Button
@@ -102,7 +102,7 @@ function SideMenu({ ...ctrl }: PollSpaceController) {
     });
   }
   return (
-    <div className="flex flex-col max-w-[250px] w-full gap-[10px]">
+    <div className="flex flex-col w-full max-w-[250px] gap-[10px]">
       <TabSelector<Tab>
         items={items}
         onClick={ctrl.onSelectTab}

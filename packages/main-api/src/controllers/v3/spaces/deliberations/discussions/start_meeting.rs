@@ -1,20 +1,20 @@
+use crate::aide::NoApi;
 use crate::{
     AppState, Error2,
-    models::space::{
-        DeliberationDiscussionMember, DeliberationDiscussionMemberQueryOption,
-        DeliberationDiscussionResponse, DeliberationSpaceDiscussion, DeliberationSpaceParticipant,
-        DeliberationSpaceParticipantQueryOption, DiscussionMemberResponse,
-        DiscussionParticipantResponse,
+    models::{
+        User,
+        space::{
+            DeliberationDiscussionMember, DeliberationDiscussionMemberQueryOption,
+            DeliberationDiscussionResponse, DeliberationSpaceDiscussion,
+            DeliberationSpaceParticipant, DeliberationSpaceParticipantQueryOption,
+            DiscussionMemberResponse, DiscussionParticipantResponse,
+        },
     },
     types::{EntityType, Partition},
     utils::aws::DynamoClient,
 };
-use bdk::prelude::axum::{
-    Extension,
-    extract::{Json, Path, State},
-};
+use bdk::prelude::axum::extract::{Json, Path, State};
 use bdk::prelude::*;
-use tower_sessions::Session;
 
 #[derive(
     Debug, Clone, serde::Deserialize, serde::Serialize, schemars::JsonSchema, aide::OperationIo,
@@ -28,17 +28,13 @@ pub struct DeliberationDiscussionByIdPath {
 
 pub async fn start_meeting_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(_session): Extension<Session>,
+    NoApi(_user): NoApi<Option<User>>,
     Path(DeliberationDiscussionByIdPath {
         space_pk,
         discussion_pk,
     }): Path<DeliberationDiscussionByIdPath>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
-    let space_id = match space_pk.clone() {
-        Partition::Space(v) => v,
-        _ => "".to_string(),
-    };
     let discussion_id = match discussion_pk {
         Partition::Discussion(v) => v,
         _ => "".to_string(),
@@ -62,7 +58,7 @@ pub async fn start_meeting_handler(
     let _ = ensure_current_meeting(
         dynamo.clone(),
         &client,
-        space_id.clone(),
+        space_pk.clone(),
         discussion_id.clone(),
         &disc,
     )
@@ -116,7 +112,7 @@ pub async fn start_meeting_handler(
 async fn ensure_current_meeting(
     dynamo: DynamoClient,
     client: &crate::utils::aws_chime_sdk_meeting::ChimeMeetingService,
-    deliberation_id: String,
+    space_pk: Partition,
     discussion_id: String,
     discussion: &DeliberationSpaceDiscussion,
 ) -> Result<String, Error2> {
@@ -134,7 +130,7 @@ async fn ensure_current_meeting(
     let new_id = created.meeting_id().unwrap_or_default().to_string();
 
     DeliberationSpaceDiscussion::updater(
-        &Partition::Space(deliberation_id.to_string()),
+        &space_pk.clone(),
         EntityType::DeliberationDiscussion(discussion_id.to_string()),
     )
     .with_meeting_id(new_id.clone())
