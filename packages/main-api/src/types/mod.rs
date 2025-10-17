@@ -8,6 +8,7 @@ pub mod oauth_provider;
 pub mod file_type;
 pub mod post_status;
 pub mod post_type;
+pub mod space_file_feature_type;
 pub mod visibility;
 
 pub mod attendee_info;
