@@ -21,7 +21,6 @@ async fn test_sprint_league_creation() {
         .create(&cli)
         .await
         .expect("failed to create sprint league");
-
     let metadata = SprintLeagueMetadata::query(&cli, &sprint_league.pk)
         .await
         .expect("failed to query sprint league metadata");
@@ -97,12 +96,17 @@ async fn test_sprint_league_creation() {
         .await
         .expect("Failed to check if user voted");
     assert!(!is_voted);
-    let res = sprint_league.vote(&cli, &user.pk, &player_1.sk, None).await;
+    let res = SprintLeague::vote(&cli, &space_pk, &user.pk, &player_1.sk, None).await;
+
     assert!(res.is_ok());
 
     let is_voted = sprint_league
         .is_voted(&cli, &user.pk)
         .await
         .expect("Failed to check if user voteds");
+
     assert!(is_voted);
+
+    let res = SprintLeague::vote(&cli, &space_pk, &user.pk, &player_1.sk, None).await;
+    assert!(res.is_err(), "Sprint league double voting should fail");
 }

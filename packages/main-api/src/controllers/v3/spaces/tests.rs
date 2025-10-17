@@ -7,7 +7,7 @@ use crate::{
 };
 
 #[tokio::test]
-async fn test_create_space() {
+pub async fn test_create_space() {
     let (ctx, post_pk) = setup_post().await;
 
     let TestContextV3 {
@@ -190,4 +190,24 @@ pub async fn setup_post() -> (TestContextV3, String) {
     };
 
     return (ctx, post_pk);
+}
+
+pub async fn setup_space() -> (TestContextV3, String) {
+    let (ctx, post_pk) = setup_post().await;
+    let TestContextV3 { app, test_user, .. } = ctx.clone();
+
+    let (_status, _headers, create_body) = post! {
+        app: app,
+        path: "/v3/spaces",
+        headers: test_user.1.clone(),
+        body: {
+            "space_type": 2,
+            "post_pk": post_pk,
+        },
+        response_type: CreateSpaceResponse
+    };
+
+    let space_pk = create_body.space_pk.to_string();
+
+    return (ctx, space_pk);
 }

@@ -1,5 +1,5 @@
 use crate::{
-    models::{SprintLeaguePlayer, SprintLeagueVote},
+    models::{SprintLeaguePlayer, SprintLeagueVote, sprint_league::sprint_league_player},
     types::*,
 };
 use bdk::prelude::*;
@@ -9,35 +9,22 @@ pub struct SprintLeague {
     pub pk: Partition,
     pub sk: EntityType,
 
-    pub voters: i64,
+    pub votes: i64,
     pub win_player: Option<EntityType>,
 }
 
 impl SprintLeague {
     pub fn new(space_pk: Partition) -> crate::Result<Self> {
-        let post_id = match space_pk {
-            Partition::Space(id) => id,
-            _ => {
-                return Err(crate::Error::InvalidPartitionKey(
-                    "SprintLeague must be under Space partition".to_string(),
-                ));
-            }
-        };
-
         Ok(Self {
-            pk: Partition::SprintLeague(post_id),
+            pk: space_pk,
             sk: EntityType::SprintLeague,
-            voters: 0,
+            votes: 0,
             win_player: None,
         })
     }
 }
 
 impl SprintLeague {
-    pub fn increment_voters(&mut self) {
-        self.voters += 1;
-    }
-
     pub async fn is_voted(
         &self,
         cli: &aws_sdk_dynamodb::Client,
@@ -48,27 +35,22 @@ impl SprintLeague {
     }
 
     pub async fn vote(
-        &self,
         cli: &aws_sdk_dynamodb::Client,
+        space_pk: &Partition,
         user_pk: &Partition,
         player_sk: &EntityType,
         referral_code: Option<String>,
     ) -> crate::Result<()> {
-        let vote = SprintLeagueVote::find_one(cli, &self.pk, user_pk).await?;
-        if vote.is_some() {
-            return Err(crate::Error::AlreadyVoted);
-        }
-
-        let sprint_league_tx = SprintLeague::updater(&self.pk, &self.sk)
-            .increase_voters(1)
+        let sprint_league_tx = SprintLeague::updater(space_pk, EntityType::SprintLeague)
+            .increase_votes(1)
             .transact_write_item();
 
-        let sprint_league_player_tx =
-            SprintLeaguePlayer::updater(self.pk.clone(), player_sk.clone())
-                .increase_voter(1)
-                .transact_write_item();
+        let sprint_league_player_tx = SprintLeaguePlayer::updater(space_pk, player_sk)
+            .increase_voter(1)
+            .transact_write_item();
+
         let sprint_league_vote_tx = SprintLeagueVote::new(
-            self.pk.clone(),
+            space_pk.clone(),
             user_pk.clone(),
             player_sk.clone(),
             referral_code,
@@ -84,7 +66,8 @@ impl SprintLeague {
             .send()
             .await
             .map_err(|e| {
-                tracing::error!("Failed to vote in sprint league: {}", e);
+                tracing::error!("Failed to vote in sprint league: {:?}", e);
+                println!("Failed to vote in sprint league: {:?}", e);
                 crate::Error::SprintLeagueVoteError(e.to_string())
             })?;
         Ok(())
