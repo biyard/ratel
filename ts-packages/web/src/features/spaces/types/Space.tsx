@@ -1,12 +1,8 @@
-import { UserType } from '@/lib/api/models/user';
-import {
-  SpacePublishState,
-  SpaceStatus,
-  SpaceVisibility,
-} from './space-common';
-import { SpaceType } from './space-type';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
+import { UserType } from '@/lib/api/models/user';
 import { BoosterType } from './booster-type';
+import { SpaceStatus, SpacePublishState } from './space-common';
+import { SpaceType } from './space-type';
 
 export class Space {
   readonly permissions: TeamGroupPermissions;
@@ -32,7 +28,7 @@ export class Space {
     public comments: number = 0,
     public shares: number = 0,
     public rewards: number | undefined,
-    public visibility: SpaceVisibility,
+    public visibility: string,
     public publishState: SpacePublishState,
 
     public booster: BoosterType | undefined,
@@ -51,7 +47,7 @@ export class Space {
   }
 
   get isPublic() {
-    return this.visibility.type === 'Public';
+    return this.visibility === 'PUBLIC';
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
