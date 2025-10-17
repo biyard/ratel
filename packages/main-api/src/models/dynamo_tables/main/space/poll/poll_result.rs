@@ -2,21 +2,21 @@ use crate::{types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, JsonSchema)]
-pub struct PollSpaceSurveyResult {
+pub struct PollResult {
     pub pk: Partition,
     pub sk: EntityType,
 
     pub created_at: i64,
-    pub summaries: Vec<SurveySummary>,
+    pub summaries: Vec<PollSummary>,
 }
 
-impl PollSpaceSurveyResult {
-    pub fn new(space_pk: Partition, summaries: Vec<SurveySummary>) -> Self {
+impl PollResult {
+    pub fn new(space_pk: Partition, summaries: Vec<PollSummary>) -> Self {
         let created_at = get_now_timestamp_millis();
 
         Self {
             pk: space_pk,
-            sk: EntityType::PollSpaceSurveyResult,
+            sk: EntityType::SpacePollResult,
             created_at,
             summaries,
         }

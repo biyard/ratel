@@ -19,6 +19,7 @@ pub mod list_items_query;
 pub mod list_items_response;
 pub mod media_placement_info;
 pub mod meeting_info;
+
 pub mod react_query;
 pub mod relationship;
 pub mod sorted_visibility;
@@ -26,11 +27,6 @@ pub mod space_publish_state;
 pub mod space_status;
 pub mod space_type;
 pub mod space_visibility;
-pub mod survey_answer;
-pub mod survey_question;
-pub mod survey_status;
-pub mod survey_summary;
-pub mod survey_type;
 
 pub mod team_group_permission;
 pub mod theme;
@@ -61,14 +57,23 @@ pub use list_items_response::*;
 pub use react_query::*;
 pub use sorted_visibility::*;
 pub use space_visibility::*;
-pub use survey_answer::*;
-pub use survey_question::*;
-pub use survey_status::*;
-pub use survey_summary::*;
-pub use survey_type::*;
+
 pub use team_group_permission::*;
 pub use theme::*;
 pub use url_type::*;
 pub use user_type::*;
 
 pub use index_tmpl::*;
+
+// Poll Features
+pub mod poll_status;
+pub use poll_status::*;
+
+pub mod poll_summary;
+pub use poll_summary::*;
+
+pub mod question;
+pub use question::*;
+
+pub mod answer;
+pub use answer::*;

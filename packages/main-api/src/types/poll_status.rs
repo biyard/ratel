@@ -7,11 +7,11 @@ use bdk::prelude::*;
     serde_with::DeserializeFromStr,
     Default,
     DynamoEnum,
-    PartialEq,
     schemars::JsonSchema,
 )]
-pub enum SurveyType {
+pub enum PollStatus {
     #[default]
-    Sample,
-    Survey,
+    Ready = 1,
+    InProgress = 2,
+    Finish = 3,
 }
