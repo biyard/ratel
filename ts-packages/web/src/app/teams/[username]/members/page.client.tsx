@@ -9,8 +9,9 @@ import { logger } from '@/lib/logger';
 import { useState } from 'react';
 
 export default function TeamMembers({ username }: { username: string }) {
-  const query = useTeamMembers(username);
   const teamDetailQuery = useTeamDetailByUsername(username);
+  const teamPk = teamDetailQuery.data?.id;
+  const query = useTeamMembers(teamPk || username); // Use teamPk if available, fallback to username
   const queryClient = useQueryClient();
   const [removingMember, setRemovingMember] = useState<string | null>(null);
 
@@ -29,7 +30,7 @@ export default function TeamMembers({ username }: { username: string }) {
   const membersData = query.data;
   const teamDetail = teamDetailQuery.data;
   const members =
-    membersData?.members?.filter(
+    membersData?.items?.filter(
       (member) =>
         member !== undefined &&
         !(checkString(member.display_name) || checkString(member.username)),

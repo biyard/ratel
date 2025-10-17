@@ -256,15 +256,17 @@ export interface TeamMember {
 }
 
 export interface ListMembersResponse {
-  members: TeamMember[];
-  total_count: number;
+  items: TeamMember[];
+  bookmark?: string;
 }
 
 export async function getTeamMembers(
-  teamUsername: string,
+  teamPk: string,
+  bookmark?: string,
 ): Promise<ListMembersResponse> {
-  return await call(
-    'GET',
-    `/v3/teams/${encodeURIComponent(teamUsername)}/members`,
-  );
+  const params = new URLSearchParams({ team_pk: teamPk });
+  if (bookmark) {
+    params.append('bookmark', bookmark);
+  }
+  return await call('GET', `/v3/teams/_/members?${params.toString()}`);
 }

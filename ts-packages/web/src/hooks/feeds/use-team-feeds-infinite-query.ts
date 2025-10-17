@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
-import { ListPostResponse, listPosts } from '@/lib/api/ratel/posts.v3';
+import { ListPostResponse, listTeamPosts } from '@/lib/api/ratel/posts.v3';
 import { FeedStatus } from '@/lib/api/models/feeds';
 
 export function getTeamFeedsOptions(teamPk: string, status?: FeedStatus) {
@@ -18,7 +18,7 @@ export function getTeamFeedsOptions(teamPk: string, status?: FeedStatus) {
         // Return empty result if teamPk is not provided
         return Promise.resolve({ items: [], bookmark: undefined });
       }
-      return listPosts(pageParam, teamPk, status);
+      return listTeamPosts(teamPk, pageParam, status);
     },
     getNextPageParam: (last: ListPostResponse) => last.bookmark ?? undefined,
     initialPageParam: undefined as string | undefined,

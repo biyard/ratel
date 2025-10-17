@@ -83,7 +83,8 @@ use crate::{
                 remove_member::remove_member_handler,
                 update_group::update_group_handler,
             },
-            list_members::{ListMembersResponse, list_members_handler},
+            list_members::{TeamMember, list_members_handler},
+            list_team_posts::list_team_posts_handler,
             update_team::{UpdateTeamResponse, update_team_handler},
         },
         users::find_user::{FindUserResponse, find_user_handler},
@@ -607,9 +608,20 @@ pub fn route(
                             get_with(
                                 list_members_handler,
                                 api_docs!(
-                                    Json<ListMembersResponse>,
+                                    Json<ListItemsResponse<TeamMember>>,
                                     "List team members",
-                                    "List all members of a team with their groups"
+                                    "List all members of a team with their groups. Use query param: ?team_pk=TEAM%23uuid or ?team_pk=username"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/posts",
+                            get_with(
+                                list_team_posts_handler,
+                                api_docs!(
+                                    Json<ListItemsResponse<PostResponse>>,
+                                    "List team posts",
+                                    "List all posts for a team. Supports query params: ?status=1 (draft) or ?status=2 (published), ?bookmark=..."
                                 ),
                             ),
                         )

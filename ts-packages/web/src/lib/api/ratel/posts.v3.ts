@@ -117,6 +117,25 @@ export async function listPosts(
   return call('GET', path);
 }
 
+export async function listTeamPosts(
+  teamPk: string,
+  bookmark?: string,
+  status?: number,
+): Promise<ListPostResponse> {
+  const params = new URLSearchParams();
+  if (bookmark) {
+    params.append('bookmark', bookmark);
+  }
+  if (status !== undefined) {
+    params.append('status', status.toString());
+  }
+
+  const queryString = params.toString();
+  const path = `/v3/teams/${encodeURIComponent(teamPk)}/posts${queryString ? `?${queryString}` : ''}`;
+
+  return call('GET', path);
+}
+
 export async function likePost(
   postPk: string,
   like: boolean,
