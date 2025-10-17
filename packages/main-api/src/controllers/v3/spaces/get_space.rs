@@ -23,6 +23,19 @@ pub struct GetSpaceResponse {
     pub features: Vec<String>,
     pub status: Option<SpaceStatus>,
     pub permissions: i64,
+    pub author_type: UserType,
+    pub author_display_name: String,
+    pub author_username: String,
+    pub author_profile_url: String,
+    pub certified: bool,
+
+    pub likes: i64,
+    pub comments: i64,
+    pub shares: i64,
+    pub rewards: Option<i64>,
+    pub visibility: SpaceVisibility,
+    pub publish_state: SpacePublishState,
+    pub booster: BoosterType,
 }
 
 pub async fn get_space_handler(
@@ -62,6 +75,20 @@ impl From<(SpaceCommon, Post, TeamGroupPermissions)> for GetSpaceResponse {
             features: vec![],
             status: space.status,
             permissions: permissions.into(),
+            author_type: post.author_type,
+            author_display_name: post.author_display_name,
+            author_username: post.author_username,
+            author_profile_url: post.author_profile_url,
+
+            // TODO: implement real certification check
+            certified: false,
+            likes: post.likes,
+            comments: post.comments,
+            shares: post.shares,
+            rewards: space.rewards,
+            visibility: space.visibility,
+            publish_state: space.publish_state,
+            booster: space.booster,
         }
     }
 }

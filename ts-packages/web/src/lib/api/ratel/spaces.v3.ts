@@ -44,3 +44,21 @@ export function updateSpaceVisibility(
     visibility,
   });
 }
+
+export function updateSpaceContent(
+  spacePk: string,
+  content: string,
+): Promise<void> {
+  return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
+    content,
+  });
+}
+
+export function updateSpaceTitle(
+  spacePk: string,
+  title: string,
+): Promise<void> {
+  return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
+    title,
+  });
+}
