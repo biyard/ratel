@@ -3,7 +3,7 @@ import { State } from '@/types/state';
 import { useSpaceHomeData } from './use-space-home-data';
 import { SideMenuProps } from '@/features/spaces/components/space-side-menu';
 import { route } from '@/route';
-import { Space } from '@/features/spaces/types/Space';
+import { Space } from '@/features/spaces/types/space';
 import { Settings, Vote } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
