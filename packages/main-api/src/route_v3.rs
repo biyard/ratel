@@ -348,6 +348,7 @@ pub fn route(
                             )
                     )
                 )
+                .nest("/polls", crate::controllers::v3::spaces::polls::route())
         )
         .nest(
             "/teams",
