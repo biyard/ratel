@@ -1,9 +1,4 @@
-use crate::{
-    Error2,
-    models::{Post, team::Team},
-    types::*,
-    utils::time::get_now_timestamp_millis,
-};
+use crate::{Error2, models::team::Team, types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
 #[derive(
@@ -180,34 +175,9 @@ impl SpaceCommon {
         }
     }
 
-    pub async fn update_transact_write_items(
-        &self,
-        title: String,
-        html_content: String,
-        started_at: Option<i64>,
-        ended_at: Option<i64>,
-        booster: Option<BoosterType>,
-    ) -> crate::Result<Vec<aws_sdk_dynamodb::types::TransactWriteItem>> {
-        let now = get_now_timestamp_millis();
-        let mut space_updater = SpaceCommon::updater(&self.pk, &self.sk).with_updated_at(now);
-        let mut post_updater = Post::updater(&self.post_pk, &EntityType::Post)
-            .with_updated_at(now)
-            .with_title(title)
-            .with_html_contents(html_content);
-
-        if let Some(time_range) = started_at.zip(ended_at) {
-            space_updater = space_updater
-                .with_started_at(time_range.0)
-                .with_ended_at(time_range.1);
-        }
-        if let Some(booster) = booster {
-            post_updater = post_updater.with_booster(booster);
-            space_updater = space_updater.with_booster(booster);
-        }
-
-        Ok(vec![
-            space_updater.transact_write_item(),
-            post_updater.transact_write_item(),
-        ])
+    pub fn validate_editable(&self) -> bool {
+        self.publish_state == SpacePublishState::Draft
+            || (self.publish_state == SpacePublishState::Published
+                && (self.status == Some(SpaceStatus::Waiting) || self.status.is_none()))
     }
 }

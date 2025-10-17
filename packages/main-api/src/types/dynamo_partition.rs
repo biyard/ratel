@@ -42,8 +42,7 @@ pub enum Partition {
     // PollSpace(String),
     PollSpaceResponse(String), // user_pk
 
-    // Sprint League Space
-    SprintLeague(String),
+    // Sprint League
     SprintLeagueVote(String), // user_pk
 
     Team(String),
@@ -68,6 +67,10 @@ impl Partition {
                 "Post(Feed) key can be only extracted from Space key".to_string(),
             )),
         }
+    }
+
+    pub fn is_space_key(&self) -> bool {
+        matches!(self, Partition::Space(_))
     }
 }
 

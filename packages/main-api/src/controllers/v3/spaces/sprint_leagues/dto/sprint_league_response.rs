@@ -15,7 +15,7 @@ impl From<Vec<SprintLeagueMetadata>> for SprintLeagueResponse {
         for entry in entity {
             match entry {
                 SprintLeagueMetadata::Space(sprint) => {
-                    res.votes = sprint.voters;
+                    res.votes = sprint.votes;
                 }
                 SprintLeagueMetadata::Player(player) => {
                     res.players.push(player);

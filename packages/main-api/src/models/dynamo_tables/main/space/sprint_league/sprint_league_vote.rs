@@ -40,11 +40,10 @@ impl SprintLeagueVote {
         user_pk: &Partition,
     ) -> crate::Result<(Partition, EntityType)> {
         let pk = match space_pk {
-            Partition::SprintLeague(s) if !s.is_empty() => Partition::SprintLeagueVote(s.clone()),
+            Partition::Space(s) if !s.is_empty() => Partition::SprintLeagueVote(s.clone()),
             _ => {
                 return Err(Error::InvalidPartitionKey(
-                    "space_pk must be Partition::SprintLeague with non-empty inner value"
-                        .to_string(),
+                    "space_pk must be Partition::Space with non-empty inner value".to_string(),
                 ));
             }
         };
