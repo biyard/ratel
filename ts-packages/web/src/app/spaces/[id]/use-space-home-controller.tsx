@@ -10,6 +10,10 @@ import { TFunction } from 'i18next';
 import { UserResponse } from '@/lib/api/ratel/me.v3';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { SpaceStatus } from '@/features/spaces/types/space-common';
+import { logger } from '@/lib/logger';
+import { useSpaceUpdateContentMutation } from '@/features/spaces/hooks/use-space-update-content-mutation';
+import { showErrorToast } from '@/lib/toast';
+import { useSpaceUpdateTitleMutation } from '@/features/spaces/hooks/use-space-update-title-mutation';
 
 export class SpaceHomeController {
   public space: Space;
@@ -19,6 +23,8 @@ export class SpaceHomeController {
     public data: ReturnType<typeof useSpaceHomeData>,
     public state: State<boolean>,
     public t: TFunction<'Space'>,
+    public updateSpaceContent: ReturnType<typeof useSpaceUpdateContentMutation>,
+    public updateSpaceTitle: ReturnType<typeof useSpaceUpdateTitleMutation>,
   ) {
     this.space = this.data.space.data;
   }
@@ -103,6 +109,10 @@ export class SpaceHomeController {
     return common;
   }
 
+  get isAdmin() {
+    return this.space.isAdmin();
+  }
+
   get adminMenus(): SideMenuProps[] {
     return [
       {
@@ -112,12 +122,49 @@ export class SpaceHomeController {
       },
     ];
   }
+
+  handleChange = async (text: string) => {
+    try {
+      await this.updateSpaceContent.mutateAsync({
+        spacePk: this.space.pk,
+        content: text,
+      });
+    } catch (error) {
+      logger.error('Failed to update space content', error);
+      showErrorToast(`Failed to update space content: ${error}`);
+    }
+  };
+
+  handleTitleChange = async (title: string) => {
+    logger.debug('Title change requested:', title);
+    try {
+      await this.updateSpaceTitle.mutateAsync({
+        spacePk: this.space.pk,
+        title,
+      });
+    } catch (error) {
+      logger.error('Failed to update space title', error);
+      showErrorToast(`Failed to update space title: ${error}`);
+    }
+  };
+
+  handleShare = async () => {
+    logger.error('handleShare not implemented');
+  };
 }
 
 export function useSpaceHomeController(spacePk: string) {
   const data = useSpaceHomeData(spacePk);
   const state = useState(false);
   const { t } = useTranslation('Space');
+  const updateSpaceContent = useSpaceUpdateContentMutation();
+  const updateSpaceTitle = useSpaceUpdateTitleMutation();
 
-  return new SpaceHomeController(data, new State(state), t);
+  return new SpaceHomeController(
+    data,
+    new State(state),
+    t,
+    updateSpaceContent,
+    updateSpaceTitle,
+  );
 }
