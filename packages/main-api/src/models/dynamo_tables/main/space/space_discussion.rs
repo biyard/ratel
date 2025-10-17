@@ -48,7 +48,7 @@ impl SpaceDiscussion {
 
         Self {
             pk: space_pk,
-            sk: EntityType::Discussion(uid),
+            sk: EntityType::SpaceDiscussion(uid),
             started_at,
             ended_at,
 
@@ -94,7 +94,7 @@ impl From<SpaceDiscussion> for SpaceDiscussionResponse {
     fn from(discussion: SpaceDiscussion) -> Self {
         Self {
             pk: match discussion.sk {
-                EntityType::Discussion(v) => Partition::Discussion(v.to_string()),
+                EntityType::SpaceDiscussion(v) => Partition::Discussion(v.to_string()),
                 _ => Partition::Discussion("".to_string()),
             },
             started_at: discussion.started_at,

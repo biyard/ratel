@@ -33,7 +33,7 @@ impl SpaceDiscussionMember {
 
         Self {
             pk: discussion_pk,
-            sk: EntityType::DiscussionMember(user_id),
+            sk: EntityType::SpaceDiscussionMember(user_id),
             user_pk: pk,
             author_display_name: display_name,
             author_profile_url: profile_url,

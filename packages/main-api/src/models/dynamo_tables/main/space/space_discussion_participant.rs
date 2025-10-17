@@ -31,7 +31,7 @@ impl SpaceDiscussionParticipant {
     ) -> Self {
         Self {
             pk: discussion_pk,
-            sk: EntityType::DiscussionParticipant(participant_id.clone()),
+            sk: EntityType::SpaceDiscussionParticipant(participant_id.clone()),
             participant_id: Some(participant_id),
             user_pk: pk,
             author_display_name: display_name,
@@ -44,7 +44,7 @@ impl SpaceDiscussionParticipant {
         if let Some(id) = &self.participant_id {
             return id.clone();
         }
-        if let EntityType::DiscussionParticipant(v) = &self.sk {
+        if let EntityType::SpaceDiscussionParticipant(v) = &self.sk {
             return v.clone();
         }
         String::new()
