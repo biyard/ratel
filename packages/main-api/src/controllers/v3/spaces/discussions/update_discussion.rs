@@ -109,7 +109,7 @@
 //     space_pk: Partition,
 //     discussions: Vec<DiscussionCreateRequest>,
 // ) -> Result<Vec<TransactWriteItem>, Error2> {
-//     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
+//     let metadata = DeliberationMetadata(&dynamo.client, space_pk.clone()).await?;
 //     let mut tx = vec![];
 
 //     for data in metadata.into_iter() {

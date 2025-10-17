@@ -339,6 +339,31 @@ pub fn route(
                         ),
                 ),
         )
+        // INFO: FILE feature
+        .nest("/spaces/:space_pk/files", Router::new()
+                            .route(
+                                "/",
+                                patch_with(
+                                    update_files_handler,
+                                    api_docs!(
+                                            Json<UpdateSpaceFileResponse>,
+                                            "Update Files",
+                                            "Update Files by space pk"
+                                        ),
+                                )
+                            )
+                            .route(
+                                "/",
+                                get_with(
+                                    get_files_handler,
+                                    api_docs!(
+                                            Json<GetSpaceFileResponse>,
+                                            "Get Files",
+                                            "Get Files by space pk"
+                                        ),
+                                )
+                            )
+            )
         .nest(
             "/spaces",
             Router::new()
@@ -374,35 +399,6 @@ pub fn route(
                             "Update space details"
                         ),
                     ).get(get_space_handler),
-                )
-                .nest("/:space_pk", Router::new()
-                    // FILE feature
-                    .nest(
-                        "/files", 
-                        Router::new()
-                            .route(
-                                "/",
-                                patch_with(
-                                    update_files_handler,
-                                    api_docs!(
-                                            Json<UpdateSpaceFileResponse>,
-                                            "Update Files",
-                                            "Update Files by space pk"
-                                        ),
-                                )
-                            )
-                            .route(
-                                "/",
-                                get_with(
-                                    get_files_handler,
-                                    api_docs!(
-                                            Json<GetSpaceFileResponse>,
-                                            "Get Files",
-                                            "Get Files by space pk"
-                                        ),
-                                )
-                            )
-                    )
                 )
                 .nest(
                     "/:space_pk/deliberation",
