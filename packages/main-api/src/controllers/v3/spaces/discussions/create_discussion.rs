@@ -9,7 +9,8 @@ use crate::features::models::space_discussion_member::{
 use crate::features::models::space_discussion_participant::{
     SpaceDiscussionParticipant, SpaceDiscussionParticipantQueryOption,
 };
-use crate::types::Partition;
+use crate::models::SpaceCommon;
+use crate::types::{Partition, TeamGroupPermission};
 use crate::{AppState, Error2, models::user::User, types::EntityType};
 use bdk::prelude::axum::extract::{Json, Path, State};
 use bdk::prelude::*;
@@ -18,12 +19,23 @@ use aide::NoApi;
 
 pub async fn create_discussion_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(_user): NoApi<Option<User>>,
+    NoApi(user): NoApi<Option<User>>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<SpaceDiscussionRequest>,
 ) -> Result<Json<CreateDiscussionResponse>, Error2> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error2::NotFoundSpace);
+    }
+
+    let (_, has_perm) = SpaceCommon::has_permission(
+        &dynamo.client,
+        &space_pk,
+        Some(&user.unwrap_or_default().pk),
+        TeamGroupPermission::SpaceEdit,
+    )
+    .await?;
+    if !has_perm {
+        return Err(Error2::NoPermission);
     }
 
     let disc = SpaceDiscussion::new(
