@@ -1,286 +1,223 @@
-// use crate::models::{
-//     DeliberationDiscussionMember, DeliberationDiscussionMemberQueryOption,
-//     DeliberationDiscussionResponse, DeliberationPath, DeliberationSpaceDiscussion,
-//     DeliberationSpaceElearning, DeliberationSpaceParticipant, ElearningResponse, Post, SpaceCommon,
-// };
-// use crate::types::{File, Partition, SpaceVisibility, TeamGroupPermission};
-// use crate::utils::aws::DynamoClient;
-// use crate::{
-//     AppState, Error2,
-//     models::{
-//         space::{DeliberationDetailResponse, DeliberationMetadata, DiscussionCreateRequest},
-//         user::User,
-//     },
-//     types::EntityType,
-// };
-// use aws_sdk_dynamodb::types::TransactWriteItem;
-// use bdk::prelude::axum::extract::{Json, Path, State};
-// use bdk::prelude::*;
-// use serde::Deserialize;
-// use validator::Validate;
+use crate::controllers::v3::spaces::{SpaceDiscussionPath, SpaceDiscussionPathParam};
+use crate::features::dto::{
+    SpaceDiscussionMemberResponse, SpaceDiscussionParticipantResponse, SpaceDiscussionResponse,
+    UpdateDiscussionRequest, UpdateDiscussionResponse,
+};
+use crate::features::models::space_discussion::SpaceDiscussion;
+use crate::features::models::space_discussion_member::{
+    SpaceDiscussionMember, SpaceDiscussionMemberQueryOption,
+};
+use crate::features::models::space_discussion_participant::{
+    SpaceDiscussionParticipant, SpaceDiscussionParticipantQueryOption,
+};
+use crate::models::User;
+use crate::types::{EntityType, Partition};
+use crate::{AppState, Error2};
+use axum::extract::{Json, Path, State};
+use bdk::prelude::aide::NoApi;
+use bdk::prelude::*;
 
-// use aide::NoApi;
+pub async fn update_discussion_handler(
+    State(AppState { dynamo, .. }): State<AppState>,
+    NoApi(_user): NoApi<Option<User>>,
+    Path(SpaceDiscussionPathParam {
+        space_pk,
+        discussion_pk,
+    }): SpaceDiscussionPath,
+    Json(req): Json<UpdateDiscussionRequest>,
+) -> Result<Json<UpdateDiscussionResponse>, Error2> {
+    if !matches!(space_pk, Partition::Space(_)) {
+        return Err(Error2::NotFoundDeliberationSpace);
+    }
 
-// #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, JsonSchema)]
-// pub struct SpaceDiscussionCreateRequest {
-//     pub discussion_pk: Option<String>,
-//     pub started_at: i64,
-//     pub ended_at: i64,
+    let discussion_id = match discussion_pk.clone() {
+        Partition::Discussion(v) => v.to_string(),
+        _ => "".to_string(),
+    };
 
-//     pub name: String,
-//     pub description: String,
-//     pub user_ids: Vec<Partition>,
-// }
+    let discussion = SpaceDiscussion::get(
+        &dynamo.client,
+        space_pk.clone(),
+        Some(EntityType::SpaceDiscussion(discussion_id.to_string())),
+    )
+    .await?;
 
-// #[derive(Debug, Clone, Deserialize, Default, aide::OperationIo, JsonSchema, Validate)]
-// pub struct UpdateDeliberationDeliberationRequest {
-//     #[schemars(description = "Discussion informations")]
-//     pub discussions: Vec<SpaceDiscussionCreateRequest>,
-// }
+    if discussion.is_none() {
+        return Err(Error2::NotFoundDiscussion);
+    }
 
-// #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
-// pub struct UpdateDeliberationDeliberationResponse {
-//     pub discussions: Vec<DeliberationDiscussionResponse>,
-// }
+    let mut bookmark = None::<String>;
 
-// //FIXME: implement with dynamodb upsert method
-// pub async fn update_deliberation_deliberation_handler(
-//     State(AppState { dynamo, .. }): State<AppState>,
-//     NoApi(user): NoApi<Option<User>>,
-//     Path(DeliberationPath { space_pk }): Path<DeliberationPath>,
-//     Json(req): Json<UpdateDeliberationDeliberationRequest>,
-// ) -> Result<Json<UpdateDeliberationDeliberationResponse>, Error2> {
-//     if !matches!(space_pk, Partition::Space(_)) {
-//         return Err(Error2::NotFoundDeliberationSpace);
-//     }
+    // DELETE EXIST MEMBERS
+    loop {
+        let (responses, new_bookmark) = SpaceDiscussionMember::query(
+            &dynamo.client,
+            discussion_pk.clone(),
+            if let Some(b) = &bookmark {
+                SpaceDiscussionMemberQueryOption::builder().bookmark(b.clone())
+            } else {
+                SpaceDiscussionMemberQueryOption::builder()
+            },
+        )
+        .await?;
 
-//     let mut tx = vec![];
+        for response in responses {
+            SpaceDiscussionMember::delete(&dynamo.client, response.pk, Some(response.sk)).await?;
+        }
 
-//     let tx_discussion = update_discussion(
-//         &dynamo,
-//         user.clone().unwrap_or_default(),
-//         space_pk.clone(),
-//         req.discussions,
-//     )
-//     .await?;
+        match new_bookmark {
+            Some(b) => bookmark = Some(b),
+            None => break,
+        }
+    }
 
-//     let tx_elearning = update_elearning(&dynamo, space_pk.clone(), req.elearning_files).await?;
+    bookmark = None;
 
-//     let mut tx = Vec::with_capacity(tx_common.len() + tx_discussion.len() + tx_elearning.len());
-//     tx.extend(tx_common);
-//     tx.extend(tx_discussion);
-//     tx.extend(tx_elearning);
+    loop {
+        let (responses, new_bookmark) = SpaceDiscussionParticipant::query(
+            &dynamo.client,
+            discussion_pk.clone(),
+            if let Some(b) = &bookmark {
+                SpaceDiscussionParticipantQueryOption::builder().bookmark(b.clone())
+            } else {
+                SpaceDiscussionParticipantQueryOption::builder()
+            },
+        )
+        .await?;
 
-//     dynamo
-//         .client
-//         .transact_write_items()
-//         .set_transact_items(Some(tx))
-//         .send()
-//         .await
-//         .map_err(|e| {
-//             tracing::error!("Failed to update deliberation {}", e);
-//             crate::Error2::ServerError(e.to_string())
-//         })?;
+        for response in responses {
+            SpaceDiscussionParticipant::delete(&dynamo.client, response.pk, Some(response.sk))
+                .await?;
+        }
 
-//     let metadata = match DeliberationMetadata::query(&dynamo.client, space_pk).await {
-//         Ok(v) => v,
-//         Err(e) => {
-//             tracing::debug!("deliberation metadata error: {:?}", e);
-//             return Err(e);
-//         }
-//     };
+        match new_bookmark {
+            Some(b) => bookmark = Some(b),
+            None => break,
+        }
+    }
 
-//     let metadata: DeliberationDetailResponse = metadata.into();
+    // UPDATE DISCUSSION
+    let mut tx = vec![];
 
-//     let space_common = metadata.space_common;
-//     let discussions = metadata.discussions;
-//     let elearnings = metadata.elearnings;
+    let d = SpaceDiscussion::updater(
+        &space_pk.clone(),
+        EntityType::SpaceDiscussion(discussion_id.clone()),
+    )
+    .with_name(req.discussion.name)
+    .with_description(req.discussion.description)
+    .with_started_at(req.discussion.started_at)
+    .with_ended_at(req.discussion.ended_at)
+    .transact_write_item();
 
-//     Ok(Json(UpdateDeliberationDeliberationResponse {
-//         space_common,
-//         discussions,
-//         elearnings,
-//     }))
-// }
+    tx.push(d);
 
-// pub async fn update_discussion(
-//     dynamo: &DynamoClient,
-//     user: User,
-//     space_pk: Partition,
-//     discussions: Vec<DiscussionCreateRequest>,
-// ) -> Result<Vec<TransactWriteItem>, Error2> {
-//     let metadata = DeliberationMetadata(&dynamo.client, space_pk.clone()).await?;
-//     let mut tx = vec![];
+    for member in req.discussion.user_ids {
+        let user = User::get(&dynamo.client, member, Some(EntityType::User))
+            .await?
+            .ok_or(Error2::NotFound("User not found".into()))?;
 
-//     for data in metadata.into_iter() {
-//         match data {
-//             DeliberationMetadata::DeliberationSpaceParticipant(v) => {
-//                 //FIXME: fix deliberation delete logic with transaction code
-//                 DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-//             }
-//             DeliberationMetadata::DeliberationSpaceMember(v) => {
-//                 //FIXME: fix deliberation delete logic with transaction code
-//                 DeliberationDiscussionMember::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-//             }
-//             // DeliberationMetadata::DeliberationSpaceDiscussion(v) => {
-//             //     DeliberationSpaceDiscussion::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-//             // }
-//             _ => {}
-//         }
-//     }
+        let m = SpaceDiscussionMember::new(Partition::Discussion(discussion_id.clone()), user)
+            .create_transact_write_item();
 
-//     for discussion in discussions {
-//         if discussion.discussion_pk.is_some() {
-//             let discussion_id = discussion
-//                 .discussion_pk
-//                 .clone()
-//                 .unwrap()
-//                 .split("#")
-//                 .last()
-//                 .ok_or_else(|| Error2::BadRequest("Invalid discussion_pk format".into()))?
-//                 .to_string();
+        tx.push(m);
 
-//             tracing::debug!("discussion debug");
-//             let d = DeliberationSpaceDiscussion::updater(
-//                 &space_pk.clone(),
-//                 EntityType::DeliberationDiscussion(discussion_id.to_string()),
-//             )
-//             .with_started_at(discussion.started_at)
-//             .with_ended_at(discussion.ended_at)
-//             .with_name(discussion.name)
-//             .with_description(discussion.description)
-//             .transact_write_item();
+        if tx.len() == 100 {
+            dynamo
+                .client
+                .transact_write_items()
+                .set_transact_items(Some(tx.clone()))
+                .send()
+                .await
+                .map_err(|e| {
+                    tracing::error!("Failed to update discussion: {:?}", e);
+                    Error2::InternalServerError("Failed to update discussion".into())
+                })?;
 
-//             tx.push(d);
+            tx.clear();
+        }
+    }
 
-//             let option = DeliberationDiscussionMemberQueryOption::builder();
+    if !tx.is_empty() {
+        dynamo
+            .client
+            .transact_write_items()
+            .set_transact_items(Some(tx))
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to update discussion: {:?}", e);
+                Error2::InternalServerError("Failed to update discussion".into())
+            })?;
+    }
 
-//             let deleted_members = DeliberationDiscussionMember::find_by_discussion_pk(
-//                 &dynamo.client,
-//                 discussion.discussion_pk.unwrap(),
-//                 option,
-//             )
-//             .await?
-//             .0;
+    // QUERY DISCUSSION
+    let discussion = SpaceDiscussion::get(
+        &dynamo.client,
+        space_pk.clone(),
+        Some(EntityType::SpaceDiscussion(discussion_id.to_string())),
+    )
+    .await?;
 
-//             for member in deleted_members {
-//                 //FIXME: fix deliberation delete logic with transaction code
-//                 DeliberationDiscussionMember::delete(&dynamo.client, member.pk, Some(member.sk))
-//                     .await?;
-//             }
+    if discussion.is_none() {
+        return Err(Error2::NotFoundDiscussion);
+    }
 
-//             for member in discussion.user_ids {
-//                 let user = User::get(&dynamo.client, member, Some(EntityType::User))
-//                     .await?
-//                     .ok_or(Error2::NotFound("User not found".into()))?;
+    let discussion = discussion.unwrap();
 
-//                 let m = DeliberationDiscussionMember::new(
-//                     space_pk.clone(),
-//                     Partition::Discussion(discussion_id.to_string()),
-//                     user,
-//                 )
-//                 .create_transact_write_item();
+    let mut discussion: SpaceDiscussionResponse = discussion.into();
 
-//                 tx.push(m);
-//             }
-//         } else {
-//             let disc = DeliberationSpaceDiscussion::new(
-//                 space_pk.clone(),
-//                 discussion.name,
-//                 discussion.description,
-//                 discussion.started_at,
-//                 discussion.ended_at,
-//                 None,
-//                 "".to_string(),
-//                 None,
-//                 None,
-//                 user.clone(),
-//             );
+    let mut discussion_members: Vec<SpaceDiscussionMemberResponse> = vec![];
+    let mut discussion_participants: Vec<SpaceDiscussionParticipantResponse> = vec![];
+    let mut bookmark = None::<String>;
 
-//             disc.create(&dynamo.client).await?;
+    loop {
+        let (responses, new_bookmark) = SpaceDiscussionMember::query(
+            &dynamo.client,
+            discussion.pk.clone(),
+            if let Some(b) = &bookmark {
+                SpaceDiscussionMemberQueryOption::builder().bookmark(b.clone())
+            } else {
+                SpaceDiscussionMemberQueryOption::builder()
+            },
+        )
+        .await?;
 
-//             let disc_id = match disc.clone().sk {
-//                 EntityType::DeliberationDiscussion(v) => v,
-//                 _ => "".to_string(),
-//             };
+        for response in responses {
+            discussion_members.push(response.into());
+        }
 
-//             for member in discussion.user_ids {
-//                 let user = User::get(&dynamo.client, member, Some(EntityType::User))
-//                     .await?
-//                     .ok_or(Error2::NotFound("User not found".into()))?;
+        match new_bookmark {
+            Some(b) => bookmark = Some(b),
+            None => break,
+        }
+    }
 
-//                 let m = DeliberationDiscussionMember::new(
-//                     space_pk.clone(),
-//                     Partition::Discussion(disc_id.clone()),
-//                     user,
-//                 )
-//                 .create_transact_write_item();
+    discussion.members = discussion_members;
+    bookmark = None;
 
-//                 tx.push(m);
-//             }
-//         }
-//     }
+    loop {
+        let (responses, new_bookmark) = SpaceDiscussionParticipant::query(
+            &dynamo.client,
+            discussion.pk.clone(),
+            if let Some(b) = &bookmark {
+                SpaceDiscussionParticipantQueryOption::builder().bookmark(b.clone())
+            } else {
+                SpaceDiscussionParticipantQueryOption::builder()
+            },
+        )
+        .await?;
 
-//     Ok(tx)
-// }
+        for response in responses {
+            discussion_participants.push(response.into());
+        }
 
-// pub async fn update_elearning(
-//     dynamo: &DynamoClient,
-//     space_pk: Partition,
-//     elearning_files: Vec<File>,
-// ) -> Result<Vec<TransactWriteItem>, Error2> {
-//     let mut tx = vec![];
-//     let elearning = DeliberationSpaceElearning::get(
-//         &dynamo.client,
-//         &space_pk,
-//         Some(EntityType::DeliberationElearning),
-//     )
-//     .await?;
+        match new_bookmark {
+            Some(b) => bookmark = Some(b),
+            None => break,
+        }
+    }
 
-//     if elearning.is_some() {
-//         let d = DeliberationSpaceElearning::updater(&space_pk, EntityType::DeliberationElearning)
-//             .with_files(elearning_files)
-//             .transact_write_item();
+    discussion.participants = discussion_participants;
 
-//         tx.push(d);
-//     } else {
-//         let elearning = DeliberationSpaceElearning::new(space_pk, elearning_files);
-//         elearning.create(&dynamo.client).await?;
-//     }
-
-//     Ok(tx)
-// }
-
-// pub async fn update_common(
-//     dynamo: &DynamoClient,
-//     space_pk: Partition,
-
-//     title: Option<String>,
-//     visibility: SpaceVisibility,
-//     started_at: i64,
-//     ended_at: i64,
-// ) -> Result<Vec<TransactWriteItem>, Error2> {
-//     let mut tx = vec![];
-
-//     let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
-//         .await?
-//         .ok_or(Error2::NotFound("Space Common not found".to_string()))?;
-
-//     let post_pk = space_common.post_pk;
-
-//     let d = SpaceCommon::updater(&space_pk, EntityType::SpaceCommon)
-//         .with_visibility(visibility)
-//         .with_started_at(started_at)
-//         .with_ended_at(ended_at)
-//         .transact_write_item();
-
-//     tx.push(d);
-
-//     let d = Post::updater(&post_pk, EntityType::Post)
-//         .with_title(title.unwrap_or_default())
-//         .transact_write_item();
-
-//     tx.push(d);
-
-//     Ok(tx)
-// }
+    Ok(Json(UpdateDiscussionResponse { discussion }))
+}
