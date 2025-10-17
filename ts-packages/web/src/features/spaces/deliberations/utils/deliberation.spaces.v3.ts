@@ -10,7 +10,7 @@ export type PartitionString = string;
 export function getDeliberationSpace(
   spacePk: string,
 ): Promise<DeliberationSpaceResponse> {
-  return call('GET', `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}`);
+  return call('GET', `/v3/spaces/${encodeURIComponent(spacePk)}/deliberation`);
 }
 
 export function updateDeliberationResponseSpace(
@@ -20,7 +20,7 @@ export function updateDeliberationResponseSpace(
 ): Promise<DeliberationSpaceResponse> {
   return call(
     'POST',
-    `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}/responses`,
+    `/v3/spaces/${encodeURIComponent(spacePk)}/deliberation/responses`,
     {
       survey_pk,
       survey_type: 'SURVEY',
@@ -34,7 +34,7 @@ export function deleteDeliberationSpace(
 ): Promise<DeleteDeliberationResponse> {
   return call(
     'POST',
-    `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}/delete`,
+    `/v3/spaces/${encodeURIComponent(spacePk)}/deliberation/delete`,
     {},
   );
 }
@@ -60,7 +60,7 @@ export function updateDeliberationSpace(
 ): Promise<DeliberationSpaceResponse> {
   return call(
     'POST',
-    `/v3/spaces/deliberation/${encodeURIComponent(spacePk)}`,
+    `/v3/spaces/${encodeURIComponent(spacePk)}/deliberation`,
     {
       title,
       html_contents,
