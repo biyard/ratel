@@ -1,10 +1,13 @@
-use crate::types::*;
+use crate::{types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct Poll {
     pub pk: Partition,
     pub sk: EntityType,
+
+    pub created_at: i64,
+    pub updated_at: i64,
 
     pub status: PollStatus,
     pub started_at: i64,
@@ -26,10 +29,12 @@ impl Poll {
                 "PollSpace must be under Space partition".to_string(),
             ));
         }
-
+        let now = get_now_timestamp_millis();
         Ok(Self {
             pk,
             sk: EntityType::SpacePoll,
+            created_at: now,
+            updated_at: now,
             user_response_count: 0,
             response_editable,
             started_at,

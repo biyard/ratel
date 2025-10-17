@@ -42,7 +42,7 @@ pub async fn get_deliberation_handler(
 
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
     tracing::debug!("Deliberation metadata retrieved: {:?}", metadata);
-    let mut metadata: DeliberationDetailResponse = metadata.into();
+    let metadata: DeliberationDetailResponse = metadata.into();
 
     tracing::debug!("DeliberationDetailResponse formed: {:?}", metadata);
 

@@ -1,13 +1,13 @@
 pub mod dto;
-pub mod get_poll_space;
-pub mod get_survey_summary;
-pub mod respond_poll_space;
-pub mod update_poll_space;
+pub mod get_poll;
+pub mod get_poll_result;
+pub mod respond_poll;
+pub mod update_poll;
 
-pub use get_poll_space::*;
-pub use get_survey_summary::*;
-pub use respond_poll_space::*;
-pub use update_poll_space::*;
+pub use get_poll::*;
+pub use get_poll_result::*;
+pub use respond_poll::*;
+pub use update_poll::*;
 
 #[cfg(test)]
 pub mod tests;
