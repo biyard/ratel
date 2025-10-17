@@ -9,6 +9,7 @@ use crate::controllers::v3::posts::list_comments::list_comments_handler;
 use crate::controllers::v3::posts::post_response::PostResponse;
 use crate::controllers::v3::posts::reply_to_comment::reply_to_comment_handler;
 use crate::controllers::v3::promotions::get_top_promotion::get_top_promotion_handler;
+use crate::controllers::v3::spaces::delete_discussion::delete_discussion_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::create_discussion::create_discussion_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
@@ -36,8 +37,8 @@ use crate::controllers::v3::spaces::deliberations::responses::create_response_an
 };
 use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
 use crate::controllers::v3::spaces::get_files::get_files_handler;
-use crate::controllers::v3::spaces::get_files::GetSpaceFileResponse;
 use crate::controllers::v3::spaces::get_space_handler;
+use crate::controllers::v3::spaces::list_discussions::list_discussions_handler;
 use crate::controllers::v3::spaces::polls::dto::*;
 use crate::controllers::v3::spaces::deliberations::update_deliberation_deliberation::{
     UpdateDeliberationDeliberationResponse, update_deliberation_deliberation_handler,
@@ -57,8 +58,8 @@ use crate::controllers::v3::spaces::polls::respond_poll_space::{
 use crate::controllers::v3::spaces::polls::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
+use crate::controllers::v3::spaces::update_discussion::update_discussion_handler;
 use crate::controllers::v3::spaces::update_files::update_files_handler;
-use crate::controllers::v3::spaces::update_files::UpdateSpaceFileResponse;
 use crate::controllers::v3::spaces::{dto::*, list_spaces_handler};
 use crate::models::space::{DeliberationDiscussionResponse, DeliberationSpaceResponse};
 use crate::models::{
@@ -339,31 +340,6 @@ pub fn route(
                         ),
                 ),
         )
-        // INFO: FILE feature
-        .nest("/spaces/:space_pk/files", Router::new()
-                            .route(
-                                "/",
-                                patch_with(
-                                    update_files_handler,
-                                    api_docs!(
-                                            Json<UpdateSpaceFileResponse>,
-                                            "Update Files",
-                                            "Update Files by space pk"
-                                        ),
-                                )
-                            )
-                            .route(
-                                "/",
-                                get_with(
-                                    get_files_handler,
-                                    api_docs!(
-                                            Json<GetSpaceFileResponse>,
-                                            "Get Files",
-                                            "Get Files by space pk"
-                                        ),
-                                )
-                            )
-            )
         .nest(
             "/spaces",
             Router::new()
@@ -399,6 +375,50 @@ pub fn route(
                             "Update space details"
                         ),
                     ).get(get_space_handler),
+                )
+                .nest("/:space_pk", Router::new()
+                    // FILE feature
+                    // FIXME: relocate in files directory in this logic
+                    .nest(
+                        "/files", 
+                        Router::new()
+                            .route(
+                                "/",
+                                    patch(
+                                    update_files_handler,
+                                )
+                                .get(
+                                    get_files_handler,
+                                )
+                            )
+                    )
+                    // DISCUSSION feature
+                    // FIXME: relocate in discussions directory in this logic
+                    .nest(
+                        "/discussions", 
+                        Router::new()
+                            .route(
+                                "/",
+                                post(
+                                    create_discussion_handler,
+                                )
+                                .get(
+                                    list_discussions_handler
+                                )
+                            )
+                            .route(
+                                "/:discussion_pk",
+                                patch(
+                                    update_discussion_handler
+                                )
+                                .get(
+                                    get_discussion_handler
+                                )
+                                .delete(
+                                    delete_discussion_handler
+                                )
+                            )
+                    )
                 )
                 .nest(
                     "/:space_pk/deliberation",
