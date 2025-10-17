@@ -1,7 +1,7 @@
 use crate::types::*;
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
+#[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserEvmAddress {
     pub pk: Partition,
 

@@ -1,3 +1,4 @@
+pub mod dto;
 pub mod get_poll_space;
 pub mod get_survey_summary;
 pub mod respond_poll_space;

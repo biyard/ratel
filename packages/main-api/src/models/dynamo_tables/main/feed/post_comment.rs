@@ -93,11 +93,6 @@ impl PostComment {
         .await
     }
 
-    pub fn with_parent_comment_sk(mut self, parent_comment_sk: EntityType) -> Self {
-        self.parent_comment_sk = Some(parent_comment_sk);
-        self
-    }
-
     pub async fn reply(
         cli: &aws_sdk_dynamodb::Client,
         post_pk: Partition,

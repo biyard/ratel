@@ -2,7 +2,14 @@ use crate::{Error2, models::team::Team, types::*, utils::time::get_now_timestamp
 use bdk::prelude::*;
 
 #[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, schemars::JsonSchema,
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    DynamoEntity,
+    Default,
+    schemars::JsonSchema,
+    aide::OperationIo,
 )]
 
 /*
@@ -51,11 +58,22 @@ pub struct SpaceCommon {
     pub updated_at: i64,
 
     pub status: Option<SpaceStatus>, // Waiting, InProgress, Finished
-    pub publish_state: SpacePublishState, // Draft, Published
-    #[dynamo(prefix = "VIS", name = "find_by_visibility", index = "gsi6", pk)]
+
+    #[dynamo(
+        prefix = "SPACE_COMMON_VIS",
+        name = "find_by_visibility",
+        index = "gsi6",
+        order = 2,
+        pk
+    )]
     pub visibility: SpaceVisibility, // Private, Public, Team(team_pk)
+    #[dynamo(index = "gsi6", order = 1, pk)]
+    pub publish_state: SpacePublishState, // Draft, Published
     #[dynamo(prefix = "POST_PK", name = "find_by_post_pk", index = "gsi2", pk)]
     pub post_pk: Partition,
+    pub space_type: SpaceType,
+    #[serde(default)]
+    pub content: String,
 
     #[dynamo(prefix = "USER_PK", name = "find_by_user_pk", index = "gsi1", pk)]
     pub user_pk: Partition,
@@ -73,7 +91,12 @@ pub struct SpaceCommon {
 
 impl SpaceCommon {
     pub fn new<A: Into<Author>>(post_pk: Partition, author: A) -> Self {
-        let uid = uuid::Uuid::new_v4().to_string();
+        let uid = match post_pk {
+            Partition::Feed(ref id) => id.clone(),
+            _ => {
+                panic!("post_pk must be Partition::Feed");
+            }
+        };
 
         let now = get_now_timestamp_millis();
         let Author {
@@ -100,15 +123,19 @@ impl SpaceCommon {
         }
     }
 
-    pub fn with_time(mut self, started_at: i64, ended_at: i64) -> Self {
-        self.started_at = Some(started_at);
-        self.ended_at = Some(ended_at);
-        self
-    }
-    pub fn with_booster(mut self, booster: BoosterType) -> Self {
-        self.booster = booster;
-        self
-    }
+    // pub fn with_time(mut self, started_at: i64, ended_at: i64) -> Self {
+    //     self.started_at = Some(started_at);
+    //     self.ended_at = Some(ended_at);
+    //     self
+    // }
+    // pub fn with_booster(mut self, booster: BoosterType) -> Self {
+    //     self.booster = booster;
+    //     self
+    // }
+    // pub fn with_space_type(mut self, space_type: SpaceType) -> Self {
+    //     self.space_type = space_type;
+    //     self
+    // }
     // pub fn with_visibility(mut self, visibility: SpaceVisibility) -> Self {
     //     self.visibility = Some(visibility);
     //     self

@@ -1,45 +1,44 @@
 use crate::{
     AppState, Error2,
     controllers::v3::spaces::deliberations::discussions::start_meeting::DeliberationDiscussionByIdPath,
-    models::space::{
-        DeliberationDiscussionMember, DeliberationDiscussionMemberQueryOption,
-        DeliberationDiscussionResponse, DeliberationSpaceDiscussion, DeliberationSpaceParticipant,
-        DeliberationSpaceParticipantQueryOption, DiscussionMemberResponse,
-        DiscussionParticipantResponse,
+    models::{
+        User,
+        space::{
+            DeliberationDiscussionMember, DeliberationDiscussionMemberQueryOption,
+            DeliberationDiscussionResponse, DeliberationSpaceDiscussion,
+            DeliberationSpaceParticipant, DeliberationSpaceParticipantQueryOption,
+            DiscussionMemberResponse, DiscussionParticipantResponse,
+        },
     },
     types::{EntityType, Partition},
-    utils::{aws::DynamoClient, dynamo_extractor::extract_user_from_session},
+    utils::aws::DynamoClient,
 };
-use bdk::prelude::axum::{
-    Extension,
-    extract::{Json, Path, State},
+use bdk::prelude::{
+    aide::NoApi,
+    axum::extract::{Json, Path, State},
 };
-use tower_sessions::Session;
 
 pub async fn exit_meeting_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(session): Extension<Session>,
+    NoApi(user): NoApi<Option<User>>,
     Path(DeliberationDiscussionByIdPath {
         space_pk,
         discussion_pk,
     }): Path<DeliberationDiscussionByIdPath>,
 ) -> Result<Json<DeliberationDiscussionResponse>, Error2> {
-    let user = extract_user_from_session(&dynamo.client, &session).await?;
-    let space_id = match space_pk.clone() {
-        Partition::Space(v) => v,
-        _ => "".to_string(),
-    };
+    let user = user.unwrap_or_default();
     let discussion_id = match discussion_pk {
         Partition::Discussion(v) => v,
         _ => "".to_string(),
     };
 
-    let user_pk = match user.pk {
+    let user_id = match user.pk {
         Partition::User(v) | Partition::Team(v) => v,
         _ => String::new(),
     };
 
-    let (disc, disc_pk) = fetch_discussion_and_pk(&dynamo, &space_id, &discussion_id).await?;
+    let (disc, disc_pk) =
+        fetch_discussion_and_pk(&dynamo, space_pk.clone(), &discussion_id).await?;
     if disc.meeting_id.is_none() {
         return Err(Error2::AwsChimeError("Not Found Meeting ID".into()));
     }
@@ -47,7 +46,7 @@ pub async fn exit_meeting_handler(
     let opt = DeliberationSpaceParticipantQueryOption::builder();
     let olds = DeliberationSpaceParticipant::find_by_discussion_user_pk(
         &dynamo.client,
-        Partition::DiscussionUser(format!("{}#{}", discussion_id, user_pk)),
+        Partition::DiscussionUser(format!("{}#{}", discussion_id, user_id)),
         opt,
     )
     .await?
@@ -67,12 +66,12 @@ pub async fn exit_meeting_handler(
 
 async fn fetch_discussion_and_pk(
     dynamo: &DynamoClient,
-    deliberation_id: &str,
+    space_pk: Partition,
     discussion_id: &str,
 ) -> Result<(DeliberationSpaceDiscussion, String), Error2> {
     let disc = DeliberationSpaceDiscussion::get(
         &dynamo.client,
-        &Partition::Space(deliberation_id.to_string()),
+        &space_pk,
         Some(EntityType::DeliberationDiscussion(
             discussion_id.to_string(),
         )),

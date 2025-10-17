@@ -27,10 +27,12 @@ export default function TextEditor({
   isImage = false,
   content,
   onChange,
+  onKeyDown,
 }: {
   isImage?: boolean;
   content: string;
   onChange?: (newContent: string) => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
 }) {
   const editor = useEditor({
     extensions: [
@@ -94,39 +96,39 @@ export default function TextEditor({
   if (!editor) return null;
 
   return (
-    <div className="w-full rounded-lg px-4 py-5 bg-card-bg-secondary border border-card-border-secondary  text-white gap-5">
-      <div className="flex flex-wrap gap-2 mb-4 text-sm items-center">
+    <div className="gap-5 py-5 px-4 w-full text-white rounded-lg border bg-card-bg-secondary border-card-border-secondary">
+      <div className="flex flex-wrap gap-2 items-center mb-4 text-sm">
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setDropdownOpen((prev) => !prev)}
-            className="px-3 py-1 rounded bg-card-bg-secondary  text-sm text-text-primary"
+            className="py-1 px-3 text-sm rounded bg-card-bg-secondary text-text-primary"
           >
             {headingLabel()}
           </button>
           {dropdownOpen && (
-            <div className="absolute left-0 mt-2 w-40 rounded-md shadow-lg bg-neutral-800 border border-neutral-700 light:bg-white z-10">
+            <div className="absolute left-0 z-10 mt-2 w-40 rounded-md border shadow-lg bg-neutral-800 border-neutral-700 light:bg-white">
               <div className="py-1">
                 <button
                   onClick={() => applyHeading('1')}
-                  className="block w-full text-left px-4 py-2 hover:bg-neutral-600 light:bg-white text-text-primary text-xl"
+                  className="block py-2 px-4 w-full text-xl text-left light:bg-white text-text-primary hover:bg-neutral-600"
                 >
                   Heading 1
                 </button>
                 <button
                   onClick={() => applyHeading('2')}
-                  className="block w-full text-left px-4 py-2  hover:bg-neutral-600 light:bg-white text-text-primary text-lg"
+                  className="block py-2 px-4 w-full text-lg text-left light:bg-white text-text-primary hover:bg-neutral-600"
                 >
                   Heading 2
                 </button>
                 <button
                   onClick={() => applyHeading('3')}
-                  className="block w-full text-left px-4 py-2  hover:bg-neutral-600 light:bg-white text-text-primary text-base"
+                  className="block py-2 px-4 w-full text-base text-left light:bg-white text-text-primary hover:bg-neutral-600"
                 >
                   Heading 3
                 </button>
                 <button
                   onClick={() => applyHeading('paragraph')}
-                  className="block w-full text-left px-4 py-2  hover:bg-neutral-600 light:bg-white text-text-primary text-sm"
+                  className="block py-2 px-4 w-full text-sm text-left light:bg-white text-text-primary hover:bg-neutral-600"
                 >
                   Normal
                 </button>
@@ -186,12 +188,14 @@ export default function TextEditor({
 
       <EditorContent
         editor={editor}
+        onKeyDown={onKeyDown}
         className="tiptap prose prose-invert h-[300px] overflow-y-auto bg-neutral-800 light:bg-card-bg light:border-neutral-300 text-text-primary border border-neutral-700 px-3 py-4 rounded-lg
     focus:outline-none focus:ring-0 focus-visible:ring-0 focus:border-transparent focus-visible:border-transparent
     list-disc list-inside
     [&_ul]:list-disc [&_ol]:list-decimal [&_li]:ml-4
     [&_h1]:text-2xl [&_h2]:text-xl [&_h3]:text-lg"
       />
+      <div>Shift + Enter for new line</div>
       <style>{`
         .ProseMirror:focus {
           outline: none;
