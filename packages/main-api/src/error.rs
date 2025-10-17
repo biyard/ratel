@@ -136,10 +136,14 @@ pub enum Error {
     NotFoundPoll,
     #[error("Poll is not in progress")]
     PollNotInProgress,
+    #[error("questions are invalid")]
+    PollInvalidQuestions,
     #[error("Answers do not match with questions")]
-    AnswersMismatchQuestions,
+    PollAnswersMismatchQuestions,
     #[error("Poll cannot be updated in its current status")]
     ImmutablePollState,
+    #[error("User cannot update response")]
+    ImmutablePollUserResponse,
     #[error("Poll Result not found")]
     NotFoundPollResult,
 

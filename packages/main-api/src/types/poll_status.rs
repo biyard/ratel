@@ -8,6 +8,7 @@ use bdk::prelude::*;
     Default,
     DynamoEnum,
     schemars::JsonSchema,
+    PartialEq,
 )]
 pub enum PollStatus {
     #[default]
