@@ -6,12 +6,10 @@ pub mod posting_deliberation;
 
 pub mod get_deliberation_common;
 pub mod get_deliberation_deliberation;
-pub mod get_deliberation_poll;
 pub mod get_deliberation_recommendation;
 pub mod get_deliberation_summary;
 
 pub mod update_deliberation_deliberation;
-pub mod update_deliberation_poll;
 pub mod update_deliberation_recommendation;
 pub mod update_deliberation_summary;
 
