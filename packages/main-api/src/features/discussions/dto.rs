@@ -135,6 +135,11 @@ pub struct CreateDiscussionResponse {
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
+pub struct DeleteDiscussionResponse {
+    pub discussion_pk: Partition,
+}
+
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct GetDiscussionResponse {
     pub discussion: SpaceDiscussionResponse,
 }

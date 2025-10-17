@@ -1,4 +1,5 @@
 use crate::controllers::v3::spaces::{SpaceDiscussionPath, SpaceDiscussionPathParam};
+use crate::features::dto::DeleteDiscussionResponse;
 use crate::features::models::space_discussion::SpaceDiscussion;
 use crate::features::models::space_discussion_member::{
     SpaceDiscussionMember, SpaceDiscussionMemberQueryOption,
@@ -11,6 +12,7 @@ use crate::types::{EntityType, Partition};
 use crate::{AppState, Error2};
 use axum::extract::{Path, State};
 use bdk::prelude::aide::NoApi;
+use bdk::prelude::axum::Json;
 use bdk::prelude::*;
 
 pub async fn delete_discussion_handler(
@@ -20,9 +22,9 @@ pub async fn delete_discussion_handler(
         space_pk,
         discussion_pk,
     }): SpaceDiscussionPath,
-) -> Result<(), Error2> {
+) -> Result<Json<DeleteDiscussionResponse>, Error2> {
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundDeliberationSpace);
+        return Err(Error2::NotFoundSpace);
     }
 
     let discussion_id = match discussion_pk.clone() {
@@ -97,5 +99,5 @@ pub async fn delete_discussion_handler(
         }
     }
 
-    Ok(())
+    Ok(Json(DeleteDiscussionResponse { discussion_pk }))
 }

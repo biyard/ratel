@@ -24,7 +24,7 @@ pub async fn get_discussion_handler(
     }): SpaceDiscussionPath,
 ) -> Result<Json<GetDiscussionResponse>, Error2> {
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundDeliberationSpace);
+        return Err(Error2::NotFoundSpace);
     }
 
     let discussion_id = match discussion_pk {
@@ -64,7 +64,12 @@ pub async fn get_discussion_handler(
         .await?;
 
         for response in responses {
-            discussion_members.push(response.into());
+            match response.sk {
+                EntityType::SpaceDiscussionMember(_) => {
+                    discussion_members.push(response.into());
+                }
+                _ => {}
+            }
         }
 
         match new_bookmark {
@@ -89,7 +94,12 @@ pub async fn get_discussion_handler(
         .await?;
 
         for response in responses {
-            discussion_participants.push(response.into());
+            match response.sk {
+                EntityType::SpaceDiscussionParticipant(_) => {
+                    discussion_participants.push(response.into());
+                }
+                _ => {}
+            }
         }
 
         match new_bookmark {

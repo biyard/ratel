@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
-use crate::features::dto::CreateDiscussionRequest;
+use crate::features::dto::SpaceDiscussionRequest;
 use crate::features::dto::{CreateDiscussionResponse, SpaceDiscussionResponse};
 use crate::features::dto::{SpaceDiscussionMemberResponse, SpaceDiscussionParticipantResponse};
 use crate::features::models::space_discussion::SpaceDiscussion;
@@ -20,18 +20,18 @@ pub async fn create_discussion_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(_user): NoApi<Option<User>>,
     Path(SpacePathParam { space_pk }): SpacePath,
-    Json(req): Json<CreateDiscussionRequest>,
+    Json(req): Json<SpaceDiscussionRequest>,
 ) -> Result<Json<CreateDiscussionResponse>, Error2> {
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundDeliberationSpace);
+        return Err(Error2::NotFoundSpace);
     }
 
     let disc = SpaceDiscussion::new(
         space_pk.clone(),
-        req.discussion.name,
-        req.discussion.description,
-        req.discussion.started_at,
-        req.discussion.ended_at,
+        req.name,
+        req.description,
+        req.started_at,
+        req.ended_at,
         None,
         "".to_string(),
         None,
@@ -41,13 +41,13 @@ pub async fn create_discussion_handler(
     disc.create(&dynamo.client).await?;
 
     let disc_id = match disc.clone().sk {
-        EntityType::DeliberationDiscussion(v) => v,
+        EntityType::SpaceDiscussion(v) => v,
         _ => "".to_string(),
     };
 
     let mut tx = vec![];
 
-    for member in req.discussion.user_ids {
+    for member in req.user_ids.clone() {
         let user = User::get(&dynamo.client, member, Some(EntityType::User))
             .await?
             .ok_or(Error2::NotFound("User not found".into()))?;
@@ -105,7 +105,12 @@ pub async fn create_discussion_handler(
         .await?;
 
         for response in responses {
-            discussion_members.push(response.into());
+            match response.sk {
+                EntityType::SpaceDiscussionMember(_) => {
+                    discussion_members.push(response.into());
+                }
+                _ => {}
+            }
         }
 
         match new_bookmark {
@@ -130,7 +135,12 @@ pub async fn create_discussion_handler(
         .await?;
 
         for response in responses {
-            discussion_participants.push(response.into());
+            match response.sk {
+                EntityType::SpaceDiscussionParticipant(_) => {
+                    discussion_participants.push(response.into());
+                }
+                _ => {}
+            }
         }
 
         match new_bookmark {
