@@ -1,54 +1,23 @@
-use crate::types::*;
+use crate::types::{space_file_feature_type::SpaceFileFeatureType, *};
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, DynamoEntity)]
 pub struct SpaceFile {
     pub pk: Partition,
     pub sk: EntityType,
 
-    pub name: String,
-    pub size: String,
-    pub ext: FileExtension,
-    pub url: Option<String>,
-}
-
-#[derive(
-    Debug, serde::Serialize, serde::Deserialize, Clone, JsonSchema, PartialEq, Eq, Default,
-)]
-pub enum FileExtension {
-    #[default]
-    JPG = 1,
-    PNG = 2,
-    PDF = 3,
-    ZIP = 4,
-    WORD = 5,
-    PPTX = 6,
-    EXCEL = 7,
-    MP4 = 8,
-    MOV = 9,
+    pub feature_type: SpaceFileFeatureType,
+    pub files: Vec<File>,
 }
 
 impl SpaceFile {
-    pub fn new(
-        pk: Partition,
-        name: String,
-        size: String,
-        ext: FileExtension,
-        url: Option<String>,
-    ) -> crate::Result<Self> {
-        if !matches!(pk, Partition::Space(_)) {
-            return Err(crate::Error::InvalidPartitionKey(
-                "Any Space must be under Space partition".to_string(),
-            ));
-        }
-
-        Ok(Self {
+    pub fn new(pk: Partition, feature_type: SpaceFileFeatureType, files: Vec<File>) -> Self {
+        Self {
             pk,
-            sk: EntityType::SpaceFile,
-            name,
-            size,
-            ext,
-            url,
-        })
+            sk: EntityType::SpaceFile(feature_type.to_string()),
+
+            feature_type,
+            files,
+        }
     }
 }
