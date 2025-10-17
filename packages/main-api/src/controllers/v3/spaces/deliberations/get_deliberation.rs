@@ -45,13 +45,6 @@ pub async fn get_deliberation_handler(
     let mut metadata: DeliberationDetailResponse = metadata.into();
 
     tracing::debug!("DeliberationDetailResponse formed: {:?}", metadata);
-    let responses = metadata.clone().surveys.responses;
-
-    for response in responses {
-        if response.user_pk == user.clone().unwrap_or_default().pk {
-            metadata.surveys.user_responses.push(response);
-        }
-    }
 
     Ok(Json(metadata))
 }

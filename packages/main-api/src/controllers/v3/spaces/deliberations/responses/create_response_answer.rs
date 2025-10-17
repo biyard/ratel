@@ -1,9 +1,7 @@
 use crate::{
     AppState, Error2,
-    models::space::{
-        DeliberationDetailResponse, DeliberationMetadata, DeliberationSpaceResponse, SpaceCommon,
-    },
-    types::{Partition, SurveyAnswer, SurveyType, TeamGroupPermission},
+    models::space::{DeliberationDetailResponse, DeliberationMetadata, SpaceCommon},
+    types::{Partition, TeamGroupPermission},
     utils::dynamo_extractor::extract_user_from_session,
 };
 use bdk::prelude::axum::{
@@ -19,10 +17,10 @@ use validator::Validate;
 pub struct CreateResponseAnswerRequest {
     #[schemars(description = "Survey ID")]
     pub survey_pk: Partition,
-    #[schemars(description = "Survey Type(Sample, Survey)")]
-    pub survey_type: SurveyType,
-    #[schemars(description = "Survey Answers")]
-    pub answers: Vec<SurveyAnswer>,
+    // #[schemars(description = "Survey Type(Sample, Survey)")]
+    // pub survey_type: SurveyType,
+    // #[schemars(description = "Survey Answers")]
+    // pub answers: Vec<SurveyAnswer>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
@@ -66,24 +64,24 @@ pub async fn create_response_answer_handler(
         return Err(Error2::NoPermission);
     }
 
-    let response = DeliberationSpaceResponse::new(
-        space_pk.clone(),
-        Partition::Survey(survey_pk_id.to_string()),
-        req.survey_type,
-        req.answers,
-        user.clone(),
-    );
-    response.create(&dynamo.client).await?;
+    // let response = DeliberationSpaceResponse::new(
+    //     space_pk.clone(),
+    //     Partition::Survey(survey_pk_id.to_string()),
+    //     req.survey_type,
+    //     req.answers,
+    //     user.clone(),
+    // );
+    // response.create(&dynamo.client).await?;
 
     let metadata = DeliberationMetadata::query(&dynamo.client, space_pk.clone()).await?;
-    let mut metadata: DeliberationDetailResponse = metadata.into();
+    let metadata: DeliberationDetailResponse = metadata.into();
 
-    for res in &metadata.surveys.responses {
-        if res.user_pk == user.clone().pk {
-            metadata.surveys.user_responses.push(res.clone());
-            continue;
-        }
-    }
+    // for res in &metadata.surveys.responses {
+    //     if res.user_pk == user.clone().pk {
+    //         metadata.surveys.user_responses.push(res.clone());
+    //         continue;
+    //     }
+    // }
 
     Ok(Json(DeliberationResponse { metadata }))
 }

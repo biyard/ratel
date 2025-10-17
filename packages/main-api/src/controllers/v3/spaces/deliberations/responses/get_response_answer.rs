@@ -1,9 +1,6 @@
 use crate::{
     AppState, Error2,
-    models::{
-        space::{DeliberationSpaceResponse, SpaceCommon},
-        user::User,
-    },
+    models::{space::SpaceCommon, user::User},
     types::{EntityType, Partition, TeamGroupPermission},
 };
 use aide::NoApi;
@@ -28,41 +25,41 @@ pub struct DeliberationResponseByIdPath {
     pub response_pk: Partition,
 }
 
-pub async fn get_response_answer_handler(
-    State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
-    Path(DeliberationResponseByIdPath {
-        space_pk,
-        response_pk,
-    }): Path<DeliberationResponseByIdPath>,
-) -> Result<Json<DeliberationSpaceResponse>, Error2> {
-    let id = match response_pk {
-        Partition::SurveyResponse(v) => v,
-        _ => "".to_string(),
-    };
-    let response = DeliberationSpaceResponse::get(
-        &dynamo.client,
-        &space_pk,
-        Some(EntityType::DeliberationResponse(id.to_string())),
-    )
-    .await?;
+// pub async fn get_response_answer_handler(
+//     State(AppState { dynamo, .. }): State<AppState>,
+//     NoApi(user): NoApi<User>,
+//     Path(DeliberationResponseByIdPath {
+//         space_pk,
+//         response_pk,
+//     }): Path<DeliberationResponseByIdPath>,
+// ) -> Result<Json<DeliberationSpaceResponse>, Error2> {
+//     let id = match response_pk {
+//         Partition::SurveyResponse(v) => v,
+//         _ => "".to_string(),
+//     };
+//     let response = DeliberationSpaceResponse::get(
+//         &dynamo.client,
+//         &space_pk,
+//         Some(EntityType::DeliberationResponse(id.to_string())),
+//     )
+//     .await?;
 
-    if response.is_none() {
-        Err(Error2::NotFound("Response not found".to_string()))?;
-    }
+//     if response.is_none() {
+//         Err(Error2::NotFound("Response not found".to_string()))?;
+//     }
 
-    let (_, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceRead,
-    )
-    .await?;
-    if !has_perm {
-        return Err(Error2::NoPermission);
-    }
+//     let (_, has_perm) = SpaceCommon::has_permission(
+//         &dynamo.client,
+//         &space_pk,
+//         Some(&user.pk),
+//         TeamGroupPermission::SpaceRead,
+//     )
+//     .await?;
+//     if !has_perm {
+//         return Err(Error2::NoPermission);
+//     }
 
-    let response = response.unwrap();
+//     let response = response.unwrap();
 
-    Ok(Json(response))
-}
+//     Ok(Json(response))
+// }
