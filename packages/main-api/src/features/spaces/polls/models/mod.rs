@@ -9,5 +9,6 @@ pub use poll_metadata::*;
 pub use poll_question::*;
 pub use poll_result::*;
 pub use poll_user_response::*;
+
 #[cfg(test)]
 mod tests;

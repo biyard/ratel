@@ -1,7 +1,8 @@
+use crate::features::spaces::polls::{PollMetadata, PollResponse, PollUserResponse};
 use crate::{
     AppState, Error2,
     controllers::v3::spaces::dto::*,
-    models::{PollMetadata, PollUserResponse, space::SpaceCommon, user::User},
+    models::{space::SpaceCommon, user::User},
     types::{Partition, TeamGroupPermission},
 };
 
@@ -11,7 +12,6 @@ use by_axum::axum::{
     extract::{Path, State},
 };
 
-use super::dto::*;
 use aide::NoApi;
 
 pub async fn get_poll_handler(

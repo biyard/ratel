@@ -29,13 +29,6 @@ pub mod discussions {
     pub mod tests;
 }
 
-pub mod responses {
-    pub mod create_response_answer;
-    pub mod get_response_answer;
-
-    #[cfg(test)]
-    pub mod tests;
-}
 #[cfg(test)]
 pub mod tests;
 pub mod update_deliberation;

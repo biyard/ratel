@@ -2,14 +2,13 @@ use crate::models::space::SpaceCommon;
 
 use crate::controllers::v3::spaces::dto::*;
 
-use crate::models::{Poll, PollMetadata};
+use crate::features::spaces::polls::{Poll, PollMetadata, PollResponse};
 use crate::types::{
     EntityType, Partition, Question, SpacePublishState, SpaceStatus, TeamGroupPermission,
 };
 use crate::utils::time::get_now_timestamp_millis;
 use crate::{AppState, Error};
 
-use super::dto::*;
 use bdk::prelude::*;
 
 use by_axum::axum::extract::{Json, Path, State};

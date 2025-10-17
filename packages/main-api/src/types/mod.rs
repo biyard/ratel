@@ -65,13 +65,6 @@ pub use user_type::*;
 
 pub use index_tmpl::*;
 
-// Poll Features
-pub mod poll_status;
-pub use poll_status::*;
-
-pub mod poll_summary;
-pub use poll_summary::*;
-
 pub mod question;
 pub use question::*;
 

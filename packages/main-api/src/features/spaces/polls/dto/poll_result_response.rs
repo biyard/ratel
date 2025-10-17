@@ -1,4 +1,5 @@
-use crate::{models::PollResult, types::*};
+use super::super::{PollResult, PollSummary};
+
 use bdk::prelude::*;
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema, aide::OperationIo,

@@ -1,6 +1,7 @@
-use crate::{Error, models::PollQuestion, types::*, utils::time::get_now_timestamp_millis};
+use crate::{Error, types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
+use super::{super::PollSummary, PollQuestion};
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, JsonSchema)]
 pub struct PollUserResponse {
     pub pk: Partition,
