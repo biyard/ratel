@@ -427,7 +427,7 @@ pub fn route(
                                 )
                                 .route(
                                     "/:discussion_pk/meeting",
-                                    post_with(
+                                    get_with(
                                         get_meeting_handler,
                                         api_docs!(
                                             Json<MeetingData>,
