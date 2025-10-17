@@ -1,64 +1,47 @@
-import { getSpaceById } from '@/lib/api/ratel_api.server';
-import { Suspense } from 'react';
-import Provider from './providers';
-import striptags from 'striptags';
-import Loading from '@/app/loading';
-import { getFeedById } from '@/hooks/feeds/use-feed-by-id';
+import { Outlet, useParams } from 'react-router';
+import { useSpaceHomeController } from './use-space-home-controller';
+import { Row } from '@/components/ui/row';
+import SpaceSideMenu from '@/features/spaces/components/space-side-menu';
+import { Col } from '@/components/ui/col';
+import {
+  AuthorSection,
+  PostInfoSection,
+  TitleSection,
+} from '@/components/post-header';
 
-// Metadata generation is not supported in React Router
-// export async function generateMetadata({
-//   params,
-// }: {
-//   params: Promise<{ id: string }>;
-// }): Promise<Metadata> {
-//   const { id } = await params;
-//   const spaceId = Number(id);
-//
-//   const { data } = await getSpaceById(spaceId);
-//
-//   const title = data?.title ?? undefined;
-//   const description = data ? striptags(data.html_contents) : undefined;
-//   let images = undefined;
-//   if (data) {
-//     const { data: feed } = await getFeedById(data?.feed_id);
-//     if (feed && feed.url) {
-//       images = [{ url: feed.url }];
-//     }
-//   }
-//
-//   return {
-//     title,
-//     description,
-//     openGraph: {
-//       title,
-//       description,
-//       images,
-//     },
-//   };
-// }
+export default function SpaceByIdLayout() {
+  const { spacePk } = useParams<{ spacePk: string }>();
+  const ctrl = useSpaceHomeController(spacePk);
 
-export default async function Layout({
-  children,
-  params,
-}: {
-  children: React.ReactNode;
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const spaceId = Number(id);
   return (
-    <Provider spaceId={spaceId}>
-      <div className="flex flex-col w-full min-h-[100svh] justify-between max-w-desktop mx-auto text-white pt-3 gap-5 max-tablet:px-5 mb-8 max-desktop:max-w-screen">
-        <Suspense
-          fallback={
-            <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center">
-              <Loading />
-            </div>
-          }
-        >
-          {children}
-        </Suspense>
-      </div>
-    </Provider>
+    <Row className="my-5 mx-auto w-full max-w-desktop">
+      <Col className="gap-4 w-full">
+        <TitleSection
+          canEdit={ctrl.isAdmin}
+          title={ctrl.space.title}
+          setTitle={ctrl.handleTitleChange}
+          handleShare={ctrl.handleShare}
+        />
+        <AuthorSection
+          type={ctrl.space.authorType}
+          profileImage={ctrl.space.authorProfileUrl}
+          name={ctrl.space.authorDisplayName}
+          isCertified={ctrl.space.certified}
+          createdAt={ctrl.space.createdAt}
+        />
+
+        <PostInfoSection
+          likes={ctrl.space.likes}
+          shares={ctrl.space.shares}
+          comments={ctrl.space.comments}
+          rewards={ctrl.space.rewards}
+          isDraft={ctrl.space.isDraft}
+          isPublic={ctrl.space.isPublic}
+        />
+
+        <Outlet />
+      </Col>
+      <SpaceSideMenu menus={ctrl.menus} />
+    </Row>
   );
 }
