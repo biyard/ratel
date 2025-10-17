@@ -10,3 +10,15 @@ pub use update_poll::*;
 
 #[cfg(test)]
 pub mod tests;
+
+use crate::AppState;
+use bdk::prelude::*;
+use by_axum::aide::axum::routing::*;
+use by_axum::axum::*;
+
+pub fn route() -> Router<AppState> {
+    Router::new()
+        .route("/", get(get_poll_handler).put(update_poll_handler))
+        .route("/result", get(get_poll_result))
+        .route("/respond", post(respond_poll_handler))
+}
