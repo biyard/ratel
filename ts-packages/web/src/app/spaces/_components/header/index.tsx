@@ -77,7 +77,7 @@ export default function SpaceHeader() {
   };
 
   return (
-    <div className="flex flex-col w-full gap-2.5">
+    <div className="flex flex-col gap-2.5 w-full">
       <SpaceModifySection
         isEditable={isEditable}
         hasEditPermission={hasEditPermission}
@@ -100,7 +100,7 @@ export default function SpaceHeader() {
         isPublic={visibility.type === 'Public'}
       />
       <TitleSection
-        isEdit={isEditingMode}
+        canEdit={isEditingMode}
         title={title}
         setTitle={(newTitle) => updateTitle(newTitle)}
         handleShare={async () => {

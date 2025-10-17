@@ -4,7 +4,7 @@ import {
   useSuspenseQuery,
   UseSuspenseQueryResult,
 } from '@tanstack/react-query';
-import { Space } from '../types/space';
+import { Space } from '../types/Space';
 import { logger } from '@/lib/logger';
 
 export function useSpaceById(spacePk: string): UseSuspenseQueryResult<Space> {

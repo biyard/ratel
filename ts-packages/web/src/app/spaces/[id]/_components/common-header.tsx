@@ -167,12 +167,12 @@ function SpaceModifySection({
 
   return (
     <div className="flex flex-row justify-between items-center w-full">
-      <div className="flex flex-row items-center gap-1 text-sm text-c-wg-50 cursor-pointer">
+      <div className="flex flex-row gap-1 items-center text-sm cursor-pointer text-c-wg-50">
         <BackButton onClick={handleGoBack} />
       </div>
 
       {hasEditPermission && (
-        <div className="flex flex-row items-center gap-2 text-sm text-white">
+        <div className="flex flex-row gap-2 items-center text-sm text-white">
           {isDraft ? (
             isEdit ? (
               <SaveButton onClick={handleSave} disabled={!isModified} />
@@ -194,7 +194,7 @@ function SpaceModifySection({
                 aria-expanded={isOpen}
                 aria-label="Space options menu"
                 aria-haspopup="menu"
-                className="w-fit p-2 rounded-md bg-neutral-800 light:bg-transparent"
+                className="p-2 rounded-md w-fit bg-neutral-800 light:bg-transparent"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -238,7 +238,7 @@ function SpaceModifySection({
               {isOpen && (
                 <div
                   role="menu"
-                  className="absolute top-full mt-2 right-0 z-50"
+                  className="absolute right-0 top-full z-50 mt-2"
                   onBlur={(e) => {
                     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                       close();
@@ -293,7 +293,7 @@ export default function Header() {
   return (
     <div>
       <SuspenseWrapper>
-        <div className="flex flex-col w-full gap-2.5">
+        <div className="flex flex-col gap-2.5 w-full">
           <SpaceModifySection
             title={isEdit ? (commonData?.title ?? '') : space.title}
             isDraft={isDraft}
@@ -313,7 +313,7 @@ export default function Header() {
             isPublic={isPublic}
           />
           <TitleSection
-            isEdit={isEdit}
+            canEdit={isEdit}
             title={isEdit ? (commonData?.title ?? '') : space.title}
             setTitle={(newTitle) => updateCommonData({ title: newTitle })}
             handleShare={handleShare}
