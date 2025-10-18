@@ -20,7 +20,7 @@ import TeamSettings from './app/teams/[username]/settings/page';
 import TeamDrafts from './app/teams/[username]/drafts/page';
 
 // Space
-import PollSpacePage from './app/spaces/poll/[id]/page';
+import SpacePollPage from './app/spaces/[id]/poll/space-poll-page';
 import { TestReportPage } from './app/test-report/test-report-page';
 import { StorybookPage } from './app/storybook/stroybook-page';
 import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
@@ -157,7 +157,7 @@ export const routes = createBrowserRouter([
           {
             id: 'poll-space',
             path: 'poll',
-            Component: PollSpacePage,
+            Component: SpacePollPage,
           },
           {
             id: 'deliberation-space',

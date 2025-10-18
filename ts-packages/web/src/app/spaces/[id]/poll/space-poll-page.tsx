@@ -2,10 +2,8 @@ import { useParams } from 'react-router';
 import {
   PollSpaceController,
   Tab,
-  usePollSpaceController,
-} from './use-poll-space-controller';
-import SpaceHeader from '@/features/spaces/components/header';
-import SpaceHTMLContentEditor from '@/features/spaces/components/content-editor';
+  useSpacePollController,
+} from './space-poll-controller';
 import Survey from '@/features/spaces/components/survey';
 import Report, { ReportProps } from '@/features/spaces/components/report';
 import usePollSpaceSummaries from '@/features/spaces/polls/hooks/use-poll-space-summary';
@@ -15,25 +13,14 @@ import { Vote } from '@/assets/icons/email';
 import TimelineMenu from '@/features/spaces/components/side-menu/timeline';
 import { PieChart1 } from '@/assets/icons/graph';
 import { SpaceStatus } from '@/features/spaces/types/space-common';
+import { menusForSpaceType } from '../use-space-home-controller';
 
-export default function PollSpacePage() {
+menusForSpaceType;
+
+export default function SpacePollPage() {
   const { spacePk } = useParams<{ spacePk: string }>();
-  const ctrl = usePollSpaceController(spacePk);
-  return (
-    <div className="flex flex-col gap-6 w-full">
-      <SpaceHeader {...ctrl.headerCtrl} />
-      <SpaceHTMLContentEditor
-        htmlContent={ctrl.headerCtrl.html_content}
-        canEdit={ctrl.isEditMode}
-        onContentChange={ctrl.headerCtrl.updateContent}
-      />
-
-      <div className="flex flex-row gap-5 w-full">
-        <MainContent {...ctrl} />
-        <SideMenu {...ctrl} />
-      </div>
-    </div>
-  );
+  const ctrl = useSpacePollController(spacePk);
+  return <MainContent {...ctrl} />;
 }
 
 function MainContent({
