@@ -8,6 +8,7 @@ import {
   PostInfoSection,
   TitleSection,
 } from '@/components/post-header';
+import TimelineMenu from '@/features/spaces/components/side-menu/timeline';
 
 export default function SpaceByIdLayout() {
   const { spacePk } = useParams<{ spacePk: string }>();
@@ -41,7 +42,15 @@ export default function SpaceByIdLayout() {
 
         <Outlet />
       </Col>
-      <SpaceSideMenu menus={ctrl.menus} />
+      <Col className="gap-2.5 w-full max-w-[250px]">
+        <SpaceSideMenu menus={ctrl.menus} />
+        <TimelineMenu
+          isEditing={false}
+          handleSetting={() => {}}
+          items={ctrl.timelineItems}
+          titleLabel={ctrl.t('timeline_title')}
+        />
+      </Col>
     </Row>
   );
 }

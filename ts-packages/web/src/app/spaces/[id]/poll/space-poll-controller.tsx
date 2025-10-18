@@ -77,7 +77,7 @@ export enum Tab {
   Analyze = 'analyze',
 }
 
-export function usePollSpaceController(spacePk: string): PollSpaceController {
+export function useSpacePollController(spacePk: string): PollSpaceController {
   const { data: space } = usePollSpace(spacePk);
   const { data: feed } = useFeedById(space.post_pk);
   const hasEditPermission = true; // TODO: replace with actual permission check
