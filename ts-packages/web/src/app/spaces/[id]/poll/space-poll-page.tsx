@@ -1,26 +1,35 @@
 import { useParams } from 'react-router';
-import {
-  PollSpaceController,
-  Tab,
-  useSpacePollController,
-} from './space-poll-controller';
+import { PollSpaceController, Tab } from './space-poll-controller';
 import Survey from '@/features/spaces/components/survey';
 import Report, { ReportProps } from '@/features/spaces/components/report';
 import usePollSpaceSummaries from '@/features/spaces/polls/hooks/use-poll-space-summary';
 import { Button } from '@/components/ui/button';
-import TabSelector from '@/features/spaces/components/side-menu/tab-selector';
-import { Vote } from '@/assets/icons/email';
-import TimelineMenu from '@/features/spaces/components/side-menu/timeline';
-import { PieChart1 } from '@/assets/icons/graph';
-import { SpaceStatus } from '@/features/spaces/types/space-common';
-import { menusForSpaceType } from '../use-space-home-controller';
-
-menusForSpaceType;
+import '@/features/spaces/polls/poll-side-menus';
+import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
+import { SpacePollEditorPage } from '@/features/spaces/polls/pages/creator/space-poll-editor-page';
+import { SpacePollViewerPage } from '@/features/spaces/polls/pages/viewer/space-poll-viewer-page';
+import { SpacePollCreatorPage } from '@/features/spaces/polls/pages/creator/space-poll-creator-page';
 
 export default function SpacePollPage() {
-  const { spacePk } = useParams<{ spacePk: string }>();
-  const ctrl = useSpacePollController(spacePk);
-  return <MainContent {...ctrl} />;
+  const { spacePk, pollPk } = useParams<{ spacePk: string; pollPk?: string }>();
+  const { data: space } = useSpaceById(spacePk);
+  /* const ctrl = useSpacePollController(spacePk); */
+
+  if (!space) {
+    throw new Error('Space not found');
+  }
+
+  if (pollPk && space.isAdmin()) {
+    // Edit Mode
+    return <SpacePollEditorPage spacePk={spacePk} pollPk={pollPk} />;
+  }
+
+  if (space.isAdmin()) {
+    // Admin Mode
+    return <SpacePollCreatorPage spacePk={spacePk} />;
+  }
+
+  return <SpacePollViewerPage spacePk={spacePk} />;
 }
 
 function MainContent({
@@ -65,55 +74,4 @@ function AnalyzeTab(
     data: { summaries },
   } = usePollSpaceSummaries(props.spacePk);
   return <Report {...props} summaries={summaries} />;
-}
-
-function SideMenu({ ...ctrl }: PollSpaceController) {
-  const items = [
-    {
-      icon: (
-        <Vote className="[&>path]:stroke-neutral-80 [&>rect]:stroke-neutral-80 w-5 h-5" />
-      ),
-      label: ctrl.t('tab_poll_label'),
-      tab: Tab.Poll,
-    },
-  ];
-
-  if (
-    ctrl.space.status === SpaceStatus.Finished &&
-    ctrl.headerCtrl.hasEditPermission
-  ) {
-    items.push({
-      icon: <PieChart1 className="[&>path]:stroke-neutral-80 w-5 h-5" />,
-      label: ctrl.t('tab_analyze_label'),
-      tab: Tab.Analyze,
-    });
-  }
-  return (
-    <div className="flex flex-col w-full max-w-[250px] gap-[10px]">
-      <TabSelector<Tab>
-        items={items}
-        onClick={ctrl.onSelectTab}
-        activeTab={ctrl.activeTab}
-      />
-      <TimelineMenu
-        isEditing={false}
-        handleSetting={() => {}}
-        items={[
-          {
-            label: 'Created',
-            time: ctrl.space.created_at,
-          },
-          {
-            label: 'Start',
-            time: ctrl.space.started_at,
-          },
-          {
-            label: 'End',
-            time: ctrl.space.ended_at,
-          },
-        ]}
-        titleLabel={ctrl.t('timeline_title')}
-      />
-    </div>
-  );
 }

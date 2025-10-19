@@ -49,6 +49,8 @@ export const route = {
         return `/spaces/${encodeURIComponent(spaceId)}`;
     }
   },
+  spacePolls: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/polls`,
 
   telegramSprintLeague: (space_id: number | string) =>
     `/telegram/sprint-league/${encodeURIComponent(space_id)}`,
