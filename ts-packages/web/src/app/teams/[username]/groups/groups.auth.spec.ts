@@ -5,13 +5,18 @@ import { CONFIGS } from '../../../../../tests/config';
 test.describe('Team Groups - Authenticated User', () => {
   let testTeamUsername: string;
 
-  test.beforeEach(async ({ page }) => {
-    // Create a fresh team for each test to avoid state issues
+  // Create ONE team for all tests in this file
+  test.beforeAll(async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: 'user.json',
+    });
+    const page = await context.newPage();
+
     const timestamp = Date.now();
     testTeamUsername = `pw-groups-${timestamp}`;
-    const teamNickname = `Groups Test Team ${timestamp}`;
+    const teamNickname = `Groups Team ${timestamp}`;
 
-    console.log(`🏢 Creating test team: ${testTeamUsername}`);
+    console.log(`🏢 Creating shared test team: ${testTeamUsername}`);
 
     await page.goto('/');
     await page.waitForLoadState('networkidle');
@@ -29,7 +34,7 @@ test.describe('Team Groups - Authenticated User', () => {
       .fill(testTeamUsername);
     await page
       .locator('[data-pw="team-description-input"]')
-      .fill(`Test team for groups functionality ${timestamp}`);
+      .fill(`Playwright team for groups functionality ${timestamp}`);
 
     await click(page, { 'data-pw': 'team-create-button' });
 
@@ -41,13 +46,15 @@ test.describe('Team Groups - Authenticated User', () => {
       },
     );
 
-    // Navigate to groups page
+    console.log(`✅ Shared test team created: ${testTeamUsername}`);
+
+    await context.close();
+  });
+
+  // Navigate to groups page before each test
+  test.beforeEach(async ({ page }) => {
     await page.goto(`/teams/${testTeamUsername}/groups`);
     await page.waitForLoadState('networkidle');
-
-    console.log(
-      `✅ Test team created and navigated to groups: ${testTeamUsername}`,
-    );
   });
 
   test('[TG-001] should display groups page with create group button', async ({
@@ -71,8 +78,8 @@ test.describe('Team Groups - Authenticated User', () => {
   }) => {
     console.log('📝 Testing group creation...');
 
-    const groupName = `Test Group ${Date.now()}`;
-    const groupDescription = 'This is a test group for E2E testing';
+    const groupName = `Group ${Date.now()}`;
+    const groupDescription = 'This is a group for E2E validation';
 
     // Click create group button
     await click(page, { 'data-pw': 'create-group-button' });
@@ -258,7 +265,7 @@ test.describe('Team Groups - Authenticated User', () => {
     // Fill name but don't select permissions
     await page
       .locator('[data-pw="create-group-name-input"]')
-      .fill('Test Group Validation');
+      .fill('Group Validation');
     await click(page, { 'data-pw': 'create-group-submit-button' });
     await page.waitForTimeout(500);
 

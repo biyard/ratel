@@ -6,13 +6,18 @@ test.describe('Team Settings - Authenticated User', () => {
   let testTeamUsername: string;
   let testTeamNickname: string;
 
-  test.beforeEach(async ({ page }) => {
-    // Create a fresh team for each test
+  // Create ONE team for all tests in this file
+  test.beforeAll(async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: 'user.json',
+    });
+    const page = await context.newPage();
+
     const timestamp = Date.now();
     testTeamUsername = `pw-settings-${timestamp}`;
     testTeamNickname = `Settings Team ${timestamp}`;
 
-    console.log(`🏢 Creating test team: ${testTeamUsername}`);
+    console.log(`🏢 Creating shared test team: ${testTeamUsername}`);
 
     await page.goto('/');
     await page.waitForLoadState('networkidle');
@@ -32,7 +37,7 @@ test.describe('Team Settings - Authenticated User', () => {
       .fill(testTeamUsername);
     await page
       .locator('[data-pw="team-description-input"]')
-      .fill(`Test team for settings functionality ${timestamp}`);
+      .fill(`Playwright team for settings functionality ${timestamp}`);
 
     await click(page, { 'data-pw': 'team-create-button' });
 
@@ -44,14 +49,16 @@ test.describe('Team Settings - Authenticated User', () => {
       },
     );
 
-    // Navigate to settings page
+    console.log(`✅ Shared test team created: ${testTeamUsername}`);
+
+    await context.close();
+  });
+
+  // Navigate to settings page before each test
+  test.beforeEach(async ({ page }) => {
     await page.goto(`/teams/${testTeamUsername}/settings`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000); // Wait for team data to load
-
-    console.log(
-      `✅ Test team created and navigated to settings: ${testTeamUsername}`,
-    );
   });
 
   test('[TS-001] should display settings page with team information', async ({
@@ -203,7 +210,7 @@ test.describe('Team Settings - Authenticated User', () => {
 
     // Try to enter text with "test" keyword (which is filtered)
     await nicknameInput.clear();
-    await nicknameInput.fill('test team invalid');
+    await nicknameInput.fill('Team invalid');
 
     await page.waitForTimeout(500);
 

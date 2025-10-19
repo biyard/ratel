@@ -5,13 +5,18 @@ import { CONFIGS } from '../../../../../tests/config';
 test.describe('Team Members - Authenticated User', () => {
   let testTeamUsername: string;
 
-  test.beforeEach(async ({ page }) => {
-    // Create a fresh team for each test
+  // Create ONE team for all tests in this file
+  test.beforeAll(async ({ browser }) => {
+    const context = await browser.newContext({
+      storageState: 'user.json',
+    });
+    const page = await context.newPage();
+
     const timestamp = Date.now();
     testTeamUsername = `pw-members-${timestamp}`;
-    const teamNickname = `Members Test Team ${timestamp}`;
+    const teamNickname = `Members Team ${timestamp}`;
 
-    console.log(`🏢 Creating test team: ${testTeamUsername}`);
+    console.log(`🏢 Creating shared test team: ${testTeamUsername}`);
 
     await page.goto('/');
     await page.waitForLoadState('networkidle');
@@ -29,7 +34,7 @@ test.describe('Team Members - Authenticated User', () => {
       .fill(testTeamUsername);
     await page
       .locator('[data-pw="team-description-input"]')
-      .fill(`Test team for members functionality ${timestamp}`);
+      .fill(`Playwright team for members functionality ${timestamp}`);
 
     await click(page, { 'data-pw': 'team-create-button' });
 
@@ -41,13 +46,15 @@ test.describe('Team Members - Authenticated User', () => {
       },
     );
 
-    // Navigate to members page
+    console.log(`✅ Shared test team created: ${testTeamUsername}`);
+
+    await context.close();
+  });
+
+  // Navigate to members page before each test
+  test.beforeEach(async ({ page }) => {
     await page.goto(`/teams/${testTeamUsername}/members`);
     await page.waitForLoadState('networkidle');
-
-    console.log(
-      `✅ Test team created and navigated to members: ${testTeamUsername}`,
-    );
   });
 
   test('[TM-001] should display members page with team owner', async ({
@@ -136,17 +143,17 @@ test.describe('Team Members - Authenticated User', () => {
     const groupCount = await groupItems.count();
 
     if (groupCount === 0) {
-      // Create a test group if none exists
-      console.log('📝 Creating a test group first...');
+      // Create a group if none exists
+      console.log('📝 Creating a group first...');
       await click(page, { 'data-pw': 'create-group-button' });
       await page.waitForTimeout(500);
 
       await page
         .locator('[data-pw="create-group-name-input"]')
-        .fill('Test Member Group');
+        .fill('Member Group');
       await page
         .locator('[data-pw="create-group-description-input"]')
-        .fill('Group for testing member display');
+        .fill('Group for member display');
 
       // Select read posts permission
       await page.locator('[data-pw="permission-toggle-0"]').click();
