@@ -81,10 +81,14 @@ export default function TeamMembers({ username }: { username: string }) {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-[1152px] px-4 py-5 gap-[10px] bg-card-bg border border-card-border rounded-lg h-fit">
+    <div
+      className="flex flex-col w-full max-w-[1152px] px-4 py-5 gap-[10px] bg-card-bg border border-card-border rounded-lg h-fit"
+      data-pw="team-members-list"
+    >
       {members.map((member) => (
         <div
           key={member.user_id}
+          data-pw={`member-item-${member.user_id}`}
           className="flex flex-col w-full h-fit gap-[15px] bg-transparent rounded-sm border border-card-border p-5"
         >
           <div
@@ -129,11 +133,13 @@ export default function TeamMembers({ username }: { username: string }) {
                 return (
                   <div
                     key={group.group_id}
+                    data-pw={`member-group-${member.user_id}-${group.group_id}`}
                     className="flex flex-row w-fit h-fit items-center gap-1 px-[8px] py-[4px] border border-neutral-800 bg-black light:bg-neutral-600 light:border-transparent rounded-lg font-medium text-sm text-white"
                   >
                     <span>{group.group_name}</span>
                     {!member.is_owner && (
                       <button
+                        data-pw={`remove-member-from-group-${member.user_id}-${group.group_id}`}
                         onClick={() =>
                           handleRemoveFromGroup(
                             member.user_id,
