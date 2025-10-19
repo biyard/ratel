@@ -157,6 +157,11 @@ pub enum Error {
     #[error("space not found")]
     NotFoundSpace,
 
+    // /v3/discussions endpoints 5000 ~
+    #[rest_error(code = 6000)]
+    #[error("discussion not found")]
+    NotFoundDiscussion,
+
     // web 1,000,000 ~
     #[error("Web error: {0}")]
     #[rest_error(code = 1_000_000)]

@@ -8,6 +8,7 @@ pub mod config;
 pub mod constants;
 pub mod controllers;
 pub mod error;
+pub mod features;
 pub mod models;
 pub mod route;
 // pub mod route_m3;
