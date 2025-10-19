@@ -152,7 +152,10 @@ export default function SettingsPage({ username }: { username: string }) {
 
   return (
     <div className="w-full max-tablet:w-full flex flex-col gap-10 items-center">
-      <FileUploader onUploadSuccess={handleProfileUrl}>
+      <FileUploader
+        onUploadSuccess={handleProfileUrl}
+        data-pw="team-profile-uploader"
+      >
         {profileUrl ? (
           <img
             src={profileUrl}
@@ -160,9 +163,13 @@ export default function SettingsPage({ username }: { username: string }) {
             width={80}
             height={80}
             className="w-40 h-40 rounded-full object-cover cursor-pointer"
+            data-pw="team-profile-image"
           />
         ) : (
-          <button className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-c-wg-50">
+          <button
+            className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-c-wg-50"
+            data-pw="team-profile-upload-button"
+          >
             {t('upload_logo')}
           </button>
         )}
@@ -178,6 +185,7 @@ export default function SettingsPage({ username }: { username: string }) {
             className="text-text-primary bg-input-box-bg border border-input-box-border"
             disabled
             value={`@${team?.username}`}
+            data-pw="team-username-display"
           />
         </Row>
         <Row className="max-tablet:flex-col">
@@ -190,6 +198,7 @@ export default function SettingsPage({ username }: { username: string }) {
             placeholder={t('display_name_hint')}
             value={nickname}
             onInput={handleNickname}
+            data-pw="team-nickname-input"
           />
         </Row>
         <Col>
@@ -201,6 +210,7 @@ export default function SettingsPage({ username }: { username: string }) {
             placeholder={t('team_description_hint')}
             value={htmlContents}
             onChange={handleContents}
+            data-pw="team-description-input"
           />
         </Col>
         <Row className="justify-end py-5">
@@ -209,6 +219,7 @@ export default function SettingsPage({ username }: { username: string }) {
             className={invalidInput ? 'bg-neutral-600' : 'bg-primary'}
             variant={'rounded_primary'}
             onClick={handleSave}
+            data-pw="team-settings-save-button"
           >
             {t('save')}
           </Button>
@@ -223,6 +234,7 @@ export default function SettingsPage({ username }: { username: string }) {
               }
               variant={'rounded_primary'}
               onClick={openDeletePopup}
+              data-pw="team-delete-button"
             >
               {t('delete')}
             </Button>

@@ -30,6 +30,7 @@ export default function DeleteTeamPopup({
             'h-10 px-4 rounded-lg border border-neutral-300 text-text-primary',
             'hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed',
           )}
+          data-pw="delete-team-cancel-button"
         >
           {t('cancel')}
         </button>
@@ -40,6 +41,7 @@ export default function DeleteTeamPopup({
             'h-10 px-4 rounded-lg bg-red-600 text-white font-semibold',
             'hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed',
           )}
+          data-pw="delete-team-confirm-button"
         >
           {t('confirm')}
         </button>

@@ -81,6 +81,7 @@ export default function TeamGroups({ username }: { username: string }) {
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-row w-full justify-end items-end gap-[10px]">
         <InviteMemberButton
+          data-pw="invite-member-button"
           onClick={() => {
             if (!teamDetail) return;
 
@@ -97,6 +98,7 @@ export default function TeamGroups({ username }: { username: string }) {
         />
         {canCreateGroup && (
           <CreateGroupButton
+            data-pw="create-group-button"
             onClick={() => {
               if (!teamDetail) return;
 
@@ -184,6 +186,7 @@ function ListGroups({
         .map((group) => (
           <div
             key={group.id}
+            data-pw={`group-item-${group.id}`}
             className="flex flex-row w-full h-fit justify-between items-center bg-transparent rounded-sm border border-card-enable-border p-5"
           >
             <div className="flex flex-row w-fit gap-[15px]">
@@ -203,6 +206,7 @@ function ListGroups({
               <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button
+                    data-pw={`group-options-${group.id}`}
                     className="p-1 hover:bg-hover rounded-full focus:outline-none transition-colors"
                     aria-haspopup="true"
                     aria-label="Post options"
@@ -216,6 +220,7 @@ function ListGroups({
                 >
                   <DropdownMenuItem>
                     <button
+                      data-pw={`delete-group-${group.id}`}
                       onClick={() => {
                         deleteGroup(group.id);
                       }}
@@ -235,10 +240,17 @@ function ListGroups({
   );
 }
 
-function InviteMemberButton({ onClick }: { onClick: () => void }) {
+function InviteMemberButton({
+  onClick,
+  'data-pw': dataPw,
+}: {
+  onClick: () => void;
+  'data-pw'?: string;
+}) {
   const { t } = useTranslation('Team');
   return (
     <div
+      data-pw={dataPw}
       className="cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-white border border-foreground rounded-[100px] gap-1"
       onClick={onClick}
     >
@@ -250,10 +262,17 @@ function InviteMemberButton({ onClick }: { onClick: () => void }) {
   );
 }
 
-function CreateGroupButton({ onClick }: { onClick: () => void }) {
+function CreateGroupButton({
+  onClick,
+  'data-pw': dataPw,
+}: {
+  onClick: () => void;
+  'data-pw'?: string;
+}) {
   const { t } = useTranslation('Team');
   return (
     <div
+      data-pw={dataPw}
       className="cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-white border border-foreground rounded-[100px] gap-1"
       onClick={onClick}
     >
