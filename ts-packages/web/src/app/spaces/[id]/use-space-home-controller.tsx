@@ -8,15 +8,12 @@ import { Settings, Vote } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { UserResponse } from '@/lib/api/ratel/me.v3';
-import { SpaceType } from '@/features/spaces/types/space-type';
 import { SpaceStatus } from '@/features/spaces/types/space-common';
 import { logger } from '@/lib/logger';
 import { useSpaceUpdateContentMutation } from '@/features/spaces/hooks/use-space-update-content-mutation';
 import { showErrorToast } from '@/lib/toast';
 import { useSpaceUpdateTitleMutation } from '@/features/spaces/hooks/use-space-update-title-mutation';
 import { sideMenusForSpaceType } from '@/features/spaces/utils/side-menus-for-space-type';
-
-export const menusForSpaceType = {};
 
 export class SpaceHomeController {
   public space: Space;
@@ -42,14 +39,6 @@ export class SpaceHomeController {
     ];
   }
 
-  get menusGenerator() {
-    menusForSpaceType[SpaceType.Poll] = this.pollMenus;
-    menusForSpaceType[SpaceType.Quiz] = this.quizMenus;
-    menusForSpaceType[SpaceType.Deliberation] = this.deliberationMenus;
-
-    return menusForSpaceType;
-  }
-
   get menus() {
     let menus: SideMenuProps[] = [
       {
@@ -60,9 +49,17 @@ export class SpaceHomeController {
     ];
 
     sideMenusForSpaceType[this.space.spaceType]?.forEach((menu) => {
-      if (menu.visible(this.space)) {
+      let visible = !menu.visible;
+
+      if (typeof menu.visible === 'function') {
+        visible = menu.visible(this.space);
+      }
+
+      if (visible) {
         menus.push({
-          ...menu,
+          Icon: menu.Icon,
+          to: typeof menu.to === 'function' ? menu.to(this.space) : menu.to,
+          label: this.t(menu.label),
         });
       }
     });

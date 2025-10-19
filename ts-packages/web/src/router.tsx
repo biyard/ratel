@@ -155,9 +155,19 @@ export const routes = createBrowserRouter([
 
           // Space Features
           {
-            id: 'poll-space',
-            path: 'poll',
-            Component: SpacePollPage,
+            path: 'polls',
+            children: [
+              {
+                id: 'poll',
+                path: '',
+                Component: SpacePollPage,
+              },
+              {
+                id: 'poll-update',
+                path: ':pollPk',
+                Component: SpacePollPage,
+              },
+            ],
           },
           {
             id: 'deliberation-space',
