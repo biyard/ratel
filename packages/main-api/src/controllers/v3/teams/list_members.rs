@@ -231,8 +231,6 @@ pub async fn list_members_handler(
         }
     });
 
-    // let total_count = members.len();
-
     Ok(Json(ListItemsResponse {
         items: members,
         bookmark: next_bookmark,
