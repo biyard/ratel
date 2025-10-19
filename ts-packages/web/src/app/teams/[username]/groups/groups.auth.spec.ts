@@ -40,7 +40,7 @@ test.describe('Team Groups - Authenticated User', () => {
 
     // Wait for redirect with increased timeout
     await page.waitForURL(
-      (url) => url.pathname.includes(`/teams/${testTeamUsername}`),
+      (url) => url.pathname.includes(`/teams/${testTeamUsername}/home`),
       {
         timeout: 15000,
       },
@@ -85,7 +85,9 @@ test.describe('Team Groups - Authenticated User', () => {
     await click(page, { 'data-pw': 'create-group-button' });
 
     // Wait for popup to be visible
-    await page.waitForTimeout(500);
+    await page
+      .locator('[data-pw="create-group-name-input"]')
+      .waitFor({ state: 'visible' });
 
     // Fill in group details
     await page.locator('[data-pw="create-group-name-input"]').fill(groupName);
@@ -100,25 +102,19 @@ test.describe('Team Groups - Authenticated User', () => {
     // Submit the form
     await click(page, { 'data-pw': 'create-group-submit-button' });
 
-    // Wait for the popup to close and group to appear in list
-    await page.waitForTimeout(1000);
+    // Wait for the group to appear in the list
+    await expect(page.getByText(groupName)).toBeVisible();
 
     // Verify the group appears in the list
     const groupItems = page.locator('[data-pw^="group-item-"]');
     const count = await groupItems.count();
     expect(count).toBeGreaterThan(0);
 
-    // Verify group name appears in the list
-    await expect(page.getByText(groupName)).toBeVisible();
-
     console.log(`✅ Group created: ${groupName}`);
   });
 
   test('[TG-003] should display group with member count', async ({ page }) => {
     console.log('👥 Testing group member count display...');
-
-    // Wait for groups to load
-    await page.waitForTimeout(1000);
 
     // Check if there are any groups
     const groupItems = page.locator('[data-pw^="group-item-"]');
@@ -147,9 +143,6 @@ test.describe('Team Groups - Authenticated User', () => {
   }) => {
     console.log('⚙️ Testing group options menu...');
 
-    // Wait for groups to load
-    await page.waitForTimeout(1000);
-
     const groupItems = page.locator('[data-pw^="group-item-"]');
     const count = await groupItems.count();
 
@@ -165,9 +158,6 @@ test.describe('Team Groups - Authenticated User', () => {
         );
         await expect(optionsButton).toBeVisible();
         await optionsButton.click();
-
-        // Wait for menu to appear
-        await page.waitForTimeout(300);
 
         // Verify delete button is visible in dropdown
         const deleteButton = page.locator(
@@ -189,10 +179,14 @@ test.describe('Team Groups - Authenticated User', () => {
     console.log('🗑️ Testing group deletion...');
 
     // First create a group to delete
-    const groupName = `Delete Test Group ${Date.now()}`;
+    const groupName = `Delete Group ${Date.now()}`;
 
     await click(page, { 'data-pw': 'create-group-button' });
-    await page.waitForTimeout(500);
+
+    // Wait for popup
+    await page
+      .locator('[data-pw="create-group-name-input"]')
+      .waitFor({ state: 'visible' });
 
     await page.locator('[data-pw="create-group-name-input"]').fill(groupName);
     await page
@@ -204,7 +198,6 @@ test.describe('Team Groups - Authenticated User', () => {
     await readPostsToggle.click();
 
     await click(page, { 'data-pw': 'create-group-submit-button' });
-    await page.waitForTimeout(1000);
 
     // Verify group was created
     await expect(page.getByText(groupName)).toBeVisible();
@@ -223,11 +216,14 @@ test.describe('Team Groups - Authenticated User', () => {
     if (groupId) {
       // Click options and delete
       await page.locator(`[data-pw="group-options-${groupId}"]`).click();
-      await page.waitForTimeout(300);
-      await page.locator(`[data-pw="delete-group-${groupId}"]`).click();
 
-      // Wait for deletion to complete
-      await page.waitForTimeout(1500);
+      // Wait for delete button to appear and click
+      const deleteButton = page.locator(`[data-pw="delete-group-${groupId}"]`);
+      await expect(deleteButton).toBeVisible();
+      await deleteButton.click();
+
+      // Wait for deletion to complete by checking the group disappears
+      await expect(page.getByText(groupName)).not.toBeVisible();
 
       // Verify group is removed from the list
       const groupItemsAfter = page.locator('[data-pw^="group-item-"]');
@@ -253,11 +249,14 @@ test.describe('Team Groups - Authenticated User', () => {
 
     // Click create group button
     await click(page, { 'data-pw': 'create-group-button' });
-    await page.waitForTimeout(500);
+
+    // Wait for popup
+    await page
+      .locator('[data-pw="create-group-submit-button"]')
+      .waitFor({ state: 'visible' });
 
     // Try to submit without filling anything
     await click(page, { 'data-pw': 'create-group-submit-button' });
-    await page.waitForTimeout(500);
 
     // Verify error message appears
     await expect(page.getByText(/group.*name.*required/i)).toBeVisible();
@@ -267,7 +266,6 @@ test.describe('Team Groups - Authenticated User', () => {
       .locator('[data-pw="create-group-name-input"]')
       .fill('Group Validation');
     await click(page, { 'data-pw': 'create-group-submit-button' });
-    await page.waitForTimeout(500);
 
     // Verify permission error appears
     await expect(
@@ -288,7 +286,6 @@ test.describe('Team Groups - Authenticated User', () => {
     console.log('🔘 Testing select all permissions...');
 
     await click(page, { 'data-pw': 'create-group-button' });
-    await page.waitForTimeout(500);
 
     // Click "Select All" for Post permissions
     const selectAllPost = page.locator(
