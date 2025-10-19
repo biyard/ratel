@@ -2,19 +2,20 @@
 // use crate::controllers::v3::spaces::CreateSpaceResponse;
 // use crate::controllers::v3::spaces::deliberations::get_deliberation_deliberation::GetDeliberationDeliberationResponse;
 // use crate::controllers::v3::spaces::deliberations::update_deliberation_deliberation::UpdateDeliberationDeliberationResponse;
+// use crate::controllers::v3::spaces::deliberations::update_deliberation_poll::UpdateDeliberationPollResponse;
 // use crate::controllers::v3::spaces::deliberations::update_deliberation_recommendation::UpdateDeliberationRecommendationResponse;
 // use crate::controllers::v3::spaces::deliberations::update_deliberation_summary::UpdateDeliberationSummaryResponse;
-// use crate::models::DeliberationContentResponse;
+// use crate::models::{DeliberationContentResponse, DeliberationSurveyResponse};
 // use crate::types::{File, Partition, SpaceType};
 // use crate::*;
 // use crate::{
 //     controllers::v3::spaces::deliberations::delete_deliberation::DeleteDeliberationResponse,
-//     models::space::{DeliberationDetailResponse, DiscussionCreateRequest},
+//     models::space::{DeliberationDetailResponse, DiscussionCreateRequest, SurveyCreateRequest},
 //     tests::{
 //         create_app_state, create_test_user, get_auth,
 //         v3_setup::{TestContextV3, setup_v3},
 //     },
-//     types::{ChoiceQuestion, LinearScaleQuestion, SpaceVisibility},
+//     types::{ChoiceQuestion, LinearScaleQuestion, SpaceVisibility, SurveyQuestion, SurveyStatus},
 // };
 // use axum::AxumRouter;
 

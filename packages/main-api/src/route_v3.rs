@@ -9,10 +9,56 @@ use crate::controllers::v3::posts::list_comments::list_comments_handler;
 use crate::controllers::v3::posts::post_response::PostResponse;
 use crate::controllers::v3::posts::reply_to_comment::reply_to_comment_handler;
 use crate::controllers::v3::promotions::get_top_promotion::get_top_promotion_handler;
-use crate::controllers::v3::spaces::get_files::GetSpaceFileResponse;
+use crate::controllers::v3::spaces::create_discussion::create_discussion_handler;
+use crate::controllers::v3::spaces::delete_discussion::delete_discussion_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::end_recording::end_recording_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::exit_meeting::exit_meeting_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::get_meeting::{
+    MeetingData, get_meeting_handler,
+};
+use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::start_meeting::start_meeting_handler;
+use crate::controllers::v3::spaces::deliberations::discussions::start_recording::start_recording_handler;
+use crate::controllers::v3::spaces::deliberations::get_deliberation_common::{
+    GetDeliberationCommonResponse, get_deliberation_common_handler,
+};
+use crate::controllers::v3::spaces::deliberations::get_deliberation_deliberation::{
+    GetDeliberationDeliberationResponse, get_deliberation_deliberation_handler,
+};
+use crate::controllers::v3::spaces::deliberations::get_deliberation_poll::get_deliberation_poll_handler;
+use crate::controllers::v3::spaces::deliberations::get_deliberation_recommendation::get_deliberation_recommendation_handler;
+use crate::controllers::v3::spaces::deliberations::get_deliberation_summary::get_deliberation_summary_handler;
+use crate::controllers::v3::spaces::deliberations::posting_deliberation::{
+    PostingDeliberationResponse, posting_deliberation_handler,
+};
+use crate::controllers::v3::spaces::deliberations::responses::create_response_answer::{
+    DeliberationResponse, create_response_answer_handler,
+};
+use crate::controllers::v3::spaces::deliberations::responses::get_response_answer::get_response_answer_handler;
+use crate::controllers::v3::spaces::deliberations::update_deliberation_deliberation::{
+    UpdateDeliberationDeliberationResponse, update_deliberation_deliberation_handler,
+};
+use crate::controllers::v3::spaces::deliberations::update_deliberation_poll::{
+    UpdateDeliberationPollResponse, update_deliberation_poll_handler,
+};
+use crate::controllers::v3::spaces::deliberations::update_deliberation_recommendation::{
+    UpdateDeliberationRecommendationResponse, update_deliberation_recommendation_handler,
+};
+use crate::controllers::v3::spaces::deliberations::update_deliberation_summary::{
+    UpdateDeliberationSummaryResponse, update_deliberation_summary_handler,
+};
+use crate::controllers::v3::spaces::get_discussion::get_discussion_handler;
 use crate::controllers::v3::spaces::get_files::get_files_handler;
 use crate::controllers::v3::spaces::get_space_handler;
-use crate::controllers::v3::spaces::update_files::UpdateSpaceFileResponse;
+use crate::controllers::v3::spaces::list_discussions::list_discussions_handler;
+use crate::controllers::v3::spaces::polls::dto::*;
+use crate::controllers::v3::spaces::polls::respond_poll_space::{
+    RespondPollSpaceResponse, respond_poll_space_handler,
+};
+use crate::controllers::v3::spaces::polls::update_poll_space::{
+    UpdatePollSpaceResponse, update_poll_space_handler,
+};
+use crate::controllers::v3::spaces::update_discussion::update_discussion_handler;
 use crate::controllers::v3::spaces::update_files::update_files_handler;
 use crate::controllers::v3::spaces::{dto::*, list_spaces_handler};
 use crate::models::Post;
@@ -321,29 +367,44 @@ pub fn route(
                 )
                 .nest("/:space_pk", Router::new()
                     // FILE feature
+                    // FIXME: relocate in files directory in this logic
                     .nest(
                         "/files", 
                         Router::new()
                             .route(
                                 "/",
-                                patch_with(
+                                    patch(
                                     update_files_handler,
-                                    api_docs!(
-                                            Json<UpdateSpaceFileResponse>,
-                                            "Update Files",
-                                            "Update Files by space pk"
-                                        ),
+                                )
+                                .get(
+                                    get_files_handler,
+                                )
+                            )
+                    )
+                    // DISCUSSION feature
+                    // FIXME: relocate in discussions directory in this logic
+                    .nest(
+                        "/discussions", 
+                        Router::new()
+                            .route(
+                                "/",
+                                post(
+                                    create_discussion_handler,
+                                )
+                                .get(
+                                    list_discussions_handler
                                 )
                             )
                             .route(
-                                "/",
-                                get_with(
-                                    get_files_handler,
-                                    api_docs!(
-                                            Json<GetSpaceFileResponse>,
-                                            "Get Files",
-                                            "Get Files by space pk"
-                                        ),
+                                "/:discussion_pk",
+                                patch(
+                                    update_discussion_handler
+                                )
+                                .get(
+                                    get_discussion_handler
+                                )
+                                .delete(
+                                    delete_discussion_handler
                                 )
                             )
                     )
