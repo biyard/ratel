@@ -77,7 +77,7 @@ async fn test_update_group_handler() {
 }
 
 #[tokio::test]
-async fn test_update_with_permisison() {
+async fn test_update_with_permissison() {
     let TestContextV3 {
         app,
         test_user,
