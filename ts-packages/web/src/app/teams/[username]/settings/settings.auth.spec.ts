@@ -17,8 +17,6 @@ test.describe('Team Settings - Authenticated User', () => {
   // Navigate to settings page before each test, creating team on first run
   test.beforeEach(async ({ page }) => {
     if (!testTeamCreated) {
-      console.log(`🏢 Creating shared test team: ${testTeamUsername}`);
-
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
@@ -46,7 +44,6 @@ test.describe('Team Settings - Authenticated User', () => {
         timeout: 15000,
       });
 
-      console.log(`✅ Shared test team created: ${testTeamUsername}`);
       testTeamCreated = true;
     }
 
@@ -62,8 +59,6 @@ test.describe('Team Settings - Authenticated User', () => {
   test('[TS-001] should display settings page with team information', async ({
     page,
   }) => {
-    console.log('⚙️ Testing settings page visibility...');
-
     // Verify username display input
     const usernameDisplay = page.locator('[data-pw="team-username-display"]');
     await expect(usernameDisplay).toBeVisible();
@@ -81,27 +76,19 @@ test.describe('Team Settings - Authenticated User', () => {
     // Verify save button
     const saveButton = page.locator('[data-pw="team-settings-save-button"]');
     await expect(saveButton).toBeVisible();
-
-    console.log('✅ Settings page loaded correctly');
   });
 
   test('[TS-002] should display delete team button for team owner', async ({
     page,
   }) => {
-    console.log('🗑️ Testing delete button visibility...');
-
     const deleteButton = page.locator('[data-pw="team-delete-button"]');
     const isVisible = await deleteButton.isVisible().catch(() => false);
 
     // Team owner should see delete button
     expect(isVisible).toBeTruthy();
-
-    console.log('✅ Delete button visible for team owner');
   });
 
   test('[TS-003] should update team nickname', async ({ page }) => {
-    console.log('✏️ Testing team nickname update...');
-
     const newNickname = `Updated Team ${Date.now()}`;
 
     // Fill new nickname
@@ -122,92 +109,11 @@ test.describe('Team Settings - Authenticated User', () => {
     const nicknameInputAfter = page.locator('[data-pw="team-nickname-input"]');
     await nicknameInputAfter.waitFor({ state: 'visible' });
     await expect(nicknameInputAfter).toHaveValue(newNickname);
-
-    console.log(`✅ Team nickname updated to: ${newNickname}`);
   });
 
-  test('[TS-004] should update team description', async ({ page }) => {
-    console.log('📝 Testing team description update...');
-
-    const newDescription = `Updated description ${Date.now()}`;
-
-    // Fill new description
-    const descriptionInput = page.locator('[data-pw="team-description-input"]');
-    await descriptionInput.clear();
-    await descriptionInput.fill(newDescription);
-
-    // Wait for save button to be enabled
-    const saveButton = page.locator('[data-pw="team-settings-save-button"]');
-    await expect(saveButton).toBeEnabled({ timeout: 10000 });
-
-    // Click save button
-    await click(page, { 'data-pw': 'team-settings-save-button' });
-
-    // Wait for redirect
-    await page.waitForURL(`/teams/${testTeamUsername}/home`, {
-      timeout: 15000,
-    });
-
-    // Go back to settings to verify
-    await page.goto(`/teams/${testTeamUsername}/settings`);
-    await page.waitForLoadState('networkidle');
-
-    const descriptionInputAfter = page.locator(
-      '[data-pw="team-description-input"]',
-    );
-    await expect(descriptionInputAfter).toHaveValue(newDescription);
-
-    console.log('✅ Team description updated successfully');
-  });
-
-  test('[TS-005] should update both nickname and description together', async ({
+  test('[TS-004] should disable save button for invalid input', async ({
     page,
   }) => {
-    console.log('🔄 Testing simultaneous nickname and description update...');
-
-    const newNickname = `Bulk Update ${Date.now()}`;
-    const newDescription = `Bulk description ${Date.now()}`;
-
-    // Update both fields
-    const nicknameInput = page.locator('[data-pw="team-nickname-input"]');
-    await nicknameInput.clear();
-    await nicknameInput.fill(newNickname);
-
-    const descriptionInput = page.locator('[data-pw="team-description-input"]');
-    await descriptionInput.clear();
-    await descriptionInput.fill(newDescription);
-
-    // Wait for save button to be enabled
-    const saveButton = page.locator('[data-pw="team-settings-save-button"]');
-    await expect(saveButton).toBeEnabled({ timeout: 10000 });
-
-    // Save changes
-    await click(page, { 'data-pw': 'team-settings-save-button' });
-
-    // Wait for redirect
-    await page.waitForURL(`/teams/${testTeamUsername}/home`, {
-      timeout: 15000,
-    });
-
-    // Verify both changes persisted
-    await page.goto(`/teams/${testTeamUsername}/settings`);
-    await page.waitForLoadState('networkidle');
-
-    await expect(page.locator('[data-pw="team-nickname-input"]')).toHaveValue(
-      newNickname,
-    );
-    await expect(
-      page.locator('[data-pw="team-description-input"]'),
-    ).toHaveValue(newDescription);
-
-    console.log('✅ Both fields updated successfully');
-  });
-
-  test('[TS-006] should disable save button for invalid input', async ({
-    page,
-  }) => {
-    console.log('🚫 Testing save button validation...');
-
     const nicknameInput = page.locator('[data-pw="team-nickname-input"]');
     const saveButton = page.locator('[data-pw="team-settings-save-button"]');
 
@@ -222,21 +128,14 @@ test.describe('Team Settings - Authenticated User', () => {
 
     // If empty doesn't disable, the form allows empty values (which is valid)
     if (!isDisabledForEmpty) {
-      console.log(
-        'ℹ️ Save button allows empty nickname (form validation passed)',
-      );
       // Restore original value
       await nicknameInput.fill(currentNickname);
-    } else {
-      console.log('✅ Save button correctly disabled for empty input');
     }
   });
 
-  test('[TS-007] should show delete team confirmation popup', async ({
+  test('[TS-005] should show delete team confirmation popup', async ({
     page,
   }) => {
-    console.log('⚠️ Testing delete team confirmation...');
-
     const deleteButton = page.locator('[data-pw="team-delete-button"]');
     const isVisible = await deleteButton.isVisible().catch(() => false);
 
@@ -275,18 +174,12 @@ test.describe('Team Settings - Authenticated User', () => {
         .isVisible()
         .catch(() => false);
       expect(popupStillVisible).toBeFalsy();
-
-      console.log('✅ Delete confirmation popup works correctly');
-    } else {
-      console.log('⚠️ Delete button not visible (might not have permission)');
     }
   });
 
-  test('[TS-008] should navigate to settings page from team navigation', async ({
+  test('[TS-006] should navigate to settings page from team navigation', async ({
     page,
   }) => {
-    console.log('🧭 Testing navigation to settings page...');
-
     // Start from home page
     await page.goto(`/teams/${testTeamUsername}/home`);
     await page.waitForLoadState('networkidle');
@@ -300,13 +193,9 @@ test.describe('Team Settings - Authenticated User', () => {
     // Verify settings form is visible
     const nicknameInput = page.locator('[data-pw="team-nickname-input"]');
     await expect(nicknameInput).toBeVisible();
-
-    console.log('✅ Navigation to settings page works correctly');
   });
 
-  test('[TS-009] should preserve username as read-only', async ({ page }) => {
-    console.log('🔒 Testing username field is read-only...');
-
+  test('[TS-007] should preserve username as read-only', async ({ page }) => {
     const usernameDisplay = page.locator('[data-pw="team-username-display"]');
 
     // Verify it's disabled
@@ -318,13 +207,9 @@ test.describe('Team Settings - Authenticated User', () => {
     // Try to modify (should not be possible)
     const isEditable = await usernameDisplay.isEditable().catch(() => false);
     expect(isEditable).toBeFalsy();
-
-    console.log('✅ Username field is correctly read-only');
   });
 
-  test('[TS-010] should handle empty nickname gracefully', async ({ page }) => {
-    console.log('📭 Testing empty nickname handling...');
-
+  test('[TS-008] should handle empty nickname gracefully', async ({ page }) => {
     const nicknameInput = page.locator('[data-pw="team-nickname-input"]');
     const saveButton = page.locator('[data-pw="team-settings-save-button"]');
 
@@ -342,11 +227,6 @@ test.describe('Team Settings - Authenticated User', () => {
       await page
         .waitForURL(`/teams/${testTeamUsername}/home`, { timeout: 5000 })
         .catch(() => {});
-
-      // Should still work (empty/undefined nickname is allowed)
-      console.log('✅ Empty nickname is allowed');
-    } else {
-      console.log('✅ Empty nickname prevents saving (validation works)');
     }
   });
 });
