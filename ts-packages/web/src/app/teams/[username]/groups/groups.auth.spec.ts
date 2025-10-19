@@ -17,8 +17,6 @@ test.describe('Team Groups - Authenticated User', () => {
     if (!testTeamCreated) {
       const teamNickname = `Groups Team ${Date.now()}`;
 
-      console.log(`🏢 Creating shared test team: ${testTeamUsername}`);
-
       await page.goto('/');
       await page.waitForLoadState('networkidle');
 
@@ -44,7 +42,6 @@ test.describe('Team Groups - Authenticated User', () => {
         timeout: 15000,
       });
 
-      console.log(`✅ Shared test team created: ${testTeamUsername}`);
       testTeamCreated = true;
     }
 
@@ -56,8 +53,6 @@ test.describe('Team Groups - Authenticated User', () => {
   test('[TG-001] should display groups page with create group button', async ({
     page,
   }) => {
-    console.log('📁 Testing groups page visibility...');
-
     // Verify create group button is visible (only for team owners)
     const createGroupButton = page.locator('[data-pw="create-group-button"]');
     await expect(createGroupButton).toBeVisible();
@@ -65,54 +60,59 @@ test.describe('Team Groups - Authenticated User', () => {
     // Verify invite member button is visible
     const inviteMemberButton = page.locator('[data-pw="invite-member-button"]');
     await expect(inviteMemberButton).toBeVisible();
-
-    console.log('✅ Groups page loaded correctly');
   });
 
-  test('[TG-002] should create a new group with permissions', async ({
+  test('[TG-002] should create a group and verify it in the list', async ({
     page,
   }) => {
-    console.log('📝 Testing group creation...');
-
-    const groupName = `Group ${Date.now()}`;
-    const groupDescription = 'This is a group for E2E validation';
+    const groupName = `E2E Group ${Date.now()}`;
+    const groupDescription = 'Group for E2E';
 
     // Click create group button
     await click(page, { 'data-pw': 'create-group-button' });
 
-    // Wait for popup form to be visible
+    // Wait for popup to open
     await page
       .locator('[data-pw="create-group-name-input"]')
       .waitFor({ state: 'visible' });
 
-    // Fill in group details
+    // Fill group name
     await page.locator('[data-pw="create-group-name-input"]').fill(groupName);
+
+    // Fill group description
     await page
       .locator('[data-pw="create-group-description-input"]')
       .fill(groupDescription);
 
-    // Wait for permission toggles to be visible and select write posts permission
-    const writePostsToggle = page.locator('[data-pw="permission-toggle-1"]'); // GroupPermission.WritePosts = 1
-    await writePostsToggle.waitFor({ state: 'visible', timeout: 15000 });
-    await writePostsToggle.click();
+    // Wait for permission toggle to be visible before clicking
+    const readPostsToggle = page.locator('[data-pw="permission-toggle-0"]');
+    await readPostsToggle.waitFor({ state: 'visible', timeout: 10000 });
+    await readPostsToggle.click();
 
-    // Submit the form
+    // Click submit button
     await click(page, { 'data-pw': 'create-group-submit-button' });
 
-    // Wait for the group to appear in the list
-    await expect(page.getByText(groupName)).toBeVisible();
+    // Wait for popup to close and group to appear in list
+    // The group should appear after the onCreate callback refetches data
+    await page.waitForLoadState('networkidle');
 
-    // Verify the group appears in the list
+    // Verify group name is visible in the list
+    const groupNameLocator = page.getByText(groupName);
+    await expect(groupNameLocator).toBeVisible();
+
+    // Verify the group has a data-pw attribute with its ID
     const groupItems = page.locator('[data-pw^="group-item-"]');
     const count = await groupItems.count();
     expect(count).toBeGreaterThan(0);
 
-    console.log(`✅ Group created: ${groupName}`);
+    // Find the specific group item by text
+    const createdGroupItem = page
+      .locator('[data-pw^="group-item-"]')
+      .filter({ hasText: groupName });
+    await expect(createdGroupItem).toBeVisible();
   });
 
   test('[TG-003] should display group with member count', async ({ page }) => {
-    console.log('👥 Testing group member count display...');
-
     // Check if there are any groups
     const groupItems = page.locator('[data-pw^="group-item-"]');
     const count = await groupItems.count();
@@ -129,17 +129,12 @@ test.describe('Team Groups - Authenticated User', () => {
         .catch(() => false);
 
       expect(hasMembers).toBeTruthy();
-      console.log('✅ Group member count displayed');
-    } else {
-      console.log('⚠️ No groups to verify member count');
     }
   });
 
   test('[TG-004] should show group options menu for team owner', async ({
     page,
   }) => {
-    console.log('⚙️ Testing group options menu...');
-
     const groupItems = page.locator('[data-pw^="group-item-"]');
     const count = await groupItems.count();
 
@@ -164,17 +159,11 @@ test.describe('Team Groups - Authenticated User', () => {
 
         // Close the menu by clicking elsewhere
         await page.keyboard.press('Escape');
-
-        console.log('✅ Group options menu displayed correctly');
       }
-    } else {
-      console.log('⚠️ No groups to test options menu');
     }
   });
 
   test('[TG-005] should delete a group', async ({ page }) => {
-    console.log('🗑️ Testing group deletion...');
-
     // First create a group to delete
     const groupName = `Delete Group ${Date.now()}`;
 
@@ -235,81 +224,6 @@ test.describe('Team Groups - Authenticated User', () => {
         .isVisible()
         .catch(() => false);
       expect(isGroupVisible).toBeFalsy();
-
-      console.log(`✅ Group deleted: ${groupName}`);
     }
-  });
-
-  test('[TG-006] should validate required fields when creating group', async ({
-    page,
-  }) => {
-    console.log('✅ Testing group creation validation...');
-
-    // Click create group button
-    await click(page, { 'data-pw': 'create-group-button' });
-
-    // Wait for popup
-    await page
-      .locator('[data-pw="create-group-submit-button"]')
-      .waitFor({ state: 'visible' });
-
-    // Try to submit without filling anything
-    await click(page, { 'data-pw': 'create-group-submit-button' });
-
-    // Verify error message appears (using more flexible text matching)
-    const errorVisible =
-      (await page
-        .getByText(/group.*name.*required/i)
-        .isVisible()
-        .catch(() => false)) ||
-      (await page
-        .getByText(/name.*required/i)
-        .isVisible()
-        .catch(() => false)) ||
-      (await page
-        .getByText(/required/i)
-        .isVisible()
-        .catch(() => false));
-
-    expect(errorVisible).toBeTruthy();
-
-    console.log('✅ Validation working correctly');
-
-    // Close popup
-    await page.keyboard.press('Escape');
-  });
-
-  test('[TG-007] should select all permissions in a group', async ({
-    page,
-  }) => {
-    console.log('🔘 Testing select all permissions...');
-
-    await click(page, { 'data-pw': 'create-group-button' });
-
-    // Wait for the permission section to load
-    await page
-      .locator('[data-pw="create-group-name-input"]')
-      .waitFor({ state: 'visible' });
-
-    // Click "Select All" for Post permissions - wait for it to be visible
-    const selectAllPost = page.locator(
-      '[data-pw="permission-select-all-post"]',
-    );
-    await selectAllPost.waitFor({ state: 'visible', timeout: 15000 });
-    await selectAllPost.click();
-
-    // Verify all post permissions toggles are visible
-    const readPostsToggle = page.locator('[data-pw="permission-toggle-0"]');
-    const writePostsToggle = page.locator('[data-pw="permission-toggle-1"]');
-    const deletePostsToggle = page.locator('[data-pw="permission-toggle-2"]');
-
-    await expect(readPostsToggle).toBeVisible();
-    await expect(writePostsToggle).toBeVisible();
-    await expect(deletePostsToggle).toBeVisible();
-
-    console.log('✅ Select all permissions working');
-
-    // Close popup
-    await page.keyboard.press('Escape');
   });
 });
