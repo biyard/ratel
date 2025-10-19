@@ -40,7 +40,7 @@ test.describe('Team Members - Authenticated User', () => {
 
     // Wait for redirect with increased timeout
     await page.waitForURL(
-      (url) => url.pathname.includes(`/teams/${testTeamUsername}`),
+      (url) => url.pathname.includes(`/teams/${testTeamUsername}/home`),
       {
         timeout: 15000,
       },
@@ -62,9 +62,6 @@ test.describe('Team Members - Authenticated User', () => {
   }) => {
     console.log('👥 Testing members page visibility...');
 
-    // Wait for members list to load
-    await page.waitForTimeout(1000);
-
     // Verify members list container is visible
     const membersList = page.locator('[data-pw="team-members-list"]');
     await expect(membersList).toBeVisible();
@@ -80,9 +77,6 @@ test.describe('Team Members - Authenticated User', () => {
   test('[TM-002] should display team owner badge', async ({ page }) => {
     console.log('👑 Testing team owner badge display...');
 
-    // Wait for members to load
-    await page.waitForTimeout(1000);
-
     // Look for team owner indicator
     const ownerBadge = page.getByText(/team.*owner/i);
     const hasOwnerBadge = await ownerBadge.isVisible().catch(() => false);
@@ -96,9 +90,6 @@ test.describe('Team Members - Authenticated User', () => {
     page,
   }) => {
     console.log('ℹ️ Testing member profile information display...');
-
-    // Wait for members to load
-    await page.waitForTimeout(1000);
 
     const memberItems = page.locator('[data-pw^="member-item-"]');
     const count = await memberItems.count();
@@ -131,12 +122,9 @@ test.describe('Team Members - Authenticated User', () => {
   test('[TM-004] should display member groups with tags', async ({ page }) => {
     console.log('🏷️ Testing member group tags display...');
 
-    // Wait for members to load
-    await page.waitForTimeout(1000);
-
     // First, create a group and verify it exists
     await page.goto(`/teams/${testTeamUsername}/groups`);
-    await page.waitForTimeout(500);
+    await page.waitForLoadState('networkidle');
 
     // Check if there are any groups
     const groupItems = page.locator('[data-pw^="group-item-"]');
@@ -146,7 +134,11 @@ test.describe('Team Members - Authenticated User', () => {
       // Create a group if none exists
       console.log('📝 Creating a group first...');
       await click(page, { 'data-pw': 'create-group-button' });
-      await page.waitForTimeout(500);
+
+      // Wait for popup
+      await page
+        .locator('[data-pw="create-group-name-input"]')
+        .waitFor({ state: 'visible' });
 
       await page
         .locator('[data-pw="create-group-name-input"]')
@@ -159,12 +151,14 @@ test.describe('Team Members - Authenticated User', () => {
       await page.locator('[data-pw="permission-toggle-0"]').click();
 
       await click(page, { 'data-pw': 'create-group-submit-button' });
-      await page.waitForTimeout(1000);
+
+      // Wait for group to be created
+      await expect(page.getByText('Member Group')).toBeVisible();
     }
 
     // Go back to members page
     await page.goto(`/teams/${testTeamUsername}/members`);
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('networkidle');
 
     // Check if any member has group tags displayed
     const memberGroups = page.locator('[data-pw^="member-group-"]');
@@ -180,9 +174,6 @@ test.describe('Team Members - Authenticated User', () => {
     page,
   }) => {
     console.log('🛡️ Testing that team owner cannot be removed from groups...');
-
-    // Wait for members to load
-    await page.waitForTimeout(1000);
 
     // Find the member with owner badge
     const ownerMemberItem = page
@@ -232,7 +223,7 @@ test.describe('Team Members - Authenticated User', () => {
 
     // Start from home page
     await page.goto(`/teams/${testTeamUsername}/home`);
-    await page.waitForTimeout(500);
+    await page.waitForLoadState('networkidle');
 
     // Click members navigation
     await click(page, { 'data-pw': 'team-nav-members' });
@@ -251,8 +242,6 @@ test.describe('Team Members - Authenticated User', () => {
     page,
   }) => {
     console.log('📊 Testing multiple members display...');
-
-    await page.waitForTimeout(1000);
 
     const memberItems = page.locator('[data-pw^="member-item-"]');
     const count = await memberItems.count();

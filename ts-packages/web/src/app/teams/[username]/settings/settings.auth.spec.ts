@@ -43,7 +43,7 @@ test.describe('Team Settings - Authenticated User', () => {
 
     // Wait for redirect with increased timeout
     await page.waitForURL(
-      (url) => url.pathname.includes(`/teams/${testTeamUsername}`),
+      (url) => url.pathname.includes(`/teams/${testTeamUsername}/home`),
       {
         timeout: 15000,
       },
@@ -58,7 +58,10 @@ test.describe('Team Settings - Authenticated User', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto(`/teams/${testTeamUsername}/settings`);
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000); // Wait for team data to load
+    // Wait for settings form to be visible
+    await page
+      .locator('[data-pw="team-nickname-input"]')
+      .waitFor({ state: 'visible' });
   });
 
   test('[TS-001] should display settings page with team information', async ({
@@ -111,23 +114,18 @@ test.describe('Team Settings - Authenticated User', () => {
     await nicknameInput.clear();
     await nicknameInput.fill(newNickname);
 
-    // Wait for any auto-save or validation
-    await page.waitForTimeout(500);
-
     // Click save button
     await click(page, { 'data-pw': 'team-settings-save-button' });
 
-    // Wait for save to complete and redirect
-    await page.waitForTimeout(1500);
-
     // Verify we're redirected to team home
-    await expect(page).toHaveURL(`/teams/${testTeamUsername}/home`);
+    await page.waitForURL(`/teams/${testTeamUsername}/home`);
 
     // Go back to settings to verify the change persisted
     await page.goto(`/teams/${testTeamUsername}/settings`);
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('networkidle');
 
     const nicknameInputAfter = page.locator('[data-pw="team-nickname-input"]');
+    await nicknameInputAfter.waitFor({ state: 'visible' });
     await expect(nicknameInputAfter).toHaveValue(newNickname);
 
     console.log(`✅ Team nickname updated to: ${newNickname}`);
@@ -143,17 +141,15 @@ test.describe('Team Settings - Authenticated User', () => {
     await descriptionInput.clear();
     await descriptionInput.fill(newDescription);
 
-    await page.waitForTimeout(500);
-
     // Click save button
     await click(page, { 'data-pw': 'team-settings-save-button' });
 
-    // Wait for save to complete
-    await page.waitForTimeout(1500);
+    // Wait for redirect
+    await page.waitForURL(`/teams/${testTeamUsername}/home`);
 
     // Go back to settings to verify
     await page.goto(`/teams/${testTeamUsername}/settings`);
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('networkidle');
 
     const descriptionInputAfter = page.locator(
       '[data-pw="team-description-input"]',
@@ -180,15 +176,15 @@ test.describe('Team Settings - Authenticated User', () => {
     await descriptionInput.clear();
     await descriptionInput.fill(newDescription);
 
-    await page.waitForTimeout(500);
-
     // Save changes
     await click(page, { 'data-pw': 'team-settings-save-button' });
-    await page.waitForTimeout(1500);
+
+    // Wait for redirect
+    await page.waitForURL(`/teams/${testTeamUsername}/home`);
 
     // Verify both changes persisted
     await page.goto(`/teams/${testTeamUsername}/settings`);
-    await page.waitForTimeout(1000);
+    await page.waitForLoadState('networkidle');
 
     await expect(page.locator('[data-pw="team-nickname-input"]')).toHaveValue(
       newNickname,
@@ -211,8 +207,6 @@ test.describe('Team Settings - Authenticated User', () => {
     // Try to enter text with "test" keyword (which is filtered)
     await nicknameInput.clear();
     await nicknameInput.fill('Team invalid');
-
-    await page.waitForTimeout(500);
 
     // Save button should be disabled
     await expect(saveButton).toBeDisabled();
@@ -237,19 +231,16 @@ test.describe('Team Settings - Authenticated User', () => {
       if (currentValue.includes('test')) {
         await nicknameInput.clear();
         await nicknameInput.fill('Valid Team Name');
-        await page.waitForTimeout(500);
       }
 
       // Click delete button
       await deleteButton.click();
 
-      // Wait for confirmation popup
-      await page.waitForTimeout(500);
-
       // Verify confirmation popup appears
       const confirmButton = page.locator(
         '[data-pw="delete-team-confirm-button"]',
       );
+      await confirmButton.waitFor({ state: 'visible' });
       const cancelButton = page.locator(
         '[data-pw="delete-team-cancel-button"]',
       );
@@ -260,9 +251,8 @@ test.describe('Team Settings - Authenticated User', () => {
       // Cancel the deletion (we don't want to actually delete during test)
       await cancelButton.click();
 
-      await page.waitForTimeout(500);
-
       // Verify popup closed
+      await expect(confirmButton).not.toBeVisible();
       const popupStillVisible = await confirmButton
         .isVisible()
         .catch(() => false);
@@ -281,7 +271,7 @@ test.describe('Team Settings - Authenticated User', () => {
 
     // Start from home page
     await page.goto(`/teams/${testTeamUsername}/home`);
-    await page.waitForTimeout(500);
+    await page.waitForLoadState('networkidle');
 
     // Click settings navigation
     await click(page, { 'data-pw': 'team-nav-settings' });
@@ -322,7 +312,6 @@ test.describe('Team Settings - Authenticated User', () => {
 
     // Clear nickname
     await nicknameInput.clear();
-    await page.waitForTimeout(500);
 
     // Save button might be disabled or enabled depending on validation
     const isDisabled = await saveButton.isDisabled().catch(() => false);
@@ -330,7 +319,11 @@ test.describe('Team Settings - Authenticated User', () => {
     if (!isDisabled) {
       // If save is allowed with empty nickname, try to save
       await click(page, { 'data-pw': 'team-settings-save-button' });
-      await page.waitForTimeout(1000);
+
+      // Wait for redirect or error
+      await page
+        .waitForURL(`/teams/${testTeamUsername}/home`, { timeout: 5000 })
+        .catch(() => {});
 
       // Should still work (empty/undefined nickname is allowed)
       console.log('✅ Empty nickname is allowed');
