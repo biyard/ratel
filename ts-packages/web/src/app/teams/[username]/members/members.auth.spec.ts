@@ -143,8 +143,10 @@ test.describe('Team Members - Authenticated User', () => {
         .locator('[data-pw="create-group-description-input"]')
         .fill('Group for member display');
 
-      // Select read posts permission
-      await page.locator('[data-pw="permission-toggle-0"]').click();
+      // Select read posts permission and wait for it
+      const readToggle = page.locator('[data-pw="permission-toggle-0"]');
+      await readToggle.waitFor({ state: 'visible', timeout: 15000 });
+      await readToggle.click();
 
       await click(page, { 'data-pw': 'create-group-submit-button' });
 
