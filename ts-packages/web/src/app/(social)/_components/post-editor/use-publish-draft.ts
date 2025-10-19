@@ -52,9 +52,11 @@ export function usePublishDraftMutation() {
 
     onSettled: () => {
       const queryClient = getQueryClient();
-      // Invalidate all feed list queries to refresh both drafts and published posts
       queryClient.invalidateQueries({
-        queryKey: feedKeys.lists(),
+        queryKey: feedKeys.drafts(username!),
+      });
+      queryClient.invalidateQueries({
+        queryKey: feedKeys.my_posts(username!),
       });
     },
   });

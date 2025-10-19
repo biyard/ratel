@@ -21,7 +21,7 @@ export default async function Provider({
   const redeemCode = await getRedeemCode(spaceId);
 
   // TODO: Migrate spaces to v3 API
-  // - Use getTeamDetailByUsernameV3 to fetch team
+  // - Use teams.v3.ts functions directly (findTeam, getTeam) to fetch team
   // - Use embedded permissions from team detail instead of separate permission checks
 
   try {

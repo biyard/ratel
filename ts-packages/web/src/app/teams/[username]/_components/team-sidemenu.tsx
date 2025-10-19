@@ -18,8 +18,9 @@ import { useTranslation } from 'react-i18next';
 
 import {
   useTeamDetailByUsername,
-  useTeamPermissions,
-} from '../../_hooks/use-team';
+  useTeamPermissionsFromDetail,
+} from '@/features/teams/hooks/use-team';
+import { TeamGroupPermission } from '@/features/auth/utils/team-group-permissions';
 
 export interface TeamSidemenuProps {
   username: string;
@@ -35,13 +36,13 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
   // Get team data using v3 API
   const teamDetailQuery = useTeamDetailByUsername(username);
 
-  // Get permissions using v3 API
-  const teamPk = teamDetailQuery.data?.id
-    ? String(teamDetailQuery.data.id)
-    : '';
-  const permissions = useTeamPermissions(teamPk);
+  // Get permissions from team detail response (no API calls!)
+  const permissions = useTeamPermissionsFromDetail(teamDetailQuery.data);
 
-  const writePostPermission = permissions.canWritePosts;
+  const writePostPermission =
+    permissions?.has(TeamGroupPermission.PostWrite) ||
+    permissions?.isAdmin() ||
+    false;
 
   // Use v3 team data if available, otherwise fall back to context team
   const displayTeam = teamDetailQuery.data || team;
@@ -88,7 +89,8 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
         ) : (
           <></>
         )}
-        {permissions.canEditGroups || permissions.canAdminTeam ? (
+        {permissions?.has(TeamGroupPermission.TeamEdit) ||
+        permissions?.isAdmin() ? (
           <Link
             to={route.teamGroups(displayTeam.username)}
             className="sidemenu-link text-text-primary "
@@ -98,7 +100,8 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
             <span>{t('manage_group')}</span>
           </Link>
         ) : null}
-        {permissions.canManageMembers || permissions.canAdminTeam ? (
+        {permissions?.has(TeamGroupPermission.GroupEdit) ||
+        permissions?.isAdmin() ? (
           <Link
             to={route.teamMembers(displayTeam.username)}
             className="sidemenu-link text-text-primary"
@@ -108,7 +111,8 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
             <span>{t('members')}</span>
           </Link>
         ) : null}
-        {permissions.canEditTeam || permissions.canAdminTeam ? (
+        {permissions?.has(TeamGroupPermission.TeamEdit) ||
+        permissions?.isAdmin() ? (
           <Link
             to={route.teamSettings(displayTeam.username)}
             className="sidemenu-link text-text-primary"

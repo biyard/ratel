@@ -24,7 +24,8 @@ interface FoundUser {
 
 // Convert TeamGroupResponse to Group for UI compatibility
 function convertToGroup(teamGroup: TeamGroupResponse): Group {
-  const groupId = teamGroup.sk.split('#')[1] || '';
+  // groupId is now just the UUID (not TEAM_GROUP#uuid format)
+  const groupId = teamGroup.id;
   return {
     id: parseInt(groupId.replace(/\D/g, ''), 10) || 0,
     name: teamGroup.name,
@@ -141,9 +142,9 @@ export default function InviteMemberPopup({
     }
 
     try {
-      // Get original group sk from groups array using the index
+      // Get original group id from groups array using the index
       const originalGroup = groups[groupIndex];
-      const groupId = originalGroup.sk.split('#')[1];
+      const groupId = originalGroup.id; // Already just the UUID
 
       // Use team PK (with TEAM# prefix) directly - no need to extract UUID
       const result = await teamsV3Api.addGroupMember(teamId, groupId, {

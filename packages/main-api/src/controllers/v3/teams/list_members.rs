@@ -3,14 +3,14 @@ use crate::models::{
     team::{Team, TeamGroup, TeamMetadata, TeamOwner},
     user::User,
 };
-use crate::types::{EntityType, Partition, list_items_response::ListItemsResponse};
+use crate::types::{EntityType, list_items_response::ListItemsResponse};
 use crate::{AppState, Error2};
 use bdk::prelude::*;
 use by_axum::{
     aide::NoApi,
     axum::{
         Json,
-        extract::{Query, State},
+        extract::{Path, Query, State},
     },
 };
 use serde::{Deserialize, Serialize};
@@ -44,8 +44,6 @@ pub struct TeamMember {
 
 #[derive(Debug, Serialize, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct ListMembersQueryParams {
-    #[schemars(description = "Team PK or username to list members for")]
-    pub team_pk: String,
     #[schemars(description = "Pagination bookmark")]
     pub bookmark: Option<String>,
     #[schemars(description = "Number of items to return (default: 50, max: 100)")]
@@ -65,31 +63,24 @@ pub struct TeamMemberResponse {
 pub async fn list_members_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-    Query(ListMembersQueryParams {
-        team_pk,
-        bookmark,
-        limit,
-    }): Query<ListMembersQueryParams>,
+    Path(team_username): Path<String>,
+    Query(ListMembersQueryParams { bookmark, limit }): Query<ListMembersQueryParams>,
 ) -> Result<Json<ListItemsResponse<TeamMember>>, Error2> {
     // Check if user is authenticated
     let auth_user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
 
-    // Parse team_pk - it can be either a Partition (TEAM#uuid) or a username
-    let team_partition: Partition = if team_pk.starts_with("TEAM#") {
-        Partition::Team(team_pk.strip_prefix("TEAM#").unwrap().to_string())
-    } else {
-        // If it's not a partition, treat it as username and find the team
-        let team_results =
-            Team::find_by_username_prefix(&dynamo.client, team_pk.clone(), Default::default())
-                .await?;
-        let team = team_results
-            .0
-            .into_iter()
-            .find(|t| t.username == team_pk)
-            .ok_or(Error2::NotFound("Team not found".into()))?;
-        team.pk.clone()
-    };
+    // Get team by username
+    let team_results =
+        Team::find_by_username_prefix(&dynamo.client, team_username.clone(), Default::default())
+            .await?;
 
+    let team = team_results
+        .0
+        .into_iter()
+        .find(|t| t.username == team_username)
+        .ok_or(Error2::NotFound("Team not found".into()))?;
+
+    let team_partition = team.pk.clone();
     let team_pk_str = team_partition.to_string();
 
     // Check if authenticated user is member or owner

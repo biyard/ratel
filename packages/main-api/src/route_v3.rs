@@ -100,7 +100,6 @@ use crate::{
             create_team::{CreateTeamResponse, create_team_handler},
             delete_team::{DeleteTeamResponse, delete_team_handler},
             find_team::{FindTeamResponse, find_team_handler},
-            get_permissions::{GetPermissionsResponse, get_permissions_handler},
             get_team::{GetTeamResponse, get_team_handler},
             groups::{
                 add_member::add_member_handler,
@@ -725,17 +724,6 @@ pub fn route(
                     .get_with(
                         find_team_handler,
                         api_docs!(Json<FindTeamResponse>, "Find team", "Find a team by ID"),
-                    ),
-                )
-                .route(
-                    "/permissions",
-                    get_with(
-                        get_permissions_handler,
-                        api_docs!(
-                            Json<GetPermissionsResponse>,
-                            "Get permissions",
-                            "Check if user has specific permission for a team"
-                        ),
                     ),
                 )
                 .nest(

@@ -434,5 +434,5 @@ async fn test_list_team_posts() {
     );
 
     let post_item = &posts_response.items[0];
-    assert_eq!(post_item.user_pk, team.team_pk.to_string());
+    assert_eq!(post_item.auth_pk, team.team_pk);
 }

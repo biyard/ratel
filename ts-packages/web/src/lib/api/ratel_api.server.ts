@@ -12,7 +12,6 @@ import {
   QK_GET_PROMOTION,
   QK_GET_REDEEM_CODE,
   QK_GET_SPACE_BY_SPACE_ID,
-  QK_GET_PERMISSION,
   QK_USERS_GET_INFO,
   QK_GET_NEWS_BY_NEWS_ID,
   QK_GET_DELIBERATION_SPACE_BY_SPACE_ID,
@@ -29,8 +28,6 @@ import type { User } from './models/user';
 import type { QueryResponse } from './models/common';
 import type { HomeGatewayResponse } from './models/home';
 import type { InfiniteData } from '@tanstack/react-query';
-import { GroupPermission } from './models/group';
-import type { Permission } from './models/permission';
 import type { NewsDetailItem } from './models/news';
 import { DeliberationSpaceResponse } from '@/features/spaces/deliberations/utils/deliberation.spaces.v3';
 
@@ -71,28 +68,6 @@ async function getDataFromServer<T>(
     key,
     data: res.data,
   };
-}
-
-// V3 server functions - use these for new code
-export async function getTeamDetailByUsernameV3(username: string) {
-  const { findTeam, getTeam } = await import('./ratel/teams.v3');
-
-  const findResult = await findTeam(username);
-  const team = findResult.teams.find((t) => t.username === username);
-
-  if (!team) {
-    return { data: null, error: 'Team not found' };
-  }
-
-  try {
-    const teamDetail = await getTeam(team.id);
-    return { data: teamDetail, error: null };
-  } catch (error) {
-    return {
-      data: null,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
 }
 
 export function getPostByUserId(

@@ -1,6 +1,9 @@
 use crate::{
     AppState, Error2,
-    models::{team::TeamMetadata, user::User},
+    models::{
+        team::{Team, TeamMetadata},
+        user::User,
+    },
 };
 use bdk::prelude::*;
 use by_axum::{
@@ -23,13 +26,29 @@ pub type GetTeamResponse = TeamDetailResponse;
 
 pub async fn get_team_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(_user): NoApi<Option<User>>,
+    NoApi(user): NoApi<Option<User>>,
     Path(path): Path<GetTeamPathParams>,
 ) -> Result<Json<GetTeamResponse>, Error2> {
-    let team = TeamMetadata::query(&dynamo.client, path.team_pk).await?;
+    let team = TeamMetadata::query(&dynamo.client, path.team_pk.clone()).await?;
     if team.is_empty() {
         return Err(Error2::NotFound("Team not found".into()));
     }
-    let team = TeamDetailResponse::from(team);
-    Ok(Json(team))
+
+    let mut team_response = TeamDetailResponse::from(team);
+
+    // Add user's permissions if authenticated
+    if let Some(user) = user {
+        let team_pk = crate::types::Partition::Team(
+            path.team_pk
+                .strip_prefix("TEAM#")
+                .unwrap_or(&path.team_pk)
+                .to_string(),
+        );
+        let permissions = Team::get_permissions_by_team_pk(&dynamo.client, &team_pk, &user.pk)
+            .await
+            .unwrap_or_default();
+        team_response.permissions = Some(permissions.into());
+    }
+
+    Ok(Json(team_response))
 }
