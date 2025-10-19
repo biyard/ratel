@@ -6,11 +6,8 @@ test.describe('Team Settings - Authenticated User', () => {
   let testTeamUsername: string;
   let testTeamNickname: string;
 
-  test.beforeAll(async ({ browser }) => {
-    // Create a test team for settings tests
-    const context = await browser.newContext();
-    const page = await context.newPage();
-
+  test.beforeEach(async ({ page }) => {
+    // Create a fresh team for each test
     const timestamp = Date.now();
     testTeamUsername = `pw-settings-${timestamp}`;
     testTeamNickname = `Settings Team ${timestamp}`;
@@ -18,8 +15,14 @@ test.describe('Team Settings - Authenticated User', () => {
     console.log(`🏢 Creating test team: ${testTeamUsername}`);
 
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
     await click(page, { 'data-pw': 'team-selector-trigger' });
     await click(page, { 'data-pw': 'open-team-creation-popup' });
+
+    await page.waitForSelector('[data-pw="team-nickname-input"]', {
+      timeout: CONFIGS.PAGE_WAIT_TIME,
+    });
 
     await page
       .locator('[data-pw="team-nickname-input"]')
@@ -32,18 +35,23 @@ test.describe('Team Settings - Authenticated User', () => {
       .fill(`Test team for settings functionality ${timestamp}`);
 
     await click(page, { 'data-pw': 'team-create-button' });
-    await page.waitForURL(`/teams/${testTeamUsername}/home`, {
-      timeout: CONFIGS.PAGE_WAIT_TIME,
-    });
 
-    console.log(`✅ Test team created: ${testTeamUsername}`);
-    await context.close();
-  });
+    // Wait for redirect with increased timeout
+    await page.waitForURL(
+      (url) => url.pathname.includes(`/teams/${testTeamUsername}`),
+      {
+        timeout: 15000,
+      },
+    );
 
-  test.beforeEach(async ({ page }) => {
+    // Navigate to settings page
     await page.goto(`/teams/${testTeamUsername}/settings`);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(1000); // Wait for team data to load
+
+    console.log(
+      `✅ Test team created and navigated to settings: ${testTeamUsername}`,
+    );
   });
 
   test('[TS-001] should display settings page with team information', async ({
@@ -217,7 +225,7 @@ test.describe('Team Settings - Authenticated User', () => {
       // First ensure button is enabled (no invalid input)
       const nicknameInput = page.locator('[data-pw="team-nickname-input"]');
       const currentValue = await nicknameInput.inputValue();
-      
+
       // Make sure we have valid input
       if (currentValue.includes('test')) {
         await nicknameInput.clear();

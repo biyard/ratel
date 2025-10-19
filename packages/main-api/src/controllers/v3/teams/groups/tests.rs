@@ -229,11 +229,13 @@ async fn test_add_member_handler() {
 
     assert_eq!(status, 200, "Failed to get team");
     let groups = team_response.groups.unwrap_or_default();
+    // group.id now contains just the UUID (not TEAM_GROUP#uuid format)
+    let group_uuid = match &team_group.group_sk {
+        EntityType::TeamGroup(uuid) => uuid.to_string(),
+        _ => team_group.group_sk.to_string(),
+    };
     assert!(
-        groups.iter().any(|g| {
-            // g.sk is "TEAM_GROUP#uuid", team_group.group_sk is EntityType::TeamGroup(uuid)
-            g.sk == team_group.group_sk.to_string()
-        }),
+        groups.iter().any(|g| g.id == group_uuid),
         "Team group should exist"
     );
 }

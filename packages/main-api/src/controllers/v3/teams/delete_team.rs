@@ -1,7 +1,7 @@
 use crate::models::{
-    dynamo_tables::main::user::user_team_group::UserTeamGroup,
+    dynamo_tables::main::user::user_team_group::{UserTeamGroup, UserTeamGroupQueryOption},
     team::{Team, TeamGroup, TeamMetadata, TeamOwner},
-    user::{User, UserTeam},
+    user::{User, UserTeam, UserTeamQueryOption},
 };
 use crate::types::EntityType;
 use crate::{AppState, Error2};
@@ -66,17 +66,18 @@ pub async fn delete_team_handler(
     let mut bookmark = None::<String>;
 
     loop {
-        let (user_teams, new_bookmark) = UserTeam::find_by_team(
-            &dynamo.client,
-            &user_team_sk,
-            if let Some(_b) = &bookmark {
-                Default::default() // TODO: Add bookmark support to find_by_team if available
-            } else {
-                Default::default()
-            },
-        )
-        .await
-        .unwrap_or_else(|_| (Vec::new(), None));
+        let query_opts = if let Some(ref b) = bookmark {
+            UserTeamQueryOption::builder().bookmark(b.clone())
+        } else {
+            Default::default()
+        };
+
+        let (user_teams, new_bookmark) =
+            UserTeam::find_by_team(&dynamo.client, &user_team_sk, query_opts).await?;
+
+        if user_teams.is_empty() {
+            break;
+        }
 
         for user_team in user_teams {
             let delete_tx = UserTeam::delete_transact_write_item(user_team.pk, user_team.sk);
@@ -108,16 +109,18 @@ pub async fn delete_team_handler(
         let mut bookmark = None::<String>;
 
         loop {
-            let (user_team_groups, new_bookmark) = UserTeamGroup::find_by_team_pk(
-                &dynamo.client,
-                &team_pk,
-                if let Some(_b) = &bookmark {
-                    Default::default() // TODO: Add bookmark support if available
-                } else {
-                    Default::default()
-                },
-            )
-            .await?;
+            let query_opts = if let Some(ref b) = bookmark {
+                UserTeamGroupQueryOption::builder().bookmark(b.clone())
+            } else {
+                Default::default()
+            };
+
+            let (user_team_groups, new_bookmark) =
+                UserTeamGroup::find_by_team_pk(&dynamo.client, &team_pk, query_opts).await?;
+
+            if user_team_groups.is_empty() {
+                break;
+            }
 
             for utg in user_team_groups {
                 // Check if this UserTeamGroup is for the current group
@@ -146,16 +149,18 @@ pub async fn delete_team_handler(
     let mut bookmark = None::<String>;
 
     loop {
-        let (remaining_user_team_groups, new_bookmark) = UserTeamGroup::find_by_team_pk(
-            &dynamo.client,
-            &team_pk,
-            if let Some(_b) = &bookmark {
-                Default::default() // TODO: Add bookmark support if available
-            } else {
-                Default::default()
-            },
-        )
-        .await?;
+        let query_opts = if let Some(ref b) = bookmark {
+            UserTeamGroupQueryOption::builder().bookmark(b.clone())
+        } else {
+            Default::default()
+        };
+
+        let (remaining_user_team_groups, new_bookmark) =
+            UserTeamGroup::find_by_team_pk(&dynamo.client, &team_pk, query_opts).await?;
+
+        if remaining_user_team_groups.is_empty() {
+            break;
+        }
 
         for utg in remaining_user_team_groups {
             let delete_tx = UserTeamGroup::delete_transact_write_item(utg.pk, utg.sk);

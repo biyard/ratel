@@ -8,7 +8,7 @@ use crate::{
         update_team::UpdateTeamResponse,
     },
     tests::v3_setup::TestContextV3,
-    types::{EntityType, TeamGroupPermission, list_items_response::ListItemsResponse},
+    types::{EntityType, Partition, TeamGroupPermission, list_items_response::ListItemsResponse},
 };
 
 use crate::*;
@@ -156,7 +156,12 @@ async fn test_get_team() {
     assert_eq!(team_response.team.username, team_username);
 
     let owner = team_response.owner.expect("Owner should exist");
-    assert_eq!(owner.user_pk, test_user.0.pk.to_string());
+    // owner.id now contains just the UUID (not USER#uuid format)
+    let user_uuid = match &test_user.0.pk {
+        Partition::User(uuid) => uuid.to_string(),
+        _ => test_user.0.pk.to_string(),
+    };
+    assert_eq!(owner.id, user_uuid);
 }
 
 #[tokio::test]
@@ -220,10 +225,10 @@ async fn test_list_members() {
 
     assert_eq!(status, 200, "Failed to add member");
 
-    // List members - using query parameter with team_pk
+    // List members - using team username in path
     let (status, _headers, members_response) = get! {
         app: app,
-        path: format!("/v3/teams/{}/members?team_pk={}", team.team_pk, percent_encoding::utf8_percent_encode(&team.team_pk.to_string(), percent_encoding::NON_ALPHANUMERIC).to_string()),
+        path: format!("/v3/teams/{}/members", team_username),
         headers: test_user.1.clone(),
         response_type: ListItemsResponse<TeamMember>
     };
@@ -359,8 +364,13 @@ async fn test_delete_group() {
 
     assert_eq!(status, 200);
     let groups = team_response.groups.unwrap_or_default();
+    // group.id now contains just the UUID (not TEAM_GROUP#uuid format)
+    let group_uuid = match &group.group_sk {
+        EntityType::TeamGroup(uuid) => uuid.to_string(),
+        _ => group.group_sk.to_string(),
+    };
     assert!(
-        !groups.iter().any(|g| g.sk == group.group_sk.to_string()),
+        !groups.iter().any(|g| g.id == group_uuid),
         "Group should be deleted"
     );
 }

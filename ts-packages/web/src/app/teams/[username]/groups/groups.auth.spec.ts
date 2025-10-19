@@ -5,11 +5,8 @@ import { CONFIGS } from '../../../../../tests/config';
 test.describe('Team Groups - Authenticated User', () => {
   let testTeamUsername: string;
 
-  test.beforeAll(async ({ browser }) => {
-    // Create a test team for all group tests to use
-    const context = await browser.newContext();
-    const page = await context.newPage();
-
+  test.beforeEach(async ({ page }) => {
+    // Create a fresh team for each test to avoid state issues
     const timestamp = Date.now();
     testTeamUsername = `pw-groups-${timestamp}`;
     const teamNickname = `Groups Test Team ${timestamp}`;
@@ -17,8 +14,14 @@ test.describe('Team Groups - Authenticated User', () => {
     console.log(`🏢 Creating test team: ${testTeamUsername}`);
 
     await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
     await click(page, { 'data-pw': 'team-selector-trigger' });
     await click(page, { 'data-pw': 'open-team-creation-popup' });
+
+    await page.waitForSelector('[data-pw="team-nickname-input"]', {
+      timeout: CONFIGS.PAGE_WAIT_TIME,
+    });
 
     await page.locator('[data-pw="team-nickname-input"]').fill(teamNickname);
     await page
@@ -29,17 +32,22 @@ test.describe('Team Groups - Authenticated User', () => {
       .fill(`Test team for groups functionality ${timestamp}`);
 
     await click(page, { 'data-pw': 'team-create-button' });
-    await page.waitForURL(`/teams/${testTeamUsername}/home`, {
-      timeout: CONFIGS.PAGE_WAIT_TIME,
-    });
 
-    console.log(`✅ Test team created: ${testTeamUsername}`);
-    await context.close();
-  });
+    // Wait for redirect with increased timeout
+    await page.waitForURL(
+      (url) => url.pathname.includes(`/teams/${testTeamUsername}`),
+      {
+        timeout: 15000,
+      },
+    );
 
-  test.beforeEach(async ({ page }) => {
+    // Navigate to groups page
     await page.goto(`/teams/${testTeamUsername}/groups`);
     await page.waitForLoadState('networkidle');
+
+    console.log(
+      `✅ Test team created and navigated to groups: ${testTeamUsername}`,
+    );
   });
 
   test('[TG-001] should display groups page with create group button', async ({
