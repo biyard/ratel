@@ -6,16 +6,13 @@ import { GroupPermission } from '@/lib/api/models/group';
 import { logger } from '@/lib/logger';
 import type { TeamGroupResponse } from '@/lib/api/ratel/teams.v3';
 import InviteMemberPopup from './_components/invite-member-popup';
-import { useTeamDetailByUsername } from '../../_hooks/use-team';
+import { useTeamDetailByUsername } from '@/features/teams/hooks/use-team';
 import { Folder } from 'lucide-react';
 import { checkString } from '@/lib/string-filter-utils';
 import { useTranslation } from 'react-i18next';
-// No more legacy compatibility imports
-import {
-  useCanCreateGroup,
-  useCanDeleteGroup,
-} from '../../_hooks/use-team-permissions';
 import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
+import { useTeamPermissionsFromDetail } from '@/features/teams/hooks/use-team';
+import { TeamGroupPermission } from '@/features/auth/utils/team-group-permissions';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   DropdownMenu,
@@ -30,9 +27,8 @@ export default function TeamGroups({ username }: { username: string }) {
   const popup = usePopup();
   const queryClient = useQueryClient();
 
-  // Get permissions directly from v3 API using individual hooks - must be called before early returns
-  const canCreateGroup = useCanCreateGroup(teamDetailQuery.data?.id || '');
-  const canDeleteGroup = useCanDeleteGroup(teamDetailQuery.data?.id || '');
+  // Get permissions directly from team detail response (no API calls!)
+  const permissions = useTeamPermissionsFromDetail(teamDetailQuery.data);
 
   if (teamDetailQuery.isLoading) {
     return <div className="flex justify-center p-8">Loading team...</div>;
@@ -47,18 +43,19 @@ export default function TeamGroups({ username }: { username: string }) {
   }
 
   const teamDetail = teamDetailQuery.data;
+  const canCreateGroup =
+    permissions?.has(TeamGroupPermission.TeamEdit) ?? false;
+  const canDeleteGroup =
+    permissions?.has(TeamGroupPermission.TeamEdit) ?? false;
 
   // Use v3 groups directly - no more legacy conversion
   const groups = teamDetail?.groups ?? [];
 
-  const deleteGroup = async (groupSk: string) => {
+  const deleteGroup = async (groupId: string) => {
     if (!teamDetail) return;
 
     try {
-      // Extract the UUID from groupSk (format: TEAM_GROUP#uuid)
-      const groupId = groupSk.split('#')[1];
-
-      // Use team username (not team_pk) for the delete API
+      // groupId is now just the UUID (not TEAM_GROUP#uuid format)
       await teamsV3Api.deleteGroup(username, groupId);
 
       // Invalidate all team-related queries to ensure fresh data
@@ -98,7 +95,7 @@ export default function TeamGroups({ username }: { username: string }) {
               .withoutBackdropClose();
           }}
         />
-        {canCreateGroup.data && (
+        {canCreateGroup && (
           <CreateGroupButton
             onClick={() => {
               if (!teamDetail) return;
@@ -163,7 +160,7 @@ export default function TeamGroups({ username }: { username: string }) {
 
       <ListGroups
         groups={groups ?? []}
-        permission={canDeleteGroup.data ?? false}
+        permission={canDeleteGroup}
         deleteGroup={deleteGroup}
       />
     </div>
@@ -186,7 +183,7 @@ function ListGroups({
         .filter((d) => !checkString(d.name))
         .map((group) => (
           <div
-            key={group.sk}
+            key={group.id}
             className="flex flex-row w-full h-fit justify-between items-center bg-transparent rounded-sm border border-card-enable-border p-5"
           >
             <div className="flex flex-row w-fit gap-[15px]">
@@ -220,7 +217,7 @@ function ListGroups({
                   <DropdownMenuItem>
                     <button
                       onClick={() => {
-                        deleteGroup(group.sk);
+                        deleteGroup(group.id);
                       }}
                       className="flex items-center w-full px-4 py-2 text-sm text-text-primary hover:bg-hover cursor-pointer"
                     >

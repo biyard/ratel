@@ -1,5 +1,8 @@
 'use client';
-import { useTeamMembers, useTeamDetailByUsername } from '../../_hooks/use-team';
+import {
+  useTeamMembers,
+  useTeamDetailByUsername,
+} from '@/features/teams/hooks/use-team';
 import { checkString } from '@/lib/string-filter-utils';
 import { X } from 'lucide-react';
 import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
@@ -7,22 +10,25 @@ import { useQueryClient } from '@tanstack/react-query';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export default function TeamMembers({ username }: { username: string }) {
+  const { t } = useTranslation('Team');
   const teamDetailQuery = useTeamDetailByUsername(username);
-  const teamPk = teamDetailQuery.data?.id;
-  const query = useTeamMembers(teamPk || username); // Use teamPk if available, fallback to username
+  const query = useTeamMembers(username); // Pass username directly
   const queryClient = useQueryClient();
   const [removingMember, setRemovingMember] = useState<string | null>(null);
 
   if (query.isLoading || teamDetailQuery.isLoading) {
-    return <div className="flex justify-center p-8">Loading members...</div>;
+    return (
+      <div className="flex justify-center p-8">{t('loading_members')}</div>
+    );
   }
 
   if (query.error || teamDetailQuery.error) {
     return (
       <div className="flex justify-center p-8 text-red-500">
-        Error loading members
+        {t('error_loading_members')}
       </div>
     );
   }
@@ -53,7 +59,7 @@ export default function TeamMembers({ username }: { username: string }) {
         user_pks: [memberUserId],
       });
 
-      showSuccessToast(`Member removed from ${groupName}`);
+      showSuccessToast(t('member_removed_from_group', { groupName }));
 
       // Invalidate queries to refresh member list
       await queryClient.invalidateQueries({
@@ -68,7 +74,7 @@ export default function TeamMembers({ username }: { username: string }) {
       });
     } catch (err) {
       logger.error('Failed to remove member from group:', err);
-      showErrorToast('Failed to remove member from group');
+      showErrorToast(t('failed_remove_member_from_group'));
     } finally {
       setRemovingMember(null);
     }
@@ -108,7 +114,7 @@ export default function TeamMembers({ username }: { username: string }) {
               </div>
               {member.is_owner && (
                 <div className="text-xs text-blue-500 font-medium">
-                  Team Owner
+                  {t('team_owner')}
                 </div>
               )}
             </div>
@@ -137,7 +143,7 @@ export default function TeamMembers({ username }: { username: string }) {
                         }
                         disabled={isRemoving}
                         className="ml-1 hover:bg-neutral-700 rounded-full p-0.5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Remove from group"
+                        title={t('remove_from_group')}
                       >
                         <X className="w-3 h-3" />
                       </button>

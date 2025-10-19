@@ -69,7 +69,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
             {teams.map((team, index) =>
               team.nickname !== '' ? (
                 <DropdownMenuItem
-                  key={`team-select-menu-${team.id}`}
+                  key={`team-select-${index}-${team.username || team.id}`}
                   className="focus:bg-accent focus:text-text-primary [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2 hover:bg-hover"
                   asChild
                 >

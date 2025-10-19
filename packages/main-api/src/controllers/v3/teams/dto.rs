@@ -42,7 +42,7 @@ impl From<Team> for TeamResponse {
 
 #[derive(Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct TeamGroupResponse {
-    pub sk: String,
+    pub id: String, // Just the UUID part, not the full EntityType
     pub name: String,
     pub description: String,
     pub members: i64,
@@ -51,8 +51,14 @@ pub struct TeamGroupResponse {
 
 impl From<TeamGroup> for TeamGroupResponse {
     fn from(group: TeamGroup) -> Self {
+        // Extract UUID from EntityType::TeamGroup(uuid)
+        let group_id = match group.sk {
+            EntityType::TeamGroup(uuid) => uuid,
+            _ => group.sk.to_string(), // Fallback
+        };
+
         Self {
-            sk: group.sk.to_string(),
+            id: group_id,
             name: group.name,
             description: group.description,
             members: group.members,
@@ -63,7 +69,7 @@ impl From<TeamGroup> for TeamGroupResponse {
 
 #[derive(Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct TeamOwnerResponse {
-    pub user_pk: String,
+    pub id: String, // Just the UUID part, not the full Partition
     pub display_name: String,
     pub profile_url: String,
     pub username: String,
@@ -71,8 +77,14 @@ pub struct TeamOwnerResponse {
 
 impl From<TeamOwner> for TeamOwnerResponse {
     fn from(owner: TeamOwner) -> Self {
+        // Extract UUID from Partition::User(uuid)
+        let user_id = match owner.user_pk {
+            Partition::User(uuid) => uuid,
+            _ => owner.user_pk.to_string(), // Fallback
+        };
+
         Self {
-            user_pk: owner.user_pk.to_string(),
+            id: user_id,
             display_name: owner.display_name,
             profile_url: owner.profile_url,
             username: owner.username,
@@ -84,8 +96,9 @@ pub struct TeamDetailResponse {
     #[serde(flatten)]
     pub team: TeamResponse,
     pub groups: Option<Vec<TeamGroupResponse>>,
-    // pub owner: TeamOwner,
     pub owner: Option<TeamOwnerResponse>,
+    /// User's permissions bitmask for this team (i64)
+    pub permissions: Option<i64>,
 }
 
 impl From<Vec<TeamMetadata>> for TeamDetailResponse {

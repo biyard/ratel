@@ -5,7 +5,7 @@ import { Col } from '@/components/ui/col';
 import useTeamInfiniteFeeds from '@/hooks/feeds/use-team-feeds-infinite-query';
 import { useObserver } from '@/hooks/use-observer';
 import { useCallback } from 'react';
-import { useTeamDetailByUsername } from '../../_hooks/use-team';
+import { useTeamDetailByUsername } from '@/features/teams/hooks/use-team';
 import { useParams } from 'react-router';
 
 export default function TeamHome() {

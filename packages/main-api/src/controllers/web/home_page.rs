@@ -30,8 +30,6 @@ pub async fn home_page_handler(
         NoApi(user),
         Query(ListPostsQueryParams {
             bookmark: None,
-            author_pk: None,
-            status: None,
         }),
     );
 

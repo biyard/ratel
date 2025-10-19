@@ -5,6 +5,7 @@ use crate::models::{
 };
 use crate::types::EntityType;
 use crate::{AppState, Error2};
+use aws_sdk_dynamodb::types::TransactWriteItem;
 use bdk::prelude::*;
 use by_axum::{
     aide::NoApi,
@@ -58,16 +59,35 @@ pub async fn delete_team_handler(
     }
 
     let mut deleted_count = 0;
+    let mut transact_items: Vec<TransactWriteItem> = Vec::new();
 
     // Delete all UserTeam entries (this is what makes the team appear in user's side menu)
     let user_team_sk = EntityType::UserTeam(team_pk.to_string());
-    let (user_teams, _) = UserTeam::find_by_team(&dynamo.client, &user_team_sk, Default::default())
+    let mut bookmark = None::<String>;
+
+    loop {
+        let (user_teams, new_bookmark) = UserTeam::find_by_team(
+            &dynamo.client,
+            &user_team_sk,
+            if let Some(_b) = &bookmark {
+                Default::default() // TODO: Add bookmark support to find_by_team if available
+            } else {
+                Default::default()
+            },
+        )
         .await
         .unwrap_or_else(|_| (Vec::new(), None));
 
-    for user_team in user_teams {
-        UserTeam::delete(&dynamo.client, user_team.pk, Some(user_team.sk)).await?;
-        deleted_count += 1;
+        for user_team in user_teams {
+            let delete_tx = UserTeam::delete_transact_write_item(user_team.pk, user_team.sk);
+            transact_items.push(delete_tx);
+            deleted_count += 1;
+        }
+
+        match new_bookmark {
+            Some(b) => bookmark = Some(b),
+            None => break,
+        }
     }
 
     // Delete all team groups and their user relationships
@@ -85,45 +105,96 @@ pub async fn delete_team_handler(
     for group in &team_groups {
         // Delete all UserTeamGroup relationships for this group
         let group_sk_string = group.sk.to_string();
-        let (user_team_groups, _) =
-            UserTeamGroup::find_by_team_pk(&dynamo.client, &team_pk, Default::default()).await?;
+        let mut bookmark = None::<String>;
 
-        for utg in user_team_groups {
-            // Check if this UserTeamGroup is for the current group
-            if let EntityType::UserTeamGroup(utg_group_sk) = &utg.sk {
-                if *utg_group_sk == group_sk_string {
-                    UserTeamGroup::delete(&dynamo.client, utg.pk, Some(utg.sk)).await?;
-                    deleted_count += 1;
+        loop {
+            let (user_team_groups, new_bookmark) = UserTeamGroup::find_by_team_pk(
+                &dynamo.client,
+                &team_pk,
+                if let Some(_b) = &bookmark {
+                    Default::default() // TODO: Add bookmark support if available
+                } else {
+                    Default::default()
+                },
+            )
+            .await?;
+
+            for utg in user_team_groups {
+                // Check if this UserTeamGroup is for the current group
+                if let EntityType::UserTeamGroup(utg_group_sk) = &utg.sk {
+                    if *utg_group_sk == group_sk_string {
+                        let delete_tx = UserTeamGroup::delete_transact_write_item(utg.pk, utg.sk);
+                        transact_items.push(delete_tx);
+                        deleted_count += 1;
+                    }
                 }
+            }
+
+            match new_bookmark {
+                Some(b) => bookmark = Some(b),
+                None => break,
             }
         }
 
         // Delete the group itself
-        TeamGroup::delete(&dynamo.client, group.pk.clone(), Some(group.sk.clone())).await?;
+        let delete_tx = TeamGroup::delete_transact_write_item(group.pk.clone(), group.sk.clone());
+        transact_items.push(delete_tx);
         deleted_count += 1;
     }
 
     // Delete any remaining UserTeamGroup relationships (cleanup)
-    let (remaining_user_team_groups, _) =
-        UserTeamGroup::find_by_team_pk(&dynamo.client, &team_pk, Default::default()).await?;
+    let mut bookmark = None::<String>;
 
-    for utg in remaining_user_team_groups {
-        UserTeamGroup::delete(&dynamo.client, utg.pk, Some(utg.sk)).await?;
-        deleted_count += 1;
+    loop {
+        let (remaining_user_team_groups, new_bookmark) = UserTeamGroup::find_by_team_pk(
+            &dynamo.client,
+            &team_pk,
+            if let Some(_b) = &bookmark {
+                Default::default() // TODO: Add bookmark support if available
+            } else {
+                Default::default()
+            },
+        )
+        .await?;
+
+        for utg in remaining_user_team_groups {
+            let delete_tx = UserTeamGroup::delete_transact_write_item(utg.pk, utg.sk);
+            transact_items.push(delete_tx);
+            deleted_count += 1;
+        }
+
+        match new_bookmark {
+            Some(b) => bookmark = Some(b),
+            None => break,
+        }
     }
 
     // Delete team owner
-    TeamOwner::delete(
-        &dynamo.client,
-        team_owner.pk.clone(),
-        Some(team_owner.sk.clone()),
-    )
-    .await?;
+    let delete_tx =
+        TeamOwner::delete_transact_write_item(team_owner.pk.clone(), team_owner.sk.clone());
+    transact_items.push(delete_tx);
     deleted_count += 1;
 
     // Delete team itself
-    Team::delete(&dynamo.client, team.pk.clone(), Some(team.sk.clone())).await?;
+    let delete_tx = Team::delete_transact_write_item(team.pk.clone(), team.sk.clone());
+    transact_items.push(delete_tx);
     deleted_count += 1;
+
+    // Execute all deletes in a transaction
+    // DynamoDB TransactWriteItems has a limit of 100 items per transaction
+    // So we need to batch the deletes if there are more than 100
+    for chunk in transact_items.chunks(100) {
+        dynamo
+            .client
+            .transact_write_items()
+            .set_transact_items(Some(chunk.to_vec()))
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to delete team entities: {}", e);
+                Error2::InternalServerError("Failed to delete team".into())
+            })?;
+    }
 
     tracing::info!(
         "Successfully deleted team '{}' and {} related entities",

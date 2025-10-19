@@ -22,8 +22,11 @@ import { logger } from '@/lib/logger';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
 import { FeedStatus } from '@/lib/api/models/feeds';
-import { useTeamDetailByUsername } from '../../_hooks/use-team';
-import { useCanManageTeam } from '../../_hooks/use-team-permissions';
+import {
+  useTeamDetailByUsername,
+  useTeamPermissionsFromDetail,
+} from '@/features/teams/hooks/use-team';
+import { TeamGroupPermission } from '@/features/auth/utils/team-group-permissions';
 import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
 
 export default function SettingsPage({ username }: { username: string }) {
@@ -37,6 +40,9 @@ export default function SettingsPage({ username }: { username: string }) {
   const teamDetailQuery = useTeamDetailByUsername(username);
   const userInfo = useUserInfo();
 
+  // Get permissions directly from team detail response (no API calls!)
+  const permissions = useTeamPermissionsFromDetail(teamDetailQuery.data);
+
   // Get legacy team from context for backward compatibility
   const team = useMemo(() => {
     return teams.find((t) => t.username === username);
@@ -48,24 +54,8 @@ export default function SettingsPage({ username }: { username: string }) {
   const [nickname, setNickname] = useState(team?.nickname);
   const [htmlContents, setHtmlContents] = useState(team?.html_contents);
 
-  // Get permissions directly from v3 API
-  const canManageTeam = useCanManageTeam(teamDetailQuery.data?.id || '');
-
-  if (teamDetailQuery.isLoading) {
-    return (
-      <div className="flex justify-center p-8">Loading team settings...</div>
-    );
-  }
-
-  if (teamDetailQuery.error) {
-    return (
-      <div className="flex justify-center p-8 text-red-500">
-        Error loading team settings
-      </div>
-    );
-  }
-
-  const deleteTeamPermission = canManageTeam.data ?? false;
+  const deleteTeamPermission =
+    permissions?.has(TeamGroupPermission.TeamAdmin) ?? false;
 
   if (!team) {
     return <></>;
