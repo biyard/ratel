@@ -1,5 +1,4 @@
 use crate::controllers::v3::spaces::{SpaceDiscussionPath, SpaceDiscussionPathParam};
-use crate::features::spaces::discussions::common_controller_logic::build_meeting_info;
 use crate::features::spaces::discussions::dto::SpaceDiscussionResponse;
 use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
 use crate::features::spaces::discussions::models::space_discussion_participant::SpaceDiscussionParticipant;
@@ -75,7 +74,7 @@ pub async fn participant_meeting_handler(
                         &disc,
                     )
                     .await?;
-                let meeting2 = build_meeting_info(&client, &recreated_id).await?;
+                let meeting2 = client.build_meeting_info(&client, &recreated_id).await?;
                 client
                     .create_attendee(&meeting2, user_pk.as_str())
                     .await
