@@ -580,7 +580,7 @@ async fn test_recording() {
         space_pk_encoded, discussion_pk_encoded
     );
 
-    let (status, _headers, body) = patch! {
+    let (status, _headers, _body) = patch! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),

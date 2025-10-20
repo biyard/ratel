@@ -15,6 +15,7 @@ use crate::controllers::v3::spaces::end_recording::end_recording_handler;
 use crate::controllers::v3::spaces::exit_meeting::exit_meeting_handler;
 use crate::controllers::v3::spaces::get_discussion::get_discussion_handler;
 use crate::controllers::v3::spaces::get_files::get_files_handler;
+use crate::controllers::v3::spaces::get_meeting::get_meeting_handler;
 use crate::controllers::v3::spaces::get_space_handler;
 use crate::controllers::v3::spaces::list_discussions::list_discussions_handler;
 use crate::controllers::v3::spaces::participant_meeting::participant_meeting_handler;
@@ -369,6 +370,7 @@ pub fn route(
                                     delete_discussion_handler
                                 )
                             )
+                            .route("/:discussion-pk/meeting", get(get_meeting_handler))
                             .route("/:discussion_pk/start-meeting", patch(start_meeting_handler))
                             .route("/:discussion_pk/participant-meeting", patch(participant_meeting_handler))
                             .route("/:discussion_pk/exit-meeting", patch(exit_meeting_handler))
