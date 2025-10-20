@@ -9,6 +9,7 @@ use bdk::prelude::*;
 
 use aide::NoApi;
 
+// TODO: merge with start_meeting handler
 pub async fn participant_meeting_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
