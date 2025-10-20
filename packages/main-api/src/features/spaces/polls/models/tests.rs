@@ -29,7 +29,7 @@ async fn test_poll_space_creation() {
         .expect("failed to create space common");
 
     let now = get_now_timestamp_millis();
-    let poll = Poll::new(common.pk.clone(), false, now, now + 60).unwrap();
+    let poll = Poll::new(common.pk.clone(), true, now, now + 60).unwrap();
 
     poll.create(&cli).await.expect("failed to create poll");
 
@@ -57,11 +57,11 @@ async fn test_poll_space_creation() {
         .await
         .expect("failed to create question");
 
-    let metadata = PollMetadata::query(&cli, &poll.pk)
+    let metadata = PollMetadata::query_begins_with_sk(&cli, &poll.pk, EntityType::SpacePoll)
         .await
         .expect("failed to query poll space metadata");
 
-    assert_eq!(metadata.len(), 3, "should have 3 entries");
+    assert_eq!(metadata.len(), 2, "should have 2 entries");
 
     let response: PollResponse = metadata.into();
 
