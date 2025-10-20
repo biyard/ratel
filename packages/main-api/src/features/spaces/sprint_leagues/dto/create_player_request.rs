@@ -1,6 +1,6 @@
 use bdk::prelude::*;
 
-use crate::models::PlayerImage;
+use super::super::PlayerImage;
 
 #[derive(Debug, serde::Deserialize, aide::OperationIo, JsonSchema)]
 pub struct CreatePlayerRequest {

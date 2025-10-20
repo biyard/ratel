@@ -1,37 +1,10 @@
-// use aide::NoApi;
-// use bdk::prelude::*;
-// use by_axum::axum::{
-//     Json,
-//     extract::{Path, Query, State},
-// };
-
-// use crate::{AppState, models::User};
-
-// use serde::{Deserialize, Serialize};
-
-// #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
-// pub struct GetSprintLeaguePathParams {}
-
-// #[derive(Debug, Serialize, Default, aide::OperationIo, JsonSchema)]
-// pub struct GetSprintLeagueResponse {}
-
-// #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
-// pub struct GetSprintLeagueQueryParams {}
-
-// pub async fn get_sprint_league_handler(
-//     State(AppState { dynamo, .. }): State<AppState>,
-//     NoApi(user): NoApi<Option<User>>,
-//     Path(path): Path<GetSprintLeaguePathParams>,
-//     Query(query): Query<GetSprintLeagueQueryParams>,
-// ) -> crate::Result<Json<GetSprintLeagueResponse>> {
-//     Ok(Json(GetSprintLeagueResponse::default()))
-// }
-
-use super::dto::SprintLeagueResponse;
 use crate::{
     AppState, Error,
     controllers::v3::spaces::dto::SpacePathParam,
-    models::{SpaceCommon, SprintLeagueMetadata, SprintLeagueVote, User},
+    features::spaces::sprint_leagues::{
+        SprintLeagueMetadata, SprintLeagueResponse, SprintLeagueVote,
+    },
+    models::{SpaceCommon, User},
     types::{Partition, TeamGroupPermission},
 };
 use aide::NoApi;

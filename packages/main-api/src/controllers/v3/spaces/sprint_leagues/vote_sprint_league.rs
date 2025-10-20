@@ -2,7 +2,8 @@ use crate::{
     AppState,
     controllers::v3::spaces::dto::SpacePathParam,
     error::Error,
-    models::{SpaceCommon, SprintLeague, SprintLeaguePlayer, SprintLeagueVote, User},
+    features::spaces::sprint_leagues::models::SprintLeague,
+    models::{SpaceCommon, User},
     types::{EntityType, TeamGroupPermission},
 };
 use aide::{NoApi, OperationIo};

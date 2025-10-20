@@ -1,7 +1,8 @@
 use crate::{Error, types::*};
 use bdk::prelude::*;
-use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+
+use super::super::PlayerImage;
 
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, schemars::JsonSchema,
@@ -84,19 +85,4 @@ impl SprintLeaguePlayer {
 
         Ok(())
     }
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize, schemars::JsonSchema)]
-pub struct PlayerImage {
-    pub select: SpriteSheet,
-    pub run: SpriteSheet,
-    pub win: String,
-    pub lose: String,
-}
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize, schemars::JsonSchema)]
-pub struct SpriteSheet {
-    // For Animation
-    pub json: String,
-    pub image: String,
 }

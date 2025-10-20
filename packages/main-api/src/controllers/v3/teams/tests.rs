@@ -92,7 +92,7 @@ async fn test_update_team() {
     let new_description = "Updated squad description";
     let new_profile_url = "https://example.com/updated_profile.png";
 
-    let (status, _headers, updated_team) = patch! {
+    let (status, _headers, _updated_team) = patch! {
         app: app,
         path: format!("/v3/teams/{}", team.team_pk),
         headers: test_user.1.clone(),

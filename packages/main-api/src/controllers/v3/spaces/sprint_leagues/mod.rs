@@ -1,4 +1,3 @@
-pub mod dto;
 mod get_sprint_league;
 mod upsert_sprint_league;
 mod vote_sprint_league;
