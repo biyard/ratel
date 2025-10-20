@@ -15,12 +15,9 @@ use crate::*;
 
 #[tokio::test]
 async fn test_update_team_without_permission() {
-    let TestContextV3 {
-        app,
-        test_user,
-        user2,
-        ..
-    } = TestContextV3::setup().await;
+    let ctx = TestContextV3::setup().await;
+    let user2 = ctx.create_another_user().await;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let team_username = format!("testteam{}", uuid::Uuid::new_v4());
 
@@ -166,12 +163,9 @@ async fn test_get_team() {
 
 #[tokio::test]
 async fn test_list_members() {
-    let TestContextV3 {
-        app,
-        test_user,
-        user2,
-        ..
-    } = TestContextV3::setup().await;
+    let ctx = TestContextV3::setup().await;
+    let user2 = ctx.create_another_user().await;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let team_username = format!("testteam{}", uuid::Uuid::new_v4());
 
@@ -250,12 +244,9 @@ async fn test_list_members() {
 
 #[tokio::test]
 async fn test_delete_team() {
-    let TestContextV3 {
-        app,
-        test_user,
-        user2,
-        ..
-    } = TestContextV3::setup().await;
+    let ctx = TestContextV3::setup().await;
+    let user2 = ctx.create_another_user().await;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let team_username = format!("testteam{}", uuid::Uuid::new_v4());
 

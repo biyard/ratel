@@ -7,7 +7,14 @@ use super::super::PlayerImage;
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, schemars::JsonSchema,
 )]
+
 pub struct SprintLeaguePlayer {
+    // #[dynamo(
+    //     prefix = "SPRINT_LEAGUE_PK",
+    //     name = "order_by_votes",
+    //     index = "gsi1",
+    //     pk
+    // )]
     pub pk: Partition,
     pub sk: EntityType,
 
@@ -15,8 +22,8 @@ pub struct SprintLeaguePlayer {
     pub description: String,
 
     pub player_image: PlayerImage,
-
-    pub voter: i64,
+    // #[dynamo(index = "gsi1", sk)]
+    pub votes: i64,
 }
 
 impl SprintLeaguePlayer {
@@ -39,10 +46,40 @@ impl SprintLeaguePlayer {
             player_image,
             name,
             description,
-            voter: 0,
+            votes: 0,
         })
     }
+    pub async fn get_all(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: &Partition,
+    ) -> crate::Result<Vec<SprintLeaguePlayer>> {
+        if !space_pk.is_space_key() {
+            return Err(crate::Error::InvalidPartitionKey(
+                "SprintLeaguePlayer must be under Space partition".to_string(),
+            ));
+        }
 
+        let mut players = Vec::new();
+        let mut bookmark = None::<String>;
+        loop {
+            let mut options = SprintLeaguePlayerQueryOption::builder()
+                .sk(EntityType::SprintLeaguePlayer(String::default()).to_string());
+            if let Some(b) = &bookmark {
+                options = options.bookmark(b.clone());
+            }
+            let (mut queried_players, next_bookmark) =
+                SprintLeaguePlayer::query(cli, space_pk, options).await?;
+
+            players.append(&mut queried_players);
+
+            match next_bookmark {
+                Some(b) => bookmark = Some(b),
+                None => break,
+            }
+        }
+
+        Ok(players)
+    }
     pub async fn delete_all(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,

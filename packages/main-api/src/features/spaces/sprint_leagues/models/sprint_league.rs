@@ -9,8 +9,9 @@ pub struct SprintLeague {
     pub pk: Partition,
     pub sk: EntityType,
 
+    pub players: i64,
     pub votes: i64,
-    pub win_player: Option<EntityType>,
+    pub winner: Option<SprintLeaguePlayer>,
 }
 
 impl SprintLeague {
@@ -19,18 +20,19 @@ impl SprintLeague {
             pk: space_pk,
             sk: EntityType::SprintLeague,
             votes: 0,
-            win_player: None,
+            winner: None,
+            players: 0,
         })
     }
 }
 
 impl SprintLeague {
     pub async fn is_voted(
-        &self,
         cli: &aws_sdk_dynamodb::Client,
+        space_pk: &Partition,
         user_pk: &Partition,
     ) -> crate::Result<bool> {
-        let vote = SprintLeagueVote::find_one(cli, &self.pk, user_pk).await?;
+        let vote = SprintLeagueVote::find_one(cli, space_pk, user_pk).await?;
         Ok(vote.is_some())
     }
 
@@ -46,7 +48,7 @@ impl SprintLeague {
             .transact_write_item();
 
         let sprint_league_player_tx = SprintLeaguePlayer::updater(space_pk, player_sk)
-            .increase_voter(1)
+            .increase_votes(1)
             .transact_write_item();
 
         let sprint_league_vote_tx = SprintLeagueVote::new(
@@ -70,6 +72,34 @@ impl SprintLeague {
                 println!("Failed to vote in sprint league: {:?}", e);
                 crate::Error::SprintLeagueVoteError(e.to_string())
             })?;
+        Ok(())
+    }
+
+    pub async fn finalize_vote(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: &Partition,
+    ) -> crate::Result<()> {
+        let players = SprintLeaguePlayer::get_all(cli, space_pk).await?;
+        if players.is_empty() {
+            return Err(crate::Error::SprintLeagueVoteError(
+                "No players found to finalize vote".to_string(),
+            ));
+        }
+
+        let winner = {
+            let mut top_player = players.first().cloned().unwrap();
+            for player in players.into_iter() {
+                if player.votes > top_player.votes {
+                    top_player = player;
+                }
+            }
+            top_player
+        };
+
+        SprintLeague::updater(space_pk, EntityType::SprintLeague)
+            .with_winner(winner)
+            .execute(cli)
+            .await?;
         Ok(())
     }
 }
