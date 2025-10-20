@@ -1,7 +1,6 @@
-use crate::features::spaces::polls::{PollMetadata, PollResponse, PollUserAnswer};
+use crate::features::spaces::polls::*;
 use crate::{
     AppState, Error2,
-    controllers::v3::spaces::dto::*,
     models::{space::SpaceCommon, user::User},
     types::{Partition, TeamGroupPermission},
 };
@@ -17,7 +16,7 @@ use aide::NoApi;
 pub async fn get_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-    Path(SpacePathParam { space_pk }): SpacePath,
+    Path(PollPathParam { space_pk, poll_sk }): PollPath,
 ) -> Result<Json<PollResponse>, Error2> {
     // Request Validation
     if !matches!(space_pk, Partition::Space(_)) {
@@ -35,7 +34,7 @@ pub async fn get_poll_handler(
         return Err(Error2::NoPermission);
     }
 
-    let metadata = PollMetadata::query(&dynamo.client, &space_pk).await?;
+    let metadata = PollMetadata::query_begins_with_sk(&dynamo.client, &space_pk, &poll_sk).await?;
     let mut poll_response: PollResponse = PollResponse::from(metadata);
     if let Some(user) = user {
         let my_survey_response =

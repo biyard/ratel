@@ -1,11 +1,7 @@
 use crate::models::space::SpaceCommon;
 
-use crate::controllers::v3::spaces::dto::*;
-
-use crate::features::spaces::polls::{Poll, PollMetadata, PollResponse};
-use crate::types::{
-    EntityType, Partition, Question, SpacePublishState, SpaceStatus, TeamGroupPermission,
-};
+use crate::features::spaces::polls::*;
+use crate::types::{Partition, Question, SpacePublishState, SpaceStatus, TeamGroupPermission};
 use crate::utils::time::get_now_timestamp_millis;
 use crate::{AppState, Error};
 
@@ -28,7 +24,11 @@ pub enum UpdatePollSpaceRequest {
 pub async fn update_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
-    Path(SpacePathParam { space_pk }): SpacePath,
+    Path(PollPathParam {
+        space_pk,
+        // FIXME: use poll pk
+        poll_sk,
+    }): PollPath,
     Json(req): Json<UpdatePollSpaceRequest>,
 ) -> crate::Result<Json<PollResponse>> {
     //Request Validation
@@ -65,7 +65,7 @@ pub async fn update_poll_handler(
     response.updated_at = now;
 
     // Update existing survey
-    let poll_updater = Poll::updater(&space_pk, &EntityType::SpacePoll);
+    let poll_updater = Poll::updater(&space_pk, &poll_sk);
 
     match req {
         UpdatePollSpaceRequest::Time {

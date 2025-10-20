@@ -2,7 +2,7 @@ import {
   ObjectiveQuestionUnion,
   BaseObjectiveSummary,
   SurveyAnswerType,
-} from '@/types/survey-type';
+} from '@/features/spaces/polls/types/poll-question';
 
 interface ObjectiveResponseProps {
   t: I18nFunction;
@@ -28,8 +28,8 @@ export default function ObjectiveQuestionSummary({
   );
 
   return (
-    <div className="w-full p-5 bg-transparent rounded-xl flex flex-col gap-5 border border-neutral-500">
-      <div className="flex items-center justify-between border-b border-input-box-border pb-2">
+    <div className="flex flex-col gap-5 p-5 w-full bg-transparent rounded-xl border border-neutral-500">
+      <div className="flex justify-between items-center pb-2 border-b border-input-box-border">
         <div className="text-base font-semibold text-neutral-400">
           {question.title}
         </div>
@@ -54,20 +54,20 @@ export function BarChart({ answers, total_count }: BarChartProps) {
   return (
     <>
       {Object.entries(answers).map(([label, count], idx) => (
-        <div key={idx} className="flex items-center gap-3">
+        <div key={idx} className="flex gap-3 items-center">
           <div
-            className="max-w-[100px] w-full text-sm font-medium text-neutral-400 truncate overflow-hidden whitespace-nowrap"
+            className="overflow-hidden w-full text-sm font-medium whitespace-nowrap max-w-[100px] text-neutral-400 truncate"
             title={label}
           >
             {label}
           </div>
-          <div className="flex-1 h-4 bg-neutral-700 rounded-full overflow-hidden">
+          <div className="overflow-hidden flex-1 h-4 rounded-full bg-neutral-700">
             <div
-              className="h-full rounded-full bg-neutral-400 transition-[width] duration-500 ease-out"
+              className="h-full rounded-full duration-500 ease-out bg-neutral-400 transition-[width]"
               style={{ width: `${(count / total_count) * 100}%` }}
             ></div>
           </div>
-          <div className="w-[80px] text-sm text-left text-neutral-400">
+          <div className="text-sm text-left w-[80px] text-neutral-400">
             {count} ({((count / total_count) * 100).toFixed(1)}%)
           </div>
         </div>
@@ -145,7 +145,7 @@ function PieChart({ answers, total_count }: PieChartProps) {
   };
 
   return (
-    <div className="w-full flex flex-col items-start justify-start">
+    <div className="flex flex-col justify-start items-start w-full">
       <ResponsiveContainer
         width="100%"
         height={250}

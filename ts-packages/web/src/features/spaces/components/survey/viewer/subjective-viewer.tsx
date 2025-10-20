@@ -1,7 +1,7 @@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import Title, { type TitleProps } from './title';
-import { SubjectiveQuestion, SurveyAnswerType } from '@/types/survey-type';
+import { SubjectiveQuestion, SurveyAnswerType } from '@/features/spaces/polls/types/poll-question';
 
 interface SubjectiveViewerProps extends SubjectiveQuestion, TitleProps {
   inputValue: string;
@@ -19,7 +19,7 @@ export default function SubjectiveViewer(props: SubjectiveViewerProps) {
         <Input
           type="text"
           placeholder={t('subjective_input_placeholder')}
-          className=" bg-input-box-bg border border-input-box-border text-base text-text-primary placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
+          className="py-3 px-4 text-base rounded-lg border focus:border-yellow-500 focus:outline-none bg-input-box-bg border-input-box-border text-text-primary placeholder:text-neutral-600"
           value={inputValue}
           onChange={(e) => onInputChange(e.target.value)}
           disabled={disabled}
@@ -28,7 +28,7 @@ export default function SubjectiveViewer(props: SubjectiveViewerProps) {
         <Textarea
           rows={7}
           placeholder={t('subjective_input_placeholder')}
-          className="bg-input-box-bg border border-input-box-border min-h-[185px]  text-base text-text-primary placeholder:text-neutral-600 px-4 py-3 rounded-lg focus:outline-none focus:border-yellow-500"
+          className="py-3 px-4 text-base rounded-lg border focus:border-yellow-500 focus:outline-none bg-input-box-bg border-input-box-border min-h-[185px] text-text-primary placeholder:text-neutral-600"
           value={inputValue}
           onChange={(e) => onInputChange(e.target.value)}
           disabled={disabled}
