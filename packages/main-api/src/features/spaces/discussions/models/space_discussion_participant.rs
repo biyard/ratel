@@ -5,7 +5,7 @@ use bdk::prelude::*;
 pub struct SpaceDiscussionParticipant {
     pub pk: Partition, //discussion_pk
     #[dynamo(index = "gsi1", sk)]
-    pub sk: EntityType, //participant id
+    pub sk: EntityType, //(discussion_pk, user_pk)
 
     pub participant_id: Option<String>,
 
@@ -29,9 +29,11 @@ impl SpaceDiscussionParticipant {
             ..
         }: User,
     ) -> Self {
+        let (discussion_pk, sk) = Self::keys(&discussion_pk, &pk);
+
         Self {
             pk: discussion_pk,
-            sk: EntityType::SpaceDiscussionParticipant(participant_id.clone()),
+            sk,
             participant_id: Some(participant_id),
             user_pk: pk,
             author_display_name: display_name,
@@ -40,25 +42,10 @@ impl SpaceDiscussionParticipant {
         }
     }
 
-    pub fn id(&self) -> String {
-        if let Some(id) = &self.participant_id {
-            return id.clone();
-        }
-        if let EntityType::SpaceDiscussionParticipant(v) = &self.sk {
-            return v.clone();
-        }
-        String::new()
-    }
-
-    pub fn discussion_user_pk_or_compute(&self) -> Partition {
-        let discussion_id = match &self.pk {
-            Partition::Discussion(v) => v.as_str(),
-            _ => "",
-        };
-        let user_id = match &self.user_pk {
-            Partition::User(v) | Partition::Team(v) => v.as_str(),
-            _ => "",
-        };
-        Partition::DiscussionUser(format!("{discussion_id}#{user_id}"))
+    pub fn keys(discussion_pk: &Partition, user_pk: &Partition) -> (Partition, EntityType) {
+        (
+            discussion_pk.clone(),
+            EntityType::SpaceDiscussionParticipant(discussion_pk.to_string(), user_pk.to_string()),
+        )
     }
 }

@@ -1,6 +1,6 @@
 use crate::controllers::v3::spaces::{SpaceDiscussionPath, SpaceDiscussionPathParam};
 use crate::features::spaces::discussions::common_controller_logic::get_discussion;
-use crate::features::spaces::discussions::dto::SpaceDiscussionResponse;
+use crate::features::spaces::discussions::dto::space_discussion_response::SpaceDiscussionResponse;
 use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
 
 use crate::models::User;

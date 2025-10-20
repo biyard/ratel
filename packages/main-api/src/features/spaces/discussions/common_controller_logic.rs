@@ -1,6 +1,6 @@
-use crate::features::spaces::discussions::dto::{
-    SpaceDiscussionMemberResponse, SpaceDiscussionParticipantResponse,
-};
+use crate::features::spaces::discussions::dto::space_discussion_member_response::SpaceDiscussionMemberResponse;
+use crate::features::spaces::discussions::dto::space_discussion_participant_response::SpaceDiscussionParticipantResponse;
+use crate::features::spaces::discussions::dto::space_discussion_response::SpaceDiscussionResponse;
 use crate::features::spaces::discussions::models::space_discussion_member::SpaceDiscussionMember;
 use crate::features::spaces::discussions::models::space_discussion_member::SpaceDiscussionMemberQueryOption;
 use crate::features::spaces::discussions::models::space_discussion_participant::SpaceDiscussionParticipant;
@@ -9,12 +9,8 @@ use crate::types::EntityType;
 use crate::types::media_placement_info::MediaPlacementInfo;
 use crate::types::meeting_info::MeetingInfo;
 use crate::{
-    Error2,
-    features::spaces::discussions::{
-        dto::SpaceDiscussionResponse, models::space_discussion::SpaceDiscussion,
-    },
-    types::Partition,
-    utils::aws::DynamoClient,
+    Error2, features::spaces::discussions::models::space_discussion::SpaceDiscussion,
+    types::Partition, utils::aws::DynamoClient,
 };
 
 pub async fn get_discussion(
@@ -60,10 +56,10 @@ pub async fn get_discussion(
 
         for response in responses {
             match response.sk {
-                EntityType::SpaceDiscussionMember(_) => {
+                EntityType::SpaceDiscussionMember(..) => {
                     discussion_members.push(response.into());
                 }
-                EntityType::SpaceDiscussionParticipant(_) => {
+                EntityType::SpaceDiscussionParticipant(..) => {
                     discussion_members.push(response.into());
                 }
                 _ => {}
@@ -93,7 +89,7 @@ pub async fn get_discussion(
 
         for response in responses {
             match response.sk {
-                EntityType::SpaceDiscussionParticipant(_) => {
+                EntityType::SpaceDiscussionParticipant(..) => {
                     if response.participant_id.clone().is_some()
                         && !response.participant_id.clone().unwrap().is_empty()
                     {
