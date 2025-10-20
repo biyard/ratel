@@ -11,6 +11,7 @@ use crate::controllers::v3::posts::reply_to_comment::reply_to_comment_handler;
 use crate::controllers::v3::promotions::get_top_promotion::get_top_promotion_handler;
 use crate::controllers::v3::spaces::create_discussion::create_discussion_handler;
 use crate::controllers::v3::spaces::delete_discussion::delete_discussion_handler;
+use crate::controllers::v3::spaces::end_recording::end_recording_handler;
 use crate::controllers::v3::spaces::exit_meeting::exit_meeting_handler;
 use crate::controllers::v3::spaces::get_discussion::get_discussion_handler;
 use crate::controllers::v3::spaces::get_files::get_files_handler;
@@ -18,6 +19,7 @@ use crate::controllers::v3::spaces::get_space_handler;
 use crate::controllers::v3::spaces::list_discussions::list_discussions_handler;
 use crate::controllers::v3::spaces::participant_meeting::participant_meeting_handler;
 use crate::controllers::v3::spaces::start_meeting::start_meeting_handler;
+use crate::controllers::v3::spaces::start_recording::start_recording_handler;
 use crate::controllers::v3::spaces::update_discussion::update_discussion_handler;
 use crate::controllers::v3::spaces::update_files::update_files_handler;
 use crate::controllers::v3::spaces::{dto::*, list_spaces_handler};
@@ -370,6 +372,8 @@ pub fn route(
                             .route("/:discussion_pk/start-meeting", patch(start_meeting_handler))
                             .route("/:discussion_pk/participant-meeting", patch(participant_meeting_handler))
                             .route("/:discussion_pk/exit-meeting", patch(exit_meeting_handler))
+                            .route("/:discussion_pk/start-recording", patch(start_recording_handler))
+                            .route("/:discussion_pk/end-recording", patch(end_recording_handler))
                     )
                                     .nest("/polls", crate::controllers::v3::spaces::polls::route())
                 )
