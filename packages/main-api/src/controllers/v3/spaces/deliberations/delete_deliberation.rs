@@ -4,8 +4,7 @@ use crate::{
         DeliberationSpaceParticipant, User,
         space::{
             DeliberationDiscussionMember, DeliberationMetadata, DeliberationSpaceContent,
-            DeliberationSpaceDiscussion, DeliberationSpaceElearning, DeliberationSpaceQuestion,
-            DeliberationSpaceResponse, DeliberationSpaceSurvey, SpaceCommon,
+            DeliberationSpaceDiscussion, DeliberationSpaceElearning, SpaceCommon,
         },
     },
     types::{Partition, TeamGroupPermission},
@@ -56,18 +55,10 @@ pub async fn delete_deliberation_handler(
             // DeliberationMetadata::DeliberationSpace(v) => {
             //     DeliberationSpace::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             // }
-            DeliberationMetadata::DeliberationSpaceSurvey(v) => {
-                DeliberationSpaceSurvey::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            }
             DeliberationMetadata::DeliberationSpaceContent(v) => {
                 DeliberationSpaceContent::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
-            DeliberationMetadata::DeliberationSpaceResponse(v) => {
-                DeliberationSpaceResponse::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            }
-            DeliberationMetadata::DeliberationSpaceQuestion(v) => {
-                DeliberationSpaceQuestion::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
-            }
+
             DeliberationMetadata::DeliberationSpaceParticipant(v) => {
                 DeliberationSpaceParticipant::delete(&dynamo.client, v.pk, Some(v.sk)).await?;
             }
