@@ -17,7 +17,6 @@ use crate::controllers::v3::spaces::deliberations::discussions::get_meeting::{
     MeetingData, get_meeting_handler,
 };
 use crate::controllers::v3::spaces::deliberations::discussions::participant_meeting::participant_meeting_handler;
-use crate::controllers::v3::spaces::deliberations::discussions::start_meeting::start_meeting_handler;
 use crate::controllers::v3::spaces::deliberations::discussions::start_recording::start_recording_handler;
 use crate::controllers::v3::spaces::deliberations::get_deliberation_common::{
     GetDeliberationCommonResponse, get_deliberation_common_handler,
@@ -58,6 +57,7 @@ use crate::controllers::v3::spaces::polls::respond_poll_space::{
 use crate::controllers::v3::spaces::polls::update_poll_space::{
     UpdatePollSpaceResponse, update_poll_space_handler,
 };
+use crate::controllers::v3::spaces::start_meeting::start_meeting_handler;
 use crate::controllers::v3::spaces::update_discussion::update_discussion_handler;
 use crate::controllers::v3::spaces::update_files::update_files_handler;
 use crate::controllers::v3::spaces::{dto::*, list_spaces_handler};
@@ -417,6 +417,10 @@ pub fn route(
                                 .delete(
                                     delete_discussion_handler
                                 )
+                            )
+                            .route(
+                                "/:discussion_pk/start-meeting",
+                                patch(start_meeting_handler)
                             )
                     )
                 )
