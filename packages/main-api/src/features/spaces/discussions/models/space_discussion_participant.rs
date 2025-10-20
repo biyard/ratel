@@ -48,4 +48,15 @@ impl SpaceDiscussionParticipant {
             EntityType::SpaceDiscussionParticipant(discussion_pk.to_string(), user_pk.to_string()),
         )
     }
+
+    pub async fn is_participant(
+        cli: &aws_sdk_dynamodb::Client,
+        discussion_pk: &Partition,
+        user_pk: &Partition,
+    ) -> Result<bool, crate::Error2> {
+        let (pk, sk) = Self::keys(discussion_pk, user_pk);
+        let member = SpaceDiscussionParticipant::get(&cli, pk, Some(sk)).await?;
+
+        Ok(member.is_some())
+    }
 }

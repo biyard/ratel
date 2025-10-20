@@ -1,4 +1,11 @@
-use crate::{models::folder_type::folder_type::FolderType, types::meeting_info::MeetingInfo, *};
+use crate::types::EntityType;
+use crate::types::Partition;
+use crate::types::media_placement_info::MediaPlacementInfo;
+use crate::utils::aws::DynamoClient;
+use crate::{
+    features::spaces::discussions::models::space_discussion::SpaceDiscussion,
+    models::folder_type::folder_type::FolderType, types::meeting_info::MeetingInfo, *,
+};
 use aws_config::{BehaviorVersion, load_defaults};
 use aws_sdk_chimesdkmediapipelines::{
     Client as MediaPipelinesClient,
@@ -370,5 +377,69 @@ impl ChimeMeetingService {
         }
 
         Ok(())
+    }
+
+    pub async fn ensure_current_meeting(
+        &self,
+        dynamo: DynamoClient,
+        client: &crate::utils::aws_chime_sdk_meeting::ChimeMeetingService,
+        space_pk: Partition,
+        discussion_pk: Partition,
+        discussion: &SpaceDiscussion,
+    ) -> Result<String> {
+        let discussion_id = match discussion_pk {
+            Partition::Discussion(v) => v.to_string(),
+            _ => "".to_string(),
+        };
+
+        if let Some(ref mid) = discussion.meeting_id {
+            if client.get_meeting_info(mid).await.is_some() {
+                return Ok(mid.clone());
+            }
+        }
+
+        let created = client.create_meeting(&discussion.name).await.map_err(|e| {
+            tracing::error!("create_meeting failed: {:?}", e);
+            Error2::AwsChimeError(e.to_string())
+        })?;
+
+        let new_id = created.meeting_id().unwrap_or_default().to_string();
+
+        SpaceDiscussion::updater(
+            &space_pk.clone(),
+            EntityType::SpaceDiscussion(discussion_id.to_string()),
+        )
+        .with_meeting_id(new_id.clone())
+        .execute(&dynamo.client)
+        .await?;
+
+        Ok(new_id)
+    }
+
+    pub async fn build_meeting_info(
+        &self,
+        client: &crate::utils::aws_chime_sdk_meeting::ChimeMeetingService,
+        meeting_id: &str,
+    ) -> Result<MeetingInfo> {
+        let m = client
+            .get_meeting_info(meeting_id)
+            .await
+            .ok_or_else(|| Error2::AwsChimeError("Missing meeting from Chime".into()))?;
+        let mp = m
+            .media_placement()
+            .ok_or_else(|| Error2::AwsChimeError("Missing media_placement".into()))?;
+        Ok(MeetingInfo {
+            meeting_id: meeting_id.to_string(),
+            media_region: m.media_region.clone().unwrap_or_default(),
+            media_placement: MediaPlacementInfo {
+                audio_host_url: mp.audio_host_url().unwrap_or_default().to_string(),
+                audio_fallback_url: mp.audio_fallback_url().unwrap_or_default().to_string(),
+                screen_data_url: mp.screen_data_url().unwrap_or_default().to_string(),
+                screen_sharing_url: mp.screen_sharing_url().unwrap_or_default().to_string(),
+                screen_viewing_url: mp.screen_viewing_url().unwrap_or_default().to_string(),
+                signaling_url: mp.signaling_url().unwrap_or_default().to_string(),
+                turn_control_url: mp.turn_control_url().unwrap_or_default().to_string(),
+            },
+        })
     }
 }
