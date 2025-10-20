@@ -57,6 +57,9 @@ pub async fn get_discussion(
                 EntityType::SpaceDiscussionMember(_) => {
                     discussion_members.push(response.into());
                 }
+                EntityType::SpaceDiscussionParticipant(_) => {
+                    discussion_members.push(response.into());
+                }
                 _ => {}
             }
         }
@@ -67,7 +70,7 @@ pub async fn get_discussion(
         }
     }
 
-    discussion.members = discussion_members;
+    discussion.members = discussion_members.clone();
     bookmark = None;
 
     loop {
@@ -85,7 +88,22 @@ pub async fn get_discussion(
         for response in responses {
             match response.sk {
                 EntityType::SpaceDiscussionParticipant(_) => {
-                    discussion_participants.push(response.into());
+                    if response.participant_id.clone().is_some()
+                        && !response.participant_id.clone().unwrap().is_empty()
+                    {
+                        discussion_participants.push(response.into());
+                    } else {
+                        let response = SpaceDiscussionMember {
+                            pk: response.pk,
+                            sk: response.sk,
+                            user_pk: response.user_pk,
+                            author_display_name: response.author_display_name,
+                            author_profile_url: response.author_profile_url,
+                            author_username: response.author_username,
+                        };
+
+                        discussion_members.push(response.into());
+                    }
                 }
                 _ => {}
             }
