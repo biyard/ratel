@@ -8,7 +8,6 @@ import '@/features/spaces/polls/poll-side-menus';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import { SpacePollEditorPage } from '@/features/spaces/polls/pages/creator/space-poll-editor-page';
 import { SpacePollViewerPage } from '@/features/spaces/polls/pages/viewer/space-poll-viewer-page';
-import { SpacePollCreatorPage } from '@/features/spaces/polls/pages/creator/space-poll-creator-page';
 
 export default function SpacePollPage() {
   const { spacePk, pollPk } = useParams<{ spacePk: string; pollPk?: string }>();
@@ -22,11 +21,6 @@ export default function SpacePollPage() {
   if (pollPk && space.isAdmin()) {
     // Edit Mode
     return <SpacePollEditorPage spacePk={spacePk} pollPk={pollPk} />;
-  }
-
-  if (space.isAdmin()) {
-    // Admin Mode
-    return <SpacePollCreatorPage spacePk={spacePk} />;
   }
 
   return <SpacePollViewerPage spacePk={spacePk} />;
