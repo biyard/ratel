@@ -163,7 +163,7 @@ export const routes = createBrowserRouter([
                 Component: SpacePollPage,
               },
               {
-                id: 'poll-update',
+                id: 'poll-by-id',
                 path: ':pollPk',
                 Component: SpacePollPage,
               },
