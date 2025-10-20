@@ -5,7 +5,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { SurveyAnswerType } from '@/types/survey-type';
+import { SurveyAnswerType } from '@/features/spaces/polls/types/poll-question';
 import { I18nFunction } from '..';
 
 export default function TypeSelect({

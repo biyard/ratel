@@ -2,7 +2,7 @@ import {
   SurveyQuestion,
   SurveyAnswer,
   SurveySummary,
-} from '@/types/survey-type';
+} from '@/features/spaces/polls/types/poll-question';
 import { call } from './call';
 import { TimeRange } from '@/types/time-range';
 import { SpaceCommon } from '@/features/spaces/types/space-common';

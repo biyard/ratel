@@ -9,8 +9,7 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
 
   return (
     <>
-      SpacePollEditorPage
-      {/* <div className="flex flex-col gap-2.5 w-full">
+      <div className="flex flex-col gap-2.5 w-full">
         {questions.map((question, index) => (
           <SurveyEditorItem
             key={index}
@@ -37,7 +36,7 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
             <Add className="w-4 h-4 stroke-neutral-500 text-neutral-500" />
           </div>
         </div>
-      </div> */}
+      </div>
     </>
   );
 }

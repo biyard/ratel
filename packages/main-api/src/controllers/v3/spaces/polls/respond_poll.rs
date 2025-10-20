@@ -1,7 +1,8 @@
-use crate::controllers::v3::spaces::dto::*;
 use crate::models::space::SpaceCommon;
 
-use crate::features::spaces::polls::{Poll, PollQuestion, PollStatus, PollUserAnswer};
+use crate::features::spaces::polls::{
+    Poll, PollPath, PollPathParam, PollQuestion, PollStatus, PollUserAnswer,
+};
 use crate::models::user::User;
 use crate::types::{Answer, EntityType, Partition, TeamGroupPermission, validate_answers};
 use crate::{AppState, Error};
@@ -25,7 +26,7 @@ pub struct RespondPollSpaceResponse {
 pub async fn respond_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): aide::NoApi<User>,
-    Path(SpacePathParam { space_pk }): SpacePath,
+    Path(PollPathParam { space_pk, poll_sk }): PollPath,
     Json(req): Json<RespondPollSpaceRequest>,
 ) -> crate::Result<Json<RespondPollSpaceResponse>> {
     //Validate Request
@@ -41,7 +42,7 @@ pub async fn respond_poll_handler(
         return Err(Error::NoPermission);
     }
 
-    let poll = Poll::get(&dynamo.client, &space_pk, Some(EntityType::SpacePoll))
+    let poll = Poll::get(&dynamo.client, &space_pk, Some(&poll_sk))
         .await?
         .ok_or(Error::NotFoundPoll)?;
 

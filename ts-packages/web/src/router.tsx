@@ -158,11 +158,6 @@ export const routes = createBrowserRouter([
             path: 'polls',
             children: [
               {
-                id: 'poll',
-                path: '',
-                Component: SpacePollPage,
-              },
-              {
                 id: 'poll-by-id',
                 path: ':pollPk',
                 Component: SpacePollPage,
