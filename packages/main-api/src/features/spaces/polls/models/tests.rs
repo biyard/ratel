@@ -1,4 +1,6 @@
-use super::{super::PollResponse, Poll, PollMetadata, PollQuestion, PollUserResponse};
+use crate::features::spaces::polls::{
+    Poll, PollMetadata, PollQuestion, PollResponse, PollUserAnswer,
+};
 use crate::{
     models::{feed::Post, space::SpaceCommon},
     tests::{create_test_user, get_test_aws_config},
@@ -65,7 +67,7 @@ async fn test_poll_space_creation() {
 
     assert_eq!(response.questions.len(), 2, "should have 2 questions");
 
-    PollUserResponse::new(
+    PollUserAnswer::new(
         poll.pk.clone(),
         user.pk.clone(),
         vec![
@@ -79,9 +81,9 @@ async fn test_poll_space_creation() {
     .await
     .expect("failed to create user survey response");
 
-    let (res, _) = PollUserResponse::find_by_space_pk(
+    let (res, _) = PollUserAnswer::find_by_space_pk(
         &cli,
-        &EntityType::SpacePollUserResponse(poll.pk.to_string()),
+        &EntityType::SpacePollUserAnswer(poll.pk.to_string()),
         Default::default(),
     )
     .await
@@ -102,16 +104,16 @@ async fn test_poll_space_creation() {
     // .await
     // .expect("failed to create user survey response");
 
-    let (res, _) = PollUserResponse::find_by_space_pk(
+    let (res, _) = PollUserAnswer::find_by_space_pk(
         &cli,
-        &EntityType::SpacePollUserResponse(poll.pk.to_string()),
+        &EntityType::SpacePollUserAnswer(poll.pk.to_string()),
         Default::default(),
     )
     .await
     .expect("failed to find spaces survey response");
     assert_eq!(res.len(), 1, "should have 1 response");
 
-    let my_survey = PollUserResponse::find_one(&cli, &poll.pk, &user.pk)
+    let my_survey = PollUserAnswer::find_one(&cli, &poll.pk, &user.pk)
         .await
         .expect("failed to get my survey response");
 

@@ -7,6 +7,8 @@ pub struct PollQuestion {
     pub sk: EntityType,
 
     pub questions: Vec<Question>, // Questions in the survey
+
+                                  // pub question : Question,
 }
 
 impl PollQuestion {

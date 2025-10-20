@@ -1,4 +1,4 @@
-use crate::features::spaces::polls::{PollResultResponse, PollUserResponse};
+use crate::features::spaces::polls::{PollResultResponse, PollUserAnswer};
 use crate::models::space::SpaceCommon;
 use crate::models::user::User;
 
@@ -31,7 +31,7 @@ pub async fn get_poll_result(
     // This logic is extremely computationally intensive.
     // This needs to be changed to perform a summary at the end of the call or at specific intervals and store the results.
     // Currently, the summary is always recalculated from the response.
-    let summaries = PollUserResponse::summarize_responses(&dynamo.client, &space_pk).await?;
+    let summaries = PollUserAnswer::summarize_responses(&dynamo.client, &space_pk).await?;
 
     Ok(Json(PollResultResponse {
         created_at: get_now_timestamp_millis(),

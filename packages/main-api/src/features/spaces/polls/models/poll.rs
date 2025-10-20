@@ -1,7 +1,7 @@
 use crate::{types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
-use super::super::PollStatus;
+use crate::features::spaces::polls::PollStatus;
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct Poll {
     pub pk: Partition,
@@ -16,6 +16,9 @@ pub struct Poll {
 
     pub user_response_count: i64, // Participants count
     pub response_editable: bool,  // Whether users can edit their responses
+
+                                  // pub topic: String,       // Poll Title
+                                  // pub description: String, // Poll Description
 }
 
 impl Poll {

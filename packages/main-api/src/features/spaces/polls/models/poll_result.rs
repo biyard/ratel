@@ -1,7 +1,7 @@
 use crate::{types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
-use super::super::PollSummary;
+use crate::features::spaces::polls::PollSummary;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, JsonSchema)]
 pub struct PollResult {
