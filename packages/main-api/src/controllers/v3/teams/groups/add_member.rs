@@ -31,7 +31,7 @@ pub struct AddMemberRequest {
     pub user_pks: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct AddMemberResponse {
     pub total_added: i64,
     pub failed_pks: Vec<String>,
@@ -45,6 +45,7 @@ pub async fn add_member_handler(
 ) -> Result<Json<AddMemberResponse>, Error2> {
     let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
 
+    // Check permissions
     check_any_permission_with_user(
         &dynamo.client,
         &user,
@@ -59,12 +60,17 @@ pub async fn add_member_handler(
     )
     .await?;
 
+    // Get the team and group
     let team = Team::get(&dynamo.client, &params.team_pk, Some(EntityType::Team)).await?;
-    let team_group = TeamGroup::get(&dynamo.client, &params.team_pk, Some(params.group_sk)).await?;
+    let team_group = TeamGroup::get(
+        &dynamo.client,
+        &params.team_pk,
+        Some(EntityType::TeamGroup(params.group_sk.clone())),
+    )
+    .await?;
 
     let team = team.ok_or(Error2::NotFound("Team not found".into()))?;
     let team_group = team_group.ok_or(Error2::NotFound("Team group not found".into()))?;
-
     let mut success_count = 0;
     let mut failed_pks = vec![];
     for member in &req.user_pks {
@@ -74,9 +80,18 @@ pub async fn add_member_handler(
             continue;
         }
         let user = user.unwrap();
-        UserTeam::new(user.pk.clone(), team.clone())
-            .create(&dynamo.client)
-            .await?;
+
+        // Check if UserTeam already exists, if not create it
+        let user_team_sk = EntityType::UserTeam(team.pk.to_string());
+        let existing_user_team =
+            UserTeam::get(&dynamo.client, &user.pk, Some(&user_team_sk)).await?;
+        if existing_user_team.is_none() {
+            UserTeam::new(user.pk.clone(), team.clone())
+                .create(&dynamo.client)
+                .await?;
+        }
+
+        // Always create UserTeamGroup (user joining a new group)
         UserTeamGroup::new(user.pk, team_group.clone())
             .create(&dynamo.client)
             .await?;

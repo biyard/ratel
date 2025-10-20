@@ -51,9 +51,13 @@ export function usePublishDraftMutation() {
     },
 
     onSettled: () => {
-      const queryKey = feedKeys.my_posts(username!);
       const queryClient = getQueryClient();
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({
+        queryKey: feedKeys.drafts(username!),
+      });
+      queryClient.invalidateQueries({
+        queryKey: feedKeys.my_posts(username!),
+      });
     },
   });
 }
