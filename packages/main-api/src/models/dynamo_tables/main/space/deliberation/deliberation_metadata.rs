@@ -16,7 +16,7 @@ pub struct DeliberationDetailResponse {
     pub summary: DeliberationContentResponse,
     pub discussions: Vec<DeliberationDiscussionResponse>,
     pub elearnings: ElearningResponse,
-    pub surveys: DeliberationSurveyResponse,
+    // pub surveys: DeliberationSurveyResponse,
     pub recommendation: DeliberationContentResponse,
 }
 
@@ -24,10 +24,10 @@ pub struct DeliberationDetailResponse {
 #[serde(untagged)]
 pub enum DeliberationMetadata {
     SpaceCommon(SpaceCommon),
-    DeliberationSpaceSurvey(DeliberationSpaceSurvey),
-    DeliberationSpaceResponse(DeliberationSpaceResponse),
+    // DeliberationSpaceSurvey(DeliberationSpaceSurvey),
+    // DeliberationSpaceResponse(DeliberationSpaceResponse),
     DeliberationSpaceContent(DeliberationSpaceContent),
-    DeliberationSpaceQuestion(DeliberationSpaceQuestion),
+    // DeliberationSpaceQuestion(DeliberationSpaceQuestion),
     DeliberationSpaceParticipant(DeliberationSpaceParticipant),
     DeliberationSpaceMember(DeliberationDiscussionMember),
     DeliberationSpaceElearning(DeliberationSpaceElearning),
@@ -91,14 +91,14 @@ impl From<Vec<DeliberationMetadata>> for DeliberationDetailResponse {
                 // DeliberationMetadata::DeliberationSpace(space) => {
                 //     res.deliberation = space;
                 // }
-                DeliberationMetadata::DeliberationSpaceSurvey(survey) => {
-                    let prev = res.surveys.clone();
+                // DeliberationMetadata::DeliberationSpaceSurvey(survey) => {
+                //     let prev = res.surveys.clone();
 
-                    res.surveys = survey.into();
-                    res.surveys.questions = prev.questions;
-                    res.surveys.responses = prev.responses;
-                    res.surveys.user_responses = prev.user_responses;
-                }
+                //     res.surveys = survey.into();
+                //     res.surveys.questions = prev.questions;
+                //     res.surveys.responses = prev.responses;
+                //     res.surveys.user_responses = prev.user_responses;
+                // }
                 DeliberationMetadata::DeliberationSpaceContent(content) => match content.sk {
                     EntityType::DeliberationSummary => {
                         res.summary = DeliberationContentResponse {
@@ -114,13 +114,13 @@ impl From<Vec<DeliberationMetadata>> for DeliberationDetailResponse {
                     }
                     _ => continue,
                 },
-                DeliberationMetadata::DeliberationSpaceResponse(response) => {
-                    let response: SurveyResponseResponse = response.into();
-                    res.surveys.responses.push(response);
-                }
-                DeliberationMetadata::DeliberationSpaceQuestion(question) => {
-                    res.surveys.questions = question.question();
-                }
+                // DeliberationMetadata::DeliberationSpaceResponse(response) => {
+                //     let response: SurveyResponseResponse = response.into();
+                //     res.surveys.responses.push(response);
+                // }
+                // DeliberationMetadata::DeliberationSpaceQuestion(question) => {
+                //     res.surveys.questions = question.question();
+                // }
                 DeliberationMetadata::DeliberationSpaceParticipant(participant) => {
                     match participant.sk {
                         EntityType::DeliberationDiscussionParticipant(..) => {

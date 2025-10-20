@@ -124,22 +124,28 @@ pub enum Error {
     SpaceNotFound,
     #[error("InvalidTimeRange")]
     InvalidTimeRange,
-    // /v3/spaces/deliberations endpoints 3100 ~
 
-    // /v3/spaces/poll endpoints 3200 ~
-    #[rest_error(code = 3200)]
-    #[error("Poll space not found")]
-    NotFoundPollSpace,
+    // /v3/spaces/deliberations endpoints 3100 ~
+    #[rest_error(code = 3100)]
     #[error("Deliberation space not found")]
     NotFoundDeliberationSpace,
-    #[error("Space is not in progress")]
-    SpaceNotInProgress,
+
+    // poll features errors 3200 ~
+    #[rest_error(code = 3200)]
+    #[error("Poll Not found")]
+    NotFoundPoll,
+    #[error("Poll is not in progress")]
+    PollNotInProgress,
+    #[error("questions are invalid")]
+    PollInvalidQuestions,
     #[error("Answers do not match with questions")]
-    AnswersMismatchQuestions,
-    #[error("Space cannot be updated in its current status")]
-    ImmutablePollSpaceState,
-    #[error("Survey summary not found")]
-    NotFoundSurveySummary,
+    PollAnswersMismatchQuestions,
+    #[error("Poll cannot be updated in its current status")]
+    ImmutablePollState,
+    #[error("User cannot update answer")]
+    ImmutablePollUserAnswer,
+    #[error("Poll Result not found")]
+    NotFoundPollResult,
 
     // teams 4000 ~
     #[error("Team not found")]
