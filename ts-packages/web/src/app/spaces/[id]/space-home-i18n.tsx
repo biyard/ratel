@@ -28,6 +28,10 @@ export const i18nSpaceHome = {
       'Once made public, this Space will be visible to everyone',
     make_public_desc_line2: 'and <b>cannot be made private again.</b>',
 
+    // Timeline
+    timeline_title: 'Timeline',
+    timeline_created_at_label: 'Created',
+
     // Menus
     menu_overview: 'Overview',
     menu_poll: 'Polls',
@@ -66,6 +70,10 @@ export const i18nSpaceHome = {
     make_public_title: '스페이스는 곧 공개될 예정입니다.',
     make_public_desc_line1: '공개로 전환하면 이 스페이스는 모두에게 보입니다',
     make_public_desc_line2: '그리고 <b>다시 비공개로 되돌릴 수 없습니다.</b>',
+
+    // Timeline
+    timeline_title: '타임라인',
+    timeline_created_at_label: '생성됨',
 
     // Menus
     menu_overview: '개요',

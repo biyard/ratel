@@ -2,9 +2,9 @@
 use crate::*;
 use aws_config::BehaviorVersion;
 use aws_credential_types::Credentials;
+use axum::AxumRouter;
 use base64::{Engine as _, engine::general_purpose};
 use bdk::prelude::*;
-use axum::AxumRouter;
 use by_axum::auth::{Authorization, DynamoUserSession};
 use tower_sessions::Session;
 
@@ -124,7 +124,7 @@ pub async fn create_user_session(
     let user = User::new(
         format!("displayName{}", uid),
         email.clone(),
-        "https://example.com/profile.png".to_string(),
+        "https://metadata.ratel.foundation/ratel/default-profile.png".to_string(),
         true,
         true,
         UserType::Individual,

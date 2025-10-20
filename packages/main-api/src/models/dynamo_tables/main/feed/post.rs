@@ -84,7 +84,7 @@ impl Post {
         author: A,
     ) -> Self {
         let uid = uuid::Uuid::new_v4().to_string();
-        let now = chrono::Utc::now().timestamp();
+        let now = chrono::Utc::now().timestamp_millis();
         let Author {
             pk,
             display_name,

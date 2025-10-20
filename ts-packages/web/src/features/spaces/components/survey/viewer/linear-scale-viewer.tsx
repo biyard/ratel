@@ -1,7 +1,7 @@
 import RadioButton from '@/components/radio-button';
 import Title, { type TitleProps } from './title';
 import { logger } from '@/lib/logger';
-import { LinearScaleQuestion } from '@/types/survey-type';
+import { LinearScaleQuestion } from '@/features/spaces/polls/types/poll-question';
 import React from 'react';
 
 interface LinearScaleViewerProps extends LinearScaleQuestion, TitleProps {
@@ -61,20 +61,20 @@ export default function LinearScaleViewer(props: LinearScaleViewerProps) {
   };
 
   return (
-    <div className="flex flex-col w-full gap-4">
+    <div className="flex flex-col gap-4 w-full">
       <Title {...props} />
 
       <div
         ref={wrapRef}
-        className="w-full max-tablet:overflow-x-auto no-scrollbar touch-pan-x md:cursor-grab select-none"
+        className="w-full select-none max-tablet:overflow-x-auto no-scrollbar touch-pan-x md:cursor-grab"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerEnd}
         onPointerCancel={onPointerEnd}
         onPointerLeave={onPointerEnd}
       >
-        <div className="flex flex-row justify-start gap-5 px-2 items-center w-max">
-          <div className="text-center font-medium text-sm text-neutral-400 break-words shrink-0">
+        <div className="flex flex-row gap-5 justify-start items-center px-2 w-max">
+          <div className="text-sm font-medium text-center break-words text-neutral-400 shrink-0">
             {min_label ?? ''}
           </div>
 
@@ -86,9 +86,9 @@ export default function LinearScaleViewer(props: LinearScaleViewerProps) {
               return (
                 <div
                   key={`scale-${val}`}
-                  className="flex flex-col items-center gap-1 w-8 shrink-0"
+                  className="flex flex-col gap-1 items-center w-8 shrink-0"
                 >
-                  <div className="text-sm text-neutral-400 font-medium">
+                  <div className="text-sm font-medium text-neutral-400">
                     {val}
                   </div>
                   <div data-stop-drag>
@@ -102,7 +102,7 @@ export default function LinearScaleViewer(props: LinearScaleViewerProps) {
             },
           )}
 
-          <div className="text-center font-medium text-sm text-neutral-400 break-words shrink-0">
+          <div className="text-sm font-medium text-center break-words text-neutral-400 shrink-0">
             {max_label ?? ''}
           </div>
         </div>

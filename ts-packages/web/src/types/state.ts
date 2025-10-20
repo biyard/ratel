@@ -1,3 +1,5 @@
+import React from 'react';
+
 export class State<S> {
   constructor(private state: [S, React.Dispatch<React.SetStateAction<S>>]) {}
 

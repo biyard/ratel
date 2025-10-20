@@ -4,17 +4,18 @@ import {
 } from '@tanstack/react-query';
 
 import { spaceKeys } from '@/constants';
-import {
-  getPollSpace,
-  PollSpaceResponse,
-} from '@/lib/api/ratel/poll.spaces.v3';
+import { call } from '@/lib/api/ratel/call';
+import { Poll } from '../types/poll';
 
-export function getOption(spacePk: string) {
+export function getOption(spacePk: string, pollPk: string) {
   return {
-    queryKey: spaceKeys.detail(spacePk),
+    queryKey: spaceKeys.poll(spacePk, pollPk),
     queryFn: async () => {
-      const post = await getPollSpace(spacePk);
-      return post;
+      const poll = await call(
+        'GET',
+        `/v3/spaces/${encodeURIComponent(spacePk)}/polls/${encodeURIComponent(pollPk)}`,
+      );
+      return new Poll(poll);
     },
     refetchOnWindowFocus: false,
   };
@@ -22,7 +23,8 @@ export function getOption(spacePk: string) {
 
 export default function usePollSpace(
   spacePk: string,
-): UseSuspenseQueryResult<PollSpaceResponse> {
-  const query = useSuspenseQuery(getOption(spacePk));
+  pollPk: string,
+): UseSuspenseQueryResult<Poll> {
+  const query = useSuspenseQuery(getOption(spacePk, pollPk));
   return query;
 }

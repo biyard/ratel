@@ -175,7 +175,7 @@ async fn tests_update_user() {
     let _expired_at = now + 3600; // 1 hour later
     let email = format!("a+{}@example.com", now);
     let nickname = format!("nickname-{}", now);
-    let profile = "http://example.com/profile.png".to_string();
+    let profile = "https://metadata.ratel.foundation/ratel/default-profile.png".to_string();
     let username = format!("user{}", now);
 
     let user = User::new(
@@ -297,7 +297,7 @@ async fn tests_find_user_metamodel() {
     let email = format!("a+{}@example.com", uuid);
     let nickname = create_nick_name();
     let nickname2 = create_nick_name();
-    let profile = "http://example.com/profile.png".to_string();
+    let profile = "https://metadata.ratel.foundation/ratel/default-profile.png".to_string();
     let username = format!("user{}", uuid);
 
     let user = User::new(

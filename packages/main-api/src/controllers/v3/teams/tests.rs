@@ -32,7 +32,7 @@ async fn test_update_team_without_permission() {
         body: {
             "username": team_username,
             "nickname": format!("{}'s Squad", team_username),
-            "profile_url": "https://example.com/profile.png",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "description": "This is a squad for verification"
         },
         response_type: CreateTeamResponse
@@ -79,7 +79,7 @@ async fn test_update_team() {
         body: {
             "username": team_username,
             "nickname": format!("{}'s Squad", team_username),
-            "profile_url": "https://example.com/profile.png",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "description": "This is a squad for verification"
         },
         response_type: CreateTeamResponse
@@ -135,7 +135,7 @@ async fn test_get_team() {
         body: {
             "username": team_username,
             "nickname": team_nickname,
-            "profile_url": "https://example.com/profile.png",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "description": "This is a squad for verification"
         },
         response_type: CreateTeamResponse
@@ -183,7 +183,7 @@ async fn test_list_members() {
         body: {
             "username": team_username,
             "nickname": format!("{}'s Squad", team_username),
-            "profile_url": "https://example.com/profile.png",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "description": "This is a squad for verification"
         },
         response_type: CreateTeamResponse
@@ -267,7 +267,7 @@ async fn test_delete_team() {
         body: {
             "username": team_username,
             "nickname": format!("{}'s Squad", team_username),
-            "profile_url": "https://example.com/profile.png",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "description": "This is a squad for verification"
         },
         response_type: CreateTeamResponse
@@ -313,7 +313,7 @@ async fn test_delete_group() {
         body: {
             "username": team_username,
             "nickname": format!("{}'s Squad", team_username),
-            "profile_url": "https://example.com/profile.png",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "description": "This is a squad for verification"
         },
         response_type: CreateTeamResponse
@@ -393,7 +393,7 @@ async fn test_list_team_posts() {
         body: {
             "username": team_username,
             "nickname": format!("{}'s Squad", team_username),
-            "profile_url": "https://example.com/profile.png",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "description": "This is a squad for verification"
         },
         response_type: CreateTeamResponse
