@@ -11,6 +11,11 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
+  "pnpm": {
+    "overrides": {
+      "@playwright/test": "^1.56.0"
+    }
+  },
   "dependencies": {
     "@apollo/client": "^3.14.0",
     "@dfinity/agent": "^2.4.1",
