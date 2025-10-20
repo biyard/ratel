@@ -1,4 +1,4 @@
-import { SurveyAnswer, SurveyQuestion } from '@/types/survey-type';
+import { SurveyAnswer, SurveyQuestion } from '@/features/spaces/polls/types/poll-question';
 import SurveyViewer from './viewer';
 import SurveyEditor from './editor';
 import { useTranslation } from 'react-i18next';

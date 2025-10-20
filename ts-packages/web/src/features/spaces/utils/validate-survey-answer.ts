@@ -3,7 +3,7 @@ import {
   SurveyAnswerType,
   SurveyQuestion,
   SurveyQuestionWithAnswer,
-} from '@/types/survey-type';
+} from '@/features/spaces/polls/types/poll-question';
 
 export default function validateSurveyAnswer(
   questions: SurveyQuestion[],

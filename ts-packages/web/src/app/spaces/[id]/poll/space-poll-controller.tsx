@@ -7,7 +7,7 @@ import {
   SurveyAnswer,
   SurveyAnswerType,
   SurveyQuestion,
-} from '@/types/survey-type';
+} from '@/features/spaces/polls/types/poll-question';
 import { ReportProps } from '@/features/spaces/components/report';
 import { PollSpaceResponse } from '@/lib/api/ratel/poll.spaces.v3';
 import { SpaceStatus } from '@/features/spaces/types/space-common';

@@ -10,7 +10,7 @@ import { SpacePollEditorPage } from '@/features/spaces/polls/pages/creator/space
 import { SpacePollViewerPage } from '@/features/spaces/polls/pages/viewer/space-poll-viewer-page';
 
 export default function SpacePollPage() {
-  const { spacePk } = useParams<{ spacePk: string; pollPk: string }>();
+  const { spacePk, pollPk } = useParams<{ spacePk: string; pollPk: string }>();
   const { data: space } = useSpaceById(spacePk);
   /* const ctrl = useSpacePollController(spacePk); */
 

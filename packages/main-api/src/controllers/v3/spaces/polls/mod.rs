@@ -18,7 +18,7 @@ use by_axum::axum::*;
 
 pub fn polls_route() -> Router<AppState> {
     Router::new()
-        .route("/", get(get_poll_handler).put(update_poll_handler))
-        .route("/result", get(get_poll_result))
-        .route("/respond", post(respond_poll_handler))
+        .route("/:poll_pk", get(get_poll_handler).put(update_poll_handler))
+        .route("/:poll_pk/results", get(get_poll_result))
+        .route("/:poll_pk/respond", post(respond_poll_handler))
 }

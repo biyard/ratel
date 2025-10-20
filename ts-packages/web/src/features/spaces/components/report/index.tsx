@@ -4,7 +4,7 @@ import {
   SurveyAnswerType,
   SurveyQuestion,
   SurveySummary,
-} from '@/types/survey-type';
+} from '@/features/spaces/polls/types/poll-question';
 import { TFunction } from 'i18next';
 import SummaryReport from './report';
 import SubjectiveQuestionSummary from './subjective-question-summary';
@@ -35,7 +35,7 @@ export default function Report({
   const { t } = useTranslation('SpaceSurveyReport');
   return (
     <div className="flex flex-col w-full">
-      <div className="flex flex-row w-full justify-end mb-[20px]">
+      <div className="flex flex-row justify-end w-full mb-[20px]">
         <div className="w-fit">
           <Button
             variant="rounded_primary"
@@ -48,7 +48,7 @@ export default function Report({
         </div>
       </div>
 
-      <div className="flex flex-col w-full gap-2.5">
+      <div className="flex flex-col gap-2.5 w-full">
         {totalResponses > 0 && (
           <SummaryReport
             t={t}
