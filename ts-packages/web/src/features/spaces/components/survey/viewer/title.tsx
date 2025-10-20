@@ -1,4 +1,4 @@
-import { SurveyAnswerType } from '@/types/survey-type';
+import { SurveyAnswerType } from '@/features/spaces/polls/types/poll-question';
 import { I18nFunction } from '..';
 
 export interface TitleProps {
@@ -27,7 +27,7 @@ export default function Title({
 
   return (
     <div>
-      <div className="flex flex-row w-full mt-1.75 mb-3.75 font-semibold text-base/[22.5px] text-text-primary gap-1">
+      <div className="flex flex-row gap-1 w-full font-semibold mt-1.75 mb-3.75 text-base/[22.5px] text-text-primary">
         <div className={is_required ? 'text-[#ff6467]' : 'text-blue-500'}>
           [
           {is_required

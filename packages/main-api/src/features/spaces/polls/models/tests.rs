@@ -29,7 +29,12 @@ async fn test_poll_space_creation() {
         .expect("failed to create space common");
 
     let now = get_now_timestamp_millis();
-    let poll = Poll::new(common.pk.clone(), false, now, now + 60).unwrap();
+    let space_id = match common.pk.clone() {
+        crate::types::Partition::Space(id) => id,
+        _ => panic!("space pk must be Partition::Space"),
+    };
+
+    let poll = Poll::new(common.pk.clone(), Some(EntityType::SpacePoll(space_id))).unwrap();
 
     poll.create(&cli).await.expect("failed to create poll");
 

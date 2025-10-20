@@ -5,8 +5,8 @@ type CustomToastProps = {
 };
 
 const CustomToast: React.FC<CustomToastProps> = ({ message }) => (
-  <div className="px-8 py-6 bg-[#3B82F6E5] rounded-xl ">
-    <span className="flex flex-row gap-x-2 items-center  text-white font-bold">
+  <div className="py-6 px-8 rounded-xl bg-[#3B82F6E5]">
+    <span className="flex flex-row gap-x-2 items-center font-bold text-white">
       <CheckCircle2 />
       {message}
     </span>
