@@ -142,8 +142,8 @@ pub enum Error {
     PollAnswersMismatchQuestions,
     #[error("Poll cannot be updated in its current status")]
     ImmutablePollState,
-    #[error("User cannot update response")]
-    ImmutablePollUserResponse,
+    #[error("User cannot update answer")]
+    ImmutablePollUserAnswer,
     #[error("Poll Result not found")]
     NotFoundPollResult,
 

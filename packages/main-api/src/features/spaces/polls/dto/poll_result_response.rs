@@ -1,4 +1,4 @@
-use super::super::{PollResult, PollSummary};
+use crate::features::spaces::polls::{PollResult, PollSummary};
 
 use bdk::prelude::*;
 #[derive(

@@ -1,7 +1,7 @@
 use crate::controllers::v3::spaces::dto::*;
 use crate::models::space::SpaceCommon;
 
-use crate::features::spaces::polls::{Poll, PollQuestion, PollStatus, PollUserResponse};
+use crate::features::spaces::polls::{Poll, PollQuestion, PollStatus, PollUserAnswer};
 use crate::models::user::User;
 use crate::types::{Answer, EntityType, Partition, TeamGroupPermission, validate_answers};
 use crate::{AppState, Error};
@@ -68,17 +68,17 @@ pub async fn respond_poll_handler(
 
     let mut transact_items = vec![];
 
-    if let Some(response) = PollUserResponse::find_one(&dynamo.client, &space_pk, &user.pk).await? {
+    if let Some(response) = PollUserAnswer::find_one(&dynamo.client, &space_pk, &user.pk).await? {
         // Update existing response
         if !poll.response_editable {
-            return Err(Error::ImmutablePollUserResponse);
+            return Err(Error::ImmutablePollUserAnswer);
         }
-        let update_tx = PollUserResponse::updater(&response.pk, &response.sk)
+        let update_tx = PollUserAnswer::updater(&response.pk, &response.sk)
             .with_answers(req.answers)
             .transact_write_item();
         transact_items.push(update_tx);
     } else {
-        let create_tx = PollUserResponse::new(poll.pk.clone(), user.pk.clone(), req.answers)
+        let create_tx = PollUserAnswer::new(poll.pk.clone(), user.pk.clone(), req.answers)
             .create_transact_write_item();
         transact_items.push(create_tx);
 

@@ -1,6 +1,6 @@
 use bdk::prelude::*;
 
-use super::{Poll, PollQuestion};
+use crate::features::spaces::polls::{Poll, PollQuestion};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 #[serde(untagged)]

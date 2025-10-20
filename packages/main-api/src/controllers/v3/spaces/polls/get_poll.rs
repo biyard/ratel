@@ -1,4 +1,4 @@
-use crate::features::spaces::polls::{PollMetadata, PollResponse, PollUserResponse};
+use crate::features::spaces::polls::{PollMetadata, PollResponse, PollUserAnswer};
 use crate::{
     AppState, Error2,
     controllers::v3::spaces::dto::*,
@@ -39,7 +39,7 @@ pub async fn get_poll_handler(
     let mut poll_response: PollResponse = PollResponse::from(metadata);
     if let Some(user) = user {
         let my_survey_response =
-            PollUserResponse::find_one(&dynamo.client, &space_pk, &user.pk).await?;
+            PollUserAnswer::find_one(&dynamo.client, &space_pk, &user.pk).await?;
 
         poll_response.my_response = my_survey_response.map(|r| r.answers);
     }

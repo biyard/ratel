@@ -1,9 +1,9 @@
 use crate::{Error, types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
-use super::{super::PollSummary, PollQuestion};
+use crate::features::spaces::polls::{PollQuestion, PollSummary};
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, JsonSchema)]
-pub struct PollUserResponse {
+pub struct PollUserAnswer {
     pub pk: Partition,
     #[dynamo(
         prefix = "POLL_SPACE_PK",
@@ -20,28 +20,30 @@ pub struct PollUserResponse {
 }
 // /controllers/
 // /features/features/models, utils, types
-impl PollUserResponse {
+impl PollUserAnswer {
     pub fn new(space_pk: Partition, user_pk: Partition, answers: Vec<Answer>) -> Self {
         let created_at = get_now_timestamp_millis();
-
+        let (pk, sk) = Self::keys(&user_pk, &space_pk);
         Self {
-            pk: Partition::SpacePollUserResponse(user_pk.to_string()),
-            sk: EntityType::SpacePollUserResponse(space_pk.to_string()),
+            pk,
+            sk,
             created_at,
             answers,
         }
+    }
+    pub fn keys(user_pk: &Partition, space_pk: &Partition) -> (Partition, EntityType) {
+        (
+            Partition::SpacePollUserAnswer(user_pk.to_string()),
+            EntityType::SpacePollUserAnswer(space_pk.to_string()),
+        )
     }
     pub async fn find_one(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
         user_pk: &Partition,
     ) -> crate::Result<Option<Self>> {
-        Self::get(
-            cli,
-            &Partition::SpacePollUserResponse(user_pk.to_string()),
-            Some(EntityType::SpacePollUserResponse(space_pk.to_string())),
-        )
-        .await
+        let (pk, sk) = Self::keys(user_pk, space_pk);
+        Self::get(cli, &pk, Some(sk)).await
     }
 
     pub async fn summarize_responses(
@@ -64,11 +66,11 @@ impl PollUserResponse {
         loop {
             let (responses, new_bookmark) = Self::find_by_space_pk(
                 cli,
-                &EntityType::SpacePollUserResponse(space_pk.to_string()),
+                &EntityType::SpacePollUserAnswer(space_pk.to_string()),
                 if let Some(b) = &bookmark {
-                    PollUserResponseQueryOption::builder().bookmark(b.clone())
+                    PollUserAnswerQueryOption::builder().bookmark(b.clone())
                 } else {
-                    PollUserResponseQueryOption::builder()
+                    PollUserAnswerQueryOption::builder()
                 },
             )
             .await?;

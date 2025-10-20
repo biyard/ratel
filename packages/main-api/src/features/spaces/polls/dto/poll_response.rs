@@ -2,7 +2,7 @@ use bdk::prelude::*;
 
 use crate::types::{Answer, EntityType, Question};
 
-use super::super::PollMetadata;
+use crate::features::spaces::polls::PollMetadata;
 #[derive(Default, serde::Serialize, schemars::JsonSchema)]
 pub struct PollResponse {
     pub sk: EntityType,
