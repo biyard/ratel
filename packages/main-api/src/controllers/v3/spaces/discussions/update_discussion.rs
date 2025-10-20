@@ -1,8 +1,6 @@
 use crate::controllers::v3::spaces::{SpaceDiscussionPath, SpaceDiscussionPathParam};
-use crate::features::dto::{
-    SpaceDiscussionMemberResponse, SpaceDiscussionParticipantResponse, SpaceDiscussionRequest,
-    SpaceDiscussionResponse, UpdateDiscussionResponse,
-};
+use crate::features::common_controller_logic::get_discussion;
+use crate::features::dto::{SpaceDiscussionRequest, UpdateDiscussionResponse};
 use crate::features::models::space_discussion::SpaceDiscussion;
 use crate::features::models::space_discussion_member::{
     SpaceDiscussionMember, SpaceDiscussionMemberQueryOption,
@@ -162,82 +160,7 @@ pub async fn update_discussion_handler(
     }
 
     // QUERY DISCUSSION
-    let discussion = SpaceDiscussion::get(
-        &dynamo.client,
-        space_pk.clone(),
-        Some(EntityType::SpaceDiscussion(discussion_id.to_string())),
-    )
-    .await?;
-
-    if discussion.is_none() {
-        return Err(Error2::NotFoundDiscussion);
-    }
-
-    let discussion = discussion.unwrap();
-
-    let mut discussion: SpaceDiscussionResponse = discussion.into();
-
-    let mut discussion_members: Vec<SpaceDiscussionMemberResponse> = vec![];
-    let mut discussion_participants: Vec<SpaceDiscussionParticipantResponse> = vec![];
-    let mut bookmark = None::<String>;
-
-    loop {
-        let (responses, new_bookmark) = SpaceDiscussionMember::query(
-            &dynamo.client,
-            discussion.pk.clone(),
-            if let Some(b) = &bookmark {
-                SpaceDiscussionMemberQueryOption::builder().bookmark(b.clone())
-            } else {
-                SpaceDiscussionMemberQueryOption::builder()
-            },
-        )
-        .await?;
-
-        for response in responses {
-            match response.sk {
-                EntityType::SpaceDiscussionMember(_) => {
-                    discussion_members.push(response.into());
-                }
-                _ => {}
-            }
-        }
-
-        match new_bookmark {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-    }
-
-    discussion.members = discussion_members;
-    bookmark = None;
-
-    loop {
-        let (responses, new_bookmark) = SpaceDiscussionParticipant::query(
-            &dynamo.client,
-            discussion.pk.clone(),
-            if let Some(b) = &bookmark {
-                SpaceDiscussionParticipantQueryOption::builder().bookmark(b.clone())
-            } else {
-                SpaceDiscussionParticipantQueryOption::builder()
-            },
-        )
-        .await?;
-
-        for response in responses {
-            match response.sk {
-                EntityType::SpaceDiscussionParticipant(_) => {
-                    discussion_participants.push(response.into());
-                }
-                _ => {}
-            }
-        }
-        match new_bookmark {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-    }
-
-    discussion.participants = discussion_participants;
+    let discussion = get_discussion(&dynamo, space_pk, discussion_pk).await?;
 
     Ok(Json(UpdateDiscussionResponse { discussion }))
 }
