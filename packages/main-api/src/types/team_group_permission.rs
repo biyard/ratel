@@ -93,6 +93,20 @@ impl Default for TeamGroupPermissions {
     }
 }
 
+impl std::ops::BitOr for TeamGroupPermissions {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        let mut combined = self.0;
+        for perm in rhs.0 {
+            if !combined.contains(&perm) {
+                combined.push(perm);
+            }
+        }
+        Self(combined)
+    }
+}
+
 impl AsRef<[TeamGroupPermission]> for TeamGroupPermissions {
     fn as_ref(&self) -> &[TeamGroupPermission] {
         &self.0
