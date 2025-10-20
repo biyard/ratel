@@ -1,18 +1,17 @@
-'use client';
-
 import { Group, Layer, Stage, Text } from 'react-konva';
 import { useEffect, useState } from 'react';
-import { CHARACTER_SIZE, Status, VIEWPORT_HEIGHT, VIEWPORT_WIDTH } from '.';
-import { SprintLeaguePlayer } from '@/lib/api/models/sprint_league';
-import Background from './components/background';
-import DimOverlay from './components/dim-overlay';
-import CharacterSprite from './components/character';
-import StoppedImage from './components/image';
-import { Banner, BannerVote } from './components/banner';
-import { BackButton, StartButton, VoteButton } from './components/button';
-import VoteItem from './components/vote';
-import PlayerNameOverlay from './components/name-overlay';
+import { CHARACTER_SIZE, VIEWPORT_HEIGHT, VIEWPORT_WIDTH } from './constants';
+import Background from './background';
+import DimOverlay from './dim-overlay';
+import CharacterSprite from './character';
+import StoppedImage from './image';
+import { Banner, BannerVote } from './banner';
+import { BackButton, StartButton, VoteButton } from './button';
+import VoteItem from './vote';
+import PlayerNameOverlay from './name-overlay';
 import { showErrorToast } from '@/lib/toast';
+import SprintLeaguePlayer from '../../types/sprint-league-player';
+import { Status } from '.';
 
 const BASE_POSITION = [
   { x: CHARACTER_SIZE / 4 + 10, y: 300, scale: 1 },
@@ -40,22 +39,22 @@ export default function KonvaCanvas({
 }: {
   initialStatus?: Status;
   players: SprintLeaguePlayer[];
-  onVote: (playerId: number) => Promise<void>;
+  onVote: (playerSk: string) => Promise<void>;
   disabled: boolean;
   width: number;
   height: number;
 }) {
   const [status, setStatus] = useState<Status>(initialStatus);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
+  const [selectedPlayerSk, setselectedPlayerSk] = useState<string | null>(null);
 
   useEffect(() => {
-    if (selectedPlayerId !== null) {
+    if (selectedPlayerSk !== null) {
       const timer = setTimeout(() => {
-        setSelectedPlayerId(null);
+        setselectedPlayerSk(null);
       }, 5000);
       return () => clearTimeout(timer);
     }
-  }, [selectedPlayerId]);
+  }, [selectedPlayerSk]);
   return (
     <Stage
       width={width}
@@ -67,7 +66,7 @@ export default function KonvaCanvas({
         players={players}
         isRaceStarted={status > Status.VOTE}
         isFinished={status === Status.GAME_END}
-        selectedPlayerId={selectedPlayerId}
+        selectedPlayerSk={selectedPlayerSk}
       />
       {status === Status.BEFORE_START && (
         <BeforeStart handleStart={() => setStatus(Status.VOTE)} />
@@ -77,11 +76,11 @@ export default function KonvaCanvas({
       {status === Status.VOTE && (
         <Vote
           players={players}
-          handleVote={async (playerId: number) => {
+          handleVote={async (playerSk: string) => {
             try {
-              await onVote(playerId);
+              await onVote(playerSk);
               setStatus(Status.AFTER_VOTE);
-              setSelectedPlayerId(playerId);
+              setselectedPlayerSk(playerSk);
             } catch (error) {
               console.error('Vote failed:', error);
               showErrorToast('Vote failed. Please try again.');
@@ -103,16 +102,15 @@ function CharacterRace({
   players,
   isRaceStarted,
   isFinished,
-  selectedPlayerId,
+  selectedPlayerSk,
 }: {
   players: SprintLeaguePlayer[];
   isRaceStarted: boolean;
   isFinished?: boolean;
-  selectedPlayerId: number | null;
+  selectedPlayerSk: string | null;
 }) {
   const totalVotes = players.reduce((sum, p) => sum + p.votes, 0);
   const minVotes = Math.min(...players.map((p) => p.votes));
-  console.log('totalVotes', totalVotes);
   const minSpeed = isRaceStarted ? 0.5 : 0;
 
   const voteRatios = isRaceStarted
@@ -128,16 +126,16 @@ function CharacterRace({
         .map((player, index) =>
           !isFinished ? (
             <CharacterSprite
-              key={player.id}
+              key={player.pk}
               imageUrl={
-                selectedPlayerId !== player.id
-                  ? player.player_images.run.image
-                  : player.player_images.select.image
+                selectedPlayerSk !== player.sk
+                  ? player.player_image.run.image
+                  : player.player_image.select.image
               }
               jsonUrl={
-                selectedPlayerId !== player.id
-                  ? player.player_images.run.json
-                  : player.player_images.select.json
+                selectedPlayerSk !== player.sk
+                  ? player.player_image.run.json
+                  : player.player_image.select.json
               }
               x={
                 BASE_POSITION[index].x +
@@ -148,16 +146,14 @@ function CharacterRace({
               scale={BASE_POSITION[index].scale + voteRatios[index] / 2}
               speed={
                 Math.max(voteRatios[index] * 5, minSpeed) +
-                (selectedPlayerId === player.id ? 5 : 0)
+                (selectedPlayerSk === player.sk ? 5 : 0)
               }
             />
           ) : (
             <StoppedImage
-              key={player.id}
+              key={player.sk}
               imageUrl={
-                index === 0
-                  ? player.player_images.win
-                  : player.player_images.lose
+                index === 0 ? player.player_image.win : player.player_image.lose
               }
               x={FINISH_POSITION[index].x}
               y={FINISH_POSITION[index].y}
@@ -183,24 +179,24 @@ function Vote({
   handleBack,
 }: {
   players: SprintLeaguePlayer[];
-  handleVote: (playerId: number) => void;
+  handleVote: (playerSk: string) => void;
   handleBack: () => void;
 }) {
-  const [selectedPlayerId, setSelectedPlayerId] = useState<number | null>(null);
+  const [selectedPlayerSk, setSelectedPlayerSk] = useState<string | null>(null);
 
-  const handleSelect = (id: number) => {
-    setSelectedPlayerId((prev) => (prev === id ? null : id));
+  const handleSelect = (sk: string) => {
+    setSelectedPlayerSk((prev) => (prev === sk ? null : sk));
   };
 
   return (
     <Layer>
       <BannerVote y={0} />
       <Group y={120}>
-        {selectedPlayerId !== null && (
+        {selectedPlayerSk !== null && (
           <Text
             x={0}
             y={0}
-            text={players.find((p) => p.id === selectedPlayerId)?.name || ''}
+            text={players.find((p) => p.sk === selectedPlayerSk)?.name || ''}
             fontSize={25}
             fontStyle="900"
             align="center"
@@ -213,15 +209,15 @@ function Vote({
         <Group width={VIEWPORT_WIDTH} y={160}>
           {players.map((p, index) => (
             <VoteItem
-              key={p.id}
+              key={p.sk}
               x={index * 110 + 70}
               y={0}
               isSelected={
-                selectedPlayerId === null ? null : selectedPlayerId === p.id
+                selectedPlayerSk === null ? null : selectedPlayerSk === p.sk
               }
-              jsonUrl={p.player_images.run.json}
-              imageUrl={p.player_images.run.image}
-              onClick={() => handleSelect(p.id)}
+              jsonUrl={p.player_image.run.json}
+              imageUrl={p.player_image.run.image}
+              onClick={() => handleSelect(p.sk)}
             />
           ))}
         </Group>
@@ -231,9 +227,9 @@ function Vote({
             width={VIEWPORT_WIDTH}
             y={0}
             text={
-              selectedPlayerId === null
+              selectedPlayerSk === null
                 ? 'SELECT YOUR PLAYER'
-                : players.find((p) => p.id === selectedPlayerId)?.description ||
+                : players.find((p) => p.sk === selectedPlayerSk)?.description ||
                   ''
             }
             fontSize={16}
@@ -249,10 +245,10 @@ function Vote({
         <BackButton x={-5} onClick={handleBack} disabled={false} />
         <VoteButton
           x={165}
-          disabled={selectedPlayerId === null}
+          disabled={selectedPlayerSk === null}
           onClick={() => {
-            if (selectedPlayerId !== null) {
-              handleVote(selectedPlayerId);
+            if (selectedPlayerSk !== null) {
+              handleVote(selectedPlayerSk);
             }
           }}
         />

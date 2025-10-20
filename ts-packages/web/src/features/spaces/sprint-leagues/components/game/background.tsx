@@ -1,11 +1,8 @@
-//// filepath: /Users/ryan/biyard/ratel/ts-packages/web/src/app/spaces/[id]/sprint-league/_components/konva/background.tsx
-'use client';
-
 import { useEffect, useRef, useState } from 'react';
 import { Group, Image as KonvaImage, Layer } from 'react-konva';
 import useImage from 'use-image';
 import { IRect } from 'konva/lib/types';
-import { VIEWPORT_HEIGHT, VIEWPORT_WIDTH } from '../';
+import { VIEWPORT_HEIGHT, VIEWPORT_WIDTH } from './constants';
 
 const IMAGE_URL = '/images/sprint_league/background.png';
 

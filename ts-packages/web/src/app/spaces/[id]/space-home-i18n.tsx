@@ -39,7 +39,7 @@ export const i18nSpaceHome = {
     menu_files: 'Files',
     menu_quiz: 'Quizzes',
     menu_recommendations: 'Recommendations',
-
+    menu_sprint_league: 'Sprint League',
     // Admin Menus
     menu_admin_settings: 'Settings',
   },
@@ -82,6 +82,8 @@ export const i18nSpaceHome = {
     menu_files: '파일',
     menu_quiz: '퀴즈',
     menu_recommendations: '권고사항',
+
+    menu_sprint_league: 'Sprint League',
 
     // Admin Menus
     menu_admin_settings: '설정',

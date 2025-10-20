@@ -1,5 +1,5 @@
 import { Layer, Rect } from 'react-konva';
-import { VIEWPORT_HEIGHT, VIEWPORT_WIDTH } from '../';
+import { VIEWPORT_HEIGHT, VIEWPORT_WIDTH } from './constants';
 
 export default function DimOverlay({
   visible,
