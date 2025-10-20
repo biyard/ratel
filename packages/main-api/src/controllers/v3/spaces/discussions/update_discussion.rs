@@ -1,5 +1,4 @@
 use crate::controllers::v3::spaces::{SpaceDiscussionPath, SpaceDiscussionPathParam};
-use crate::features::spaces::discussions::common_controller_logic::get_discussion;
 use crate::features::spaces::discussions::dto::{SpaceDiscussionRequest, UpdateDiscussionResponse};
 use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
 use crate::features::spaces::discussions::models::space_discussion_member::{
@@ -17,7 +16,7 @@ use bdk::prelude::*;
 
 pub async fn update_discussion_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
+    NoApi(user): NoApi<User>,
     Path(SpaceDiscussionPathParam {
         space_pk,
         discussion_pk,
@@ -28,10 +27,12 @@ pub async fn update_discussion_handler(
         return Err(Error2::NotFoundSpace);
     }
 
+    let (pk, sk) = SpaceDiscussion::keys(&space_pk, &discussion_pk);
+
     let (_, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
-        Some(&user.unwrap_or_default().pk),
+        Some(&user.pk),
         TeamGroupPermission::SpaceEdit,
     )
     .await?;
@@ -39,21 +40,9 @@ pub async fn update_discussion_handler(
         return Err(Error2::NoPermission);
     }
 
-    let discussion_id = match discussion_pk.clone() {
-        Partition::Discussion(v) => v.to_string(),
-        _ => "".to_string(),
-    };
-
-    let discussion = SpaceDiscussion::get(
-        &dynamo.client,
-        space_pk.clone(),
-        Some(EntityType::SpaceDiscussion(discussion_id.to_string())),
-    )
-    .await?;
-
-    if discussion.is_none() {
-        return Err(Error2::NotFoundDiscussion);
-    }
+    let _discussion =
+        SpaceDiscussion::get_discussion(&dynamo.client, &space_pk, &discussion_pk, &user.pk)
+            .await?;
 
     let mut bookmark = None::<String>;
 
@@ -108,15 +97,12 @@ pub async fn update_discussion_handler(
     // UPDATE DISCUSSION
     let mut tx = vec![];
 
-    let d = SpaceDiscussion::updater(
-        &space_pk.clone(),
-        EntityType::SpaceDiscussion(discussion_id.clone()),
-    )
-    .with_name(req.name)
-    .with_description(req.description)
-    .with_started_at(req.started_at)
-    .with_ended_at(req.ended_at)
-    .transact_write_item();
+    let d = SpaceDiscussion::updater(&pk, sk)
+        .with_name(req.name)
+        .with_description(req.description)
+        .with_started_at(req.started_at)
+        .with_ended_at(req.ended_at)
+        .transact_write_item();
 
     tx.push(d);
 
@@ -125,12 +111,12 @@ pub async fn update_discussion_handler(
             .await?
             .ok_or(Error2::NotFound("User not found".into()))?;
 
-        let m = SpaceDiscussionMember::new(Partition::Discussion(discussion_id.clone()), user)
-            .create_transact_write_item();
+        let m =
+            SpaceDiscussionMember::new(discussion_pk.clone(), user).create_transact_write_item();
 
         tx.push(m);
 
-        if tx.len() == 100 {
+        if tx.len() == 10 {
             dynamo
                 .client
                 .transact_write_items()
@@ -160,7 +146,9 @@ pub async fn update_discussion_handler(
     }
 
     // QUERY DISCUSSION
-    let discussion = get_discussion(&dynamo, space_pk, discussion_pk).await?;
+    let discussion =
+        SpaceDiscussion::get_discussion(&dynamo.client, &space_pk, &discussion_pk, &user.pk)
+            .await?;
 
     Ok(Json(UpdateDiscussionResponse { discussion }))
 }

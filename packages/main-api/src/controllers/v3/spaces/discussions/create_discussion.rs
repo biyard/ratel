@@ -3,16 +3,8 @@ use crate::features::spaces::discussions::dto::SpaceDiscussionRequest;
 use crate::features::spaces::discussions::dto::{
     CreateDiscussionResponse, SpaceDiscussionResponse,
 };
-use crate::features::spaces::discussions::dto::{
-    SpaceDiscussionMemberResponse, SpaceDiscussionParticipantResponse,
-};
 use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
-use crate::features::spaces::discussions::models::space_discussion_member::{
-    SpaceDiscussionMember, SpaceDiscussionMemberQueryOption,
-};
-use crate::features::spaces::discussions::models::space_discussion_participant::{
-    SpaceDiscussionParticipant, SpaceDiscussionParticipantQueryOption,
-};
+use crate::features::spaces::discussions::models::space_discussion_member::SpaceDiscussionMember;
 use crate::models::SpaceCommon;
 use crate::types::{Partition, TeamGroupPermission};
 use crate::{AppState, Error2, models::user::User, types::EntityType};
@@ -23,7 +15,7 @@ use aide::NoApi;
 
 pub async fn create_discussion_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
+    NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<SpaceDiscussionRequest>,
 ) -> Result<Json<CreateDiscussionResponse>, Error2> {
@@ -34,7 +26,7 @@ pub async fn create_discussion_handler(
     let (_, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
-        Some(&user.unwrap_or_default().pk),
+        Some(&user.pk),
         TeamGroupPermission::SpaceEdit,
     )
     .await?;
@@ -61,6 +53,8 @@ pub async fn create_discussion_handler(
         _ => "".to_string(),
     };
 
+    let discussion_pk = Partition::Discussion(disc_id.clone());
+
     let mut tx = vec![];
 
     for member in req.user_ids.clone() {
@@ -68,12 +62,12 @@ pub async fn create_discussion_handler(
             .await?
             .ok_or(Error2::NotFound("User not found".into()))?;
 
-        let m = SpaceDiscussionMember::new(Partition::Discussion(disc_id.clone()), user)
-            .create_transact_write_item();
+        let m =
+            SpaceDiscussionMember::new(discussion_pk.clone(), user).create_transact_write_item();
 
         tx.push(m);
 
-        if tx.len() == 100 {
+        if tx.len() == 10 {
             dynamo
                 .client
                 .transact_write_items()
@@ -103,69 +97,10 @@ pub async fn create_discussion_handler(
     }
 
     let mut discussion: SpaceDiscussionResponse = disc.into();
+    let is_member =
+        SpaceDiscussionMember::is_member(&dynamo.client, &discussion_pk, &user.pk).await?;
 
-    let mut discussion_members: Vec<SpaceDiscussionMemberResponse> = vec![];
-    let mut discussion_participants: Vec<SpaceDiscussionParticipantResponse> = vec![];
-    let mut bookmark = None::<String>;
-
-    loop {
-        let (responses, new_bookmark) = SpaceDiscussionMember::query(
-            &dynamo.client,
-            discussion.pk.clone(),
-            if let Some(b) = &bookmark {
-                SpaceDiscussionMemberQueryOption::builder().bookmark(b.clone())
-            } else {
-                SpaceDiscussionMemberQueryOption::builder()
-            },
-        )
-        .await?;
-
-        for response in responses {
-            match response.sk {
-                EntityType::SpaceDiscussionMember(_) => {
-                    discussion_members.push(response.into());
-                }
-                _ => {}
-            }
-        }
-
-        match new_bookmark {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-    }
-
-    discussion.members = discussion_members;
-    bookmark = None;
-
-    loop {
-        let (responses, new_bookmark) = SpaceDiscussionParticipant::query(
-            &dynamo.client,
-            discussion.pk.clone(),
-            if let Some(b) = &bookmark {
-                SpaceDiscussionParticipantQueryOption::builder().bookmark(b.clone())
-            } else {
-                SpaceDiscussionParticipantQueryOption::builder()
-            },
-        )
-        .await?;
-
-        for response in responses {
-            match response.sk {
-                EntityType::SpaceDiscussionParticipant(_) => {
-                    discussion_participants.push(response.into());
-                }
-                _ => {}
-            }
-        }
-
-        match new_bookmark {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-    }
-
-    discussion.participants = discussion_participants;
+    discussion.is_member = is_member;
 
     Ok(Json(CreateDiscussionResponse { discussion }))
 }
