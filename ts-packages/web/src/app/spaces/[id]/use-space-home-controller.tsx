@@ -18,6 +18,8 @@ import { sideMenusForSpaceType } from '@/features/spaces/utils/side-menus-for-sp
 export class SpaceHomeController {
   public space: Space;
   public user: UserResponse | null;
+  public saveHook?: () => Promise<void>;
+  public publishHook?: () => Promise<void>;
 
   constructor(
     public data: ReturnType<typeof useSpaceHomeData>,
@@ -25,6 +27,8 @@ export class SpaceHomeController {
     public t: TFunction<'Space'>,
     public updateSpaceContent: ReturnType<typeof useSpaceUpdateContentMutation>,
     public updateSpaceTitle: ReturnType<typeof useSpaceUpdateTitleMutation>,
+    public editState: State<boolean>,
+    public saveState: State<boolean>,
   ) {
     this.space = this.data.space.data;
   }
@@ -167,26 +171,36 @@ export class SpaceHomeController {
 
   handleActionEdit = async () => {
     logger.debug('Action edit triggered');
+    this.editState.set(true);
   };
 
   handleActionSave = async () => {
     logger.debug('Action save triggered');
+    this.editState.set(false);
+    if (this.saveHook) {
+      this.saveHook();
+    }
   };
 
   handleActionPublish = async () => {
     logger.debug('Action publish triggered');
+    if (this.publishHook) {
+      this.publishHook();
+    }
+  };
+
+  handleActionDelete = async () => {
+    logger.debug('Action delete triggered');
   };
 
   get actions() {
     return [
       {
-        label: this.t('edit'),
-        onClick: this.handleActionEdit,
-        holdingLabel: this.t('save'),
-        onClickWhileHolding: this.handleActionSave,
+        label: this.t('publish'),
+        onClick: this.handleActionPublish,
       },
       {
-        label: this.t('publish'),
+        label: this.t('delete'),
         onClick: this.handleActionPublish,
       },
     ];
@@ -200,11 +214,16 @@ export function useSpaceHomeController(spacePk: string) {
   const updateSpaceContent = useSpaceUpdateContentMutation();
   const updateSpaceTitle = useSpaceUpdateTitleMutation();
 
+  const edit = useState(false);
+  const save = useState(false);
+
   return new SpaceHomeController(
     data,
     new State(state),
     t,
     updateSpaceContent,
     updateSpaceTitle,
+    new State(edit),
+    new State(save),
   );
 }

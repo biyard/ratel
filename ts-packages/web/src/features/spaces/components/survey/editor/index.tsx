@@ -1,6 +1,7 @@
 import { DialPad } from '@/assets/icons/security';
 import {
   createDefaultQuestion,
+  PollQuestion,
   SurveyAnswerType,
   SurveyQuestion,
 } from '@/features/spaces/polls/types/poll-question';
@@ -12,31 +13,24 @@ import LinearScaleQuestionEditor from './linear-scale-question';
 import { Add } from '@/assets/icons/validations';
 import SwitchButton from '@/components/switch-button';
 import { I18nFunction } from '..';
+import { SpacePollEditorController } from '@/features/spaces/polls/pages/creator/use-space-poll-editor-controller';
 
 interface SurveyEditorProps {
-  t: I18nFunction;
-  questions: SurveyQuestion[];
-  onAddQuestion: () => void;
-  onDeleteQuestion: (questionIdx: number) => void;
-  onUpdateQuestion: (questionIdx: number, newQuestion: SurveyQuestion) => void;
+  ctrl: SpacePollEditorController;
 }
 
-export default function SurveyEditor({
-  t,
-  questions,
-  onAddQuestion,
-  onDeleteQuestion,
-  onUpdateQuestion,
-}: SurveyEditorProps) {
+export default function SurveyEditor({ ctrl }: SurveyEditorProps) {
   return (
     <div className="flex flex-col gap-2.5 w-full">
-      {questions.map((question, index) => (
+      {ctrl.questions.get().map((question, index) => (
         <SurveyEditorItem
-          key={index}
-          t={t}
+          key={`survey-editor-item-${index}`}
+          t={ctrl.t}
           question={question}
-          onUpdate={(newQuestion) => onUpdateQuestion(index, newQuestion)}
-          onDelete={() => onDeleteQuestion(index)}
+          onUpdate={(newQuestion) =>
+            ctrl.handleUpdateQuestion(index, newQuestion)
+          }
+          onDelete={() => ctrl.handleRemoveQuestion(index)}
         />
       ))}
       <div className="flex relative justify-center items-center py-6 w-full">
@@ -51,7 +45,7 @@ export default function SurveyEditor({
 
         <div
           className="flex z-10 justify-center items-center rounded-full border cursor-pointer bg-background w-fit h-fit p-[13px] border-neutral-500"
-          onClick={onAddQuestion}
+          onClick={ctrl.handleAddQuestion}
         >
           <Add className="w-4 h-4 stroke-neutral-500 text-neutral-500" />
         </div>
