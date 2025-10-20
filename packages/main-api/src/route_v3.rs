@@ -9,20 +9,7 @@ use crate::controllers::v3::posts::list_comments::list_comments_handler;
 use crate::controllers::v3::posts::post_response::PostResponse;
 use crate::controllers::v3::posts::reply_to_comment::reply_to_comment_handler;
 use crate::controllers::v3::promotions::get_top_promotion::get_top_promotion_handler;
-use crate::controllers::v3::spaces::create_discussion::create_discussion_handler;
-use crate::controllers::v3::spaces::delete_discussion::delete_discussion_handler;
-use crate::controllers::v3::spaces::end_recording::end_recording_handler;
-use crate::controllers::v3::spaces::exit_meeting::exit_meeting_handler;
-use crate::controllers::v3::spaces::get_discussion::get_discussion_handler;
-use crate::controllers::v3::spaces::get_files::get_files_handler;
-use crate::controllers::v3::spaces::get_meeting::get_meeting_handler;
 use crate::controllers::v3::spaces::get_space_handler;
-use crate::controllers::v3::spaces::list_discussions::list_discussions_handler;
-use crate::controllers::v3::spaces::participant_meeting::participant_meeting_handler;
-use crate::controllers::v3::spaces::start_meeting::start_meeting_handler;
-use crate::controllers::v3::spaces::start_recording::start_recording_handler;
-use crate::controllers::v3::spaces::update_discussion::update_discussion_handler;
-use crate::controllers::v3::spaces::update_files::update_files_handler;
 use crate::controllers::v3::spaces::{dto::*, list_spaces_handler};
 use crate::models::Post;
 use crate::models::PostComment;
@@ -329,55 +316,15 @@ pub fn route(
                     ).get(get_space_handler),
                 )
                 .nest("/:space_pk", Router::new()
-                    // FILE feature
-                    // FIXME: relocate in files directory in this logic
                     .nest(
                         "/files", 
-                        Router::new()
-                            .route(
-                                "/",
-                                    patch(
-                                    update_files_handler,
-                                )
-                                .get(
-                                    get_files_handler,
-                                )
-                            )
+                        crate::controllers::v3::spaces::files::files_route()
                     )
-                    // DISCUSSION feature
-                    // FIXME: relocate in discussions directory in this logic
                     .nest(
                         "/discussions", 
-                        Router::new()
-                            .route(
-                                "/",
-                                post(
-                                    create_discussion_handler,
-                                )
-                                .get(
-                                    list_discussions_handler
-                                )
-                            )
-                            .route(
-                                "/:discussion_pk",
-                                patch(
-                                    update_discussion_handler
-                                )
-                                .get(
-                                    get_discussion_handler
-                                )
-                                .delete(
-                                    delete_discussion_handler
-                                )
-                            )
-                            .route("/:discussion-pk/meeting", get(get_meeting_handler))
-                            .route("/:discussion_pk/start-meeting", patch(start_meeting_handler))
-                            .route("/:discussion_pk/participant-meeting", patch(participant_meeting_handler))
-                            .route("/:discussion_pk/exit-meeting", patch(exit_meeting_handler))
-                            .route("/:discussion_pk/start-recording", patch(start_recording_handler))
-                            .route("/:discussion_pk/end-recording", patch(end_recording_handler))
+                        crate::controllers::v3::spaces::discussions::discussions_route()
                     )
-                                    .nest("/polls", crate::controllers::v3::spaces::polls::route())
+                                    .nest("/polls", crate::controllers::v3::spaces::polls::polls_route())
                 )
         )
         .nest(
