@@ -1,103 +1,183 @@
 'use client';
 
 import SelectBox from '@/components/selectbox/selectbox';
-import { Group, TotalUser } from '@/lib/api/models/user';
+import { Group } from '@/lib/api/models/user';
 import { useState } from 'react';
-// import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { Clear } from '@/components/icons';
 import SearchInput from '@/components/input/search-input';
-import { useApiCall } from '@/lib/api/use-send';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { checkEmailRequest } from '@/lib/api/models/group';
 import clsx from 'clsx';
 import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
-import { showErrorToast } from '@/lib/toast';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useTranslation } from 'react-i18next';
+import * as usersV3Api from '@/lib/api/ratel/users.v3';
+import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
+import type { TeamGroupResponse } from '@/lib/api/ratel/teams.v3';
+import { useQueryClient } from '@tanstack/react-query';
+
+interface FoundUser {
+  pk: string;
+  nickname: string;
+  username: string;
+  profile_url: string;
+}
+
+// Convert TeamGroupResponse to Group for UI compatibility
+function convertToGroup(teamGroup: TeamGroupResponse): Group {
+  // groupId is now just the UUID (not TEAM_GROUP#uuid format)
+  const groupId = teamGroup.id;
+  return {
+    id: parseInt(groupId.replace(/\D/g, ''), 10) || 0,
+    name: teamGroup.name,
+    description: teamGroup.description,
+    image_url: '',
+    permissions: teamGroup.permissions,
+    created_at: Date.now(),
+    updated_at: Date.now(),
+    creator_id: 0, // Not available in v3 API
+    member_count: teamGroup.members,
+  };
+}
 
 export default function InviteMemberPopup({
-  team_id,
+  teamId,
+  username,
   groups,
-  onclick,
 }: {
-  team_id: number;
-  groups: Group[];
-  onclick: (group_id: number, users: number[]) => void;
+  teamId: string;
+  username: string;
+  groups: TeamGroupResponse[];
 }) {
   const { t } = useTranslation('Team');
-  const { post, get } = useApiCall();
+  const queryClient = useQueryClient();
+
+  // Keep both original and converted groups to maintain sk reference
+  const convertedGroups = groups.map(convertToGroup);
   const [groupIndex, setGroupIndex] = useState(0);
-  const [selectedGroup, setSelectedGroup] = useState(groups[0]);
+  const [selectedGroup, setSelectedGroup] = useState(convertedGroups[0]);
 
-  const [selectedUsers, setSelectedUsers] = useState<TotalUser[]>([]);
-  const [isError, setIsError] = useState<boolean[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<FoundUser[]>([]);
   const [searchValue, setSearchValue] = useState('');
-  const [errorCount, setErrorCount] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const setValue = async (
-    value: string,
-    isEnter: boolean,
-  ): Promise<TotalUser[]> => {
-    const added: TotalUser[] = [];
+  const searchUser = async (input: string): Promise<FoundUser | null> => {
+    if (checkString(input)) return null;
 
-    if (value.includes(',') || isEnter) {
-      const identifiers = value
-        .split(',')
-        .map((v) => v.trim())
-        .filter((v) => v !== '');
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+    const isPhone = /^\+?[0-9]\d{7,14}$/.test(input);
 
-      for (const input of identifiers) {
-        if (checkString(input)) continue;
+    try {
+      setIsSearching(true);
+      let userResponse;
 
-        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
-        const isPhone = /^\+?[0-9]\d{7,14}$/.test(input);
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let data: any = null;
-
-        try {
-          if (isEmail) {
-            data = await get(ratelApi.users.getUserByEmail(input));
-          } else if (isPhone) {
-            data = await get(ratelApi.users.getUserByPhoneNumber(input));
-          } else {
-            data = await get(ratelApi.users.getUserByUsername(input));
-          }
-
-          if (data) {
-            const exists = selectedUsers.some((u) => u.id === data.id);
-            if (!exists) {
-              const result = await post(
-                ratelApi.groups.check_email(team_id, selectedGroup.id),
-                checkEmailRequest(input),
-              );
-
-              const valueIsError: boolean = !result && isEmail ? true : false;
-
-              setSelectedUsers((prev) => [...prev, data]);
-              setIsError((prev) => [...prev, valueIsError]);
-
-              if (valueIsError) {
-                setErrorCount((prev) => Math.max(prev + 1, 0));
-              }
-
-              added.push(data);
-            }
-          } else {
-            showErrorToast(t('invalid_user'));
-          }
-        } catch (err) {
-          logger.error('failed to search user with error: ', err);
-          showErrorToast(t('failed_search_user'));
-        }
+      if (isEmail) {
+        userResponse = await usersV3Api.findUserByEmail(input);
+      } else if (isPhone) {
+        userResponse = await usersV3Api.findUserByPhoneNumber(input);
+      } else {
+        userResponse = await usersV3Api.findUserByUsername(input);
       }
 
-      setSearchValue('');
-    } else {
-      setSearchValue(value);
+      logger.debug('User search response:', userResponse);
+
+      // The response has user fields flattened at the root level (no nested "user" object)
+      if (userResponse?.pk) {
+        logger.debug('User found:', userResponse);
+        return {
+          pk: userResponse.pk,
+          nickname: userResponse.nickname,
+          username: userResponse.username,
+          profile_url: userResponse.profile_url,
+        };
+      }
+
+      logger.warn('User not found - invalid response structure:', userResponse);
+      showErrorToast('User Not Found');
+      return null;
+    } catch (err: unknown) {
+      logger.error('Failed to search user:', err);
+
+      const error = err as { response?: { status?: number }; status?: number };
+      if (error?.response?.status === 404 || error?.status === 404) {
+        showErrorToast('User Not Found');
+      } else {
+        showErrorToast(t('failed_search_user'));
+      }
+
+      return null;
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const addUser = async (value: string) => {
+    if (!value.trim()) return;
+
+    const identifiers = value
+      .split(',')
+      .map((v) => v.trim())
+      .filter((v) => v !== '');
+
+    for (const input of identifiers) {
+      const foundUser = await searchUser(input);
+
+      if (foundUser) {
+        const exists = selectedUsers.some((u) => u.pk === foundUser.pk);
+
+        if (!exists) {
+          setSelectedUsers((prev) => [...prev, foundUser]);
+        } else {
+          showErrorToast(`${foundUser.nickname} is already added`);
+        }
+      }
     }
 
-    return added;
+    setSearchValue('');
+  };
+
+  const handleInvite = async () => {
+    if (selectedUsers.length === 0) {
+      showErrorToast('Please select users to invite');
+      return;
+    }
+
+    try {
+      // Get original group id from groups array using the index
+      const originalGroup = groups[groupIndex];
+      const groupId = originalGroup.id; // Already just the UUID
+
+      // Use team PK (with TEAM# prefix) directly - no need to extract UUID
+      const result = await teamsV3Api.addGroupMember(teamId, groupId, {
+        user_pks: selectedUsers.map((u) => u.pk),
+      });
+
+      if (result.failed_pks.length > 0) {
+        showErrorToast(`Failed to add ${result.failed_pks.length} user(s)`);
+      }
+
+      if (result.total_added > 0) {
+        showSuccessToast('Members invited successfully');
+
+        // Invalidate queries to refresh member counts
+        await queryClient.invalidateQueries({
+          predicate: (query) => {
+            const queryKey = query.queryKey;
+            return (
+              queryKey.includes(username) ||
+              queryKey.includes('team') ||
+              queryKey.includes('group') ||
+              queryKey.includes('members')
+            );
+          },
+        });
+      }
+
+      setSelectedUsers([]);
+      setSearchValue('');
+    } catch (err) {
+      logger.error('Failed to invite members:', err);
+      showErrorToast('Failed to invite members');
+    }
   };
 
   return (
@@ -107,7 +187,7 @@ export default function InviteMemberPopup({
           {t('select_group')}
         </div>
         <SelectBox
-          groups={groups}
+          groups={convertedGroups}
           groupIndex={groupIndex}
           setGroupIndex={setGroupIndex}
           selectedGroup={selectedGroup}
@@ -123,43 +203,30 @@ export default function InviteMemberPopup({
           <SearchInput
             value={searchValue}
             placeholder={t('email_hint')}
-            setValue={async (value) => {
-              await setValue(value, false);
+            setValue={(value) => {
+              setSearchValue(value);
             }}
             onenter={async () => {
-              await setValue(searchValue, true);
+              await addUser(searchValue);
             }}
           />
         </div>
+        {isSearching && (
+          <div className="text-sm text-gray-400 mt-2">Searching...</div>
+        )}
       </div>
 
       <div className="flex flex-col w-full gap-[10px]">
         <div className="flex flex-wrap gap-1">
-          {selectedUsers.map((user, index) => {
+          {selectedUsers.map((user) => {
             return (
               <SelectedUserInfo
-                key={user.id}
+                key={user.pk}
                 username={user.nickname}
-                isError={isError[index]}
                 onremove={() => {
-                  setSelectedUsers((prevUsers) => {
-                    const newUsers = [...prevUsers];
-                    newUsers.splice(index, 1);
-                    return newUsers;
-                  });
-
-                  setIsError((prevErrors) => {
-                    const newErrors = [...prevErrors];
-                    const v = newErrors.splice(index, 1)[0];
-                    logger.debug('value: ', v);
-
-                    const newErrorCount = newErrors.filter(
-                      (e) => e === true,
-                    ).length;
-                    setErrorCount(newErrorCount);
-
-                    return newErrors;
-                  });
+                  setSelectedUsers((prevUsers) =>
+                    prevUsers.filter((u) => u.pk !== user.pk),
+                  );
                 }}
               />
             );
@@ -168,74 +235,52 @@ export default function InviteMemberPopup({
       </div>
 
       <InviteMemberButton
-        isError={errorCount != 0}
-        onclick={async () => {
-          const newlyAdded = await setValue(searchValue, true);
-
-          const ids = new Set<number>();
-          selectedUsers.forEach((u) => ids.add(u.id));
-          newlyAdded.forEach((u) => ids.add(u.id));
-
-          if (errorCount == 0) {
-            onclick(selectedGroup.id, Array.from(ids));
-          }
-        }}
+        disabled={selectedUsers.length === 0}
+        onclick={handleInvite}
       />
     </div>
   );
 }
 
 function InviteMemberButton({
-  isError,
+  disabled,
   onclick,
 }: {
-  isError: boolean;
+  disabled: boolean;
   onclick: () => void;
 }) {
   const { t } = useTranslation('Team');
   const containerClass = clsx(
     'flex flex-row w-full justify-center items-center my-[15px] py-[15px] rounded-lg font-bold text-[#000203] text-base',
-    isError ? 'cursor-not-allowed bg-neutral-500' : 'cursor-pointer bg-primary',
+    disabled
+      ? 'cursor-not-allowed bg-neutral-500'
+      : 'cursor-pointer bg-primary',
   );
   return (
     <div className="flex flex-col w-full">
       <div
         className={containerClass}
         onClick={() => {
-          if (!isError) {
+          if (!disabled) {
             onclick();
           }
         }}
       >
         {t('send')}
       </div>
-
-      {isError && (
-        <div className="font-semibold text-base text-red-400">
-          The user does not exist or already exists in the group. Please check
-          the email again.
-        </div>
-      )}
     </div>
   );
 }
 
 function SelectedUserInfo({
   username,
-  isError,
   onremove,
 }: {
   username: string;
-  isError: boolean;
   onremove: () => void;
 }) {
-  const containerClass = clsx(
-    'flex flex-row w-fit gap-1 justify-start items-center bg-primary rounded-[100px] px-[12px] py-[2px]',
-    isError ? 'border-[3px] border-[#ff0000]' : '',
-  );
-
   return (
-    <div className={containerClass}>
+    <div className="flex flex-row w-fit gap-1 justify-start items-center bg-primary rounded-[100px] px-[12px] py-[2px]">
       <div className="font-medium text-neutral-900 text-[15px]/[24px]">
         {username}
       </div>

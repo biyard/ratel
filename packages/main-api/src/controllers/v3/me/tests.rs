@@ -71,11 +71,12 @@ async fn test_update_user_with_team_handler() {
         update_user_res.err()
     );
 
+    // Use the team_pk directly (it's already a Partition)
     let team = get_team_handler(
         State(app_state.clone()),
         NoApi(Some(user.clone())),
         Path(GetTeamPathParams {
-            team_pk: team.team_pk.clone(),
+            team_pk: team.team_pk.to_string(),
         }),
     )
     .await;
