@@ -32,7 +32,12 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
         {ctrl.editing.get() ? (
           <SurveyEditor ctrl={ctrl} />
         ) : (
-          <SurveyViewer t={ctrl.t} questions={ctrl.poll.questions} />
+          <SurveyViewer
+            t={ctrl.t}
+            questions={ctrl.poll.questions}
+            onUpdateAnswer={ctrl.handleUpdateAnswer}
+            selectedAnswers={ctrl.answers.get()}
+          />
         )}
       </Col>
     </>

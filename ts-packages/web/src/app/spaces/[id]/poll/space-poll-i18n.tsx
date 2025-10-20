@@ -11,9 +11,8 @@ const ko = {
   tab_analyze_label: '분석',
   timeline_title: '타임라인',
 };
-const i18n = {
+
+export const i18nPollSpace = {
   en,
   ko,
 };
-
-export default i18n;
