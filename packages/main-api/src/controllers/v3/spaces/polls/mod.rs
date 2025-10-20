@@ -1,13 +1,24 @@
-pub mod dto;
-pub mod get_poll_space;
-pub mod get_survey_summary;
-pub mod respond_poll_space;
-pub mod update_poll_space;
+pub mod get_poll;
+pub mod get_poll_result;
+pub mod respond_poll;
+pub mod update_poll;
 
-pub use get_poll_space::*;
-pub use get_survey_summary::*;
-pub use respond_poll_space::*;
-pub use update_poll_space::*;
+pub use get_poll::*;
+pub use get_poll_result::*;
+pub use respond_poll::*;
+pub use update_poll::*;
 
 #[cfg(test)]
 pub mod tests;
+
+use crate::AppState;
+use bdk::prelude::*;
+use by_axum::aide::axum::routing::*;
+use by_axum::axum::*;
+
+pub fn route() -> Router<AppState> {
+    Router::new()
+        .route("/", get(get_poll_handler).put(update_poll_handler))
+        .route("/result", get(get_poll_result))
+        .route("/respond", post(respond_poll_handler))
+}

@@ -4,7 +4,7 @@ use bdk::prelude::*;
     Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
 )]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
-pub enum SurveyQuestion {
+pub enum Question {
     SingleChoice(ChoiceQuestion),
     MultipleChoice(ChoiceQuestion),
     ShortAnswer(SubjectiveQuestion),
@@ -14,7 +14,7 @@ pub enum SurveyQuestion {
     LinearScale(LinearScaleQuestion),
 }
 
-impl Default for SurveyQuestion {
+impl Default for Question {
     fn default() -> Self {
         Self::SingleChoice(ChoiceQuestion::default())
     }
