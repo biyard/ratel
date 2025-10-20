@@ -1,10 +1,10 @@
 use crate::controllers::v3::spaces::{SpaceDiscussionPath, SpaceDiscussionPathParam};
-use crate::features::dto::DeleteDiscussionResponse;
-use crate::features::models::space_discussion::SpaceDiscussion;
-use crate::features::models::space_discussion_member::{
+use crate::features::spaces::discussions::dto::DeleteDiscussionResponse;
+use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
+use crate::features::spaces::discussions::models::space_discussion_member::{
     SpaceDiscussionMember, SpaceDiscussionMemberQueryOption,
 };
-use crate::features::models::space_discussion_participant::{
+use crate::features::spaces::discussions::models::space_discussion_participant::{
     SpaceDiscussionParticipant, SpaceDiscussionParticipantQueryOption,
 };
 use crate::models::{SpaceCommon, User};
