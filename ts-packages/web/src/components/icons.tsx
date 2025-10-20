@@ -16,7 +16,7 @@ export { default as Calendar } from '@/assets/icons/calendar.svg?react';
 export { default as Certified } from '@/assets/icons/certified.svg?react';
 export { default as Character } from '@/assets/icons/character.svg?react';
 export { default as Chat } from '@/assets/icons/chat.svg?react';
-export { default as CheckCircele2 } from '@/assets/icons/check-circele2.svg?react';
+export { default as CheckCircle2 } from '@/assets/icons/check-circle2.svg?react';
 export { default as CheckCircle } from '@/assets/icons/check-circle.svg?react';
 export { default as Check } from '@/assets/icons/check.svg?react';
 export { default as CheckboxIcon } from '@/assets/icons/checkbox-icon.svg?react';
@@ -756,45 +756,43 @@ export { default as VideoCameraVideo } from '@/assets/icons/video-camera/video.s
 // ============================================================
 // These aliases maintain backward compatibility with old icon names
 
-export { Telegram_logo as TelegramIcon } from '@/assets/icons/telegram_logo.svg?react';
-export { Edit_1 as Edit1 } from '@/assets/icons/edit_1.svg?react';
-export { Loader2 as Loader } from '@/assets/icons/loader2.svg?react';
-export { Delete_2 as Delete2 } from '@/assets/icons/delete_2.svg?react';
-export { Badge as BadgeIcon } from '@/assets/icons/badge.svg?react';
-export { Comment as CommentIcon } from '@/assets/icons/comment.svg?react';
-export { Image as Image2 } from '@/assets/icons/image.svg?react';
-export { FilesXlsx as Excel } from '@/assets/icons/files/xlsx.svg?react';
-export { FilesJpg as Jpg } from '@/assets/icons/files/jpg.svg?react';
-export { FilesMp4 as MP4 } from '@/assets/icons/files/mp4.svg?react';
-export { FilesPng as Png } from '@/assets/icons/files/png.svg?react';
-export { FilesPptx as Pptx } from '@/assets/icons/files/pptx.svg?react';
-export { FilesDocx as Word } from '@/assets/icons/files/docx.svg?react';
-export { FilesZip as Zip } from '@/assets/icons/files/zip.svg?react';
-export { FilesMov as MOV } from '@/assets/icons/files/mov.svg?react';
-export { Chat as ZoomChat } from '@/assets/icons/chat.svg?react';
-export { MicOff as ZoomMicOff } from '@/assets/icons/mic-off.svg?react';
-export { MicOn as ZoomMicOn } from '@/assets/icons/mic-on.svg?react';
-export { ZoomUser as ZoomParticipants } from '@/assets/icons/zoom-user.svg?react';
-export { VideoOff as ZoomVideoOff } from '@/assets/icons/video-off.svg?react';
-export { VideoOn as ZoomVideoOn } from '@/assets/icons/video-on.svg?react';
+export { default as TelegramIcon } from '@/assets/icons/telegram_logo.svg?react';
+export { default as Edit1 } from '@/assets/icons/edit_1.svg?react';
+export { default as Loader } from '@/assets/icons/loader2.svg?react';
+export { default as Delete2 } from '@/assets/icons/delete_2.svg?react';
+export { default as BadgeIcon } from '@/assets/icons/badge.svg?react';
+export { default as CommentIcon } from '@/assets/icons/comment.svg?react';
+export { default as Image2 } from '@/assets/icons/image.svg?react';
+export { default as Excel } from '@/assets/icons/files/xlsx.svg?react';
+export { default as Jpg } from '@/assets/icons/files/jpg.svg?react';
+export { default as MP4 } from '@/assets/icons/files/mp4.svg?react';
+export { default as Png } from '@/assets/icons/files/png.svg?react';
+export { default as Pptx } from '@/assets/icons/files/pptx.svg?react';
+export { default as Word } from '@/assets/icons/files/docx.svg?react';
+export { default as Zip } from '@/assets/icons/files/zip.svg?react';
+export { default as MOV } from '@/assets/icons/files/mov.svg?react';
+export { default as ZoomChat } from '@/assets/icons/chat.svg?react';
+export { default as ZoomMicOff } from '@/assets/icons/mic-off.svg?react';
+export { default as ZoomMicOn } from '@/assets/icons/mic-on.svg?react';
+export { default as ZoomParticipants } from '@/assets/icons/zoom-user.svg?react';
+export { default as ZoomVideoOff } from '@/assets/icons/video-off.svg?react';
+export { default as ZoomVideoOn } from '@/assets/icons/video-on.svg?react';
 
 // Richtext aliases matching the old convention
-export { RichtextBold as Bold1 } from '@/assets/icons/richtext/bold.svg?react';
-export { RichtextImage as Image1 } from '@/assets/icons/richtext/image.svg?react';
-export { RichtextItalic as Italic1 } from '@/assets/icons/richtext/italic.svg?react';
-export { RichtextStrikeThrough as StrikeThrough1 } from '@/assets/icons/richtext/strike-through.svg?react';
-export { RichtextUnderline as Underline1 } from '@/assets/icons/richtext/underline.svg?react';
-export { RichtextBullet as Bullet1 } from '@/assets/icons/richtext/bullet.svg?react';
-export { RichtextOrdered as Ordered1 } from '@/assets/icons/richtext/ordered.svg?react';
+export { default as Bold1 } from '@/assets/icons/richtext/bold.svg?react';
+export { default as Image1 } from '@/assets/icons/richtext/image.svg?react';
+export { default as Italic1 } from '@/assets/icons/richtext/italic.svg?react';
+export { default as StrikeThrough1 } from '@/assets/icons/richtext/strike-through.svg?react';
+export { default as Underline1 } from '@/assets/icons/richtext/underline.svg?react';
+export { default as Bullet1 } from '@/assets/icons/richtext/bullet.svg?react';
+export { default as Ordered1 } from '@/assets/icons/richtext/ordered.svg?react';
 
 // Flags aliases
-export { FlagsUs as Us } from '@/assets/icons/flags/us.svg?react';
+export { default as Us } from '@/assets/icons/flags/us.svg?react';
 
 // Chevron aliases
-export { ArrowsChevronLeft as ChevronLeft } from '@/assets/icons/arrows/chevron-left.svg?react';
-export { ArrowsChevronRight as ChevronRight2 } from '@/assets/icons/arrows/chevron-right.svg?react';
+export { default as ChevronLeft } from '@/assets/icons/arrows/chevron-left.svg?react';
+export { default as ChevronRight2 } from '@/assets/icons/arrows/chevron-right.svg?react';
 
 // Arrow aliases
-export { Right as ArrowRight } from '@/assets/icons/right.svg?react';
-
-
+export { default as ArrowRight } from '@/assets/icons/right.svg?react';

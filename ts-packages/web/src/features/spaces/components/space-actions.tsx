@@ -1,4 +1,4 @@
-import { Expand } from '@/components/icons';
+import { BottomTriangle, Expand } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -31,7 +31,7 @@ export function SpaceActions({ actions }: SpaceActionsProps) {
 
           <DropdownMenuTrigger asChild>
             <div className="w-20">
-              <ArrowDown />
+              <BottomTriangle />
             </div>
           </DropdownMenuTrigger>
         </Row>
