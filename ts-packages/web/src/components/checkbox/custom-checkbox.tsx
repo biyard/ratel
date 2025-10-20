@@ -3,6 +3,7 @@ interface CustomCheckboxProps {
   checked: boolean;
   onChange: () => void;
   disabled?: boolean;
+  'data-pw'?: string;
 }
 
 export default function CustomCheckbox({
@@ -10,12 +11,14 @@ export default function CustomCheckbox({
   checked,
   onChange,
   disabled = false,
+  'data-pw': dataPw,
 }: CustomCheckboxProps) {
   return (
     <button
       type="button"
       onClick={onChange}
       aria-pressed={checked}
+      data-pw={dataPw}
       className={`w-6 h-6 flex items-center justify-center border
         ${disabled ? 'bg-neutral-500 border-transparent light:bg-primary' : checked ? 'bg-yellow-500 border-transparent' : 'bg-transparent border-neutral-500'}
         ${isRounded ? 'rounded-full' : 'rounded-sm'}

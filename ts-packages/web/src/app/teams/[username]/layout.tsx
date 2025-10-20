@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { Outlet, useParams } from 'react-router';
 import Loading from '@/app/loading';
 import { logger } from '@/lib/logger';
 import TeamSidemenu from './_components/team-sidemenu';
@@ -12,19 +13,14 @@ import {
   RePostDraftProvider,
 } from '@/app/(social)/_components/create-repost';
 
-export interface TeamLayoutProps {
-  params: Promise<{ username: string }>;
-}
+export default function TeamLayout() {
+  const { username } = useParams<{ username: string }>();
 
-export default async function TeamLayout({
-  children,
-  params,
-}: Readonly<{
-  children: React.ReactNode;
-}> &
-  TeamLayoutProps) {
-  const { username } = await params;
   logger.debug('TeamLayout: username', username);
+
+  if (!username) {
+    return <div>Team not found</div>;
+  }
 
   return (
     <Provider username={username}>
@@ -40,7 +36,7 @@ export default async function TeamLayout({
           >
             <PostEditorProvider>
               <RePostDraftProvider>
-                {children}
+                <Outlet />
 
                 <div className="fixed bottom-0 left-0 right-0 z-10 flex flex-row items-center justify-center">
                   <div className="max-w-desktop w-full">

@@ -6,9 +6,6 @@ import { Col } from '@/components/ui/col';
 import { Input } from '@/components/ui/input';
 import { Row } from '@/components/ui/row';
 import { Textarea } from '@/components/ui/textarea';
-import { userEditProfileRequest } from '@/lib/api/models/user';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { useApiCall } from '@/lib/api/use-send';
 
 import { useContext, useMemo, useState } from 'react';
 import { TeamContext } from '@/lib/contexts/team-context';
@@ -20,14 +17,17 @@ import { showErrorToast, showInfoToast } from '@/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { usePopup } from '@/lib/contexts/popup-service';
 import DeleteTeamPopup from './_components/delete-team-popup';
-import { deleteTeamRequest } from '@/lib/api/models/team';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { logger } from '@/lib/logger';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
 import { FeedStatus } from '@/lib/api/models/feeds';
-import { GroupPermission } from '@/lib/api/models/group';
-import { usePermission } from '@/app/(social)/_hooks/use-permission';
+import {
+  useTeamDetailByUsername,
+  useTeamPermissionsFromDetail,
+} from '@/features/teams/hooks/use-team';
+import { TeamGroupPermission } from '@/features/auth/utils/team-group-permissions';
+import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
 
 export default function SettingsPage({ username }: { username: string }) {
   const { t } = useTranslation('Team');
@@ -36,22 +36,26 @@ export default function SettingsPage({ username }: { username: string }) {
   const { teams, updateSelectedTeam, setSelectedTeam } =
     useContext(TeamContext);
 
+  // Use v3 API to get team details with permissions
+  const teamDetailQuery = useTeamDetailByUsername(username);
+  const userInfo = useUserInfo();
+
+  // Get permissions directly from team detail response (no API calls!)
+  const permissions = useTeamPermissionsFromDetail(teamDetailQuery.data);
+
+  // Get legacy team from context for backward compatibility
   const team = useMemo(() => {
     return teams.find((t) => t.username === username);
   }, [teams, username]);
 
-  const { post } = useApiCall();
   const navigate = useNavigate();
-  const userInfo = useUserInfo();
 
   const [profileUrl, setProfileUrl] = useState(team?.profile_url || '');
   const [nickname, setNickname] = useState(team?.nickname);
   const [htmlContents, setHtmlContents] = useState(team?.html_contents);
 
-  // TODO: Update to use v3 permissions with username instead of id
   const deleteTeamPermission =
-    usePermission(team?.username ?? '', GroupPermission.DeleteGroup).data
-      .has_permission ?? false;
+    permissions?.has(TeamGroupPermission.TeamAdmin) ?? false;
 
   if (!team) {
     return <></>;
@@ -73,18 +77,26 @@ export default function SettingsPage({ username }: { username: string }) {
       .open(
         <DeleteTeamPopup
           onConfirm={async () => {
+            if (!teamDetailQuery.data) return;
+
             try {
-              await post(
-                ratelApi.teams.deleteTeam(),
-                deleteTeamRequest(team!.id),
-              );
+              await teamsV3Api.deleteTeam(username);
               showInfoToast(t('success_delete_team'));
+
+              // Invalidate all team-related queries
+              await queryClient.invalidateQueries({
+                predicate: (query) =>
+                  query.queryKey[0]?.toString().includes('team') ||
+                  query.queryKey[0]?.toString().includes('user-info'),
+              });
+
               // Invalidate all published feeds after deleting team
               await queryClient.invalidateQueries({
                 queryKey: feedKeys.list({
                   status: FeedStatus.Published,
                 }),
               });
+
               userInfo.refetch();
               setSelectedTeam(0);
               navigate('/');
@@ -104,24 +116,35 @@ export default function SettingsPage({ username }: { username: string }) {
   };
 
   const handleSave = async () => {
+    if (!teamDetailQuery.data) return;
+
     if (checkString(nickname ?? '') || checkString(htmlContents ?? '')) {
       showErrorToast(t('remove_test_keyword'));
       return;
     }
 
-    await post(
-      ratelApi.users.editProfile(team!.id),
-      userEditProfileRequest(nickname!, htmlContents!, profileUrl),
-    );
+    try {
+      await teamsV3Api.updateTeam(teamDetailQuery.data.id, {
+        nickname: nickname || undefined,
+        description: htmlContents || undefined,
+        profile_url: profileUrl || undefined,
+      });
 
-    updateSelectedTeam({
-      ...team!,
-      nickname: nickname!,
-      html_contents: htmlContents!,
-      profile_url: profileUrl,
-    });
+      // Refetch team data
+      teamDetailQuery.refetch();
 
-    navigate(route.teamByUsername(username));
+      updateSelectedTeam({
+        ...team!,
+        nickname: nickname!,
+        html_contents: htmlContents!,
+        profile_url: profileUrl,
+      });
+
+      navigate(route.teamByUsername(username));
+    } catch (e) {
+      logger.error('Failed to update team:', e);
+      showErrorToast(t('failed_update_team') || 'Failed to update team');
+    }
   };
 
   const invalidInput =
@@ -129,7 +152,10 @@ export default function SettingsPage({ username }: { username: string }) {
 
   return (
     <div className="w-full max-tablet:w-full flex flex-col gap-10 items-center">
-      <FileUploader onUploadSuccess={handleProfileUrl}>
+      <FileUploader
+        onUploadSuccess={handleProfileUrl}
+        data-pw="team-profile-uploader"
+      >
         {profileUrl ? (
           <img
             src={profileUrl}
@@ -137,9 +163,13 @@ export default function SettingsPage({ username }: { username: string }) {
             width={80}
             height={80}
             className="w-40 h-40 rounded-full object-cover cursor-pointer"
+            data-pw="team-profile-image"
           />
         ) : (
-          <button className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-c-wg-50">
+          <button
+            className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-c-wg-50"
+            data-pw="team-profile-upload-button"
+          >
             {t('upload_logo')}
           </button>
         )}
@@ -155,6 +185,7 @@ export default function SettingsPage({ username }: { username: string }) {
             className="text-text-primary bg-input-box-bg border border-input-box-border"
             disabled
             value={`@${team?.username}`}
+            data-pw="team-username-display"
           />
         </Row>
         <Row className="max-tablet:flex-col">
@@ -167,6 +198,7 @@ export default function SettingsPage({ username }: { username: string }) {
             placeholder={t('display_name_hint')}
             value={nickname}
             onInput={handleNickname}
+            data-pw="team-nickname-input"
           />
         </Row>
         <Col>
@@ -178,6 +210,7 @@ export default function SettingsPage({ username }: { username: string }) {
             placeholder={t('team_description_hint')}
             value={htmlContents}
             onChange={handleContents}
+            data-pw="team-description-input"
           />
         </Col>
         <Row className="justify-end py-5">
@@ -186,6 +219,7 @@ export default function SettingsPage({ username }: { username: string }) {
             className={invalidInput ? 'bg-neutral-600' : 'bg-primary'}
             variant={'rounded_primary'}
             onClick={handleSave}
+            data-pw="team-settings-save-button"
           >
             {t('save')}
           </Button>
@@ -200,6 +234,7 @@ export default function SettingsPage({ username }: { username: string }) {
               }
               variant={'rounded_primary'}
               onClick={openDeletePopup}
+              data-pw="team-delete-button"
             >
               {t('delete')}
             </Button>

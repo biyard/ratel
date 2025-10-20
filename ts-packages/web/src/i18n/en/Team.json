@@ -44,5 +44,11 @@
   "delete": "Delete",
   "remove_test_keyword": "Please remove the test keyword",
   "write_title": "Write a title...",
-  "write_content": "Type here, Use Markdown, BB code, or HTML to format."
+  "write_content": "Type here, Use Markdown, BB code, or HTML to format.",
+  "loading_members": "Loading members...",
+  "error_loading_members": "Error loading members",
+  "team_owner": "Team Owner",
+  "remove_from_group": "Remove from group",
+  "member_removed_from_group": "Member removed from {{groupName}}",
+  "failed_remove_member_from_group": "Failed to remove member from group"
 }

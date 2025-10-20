@@ -12,9 +12,6 @@ import {
   QK_GET_PROMOTION,
   QK_GET_REDEEM_CODE,
   QK_GET_SPACE_BY_SPACE_ID,
-  QK_GET_TEAM_BY_ID,
-  QK_GET_TEAM_BY_USERNAME,
-  QK_GET_PERMISSION,
   QK_USERS_GET_INFO,
   QK_GET_NEWS_BY_NEWS_ID,
   QK_GET_DELIBERATION_SPACE_BY_SPACE_ID,
@@ -29,11 +26,8 @@ import type { NetworkData } from './models/network';
 import type { Promotion } from './models/promotion';
 import type { User } from './models/user';
 import type { QueryResponse } from './models/common';
-import type { Team } from './models/team';
 import type { HomeGatewayResponse } from './models/home';
 import type { InfiniteData } from '@tanstack/react-query';
-import { GroupPermission } from './models/group';
-import type { Permission } from './models/permission';
 import type { NewsDetailItem } from './models/news';
 import { DeliberationSpaceResponse } from '@/features/spaces/deliberations/utils/deliberation.spaces.v3';
 
@@ -74,20 +68,6 @@ async function getDataFromServer<T>(
     key,
     data: res.data,
   };
-}
-
-export function getTeamByUsername(username: string) {
-  return getDataFromServer<Team>(
-    [QK_GET_TEAM_BY_USERNAME, username],
-    ratelApi.teams.getTeamByUsername(username),
-  );
-}
-
-export function getTeamById(user_id: number) {
-  return getDataFromServer<Team>(
-    [QK_GET_TEAM_BY_ID, user_id],
-    ratelApi.teams.getTeamById(user_id),
-  );
 }
 
 export function getPostByUserId(
@@ -186,17 +166,6 @@ export async function getUserInfo(): Promise<{
   return getDataFromServer<User>(
     [QK_USERS_GET_INFO],
     ratelApi.users.getUserInfo(),
-  );
-}
-
-// TODO: Update to use v3 permissions API with team username
-export function getPermission(
-  teamUsername: string,
-  permission: GroupPermission,
-): Promise<{ key: (string | number)[]; data: Permission | null }> {
-  return getDataFromServer<Permission>(
-    [QK_GET_PERMISSION, teamUsername, permission],
-    ratelApi.permissions.getPermissions(teamUsername, permission),
   );
 }
 

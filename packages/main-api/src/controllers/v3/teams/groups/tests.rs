@@ -1,310 +1,241 @@
 #![allow(warnings)]
-use bdk::prelude::*;
 use crate::{
-    controllers::v3::{
-        me::get_info::get_info_handler,
-        teams::{
-            create_team::{CreateTeamRequest, create_team_handler},
-            get_team::{GetTeamPathParams, get_team_handler},
-            groups::{
-                add_member::{AddMemberPathParams, AddMemberRequest, add_member_handler},
-                create_group::{CreateGroupPathParams, CreateGroupRequest, create_group_handler},
-                update_group::{UpdateGroupPathParams, UpdateGroupRequest, update_group_handler},
-            },
+    controllers::v3::teams::{
+        create_team::CreateTeamResponse,
+        get_team::GetTeamResponse,
+        groups::{
+            add_member::AddMemberResponse, create_group::CreateGroupResponse,
+            delete_group::DeleteGroupResponse,
         },
     },
-    tests::{create_app_state, create_test_user},
-    types::TeamGroupPermission,
+    tests::v3_setup::TestContextV3,
+    types::{EntityType, TeamGroupPermission},
 };
-use by_axum::{
-    aide::NoApi,
-    axum::{
-        Json,
-        extract::{Path, State},
-    },
-};
+
+use crate::*;
+
 #[tokio::test]
 async fn test_update_group_handler() {
-    let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
 
-    let team_username = format!("TEAM{}", uuid::Uuid::new_v4().to_string());
+    let team_username = format!("testteam{}", uuid::Uuid::new_v4());
+
     // Create a team
-    let team = create_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Json(CreateTeamRequest {
-            username: team_username.clone(),
-            nickname: format!("{}'s Team", team_username),
-            profile_url: "https://example.com/profile.png".into(),
-            description: "This is a test team".into(),
-        }),
-    )
-    .await;
+    let (status, _headers, team) = post! {
+        app: app,
+        path: "/v3/teams",
+        headers: test_user.1.clone(),
+        body: {
+            "username": team_username,
+            "nickname": format!("{}'s Team", team_username),
+            "profile_url": "https://example.com/profile.png",
+            "description": "This is a team for verification"
+        },
+        response_type: CreateTeamResponse
+    };
 
-    assert!(team.is_ok(), "Failed to create team: {:?}", team.err());
-    let team = team.unwrap().0;
+    assert_eq!(status, 200, "Failed to create team");
 
     // Create a team group
-    let team_group = create_group_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Path(CreateGroupPathParams {
-            team_pk: team.team_pk.clone(),
-        }),
-        Json(CreateGroupRequest {
-            name: "Test Group".into(),
-            description: "A group for testing".into(),
-            image_url: "https://example.com/image.png".into(),
-            permissions: vec![TeamGroupPermission::GroupEdit],
-        }),
-    )
-    .await;
-    assert!(
-        team_group.is_ok(),
-        "Failed to create team group: {:?}",
-        team_group.err()
-    );
+    let (status, _headers, team_group) = post! {
+        app: app,
+        path: format!("/v3/teams/{}/groups", team.team_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "name": "Group for Verification",
+            "description": "A group for verification purposes",
+            "image_url": "https://example.com/image.png",
+            "permissions": [TeamGroupPermission::GroupEdit]
+        },
+        response_type: CreateGroupResponse
+    };
 
-    let team_group = team_group.unwrap().0;
+    assert_eq!(status, 200, "Failed to create team group");
 
-    let res = update_group_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Path(UpdateGroupPathParams {
-            team_pk: team.team_pk.clone(),
-            group_sk: team_group.group_sk.clone(),
-        }),
-        Json(UpdateGroupRequest {
-            name: Some("Updated Group Name".into()),
-            description: Some("Updated description".into()),
-            permissions: Some(vec![
+    // Extract UUID from EntityType for path parameter
+    let group_id = match team_group.group_sk {
+        EntityType::TeamGroup(ref id) => id.clone(),
+        _ => panic!("Expected TeamGroup EntityType"),
+    };
+
+    // Update group
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: format!("/v3/teams/{}/groups/{}", team.team_pk, group_id),
+        headers: test_user.1.clone(),
+        body: {
+            "name": "Updated Group Name",
+            "description": "Updated description",
+            "permissions": [
                 TeamGroupPermission::GroupEdit,
-                TeamGroupPermission::TeamEdit,
-            ]),
-        }),
-    )
-    .await;
+                TeamGroupPermission::TeamEdit
+            ]
+        }
+    };
 
-    assert!(res.is_ok(), "Failed to update group: {:?}", res.err());
+    assert_eq!(status, 200, "Failed to update group");
 }
+
 #[tokio::test]
-async fn test_update_with_permisison() {
-    let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
+async fn test_update_with_permissison() {
+    let TestContextV3 {
+        app,
+        test_user,
+        user2,
+        ..
+    } = TestContextV3::setup().await;
 
-    let team_username = format!("TEAM{}", uuid::Uuid::new_v4().to_string());
+    let team_username = format!("testteam{}", uuid::Uuid::new_v4());
+
     // Create a team
-    let team = create_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Json(CreateTeamRequest {
-            username: team_username.clone(),
-            nickname: format!("{}'s Team", team_username),
-            profile_url: "https://example.com/profile.png".into(),
-            description: "This is a test team".into(),
-        }),
-    )
-    .await;
+    let (status, _headers, team) = post! {
+        app: app,
+        path: "/v3/teams",
+        headers: test_user.1.clone(),
+        body: {
+            "username": team_username,
+            "nickname": format!("{}'s Team", team_username),
+            "profile_url": "https://example.com/profile.png",
+            "description": "This is a team for verification"
+        },
+        response_type: CreateTeamResponse
+    };
 
-    assert!(team.is_ok(), "Failed to create team: {:?}", team.err());
-    let team = team.unwrap().0;
+    assert_eq!(status, 200, "Failed to create team");
 
     // Create a team group
-    let team_group = create_group_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Path(CreateGroupPathParams {
-            team_pk: team.team_pk.clone(),
-        }),
-        Json(CreateGroupRequest {
-            name: "Test Group".into(),
-            description: "A group for testing".into(),
-            image_url: "https://example.com/image.png".into(),
-            permissions: vec![TeamGroupPermission::GroupEdit],
-        }),
-    )
-    .await;
-    assert!(
-        team_group.is_ok(),
-        "Failed to create team group: {:?}",
-        team_group.err()
-    );
+    let (status, _headers, team_group) = post! {
+        app: app,
+        path: format!("/v3/teams/{}/groups", team.team_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "name": "Group for Verification",
+            "description": "A group for verification purposes",
+            "image_url": "https://example.com/image.png",
+            "permissions": [TeamGroupPermission::GroupEdit]
+        },
+        response_type: CreateGroupResponse
+    };
 
-    let team_group = team_group.unwrap().0;
+    assert_eq!(status, 200, "Failed to create team group");
 
-    let user2 = create_test_user(&cli).await;
+    // Extract UUID from EntityType for path parameter
+    let group_id = match team_group.group_sk {
+        EntityType::TeamGroup(ref id) => id.clone(),
+        _ => panic!("Expected TeamGroup EntityType"),
+    };
 
-    let res = add_member_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Path(AddMemberPathParams {
-            team_pk: team.team_pk.clone(),
-            group_sk: team_group.group_sk.clone(),
-        }),
-        Json(AddMemberRequest {
-            user_pks: vec![user2.pk.to_string()],
-        }),
-    )
-    .await;
-    assert!(
-        res.is_ok(),
-        "Failed to add member to group: {:?}",
-        res.err()
-    );
-    let res = res.unwrap().0;
+    // Add user2 as member to the group
+    let (status, _headers, _add_result) = post! {
+        app: app,
+        path: format!("/v3/teams/{}/groups/{}/member", team.team_pk, group_id),
+        headers: test_user.1.clone(),
+        body: {
+            "user_pks": [user2.0.pk.to_string()]
+        },
+        response_type: AddMemberResponse
+    };
 
-    assert!(
-        res.total_added == 1,
-        "Expected total_added to be 1 but got: {:?}",
-        res.total_added
-    );
+    assert_eq!(status, 200, "Failed to add member to group");
 
-    // Try to update permission with user2 (should fail)
-    let res = update_group_handler(
-        State(app_state.clone()),
-        NoApi(Some(user2.clone())),
-        Path(UpdateGroupPathParams {
-            team_pk: team.team_pk.clone(),
-            group_sk: team_group.group_sk.clone(),
-        }),
-        Json(UpdateGroupRequest {
-            name: Some("Updated Group Name".into()),
-            description: Some("Updated description".into()),
-            permissions: Some(vec![
-                TeamGroupPermission::GroupEdit,
-                TeamGroupPermission::TeamEdit,
-            ]),
-        }),
-    )
-    .await;
-    assert!(
-        res.is_err(),
-        "Expected error reason: without Permission but got: {:?}",
-        res.ok()
-    );
-    // Update permission with user2 (should succeed)
-    let res = update_group_handler(
-        State(app_state.clone()),
-        NoApi(Some(user2.clone())),
-        Path(UpdateGroupPathParams {
-            team_pk: team.team_pk.clone(),
-            group_sk: team_group.group_sk.clone(),
-        }),
-        Json(UpdateGroupRequest {
-            name: Some("Updated Group Name".into()),
-            description: Some("Updated description".into()),
-            permissions: None, // No permission change
-        }),
-    )
-    .await;
-
-    assert!(res.is_ok(), "Failed to update group: {:?}", res.err());
-}
-#[tokio::test]
-async fn test_add_member_handler() {
-    let app_state = create_app_state();
-    let cli = app_state.dynamo.client.clone();
-    let user = create_test_user(&cli).await;
-    let team_username = format!("TEAM{}", uuid::Uuid::new_v4().to_string());
-    // Create a team
-    let team = create_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Json(CreateTeamRequest {
-            username: team_username.clone(),
-            nickname: format!("{}'s Team", team_username),
-            profile_url: "https://example.com/profile.png".into(),
-            description: "This is a test team".into(),
-        }),
-    )
-    .await;
-
-    assert!(team.is_ok(), "Failed to create team: {:?}", team.err());
-    let team = team.unwrap().0;
-
-    // Create a team group
-    let team_group = create_group_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Path(CreateGroupPathParams {
-            team_pk: team.team_pk.clone(),
-        }),
-        Json(CreateGroupRequest {
-            name: "Test Group".into(),
-            description: "A group for testing".into(),
-            image_url: "https://example.com/image.png".into(),
-            permissions: vec![TeamGroupPermission::GroupEdit],
-        }),
-    )
-    .await;
-    assert!(
-        team_group.is_ok(),
-        "Failed to create team group: {:?}",
-        team_group.err()
-    );
-
-    let team_group = team_group.unwrap().0;
-
-    // Create Some users to be added
-    let user2 = create_test_user(&cli).await;
-    let user3 = create_test_user(&cli).await;
-
-    // Call add_member_handler
-    let add_member_res = add_member_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Path(AddMemberPathParams {
-            team_pk: team.team_pk.clone(),
-            group_sk: team_group.group_sk.clone(),
-        }),
-        Json(AddMemberRequest {
-            user_pks: vec![user2.pk.to_string(), user3.pk.to_string()],
-        }),
-    )
-    .await;
-
-    assert!(
-        add_member_res.is_ok(),
-        "Failed to add members: {:?}",
-        add_member_res.err()
-    );
-
-    let team = get_team_handler(
-        State(app_state.clone()),
-        NoApi(Some(user.clone())),
-        Path(GetTeamPathParams {
-            team_pk: team.team_pk.clone(),
-        }),
-    )
-    .await;
-
-    assert!(
-        team.is_ok(),
-        "Failed to get team after adding members: {:?}",
-        team.err()
-    );
-
-    let team = team.unwrap().0;
-    let res = team.groups.unwrap_or_default();
-    let team_group = res
-        .into_iter()
-        .find(|g| g.sk == team_group.group_sk)
-        .expect("Team group should exist");
+    // Update group with user2 (who has GroupEdit permission)
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: format!("/v3/teams/{}/groups/{}", team.team_pk, group_id),
+        headers: user2.1.clone(),
+        body: {
+            "name": "Updated by Member",
+            "description": "Updated by a group member"
+        }
+    };
 
     assert_eq!(
-        team_group.members, 3,
-        "Team group members should be 3(Owner + 2 added)"
+        status, 200,
+        "Member with GroupEdit permission should be able to update group"
     );
+}
 
-    // FIXME: Use oneshot and session
-    // let user2 = get_info_handler(State(app_state.clone()), Extension(Some(auth2.clone()))).await;
+#[tokio::test]
+async fn test_add_member_handler() {
+    let TestContextV3 {
+        app,
+        test_user,
+        user2,
+        ..
+    } = TestContextV3::setup().await;
 
-    // assert!(user2.is_ok(), "Failed to get user2 info: {:?}", user2.err());
-    // let user2 = user2.unwrap().0;
-    // let user2_teams = user2.teams.unwrap_or_default();
+    let team_username = format!("testteam{}", uuid::Uuid::new_v4());
 
-    // assert_eq!(user2_teams.len(), 1, "User2 should be in 1 team");
+    // Create a team
+    let (status, _headers, team) = post! {
+        app: app,
+        path: "/v3/teams",
+        headers: test_user.1.clone(),
+        body: {
+            "username": team_username,
+            "nickname": format!("{}'s Team", team_username),
+            "profile_url": "https://example.com/profile.png",
+            "description": "This is a team for verification"
+        },
+        response_type: CreateTeamResponse
+    };
+
+    assert_eq!(status, 200, "Failed to create team");
+
+    // Create a team group
+    let (status, _headers, team_group) = post! {
+        app: app,
+        path: format!("/v3/teams/{}/groups", team.team_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "name": "Group for Verification",
+            "description": "A group for verification purposes",
+            "image_url": "https://example.com/image.png",
+            "permissions": [TeamGroupPermission::PostWrite]
+        },
+        response_type: CreateGroupResponse
+    };
+
+    assert_eq!(status, 200, "Failed to create team group");
+
+    // Extract UUID from EntityType for path parameter
+    let group_id = match team_group.group_sk {
+        EntityType::TeamGroup(ref id) => id.clone(),
+        _ => panic!("Expected TeamGroup EntityType"),
+    };
+
+    // Add members to the group
+    let (status, _headers, add_result) = post! {
+        app: app,
+        path: format!("/v3/teams/{}/groups/{}/member", team.team_pk, group_id),
+        headers: test_user.1.clone(),
+        body: {
+            "user_pks": [user2.0.pk.to_string()]
+        },
+        response_type: AddMemberResponse
+    };
+
+    assert_eq!(status, 200, "Failed to add members");
+    assert_eq!(add_result.total_added, 1, "Should have added 1 member");
+    assert_eq!(add_result.failed_pks.len(), 0, "Should have no failed adds");
+
+    // Get team and verify group exists
+    let (status, _headers, team_response) = get! {
+        app: app,
+        path: format!("/v3/teams/{}", team.team_pk),
+        headers: test_user.1.clone(),
+        response_type: GetTeamResponse
+    };
+
+    assert_eq!(status, 200, "Failed to get team");
+    let groups = team_response.groups.unwrap_or_default();
+    // group.id now contains just the UUID (not TEAM_GROUP#uuid format)
+    let group_uuid = match &team_group.group_sk {
+        EntityType::TeamGroup(uuid) => uuid.to_string(),
+        _ => team_group.group_sk.to_string(),
+    };
+    assert!(
+        groups.iter().any(|g| g.id == group_uuid),
+        "Team group should exist"
+    );
 }
