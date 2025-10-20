@@ -1,12 +1,12 @@
 use crate::controllers::v3::spaces::{SpaceDiscussionPath, SpaceDiscussionPathParam};
-use crate::features::common_controller_logic::{ensure_current_meeting, get_discussion};
+use crate::features::common_controller_logic::{
+    build_meeting_info, ensure_current_meeting, get_discussion,
+};
 use crate::features::dto::SpaceDiscussionResponse;
 use crate::features::models::space_discussion::SpaceDiscussion;
 use crate::features::models::space_discussion_participant::{
     SpaceDiscussionParticipant, SpaceDiscussionParticipantQueryOption,
 };
-use crate::types::media_placement_info::MediaPlacementInfo;
-use crate::types::meeting_info::MeetingInfo;
 use crate::types::{EntityType, Partition};
 use crate::{AppState, Error2, models::user::User};
 use bdk::prelude::axum::extract::{Json, Path, State};
@@ -153,30 +153,4 @@ pub async fn participant_meeting_handler(
 
     let disc = get_discussion(&dynamo, space_pk.clone(), discussion_pk.clone()).await?;
     Ok(Json(disc))
-}
-
-async fn build_meeting_info(
-    client: &crate::utils::aws_chime_sdk_meeting::ChimeMeetingService,
-    meeting_id: &str,
-) -> Result<MeetingInfo, Error2> {
-    let m = client
-        .get_meeting_info(meeting_id)
-        .await
-        .ok_or_else(|| Error2::AwsChimeError("Missing meeting from Chime".into()))?;
-    let mp = m
-        .media_placement()
-        .ok_or_else(|| Error2::AwsChimeError("Missing media_placement".into()))?;
-    Ok(MeetingInfo {
-        meeting_id: meeting_id.to_string(),
-        media_region: m.media_region.clone().unwrap_or_default(),
-        media_placement: MediaPlacementInfo {
-            audio_host_url: mp.audio_host_url().unwrap_or_default().to_string(),
-            audio_fallback_url: mp.audio_fallback_url().unwrap_or_default().to_string(),
-            screen_data_url: mp.screen_data_url().unwrap_or_default().to_string(),
-            screen_sharing_url: mp.screen_sharing_url().unwrap_or_default().to_string(),
-            screen_viewing_url: mp.screen_viewing_url().unwrap_or_default().to_string(),
-            signaling_url: mp.signaling_url().unwrap_or_default().to_string(),
-            turn_control_url: mp.turn_control_url().unwrap_or_default().to_string(),
-        },
-    })
 }

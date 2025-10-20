@@ -4,6 +4,8 @@ use crate::features::models::space_discussion_member::SpaceDiscussionMemberQuery
 use crate::features::models::space_discussion_participant::SpaceDiscussionParticipant;
 use crate::features::models::space_discussion_participant::SpaceDiscussionParticipantQueryOption;
 use crate::types::EntityType;
+use crate::types::media_placement_info::MediaPlacementInfo;
+use crate::types::meeting_info::MeetingInfo;
 use crate::{
     Error2,
     features::{dto::SpaceDiscussionResponse, models::space_discussion::SpaceDiscussion},
@@ -149,4 +151,30 @@ pub async fn ensure_current_meeting(
     .await?;
 
     Ok(new_id)
+}
+
+pub async fn build_meeting_info(
+    client: &crate::utils::aws_chime_sdk_meeting::ChimeMeetingService,
+    meeting_id: &str,
+) -> Result<MeetingInfo, Error2> {
+    let m = client
+        .get_meeting_info(meeting_id)
+        .await
+        .ok_or_else(|| Error2::AwsChimeError("Missing meeting from Chime".into()))?;
+    let mp = m
+        .media_placement()
+        .ok_or_else(|| Error2::AwsChimeError("Missing media_placement".into()))?;
+    Ok(MeetingInfo {
+        meeting_id: meeting_id.to_string(),
+        media_region: m.media_region.clone().unwrap_or_default(),
+        media_placement: MediaPlacementInfo {
+            audio_host_url: mp.audio_host_url().unwrap_or_default().to_string(),
+            audio_fallback_url: mp.audio_fallback_url().unwrap_or_default().to_string(),
+            screen_data_url: mp.screen_data_url().unwrap_or_default().to_string(),
+            screen_sharing_url: mp.screen_sharing_url().unwrap_or_default().to_string(),
+            screen_viewing_url: mp.screen_viewing_url().unwrap_or_default().to_string(),
+            signaling_url: mp.signaling_url().unwrap_or_default().to_string(),
+            turn_control_url: mp.turn_control_url().unwrap_or_default().to_string(),
+        },
+    })
 }
