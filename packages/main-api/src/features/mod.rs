@@ -1,3 +1,4 @@
-pub mod discussions;
+pub mod spaces;
 
+pub mod discussions;
 pub use discussions::*;
