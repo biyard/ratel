@@ -74,7 +74,7 @@ function DropdownMenuItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-muted-foreground relative rounded-sm text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2 hover:bg-hover cursor-pointer",
+        "text-text-primary focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:!text-destructive [&_svg:not([class*='text-'])]:text-muted-foreground relative rounded-sm text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2 hover:bg-hover cursor-pointer",
         className,
       )}
       {...props}
@@ -98,7 +98,7 @@ function DropdownMenuCheckboxItem({
       checked={checked}
       {...props}
     >
-      <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
+      <span className="flex absolute left-2 justify-center items-center pointer-events-none size-3.5">
         <DropdownMenuPrimitive.ItemIndicator>
           <CheckIcon className="size-4" />
         </DropdownMenuPrimitive.ItemIndicator>
@@ -133,7 +133,7 @@ function DropdownMenuRadioItem({
       )}
       {...props}
     >
-      <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
+      <span className="flex absolute left-2 justify-center items-center pointer-events-none size-3.5">
         <DropdownMenuPrimitive.ItemIndicator>
           <CircleIcon className="size-2-current" />
         </DropdownMenuPrimitive.ItemIndicator>

@@ -46,6 +46,13 @@ impl PostResponse {
 
 impl From<Post> for PostResponse {
     fn from(post: Post) -> Self {
+        let (space_pk, space_type) = match post.space_visibility {
+            Some(crate::types::SpaceVisibility::Public) => {
+                (post.space_pk.clone(), post.space_type.clone())
+            }
+            _ => (None, None),
+        };
+
         PostResponse {
             pk: post.pk,
             created_at: post.created_at,
@@ -58,13 +65,13 @@ impl From<Post> for PostResponse {
             author_display_name: post.author_display_name,
             author_profile_url: post.author_profile_url,
             author_username: post.author_username,
-            space_pk: None,
+            space_pk,
             booster: post.booster.unwrap_or(BoosterType::NoBoost),
             rewards: post.rewards,
             urls: post.urls.clone(),
             liked: false,
             auth_pk: post.user_pk,
-            space_type: None,
+            space_type,
             author_type: post.author_type,
         }
     }
