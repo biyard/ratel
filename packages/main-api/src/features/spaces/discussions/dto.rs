@@ -1,6 +1,6 @@
-use crate::features::discussions::models::space_discussion::SpaceDiscussion;
-use crate::features::discussions::models::space_discussion_member::SpaceDiscussionMember;
-use crate::features::discussions::models::space_discussion_participant::SpaceDiscussionParticipant;
+use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
+use crate::features::spaces::discussions::models::space_discussion_member::SpaceDiscussionMember;
+use crate::features::spaces::discussions::models::space_discussion_participant::SpaceDiscussionParticipant;
 use crate::types::attendee_info::AttendeeInfo;
 use crate::types::meeting_info::MeetingInfo;
 use crate::types::{EntityType, Partition};

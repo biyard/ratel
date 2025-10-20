@@ -1,5 +1,7 @@
 use crate::controllers::v3::spaces::CreateSpaceResponse;
-use crate::features::dto::{CreateDiscussionResponse, SpaceDiscussionResponse};
+use crate::features::spaces::discussions::dto::{
+    CreateDiscussionResponse, SpaceDiscussionResponse,
+};
 use crate::tests::create_test_user;
 use crate::types::{Partition, SpaceType};
 use crate::*;

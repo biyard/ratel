@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::CreateSpaceResponse;
-use crate::features::dto::{
+use crate::features::spaces::discussions::dto::{
     CreateDiscussionResponse, DeleteDiscussionResponse, GetDiscussionResponse,
     ListDiscussionResponse,
 };
