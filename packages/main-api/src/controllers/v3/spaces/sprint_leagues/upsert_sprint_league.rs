@@ -1,10 +1,9 @@
+use crate::features::spaces::sprint_leagues::CreatePlayerRequest;
 use crate::{
     AppState,
     controllers::v3::spaces::dto::SpacePathParam,
     error::Error,
-    features::spaces::sprint_leagues::{
-        CreatePlayerRequest, SprintLeague, SprintLeaguePlayer, SprintLeagueResponse,
-    },
+    features::spaces::sprint_leagues::{SprintLeague, SprintLeaguePlayer, SprintLeagueResponse},
     models::{SpaceCommon, User},
     types::{EntityType, Partition, TeamGroupPermission},
 };
