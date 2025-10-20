@@ -47,18 +47,24 @@ export function wrap(page: Page, project: string, baseDir: string): BiyardPage {
 
 export async function click(
   page: Page,
-  { text, label }: { text?: string; label?: string },
+  {
+    text,
+    label,
+    'data-pw': dataPw,
+  }: { text?: string; label?: string; 'data-pw'?: string },
 ): Promise<Locator> {
-  let timeout = { timeout: CONFIGS.PAGE_WAIT_TIME };
+  const timeout = { timeout: CONFIGS.PAGE_WAIT_TIME };
 
   let selected: Locator;
 
-  if (label) {
+  if (dataPw) {
+    selected = page.locator(`[data-pw="${dataPw}"]`);
+  } else if (label) {
     selected = page.getByLabel(label, { exact: true });
   } else if (text) {
     selected = page.getByRole('button', { name: text, exact: true });
   } else {
-    throw new Error('Either text or id must be provided');
+    throw new Error('Either text, label, or data-pw must be provided');
   }
 
   await expect(selected).toBeVisible(timeout);
@@ -78,8 +84,8 @@ export async function fill(
   },
   value: string,
 ): Promise<Locator> {
-  let opt = { exact: true };
-  let timeout = { timeout: CONFIGS.PAGE_WAIT_TIME };
+  const opt = { exact: true };
+  const timeout = { timeout: CONFIGS.PAGE_WAIT_TIME };
 
   let selected: Locator;
 
@@ -105,8 +111,8 @@ export async function waitForVisible(
     text?: string;
   },
 ): Promise<Locator> {
-  let opt = { exact: true };
-  let timeout = { timeout: CONFIGS.PAGE_WAIT_TIME };
+  const opt = { exact: true };
+  const timeout = { timeout: CONFIGS.PAGE_WAIT_TIME };
 
   let selected: Locator;
 

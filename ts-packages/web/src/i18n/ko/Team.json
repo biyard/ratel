@@ -44,5 +44,11 @@
   "delete": "삭제",
   "remove_test_keyword": "test 와 관련된 글자를 제거해주세요",
   "write_title": "제목을 입력해주세요.",
-  "write_content": "여기에 마크다운 형태를 활용하여 설명을 입력해주세요."
+  "write_content": "여기에 마크다운 형태를 활용하여 설명을 입력해주세요.",
+  "loading_members": "멤버 로딩 중...",
+  "error_loading_members": "멤버 로딩 실패",
+  "team_owner": "팀 소유자",
+  "remove_from_group": "그룹에서 제거",
+  "member_removed_from_group": "{{groupName}}에서 멤버를 제거했습니다",
+  "failed_remove_member_from_group": "그룹에서 멤버를 제거하는데 실패했습니다"
 }

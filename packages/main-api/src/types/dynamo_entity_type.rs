@@ -55,11 +55,13 @@ pub enum EntityType {
     // SPACE_PK index is aligned by gsi2-index
     SpaceCommon,
 
-    // Poll Space entity types
-    // PollSpace,
-    PollSpaceSurvey,
-    PollSpaceSurveyResponse(String), //space_pk
-    PollSpaceSurveyResult,
+    // Poll Feature entity types
+    SpacePoll,
+
+    SpacePollQuestion,
+
+    SpacePollResult,
+    SpacePollUserAnswer(String), // user_pk
 
     // Survery space entity types
     SurveySpace,
@@ -99,11 +101,10 @@ pub enum EntityType {
     Industry,
 
     //SPACE FEATURE
-    SpaceFile,
+    SpaceFile(String),
     SpaceDiscussion(String),
     SpaceDiscussionMember(String),
     SpaceDiscussionParticipant(String),
-    SpacePoll(String),
     SpaceQuiz(String),
     SpaceRecommendation,
     SpaceSurveyResponse(String), //Space pk

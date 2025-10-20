@@ -9,8 +9,7 @@ use crate::{
             DeliberationDetailResponse, DeliberationDiscussionMember,
             DeliberationDiscussionMemberQueryOption, DeliberationMetadata,
             DeliberationSpaceContent, DeliberationSpaceDiscussion, DeliberationSpaceElearning,
-            DeliberationSpaceQuestion, DeliberationSpaceQuestionQueryOption,
-            DeliberationSpaceSurvey, DiscussionCreateRequest, SpaceCommon, SurveyCreateRequest,
+            DiscussionCreateRequest, SpaceCommon,
         },
         user::User,
     },
@@ -37,9 +36,6 @@ pub struct UpdateDeliberationRequest {
     pub discussions: Vec<DiscussionCreateRequest>,
     #[schemars(description = "Deliberation elearning files")]
     pub elearning_files: Vec<File>,
-
-    #[schemars(description = "Deliberation surveys")]
-    pub surveys: Vec<SurveyCreateRequest>,
 
     #[schemars(description = "Final Recommendation HTML contents")]
     pub recommendation_html_contents: Option<String>,
@@ -117,7 +113,6 @@ pub async fn update_deliberation_handler(
     )
     .await?;
     update_elearning(dynamo.clone(), space_pk.to_string(), req.elearning_files).await?;
-    update_survey(dynamo.clone(), space_pk.to_string(), req.surveys).await?;
     update_recommendation(
         dynamo.clone(),
         space_pk.to_string(),
@@ -143,89 +138,6 @@ pub async fn update_deliberation_handler(
     // tracing::debug!("deliberation metadata 1111: {:?}", metadata);
 
     Ok(Json(metadata))
-}
-
-pub async fn update_survey(
-    dynamo: DynamoClient,
-    space_pk: String,
-    surveys: Vec<SurveyCreateRequest>,
-) -> Result<(), Error2> {
-    let id = space_pk
-        .clone()
-        .split("#")
-        .last()
-        .ok_or_else(|| Error2::BadRequest("Invalid space_pk format".into()))?
-        .to_string();
-
-    for survey in surveys {
-        if survey.survey_pk.is_some() {
-            let survey_id = survey
-                .survey_pk
-                .clone()
-                .unwrap_or_default()
-                .split("#")
-                .last()
-                .ok_or_else(|| Error2::BadRequest("Invalid survey_pk format".into()))?
-                .to_string();
-
-            DeliberationSpaceSurvey::updater(
-                &space_pk,
-                EntityType::DeliberationSurvey(survey_id.clone()),
-            )
-            .with_started_at(survey.started_at)
-            .with_ended_at(survey.ended_at)
-            .with_status(survey.status)
-            .execute(&dynamo.client)
-            .await?;
-
-            let option = DeliberationSpaceQuestionQueryOption::builder();
-
-            let deleted_questions = DeliberationSpaceQuestion::find_by_survey_pk(
-                &dynamo.client,
-                survey.survey_pk.unwrap(),
-                option,
-            )
-            .await?
-            .0;
-
-            for question in deleted_questions {
-                DeliberationSpaceQuestion::delete(&dynamo.client, question.pk, Some(question.sk))
-                    .await?;
-            }
-
-            let question = DeliberationSpaceQuestion::new(
-                Partition::Space(id.clone()),
-                Partition::Survey(survey_id.clone()),
-                survey.questions,
-            );
-
-            question.create(&dynamo.client).await?;
-        } else {
-            let sur = DeliberationSpaceSurvey::new(
-                Partition::Space(id.clone()),
-                survey.status,
-                survey.started_at,
-                survey.ended_at,
-            );
-
-            sur.create(&dynamo.client).await?;
-
-            let survey_id = match sur.clone().sk {
-                EntityType::DeliberationSurvey(v) => v,
-                _ => "".to_string(),
-            };
-
-            let question = DeliberationSpaceQuestion::new(
-                Partition::Space(id.clone()),
-                Partition::Survey(survey_id),
-                survey.questions,
-            );
-
-            question.create(&dynamo.client).await?;
-        }
-    }
-
-    Ok(())
 }
 
 pub async fn update_discussion(

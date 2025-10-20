@@ -6,6 +6,7 @@
 //   UrlType,
 //   writePostRequest,
 // } from '@/lib/api/models/feeds/write-post-request';
+import { useParams } from 'react-router';
 import TeamSettings from './page.client';
 
 export interface TeamLayoutProps {
@@ -43,8 +44,12 @@ export interface TeamLayoutProps {
 //   },
 // };
 
-export default async function Page({ params }: TeamLayoutProps) {
-  const { username } = await params;
+export default function Page() {
+  const { username } = useParams<{ username: string }>();
+
+  if (!username) {
+    return <div>Invalid team username</div>;
+  }
 
   return <TeamSettings username={username} />;
 }

@@ -4,9 +4,10 @@ use crate::{
         team::{Team, TeamGroup},
         user::{User, UserTeamGroup},
     },
-    types::{EntityType, TeamGroupPermission, TeamGroupPermissions},
+    types::{EntityType, Partition, TeamGroupPermission, TeamGroupPermissions},
     utils::security::{RatelResource, check_any_permission_with_user},
 };
+use bdk::prelude::*;
 use by_axum::{
     aide::NoApi,
     axum::{
@@ -15,7 +16,6 @@ use by_axum::{
     },
 };
 use serde::{Deserialize, Serialize};
-use bdk::prelude::*;
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct CreateGroupPathParams {
@@ -30,10 +30,12 @@ pub struct CreateGroupRequest {
     pub permissions: Vec<TeamGroupPermission>,
 }
 
-#[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreateGroupResponse {
-    pub group_pk: String,
-    pub group_sk: String,
+    #[schemars(description = "Group PK (Team PK)")]
+    pub group_pk: Partition,
+    #[schemars(description = "Group SK (Unique identifier)")]
+    pub group_sk: EntityType,
 }
 
 pub async fn create_group_handler(
@@ -43,6 +45,7 @@ pub async fn create_group_handler(
     Json(req): Json<CreateGroupRequest>,
 ) -> Result<Json<CreateGroupResponse>, Error2> {
     let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
+
     // If Admin permissions are requested, require TeamAdmin
     let required_permissions = if req
         .permissions
@@ -100,7 +103,7 @@ pub async fn create_group_handler(
         .await?;
 
     Ok(Json(CreateGroupResponse {
-        group_pk: group_pk.to_string(),
-        group_sk: group_sk.to_string(),
+        group_pk,
+        group_sk,
     }))
 }
