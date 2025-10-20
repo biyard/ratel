@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::types::*;
+use crate::types::{Answer, Question};
 use bdk::prelude::*;
 
 #[derive(
@@ -14,7 +14,7 @@ use bdk::prelude::*;
     aide::OperationIo,
 )]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
-pub enum SurveySummary {
+pub enum PollSummary {
     SingleChoice {
         total_count: i64,
         answers: HashMap<i32, i64>, // (option_idx, count)
@@ -44,25 +44,26 @@ pub enum SurveySummary {
         answers: HashMap<i32, i64>, // (scale_value, count)
     },
 }
-impl SurveySummary {
-    pub fn aggregate_answer(&mut self, answer: SurveyAnswer) {
+
+impl PollSummary {
+    pub fn aggregate_answer(&mut self, answer: Answer) {
         match self {
-            SurveySummary::SingleChoice {
+            PollSummary::SingleChoice {
                 answers,
                 total_count,
             } => {
-                if let SurveyAnswer::SingleChoice { answer } = answer {
+                if let Answer::SingleChoice { answer } = answer {
                     if let Some(idx) = answer {
                         *answers.entry(idx).or_insert(0) += 1;
                         *total_count += 1;
                     }
                 }
             }
-            SurveySummary::MultipleChoice {
+            PollSummary::MultipleChoice {
                 answers,
                 total_count,
             } => {
-                if let SurveyAnswer::MultipleChoice { answer } = answer {
+                if let Answer::MultipleChoice { answer } = answer {
                     if let Some(idxs) = answer {
                         for idx in idxs {
                             *answers.entry(idx).or_insert(0) += 1;
@@ -71,33 +72,33 @@ impl SurveySummary {
                     }
                 }
             }
-            SurveySummary::ShortAnswer {
+            PollSummary::ShortAnswer {
                 answers,
                 total_count,
             } => {
-                if let SurveyAnswer::ShortAnswer { answer } = answer {
+                if let Answer::ShortAnswer { answer } = answer {
                     if let Some(answer) = answer {
                         *answers.entry(answer).or_insert(0) += 1;
                         *total_count += 1;
                     }
                 }
             }
-            SurveySummary::Subjective {
+            PollSummary::Subjective {
                 answers,
                 total_count,
             } => {
-                if let SurveyAnswer::Subjective { answer } = answer {
+                if let Answer::Subjective { answer } = answer {
                     if let Some(answer) = answer {
                         *answers.entry(answer).or_insert(0) += 1;
                         *total_count += 1;
                     }
                 }
             }
-            SurveySummary::Checkbox {
+            PollSummary::Checkbox {
                 answers,
                 total_count,
             } => {
-                if let SurveyAnswer::Checkbox { answer } = answer {
+                if let Answer::Checkbox { answer } = answer {
                     if let Some(idxs) = answer {
                         for idx in idxs {
                             *answers.entry(idx).or_insert(0) += 1;
@@ -106,22 +107,22 @@ impl SurveySummary {
                     }
                 }
             }
-            SurveySummary::Dropdown {
+            PollSummary::Dropdown {
                 answers,
                 total_count,
             } => {
-                if let SurveyAnswer::Dropdown { answer } = answer {
+                if let Answer::Dropdown { answer } = answer {
                     if let Some(idx) = answer {
                         *answers.entry(idx).or_insert(0) += 1;
                         *total_count += 1;
                     }
                 }
             }
-            SurveySummary::LinearScale {
+            PollSummary::LinearScale {
                 answers,
                 total_count,
             } => {
-                if let SurveyAnswer::LinearScale { answer } = answer {
+                if let Answer::LinearScale { answer } = answer {
                     if let Some(idx) = answer {
                         *answers.entry(idx).or_insert(0) += 1;
                         *total_count += 1;
@@ -131,34 +132,34 @@ impl SurveySummary {
         }
     }
 }
-impl From<SurveyQuestion> for SurveySummary {
-    fn from(question: SurveyQuestion) -> Self {
+impl From<Question> for PollSummary {
+    fn from(question: Question) -> Self {
         match question {
-            SurveyQuestion::SingleChoice(_) => SurveySummary::SingleChoice {
+            Question::SingleChoice(_) => PollSummary::SingleChoice {
                 answers: HashMap::new(),
                 total_count: 0,
             },
-            SurveyQuestion::MultipleChoice(_) => SurveySummary::MultipleChoice {
+            Question::MultipleChoice(_) => PollSummary::MultipleChoice {
                 answers: HashMap::new(),
                 total_count: 0,
             },
-            SurveyQuestion::ShortAnswer(_) => SurveySummary::ShortAnswer {
+            Question::ShortAnswer(_) => PollSummary::ShortAnswer {
                 answers: HashMap::new(),
                 total_count: 0,
             },
-            SurveyQuestion::Subjective(_) => SurveySummary::Subjective {
+            Question::Subjective(_) => PollSummary::Subjective {
                 total_count: 0,
                 answers: HashMap::new(),
             },
-            SurveyQuestion::Checkbox(_) => SurveySummary::Checkbox {
+            Question::Checkbox(_) => PollSummary::Checkbox {
                 total_count: 0,
                 answers: HashMap::new(),
             },
-            SurveyQuestion::Dropdown(_) => SurveySummary::Dropdown {
+            Question::Dropdown(_) => PollSummary::Dropdown {
                 total_count: 0,
                 answers: HashMap::new(),
             },
-            SurveyQuestion::LinearScale(_) => SurveySummary::LinearScale {
+            Question::LinearScale(_) => PollSummary::LinearScale {
                 total_count: 0,
                 answers: HashMap::new(),
             },
