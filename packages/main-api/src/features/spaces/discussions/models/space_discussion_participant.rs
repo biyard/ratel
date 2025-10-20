@@ -1,7 +1,7 @@
 use crate::{models::user::User, types::*};
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema, Default)]
 pub struct SpaceDiscussionParticipant {
     pub pk: Partition, //discussion_pk
     #[dynamo(index = "gsi1", sk)]

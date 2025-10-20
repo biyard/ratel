@@ -1,12 +1,16 @@
 pub mod create_discussion;
 pub mod delete_discussion;
 pub mod get_discussion;
+pub mod get_discussion_member;
+pub mod get_discussion_participant;
 pub mod list_discussions;
 pub mod update_discussion;
 
 pub use create_discussion::*;
 pub use delete_discussion::*;
 pub use get_discussion::*;
+pub use get_discussion_member::*;
+pub use get_discussion_participant::*;
 pub use list_discussions::*;
 pub use update_discussion::*;
 
@@ -45,6 +49,14 @@ pub fn discussions_route() -> Router<AppState> {
         .route(
             "/",
             post(create_discussion_handler).get(list_discussions_handler),
+        )
+        .route(
+            "/:discussion_pk/members",
+            get(get_discussion_members_handler),
+        )
+        .route(
+            "/:discussion_pk/participants",
+            get(get_discussion_participants_handler),
         )
         .route(
             "/:discussion_pk",

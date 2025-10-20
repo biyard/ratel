@@ -1,5 +1,7 @@
 use crate::features::spaces::discussions::dto::space_discussion_request::SpaceDiscussionRequest;
 use crate::features::spaces::discussions::dto::space_discussion_response::SpaceDiscussionResponse;
+use crate::features::spaces::discussions::models::space_discussion_member::SpaceDiscussionMember;
+use crate::features::spaces::discussions::models::space_discussion_participant::SpaceDiscussionParticipant;
 use crate::types::Partition;
 use bdk::prelude::*;
 use serde::Deserialize;
@@ -37,6 +39,18 @@ pub struct GetDiscussionResponse {
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct ListDiscussionResponse {
     pub discussions: Vec<SpaceDiscussionResponse>,
+    pub bookmark: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema)]
+pub struct ListDiscussionMemberResponse {
+    pub members: Vec<SpaceDiscussionMember>,
+    pub bookmark: Option<String>,
+}
+
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema)]
+pub struct ListDiscussionParticipantResponse {
+    pub participants: Vec<SpaceDiscussionParticipant>,
     pub bookmark: Option<String>,
 }
 
