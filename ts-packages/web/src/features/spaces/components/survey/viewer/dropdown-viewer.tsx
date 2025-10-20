@@ -6,7 +6,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import Title, { type TitleProps } from './title';
-import { DropdownQuestion } from '@/types/survey-type';
+import { DropdownQuestion } from '@/features/spaces/polls/types/poll-question';
 
 interface DropdownViewerProps extends DropdownQuestion, TitleProps {
   selectedOption: number | null;
@@ -16,7 +16,7 @@ interface DropdownViewerProps extends DropdownQuestion, TitleProps {
 export default function DropdownViewer(props: DropdownViewerProps) {
   const { t, options, selectedOption, onSelect, disabled = false } = props;
   return (
-    <div className="flex flex-col w-full gap-2.5">
+    <div className="flex flex-col gap-2.5 w-full">
       <Title {...props} />
       <Select
         disabled={disabled}

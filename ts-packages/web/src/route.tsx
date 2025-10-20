@@ -49,6 +49,11 @@ export const route = {
         return `/spaces/${encodeURIComponent(spaceId)}`;
     }
   },
+  spacePolls: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/polls`,
+
+  spacePollById: (spaceId: string, pollId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/polls/${encodeURIComponent(pollId)}`,
 
   telegramSprintLeague: (space_id: number | string) =>
     `/telegram/sprint-league/${encodeURIComponent(space_id)}`,

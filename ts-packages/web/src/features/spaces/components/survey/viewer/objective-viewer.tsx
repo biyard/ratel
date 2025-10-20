@@ -4,7 +4,7 @@ import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 // import { Answer } from '@/lib/api/models/response';
 // import { Question } from '@/lib/api/models/survey';
 import Title, { type TitleProps } from './title';
-import { ChoiceQuestion } from '@/types/survey-type';
+import { ChoiceQuestion } from '@/features/spaces/polls/types/poll-question';
 
 interface ObjectiveViewerProps extends ChoiceQuestion, TitleProps {
   disabled?: boolean;
@@ -26,7 +26,7 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
       <Title {...props} />
       {image_url ? (
         <img
-          className="object-contain max-h-70 w-fit rounded-lg"
+          className="object-contain rounded-lg max-h-70 w-fit"
           src={image_url}
           alt={title}
         />
@@ -38,7 +38,7 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
           return (
             <div
               key={`${answer_type}-${optionIdx}`}
-              className="flex flex-row w-full h-fit justify-start items-center gap-3"
+              className="flex flex-row gap-3 justify-start items-center w-full h-fit"
             >
               <div className="w-4.5 h-4.5">
                 <CustomCheckbox

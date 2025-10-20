@@ -28,7 +28,7 @@ async fn test_update_group_handler() {
         body: {
             "username": team_username,
             "nickname": format!("{}'s Team", team_username),
-            "profile_url": "https://example.com/profile.png",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "description": "This is a team for verification"
         },
         response_type: CreateTeamResponse
@@ -95,7 +95,7 @@ async fn test_update_with_permissison() {
         body: {
             "username": team_username,
             "nickname": format!("{}'s Team", team_username),
-            "profile_url": "https://example.com/profile.png",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "description": "This is a team for verification"
         },
         response_type: CreateTeamResponse
@@ -174,7 +174,7 @@ async fn test_add_member_handler() {
         body: {
             "username": team_username,
             "nickname": format!("{}'s Team", team_username),
-            "profile_url": "https://example.com/profile.png",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "description": "This is a team for verification"
         },
         response_type: CreateTeamResponse

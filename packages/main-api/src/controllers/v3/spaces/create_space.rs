@@ -1,8 +1,9 @@
+use crate::features::spaces::polls::Poll;
 use crate::models::feed::Post;
 use crate::models::space::SpaceCommon;
 use crate::models::user::User;
 use crate::types::{Partition, SpaceType, TeamGroupPermission};
-use crate::{AppState, Error2, transact_write};
+use crate::{AppState, Error2, transact_write_items};
 use aide::NoApi;
 use axum::extract::{Json, State};
 use bdk::prelude::*;
@@ -50,11 +51,18 @@ pub async fn create_space_handler(
         .with_space_pk(space.pk.clone())
         .with_space_type(space_type);
 
-    transact_write!(
-        dynamo.client,
+    let mut tx = vec![
         space.create_transact_write_item(),
-        post_updater.transact_write_item()
-    )?;
+        post_updater.transact_write_item(),
+    ];
+
+    if space.space_type == SpaceType::Poll {
+        let poll: Poll = space.pk.clone().try_into()?;
+
+        tx.push(poll.create_transact_write_item());
+    }
+
+    transact_write_items!(dynamo.client, tx)?;
 
     Ok(Json(CreateSpaceResponse { space_pk: space.pk }))
 }
