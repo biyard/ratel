@@ -1,3 +1,5 @@
+import { PollQuestion } from './poll-question';
+
 export class Poll {
   public pk: string;
   public sk: string;
@@ -7,7 +9,8 @@ export class Poll {
   public ended_at: number;
   public response_editable: boolean;
   public user_response_count: number;
-  public questions: any[];
+
+  public questions: PollQuestion[];
   public myResponse?: any[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
