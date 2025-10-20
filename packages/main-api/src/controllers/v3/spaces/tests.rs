@@ -1,6 +1,6 @@
 use crate::controllers::v3::posts::CreatePostResponse;
 use crate::models::SpaceCommon;
-use crate::types::{ListItemsResponse, SpacePublishState};
+use crate::types::{ListItemsResponse, SpacePublishState, SpaceType};
 use crate::*;
 use crate::{
     controllers::v3::spaces::create_space::CreateSpaceResponse, tests::v3_setup::TestContextV3,
@@ -192,7 +192,7 @@ pub async fn setup_post() -> (TestContextV3, String) {
     return (ctx, post_pk);
 }
 
-pub async fn setup_space() -> (TestContextV3, String) {
+pub async fn setup_space(space_type: SpaceType) -> (TestContextV3, String) {
     let (ctx, post_pk) = setup_post().await;
     let TestContextV3 { app, test_user, .. } = ctx.clone();
 
@@ -201,7 +201,7 @@ pub async fn setup_space() -> (TestContextV3, String) {
         path: "/v3/spaces",
         headers: test_user.1.clone(),
         body: {
-            "space_type": 2,
+            "space_type": space_type as u8,
             "post_pk": post_pk,
         },
         response_type: CreateSpaceResponse

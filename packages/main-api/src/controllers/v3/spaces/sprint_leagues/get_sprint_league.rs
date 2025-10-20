@@ -5,7 +5,7 @@ use crate::{
         SprintLeagueMetadata, SprintLeagueResponse, SprintLeagueVote,
     },
     models::{SpaceCommon, User},
-    types::{Partition, TeamGroupPermission},
+    types::{EntityType, Partition, TeamGroupPermission},
 };
 use aide::NoApi;
 use bdk::prelude::*;
@@ -34,7 +34,12 @@ pub async fn get_sprint_league_handler(
         return Err(Error::NoPermission);
     }
 
-    let sprint_league_future = SprintLeagueMetadata::query(&dynamo.client, &space_pk);
+    let sprint_league_future = SprintLeagueMetadata::query_begins_with_sk(
+        &dynamo.client,
+        &space_pk,
+        EntityType::SprintLeague,
+    );
+
     let user_vote_future = if let Some(user) = &user {
         Some(SprintLeagueVote::find_one(
             &dynamo.client,
@@ -49,13 +54,8 @@ pub async fn get_sprint_league_handler(
         tokio::try_join!(sprint_league_future, vote_future)?
     } else {
         let sprint_league = sprint_league_future.await?;
+
         (sprint_league, None)
     };
-
-    let mut response: SprintLeagueResponse = sprint_league.into();
-    if user_vote.is_some() {
-        response.is_voted = true;
-    }
-
-    Ok(Json(response))
+    Ok(Json((sprint_league, user_vote.is_some()).into()))
 }

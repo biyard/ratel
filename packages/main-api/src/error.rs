@@ -154,6 +154,8 @@ pub enum Error {
     #[rest_error(code = 3300)]
     #[error("Sprint League not found")]
     NotFoundSprintLeague,
+    #[error("Sprint League players are invalid")]
+    InvalidSprintLeaguePlayer,
     #[error("Sprint League not found")]
     SprintLeagueVoteError(String),
 

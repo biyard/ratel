@@ -3,7 +3,7 @@ use uuid::Uuid;
 use super::*;
 use crate::features::spaces::sprint_leagues::{PlayerImage, SpriteSheet};
 use crate::tests::{create_test_user, get_test_aws_config};
-use crate::types::Partition;
+use crate::types::{EntityType, Partition};
 use crate::utils::aws::DynamoClient;
 
 #[tokio::test]
@@ -22,9 +22,13 @@ async fn test_sprint_league_creation() {
         .create(&cli)
         .await
         .expect("failed to create sprint league");
-    let metadata = SprintLeagueMetadata::query(&cli, &sprint_league.pk)
-        .await
-        .expect("failed to query sprint league metadata");
+    let metadata = SprintLeagueMetadata::query_begins_with_sk(
+        &cli,
+        &sprint_league.pk,
+        EntityType::SprintLeague,
+    )
+    .await
+    .expect("failed to query sprint league metadata");
 
     assert_eq!(metadata.len(), 1);
     let player_image = PlayerImage {
@@ -76,9 +80,13 @@ async fn test_sprint_league_creation() {
         .await
         .expect("failed to create players");
 
-    let metadata = SprintLeagueMetadata::query(&cli, &sprint_league.pk)
-        .await
-        .expect("failed to query sprint league metadata");
+    let metadata = SprintLeagueMetadata::query_begins_with_sk(
+        &cli,
+        &sprint_league.pk,
+        EntityType::SprintLeague,
+    )
+    .await
+    .expect("failed to query sprint league metadata");
     assert_eq!(metadata.len(), 4);
     let players: Vec<SprintLeaguePlayer> = metadata
         .into_iter()
@@ -92,21 +100,25 @@ async fn test_sprint_league_creation() {
         .collect();
     assert_eq!(players.len(), 3);
 
-    let is_voted = sprint_league
-        .is_voted(&cli, &user.pk)
+    let is_voted = SprintLeague::is_voted(&cli, &space_pk, &user.pk)
         .await
         .expect("Failed to check if user voted");
     assert!(!is_voted);
-    let res = SprintLeague::vote(&cli, &space_pk, &user.pk, &player_1.sk, None).await;
+    let res = SprintLeague::vote(&cli, &space_pk, &user.pk, &player_2.sk, None).await;
 
     assert!(res.is_ok());
 
-    let is_voted = sprint_league
-        .is_voted(&cli, &user.pk)
+    let is_voted = SprintLeague::is_voted(&cli, &space_pk, &user.pk)
         .await
         .expect("Failed to check if user voteds");
 
     assert!(is_voted);
+
+    // let (players, _) = SprintLeaguePlayer::query_order_by_votes(&cli, &space_pk, None)
+    //     .await
+    //     .expect("Failed to query players by votes");
+    // assert_eq!(players[0].sk, player_2.sk);
+    // assert_eq!(players[0].votes, 1);
 
     let res = SprintLeague::vote(&cli, &space_pk, &user.pk, &player_1.sk, None).await;
     assert!(res.is_err(), "Sprint league double voting should fail");

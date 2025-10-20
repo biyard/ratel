@@ -30,6 +30,10 @@ pub async fn upsert_sprint_league_handler(
         return Err(Error::SpaceNotFound);
     }
 
+    if req.players.len() != 3 {
+        return Err(Error::InvalidSprintLeaguePlayer);
+    }
+
     let (space_common, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
@@ -48,16 +52,19 @@ pub async fn upsert_sprint_league_handler(
     }
 
     let mut transact_write_items = vec![];
+
     let sprint_league = if let Some(sprint_league) =
         SprintLeague::get(&dynamo.client, &space_pk, Some(EntityType::SprintLeague)).await?
     {
-        SprintLeaguePlayer::delete_all(&dynamo.client, &space_pk).await?;
         sprint_league
     } else {
         let sprint_league = SprintLeague::new(space_pk.clone())?;
         transact_write_items.push(sprint_league.create_transact_write_item());
+
         sprint_league
     };
+
+    SprintLeaguePlayer::delete_all(&dynamo.client, &space_pk).await?;
 
     let mut players = Vec::new();
     for player_req in req.players {
@@ -70,6 +77,10 @@ pub async fn upsert_sprint_league_handler(
         transact_write_items.push(player.create_transact_write_item());
         players.push(player);
     }
+    let updater = SprintLeague::updater(&space_pk, EntityType::SprintLeague)
+        .with_players(players.len() as i64)
+        .transact_write_item();
+    transact_write_items.push(updater);
 
     dynamo
         .client
@@ -84,6 +95,7 @@ pub async fn upsert_sprint_league_handler(
             ))
         })?;
 
-    let is_voted = sprint_league.is_voted(&dynamo.client, &user.pk).await?;
+    let is_voted = SprintLeague::is_voted(&dynamo.client, &space_pk, &user.pk).await?;
+
     Ok(Json((sprint_league, players, is_voted).into()))
 }
