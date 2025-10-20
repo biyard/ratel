@@ -128,31 +128,28 @@ pub enum Error {
     SpaceNotEditable,
     #[error("PK must be a Partition::Space")]
     InvalidSpacePartitionKey,
-    // /v3/spaces/deliberations endpoints 3100 ~
 
-    // /v3/spaces/poll endpoints 3200 ~
-    #[rest_error(code = 3200)]
-    #[error("Poll space not found")]
-    NotFoundPollSpace,
+    // /v3/spaces/deliberations endpoints 3100 ~
+    #[rest_error(code = 3100)]
     #[error("Deliberation space not found")]
     NotFoundDeliberationSpace,
-    #[error("Space is not in progress")]
-    SpaceNotInProgress,
-    #[error("Answers do not match with questions")]
-    AnswersMismatchQuestions,
-    #[error("Space cannot be updated in its current status")]
-    ImmutablePollSpaceState,
-    #[error("Survey summary not found")]
-    NotFoundSurveySummary,
 
-    // Sprint League Feature 3400 ~
-    #[error("User has already voted")]
-    #[rest_error(code = 3400)]
-    AlreadyVoted,
-    #[error("Sprint league vote error: {0}")]
-    SprintLeagueVoteError(String),
-    #[error("Sprint league not found")]
-    SprintLeagueNotFound,
+    // poll features errors 3200 ~
+    #[rest_error(code = 3200)]
+    #[error("Poll Not found")]
+    NotFoundPoll,
+    #[error("Poll is not in progress")]
+    PollNotInProgress,
+    #[error("questions are invalid")]
+    PollInvalidQuestions,
+    #[error("Answers do not match with questions")]
+    PollAnswersMismatchQuestions,
+    #[error("Poll cannot be updated in its current status")]
+    ImmutablePollState,
+    #[error("User cannot update answer")]
+    ImmutablePollUserAnswer,
+    #[error("Poll Result not found")]
+    NotFoundPollResult,
 
     // teams 4000 ~
     #[error("Team not found")]
@@ -163,6 +160,11 @@ pub enum Error {
     #[rest_error(code = 5000)]
     #[error("space not found")]
     NotFoundSpace,
+
+    // /v3/discussions endpoints 5000 ~
+    #[rest_error(code = 6000)]
+    #[error("discussion not found")]
+    NotFoundDiscussion,
 
     // web 1,000,000 ~
     #[error("Web error: {0}")]

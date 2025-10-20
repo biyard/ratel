@@ -108,6 +108,7 @@ function CreateButton({
   const { t } = useTranslation('Team');
   return (
     <div
+      data-pw="create-group-submit-button"
       className={`${isEnabled ? 'cursor-pointer bg-primary' : 'cursor-not-allowed bg-neutral-300'} flex flex-row w-fit h-fit px-[40px] py-[15px] rounded-[10px] font-bold text-bg text-base`}
       onClick={() => {
         onClick();
@@ -178,6 +179,7 @@ function GroupPermissionSelector({
                   <CustomCheckbox
                     checked={allChecked}
                     onChange={() => toggleAllInGroup(perms.map((p) => p.value))}
+                    data-pw={`permission-select-all-${groupName.toLowerCase()}`}
                   />
                 </div>
               </div>
@@ -190,6 +192,7 @@ function GroupPermissionSelector({
                     <div
                       key={perm.value}
                       className="flex justify-between items-center py-2 h-[55px]"
+                      data-pw={`permission-item-${perm.value}`}
                     >
                       <span className="text-[15px]/[24px] font-normal text-text-primary">
                         {perm.label}
@@ -197,6 +200,7 @@ function GroupPermissionSelector({
                       <Switch
                         checked={active}
                         onChange={() => togglePermission(perm.value)}
+                        data-pw={`permission-toggle-${perm.value}`}
                       />
                     </div>
                   );
@@ -246,6 +250,7 @@ function GroupDescription({
         maxLength={100}
         placeholder={t('description_hint')}
         className="w-full px-5 py-[10px] rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary placeholder:text-neutral-600 text-sm outline-none resize-none"
+        data-pw="create-group-description-input"
       />
 
       <div className="w-full text-right text-[15px]/[22.5px] text-neutral-600">
@@ -279,6 +284,7 @@ function GroupName({
         maxLength={100}
         placeholder={t('group_name_hint')}
         className="w-full px-5 py-[10.5px] rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary placeholder:text-neutral-600 text-[15px]/[22.5px] outline-none"
+        data-pw="create-group-name-input"
       />
 
       <div className="w-full text-right text-[15px]/[22.5px] text-neutral-600">{`${groupName.length}/100`}</div>
