@@ -31,7 +31,7 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
         </Row>
 
         <TimeRangeSetting
-          canEdit={ctrl.editing.get()}
+          canEdit={ctrl.space.isAdmin()}
           onChange={ctrl.onChangeTimeRange}
           startTimestampMillis={ctrl.poll.started_at}
           endTimestampMillis={ctrl.poll.ended_at}
