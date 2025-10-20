@@ -9,11 +9,11 @@ import {
 } from '@radix-ui/react-select';
 import { TFunction } from 'i18next';
 
-import { SurveyQuestion } from '@/features/spaces/polls/types/poll-question';
+import { PollQuestion } from '@/features/spaces/polls/types/poll-question';
 import { I18nFunction } from '..';
 
 type LinearScaleQuestion = Extract<
-  SurveyQuestion,
+  PollQuestion,
   { answer_type: 'linear_scale' }
 >;
 

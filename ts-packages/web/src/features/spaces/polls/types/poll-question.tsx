@@ -102,7 +102,7 @@ export type SubjectiveQuestionUnion =
   | ShortAnswerQuestionType
   | SubjectiveQuestionType;
 
-export type SurveyQuestion = ObjectiveQuestionUnion | SubjectiveQuestionUnion;
+export type PollQuestion = ObjectiveQuestionUnion | SubjectiveQuestionUnion;
 
 export type SurveyAnswer =
   | { answer_type: SurveyAnswerType.SingleChoice; answer?: number }
@@ -116,7 +116,7 @@ export type SurveyAnswer =
 export type SurveyQuestionWithAnswer = {
   [T in SurveyAnswerType]: {
     answer_type: T;
-    question: Extract<SurveyQuestion, { answer_type: T }>;
+    question: Extract<PollQuestion, { answer_type: T }>;
     answer?: Extract<SurveyAnswer, { answer_type: T }>;
   };
 }[SurveyAnswerType];
@@ -193,7 +193,7 @@ export function createEmptyAnswer(type: SurveyAnswerType): SurveyAnswer {
   }
 }
 
-export function createDefaultQuestion(type: SurveyAnswerType): SurveyQuestion {
+export function createDefaultQuestion(type: SurveyAnswerType): PollQuestion {
   switch (type) {
     case SurveyAnswerType.SingleChoice:
     case SurveyAnswerType.MultipleChoice:
