@@ -41,7 +41,7 @@ pub async fn respond_poll_handler(
         return Err(Error::NoPermission);
     }
 
-    let poll = Poll::get(&dynamo.client, &space_pk, Some(EntityType::Space))
+    let poll = Poll::get(&dynamo.client, &space_pk, Some(EntityType::SpacePoll))
         .await?
         .ok_or(Error::NotFoundPoll)?;
 
