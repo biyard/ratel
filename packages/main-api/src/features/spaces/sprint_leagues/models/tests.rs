@@ -1,6 +1,7 @@
 use uuid::Uuid;
 
-use crate::models::*;
+use super::*;
+use crate::features::spaces::sprint_leagues::{PlayerImage, SpriteSheet};
 use crate::tests::{create_test_user, get_test_aws_config};
 use crate::types::Partition;
 use crate::utils::aws::DynamoClient;
@@ -82,7 +83,7 @@ async fn test_sprint_league_creation() {
     let players: Vec<SprintLeaguePlayer> = metadata
         .into_iter()
         .filter_map(|m| {
-            if let SprintLeagueMetadata::Player(player) = m {
+            if let SprintLeagueMetadata::SprintLeaguePlayer(player) = m {
                 Some(player)
             } else {
                 None

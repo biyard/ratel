@@ -1,9 +1,11 @@
-use super::dto::SprintLeagueResponse;
 use crate::{
     AppState,
     controllers::v3::spaces::dto::SpacePathParam,
     error::Error,
-    models::{SpaceCommon, SprintLeague, SprintLeaguePlayer, User},
+    features::spaces::sprint_leagues::{
+        CreatePlayerRequest, SprintLeague, SprintLeaguePlayer, SprintLeagueResponse,
+    },
+    models::{SpaceCommon, User},
     types::{EntityType, Partition, TeamGroupPermission},
 };
 use aide::{NoApi, OperationIo};
@@ -13,8 +15,6 @@ use axum::{
 };
 use bdk::prelude::*;
 use serde::Deserialize;
-
-use super::dto::CreatePlayerRequest;
 
 #[derive(Debug, Deserialize, Default, OperationIo, JsonSchema)]
 pub struct UpsertSprintLeaguePlayerRequest {
@@ -85,9 +85,6 @@ pub async fn upsert_sprint_league_handler(
             ))
         })?;
 
-    Ok(Json(SprintLeagueResponse {
-        players,
-        votes: sprint_league.votes,
-        is_voted: false, // Before Voting Start
-    }))
+    let is_voted = sprint_league.is_voted(&dynamo.client, &user.pk).await?;
+    Ok(Json((sprint_league, players, is_voted).into()))
 }

@@ -151,6 +151,12 @@ pub enum Error {
     #[error("Poll Result not found")]
     NotFoundPollResult,
 
+    #[rest_error(code = 3300)]
+    #[error("Sprint League not found")]
+    NotFoundSprintLeague,
+    #[error("Sprint League not found")]
+    SprintLeagueVoteError(String),
+
     // teams 4000 ~
     #[error("Team not found")]
     #[rest_error(status = 404, code = 4000)]

@@ -1,7 +1,7 @@
-use crate::{
-    models::{SprintLeaguePlayer, SprintLeagueVote, sprint_league::sprint_league_player},
-    types::*,
-};
+use crate::types::{EntityType, Partition};
+
+use super::{SprintLeaguePlayer, SprintLeagueVote};
+
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
