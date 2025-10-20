@@ -1,12 +1,16 @@
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
-use crate::features::dto::SpaceDiscussionRequest;
-use crate::features::dto::{CreateDiscussionResponse, SpaceDiscussionResponse};
-use crate::features::dto::{SpaceDiscussionMemberResponse, SpaceDiscussionParticipantResponse};
-use crate::features::models::space_discussion::SpaceDiscussion;
-use crate::features::models::space_discussion_member::{
+use crate::features::spaces::discussions::dto::SpaceDiscussionRequest;
+use crate::features::spaces::discussions::dto::{
+    CreateDiscussionResponse, SpaceDiscussionResponse,
+};
+use crate::features::spaces::discussions::dto::{
+    SpaceDiscussionMemberResponse, SpaceDiscussionParticipantResponse,
+};
+use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
+use crate::features::spaces::discussions::models::space_discussion_member::{
     SpaceDiscussionMember, SpaceDiscussionMemberQueryOption,
 };
-use crate::features::models::space_discussion_participant::{
+use crate::features::spaces::discussions::models::space_discussion_participant::{
     SpaceDiscussionParticipant, SpaceDiscussionParticipantQueryOption,
 };
 use crate::models::SpaceCommon;

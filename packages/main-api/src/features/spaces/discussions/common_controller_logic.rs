@@ -1,14 +1,18 @@
-use crate::features::dto::{SpaceDiscussionMemberResponse, SpaceDiscussionParticipantResponse};
-use crate::features::models::space_discussion_member::SpaceDiscussionMember;
-use crate::features::models::space_discussion_member::SpaceDiscussionMemberQueryOption;
-use crate::features::models::space_discussion_participant::SpaceDiscussionParticipant;
-use crate::features::models::space_discussion_participant::SpaceDiscussionParticipantQueryOption;
+use crate::features::spaces::discussions::dto::{
+    SpaceDiscussionMemberResponse, SpaceDiscussionParticipantResponse,
+};
+use crate::features::spaces::discussions::models::space_discussion_member::SpaceDiscussionMember;
+use crate::features::spaces::discussions::models::space_discussion_member::SpaceDiscussionMemberQueryOption;
+use crate::features::spaces::discussions::models::space_discussion_participant::SpaceDiscussionParticipant;
+use crate::features::spaces::discussions::models::space_discussion_participant::SpaceDiscussionParticipantQueryOption;
 use crate::types::EntityType;
 use crate::types::media_placement_info::MediaPlacementInfo;
 use crate::types::meeting_info::MeetingInfo;
 use crate::{
     Error2,
-    features::{dto::SpaceDiscussionResponse, models::space_discussion::SpaceDiscussion},
+    features::spaces::discussions::{
+        dto::SpaceDiscussionResponse, models::space_discussion::SpaceDiscussion,
+    },
     types::Partition,
     utils::aws::DynamoClient,
 };

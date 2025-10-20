@@ -1,7 +1,7 @@
 use crate::controllers::v3::spaces::SpaceDiscussionPath;
 use crate::controllers::v3::spaces::SpaceDiscussionPathParam;
-use crate::features::common_controller_logic::get_discussion;
-use crate::features::dto::GetDiscussionResponse;
+use crate::features::spaces::discussions::common_controller_logic::get_discussion;
+use crate::features::spaces::discussions::dto::GetDiscussionResponse;
 use crate::types::Partition;
 use crate::{AppState, Error2, models::user::User};
 use aide::NoApi;

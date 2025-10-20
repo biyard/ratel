@@ -1,8 +1,8 @@
 use crate::controllers::v3::spaces::{SpaceDiscussionPath, SpaceDiscussionPathParam};
-use crate::features::common_controller_logic::get_discussion;
-use crate::features::dto::SpaceDiscussionResponse;
-use crate::features::models::space_discussion::SpaceDiscussion;
-use crate::features::models::space_discussion_participant::{
+use crate::features::spaces::discussions::common_controller_logic::get_discussion;
+use crate::features::spaces::discussions::dto::SpaceDiscussionResponse;
+use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
+use crate::features::spaces::discussions::models::space_discussion_participant::{
     SpaceDiscussionParticipant, SpaceDiscussionParticipantQueryOption,
 };
 use crate::types::Partition;
