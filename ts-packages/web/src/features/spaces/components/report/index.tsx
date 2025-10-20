@@ -2,7 +2,7 @@ import { logger } from '@/lib/logger';
 
 import {
   SurveyAnswerType,
-  SurveyQuestion,
+  PollQuestion,
   SurveySummary,
 } from '@/features/spaces/polls/types/poll-question';
 import { TFunction } from 'i18next';
@@ -22,7 +22,7 @@ export interface ReportProps {
   startedAt: number;
   endedAt: number;
   totalResponses: number;
-  questions: SurveyQuestion[];
+  questions: PollQuestion[];
   summaries: SurveySummary[];
 }
 export default function Report({
@@ -72,7 +72,7 @@ export default function Report({
 
 interface SummaryItemProps {
   t: I18nFunction;
-  question: SurveyQuestion;
+  question: PollQuestion;
   summary: SurveySummary;
 }
 

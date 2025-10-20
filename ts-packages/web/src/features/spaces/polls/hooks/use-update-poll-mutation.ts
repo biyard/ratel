@@ -7,7 +7,7 @@ import {
   PollSpaceResponse,
   updatePollSpace,
 } from '@/lib/api/ratel/poll.spaces.v3';
-import { SurveyQuestion } from '@/features/spaces/polls/types/poll-question';
+import { PollQuestion } from '@/features/spaces/polls/types/poll-question';
 import { TimeRange } from '@/types/time-range';
 import { FeedStatus } from '@/lib/api/models/feeds';
 import { PostResponse } from '@/lib/api/ratel/posts.v3';
@@ -30,7 +30,7 @@ export function useUpdatePollSpaceMutation() {
       title: string;
       htmlContent: string;
       timeRange: TimeRange;
-      questions: SurveyQuestion[];
+      questions: PollQuestion[];
     }) => {
       await updatePollSpace(spacePk, title, htmlContent, timeRange, questions);
       return { spacePk };

@@ -1,12 +1,12 @@
 import {
   SurveyAnswer,
   SurveyAnswerType,
-  SurveyQuestion,
+  PollQuestion,
   SurveyQuestionWithAnswer,
 } from '@/features/spaces/polls/types/poll-question';
 
 export default function validateSurveyAnswer(
-  questions: SurveyQuestion[],
+  questions: PollQuestion[],
   answers: SurveyAnswer[],
 ): boolean {
   if (questions.length !== answers.length) return false;

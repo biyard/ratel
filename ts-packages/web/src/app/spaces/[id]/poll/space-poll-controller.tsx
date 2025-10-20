@@ -6,7 +6,7 @@ import {
   createEmptyAnswer,
   SurveyAnswer,
   SurveyAnswerType,
-  SurveyQuestion,
+  PollQuestion,
 } from '@/features/spaces/polls/types/poll-question';
 import { ReportProps } from '@/features/spaces/components/report';
 import { PollSpaceResponse } from '@/lib/api/ratel/poll.spaces.v3';
@@ -48,11 +48,11 @@ export class PollSpaceController implements ISpaceController {
     headerCtrl: SpaceHeaderController,
     public activeTab: Tab,
     public onSelectTab: (tab: Tab) => void,
-    public questions: SurveyQuestion[],
+    public questions: PollQuestion[],
     public isAnswerModified: boolean,
     public answers: Record<number, SurveyAnswer>,
     public onAddQuestion: () => void,
-    public onUpdateQuestion: (index: number, question: SurveyQuestion) => void,
+    public onUpdateQuestion: (index: number, question: PollQuestion) => void,
     public onDeleteQuestion: (index: number) => void,
     public onUpdateAnswer: (questionIdx: number, answer: SurveyAnswer) => void,
     public onSubmitSurvey: () => Promise<void>,
@@ -67,7 +67,7 @@ export class PollSpaceController implements ISpaceController {
     this.isSurveyProgress = space.status === SpaceStatus.InProgress;
   }
 
-  onUpdateQuestion = (index: number, question: SurveyQuestion) => {
+  onUpdateQuestion = (index: number, question: PollQuestion) => {
     const updatedQuestions = [...editableQuestions];
     updatedQuestions[index] = question;
     setQuestions(updatedQuestions);
@@ -79,7 +79,7 @@ export class PollSpaceController implements ISpaceController {
     headerCtrl.onModifyContent();
   };
   onAddQuestion = () => {
-    const newQuestion: SurveyQuestion = {
+    const newQuestion: PollQuestion = {
       answer_type: SurveyAnswerType.ShortAnswer,
       title: '',
       description: '',
@@ -140,7 +140,7 @@ export function useSpacePollController(spacePk: string): PollSpaceController {
   const updatePollSpace = useUpdatePollSpaceMutation().mutateAsync;
   const submitSurveyResponse = usePollResponseMutation().mutateAsync;
   //Edit mode state
-  const [editableQuestions, setQuestions] = useState<SurveyQuestion[]>([]);
+  const [editableQuestions, setQuestions] = useState<PollQuestion[]>([]);
 
   const [isAnswerModified, setIsAnswerModified] = useState(false);
   // From Array, Convert into Record
