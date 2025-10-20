@@ -43,27 +43,28 @@ pub async fn list_posts_handler(
         bookmark
     );
 
-    let likes = match (user, posts.is_empty()) {
+    let likes = match (user.clone(), posts.is_empty()) {
         (Some(user), false) => {
             let sk = EntityType::PostLike(user.pk.to_string());
-            PostLike::batch_get(
+            let likes = PostLike::batch_get(
                 &dynamo.client,
                 posts
                     .iter()
                     .map(|post| (post.pk.clone(), sk.clone()))
                     .collect(),
             )
-            .await?
+            .await?;
+
+            likes
         }
         _ => vec![],
     };
-
     tracing::debug!("list_posts_handler: returning {} items", posts.len());
     let items: Vec<PostResponse> = posts
         .into_iter()
         .map(|post| {
             let liked = likes.iter().any(|like| like.pk == post.pk);
-            PostResponse::from(post).with_like(liked)
+            PostResponse::from((user.clone(), post)).with_like(liked)
         })
         .collect();
 
