@@ -26,8 +26,8 @@ export const QK_GET_DISCUSSION_BY_DISCUSSION_ID =
   'get-discussion-by-discussion-id';
 export const QK_GET_MEETING_BY_DISCUSSION_ID = 'get-meeting-by-discussion-id';
 
-export const QK_GET_TEAM_BY_ID = 'get-team-by-id';
 export const QK_GET_TEAM_BY_USERNAME = 'get-team-by-username';
+export const QK_GET_TEAM_BY_PK = 'get-team-by-pk-v3';
 
 export const QK_GET_REDEEM_CODE = 'get-redeem-code';
 export const QK_GET_USER_BADGE = 'get-user-badge';
