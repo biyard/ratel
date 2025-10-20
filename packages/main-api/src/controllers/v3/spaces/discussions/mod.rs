@@ -1,7 +1,9 @@
 pub mod create_discussion;
 pub mod delete_discussion;
+pub mod exit_meeting;
 pub mod get_discussion;
 pub mod list_discussions;
+pub mod participant_meeting;
 pub mod start_meeting;
 pub mod update_discussion;
 

@@ -355,6 +355,155 @@ async fn test_start_meeting_handler() {
     assert!(body.meeting_id.is_some());
 }
 
+#[tokio::test]
+async fn test_participant_meeting_handler() {
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    let CreatedDeliberationSpace { space_pk, .. } =
+        bootstrap_deliberation_space(&app, headers.clone()).await;
+
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let path = format!("/v3/spaces/{}/discussions", space_pk_encoded);
+
+    let users = vec![user.pk];
+
+    let now = chrono::Utc::now().timestamp();
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "started_at": now, "ended_at": now + 10_000, "name": "discussion title".to_string(), "description": "discussion description".to_string(), "user_ids": users.clone()
+        },
+        response_type: CreateDiscussionResponse
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.discussion.members.len(), 1);
+
+    let discussion_pk = body.discussion.pk;
+    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
+    let path = format!(
+        "/v3/spaces/{}/discussions/{}/start-meeting",
+        space_pk_encoded, discussion_pk_encoded
+    );
+
+    let (status, _headers, body) = patch! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {},
+        response_type: SpaceDiscussionResponse
+    };
+
+    assert_eq!(status, 200);
+    assert!(body.meeting_id.is_some());
+
+    let path = format!(
+        "/v3/spaces/{}/discussions/{}/participant-meeting",
+        space_pk_encoded, discussion_pk_encoded
+    );
+
+    let (status, _headers, body) = patch! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {},
+        response_type: SpaceDiscussionResponse
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.participants.len(), 1);
+}
+
+#[tokio::test]
+async fn test_exit_meeting_handler() {
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    let CreatedDeliberationSpace { space_pk, .. } =
+        bootstrap_deliberation_space(&app, headers.clone()).await;
+
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let path = format!("/v3/spaces/{}/discussions", space_pk_encoded);
+
+    let users = vec![user.pk];
+
+    let now = chrono::Utc::now().timestamp();
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "started_at": now, "ended_at": now + 10_000, "name": "discussion title".to_string(), "description": "discussion description".to_string(), "user_ids": users.clone()
+        },
+        response_type: CreateDiscussionResponse
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.discussion.members.len(), 1);
+
+    let discussion_pk = body.discussion.pk;
+    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
+    let path = format!(
+        "/v3/spaces/{}/discussions/{}/start-meeting",
+        space_pk_encoded, discussion_pk_encoded
+    );
+
+    let (status, _headers, body) = patch! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {},
+        response_type: SpaceDiscussionResponse
+    };
+
+    assert_eq!(status, 200);
+    assert!(body.meeting_id.is_some());
+
+    let path = format!(
+        "/v3/spaces/{}/discussions/{}/participant-meeting",
+        space_pk_encoded, discussion_pk_encoded
+    );
+
+    let (status, _headers, body) = patch! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {},
+        response_type: SpaceDiscussionResponse
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.participants.len(), 1);
+
+    let path = format!(
+        "/v3/spaces/{}/discussions/{}/exit-meeting",
+        space_pk_encoded, discussion_pk_encoded
+    );
+
+    let (status, _headers, body) = patch! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {},
+        response_type: SpaceDiscussionResponse
+    };
+
+    tracing::debug!("exit meeting: {:?}", body.clone());
+
+    assert_eq!(status, 200);
+}
+
 async fn bootstrap_deliberation_space(
     app: &AxumRouter,
     headers: axum::http::HeaderMap,
