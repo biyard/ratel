@@ -1,14 +1,9 @@
+import { logger } from '@/lib/logger';
 import { useSpacePollEditorController } from './use-space-poll-editor-controller';
+import { SpacePollPathProps } from '../space-poll-path-props';
 
-export type SpacePollEditorPageProps = {
-  spacePk: string;
-  pollPk: string;
-};
-
-export function SpacePollEditorPage({
-  spacePk,
-  pollPk,
-}: SpacePollEditorPageProps) {
+export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
+  logger.debug(`SpacePollEditorPage: spacePk=${spacePk}, pollPk=${pollPk}`);
   // TODO: use or define hooks
   const _ctrl = useSpacePollEditorController();
 

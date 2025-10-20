@@ -10,7 +10,7 @@ import { SpacePollEditorPage } from '@/features/spaces/polls/pages/creator/space
 import { SpacePollViewerPage } from '@/features/spaces/polls/pages/viewer/space-poll-viewer-page';
 
 export default function SpacePollPage() {
-  const { spacePk, pollPk } = useParams<{ spacePk: string; pollPk?: string }>();
+  const { spacePk } = useParams<{ spacePk: string; pollPk: string }>();
   const { data: space } = useSpaceById(spacePk);
   /* const ctrl = useSpacePollController(spacePk); */
 
@@ -18,12 +18,12 @@ export default function SpacePollPage() {
     throw new Error('Space not found');
   }
 
-  if (pollPk && space.isAdmin()) {
+  if (space.isAdmin()) {
     // Edit Mode
     return <SpacePollEditorPage spacePk={spacePk} pollPk={pollPk} />;
   }
 
-  return <SpacePollViewerPage spacePk={spacePk} />;
+  return <SpacePollViewerPage spacePk={spacePk} pollPk={pollPk} />;
 }
 
 function MainContent({
