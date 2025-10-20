@@ -1,4 +1,4 @@
-import { PollQuestion } from './poll-question';
+import { PollAnswer, PollQuestion } from './poll-question';
 
 export class Poll {
   public pk: string;
@@ -11,7 +11,7 @@ export class Poll {
   public user_response_count: number;
 
   public questions: PollQuestion[];
-  public myResponse?: any[];
+  public myResponse?: PollAnswer[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
