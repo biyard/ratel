@@ -1,7 +1,7 @@
 use crate::controllers::v3::spaces::CreateSpaceResponse;
 use crate::features::spaces::discussions::dto::{
     CreateDiscussionResponse, DeleteDiscussionResponse, GetDiscussionResponse,
-    ListDiscussionResponse,
+    ListDiscussionMemberResponse, ListDiscussionResponse,
 };
 use crate::types::{Partition, SpaceType};
 use crate::*;
@@ -262,6 +262,56 @@ async fn test_get_discussion_handler() {
     assert_eq!(status, 200);
 
     tracing::debug!("get discussion body: {:?}", body);
+}
+
+#[tokio::test]
+async fn test_get_discussion_members_handler() {
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    let CreatedDeliberationSpace { space_pk, .. } =
+        bootstrap_deliberation_space(&app, headers.clone()).await;
+
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let path = format!("/v3/spaces/{}/discussions", space_pk_encoded);
+
+    // create user
+    let users = vec![user.pk];
+
+    let now = chrono::Utc::now().timestamp();
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "started_at": now, "ended_at": now + 10_000, "name": "discussion title".to_string(), "description": "discussion description".to_string(), "user_ids": users.clone()
+        },
+        response_type: CreateDiscussionResponse
+    };
+
+    assert_eq!(status, 200);
+    tracing::debug!("discussion body: {:?}", body);
+
+    let discussion_pk = body.discussion.pk;
+    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
+    let path = format!(
+        "/v3/spaces/{}/discussions/{}/members",
+        space_pk_encoded, discussion_pk_encoded
+    );
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        response_type: ListDiscussionMemberResponse
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.members.len(), 1);
 }
 
 async fn bootstrap_deliberation_space(
