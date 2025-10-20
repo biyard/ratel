@@ -37,7 +37,7 @@ async fn test_update_user_with_team_handler() {
             nickname: team_display_name.clone(),
             username: team_username.clone(),
             description: "This is a test team".into(),
-            profile_url: "https://example.com/profile.png".into(),
+            profile_url: "https://metadata.ratel.foundation/ratel/default-profile.png".into(),
         }),
     )
     .await;
