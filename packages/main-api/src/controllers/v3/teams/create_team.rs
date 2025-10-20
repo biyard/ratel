@@ -4,7 +4,10 @@ use crate::{
         team::{Team, TeamOwner},
         user::{User, UserTeam},
     },
-    utils::validator::{validate_description, validate_image_url, validate_username},
+    utils::{
+        validator::{validate_description, validate_image_url, validate_username},
+    },
+    types::Partition,
 };
 use bdk::prelude::*;
 use by_axum::{
@@ -31,9 +34,9 @@ pub struct CreateTeamRequest {
     pub description: String,
 }
 
-#[derive(Debug, Clone, Serialize, Default, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreateTeamResponse {
-    pub team_pk: String,
+    pub team_pk: Partition,
 }
 
 pub async fn create_team_handler(
@@ -56,7 +59,7 @@ pub async fn create_team_handler(
         .await?;
     let team_pk = team.pk.clone();
     UserTeam::new(user_pk, team).create(&dynamo.client).await?;
-    Ok(Json(CreateTeamResponse {
-        team_pk: team_pk.to_string(),
-    }))
+
+    Ok(Json(CreateTeamResponse { team_pk }))
+
 }

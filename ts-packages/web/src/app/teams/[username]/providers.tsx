@@ -1,70 +1,40 @@
-import { ReactNode } from 'react';
-import { initData } from '@/providers/getQueryClient';
-import {
-  getPermission,
-  getTeamByUsername,
-  getUserInfo,
-} from '@/lib/api/ratel_api.server';
-import { getServerQueryClient } from '@/lib/query-utils.server';
-import ClientProviders from './providers.client';
-import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import { GroupPermission } from '@/lib/api/models/group';
+'use client';
 
-export default async function Provider({
+import { ReactNode } from 'react';
+import ClientProviders from './providers.client';
+
+import { useTeamDetailByUsername } from '@/features/teams/hooks/use-team';
+import { logger } from '@/lib/logger';
+
+export default function Provider({
   children,
   username,
 }: {
   children: ReactNode;
   username: string;
 }) {
-  const queryClient = await getServerQueryClient();
+  logger.debug('Provider: username parameter received:', username);
 
-  const team = await getTeamByUsername(username);
-  const user = await getUserInfo();
+  // Use v3 client-side data fetching - this eliminates all server-side API calls
+  const {
+    data: teamDetail,
+    isLoading,
+    error,
+  } = useTeamDetailByUsername(username);
 
-  const userId = user?.data?.id ?? 0;
+  logger.debug('Provider: teamDetail', teamDetail);
 
-  // TODO: Update to use v3 permissions API with team username
-  const invitePermission = await getPermission(
-    team.data?.username ?? '',
-    GroupPermission.InviteMember,
-  );
-
-  const writePostPermission = await getPermission(
-    team.data?.username ?? '',
-    GroupPermission.WritePosts,
-  );
-
-  const updateGroupPermission = await getPermission(
-    team.data?.username ?? '',
-    GroupPermission.UpdateGroup,
-  );
-
-  const deleteGroupPermission = await getPermission(
-    team.data?.username ?? '',
-    GroupPermission.DeleteGroup,
-  );
-
-  try {
-    // Initialize the query client with the space data
-    initData(queryClient, [
-      team,
-      user,
-      invitePermission,
-      writePostPermission,
-      updateGroupPermission,
-      deleteGroupPermission,
-    ]);
-  } catch (error) {
-    console.error('Failed to fetch data', error);
-    throw error;
+  if (isLoading) {
+    return <div>Loading team...</div>;
   }
 
-  const dehydratedState = dehydrate(queryClient);
+  if (error || !teamDetail) {
+    logger.error('Provider: Failed to load team', error);
+    return <div>Failed to load team</div>;
+  }
 
-  return (
-    <ClientProviders userId={userId}>
-      <HydrationBoundary state={dehydratedState}>{children}</HydrationBoundary>
-    </ClientProviders>
-  );
+  // Extract user ID for context (you may need to get this from a different hook)
+  const userId = 0; // TODO: Get from user context/hook
+
+  return <ClientProviders userId={userId}>{children}</ClientProviders>;
 }

@@ -6,11 +6,8 @@
 //   UrlType,
 //   writePostRequest,
 // } from '@/lib/api/models/feeds/write-post-request';
+import { useParams } from 'react-router';
 import TeamMembers from './page.client';
-
-export interface TeamLayoutProps {
-  params: Promise<{ username: string }>;
-}
 
 // Metadata is not supported in React Router
 // export const metadata: Metadata = {
@@ -43,7 +40,7 @@ export interface TeamLayoutProps {
 //   },
 // };
 
-export default async function Page({ params }: TeamLayoutProps) {
-  const { username } = await params;
-  return <TeamMembers username={username} />;
+export default function Page() {
+  const { username } = useParams<{ username: string }>();
+  return <TeamMembers username={username!} />;
 }

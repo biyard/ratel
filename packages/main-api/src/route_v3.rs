@@ -101,7 +101,6 @@ use crate::{
             create_team::{CreateTeamResponse, create_team_handler},
             delete_team::{DeleteTeamResponse, delete_team_handler},
             find_team::{FindTeamResponse, find_team_handler},
-            get_permissions::{GetPermissionsResponse, get_permissions_handler},
             get_team::{GetTeamResponse, get_team_handler},
             groups::{
                 add_member::add_member_handler,
@@ -110,7 +109,8 @@ use crate::{
                 remove_member::remove_member_handler,
                 update_group::update_group_handler,
             },
-            list_members::{ListMembersResponse, list_members_handler},
+            list_members::{TeamMember, list_members_handler},
+            list_team_posts::list_team_posts_handler,
             update_team::{UpdateTeamResponse, update_team_handler},
         },
         users::find_user::{FindUserResponse, find_user_handler},
@@ -742,17 +742,6 @@ pub fn route(
                         api_docs!(Json<FindTeamResponse>, "Find team", "Find a team by ID"),
                     ),
                 )
-                .route(
-                    "/permissions",
-                    get_with(
-                        get_permissions_handler,
-                        api_docs!(
-                            Json<GetPermissionsResponse>,
-                            "Get permissions",
-                            "Check if user has specific permission for a team"
-                        ),
-                    ),
-                )
                 .nest(
                     "/:team_pk",
                     Router::new()
@@ -788,9 +777,20 @@ pub fn route(
                             get_with(
                                 list_members_handler,
                                 api_docs!(
-                                    Json<ListMembersResponse>,
+                                    Json<ListItemsResponse<TeamMember>>,
                                     "List team members",
-                                    "List all members of a team with their groups"
+                                    "List all members of a team with their groups. Use query param: ?team_pk=TEAM%23uuid or ?team_pk=username"
+                                ),
+                            ),
+                        )
+                        .route(
+                            "/posts",
+                            get_with(
+                                list_team_posts_handler,
+                                api_docs!(
+                                    Json<ListItemsResponse<PostResponse>>,
+                                    "List team posts",
+                                    "List all posts for a team. Supports query params: ?status=1 (draft) or ?status=2 (published), ?bookmark=..."
                                 ),
                             ),
                         )

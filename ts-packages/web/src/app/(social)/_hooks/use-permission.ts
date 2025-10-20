@@ -28,7 +28,7 @@ export function usePermission(
 
       for (let i = 1; i <= maxAttempts; i++) {
         const p = (await get(
-          ratelApi.permissions.getPermissions(teamUsername, permission),
+          ratelApi.permissions._legacy_getPermissions(teamUsername, permission),
         )) as Permission | null | undefined;
 
         last = p ?? EMPTY_PERMISSION;
