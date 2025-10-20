@@ -128,18 +128,12 @@ pub fn route(
                 .nest(
                     "/:space_pk",
                     Router::new()
-                        .nest(
-                            "/files",
-                            crate::controllers::v3::spaces::files::files_route(),
-                        )
+                        .nest("/files", crate::controllers::v3::spaces::files::route())
                         .nest(
                             "/discussions",
-                            crate::controllers::v3::spaces::discussions::discussions_route(),
+                            crate::controllers::v3::spaces::discussions::route(),
                         )
-                        .nest(
-                            "/polls",
-                            crate::controllers::v3::spaces::polls::polls_route(),
-                        ),
+                        .nest("/polls", crate::controllers::v3::spaces::polls::route()),
                 ),
         )
         .nest(
