@@ -44,7 +44,7 @@ use bdk::prelude::*;
 use by_axum::aide::axum::routing::*;
 use by_axum::axum::*;
 
-pub fn discussions_route() -> Router<AppState> {
+pub fn route() -> Router<AppState> {
     Router::new()
         .route(
             "/",
