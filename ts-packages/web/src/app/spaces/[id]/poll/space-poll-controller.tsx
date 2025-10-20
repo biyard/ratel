@@ -4,7 +4,7 @@ import { Post } from '@/lib/api/ratel/posts.v3';
 import { SurveyProps } from '@/features/spaces/components/survey';
 import {
   createEmptyAnswer,
-  SurveyAnswer,
+  PollAnswer,
   SurveyAnswerType,
   PollQuestion,
 } from '@/features/spaces/polls/types/poll-question';
@@ -50,11 +50,11 @@ export class PollSpaceController implements ISpaceController {
     public onSelectTab: (tab: Tab) => void,
     public questions: PollQuestion[],
     public isAnswerModified: boolean,
-    public answers: Record<number, SurveyAnswer>,
+    public answers: Record<number, PollAnswer>,
     public onAddQuestion: () => void,
     public onUpdateQuestion: (index: number, question: PollQuestion) => void,
     public onDeleteQuestion: (index: number) => void,
-    public onUpdateAnswer: (questionIdx: number, answer: SurveyAnswer) => void,
+    public onUpdateAnswer: (questionIdx: number, answer: PollAnswer) => void,
     public onSubmitSurvey: () => Promise<void>,
   ) {
     this.post = post;
@@ -88,7 +88,7 @@ export class PollSpaceController implements ISpaceController {
     setQuestions((q) => [...q, newQuestion]);
     headerCtrl.onModifyContent();
   };
-  onUpdateAnswer = (questionIdx: number, answer: SurveyAnswer) => {
+  onUpdateAnswer = (questionIdx: number, answer: PollAnswer) => {
     setAnswers((prev) => {
       return { ...prev, [questionIdx]: answer };
     });
@@ -145,7 +145,7 @@ export function useSpacePollController(spacePk: string): PollSpaceController {
   const [isAnswerModified, setIsAnswerModified] = useState(false);
   // From Array, Convert into Record
 
-  const [answers, setAnswers] = useState<Record<number, SurveyAnswer>>(
+  const [answers, setAnswers] = useState<Record<number, PollAnswer>>(
     Object.fromEntries(
       (space.my_response || []).map((answer, index) => [index, answer]),
     ),

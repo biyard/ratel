@@ -1,5 +1,5 @@
 import {
-  SurveyAnswer,
+  PollAnswer,
   SurveyAnswerType,
   PollQuestion,
   SurveyQuestionWithAnswer,
@@ -7,7 +7,7 @@ import {
 
 export default function validateSurveyAnswer(
   questions: PollQuestion[],
-  answers: SurveyAnswer[],
+  answers: PollAnswer[],
 ): boolean {
   if (questions.length !== answers.length) return false;
 

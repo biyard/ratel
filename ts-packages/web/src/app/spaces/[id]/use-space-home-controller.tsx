@@ -164,6 +164,33 @@ export class SpaceHomeController {
   handleShare = async () => {
     logger.error('handleShare not implemented');
   };
+
+  handleActionEdit = async () => {
+    logger.debug('Action edit triggered');
+  };
+
+  handleActionSave = async () => {
+    logger.debug('Action save triggered');
+  };
+
+  handleActionPublish = async () => {
+    logger.debug('Action publish triggered');
+  };
+
+  get actions() {
+    return [
+      {
+        label: this.t('edit'),
+        onClick: this.handleActionEdit,
+        holdingLabel: this.t('save'),
+        onClickWhileHolding: this.handleActionSave,
+      },
+      {
+        label: this.t('publish'),
+        onClick: this.handleActionPublish,
+      },
+    ];
+  }
 }
 
 export function useSpaceHomeController(spacePk: string) {
