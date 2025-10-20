@@ -1,5 +1,3 @@
-'use client';
-
 import { useEffect, useRef, useMemo } from 'react';
 import { Group, Image as KonvaImage } from 'react-konva';
 import useImage from 'use-image';

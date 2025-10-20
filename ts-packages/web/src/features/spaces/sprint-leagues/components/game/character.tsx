@@ -1,10 +1,8 @@
-'use client';
-
 import { useEffect, useRef, useState } from 'react';
 import { Sprite } from 'react-konva';
 import useImage from 'use-image';
 import type { Sprite as KonvaSprite } from 'konva/lib/shapes/Sprite';
-import { CHARACTER_SIZE } from '../';
+import { CHARACTER_SIZE } from './constants';
 
 const parseFrames = (
   frames: Record<

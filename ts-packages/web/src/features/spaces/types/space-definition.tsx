@@ -38,7 +38,6 @@ export const SPACE_DEFINITIONS: SpaceDefinition[] = [
     Icon: <Palace className="[&>path]:stroke-[var(--color-neutral-500)]" />,
     labelKey: 'sprintLeague.label',
     descKey: 'sprintLeague.desc',
-    experiment: true,
     canBoost: true,
   },
   {
