@@ -9,11 +9,11 @@ import {
 } from '@radix-ui/react-select';
 import { TFunction } from 'i18next';
 
-import { SurveyQuestion } from '@/types/survey-type';
+import { PollQuestion } from '@/features/spaces/polls/types/poll-question';
 import { I18nFunction } from '..';
 
 type LinearScaleQuestion = Extract<
-  SurveyQuestion,
+  PollQuestion,
   { answer_type: 'linear_scale' }
 >;
 
@@ -42,11 +42,11 @@ export default function LinearScaleQuestionEditor({
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-row items-center gap-2">
-        <div className="bg-input-box-bg border border-input-box-border rounded-md px-3 py-2 text-text-primary text-sm text-start min-w-20 ">
+      <div className="flex flex-row gap-2 items-center">
+        <div className="py-2 px-3 text-sm rounded-md border bg-input-box-bg border-input-box-border text-text-primary text-start min-w-20">
           {question.min_value}
         </div>
-        <span className="text-text-primary text-sm">~</span>
+        <span className="text-sm text-text-primary">~</span>
         <Select
           value={question.max_value.toString()}
           onValueChange={(value) => {
@@ -75,8 +75,8 @@ export default function LinearScaleQuestionEditor({
       </div>
 
       <div className="flex flex-col justify-start items-start w-full">
-        <div className="flex flex-row items-center justify-start gap-5 w-full mb-3">
-          <span className="font-medium text-text-primary text-sm w-5 text-center">
+        <div className="flex flex-row gap-5 justify-start items-center mb-3 w-full">
+          <span className="w-5 text-sm font-medium text-center text-text-primary">
             {question.min_value}
           </span>
           <Input
@@ -90,8 +90,8 @@ export default function LinearScaleQuestionEditor({
           />
         </div>
 
-        <div className="flex flex-row items-center justify-start gap-5 w-full">
-          <span className="font-medium text-text-primary text-sm w-5 text-center">
+        <div className="flex flex-row gap-5 justify-start items-center w-full">
+          <span className="w-5 text-sm font-medium text-center text-text-primary">
             {question.max_value}
           </span>
           <Input

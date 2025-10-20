@@ -4,7 +4,7 @@ import {
   submitPollSurveyResponse,
 } from '@/lib/api/ratel/poll.spaces.v3';
 import { optimisticUpdate } from '@/lib/hook-utils';
-import { SurveyAnswer } from '@/types/survey-type';
+import { PollAnswer } from '@/features/spaces/polls/types/poll-question';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 export function usePollResponseMutation() {
@@ -16,7 +16,7 @@ export function usePollResponseMutation() {
       answers,
     }: {
       spacePk: string;
-      answers: SurveyAnswer[];
+      answers: PollAnswer[];
     }) => {
       await submitPollSurveyResponse(spacePk, answers);
     },

@@ -43,7 +43,7 @@ pub async fn list_posts_handler(
         bookmark
     );
 
-    let likes = match (user.clone(), posts.is_empty()) {
+    let likes = match (&user, posts.is_empty()) {
         (Some(user), false) => {
             let sk = EntityType::PostLike(user.pk.to_string());
             let likes = PostLike::batch_get(

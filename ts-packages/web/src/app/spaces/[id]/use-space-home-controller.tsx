@@ -8,16 +8,18 @@ import { Settings, Vote } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { UserResponse } from '@/lib/api/ratel/me.v3';
-import { SpaceType } from '@/features/spaces/types/space-type';
 import { SpaceStatus } from '@/features/spaces/types/space-common';
 import { logger } from '@/lib/logger';
 import { useSpaceUpdateContentMutation } from '@/features/spaces/hooks/use-space-update-content-mutation';
 import { showErrorToast } from '@/lib/toast';
 import { useSpaceUpdateTitleMutation } from '@/features/spaces/hooks/use-space-update-title-mutation';
+import { sideMenusForSpaceType } from '@/features/spaces/utils/side-menus-for-space-type';
 
 export class SpaceHomeController {
   public space: Space;
   public user: UserResponse | null;
+  public saveHook?: () => Promise<void>;
+  public publishHook?: () => Promise<void>;
 
   constructor(
     public data: ReturnType<typeof useSpaceHomeData>,
@@ -25,17 +27,20 @@ export class SpaceHomeController {
     public t: TFunction<'Space'>,
     public updateSpaceContent: ReturnType<typeof useSpaceUpdateContentMutation>,
     public updateSpaceTitle: ReturnType<typeof useSpaceUpdateTitleMutation>,
+    public editState: State<boolean>,
+    public saveState: State<boolean>,
   ) {
     this.space = this.data.space.data;
   }
 
-  get menusGenerator() {
-    const gen = {};
-    gen[SpaceType.Poll] = this.pollMenus;
-    gen[SpaceType.Quiz] = this.quizMenus;
-    gen[SpaceType.Deliberation] = this.deliberationMenus;
-
-    return gen;
+  get timelineItems() {
+    // FIXME: add more timeline items even specific to space type
+    return [
+      {
+        label: this.t('timeline_created_at_label'),
+        time: this.space.createdAt,
+      },
+    ];
   }
 
   get menus() {
@@ -47,9 +52,21 @@ export class SpaceHomeController {
       },
     ];
 
-    if (this.menusGenerator[this.space.spaceType]) {
-      menus = menus.concat(this.menusGenerator[this.space.spaceType]);
-    }
+    sideMenusForSpaceType[this.space.spaceType]?.forEach((menu) => {
+      let visible = !menu.visible;
+
+      if (typeof menu.visible === 'function') {
+        visible = menu.visible(this.space);
+      }
+
+      if (visible) {
+        menus.push({
+          Icon: menu.Icon,
+          to: typeof menu.to === 'function' ? menu.to(this.space) : menu.to,
+          label: this.t(menu.label),
+        });
+      }
+    });
 
     if (this.space.isAdmin()) {
       menus = menus.concat(this.adminMenus);
@@ -151,6 +168,43 @@ export class SpaceHomeController {
   handleShare = async () => {
     logger.error('handleShare not implemented');
   };
+
+  handleActionEdit = async () => {
+    logger.debug('Action edit triggered');
+    this.editState.set(true);
+  };
+
+  handleActionSave = async () => {
+    logger.debug('Action save triggered');
+    this.editState.set(false);
+    if (this.saveHook) {
+      this.saveHook();
+    }
+  };
+
+  handleActionPublish = async () => {
+    logger.debug('Action publish triggered');
+    if (this.publishHook) {
+      this.publishHook();
+    }
+  };
+
+  handleActionDelete = async () => {
+    logger.debug('Action delete triggered');
+  };
+
+  get actions() {
+    return [
+      {
+        label: this.t('publish'),
+        onClick: this.handleActionPublish,
+      },
+      {
+        label: this.t('delete'),
+        onClick: this.handleActionPublish,
+      },
+    ];
+  }
 }
 
 export function useSpaceHomeController(spacePk: string) {
@@ -160,11 +214,16 @@ export function useSpaceHomeController(spacePk: string) {
   const updateSpaceContent = useSpaceUpdateContentMutation();
   const updateSpaceTitle = useSpaceUpdateTitleMutation();
 
+  const edit = useState(false);
+  const save = useState(false);
+
   return new SpaceHomeController(
     data,
     new State(state),
     t,
     updateSpaceContent,
     updateSpaceTitle,
+    new State(edit),
+    new State(save),
   );
 }

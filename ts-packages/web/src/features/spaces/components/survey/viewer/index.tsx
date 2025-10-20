@@ -3,7 +3,7 @@ import {
   SurveyAnswerType,
   SurveyQuestion,
   SurveyQuestionWithAnswer,
-} from '@/types/survey-type';
+} from '@/features/spaces/polls/types/poll-question';
 import ObjectiveViewer from './objective-viewer';
 import DropdownViewer from './dropdown-viewer';
 import LinearScaleViewer from './linear-scale-viewer';

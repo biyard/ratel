@@ -2,7 +2,7 @@ import {
   LinearScaleQuestionType,
   ObjectiveQuestionUnion,
   SurveyAnswerType,
-} from '@/types/survey-type';
+} from '@/features/spaces/polls/types/poll-question';
 import { DialPad2, Remove } from '@/components/icons';
 import { Input } from '@/components/ui/input';
 import { I18nFunction } from '..';
@@ -59,14 +59,14 @@ export default function ObjectiveQuestionEditor({
             onChange={(e) => handleUpdateOption(idx, e.target.value)}
           />
           <Remove
-            className="cursor-pointer w-5 h-5 stroke-neutral-400 text-neutral-400"
+            className="w-5 h-5 cursor-pointer stroke-neutral-400 text-neutral-400"
             onClick={() => handleRemoveOption(idx)}
           />
         </div>
       ))}
       <button
         onClick={handleAddOption}
-        className="cursor-pointer text-sm text-neutral-500 font-semibold text-left mt-2"
+        className="mt-2 text-sm font-semibold text-left cursor-pointer text-neutral-500"
       >
         + {t('add_option_button_label')}
       </button>
