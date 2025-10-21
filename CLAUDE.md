@@ -167,6 +167,130 @@ Main Api package is the main backend APIs for Ratel written by Rust.
 - `v3` will be implemented based on Axum native convention.
 - `v3` endpoints will use DynamoDB models implemented in `packages/main-api/src/models/dynamo_tables/main`
 
+### Testing Backend APIs
+The main-api uses custom HTTP request macros for testing API endpoints. Tests are located in `tests.rs` files within controller modules.
+
+#### Test File Structure
+- Test files are named `tests.rs` and placed within the corresponding controller module directory
+- Example: `/packages/main-api/src/controllers/v3/posts/tests.rs` contains tests for all post-related endpoints
+- Tests use the `#[tokio::test]` attribute for async test functions
+
+#### HTTP Request Macros
+The codebase provides convenient macros for making HTTP requests in tests, defined in `/packages/main-api/src/tests/macros.rs`:
+
+**Available Macros:**
+- `get!` - For GET requests
+- `post!` - For POST requests
+- `patch!` - For PATCH requests
+- `put!` - For PUT requests
+- `delete!` - For DELETE requests
+
+**Macro Parameters:**
+The macros accept the following parameters (in order):
+1. `app:` - The application instance from TestContextV3
+2. `path:` - The API endpoint path (e.g., "/v3/posts/{id}")
+3. `headers:` (optional) - HTTP headers (e.g., authentication headers)
+4. `body:` (optional) - Request body as JSON object literal
+5. `response_type:` (optional) - Expected response type (defaults to `serde_json::Value`)
+
+**Return Value:**
+All macros return a tuple: `(StatusCode, HeaderMap, ResponseBody)`
+
+#### Example Test Patterns
+
+**Basic GET request:**
+```rust
+let (status, _headers, body) = get! {
+    app: app,
+    path: format!("/v3/posts/{}", post_pk),
+    headers: test_user.1.clone(),
+    response_type: PostDetailResponse
+};
+assert_eq!(status, 200);
+```
+
+**POST request with body:**
+```rust
+let (status, _headers, body) = post! {
+    app: app,
+    path: "/v3/posts",
+    headers: test_user.1.clone(),
+    body: {
+        "title": "Test Post",
+        "content": "<p>Test Content</p>"
+    },
+    response_type: CreatePostResponse
+};
+assert_eq!(status, 200);
+```
+
+**Request without authentication:**
+```rust
+let (status, _headers, body) = get! {
+    app: app,
+    path: format!("/v3/posts/{}", post_pk),
+    response_type: PostDetailResponse
+};
+```
+
+#### Test Context Setup
+Use `TestContextV3::setup()` to get test context with:
+- `app` - The application instance
+- `test_user` - A tuple of `(User, HeaderMap)` for authenticated requests
+- `now` - Current timestamp for unique test data
+- `ddb` - DynamoDB client for direct database operations
+
+**Example:**
+```rust
+#[tokio::test]
+async fn test_get_post() {
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
+    // Your test code here
+}
+```
+
+#### Best Practices for Writing Tests
+1. **Test each handler function comprehensively** - Cover success cases, error cases, and edge cases
+2. **Use descriptive test names** - Name tests clearly (e.g., `test_get_post_when_authenticated`)
+3. **Test permissions** - Verify that authentication/authorization works correctly
+4. **Test with and without auth** - Test endpoints both as authenticated users and guests
+5. **Verify response structure** - Check status codes, response bodies, and headers
+6. **Test error cases** - Verify correct error codes and messages for invalid requests
+7. **Always run tests before committing** - Execute `cd packages/main-api && make test` to ensure all tests pass
+
+#### Common Test Scenarios
+For a typical API handler, write tests for:
+- ✅ Successful request with valid data
+- ✅ Request with authentication vs without authentication
+- ✅ Request with invalid/missing parameters
+- ✅ Request for non-existent resources (404)
+- ✅ Unauthorized access (401/403)
+- ✅ Related data fetching (e.g., with comments, likes, etc.)
+- ✅ Permission-based data filtering (e.g., hiding space info)
+
+#### Example Test Suite Structure
+```rust
+// Test successful operations
+#[tokio::test]
+async fn test_get_post_when_authenticated() { /* ... */ }
+
+// Test guest access
+#[tokio::test]
+async fn test_get_post_when_not_authenticated() { /* ... */ }
+
+// Test with related data
+#[tokio::test]
+async fn test_get_post_with_comments() { /* ... */ }
+
+// Test error cases
+#[tokio::test]
+async fn test_get_nonexistent_post() { /* ... */ }
+
+// Test permissions
+#[tokio::test]
+async fn test_get_post_permissions() { /* ... */ }
+```
+
 
 ## by_macro
 `by_macro` package provides macros to simplify the code.

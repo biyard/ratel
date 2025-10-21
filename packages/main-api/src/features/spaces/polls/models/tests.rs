@@ -34,10 +34,6 @@ async fn test_poll_space_creation() {
         _ => panic!("space pk must be Partition::Space"),
     };
 
-    let poll = Poll::new(common.pk.clone(), Some(EntityType::SpacePoll(space_id))).unwrap();
-
-    poll.create(&cli).await.expect("failed to create poll");
-
     let questions = vec![
         Question::SingleChoice(ChoiceQuestion {
             title: "What is your favorite color?".to_string(),
@@ -54,21 +50,17 @@ async fn test_poll_space_creation() {
             is_required: Some(true),
         }),
     ];
+    let sk = EntityType::SpacePoll(space_id);
+    let poll = Poll::new(common.pk.clone(), Some(sk.clone()))
+        .unwrap()
+        .with_questions(questions);
 
-    let question = PollQuestion::new(common.pk.clone(), questions);
-
-    question
-        .create(&cli)
+    let poll = Poll::get(&cli, &common.pk, Some(&poll.sk))
         .await
-        .expect("failed to create question");
+        .expect("failed to get poll")
+        .expect("poll not found");
 
-    let metadata = PollMetadata::query_all(&cli, &common.pk)
-        .await
-        .expect("failed to query poll space metadata");
-
-    assert_eq!(metadata.len(), 2, "should have 2 entries");
-
-    let response: PollResponse = metadata.into();
+    let response: PollResponse = poll.clone().into();
 
     assert_eq!(response.questions.len(), 2, "should have 2 questions");
 
