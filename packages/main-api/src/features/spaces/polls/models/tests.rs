@@ -1,4 +1,5 @@
 use crate::features::spaces::polls::{Poll, PollResponse, PollUserAnswer};
+use crate::utils::time::get_now_timestamp_millis;
 use crate::{
     models::{feed::Post, space::SpaceCommon},
     tests::{create_test_user, get_test_aws_config},
@@ -52,6 +53,7 @@ async fn test_poll_space_creation() {
     let poll = Poll::new(common.pk.clone(), Some(sk.clone()))
         .unwrap()
         .with_questions(questions);
+    poll.create(&cli).await.expect("failed to create poll");
 
     let poll = Poll::get(&cli, &common.pk, Some(&poll.sk))
         .await
