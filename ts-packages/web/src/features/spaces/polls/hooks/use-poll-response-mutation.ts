@@ -1,40 +1,37 @@
-import { pollSpaceKeys, spaceKeys } from '@/constants';
-import {
-  PollSpaceResponse,
-  submitPollSurveyResponse,
-} from '@/lib/api/ratel/poll.spaces.v3';
+import { spaceKeys } from '@/constants';
 import { optimisticUpdate } from '@/lib/hook-utils';
-import { SurveyAnswer } from '@/types/survey-type';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { PollAnswer } from '@/features/spaces/polls/types/poll-question';
+import { useMutation } from '@tanstack/react-query';
+import { call } from '@/lib/api/ratel/call';
+import { Poll } from '../types/poll';
 
 export function usePollResponseMutation() {
-  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationKey: ['poll-response'],
     mutationFn: async ({
       spacePk,
+      pollSk,
       answers,
     }: {
       spacePk: string;
-      answers: SurveyAnswer[];
+      pollSk: string;
+      answers: PollAnswer[];
     }) => {
-      await submitPollSurveyResponse(spacePk, answers);
-    },
-    onSuccess: async (_, { spacePk, answers }) => {
-      const pollSpaceQK = spaceKeys.detail(spacePk);
-      await optimisticUpdate<PollSpaceResponse>(
-        { queryKey: pollSpaceQK },
-        (space) => {
-          if (!space.my_response) {
-            space.user_response_count += 1;
-          }
-          space.my_response = answers;
-          return space;
+      await call(
+        'POST',
+        `/v3/spaces/${encodeURIComponent(spacePk)}/polls/${encodeURIComponent(pollSk)}/responses`,
+        {
+          answers,
         },
       );
+    },
+    onSuccess: async (_, { spacePk, pollSk, answers }) => {
+      const pollSpaceQK = spaceKeys.poll(spacePk, pollSk);
+      await optimisticUpdate<Poll>({ queryKey: pollSpaceQK }, (poll) => {
+        poll.user_response_count += 1;
+        poll.myResponse = answers;
 
-      queryClient.invalidateQueries({
-        queryKey: pollSpaceKeys.summary(spacePk),
+        return poll;
       });
     },
   });

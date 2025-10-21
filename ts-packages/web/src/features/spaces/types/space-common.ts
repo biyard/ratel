@@ -12,9 +12,9 @@ export enum SpaceStatus {
 }
 
 export type SpaceVisibility =
-  | { type: 'Private' }
-  | { type: 'Public' }
-  | { type: 'Team'; team_pk: string };
+  | { type: 'Private' | 'private' | 'PRIVATE' }
+  | { type: 'Public' | 'public' | 'PUBLIC' }
+  | { type: 'Team' | 'team' | 'TEAM'; team_pk: string };
 
 export interface SpaceCommon {
   pk: string;

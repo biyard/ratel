@@ -56,7 +56,7 @@ pub enum EntityType {
     SpaceCommon,
 
     // Poll Feature entity types
-    SpacePoll,
+    SpacePoll(String), // SpacePoll#{uuid or space_id}
 
     SpacePollQuestion,
 
@@ -79,7 +79,9 @@ pub enum EntityType {
     DeliberationResponse(String),
 
     // Sprint league space entity types
-    SprintLeagueSpace,
+    SprintLeague,
+    SprintLeaguePlayer(String), //Uuid
+    SprintLeagueVote(String),   //#{SPACE_ID}#{UserPk_ID}
 
     // Artwork space entity types
     ArtworkSpace,
@@ -99,10 +101,10 @@ pub enum EntityType {
     Industry,
 
     //SPACE FEATURE
-    SpaceFile(String),
+    SpaceFile,
     SpaceDiscussion(String),
-    SpaceDiscussionMember(String),
-    SpaceDiscussionParticipant(String),
+    SpaceDiscussionMember(String, String),
+    SpaceDiscussionParticipant(String, String),
     SpaceQuiz(String),
     SpaceRecommendation,
     SpaceSurveyResponse(String), //Space pk

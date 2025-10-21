@@ -1,7 +1,7 @@
-use crate::features::spaces::polls::{PollMetadata, PollResponse, PollUserAnswer};
+use crate::features::spaces::polls::*;
+use crate::types::SpacePublishState;
 use crate::{
     AppState, Error2,
-    controllers::v3::spaces::dto::*,
     models::{space::SpaceCommon, user::User},
     types::{Partition, TeamGroupPermission},
 };
@@ -17,14 +17,14 @@ use aide::NoApi;
 pub async fn get_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-    Path(SpacePathParam { space_pk }): SpacePath,
+    Path(PollPathParam { space_pk, poll_sk }): PollPath,
 ) -> Result<Json<PollResponse>, Error2> {
     // Request Validation
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error2::NotFoundPoll);
     }
 
-    let (_, has_perm) = SpaceCommon::has_permission(
+    let (sc, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
         user.as_ref().map(|u| &u.pk),
@@ -35,9 +35,18 @@ pub async fn get_poll_handler(
         return Err(Error2::NoPermission);
     }
 
-    let metadata = PollMetadata::query(&dynamo.client, &space_pk).await?;
-    let mut poll_response: PollResponse = PollResponse::from(metadata);
-    if let Some(user) = user {
+    let poll = Poll::get(&dynamo.client, &space_pk, Some(&poll_sk))
+        .await?
+        .ok_or(Error2::NotFoundPoll)?;
+
+    let mut poll_response: PollResponse = PollResponse::from(poll);
+    let now = crate::utils::time::get_now_timestamp_millis();
+
+    if user.is_some()
+        && sc.publish_state == SpacePublishState::Published
+        && poll_response.started_at <= now
+    {
+        let user = user.unwrap();
         let my_survey_response =
             PollUserAnswer::find_one(&dynamo.client, &space_pk, &user.pk).await?;
 

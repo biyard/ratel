@@ -2,8 +2,8 @@ use bdk::prelude::*;
 
 use crate::types::{Answer, EntityType, Question};
 
-use crate::features::spaces::polls::PollMetadata;
-#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+use crate::features::spaces::polls::Poll;
+#[derive(Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PollResponse {
     pub sk: EntityType,
     pub created_at: i64,
@@ -16,25 +16,18 @@ pub struct PollResponse {
     pub my_response: Option<Vec<Answer>>, // User responses to the survey
 }
 
-impl From<Vec<PollMetadata>> for PollResponse {
-    fn from(entity: Vec<PollMetadata>) -> Self {
+impl From<Poll> for PollResponse {
+    fn from(poll: Poll) -> Self {
         let mut res = Self::default();
-        for entry in entity {
-            match entry {
-                PollMetadata::Poll(poll) => {
-                    res.sk = poll.sk;
-                    res.started_at = poll.started_at;
-                    res.ended_at = poll.ended_at;
-                    res.response_editable = poll.response_editable;
-                    res.user_response_count = poll.user_response_count;
-                    res.created_at = poll.created_at;
-                    res.updated_at = poll.updated_at;
-                }
-                PollMetadata::PollQuestion(question) => {
-                    res.questions = question.questions;
-                }
-            }
-        }
+        res.sk = poll.sk;
+        res.started_at = poll.started_at;
+        res.ended_at = poll.ended_at;
+        res.response_editable = poll.response_editable;
+        res.user_response_count = poll.user_response_count;
+        res.created_at = poll.created_at;
+        res.updated_at = poll.updated_at;
+        res.questions = poll.questions;
+
         res
     }
 }

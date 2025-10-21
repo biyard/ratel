@@ -1,11 +1,10 @@
-use crate::features::spaces::polls::{
-    Poll, PollMetadata, PollQuestion, PollResponse, PollUserAnswer,
-};
+use crate::features::spaces::polls::{Poll, PollResponse, PollUserAnswer};
+use crate::utils::time::get_now_timestamp_millis;
 use crate::{
     models::{feed::Post, space::SpaceCommon},
     tests::{create_test_user, get_test_aws_config},
     types::{Answer, ChoiceQuestion, EntityType, Question},
-    utils::{aws::DynamoClient, time::get_now_timestamp_millis},
+    utils::aws::DynamoClient,
 };
 
 #[tokio::test]
@@ -28,10 +27,11 @@ async fn test_poll_space_creation() {
         .await
         .expect("failed to create space common");
 
-    let now = get_now_timestamp_millis();
-    let poll = Poll::new(common.pk.clone(), false, now, now + 60).unwrap();
-
-    poll.create(&cli).await.expect("failed to create poll");
+    let _now = get_now_timestamp_millis();
+    let space_id = match common.pk.clone() {
+        crate::types::Partition::Space(id) => id,
+        _ => panic!("space pk must be Partition::Space"),
+    };
 
     let questions = vec![
         Question::SingleChoice(ChoiceQuestion {
@@ -49,21 +49,18 @@ async fn test_poll_space_creation() {
             is_required: Some(true),
         }),
     ];
+    let sk = EntityType::SpacePoll(space_id);
+    let poll = Poll::new(common.pk.clone(), Some(sk.clone()))
+        .unwrap()
+        .with_questions(questions);
+    poll.create(&cli).await.expect("failed to create poll");
 
-    let question = PollQuestion::new(poll.pk.clone(), questions);
-
-    question
-        .create(&cli)
+    let poll = Poll::get(&cli, &common.pk, Some(&poll.sk))
         .await
-        .expect("failed to create question");
+        .expect("failed to get poll")
+        .expect("poll not found");
 
-    let metadata = PollMetadata::query(&cli, &poll.pk)
-        .await
-        .expect("failed to query poll space metadata");
-
-    assert_eq!(metadata.len(), 3, "should have 3 entries");
-
-    let response: PollResponse = metadata.into();
+    let response: PollResponse = poll.clone().into();
 
     assert_eq!(response.questions.len(), 2, "should have 2 questions");
 

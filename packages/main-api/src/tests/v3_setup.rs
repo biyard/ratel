@@ -20,6 +20,10 @@ impl TestContextV3 {
     pub async fn setup() -> Self {
         setup_v3().await
     }
+
+    pub async fn create_another_user(&self) -> (User, axum::http::HeaderMap) {
+        create_user_session(self.app.clone(), &self.ddb).await
+    }
 }
 
 pub async fn setup_v3() -> TestContextV3 {
@@ -60,13 +64,13 @@ pub async fn setup_v3() -> TestContextV3 {
 
     let ddb = Client::from_conf(aws_config);
     let (user, headers) = create_user_session(app.clone(), &ddb).await;
-    let user2 = create_user_session(app.clone(), &ddb).await;
+    let (user2, headers2) = create_user_session(app.clone(), &ddb).await;
 
     TestContextV3 {
         app,
         now,
         ddb,
         test_user: (user, headers),
-        user2,
+        user2: (user2, headers2),
     }
 }

@@ -1,45 +1,42 @@
-import { DialPad } from '@/assets/icons/security';
+import { Add } from '@/assets/icons/validations';
+import SwitchButton from '@/components/switch-button';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { SpacePollEditorController } from '@/features/spaces/polls/pages/creator/use-space-poll-editor-controller';
 import {
   createDefaultQuestion,
   SurveyAnswerType,
   SurveyQuestion,
-} from '@/types/survey-type';
-import TypeSelect from './type-select';
-import { Input } from '@/components/ui/input';
+} from '@/features/spaces/polls/types/poll-question';
 import { Trash2 } from 'lucide-react';
-import ObjectiveQuestionEditor from './objective-question';
-import LinearScaleQuestionEditor from './linear-scale-question';
-import { Add } from '@/assets/icons/validations';
-import SwitchButton from '@/components/switch-button';
 import { I18nFunction } from '..';
+import LinearScaleQuestionEditor from './linear-scale-question';
+import ObjectiveQuestionEditor from './objective-question';
+import TypeSelect from './type-select';
 
 interface SurveyEditorProps {
-  t: I18nFunction;
-  questions: SurveyQuestion[];
-  onAddQuestion: () => void;
-  onDeleteQuestion: (questionIdx: number) => void;
-  onUpdateQuestion: (questionIdx: number, newQuestion: SurveyQuestion) => void;
+  ctrl: SpacePollEditorController;
 }
 
-export default function SurveyEditor({
-  t,
-  questions,
-  onAddQuestion,
-  onDeleteQuestion,
-  onUpdateQuestion,
-}: SurveyEditorProps) {
+export default function SurveyEditor({ ctrl }: SurveyEditorProps) {
   return (
-    <div className="flex flex-col w-full gap-2.5">
-      {questions.map((question, index) => (
-        <SurveyEditorItem
-          key={index}
-          t={t}
-          question={question}
-          onUpdate={(newQuestion) => onUpdateQuestion(index, newQuestion)}
-          onDelete={() => onDeleteQuestion(index)}
-        />
+    <div className="flex flex-col gap-2.5 w-full">
+      {ctrl.questions.get().map((question, index) => (
+        <>
+          {index !== 0 && <Separator className="bg-gray-600" />}
+
+          <SurveyEditorItem
+            key={`survey-editor-item-${index}`}
+            t={ctrl.t}
+            question={question}
+            onUpdate={(newQuestion) =>
+              ctrl.handleUpdateQuestion(index, newQuestion)
+            }
+            onDelete={() => ctrl.handleRemoveQuestion(index)}
+          />
+        </>
       ))}
-      <div className="relative flex items-center justify-center w-full py-6">
+      <div className="flex relative justify-center items-center py-6 w-full">
         <div
           className="absolute top-1/2 w-full h-0.25"
           style={{
@@ -50,8 +47,8 @@ export default function SurveyEditor({
         />
 
         <div
-          className="cursor-pointer z-10 bg-background flex items-center justify-center w-fit h-fit p-[13px] border border-neutral-500 rounded-full"
-          onClick={onAddQuestion}
+          className="flex z-10 justify-center items-center rounded-full border cursor-pointer bg-background w-fit h-fit p-[13px] border-neutral-500"
+          onClick={ctrl.handleAddQuestion}
         >
           <Add className="w-4 h-4 stroke-neutral-500 text-neutral-500" />
         </div>
@@ -121,11 +118,8 @@ export function SurveyEditorItem({
   };
 
   return (
-    <div className="flex flex-col w-full bg-card-bg-secondary border border-card-border rounded-[10px] px-4 pb-5 pt-1">
-      <div className="flex flex-row w-full justify-center items-center mb-2.5">
-        <DialPad className="w-6 h-6" />
-      </div>
-      <div className="flex flex-col w-full gap-2.5">
+    <div className="flex flex-col px-4 pt-1 pb-5 w-full border bg-card-bg-secondary border-card-border rounded-[10px]">
+      <div className="flex flex-col gap-2.5 w-full">
         <div className="flex gap-2 max-tablet:flex-col">
           <TypeSelect
             t={t}
@@ -141,7 +135,7 @@ export function SurveyEditorItem({
           />
         </div>
 
-        <div className="flex flex-col mt-2.5 gap-2.5">
+        <div className="flex flex-col gap-2.5 mt-2.5">
           <QuestionContent t={t} question={question} onUpdate={onUpdate} />
         </div>
 
@@ -184,8 +178,8 @@ export function QuestionFooter({
   };
 
   return (
-    <div className="flex flex-row w-full justify-end items-center mt-4">
-      <div className="flex flex-wrap w-fit max-tablet:gap-4 max-tablet:justify-end gap-10">
+    <div className="flex flex-row justify-end items-center mt-4 w-full">
+      <div className="flex flex-wrap gap-10 w-fit max-tablet:gap-4 max-tablet:justify-end">
         {question.answer_type === SurveyAnswerType.Checkbox && (
           <LabelSwitchButton
             bgColor="bg-blue-500"
@@ -205,13 +199,13 @@ export function QuestionFooter({
         />
 
         <div
-          className="cursor-pointer flex flex-row w-fit gap-1.25 items-center"
+          className="flex flex-row items-center cursor-pointer w-fit gap-1.25"
           onClick={onDelete}
         >
-          <div className="text-[15px] text-neutral-500 font-medium cursor-pointer">
+          <div className="font-medium cursor-pointer text-[15px] text-neutral-500">
             {t('delete_button_label')}
           </div>
-          <Trash2 className="w-4.5 h-4.5 stroke-white light:stroke-neutral-500 cursor-pointer" />
+          <Trash2 className="cursor-pointer w-4.5 h-4.5 stroke-white light:stroke-neutral-500" />
         </div>
       </div>
     </div>
@@ -232,7 +226,7 @@ function LabelSwitchButton({
   onChange: (val: boolean) => void;
 }) {
   return (
-    <label className="flex items-center cursor-pointer gap-2 select-none">
+    <label className="flex gap-2 items-center cursor-pointer select-none">
       <span
         className={`font-medium text-[15px]/[24px] ${value ? textColor : 'text-gray-400'}`}
       >

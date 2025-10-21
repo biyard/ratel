@@ -84,7 +84,7 @@ impl Post {
         author: A,
     ) -> Self {
         let uid = uuid::Uuid::new_v4().to_string();
-        let now = chrono::Utc::now().timestamp();
+        let now = chrono::Utc::now().timestamp_millis();
         let Author {
             pk,
             display_name,
@@ -141,22 +141,24 @@ impl Post {
             return Ok(self.get_permissions_for_guest());
         }
 
-        match self.user_pk.clone() {
+        let gperm = self.get_permissions_for_guest();
+        let perm = match self.user_pk.clone() {
             team_pk if matches!(team_pk, Partition::Team(_)) => {
-                return Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk).await;
+                Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk).await? | gperm
             }
-            _ => {
-                return Err(Error2::NotSupported(format!(
-                    "Post({}) author type {:?} is not supported",
-                    self.pk, self.author_type
-                )));
-            }
-        }
+            _ => gperm,
+        };
+
+        Ok(perm)
     }
 
     fn get_permissions_for_guest(&self) -> TeamGroupPermissions {
         if self.status == PostStatus::Published && self.visibility == Some(Visibility::Public) {
-            return TeamGroupPermissions::read();
+            if self.space_visibility == Some(SpaceVisibility::Public) {
+                return TeamGroupPermissions::read();
+            } else {
+                return TeamGroupPermissions(vec![TeamGroupPermission::PostRead]);
+            }
         }
 
         TeamGroupPermissions::empty()

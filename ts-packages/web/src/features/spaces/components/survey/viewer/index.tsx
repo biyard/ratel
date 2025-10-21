@@ -3,7 +3,7 @@ import {
   SurveyAnswerType,
   SurveyQuestion,
   SurveyQuestionWithAnswer,
-} from '@/types/survey-type';
+} from '@/features/spaces/polls/types/poll-question';
 import ObjectiveViewer from './objective-viewer';
 import DropdownViewer from './dropdown-viewer';
 import LinearScaleViewer from './linear-scale-viewer';
@@ -36,6 +36,11 @@ export default function SurveyViewer({
 
   return (
     <div className="flex flex-col gap-2.5 w-full">
+      {questions.length === 0 && (
+        <span className="flex justify-center items-center w-full text-neutral-500">
+          {t('no_questions')}
+        </span>
+      )}
       {questionsWithAnswers.map((questionAnswer, idx) => (
         <Card key={`survey-question-${idx}`}>
           <QuestionViewer

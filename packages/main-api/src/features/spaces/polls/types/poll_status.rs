@@ -9,10 +9,11 @@ use bdk::prelude::*;
     DynamoEnum,
     schemars::JsonSchema,
     PartialEq,
+    aide::OperationIo,
 )]
 pub enum PollStatus {
     #[default]
-    Ready = 1,
+    NotStarted = 1,
     InProgress = 2,
     Finish = 3,
 }

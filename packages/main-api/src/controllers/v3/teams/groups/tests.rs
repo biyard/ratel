@@ -28,7 +28,7 @@ async fn test_update_group_handler() {
         body: {
             "username": team_username,
             "nickname": format!("{}'s Team", team_username),
-            "profile_url": "https://example.com/profile.png",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "description": "This is a team for verification"
         },
         response_type: CreateTeamResponse
@@ -78,12 +78,9 @@ async fn test_update_group_handler() {
 
 #[tokio::test]
 async fn test_update_with_permissison() {
-    let TestContextV3 {
-        app,
-        test_user,
-        user2,
-        ..
-    } = TestContextV3::setup().await;
+    let ctx = TestContextV3::setup().await;
+    let user2 = ctx.create_another_user().await;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let team_username = format!("testteam{}", uuid::Uuid::new_v4());
 
@@ -95,7 +92,7 @@ async fn test_update_with_permissison() {
         body: {
             "username": team_username,
             "nickname": format!("{}'s Team", team_username),
-            "profile_url": "https://example.com/profile.png",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "description": "This is a team for verification"
         },
         response_type: CreateTeamResponse
@@ -157,13 +154,9 @@ async fn test_update_with_permissison() {
 
 #[tokio::test]
 async fn test_add_member_handler() {
-    let TestContextV3 {
-        app,
-        test_user,
-        user2,
-        ..
-    } = TestContextV3::setup().await;
-
+    let ctx = TestContextV3::setup().await;
+    let user2 = ctx.create_another_user().await;
+    let TestContextV3 { app, test_user, .. } = ctx;
     let team_username = format!("testteam{}", uuid::Uuid::new_v4());
 
     // Create a team
@@ -174,7 +167,7 @@ async fn test_add_member_handler() {
         body: {
             "username": team_username,
             "nickname": format!("{}'s Team", team_username),
-            "profile_url": "https://example.com/profile.png",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "description": "This is a team for verification"
         },
         response_type: CreateTeamResponse

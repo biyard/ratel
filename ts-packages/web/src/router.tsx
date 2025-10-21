@@ -20,15 +20,14 @@ import TeamSettings from './app/teams/[username]/settings/page';
 import TeamDrafts from './app/teams/[username]/drafts/page';
 
 // Space
-import PollSpacePage from './app/spaces/poll/[id]/page';
+import SpacePollPage from './app/spaces/[id]/poll/space-poll-page';
 import { TestReportPage } from './app/test-report/test-report-page';
 import { StorybookPage } from './app/storybook/stroybook-page';
 import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
-import DeliberationSpacePage from './app/spaces/deliberation/[id]/page';
-import DiscussionPage from './app/spaces/deliberation/[id]/discussion/[discussion-id]/discussion-page';
 import SpaceByIdLayout from './app/spaces/[id]/space-by-id-layout';
 import { SpaceHomePage } from './app/spaces/[id]/space-home-page';
 import { SpaceSettingsPage } from './app/spaces/[id]/settings/space-settings-page';
+import SpaceSprintLeaguePage from './app/spaces/[id]/sprint-league/page';
 
 export const routes = createBrowserRouter([
   {
@@ -153,22 +152,23 @@ export const routes = createBrowserRouter([
             Component: SpaceSettingsPage,
           },
 
-          // Space Features
           {
-            id: 'poll-space',
-            path: 'poll',
-            Component: PollSpacePage,
+            id: 'space-sprint-league-feature',
+            path: 'sprint-leagues',
+            Component: SpaceSprintLeaguePage,
           },
+          // Space Poll Feature
           {
-            id: 'deliberation-space',
-            path: 'deliberation',
-            Component: DeliberationSpacePage,
-          },
-          {
-            id: 'discussion',
-            path: 'discussion/:discussionPk',
-            Component: DiscussionPage,
-          },
+            id: 'space-poll-feature',
+            path: 'polls',
+            children: [
+              {
+                id: 'poll-by-id',
+                path: ':pollPk',
+                Component: SpacePollPage,
+              },
+            ],
+          }, // End of Poll Feature
         ],
       }, // End of Space Layout
 
