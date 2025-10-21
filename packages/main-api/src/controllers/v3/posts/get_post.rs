@@ -43,6 +43,7 @@ pub async fn get_post_handler(
             "You do not have permission to view this post".into(),
         ));
     }
+    let can_read_space = permissions.contains(crate::types::TeamGroupPermission::SpaceRead);
 
     let (is_liked, comment_likes) = if let Some(user) = &user {
         let is_liked = post.is_liked(cli, &user.pk);
@@ -60,8 +61,16 @@ pub async fn get_post_handler(
     // let (post_metadata, post_likes) = tokio::try_join!(post_metadata, post_likes)?;
 
     // TODO: Check if the user has liked the post and set is_liked accordingly
+    let mut resp: PostDetailResponse =
+        (post_metadata, permissions.into(), is_liked, comment_likes).into();
 
-    Ok(Json(
-        (post_metadata, permissions.into(), is_liked, comment_likes).into(),
-    ))
+    if !can_read_space {
+        resp.post.as_mut().map(|p| {
+            p.space_pk = None;
+            p.space_type = None;
+            p.space_visibility = None;
+        });
+    }
+
+    Ok(Json(resp))
 }

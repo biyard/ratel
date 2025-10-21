@@ -1,7 +1,14 @@
 use bdk::prelude::*;
 
 #[derive(
-    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    aide::OperationIo,
 )]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
 pub enum Question {
@@ -21,7 +28,15 @@ impl Default for Question {
 }
 
 #[derive(
-    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, schemars::JsonSchema,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    Default,
+    schemars::JsonSchema,
+    aide::OperationIo,
 )]
 pub struct LinearScaleQuestion {
     pub title: String,
@@ -35,7 +50,15 @@ pub struct LinearScaleQuestion {
 }
 
 #[derive(
-    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, schemars::JsonSchema,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    Default,
+    schemars::JsonSchema,
+    aide::OperationIo,
 )]
 pub struct DropdownQuestion {
     pub title: String,
@@ -46,7 +69,15 @@ pub struct DropdownQuestion {
 }
 
 #[derive(
-    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, schemars::JsonSchema,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    Default,
+    schemars::JsonSchema,
+    aide::OperationIo,
 )]
 pub struct CheckboxQuestion {
     pub title: String,
@@ -58,7 +89,15 @@ pub struct CheckboxQuestion {
 }
 
 #[derive(
-    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, schemars::JsonSchema,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    Default,
+    schemars::JsonSchema,
+    aide::OperationIo,
 )]
 pub struct SubjectiveQuestion {
     pub title: String,
@@ -67,7 +106,15 @@ pub struct SubjectiveQuestion {
 }
 
 #[derive(
-    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, Default, schemars::JsonSchema,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    serde::Serialize,
+    serde::Deserialize,
+    Default,
+    schemars::JsonSchema,
+    aide::OperationIo,
 )]
 pub struct ChoiceQuestion {
     pub title: String,

@@ -3,7 +3,8 @@ use tokio::time::sleep;
 use validator::ValidateLength;
 
 use crate::{
-    controllers::v3::posts::create_post::CreatePostResponse, tests::v3_setup::TestContextV3,
+    controllers::v3::posts::{PostDetailResponse, create_post::CreatePostResponse},
+    tests::v3_setup::TestContextV3,
 };
 
 use crate::*;
@@ -409,4 +410,368 @@ async fn test_delete_post_by_other_no_permitted() {
 #[tokio::test]
 async fn test_delete_post_by_other_permitted() {
     // TODO:  success test
+}
+
+// Tests for get_post_handler
+#[tokio::test]
+async fn test_get_post_when_authenticated() {
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
+
+    // Create a post
+    let (status, _headers, create_body) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: test_user.1.clone(),
+        response_type: CreatePostResponse
+    };
+
+    assert_eq!(status, 200);
+    assert!(create_body.post_pk.to_string().len() > 0);
+
+    // Update and publish the post
+    let (status, _headers, _body) = patch! {
+        app: app,
+        path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "title": "Test Post",
+            "content": "<p>Test Content</p>",
+            "visibility": "PUBLIC",
+            "publish": true
+        }
+    };
+    assert_eq!(status, 200);
+
+    // Get the post
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
+        headers: test_user.1.clone(),
+        response_type: PostDetailResponse
+    };
+
+    assert_eq!(status, 200);
+    assert!(body.post.is_some());
+    let post = body.post.unwrap();
+    assert_eq!(post.pk, create_body.post_pk);
+    assert_eq!(post.title, "Test Post");
+    assert_eq!(post.html_contents, "<p>Test Content</p>");
+    assert_eq!(body.is_liked, false);
+}
+
+#[tokio::test]
+async fn test_get_published_post_when_not_authenticated() {
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
+
+    // Create and publish a post
+    let (status, _headers, create_body) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: test_user.1.clone(),
+        response_type: CreatePostResponse
+    };
+    assert_eq!(status, 200);
+
+    let (status, _headers, _body) = patch! {
+        app: app,
+        path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "title": "Public Post",
+            "content": "<p>Public Content</p>",
+            "visibility": "PUBLIC",
+            "publish": true
+        }
+    };
+    assert_eq!(status, 200);
+
+    // Get the post without authentication
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
+        response_type: PostDetailResponse
+    };
+
+    assert_eq!(status, 200);
+    assert!(body.post.is_some());
+    let post = body.post.unwrap();
+    assert_eq!(post.pk, create_body.post_pk);
+    assert_eq!(post.title, "Public Post");
+}
+
+#[tokio::test]
+async fn test_get_post_with_comments() {
+    let TestContextV3 {
+        app,
+        test_user,
+        now,
+        ..
+    } = TestContextV3::setup().await;
+
+    // Create and publish a post
+    let (status, _headers, create_body) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: test_user.1.clone(),
+        response_type: CreatePostResponse
+    };
+    assert_eq!(status, 200);
+
+    let post_pk = create_body.post_pk.to_string();
+
+    let (status, _headers, _body) = patch! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "title": "Post with Comments",
+            "content": "<p>Content</p>",
+            "visibility": "PUBLIC",
+            "publish": true
+        }
+    };
+    assert_eq!(status, 200);
+
+    // Add comments
+    let comment_content = format!("<p>Test comment {}</p>", now);
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: format!("/v3/posts/{}/comments", post_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "content": &comment_content
+        }
+    };
+    assert_eq!(status, 200);
+
+    // Get the post with comments
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        headers: test_user.1.clone(),
+        response_type: PostDetailResponse
+    };
+
+    assert_eq!(status, 200);
+    assert!(body.post.is_some());
+    assert!(body.comments.len() >= 1);
+    assert_eq!(body.comments[0].content, comment_content);
+}
+
+#[tokio::test]
+async fn test_get_post_with_like() {
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
+
+    // Create and publish a post
+    let (status, _headers, create_body) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: test_user.1.clone(),
+        response_type: CreatePostResponse
+    };
+    assert_eq!(status, 200);
+
+    let post_pk = create_body.post_pk.to_string();
+
+    let (status, _headers, _body) = patch! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "title": "Post with Like",
+            "content": "<p>Content</p>",
+            "visibility": "PUBLIC",
+            "publish": true
+        }
+    };
+    assert_eq!(status, 200);
+
+    // Like the post
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: format!("/v3/posts/{}/likes", post_pk),
+        headers: test_user.1.clone(),
+        body: { "like": true }
+    };
+    assert_eq!(status, 200);
+
+    // Get the post and verify like status
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        headers: test_user.1.clone(),
+        response_type: PostDetailResponse
+    };
+
+    assert_eq!(status, 200);
+    assert!(body.post.is_some());
+    assert_eq!(body.is_liked, true);
+    let post = body.post.unwrap();
+    assert_eq!(post.likes, 1);
+}
+
+#[tokio::test]
+async fn test_get_post_with_comment_likes() {
+    let TestContextV3 {
+        app,
+        test_user,
+        now,
+        ..
+    } = TestContextV3::setup().await;
+
+    // Create and publish a post
+    let (status, _headers, create_body) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: test_user.1.clone(),
+        response_type: CreatePostResponse
+    };
+    assert_eq!(status, 200);
+
+    let post_pk = create_body.post_pk.to_string();
+
+    let (status, _headers, _body) = patch! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "title": "Post with Comment Likes",
+            "content": "<p>Content</p>",
+            "visibility": "PUBLIC",
+            "publish": true
+        }
+    };
+    assert_eq!(status, 200);
+
+    // Add a comment
+    let comment_content = format!("<p>Test comment {}</p>", now);
+    let (status, _headers, comment_body) = post! {
+        app: app,
+        path: format!("/v3/posts/{}/comments", post_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "content": &comment_content
+        },
+        response_type: serde_json::Value
+    };
+    assert_eq!(status, 200);
+    let comment_sk = comment_body["sk"].as_str().unwrap();
+
+    // Like the comment
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: format!("/v3/posts/{}/comments/{}/likes", post_pk, comment_sk),
+        headers: test_user.1.clone(),
+        body: { "like": true }
+    };
+    assert_eq!(status, 200);
+
+    // Get the post and verify comment like status
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        headers: test_user.1.clone(),
+        response_type: PostDetailResponse
+    };
+
+    assert_eq!(status, 200);
+    assert!(body.comments.len() >= 1);
+    assert_eq!(body.comments[0].content, comment_content);
+    assert_eq!(body.comments[0].likes, 1);
+    assert_eq!(body.comments[0].liked, true);
+}
+
+#[tokio::test]
+async fn test_get_nonexistent_post() {
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
+
+    // Try to get a non-existent post
+    let (status, _headers, body) = get! {
+        app: app,
+        path: "/v3/posts/FEED#nonexistent",
+        headers: test_user.1.clone()
+    };
+
+    assert_eq!(status, 404);
+    assert_eq!(body["code"], 2001); // PostNotFound error code
+}
+
+#[tokio::test]
+async fn test_get_post_permissions() {
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
+
+    // Create a draft post (not published)
+    let (status, _headers, create_body) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: test_user.1.clone(),
+        response_type: CreatePostResponse
+    };
+    assert_eq!(status, 200);
+
+    let post_pk = create_body.post_pk.to_string();
+
+    // Owner should be able to read their own draft
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        headers: test_user.1.clone(),
+        response_type: PostDetailResponse
+    };
+
+    assert_eq!(status, 200);
+    assert!(body.post.is_some());
+    assert!(body.permissions as u64 > 0); // Should have permissions
+}
+
+#[tokio::test]
+async fn test_get_post_guest_no_like_data() {
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
+
+    // Create and publish a post
+    let (status, _headers, create_body) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: test_user.1.clone(),
+        response_type: CreatePostResponse
+    };
+    assert_eq!(status, 200);
+
+    let post_pk = create_body.post_pk.to_string();
+
+    let (status, _headers, _body) = patch! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "title": "Public Post",
+            "content": "<p>Content</p>",
+            "visibility": "PUBLIC",
+            "publish": true
+        }
+    };
+    assert_eq!(status, 200);
+
+    // Like the post as authenticated user
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: format!("/v3/posts/{}/likes", post_pk),
+        headers: test_user.1.clone(),
+        body: { "like": true }
+    };
+    assert_eq!(status, 200);
+
+    // Get post as guest (not authenticated)
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        response_type: PostDetailResponse
+    };
+
+    assert_eq!(status, 200);
+    assert!(body.post.is_some());
+    // Guest should see likes count but is_liked should be false
+    assert_eq!(body.is_liked, false);
+    let post = body.post.unwrap();
+    assert_eq!(post.likes, 1);
 }

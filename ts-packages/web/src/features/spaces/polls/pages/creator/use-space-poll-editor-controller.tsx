@@ -13,6 +13,9 @@ import {
 } from '@/features/spaces/types/survey-type';
 import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
+import { useUpdateTimeRangeMutation } from '../../hooks/use-update-time-range-mutation';
+import { useUpdateQuestionsMutation } from '../../hooks/use-update-questions-mutation';
+import { useUpdateResponseEditableMutation } from '../../hooks/use-update-response-editable-mutation';
 
 export class SpacePollEditorController {
   constructor(
@@ -22,6 +25,11 @@ export class SpacePollEditorController {
     public t: TFunction<'SpaceSurvey', undefined>,
     public editing: State<boolean>,
     public answers: State<Record<number, SurveyAnswer>>,
+    public updateTimeRange: ReturnType<typeof useUpdateTimeRangeMutation>,
+    public updateQuestions: ReturnType<typeof useUpdateQuestionsMutation>,
+    public updateResponseEditable: ReturnType<
+      typeof useUpdateResponseEditableMutation
+    >,
   ) {}
 
   handleAddQuestion = () => {
@@ -50,6 +58,11 @@ export class SpacePollEditorController {
 
   handleSave = () => {
     this.editing.set(false);
+    this.updateQuestions.mutate({
+      spacePk: this.space.pk,
+      pollSk: this.poll.sk,
+      questions: this.questions.get(),
+    });
   };
 
   handleDiscard = () => {
@@ -61,12 +74,34 @@ export class SpacePollEditorController {
       `handleUpdateAnswer called for questionIdx ${questionIdx}`,
       answer,
     );
+    const currentAnswers = this.answers.get();
+    currentAnswers[questionIdx] = answer;
+    this.answers.set({ ...currentAnswers });
   };
 
-  onChangeTimeRange = (startMillis: number, endMillis: number) => {
+  onChangeTimeRange = (started_at: number, ended_at: number) => {
     logger.debug(
-      `onChangeTimeRange called: start=${startMillis}, end=${endMillis}`,
+      `onChangeTimeRange called: start=${started_at}, end=${ended_at}`,
     );
+
+    this.updateTimeRange.mutate({
+      spacePk: this.space.pk,
+      pollSk: this.poll.sk,
+      started_at,
+      ended_at,
+    });
+  };
+
+  onChangeResponseEditable = (response_editable: boolean) => {
+    logger.debug(
+      `onChangeResponseEditable called: response_editable=${response_editable}`,
+    );
+
+    this.updateResponseEditable.mutate({
+      spacePk: this.space.pk,
+      pollSk: this.poll.sk,
+      response_editable,
+    });
   };
 }
 
@@ -79,6 +114,10 @@ export function useSpacePollEditorController(spacePk: string, pollPk: string) {
   // FIXME: This should be my current answers
   const answers = useState<Record<number, SurveyAnswer>>({});
 
+  const updateTimeRange = useUpdateTimeRangeMutation();
+  const updateQuestions = useUpdateQuestionsMutation();
+  const updateResponseEditable = useUpdateResponseEditableMutation();
+
   return new SpacePollEditorController(
     space,
     poll,
@@ -86,5 +125,8 @@ export function useSpacePollEditorController(spacePk: string, pollPk: string) {
     t,
     new State(editing),
     new State(answers),
+    updateTimeRange,
+    updateQuestions,
+    updateResponseEditable,
   );
 }

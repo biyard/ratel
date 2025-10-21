@@ -22,6 +22,7 @@ export function SpaceActions({ actions }: SpaceActionsProps) {
         <SpaceActionDropdown actions={actions} onChange={(n) => setHold(n)} />
       ) : (
         <Button
+          aria-role={actions[hold].holdingLabel}
           variant="rounded_primary"
           className="w-full"
           onClick={() => {
@@ -49,6 +50,7 @@ export function SpaceActionDropdown({
           <Row className="gap-0.5">
             <div className="w-full">
               <Button
+                aria-role={firstAction.label}
                 variant="rounded_secondary"
                 className="w-full rounded-r-none !important"
                 onPointerDown={(e) => {
@@ -68,7 +70,7 @@ export function SpaceActionDropdown({
             </div>
 
             <Row className="justify-center items-center px-3 bg-white rounded-full rounded-l-none cursor-pointer w-fit hover:bg-neutral-200">
-              <BottomTriangle />
+              <BottomTriangle aria-role="Expand Space Actions" />
             </Row>
           </Row>
         </DropdownMenuTrigger>
@@ -76,6 +78,7 @@ export function SpaceActionDropdown({
         <DropdownMenuContent className="bg-white border-0" align="end">
           {actions.slice(1).map((action, index) => (
             <DropdownMenuItem
+              aria-role={action.label}
               key={index}
               onSelect={() => {
                 if (action.holdingLabel) onChange(index + 1);

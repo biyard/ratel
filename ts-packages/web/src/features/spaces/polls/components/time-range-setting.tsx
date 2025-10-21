@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 export type TimeRangeSettingProps = {
   startTimestampMillis: number;
   endTimestampMillis: number;
-  onChange: (startedAt: number, endedAt: number) => void;
+  onChange?: (startedAt: number, endedAt: number) => void;
   canEdit?: boolean;
   className?: string;
 };
@@ -52,7 +52,13 @@ export function TimeRangeSetting({
   let button = <></>;
   if (canEdit) {
     button = editing ? (
-      <Button variant="primary" onClick={() => setEditing(false)}>
+      <Button
+        variant="primary"
+        onClick={() => {
+          setEditing(false);
+          onChange(start, end);
+        }}
+      >
         {' '}
         {t('btn_save')}
       </Button>
@@ -60,7 +66,6 @@ export function TimeRangeSetting({
       <Button
         onClick={() => {
           setEditing(true);
-          onChange(start, end);
         }}
       >
         {' '}
@@ -77,51 +82,53 @@ export function TimeRangeSetting({
           className,
         )}
       >
-        <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:w-auto">
-          <div className="w-full max-tablet:w-auto">
-            <CalendarDropdown
-              canEdit={canEdit && editing}
-              value={start}
-              onChange={handleStart}
-            />
+        <div className="flex flex-row gap-2 w-full max-tablet:flex-wrap max-tablet:items-center">
+          <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:w-auto">
+            <div className="w-full max-tablet:w-auto">
+              <CalendarDropdown
+                canEdit={canEdit && editing}
+                value={start}
+                onChange={handleStart}
+              />
+            </div>
+            <div className="w-full sm:w-auto">
+              <TimeDropdown
+                canEdit={canEdit && editing}
+                value={start}
+                onChange={handleStart}
+              />
+            </div>
           </div>
-          <div className="w-full sm:w-auto">
-            <TimeDropdown
-              canEdit={canEdit && editing}
-              value={start}
-              onChange={handleStart}
-            />
-          </div>
-        </div>
 
-        <div className="hidden self-center h-0.5 sm:block w-[15px] bg-neutral-600" />
+          <div className="hidden self-center h-0.5 sm:block w-[15px] bg-neutral-600" />
 
-        <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:w-auto max-tablet:mt-2.5">
-          <div className="w-full sm:w-auto">
-            <CalendarDropdown
-              canEdit={canEdit && editing}
-              value={end}
-              onChange={handleEnd}
+          <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:w-auto max-tablet:mt-2.5">
+            <div className="w-full sm:w-auto">
+              <CalendarDropdown
+                canEdit={canEdit && editing}
+                value={end}
+                onChange={handleEnd}
+              />
+            </div>
+            <div className="w-full sm:w-auto">
+              <TimeDropdown
+                canEdit={canEdit && editing}
+                value={end}
+                onChange={handleEnd}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-row gap-2.5 items-center px-5 mt-2 w-full rounded-lg border sm:mt-0 border-select-date-border bg-select-date-bg py-[10.5px] sm:w-fit">
+            <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
+              {localTimezone}
+            </div>
+            <Internet
+              className="w-5 h-5 [&>path]:stroke-neutral-600 [&>circle]:stroke-neutral-600"
+              width="20"
+              height="20"
             />
           </div>
-          <div className="w-full sm:w-auto">
-            <TimeDropdown
-              canEdit={canEdit && editing}
-              value={end}
-              onChange={handleEnd}
-            />
-          </div>
-        </div>
-
-        <div className="flex flex-row gap-2.5 items-center px-5 mt-2 w-full rounded-lg border sm:mt-0 border-select-date-border bg-select-date-bg py-[10.5px] sm:w-fit">
-          <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
-            {localTimezone}
-          </div>
-          <Internet
-            className="w-5 h-5 [&>path]:stroke-neutral-600 [&>circle]:stroke-neutral-600"
-            width="20"
-            height="20"
-          />
         </div>
 
         {button}
