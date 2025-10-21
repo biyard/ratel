@@ -38,7 +38,7 @@ pub async fn update_sprint_league_player_handler(
         &dynamo.client,
         &space_pk,
         Some(&user.pk),
-        TeamGroupPermission::SpaceRead,
+        TeamGroupPermission::SpaceWrite,
     )
     .await?;
 

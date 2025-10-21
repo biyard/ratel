@@ -156,7 +156,7 @@ pub enum Error {
     NotFoundSprintLeague,
     #[error("Sprint League players are invalid")]
     InvalidSprintLeaguePlayer,
-    #[error("Sprint League not found")]
+    #[error("Failed to vote in sprint league: {0}")]
     SprintLeagueVoteError(String),
 
     // teams 4000 ~

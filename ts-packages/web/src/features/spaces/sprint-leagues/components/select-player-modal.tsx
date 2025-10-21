@@ -1,18 +1,19 @@
 // import { usePopup } from '@/lib/contexts/popup-service';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { PlayerImage } from '../types/sprint-league-player';
 import { BasePlayerImages } from './game/constants';
+import { TFunction } from 'i18next';
 
 export default function PlayerSelectModal({
+  t,
   onSelect,
   playerImages = BasePlayerImages,
 }: {
+  t: TFunction<'SpaceSprintLeague', undefined>;
   onSelect: (spriteSheet: PlayerImage) => void;
   playerImages?: PlayerImage[];
 }) {
-  const { t } = useTranslation('SprintSpace');
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   return (
@@ -42,7 +43,7 @@ export default function PlayerSelectModal({
           }
         }}
       >
-        Select
+        {t('select_player_modal_confirm_button')}
       </Button>
     </div>
   );
