@@ -95,6 +95,9 @@ const QK_SPACES = 'spaces';
 export const spaceKeys = {
   all: [QK_SPACES] as const,
   detail: (pk: string) => [...spaceKeys.all, 'detail', pk] as const,
+  sprint_leagues: (space_pk: string) =>
+    [...spaceKeys.detail(space_pk), 'sprint_leagues'] as const,
+
   polls: (space_pk: string) =>
     [...spaceKeys.detail(space_pk), 'polls'] as const,
   poll: (space_pk: string, poll_pk: string) =>

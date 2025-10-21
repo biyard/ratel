@@ -5,12 +5,7 @@ use crate::features::spaces::polls::{PollQuestion, PollSummary};
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, JsonSchema)]
 pub struct PollUserAnswer {
     pub pk: Partition,
-    #[dynamo(
-        prefix = "POLL_SPACE_PK",
-        index = "gsi1",
-        name = "find_by_space_pk",
-        pk
-    )]
+    #[dynamo(prefix = "POLL_PK", index = "gsi1", name = "find_by_space_pk", pk)]
     pub sk: EntityType,
 
     #[dynamo(index = "gsi1", sk)]

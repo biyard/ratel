@@ -149,7 +149,9 @@ export function useThreadController() {
 
   useEffect(() => {
     if (feed.post.space_pk) {
-      navigate(route.spaceByType(feed.post.space_type, feed.post.space_pk));
+      navigate(route.spaceByType(feed.post.space_type, feed.post.space_pk), {
+        replace: true,
+      });
     }
   }, [feed, navigate]);
 
