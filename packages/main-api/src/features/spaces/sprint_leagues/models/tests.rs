@@ -46,6 +46,7 @@ async fn test_sprint_league_creation() {
 
     let player_1 = SprintLeaguePlayer::new(
         sprint_league.pk.clone(),
+        0,
         "Player 1".into(),
         "Description".into(),
         player_image.clone(),
@@ -54,6 +55,7 @@ async fn test_sprint_league_creation() {
 
     let player_2 = SprintLeaguePlayer::new(
         sprint_league.pk.clone(),
+        1,
         "Player 2".into(),
         "Description".into(),
         player_image.clone(),
@@ -62,6 +64,7 @@ async fn test_sprint_league_creation() {
 
     let player_3 = SprintLeaguePlayer::new(
         sprint_league.pk.clone(),
+        2,
         "Player 3".into(),
         "Description".into(),
         player_image.clone(),

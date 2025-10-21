@@ -55,20 +55,16 @@ async fn test_poll_space_creation() {
         }),
     ];
 
-    let question = PollQuestion::new(poll.pk.clone(), questions);
+    let question = PollQuestion::new(common.pk.clone(), questions);
 
     question
         .create(&cli)
         .await
         .expect("failed to create question");
 
-    let metadata = PollMetadata::query_begins_with_sk(
-        &cli,
-        &poll.pk,
-        EntityType::SpacePoll(String::default()),
-    )
-    .await
-    .expect("failed to query poll space metadata");
+    let metadata = PollMetadata::query_all(&cli, &common.pk)
+        .await
+        .expect("failed to query poll space metadata");
 
     assert_eq!(metadata.len(), 2, "should have 2 entries");
 

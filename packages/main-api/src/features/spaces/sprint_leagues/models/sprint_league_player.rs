@@ -1,11 +1,10 @@
 use crate::{Error, types::*};
 use bdk::prelude::*;
-use uuid::Uuid;
 
 use super::super::PlayerImage;
 
 #[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default, schemars::JsonSchema,
+    Debug, Clone, serde::Serialize, serde::Deserialize, Default, DynamoEntity, schemars::JsonSchema,
 )]
 
 pub struct SprintLeaguePlayer {
@@ -29,11 +28,11 @@ pub struct SprintLeaguePlayer {
 impl SprintLeaguePlayer {
     pub fn new(
         pk: Partition,
+        index: i64,
         name: String,
         description: String,
         player_image: PlayerImage,
     ) -> crate::Result<Self> {
-        let uuid = Uuid::new_v4().to_string();
         if !matches!(pk, Partition::Space(_)) {
             return Err(crate::Error::InvalidPartitionKey(
                 "SprintLeaguePlayer must be under SprintLeague partition".to_string(),
@@ -42,13 +41,14 @@ impl SprintLeaguePlayer {
 
         Ok(Self {
             pk,
-            sk: EntityType::SprintLeaguePlayer(uuid),
+            sk: EntityType::SprintLeaguePlayer(index.to_string()),
             player_image,
             name,
             description,
             votes: 0,
         })
     }
+
     pub async fn get_all(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
@@ -64,9 +64,11 @@ impl SprintLeaguePlayer {
         loop {
             let mut options = SprintLeaguePlayerQueryOption::builder()
                 .sk(EntityType::SprintLeaguePlayer(String::default()).to_string());
+
             if let Some(b) = &bookmark {
                 options = options.bookmark(b.clone());
             }
+
             let (mut queried_players, next_bookmark) =
                 SprintLeaguePlayer::query(cli, space_pk, options).await?;
 
@@ -80,6 +82,7 @@ impl SprintLeaguePlayer {
 
         Ok(players)
     }
+    // FIXME: Remove this logic. and update SprintLeaguePlayer instead.
     pub async fn delete_all(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
@@ -92,12 +95,20 @@ impl SprintLeaguePlayer {
 
         let mut bookmark = None::<String>;
         loop {
-            let mut options = SprintLeaguePlayerQueryOption::builder().limit(100);
+            let mut options = SprintLeaguePlayerQueryOption::builder()
+                .sk(EntityType::SprintLeaguePlayer(String::default()).to_string())
+                .limit(100);
+
             if let Some(b) = &bookmark {
                 options = options.bookmark(b.clone());
             }
-            let (players, next_bookmark) =
-                SprintLeaguePlayer::query(cli, space_pk, options).await?;
+
+            let (players, next_bookmark) = SprintLeaguePlayer::query(cli, space_pk, options)
+                .await
+                .map_err(|e| {
+                    tracing::debug!("Error querying sprint league players for deletion: {:?}", e);
+                    e
+                })?;
 
             if players.is_empty() {
                 break;

@@ -56,20 +56,26 @@ pub async fn upsert_sprint_league_handler(
     let sprint_league = if let Some(sprint_league) =
         SprintLeague::get(&dynamo.client, &space_pk, Some(EntityType::SprintLeague)).await?
     {
+        SprintLeaguePlayer::delete_all(&dynamo.client, &space_pk).await?;
+        let updater = SprintLeague::updater(&space_pk, EntityType::SprintLeague)
+            .with_players(req.players.len() as i64)
+            .transact_write_item();
+        transact_write_items.push(updater);
         sprint_league
     } else {
-        let sprint_league = SprintLeague::new(space_pk.clone())?;
+        let sprint_league =
+            SprintLeague::new(space_pk.clone())?.with_players(req.players.len() as i64);
+
         transact_write_items.push(sprint_league.create_transact_write_item());
 
         sprint_league
     };
 
-    SprintLeaguePlayer::delete_all(&dynamo.client, &space_pk).await?;
-
     let mut players = Vec::new();
-    for player_req in req.players {
+    for (index, player_req) in req.players.into_iter().enumerate() {
         let player = SprintLeaguePlayer::new(
             space_pk.clone(),
+            index as i64,
             player_req.name,
             player_req.description,
             player_req.player_image,
@@ -77,10 +83,6 @@ pub async fn upsert_sprint_league_handler(
         transact_write_items.push(player.create_transact_write_item());
         players.push(player);
     }
-    let updater = SprintLeague::updater(&space_pk, EntityType::SprintLeague)
-        .with_players(players.len() as i64)
-        .transact_write_item();
-    transact_write_items.push(updater);
 
     dynamo
         .client
@@ -90,7 +92,7 @@ pub async fn upsert_sprint_league_handler(
         .await
         .map_err(|e| {
             crate::Error::InternalServerError(format!(
-                "Failed to upsert sprint league players: {}",
+                "Failed to upsert sprint league players: {:?}",
                 e
             ))
         })?;
