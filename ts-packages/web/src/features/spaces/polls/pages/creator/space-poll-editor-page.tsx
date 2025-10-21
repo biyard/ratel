@@ -8,6 +8,7 @@ import { Row } from '@/components/ui/row';
 import { Button } from '@/components/ui/button';
 import SurveyViewer from '@/features/spaces/components/survey/viewer';
 import { TimeRangeSetting } from '../../components/time-range-setting';
+import Card from '@/components/card';
 
 export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollEditorPage: spacePk=${spacePk}, pollPk=${pollPk}`);
@@ -17,19 +18,6 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
   return (
     <>
       <Col>
-        <Row className="gap-2 justify-end mb-4">
-          {ctrl.editing.get() ? (
-            <>
-              <Button variant="primary" onClick={ctrl.handleSave}>
-                {t('btn_save')}
-              </Button>
-              <Button onClick={ctrl.handleDiscard}>{t('btn_discard')}</Button>
-            </>
-          ) : (
-            <Button onClick={ctrl.handleEdit}>{t('btn_edit')}</Button>
-          )}
-        </Row>
-
         <TimeRangeSetting
           canEdit={ctrl.space.isAdmin()}
           onChange={ctrl.onChangeTimeRange}
@@ -38,16 +26,35 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
           className="justify-end"
         />
 
-        {ctrl.editing.get() ? (
-          <SurveyEditor ctrl={ctrl} />
-        ) : (
-          <SurveyViewer
-            t={ctrl.t}
-            questions={ctrl.poll.questions}
-            onUpdateAnswer={ctrl.handleUpdateAnswer}
-            selectedAnswers={ctrl.answers.get()}
-          />
-        )}
+        <Card>
+          <Col>
+            <Row className="gap-2 justify-end mb-4">
+              {ctrl.editing.get() ? (
+                <>
+                  <Button variant="primary" onClick={ctrl.handleSave}>
+                    {t('btn_save')}
+                  </Button>
+                  <Button onClick={ctrl.handleDiscard}>
+                    {t('btn_discard')}
+                  </Button>
+                </>
+              ) : (
+                <Button onClick={ctrl.handleEdit}>{t('btn_edit')}</Button>
+              )}
+            </Row>
+
+            {ctrl.editing.get() ? (
+              <SurveyEditor ctrl={ctrl} />
+            ) : (
+              <SurveyViewer
+                t={ctrl.t}
+                questions={ctrl.poll.questions}
+                onUpdateAnswer={ctrl.handleUpdateAnswer}
+                selectedAnswers={ctrl.answers.get()}
+              />
+            )}
+          </Col>
+        </Card>
       </Col>
     </>
   );

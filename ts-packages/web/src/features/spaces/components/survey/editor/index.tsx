@@ -1,19 +1,18 @@
-import { DialPad } from '@/assets/icons/security';
+import { Add } from '@/assets/icons/validations';
+import SwitchButton from '@/components/switch-button';
+import { Input } from '@/components/ui/input';
+import { Separator } from '@/components/ui/separator';
+import { SpacePollEditorController } from '@/features/spaces/polls/pages/creator/use-space-poll-editor-controller';
 import {
   createDefaultQuestion,
-  PollQuestion,
   SurveyAnswerType,
   SurveyQuestion,
 } from '@/features/spaces/polls/types/poll-question';
-import TypeSelect from './type-select';
-import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
-import ObjectiveQuestionEditor from './objective-question';
-import LinearScaleQuestionEditor from './linear-scale-question';
-import { Add } from '@/assets/icons/validations';
-import SwitchButton from '@/components/switch-button';
 import { I18nFunction } from '..';
-import { SpacePollEditorController } from '@/features/spaces/polls/pages/creator/use-space-poll-editor-controller';
+import LinearScaleQuestionEditor from './linear-scale-question';
+import ObjectiveQuestionEditor from './objective-question';
+import TypeSelect from './type-select';
 
 interface SurveyEditorProps {
   ctrl: SpacePollEditorController;
@@ -23,15 +22,19 @@ export default function SurveyEditor({ ctrl }: SurveyEditorProps) {
   return (
     <div className="flex flex-col gap-2.5 w-full">
       {ctrl.questions.get().map((question, index) => (
-        <SurveyEditorItem
-          key={`survey-editor-item-${index}`}
-          t={ctrl.t}
-          question={question}
-          onUpdate={(newQuestion) =>
-            ctrl.handleUpdateQuestion(index, newQuestion)
-          }
-          onDelete={() => ctrl.handleRemoveQuestion(index)}
-        />
+        <>
+          {index !== 0 && <Separator className="bg-gray-600" />}
+
+          <SurveyEditorItem
+            key={`survey-editor-item-${index}`}
+            t={ctrl.t}
+            question={question}
+            onUpdate={(newQuestion) =>
+              ctrl.handleUpdateQuestion(index, newQuestion)
+            }
+            onDelete={() => ctrl.handleRemoveQuestion(index)}
+          />
+        </>
       ))}
       <div className="flex relative justify-center items-center py-6 w-full">
         <div
@@ -116,9 +119,6 @@ export function SurveyEditorItem({
 
   return (
     <div className="flex flex-col px-4 pt-1 pb-5 w-full border bg-card-bg-secondary border-card-border rounded-[10px]">
-      <div className="flex flex-row justify-center items-center mb-2.5 w-full">
-        <DialPad className="w-6 h-6" />
-      </div>
       <div className="flex flex-col gap-2.5 w-full">
         <div className="flex gap-2 max-tablet:flex-col">
           <TypeSelect
