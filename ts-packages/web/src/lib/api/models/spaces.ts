@@ -5,7 +5,6 @@ import type { Elearning, ElearningCreateRequest } from './elearning';
 import type { FileInfo } from './feeds';
 import type { SurveyResponse } from './response';
 import type { SpaceDraft, SpaceDraftCreateRequest } from './space_draft';
-import type { SprintLeague } from './sprint_league';
 import type { Survey, SurveyCreateRequest } from './survey';
 import type { UserType } from './user';
 import type { QuizQuestion, BoosterType, NoticeQuizRequest } from './notice';
@@ -36,8 +35,6 @@ export interface Space {
   user_responses: SurveyResponse[];
   responses: SurveyResponse[];
   drafts: SpaceDraft[];
-
-  sprint_leagues?: SprintLeague[];
 
   likes: number;
   shares: number;
