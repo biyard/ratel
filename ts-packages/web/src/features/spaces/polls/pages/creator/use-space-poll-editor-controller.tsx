@@ -15,6 +15,7 @@ import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useUpdateTimeRangeMutation } from '../../hooks/use-update-time-range-mutation';
 import { useUpdateQuestionsMutation } from '../../hooks/use-update-questions-mutation';
+import { useUpdateResponseEditableMutation } from '../../hooks/use-update-response-editable-mutation';
 
 export class SpacePollEditorController {
   constructor(
@@ -26,6 +27,9 @@ export class SpacePollEditorController {
     public answers: State<Record<number, SurveyAnswer>>,
     public updateTimeRange: ReturnType<typeof useUpdateTimeRangeMutation>,
     public updateQuestions: ReturnType<typeof useUpdateQuestionsMutation>,
+    public updateResponseEditable: ReturnType<
+      typeof useUpdateResponseEditableMutation
+    >,
   ) {}
 
   handleAddQuestion = () => {
@@ -87,6 +91,18 @@ export class SpacePollEditorController {
       ended_at,
     });
   };
+
+  onChangeResponseEditable = (response_editable: boolean) => {
+    logger.debug(
+      `onChangeResponseEditable called: response_editable=${response_editable}`,
+    );
+
+    this.updateResponseEditable.mutate({
+      spacePk: this.space.pk,
+      pollSk: this.poll.sk,
+      response_editable,
+    });
+  };
 }
 
 export function useSpacePollEditorController(spacePk: string, pollPk: string) {
@@ -100,6 +116,7 @@ export function useSpacePollEditorController(spacePk: string, pollPk: string) {
 
   const updateTimeRange = useUpdateTimeRangeMutation();
   const updateQuestions = useUpdateQuestionsMutation();
+  const updateResponseEditable = useUpdateResponseEditableMutation();
 
   return new SpacePollEditorController(
     space,
@@ -110,5 +127,6 @@ export function useSpacePollEditorController(spacePk: string, pollPk: string) {
     new State(answers),
     updateTimeRange,
     updateQuestions,
+    updateResponseEditable,
   );
 }
