@@ -1,8 +1,9 @@
 import { BoosterType } from '@/features/spaces/types/booster-type';
-import { SpaceType } from '../models/spaces';
 import { UserType } from '../models/user';
 import { call } from './call';
 import { ListResponse } from './common';
+import { SpaceVisibility } from '@/features/spaces/types/space-common';
+import { SpaceType } from '@/features/spaces/types/space-type';
 
 export function createPost(team_pk?: string): Promise<CreatePostResponse> {
   if (team_pk) {
@@ -153,7 +154,7 @@ export type Post = {
   html_contents: string;
   post_type: PostType;
   status: number;
-  visibility?: number;
+  visibility?: Visibility;
   shares: number;
   likes: number;
   comments: number;
@@ -164,6 +165,8 @@ export type Post = {
   author_type: UserType;
   space_pk?: string;
   space_type?: SpaceType;
+  space_visibility?: SpaceVisibility;
+
   booster?: BoosterType;
   rewards?: number;
   urls: string[];

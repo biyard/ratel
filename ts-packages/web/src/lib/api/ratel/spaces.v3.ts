@@ -30,7 +30,7 @@ export function publishSpace(
   spacePk: string,
   visibility: SpaceVisibility,
 ): Promise<void> {
-  return call('POST', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
+  return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
     publish: true,
     visibility: encodeVisibility(visibility),
   });

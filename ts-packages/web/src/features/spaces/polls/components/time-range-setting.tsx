@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 export type TimeRangeSettingProps = {
   startTimestampMillis: number;
   endTimestampMillis: number;
-  onChange: (startedAt: number, endedAt: number) => void;
+  onChange?: (startedAt: number, endedAt: number) => void;
   canEdit?: boolean;
   className?: string;
 };
