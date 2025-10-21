@@ -39,11 +39,13 @@ import koEditArtworkPost from './ko/EditArtworkPost.json';
 import { i18nThreadPage } from '@/app/(social)/threads/[id]/thread-page-i18n';
 import i18nSpaceSurveyComponent from '@/features/spaces/components/survey/i18n';
 import i18nSpaceSurveyReportComponent from '@/features/spaces/components/report/i18n';
+import i18nSpaceFileComponent from '@/features/spaces/components/file/i18n';
 import { i18nSpaceTypeSelectModal } from '@/features/spaces/modals/space-type-selector-modal';
 import { i18nSpaceHome } from '@/app/spaces/[id]/space-home-i18n';
 import { i18nSpacePollEditor } from '@/features/spaces/polls/pages/creator/space-poll-editor-i18n';
 import { i18nPollSpace } from '@/app/spaces/[id]/poll/space-poll-i18n';
 import { i18nDeliberationPage } from '@/app/spaces/[id]/deliberations/deliberation-page-i18n';
+import { i18nSpaceFileEditor } from '@/features/spaces/files/pages/creator/space-file-editor-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 export const resources = {
@@ -93,9 +95,11 @@ Object.entries({
   PollSpace: i18nPollSpace,
   SpaceSurvey: i18nSpaceSurveyComponent,
   SpaceSurveyReport: i18nSpaceSurveyReportComponent,
+  SpaceFile: i18nSpaceFileComponent,
   SpaceTypeSelectModal: i18nSpaceTypeSelectModal,
   Space: i18nSpaceHome,
   SpacePollEditor: i18nSpacePollEditor,
+  SpaceFileEditor: i18nSpaceFileEditor,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
