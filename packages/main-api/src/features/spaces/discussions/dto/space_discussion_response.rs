@@ -1,5 +1,3 @@
-use crate::features::spaces::discussions::dto::space_discussion_member_response::SpaceDiscussionMemberResponse;
-use crate::features::spaces::discussions::dto::space_discussion_participant_response::SpaceDiscussionParticipantResponse;
 use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
 use crate::types::{EntityType, Partition};
 use bdk::prelude::*;
@@ -28,8 +26,6 @@ pub struct SpaceDiscussionResponse {
     pub record: Option<String>,
 
     pub is_member: bool,
-    pub members: Vec<SpaceDiscussionMemberResponse>,
-    pub participants: Vec<SpaceDiscussionParticipantResponse>,
 }
 
 impl From<SpaceDiscussion> for SpaceDiscussionResponse {
@@ -48,8 +44,6 @@ impl From<SpaceDiscussion> for SpaceDiscussionResponse {
             media_pipeline_arn: discussion.media_pipeline_arn,
             record: discussion.record,
             is_member: false,
-            members: vec![],
-            participants: vec![],
         }
     }
 }
