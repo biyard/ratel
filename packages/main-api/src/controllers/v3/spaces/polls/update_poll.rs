@@ -1,9 +1,9 @@
 use crate::models::space::SpaceCommon;
 
 use crate::features::spaces::polls::*;
-use crate::types::{Partition, Question, TeamGroupPermission};
+use crate::types::{EntityType, Partition, Question, TeamGroupPermission};
 use crate::utils::time::get_now_timestamp_millis;
-use crate::{AppState, Error};
+use crate::{AppState, Error, transact_write};
 
 use bdk::prelude::*;
 
@@ -21,19 +21,24 @@ pub enum UpdatePollSpaceRequest {
     ResponseEditable { response_editable: bool },
 }
 
+#[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
+pub struct UpdatePollSpaceResponse {
+    pub status: String,
+}
+
 pub async fn update_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
     Path(PollPathParam { space_pk, poll_sk }): PollPath,
     Json(req): Json<UpdatePollSpaceRequest>,
-) -> crate::Result<Json<Poll>> {
+) -> crate::Result<Json<UpdatePollSpaceResponse>> {
     //Request Validation
     if !matches!(space_pk, Partition::Space(_)) || !matches!(poll_sk, EntityType::SpacePoll(_)) {
         return Err(Error::NotFoundPoll);
     }
 
     // Check Permissions
-    let (space_common, has_perm) = SpaceCommon::has_permission(
+    let (_space_common, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
         Some(&user.pk),
@@ -46,8 +51,8 @@ pub async fn update_poll_handler(
 
     let now = get_now_timestamp_millis();
 
-    // Update existing survey
-    let poll_updater = Poll::updater(&space_pk, &poll_sk).with_updated_at(now);
+    let space = SpaceCommon::updater(&space_pk, EntityType::SpaceCommon).with_updated_at(now);
+    let mut poll_updater = Poll::updater(&space_pk, &poll_sk).with_updated_at(now);
 
     match req {
         UpdatePollSpaceRequest::Time {
@@ -73,7 +78,13 @@ pub async fn update_poll_handler(
         }
     }
 
-    let response = poll_updater.execute(&dynamo.client).await?;
+    transact_write!(
+        &dynamo.client,
+        space.transact_write_item(),
+        poll_updater.transact_write_item(),
+    )?;
 
-    Ok(Json(response))
+    Ok(Json(UpdatePollSpaceResponse {
+        status: "success".to_string(),
+    }))
 }

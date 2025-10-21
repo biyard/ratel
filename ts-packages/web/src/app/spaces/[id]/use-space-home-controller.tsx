@@ -68,9 +68,9 @@ export class SpaceHomeController {
       }
     });
 
-    if (this.space.isAdmin()) {
-      menus = menus.concat(this.adminMenus);
-    }
+    /* if (this.space.isAdmin()) {
+     *   menus = menus.concat(this.adminMenus);
+     * } */
 
     return menus;
   }

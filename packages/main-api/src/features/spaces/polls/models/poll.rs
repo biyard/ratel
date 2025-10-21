@@ -29,6 +29,7 @@ pub struct Poll {
     pub ended_at: i64,
     pub response_editable: bool, // Whether users can edit their responses
 
+    #[serde(default)]
     pub questions: Vec<Question>, // Questions in the survey
 }
 
