@@ -137,7 +137,11 @@ pub fn route(
                             "/discussions",
                             crate::controllers::v3::spaces::discussions::route(),
                         )
-                        .nest("/polls", crate::controllers::v3::spaces::polls::route()),
+                        .nest("/polls", crate::controllers::v3::spaces::polls::route())
+                        .nest(
+                            "/sprint-leagues",
+                            crate::controllers::v3::spaces::sprint_leagues::route(),
+                        ),
                 ),
         )
         .nest(

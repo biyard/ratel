@@ -35,12 +35,15 @@ pub enum Partition {
 
     Discussion(String),
     DiscussionUser(String),
-    Survey(String),
-    SurveyResponse(String),
+    // Survey(String),
+    // SurveyResponse(String),
 
     // Poll Space
     // PollSpace(String),
     SpacePollUserAnswer(String), // user_pk
+
+    // Sprint League
+    SprintLeagueVote(String), // user_pk
 
     Team(String),
 
@@ -64,6 +67,10 @@ impl Partition {
                 "Post(Feed) key can be only extracted from Space key".to_string(),
             )),
         }
+    }
+
+    pub fn is_space_key(&self) -> bool {
+        matches!(self, Partition::Space(_))
     }
 }
 
