@@ -1,7 +1,9 @@
 use crate::controllers::v3::posts::create_post::CreatePostResponse;
 use crate::controllers::v3::spaces::CreateSpaceResponse;
-use crate::controllers::v3::spaces::get_files::{GetSpaceFileQueryParams, GetSpaceFileResponse};
-use crate::controllers::v3::spaces::update_files::UpdateSpaceFileResponse;
+use crate::controllers::v3::spaces::files::get_files::{
+    GetSpaceFileQueryParams, GetSpaceFileResponse,
+};
+use crate::controllers::v3::spaces::files::update_files::UpdateSpaceFileResponse;
 
 use crate::tests::{
     create_app_state,

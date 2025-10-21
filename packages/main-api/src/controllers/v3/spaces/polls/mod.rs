@@ -16,7 +16,7 @@ use bdk::prelude::*;
 use by_axum::aide::axum::routing::*;
 use by_axum::axum::*;
 
-pub fn polls_route() -> Router<AppState> {
+pub fn route() -> Router<AppState> {
     Router::new()
         .route("/:poll_sk", get(get_poll_handler).put(update_poll_handler))
         .route("/:poll_sk/results", get(get_poll_result))
