@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::dto::*;
-use crate::features::spaces::files::SpaceFile;
+use crate::features::spaces::recommendations::{SpaceRecommendation, SpaceRecommendationResponse};
 use crate::models::space::SpaceCommon;
 
 use crate::models::user::User;
@@ -7,21 +7,14 @@ use crate::types::{Partition, TeamGroupPermission};
 use crate::{AppState, Error2};
 
 use aide::NoApi;
-
-use crate::types::File;
 use axum::extract::{Json, Path, State};
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
-pub struct GetSpaceFileResponse {
-    pub files: Vec<File>,
-}
-
-pub async fn get_files_handler(
+pub async fn get_recommendation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Path(SpacePathParam { space_pk }): SpacePath,
-) -> Result<Json<GetSpaceFileResponse>, Error2> {
+) -> Result<Json<SpaceRecommendationResponse>, Error2> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error2::NotFoundDeliberationSpace);
     }
@@ -37,13 +30,12 @@ pub async fn get_files_handler(
         return Err(Error2::NoPermission);
     }
 
-    let (pk, sk) = SpaceFile::keys(&space_pk);
+    let (pk, sk) = SpaceRecommendation::keys(&space_pk);
 
-    let files = SpaceFile::get(&dynamo.client, &pk.clone(), Some(sk.clone())).await?;
+    let recommendation =
+        SpaceRecommendation::get(&dynamo.client, pk.clone(), Some(sk.clone())).await?;
 
-    let files = files.unwrap_or_default();
+    let recommendation = recommendation.unwrap_or_default();
 
-    Ok(Json(GetSpaceFileResponse {
-        files: files.clone().files,
-    }))
+    Ok(Json(recommendation.into()))
 }
