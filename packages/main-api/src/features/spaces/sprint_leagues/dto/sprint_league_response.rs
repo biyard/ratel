@@ -23,6 +23,8 @@ impl From<(Vec<SprintLeagueMetadata>, bool)> for SprintLeagueResponse {
         for entry in entity {
             match entry {
                 SprintLeagueMetadata::SprintLeague(sprint) => {
+                    res.pk = sprint.pk;
+                    res.sk = sprint.sk;
                     res.votes = sprint.votes;
                     res.winner = sprint.winner;
                 }

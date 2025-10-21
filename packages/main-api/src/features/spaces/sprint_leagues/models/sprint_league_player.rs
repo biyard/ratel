@@ -35,7 +35,7 @@ impl SprintLeaguePlayer {
     ) -> crate::Result<Self> {
         if !matches!(pk, Partition::Space(_)) {
             return Err(crate::Error::InvalidPartitionKey(
-                "SprintLeaguePlayer must be under SprintLeague partition".to_string(),
+                "SprintLeaguePlayer must be under Space partition".to_string(),
             ));
         }
 

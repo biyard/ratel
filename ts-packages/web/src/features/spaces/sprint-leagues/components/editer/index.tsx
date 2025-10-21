@@ -90,10 +90,16 @@ export default function SprintLeagueEditor({
                                 });
                                 popup.close();
                               }}
+                              t={t}
                             />,
                           )
                           .withTitle(t('select_player_modal_title'));
                       }}
+                      spriteSheet={
+                        player.player_image.run.image
+                          ? player.player_image.run
+                          : undefined
+                      }
                       t={t}
                     />
                   </div>

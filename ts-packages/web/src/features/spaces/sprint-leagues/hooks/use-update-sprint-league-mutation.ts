@@ -24,16 +24,14 @@ export function useUpdateSprintLeagueMutation() {
       const prevSprintLeague = await optimisticUpdate<SprintLeague>(
         { queryKey: spaceKeys.sprint_leagues(spacePk) },
         (sprintLeague) => {
+          if (!sprintLeague) return sprintLeague;
           const nextPlayers = sprintLeague.players.map((p, index) => ({
             ...p,
-            player_image: players[index]?.player_image || null,
-            name: players[index]?.name || '',
-            description: players[index]?.description || '',
+            player_image: players[index]?.player_image ?? p.player_image,
+            name: players[index]?.name ?? p.name,
+            description: players[index]?.description ?? p.description,
           }));
-          return {
-            ...sprintLeague!,
-            players: nextPlayers,
-          };
+          return { ...sprintLeague, players: nextPlayers };
         },
       );
 

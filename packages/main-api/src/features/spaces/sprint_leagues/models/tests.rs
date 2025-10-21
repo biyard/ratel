@@ -113,7 +113,7 @@ async fn test_sprint_league_creation() {
 
     let is_voted = SprintLeague::is_voted(&cli, &space_pk, &user.pk)
         .await
-        .expect("Failed to check if user voteds");
+        .expect("Failed to check if user voted");
 
     assert!(is_voted);
 
