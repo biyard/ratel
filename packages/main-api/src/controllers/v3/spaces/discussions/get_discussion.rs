@@ -1,7 +1,7 @@
 use crate::controllers::v3::spaces::SpaceDiscussionPath;
 use crate::controllers::v3::spaces::SpaceDiscussionPathParam;
-use crate::features::common_controller_logic::get_discussion;
-use crate::features::dto::GetDiscussionResponse;
+use crate::features::spaces::discussions::dto::GetDiscussionResponse;
+use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
 use crate::types::Partition;
 use crate::{AppState, Error2, models::user::User};
 use aide::NoApi;
@@ -10,7 +10,7 @@ use bdk::prelude::*;
 
 pub async fn get_discussion_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(_user): NoApi<Option<User>>,
+    NoApi(user): NoApi<User>,
     Path(SpaceDiscussionPathParam {
         space_pk,
         discussion_pk,
@@ -20,7 +20,8 @@ pub async fn get_discussion_handler(
         return Err(Error2::NotFoundSpace);
     }
 
-    let discussion = get_discussion(&dynamo, space_pk, discussion_pk).await?;
-
+    let discussion =
+        SpaceDiscussion::get_discussion(&dynamo.client, &space_pk, &discussion_pk, &user.pk)
+            .await?;
     Ok(Json(GetDiscussionResponse { discussion }))
 }

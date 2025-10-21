@@ -16,13 +16,9 @@ pub mod tests;
 
 pub use create_space::*;
 pub use delete_space::*;
-pub use deliberations::*;
-pub use discussions::*;
 pub use dto::*;
-pub use files::*;
 pub use get_space::*;
 pub use list_spaces::*;
-pub use polls::*;
 pub use update_space::*;
 
 pub mod sprint_leagues;

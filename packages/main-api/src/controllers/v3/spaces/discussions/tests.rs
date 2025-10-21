@@ -1,17 +1,13 @@
 use crate::controllers::v3::spaces::CreateSpaceResponse;
-use crate::features::dto::{
+use crate::features::spaces::discussions::dto::{
     CreateDiscussionResponse, DeleteDiscussionResponse, GetDiscussionResponse,
-    ListDiscussionResponse,
+    ListDiscussionMemberResponse, ListDiscussionResponse,
 };
-use crate::tests::create_test_user;
 use crate::types::{Partition, SpaceType};
 use crate::*;
 use crate::{
     controllers::v3::posts::CreatePostResponse,
-    tests::{
-        create_app_state,
-        v3_setup::{TestContextV3, setup_v3},
-    },
+    tests::v3_setup::{TestContextV3, setup_v3},
 };
 use axum::AxumRouter;
 
@@ -23,12 +19,9 @@ struct CreatedDeliberationSpace {
 async fn test_create_discussion_handler() {
     let TestContextV3 {
         app,
-        test_user: (_user, headers),
+        test_user: (user, headers),
         ..
     } = setup_v3().await;
-
-    let app_state = create_app_state();
-    let cli = &app_state.dynamo.client;
 
     let CreatedDeliberationSpace { space_pk, .. } =
         bootstrap_deliberation_space(&app, headers.clone()).await;
@@ -37,10 +30,7 @@ async fn test_create_discussion_handler() {
     let path = format!("/v3/spaces/{}/discussions", space_pk_encoded);
 
     // create user
-    let team_1 = create_test_user(&cli).await.pk;
-    let team_2 = create_test_user(&cli).await.pk;
-
-    let users = vec![team_1.clone(), team_2.clone()];
+    let users = vec![user.pk];
 
     let now = chrono::Utc::now().timestamp();
 
@@ -55,19 +45,16 @@ async fn test_create_discussion_handler() {
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body.discussion.members.len(), 2);
+    assert_eq!(body.discussion.is_member, true);
 }
 
 #[tokio::test]
 async fn test_update_discussion_handler() {
     let TestContextV3 {
         app,
-        test_user: (_user, headers),
+        test_user: (user, headers),
         ..
     } = setup_v3().await;
-
-    let app_state = create_app_state();
-    let cli = &app_state.dynamo.client;
 
     let CreatedDeliberationSpace { space_pk, .. } =
         bootstrap_deliberation_space(&app, headers.clone()).await;
@@ -76,10 +63,7 @@ async fn test_update_discussion_handler() {
     let path = format!("/v3/spaces/{}/discussions", space_pk_encoded);
 
     // create user
-    let team_1 = create_test_user(&cli).await.pk;
-    let team_2 = create_test_user(&cli).await.pk;
-
-    let users = vec![team_1.clone(), team_2.clone()];
+    let users = vec![user.pk.clone()];
 
     let now = chrono::Utc::now().timestamp();
 
@@ -94,9 +78,8 @@ async fn test_update_discussion_handler() {
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body.discussion.members.len(), 2);
+    assert_eq!(body.discussion.is_member, true);
 
-    let users = vec![team_1.clone()];
     let discussion_pk = body.discussion.pk;
     let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
 
@@ -116,7 +99,6 @@ async fn test_update_discussion_handler() {
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body.discussion.members.len(), 1);
     assert_eq!(body.discussion.name, "updated discussion title".to_string());
     assert_eq!(
         body.discussion.description,
@@ -128,12 +110,9 @@ async fn test_update_discussion_handler() {
 async fn test_delete_discussion_handler() {
     let TestContextV3 {
         app,
-        test_user: (_user, headers),
+        test_user: (user, headers),
         ..
     } = setup_v3().await;
-
-    let app_state = create_app_state();
-    let cli = &app_state.dynamo.client;
 
     let CreatedDeliberationSpace { space_pk, .. } =
         bootstrap_deliberation_space(&app, headers.clone()).await;
@@ -142,10 +121,7 @@ async fn test_delete_discussion_handler() {
     let path = format!("/v3/spaces/{}/discussions", space_pk_encoded);
 
     // create user
-    let team_1 = create_test_user(&cli).await.pk;
-    let team_2 = create_test_user(&cli).await.pk;
-
-    let users = vec![team_1.clone(), team_2.clone()];
+    let users = vec![user.pk];
 
     let now = chrono::Utc::now().timestamp();
 
@@ -186,12 +162,9 @@ async fn test_delete_discussion_handler() {
 async fn test_list_discussions_handler() {
     let TestContextV3 {
         app,
-        test_user: (_user, headers),
+        test_user: (user, headers),
         ..
     } = setup_v3().await;
-
-    let app_state = create_app_state();
-    let cli = &app_state.dynamo.client;
 
     let CreatedDeliberationSpace { space_pk, .. } =
         bootstrap_deliberation_space(&app, headers.clone()).await;
@@ -200,10 +173,7 @@ async fn test_list_discussions_handler() {
     let path = format!("/v3/spaces/{}/discussions", space_pk_encoded);
 
     // create user
-    let team_1 = create_test_user(&cli).await.pk;
-    let team_2 = create_test_user(&cli).await.pk;
-
-    let users = vec![team_1.clone(), team_2.clone()];
+    let users = vec![user.pk];
 
     let now = chrono::Utc::now().timestamp();
 
@@ -247,12 +217,9 @@ async fn test_list_discussions_handler() {
 async fn test_get_discussion_handler() {
     let TestContextV3 {
         app,
-        test_user: (_user, headers),
+        test_user: (user, headers),
         ..
     } = setup_v3().await;
-
-    let app_state = create_app_state();
-    let cli = &app_state.dynamo.client;
 
     let CreatedDeliberationSpace { space_pk, .. } =
         bootstrap_deliberation_space(&app, headers.clone()).await;
@@ -261,10 +228,7 @@ async fn test_get_discussion_handler() {
     let path = format!("/v3/spaces/{}/discussions", space_pk_encoded);
 
     // create user
-    let team_1 = create_test_user(&cli).await.pk;
-    let team_2 = create_test_user(&cli).await.pk;
-
-    let users = vec![team_1.clone(), team_2.clone()];
+    let users = vec![user.pk];
 
     let now = chrono::Utc::now().timestamp();
 
@@ -279,6 +243,7 @@ async fn test_get_discussion_handler() {
     };
 
     assert_eq!(status, 200);
+    tracing::debug!("discussion body: {:?}", body);
 
     let discussion_pk = body.discussion.pk;
     let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
@@ -297,6 +262,56 @@ async fn test_get_discussion_handler() {
     assert_eq!(status, 200);
 
     tracing::debug!("get discussion body: {:?}", body);
+}
+
+#[tokio::test]
+async fn test_get_discussion_members_handler() {
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    let CreatedDeliberationSpace { space_pk, .. } =
+        bootstrap_deliberation_space(&app, headers.clone()).await;
+
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+    let path = format!("/v3/spaces/{}/discussions", space_pk_encoded);
+
+    // create user
+    let users = vec![user.pk];
+
+    let now = chrono::Utc::now().timestamp();
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "started_at": now, "ended_at": now + 10_000, "name": "discussion title".to_string(), "description": "discussion description".to_string(), "user_ids": users.clone()
+        },
+        response_type: CreateDiscussionResponse
+    };
+
+    assert_eq!(status, 200);
+    tracing::debug!("discussion body: {:?}", body);
+
+    let discussion_pk = body.discussion.pk;
+    let discussion_pk_encoded = discussion_pk.to_string().replace('#', "%23");
+    let path = format!(
+        "/v3/spaces/{}/discussions/{}/members",
+        space_pk_encoded, discussion_pk_encoded
+    );
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        response_type: ListDiscussionMemberResponse
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.members.len(), 1);
 }
 
 async fn bootstrap_deliberation_space(
