@@ -70,6 +70,9 @@ export class SpacePollEditorController {
       `handleUpdateAnswer called for questionIdx ${questionIdx}`,
       answer,
     );
+    const currentAnswers = this.answers.get();
+    currentAnswers[questionIdx] = answer;
+    this.answers.set({ ...currentAnswers });
   };
 
   onChangeTimeRange = (started_at: number, ended_at: number) => {
