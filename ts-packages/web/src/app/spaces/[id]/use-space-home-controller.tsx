@@ -164,16 +164,21 @@ export class SpaceHomeController {
   };
 
   get actions() {
-    return [
-      {
-        label: this.t('publish'),
-        onClick: this.handleActionPublish,
-      },
+    const ret = [
       {
         label: this.t('delete'),
         onClick: this.handleActionPublish,
       },
     ];
+
+    if (this.space.isDraft) {
+      ret.unshift({
+        label: this.t('publish'),
+        onClick: this.handleActionPublish,
+      });
+    }
+
+    return ret;
   }
 }
 

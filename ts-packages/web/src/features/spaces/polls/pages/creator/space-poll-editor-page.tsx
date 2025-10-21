@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import SurveyViewer from '@/features/spaces/components/survey/viewer';
 import { TimeRangeSetting } from '../../components/time-range-setting';
 import Card from '@/components/card';
+import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 
 export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollEditorPage: spacePk=${spacePk}, pollPk=${pollPk}`);
@@ -25,6 +26,26 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
           endTimestampMillis={ctrl.poll.ended_at}
           className="justify-end"
         />
+
+        {ctrl.space.isAdmin() && (
+          <div className="flex flex-row items-center gap-3 mb-4">
+            <CustomCheckbox
+              checked={ctrl.poll.response_editable}
+              onChange={() =>
+                ctrl.onChangeResponseEditable(!ctrl.poll.response_editable)
+              }
+              data-pw="response-editable-checkbox"
+            />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-medium text-white cursor-pointer">
+                {t('response_editable_label')}
+              </label>
+              <p className="text-xs text-neutral-400">
+                {t('response_editable_description')}
+              </p>
+            </div>
+          </div>
+        )}
 
         <Card>
           <Col>
