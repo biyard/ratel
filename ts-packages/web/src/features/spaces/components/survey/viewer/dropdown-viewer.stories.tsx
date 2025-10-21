@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import DropdownViewer from './dropdown-viewer';
-import { SurveyAnswerType } from '../../../../../types/survey-type';
+import { SurveyAnswerType } from '@/features/spaces/polls/types/poll-question';
 
 const mockT = ((key: string) => key) as any;
 

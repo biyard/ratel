@@ -141,17 +141,15 @@ impl Post {
             return Ok(self.get_permissions_for_guest());
         }
 
-        match self.user_pk.clone() {
+        let gperm = self.get_permissions_for_guest();
+        let perm = match self.user_pk.clone() {
             team_pk if matches!(team_pk, Partition::Team(_)) => {
-                return Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk).await;
+                Team::get_permissions_by_team_pk(cli, &team_pk, &user.pk).await? | gperm
             }
-            _ => {
-                return Err(Error2::NotSupported(format!(
-                    "Post({}) author type {:?} is not supported",
-                    self.pk, self.author_type
-                )));
-            }
-        }
+            _ => gperm,
+        };
+
+        Ok(perm)
     }
 
     fn get_permissions_for_guest(&self) -> TeamGroupPermissions {

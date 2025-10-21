@@ -7,6 +7,7 @@ import * as Popover from '@radix-ui/react-popover';
 interface TimeDropdownProps {
   value: number;
   onChange: (newTimestamp: number) => void;
+  canEdit?: boolean;
 }
 
 const timeOptions = Array.from({ length: 24 }, (_, i) => {
@@ -23,7 +24,11 @@ const formatAMPM = (timestamp: number): string => {
   return `${h.toString().padStart(2, '0')}:00 ${suffix}`;
 };
 
-export default function TimeDropdown({ value, onChange }: TimeDropdownProps) {
+export default function TimeDropdown({
+  value,
+  onChange,
+  canEdit,
+}: TimeDropdownProps) {
   const [open, setOpen] = useState(false);
   const selectedTime = value ? formatAMPM(value) : null;
 
@@ -68,11 +73,11 @@ export default function TimeDropdown({ value, onChange }: TimeDropdownProps) {
   };
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
+    <Popover.Root open={canEdit && open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
         <button
           ref={triggerRef}
-          className="flex justify-between items-center w-[150px] max-tablet:w-full border border-c-wg-70 rounded-lg px-[20px] py-[10.5px] font-medium text-neutral-600 border-select-date-border bg-select-date-bg text-[15px]/[22.5px] text-left shadow-sm focus:outline-none gap-[10px]"
+          className="flex justify-between items-center font-medium text-left rounded-lg border shadow-sm focus:outline-none w-[150px] max-tablet:w-full border-c-wg-70 px-[20px] py-[10.5px] text-neutral-600 border-select-date-border bg-select-date-bg text-[15px]/[22.5px] gap-[10px]"
         >
           {selectedTime || 'Select'}
           <Clock className="w-5 h-5 stroke-neutral-500" />
@@ -84,7 +89,7 @@ export default function TimeDropdown({ value, onChange }: TimeDropdownProps) {
           align="start"
           sideOffset={4}
           style={{ width: contentWidth }}
-          className="mt-1 rounded-md shadow-lg bg-white max-h-60 overflow-auto border border-gray-200 z-[999]"
+          className="overflow-auto mt-1 max-h-60 bg-white rounded-md border border-gray-200 shadow-lg z-[999]"
         >
           {timeOptions.map((time) => (
             <div
