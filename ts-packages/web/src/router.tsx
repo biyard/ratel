@@ -27,6 +27,9 @@ import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
 import SpaceByIdLayout from './app/spaces/[id]/space-by-id-layout';
 import { SpaceHomePage } from './app/spaces/[id]/space-home-page';
 import { SpaceSettingsPage } from './app/spaces/[id]/settings/space-settings-page';
+import SpaceDiscussionPage from './app/spaces/[id]/discussion/space-discussion-page';
+import SpaceFilePage from './app/spaces/[id]/file/space-file-page';
+import SpaceRecommendationPage from './app/spaces/[id]/recommendation/space-recommendation-page';
 
 export const routes = createBrowserRouter([
   {
@@ -165,6 +168,24 @@ export const routes = createBrowserRouter([
               },
             ],
           }, // End of Poll Feature
+          // Space Discussion Feature
+          {
+            id: 'space-discussion-feature',
+            path: 'discussions',
+            Component: SpaceDiscussionPage,
+          }, // End of Discussion Feature
+          // Space File Feature
+          {
+            id: 'space-file-feature',
+            path: 'files',
+            Component: SpaceFilePage,
+          }, // End of File Feature
+          // Space Recommendation Feature
+          {
+            id: 'space-recommendation-feature',
+            path: 'recommendations',
+            Component: SpaceRecommendationPage,
+          }, // End of Recommendation Feature
         ],
       }, // End of Space Layout
 
