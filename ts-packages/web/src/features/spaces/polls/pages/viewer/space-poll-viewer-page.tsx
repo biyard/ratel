@@ -12,10 +12,12 @@ import { Button } from '@/components/ui/button';
 export const i18nSpacePollViewerPage = {
   en: {
     btn_submit: 'Submit',
+    btn_update: 'Update',
     btn_login: 'Log in to Submit',
   },
   ko: {
     btn_submit: '제출',
+    btn_update: '수정',
     btn_login: '로그인 후 제출',
   },
 };
@@ -25,6 +27,32 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollViewerPage: spacePk=${spacePk}, pollPk=${pollPk}`);
 
   const ctrl = useSpacePollViewerController(spacePk, pollPk);
+
+  let button = <></>;
+
+  if (ctrl.user && ctrl.poll.myResponse.length === 0) {
+    button = (
+      <Button onClick={ctrl.handleSubmit}>
+        {ctrl.t('SpacePollViewer:btn_submit')}
+      </Button>
+    );
+  } else if (
+    ctrl.user &&
+    ctrl.poll.myResponse.length > 0 &&
+    ctrl.poll.response_editable
+  ) {
+    button = (
+      <Button onClick={ctrl.handleSubmit}>
+        {ctrl.t('SpacePollViewer:btn_update')}
+      </Button>
+    );
+  } else if (!ctrl.user) {
+    button = (
+      <Button onClick={ctrl.handleLogin}>
+        {ctrl.t('SpacePollViewer:btn_login')}
+      </Button>
+    );
+  }
 
   return (
     <>
@@ -46,17 +74,7 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
           </Col>
         </Card>
 
-        <Row className="justify-end w-full">
-          {ctrl.user ? (
-            <Button onClick={ctrl.handleSubmit}>
-              {ctrl.t('SpacePollViewer:btn_submit')}
-            </Button>
-          ) : (
-            <Button onClick={ctrl.handleLogin}>
-              {ctrl.t('SpacePollViewer:btn_login')}
-            </Button>
-          )}
-        </Row>
+        <Row className="justify-end w-full">{button}</Row>
       </Col>
     </>
   );

@@ -19,7 +19,6 @@ pub struct Poll {
     pub created_at: i64,
     pub updated_at: i64,
 
-    pub status: PollStatus,
     pub topic: String,       // Poll Title
     pub description: String, // Poll Description
 
@@ -57,7 +56,6 @@ impl Poll {
             created_at: now,
             updated_at: now,
             user_response_count: 0,
-            status: PollStatus::Ready,
 
             response_editable: false,
             started_at: now,
@@ -67,6 +65,17 @@ impl Poll {
             description: String::new(),
             questions: Vec::new(),
         })
+    }
+
+    pub fn status(&self) -> PollStatus {
+        let now = get_now_timestamp_millis();
+        if now < self.started_at {
+            PollStatus::NotStarted
+        } else if now >= self.started_at && now <= self.ended_at {
+            PollStatus::InProgress
+        } else {
+            PollStatus::Finish
+        }
     }
 }
 
