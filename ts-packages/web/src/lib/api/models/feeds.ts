@@ -7,7 +7,7 @@ export const UrlType = {
   Image: 1,
 } as const;
 
-export type UrlType = typeof UrlType[keyof typeof UrlType];
+export type UrlType = (typeof UrlType)[keyof typeof UrlType];
 
 export interface ArtworkTrait {
   trait_type: string;
@@ -21,7 +21,8 @@ export const ArtworkTraitDisplayType = {
   Number: 'number',
 } as const;
 
-export type ArtworkTraitDisplayType = typeof ArtworkTraitDisplayType[keyof typeof ArtworkTraitDisplayType];
+export type ArtworkTraitDisplayType =
+  (typeof ArtworkTraitDisplayType)[keyof typeof ArtworkTraitDisplayType];
 
 export interface ArtworkMetadata {
   traits: ArtworkTrait[];
@@ -160,19 +161,26 @@ export const FeedType = {
   DocReview: 4,
 } as const;
 
-export type FeedType = typeof FeedType[keyof typeof FeedType];
+export type FeedType = (typeof FeedType)[keyof typeof FeedType];
 
 export const FeedStatus = {
   Draft: 1,
   Published: 2,
 } as const;
 
-export type FeedStatus = typeof FeedStatus[keyof typeof FeedStatus];
+export type FeedStatus = (typeof FeedStatus)[keyof typeof FeedStatus];
 
 export interface FileInfo {
   name: string;
   size: string;
   ext: string;
+  url?: string | null;
+}
+
+export interface File {
+  name: string;
+  size: string;
+  ext: FileExtension;
   url?: string | null;
 }
 
@@ -188,7 +196,7 @@ export const FileExtension = {
   MOV: 'MOV',
 } as const;
 
-export type FileExtension = typeof FileExtension[keyof typeof FileExtension];
+export type FileExtension = (typeof FileExtension)[keyof typeof FileExtension];
 
 export const FileExtensionLabel: Record<
   FileExtension,

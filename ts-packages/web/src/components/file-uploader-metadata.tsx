@@ -63,7 +63,7 @@ export default function FileUploaderMetadata({
     const partSize = 5 * 1024 * 1024;
     const totalParts = Math.ceil(file.size / partSize);
 
-    const res = await get(
+    await get(
       ratelApi.assets.getMultipartPresignedUrl(fileTypeKey, totalParts),
     );
 
