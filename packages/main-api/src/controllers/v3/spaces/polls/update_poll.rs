@@ -21,7 +21,7 @@ pub enum UpdatePollSpaceRequest {
     ResponseEditable { response_editable: bool },
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
+#[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema, Default)]
 pub struct UpdatePollSpaceResponse {
     pub status: String,
 }
@@ -71,7 +71,11 @@ pub async fn update_poll_handler(
             if questions.is_empty() {
                 return Err(Error::PollInvalidQuestions);
             }
-            poll_updater = poll_updater.with_questions(questions);
+            poll_updater = poll_updater.with_questions(questions.clone());
+
+            // Also create/update PollQuestion entity for result aggregation
+            let poll_question = PollQuestion::new(space_pk.clone(), questions);
+            poll_question.create(&dynamo.client).await?;
         }
         UpdatePollSpaceRequest::ResponseEditable { response_editable } => {
             poll_updater = poll_updater.with_response_editable(response_editable);

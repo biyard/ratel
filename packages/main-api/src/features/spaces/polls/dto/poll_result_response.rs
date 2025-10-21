@@ -2,7 +2,13 @@ use crate::features::spaces::polls::{PollResult, PollSummary};
 
 use bdk::prelude::*;
 #[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema, aide::OperationIo,
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
+    aide::OperationIo,
+    Default,
 )]
 pub struct PollResultResponse {
     pub created_at: i64,

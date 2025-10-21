@@ -3,7 +3,7 @@ use bdk::prelude::*;
 use crate::types::{Answer, EntityType, Question};
 
 use crate::features::spaces::polls::Poll;
-#[derive(Default, serde::Serialize, schemars::JsonSchema)]
+#[derive(Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct PollResponse {
     pub sk: EntityType,
     pub created_at: i64,
