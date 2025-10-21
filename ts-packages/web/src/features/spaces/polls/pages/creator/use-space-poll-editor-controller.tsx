@@ -14,6 +14,7 @@ import {
 import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useUpdateTimeRangeMutation } from '../../hooks/use-update-time-range-mutation';
+import { useUpdateQuestionsMutation } from '../../hooks/use-update-questions-mutation';
 
 export class SpacePollEditorController {
   constructor(
@@ -24,6 +25,7 @@ export class SpacePollEditorController {
     public editing: State<boolean>,
     public answers: State<Record<number, SurveyAnswer>>,
     public updateTimeRange: ReturnType<typeof useUpdateTimeRangeMutation>,
+    public updateQuestions: ReturnType<typeof useUpdateQuestionsMutation>,
   ) {}
 
   handleAddQuestion = () => {
@@ -52,6 +54,11 @@ export class SpacePollEditorController {
 
   handleSave = () => {
     this.editing.set(false);
+    this.updateQuestions.mutate({
+      spacePk: this.space.pk,
+      pollSk: this.poll.sk,
+      questions: this.questions.get(),
+    });
   };
 
   handleDiscard = () => {
@@ -89,6 +96,7 @@ export function useSpacePollEditorController(spacePk: string, pollPk: string) {
   const answers = useState<Record<number, SurveyAnswer>>({});
 
   const updateTimeRange = useUpdateTimeRangeMutation();
+  const updateQuestions = useUpdateQuestionsMutation();
 
   return new SpacePollEditorController(
     space,
@@ -98,5 +106,6 @@ export function useSpacePollEditorController(spacePk: string, pollPk: string) {
     new State(editing),
     new State(answers),
     updateTimeRange,
+    updateQuestions,
   );
 }

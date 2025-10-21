@@ -1,4 +1,5 @@
 use crate::features::spaces::polls::*;
+use crate::types::SpacePublishState;
 use crate::{
     AppState, Error2,
     models::{space::SpaceCommon, user::User},
@@ -23,7 +24,7 @@ pub async fn get_poll_handler(
         return Err(Error2::NotFoundPoll);
     }
 
-    let (_, has_perm) = SpaceCommon::has_permission(
+    let (sc, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
         user.as_ref().map(|u| &u.pk),
@@ -34,9 +35,18 @@ pub async fn get_poll_handler(
         return Err(Error2::NoPermission);
     }
 
-    let metadata = PollMetadata::query_begins_with_sk(&dynamo.client, &space_pk, &poll_sk).await?;
-    let mut poll_response: PollResponse = PollResponse::from(metadata);
-    if let Some(user) = user {
+    let poll = Poll::get(&dynamo.client, &space_pk, Some(&poll_sk))
+        .await?
+        .ok_or(Error2::NotFoundPoll)?;
+
+    let mut poll_response: PollResponse = PollResponse::from(poll);
+    let now = crate::utils::time::get_now_timestamp_millis();
+
+    if user.is_some()
+        && sc.publish_state == SpacePublishState::Published
+        && poll_response.started_at <= now
+    {
+        let user = user.unwrap();
         let my_survey_response =
             PollUserAnswer::find_one(&dynamo.client, &space_pk, &user.pk).await?;
 
