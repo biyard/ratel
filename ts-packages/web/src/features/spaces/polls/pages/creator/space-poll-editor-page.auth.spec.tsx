@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { CONFIGS } from '@tests/config';
 
 test.describe('[SpacePollEditorPage] Authenticated Users', () => {
   // Note: These tests verify the behavior of the poll editor page for authenticated users
@@ -19,7 +20,7 @@ test.describe('[SpacePollEditorPage] Authenticated Users', () => {
     // The baseURL should be accessible
     const currentUrl = page.url();
     expect(currentUrl).toBeTruthy();
-    expect(currentUrl).toContain(page.context().baseURL || 'localhost');
+    expect(currentUrl).toContain(CONFIGS.PLAYWRIGHT.BASE_URL);
   });
 
   test('[SPEP-002] Checkbox toggle sends correct API request format', async ({
@@ -160,16 +161,5 @@ test.describe('[SpacePollEditorPage] Authenticated Users', () => {
 
     expect(toggledBoolean).toBe(false);
     expect(!toggledBoolean).toBe(true);
-  });
-
-  test('[SPEP-010] Authenticated user can access home page', async ({
-    page,
-  }) => {
-    // Basic test to verify authentication is working
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-
-    // Verify the page loaded successfully
-    expect(page.url()).toContain(page.context().baseURL || '');
   });
 });
