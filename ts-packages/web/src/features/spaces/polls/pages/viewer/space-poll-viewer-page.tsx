@@ -5,6 +5,20 @@ import { Col } from '@/components/ui/col';
 import SurveyViewer from '@/features/spaces/components/survey/viewer';
 import { TimeRangeSetting } from '../../components/time-range-setting';
 import Card from '@/components/card';
+import { Row } from '@/components/ui/row';
+import { Button } from '@/components/ui/button';
+
+// TODO: Add to 'i18n/config.ts'
+export const i18nSpacePollViewerPage = {
+  en: {
+    btn_submit: 'Submit',
+    btn_login: 'Log in to Submit',
+  },
+  ko: {
+    btn_submit: '제출',
+    btn_login: '로그인 후 제출',
+  },
+};
 
 export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   // TODO: use or define hooks
@@ -31,6 +45,18 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
             />
           </Col>
         </Card>
+
+        <Row className="justify-end w-full">
+          {ctrl.user ? (
+            <Button onClick={ctrl.handleSubmit}>
+              {ctrl.t('SpacePollViewer:btn_submit')}
+            </Button>
+          ) : (
+            <Button onClick={ctrl.handleLogin}>
+              {ctrl.t('SpacePollViewer:btn_login')}
+            </Button>
+          )}
+        </Row>
       </Col>
     </>
   );
