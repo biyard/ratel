@@ -12,6 +12,7 @@ import { useUserInfo } from '@/hooks/use-user-info';
 import { LoginModal } from '@/components/popup/login-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { UserResponse } from '@/lib/api/ratel/me.v3';
+import { usePollResponseMutation } from '../../hooks/use-poll-response-mutation';
 
 export class SpacePollViewerController {
   constructor(
@@ -21,6 +22,7 @@ export class SpacePollViewerController {
     public answers: State<Record<number, SurveyAnswer>>,
     public user: UserResponse | null,
     public popup: ReturnType<typeof usePopup>,
+    public submitPollResponse: ReturnType<typeof usePollResponseMutation>,
   ) {}
 
   handleUpdateAnswer = (questionIdx: number, answer: SurveyAnswer) => {
@@ -33,7 +35,13 @@ export class SpacePollViewerController {
     this.answers.set({ ...currentAnswers });
   };
 
-  handleSubmit = () => {};
+  handleSubmit = () => {
+    this.submitPollResponse.mutate({
+      spacePk: this.space.pk,
+      pollSk: this.poll.sk,
+      answers: Object.values(this.answers.get()),
+    });
+  };
 
   handleLogin = () => {
     this.popup
@@ -44,9 +52,13 @@ export class SpacePollViewerController {
 }
 
 export function useSpacePollViewerController(spacePk, pollPk) {
+  // Fetching data from remote
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
   const { data: user } = useUserInfo();
+
+  // mutations
+  const usePollResponse = usePollResponseMutation();
 
   const { t } = useTranslation('SpaceSurvey');
   const popup = usePopup();
@@ -59,5 +71,6 @@ export function useSpacePollViewerController(spacePk, pollPk) {
     new State(answers),
     user,
     popup,
+    usePollResponse,
   );
 }
