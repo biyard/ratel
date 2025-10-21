@@ -18,7 +18,7 @@ pub struct RespondPollSpaceRequest {
 
 #[derive(Debug, Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct RespondPollSpaceResponse {
-    poll_space_pk: Partition,
+    pub poll_space_pk: Partition,
 }
 
 pub async fn respond_poll_handler(

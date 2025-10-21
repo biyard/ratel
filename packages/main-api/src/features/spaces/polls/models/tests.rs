@@ -1,11 +1,9 @@
-use crate::features::spaces::polls::{
-    Poll, PollMetadata, PollQuestion, PollResponse, PollUserAnswer,
-};
+use crate::features::spaces::polls::{Poll, PollResponse, PollUserAnswer};
 use crate::{
     models::{feed::Post, space::SpaceCommon},
     tests::{create_test_user, get_test_aws_config},
     types::{Answer, ChoiceQuestion, EntityType, Question},
-    utils::{aws::DynamoClient, time::get_now_timestamp_millis},
+    utils::aws::DynamoClient,
 };
 
 #[tokio::test]
