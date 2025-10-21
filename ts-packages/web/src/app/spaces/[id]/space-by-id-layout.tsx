@@ -53,7 +53,8 @@ export default function SpaceByIdLayout() {
           <Outlet />
         </Col>
         <Col className="gap-2.5 w-full max-w-[250px]">
-          <SpaceActions actions={ctrl.actions} />
+          {ctrl.space.isAdmin && <SpaceActions actions={ctrl.actions} />}
+
           <SpaceSideMenu menus={ctrl.menus} />
           <TimelineMenu
             isEditing={false}

@@ -7,6 +7,7 @@ import { Col } from '@/components/ui/col';
 import { Row } from '@/components/ui/row';
 import { Button } from '@/components/ui/button';
 import SurveyViewer from '@/features/spaces/components/survey/viewer';
+import { TimeRangeSetting } from '../../components/time-range-setting';
 
 export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollEditorPage: spacePk=${spacePk}, pollPk=${pollPk}`);
@@ -28,6 +29,14 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
             <Button onClick={ctrl.handleEdit}>{t('btn_edit')}</Button>
           )}
         </Row>
+
+        <TimeRangeSetting
+          canEdit={ctrl.space.isAdmin()}
+          onChange={ctrl.onChangeTimeRange}
+          startTimestampMillis={ctrl.poll.started_at}
+          endTimestampMillis={ctrl.poll.ended_at}
+          className="justify-end"
+        />
 
         {ctrl.editing.get() ? (
           <SurveyEditor ctrl={ctrl} />
