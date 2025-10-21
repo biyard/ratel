@@ -60,6 +60,9 @@ export const route = {
     `/spaces/${encodeURIComponent(spaceId)}/discussions`,
   spaceRecommendations: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/recommendations`,
+  spaceSprintLeagues: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/sprint-leagues`,
+
   telegramSprintLeague: (space_id: number | string) =>
     `/telegram/sprint-league/${encodeURIComponent(space_id)}`,
   telegramSubscribe: (chat_id: number, lang?: string) => {

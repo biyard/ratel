@@ -124,6 +124,10 @@ pub enum Error {
     SpaceNotFound,
     #[error("InvalidTimeRange")]
     InvalidTimeRange,
+    #[error("Space cannot be edited in its current status")]
+    SpaceNotEditable,
+    #[error("PK must be a Partition::Space")]
+    InvalidSpacePartitionKey,
 
     // /v3/spaces/deliberations endpoints 3100 ~
     #[rest_error(code = 3100)]
@@ -146,6 +150,14 @@ pub enum Error {
     ImmutablePollUserAnswer,
     #[error("Poll Result not found")]
     NotFoundPollResult,
+
+    #[rest_error(code = 3300)]
+    #[error("Sprint League not found")]
+    NotFoundSprintLeague,
+    #[error("Sprint League players are invalid")]
+    InvalidSprintLeaguePlayer,
+    #[error("Failed to vote in sprint league: {0}")]
+    SprintLeagueVoteError(String),
 
     // teams 4000 ~
     #[error("Team not found")]

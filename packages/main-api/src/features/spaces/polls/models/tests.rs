@@ -28,7 +28,7 @@ async fn test_poll_space_creation() {
         .await
         .expect("failed to create space common");
 
-    let now = get_now_timestamp_millis();
+    let _now = get_now_timestamp_millis();
     let space_id = match common.pk.clone() {
         crate::types::Partition::Space(id) => id,
         _ => panic!("space pk must be Partition::Space"),
@@ -55,18 +55,18 @@ async fn test_poll_space_creation() {
         }),
     ];
 
-    let question = PollQuestion::new(poll.pk.clone(), questions);
+    let question = PollQuestion::new(common.pk.clone(), questions);
 
     question
         .create(&cli)
         .await
         .expect("failed to create question");
 
-    let metadata = PollMetadata::query(&cli, &poll.pk)
+    let metadata = PollMetadata::query_all(&cli, &common.pk)
         .await
         .expect("failed to query poll space metadata");
 
-    assert_eq!(metadata.len(), 3, "should have 3 entries");
+    assert_eq!(metadata.len(), 2, "should have 2 entries");
 
     let response: PollResponse = metadata.into();
 

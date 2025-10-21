@@ -27,6 +27,7 @@ import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
 import SpaceByIdLayout from './app/spaces/[id]/space-by-id-layout';
 import { SpaceHomePage } from './app/spaces/[id]/space-home-page';
 import { SpaceSettingsPage } from './app/spaces/[id]/settings/space-settings-page';
+import SpaceSprintLeaguePage from './app/spaces/[id]/sprint-league/page';
 import SpaceDiscussionPage from './app/spaces/[id]/discussion/space-discussion-page';
 import SpaceFilePage from './app/spaces/[id]/file/space-file-page';
 import SpaceRecommendationPage from './app/spaces/[id]/recommendation/space-recommendation-page';
@@ -154,8 +155,11 @@ export const routes = createBrowserRouter([
             Component: SpaceSettingsPage,
           },
 
-          // Space Features
-
+          {
+            id: 'space-sprint-league-feature',
+            path: 'sprint-leagues',
+            Component: SpaceSprintLeaguePage,
+          },
           // Space Poll Feature
           {
             id: 'space-poll-feature',

@@ -180,4 +180,10 @@ impl SpaceCommon {
             _ => Err(Error2::InternalServerError("Invalid space author".into())),
         }
     }
+
+    pub fn validate_editable(&self) -> bool {
+        self.publish_state == SpacePublishState::Draft
+            || (self.publish_state == SpacePublishState::Published
+                && (self.status == Some(SpaceStatus::Waiting) || self.status.is_none()))
+    }
 }

@@ -79,7 +79,9 @@ pub enum EntityType {
     DeliberationResponse(String),
 
     // Sprint league space entity types
-    SprintLeagueSpace,
+    SprintLeague,
+    SprintLeaguePlayer(String), //Uuid
+    SprintLeagueVote(String),   //#{SPACE_ID}#{UserPk_ID}
 
     // Artwork space entity types
     ArtworkSpace,

@@ -855,7 +855,7 @@ fn generate_updater(
                 self,
                 cli: &aws_sdk_dynamodb::Client,
             ) -> #result_ty <(), #err_ctor> {
-                let new = cli.update_item()
+                let _ = cli.update_item()
                     .table_name(#ident::table_name())
                     .set_key(Some(self.k))
                     .set_attribute_updates(Some(self.m))
