@@ -1,15 +1,12 @@
 use crate::controllers::v3::posts::create_post::CreatePostResponse;
 use crate::controllers::v3::spaces::CreateSpaceResponse;
-use crate::controllers::v3::spaces::files::get_files::{
-    GetSpaceFileQueryParams, GetSpaceFileResponse,
-};
+use crate::controllers::v3::spaces::files::get_files::GetSpaceFileResponse;
 use crate::controllers::v3::spaces::files::update_files::UpdateSpaceFileResponse;
 
 use crate::tests::{
     create_app_state,
     v3_setup::{TestContextV3, setup_v3},
 };
-use crate::types::space_file_feature_type::SpaceFileFeatureType;
 use crate::types::{File, Partition, SpaceType};
 use crate::*;
 use axum::AxumRouter;
@@ -46,23 +43,15 @@ async fn test_update_files_handler() {
                 ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
-            "feature_type": SpaceFileFeatureType::Overview,
         },
         response_type: UpdateSpaceFileResponse
     };
 
     assert_eq!(status, 200);
 
-    let qs = serde_urlencoded::to_string(&GetSpaceFileQueryParams {
-        feature_type: SpaceFileFeatureType::Overview,
-    })
-    .unwrap();
-
-    let url = format!("{path}?{qs}");
-
     let (status, _headers, body) = get! {
         app: app,
-        path: &url,
+        path: path.clone(),
         headers: headers.clone(),
         response_type: GetSpaceFileResponse
     };
@@ -83,7 +72,6 @@ async fn test_update_files_handler() {
                 ext: crate::types::FileExtension::PDF,
                 url: None,
             }],
-            "feature_type": SpaceFileFeatureType::Overview,
         },
         response_type: UpdateSpaceFileResponse
     };
@@ -92,7 +80,7 @@ async fn test_update_files_handler() {
 
     let (status, _headers, body) = get! {
         app: app,
-        path: &url,
+        path: path.clone(),
         headers: headers.clone(),
         response_type: GetSpaceFileResponse
     };
