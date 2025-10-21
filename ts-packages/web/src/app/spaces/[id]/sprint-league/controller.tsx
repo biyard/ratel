@@ -12,6 +12,8 @@ import { Space } from '@/features/spaces/types/space';
 import { TFunction } from 'i18next';
 import CreateSprintLeaguePlayer from '@/features/spaces/sprint-leagues/types/create-sprint-league-player';
 import { useUpdateSprintLeagueMutation } from '@/features/spaces/sprint-leagues/hooks/use-update-sprint-league-mutation';
+import { useVoteSprintLeagueMutation } from '@/features/spaces/sprint-leagues/hooks/use-sprint-league-vote-mutation';
+import { SpaceStatus } from '@/features/spaces/types/space-common';
 
 export interface ISpaceSprintLeagueController
   extends SprintLeagueGameProps,
@@ -36,9 +38,12 @@ export function useSprintLeagueController(
       : [defaultPlayer(), defaultPlayer(), defaultPlayer()],
   );
   const updateSprintLeague = useUpdateSprintLeagueMutation().mutateAsync;
+  const voteSprintLeague = useVoteSprintLeagueMutation().mutateAsync;
   const onVote = async (playerSk: string) => {
-    console.log('Vote for playerSk:', playerSk);
-    // TODO : implement vote logic
+    await voteSprintLeague({
+      spacePk: spacePk,
+      playerSk: playerSk,
+    });
   };
 
   const onUpdatePlayer = (index: number, player: SprintLeaguePlayer) => {
@@ -88,7 +93,7 @@ export function useSprintLeagueController(
 
     initialStatus: 0,
 
-    disabled: false,
+    disabled: editing || space.status !== SpaceStatus.InProgress,
     onEdit,
     onSave,
     onDiscard,

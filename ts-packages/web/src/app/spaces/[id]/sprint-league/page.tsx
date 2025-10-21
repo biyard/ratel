@@ -21,7 +21,7 @@ export default function SpaceSprintLeaguePage() {
           <SprintLeagueEditor {...ctrl} />
         </>
       )}
-      <SprintLeagueGame {...ctrl} />
+      <SprintLeagueGame {...ctrl} disabled={true} />
     </div>
   );
 }

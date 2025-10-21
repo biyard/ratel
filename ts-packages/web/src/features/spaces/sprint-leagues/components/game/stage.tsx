@@ -34,6 +34,7 @@ export default function KonvaCanvas({
   initialStatus = Status.BEFORE_START,
   players,
   onVote,
+  disabled,
   width,
   height,
 }: {
@@ -44,7 +45,9 @@ export default function KonvaCanvas({
   width: number;
   height: number;
 }) {
-  const [status, setStatus] = useState<Status>(initialStatus);
+  const [status, setStatus] = useState<Status>(
+    disabled ? Status.BEFORE_START : initialStatus,
+  );
   const [selectedPlayerSk, setselectedPlayerSk] = useState<string | null>(null);
 
   useEffect(() => {
@@ -69,7 +72,12 @@ export default function KonvaCanvas({
         selectedPlayerSk={selectedPlayerSk}
       />
       {status === Status.BEFORE_START && (
-        <BeforeStart handleStart={() => setStatus(Status.VOTE)} />
+        <BeforeStart
+          handleStart={() => {
+            if (disabled) return;
+            setStatus(Status.VOTE);
+          }}
+        />
       )}
       <DimOverlay visible={status === Status.VOTE} />
 
