@@ -143,6 +143,16 @@ impl SpaceCommon {
 }
 
 impl SpaceCommon {
+    pub fn permissions_for_guest(&self) -> TeamGroupPermissions {
+        if self.visibility == SpaceVisibility::Public
+            && self.publish_state == SpacePublishState::Published
+        {
+            return TeamGroupPermissions::read();
+        }
+
+        TeamGroupPermissions::empty()
+    }
+
     pub async fn has_permission(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
@@ -152,6 +162,12 @@ impl SpaceCommon {
         let space = SpaceCommon::get(cli, space_pk, Some(EntityType::SpaceCommon))
             .await?
             .ok_or(Error2::SpaceNotFound)?;
+
+        let permissions = space.permissions_for_guest();
+
+        if permissions.contains(perm) {
+            return Ok((space, true));
+        }
 
         let author_pk = &space.user_pk;
 

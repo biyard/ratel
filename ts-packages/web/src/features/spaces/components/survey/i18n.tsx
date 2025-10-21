@@ -17,6 +17,8 @@ const en = {
   subjective_input_placeholder: 'Please share your opinion.',
   option_input_placeholder: 'Enter an option',
   add_option_button_label: 'Add Option',
+
+  no_questions: 'No questions available.',
 };
 
 const ko = {
@@ -39,6 +41,8 @@ const ko = {
   option_input_placeholder: '옵션을 입력하세요',
 
   add_option_button_label: '옵션 추가하기',
+
+  no_questions: '질문이 없습니다.',
 };
 const i18n = {
   en,

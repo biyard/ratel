@@ -46,6 +46,7 @@ import { i18nPollSpace } from '@/app/spaces/[id]/poll/space-poll-i18n';
 import { i18nDeliberationPage } from '@/app/spaces/[id]/deliberations/deliberation-page-i18n';
 import i18nSpaceSprintLeague from '@/app/spaces/[id]/sprint-league/i18n';
 import { i18nTimeRangeSetting } from '@/features/spaces/polls/components/time-range-setting';
+import { i18nSpacePollViewerPage } from '@/features/spaces/polls/pages/viewer/space-poll-viewer-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 export const resources = {
@@ -100,6 +101,7 @@ Object.entries({
   SpacePollEditor: i18nSpacePollEditor,
   SpaceSprintLeague: i18nSpaceSprintLeague,
   TimeRangeSetting: i18nTimeRangeSetting,
+  SpacePollViewer: i18nSpacePollViewerPage,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;

@@ -4,16 +4,18 @@ import { useSpaceHomeData } from './use-space-home-data';
 import { SideMenuProps } from '@/features/spaces/components/space-side-menu';
 import { route } from '@/route';
 import { Space } from '@/features/spaces/types/space';
-import { Settings, Vote } from '@/components/icons';
+import { Settings } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { UserResponse } from '@/lib/api/ratel/me.v3';
-import { SpaceStatus } from '@/features/spaces/types/space-common';
 import { logger } from '@/lib/logger';
 import { useSpaceUpdateContentMutation } from '@/features/spaces/hooks/use-space-update-content-mutation';
 import { showErrorToast } from '@/lib/toast';
 import { useSpaceUpdateTitleMutation } from '@/features/spaces/hooks/use-space-update-title-mutation';
 import { sideMenusForSpaceType } from '@/features/spaces/utils/side-menus-for-space-type';
+import { usePopup } from '@/lib/contexts/popup-service';
+import PublishSpaceModal from '@/features/spaces/modals/space-publish-modal';
+import { usePublishSpaceMutation } from '@/features/spaces/hooks/use-publish-mutation';
 
 export class SpaceHomeController {
   public space: Space;
@@ -29,6 +31,8 @@ export class SpaceHomeController {
     public updateSpaceTitle: ReturnType<typeof useSpaceUpdateTitleMutation>,
     public editState: State<boolean>,
     public saveState: State<boolean>,
+    public popup: ReturnType<typeof usePopup>,
+    public publishSpace: ReturnType<typeof usePublishSpaceMutation>,
   ) {
     this.space = this.data.space.data;
   }
@@ -44,7 +48,7 @@ export class SpaceHomeController {
   }
 
   get menus() {
-    let menus: SideMenuProps[] = [
+    const menus: SideMenuProps[] = [
       {
         Icon: Settings,
         to: route.spaceByType(this.space.spaceType, this.space.pk),
@@ -68,62 +72,11 @@ export class SpaceHomeController {
       }
     });
 
-    if (this.space.isAdmin()) {
-      menus = menus.concat(this.adminMenus);
-    }
+    /* if (this.space.isAdmin()) {
+     *   menus = menus.concat(this.adminMenus);
+     * } */
 
     return menus;
-  }
-
-  get pollMenus(): SideMenuProps[] {
-    return [
-      {
-        Icon: Vote,
-        to: route.spaceByType(this.space.spaceType, this.space.pk),
-        label: this.t('menu_poll'),
-      },
-    ];
-  }
-
-  get quizMenus(): SideMenuProps[] {
-    return [
-      {
-        Icon: Vote,
-        to: route.spaceByType(this.space.spaceType, this.space.pk),
-        label: this.t('menu_quiz'),
-      },
-    ];
-  }
-
-  get deliberationMenus(): SideMenuProps[] {
-    const common = [
-      {
-        Icon: Vote,
-        to: route.spaceByType(this.space.spaceType, this.space.pk),
-        label: this.t('menu_discussions'),
-      },
-
-      {
-        Icon: Vote,
-        to: route.spaceByType(this.space.spaceType, this.space.pk),
-        label: this.t('menu_poll'),
-      },
-      {
-        Icon: Vote,
-        to: route.spaceByType(this.space.spaceType, this.space.pk),
-        label: this.t('menu_files'),
-      },
-    ];
-
-    if (this.space.status === SpaceStatus.Finished) {
-      common.push({
-        Icon: Vote,
-        to: route.spaceByType(this.space.spaceType, this.space.pk),
-        label: this.t('menu_recommendations'),
-      });
-    }
-
-    return common;
   }
 
   get isAdmin() {
@@ -182,11 +135,28 @@ export class SpaceHomeController {
     }
   };
 
-  handleActionPublish = async () => {
-    logger.debug('Action publish triggered');
+  handlePublish = async (publishType) => {
+    logger.debug('Publishing space with type:', publishType);
     if (this.publishHook) {
       this.publishHook();
     }
+
+    const visibility = { type: publishType };
+
+    this.publishSpace.mutateAsync({
+      spacePk: this.space.pk,
+      visibility,
+    });
+    this.popup.close();
+  };
+
+  handleActionPublish = async () => {
+    logger.debug('Action publish triggered');
+
+    this.popup
+      .open(<PublishSpaceModal onPublish={this.handlePublish} />)
+      .withTitle(this.t('publish_space'))
+      .withoutBackdropClose();
   };
 
   handleActionDelete = async () => {
@@ -194,16 +164,21 @@ export class SpaceHomeController {
   };
 
   get actions() {
-    return [
-      {
-        label: this.t('publish'),
-        onClick: this.handleActionPublish,
-      },
+    const ret = [
       {
         label: this.t('delete'),
         onClick: this.handleActionPublish,
       },
     ];
+
+    if (this.space.isDraft) {
+      ret.unshift({
+        label: this.t('publish'),
+        onClick: this.handleActionPublish,
+      });
+    }
+
+    return ret;
   }
 }
 
@@ -213,9 +188,11 @@ export function useSpaceHomeController(spacePk: string) {
   const { t } = useTranslation('Space');
   const updateSpaceContent = useSpaceUpdateContentMutation();
   const updateSpaceTitle = useSpaceUpdateTitleMutation();
+  const publishSpace = usePublishSpaceMutation();
 
   const edit = useState(false);
   const save = useState(false);
+  const popup = usePopup();
 
   return new SpaceHomeController(
     data,
@@ -225,5 +202,7 @@ export function useSpaceHomeController(spacePk: string) {
     updateSpaceTitle,
     new State(edit),
     new State(save),
+    popup,
+    publishSpace,
   );
 }

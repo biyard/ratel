@@ -4,7 +4,7 @@ use crate::models::space::SpaceCommon;
 use crate::models::Post;
 use crate::models::user::User;
 use crate::types::{EntityType, SpacePublishState, SpaceVisibility, TeamGroupPermission};
-use crate::{AppState, Error2, transact_write_items};
+use crate::{AppState, Error2, transact_write};
 use aide::NoApi;
 use axum::extract::{Json, Path, State};
 use bdk::prelude::*;
@@ -45,6 +45,11 @@ pub async fn update_space_handler(
         return Err(Error2::NoPermission);
     }
 
+    let now = chrono::Utc::now().timestamp_millis();
+    let mut su = SpaceCommon::updater(&space.pk, &space.sk).with_updated_at(now);
+    let mut pu =
+        Post::updater(space.pk.clone().to_post_key()?, EntityType::Post).with_updated_at(now);
+
     match req {
         UpdateSpaceRequest::Publish {
             publish,
@@ -56,49 +61,35 @@ pub async fn update_space_handler(
                 ));
             }
             // FIXME: check validation if it is well designed to be published.
-            let updater = SpaceCommon::updater(&space.pk, &space.sk)
+            su = su
                 .with_publish_state(SpacePublishState::Published)
                 .with_visibility(visibility.clone());
 
-            let mut tx = vec![updater.transact_write_item()];
-
-            if space.visibility == SpaceVisibility::Public {
-                tx.push(
-                    Post::updater(space.pk.clone().to_post_key()?, EntityType::Post)
-                        .with_updated_at(chrono::Utc::now().timestamp_millis())
-                        .with_space_visibility(SpaceVisibility::Public)
-                        .transact_write_item(),
-                );
-            }
-
-            transact_write_items!(dynamo.client, tx)?;
+            pu = pu.with_space_visibility(SpaceVisibility::Public);
 
             space.publish_state = SpacePublishState::Published;
             space.visibility = visibility;
-
-            Ok(Json(SpaceCommonResponse::from(space)))
         }
         UpdateSpaceRequest::Visibility { visibility } => {
-            let updater =
-                SpaceCommon::updater(&space.pk, &space.sk).with_visibility(visibility.clone());
-            updater.execute(&dynamo.client).await?;
+            su = su.with_visibility(visibility.clone());
 
             space.visibility = visibility;
-            Ok(Json(SpaceCommonResponse::from(space)))
         }
         UpdateSpaceRequest::Content { content } => {
-            let updater = SpaceCommon::updater(&space.pk, &space.sk).with_content(content.clone());
-            updater.execute(&dynamo.client).await?;
+            su = su.with_content(content.clone());
 
             space.content = content;
-            Ok(Json(SpaceCommonResponse::from(space)))
         }
         UpdateSpaceRequest::Title { title } => {
-            let post_pk = space.pk.clone().to_post_key()?;
-            let updater = Post::updater(&post_pk, EntityType::Post).with_title(title.clone());
-            updater.execute(&dynamo.client).await?;
-
-            Ok(Json(SpaceCommonResponse::from(space)))
+            pu = pu.with_title(title.clone());
         }
     }
+
+    transact_write!(
+        dynamo.client,
+        su.transact_write_item(),
+        pu.transact_write_item()
+    )?;
+
+    Ok(Json(SpaceCommonResponse::from(space)))
 }
