@@ -62,7 +62,15 @@ export function useSpacePollViewerController(spacePk, pollPk) {
 
   const { t } = useTranslation('SpaceSurvey');
   const popup = usePopup();
-  const answers = useState<Record<number, SurveyAnswer>>({});
+  const answers = useState<Record<number, SurveyAnswer>>(
+    poll?.myResponse.reduce(
+      (acc, answer, idx) => {
+        acc[idx] = answer;
+        return acc;
+      },
+      {} as Record<number, SurveyAnswer>,
+    ) || {},
+  );
 
   return new SpacePollViewerController(
     space,

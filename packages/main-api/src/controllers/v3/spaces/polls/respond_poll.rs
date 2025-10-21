@@ -1,11 +1,9 @@
 use crate::models::space::SpaceCommon;
 
-use crate::features::spaces::polls::{
-    Poll, PollPath, PollPathParam, PollQuestion, PollStatus, PollUserAnswer,
-};
+use crate::features::spaces::polls::*;
 use crate::models::user::User;
-use crate::types::{Answer, EntityType, Partition, TeamGroupPermission, validate_answers};
-use crate::{AppState, Error};
+use crate::types::{Answer, Partition, TeamGroupPermission, validate_answers};
+use crate::{AppState, Error, transact_write};
 
 use aide::NoApi;
 
@@ -47,58 +45,23 @@ pub async fn respond_poll_handler(
         .ok_or(Error::NotFoundPoll)?;
 
     // Space Status Check
-    if poll.status != PollStatus::InProgress {
+    if poll.status() != PollStatus::InProgress {
         return Err(Error::PollNotInProgress);
     }
 
-    //
-    // if poll.response_editable
-
-    //Validate Answers
-    let poll_question = PollQuestion::get(
-        &dynamo.client,
-        &space_pk,
-        Some(EntityType::SpacePollQuestion),
-    )
-    .await?
-    .ok_or(Error::NotFoundPoll)?;
-
-    if !validate_answers(poll_question.questions, req.answers.clone()) {
+    if !validate_answers(poll.questions, req.answers.clone()) {
         return Err(Error::PollAnswersMismatchQuestions);
     }
 
-    let mut transact_items = vec![];
+    let create_tx = PollUserAnswer::new(poll.pk.clone(), user.pk.clone(), req.answers)
+        .create_transact_write_item();
 
-    if let Some(response) = PollUserAnswer::find_one(&dynamo.client, &space_pk, &user.pk).await? {
-        // Update existing response
-        if !poll.response_editable {
-            return Err(Error::ImmutablePollUserAnswer);
-        }
-        let update_tx = PollUserAnswer::updater(&response.pk, &response.sk)
-            .with_answers(req.answers)
-            .transact_write_item();
-        transact_items.push(update_tx);
-    } else {
-        let create_tx = PollUserAnswer::new(poll.pk.clone(), user.pk.clone(), req.answers)
-            .create_transact_write_item();
-        transact_items.push(create_tx);
+    let space_increment_tx = Poll::updater(&poll.pk, &poll.sk)
+        .increase_user_response_count(1)
+        .transact_write_item();
 
-        let space_increment_tx = Poll::updater(&poll.pk, &poll.sk)
-            .increase_user_response_count(1)
-            .transact_write_item();
-        transact_items.push(space_increment_tx);
-    }
+    transact_write!(&dynamo.client, create_tx, space_increment_tx)?;
 
-    dynamo
-        .client
-        .transact_write_items()
-        .set_transact_items(Some(transact_items))
-        .send()
-        .await
-        .map_err(|e| {
-            tracing::error!("Failed to respond poll space: {}", e);
-            Error::InternalServerError("Failed to respond poll space".into())
-        })?;
     Ok(Json(RespondPollSpaceResponse {
         poll_space_pk: space_pk,
     }))

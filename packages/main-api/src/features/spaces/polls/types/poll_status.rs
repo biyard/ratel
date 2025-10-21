@@ -13,7 +13,7 @@ use bdk::prelude::*;
 )]
 pub enum PollStatus {
     #[default]
-    Ready = 1,
+    NotStarted = 1,
     InProgress = 2,
     Finish = 3,
 }
