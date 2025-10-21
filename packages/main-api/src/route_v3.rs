@@ -130,6 +130,10 @@ pub fn route(
                     Router::new()
                         .nest("/files", crate::controllers::v3::spaces::files::route())
                         .nest(
+                            "/recommendations",
+                            crate::controllers::v3::spaces::recommendations::route(),
+                        )
+                        .nest(
                             "/discussions",
                             crate::controllers::v3::spaces::discussions::route(),
                         )
