@@ -8,22 +8,7 @@ import Card from '@/components/card';
 import { Row } from '@/components/ui/row';
 import { Button } from '@/components/ui/button';
 
-// TODO: Add to 'i18n/config.ts'
-export const i18nSpacePollViewerPage = {
-  en: {
-    btn_submit: 'Submit',
-    btn_update: 'Update',
-    btn_login: 'Log in to Submit',
-  },
-  ko: {
-    btn_submit: '제출',
-    btn_update: '수정',
-    btn_login: '로그인 후 제출',
-  },
-};
-
 export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
-  // TODO: use or define hooks
   logger.debug(`SpacePollViewerPage: spacePk=${spacePk}, pollPk=${pollPk}`);
 
   const ctrl = useSpacePollViewerController(spacePk, pollPk);
