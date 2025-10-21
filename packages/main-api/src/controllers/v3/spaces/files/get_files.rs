@@ -52,7 +52,7 @@ pub async fn get_files_handler(
     )
     .await?;
 
-    let files = files.unwrap();
+    let files = files.unwrap_or_default();
 
     Ok(Json(GetSpaceFileResponse {
         files: files.clone().files,
