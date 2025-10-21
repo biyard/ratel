@@ -39,20 +39,36 @@ impl SprintLeagueVote {
         space_pk: &Partition,
         user_pk: &Partition,
     ) -> crate::Result<(Partition, EntityType)> {
-        if !matches!(space_pk, Partition::Space(_)) {
-            return Err(Error::InvalidSpacePartitionKey);
-        }
+        // if !matches!(space_pk, Partition::Space(_)) {
+        //     return Err(Error::InvalidSpacePartitionKey);
+        // }
 
-        let sk = match user_pk {
-            Partition::User(id) => EntityType::SprintLeagueVote(id.clone()),
+        // let sk = match user_pk {
+        //     Partition::User(id) => EntityType::SprintLeagueVote(id.clone()),
+        //     _ => {
+        //         return Err(Error::InvalidPartitionKey(
+        //             "user_pk must be Partition::User".to_string(),
+        //         ));
+        //     }
+        // };
+        // Ok((space_pk.clone(), sk))
+        let pk = match space_pk {
+            Partition::Space(s) if !s.is_empty() => Partition::SprintLeagueVote(s.clone()),
             _ => {
                 return Err(Error::InvalidPartitionKey(
-                    "user_pk must be Partition::User".to_string(),
+                    "space_pk must be Partition::Space with non-empty inner value".to_string(),
                 ));
             }
         };
-
-        Ok((space_pk.clone(), sk))
+        let sk = match user_pk {
+            Partition::User(u) if !u.is_empty() => EntityType::SprintLeagueVote(u.clone()),
+            _ => {
+                return Err(Error::InvalidPartitionKey(
+                    "user_pk must be Partition::User with non-empty inner value".to_string(),
+                ));
+            }
+        };
+        Ok((pk, sk))
     }
 
     pub async fn find_one(

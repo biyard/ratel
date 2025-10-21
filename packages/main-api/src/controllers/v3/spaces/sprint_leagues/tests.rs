@@ -14,7 +14,7 @@ async fn setup_sprint_league(ctx: &TestContextV3, space_pk: &str) -> SprintLeagu
     } = ctx;
     let players = vec![
         CreatePlayerRequest {
-            name: "Lee Jun".into(),
+            name: "LEE JUN".into(),
             description: "The fastest runner in the east.".into(),
             player_image: PlayerImage {
                 run: SpriteSheet {
@@ -30,7 +30,7 @@ async fn setup_sprint_league(ctx: &TestContextV3, space_pk: &str) -> SprintLeagu
             },
         },
         CreatePlayerRequest {
-            name: "Kim Moon".into(),
+            name: "KIM MOON".into(),
             description: "A sprinter with unmatched agility.".into(),
             player_image: PlayerImage {
                 run: SpriteSheet {
@@ -64,7 +64,7 @@ async fn setup_sprint_league(ctx: &TestContextV3, space_pk: &str) -> SprintLeagu
     ];
     let (status, _, res) = put! {
         app: app,
-        path: format!("/v3/spaces/{}/sprint_leagues", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/sprint-leagues", space_pk.to_string()),
         headers: headers.clone(),
         body: {
             "players": players
@@ -94,7 +94,7 @@ pub async fn test_sprint_league_upsert() {
 
     let (status, _, res) = get! {
         app: app,
-        path: format!("/v3/spaces/{}/sprint_leagues", encoded_pk),
+        path: format!("/v3/spaces/{}/sprint-leagues", encoded_pk),
         headers: headers.clone(),
         response_type: SprintLeagueResponse
     };
@@ -108,6 +108,31 @@ pub async fn test_sprint_league_upsert() {
         assert_eq!(org.player_image.lose, res.player_image.lose);
         assert_eq!(org.player_image.select.json, res.player_image.select.json);
         assert_eq!(org.player_image.select.image, res.player_image.select.image);
+    }
+    // Modify player names
+    let next_players: Vec<CreatePlayerRequest> = res
+        .players
+        .into_iter()
+        .map(|player| CreatePlayerRequest {
+            name: format!("{} UPDATED", player.name),
+            description: player.description,
+            player_image: player.player_image,
+        })
+        .collect();
+
+    let (status, _, res) = put! {
+        app: app,
+        path: format!("/v3/spaces/{}/sprint-leagues", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "players": next_players,
+        },
+        response_type: SprintLeagueResponse,
+    };
+
+    assert_eq!(status, 200);
+    for (org, res) in next_players.iter().zip(res.players.iter()) {
+        assert_eq!(org.name, res.name);
     }
 }
 
@@ -128,7 +153,7 @@ async fn test_sprint_league_vote() {
 
     let (status, _headers, _) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/sprint_leagues/votes", space_pk),
+        path: format!("/v3/spaces/{}/sprint-leagues/votes", space_pk),
         headers: headers.clone(),
         body: { "player_sk": player.sk.to_string() }
     };
@@ -137,11 +162,10 @@ async fn test_sprint_league_vote() {
 
     let (status, _headers, body) = get! {
         app: app,
-        path: format!("/v3/spaces/{}/sprint_leagues", space_pk),
+        path: format!("/v3/spaces/{}/sprint-leagues", space_pk),
         headers: headers.clone(),
         response_type: SprintLeagueResponse,
     };
-
     assert_eq!(status, 200);
     assert_eq!(body.players.len(), 3);
     assert_eq!(
@@ -157,7 +181,7 @@ async fn test_sprint_league_vote() {
 
     let (status, _headers, _) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/sprint_leagues/votes", space_pk),
+        path: format!("/v3/spaces/{}/sprint-leagues/votes", space_pk),
         headers: user2_headers.clone(),
         body: { "player_sk": player.sk.to_string() }
     };

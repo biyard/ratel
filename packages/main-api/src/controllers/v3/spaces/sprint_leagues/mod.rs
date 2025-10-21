@@ -10,8 +10,8 @@ pub use get_sprint_league::*;
 mod vote_sprint_league;
 pub use vote_sprint_league::*;
 
-mod create_sprint_league_player;
-pub use create_sprint_league_player::*;
+// mod create_sprint_league_player;
+// pub use create_sprint_league_player::*;
 
 mod update_sprint_league_player;
 pub use update_sprint_league_player::*;
@@ -33,7 +33,7 @@ pub fn route() -> Router<AppState> {
                 .put(upsert_sprint_league_handler),
         )
         .route("/votes", post(vote_sprint_league_handler))
-        .route("/players", post(create_sprint_league_player_handler))
+        // .route("/players", post(create_sprint_league_player_handler))
         .route(
             "/players/:player_sk",
             put(update_sprint_league_player_handler),
