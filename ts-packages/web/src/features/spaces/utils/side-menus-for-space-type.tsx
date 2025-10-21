@@ -8,7 +8,6 @@ export type SideMenu = {
   Icon: React.ComponentType<React.ComponentProps<'svg'>>;
   to: string | ((args: Space) => string);
   label: string;
-
   visible?: (args: Space) => boolean;
 };
 

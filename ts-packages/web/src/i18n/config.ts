@@ -45,6 +45,7 @@ import { i18nSpaceHome } from '@/app/spaces/[id]/space-home-i18n';
 import { i18nSpacePollEditor } from '@/features/spaces/polls/pages/creator/space-poll-editor-i18n';
 import { i18nPollSpace } from '@/app/spaces/[id]/poll/space-poll-i18n';
 import { i18nDeliberationPage } from '@/app/spaces/[id]/deliberations/deliberation-page-i18n';
+import i18nSpaceSprintLeague from '@/app/spaces/[id]/sprint-league/i18n';
 import { i18nTimeRangeSetting } from '@/features/spaces/polls/components/time-range-setting';
 import { i18nSpaceFileEditor } from '@/features/spaces/files/pages/creator/space-file-editor-i18n';
 import { i18nSpaceRecommendationEditor } from '@/features/spaces/recommendations/pages/creator/space-recommendation-editor-i18n';
@@ -101,6 +102,7 @@ Object.entries({
   SpaceTypeSelectModal: i18nSpaceTypeSelectModal,
   Space: i18nSpaceHome,
   SpacePollEditor: i18nSpacePollEditor,
+  SpaceSprintLeague: i18nSpaceSprintLeague,
   TimeRangeSetting: i18nTimeRangeSetting,
   SpaceFileEditor: i18nSpaceFileEditor,
   SpaceRecommendationEditor: i18nSpaceRecommendationEditor,

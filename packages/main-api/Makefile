@@ -135,7 +135,7 @@ build-only:
 	mkdir -p $(WORKSPACE_ROOT)/.build/$(SERVICE)
 	cp $(CARGO_TARGET_DIR)/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap
 
-TEST_TARGET ?= controllers::v3 models::dynamo_tables
+TEST_TARGET ?= controllers::v3 models::dynamo_tables features
 
 test:
 	$(BUILD_ENV) WEB_BUILD="false" RUSTFLAGS="-A warnings" cargo test $(RUST_FLAG) --lib -j 1 --  --test-threads=1 $(TEST_TARGET) --show-output
