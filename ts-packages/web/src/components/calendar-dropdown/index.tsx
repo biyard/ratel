@@ -10,19 +10,21 @@ import * as Popover from '@radix-ui/react-popover';
 interface CalendarDropdownProps {
   value: number;
   onChange: (date: number) => void;
+  canEdit?: boolean;
 }
 
 export default function CalendarDropdown({
   value,
   onChange,
+  canEdit,
 }: CalendarDropdownProps) {
   const [calendarOpen, setCalendarOpen] = useState<boolean>(false);
   const selectedDate = value ? new Date(value) : null;
 
   return (
-    <Popover.Root open={calendarOpen} onOpenChange={setCalendarOpen}>
+    <Popover.Root open={canEdit && calendarOpen} onOpenChange={setCalendarOpen}>
       <Popover.Trigger asChild>
-        <button className="flex flex-row items-center justify-between w-[150px] max-tablet:w-full border px-[20px] py-[10.5px] rounded-lg font-medium text-[15px]/[22.5px] text-neutral-600 bg-select-date-bg border-select-date-border shadow-sm focus:outline-none gap-[10px]">
+        <button className="flex flex-row justify-between items-center font-medium rounded-lg border shadow-sm focus:outline-none w-[150px] max-tablet:w-full px-[20px] py-[10.5px] text-[15px]/[22.5px] text-neutral-600 bg-select-date-bg border-select-date-border gap-[10px]">
           {selectedDate ? format(selectedDate, 'yyyy/MM/dd') : 'Selected Date'}
           <Calendar className="w-5 h-5 stroke-neutral-500" />
         </button>
@@ -30,7 +32,7 @@ export default function CalendarDropdown({
 
       <Popover.Portal>
         <Popover.Content
-          className="mt-1 bg-white text-black rounded-xl shadow-xl p-4 w-[350px] z-[9999]"
+          className="p-4 mt-1 text-black bg-white rounded-xl shadow-xl w-[350px] z-[9999]"
           align="start"
           sideOffset={4}
         >

@@ -62,6 +62,12 @@ export class SpacePollEditorController {
       answer,
     );
   };
+
+  onChangeTimeRange = (startMillis: number, endMillis: number) => {
+    logger.debug(
+      `onChangeTimeRange called: start=${startMillis}, end=${endMillis}`,
+    );
+  };
 }
 
 export function useSpacePollEditorController(spacePk: string, pollPk: string) {
