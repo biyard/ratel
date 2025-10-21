@@ -13,7 +13,11 @@ export type SideMenuProps = {
 };
 
 export default function SpaceSideMenu({ menus }: SpaceSideMenuProps) {
-  const [selected, setSelected] = useState(0);
+  const currentPath = window.location.pathname;
+
+  const [selected, setSelected] = useState(
+    menus?.findIndex((item) => item.to === currentPath) ?? 0,
+  );
 
   return (
     <>
