@@ -3,9 +3,9 @@ import { spaceKeys } from '@/constants';
 import { showErrorToast } from '@/lib/toast';
 import { optimisticUpdate } from '@/lib/hook-utils';
 
-import SprintLeaguePlayer from '../types/sprint-league-player';
 import updateSprintLeague from '../api/upsert-sprint-league';
 import SprintLeague from '../types/sprint-league';
+import CreateSprintLeaguePlayer from '../types/create-sprint-league-player';
 
 export function useUpdateSprintLeagueMutation() {
   return useMutation({
@@ -14,8 +14,9 @@ export function useUpdateSprintLeagueMutation() {
       players,
     }: {
       spacePk: string;
-      players: SprintLeaguePlayer[];
+      players: CreateSprintLeaguePlayer[];
     }) => {
+      console.log('Updating sprint league with players:', players);
       return await updateSprintLeague(spacePk, players);
     },
 
@@ -23,9 +24,15 @@ export function useUpdateSprintLeagueMutation() {
       const prevSprintLeague = await optimisticUpdate<SprintLeague>(
         { queryKey: spaceKeys.sprint_leagues(spacePk) },
         (sprintLeague) => {
+          const nextPlayers = sprintLeague.players.map((p, index) => ({
+            ...p,
+            player_image: players[index]?.player_image || null,
+            name: players[index]?.name || '',
+            description: players[index]?.description || '',
+          }));
           return {
             ...sprintLeague!,
-            players,
+            players: nextPlayers,
           };
         },
       );
@@ -39,6 +46,13 @@ export function useUpdateSprintLeagueMutation() {
       showErrorToast(error.message || 'Failed to update sprint league');
     },
 
-    onSettled: () => {},
+    onSuccess: async (data, { spacePk }) => {
+      await optimisticUpdate<SprintLeague>(
+        { queryKey: spaceKeys.sprint_leagues(spacePk) },
+        (_) => {
+          return data;
+        },
+      );
+    },
   });
 }

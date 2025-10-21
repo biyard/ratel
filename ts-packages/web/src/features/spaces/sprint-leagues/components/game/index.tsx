@@ -43,7 +43,7 @@ export default function Game({
   const adjustedHeight = VIEWPORT_HEIGHT * (containerWidth / VIEWPORT_WIDTH);
   return (
     <div className="flex justify-center w-full">
-      <div ref={containerRef} className="w-full max-w-120">
+      <div ref={containerRef} className="w-full ">
         <Base
           width={adjustedWidth}
           height={adjustedHeight}
