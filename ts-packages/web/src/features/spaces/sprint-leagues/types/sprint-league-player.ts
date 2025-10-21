@@ -20,3 +20,23 @@ export interface SpriteSheet {
   json: string;
   image: string;
 }
+
+export const defaultPlayer: () => SprintLeaguePlayer = () => ({
+  pk: crypto.randomUUID(),
+  sk: crypto.randomUUID(),
+  name: '',
+  description: '',
+  player_image: {
+    select: {
+      json: '',
+      image: '',
+    },
+    run: {
+      json: '',
+      image: '',
+    },
+    win: '',
+    lose: '',
+  },
+  votes: 0,
+});

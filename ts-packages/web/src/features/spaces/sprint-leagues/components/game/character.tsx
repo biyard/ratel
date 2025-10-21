@@ -50,14 +50,20 @@ export default function CharacterSprite({
   const [frameSize, setFrameSize] = useState<[number, number] | null>(null);
 
   useEffect(() => {
-    fetch(jsonUrl)
-      .then((response) => response.json())
-      .then((data) => {
-        const { frameArray: frames, width, height } = parseFrames(data.frames);
-        setFrameSize([width, height]);
-        setAnimation(frames);
-      })
-      .catch((error) => console.error('Error fetching sprite data:', error));
+    if (jsonUrl) {
+      fetch(jsonUrl)
+        .then((response) => response.json())
+        .then((data) => {
+          const {
+            frameArray: frames,
+            width,
+            height,
+          } = parseFrames(data.frames);
+          setFrameSize([width, height]);
+          setAnimation(frames);
+        })
+        .catch((error) => console.error('Error fetching sprite data:', error));
+    }
   }, [jsonUrl]);
 
   useEffect(() => {
