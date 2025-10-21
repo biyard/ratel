@@ -9,7 +9,7 @@ import SpaceFileEditors from '@/features/spaces/components/file/editor';
 import SpaceFileViewer from '@/features/spaces/components/file/viewer';
 
 export function SpaceFileEditorPage({ spacePk }: SpaceFilePathProps) {
-  logger.debug(`SpacePollEditorPage: spacePk=${spacePk}`);
+  logger.debug(`SpaceFileEditorPage: spacePk=${spacePk}`);
 
   const ctrl = useSpaceFileEditorController(spacePk);
   const { t } = useTranslation('SpaceFileEditor');

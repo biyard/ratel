@@ -4,7 +4,7 @@ import { useSpaceFileViewerController } from './use-space-file-viewer-controller
 import SpaceFileViewer from '@/features/spaces/components/file/viewer';
 
 export function SpaceFileViewerPage({ spacePk }: SpaceFilePathProps) {
-  logger.debug(`SpacePollViewerPage: spacePk=${spacePk}`);
+  logger.debug(`SpaceFileViewerPage: spacePk=${spacePk}`);
 
   const ctrl = useSpaceFileViewerController(spacePk);
 
