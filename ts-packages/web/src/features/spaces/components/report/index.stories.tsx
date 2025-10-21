@@ -5,7 +5,7 @@ import {
   SurveyAnswerType,
   SurveyQuestion,
   SurveySummary,
-} from '@/types/survey-type';
+} from '@/features/spaces/polls/types/poll-question';
 
 const mockT: I18nFunction = ((key: string) => key) as any;
 
