@@ -13,12 +13,12 @@ export function useListMemberships() {
     queryKey: [QK_MEMBERSHIPS],
     queryFn: async (): Promise<ListResponse<MembershipResponse>> => {
       try {
-        const ret: ListResponse<MembershipResponse> = await call(
-          'GET',
-          '/m3/memberships',
-        );
+        const ret: ListResponse<unknown> = await call('GET', '/m3/memberships');
 
-        return ret;
+        return {
+          items: ret.items.map((item) => new MembershipResponse(item)),
+          bookmark: ret.bookmark,
+        };
       } catch (e) {
         logger.error('Failed to fetch memberships', e);
         throw new Error(e);

@@ -1,4 +1,4 @@
-import type { MembershipResponse } from '@/features/membership/dto/list-memberships-response';
+import { MembershipResponse } from '../dto/membership-response';
 import { useMembershipsI18n } from '../i18n';
 
 interface MembershipTableProps {
@@ -43,7 +43,7 @@ export function MembershipTable({
               className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
             >
               <td className="p-3 font-medium">{membership.tier}</td>
-              <td className="p-3">${membership.price_dollers}</td>
+              <td className="p-3">${membership.price_dollars}</td>
               <td className="p-3">{membership.credits}</td>
               <td className="p-3">
                 {membership.duration_days} {i18n.days}

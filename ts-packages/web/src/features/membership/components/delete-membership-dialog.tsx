@@ -1,4 +1,4 @@
-import type { MembershipResponse } from '@/features/membership/dto/list-memberships-response';
+import { MembershipResponse } from '../dto/membership-response';
 import { useMembershipsI18n } from '../i18n';
 
 interface DeleteMembershipDialogProps {
@@ -31,7 +31,7 @@ export function DeleteMembershipDialog({
               <strong>{i18n.tier}:</strong> {membership.tier}
             </div>
             <div>
-              <strong>{i18n.price}:</strong> ${membership.price_dollers}
+              <strong>{i18n.price}:</strong> ${membership.price_dollars}
             </div>
             <div>
               <strong>{i18n.credits}:</strong> {membership.credits}

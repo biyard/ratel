@@ -25,7 +25,7 @@ export function MembershipForm({
 
   const [formData, setFormData] = useState<CreateMembershipRequest>({
     tier: MembershipTier.Free,
-    price_dollers: 0,
+    price_dollars: 0,
     credits: 0,
     duration_days: 30,
     display_order: 0,
@@ -38,7 +38,7 @@ export function MembershipForm({
     if (membership) {
       setFormData({
         tier: membership.tier,
-        price_dollers: membership.price_dollers,
+        price_dollars: membership.price_dollars,
         credits: membership.credits,
         duration_days: membership.duration_days,
         display_order: membership.display_order,
@@ -75,7 +75,7 @@ export function MembershipForm({
       [name]:
         name === 'tier'
           ? value
-          : name === 'price_dollers' ||
+          : name === 'price_dollars' ||
               name === 'credits' ||
               name === 'duration_days' ||
               name === 'display_order'
@@ -122,8 +122,8 @@ export function MembershipForm({
             </label>
             <input
               type="number"
-              name="price_dollers"
-              value={formData.price_dollers}
+              name="price_dollars"
+              value={formData.price_dollars}
               onChange={handleChange}
               className="p-2 w-full bg-white rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600"
               min="0"
