@@ -16,9 +16,6 @@ pub async fn create_membership_handler(
 ) -> Result<Json<MembershipResponse>, Error2> {
     let cli = &dynamo.client;
 
-    // Verify user is a ServiceAdmin
-    let _admin = verify_service_admin(user, cli).await?;
-
     // Create membership
     let membership = Membership::new(
         req.tier,

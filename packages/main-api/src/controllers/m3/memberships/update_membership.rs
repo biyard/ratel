@@ -19,9 +19,6 @@ pub async fn update_membership_handler(
 ) -> Result<Json<MembershipResponse>, Error2> {
     let cli = &dynamo.client;
 
-    // Verify user is a ServiceAdmin
-    let _admin = verify_service_admin(user, cli).await?;
-
     // Get membership
     let pk = Partition::Membership(membership_id);
     let sk = Some(EntityType::Membership);
