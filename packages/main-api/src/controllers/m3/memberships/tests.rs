@@ -81,7 +81,7 @@ async fn test_get_membership() {
     assert_eq!(status, 200);
     assert_eq!(body.id, membership_id);
     assert_eq!(body.tier, MembershipTier::Pro);
-    assert_eq!(body.price_dollers, 10);
+    assert_eq!(body.price_dollars, 10);
 }
 
 #[tokio::test]
@@ -135,7 +135,7 @@ async fn test_create_membership_as_admin() {
         headers: admin_user.1,
         body: {
             "tier": "Pro",
-            "price_dollers": 15,
+            "price_dollars": 15,
             "credits": 150,
             "duration_days": 30,
             "display_order": 3
@@ -145,7 +145,7 @@ async fn test_create_membership_as_admin() {
 
     assert_eq!(status, 200);
     assert_eq!(body.tier, MembershipTier::Pro);
-    assert_eq!(body.price_dollers, 15);
+    assert_eq!(body.price_dollars, 15);
     assert_eq!(body.credits, 150);
     assert_eq!(body.duration_days, 30);
     assert!(body.is_active);
@@ -161,7 +161,7 @@ async fn test_create_membership_as_non_admin() {
         headers: test_user.1,
         body: {
             "tier": "Pro",
-            "price_dollers": 15,
+            "price_dollars": 15,
             "credits": 150,
             "duration_days": 30,
             "display_order": 3
@@ -181,7 +181,7 @@ async fn test_create_membership_without_auth() {
         path: "/m3/memberships",
         body: {
             "tier": "Pro",
-            "price_dollers": 15,
+            "price_dollars": 15,
             "credits": 150,
             "duration_days": 30,
             "display_order": 3
@@ -211,14 +211,14 @@ async fn test_update_membership_as_admin() {
         path: format!("/m3/memberships/{}", membership_id),
         headers: admin_user.1,
         body: {
-            "price_dollers": 25,
+            "price_dollars": 25,
             "credits": 250
         },
         response_type: MembershipResponse
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body.price_dollers, 25);
+    assert_eq!(body.price_dollars, 25);
     assert_eq!(body.credits, 250);
 }
 
@@ -241,7 +241,7 @@ async fn test_update_membership_as_non_admin() {
         path: format!("/m3/memberships/{}", membership_id),
         headers: test_user.1,
         body: {
-            "price_dollers": 25
+            "price_dollars": 25
         }
     };
 

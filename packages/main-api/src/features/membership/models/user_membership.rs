@@ -59,7 +59,7 @@ impl UserMembership {
         membership_pk: Partition,
         duration_days: i32,
         credits: i64,
-        price_paid: i64, // only dollers
+        price_paid: i64, // only dollars
     ) -> crate::Result<Self> {
         // Validation
         if !matches!(user_pk, Partition::User(_)) {

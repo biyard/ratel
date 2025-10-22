@@ -29,8 +29,8 @@ pub struct Membership {
 
     // Description should be defined in frontend.
 
-    // price_dollers is a doller price of this membership
-    pub price_dollers: i64,
+    // price_dollars is a dollar price of this membership
+    pub price_dollars: i64,
 
     // Display order in the UI (lower numbers first)
     pub display_order: i32,
@@ -63,7 +63,7 @@ impl Membership {
             created_at,
             updated_at: created_at,
             tier,
-            price_dollers,
+            price_dollars: price_dollers,
             credits,
             duration_days,
             display_order,
@@ -94,7 +94,7 @@ impl Membership {
             self.tier = tier;
         }
         if let Some(price) = price_dollers {
-            self.price_dollers = price;
+            self.price_dollars = price;
         }
         if let Some(credits) = credits {
             self.credits = credits;
