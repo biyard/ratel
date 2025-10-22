@@ -86,6 +86,7 @@ export function DiscussionRoom({
             {canEdit && (
               <div className="relative w-fit h-fit" ref={menuRef}>
                 <Extra2
+                  id="editable-discussion-option"
                   className="cursor-pointer w-6 h-6"
                   onClick={(e) => {
                     e.stopPropagation();
