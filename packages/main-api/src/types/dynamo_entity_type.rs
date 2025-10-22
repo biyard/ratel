@@ -108,4 +108,7 @@ pub enum EntityType {
     SpaceQuiz(String),
     SpaceRecommendation,
     SpaceSurveyResponse(String), //Space pk
+
+    //Telegram Feature
+    TelegramChannel(String), // Telegram Chat ID
 }
