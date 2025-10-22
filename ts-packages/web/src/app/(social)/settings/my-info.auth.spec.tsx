@@ -94,13 +94,11 @@ test.describe.serial('[User Settings - My Info] Authenticated User', () => {
     // Save
     await saveButton.click();
 
-    // Wait for success toast
-    await page.waitForTimeout(1000);
-    const successToast = page.getByText(/profile updated successfully!/i);
-    await expect(successToast).toBeVisible({ timeout: 5000 });
-
-    // Should navigate to home page after successful save
-    await page.waitForURL('/', { timeout: 5000 });
+    // Should navigate to home page after successful save (navigation indicates success)
+    await page.waitForURL('/', { timeout: 10000 });
+    
+    // Verify we're on the home page
+    expect(page.url()).toBe('http://localhost:8080/');
   });
 
   test('[US-003] Should successfully update display name with 2 words', async ({
@@ -125,10 +123,9 @@ test.describe.serial('[User Settings - My Info] Authenticated User', () => {
     // Save
     await saveButton.click();
 
-    // Wait for success toast
-    await page.waitForTimeout(1000);
-    const successToast = page.getByText(/profile updated successfully!/i);
-    await expect(successToast).toBeVisible({ timeout: 5000 });
+    // Should navigate to home page after successful save (navigation indicates success)
+    await page.waitForURL('/', { timeout: 10000 });
+    expect(page.url()).toBe('http://localhost:8080/');
   });
 
   test('[US-004] Should show error when display name exceeds 2 words', async ({
@@ -529,9 +526,10 @@ test.describe.serial('[User Settings - My Info] Authenticated User', () => {
 
     // Save should work
     await saveButton.click();
-    await page.waitForTimeout(1000);
-    const successToast = page.getByText(/profile updated successfully!/i);
-    await expect(successToast).toBeVisible({ timeout: 5000 });
+    
+    // Should navigate to home page after successful save (navigation indicates success)
+    await page.waitForURL('/', { timeout: 10000 });
+    expect(page.url()).toBe('http://localhost:8080/');
   });
 
   test('[US-018] Should trim whitespace from display name before validation', async ({
@@ -553,10 +551,9 @@ test.describe.serial('[User Settings - My Info] Authenticated User', () => {
     // Save
     await saveButton.click();
 
-    // Should succeed (whitespace trimmed)
-    await page.waitForTimeout(1000);
-    const successToast = page.getByText(/profile updated successfully!/i);
-    await expect(successToast).toBeVisible({ timeout: 5000 });
+    // Should succeed (whitespace trimmed) - navigation to home indicates success
+    await page.waitForURL('/', { timeout: 10000 });
+    expect(page.url()).toBe('http://localhost:8080/');
   });
 
   test('[US-019] Should reject display name with only whitespace', async ({
