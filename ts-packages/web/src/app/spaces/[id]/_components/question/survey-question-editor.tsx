@@ -3,7 +3,7 @@ import { useState } from 'react';
 import AnswerTypeSelect, { AnswerType } from './answer-type-select';
 import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
-import FileUploader from '@/components/file-uploader';
+import FileUploader from '@/features/spaces/files/components/file-uploader';
 
 import LinearScaleSelection from './_component/linear-scale-selection';
 import ObjectiveOption from './_component/objective-option';
