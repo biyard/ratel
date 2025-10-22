@@ -38,7 +38,7 @@ export default function DiscussionEditor({
             <div className="font-bold text-text-primary text-[15px]/[20px]">
               {t('discussions')}
             </div>
-            {canEdit && <AddDiscussionButton onadd={onadd} />}
+            {canEdit && <AddDiscussionButton t={t} onadd={onadd} />}
           </div>
         </div>
 
@@ -46,6 +46,7 @@ export default function DiscussionEditor({
           {discussions.map((discussion, index) => (
             <React.Fragment key={discussion.pk ?? index}>
               <DiscussionRoom
+                t={t}
                 discussion={discussion}
                 canEdit={canEdit}
                 isMember={discussion.is_member}
@@ -65,7 +66,7 @@ export default function DiscussionEditor({
               className="self-center mt-2 px-4 py-2 rounded-md border border-divider hover:bg-white/5"
               onClick={onloadmore}
             >
-              {'More'}
+              {t('more')}
             </button>
           )}
         </div>
