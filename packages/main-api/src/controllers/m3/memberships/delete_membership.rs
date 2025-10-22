@@ -1,9 +1,5 @@
 use crate::features::membership::dto::*;
-use crate::{
-    AppState, Error2, aide::OperationIo, controllers::v3::verify_service_admin,
-    features::membership::*, models::user::User, types::*,
-};
-use aide::NoApi;
+use crate::{AppState, Error2, aide::OperationIo, features::membership::*, types::*};
 use axum::{
     Json,
     extract::{Path, State},
@@ -19,7 +15,6 @@ pub struct DeleteMembershipResponse {
 /// Delete membership (ServiceAdmin only)
 pub async fn delete_membership_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
     Path(MembershipPathParam { membership_id }): Path<MembershipPathParam>,
 ) -> Result<Json<DeleteMembershipResponse>, Error2> {
     let cli = &dynamo.client;

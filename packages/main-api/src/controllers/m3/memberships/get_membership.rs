@@ -1,9 +1,5 @@
 use crate::features::membership::dto::*;
-use crate::{
-    AppState, Error2, controllers::v3::verify_service_admin, features::membership::*,
-    models::user::User, types::*,
-};
-use aide::NoApi;
+use crate::{AppState, Error2, features::membership::*, types::*};
 use axum::{
     Json,
     extract::{Path, State},
@@ -13,7 +9,6 @@ use bdk::prelude::*;
 /// Get membership by ID (ServiceAdmin only)
 pub async fn get_membership_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
     Path(MembershipPathParam { membership_id }): Path<MembershipPathParam>,
 ) -> Result<Json<MembershipResponse>, Error2> {
     let cli = &dynamo.client;
