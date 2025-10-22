@@ -6,6 +6,15 @@ import { useInviteMemberModalController } from './use-invite-member-modal-contro
 import { SpaceDiscussionMemberResponse } from '../../../types/space-discussion-member-response';
 import { TFunction } from 'i18next';
 
+export type InviteMemberPopupProps = {
+  spacePk: string;
+  discussionPk: string;
+  name: string;
+  description: string;
+  startTime: number;
+  endTime: number;
+};
+
 export default function InviteMemberPopup({
   spacePk,
   discussionPk,
@@ -13,14 +22,7 @@ export default function InviteMemberPopup({
   description,
   startTime,
   endTime,
-}: {
-  spacePk: string;
-  discussionPk: string;
-  name: string;
-  description: string;
-  startTime: number;
-  endTime: number;
-}) {
+}: InviteMemberPopupProps) {
   const ctrl = useInviteMemberModalController(
     spacePk,
     discussionPk,

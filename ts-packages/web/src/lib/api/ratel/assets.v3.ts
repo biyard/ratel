@@ -22,9 +22,8 @@ export function getPutMultiObjectUrl(
 }
 
 export function completeMultipartUpload(
-  upload_id: string,
-  key: string,
-  parts: upload,
+  total_count: number | null | undefined,
+  file_type: FileType,
 ): Promise<void> {
   return call(
     'GET',

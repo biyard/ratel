@@ -7,6 +7,16 @@ import TimeDropdown from '@/components/time-dropdown';
 import { showErrorToast } from '@/lib/toast';
 import { Internet } from '@/components/icons';
 
+export type NewDiscussionProps = {
+  spacePk: string;
+  discussionPk: string | null | undefined;
+
+  startedAt: number;
+  endedAt: number;
+  name: string;
+  description: string;
+};
+
 export default function NewDiscussion({
   spacePk,
   discussionPk,
@@ -15,15 +25,7 @@ export default function NewDiscussion({
   endedAt,
   name,
   description,
-}: {
-  spacePk: string;
-  discussionPk: string | null | undefined;
-
-  startedAt: number;
-  endedAt: number;
-  name: string;
-  description: string;
-}) {
+}: NewDiscussionProps) {
   const ctrl = useNewDiscussionModalController(
     spacePk,
     discussionPk,
@@ -160,20 +162,6 @@ export default function NewDiscussion({
           </div>
         </div>
       </div>
-
-      {/* <div className="flex flex-row w-full py-5 items-start gap-2.5">
-        <CustomCheckbox
-          checked={reminderEnabled}
-          onChange={() => setReminderEnabled(!reminderEnabled)}
-          disabled={false}
-        />
-        <div className="text-[15px]/[24px]">
-          <div className="font-medium text-white">Reminder Notification</div>
-          <div className="font-normal text-neutral-300">
-            A reminder email will be sent 10 minutes prior to the discussion.
-          </div>
-        </div>
-      </div> */}
 
       <div className="flex justify-end mt-2.5">
         <button
