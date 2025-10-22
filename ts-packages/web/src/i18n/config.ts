@@ -54,6 +54,7 @@ import { i18nMemberships } from '@/features/membership/i18n';
 import { i18nHeader } from '@/components/header/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
+// NOTE: it should be migrated to namespace based code splitting later
 export const resources = {
   en: {
     SignIn: enSignIn,
