@@ -1,17 +1,32 @@
 import { logger } from '@/lib/logger';
 import { SpaceDiscussionPathProps } from '../space-discussion-path-props';
 import { useSpaceDiscussionViewerController } from './use-space-discussion-viewer-controller';
+import { Col } from '@/components/ui/col';
+import DiscussionEditor from '../../components/discussion-editor';
 
 export function SpaceDiscussionViewerPage({
   spacePk,
 }: SpaceDiscussionPathProps) {
   logger.debug(`SpaceDiscussionViewerPage: spacePk=${spacePk}`);
 
-  const _ctrl = useSpaceDiscussionViewerController(spacePk);
+  const ctrl = useSpaceDiscussionViewerController(spacePk);
 
   return (
     <>
-      <div className="text-text-primary">discussion viewer</div>
+      <Col>
+        <Col>
+          <DiscussionEditor
+            t={ctrl.t}
+            onadd={() => {}}
+            onupdate={() => {}}
+            ondelete={() => {}}
+            canEdit={false}
+            isPublished={!ctrl.space.isDraft}
+            discussions={ctrl.discussion.discussions}
+            bookmark={ctrl.discussion.bookmark}
+          />
+        </Col>
+      </Col>
     </>
   );
 }
