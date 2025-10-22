@@ -14,17 +14,22 @@ export type DiscussionEditorProps = {
   onadd: () => void;
   ondelete: (discussionPk: string) => void;
   onupdate: (discussionPk: string, discussion: SpaceDiscussionResponse) => void;
+  onloadmore: () => void;
 };
 
 export default function DiscussionEditor({
   t,
   discussions,
+  bookmark,
   canEdit,
   isPublished,
   onadd,
   ondelete,
   onupdate,
+  onloadmore,
 }: DiscussionEditorProps) {
+  const hasMore = !!bookmark;
+
   return (
     <>
       <Card className="flex flex-col gap-3">
@@ -33,34 +38,36 @@ export default function DiscussionEditor({
             <div className="font-bold text-text-primary text-[15px]/[20px]">
               {t('discussions')}
             </div>
-
             {canEdit && <AddDiscussionButton onadd={onadd} />}
           </div>
         </div>
 
         <div className="flex flex-col w-full gap-2.5">
           {discussions.map((discussion, index) => (
-            <React.Fragment key={index}>
+            <React.Fragment key={discussion.pk ?? index}>
               <DiscussionRoom
                 discussion={discussion}
                 canEdit={canEdit}
                 isMember={discussion.is_member}
                 isPublished={isPublished}
                 onclick={() => {}}
-                onupdate={() => {
-                  onupdate(discussion.pk, discussion);
-                }}
-                ondelete={() => {
-                  ondelete(discussion.pk);
-                }}
+                onupdate={() => onupdate(discussion.pk, discussion)}
+                ondelete={() => ondelete(discussion.pk)}
               />
               {index !== discussions.length - 1 ? (
-                <div className=" w-full h-0.25 gap-1 bg-divider" />
-              ) : (
-                <></>
-              )}
+                <div className="w-full h-0.25 gap-1 bg-divider" />
+              ) : null}
             </React.Fragment>
           ))}
+
+          {hasMore && (
+            <button
+              className="self-center mt-2 px-4 py-2 rounded-md border border-divider hover:bg-white/5"
+              onClick={onloadmore}
+            >
+              {'More'}
+            </button>
+          )}
         </div>
       </Card>
     </>

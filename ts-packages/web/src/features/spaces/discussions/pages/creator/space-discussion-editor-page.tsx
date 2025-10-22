@@ -30,8 +30,9 @@ export function SpaceDiscussionEditorPage({
             }}
             canEdit={true}
             isPublished={!ctrl.space.isDraft}
-            discussions={ctrl.discussion.discussions}
-            bookmark={ctrl.discussion.bookmark}
+            discussions={ctrl.discussions.get()}
+            bookmark={ctrl.bookmark.get()}
+            onloadmore={ctrl.loadMore}
           />
         </Col>
       </Col>
