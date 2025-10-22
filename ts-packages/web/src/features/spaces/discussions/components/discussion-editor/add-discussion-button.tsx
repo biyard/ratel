@@ -1,7 +1,11 @@
 import { Add } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 
-export function AddDiscussion({ onadd }: { onadd: () => void }) {
+export type AddDiscussionButtonProps = {
+  onadd: () => void;
+};
+
+export function AddDiscussionButton({ onadd }: AddDiscussionButtonProps) {
   const { t } = useTranslation('DeliberationSpace');
   return (
     <div
