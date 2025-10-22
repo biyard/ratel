@@ -1,7 +1,10 @@
 use base64::{Engine, engine::general_purpose};
 use serde::Serialize;
 
-use crate::{types::Partition, utils::telegram::TelegramButton};
+use crate::{
+    types::{Partition, SpaceType},
+    utils::telegram::TelegramButton,
+};
 
 #[derive(Serialize)]
 struct WebParams {
@@ -9,10 +12,7 @@ struct WebParams {
 }
 #[derive(Serialize)]
 pub enum TelegramCommand {
-    OpenSpacePage {
-        space_pk: String,
-        feature: Option<String>,
-    },
+    OpenSpacePage { space_pk: String, r#type: SpaceType },
 }
 
 pub fn generate_link(bot_name: &str, command: TelegramCommand) -> String {
@@ -25,14 +25,14 @@ pub fn generate_link(bot_name: &str, command: TelegramCommand) -> String {
 pub fn get_space_created_message(
     bot_name: &str,
     space_pk: &Partition,
-    feature: Option<String>,
+    r#type: SpaceType,
     title: &str,
 ) -> (String, TelegramButton) {
     let link = generate_link(
         bot_name,
         TelegramCommand::OpenSpacePage {
             space_pk: space_pk.to_string(),
-            feature,
+            r#type,
         },
     );
     let content = format!(
