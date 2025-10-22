@@ -27,7 +27,7 @@ impl TestContextV3 {
 }
 
 pub async fn setup_v3() -> TestContextV3 {
-    let app = api_main::api_main().await.unwrap();
+    let app = api_main::api_main(None).await.unwrap();
     let now = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap()

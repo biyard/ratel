@@ -1,4 +1,7 @@
-use crate::Result;
+use crate::{
+    Result,
+    features::telegrams::{chat_member_update_handler, message_handler, set_command},
+};
 
 use serde::Serialize;
 use teloxide::{
@@ -31,7 +34,29 @@ impl TelegramBot {
         };
         Ok(std::sync::Arc::new(telegram))
     }
+    pub fn dispatcher(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+    ) -> impl std::future::Future<Output = Result<()>> + '_ {
+        let bot = self.bot.clone();
+        let cli = cli.clone();
 
+        async move {
+            set_command(bot.clone()).await;
+
+            let handler = dptree::entry()
+                .branch(Update::filter_message().endpoint(message_handler))
+                .branch(Update::filter_my_chat_member().endpoint(chat_member_update_handler));
+
+            let mut dispatcher = Dispatcher::builder(bot, handler)
+                .dependencies(dptree::deps![cli.clone()])
+                .enable_ctrlc_handler()
+                .build();
+
+            let res = dispatcher.dispatch();
+            Ok(res.await)
+        }
+    }
     pub async fn send_message(
         &self,
         chat_ids: Vec<i64>,

@@ -66,6 +66,7 @@ impl TelegramChannel {
             let (queried_channels, next_bookmark) =
                 TelegramChannel::query(cli, Partition::TelegramChannel, options).await?;
             let chat_ids: Vec<i64> = queried_channels.into_iter().map(|c| c.chat_id).collect();
+            tracing::debug!("Sending Telegram message to channels: {:?}", chat_ids);
             bot.send_message(chat_ids, &content, button.clone()).await?;
             match next_bookmark {
                 Some(b) => bookmark = Some(b),
