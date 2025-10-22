@@ -2,16 +2,9 @@
 
 import { usePopup } from '@/lib/contexts/popup-service';
 import LocaleModal from '../modal/locale-modal';
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import ThemeModal from '../modal/theme-modal';
-import { updateUser } from '@/lib/api/ratel/me.v3';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { ThemeType } from '@/lib/api/models/user';
-import { useQueryClient } from '@tanstack/react-query';
-import { QK_USERS_GET_INFO } from '@/constants';
 import SpecBox from '@/app/(social)/_components/spec-box';
-import { showErrorToast } from '@/lib/toast';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function MySettings() {
