@@ -5,18 +5,13 @@ use crate::{
         user::{User, UserDetailResponse, UserEvmAddress, UserMetadata},
     },
     types::Theme,
-    utils::{
-        validator::{validate_description, validate_image_url, validate_username},
-    },
-};
-use by_axum::{
-    aide::NoApi,
-    axum::{
-        Json,
-        extract::{State},
-    },
+    utils::validator::{validate_description, validate_image_url, validate_nickname},
 };
 use bdk::prelude::*;
+use by_axum::{
+    aide::NoApi,
+    axum::{Json, extract::State},
+};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
@@ -67,7 +62,7 @@ pub async fn update_user_handler(
             profile_url,
             description,
         } => {
-            validate_username(&nickname)?;
+            validate_nickname(&nickname)?;
             validate_image_url(&profile_url)?;
             validate_description(&description)?;
             User::updater(user.pk.clone(), user.sk)
