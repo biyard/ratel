@@ -48,7 +48,7 @@ pub async fn purchase_membership_handler(
         membership_pk,
         membership.duration_days,
         membership.credits,
-        membership.price_dollers,
+        membership.price_dollars,
     )?;
 
     // Set transaction details if provided

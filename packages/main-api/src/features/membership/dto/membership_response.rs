@@ -2,13 +2,11 @@ use crate::aide::OperationIo;
 use crate::features::membership::*;
 use bdk::prelude::*;
 
-#[derive(
-    Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema, OperationIo
-)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema, OperationIo)]
 pub struct MembershipResponse {
     pub id: String,
     pub tier: MembershipTier,
-    pub price_dollers: i64,
+    pub price_dollars: i64,
     pub credits: i64,
     pub duration_days: i32,
     pub display_order: i32,
@@ -22,7 +20,7 @@ impl From<Membership> for MembershipResponse {
         Self {
             id: membership.get_id().unwrap_or_default(),
             tier: membership.tier,
-            price_dollers: membership.price_dollers,
+            price_dollars: membership.price_dollars,
             credits: membership.credits,
             duration_days: membership.duration_days,
             display_order: membership.display_order,

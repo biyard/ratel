@@ -19,7 +19,7 @@ pub async fn create_membership_handler(
     // Create membership
     let membership = Membership::new(
         req.tier,
-        req.price_dollers,
+        req.price_dollars,
         req.credits,
         req.duration_days,
         req.display_order,
