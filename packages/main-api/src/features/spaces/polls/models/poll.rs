@@ -2,7 +2,16 @@ use crate::{types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
 use crate::features::spaces::polls::PollStatus;
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
+#[derive(
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    DynamoEntity,
+    Default,
+    schemars::JsonSchema,
+    aide::OperationIo,
+)]
 pub struct Poll {
     pub pk: Partition,
     pub sk: EntityType,
@@ -10,7 +19,6 @@ pub struct Poll {
     pub created_at: i64,
     pub updated_at: i64,
 
-    pub status: PollStatus,
     pub topic: String,       // Poll Title
     pub description: String, // Poll Description
 
@@ -19,6 +27,9 @@ pub struct Poll {
     pub started_at: i64,
     pub ended_at: i64,
     pub response_editable: bool, // Whether users can edit their responses
+
+    #[serde(default)]
+    pub questions: Vec<Question>, // Questions in the survey
 }
 
 impl Poll {
@@ -45,7 +56,6 @@ impl Poll {
             created_at: now,
             updated_at: now,
             user_response_count: 0,
-            status: PollStatus::Ready,
 
             response_editable: false,
             started_at: now,
@@ -53,7 +63,19 @@ impl Poll {
 
             topic: String::new(),
             description: String::new(),
+            questions: Vec::new(),
         })
+    }
+
+    pub fn status(&self) -> PollStatus {
+        let now = get_now_timestamp_millis();
+        if now < self.started_at {
+            PollStatus::NotStarted
+        } else if now >= self.started_at && now <= self.ended_at {
+            PollStatus::InProgress
+        } else {
+            PollStatus::Finish
+        }
     }
 }
 

@@ -47,6 +47,7 @@ import { i18nPollSpace } from '@/app/spaces/[id]/poll/space-poll-i18n';
 import { i18nDeliberationPage } from '@/app/spaces/[id]/deliberations/deliberation-page-i18n';
 import i18nSpaceSprintLeague from '@/app/spaces/[id]/sprint-league/i18n';
 import { i18nTimeRangeSetting } from '@/features/spaces/polls/components/time-range-setting';
+import { i18nSpacePollViewerPage } from '@/features/spaces/polls/pages/viewer/space-poll-viewer-i18n';
 import { i18nSpaceFileEditor } from '@/features/spaces/files/pages/creator/space-file-editor-i18n';
 import { i18nSpaceRecommendationEditor } from '@/features/spaces/recommendations/pages/creator/space-recommendation-editor-i18n';
 export const LANGUAGES = ['en', 'ko'];
@@ -104,6 +105,7 @@ Object.entries({
   SpacePollEditor: i18nSpacePollEditor,
   SpaceSprintLeague: i18nSpaceSprintLeague,
   TimeRangeSetting: i18nTimeRangeSetting,
+  SpacePollViewer: i18nSpacePollViewerPage,
   SpaceFileEditor: i18nSpaceFileEditor,
   SpaceRecommendationEditor: i18nSpaceRecommendationEditor,
 }).forEach(([key, value]) => {
