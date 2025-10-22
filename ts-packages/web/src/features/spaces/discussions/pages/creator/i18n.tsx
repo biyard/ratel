@@ -15,6 +15,11 @@ const en = {
   new_discussion: 'New Discussion',
   invalid_user: 'Invalid Email Format',
   failed_search_user: 'Failed to search user',
+
+  more: 'More',
+  update: 'Update',
+  delete: 'Delete',
+  join: 'Join',
 };
 
 const ko = {
@@ -34,6 +39,11 @@ const ko = {
   new_discussion: '새로운 토론',
   invalid_user: '이메일 형태를 확인해주세요.',
   failed_search_user: '유저 검색에 실패했습니다.',
+
+  more: '더보기',
+  update: '수정하기',
+  delete: '삭제하기',
+  join: '참여하기',
 };
 
 const i18n = {

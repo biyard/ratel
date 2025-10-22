@@ -1,12 +1,12 @@
 import { Add } from '@/components/icons';
-import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
 
 export type AddDiscussionButtonProps = {
   onadd: () => void;
+  t: TFunction<'SpaceDiscussionEditor', undefined>;
 };
 
-export function AddDiscussionButton({ onadd }: AddDiscussionButtonProps) {
-  const { t } = useTranslation('DeliberationSpace');
+export function AddDiscussionButton({ t, onadd }: AddDiscussionButtonProps) {
   return (
     <div
       id="add-discussion-btn"

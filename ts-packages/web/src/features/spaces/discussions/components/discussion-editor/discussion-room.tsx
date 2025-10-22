@@ -3,8 +3,10 @@ import { SpaceDiscussionResponse } from '../../types/space-discussion-response';
 import { format } from 'date-fns';
 import discussionImg from '@/assets/images/discussion.png';
 import { ArrowRight, Extra2 } from '@/components/icons';
+import { TFunction } from 'i18next';
 
 export type DiscussionRoomProps = {
+  t: TFunction<'SpaceDiscussionEditor', undefined>;
   discussion: SpaceDiscussionResponse;
   canEdit: boolean;
   isMember: boolean;
@@ -15,6 +17,7 @@ export type DiscussionRoomProps = {
 };
 
 export function DiscussionRoom({
+  t,
   discussion,
   canEdit,
   isMember,
@@ -105,7 +108,7 @@ export function DiscussionRoom({
                         onupdate();
                       }}
                     >
-                      {'Update'}
+                      {t('update')}
                     </div>
                     <div
                       className="px-4 py-2 hover:bg-neutral-200 cursor-pointer whitespace-nowrap"
@@ -114,7 +117,7 @@ export function DiscussionRoom({
                         ondelete();
                       }}
                     >
-                      {'Delete'}
+                      {t('delete')}
                     </div>
                   </div>
                 )}
@@ -142,7 +145,7 @@ export function DiscussionRoom({
 
         {isLive && isMember && isPublished && (
           <div className="flex flex-row w-full justify-end">
-            <JoinButton onClick={onclick} />
+            <JoinButton t={t} onClick={onclick} />
           </div>
         )}
       </div>
@@ -150,7 +153,13 @@ export function DiscussionRoom({
   );
 }
 
-function JoinButton({ onClick }: { onClick: () => void }) {
+function JoinButton({
+  t,
+  onClick,
+}: {
+  t: TFunction<'SpaceDiscussionEditor', undefined>;
+  onClick: () => void;
+}) {
   return (
     <div
       className="cursor-pointer flex flex-row items-center w-fit h-fit px-5 py-2.5 gap-2.5 bg-white light:bg-card-bg border border-card-border hover:bg-white/80 light:hover:bg-card-bg/50 rounded-lg"
@@ -158,7 +167,7 @@ function JoinButton({ onClick }: { onClick: () => void }) {
         onClick();
       }}
     >
-      <div className="font-bold text-[#000203] text-sm">Join</div>
+      <div className="font-bold text-[#000203] text-sm">{t('join')}</div>
       <ArrowRight className=" [&>path]:stroke-black stroke-3 w-[15px] h-[15px]" />
     </div>
   );

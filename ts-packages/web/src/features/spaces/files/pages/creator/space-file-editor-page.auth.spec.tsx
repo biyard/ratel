@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { click, fill } from '@tests/utils';
 // import { fileURLToPath } from 'url';
 
-test.describe.serial('[Space File] Authenticated Users ', () => {
+test.describe.serial('[SpaceFileEditorPage] Authenticated Users ', () => {
   let context: import('@playwright/test').BrowserContext;
   let page: import('@playwright/test').Page;
 
