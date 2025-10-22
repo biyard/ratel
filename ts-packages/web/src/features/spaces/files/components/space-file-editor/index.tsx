@@ -1,6 +1,6 @@
 import { File, toFileExtension } from '@/lib/api/models/feeds';
 import Card from '@/components/card';
-import FileUploaderMetadata from '@/components/file-uploader-metadata';
+import FileUploaderMetadata from '@/features/spaces/files/components/file-uploader-metadata';
 import { Upload } from '@/components/icons';
 import { checkString } from '@/lib/string-filter-utils';
 import EditableFile from './editable-file';

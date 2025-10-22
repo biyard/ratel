@@ -39,7 +39,7 @@ import koEditArtworkPost from './ko/EditArtworkPost.json';
 import { i18nThreadPage } from '@/app/(social)/threads/[id]/thread-page-i18n';
 import i18nSpaceSurveyComponent from '@/features/spaces/components/survey/i18n';
 import i18nSpaceSurveyReportComponent from '@/features/spaces/components/report/i18n';
-import i18nSpaceFileComponent from '@/features/spaces/components/file/i18n';
+import i18nSpaceFileComponent from '@/features/spaces/files/components/space-file-editor/i18n';
 import { i18nSpaceTypeSelectModal } from '@/features/spaces/modals/space-type-selector-modal';
 import { i18nSpaceHome } from '@/app/spaces/[id]/space-home-i18n';
 import { i18nSpacePollEditor } from '@/features/spaces/polls/pages/creator/space-poll-editor-i18n';

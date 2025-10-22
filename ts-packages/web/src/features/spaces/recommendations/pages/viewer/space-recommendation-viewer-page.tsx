@@ -1,13 +1,11 @@
 import { logger } from '@/lib/logger';
 import { Col } from '@/components/ui/col';
-import SpaceFileViewer from '@/features/spaces/components/file/viewer';
-import { SpaceRecommendationPathProps } from '../space-recommendation-path-props';
 import SpaceHTMLContentEditor from '@/features/spaces/components/content-editor';
 import { useSpaceRecommendationViewerController } from './use-space-recommendation-viewer-controller';
+import SpaceFileViewer from '@/features/spaces/files/components/space-file-viewer';
+import { SpacePathProps } from '@/features/space-path-props';
 
-export function SpaceRecommendationViewerPage({
-  spacePk,
-}: SpaceRecommendationPathProps) {
+export function SpaceRecommendationViewerPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceRecommendationViewerPage: spacePk=${spacePk}`);
 
   const ctrl = useSpaceRecommendationViewerController(spacePk);

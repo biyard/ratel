@@ -1,6 +1,6 @@
 import { PrimaryButton } from '@/components/button/primary-button';
 import { Checkbox } from '@/components/checkbox/checkbox';
-import FileUploader from '@/components/file-uploader';
+import FileUploader from '@/features/spaces/files/components/file-uploader';
 import { Button } from '@/components/ui/button';
 import { useTranslation, Trans } from 'react-i18next';
 import { useState } from 'react';
