@@ -96,7 +96,7 @@ test.describe.serial('[User Settings - My Info] Authenticated User', () => {
 
     // Wait for success toast
     await page.waitForTimeout(1000);
-    const successToast = page.getByText(/profile updated successfully/i);
+    const successToast = page.getByText(/profile updated successfully!/i);
     await expect(successToast).toBeVisible({ timeout: 5000 });
 
     // Should navigate to home page after successful save
@@ -127,7 +127,7 @@ test.describe.serial('[User Settings - My Info] Authenticated User', () => {
 
     // Wait for success toast
     await page.waitForTimeout(1000);
-    const successToast = page.getByText(/profile updated successfully/i);
+    const successToast = page.getByText(/profile updated successfully!/i);
     await expect(successToast).toBeVisible({ timeout: 5000 });
   });
 
@@ -530,7 +530,7 @@ test.describe.serial('[User Settings - My Info] Authenticated User', () => {
     // Save should work
     await saveButton.click();
     await page.waitForTimeout(1000);
-    const successToast = page.getByText(/profile updated successfully/i);
+    const successToast = page.getByText(/profile updated successfully!/i);
     await expect(successToast).toBeVisible({ timeout: 5000 });
   });
 
@@ -555,7 +555,7 @@ test.describe.serial('[User Settings - My Info] Authenticated User', () => {
 
     // Should succeed (whitespace trimmed)
     await page.waitForTimeout(1000);
-    const successToast = page.getByText(/profile updated successfully/i);
+    const successToast = page.getByText(/profile updated successfully!/i);
     await expect(successToast).toBeVisible({ timeout: 5000 });
   });
 
