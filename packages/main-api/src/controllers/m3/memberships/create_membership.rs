@@ -1,17 +1,12 @@
 use crate::features::membership::dto::*;
 
-use crate::{
-    AppState, Error2, controllers::v3::verify_service_admin, features::membership::*,
-    models::user::User,
-};
-use aide::NoApi;
+use crate::{AppState, Error2, features::membership::*};
 use axum::{Json, extract::State};
 use bdk::prelude::*;
 
 /// Create a new membership (ServiceAdmin only)
 pub async fn create_membership_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
     Json(req): Json<CreateMembershipRequest>,
 ) -> Result<Json<MembershipResponse>, Error2> {
     let cli = &dynamo.client;

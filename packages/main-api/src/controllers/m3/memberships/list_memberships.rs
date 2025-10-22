@@ -1,10 +1,6 @@
 use crate::features::membership::dto::*;
 use crate::types::ListItemsResponse;
-use crate::{
-    AppState, Error2, controllers::v3::verify_service_admin, features::membership::*,
-    models::user::User,
-};
-use aide::NoApi;
+use crate::{AppState, Error2, features::membership::*};
 use axum::{Json, extract::State};
 use bdk::prelude::*;
 
@@ -13,7 +9,6 @@ use bdk::prelude::*;
 /// Returns all active memberships sorted by display_order
 pub async fn list_memberships_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
 ) -> Result<Json<ListItemsResponse<MembershipResponse>>, Error2> {
     let cli = &dynamo.client;
 
