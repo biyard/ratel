@@ -2,7 +2,7 @@ use std::env;
 
 use crate::{
     AppState, config,
-    controllers::{web},
+    controllers::web,
     route::{RouteDeps, route},
     utils::{
         aws::{
@@ -15,9 +15,9 @@ use crate::{
     },
 };
 
+use bdk::prelude::sqlx::PgPool;
 use bdk::prelude::{by_axum::axum::Router, *};
 use by_types::DatabaseConfig;
-use bdk::prelude::sqlx::PgPool;
 use sqlx::postgres::PgPoolOptions;
 use tower_sessions::{
     SessionManagerLayer,
@@ -47,7 +47,8 @@ pub async fn db_init(url: &'static str, max_conn: u32) -> PgPool {
     let pool = PgPoolOptions::new()
         .max_connections(max_conn)
         .connect(&url)
-        .await.expect("Failed to create Postgres connection pool");
+        .await
+        .expect("Failed to create Postgres connection pool");
 
     pool
 }
