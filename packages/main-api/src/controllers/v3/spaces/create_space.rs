@@ -56,7 +56,7 @@ pub async fn create_space_handler(
         post_updater.transact_write_item(),
     ];
 
-    if space.space_type == SpaceType::Poll {
+    if space.space_type == SpaceType::Poll || space.space_type == SpaceType::Deliberation {
         let poll: Poll = space.pk.clone().try_into()?;
 
         tx.push(poll.create_transact_write_item());

@@ -15,7 +15,7 @@ import { showErrorToast } from '@/lib/toast';
 import { Row } from '../ui/row';
 import { Button } from '../ui/button';
 import { sha3 } from '@/lib/utils';
-import FileUploader from '../file-uploader';
+import FileUploader from '../../features/spaces/files/components/file-uploader';
 import { useTranslation, Trans } from 'react-i18next';
 import { OAuthProvider } from '@/types/oauth-provider';
 import { ratelSdk } from '@/lib/api/ratel';
