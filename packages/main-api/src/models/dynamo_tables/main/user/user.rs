@@ -54,7 +54,6 @@ pub struct User {
     #[dynamo(index = "gsi1", sk)]
     pub password: Option<String>,
 
-    pub membership: Membership,
     pub theme: Theme,
     pub points: i64,
 }

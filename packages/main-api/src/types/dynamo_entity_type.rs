@@ -108,4 +108,8 @@ pub enum EntityType {
     SpaceQuiz(String),
     SpaceRecommendation,
     SpaceSurveyResponse(String), //Space pk
+
+    // Membership
+    Membership,
+    UserMembership, // PK: {USER_PK}, SK: UserMembership
 }
