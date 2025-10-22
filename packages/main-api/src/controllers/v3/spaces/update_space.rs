@@ -56,7 +56,6 @@ pub async fn update_space_handler(
     let mut pu =
         Post::updater(space.pk.clone().to_post_key()?, EntityType::Post).with_updated_at(now);
     let mut should_notify_space = false;
-    tracing::debug!("Initial req: {:?} {:?}", req, space);
     match req {
         UpdateSpaceRequest::Publish {
             publish,
@@ -107,7 +106,6 @@ pub async fn update_space_handler(
         pu.transact_write_item()
     )?;
 
-    tracing::debug!("should_notify_space: {}", should_notify_space);
     if should_notify_space {
         if let Some(bot) = telegram_bot {
             let dynamo_client = dynamo.client.clone();
@@ -120,7 +118,7 @@ pub async fn update_space_handler(
                         let (content, button) = get_space_created_message(
                             &bot.bot_name,
                             &space_pk_clone,
-                            None,
+                            space.space_type,
                             &post.title,
                         );
 
