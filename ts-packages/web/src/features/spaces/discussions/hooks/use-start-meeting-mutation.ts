@@ -2,7 +2,7 @@ import { spaceKeys } from '@/constants';
 import { optimisticUpdate } from '@/lib/hook-utils';
 import { useMutation } from '@tanstack/react-query';
 import { SpaceDiscussionResponse } from '../types/space-discussion-response';
-import { discussionStartMeeting } from '@/features/discussion/utils/discussion.v3';
+import { discussionStartMeeting } from '@/lib/api/ratel/discussion.spaces.v3';
 
 export function useStartMeetingMutation<T extends SpaceDiscussionResponse>() {
   const mutation = useMutation({
