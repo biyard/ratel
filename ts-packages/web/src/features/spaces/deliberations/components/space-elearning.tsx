@@ -1,4 +1,4 @@
-import FileUploaderMetadata from '@/components/file-uploader-metadata';
+import FileUploaderMetadata from '@/features/spaces/files/components/file-uploader-metadata';
 import { FileExtension, toFileExtension } from '@/lib/api/models/feeds';
 // import { checkString } from '@/lib/string-filter-utils';
 

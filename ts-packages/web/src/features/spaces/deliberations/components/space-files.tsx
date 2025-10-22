@@ -5,7 +5,7 @@ import { FileExtension, toFileExtension } from '@/lib/api/models/feeds';
 import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 import { checkString } from '@/lib/string-filter-utils';
 
-import FileUploaderMetadata from '@/components/file-uploader-metadata';
+import FileUploaderMetadata from '@/features/spaces/files/components/file-uploader-metadata';
 import { Upload } from 'lucide-react';
 import {
   CircleClose,

@@ -54,7 +54,12 @@ export const route = {
 
   spacePollById: (spaceId: string, pollId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/polls/${encodeURIComponent(pollId)}`,
-
+  spaceFiles: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/files`,
+  spaceDiscussions: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/discussions`,
+  spaceRecommendations: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/recommendations`,
   spaceSprintLeagues: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/sprint-leagues`,
 
