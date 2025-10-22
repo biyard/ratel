@@ -39,7 +39,7 @@ import {
   $createParagraphNode,
 } from 'lexical';
 import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
-import FileUploader from '@/components/file-uploader';
+import FileUploader from '@/features/spaces/files/components/file-uploader';
 import { logger } from '@/lib/logger';
 
 import { Button } from '../ui/button';

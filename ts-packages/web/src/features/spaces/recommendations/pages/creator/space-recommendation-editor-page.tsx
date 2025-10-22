@@ -3,15 +3,13 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Col } from '@/components/ui/col';
 import { Row } from '@/components/ui/row';
-import SpaceFileEditors from '@/features/spaces/components/file/editor';
-import SpaceFileViewer from '@/features/spaces/components/file/viewer';
-import { SpaceRecommendationPathProps } from '../space-recommendation-path-props';
 import { useSpaceRecommendationEditorController } from './use-space-recommendation-editor-controller';
 import SpaceHTMLContentEditor from '@/features/spaces/components/content-editor';
+import SpaceFileEditors from '@/features/spaces/files/components/space-file-editor';
+import SpaceFileViewer from '@/features/spaces/files/components/space-file-viewer';
+import { SpacePathProps } from '@/features/space-path-props';
 
-export function SpaceRecommendationEditorPage({
-  spacePk,
-}: SpaceRecommendationPathProps) {
+export function SpaceRecommendationEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceRecommendationEditorPage: spacePk=${spacePk}`);
 
   const ctrl = useSpaceRecommendationEditorController(spacePk);

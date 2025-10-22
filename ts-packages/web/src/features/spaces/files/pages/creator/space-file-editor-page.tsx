@@ -1,14 +1,14 @@
 import { logger } from '@/lib/logger';
-import { SpaceFilePathProps } from '../space-file-path-props';
 import { useSpaceFileEditorController } from './use-space-file-editor-controller';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Col } from '@/components/ui/col';
 import { Row } from '@/components/ui/row';
-import SpaceFileEditors from '@/features/spaces/components/file/editor';
-import SpaceFileViewer from '@/features/spaces/components/file/viewer';
+import SpaceFileEditors from '../../components/space-file-editor';
+import SpaceFileViewer from '../../components/space-file-viewer';
+import { SpacePathProps } from '@/features/space-path-props';
 
-export function SpaceFileEditorPage({ spacePk }: SpaceFilePathProps) {
+export function SpaceFileEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceFileEditorPage: spacePk=${spacePk}`);
 
   const ctrl = useSpaceFileEditorController(spacePk);

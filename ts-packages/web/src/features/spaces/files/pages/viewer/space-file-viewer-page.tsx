@@ -1,9 +1,9 @@
 import { logger } from '@/lib/logger';
-import { SpaceFilePathProps } from '../space-file-path-props';
 import { useSpaceFileViewerController } from './use-space-file-viewer-controller';
-import SpaceFileViewer from '@/features/spaces/components/file/viewer';
+import SpaceFileViewer from '../../components/space-file-viewer';
+import { SpacePathProps } from '@/features/space-path-props';
 
-export function SpaceFileViewerPage({ spacePk }: SpaceFilePathProps) {
+export function SpaceFileViewerPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceFileViewerPage: spacePk=${spacePk}`);
 
   const ctrl = useSpaceFileViewerController(spacePk);
