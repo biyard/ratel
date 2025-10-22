@@ -5,6 +5,11 @@ import { Space } from '@/features/spaces/types/space';
 import { ListDiscussionResponse } from '../../types/list-discussion-response';
 import { SpaceDiscussionResponse } from '../../types/space-discussion-response';
 import useDiscussionSpace from '../../hooks/use-discussion-space';
+import { logger } from '@/lib/logger';
+import { usePopup } from '@/lib/contexts/popup-service';
+import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
+import NewDiscussion from '../../components/modals/new_discussion';
 
 export class SpaceDiscussionEditorController {
   constructor(
@@ -14,6 +19,8 @@ export class SpaceDiscussionEditorController {
     public bookmark: string | null | undefined,
     public discussions: State<SpaceDiscussionResponse[]>,
     public editing: State<boolean>,
+    public popup,
+    public t: TFunction<'SpaceDiscussionEditor', undefined>,
   ) {}
 
   handleEdit = () => {
@@ -27,6 +34,23 @@ export class SpaceDiscussionEditorController {
   handleDiscard = () => {
     this.editing.set(false);
   };
+
+  handleAddDiscussion = async () => {
+    logger.debug('handleAddDiscussion');
+    this.popup
+      .open(
+        <NewDiscussion
+          spacePk={this.spacePk}
+          discussionPk={null}
+          startedAt={Date.now()}
+          endedAt={Date.now() + 60 * 60 * 1000}
+          name={''}
+          description={''}
+        />,
+      )
+      .withoutBackdropClose()
+      .withTitle(this.t('select_space_type'));
+  };
 }
 
 export function useSpaceDiscussionEditorController(spacePk: string) {
@@ -35,6 +59,8 @@ export function useSpaceDiscussionEditorController(spacePk: string) {
   const bookmark = discussion.bookmark;
   const discussions = useState(discussion.discussions || []);
   const editing = useState(false);
+  const popup = usePopup();
+  const { t } = useTranslation('SpaceDiscussionEditor');
 
   return new SpaceDiscussionEditorController(
     spacePk,
@@ -43,5 +69,7 @@ export function useSpaceDiscussionEditorController(spacePk: string) {
     bookmark,
     new State(discussions),
     new State(editing),
+    popup,
+    t,
   );
 }
