@@ -26,6 +26,13 @@ export async function loginWithOAuth(
   return user;
 }
 
+export async function loginWithTelegram(telegram_raw: string): Promise<User> {
+  const user: User = await call('POST', '/v3/auth/login', {
+    telegram_raw,
+  });
+
+  return user;
+}
 export async function getMe(): Promise<User> {
   const user: User = await call('GET', '/v3/me');
 

@@ -28,6 +28,7 @@ import SpaceByIdLayout from './app/spaces/[id]/space-by-id-layout';
 import { SpaceHomePage } from './app/spaces/[id]/space-home-page';
 import { SpaceSettingsPage } from './app/spaces/[id]/settings/space-settings-page';
 import SpaceSprintLeaguePage from './app/spaces/[id]/sprint-league/page';
+import TelegramPage from './app/telegram/page';
 
 export const routes = createBrowserRouter([
   {
@@ -171,7 +172,11 @@ export const routes = createBrowserRouter([
           }, // End of Poll Feature
         ],
       }, // End of Space Layout
-
+      {
+        id: 'telegram-page',
+        path: 'telegram',
+        Component: TelegramPage,
+      },
       // Test Report Page
       {
         id: 'test-report-page',
