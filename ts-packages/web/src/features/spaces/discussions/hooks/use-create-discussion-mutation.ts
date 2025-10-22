@@ -39,7 +39,7 @@ export function useCreateDiscussionMutation<
       _,
       { spacePk, started_at, ended_at, name, description },
     ) => {
-      const spaceQK = spaceKeys.discussion(spacePk);
+      const spaceQK = spaceKeys.discussions(spacePk);
       await optimisticUpdate<T>({ queryKey: spaceQK }, (response) => {
         response.started_at = started_at;
         response.ended_at = ended_at;

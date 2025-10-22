@@ -41,7 +41,7 @@ export function useUpdateDiscussionMutation<
       );
     },
     onSuccess: async (_, { spacePk }) => {
-      const spaceQK = spaceKeys.discussion(spacePk);
+      const spaceQK = spaceKeys.discussions(spacePk);
       await optimisticUpdate<T>({ queryKey: spaceQK }, (response) => {
         return response;
       });

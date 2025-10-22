@@ -62,6 +62,8 @@ export function useSpaceDiscussionEditorController(spacePk: string) {
   const popup = usePopup();
   const { t } = useTranslation('SpaceDiscussionEditor');
 
+  //   console.log('discussion:', discussion.discussions, discussion.bookmark);
+
   return new SpaceDiscussionEditorController(
     spacePk,
     space,
