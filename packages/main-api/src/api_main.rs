@@ -11,7 +11,7 @@ use crate::{
         },
         dynamo_session_store::DynamoSessionStore,
         sqs_client,
-        telegram::TelegramBot,
+        telegram::ArcTelegramBot,
     },
 };
 
@@ -53,7 +53,7 @@ pub async fn db_init(url: &'static str, max_conn: u32) -> PgPool {
     pool
 }
 
-pub async fn api_main() -> Result<Router, crate::Error2> {
+pub async fn api_main(bot: Option<ArcTelegramBot>) -> Result<Router, crate::Error2> {
     let app = by_axum::new();
     let conf = config::get();
 
@@ -100,17 +100,6 @@ pub async fn api_main() -> Result<Router, crate::Error2> {
     // let mcp_router = by_axum::axum::Router::new()
     //     .nest_service("/mcp", controllers::mcp::route(pool.clone()).await.expect("MCP router"))
     //     .layer(middleware::from_fn(mcp_middleware));
-    let bot = if let Some(token) = conf.telegram_token {
-        let res = TelegramBot::new(token).await;
-        if let Err(err) = res {
-            tracing::error!("Failed to initialize Telegram bot: {}", err);
-            None
-        } else {
-            Some(res.unwrap())
-        }
-    } else {
-        None
-    };
 
     let app_state = AppState {
         dynamo: dynamo_client.clone(),
