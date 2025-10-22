@@ -13,6 +13,7 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { useCreateDiscussionMutation } from '../../../hooks/use-create-discussion-mutation';
+import { useUpdateDiscussionMutation } from '../../../hooks/use-update-discussion-mutation';
 
 export class InviteMemberModalController {
   constructor(
@@ -34,6 +35,7 @@ export class InviteMemberModalController {
     public get,
 
     public createDiscussion: ReturnType<typeof useCreateDiscussionMutation>,
+    public updateDiscussion: ReturnType<typeof useUpdateDiscussionMutation>,
   ) {}
 
   handleSearchValue = async (
@@ -119,21 +121,41 @@ export class InviteMemberModalController {
       .map((u) => u.user_pk)
       .filter((v): v is string => typeof v === 'string' && v.length > 0);
 
-    try {
-      await this.createDiscussion.mutateAsync({
-        spacePk: this.spacePk,
-        started_at: this.startedAt,
-        ended_at: this.endedAt,
-        name: this.name,
-        description: this.description,
-        user_ids: userPks,
-      });
+    if (this.discussionPk == null || this.discussionPk == undefined) {
+      try {
+        await this.createDiscussion.mutateAsync({
+          spacePk: this.spacePk,
+          started_at: this.startedAt,
+          ended_at: this.endedAt,
+          name: this.name,
+          description: this.description,
+          user_ids: userPks,
+        });
 
-      showSuccessToast('Success to create discussion');
-    } catch {
-      showErrorToast('Failed to create discussion');
-    } finally {
-      this.popup.close();
+        showSuccessToast('Success to create discussion');
+      } catch {
+        showErrorToast('Failed to create discussion');
+      } finally {
+        this.popup.close();
+      }
+    } else {
+      try {
+        await this.updateDiscussion.mutateAsync({
+          spacePk: this.spacePk,
+          discussionPk: this.discussionPk ?? '',
+          started_at: this.startedAt,
+          ended_at: this.endedAt,
+          name: this.name,
+          description: this.description,
+          user_ids: userPks,
+        });
+
+        showSuccessToast('Success to update discussion');
+      } catch {
+        showErrorToast('Failed to update discussion');
+      } finally {
+        this.popup.close();
+      }
     }
   };
 
@@ -166,6 +188,7 @@ export function useInviteMemberModalController(
   const errorCount = useState(0);
 
   const createDiscussion = useCreateDiscussionMutation();
+  const updateDiscussion = useUpdateDiscussionMutation();
 
   return new InviteMemberModalController(
     navigate,
@@ -186,5 +209,6 @@ export function useInviteMemberModalController(
     get,
 
     createDiscussion,
+    updateDiscussion,
   );
 }
