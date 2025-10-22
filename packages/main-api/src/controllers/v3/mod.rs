@@ -1,3 +1,7 @@
+use crate::{AppState, Error2, models::user::User, types::*};
+use axum::extract::State;
+use bdk::prelude::*;
+
 pub mod networks;
 
 pub mod promotions {
@@ -71,3 +75,65 @@ pub mod teams {
 }
 
 pub mod posts;
+
+pub mod memberships;
+
+/// Extract DynamoDB client from AppState
+///
+/// # Example
+/// ```no_run
+/// use crate::controllers::v3::extract_state;
+/// use axum::extract::State;
+///
+/// async fn my_handler(state: State<AppState>) {
+///     let cli = extract_state(state);
+///     // Use cli for DynamoDB operations
+/// }
+/// ```
+pub fn extract_state(State(AppState { dynamo, .. }): State<AppState>) -> aws_sdk_dynamodb::Client {
+    dynamo.client
+}
+
+/// Verify that the current user is a ServiceAdmin
+///
+/// # Arguments
+/// * `user` - Optional user from authentication middleware
+/// * `cli` - DynamoDB client for querying ServiceAdmin records
+///
+/// # Returns
+/// * `Ok(User)` - If user is authenticated and is a ServiceAdmin
+/// * `Err(Error2::NoUserFound)` - If no user is authenticated
+/// * `Err(Error2::NoPermission)` - If user is not a ServiceAdmin
+///
+/// # Example
+/// ```no_run
+/// use crate::controllers::v3::verify_service_admin;
+/// use aide::NoApi;
+/// use axum::{extract::State, Json};
+///
+/// async fn admin_only_handler(
+///     state: State<AppState>,
+///     NoApi(user): NoApi<Option<User>>,
+/// ) -> Result<Json<Response>, Error2> {
+///     let cli = &state.dynamo.client;
+///
+///     // Verify user is a ServiceAdmin
+///     let admin_user = verify_service_admin(user, cli).await?;
+///
+///     // Continue with admin operations
+///     Ok(Json(response))
+/// }
+/// ```
+pub async fn verify_service_admin(
+    user: Option<User>,
+    _cli: &aws_sdk_dynamodb::Client,
+) -> Result<User, Error2> {
+    // Check if user is authenticated
+    let user = user.ok_or(Error2::NoUserFound)?;
+
+    if user.user_type == UserType::Admin {
+        Ok(user)
+    } else {
+        Err(Error2::NoPermission)
+    }
+}

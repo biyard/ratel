@@ -37,10 +37,23 @@ pub struct Membership {
 
     // Duration in days (30 for monthly, 365 for yearly, 0 for lifetime)
     pub duration_days: i32,
+
+    // Is this membership currently available for purchase?
+    #[dynamo(index = "gsi1", pk, prefix = "ACTIVE", name = "find_active")]
+    pub is_active: bool,
+
+    #[dynamo(index = "gsi1", sk, prefix = "ORDER")]
+    pub display_order_indexed: i32,
 }
 
 impl Membership {
-    pub fn new() -> Self {
+    pub fn new(
+        tier: MembershipTier,
+        price_dollers: i64,
+        credits: i64,
+        duration_days: i32,
+        display_order: i32,
+    ) -> Self {
         let uid = uuid::Uuid::new_v4().to_string();
         let created_at = chrono::Utc::now().timestamp_micros();
 
@@ -49,7 +62,53 @@ impl Membership {
             sk: EntityType::Membership,
             created_at,
             updated_at: created_at,
-            ..Default::default()
+            tier,
+            price_dollers,
+            credits,
+            duration_days,
+            display_order,
+            is_active: true,
+            display_order_indexed: display_order,
         }
+    }
+
+    /// Get membership ID from partition key
+    pub fn get_id(&self) -> Option<String> {
+        match &self.pk {
+            Partition::Membership(id) => Some(id.clone()),
+            _ => None,
+        }
+    }
+
+    /// Update membership fields
+    pub fn update(
+        &mut self,
+        tier: Option<MembershipTier>,
+        price_dollers: Option<i64>,
+        credits: Option<i64>,
+        duration_days: Option<i32>,
+        display_order: Option<i32>,
+        is_active: Option<bool>,
+    ) {
+        if let Some(tier) = tier {
+            self.tier = tier;
+        }
+        if let Some(price) = price_dollers {
+            self.price_dollers = price;
+        }
+        if let Some(credits) = credits {
+            self.credits = credits;
+        }
+        if let Some(duration) = duration_days {
+            self.duration_days = duration;
+        }
+        if let Some(order) = display_order {
+            self.display_order = order;
+            self.display_order_indexed = order;
+        }
+        if let Some(active) = is_active {
+            self.is_active = active;
+        }
+        self.updated_at = chrono::Utc::now().timestamp_micros();
     }
 }
