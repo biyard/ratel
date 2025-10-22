@@ -75,7 +75,7 @@ pub async fn update_space_handler(
             pu = pu.with_space_visibility(SpaceVisibility::Public);
 
             should_notify_space = space.booster != BoosterType::NoBoost
-                && (space.publish_state != SpacePublishState::Published && publish)
+                && (space.publish_state == SpacePublishState::Draft && publish)
                 && visibility == SpaceVisibility::Public;
 
             space.publish_state = SpacePublishState::Published;
