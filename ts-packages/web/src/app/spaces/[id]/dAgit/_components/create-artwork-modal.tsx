@@ -3,12 +3,11 @@
 import { usePopup } from '@/lib/contexts/popup-service';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import FileUploaderMetadata from '@/components/file-uploader-metadata';
+import FileUploaderMetadata from '@/features/spaces/files/components/file-uploader-metadata';
 
 import { UploadFile } from '@/assets/icons/file';
 import { FileInfo } from '@/lib/api/models/feeds';
 import { Input } from '@/components/ui/input';
-
 
 const openCreateArtworkModal = (
   popup: ReturnType<typeof usePopup>,
