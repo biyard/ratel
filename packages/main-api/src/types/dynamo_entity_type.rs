@@ -112,4 +112,7 @@ pub enum EntityType {
     // Membership
     Membership,
     UserMembership, // PK: {USER_PK}, SK: UserMembership
+
+    // ServiceAdmin
+    ServiceAdmin, // PK: SERVICE_ADMIN#{USER_PK}, SK: ServiceAdmin
 }

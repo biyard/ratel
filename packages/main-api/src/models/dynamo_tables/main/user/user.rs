@@ -169,6 +169,11 @@ impl User {
             ..Default::default()
         }
     }
+
+    /// Check if the user is an admin
+    pub fn is_admin(&self) -> bool {
+        self.user_type == UserType::Admin
+    }
 }
 
 impl FromRequestParts<AppState> for Option<User> {

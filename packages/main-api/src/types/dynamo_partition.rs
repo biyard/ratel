@@ -51,6 +51,9 @@ pub enum Partition {
 
     // Membership
     Membership(String),
+
+    // ServiceAdmin
+    ServiceAdmin(String),
 }
 
 impl Partition {
