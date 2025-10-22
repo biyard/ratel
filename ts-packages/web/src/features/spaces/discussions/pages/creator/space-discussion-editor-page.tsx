@@ -28,6 +28,9 @@ export function SpaceDiscussionEditorPage({
             ondelete={async (discussionPk: string) => {
               await ctrl.handleDeleteDiscussion(discussionPk);
             }}
+            onenter={async (discussionPk: string) => {
+              await ctrl.enterDiscussionRoom(discussionPk);
+            }}
             canEdit={true}
             isPublished={!ctrl.space.isDraft}
             discussions={ctrl.discussions.get()}

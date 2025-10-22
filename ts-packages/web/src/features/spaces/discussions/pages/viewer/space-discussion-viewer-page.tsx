@@ -20,6 +20,9 @@ export function SpaceDiscussionViewerPage({
             onadd={() => {}}
             onupdate={() => {}}
             ondelete={() => {}}
+            onenter={async (discussionPk: string) => {
+              await ctrl.enterDiscussionRoom(discussionPk);
+            }}
             canEdit={false}
             isPublished={!ctrl.space.isDraft}
             discussions={ctrl.discussions.get()}

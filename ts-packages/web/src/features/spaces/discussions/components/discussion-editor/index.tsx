@@ -12,6 +12,7 @@ export type DiscussionEditorProps = {
   canEdit: boolean;
   isPublished: boolean;
   onadd: () => void;
+  onenter: (discussionPk: string) => void;
   ondelete: (discussionPk: string) => void;
   onupdate: (discussionPk: string, discussion: SpaceDiscussionResponse) => void;
   onloadmore: () => void;
@@ -26,6 +27,7 @@ export default function DiscussionEditor({
   onadd,
   ondelete,
   onupdate,
+  onenter,
   onloadmore,
 }: DiscussionEditorProps) {
   const hasMore = !!bookmark;
@@ -51,7 +53,9 @@ export default function DiscussionEditor({
                 canEdit={canEdit}
                 isMember={discussion.is_member}
                 isPublished={isPublished}
-                onclick={() => {}}
+                onclick={() => {
+                  onenter(discussion.pk);
+                }}
                 onupdate={() => onupdate(discussion.pk, discussion)}
                 ondelete={() => ondelete(discussion.pk)}
               />

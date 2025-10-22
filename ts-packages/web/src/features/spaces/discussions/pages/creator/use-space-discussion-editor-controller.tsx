@@ -12,6 +12,10 @@ import NewDiscussion from '../../components/modals/new_discussion';
 import { useDeleteDiscussionMutation } from '../../hooks/use-delete-discussion-mutation';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { call } from '@/lib/api/ratel/call';
+import { useStartMeetingMutation } from '../../hooks/use-start-meeting-mutation';
+import { useParticipateMeetingMutation } from '../../hooks/use-participate-meeting-mutation';
+import { route } from '@/route';
+import { NavigateFunction, useNavigate } from 'react-router';
 
 export class SpaceDiscussionEditorController {
   constructor(
@@ -24,6 +28,9 @@ export class SpaceDiscussionEditorController {
     public popup,
     public t: TFunction<'SpaceDiscussionEditor', undefined>,
     public deleteDiscussion: ReturnType<typeof useDeleteDiscussionMutation>,
+    public startMeeting: ReturnType<typeof useStartMeetingMutation>,
+    public participantMeeting: ReturnType<typeof useParticipateMeetingMutation>,
+    public navigate: NavigateFunction,
   ) {}
 
   handleEdit = () => this.editing.set(true);
@@ -79,6 +86,15 @@ export class SpaceDiscussionEditorController {
       .withTitle(this.t('select_space_type'));
   };
 
+  enterDiscussionRoom = async (discussionPk: string) => {
+    const spacePk = this.spacePk;
+
+    await this.startMeeting.mutateAsync({ spacePk, discussionPk });
+    await this.participantMeeting.mutateAsync({ spacePk, discussionPk });
+
+    this.navigate(route.discussionByPk(spacePk, discussionPk));
+  };
+
   loadMore = async () => {
     const bm = this.bookmark.get();
     if (!bm) return;
@@ -110,6 +126,9 @@ export function useSpaceDiscussionEditorController(spacePk: string) {
   const popup = usePopup();
   const { t } = useTranslation('SpaceDiscussionEditor');
   const deleteDiscussion = useDeleteDiscussionMutation();
+  const startMeeting = useStartMeetingMutation();
+  const participantMeeting = useParticipateMeetingMutation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     discussions[1](discussion.discussions || []);
@@ -126,5 +145,8 @@ export function useSpaceDiscussionEditorController(spacePk: string) {
     popup,
     t,
     deleteDiscussion,
+    startMeeting,
+    participantMeeting,
+    navigate,
   );
 }

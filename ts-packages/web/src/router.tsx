@@ -31,6 +31,7 @@ import SpaceSprintLeaguePage from './app/spaces/[id]/sprint-league/page';
 import SpaceDiscussionPage from './app/spaces/[id]/discussion/space-discussion-page';
 import SpaceFilePage from './app/spaces/[id]/file/space-file-page';
 import SpaceRecommendationPage from './app/spaces/[id]/recommendation/space-recommendation-page';
+import DiscussionPage from './app/spaces/[id]/discussion/[discussion-id]/discussion-page';
 
 export const routes = createBrowserRouter([
   {
@@ -174,9 +175,20 @@ export const routes = createBrowserRouter([
           }, // End of Poll Feature
           // Space Discussion Feature
           {
-            id: 'space-discussion-feature',
+            id: 'space-discussion',
             path: 'discussions',
-            Component: SpaceDiscussionPage,
+            children: [
+              {
+                id: 'space-discussion-index',
+                index: true,
+                Component: SpaceDiscussionPage,
+              },
+              {
+                id: 'discussion-by-id',
+                path: ':discussionPk',
+                Component: DiscussionPage,
+              },
+            ],
           }, // End of Discussion Feature
           // Space File Feature
           {
