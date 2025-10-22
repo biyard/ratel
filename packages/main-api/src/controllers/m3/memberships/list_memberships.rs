@@ -17,9 +17,6 @@ pub async fn list_memberships_handler(
 ) -> Result<Json<ListItemsResponse<MembershipResponse>>, Error2> {
     let cli = &dynamo.client;
 
-    // Verify user is a ServiceAdmin
-    let _admin = verify_service_admin(user, cli).await?;
-
     // Query active memberships using GSI1
     let (memberships, bookmark) =
         Membership::find_active(cli, true, MembershipQueryOption::builder().limit(100)).await?;
