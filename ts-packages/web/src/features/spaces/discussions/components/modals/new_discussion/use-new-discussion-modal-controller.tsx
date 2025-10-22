@@ -5,6 +5,7 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { showErrorToast } from '@/lib/toast';
+import InviteMemberPopup from '../invite_member';
 
 export class NewDiscussionModalController {
   constructor(
@@ -43,7 +44,16 @@ export class NewDiscussionModalController {
     }
 
     this.popup
-      .open(<div>hello</div>)
+      .open(
+        <InviteMemberPopup
+          spacePk={this.spacePk}
+          discussionPk={this.discussionPk}
+          name={this.name.get()}
+          description={this.description.get()}
+          startTime={this.startedAt.get()}
+          endTime={this.endedAt.get()}
+        />,
+      )
       .withTitle(this.t('new_discussion'))
       .withoutBackdropClose();
   };
