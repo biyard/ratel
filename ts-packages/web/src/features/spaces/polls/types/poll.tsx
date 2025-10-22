@@ -25,6 +25,6 @@ export class Poll {
     this.response_editable = json.response_editable;
     this.user_response_count = json.user_response_count;
     this.questions = json.questions || [];
-    this.myResponse = json.my_response;
+    this.myResponse = json.my_response || [];
   }
 }

@@ -8,7 +8,7 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { LoginModal } from '@/components/popup/login-popup';
 import { useUserInfo } from '../_hooks/user';
 import { useTranslation } from 'react-i18next';
-import { NavLink } from "react-router";
+import { NavLink } from 'react-router';
 
 export default function ClientLayout({
   children,
@@ -33,21 +33,21 @@ export default function ClientLayout({
 
   return (
     <>
-        <Header
-          mobileExtends={mobileExtends}
-          setMobileExtends={setMobileExtends}
-        />
+      <Header
+        mobileExtends={mobileExtends}
+        setMobileExtends={setMobileExtends}
+      />
 
       {children}
 
-        <div
-          className={
-            mobileExtends
-              ? 'fixed top-[60px] left-0 w-screen h-screen z-20 text-white bg-bg hidden max-tablet:flex max-tablet:flex-col max-tablet:items-start max-tablet:justify-start pt-6 px-4 gap-[50px]'
-              : 'hidden'
-          }
-        >
-          <NavLink
+      <div
+        className={
+          mobileExtends
+            ? 'fixed top-[60px] left-0 w-screen h-screen z-20 text-white bg-bg hidden max-tablet:flex max-tablet:flex-col max-tablet:items-start max-tablet:justify-start pt-6 px-4 gap-[50px]'
+            : 'hidden'
+        }
+      >
+        <NavLink
           to={route.settings()}
           onClick={() => setMobileExtends(false)}
           className={linkClass}
@@ -55,38 +55,38 @@ export default function ClientLayout({
           {data?.nickname}
         </NavLink>
         <NavLink
-            to={route.home()}
-            onClick={() => setMobileExtends(false)}
-            className={linkClass}
-          >
-            {t('home')}
-          </NavLink>
+          to={route.home()}
+          onClick={() => setMobileExtends(false)}
+          className={linkClass}
+        >
+          {t('home')}
+        </NavLink>
 
-          {!isLoading && data ? (
-            <div
-              className={linkClass + ' cursor-pointer'}
-              onClick={() => {
-                logout();
-                refetch();
-                setMobileExtends(false);
-              }}
-            >
-              {t('logout')}
-            </div>
-          ) : (
-            <button
-              className={linkClass + ' cursor-pointer'}
-              onClick={() => {
-                popup
-                  .open(<LoginModal />)
-                  .withTitle(t('join_the_movement'))
-                  .withoutBackdropClose();
-              }}
-            >
-              {t('signIn')}
-            </button>
-          )}
-        </div>
+        {!isLoading && data ? (
+          <div
+            className={linkClass + ' cursor-pointer'}
+            onClick={() => {
+              logout();
+              refetch();
+              setMobileExtends(false);
+            }}
+          >
+            {t('logout')}
+          </div>
+        ) : (
+          <button
+            className={linkClass + ' cursor-pointer'}
+            onClick={() => {
+              popup
+                .open(<LoginModal />)
+                .withTitle(t('join_the_movement'))
+                .withoutBackdropClose();
+            }}
+          >
+            {t('signIn')}
+          </button>
+        )}
+      </div>
     </>
   );
 }

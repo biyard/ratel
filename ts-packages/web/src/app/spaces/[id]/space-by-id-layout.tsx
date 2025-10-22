@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext } from 'react';
 import { Outlet, useParams } from 'react-router';
 import {
   SpaceHomeController,
@@ -53,7 +53,7 @@ export default function SpaceByIdLayout() {
           <Outlet />
         </Col>
         <Col className="gap-2.5 w-full max-w-[250px]">
-          {ctrl.space.isAdmin && <SpaceActions actions={ctrl.actions} />}
+          {ctrl.space.isAdmin() && <SpaceActions actions={ctrl.actions} />}
 
           <SpaceSideMenu menus={ctrl.menus} />
           <TimelineMenu

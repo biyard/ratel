@@ -1,9 +1,9 @@
 use crate::models::space::SpaceCommon;
 
 use crate::features::spaces::polls::*;
-use crate::types::{Partition, Question, SpacePublishState, SpaceStatus, TeamGroupPermission};
+use crate::types::{EntityType, Partition, Question, TeamGroupPermission};
 use crate::utils::time::get_now_timestamp_millis;
-use crate::{AppState, Error};
+use crate::{AppState, Error, transact_write};
 
 use bdk::prelude::*;
 
@@ -21,23 +21,24 @@ pub enum UpdatePollSpaceRequest {
     ResponseEditable { response_editable: bool },
 }
 
+#[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema, Default)]
+pub struct UpdatePollSpaceResponse {
+    pub status: String,
+}
+
 pub async fn update_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
-    Path(PollPathParam {
-        space_pk,
-        // FIXME: use poll pk
-        poll_sk,
-    }): PollPath,
+    Path(PollPathParam { space_pk, poll_sk }): PollPath,
     Json(req): Json<UpdatePollSpaceRequest>,
-) -> crate::Result<Json<PollResponse>> {
+) -> crate::Result<Json<UpdatePollSpaceResponse>> {
     //Request Validation
-    if !matches!(space_pk, Partition::Space(_)) {
+    if !matches!(space_pk, Partition::Space(_)) || !matches!(poll_sk, EntityType::SpacePoll(_)) {
         return Err(Error::NotFoundPoll);
     }
 
     // Check Permissions
-    let (space_common, has_perm) = SpaceCommon::has_permission(
+    let (_space_common, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
         Some(&user.pk),
@@ -48,24 +49,10 @@ pub async fn update_poll_handler(
         return Err(Error::NoPermission);
     }
 
-    // Only Draft or Published+Waiting state can be updated
-    let is_updatable = match space_common.publish_state {
-        SpacePublishState::Draft => true,
-        SpacePublishState::Published => space_common.status == Some(SpaceStatus::Waiting),
-        // _ => false,
-    };
-
-    if !is_updatable {
-        return Err(Error::ImmutablePollState);
-    }
-
-    let poll_metadata = PollMetadata::query(&dynamo.client, &space_pk).await?;
-    let mut response = PollResponse::from(poll_metadata);
     let now = get_now_timestamp_millis();
-    response.updated_at = now;
 
-    // Update existing survey
-    let poll_updater = Poll::updater(&space_pk, &poll_sk);
+    let space = SpaceCommon::updater(&space_pk, EntityType::SpaceCommon).with_updated_at(now);
+    let mut poll_updater = Poll::updater(&space_pk, &poll_sk).with_updated_at(now);
 
     match req {
         UpdatePollSpaceRequest::Time {
@@ -76,41 +63,32 @@ pub async fn update_poll_handler(
             if started_at >= ended_at {
                 return Err(Error::InvalidTimeRange);
             }
-            poll_updater
-                .with_updated_at(now)
+            poll_updater = poll_updater
                 .with_started_at(started_at)
-                .with_ended_at(ended_at)
-                .execute(&dynamo.client)
-                .await?;
-            response.started_at = started_at;
-            response.ended_at = ended_at;
-            Ok(Json(response))
+                .with_ended_at(ended_at);
         }
-        UpdatePollSpaceRequest::Question { ref questions } => {
+        UpdatePollSpaceRequest::Question { questions } => {
             if questions.is_empty() {
                 return Err(Error::PollInvalidQuestions);
             }
-            Ok(Json(response))
+            poll_updater = poll_updater.with_questions(questions.clone());
+
+            // Also create/update PollQuestion entity for result aggregation
+            let poll_question = PollQuestion::new(space_pk.clone(), questions);
+            poll_question.create(&dynamo.client).await?;
         }
         UpdatePollSpaceRequest::ResponseEditable { response_editable } => {
-            poll_updater
-                .with_updated_at(now)
-                .with_response_editable(response_editable)
-                .execute(&dynamo.client)
-                .await?;
-            response.response_editable = response_editable;
-            Ok(Json(response))
+            poll_updater = poll_updater.with_response_editable(response_editable);
         }
     }
 
-    // dynamo
-    //     .client
-    //     .transact_write_items()
-    //     .set_transact_items(Some(vec![poll_survey_tx, space_tx, post_tx]))
-    //     .send()
-    //     .await
-    //     .map_err(|e| {
-    //         tracing::error!("Failed to update poll space: {:?}", e);
-    //         Error2::InternalServerError("Failed to update poll space".into())
-    //     })?;
+    transact_write!(
+        &dynamo.client,
+        space.transact_write_item(),
+        poll_updater.transact_write_item(),
+    )?;
+
+    Ok(Json(UpdatePollSpaceResponse {
+        status: "success".to_string(),
+    }))
 }

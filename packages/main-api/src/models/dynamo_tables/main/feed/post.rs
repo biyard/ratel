@@ -154,7 +154,11 @@ impl Post {
 
     fn get_permissions_for_guest(&self) -> TeamGroupPermissions {
         if self.status == PostStatus::Published && self.visibility == Some(Visibility::Public) {
-            return TeamGroupPermissions::read();
+            if self.space_visibility == Some(SpaceVisibility::Public) {
+                return TeamGroupPermissions::read();
+            } else {
+                return TeamGroupPermissions(vec![TeamGroupPermission::PostRead]);
+            }
         }
 
         TeamGroupPermissions::empty()

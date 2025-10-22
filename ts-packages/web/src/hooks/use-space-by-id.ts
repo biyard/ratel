@@ -24,7 +24,7 @@ import { getQueryClient } from '@/providers/getQueryClient';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { PublishingScope } from '@/lib/api/models/notice';
-import { PublishType } from '@/components/post-header/modals/publish-space';
+import { PublishType } from '@/features/spaces/modals/space-publish-modal';
 import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { route } from '@/route';
 import { useTranslation } from 'react-i18next';
