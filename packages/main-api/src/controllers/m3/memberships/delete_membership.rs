@@ -24,9 +24,6 @@ pub async fn delete_membership_handler(
 ) -> Result<Json<DeleteMembershipResponse>, Error2> {
     let cli = &dynamo.client;
 
-    // Verify user is a ServiceAdmin
-    let _admin = verify_service_admin(user, cli).await?;
-
     // Delete membership
     let pk = Partition::Membership(membership_id);
     let sk = Some(EntityType::Membership);
