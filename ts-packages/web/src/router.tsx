@@ -33,6 +33,10 @@ import SpaceFilePage from './app/spaces/[id]/file/space-file-page';
 import SpaceRecommendationPage from './app/spaces/[id]/recommendation/space-recommendation-page';
 import DiscussionPage from './app/spaces/[id]/discussion/[discussion-id]/discussion-page';
 
+// Admin
+import AdminPage from './app/admin/page';
+import { MembershipsPage } from './app/admin/memberships/memberships-page';
+
 export const routes = createBrowserRouter([
   {
     id: 'root-layout',
@@ -217,6 +221,18 @@ export const routes = createBrowserRouter([
         path: 'storybook',
         Component: StorybookPage,
       }, // End of StorybookPage
+
+      // Admin Routes
+      {
+        id: 'admin-page',
+        path: 'admin',
+        Component: AdminPage,
+      },
+      {
+        id: 'admin-memberships-page',
+        path: 'admin/memberships',
+        Component: MembershipsPage,
+      }, // End of Admin Routes
     ],
   },
 ]);
