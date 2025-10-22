@@ -28,12 +28,11 @@ async fn test_list_memberships() {
         app: app,
         path: "/m3/memberships",
         headers: admin_user.1,
-        response_type: ListMembershipsResponse
+        response_type: ListItemsResponse<MembershipResponse>
     };
 
     assert_eq!(status, 200);
-    assert!(body.total >= 2);
-    assert!(body.memberships.len() >= 2);
+    assert!(body.items.len() >= 2);
 }
 
 #[tokio::test]

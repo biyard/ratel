@@ -1,7 +1,6 @@
 import i18next from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
-import enNav from './en/Nav.json';
 import enSignIn from './en/SignIn.json';
 import enSignup from './en/Signup.json';
 import enSpaceForms from './en/SpaceForms.json';
@@ -19,7 +18,6 @@ import enSpacePublishModal from './en/SpacePublishModal.json';
 import enSpaceMakePublicModal from './en/SpaceMakePublicModal.json';
 import enEditArtworkPost from './en/EditArtworkPost.json';
 
-import koNav from './ko/Nav.json';
 import koSignIn from './ko/SignIn.json';
 import koSignup from './ko/Signup.json';
 import koSpaceForms from './ko/SpaceForms.json';
@@ -51,11 +49,13 @@ import { i18nTimeRangeSetting } from '@/features/spaces/polls/components/time-ra
 import { i18nSpacePollViewerPage } from '@/features/spaces/polls/pages/viewer/space-poll-viewer-i18n';
 import { i18nSpaceFileEditor } from '@/features/spaces/files/pages/creator/space-file-editor-i18n';
 import { i18nSpaceRecommendationEditor } from '@/features/spaces/recommendations/pages/creator/space-recommendation-editor-i18n';
+import { i18nAdmin } from '@/app/admin/admin-page-i18n';
+import { i18nMemberships } from '@/features/membership/i18n';
+import { i18nHeader } from '@/components/header/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 export const resources = {
   en: {
-    Nav: enNav,
     SignIn: enSignIn,
     Signup: enSignup,
     SpaceForms: enSpaceForms,
@@ -74,7 +74,6 @@ export const resources = {
     EditArtworkPost: enEditArtworkPost,
   },
   ko: {
-    Nav: koNav,
     SignIn: koSignIn,
     Signup: koSignup,
     SpaceForms: koSpaceForms,
@@ -110,6 +109,9 @@ Object.entries({
   SpaceFileEditor: i18nSpaceFileEditor,
   SpaceDiscussionEditor: i18nSpaceDiscussionEditorPage,
   SpaceRecommendationEditor: i18nSpaceRecommendationEditor,
+  Admin: i18nAdmin,
+  Memberships: i18nMemberships,
+  Nav: i18nHeader,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
