@@ -10,6 +10,8 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import NewDiscussion from '../../components/modals/new_discussion';
+import { useDeleteDiscussionMutation } from '../../hooks/use-delete-discussion-mutation';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 
 export class SpaceDiscussionEditorController {
   constructor(
@@ -21,6 +23,8 @@ export class SpaceDiscussionEditorController {
     public editing: State<boolean>,
     public popup,
     public t: TFunction<'SpaceDiscussionEditor', undefined>,
+
+    public deleteDiscussion: ReturnType<typeof useDeleteDiscussionMutation>,
   ) {}
 
   handleEdit = () => {
@@ -33,6 +37,40 @@ export class SpaceDiscussionEditorController {
 
   handleDiscard = () => {
     this.editing.set(false);
+  };
+
+  handleDeleteDiscussion = async (discussionPk: string) => {
+    try {
+      await this.deleteDiscussion.mutateAsync({
+        spacePk: this.spacePk,
+        discussionPk: discussionPk,
+      });
+
+      showSuccessToast('Success to delete discussion');
+    } catch {
+      showErrorToast('Failed to delete discussion');
+    } finally {
+      this.popup.close();
+    }
+  };
+
+  handleUpdateDiscussion = async (
+    discussionPk: string,
+    discussion: SpaceDiscussionResponse,
+  ) => {
+    this.popup
+      .open(
+        <NewDiscussion
+          spacePk={this.spacePk}
+          discussionPk={discussionPk}
+          startedAt={discussion.started_at}
+          endedAt={discussion.ended_at}
+          name={discussion.name}
+          description={discussion.description}
+        />,
+      )
+      .withoutBackdropClose()
+      .withTitle(this.t('select_space_type'));
   };
 
   handleAddDiscussion = async () => {
@@ -62,6 +100,8 @@ export function useSpaceDiscussionEditorController(spacePk: string) {
   const popup = usePopup();
   const { t } = useTranslation('SpaceDiscussionEditor');
 
+  const deleteDiscussion = useDeleteDiscussionMutation();
+
   //   console.log('discussion:', discussion.discussions, discussion.bookmark);
 
   return new SpaceDiscussionEditorController(
@@ -73,5 +113,7 @@ export function useSpaceDiscussionEditorController(spacePk: string) {
     new State(editing),
     popup,
     t,
+
+    deleteDiscussion,
   );
 }
