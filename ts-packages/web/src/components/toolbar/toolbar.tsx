@@ -18,7 +18,7 @@ import {
   Strikethrough,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import FileUploader from '@/components/file-uploader';
+import FileUploader from '@/features/spaces/files/components/file-uploader';
 
 export default function ToolbarPlugin({
   onImageUpload,
