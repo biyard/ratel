@@ -60,11 +60,6 @@ export default function ClientProviders({
       return false;
     }
 
-    if (trimmedNickname.length === 0) {
-      showErrorToast('Display name cannot be empty or only whitespace');
-      return false;
-    }
-
     // Check word count (max 2 words)
     const wordCount = trimmedNickname
       .split(/\s+/)
