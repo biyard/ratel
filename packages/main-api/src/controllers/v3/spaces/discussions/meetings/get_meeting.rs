@@ -19,7 +19,6 @@ pub async fn get_meeting_handler(
         discussion_pk,
     }): SpaceDiscussionPath,
 ) -> Result<Json<MeetingData>, Error2> {
-    tracing::debug!("1111111: {:?}", discussion_pk);
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
     let (pk, sk) = SpaceDiscussion::keys(&space_pk, &discussion_pk);
 
