@@ -854,16 +854,17 @@ fn generate_updater(
             pub async fn execute(
                 self,
                 cli: &aws_sdk_dynamodb::Client,
-            ) -> #result_ty <(), #err_ctor> {
-                let _ = cli.update_item()
+            ) -> #result_ty <#ident, #err_ctor> {
+                let res = cli.update_item()
                     .table_name(#ident::table_name())
                     .set_key(Some(self.k))
                     .set_attribute_updates(Some(self.m))
+                    .return_values(aws_sdk_dynamodb::types::ReturnValue::AllNew)
                     .send()
                     .await
                     .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
 
-                Ok(())
+                Ok(serde_dynamo::from_item(res.attributes.unwrap_or_default())?)
             }
         }
     }

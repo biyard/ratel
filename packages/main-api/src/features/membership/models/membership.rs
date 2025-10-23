@@ -35,8 +35,11 @@ pub struct Membership {
     // Display order in the UI (lower numbers first)
     pub display_order: i32,
 
-    // Duration in days (30 for monthly, 365 for yearly, 0 for lifetime)
+    // Duration in days (30 for monthly, 365 for yearly, -1 or 0 for infinite/lifetime)
     pub duration_days: i32,
+
+    // Maximum credits that can be used per space (-1 for unlimited)
+    pub max_credits_per_space: i64,
 
     // Is this membership currently available for purchase?
     #[dynamo(index = "gsi1", pk, prefix = "ACTIVE", name = "find_active")]
@@ -53,6 +56,7 @@ impl Membership {
         credits: i64,
         duration_days: i32,
         display_order: i32,
+        max_credits_per_space: i64,
     ) -> Self {
         let uid = uuid::Uuid::new_v4().to_string();
         let created_at = chrono::Utc::now().timestamp_micros();
@@ -66,6 +70,7 @@ impl Membership {
             price_dollars: price_dollers,
             credits,
             duration_days,
+            max_credits_per_space,
             display_order,
             is_active: true,
             display_order_indexed: display_order,
@@ -89,6 +94,7 @@ impl Membership {
         duration_days: Option<i32>,
         display_order: Option<i32>,
         is_active: Option<bool>,
+        max_credits_per_space: Option<i64>,
     ) {
         if let Some(tier) = tier {
             self.tier = tier;
@@ -108,6 +114,9 @@ impl Membership {
         }
         if let Some(active) = is_active {
             self.is_active = active;
+        }
+        if let Some(max_credits) = max_credits_per_space {
+            self.max_credits_per_space = max_credits;
         }
         self.updated_at = chrono::Utc::now().timestamp_micros();
     }
