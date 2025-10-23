@@ -1093,7 +1093,7 @@ fn generate_struct_impl(
                     .unwrap_or_default()
                     .into_iter()
                     .map(|item| serde_dynamo::from_item(item))
-                    .collect::<Result<Vec<_>, _>>()?;
+                    .collect::<std::result::Result<Vec<_>, _>>()?;
 
                 let bookmark = if let Some(ref last_evaluated_key) = resp.last_evaluated_key {
                     Some(Self::encode_lek_all(last_evaluated_key)?)
@@ -1383,7 +1383,7 @@ fn generate_enum_impl(ident: Ident, _ds: &DataEnum, s_cfg: StructCfg) -> proc_ma
                     .unwrap_or_default()
                     .into_iter()
                     .map(|item| serde_dynamo::from_item(item))
-                    .collect::<Result<Vec<#ident>, _>>()?;
+                    .collect::<std::result::Result<Vec<#ident>, _>>()?;
                 Ok(items)
             }
 
@@ -1427,7 +1427,7 @@ fn generate_enum_impl(ident: Ident, _ds: &DataEnum, s_cfg: StructCfg) -> proc_ma
                     .unwrap_or_default()
                     .into_iter()
                     .map(|item| serde_dynamo::from_item(item))
-                    .collect::<Result<Vec<#ident>, _>>()?;
+                    .collect::<std::result::Result<Vec<#ident>, _>>()?;
                 Ok(items)
             }
 
@@ -1677,7 +1677,7 @@ fn generate_index_fn(
                 .unwrap_or_default()
                 .into_iter()
                 .map(|item| serde_dynamo::from_item(item))
-                .collect::<Result<Vec<_>, _>>()?;
+                .collect::<std::result::Result<Vec<_>, _>>()?;
 
             let bookmark = if let Some(ref last_evaluated_key) = resp.last_evaluated_key {
                 Some(Self::encode_lek_all(last_evaluated_key)?)
