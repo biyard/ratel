@@ -9,7 +9,6 @@ import {
   MeetingSessionConfiguration,
 } from 'amazon-chime-sdk-js';
 
-import { useApiCall } from '@/lib/api/use-send';
 import { logger } from '@/lib/logger';
 import { route } from '@/route';
 import { useExitMeetingMutation } from '../../../hooks/use-exit-meeting-mutation';
@@ -191,7 +190,6 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
     null,
   );
 
-  const { post, get } = useApiCall();
   const navigate = useNavigate();
 
   const data = useDiscussion(spacePk, discussionPk);
@@ -241,7 +239,7 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
 
     const handlePopState = async () => {
       await cleanupMeetingSession();
-      navigate(route.deliberationSpaceById(spacePk));
+      navigate(route.discussionByPk(spacePk, discussionPk));
     };
 
     const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
@@ -261,7 +259,7 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('unload', handleUnload);
     };
-  }, [spacePk, discussionPk, meetingSession, navigate, post]);
+  }, [spacePk, discussionPk, meetingSession, navigate]);
 
   useEffect(() => {
     if (startedRef.current) return;
@@ -504,7 +502,7 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
     return () => {
       av.realtimeUnsubscribeToAttendeeIdPresence?.(handlePresenceChange);
     };
-  }, [meetingSession, users, spacePk, discussionPk, get]);
+  }, [meetingSession, users, spacePk, discussionPk]);
 
   useEffect(() => {
     if (!meetingSession) return;

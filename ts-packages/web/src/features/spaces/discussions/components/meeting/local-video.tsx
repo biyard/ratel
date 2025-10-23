@@ -48,6 +48,7 @@ export default function LocalVideo({
       if (!ok || !mounted) return;
 
       const observer = {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         videoTileDidUpdate: (ts: any) => {
           if (!mounted) return;
           if (ts.localTile && ts.tileId != null && videoRef.current) {
