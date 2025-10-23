@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { CONFIGS } from './config';
 import { click, fill } from './utils';
 
@@ -22,7 +22,7 @@ test('create admin storage state', async ({ page }) => {
 
   await click(page, { text: 'Sign in' });
 
-  await page.waitForURL('/', { timeout: CONFIGS.PAGE_WAIT_TIME });
+  await expect(page.getByRole('link', { name: 'Admin' })).toBeVisible();
 
   // Save Playwright storage state for authenticated tests
   await page.context().storageState({ path: 'admin.json' });

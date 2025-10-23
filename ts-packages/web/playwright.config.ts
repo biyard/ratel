@@ -77,7 +77,7 @@ export default defineConfig({
       testMatch: ['**/*.admin.setup.ts', '**/*.admin.setup.tsx'],
     },
     {
-      name: 'Admin tests',
+      name: 'admin',
       testMatch: ['**/*.admin.spec.ts', '**/*.admin.spec.tsx'],
       dependencies: ['admin-setup'],
       use: {

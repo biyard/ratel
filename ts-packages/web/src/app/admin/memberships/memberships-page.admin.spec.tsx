@@ -30,18 +30,6 @@ test.describe('Memberships Page - Admin', () => {
       const currentUrl = page.url();
       console.log('Current URL:', currentUrl);
 
-      // Check if redirected to home (means admin check failed)
-      if (currentUrl === 'http://localhost:8080/' || !currentUrl.includes('/admin/memberships')) {
-        console.warn(
-          '⚠️  User was redirected from /admin/memberships - admin user may not have user_type=98',
-        );
-        console.warn(
-          '   To fix: Ensure admin@ratel.foundation has user_type=98 in the database',
-        );
-        test.skip();
-        return;
-      }
-
       // If we're still on the admin page, verify it loaded
       expect(currentUrl).toContain('/admin/memberships');
 
@@ -71,7 +59,9 @@ test.describe('Memberships Page - Admin', () => {
       }
 
       // Check for Create button (should exist on successful load)
-      const createButton = page.getByRole('button', { name: /create/i }).first();
+      const createButton = page
+        .getByRole('button', { name: /create/i })
+        .first();
       const hasCreateButton = await createButton.isVisible().catch(() => false);
 
       if (hasCreateButton) {
@@ -103,7 +93,9 @@ test.describe('Memberships Page - Admin', () => {
       const count = await createButtons.count();
 
       if (count === 0) {
-        console.log('No create button found - page may not have loaded properly');
+        console.log(
+          'No create button found - page may not have loaded properly',
+        );
         test.skip();
         return;
       }
@@ -118,9 +110,7 @@ test.describe('Memberships Page - Admin', () => {
 
       // Verify all form fields are present
       await expect(page.locator('select[name="tier"]')).toBeVisible();
-      await expect(
-        page.locator('input[name="price_dollars"]'),
-      ).toBeVisible();
+      await expect(page.locator('input[name="price_dollars"]')).toBeVisible();
       await expect(page.locator('input[name="credits"]')).toBeVisible();
       await expect(page.locator('input[name="display_order"]')).toBeVisible();
 
@@ -157,9 +147,13 @@ test.describe('Memberships Page - Admin', () => {
       // Check if form closed (success) or still open (error)
       const formStillOpen = await formHeading.isVisible().catch(() => false);
       if (formStillOpen) {
-        console.log('⚠️  Form still open - may have validation error or API error');
+        console.log(
+          '⚠️  Form still open - may have validation error or API error',
+        );
       } else {
-        console.log('✓ Form closed - membership creation submitted successfully');
+        console.log(
+          '✓ Form closed - membership creation submitted successfully',
+        );
       }
     });
 
@@ -188,9 +182,7 @@ test.describe('Memberships Page - Admin', () => {
 
       if (!isChecked) {
         // Should show duration input when unchecked
-        await expect(
-          page.locator('input[name="duration_days"]'),
-        ).toBeVisible();
+        await expect(page.locator('input[name="duration_days"]')).toBeVisible();
 
         // Check the checkbox
         await infiniteCheckbox.check();
@@ -344,9 +336,7 @@ test.describe('Memberships Page - Admin', () => {
       await page.waitForTimeout(1000);
 
       // Verify confirmation dialog opened
-      const dialogHeading = page
-        .locator('h2')
-        .filter({ hasText: /delete/i });
+      const dialogHeading = page.locator('h2').filter({ hasText: /delete/i });
       await expect(dialogHeading).toBeVisible({ timeout: 5000 });
 
       console.log('✓ Delete confirmation dialog opened');
@@ -361,7 +351,9 @@ test.describe('Memberships Page - Admin', () => {
   });
 
   test.describe('Form Validation', () => {
-    test('[MP-009] Numeric fields have correct input type', async ({ page }) => {
+    test('[MP-009] Numeric fields have correct input type', async ({
+      page,
+    }) => {
       if (!page.url().includes('/admin/memberships')) {
         test.skip();
         return;
@@ -398,7 +390,9 @@ test.describe('Memberships Page - Admin', () => {
       const currentUrl = page.url();
 
       if (!currentUrl.includes('/admin/memberships')) {
-        console.log('⚠️  User redirected from admin page - admin permissions may not be set');
+        console.log(
+          '⚠️  User redirected from admin page - admin permissions may not be set',
+        );
         test.skip();
         return;
       }
@@ -416,7 +410,9 @@ test.describe('Memberships Page - Admin', () => {
       const errorMessage = page.getByText(/error/i);
       const hasError = await errorMessage.isVisible().catch(() => false);
 
-      const createButton = page.getByRole('button', { name: /create/i }).first();
+      const createButton = page
+        .getByRole('button', { name: /create/i })
+        .first();
       const hasCreateButton = await createButton.isVisible().catch(() => false);
 
       console.log('Page state:', {
