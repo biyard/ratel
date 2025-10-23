@@ -2,15 +2,15 @@
 
 ## Project Structure & Modules
 - Rust workspace in `packages/*` (e.g., `packages/main-api`, `packages/fetcher`, `packages/image-worker`, `packages/telegram-bot`). Shared types in `packages/dto`.
-- Web app (Next.js) in `ts-packages/web`.
+- Web app (Vite/React) in `ts-packages/web`.
 - E2E tests (Playwright) in `tests/`.
 - Infra/CDK assets under `deps/rust-sdk/cdk` (deploy helper) and `cdk/` (web artifacts copy on deploy).
 - Docker and local tooling: `docker-compose.yaml`, `scripts/`, `.build/` (generated artifacts), `benchmark/` fixtures.
 
 ## Build, Test, and Dev
-- Web (Next.js):
-  - Dev: `pnpm -C ts-packages/web dev`
-  - Build/Start: `pnpm -C ts-packages/web build && pnpm -C ts-packages/web start`
+- Web (Vite/React):
+  - Dev: `cd ts-packages/web && make run` or `pnpm -C ts-packages/web dev`
+  - Build: `pnpm -C ts-packages/web build`
   - Lint: `pnpm -C ts-packages/web lint`
 - Rust services (per package):
   - Dev (watch): `cd packages/main-api && make run`

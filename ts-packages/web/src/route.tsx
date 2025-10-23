@@ -70,4 +70,8 @@ export const route = {
       lang ? `&lang=${lang}` : ''
     }`;
   },
+
+  // Admin routes
+  admin: () => '/admin',
+  adminMemberships: () => '/admin/memberships',
 };

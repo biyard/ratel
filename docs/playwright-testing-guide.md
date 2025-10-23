@@ -4,44 +4,37 @@ This guide provides comprehensive instructions for writing and maintaining Playw
 
 ## Overview
 
-Playwright tests in this project use a structured approach that mirrors the Next.js App Router directory structure. All tests are located in the `tests/` directory and follow specific naming and organizational conventions.
+Playwright tests in this project use a structured approach that organizes tests alongside their page components. Tests can be placed either in the same directory as the page being tested, or in the `tests/` directory following the app structure. The project uses Vite/React with React Router (defined in `router.tsx`).
 
 ## Directory Structure
 
-### Mirroring App Router Structure
-The test directory structure should exactly match the app router structure:
+### Test Organization
+Tests can be organized in two ways:
+
+1. **Co-located with pages** (preferred for new tests):
+   - Place test files in the same directory as the page component
+   - Example: `ts-packages/web/src/app/admin/memberships/memberships-page.admin.spec.tsx`
+
+2. **Centralized in tests/ directory** (for existing tests):
+   - Tests follow the app structure in `tests/` directory
 
 ```
 ts-packages/web/src/app/
 ├── (social)/
-│   ├── page.tsx
+│   ├── home-page.tsx                    # Page component
+│   ├── home-page.auth.spec.tsx          # Co-located test
 │   ├── settings/
 │   └── experimental/
-└── teams/
-    ├── [username]/
-    │   ├── page.tsx
-    │   ├── home/
-    │   ├── settings/
-    │   ├── members/
-    │   ├── drafts/
-    │   └── groups/
-    └── page.tsx
+└── admin/
+    └── memberships/
+        ├── memberships-page.tsx         # Page component
+        ├── memberships-page.admin.spec.tsx  # Co-located test
+        └── use-memberships-page-controller.tsx
 
-tests/
-├── (social)/
-│   ├── homepage.auth.spec.ts
-│   ├── homepage.anon.spec.ts
-│   ├── settings/
-│   └── experimental/
-└── teams/
-    ├── [username]/
-    │   ├── team-page.auth.spec.ts
-    │   ├── home/
-    │   ├── settings/
-    │   ├── members/
-    │   ├── drafts/
-    │   └── groups/
-    └── teams-list.auth.spec.ts
+# Routes are defined in router.tsx (React Router):
+router.tsx:
+  - Component: HomePage (from home-page.tsx)
+  - Component: MembershipsPage (from memberships-page.tsx)
 ```
 
 ## Naming Conventions
