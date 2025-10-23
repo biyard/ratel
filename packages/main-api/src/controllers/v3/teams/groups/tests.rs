@@ -44,7 +44,7 @@ async fn test_update_group_handler() {
         body: {
             "name": "Group for Verification",
             "description": "A group for verification purposes",
-            "image_url": "https://example.com/image.png",
+            "image_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "permissions": [TeamGroupPermission::GroupEdit]
         },
         response_type: CreateGroupResponse
@@ -53,7 +53,7 @@ async fn test_update_group_handler() {
     assert_eq!(status, 200, "Failed to create team group");
 
     // Extract UUID from EntityType for path parameter
-    let group_id = match team_group.group_sk {
+    let _group_id = match team_group.group_sk {
         EntityType::TeamGroup(ref id) => id.clone(),
         _ => panic!("Expected TeamGroup EntityType"),
     };
@@ -61,7 +61,7 @@ async fn test_update_group_handler() {
     // Update group
     let (status, _headers, _body) = post! {
         app: app,
-        path: format!("/v3/teams/{}/groups/{}", team.team_pk, group_id),
+        path: format!("/v3/teams/{}/groups/{}", team.team_pk, team_group.group_sk ),
         headers: test_user.1.clone(),
         body: {
             "name": "Updated Group Name",
@@ -108,7 +108,7 @@ async fn test_update_with_permissison() {
         body: {
             "name": "Group for Verification",
             "description": "A group for verification purposes",
-            "image_url": "https://example.com/image.png",
+            "image_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "permissions": [TeamGroupPermission::GroupEdit]
         },
         response_type: CreateGroupResponse
@@ -138,7 +138,7 @@ async fn test_update_with_permissison() {
     // Update group with user2 (who has GroupEdit permission)
     let (status, _headers, _body) = post! {
         app: app,
-        path: format!("/v3/teams/{}/groups/{}", team.team_pk, group_id),
+        path: format!("/v3/teams/{}/groups/{}", team.team_pk, team_group.group_sk),
         headers: user2.1.clone(),
         body: {
             "name": "Updated by Member",
@@ -183,7 +183,7 @@ async fn test_add_member_handler() {
         body: {
             "name": "Group for Verification",
             "description": "A group for verification purposes",
-            "image_url": "https://example.com/image.png",
+            "image_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
             "permissions": [TeamGroupPermission::PostWrite]
         },
         response_type: CreateGroupResponse
