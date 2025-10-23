@@ -28,10 +28,10 @@ import SpaceByIdLayout from './app/spaces/[id]/space-by-id-layout';
 import { SpaceHomePage } from './app/spaces/[id]/space-home-page';
 import { SpaceSettingsPage } from './app/spaces/[id]/settings/space-settings-page';
 import SpaceSprintLeaguePage from './app/spaces/[id]/sprint-league/page';
-import SpaceDiscussionPage from './app/spaces/[id]/discussion/space-discussion-page';
+import SpaceDiscussionPage from './app/spaces/[id]/discussions/space-discussion-page';
 import SpaceFilePage from './app/spaces/[id]/file/space-file-page';
 import SpaceRecommendationPage from './app/spaces/[id]/recommendation/space-recommendation-page';
-import DiscussionPage from './app/spaces/[id]/discussion/[discussion-id]/discussion-page';
+import DiscussionPage from './app/spaces/[id]/discussions/[discussion-id]/discussion-page';
 
 // Admin
 import AdminPage from './app/admin/page';

@@ -51,7 +51,6 @@ pub struct ListDiscussionMemberResponse {
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema)]
 pub struct ListDiscussionParticipantResponse {
     pub participants: Vec<SpaceDiscussionParticipant>,
-    pub bookmark: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]

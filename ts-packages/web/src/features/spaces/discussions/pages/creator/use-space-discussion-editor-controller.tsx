@@ -130,10 +130,14 @@ export function useSpaceDiscussionEditorController(spacePk: string) {
   const participantMeeting = useParticipateMeetingMutation();
   const navigate = useNavigate();
 
+  const discussionsKey = (discussion?.discussions ?? [])
+    .map((d) => d?.pk)
+    .join('|');
+
   useEffect(() => {
-    discussions[1](discussion.discussions || []);
-    bookmark[1](discussion.bookmark ?? null);
-  }, [bookmark, discussion, discussions]);
+    discussions[1](discussion?.discussions ?? []);
+    bookmark[1](discussion?.bookmark ?? null);
+  }, [discussionsKey, discussion?.bookmark]);
 
   return new SpaceDiscussionEditorController(
     spacePk,
