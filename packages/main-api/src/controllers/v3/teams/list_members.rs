@@ -4,7 +4,7 @@ use crate::models::{
     user::User,
 };
 use crate::types::{EntityType, list_items_response::ListItemsResponse};
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 use bdk::prelude::*;
 use by_axum::{
     aide::NoApi,
@@ -65,9 +65,9 @@ pub async fn list_members_handler(
     NoApi(user): NoApi<Option<User>>,
     Path(team_username): Path<String>,
     Query(ListMembersQueryParams { bookmark, limit }): Query<ListMembersQueryParams>,
-) -> Result<Json<ListItemsResponse<TeamMember>>, Error2> {
+) -> Result<Json<ListItemsResponse<TeamMember>>, Error> {
     // Check if user is authenticated
-    let auth_user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
+    let auth_user = user.ok_or(Error::Unauthorized("Authentication required".into()))?;
 
     // Get team by username
     let team_results =
@@ -78,7 +78,7 @@ pub async fn list_members_handler(
         .0
         .into_iter()
         .find(|t| t.username == team_username)
-        .ok_or(Error2::NotFound("Team not found".into()))?;
+        .ok_or(Error::NotFound("Team not found".into()))?;
 
     let team_partition = team.pk.clone();
     let team_pk_str = team_partition.to_string();
@@ -104,7 +104,7 @@ pub async fn list_members_handler(
     let is_auth_user_member = !auth_user_memberships.0.is_empty();
 
     if !is_auth_user_owner && !is_auth_user_member {
-        return Err(Error2::Unauthorized(
+        return Err(Error::Unauthorized(
             "You must be a member of this team to view its members".into(),
         ));
     }

@@ -4,7 +4,7 @@ use crate::models::space::SpaceCommon;
 
 use crate::models::user::User;
 use crate::types::{Partition, TeamGroupPermission};
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 
 use aide::NoApi;
 use axum::extract::{Json, Path, State};
@@ -14,9 +14,9 @@ pub async fn get_recommendation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Path(SpacePathParam { space_pk }): SpacePath,
-) -> Result<Json<SpaceRecommendationResponse>, Error2> {
+) -> Result<Json<SpaceRecommendationResponse>, Error> {
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundDeliberationSpace);
+        return Err(Error::NotFoundDeliberationSpace);
     }
 
     let (_, has_perm) = SpaceCommon::has_permission(
@@ -27,7 +27,7 @@ pub async fn get_recommendation_handler(
     )
     .await?;
     if !has_perm {
-        return Err(Error2::NoPermission);
+        return Err(Error::NoPermission);
     }
 
     let (pk, sk) = SpaceRecommendation::keys(&space_pk);

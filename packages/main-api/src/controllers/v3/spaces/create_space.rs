@@ -3,7 +3,7 @@ use crate::models::feed::Post;
 use crate::models::space::SpaceCommon;
 use crate::models::user::User;
 use crate::types::{Partition, SpaceType, TeamGroupPermission};
-use crate::{AppState, Error2, transact_write_items};
+use crate::{AppState, Error, transact_write_items};
 use aide::NoApi;
 use axum::extract::{Json, State};
 use bdk::prelude::*;
@@ -33,7 +33,7 @@ pub async fn create_space_handler(
         space_type,
         post_pk,
     }): Json<CreateSpaceRequest>,
-) -> Result<Json<CreateSpaceResponse>, Error2> {
+) -> Result<Json<CreateSpaceResponse>, Error> {
     let (post, has_perm) = Post::has_permission(
         &dynamo.client,
         &post_pk,
@@ -42,7 +42,7 @@ pub async fn create_space_handler(
     )
     .await?;
     if !has_perm {
-        return Err(Error2::NoPermission);
+        return Err(Error::NoPermission);
     }
 
     let space = SpaceCommon::new(post_pk, user).with_space_type(space_type);

@@ -3,7 +3,7 @@ use crate::features::spaces::discussions::dto::space_discussion_response::SpaceD
 use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
 
 use crate::models::User;
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 use axum::extract::{Path, State};
 use bdk::prelude::aide::NoApi;
 use bdk::prelude::axum::Json;
@@ -16,7 +16,7 @@ pub async fn end_recording_handler(
         space_pk,
         discussion_pk,
     }): SpaceDiscussionPath,
-) -> Result<Json<SpaceDiscussionResponse>, Error2> {
+) -> Result<Json<SpaceDiscussionResponse>, Error> {
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
 
     let (pk, sk) = SpaceDiscussion::keys(&space_pk, &discussion_pk);
@@ -27,10 +27,10 @@ pub async fn end_recording_handler(
     let meeting_id = disc
         .meeting_id
         .clone()
-        .ok_or_else(|| Error2::NotFound("not found discussion".to_string()))?;
+        .ok_or_else(|| Error::NotFound("not found discussion".to_string()))?;
 
     if disc.pipeline_id == "" {
-        return Err(Error2::NotFound("not found pipeline".to_string()));
+        return Err(Error::NotFound("not found pipeline".to_string()));
     }
 
     client
@@ -38,7 +38,7 @@ pub async fn end_recording_handler(
         .await
         .map_err(|e| {
             tracing::error!("end_pipeline failed: {:?}", e);
-            Error2::AwsChimeError(e.to_string())
+            Error::AwsChimeError(e.to_string())
         })?;
 
     let disc = disc.into();

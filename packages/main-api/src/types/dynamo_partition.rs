@@ -63,7 +63,7 @@ impl Partition {
     pub fn to_space_pk(self) -> crate::Result<Partition> {
         match self {
             Partition::Feed(pk) => Ok(Partition::Space(pk)),
-            _ => Err(crate::Error2::InvalidPartitionKey(
+            _ => Err(crate::Error::InvalidPartitionKey(
                 "Space key can be only extracted from Feed key".to_string(),
             )),
         }
@@ -72,7 +72,7 @@ impl Partition {
     pub fn to_post_key(self) -> crate::Result<Partition> {
         match self {
             Partition::Space(pk) => Ok(Partition::Feed(pk)),
-            _ => Err(crate::Error2::InvalidPartitionKey(
+            _ => Err(crate::Error::InvalidPartitionKey(
                 "Post(Feed) key can be only extracted from Space key".to_string(),
             )),
         }

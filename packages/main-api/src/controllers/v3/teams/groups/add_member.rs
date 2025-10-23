@@ -1,5 +1,5 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     models::{
         team::{Team, TeamGroup},
         user::{User, UserTeam, UserTeamGroup},
@@ -42,8 +42,8 @@ pub async fn add_member_handler(
     NoApi(user): NoApi<Option<User>>,
     Path(params): Path<AddMemberPathParams>,
     Json(req): Json<AddMemberRequest>,
-) -> Result<Json<AddMemberResponse>, Error2> {
-    let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
+) -> Result<Json<AddMemberResponse>, Error> {
+    let user = user.ok_or(Error::Unauthorized("Authentication required".into()))?;
 
     // Check permissions
     check_any_permission_with_user(
@@ -69,8 +69,8 @@ pub async fn add_member_handler(
     )
     .await?;
 
-    let team = team.ok_or(Error2::NotFound("Team not found".into()))?;
-    let team_group = team_group.ok_or(Error2::NotFound("Team group not found".into()))?;
+    let team = team.ok_or(Error::NotFound("Team not found".into()))?;
+    let team_group = team_group.ok_or(Error::NotFound("Team group not found".into()))?;
     let mut success_count = 0;
     let mut failed_pks = vec![];
     for member in &req.user_pks {

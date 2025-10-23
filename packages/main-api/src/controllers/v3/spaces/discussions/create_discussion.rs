@@ -7,7 +7,7 @@ use crate::features::spaces::discussions::models::space_discussion::SpaceDiscuss
 use crate::features::spaces::discussions::models::space_discussion_member::SpaceDiscussionMember;
 use crate::models::SpaceCommon;
 use crate::types::{Partition, TeamGroupPermission};
-use crate::{AppState, Error2, models::user::User, types::EntityType};
+use crate::{AppState, Error, models::user::User, types::EntityType};
 use bdk::prelude::axum::extract::{Json, Path, State};
 use bdk::prelude::*;
 
@@ -18,9 +18,9 @@ pub async fn create_discussion_handler(
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<SpaceDiscussionRequest>,
-) -> Result<Json<CreateDiscussionResponse>, Error2> {
+) -> Result<Json<CreateDiscussionResponse>, Error> {
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundSpace);
+        return Err(Error::NotFoundSpace);
     }
 
     let (_, has_perm) = SpaceCommon::has_permission(
@@ -31,7 +31,7 @@ pub async fn create_discussion_handler(
     )
     .await?;
     if !has_perm {
-        return Err(Error2::NoPermission);
+        return Err(Error::NoPermission);
     }
 
     let disc = SpaceDiscussion::new(
@@ -60,7 +60,7 @@ pub async fn create_discussion_handler(
     for member in req.user_ids.clone() {
         let user = User::get(&dynamo.client, member, Some(EntityType::User))
             .await?
-            .ok_or(Error2::NotFound("User not found".into()))?;
+            .ok_or(Error::NotFound("User not found".into()))?;
 
         let m =
             SpaceDiscussionMember::new(discussion_pk.clone(), user).create_transact_write_item();
@@ -76,7 +76,7 @@ pub async fn create_discussion_handler(
                 .await
                 .map_err(|e| {
                     tracing::error!("Failed to create discussion: {:?}", e);
-                    Error2::InternalServerError("Failed to create discussion".into())
+                    Error::InternalServerError("Failed to create discussion".into())
                 })?;
 
             tx.clear();
@@ -92,7 +92,7 @@ pub async fn create_discussion_handler(
             .await
             .map_err(|e| {
                 tracing::error!("Failed to create discussion: {:?}", e);
-                Error2::InternalServerError("Failed to create discussion".into())
+                Error::InternalServerError("Failed to create discussion".into())
             })?;
     }
 
