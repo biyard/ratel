@@ -4,13 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Ratel is a decentralized legislative platform built with Rust and TypeScript, designed to bridge the gap between crypto users and policymakers. The project consists of multiple Rust services and a Next.js web frontend.
+Ratel is a decentralized legislative platform built with Rust and TypeScript, designed to bridge the gap between crypto users and policymakers. The project consists of multiple Rust services and a Vite/React web frontend.
 
 ## Architecture
 
 This is a monorepo with a workspace structure:
 - **packages/** - Rust workspace packages (APIs, workers, shared DTOs)
-- **ts-packages/** - TypeScript packages (Next.js web frontend)
+- **ts-packages/** - TypeScript packages (Vite/React web frontend)
 - **kaia/** - Blockchain contracts
 - **tests/** - Playwright integration tests
 
@@ -21,7 +21,7 @@ This is a monorepo with a workspace structure:
 - **image-worker** (`packages/image-worker/`) - Image processing service
 - **telegram-bot** (`packages/telegram-bot/`) - Telegram integration
 - **dto** (`packages/dto/`) - Shared data transfer objects
-- **web** (`ts-packages/web/`) - Next.js frontend with React 19
+- **web** (`ts-packages/web/`) - Vite frontend with React 19
 
 ### Frontend
 - All page implementations are placed in `ts-packages/web/src/app` as similar tree of routes.
@@ -59,7 +59,7 @@ This is a monorepo with a workspace structure:
 docker-compose --profile development up -d
 
 # Start specific services
-docker-compose up -d postgres redis hasura main-api web
+docker-compose up -d redis hasura main-api web
 
 # Include telegram bot (requires TELEGRAM_TOKEN)
 docker-compose --profile telegram up -d
@@ -113,7 +113,7 @@ cd ts-packages/web && npx playwright test
 
 ### Linting/Formatting
 ```bash
-# Next.js linting
+# Vite/React linting
 cd ts-packages/web && npm run lint
 ```
 
@@ -129,12 +129,11 @@ cd ts-packages/web && npm run lint
 
 The docker-compose.yaml provides:
 
-- **postgres** - PostgreSQL database (port 5432)
 - **main-api** - REST API (port 3000)
 - **fetcher** - Legislative data fetching (port 3001)
 - **image-worker** - Image processing service
 - **telegram-bot** - Telegram bot (optional, requires TELEGRAM_TOKEN)
-- **web** - Next.js frontend (port 8080)
+- **web** - Vite/React frontend (port 8080)
 - **localstack** - DynamoDB (port 4566)
 
 Access points:
