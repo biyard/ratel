@@ -1181,7 +1181,7 @@ fn generate_struct_impl(
             pub async fn batch_get(
                 cli: &aws_sdk_dynamodb::Client,
                 keys: Vec<#batch_get_param>,
-            ) -> Result<Vec<Self>, #err_ctor> {
+            ) -> std::result::Result<Vec<Self>, #err_ctor> {
                 if keys.is_empty() {
                     return Ok(vec![]);
                 }
