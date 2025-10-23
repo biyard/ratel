@@ -354,7 +354,11 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
         });
         return stream;
       });
+      const av = session.audioVideo;
+      av.realtimeMuteLocalAudio();
+
       const selfAttendeeId = configuration.credentials?.attendeeId;
+
       if (selfAttendeeId)
         setMicStates((prev) => ({ ...prev, [selfAttendeeId]: false }));
       setMeetingSession(session);
@@ -398,17 +402,35 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
   useEffect(() => {
     if (!meetingSession) return;
     const av = meetingSession.audioVideo;
+    const selfId = meetingSession.configuration.credentials?.attendeeId;
     const activeAttendeeIds = new Set<string>();
-    av.realtimeSubscribeToAttendeeIdPresence((attendeeId, present) => {
+    const subscribed = new Set<string>();
+
+    const onPresence = (attendeeId: string, present: boolean) => {
       if (attendeeId.includes('#content')) return;
+
       if (present) {
         activeAttendeeIds.add(attendeeId);
         void refetchParticipants();
-        av.realtimeSubscribeToVolumeIndicator(attendeeId, (_id, _v, muted) => {
-          if (typeof muted === 'boolean') {
-            setMicStates((prev) => ({ ...prev, [attendeeId]: !muted }));
-          }
-        });
+
+        if (attendeeId === selfId) {
+          setMicStates((prev) => ({ ...prev, [selfId!]: isAudioOn }));
+          return;
+        }
+
+        setMicStates((prev) => ({ ...prev, [attendeeId]: false }));
+
+        if (!subscribed.has(attendeeId)) {
+          subscribed.add(attendeeId);
+          av.realtimeSubscribeToVolumeIndicator(
+            attendeeId,
+            (_id, _v, muted) => {
+              if (typeof muted === 'boolean') {
+                setMicStates((prev) => ({ ...prev, [attendeeId]: !muted }));
+              }
+            },
+          );
+        }
       } else {
         activeAttendeeIds.delete(attendeeId);
         void refetchParticipants();
@@ -417,14 +439,23 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
           delete cp[attendeeId];
           return cp;
         });
+        if (subscribed.has(attendeeId)) {
+          av.realtimeUnsubscribeFromVolumeIndicator(attendeeId);
+          subscribed.delete(attendeeId);
+        }
       }
-    });
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    av.realtimeSubscribeToAttendeeIdPresence(onPresence as any);
     return () => {
       activeAttendeeIds.forEach((id) =>
         av.realtimeUnsubscribeFromVolumeIndicator(id),
       );
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      av.realtimeUnsubscribeToAttendeeIdPresence?.(onPresence as any);
     };
-  }, [meetingSession, refetchParticipants]);
+  }, [meetingSession, refetchParticipants, isAudioOn]);
 
   const exitedAttendeesRef = useRef<Set<string>>(new Set());
 
