@@ -105,8 +105,10 @@ export const spaceKeys = {
   file: (space_pk: string) => [...spaceKeys.detail(space_pk), 'files'] as const,
   recommendation: (space_pk: string) =>
     [...spaceKeys.detail(space_pk), 'recommendations'] as const,
-  discussion: (space_pk: string) =>
+  discussions: (space_pk: string) =>
     [...spaceKeys.detail(space_pk), 'discussions'] as const,
+  discussion: (space_pk: string, discussion_pk: string) =>
+    [...spaceKeys.detail(space_pk), 'discussions', discussion_pk] as const,
 };
 
 export const pollSpaceKeys = {

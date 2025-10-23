@@ -2,12 +2,13 @@ import { test, expect } from '@playwright/test';
 import { click, fill } from '@tests/utils';
 // import { fileURLToPath } from 'url';
 
-test.describe.serial('[Space File] Authenticated Users ', () => {
+test.describe
+  .serial('[SpaceRecommendationEditorPage] Authenticated Users ', () => {
   let context: import('@playwright/test').BrowserContext;
   let page: import('@playwright/test').Page;
 
   let threadUrl = '';
-  //   let spaceUrl = '';
+  let spaceUrl = '';
 
   test.beforeAll('Create a post', async ({ browser }) => {
     context = await browser.newContext({ storageState: 'user.json' });
@@ -33,7 +34,7 @@ test.describe.serial('[Space File] Authenticated Users ', () => {
     threadUrl = page.url();
   });
 
-  test('Create a deliberation Space', async () => {
+  test('[SPEP-001] Create a deliberation Space', async () => {
     await page.goto(threadUrl);
     await page.waitForTimeout(3000);
 
@@ -51,15 +52,46 @@ test.describe.serial('[Space File] Authenticated Users ', () => {
 
     await page.waitForURL(/\/spaces\/[^/]+(?:\?.*)?$/, { timeout: 15000 });
 
-    // spaceUrl = page.url();
+    spaceUrl = page.url();
+  });
+
+  test('[SPEP-002] Update Recommendation Contents', async () => {
+    const body = 'This recommendation was edited by Playwright';
+
+    await page.goto(spaceUrl);
+    await page.waitForTimeout(3000);
+
+    await page.getByText('Recommendations', { exact: true }).click();
+
+    const editIcon = page.locator('svg[role="button"]');
+    await expect(editIcon).toBeVisible({ timeout: 5000 });
+    await editIcon.click();
+
+    const textEditor = page
+      .locator('.tiptap.ProseMirror[contenteditable="true"]')
+      .last();
+
+    await textEditor.waitFor();
+    await expect(textEditor).toBeVisible();
+    await expect(textEditor).toBeEditable();
+
+    const mod = process.platform === 'darwin' ? 'Meta' : 'Control';
+    await textEditor.click();
+    await textEditor.press(`${mod}+KeyA`);
+    await textEditor.press('Backspace');
+
+    await textEditor.type(body);
+    await textEditor.press('Enter');
+
+    await expect(page.getByText(body)).toBeVisible();
   });
 
   // FIXME: fix to failed testcode
-  //   test('Update File', async () => {
+  //   test('Update Recommendation Files', async () => {
   //     await page.goto(spaceUrl);
   //     await page.waitForTimeout(3000);
 
-  //     await page.getByText('Files', { exact: true }).click();
+  //     await page.getByText('Recommendations', { exact: true }).click();
   //     await page.getByText('Edit', { exact: true }).click();
 
   //     const [fileChooser] = await Promise.all([

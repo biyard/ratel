@@ -1,7 +1,7 @@
 use crate::controllers::v3::spaces::CreateSpaceResponse;
 use crate::features::spaces::discussions::dto::{
     CreateDiscussionResponse, DeleteDiscussionResponse, GetDiscussionResponse,
-    ListDiscussionMemberResponse, ListDiscussionResponse,
+    ListDiscussionResponse, SpaceDiscussionMemberResponse,
 };
 use crate::types::{Partition, SpaceType};
 use crate::*;
@@ -307,11 +307,11 @@ async fn test_get_discussion_members_handler() {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
-        response_type: ListDiscussionMemberResponse
+        response_type: Vec<SpaceDiscussionMemberResponse>
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body.members.len(), 1);
+    assert_eq!(body.len(), 1);
 }
 
 async fn bootstrap_deliberation_space(
