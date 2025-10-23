@@ -97,11 +97,36 @@ test.describe
     await expect(page.getByText('Join', { exact: true })).toBeVisible();
   });
 
-  test('[SPEP-004] Participate Meeting', async () => {
+  test('[SPEP-004] Participate Meeting (check participate members)', async () => {
+    await page.goto(spaceUrl + '/discussions');
+    await page.waitForTimeout(100);
+
+    await page.getByText('Join', { exact: true }).click();
+    await page.waitForTimeout(1000);
+
+    await expect(
+      page.getByText('deliberation discussion title', { exact: true }),
+    ).toBeVisible();
+    await page.getByText('Participants', { exact: true }).click();
+    const rows = page.locator('div').filter({
+      has: page.getByRole('img', { name: /'s profile$/ }),
+    });
+    await expect(rows.first()).toBeVisible();
+    await page.locator('#participant-close-button').click();
+
+    await page.getByText('End', { exact: true }).click();
+
+    await page.waitForTimeout(100);
+    await expect(
+      page.getByText('deliberation discussion title', { exact: true }),
+    ).toBeVisible();
+  });
+
+  test('[SPEP-005] Participate Meeting (send messages)', async () => {
     const message = 'meeting message';
 
     await page.goto(spaceUrl + '/discussions');
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(100);
 
     await page.getByText('Join', { exact: true }).click();
     await page.waitForTimeout(1000);
@@ -111,18 +136,18 @@ test.describe
     ).toBeVisible();
 
     await page.getByText('Chat', { exact: true }).click();
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(100);
 
     const input = page.getByPlaceholder('Type message here');
     await input.fill(message);
     await input.press('Enter');
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(100);
 
     await expect(page.getByText(message, { exact: true })).toBeVisible();
     await page.locator('#chat-close-button').click();
     await page.getByText('End', { exact: true }).click();
 
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(100);
     await expect(
       page.getByText('deliberation discussion title', { exact: true }),
     ).toBeVisible();

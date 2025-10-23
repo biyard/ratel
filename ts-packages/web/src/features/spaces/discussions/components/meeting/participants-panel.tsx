@@ -65,6 +65,7 @@ export default function ParticipantsPanel({
           <div className="font-semibold text-sm">Participants</div>
         </div>
         <button
+          id="participant-close-button"
           type="button"
           aria-label="Close participants panel"
           onClick={handleClose}
