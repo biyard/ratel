@@ -23,7 +23,7 @@ pub mod wallets;
 
 pub mod aws;
 
-pub mod mcp_middleware;
+// pub mod mcp_middleware;
 
 pub mod dynamo_extractor;
 pub mod dynamo_session_store;
