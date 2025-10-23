@@ -15,7 +15,7 @@ import { usePostEditorContext } from '../post-editor/provider';
 import { useObserver } from '@/hooks/use-observer';
 import { useCallback } from 'react';
 import { type TopPromotionResponse } from '@/lib/api/ratel/promotions.v3';
-import useInfinitePosts from '../../_hooks/use-infinite-posts';
+import useInfinitePosts from '../../../../features/posts/hooks/use-posts';
 
 export const SIZE = 10;
 
@@ -64,7 +64,7 @@ export default function Home({
 
   if (isLoading) {
     return (
-      <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-gray-500">
+      <div className="flex flex-row justify-start items-center w-full text-base font-medium text-gray-500 border border-gray-500 h-fit px-[16px] py-[20px] rounded-[8px]">
         Loading...
       </div>
     );
@@ -72,15 +72,15 @@ export default function Home({
 
   if (!data || data.pages.length === 0) {
     return (
-      <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-gray-500">
+      <div className="flex flex-row justify-start items-center w-full text-base font-medium text-gray-500 border border-gray-500 h-fit px-[16px] py-[20px] rounded-[8px]">
         No posts available
       </div>
     );
   }
   const flattedPosts = data?.pages.flatMap((page) => page.items) ?? [];
   return (
-    <div className="flex-1 flex relative">
-      <Col className="flex-1 flex max-mobile:px-[10px]">
+    <div className="flex relative flex-1">
+      <Col className="flex flex-1 max-mobile:px-[10px]">
         <Col className="flex-1">
           {flattedPosts.map((post) => (
             <FeedCard key={`feed-${post.pk}`} post={post} />
