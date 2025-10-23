@@ -87,9 +87,9 @@ export class InviteMemberModalController {
           showErrorToast(this.t('failed_search_user'));
         }
       }
-      this.selectedUsers.set(nextSelected);
+      this.selectedUsers.set(ns);
       this.searchValue.set('');
-      return nextSelected;
+      return ns;
     } else {
       this.searchValue.set(value);
     }
