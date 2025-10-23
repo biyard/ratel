@@ -1,12 +1,11 @@
 import { Clear, Logo } from '@/components/icons';
 
-export function Header({
-  name,
-  onclose,
-}: {
+export type HeaderProps = {
   name: string;
   onclose: () => void;
-}) {
+};
+
+export function Header({ name, onclose }: HeaderProps) {
   return (
     <div className="flex flex-row items-center w-full bg-neutral-900 light:bg-black text-white px-6 py-3 text-sm font-semibold border-b border-neutral-800">
       <div className="flex flex-row flex-1 justify-start">

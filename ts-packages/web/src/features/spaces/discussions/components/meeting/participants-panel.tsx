@@ -7,17 +7,10 @@ import {
   ZoomVideoOn,
 } from '@/components/icons';
 import { useEffect, useMemo, useState } from 'react';
-
 import { DefaultMeetingSession } from 'amazon-chime-sdk-js';
 import { SpaceDiscussionParticipantResponse } from '../../types/space-discussion-participant-response';
 
-export default function ParticipantsPanel({
-  micStates,
-  videoStates,
-  users,
-  participants,
-  onClose,
-}: {
+export type ParticipantsPanelProps = {
   micStates: Record<string, boolean>;
   videoStates: Record<string, boolean>;
   users: SpaceDiscussionParticipantResponse[];
@@ -25,7 +18,15 @@ export default function ParticipantsPanel({
   setFocusedAttendeeId: (attendeeId: string | null) => void;
   meetingSession: DefaultMeetingSession;
   onClose: () => void;
-}) {
+};
+
+export default function ParticipantsPanel({
+  micStates,
+  videoStates,
+  users,
+  participants,
+  onClose,
+}: ParticipantsPanelProps) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {

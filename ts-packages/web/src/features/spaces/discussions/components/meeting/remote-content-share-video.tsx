@@ -7,13 +7,15 @@ type FitMode = 'contain' | 'cover';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TileStateAny = any;
 
+export type RemoteContentShareVideoProps = {
+  meetingSession: DefaultMeetingSession;
+  onRemoteContentTileUpdate: (tileState: TileStateAny | null) => void;
+};
+
 export default function RemoteContentShareVideo({
   meetingSession,
   onRemoteContentTileUpdate,
-}: {
-  meetingSession: DefaultMeetingSession;
-  onRemoteContentTileUpdate: (tileState: TileStateAny | null) => void;
-}) {
+}: RemoteContentShareVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const boundContentTileIdRef = useRef<number | null>(null);

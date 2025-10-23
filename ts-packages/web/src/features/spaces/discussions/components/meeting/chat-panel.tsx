@@ -4,6 +4,15 @@ import { useEffect, useRef, useState } from 'react';
 import dayjs from 'dayjs';
 import { SpaceDiscussionParticipantResponse } from '../../types/space-discussion-participant-response';
 
+export type ChatPanelProps = {
+  onClose: () => void;
+  users: SpaceDiscussionParticipantResponse[];
+  participants: SpaceDiscussionParticipantResponse[];
+  messages: { senderId: string; text: string; timestamp: number }[];
+  onSend: (text: string) => void;
+  myAttendeeId: string;
+};
+
 export default function ChatPanel({
   onClose,
   messages,
@@ -11,14 +20,7 @@ export default function ChatPanel({
   users,
   participants,
   myAttendeeId,
-}: {
-  onClose: () => void;
-  users: SpaceDiscussionParticipantResponse[];
-  participants: SpaceDiscussionParticipantResponse[];
-  messages: { senderId: string; text: string; timestamp: number }[];
-  onSend: (text: string) => void;
-  myAttendeeId: string;
-}) {
+}: ChatPanelProps) {
   const [visible, setVisible] = useState(false);
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);

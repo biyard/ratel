@@ -12,18 +12,7 @@ import {
 } from '@/components/icons';
 import { JSX, useEffect, useRef, useState } from 'react';
 
-export default function Bottom({
-  isVideoOn,
-  isAudioOn,
-  // isRecording,
-  onclose,
-  // onRecordClick,
-  onParticipantsClick,
-  onChatClick,
-  onAudioToggle,
-  onVideoToggle,
-  onShareToggle,
-}: {
+export type BottomProps = {
   isVideoOn: boolean;
   isAudioOn: boolean;
   isSharing: boolean;
@@ -35,7 +24,20 @@ export default function Bottom({
   onAudioToggle: () => void;
   onVideoToggle: () => void;
   onShareToggle: () => void;
-}) {
+};
+
+export default function Bottom({
+  isVideoOn,
+  isAudioOn,
+  // isRecording,
+  onclose,
+  // onRecordClick,
+  onParticipantsClick,
+  onChatClick,
+  onAudioToggle,
+  onVideoToggle,
+  onShareToggle,
+}: BottomProps) {
   const [showOptions, setShowOptions] = useState(false);
   const optionsBtnRef = useRef<HTMLDivElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
