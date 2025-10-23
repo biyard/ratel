@@ -1,6 +1,5 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import type { UseSuspenseQueryResult } from '@tanstack/react-query';
 import {
   ConsoleLogger,
   DefaultDeviceController,
@@ -117,9 +116,6 @@ export class SpaceDiscussionMeetingViewerController {
   changeFocusedAttendeeId = (v: string | null) =>
     this.deps.setters.setFocusedAttendeeId(v);
 
-  get data(): UseSuspenseQueryResult<DiscussionResponse> {
-    return this.deps.data;
-  }
   get discussion(): DiscussionResponse {
     return this.deps.discussion;
   }
@@ -156,10 +152,10 @@ export function useSpaceDiscussionMeetingViewerController(
 function useBuildDeps(spacePk: string, discussionPk: string) {
   const discussionMeetingMutation = useDiscussionMeetingMutation();
   const exitMeetingMutation = useExitMeetingMutation();
-  const { data: discussionParticipant } = useDiscussionParticipantSpace(
-    spacePk,
-    discussionPk,
-  );
+  const data = useDiscussionParticipantSpace(spacePk, discussionPk);
+  const { refetch: refetchParticipants } = data;
+
+  const discussionParticipant = data.data;
 
   const tileMapRef = useRef<Record<number, string>>({});
   const [isFirstClicked, setIsFirstClicked] = useState(false);
@@ -192,9 +188,8 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
 
   const navigate = useNavigate();
 
-  const data = useDiscussion(spacePk, discussionPk);
+  const { data: discussion } = useDiscussion(spacePk, discussionPk);
 
-  const discussion = data.data;
   const users = discussionParticipant.participants;
 
   const startedRef = useRef(false);
@@ -239,16 +234,19 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
 
     const handlePopState = async () => {
       await cleanupMeetingSession();
+      data.refetch();
       navigate(route.discussionByPk(spacePk, discussionPk));
     };
 
     const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
       e.preventDefault();
       await cleanupMeetingSession();
+      data.refetch();
     };
 
     const handleUnload = async () => {
       await cleanupMeetingSession();
+      data.refetch();
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -417,7 +415,7 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
     av.realtimeSubscribeToAttendeeIdPresence((attendeeId, present) => {
       if (present) {
         activeAttendeeIds.add(attendeeId);
-        data.refetch();
+        void refetchParticipants();
         av.realtimeSubscribeToVolumeIndicator(attendeeId, (_id, _v, muted) => {
           setMicStates((prev) =>
             typeof muted !== 'boolean'
@@ -427,7 +425,7 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
         });
       } else {
         activeAttendeeIds.delete(attendeeId);
-        data.refetch();
+        void refetchParticipants();
         setMicStates((prev) => {
           const cp = { ...prev };
           delete cp[attendeeId];
@@ -440,7 +438,69 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
         av.realtimeUnsubscribeFromVolumeIndicator(id),
       );
     };
-  }, [meetingSession, data]);
+  }, [meetingSession, refetchParticipants]);
+
+  useEffect(() => {
+    if (!meetingSession) return;
+    const av = meetingSession.audioVideo;
+
+    const byAttendee = new Map((users ?? []).map((u) => [u.participant_id, u]));
+    const byUserPk = new Map(
+      (discussionParticipant?.participants ?? []).map((p) => [p.user_pk, p]),
+    );
+
+    const handlePresenceChange = (
+      attendeeId: string,
+      present: boolean,
+      _externalUserId?: string,
+    ) => {
+      const selfId = meetingSession.configuration.credentials?.attendeeId;
+      if (attendeeId === selfId && !present) return;
+
+      const u = byAttendee.get(attendeeId);
+      const userPk = u?.user_pk;
+
+      if (!userPk) {
+        void refetchParticipants();
+        return;
+      }
+
+      setParticipants((prev) => {
+        const exists = prev.some((p) => p.user_pk === userPk);
+        if (present) {
+          if (exists) return prev;
+          const full =
+            byUserPk.get(userPk) ??
+            ({
+              user_pk: u.user_pk,
+              author_username: u.author_username,
+              author_display_name: u.author_display_name,
+              author_profile_url: u.author_profile_url,
+            } as SpaceDiscussionParticipantResponse);
+          return [...prev, full];
+        } else {
+          if (!exists) return prev;
+          return prev.filter((p) => p.user_pk !== userPk);
+        }
+      });
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    av.realtimeSubscribeToAttendeeIdPresence(handlePresenceChange as any);
+    return () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      av.realtimeUnsubscribeToAttendeeIdPresence?.(handlePresenceChange as any);
+    };
+  }, [
+    meetingSession,
+    users,
+    discussionParticipant?.participants,
+    refetchParticipants,
+  ]);
+
+  useEffect(() => {
+    setParticipants(discussionParticipant?.participants ?? []);
+  }, [discussionParticipant?.participants]);
 
   useEffect(() => {
     if (!meetingSession) return;
@@ -459,50 +519,6 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
     av.realtimeSubscribeToReceiveDataMessage(topic, onMessageReceived);
     return () => av.realtimeUnsubscribeFromReceiveDataMessage(topic);
   }, [meetingSession]);
-
-  const exitedAttendeesRef = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (!meetingSession || !users || users.length === 0) return;
-    const av = meetingSession.audioVideo;
-    const handlePresenceChange = async (
-      attendeeId: string,
-      present: boolean,
-    ) => {
-      const selfId = meetingSession.configuration.credentials?.attendeeId;
-      if (attendeeId === selfId && !present) return;
-      if (present) exitedAttendeesRef.current.delete(attendeeId);
-      else exitedAttendeesRef.current.add(attendeeId);
-      try {
-        setParticipants((prev) => {
-          const list = (
-            Array.isArray(discussionParticipant.participants)
-              ? discussionParticipant.participants
-              : []
-          ) as Array<{ user_pk?: string }>;
-
-          const incomingIds = new Set(
-            list.map((p) => p?.user_pk).filter(Boolean) as string[],
-          );
-
-          const keepExisting = prev.filter((p) => incomingIds.has(p.user_pk));
-
-          const addNew = list.filter(
-            (p) => p?.user_pk && !prev.some((pp) => pp.user_pk === p.user_pk),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ) as any[];
-
-          return [...keepExisting, ...addNew];
-        });
-      } catch (err) {
-        logger.debug('set participants error: ', err);
-      }
-    };
-    av.realtimeSubscribeToAttendeeIdPresence(handlePresenceChange);
-    return () => {
-      av.realtimeUnsubscribeToAttendeeIdPresence?.(handlePresenceChange);
-    };
-  }, [meetingSession, users, spacePk, discussionPk]);
 
   useEffect(() => {
     if (!meetingSession) return;
@@ -644,7 +660,6 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
       setFocusedAttendeeId,
     },
     handlers: { sendMessage, cleanupMeetingSession },
-    data,
     discussion,
     users,
     derived: { focusedUser, focusedParticipant, focusedNickname },
