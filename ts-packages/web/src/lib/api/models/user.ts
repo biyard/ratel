@@ -42,10 +42,11 @@ export const UserType = {
   Individual: 1,
   Team: 2,
   Bot: 3,
+  Admin: 98,
   Anonymous: 99,
 } as const;
 
-export type UserType = typeof UserType[keyof typeof UserType];
+export type UserType = (typeof UserType)[keyof typeof UserType];
 
 export const ThemeType = {
   Light: 1,
@@ -53,7 +54,7 @@ export const ThemeType = {
   SystemDefault: 3,
 } as const;
 
-export type ThemeType = typeof ThemeType[keyof typeof ThemeType];
+export type ThemeType = (typeof ThemeType)[keyof typeof ThemeType];
 
 export const MembershipType = {
   Free: 1,
@@ -63,7 +64,8 @@ export const MembershipType = {
   Admin: 99,
 } as const;
 
-export type MembershipType = typeof MembershipType[keyof typeof MembershipType];
+export type MembershipType =
+  (typeof MembershipType)[keyof typeof MembershipType];
 
 export interface Badge {
   id: number;
@@ -86,7 +88,7 @@ export const Scope = {
   Team: 3,
 } as const;
 
-export type Scope = typeof Scope[keyof typeof Scope];
+export type Scope = (typeof Scope)[keyof typeof Scope];
 export interface Group {
   id: number;
   created_at: number;

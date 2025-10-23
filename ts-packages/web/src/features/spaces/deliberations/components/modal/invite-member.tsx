@@ -127,6 +127,7 @@ export default function InviteMemberPopup({
 
   const handleSend = async () => {
     const flushed = searchValue ? await setValue(searchValue, true) : undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const participants = ensureMe((flushed ?? selectedUsers) as any);
 
     onadd({

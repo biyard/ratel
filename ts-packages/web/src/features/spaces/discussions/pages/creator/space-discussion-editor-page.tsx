@@ -1,17 +1,44 @@
 import { logger } from '@/lib/logger';
 import { SpaceDiscussionPathProps } from '../space-discussion-path-props';
 import { useSpaceDiscussionEditorController } from './use-space-discussion-editor-controller';
+import { Col } from '@/components/ui/col';
+import DiscussionEditor from '../../components/discussion-editor';
+import { SpaceDiscussionResponse } from '../../types/space-discussion-response';
 
 export function SpaceDiscussionEditorPage({
   spacePk,
 }: SpaceDiscussionPathProps) {
   logger.debug(`SpaceDiscussionEditorPage: spacePk=${spacePk}`);
 
-  const _ctrl = useSpaceDiscussionEditorController(spacePk);
+  const ctrl = useSpaceDiscussionEditorController(spacePk);
 
   return (
     <>
-      <div className="text-text-primary">discussion editor</div>
+      <Col>
+        <Col>
+          <DiscussionEditor
+            t={ctrl.t}
+            onadd={ctrl.handleAddDiscussion}
+            onupdate={async (
+              discussionPk: string,
+              discussion: SpaceDiscussionResponse,
+            ) => {
+              await ctrl.handleUpdateDiscussion(discussionPk, discussion);
+            }}
+            ondelete={async (discussionPk: string) => {
+              await ctrl.handleDeleteDiscussion(discussionPk);
+            }}
+            onenter={async (discussionPk: string) => {
+              await ctrl.enterDiscussionRoom(discussionPk);
+            }}
+            canEdit={true}
+            isPublished={!ctrl.space.isDraft}
+            discussions={ctrl.discussions.get()}
+            bookmark={ctrl.bookmark.get()}
+            onloadmore={ctrl.loadMore}
+          />
+        </Col>
+      </Col>
     </>
   );
 }
