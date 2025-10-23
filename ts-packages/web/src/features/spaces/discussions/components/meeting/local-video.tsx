@@ -3,13 +3,15 @@ import { DefaultMeetingSession } from 'amazon-chime-sdk-js';
 
 type FitMode = 'contain' | 'cover';
 
+export type LocalVideoProps = {
+  meetingSession: DefaultMeetingSession;
+  isVideoOn: boolean;
+};
+
 export default function LocalVideo({
   meetingSession,
   isVideoOn,
-}: {
-  meetingSession: DefaultMeetingSession;
-  isVideoOn: boolean;
-}) {
+}: LocalVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [started, setStarted] = useState(false);

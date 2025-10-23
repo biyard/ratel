@@ -3,6 +3,15 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRef, useState, useEffect, useMemo } from 'react';
 import { SpaceDiscussionParticipantResponse } from '../../types/space-discussion-participant-response';
 
+export type RemoteGalleryViewProps = {
+  meetingSession: DefaultMeetingSession;
+  videoTiles: { tileId: number; attendeeId: string }[];
+  participants: SpaceDiscussionParticipantResponse[];
+  u: SpaceDiscussionParticipantResponse[];
+  focusedAttendeeId: string | null;
+  setFocusedAttendeeId: (attendeeId: string | null) => void;
+};
+
 export default function RemoteGalleryView({
   meetingSession,
   videoTiles,
@@ -10,14 +19,7 @@ export default function RemoteGalleryView({
   u,
   focusedAttendeeId,
   setFocusedAttendeeId,
-}: {
-  meetingSession: DefaultMeetingSession;
-  videoTiles: { tileId: number; attendeeId: string }[];
-  participants: SpaceDiscussionParticipantResponse[];
-  u: SpaceDiscussionParticipantResponse[];
-  focusedAttendeeId: string | null;
-  setFocusedAttendeeId: (attendeeId: string | null) => void;
-}) {
+}: RemoteGalleryViewProps) {
   const users = u.filter(
     (user, index, self) =>
       index === self.findIndex((u) => u.participant_id === user.participant_id),
