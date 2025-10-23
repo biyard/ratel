@@ -5,7 +5,6 @@ use aws_credential_types::Credentials;
 use axum::AxumRouter;
 use base64::{Engine as _, engine::general_purpose};
 use bdk::prelude::*;
-use by_axum::auth::{Authorization, DynamoUserSession};
 use tower_sessions::Session;
 
 use crate::{
@@ -66,14 +65,6 @@ pub async fn create_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
     user.create(cli).await.unwrap();
 
     return user;
-}
-
-pub fn get_auth(user: &User) -> Authorization {
-    let session = DynamoUserSession {
-        pk: user.pk.to_string(),
-        typ: user.user_type as i64,
-    };
-    Authorization::DynamoSession(session)
 }
 
 pub fn mock_principal_token() -> String {
