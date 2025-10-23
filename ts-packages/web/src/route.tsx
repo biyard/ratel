@@ -39,7 +39,7 @@ export const route = {
     `/spaces/${spaceId}/discussions/${discussionId}`,
 
   discussionByPk: (spacePk: string, discussionPk: string) =>
-    `/spaces/${encodeURIComponent(spacePk)}/discussion/${encodeURIComponent(discussionPk)}`,
+    `/spaces/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}`,
 
   spaceSetting: (spacePk: string) =>
     `/spaces/${encodeURIComponent(spacePk)}/settings`,
