@@ -9,7 +9,7 @@ import { ListDiscussionParticipantResponse } from '../types/list-discussion-part
 
 export function getOption(spacePk: string, discussionPk: string) {
   return {
-    queryKey: spaceKeys.discussion(spacePk, discussionPk),
+    queryKey: spaceKeys.discussion_participants(spacePk, discussionPk),
     queryFn: async () => {
       const participants = await call(
         'GET',

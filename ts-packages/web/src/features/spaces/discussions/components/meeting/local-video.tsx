@@ -14,40 +14,45 @@ export default function LocalVideo({
 }: LocalVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
+
+  const [ready, setReady] = useState(false);
+  const pendingStartRef = useRef(false);
   const [started, setStarted] = useState(false);
 
   const [fit, setFit] = useState<FitMode>('contain');
-
   const [, setVw] = useState(0);
   const [, setVh] = useState(0);
   const [, setCw] = useState(0);
   const [, setCh] = useState(0);
-
   const [overflow, setOverflow] = useState({ x: 0, y: 0 });
   const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const av = meetingSession.audioVideo;
+    const dc = meetingSession.deviceController;
     let mounted = true;
 
     const ensureDevice = async () => {
-      let cams = await av.listVideoInputDevices();
-      if (!cams.length) {
-        try {
+      try {
+        let cams = await dc.listVideoInputDevices();
+        if (!cams.length) {
           const s = await navigator.mediaDevices.getUserMedia({ video: true });
           s.getTracks().forEach((t) => t.stop());
-          cams = await av.listVideoInputDevices();
-        } catch {
-          return null;
+          cams = await dc.listVideoInputDevices();
         }
+        if (!cams.length) return false;
+
+        await dc.startVideoInput(cams[0].deviceId);
+        return true;
+      } catch {
+        return false;
       }
-      await av.startVideoInput(cams[0].deviceId);
-      return true;
     };
 
     const start = async () => {
       const ok = await ensureDevice();
-      if (!ok || !mounted) return;
+      if (!mounted) return;
+      setReady(ok);
 
       const observer = {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -58,19 +63,21 @@ export default function LocalVideo({
           }
         },
       };
-      av.addObserver(observer);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      av.addObserver(observer as any);
 
-      if (isVideoOn) {
+      if (ok && (isVideoOn || pendingStartRef.current)) {
+        pendingStartRef.current = false;
         av.startLocalVideoTile();
-        const local = av.getLocalVideoTile();
-        const id = local?.state().tileId ?? null;
+        const id = av.getLocalVideoTile()?.state().tileId ?? null;
         if (id != null && videoRef.current) {
           av.bindVideoElement(id, videoRef.current);
         }
       }
 
       setStarted(true);
-      return () => av.removeObserver(observer);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return () => av.removeObserver(observer as any);
     };
 
     const cleanupObs = start();
@@ -85,8 +92,14 @@ export default function LocalVideo({
   }, [meetingSession]);
 
   useEffect(() => {
-    const av = meetingSession.audioVideo;
     if (!started) return;
+    const av = meetingSession.audioVideo;
+
+    if (!ready) {
+      pendingStartRef.current = isVideoOn;
+      return;
+    }
+
     if (isVideoOn) {
       av.startLocalVideoTile();
       const id = av.getLocalVideoTile()?.state().tileId ?? null;
@@ -96,14 +109,7 @@ export default function LocalVideo({
     } else {
       av.stopLocalVideoTile();
     }
-  }, [isVideoOn, started, meetingSession]);
-
-  // useEffect(() => {
-  //   const av = meetingSession.audioVideo;
-  //   if (!started) return;
-  //   if (isVideoOn) av.startLocalVideoTile();
-  //   else av.stopLocalVideoTile();
-  // }, [isVideoOn, started, meetingSession.audioVideo]);
+  }, [isVideoOn, ready, started, meetingSession]);
 
   useLayoutEffect(() => {
     const vEl = videoRef.current;
@@ -133,7 +139,6 @@ export default function LocalVideo({
       const ox = Math.max(0, Math.round(scaledW - _cw));
       const oy = Math.max(0, Math.round(scaledH - _ch));
       setOverflow({ x: ox, y: oy });
-
       setOffset((prev) => clampOffset(prev, ox, oy));
     };
 
@@ -220,10 +225,6 @@ export default function LocalVideo({
         autoPlay
         muted
         playsInline
-        onLoadedMetadata={() => console.log('Video metadata loaded')}
-        onCanPlay={() => console.log('Video can play')}
-        onPlay={() => console.log('Video playing')}
-        onError={(e) => console.error('Video error:', e)}
       />
     </div>
   );
