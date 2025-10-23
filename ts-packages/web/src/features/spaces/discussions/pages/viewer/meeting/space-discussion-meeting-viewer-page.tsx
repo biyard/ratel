@@ -131,28 +131,6 @@ export function SpaceDiscussionMeetingViewerPage({
             }}
             onRecordClick={async () => {
               if (!ctrl.meetingSession) return;
-              // const av = ctrl.meetingSession.audioVideo;
-              // if (!ctrl.isRecording) {
-              //   await post(
-              //     ratelApi.discussions.actDiscussionById(spaceId, discussionId),
-              //     startRecordingRequest(),
-              //   );
-              //   av.realtimeSendDataMessage(
-              //     'recording-status',
-              //     new TextEncoder().encode('start'),
-              //     10000,
-              //   );
-              // } else {
-              //   await post(
-              //     ratelApi.discussions.actDiscussionById(spaceId, discussionId),
-              //     endRecordingRequest(),
-              //   );
-              //   av.realtimeSendDataMessage(
-              //     'recording-status',
-              //     new TextEncoder().encode('stop'),
-              //     10000,
-              //   );
-              // }
               ctrl.changeIsRecording(!ctrl.isRecording);
             }}
             onParticipantsClick={() => {
