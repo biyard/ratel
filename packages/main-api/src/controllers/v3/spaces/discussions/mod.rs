@@ -64,7 +64,7 @@ pub fn route() -> Router<AppState> {
                 .get(get_discussion_handler)
                 .delete(delete_discussion_handler),
         )
-        .route("/:discussion-pk/meetings", get(get_meeting_handler))
+        .route("/:discussion_pk/meetings", get(get_meeting_handler))
         .route(
             "/:discussion_pk/meetings/start-meeting",
             patch(start_meeting_handler),
