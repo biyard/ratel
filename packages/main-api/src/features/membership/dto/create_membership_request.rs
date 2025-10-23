@@ -7,6 +7,9 @@ pub struct CreateMembershipRequest {
     pub tier: MembershipTier,
     pub price_dollars: i64,
     pub credits: i64,
+    /// Duration in days. Use -1 or 0 for infinite/lifetime memberships
     pub duration_days: i32,
     pub display_order: i32,
+    /// Maximum credits that can be used per space. Use -1 for unlimited
+    pub max_credits_per_space: i64,
 }

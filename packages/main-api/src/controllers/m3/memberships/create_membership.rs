@@ -18,6 +18,7 @@ pub async fn create_membership_handler(
         req.credits,
         req.duration_days,
         req.display_order,
+        req.max_credits_per_space,
     );
 
     membership.create(cli).await?;

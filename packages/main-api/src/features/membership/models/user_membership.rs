@@ -77,8 +77,9 @@ impl UserMembership {
         let created_at = chrono::Utc::now().timestamp_micros();
 
         // Fix: Convert to i64 before multiplication to prevent overflow
-        let expired_at = if duration_days == 0 {
-            // Lifetime membership (far future)
+        // Support -1 and 0 for infinite/lifetime memberships
+        let expired_at = if duration_days <= 0 {
+            // Infinite/Lifetime membership (far future)
             i64::MAX
         } else {
             created_at + (duration_days as i64) * 24 * 60 * 60 * 1_000_000
@@ -108,12 +109,18 @@ impl UserMembership {
     /// Check if membership is currently active and not expired
     pub fn is_active(&self) -> bool {
         self.status == MembershipStatus::Active
-            && self.expired_at > chrono::Utc::now().timestamp_micros()
+            && (self.expired_at == i64::MAX || self.expired_at > chrono::Utc::now().timestamp_micros())
     }
 
     /// Check if membership is expired
     pub fn is_expired(&self) -> bool {
-        self.expired_at <= chrono::Utc::now().timestamp_micros()
+        // Infinite memberships (i64::MAX) never expire
+        self.expired_at != i64::MAX && self.expired_at <= chrono::Utc::now().timestamp_micros()
+    }
+
+    /// Check if membership has infinite duration
+    pub fn is_infinite(&self) -> bool {
+        self.expired_at == i64::MAX
     }
 
     /// Cancel the membership
@@ -136,7 +143,8 @@ impl UserMembership {
             now
         };
 
-        let new_expiration = if duration_days == 0 {
+        // Support -1 and 0 for infinite/lifetime memberships
+        let new_expiration = if duration_days <= 0 {
             i64::MAX
         } else {
             base_time + (duration_days as i64) * 24 * 60 * 60 * 1_000_000

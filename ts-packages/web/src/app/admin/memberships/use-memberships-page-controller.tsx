@@ -4,11 +4,9 @@ import { useUserInfo } from '@/hooks/use-user-info';
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
 import { useEffect } from 'react';
-import type {
-  MembershipResponse,
-  CreateMembershipRequest,
-  UpdateMembershipRequest,
-} from '@/features/membership/dto/list-memberships-response';
+import type { MembershipResponse } from '@/features/membership/dto/membership-response';
+import type { CreateMembershipRequest } from '@/features/membership/dto/create-membership-request';
+import type { UpdateMembershipRequest } from '@/features/membership/dto/update-membership-request';
 
 const USER_TYPE_ADMIN = 98;
 

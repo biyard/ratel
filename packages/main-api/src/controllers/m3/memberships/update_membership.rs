@@ -14,26 +14,18 @@ pub async fn update_membership_handler(
 ) -> Result<Json<MembershipResponse>, Error2> {
     let cli = &dynamo.client;
 
-    // Get membership
     let pk = Partition::Membership(membership_id);
-    let sk = Some(EntityType::Membership);
 
-    let mut membership = Membership::get(cli, pk, sk)
-        .await?
-        .ok_or(Error2::NotFound("Membership not found".to_string()))?;
-
-    // Update membership fields
-    membership.update(
-        req.tier,
-        req.price_dollers,
-        req.credits,
-        req.duration_days,
-        req.display_order,
-        req.is_active,
-    );
-
-    // Save to database
-    membership.create(cli).await?;
+    let membership = Membership::updater(&pk, EntityType::Membership)
+        .with_tier(req.tier)
+        .with_price_dollars(req.price_dollars)
+        .with_credits(req.credits)
+        .with_duration_days(req.duration_days)
+        .with_display_order(req.display_order)
+        .with_is_active(req.is_active)
+        .with_max_credits_per_space(req.max_credits_per_space)
+        .execute(cli)
+        .await?;
 
     Ok(Json(membership.into()))
 }

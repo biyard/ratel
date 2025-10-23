@@ -35,6 +35,13 @@ export const i18nMemberships = {
     delete_confirm_message:
       'Are you sure you want to delete the {tier} membership? This action cannot be undone.',
     delete_confirm: 'Delete',
+
+    // Infinite duration and max credits per space
+    max_credits_per_space: 'Max Credits Per Space',
+    infinite_duration: 'Infinite Duration',
+    unlimited_credits_per_space: 'Unlimited Credits Per Space',
+    infinite_duration_help: 'This membership will never expire',
+    unlimited_credits_per_space_help: 'Users can use unlimited credits per space',
   },
   ko: {
     title: '멤버십 관리',
@@ -70,6 +77,13 @@ export const i18nMemberships = {
     delete_confirm_message:
       '{tier} 멤버십을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.',
     delete_confirm: '삭제',
+
+    // Infinite duration and max credits per space
+    max_credits_per_space: '공간당 최대 크레딧',
+    infinite_duration: '무제한 기간',
+    unlimited_credits_per_space: '공간당 무제한 크레딧',
+    infinite_duration_help: '이 멤버십은 만료되지 않습니다',
+    unlimited_credits_per_space_help: '사용자가 공간당 무제한 크레딧을 사용할 수 있습니다',
   },
 };
 
@@ -110,6 +124,13 @@ export interface MembershipsI18n {
   deleteConfirmTitle: string;
   deleteConfirmMessage: string;
   deleteConfirm: string;
+
+  // Infinite duration and max credits per space
+  maxCreditsPerSpace: string;
+  infiniteDuration: string;
+  unlimitedCreditsPerSpace: string;
+  infiniteDurationHelp: string;
+  unlimitedCreditsPerSpaceHelp: string;
 }
 
 export function useMembershipsI18n(): MembershipsI18n {
@@ -148,5 +169,11 @@ export function useMembershipsI18n(): MembershipsI18n {
     deleteConfirmTitle: t('delete_confirm_title'),
     deleteConfirmMessage: t('delete_confirm_message'),
     deleteConfirm: t('delete_confirm'),
+
+    maxCreditsPerSpace: t('max_credits_per_space'),
+    infiniteDuration: t('infinite_duration'),
+    unlimitedCreditsPerSpace: t('unlimited_credits_per_space'),
+    infiniteDurationHelp: t('infinite_duration_help'),
+    unlimitedCreditsPerSpaceHelp: t('unlimited_credits_per_space_help'),
   };
 }

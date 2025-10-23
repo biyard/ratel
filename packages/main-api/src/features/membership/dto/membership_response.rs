@@ -8,11 +8,14 @@ pub struct MembershipResponse {
     pub tier: MembershipTier,
     pub price_dollars: i64,
     pub credits: i64,
+    /// Duration in days. -1 or 0 indicates infinite/lifetime membership
     pub duration_days: i32,
     pub display_order: i32,
     pub is_active: bool,
     pub created_at: i64,
     pub updated_at: i64,
+    /// Maximum credits that can be used per space. -1 indicates unlimited
+    pub max_credits_per_space: i64,
 }
 
 impl From<Membership> for MembershipResponse {
@@ -27,6 +30,7 @@ impl From<Membership> for MembershipResponse {
             is_active: membership.is_active,
             created_at: membership.created_at,
             updated_at: membership.updated_at,
+            max_credits_per_space: membership.max_credits_per_space,
         }
     }
 }

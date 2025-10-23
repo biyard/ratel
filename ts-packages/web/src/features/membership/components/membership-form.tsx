@@ -29,21 +29,31 @@ export function MembershipForm({
     credits: 0,
     duration_days: 30,
     display_order: 0,
+    max_credits_per_space: -1, // -1 for unlimited by default
   });
 
   const [isActive, setIsActive] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isInfiniteDuration, setIsInfiniteDuration] = useState(false);
+  const [isUnlimitedCreditsPerSpace, setIsUnlimitedCreditsPerSpace] =
+    useState(true);
 
   useEffect(() => {
     if (membership) {
+      const isInfinite = membership.duration_days <= 0;
+      const isUnlimited = membership.max_credits_per_space <= 0;
+
       setFormData({
         tier: membership.tier,
         price_dollars: membership.price_dollars,
         credits: membership.credits,
-        duration_days: membership.duration_days,
+        duration_days: isInfinite ? 30 : membership.duration_days,
         display_order: membership.display_order,
+        max_credits_per_space: isUnlimited ? 1000 : membership.max_credits_per_space,
       });
       setIsActive(membership.is_active);
+      setIsInfiniteDuration(isInfinite);
+      setIsUnlimitedCreditsPerSpace(isUnlimited);
     }
   }, [membership]);
 
@@ -52,14 +62,20 @@ export function MembershipForm({
     setError(null);
 
     try {
+      const submitData = {
+        ...formData,
+        duration_days: isInfiniteDuration ? -1 : formData.duration_days,
+        max_credits_per_space: isUnlimitedCreditsPerSpace ? -1 : formData.max_credits_per_space,
+      };
+
       if (isEditing) {
         const updateData: UpdateMembershipRequest = {
-          ...formData,
+          ...submitData,
           is_active: isActive,
         };
         await onSubmit(updateData);
       } else {
-        await onSubmit(formData);
+        await onSubmit(submitData);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : i18n.submitError);
@@ -78,7 +94,8 @@ export function MembershipForm({
           : name === 'price_dollars' ||
               name === 'credits' ||
               name === 'duration_days' ||
-              name === 'display_order'
+              name === 'display_order' ||
+              name === 'max_credits_per_space'
             ? parseInt(value) || 0
             : value,
     }));
@@ -147,18 +164,75 @@ export function MembershipForm({
           </div>
 
           <div>
-            <label className="block mb-1 text-sm font-medium">
-              {i18n.duration} ({i18n.days})
-            </label>
-            <input
-              type="number"
-              name="duration_days"
-              value={formData.duration_days}
-              onChange={handleChange}
-              className="p-2 w-full bg-white rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600"
-              min="1"
-              required
-            />
+            <div className="flex items-center mb-2">
+              <input
+                type="checkbox"
+                id="infinite_duration"
+                checked={isInfiniteDuration}
+                onChange={(e) => setIsInfiniteDuration(e.target.checked)}
+                className="mr-2"
+              />
+              <label htmlFor="infinite_duration" className="text-sm font-medium">
+                {i18n.infiniteDuration}
+              </label>
+            </div>
+            {!isInfiniteDuration && (
+              <>
+                <label className="block mb-1 text-sm font-medium">
+                  {i18n.duration} ({i18n.days})
+                </label>
+                <input
+                  type="number"
+                  name="duration_days"
+                  value={formData.duration_days}
+                  onChange={handleChange}
+                  className="p-2 w-full bg-white rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600"
+                  min="1"
+                  required
+                />
+              </>
+            )}
+            {isInfiniteDuration && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {i18n.infiniteDurationHelp}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <div className="flex items-center mb-2">
+              <input
+                type="checkbox"
+                id="unlimited_credits_per_space"
+                checked={isUnlimitedCreditsPerSpace}
+                onChange={(e) => setIsUnlimitedCreditsPerSpace(e.target.checked)}
+                className="mr-2"
+              />
+              <label htmlFor="unlimited_credits_per_space" className="text-sm font-medium">
+                {i18n.unlimitedCreditsPerSpace}
+              </label>
+            </div>
+            {!isUnlimitedCreditsPerSpace && (
+              <>
+                <label className="block mb-1 text-sm font-medium">
+                  {i18n.maxCreditsPerSpace}
+                </label>
+                <input
+                  type="number"
+                  name="max_credits_per_space"
+                  value={formData.max_credits_per_space}
+                  onChange={handleChange}
+                  className="p-2 w-full bg-white rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600"
+                  min="1"
+                  required
+                />
+              </>
+            )}
+            {isUnlimitedCreditsPerSpace && (
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {i18n.unlimitedCreditsPerSpaceHelp}
+              </p>
+            )}
           </div>
 
           <div>

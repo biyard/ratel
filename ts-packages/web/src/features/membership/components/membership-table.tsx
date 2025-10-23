@@ -30,6 +30,7 @@ export function MembershipTable({
             <th className="p-3 font-semibold text-left">{i18n.tier}</th>
             <th className="p-3 font-semibold text-left">{i18n.price}</th>
             <th className="p-3 font-semibold text-left">{i18n.credits}</th>
+            <th className="p-3 font-semibold text-left">{i18n.maxCreditsPerSpace}</th>
             <th className="p-3 font-semibold text-left">{i18n.duration}</th>
             <th className="p-3 font-semibold text-left">{i18n.displayOrder}</th>
             <th className="p-3 font-semibold text-left">{i18n.status}</th>
@@ -44,10 +45,9 @@ export function MembershipTable({
             >
               <td className="p-3 font-medium">{membership.tier}</td>
               <td className="p-3">${membership.price_dollars}</td>
-              <td className="p-3">{membership.credits}</td>
-              <td className="p-3">
-                {membership.duration_days} {i18n.days}
-              </td>
+              <td className="p-3">{membership.credits.toLocaleString()}</td>
+              <td className="p-3">{membership.getFormattedCreditsPerSpace()}</td>
+              <td className="p-3">{membership.getFormattedDuration()}</td>
               <td className="p-3">{membership.display_order}</td>
               <td className="p-3">
                 <span
