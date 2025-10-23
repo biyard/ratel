@@ -1,6 +1,7 @@
 import { useParams } from 'react-router';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import { logger } from '@/lib/logger';
+import { SpaceDiscussionMeetingViewerPage } from '@/features/spaces/discussions/pages/viewer/meeting/space-discussion-meeting-viewer-page';
 
 export default function DiscussionPage() {
   const { spacePk, discussionPk } = useParams<{
@@ -16,8 +17,9 @@ export default function DiscussionPage() {
   }
 
   return (
-    <div className="bg-white text-black fixed top-0 left-0 flex flex-row w-full h-full">
-      discussion page
-    </div>
+    <SpaceDiscussionMeetingViewerPage
+      spacePk={spacePk}
+      discussionPk={discussionPk}
+    />
   );
 }

@@ -11,11 +11,11 @@ export function getOption(spacePk: string) {
   return {
     queryKey: spaceKeys.discussions(spacePk),
     queryFn: async () => {
-      const file = await call(
+      const discussion = await call(
         'GET',
         `/v3/spaces/${encodeURIComponent(spacePk)}/discussions`,
       );
-      return new ListDiscussionResponse(file);
+      return new ListDiscussionResponse(discussion);
     },
     refetchOnWindowFocus: false,
   };
