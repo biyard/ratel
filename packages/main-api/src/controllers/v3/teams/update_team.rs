@@ -1,5 +1,5 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     models::{
         team::Team,
         user::{User, UserTeam, UserTeamQueryOption},
@@ -49,8 +49,8 @@ pub async fn update_team_handler(
     NoApi(user): NoApi<Option<User>>,
     Path(params): Path<UpdateTeamPathParams>,
     Json(req): Json<UpdateTeamRequest>,
-) -> Result<Json<UpdateTeamResponse>, Error2> {
-    let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
+) -> Result<Json<UpdateTeamResponse>, Error> {
+    let user = user.ok_or(Error::Unauthorized("Authentication required".into()))?;
 
     check_any_permission_with_user(
         &dynamo.client,
@@ -68,7 +68,7 @@ pub async fn update_team_handler(
 
     let team = Team::get(&dynamo.client, &params.team_pk, Some(EntityType::Team)).await?;
     if team.is_none() {
-        return Err(Error2::NotFound("Team not found".into()));
+        return Err(Error::NotFound("Team not found".into()));
     }
     let mut team = team.unwrap();
     let mut need_update_user_team = false;

@@ -177,7 +177,7 @@ impl User {
 }
 
 impl FromRequestParts<AppState> for Option<User> {
-    type Rejection = crate::Error2;
+    type Rejection = crate::Error;
 
     async fn from_request_parts(
         parts: &mut Parts,
@@ -215,7 +215,7 @@ impl FromRequestParts<AppState> for Option<User> {
 
 // For authenticated routes where User must be present
 impl FromRequestParts<AppState> for User {
-    type Rejection = crate::Error2;
+    type Rejection = crate::Error;
 
     async fn from_request_parts(
         parts: &mut Parts,
@@ -226,7 +226,7 @@ impl FromRequestParts<AppState> for User {
             .await
             .map_err(|e| {
                 tracing::error!("no session found from request: {:?}", e);
-                crate::Error2::NoSessionFound
+                crate::Error::NoSessionFound
             })?;
 
         let user_pk: Partition = session
@@ -234,15 +234,15 @@ impl FromRequestParts<AppState> for User {
             .await
             .map_err(|e| {
                 tracing::error!("no user id found from session: {:?}", e);
-                crate::Error2::NoSessionFound
+                crate::Error::NoSessionFound
             })?
-            .ok_or(crate::Error2::NoSessionFound)?;
+            .ok_or(crate::Error::NoSessionFound)?;
 
         let user = User::get(&(_state.dynamo.client), user_pk, Some(EntityType::User))
             .await
             .map_err(|e| {
                 tracing::error!("failed to get user from db: {:?}", e);
-                crate::Error2::NoSessionFound
+                crate::Error::NoSessionFound
             });
 
         if user.is_err() {
@@ -250,7 +250,7 @@ impl FromRequestParts<AppState> for User {
             if let Err(e) = session.flush().await {
                 tracing::error!("failed to flush session: {:?}", e);
             }
-            return Err(crate::Error2::NoSessionFound);
+            return Err(crate::Error::NoSessionFound);
         }
 
         let user = user.unwrap();
@@ -259,7 +259,7 @@ impl FromRequestParts<AppState> for User {
             if let Err(e) = session.flush().await {
                 tracing::error!("failed to flush session: {:?}", e);
             }
-            return Err(crate::Error2::NoUserFound);
+            return Err(crate::Error::NoUserFound);
         }
 
         Ok(user.unwrap())

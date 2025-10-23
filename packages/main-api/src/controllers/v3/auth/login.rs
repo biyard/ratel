@@ -1,5 +1,5 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     constants::SESSION_KEY_USER_ID,
     models::{
         UserTelegram, UserTelegramQueryOption,
@@ -38,7 +38,7 @@ pub async fn login_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<Session>,
     Json(req): Json<LoginRequest>,
-) -> Result<Json<User>, Error2> {
+) -> Result<Json<User>, Error> {
     let user = match req {
         LoginRequest::Email { email, password } => {
             login_with_email(&dynamo.client, email, password).await?
@@ -63,7 +63,7 @@ pub async fn login_with_oauth(
     cli: &aws_sdk_dynamodb::Client,
     provider: Provider,
     access_token: String,
-) -> Result<User, Error2> {
+) -> Result<User, Error> {
     let email = provider.get_email(&access_token).await?;
 
     let user = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1))
@@ -71,7 +71,7 @@ pub async fn login_with_oauth(
         .0
         .get(0)
         .cloned()
-        .ok_or(Error2::Unauthorized(
+        .ok_or(Error::Unauthorized(
             "No user found with the given email".into(),
         ))?;
 
@@ -82,7 +82,7 @@ pub async fn login_with_email(
     cli: &aws_sdk_dynamodb::Client,
     email: String,
     password: String,
-) -> Result<User, Error2> {
+) -> Result<User, Error> {
     let hashed_password = hash_password(&password);
     let (u, _) = User::find_by_email_and_password(
         cli,
@@ -93,7 +93,7 @@ pub async fn login_with_email(
     let user = u
         .get(0)
         .cloned()
-        .ok_or(Error2::Unauthorized("Invalid email or password".into()))?;
+        .ok_or(Error::Unauthorized("Invalid email or password".into()))?;
 
     // FIXME(migrate): fallback to tricky migration from postgres
     // let user = if user.is_none() {

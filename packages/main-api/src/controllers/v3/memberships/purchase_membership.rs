@@ -1,6 +1,6 @@
 use crate::features::membership::dto::*;
 
-use crate::{AppState, Error2, features::membership::*, models::user::User, types::*};
+use crate::{AppState, Error, features::membership::*, models::user::User, types::*};
 use aide::NoApi;
 use axum::{Json, extract::State};
 use bdk::prelude::*;
@@ -10,10 +10,10 @@ pub async fn purchase_membership_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Json(req): Json<PurchaseMembershipRequest>,
-) -> Result<Json<UserMembershipResponse>, Error2> {
+) -> Result<Json<UserMembershipResponse>, Error> {
     let cli = &dynamo.client;
 
-    let user = user.ok_or(Error2::NoUserFound)?;
+    let user = user.ok_or(Error::NoUserFound)?;
 
     // Get membership details
     let membership_pk = Partition::Membership(req.membership_id.clone());
@@ -21,11 +21,11 @@ pub async fn purchase_membership_handler(
 
     let membership = Membership::get(cli, membership_pk.clone(), membership_sk)
         .await?
-        .ok_or(Error2::NotFound("Membership not found".to_string()))?;
+        .ok_or(Error::NotFound("Membership not found".to_string()))?;
 
     // Check if membership is active
     if !membership.is_active {
-        return Err(Error2::BadRequest(
+        return Err(Error::BadRequest(
             "This membership is not available for purchase".to_string(),
         ));
     }
@@ -36,7 +36,7 @@ pub async fn purchase_membership_handler(
 
     if let Some(existing) = existing_membership {
         if existing.is_active() {
-            return Err(Error2::AlreadyExists(
+            return Err(Error::AlreadyExists(
                 "You already have an active membership. Please cancel it first or wait for it to expire.".to_string(),
             ));
         }

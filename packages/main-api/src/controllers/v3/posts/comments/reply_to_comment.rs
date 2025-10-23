@@ -21,7 +21,7 @@ pub async fn reply_to_comment_handler(
         comment_sk: comment_pk,
     }): PostCommentPath,
     Json(req): Json<ReplyToCommentRequest>,
-) -> Result<Json<PostComment>, crate::Error2> {
+) -> Result<Json<PostComment>, crate::Error> {
     tracing::debug!("Handling request: {:?}", req);
 
     let comment =

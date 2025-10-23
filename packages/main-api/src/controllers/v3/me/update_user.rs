@@ -1,22 +1,17 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     models::{
         team::{TeamOwner, TeamOwnerQueryOption},
         user::{User, UserDetailResponse, UserEvmAddress, UserMetadata},
     },
     types::Theme,
-    utils::{
-        validator::{validate_description, validate_image_url, validate_username},
-    },
-};
-use by_axum::{
-    aide::NoApi,
-    axum::{
-        Json,
-        extract::{State},
-    },
+    utils::validator::{validate_description, validate_image_url, validate_username},
 };
 use bdk::prelude::*;
+use by_axum::{
+    aide::NoApi,
+    axum::{Json, extract::State},
+};
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
@@ -44,10 +39,10 @@ pub async fn update_user_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Json(req): Json<UpdateUserRequest>,
-) -> Result<Json<UpdateUserResponse>, Error2> {
+) -> Result<Json<UpdateUserResponse>, Error> {
     let user = match user {
         Some(u) => u,
-        None => return Err(Error2::Unauthorized("Authentication required".into())),
+        None => return Err(Error::Unauthorized("Authentication required".into())),
     };
 
     match req {

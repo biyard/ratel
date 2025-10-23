@@ -3,7 +3,7 @@ use crate::features::spaces::discussions::dto::SpaceDiscussionResponse;
 use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
 use crate::features::spaces::discussions::models::space_discussion_participant::SpaceDiscussionParticipant;
 use crate::types::Partition;
-use crate::{AppState, Error2, models::user::User};
+use crate::{AppState, Error, models::user::User};
 use bdk::prelude::axum::extract::{Json, Path, State};
 use bdk::prelude::*;
 
@@ -17,7 +17,7 @@ pub async fn participant_meeting_handler(
         space_pk,
         discussion_pk,
     }): SpaceDiscussionPath,
-) -> Result<Json<SpaceDiscussionResponse>, Error2> {
+) -> Result<Json<SpaceDiscussionResponse>, Error> {
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
     let user_pk = match user.pk.clone() {
         Partition::User(v) => v,
@@ -57,7 +57,7 @@ pub async fn participant_meeting_handler(
         .await
         .map_err(|e| {
             tracing::error!("create_attendee error: {:?}", e);
-            Error2::AwsChimeError(e.to_string())
+            Error::AwsChimeError(e.to_string())
         }) {
         Ok(r) => r,
         Err(e) => {
@@ -81,7 +81,7 @@ pub async fn participant_meeting_handler(
                     .await
                     .map_err(|e| {
                         tracing::error!("create_attendee error: {:?}", e);
-                        Error2::AwsChimeError(e.to_string())
+                        Error::AwsChimeError(e.to_string())
                     })?
             } else {
                 return Err(e);

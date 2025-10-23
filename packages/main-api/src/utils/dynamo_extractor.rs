@@ -1,5 +1,5 @@
 use crate::{
-    Error2,
+    Error,
     constants::SESSION_KEY_USER_ID,
     models::user::User,
     types::{EntityType, Partition},
@@ -8,15 +8,15 @@ use crate::{
 pub async fn extract_user_from_session(
     cli: &aws_sdk_dynamodb::Client,
     session: &tower_sessions::Session,
-) -> Result<User, Error2> {
+) -> Result<User, Error> {
     let user_pk: Partition = session
         .get(SESSION_KEY_USER_ID)
         .await?
-        .ok_or(Error2::Unauthorized("no session".to_string()))?;
+        .ok_or(Error::Unauthorized("no session".to_string()))?;
 
     let user = User::get(cli, &user_pk, Some(EntityType::User))
         .await?
-        .ok_or(Error2::NotFound("User not found".into()))?;
+        .ok_or(Error::NotFound("User not found".into()))?;
 
     Ok(user)
 }

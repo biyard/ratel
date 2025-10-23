@@ -1,7 +1,7 @@
 mod team_permission_verifier;
 
 use crate::{
-    Error2,
+    Error,
     constants::SESSION_KEY_USER_ID,
     types::{Partition, TeamGroupPermission},
 };
@@ -28,7 +28,7 @@ pub async fn check_any_permission_with_user(
     user: &crate::models::user::User,
     rsc: RatelResource,
     permissions: Vec<TeamGroupPermission>,
-) -> Result<(), Error2> {
+) -> Result<(), Error> {
     let user_pk = user.pk.to_string();
 
     let verifier: Box<dyn PermissionVerifier> = match rsc {
@@ -38,7 +38,7 @@ pub async fn check_any_permission_with_user(
     };
     let required_mask = permissions_mask(&permissions);
     if !verifier.has_any_permissions(required_mask) {
-        return Err(Error2::Unauthorized(
+        return Err(Error::Unauthorized(
             "You do not have permission to perform this action".into(),
         ));
     }
@@ -51,11 +51,11 @@ pub async fn check_permission_from_session(
     session: &tower_sessions::Session,
     rsc: RatelResource,
     permissions: Vec<TeamGroupPermission>,
-) -> Result<(), Error2> {
+) -> Result<(), Error> {
     let user_pk: Partition = session
         .get(SESSION_KEY_USER_ID)
         .await?
-        .ok_or(Error2::Unauthorized("no session".to_string()))?;
+        .ok_or(Error::Unauthorized("no session".to_string()))?;
 
     let verifier: Box<dyn PermissionVerifier> = match rsc {
         RatelResource::Team { team_pk } => {
@@ -64,7 +64,7 @@ pub async fn check_permission_from_session(
     };
     let required_mask = permissions_mask(&permissions);
     if !verifier.has_all_permission(required_mask) {
-        return Err(Error2::Unauthorized(
+        return Err(Error::Unauthorized(
             "You do not have permission to perform this action".into(),
         ));
     }
@@ -77,11 +77,11 @@ pub async fn check_any_permission_from_session(
     session: &tower_sessions::Session,
     rsc: RatelResource,
     permissions: Vec<TeamGroupPermission>,
-) -> Result<(), Error2> {
+) -> Result<(), Error> {
     let user_pk: Partition = session
         .get(SESSION_KEY_USER_ID)
         .await?
-        .ok_or(Error2::Unauthorized("no session".to_string()))?;
+        .ok_or(Error::Unauthorized("no session".to_string()))?;
 
     let verifier: Box<dyn PermissionVerifier> = match rsc {
         RatelResource::Team { team_pk } => {
@@ -90,7 +90,7 @@ pub async fn check_any_permission_from_session(
     };
     let required_mask = permissions_mask(&permissions);
     if !verifier.has_any_permissions(required_mask) {
-        return Err(Error2::Unauthorized(
+        return Err(Error::Unauthorized(
             "You do not have permission to perform this action".into(),
         ));
     }

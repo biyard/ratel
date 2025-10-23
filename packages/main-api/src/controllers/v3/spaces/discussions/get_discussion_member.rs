@@ -4,7 +4,7 @@ use crate::features::spaces::discussions::dto::SpaceDiscussionMemberResponse;
 use crate::features::spaces::discussions::models::space_discussion_member::SpaceDiscussionMember;
 use crate::features::spaces::discussions::models::space_discussion_member::SpaceDiscussionMemberQueryOption;
 use crate::types::Partition;
-use crate::{AppState, Error2, models::user::User};
+use crate::{AppState, Error, models::user::User};
 use aide::NoApi;
 use bdk::prelude::axum::extract::{Json, Path, State};
 use bdk::prelude::*;
@@ -16,9 +16,9 @@ pub async fn get_discussion_members_handler(
         space_pk,
         discussion_pk,
     }): SpaceDiscussionPath,
-) -> Result<Json<Vec<SpaceDiscussionMemberResponse>>, Error2> {
+) -> Result<Json<Vec<SpaceDiscussionMemberResponse>>, Error> {
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundSpace);
+        return Err(Error::NotFoundSpace);
     }
 
     let mut members: Vec<SpaceDiscussionMemberResponse> = vec![];
