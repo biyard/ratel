@@ -68,6 +68,7 @@ export default function ChatPanel({
             <div className="font-semibold text-sm">Chat</div>
           </div>
           <button
+            id="chat-close-button"
             type="button"
             aria-label="Close chat panel"
             onClick={handleClose}
