@@ -18,6 +18,7 @@ You MUST adhere to these Ratel project conventions:
 - Place test files in the same directory as the page component being tested
 - Use naming pattern: `{name}-page.anon.spec.tsx` for anonymous user tests
 - Use naming pattern: `{name}-page.auth.spec.tsx` for authenticated user tests
+- Use naming pattern: `{name}-page.admin.spec.tsx` for admin tests
 - Example: For `dashboard-page.tsx`, create `dashboard-page.anon.spec.tsx` and `dashboard-page.auth.spec.tsx`
 
 ### Test Structure
@@ -46,27 +47,33 @@ You MUST adhere to these Ratel project conventions:
    - Error states and validation
 
 3. **Use Appropriate Selectors**:
+   - Use `fill` and `click` functions in `ts-packages/web/tests/utils.ts` first to simplify test code in aspect of users.
    - Prefer test IDs or semantic selectors over CSS classes
    - Use `page.getByRole()`, `page.getByText()`, `page.getByLabel()` when possible
    - Avoid brittle selectors tied to implementation details
 
-4. **Authentication Testing**:
+4. **Admin Testing**:
+   - For `.admin.spec.tsx` files, set up authenticated user context
+   - Test features that require authentication
+   - Verify permission-based UI changes
+
+5. **Authentication Testing**:
    - For `.auth.spec.tsx` files, set up authenticated user context
    - Test features that require authentication
    - Verify permission-based UI changes
 
-5. **Anonymous User Testing**:
+6. **Anonymous User Testing**:
    - For `.anon.spec.tsx` files, test the page without authentication
    - Verify login prompts or redirects when appropriate
    - Test public-facing features
 
-6. **Assertions**:
+7. **Assertions**:
    - Verify visible elements: `await expect(page.getByRole('button')).toBeVisible()`
    - Check text content: `await expect(page.getByText('Welcome')).toBeVisible()`
    - Validate navigation: `await expect(page).toHaveURL('/expected-path')`
    - Test data presence: Verify that fetched data is displayed correctly
 
-7. **Wait for Async Operations**:
+8. **Wait for Async Operations**:
    - Use `await page.waitForLoadState('networkidle')` after navigation
    - Wait for API responses when testing data fetching
    - Use `await page.waitForSelector()` when waiting for dynamic content
