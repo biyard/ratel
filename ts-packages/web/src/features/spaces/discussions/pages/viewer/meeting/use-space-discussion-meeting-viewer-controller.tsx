@@ -379,6 +379,7 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
             ? prev
             : [...prev, { tileId, attendeeId: boundAttendeeId }];
         });
+
         setVideoStates((prev) => ({ ...prev, [boundAttendeeId]: videoOn }));
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -594,6 +595,21 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
     setRemoteContentTileOwner(null);
   };
 
+  const videoStatesSig = useMemo(
+    () =>
+      Object.entries(videoStates)
+        .map(([k, v]) => `${k}:${v ? 1 : 0}`)
+        .join('|'),
+    [videoStates],
+  );
+  const micStatesSig = useMemo(
+    () =>
+      Object.entries(micStates)
+        .map(([k, v]) => `${k}:${v ? 1 : 0}`)
+        .join('|'),
+    [micStates],
+  );
+
   const token = [
     spacePk,
     discussionPk,
@@ -605,6 +621,8 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
     videoTiles.length,
     Boolean(meetingSession),
     remoteContentTileOwner ?? '-',
+    micStatesSig,
+    videoStatesSig,
     Object.keys(micStates).length,
     Object.keys(videoStates).length,
     messages.length,
