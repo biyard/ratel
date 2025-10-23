@@ -117,7 +117,7 @@ fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
         table_prefix: env!("DYNAMO_TABLE_PREFIX").into(),
         result_ty: "std::result::Result".into(),
         // FIXME: rename after finishing migration
-        error_ctor: "crate::Error2".into(),
+        error_ctor: "crate::Error".into(),
         pk_name: "pk".into(),
         sk_name: Some("sk".into()),
         indice: vec![],
@@ -1540,7 +1540,7 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
     quote! {
         pub fn encode_lek_all(
             lek: &std::collections::HashMap<String, aws_sdk_dynamodb::types::AttributeValue>,
-        ) -> std::result::Result<String, crate::Error2> {
+        ) -> std::result::Result<String, crate::Error> {
             let mut bookmark = vec![];
             for (k, v) in lek.iter() {
                 match v {
@@ -1548,7 +1548,7 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
                         bookmark.push(format!("{};;;{}", k, s));
                     }
                     _ => {
-                        return Err(crate::Error2::InternalServerError(
+                        return Err(crate::Error::InternalServerError(
                             "Unsupported AttributeValue type in LEK".into(),
                         ));
                     }
@@ -1566,7 +1566,7 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
             bookmark: &str,
         ) -> std::result::Result<
             std::collections::HashMap<String, aws_sdk_dynamodb::types::AttributeValue>,
-        crate::Error2,
+        crate::Error,
         > {
             use base64::Engine as _;
 
@@ -1574,7 +1574,7 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
             let s = String::from_utf8(bytes).map_err(|e| e.to_string())?;
             let parts: Vec<&str> = s.split(";;;").collect();
             if parts.len() % 2 != 0 {
-                return Err(crate::Error2::InvalidBookmark);
+                return Err(crate::Error::InvalidBookmark);
             }
             let mut v = std::collections::HashMap::new();
             for i in (0..parts.len()).step_by(2) {
