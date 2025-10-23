@@ -1,5 +1,6 @@
 export const i18nSpaceHome = {
   en: {
+    publish_space: 'Publish Space',
     unsupported_space_type: 'Unsupported space type',
     no_authorized_user: 'No Authorized User',
     untitled_space: 'Untitled Space',
@@ -44,6 +45,7 @@ export const i18nSpaceHome = {
     menu_admin_settings: 'Settings',
   },
   ko: {
+    publish_space: '스페이스 게시',
     unsupported_space_type: '지원되지 않는 스페이스 유형입니다.',
     no_authorized_user: '인증되지 않은 사용자입니다.',
     untitled_space: '제목 없는 스페이스',

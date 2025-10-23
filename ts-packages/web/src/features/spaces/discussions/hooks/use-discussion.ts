@@ -5,26 +5,27 @@ import {
 
 import { spaceKeys } from '@/constants';
 import { call } from '@/lib/api/ratel/call';
-import { ListDiscussionMemberResponse } from '../types/list-discussion-member-response';
+import { DiscussionResponse } from '../types/get-discussion-response';
 
 export function getOption(spacePk: string, discussionPk: string) {
   return {
     queryKey: spaceKeys.discussion(spacePk, discussionPk),
     queryFn: async () => {
-      const members = await call(
+      const discussion = await call(
         'GET',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}/members`,
+        `/v3/spaces/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}
+        `,
       );
-      return new ListDiscussionMemberResponse(members);
+      return new DiscussionResponse(discussion);
     },
     refetchOnWindowFocus: false,
   };
 }
 
-export default function useDiscussionMemberSpace(
+export default function useDiscussion(
   spacePk: string,
   discussionPk: string,
-): UseSuspenseQueryResult<ListDiscussionMemberResponse> {
+): UseSuspenseQueryResult<DiscussionResponse> {
   const query = useSuspenseQuery(getOption(spacePk, discussionPk));
   return query;
 }
