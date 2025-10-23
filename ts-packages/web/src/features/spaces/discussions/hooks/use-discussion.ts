@@ -9,7 +9,7 @@ import { DiscussionResponse } from '../types/get-discussion-response';
 
 export function getOption(spacePk: string, discussionPk: string) {
   return {
-    queryKey: spaceKeys.discussions(spacePk),
+    queryKey: spaceKeys.discussion(spacePk, discussionPk),
     queryFn: async () => {
       const discussion = await call(
         'GET',

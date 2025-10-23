@@ -373,26 +373,15 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       videoTileDidUpdate: (tileState: any) => {
         const { tileId, boundAttendeeId } = tileState;
-        if (!tileId || !boundAttendeeId) return;
+        if (!tileId || !boundAttendeeId || tileState.isContent) return;
         tileMapRef.current[tileId] = boundAttendeeId;
-        const attendeeId = tileState.boundAttendeeId;
-        const videoOn =
-          attendeeId !== meetingSession.configuration.credentials?.attendeeId
-            ? true
-            : tileState.boundAttendeeId &&
-              tileState.tileId !== null &&
-              (tileState.active || tileState.boundVideoStream !== null);
-        if (!tileState.isContent && tileState.tileId && boundAttendeeId) {
-          setVideoTiles((prev) => {
-            const exists = prev.some((t) => t.tileId === tileState.tileId);
-            return exists
-              ? prev
-              : [
-                  ...prev,
-                  { tileId: tileState.tileId, attendeeId: boundAttendeeId },
-                ];
-          });
-        }
+        const videoOn = !!(tileState.active || tileState.boundVideoStream);
+        setVideoTiles((prev) => {
+          const exists = prev.some((t) => t.tileId === tileId);
+          return exists
+            ? prev
+            : [...prev, { tileId, attendeeId: boundAttendeeId }];
+        });
         setVideoStates((prev) => ({ ...prev, [boundAttendeeId]: videoOn }));
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -413,15 +402,14 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
     const av = meetingSession.audioVideo;
     const activeAttendeeIds = new Set<string>();
     av.realtimeSubscribeToAttendeeIdPresence((attendeeId, present) => {
+      if (attendeeId.includes('#content')) return;
       if (present) {
         activeAttendeeIds.add(attendeeId);
         void refetchParticipants();
         av.realtimeSubscribeToVolumeIndicator(attendeeId, (_id, _v, muted) => {
-          setMicStates((prev) =>
-            typeof muted !== 'boolean'
-              ? prev
-              : { ...prev, [attendeeId]: !muted },
-          );
+          if (typeof muted === 'boolean') {
+            setMicStates((prev) => ({ ...prev, [attendeeId]: !muted }));
+          }
         });
       } else {
         activeAttendeeIds.delete(attendeeId);
@@ -440,8 +428,10 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
     };
   }, [meetingSession, refetchParticipants]);
 
+  const exitedAttendeesRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
-    if (!meetingSession) return;
+    if (!meetingSession || !users || users.length === 0) return;
     const av = meetingSession.audioVideo;
 
     const byAttendee = new Map((users ?? []).map((u) => [u.participant_id, u]));
@@ -454,6 +444,7 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
       present: boolean,
       _externalUserId?: string,
     ) => {
+      if (attendeeId.includes('#content')) return;
       const selfId = meetingSession.configuration.credentials?.attendeeId;
       if (attendeeId === selfId && !present) return;
 
@@ -464,6 +455,9 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
         void refetchParticipants();
         return;
       }
+
+      if (present) exitedAttendeesRef.current.delete(attendeeId);
+      else exitedAttendeesRef.current.add(attendeeId);
 
       setParticipants((prev) => {
         const exists = prev.some((p) => p.user_pk === userPk);

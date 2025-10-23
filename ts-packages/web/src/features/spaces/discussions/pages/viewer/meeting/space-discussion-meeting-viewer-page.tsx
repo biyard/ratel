@@ -1,10 +1,10 @@
+// space-discussion-meeting-viewer-page.tsx
 import { logger } from '@/lib/logger';
 import { SpaceDiscussionPathProps } from '../../space-discussion-path-props';
 import { useSpaceDiscussionMeetingViewerController } from './use-space-discussion-meeting-viewer-controller';
 import Bottom from '../../../components/meeting/bottom';
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
-import { SpaceType } from '@/features/spaces/types/space-type';
 import { Header } from '../../../components/meeting/header';
 import LocalVideo from '../../../components/meeting/local-video';
 import RemoteContentShareVideo from '../../../components/meeting/remote-content-share-video';
@@ -28,10 +28,10 @@ export function SpaceDiscussionMeetingViewerPage({
       <div className="flex flex-1 h-full justify-center items-center">
         <div className="flex flex-1 bg-black h-full w-full max-w-full flex-col justify-center items-center">
           <Header
-            name={ctrl.discussion.discussion.name}
+            name={ctrl.discussion?.discussion?.name ?? ''}
             onclose={async () => {
               await ctrl.cleanUpMeetingSession();
-              navigate(route.spaceByType(SpaceType.Deliberation, spacePk));
+              navigate(route.spaceDiscussions(spacePk));
             }}
           />
 
@@ -127,7 +127,7 @@ export function SpaceDiscussionMeetingViewerPage({
             isRecording={ctrl.isRecording}
             onclose={async () => {
               await ctrl.cleanUpMeetingSession();
-              navigate(route.spaceByType(SpaceType.Deliberation, spacePk));
+              navigate(route.spaceDiscussions(spacePk));
             }}
             onRecordClick={async () => {
               if (!ctrl.meetingSession) return;
@@ -165,9 +165,12 @@ export function SpaceDiscussionMeetingViewerPage({
             onAudioToggle={async () => {
               if (!ctrl.meetingSession) return;
               const av = ctrl.meetingSession.audioVideo;
+              const selfId =
+                ctrl.meetingSession.configuration.credentials?.attendeeId;
 
               if (ctrl.isAudioOn) {
                 av.realtimeMuteLocalAudio();
+                ctrl.changeMicStates({ ...ctrl.micStates, [selfId!]: false });
                 ctrl.changeIsAudioOn(false);
                 return;
               }
@@ -184,27 +187,21 @@ export function SpaceDiscussionMeetingViewerPage({
                     });
                     stream.getTracks().forEach((t) => t.stop());
                     inputs = await dc.listAudioInputDevices();
-                  } catch (permErr) {
-                    console.warn(
-                      '[Audio] permission denied or no device:',
-                      permErr,
-                    );
+                  } catch {
                     return;
                   }
                 }
 
                 if (!inputs.length) {
-                  console.warn(
-                    '[Audio] no input devices found after permission',
-                  );
                   return;
                 }
 
                 await dc.startAudioInput(inputs[0].deviceId);
                 av.realtimeUnmuteLocalAudio();
+                ctrl.changeMicStates({ ...ctrl.micStates, [selfId!]: true });
                 ctrl.changeIsAudioOn(true);
-              } catch (err) {
-                console.warn('[Audio] enable failed:', err);
+              } catch {
+                logger.debug('change audio failed');
               }
             }}
           />
