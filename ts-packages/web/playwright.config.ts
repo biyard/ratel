@@ -71,5 +71,24 @@ export default defineConfig({
         storageState: 'user.json',
       },
     },
+
+    {
+      name: 'admin-setup',
+      testMatch: ['**/*.admin.setup.ts', '**/*.admin.setup.tsx'],
+    },
+    {
+      name: 'admin',
+      testMatch: ['**/*.admin.spec.ts', '**/*.admin.spec.tsx'],
+      dependencies: ['admin-setup'],
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: {
+          width: 1440,
+          height: 950,
+        },
+        // This will be loaded in the beforeEach of authenticated tests
+        storageState: 'admin.json',
+      },
+    },
   ],
 });
