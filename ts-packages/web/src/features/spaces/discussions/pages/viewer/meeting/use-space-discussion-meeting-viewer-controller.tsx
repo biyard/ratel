@@ -152,10 +152,9 @@ export function useSpaceDiscussionMeetingViewerController(
 function useBuildDeps(spacePk: string, discussionPk: string) {
   const discussionMeetingMutation = useDiscussionMeetingMutation();
   const exitMeetingMutation = useExitMeetingMutation();
-  const data = useDiscussionParticipantSpace(spacePk, discussionPk);
-  const { refetch: refetchParticipants } = data;
-
-  const discussionParticipant = data.data;
+  const { data: discussionParticipant, refetch: refetchParticipants } =
+    useDiscussionParticipantSpace(spacePk, discussionPk);
+  const { data: discussion } = useDiscussion(spacePk, discussionPk);
 
   const tileMapRef = useRef<Record<number, string>>({});
   const [isFirstClicked, setIsFirstClicked] = useState(false);
@@ -187,8 +186,6 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
   );
 
   const navigate = useNavigate();
-
-  const { data: discussion } = useDiscussion(spacePk, discussionPk);
 
   const users = discussionParticipant.participants;
 
@@ -234,19 +231,19 @@ function useBuildDeps(spacePk: string, discussionPk: string) {
 
     const handlePopState = async () => {
       await cleanupMeetingSession();
-      data.refetch();
+      refetchParticipants();
       navigate(route.discussionByPk(spacePk, discussionPk));
     };
 
     const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
       e.preventDefault();
       await cleanupMeetingSession();
-      data.refetch();
+      refetchParticipants();
     };
 
     const handleUnload = async () => {
       await cleanupMeetingSession();
-      data.refetch();
+      refetchParticipants();
     };
 
     window.addEventListener('popstate', handlePopState);

@@ -1,4 +1,3 @@
-// space-discussion-meeting-viewer-page.tsx
 import { logger } from '@/lib/logger';
 import { SpaceDiscussionPathProps } from '../../space-discussion-path-props';
 import { useSpaceDiscussionMeetingViewerController } from './use-space-discussion-meeting-viewer-controller';
