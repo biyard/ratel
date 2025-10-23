@@ -1,11 +1,7 @@
-import Provider from './providers';
-
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <Provider>
-      <div className="absolute w-screen h-screen left-0 top-0 bg-black">
-        {children}
-      </div>
-    </Provider>
+    <div className="absolute top-0 left-0 w-screen h-screen bg-black">
+      {children}
+    </div>
   );
 }

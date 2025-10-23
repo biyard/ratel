@@ -174,6 +174,11 @@ pub enum Error {
     #[error("discussion not found")]
     NotFoundDiscussion,
 
+    // membership endpoints 7000 ~
+    #[error("Insufficient credits")]
+    #[rest_error(status = 400, code = 7000)]
+    InsufficientCredits,
+
     // web 1,000,000 ~
     #[error("Web error: {0}")]
     #[rest_error(code = 1_000_000)]

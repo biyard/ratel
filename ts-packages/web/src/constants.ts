@@ -124,3 +124,5 @@ export const discussionKeys = {
   meeting: (spacePk: string, discussionPk: string) =>
     [QK_DISCUSSION, 'meeting', spacePk, discussionPk] as const,
 };
+
+export const QK_MEMBERSHIPS = 'memberships';
