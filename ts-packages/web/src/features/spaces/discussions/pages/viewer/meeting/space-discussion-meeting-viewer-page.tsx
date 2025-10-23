@@ -7,6 +7,10 @@ import { route } from '@/route';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { Header } from '../../../components/meeting/header';
 import LocalVideo from '../../../components/meeting/local-video';
+import RemoteContentShareVideo from '../../../components/meeting/remote-content-share-video';
+import ChatPanel from '../../../components/meeting/chat-panel';
+import ParticipantsPanel from '../../../components/meeting/participants-panel';
+import RemoteGalleryView from '../../../components/meeting/remote-gallery-view';
 
 export function SpaceDiscussionMeetingViewerPage({
   spacePk,
@@ -34,7 +38,7 @@ export function SpaceDiscussionMeetingViewerPage({
           <div className="relative w-full h-full">
             <div className="flex flex-col w-full justify-start items-start">
               <>
-                {/* {ctrl.meetingSession && (
+                {ctrl.meetingSession && (
                   <RemoteContentShareVideo
                     meetingSession={ctrl.meetingSession}
                     onRemoteContentTileUpdate={(tileState) => {
@@ -55,9 +59,9 @@ export function SpaceDiscussionMeetingViewerPage({
                       }
                     }}
                   />
-                )} */}
+                )}
 
-                {/* {ctrl.focusedAttendeeId && ctrl.meetingSession && (
+                {ctrl.focusedAttendeeId && ctrl.meetingSession && (
                   <div className="w-full h-full z-100 bg-black border-4 border-white rounded-xl ">
                     <video
                       className="absolute top-0 left-0 w-full h-full bg-black object-cover z-50"
@@ -81,7 +85,7 @@ export function SpaceDiscussionMeetingViewerPage({
                       {ctrl.focusedNickname}
                     </div>
                   </div>
-                )} */}
+                )}
 
                 {ctrl.meetingSession && (
                   <div
@@ -101,7 +105,7 @@ export function SpaceDiscussionMeetingViewerPage({
             </div>
           </div>
 
-          {/* <div className="flex flex-row w-full max-tablet:hidden">
+          <div className="flex flex-row w-full max-tablet:hidden">
             {ctrl.meetingSession &&
               !ctrl.isSharing &&
               !ctrl.remoteContentTileOwner && (
@@ -114,7 +118,7 @@ export function SpaceDiscussionMeetingViewerPage({
                   setFocusedAttendeeId={ctrl.changeFocusedAttendeeId}
                 />
               )}
-          </div> */}
+          </div>
 
           <Bottom
             isVideoOn={ctrl.isVideoOn}
@@ -229,7 +233,7 @@ export function SpaceDiscussionMeetingViewerPage({
         </div>
       </div>
 
-      {/* {ctrl.activePanel === 'participants' && (
+      {ctrl.activePanel === 'participants' && (
         <ParticipantsPanel
           micStates={ctrl.micStates}
           videoStates={ctrl.videoStates}
@@ -255,7 +259,7 @@ export function SpaceDiscussionMeetingViewerPage({
             ctrl.meetingSession?.configuration.credentials?.attendeeId ?? ''
           }
         />
-      )} */}
+      )}
     </div>
   );
 }
