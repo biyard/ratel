@@ -217,7 +217,7 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
         }
 
         impl #name {
-            pub fn try_into_inner(&self) -> std::result::Result<String, crate::Error2> {
+            pub fn try_into_inner(&self) -> std::result::Result<String, crate::Error> {
                 match self {
                     #(#inner_arms)*
                 }
