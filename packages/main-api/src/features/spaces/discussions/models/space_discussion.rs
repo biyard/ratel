@@ -1,4 +1,5 @@
 use crate::{
+    Error,
     features::spaces::discussions::{
         dto::SpaceDiscussionResponse, models::space_discussion_member::SpaceDiscussionMember,
     },
@@ -81,5 +82,52 @@ impl SpaceDiscussion {
         discussion.is_member = member.is_some();
 
         Ok(discussion)
+    }
+
+    pub async fn delete_all(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: &Partition,
+    ) -> crate::Result<()> {
+        let mut bookmark = None::<String>;
+        loop {
+            let mut options = SpaceDiscussionQueryOption::builder()
+                .sk("SPACE_DISCUSSION#".into())
+                .limit(100);
+
+            if let Some(b) = &bookmark {
+                options = options.bookmark(b.clone());
+            }
+
+            let (discussions, next_bookmark) = SpaceDiscussion::query(cli, space_pk, options)
+                .await
+                .map_err(|e| {
+                    tracing::debug!("Error querying space discussions for deletion: {:?}", e);
+                    e
+                })?;
+
+            if discussions.is_empty() {
+                break;
+            }
+
+            let tx_items = discussions
+                .into_iter()
+                .map(|discussion| {
+                    SpaceDiscussion::delete_transact_write_item(discussion.pk, discussion.sk)
+                })
+                .collect::<Vec<_>>();
+
+            cli.transact_write_items()
+                .set_transact_items(Some(tx_items))
+                .send()
+                .await
+                .map_err(|e| Error::InternalServerError(e.to_string()))?;
+
+            match next_bookmark {
+                Some(b) => bookmark = Some(b),
+                None => break,
+            }
+        }
+
+        Ok(())
     }
 }

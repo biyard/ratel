@@ -1,6 +1,7 @@
 export const i18nSpaceHome = {
   en: {
     publish_space: 'Publish Space',
+    delete_space: 'Delete Space',
     unsupported_space_type: 'Unsupported space type',
     no_authorized_user: 'No Authorized User',
     untitled_space: 'Untitled Space',
@@ -8,7 +9,7 @@ export const i18nSpaceHome = {
     delete_warning:
       'This action cannot be undone. This will permanently delete the Space and all its contents.',
     delete_label: 'To confirm, type the Space name exactly as shown:',
-    delete_placeholder: 'Type "{spaceName}" to confirm',
+    delete_placeholder: 'Type "{{spaceName}}" to confirm',
     cancel: 'Cancel',
     delete_button: 'Delete Space',
     deleting: 'Deleting...',
@@ -47,6 +48,7 @@ export const i18nSpaceHome = {
   },
   ko: {
     publish_space: '스페이스 게시',
+    delete_space: '스페이스 삭제',
     unsupported_space_type: '지원되지 않는 스페이스 유형입니다.',
     no_authorized_user: '인증되지 않은 사용자입니다.',
     untitled_space: '제목 없는 스페이스',
@@ -54,7 +56,7 @@ export const i18nSpaceHome = {
     delete_warning:
       '이 작업은 되돌릴 수 없습니다. 스페이스와 그 안의 모든 콘텐츠가 영구적으로 삭제됩니다.',
     delete_label: '확인을 위해 아래와 동일하게 스페이스 이름을 입력하세요:',
-    delete_placeholder: '확인을 위해 "{spaceName}"을(를) 입력하세요',
+    delete_placeholder: '확인을 위해 "{{spaceName}}"을(를) 입력하세요',
     cancel: '취소',
     delete_button: '스페이스 삭제',
     deleting: '삭제 중...',

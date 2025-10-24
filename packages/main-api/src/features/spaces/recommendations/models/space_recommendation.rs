@@ -77,6 +77,31 @@ impl SpaceRecommendation {
 
         Ok(recommendation)
     }
+
+    pub async fn delete_one(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: &Partition,
+    ) -> crate::Result<()> {
+        let recommendation = SpaceRecommendation::get(
+            &cli,
+            space_pk.clone(),
+            Some(EntityType::SpaceRecommendation),
+        )
+        .await?;
+
+        if recommendation.is_none() {
+            return Ok(());
+        }
+
+        SpaceRecommendation::delete(
+            &cli,
+            &space_pk.clone(),
+            Some(EntityType::SpaceRecommendation),
+        )
+        .await?;
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
