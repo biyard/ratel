@@ -12,24 +12,9 @@ export enum SpaceStatus {
 }
 
 export type SpaceVisibility =
-  | { type: 'private' }
-  | { type: 'public' }
-  | { type: 'team'; team_pk: string };
-
-export function normalizeVisibility(v: unknown): SpaceVisibility | undefined {
-  const type = v.toString().toLowerCase();
-
-  if (type === 'private') return { type: 'private' };
-  if (type === 'public') return { type: 'public' };
-  if (type === 'team') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const team_pk = (v as any).team_pk;
-    if (typeof team_pk === 'string' && team_pk) {
-      return { type: 'team', team_pk };
-    }
-  }
-  return undefined;
-}
+  | { type: 'Private' | 'private' | 'PRIVATE' }
+  | { type: 'Public' | 'public' | 'PUBLIC' }
+  | { type: 'Team' | 'team' | 'TEAM'; team_pk: string };
 
 export interface SpaceCommon {
   pk: string;
