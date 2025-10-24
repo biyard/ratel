@@ -1,3 +1,5 @@
+import { SpaceType } from '@/features/spaces/types/space-type';
+
 /*
 #[derive(Serialize)]
 struct WebParams {
@@ -15,6 +17,7 @@ export interface TgWebParams {
 
 export type TelegramWebCommand = {
   OpenSpacePage: {
-    space_id: number;
+    space_pk: string;
+    type: SpaceType;
   };
 };

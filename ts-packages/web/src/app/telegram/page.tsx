@@ -1,10 +1,5 @@
-'use client';
-
 import { useEffect, useState } from 'react';
-import { useRawInitData, postEvent } from '@telegram-apps/sdk-react';
-import { useAuth } from '@/lib/contexts/auth-context';
-import { proxy } from '@/lib/api/ratel_api';
-import { send } from '@/lib/api/send';
+import { useRawInitData, postEvent, useLaunchParams } from '@tma.js/sdk-react';
 
 import Loading from '../loading';
 import { useNavigate, useSearchParams } from 'react-router';
@@ -13,24 +8,7 @@ import { route } from '@/route';
 import { TelegramWebCommand, TgWebParams } from '@/types/telegram';
 import { getKey as getUserQueryKey } from '../(social)/_hooks/user';
 import { getQueryClient } from '@/providers/getQueryClient';
-// import { Button } from '@/components/ui/button';
-// import { config } from '@/config';
-// import { apiFetch } from '@/lib/api/apiFetch';
-
-function useDidMount(): boolean {
-  const [didMount, setDidMount] = useState<boolean>(false);
-
-  useEffect(() => {
-    setDidMount(true);
-  }, []);
-
-  return didMount;
-}
-
-export default function HomePage() {
-  const didMount = useDidMount();
-  return didMount && <TelegramMiniAppMain />;
-}
+import { loginWithTelegram } from '@/lib/api/ratel/auth.v3';
 
 function parseTelegramStartParam(startParam: string): TgWebParams | null {
   try {
@@ -50,37 +28,34 @@ function getRedirectPath(params: TgWebParams): string {
   const command: TelegramWebCommand = params.command;
 
   if ('OpenSpacePage' in command) {
-    const { space_id } = command.OpenSpacePage;
-    return route.space(space_id);
+    const { space_pk, type } = command.OpenSpacePage;
+    return route.spaceByType(type, space_pk);
   }
 
   return route.home();
 }
 
-function TelegramMiniAppMain() {
+export default function TelegramPage() {
+  const params = useLaunchParams();
+  const tgWebAppStartParam = params.tgWebAppStartParam;
   const [isLoading, setIsLoading] = useState(true);
   const raw = useRawInitData();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const queryClient = getQueryClient();
-  const { ed25519KeyPair } = useAuth();
-  // const [token, setToken] = useState<string | null>(null);
+  console.log('TelegramPage initialized with params:', params, raw);
   useEffect(() => {
     const tryLoginWithTelegramRaw = async () => {
-      if (!ed25519KeyPair || !raw) {
-        return;
-      }
       try {
-        const url = proxy.login.loginWithTelegram(raw);
-        const info = await send(ed25519KeyPair, url, '');
-        //If telegram User is not linked with Ratel Service, Open External Browser to Linking
+        const info = await loginWithTelegram(raw);
+
         if (!info) {
           setIsLoading(false);
           return;
         }
 
         queryClient.refetchQueries({ queryKey: getUserQueryKey() });
-        const tgWebAppStartParam = searchParams.get('tgWebAppStartParam');
+
         if (tgWebAppStartParam) {
           const params = parseTelegramStartParam(tgWebAppStartParam);
           if (params) {
@@ -98,7 +73,7 @@ function TelegramMiniAppMain() {
     };
 
     tryLoginWithTelegramRaw();
-  }, [raw, ed25519KeyPair, searchParams, navigate, queryClient]);
+  }, [raw, searchParams, navigate, queryClient, tgWebAppStartParam]);
 
   return (
     <>{isLoading ? <Loading /> : <div>Failed to login with telegram</div>}</>
