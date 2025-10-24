@@ -6,14 +6,19 @@ import useDiscussionMemberSpace from '../../../hooks/use-discussion-member-space
 import { State } from '@/types/state';
 import { SpaceDiscussionMemberResponse } from '../../../types/space-discussion-member-response';
 import { useState } from 'react';
-import { User } from '@/lib/api/ratel/auth.v3';
+
 import { checkString } from '@/lib/string-filter-utils';
 import { useApiCall } from '@/lib/api/use-send';
-import { ratelApi } from '@/lib/api/ratel_api';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { useCreateDiscussionMutation } from '../../../hooks/use-create-discussion-mutation';
 import { useUpdateDiscussionMutation } from '../../../hooks/use-update-discussion-mutation';
+import {
+  findUserByEmail,
+  findUserByPhoneNumber,
+  findUserByUsername,
+  UserDetailResponse,
+} from '@/lib/api/ratel/users.v3';
 
 export class InviteMemberModalController {
   constructor(
@@ -54,28 +59,22 @@ export class InviteMemberModalController {
         const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
         const isPhone = /^\+?[0-9]\d{7,14}$/.test(input);
         try {
-          let data: User | null = null;
+          let data: UserDetailResponse | null = null;
           if (isEmail) {
-            data = await this.get(ratelApi.users.getUserByEmail(input));
+            data = await findUserByEmail(input);
           } else if (isPhone) {
-            data = await this.get(ratelApi.users.getUserByPhoneNumber(input));
+            data = await findUserByUsername(input);
           } else {
-            data = await this.get(ratelApi.users.getUserByUsername(input));
+            data = await findUserByPhoneNumber(input);
           }
           if (data) {
             const exists = nextSelected.some((u) => u.user_pk === data.pk);
             if (!exists) {
               const user = {
                 user_pk: data.pk,
-                author_display_name:
-                  data.display_name != undefined && data.display_name != ''
-                    ? data.display_name
-                    : data.email,
+                author_display_name: data.nickname,
                 author_profile_url: data.profile_url,
-                author_username:
-                  data.display_name != undefined && data.display_name != ''
-                    ? data.display_name
-                    : data.email,
+                author_username: data.username,
               };
               ns = [...ns, user];
             }

@@ -1,8 +1,4 @@
-'use client';
-
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { userEditProfileRequest } from '@/lib/api/models/user';
-import { ratelApi } from '@/lib/api/ratel_api';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { useApiCall } from '@/lib/api/use-send';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
@@ -55,11 +51,12 @@ export default function ClientProviders({
       showErrorToast('Please remove the test keyword');
       return;
     }
-
-    post(
-      ratelApi.users.editProfile(0), // TODO: Migrate to v3 user update endpoint
-      userEditProfileRequest(nickname!, htmlContents!, profileUrl),
-    );
+    throw new Error('Not implemented');
+    // TODO: Migrate to v3 user update endpoint
+    // post(
+    //   // ratelApi.users.editProfile(0),
+    //   userEditProfileRequest(nickname!, htmlContents!, profileUrl),
+    // );
     userinfo.refetch();
   };
   return (

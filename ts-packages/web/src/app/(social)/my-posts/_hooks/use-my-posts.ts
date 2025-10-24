@@ -1,7 +1,7 @@
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
 import { FeedStatus } from '@/features/posts/types/post';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { listMyPosts } from '@/lib/api/ratel/me.v3';
 import { ListPostResponse } from '@/features/posts/dto/list-post-response';
 

@@ -1,7 +1,6 @@
 import { QK_GET_NEWS_BY_NEWS_ID } from '@/constants';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { apiFetch, type FetchResponse } from '@/lib/api/apiFetch';
-import { QueryClient } from '@tanstack/react-query';
 import { config } from '@/config';
 import {
   useSuspenseQuery,
@@ -26,30 +25,6 @@ export function useNewsByID(
   });
 
   return query;
-}
-
-export async function prefetchNewsByID(queryClient: QueryClient, id: number) {
-  try {
-    await queryClient.prefetchQuery({
-      queryKey: getKey(id),
-      queryFn: async () => {
-        const { data } = await requestNewsByID(id);
-        return data;
-      },
-    });
-  } catch (error) {
-    console.warn(`Failed to prefetch feed ${id}:`, error);
-  }
-}
-
-export function setInitialNewsByID(
-  queryClient: QueryClient,
-  id: number,
-  data: NewsDetail | null,
-) {
-  if (data) {
-    queryClient.setQueryData(getKey(id), data);
-  }
 }
 
 export function requestNewsByID(

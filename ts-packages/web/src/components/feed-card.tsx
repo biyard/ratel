@@ -6,7 +6,8 @@ import { convertNumberToString } from '@/lib/number-utils';
 import TimeAgo from './time-ago';
 import DOMPurify from 'dompurify';
 import { NavLink, useNavigate } from 'react-router';
-import { UserType } from '@/lib/api/models/user';
+import { UserType } from '@/lib/api/ratel/users.v3';
+
 import { route } from '@/route';
 import { Button } from './ui/button';
 import {
@@ -18,7 +19,7 @@ import {
 import { Edit1 } from './icons';
 import { useRepostDraft } from '@/app/(social)/_components/create-repost';
 import { showSuccessToast, showErrorToast } from './custom-toast/toast';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { useTranslation } from 'react-i18next';

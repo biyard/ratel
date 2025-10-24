@@ -1,4 +1,5 @@
-import { UserType } from '@/lib/api/models/user';
+import { UserType } from '@/lib/api/ratel/users.v3';
+
 import { useTranslation } from 'react-i18next';
 
 type SuggestionItemProps = {

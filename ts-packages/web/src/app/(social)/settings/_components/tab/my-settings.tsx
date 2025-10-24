@@ -7,11 +7,11 @@ import ThemeModal from '../modal/theme-modal';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { ChangeThemeRequest } from '@/lib/api/models/themes/theme';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { ThemeType } from '@/lib/api/models/user';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_USERS_GET_INFO } from '@/constants';
 import SpecBox from '@/app/(social)/_components/spec-box';
+import { ThemeType } from '@/lib/api/ratel/users.v3';
 
 export default function MySettings() {
   const { post } = useApiCall();

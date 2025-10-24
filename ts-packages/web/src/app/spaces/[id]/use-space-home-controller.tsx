@@ -7,7 +7,6 @@ import { Space } from '@/features/spaces/types/space';
 import { Settings } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
-import { UserResponse } from '@/lib/api/ratel/me.v3';
 import { logger } from '@/lib/logger';
 import { useSpaceUpdateContentMutation } from '@/features/spaces/hooks/use-space-update-content-mutation';
 import { showErrorToast } from '@/lib/toast';
@@ -16,10 +15,11 @@ import { sideMenusForSpaceType } from '@/features/spaces/utils/side-menus-for-sp
 import { usePopup } from '@/lib/contexts/popup-service';
 import PublishSpaceModal from '@/features/spaces/modals/space-publish-modal';
 import { usePublishSpaceMutation } from '@/features/spaces/hooks/use-publish-mutation';
+import { UserDetailResponse } from '@/lib/api/ratel/users.v3';
 
 export class SpaceHomeController {
   public space: Space;
-  public user: UserResponse | null;
+  public user: UserDetailResponse | null;
   public saveHook?: () => Promise<void>;
   public publishHook?: () => Promise<void>;
 

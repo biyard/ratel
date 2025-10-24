@@ -1,7 +1,7 @@
 import { BoosterType } from '@/features/spaces/types/booster-type';
 import { SpaceVisibility } from '@/features/spaces/types/space-common';
 import { SpaceType } from '@/features/spaces/types/space-type';
-import { UserType } from '@/lib/api/models/user';
+import { UserType } from '@/lib/api/ratel/users.v3';
 
 interface Post {
   pk: string;

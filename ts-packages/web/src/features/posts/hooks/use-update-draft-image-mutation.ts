@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
 import { showErrorToast } from '@/lib/toast';
 import { optimisticListUpdate, optimisticUpdate } from '@/lib/hook-utils';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { call } from '@/lib/api/ratel/call';
 import Post from '../types/post';
 import PostResponse from '../dto/list-post-response';

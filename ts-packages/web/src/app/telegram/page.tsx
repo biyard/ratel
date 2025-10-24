@@ -6,10 +6,10 @@ import { useNavigate, useSearchParams } from 'react-router';
 import { decode_base64 } from '@/lib/base64';
 import { route } from '@/route';
 
-import { getKey as getUserQueryKey } from '../(social)/_hooks/user';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { loginWithTelegram } from '@/lib/api/ratel/auth.v3';
 import { SpaceType } from '@/features/spaces/types/space-type';
+import { invalidateUserInfo } from '@/hooks/use-user-info';
 
 export interface TgWebParams {
   command: TelegramWebCommand;
@@ -66,7 +66,7 @@ export default function TelegramPage() {
           return;
         }
 
-        queryClient.refetchQueries({ queryKey: getUserQueryKey() });
+        invalidateUserInfo(queryClient);
 
         if (tgWebAppStartParam) {
           const params = parseTelegramStartParam(tgWebAppStartParam);

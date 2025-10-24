@@ -1,6 +1,7 @@
 import { BoosterType } from '@/features/spaces/types/booster-type';
 import { SpaceType } from '@/features/spaces/types/space-type';
-import { UserType } from '@/lib/api/models/user';
+import { UserType } from '@/lib/api/ratel/users.v3';
+
 import { ListResponse } from '@/lib/api/ratel/common';
 
 export type ListPostResponse = ListResponse<PostResponse>;

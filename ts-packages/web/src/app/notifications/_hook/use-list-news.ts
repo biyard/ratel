@@ -1,4 +1,3 @@
-'use client';
 import { QK_GET_NEWS_BY_NEWS_ID } from '@/constants';
 import { ratelApi } from '@/lib/api/ratel_api';
 import {

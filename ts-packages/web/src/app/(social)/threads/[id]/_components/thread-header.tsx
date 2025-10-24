@@ -6,7 +6,8 @@ import {
   ThumbUp,
 } from '@/components/icons';
 
-import { UserType } from '@/lib/api/models/user';
+import { UserType } from '@/lib/api/ratel/users.v3';
+
 import { convertNumberToString } from '@/lib/number-utils';
 import { getTimeAgo } from '@/lib/time-utils';
 

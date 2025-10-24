@@ -20,6 +20,7 @@ import { useTranslation, Trans } from 'react-i18next';
 import { OAuthProvider } from '@/types/oauth-provider';
 import { ratelSdk } from '@/lib/api/ratel';
 import { useUserInfo } from '@/hooks/use-user-info';
+import { signup } from '@/lib/api/ratel/auth.v3';
 
 export interface UserSetupPopupProps {
   id?: string;
@@ -122,8 +123,8 @@ const UserSetupPopup = ({
         // FIXME: EVM address must be verified by signature in server-side
         req.evm_address = auth.evmWallet?.address;
       }
-
-      if (await post(ratelApi.users.signup(), req)) {
+      const res = await signup(req);
+      if (res) {
         query.refetch();
         popup.open(<ConfirmPopup />);
       }

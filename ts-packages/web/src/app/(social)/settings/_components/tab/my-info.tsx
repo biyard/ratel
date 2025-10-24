@@ -6,20 +6,18 @@ import { Col } from '@/components/ui/col';
 import { Input } from '@/components/ui/input';
 import { Row } from '@/components/ui/row';
 import { Textarea } from '@/components/ui/textarea';
-import { ratelApi } from '@/lib/api/ratel_api';
 import { checkString } from '@/lib/string-filter-utils';
 import { route } from '@/route';
 import { logger } from '@/lib/logger';
-import { useApiCall } from '@/lib/api/use-send';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { useSettingsContext } from '../../providers.client';
 import WalletSummary from '../wallet-summary';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
+import { updateUserEvmAddress } from '@/lib/api/ratel/me.v3';
 
 export default function MyInfo() {
   const { t } = useTranslation('Settings');
-  const { post } = useApiCall();
   const userInfo = useSuspenseUserInfo();
   const { data: user } = userInfo;
   const navigate = useNavigate();
@@ -92,11 +90,7 @@ export default function MyInfo() {
             onUpdate={async (address) => {
               logger.debug('Updating wallet address...', address);
 
-              await post(ratelApi.users.updateEvmAddress(), {
-                update_evm_address: {
-                  evm_address: address,
-                },
-              });
+              await updateUserEvmAddress(address);
 
               userInfo.refetch();
               handleShowWalletConnect(false);
