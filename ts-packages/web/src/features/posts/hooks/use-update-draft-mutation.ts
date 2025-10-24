@@ -1,28 +1,45 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
 import { showErrorToast } from '@/lib/toast';
+
 import { optimisticListUpdate, optimisticUpdate } from '@/lib/hook-utils';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { updatePostWithImage, type PostResponse } from '@/lib/api/ratel/posts.v3';
+import Post from '../types/post';
+import { call } from '@/lib/api/ratel/call';
+import PostResponse from '../dto/list-post-response';
 
-export function useUpdateDraftImageMutation() {
+export function updatePostWithTitleAndContents(
+  postPk: string,
+  title: string,
+  content: string,
+): Promise<Post> {
+  return call('PATCH', `/v3/posts/${encodeURIComponent(postPk)}`, {
+    title,
+    content,
+  });
+}
+
+export function useUpdateDraftMutation() {
   const { data: user } = useSuspenseUserInfo();
+  const queryClient = useQueryClient();
 
   const username = user?.username;
 
   return useMutation({
     mutationFn: async ({
       postPk,
-      image,
+      title,
+      content,
     }: {
       postPk: string;
-      image: string;
+      title: string;
+      content: string;
     }) => {
-      await updatePostWithImage(postPk, image);
+      await updatePostWithTitleAndContents(postPk, title, content);
       return { postPk };
     },
 
-    onMutate: async ({ postPk, image }) => {
+    onMutate: async ({ postPk, title, content }) => {
       const queryKey = feedKeys.detail(postPk);
       const listQueryKey = feedKeys.drafts(username!);
 
@@ -31,7 +48,8 @@ export function useUpdateDraftImageMutation() {
         (post) => {
           return {
             ...post!,
-            urls: [image],
+            title,
+            content,
           };
         },
       );
@@ -43,7 +61,8 @@ export function useUpdateDraftImageMutation() {
 
           return {
             ...post,
-            urls: [image],
+            title,
+            content,
           };
         },
       );
@@ -59,9 +78,10 @@ export function useUpdateDraftImageMutation() {
     },
 
     onSettled: () => {
-      // TODO: Run after completed, as invalidation
-      // const queryClient = getQueryClient();
-      // queryClient.invalidateQueries({ queryKey });
+      // Invalidate all feed list queries to refresh drafts/posts lists
+      queryClient.invalidateQueries({
+        queryKey: feedKeys.lists(),
+      });
     },
   });
 }

@@ -1,4 +1,4 @@
-import { Post } from '@/lib/api/ratel/posts.v3';
+import Post from '@/features/posts/types/post';
 import { create } from 'zustand';
 
 export interface SpaceHeaderStore {

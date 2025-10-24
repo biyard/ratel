@@ -1,7 +1,26 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
-import { ListPostResponse, listTeamPosts } from '@/lib/api/ratel/posts.v3';
 import { FeedStatus } from '@/lib/api/models/feeds';
+import { ListPostResponse } from '@/features/posts/dto/list-post-response';
+import { call } from '@/lib/api/ratel/call';
+
+export async function listTeamPosts(
+  teamPk: string,
+  bookmark?: string,
+  status?: FeedStatus,
+): Promise<ListPostResponse> {
+  const params = new URLSearchParams();
+  if (bookmark) {
+    params.append('bookmark', bookmark);
+  }
+  if (status !== undefined) {
+    params.append('status', status.toString());
+  }
+  const queryString = params.toString();
+  const path = `/v3/teams/${encodeURIComponent(teamPk)}/posts${queryString ? `?${queryString}` : ''}`;
+
+  return call('GET', path);
+}
 
 export function getTeamFeedsOptions(teamPk: string, status?: FeedStatus) {
   return {

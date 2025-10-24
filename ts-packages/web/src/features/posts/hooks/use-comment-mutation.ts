@@ -1,8 +1,8 @@
 import { feedKeys } from '@/constants';
 import { comment } from '@/lib/api/ratel/comments.v3';
-import { PostDetailResponse } from '@/lib/api/ratel/posts.v3';
 import { optimisticUpdate } from '@/lib/hook-utils';
 import { useMutation } from '@tanstack/react-query';
+import { PostDetailResponse } from '../dto/post-detail-response';
 
 export function useCommentMutation() {
   return useMutation({

@@ -35,16 +35,12 @@ import {
 import { HexColorPicker } from 'react-colorful';
 import { useUserInfo } from '../../_hooks/user';
 
-import { PostType, Status, usePostEditorContext } from './provider';
+import { usePostEditorContext } from './provider';
 import type { ArtworkTrait } from '@/lib/api/models/feeds';
 import { ArtworkTraitDisplayType } from '@/lib/api/models/feeds';
+import { EditorStatus, PostTypeLabel } from './type';
 
-export {
-  PostType,
-  Status,
-  usePostEditorContext,
-  PostEditorProvider,
-} from './provider';
+export { usePostEditorContext, PostEditorProvider } from './provider';
 
 export const editorTheme = {
   ltr: 'text-left',
@@ -264,7 +260,7 @@ export function CreatePost() {
             <DoubleArrowDown className="[&>path]:stroke-text-primary" />
           </div>
         </div>
-        {postType === PostType.General ? (
+        {postType === PostTypeLabel.General ? (
           <LexicalComposer initialConfig={editorConfig}>
             <div className="px-4 pt-4">
               <input
@@ -314,7 +310,7 @@ export function CreatePost() {
               <ToolbarPlugin onImageUpload={(url) => updateImage(url)} />
 
               <div className="flex items-center gap-4">
-                {status === Status.Saving && (
+                {status === EditorStatus.Saving && (
                   <div className="flex items-center gap-2 text-sm text-neutral-400">
                     <Loader2 className="animate-spin" size={16} />
                     <span>Saving...</span>
@@ -328,10 +324,10 @@ export function CreatePost() {
                   onClick={async () => {
                     await handleUpdate();
                   }}
-                  disabled={isSubmitDisabled || status !== Status.Idle}
+                  disabled={isSubmitDisabled || status !== EditorStatus.Idle}
                   className="gap-2"
                 >
-                  {status !== Status.Idle ? (
+                  {status !== EditorStatus.Idle ? (
                     <Loader2 className="animate-spin" />
                   ) : (
                     <UserCircleIcon />
@@ -345,7 +341,7 @@ export function CreatePost() {
             <EditableArtworkPost />
             <div className="flex items-center justify-end p-4 text-neutral-400">
               <div className="flex items-center gap-4">
-                {status === Status.Saving && (
+                {status === EditorStatus.Saving && (
                   <div className="flex items-center gap-2 text-sm text-neutral-400">
                     <Loader2 className="animate-spin" size={16} />
                     <span>Saving...</span>
@@ -359,10 +355,10 @@ export function CreatePost() {
                   onClick={async () => {
                     await handleUpdate();
                   }}
-                  disabled={isSubmitDisabled || status !== Status.Idle}
+                  disabled={isSubmitDisabled || status !== EditorStatus.Idle}
                   className="gap-2"
                 >
-                  {status !== Status.Idle ? (
+                  {status !== EditorStatus.Idle ? (
                     <Loader2 className="animate-spin" />
                   ) : (
                     <UserCircleIcon />
@@ -381,20 +377,20 @@ function SelectPostType({
   postType,
   setPostType,
 }: {
-  postType: PostType;
-  setPostType: (type: PostType) => void;
+  postType: PostTypeLabel;
+  setPostType: (type: PostTypeLabel) => void;
 }) {
   return (
     <Select
       value={postType}
-      onValueChange={(val) => setPostType(val as PostType)}
+      onValueChange={(val) => setPostType(val as PostTypeLabel)}
     >
       <SelectTrigger>
         <SelectValue placeholder="Select Post Type" />
       </SelectTrigger>
       <SelectContent className="bg-neutral-600 text-white border-0">
-        <SelectItem value={PostType.General}>General</SelectItem>
-        <SelectItem value={PostType.Artwork}>Artwork</SelectItem>
+        <SelectItem value={PostTypeLabel.General}>General</SelectItem>
+        <SelectItem value={PostTypeLabel.Artwork}>Artwork</SelectItem>
       </SelectContent>
     </Select>
   );
@@ -542,9 +538,7 @@ export function ArtworkPost({
 
         {traits.map((trait, index) => {
           let name = formatTraitType(trait.trait_type);
-          try {
-            name = t(trait.trait_type) || formatTraitType(trait.trait_type);
-          } catch {}
+          name = t(trait.trait_type) || formatTraitType(trait.trait_type);
 
           switch (trait.display_type) {
             case null:
@@ -620,7 +614,7 @@ export function ArtworkPost({
   );
 }
 
-export function formatTraitType(traitType: string) {
+function formatTraitType(traitType: string) {
   return traitType
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))

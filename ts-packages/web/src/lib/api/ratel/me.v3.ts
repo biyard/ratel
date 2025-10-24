@@ -1,5 +1,5 @@
+import { ListPostResponse } from '@/features/posts/dto/list-post-response';
 import { call } from './call';
-import type { ListPostResponse } from './posts.v3';
 
 export async function getUserInfo(): Promise<UserResponse> {
   return call('GET', '/v3/me');

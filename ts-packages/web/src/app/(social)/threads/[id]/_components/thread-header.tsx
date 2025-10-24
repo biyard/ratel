@@ -10,9 +10,9 @@ import { UserType } from '@/lib/api/models/user';
 import { convertNumberToString } from '@/lib/number-utils';
 import { getTimeAgo } from '@/lib/time-utils';
 
-import { PostDetailResponse } from '@/lib/api/ratel/posts.v3';
 import { TFunction } from 'i18next';
 import ThreadAdminMenu from './thread-admin-menu';
+import { PostDetailResponse } from '@/features/posts/dto/post-detail-response';
 
 export type ThreadHeaderProps = {
   t: TFunction<'Thread', undefined>;

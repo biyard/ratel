@@ -1,17 +1,18 @@
 import { PublishType } from '@/components/post-header/modals/publish-space';
-import { Post } from '@/lib/api/ratel/posts.v3';
-import {
-  SpaceCommon,
-  SpacePublishState,
-  SpaceStatus,
-  SpaceVisibility,
-} from '@/types/space-common';
+
 import { ReactNode } from 'react';
 import { useSpaceHeaderStore } from './store';
 import { useNavigate } from 'react-router';
 import { usePublishSpaceMutation } from '@/features/spaces/hooks/use-publish-mutation';
 import { useUpdateSpaceVisibilityMutation } from '@/features/spaces/hooks/use-update-visibility-mutation';
 import { SpaceHeaderContext } from './context';
+import {
+  SpaceCommon,
+  SpacePublishState,
+  SpaceStatus,
+  SpaceVisibility,
+} from '@/features/spaces/types/space-common';
+import Post from '@/features/posts/types/post';
 
 /**
  * @interface SpaceHeaderContextType
