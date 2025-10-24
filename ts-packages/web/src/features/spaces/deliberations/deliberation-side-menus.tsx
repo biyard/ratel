@@ -1,19 +1,32 @@
-import { Settings } from '@/components/icons';
+import {
+  CheckCircle2,
+  Discuss,
+  PieChart1,
+  Post,
+  Vote,
+} from '@/components/icons';
 import { SpaceType } from '../types/space-type';
 import { addSideMenusForSpaceType } from '../utils/side-menus-for-space-type';
 import { route } from '@/route';
 // import { SpaceStatus } from '../types/space-common';
 
+const checkCircle2Colored = (props) => (
+  <CheckCircle2
+    {...props}
+    className="[&>path]:stroke-neutral-80 [&>circle]:stroke-neutral-80"
+  />
+);
+
 addSideMenusForSpaceType(SpaceType.Deliberation, [
   {
-    Icon: Settings,
+    Icon: Post,
     to: (space) => {
       return route.spaceFiles(space.pk);
     },
     label: 'menu_files',
   },
   {
-    Icon: Settings,
+    Icon: Vote,
     to: (space) => {
       const pollPk = `SPACE_POLL#${space.pk.split('#')[1]}`;
       return route.spacePollById(space.pk, pollPk);
@@ -21,21 +34,21 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
     label: 'menu_poll',
   },
   {
-    Icon: Settings,
+    Icon: Discuss,
     to: (space) => {
       return route.spaceDiscussions(space.pk);
     },
     label: 'menu_discussions',
   },
   {
-    Icon: Settings,
+    Icon: checkCircle2Colored,
     to: (space) => {
       return route.spaceRecommendations(space.pk);
     },
     label: 'menu_recommendations',
   },
   {
-    Icon: Settings,
+    Icon: PieChart1,
     to: (space) => {
       const pollPk = `SPACE_POLL#${space.pk.split('#')[1]}`;
       return route.spaceAnalyzePollById(space.pk, pollPk);
