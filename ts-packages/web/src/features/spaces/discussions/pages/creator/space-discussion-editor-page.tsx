@@ -1,13 +1,11 @@
 import { logger } from '@/lib/logger';
-import { SpaceDiscussionPathProps } from '../space-discussion-path-props';
 import { useSpaceDiscussionEditorController } from './use-space-discussion-editor-controller';
 import { Col } from '@/components/ui/col';
 import DiscussionEditor from '../../components/discussion-editor';
 import { SpaceDiscussionResponse } from '../../types/space-discussion-response';
+import { SpacePathProps } from '@/features/space-path-props';
 
-export function SpaceDiscussionEditorPage({
-  spacePk,
-}: SpaceDiscussionPathProps) {
+export function SpaceDiscussionEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceDiscussionEditorPage: spacePk=${spacePk}`);
 
   const ctrl = useSpaceDiscussionEditorController(spacePk);

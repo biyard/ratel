@@ -3,7 +3,6 @@ pub mod delete_space;
 pub mod list_spaces;
 pub mod update_space;
 
-pub mod deliberations;
 pub mod discussions;
 pub mod files;
 pub mod polls;

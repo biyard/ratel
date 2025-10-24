@@ -6,7 +6,7 @@ use tracing::Level;
 
 use crate::{
     AppState, controllers, route_v3,
-    utils::{aws::*, sqs_client::SqsClient, telegram::TelegramBot},
+    utils::{aws::*, sqs_client::SqsClient, telegram::ArcTelegramBot},
 };
 
 pub struct RouteDeps {
@@ -17,7 +17,7 @@ pub struct RouteDeps {
     pub textract_client: TextractClient,
     pub metadata_s3_client: S3Client,
     pub private_s3_client: S3Client,
-    pub bot: Option<TelegramBot>,
+    pub bot: Option<ArcTelegramBot>,
     pub dynamo_client: DynamoClient,
     pub ses_client: SesClient,
 }
@@ -30,7 +30,7 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Erro
         // rek_client,
         // textract_client,
         // private_s3_client,
-        // bot,
+        bot,
         dynamo_client,
         ses_client,
         ..
@@ -48,6 +48,7 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Erro
                 pool: pool.clone(),
                 dynamo_client: dynamo_client.clone(),
                 ses_client: ses_client.clone(),
+                bot: bot.clone(),
             })?,
         )
         .nest(

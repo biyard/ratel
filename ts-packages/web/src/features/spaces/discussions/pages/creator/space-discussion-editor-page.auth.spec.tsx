@@ -119,6 +119,12 @@ test.describe.serial('[SpaceDiscussionEditorPage] Authenticated Users ', () => {
 
     await modal.getByRole('button', { name: 'Continue' }).click();
     await modal.locator('div.cursor-pointer', { hasText: 'send' }).click();
+    await page.waitForTimeout(500);
+
+    await page.goto(spaceUrl);
+    await page.waitForTimeout(500);
+
+    await page.getByText('Discussions', { exact: true }).click();
 
     await expect(page.getByText(title, { exact: true })).toBeVisible();
     await expect(page.getByText(description, { exact: true })).toBeVisible();

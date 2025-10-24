@@ -1,4 +1,15 @@
+import { AttendeeInfo, MeetingInfo } from '../models/meeting';
 import { call } from './call';
+
+export function getMeetingByDiscussionPk(
+  spacePk: string,
+  discussionPk: string,
+): Promise<MeetingData> {
+  return call(
+    'GET',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}/meetings`,
+  );
+}
 
 export function createSpaceDiscussion(
   spacePk: string,
@@ -101,4 +112,9 @@ export function discussionEndRecording(
     'PATCH',
     `/v3/spaces/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}/meetings/end-recording`,
   );
+}
+
+export interface MeetingData {
+  Meeting: MeetingInfo;
+  Attendee: AttendeeInfo;
 }
