@@ -1,4 +1,4 @@
-import { expect, Locator, Page, TestInfo } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 import { CONFIGS } from './config';
 // Screenshot util class
 export type BiyardPage = Page & {
@@ -69,6 +69,7 @@ export async function click(
 
   await expect(selected).toBeVisible(timeout);
   await selected.click();
+  await page.waitForLoadState('networkidle');
 
   return selected;
 }

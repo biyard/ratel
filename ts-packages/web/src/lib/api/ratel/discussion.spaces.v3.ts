@@ -1,4 +1,15 @@
+import { AttendeeInfo, MeetingInfo } from '../models/meeting';
 import { call } from './call';
+
+export function getMeetingByDiscussionPk(
+  spacePk: string,
+  discussionPk: string,
+): Promise<MeetingData> {
+  return call(
+    'GET',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}/meetings`,
+  );
+}
 
 export function createSpaceDiscussion(
   spacePk: string,
@@ -51,4 +62,59 @@ export function deleteSpaceDiscussion(
     'DELETE',
     `/v3/spaces/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}`,
   );
+}
+
+export function discussionStartMeeting(
+  spacePk: string,
+  discussionPk: string,
+): Promise<void> {
+  return call(
+    'PATCH',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}/meetings/start-meeting`,
+  );
+}
+
+export function discussionParticipateMeeting(
+  spacePk: string,
+  discussionPk: string,
+): Promise<void> {
+  return call(
+    'PATCH',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}/meetings/participant-meeting`,
+  );
+}
+
+export function discussionExitMeeting(
+  spacePk: string,
+  discussionPk: string,
+): Promise<void> {
+  return call(
+    'PATCH',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}/meetings/exit-meeting`,
+  );
+}
+
+export function discussionStartRecording(
+  spacePk: string,
+  discussionPk: string,
+): Promise<void> {
+  return call(
+    'PATCH',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}/meetings/start-recording`,
+  );
+}
+
+export function discussionEndRecording(
+  spacePk: string,
+  discussionPk: string,
+): Promise<void> {
+  return call(
+    'PATCH',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}/meetings/end-recording`,
+  );
+}
+
+export interface MeetingData {
+  Meeting: MeetingInfo;
+  Attendee: AttendeeInfo;
 }
