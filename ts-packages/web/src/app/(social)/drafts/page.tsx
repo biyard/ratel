@@ -1,7 +1,7 @@
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { useCallback, useRef } from 'react';
 import { Col } from '@/components/ui/col';
-import { FeedStatus } from '@/lib/api/models/feeds';
+import { FeedStatus } from '@/features/posts/types/post';
 import { usePostEditorContext } from '../_components/post-editor';
 import CreatePostButton from '../_components/create-post-button';
 import { Row } from '@/components/ui/row';

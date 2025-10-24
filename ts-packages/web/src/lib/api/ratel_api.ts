@@ -1,45 +1,30 @@
-import type { Feed, FeedStatus, FeedV2 } from './models/feeds';
-import { FileType } from './models/file-type';
-import type { Space } from './models/spaces';
-import type {
-  QuizAttempt,
-  QuizAttemptsResponse,
-  NoticeQuizAnswer,
-} from './models/notice';
 import {
-  QK_GET_FEED_BY_FEED_ID,
   QK_GET_NETWORK,
   QK_GET_PROMOTION,
   QK_GET_REDEEM_CODE,
-  QK_GET_SPACE_BY_SPACE_ID,
-  QK_LATEST_QUIZ_ATTEMPT,
-  QK_QUIZ_ATTEMPTS,
-  QK_QUIZ_ANSWERS,
-  QK_GET_FEED_BY_FEED_ID_V2,
 } from '@/constants';
 import {
   useSuspenseQuery,
   type UseSuspenseQueryResult,
-  useQuery,
-  type UseQueryResult,
 } from '@tanstack/react-query';
 import { useApiCall } from './use-send';
 import type { RedeemCode } from './models/redeem-code';
 import type { NetworkData } from './models/network';
 import type { Promotion } from './models/promotion';
 import { GroupPermission } from './models/group';
+import { FeedStatus } from '@/features/posts/types/post';
 
-export function useSpaceById(id: number): UseSuspenseQueryResult<Space> {
-  const { get } = useApiCall();
+// export function useSpaceById(id: number): UseSuspenseQueryResult<Space> {
+//   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
-    queryKey: [QK_GET_SPACE_BY_SPACE_ID, id],
-    queryFn: () => get(ratelApi.spaces.getSpaceBySpaceId(id)),
-    refetchOnWindowFocus: false,
-  });
+//   const query = useSuspenseQuery({
+//     queryKey: [QK_GET_SPACE_BY_SPACE_ID, id],
+//     queryFn: () => get(ratelApi.spaces.getSpaceBySpaceId(id)),
+//     refetchOnWindowFocus: false,
+//   });
 
-  return query;
-}
+//   return query;
+// }
 
 export function useRedeemCode(
   meta_id: number,
@@ -55,30 +40,30 @@ export function useRedeemCode(
   return query;
 }
 
-export function usePostByIdV2(id: string): UseSuspenseQueryResult<FeedV2> {
-  const feedPk = 'FEED%23' + id;
-  const { get } = useApiCall();
+// export function usePostByIdV2(id: string): UseSuspenseQueryResult<FeedV2> {
+//   const feedPk = 'FEED%23' + id;
+//   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
-    queryKey: [QK_GET_FEED_BY_FEED_ID_V2, feedPk],
-    queryFn: () => get(ratelApi.feeds.getFeedById(feedPk)),
-    refetchOnWindowFocus: false,
-  });
+//   const query = useSuspenseQuery({
+//     queryKey: [QK_GET_FEED_BY_FEED_ID_V2, feedPk],
+//     queryFn: () => get(ratelApi.feeds.getFeedById(feedPk)),
+//     refetchOnWindowFocus: false,
+//   });
 
-  return query;
-}
+//   return query;
+// }
 
-export function useFeedById(id: number): UseSuspenseQueryResult<Feed> {
-  const { get } = useApiCall();
+// export function useFeedById(id: number): UseSuspenseQueryResult<Feed> {
+//   const { get } = useApiCall();
 
-  const query = useSuspenseQuery({
-    queryKey: [QK_GET_FEED_BY_FEED_ID, id],
-    queryFn: () => get(ratelApi.feeds.getFeedsByFeedId(id)),
-    refetchOnWindowFocus: false,
-  });
+//   const query = useSuspenseQuery({
+//     queryKey: [QK_GET_FEED_BY_FEED_ID, id],
+//     queryFn: () => get(ratelApi.feeds.getFeedsByFeedId(id)),
+//     refetchOnWindowFocus: false,
+//   });
 
-  return query;
-}
+//   return query;
+// }
 
 export function useNetwork(): UseSuspenseQueryResult<NetworkData> {
   const { get } = useApiCall();
@@ -104,76 +89,76 @@ export function usePromotion(): UseSuspenseQueryResult<Promotion> {
   return query;
 }
 
-export function useQuizAttempts(
-  spaceId: number,
-  enabled = true,
-): UseQueryResult<QuizAttemptsResponse> {
-  const { get } = useApiCall();
+// export function useQuizAttempts(
+//   spaceId: number,
+//   enabled = true,
+// ): UseQueryResult<QuizAttemptsResponse> {
+//   const { get } = useApiCall();
 
-  return useQuery({
-    queryKey: [QK_QUIZ_ATTEMPTS, spaceId],
-    queryFn: async () => {
-      if (!spaceId) {
-        throw new Error('Space ID is required');
-      }
+//   return useQuery({
+//     queryKey: [QK_QUIZ_ATTEMPTS, spaceId],
+//     queryFn: async () => {
+//       if (!spaceId) {
+//         throw new Error('Space ID is required');
+//       }
 
-      const response: QuizAttemptsResponse = await get(
-        ratelApi.notice_quiz.getQuizAttempts(spaceId),
-      );
-      return response;
-    },
-    enabled: enabled && spaceId > 0,
-  });
-}
+//       const response: QuizAttemptsResponse = await get(
+//         ratelApi.notice_quiz.getQuizAttempts(spaceId),
+//       );
+//       return response;
+//     },
+//     enabled: enabled && spaceId > 0,
+//   });
+// }
 
-export function useLatestQuizAttempt(
-  spaceId: number,
-): UseQueryResult<QuizAttempt | null> {
-  const { get } = useApiCall();
+// export function useLatestQuizAttempt(
+//   spaceId: number,
+// ): UseQueryResult<QuizAttempt | null> {
+//   const { get } = useApiCall();
 
-  const query = useQuery({
-    queryKey: [QK_LATEST_QUIZ_ATTEMPT, spaceId],
-    queryFn: async () => {
-      const response: QuizAttemptsResponse = await get(
-        ratelApi.notice_quiz.getLatestQuizAttempt(spaceId),
-      );
-      // Return the latest attempt (first item since it's ordered by created_at desc)
-      return response.items.length > 0 ? response.items[0] : null;
-    },
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-    refetchOnReconnect: true,
-    staleTime: 5 * 1000, // Consider data fresh for 5 seconds
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
-    enabled: spaceId > 0,
-    retry: 3, // Retry failed requests up to 3 times
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-  });
+//   const query = useQuery({
+//     queryKey: [QK_LATEST_QUIZ_ATTEMPT, spaceId],
+//     queryFn: async () => {
+//       const response: QuizAttemptsResponse = await get(
+//         ratelApi.notice_quiz.getLatestQuizAttempt(spaceId),
+//       );
+//       // Return the latest attempt (first item since it's ordered by created_at desc)
+//       return response.items.length > 0 ? response.items[0] : null;
+//     },
+//     refetchOnWindowFocus: true,
+//     refetchOnMount: true,
+//     refetchOnReconnect: true,
+//     staleTime: 5 * 1000, // Consider data fresh for 5 seconds
+//     gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+//     enabled: spaceId > 0,
+//     retry: 3, // Retry failed requests up to 3 times
+//     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+//   });
 
-  return query;
-}
+//   return query;
+// }
 
-export function useQuizAnswers(
-  spaceId: number,
-  enabled = true,
-): UseQueryResult<NoticeQuizAnswer> {
-  const { get } = useApiCall();
+// export function useQuizAnswers(
+//   spaceId: number,
+//   enabled = true,
+// ): UseQueryResult<NoticeQuizAnswer> {
+//   const { get } = useApiCall();
 
-  return useQuery({
-    queryKey: [QK_QUIZ_ANSWERS, spaceId],
-    queryFn: async () => {
-      if (!spaceId) {
-        throw new Error('Space ID is required');
-      }
+//   return useQuery({
+//     queryKey: [QK_QUIZ_ANSWERS, spaceId],
+//     queryFn: async () => {
+//       if (!spaceId) {
+//         throw new Error('Space ID is required');
+//       }
 
-      const response: NoticeQuizAnswer = await get(
-        ratelApi.notice_quiz.getQuizAnswers(spaceId),
-      );
-      return response;
-    },
-    enabled: enabled && spaceId > 0,
-  });
-}
+//       const response: NoticeQuizAnswer = await get(
+//         ratelApi.notice_quiz.getQuizAnswers(spaceId),
+//       );
+//       return response;
+//     },
+//     enabled: enabled && spaceId > 0,
+//   });
+// }
 
 export const proxy = {
   login: {
@@ -205,13 +190,13 @@ export const ratelApi = {
     sendVerificationCode: () => '/v1/users/verifications',
   },
 
-  assets: {
-    getPresignedUrl: (file_type: FileType, total_count = 1) =>
-      `/v3/assets?file_type=${file_type}&total_count=${total_count}`,
-    getMultipartPresignedUrl: (file_type: FileType, total_count = 1) =>
-      `/v3/assets/multiparts?file_type=${file_type}&total_count=${total_count}`,
-    createMultipartUpload: () => `/v3/assets/multiparts/complete`,
-  },
+  // assets: {
+  //   getPresignedUrl: (file_type: FileExtension, total_count = 1) =>
+  //     `/v3/assets?file_type=${file_type}&total_count=${total_count}`,
+  //   getMultipartPresignedUrl: (file_type: FileExtension, total_count = 1) =>
+  //     `/v3/assets/multiparts?file_type=${file_type}&total_count=${total_count}`,
+  //   createMultipartUpload: () => `/v3/assets/multiparts/complete`,
+  // },
   teams: {
     createTeam: () => '/v3/teams',
     deleteTeam: (teamPk: string) => `/v3/teams/${teamPk}`,

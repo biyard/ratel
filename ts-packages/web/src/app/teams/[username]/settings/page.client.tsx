@@ -21,7 +21,7 @@ import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { logger } from '@/lib/logger';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
-import { FeedStatus } from '@/lib/api/models/feeds';
+import { FeedStatus } from '@/features/posts/types/post';
 import {
   useTeamDetailByUsername,
   useTeamPermissionsFromDetail,

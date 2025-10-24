@@ -1,4 +1,3 @@
-import DisableBorderCard from '@/app/(social)/_components/disable-border-card';
 import FirstActive from '@/assets/icons/progress/1_active.svg?react';
 import FirstInActive from '@/assets/icons/progress/1_inactive.svg?react';
 
@@ -19,6 +18,7 @@ import SixthInActive from '@/assets/icons/progress/6_inactive.svg?react';
 
 import SeventhActive from '@/assets/icons/progress/7_active.svg?react';
 import SeventhInActive from '@/assets/icons/progress/7_inactive.svg?react';
+import Card from '@/components/card';
 
 export default function SpaceCouponProgress({
   progress,
@@ -26,7 +26,7 @@ export default function SpaceCouponProgress({
   progress: number;
 }) {
   return (
-    <DisableBorderCard>
+    <Card variant="secondary">
       <div className="w-full flex flex-row gap-2.5">
         {progress > 0 ? <FirstActive /> : <FirstInActive />}
         {progress > 1 ? <SecondActive /> : <SecondInActive />}
@@ -36,6 +36,6 @@ export default function SpaceCouponProgress({
         {progress > 5 ? <SixthActive /> : <SixthInActive />}
         {progress > 6 ? <SeventhActive /> : <SeventhInActive />}
       </div>
-    </DisableBorderCard>
+    </Card>
   );
 }

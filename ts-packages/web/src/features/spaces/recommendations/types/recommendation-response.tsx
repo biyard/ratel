@@ -1,8 +1,8 @@
-import { File } from '@/lib/api/models/feeds';
+import FileType from '../../files/types/file';
 
 export class SpaceRecommendationResponse {
   html_contents: string;
-  files: File[];
+  files: FileType[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {

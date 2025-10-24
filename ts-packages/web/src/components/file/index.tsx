@@ -1,5 +1,3 @@
-import { FileInfo } from '@/lib/api/models/feeds';
-
 import {
   Jpg,
   Png,
@@ -10,11 +8,12 @@ import {
   Excel,
   Upload,
 } from '@/components/icons';
+import FileType, { FileExtension } from '@/features/spaces/files/types/file';
 export function File({
   file,
   onClick,
 }: {
-  file: FileInfo;
+  file: FileType;
   onClick?: () => void;
 }) {
   const handleDownload = () => {
@@ -41,17 +40,17 @@ export function File({
       onClick={handleDownload}
     >
       <div className="[&>svg]:size-9">
-        {file.ext === 'JPG' ? (
+        {file.ext === FileExtension.JPG ? (
           <Jpg />
-        ) : file.ext === 'PNG' ? (
+        ) : file.ext === FileExtension.PNG ? (
           <Png />
-        ) : file.ext === 'PDF' ? (
+        ) : file.ext === FileExtension.PDF ? (
           <Pdf />
-        ) : file.ext === 'ZIP' ? (
+        ) : file.ext === FileExtension.ZIP ? (
           <Zip />
-        ) : file.ext === 'WORD' ? (
+        ) : file.ext === FileExtension.WORD ? (
           <Word />
-        ) : file.ext === 'PPTX' ? (
+        ) : file.ext === FileExtension.PPTX ? (
           <Pptx />
         ) : (
           <Excel />

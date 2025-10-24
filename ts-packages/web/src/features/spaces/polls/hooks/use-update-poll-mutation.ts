@@ -9,8 +9,8 @@ import {
 } from '@/lib/api/ratel/poll.spaces.v3';
 import { PollQuestion } from '@/features/spaces/polls/types/poll-question';
 import { TimeRange } from '@/types/time-range';
-import { FeedStatus } from '@/lib/api/models/feeds';
 import PostResponse from '@/features/posts/dto/list-post-response';
+import { FeedStatus } from '@/features/posts/types/post';
 
 export function useUpdatePollSpaceMutation() {
   const { data: user } = useSuspenseUserInfo();

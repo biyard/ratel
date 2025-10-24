@@ -1,16 +1,19 @@
 // INFO: return file info
 import type { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
-import { FileInfo } from '@/lib/api/models/feeds';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { useApiCall } from '@/lib/api/use-send';
 import { getFileType, toContentType } from '@/lib/file-utils';
 import { logger } from '@/lib/logger';
 import { showErrorToast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { useRef } from 'react';
+import FileType from '../types/file';
+import {
+  completeMultipartUpload,
+  getPutMultiObjectUrl,
+  getPutObjectUrl,
+} from '@/lib/api/ratel/assets.v3';
 
 interface FileUploaderMetadataProps {
-  onUploadSuccess?: (fileInfo: FileInfo) => void;
+  onUploadSuccess?: (file: FileType) => void;
   isImage?: boolean; // true: image only / false: PDF only
   isMedia?: boolean;
 }
@@ -23,7 +26,6 @@ export default function FileUploaderMetadata({
   ...props
 }: React.ComponentProps<'div'> & FileUploaderMetadataProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const { get, post } = useApiCall();
 
   const handleUpload = async () => {
     inputRef.current?.click();
@@ -63,14 +65,8 @@ export default function FileUploaderMetadata({
     const partSize = 5 * 1024 * 1024;
     const totalParts = Math.ceil(file.size / partSize);
 
-    await get(
-      ratelApi.assets.getMultipartPresignedUrl(fileTypeKey, totalParts),
-    );
-
     if (totalParts === 1) {
-      const res: AssetPresignedUris = await get(
-        ratelApi.assets.getPresignedUrl(fileTypeKey, totalParts),
-      );
+      const res = await getPutObjectUrl(totalParts, fileTypeKey);
 
       const presignedUrl = res.presigned_uris[0];
       const publicUrl = res.uris[0];
@@ -90,18 +86,19 @@ export default function FileUploaderMetadata({
       logger.debug('File uploaded successfully:', file.name);
 
       if (onUploadSuccess) {
-        const fileInfo: FileInfo = {
+        const fileInfo: FileType = {
           name: file.name,
           size: `${(file.size / 1024).toFixed(1)} KB`,
-          ext: fileTypeKey.toUpperCase(),
+          ext: fileTypeKey,
           url: publicUrl,
         };
 
         onUploadSuccess(fileInfo);
       }
     } else {
-      const res: AssetPresignedUris = await get(
-        ratelApi.assets.getMultipartPresignedUrl(fileTypeKey, totalParts),
+      const res: AssetPresignedUris = await getPutMultiObjectUrl(
+        totalParts,
+        fileTypeKey,
       );
       logger.debug('Presigned URL response:', res);
 
@@ -133,7 +130,7 @@ export default function FileUploaderMetadata({
           });
         }
 
-        await post(ratelApi.assets.createMultipartUpload(), {
+        await completeMultipartUpload({
           upload_id,
           key,
           parts: etags,
@@ -144,7 +141,7 @@ export default function FileUploaderMetadata({
         onUploadSuccess?.({
           name: file.name,
           size: `${(file.size / 1024).toFixed(1)} KB`,
-          ext: fileTypeKey.toUpperCase(),
+          ext: fileTypeKey,
           url: uris[0],
         });
       } catch (error) {

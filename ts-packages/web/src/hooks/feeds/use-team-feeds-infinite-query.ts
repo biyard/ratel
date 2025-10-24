@@ -1,8 +1,8 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
-import { FeedStatus } from '@/lib/api/models/feeds';
 import { ListPostResponse } from '@/features/posts/dto/list-post-response';
 import { call } from '@/lib/api/ratel/call';
+import { FeedStatus } from '@/features/posts/types/post';
 
 export async function listTeamPosts(
   teamPk: string,

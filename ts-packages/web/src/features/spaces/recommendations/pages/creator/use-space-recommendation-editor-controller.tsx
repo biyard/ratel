@@ -2,19 +2,19 @@ import { State } from '@/types/state';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import { useState } from 'react';
 import { Space } from '@/features/spaces/types/space';
-import { File } from '@/lib/api/models/feeds';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import useRecommendationSpace from '../../hooks/use-recommendation-space';
 import { useUpdateRecommendationContentMutation } from '../../hooks/use-update-recommendation-content-mutation';
 import { useUpdateRecommendationFileMutation } from '../../hooks/use-update-recommendation-file-mutation';
 import { SpaceRecommendationResponse } from '../../types/recommendation-response';
+import FileType from '@/features/spaces/files/types/file';
 
 export class SpaceRecommendationEditorController {
   constructor(
     public spacePk: string,
     public space: Space,
     public recommendation: SpaceRecommendationResponse,
-    public files: State<File[]>,
+    public files: State<FileType[]>,
     public htmlContents: State<string>,
     public editing: State<boolean>,
     public updateContent: ReturnType<
@@ -63,7 +63,7 @@ export class SpaceRecommendationEditorController {
     this.editing.set(false);
   };
 
-  handleAddFile = (file: File) => {
+  handleAddFile = (file: FileType) => {
     this.files.set([...this.files.get(), file]);
   };
 
