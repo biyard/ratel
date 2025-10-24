@@ -43,6 +43,7 @@ export const i18nSpaceHome = {
     menu_sprint_league: 'Sprint League',
     // Admin Menus
     menu_admin_settings: 'Settings',
+    menu_analyze: 'Analyze',
   },
   ko: {
     publish_space: '스페이스 게시',
@@ -89,5 +90,6 @@ export const i18nSpaceHome = {
 
     // Admin Menus
     menu_admin_settings: '설정',
+    menu_analyze: '분석',
   },
 };
