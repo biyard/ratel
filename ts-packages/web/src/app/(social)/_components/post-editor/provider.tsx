@@ -1,5 +1,3 @@
-import type { ArtworkTrait } from '@/lib/api/models/feeds';
-import { ArtworkTraitDisplayType } from '@/lib/api/models/feeds';
 import { checkString } from '@/lib/string-filter-utils';
 import {
   createContext,
@@ -8,11 +6,7 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { apiFetch } from '@/lib/api/apiFetch';
-import { config } from '@/config';
-import { ratelApi } from '@/lib/api/ratel_api';
 import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
-import type { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
 
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
@@ -22,6 +16,11 @@ import { EditorStatus, PostTypeLabel } from './type';
 import { useUpdateDraftMutation } from '@/features/posts/hooks/use-update-draft-mutation';
 import { useUpdateDraftImageMutation } from '@/features/posts/hooks/use-update-draft-image-mutation';
 import { usePublishDraftMutation } from '@/features/posts/hooks/use-publish-draft-mutation';
+import { getPutObjectUrl } from '@/lib/api/ratel/assets.v3';
+import {
+  ArtworkTrait,
+  ArtworkTraitDisplayType,
+} from '@/features/posts/types/post-artwork';
 
 const AUTO_SAVE_DELAY = 5000; // ms
 export interface PostEditorContextType {
@@ -182,26 +181,18 @@ export function PostEditorProvider({
 
     const mime = image.match(/^data:([^;]+);base64,/);
     if (mime && mime[1]) {
-      const res = await apiFetch<AssetPresignedUris>(
-        `${config.api_url}${ratelApi.assets.getPresignedUrl(parseFileType(mime[1]))}`,
-        {
-          method: 'GET',
-        },
-      );
-      if (
-        res.data &&
-        res.data.presigned_uris?.length > 0 &&
-        res.data.uris?.length > 0
-      ) {
+      const res = await getPutObjectUrl(1, parseFileType(mime[1]));
+
+      if (res && res.presigned_uris?.length > 0 && res.uris?.length > 0) {
         const blob = await dataUrlToBlob(image);
-        await fetch(res.data.presigned_uris[0], {
+        await fetch(res.presigned_uris[0], {
           method: 'PUT',
           headers: {
             'Content-Type': mime[1],
           },
           body: blob,
         });
-        const imageUrl = res.data.uris[0];
+        const imageUrl = res.uris[0];
 
         await handleUpdateImage({ postPk: feed!.pk, image: imageUrl });
 

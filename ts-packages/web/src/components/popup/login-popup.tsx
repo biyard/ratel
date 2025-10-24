@@ -23,7 +23,7 @@ import { type User as TelegramUser } from '@tma.js/sdk-react';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { useTranslation } from 'react-i18next';
 import { feedKeys } from '@/constants';
-import { FeedStatus } from '@/lib/api/models/feeds';
+import { FeedStatus } from '@/features/posts/types/post';
 import { useApiCall } from '@/lib/api/use-send';
 import { OAuthProvider } from '@/types/oauth-provider';
 import { ratelSdk } from '@/lib/api/ratel';

@@ -1,4 +1,3 @@
-'use client';
 import * as React from 'react';
 import { useState } from 'react';
 import { usePopup } from '@/lib/contexts/popup-service';
@@ -6,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import type { Badge } from '@/lib/api/models/badge';
 import Loading from '@/app/loading';
 import RoundCheckIcon from '@/components/round-checkicon';
-
 
 interface NftSelectModalProps {
   id?: string;

@@ -3,7 +3,7 @@ import { optimisticUpdate } from '@/lib/hook-utils';
 import { useMutation } from '@tanstack/react-query';
 import { SpaceRecommendationResponse } from '../types/recommendation-response';
 import { updateRecommendationFiles } from '@/lib/api/ratel/recommendation.spaces.v3';
-import { File } from '@/lib/api/models/feeds';
+import FileType from '../../files/types/file';
 
 export function useUpdateRecommendationFileMutation<
   T extends SpaceRecommendationResponse,
@@ -15,7 +15,7 @@ export function useUpdateRecommendationFileMutation<
       files,
     }: {
       spacePk: string;
-      files: File[];
+      files: FileType[];
     }) => {
       await updateRecommendationFiles(spacePk, files);
     },

@@ -1,4 +1,7 @@
-import { AttendeeInfo, MeetingInfo } from '../models/meeting';
+import {
+  AttendeeInfo,
+  MeetingInfo,
+} from '@/features/spaces/discussions/types/meeting';
 import { call } from './call';
 
 export function getMeetingByDiscussionPk(

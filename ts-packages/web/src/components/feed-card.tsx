@@ -8,7 +8,6 @@ import DOMPurify from 'dompurify';
 import { NavLink, useNavigate } from 'react-router';
 import { UserType } from '@/lib/api/models/user';
 import { route } from '@/route';
-import { SpaceType } from '@/lib/api/models/spaces';
 import { Button } from './ui/button';
 import {
   DropdownMenuContent,
@@ -27,6 +26,7 @@ import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 import { BoosterType } from '@/features/spaces/types/booster-type';
 import PostResponse from '@/features/posts/dto/list-post-response';
 import { useLikePostMutation } from '@/features/posts/hooks/use-like-post-mutation';
+import { SpaceType } from '@/features/spaces/types/space-type';
 
 export interface FeedCardProps {
   post: PostResponse;

@@ -1,7 +1,7 @@
 'use client';
 import { useCallback } from 'react';
 import { Col } from '@/components/ui/col';
-import { FeedStatus } from '@/lib/api/models/feeds';
+import { FeedStatus } from '@/features/posts/types/post';
 import { Row } from '@/components/ui/row';
 import { FeedContents, UserBadge } from '@/components/feed-card';
 import { UserType } from '@/lib/api/models/user';

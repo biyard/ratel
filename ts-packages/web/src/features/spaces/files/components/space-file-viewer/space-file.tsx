@@ -1,4 +1,3 @@
-import { File, FileExtension } from '@/lib/api/models/feeds';
 import {
   Excel,
   Jpg,
@@ -11,9 +10,10 @@ import {
   Word,
   Zip,
 } from '@/components/icons';
+import FileType, { FileExtension } from '@/features/spaces/files/types/file';
 
 export interface SpaceFileProps {
-  file: File;
+  file: FileType;
   onclick: () => void;
 }
 

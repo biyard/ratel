@@ -36,9 +36,11 @@ import { HexColorPicker } from 'react-colorful';
 import { useUserInfo } from '../../_hooks/user';
 
 import { usePostEditorContext } from './provider';
-import type { ArtworkTrait } from '@/lib/api/models/feeds';
-import { ArtworkTraitDisplayType } from '@/lib/api/models/feeds';
 import { EditorStatus, PostTypeLabel } from './type';
+import {
+  ArtworkTrait,
+  ArtworkTraitDisplayType,
+} from '@/features/posts/types/post-artwork';
 
 export { usePostEditorContext, PostEditorProvider } from './provider';
 

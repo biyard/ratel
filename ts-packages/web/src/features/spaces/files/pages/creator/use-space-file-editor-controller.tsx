@@ -4,16 +4,16 @@ import { useState } from 'react';
 import useFileSpace from '../../hooks/use-file-space';
 import { FileResponse } from '../../types/file-response';
 import { Space } from '@/features/spaces/types/space';
-import { File } from '@/lib/api/models/feeds';
 import { useUpdateFileMutation } from '../../hooks/use-update-file-mutation';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import FileType from '../../types/file';
 
 export class SpaceFileEditorController {
   constructor(
     public spacePk: string,
     public space: Space,
     public file: FileResponse,
-    public files: State<File[]>,
+    public files: State<FileType[]>,
     public editing: State<boolean>,
     public updateFile: ReturnType<typeof useUpdateFileMutation>,
   ) {}
@@ -43,7 +43,7 @@ export class SpaceFileEditorController {
     this.editing.set(false);
   };
 
-  handleAddFile = (file: File) => {
+  handleAddFile = (file: FileType) => {
     this.files.set([...this.files.get(), file]);
   };
 
