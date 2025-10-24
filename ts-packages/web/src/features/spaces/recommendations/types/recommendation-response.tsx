@@ -1,8 +1,8 @@
-import FileType from '../../files/types/file';
+import FileModel from '../../files/types/file';
 
 export class SpaceRecommendationResponse {
   html_contents: string;
-  files: FileType[];
+  files: FileModel[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {

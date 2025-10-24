@@ -1,10 +1,10 @@
-interface FileType {
+interface FileModel {
   name: string;
   size: string;
   ext: FileExtension;
   url?: string | null;
 }
-export default FileType;
+export default FileModel;
 
 export enum FileExtension {
   None = 'none',
@@ -103,9 +103,9 @@ export function toFileExtension(
   }
 }
 
-export type BackendFile = Omit<FileType, 'ext'> & { ext: string };
+export type BackendFile = Omit<FileModel, 'ext'> & { ext: string };
 
-export const toBackendFile = (f: FileType): BackendFile => ({
+export const toBackendFile = (f: FileModel): BackendFile => ({
   ...f,
   ext: f.ext.toUpperCase(),
 });

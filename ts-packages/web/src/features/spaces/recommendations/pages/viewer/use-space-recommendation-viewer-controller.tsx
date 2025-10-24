@@ -1,13 +1,13 @@
 import { Space } from '@/features/spaces/types/space';
 import useRecommendationSpace from '../../hooks/use-recommendation-space';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
-import FileType from '@/features/spaces/files/types/file';
+import FileModel from '@/features/spaces/files/types/file';
 
 export class SpaceRecommendationViewerController {
   constructor(
     public spacePk: string,
     public space: Space,
-    public files: FileType[],
+    public files: FileModel[],
     public htmlContents: string,
   ) {}
 }

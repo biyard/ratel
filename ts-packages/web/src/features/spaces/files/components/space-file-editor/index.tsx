@@ -4,12 +4,12 @@ import { Upload } from '@/components/icons';
 import { checkString } from '@/lib/string-filter-utils';
 import EditableFile from './editable-file';
 import { useTranslation } from 'react-i18next';
-import FileType, { toFileExtension } from '../../types/file';
+import FileModel, { toFileExtension } from '../../types/file';
 
 export interface SpaceFilesEditorProps {
-  files: FileType[];
+  files: FileModel[];
   onremove?: (index: number) => void;
-  onadd?: (file: FileType) => void;
+  onadd?: (file: FileModel) => void;
 }
 
 export default function SpaceFileEditors({
@@ -30,7 +30,7 @@ export default function SpaceFileEditors({
             isImage={false}
             isMedia={true}
             onUploadSuccess={(uploaded) => {
-              const f: FileType = {
+              const f: FileModel = {
                 name: uploaded.name ?? 'untitled',
                 size: uploaded.size,
                 ext: toFileExtension(uploaded.ext),

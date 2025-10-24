@@ -5,7 +5,7 @@ import { logger } from '@/lib/logger';
 import { showErrorToast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { useRef } from 'react';
-import FileType from '../types/file';
+import FileModel from '../types/file';
 import {
   completeMultipartUpload,
   getPutMultiObjectUrl,
@@ -13,7 +13,7 @@ import {
 } from '@/lib/api/ratel/assets.v3';
 
 interface FileUploaderMetadataProps {
-  onUploadSuccess?: (file: FileType) => void;
+  onUploadSuccess?: (file: FileModel) => void;
   isImage?: boolean; // true: image only / false: PDF only
   isMedia?: boolean;
 }
@@ -86,7 +86,7 @@ export default function FileUploaderMetadata({
       logger.debug('File uploaded successfully:', file.name);
 
       if (onUploadSuccess) {
-        const fileInfo: FileType = {
+        const fileInfo: FileModel = {
           name: file.name,
           size: `${(file.size / 1024).toFixed(1)} KB`,
           ext: fileTypeKey,
