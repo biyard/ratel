@@ -19,6 +19,7 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
         totalResponses={ctrl.poll.user_response_count}
         questions={ctrl.poll.questions}
         summaries={ctrl.summary.summaries}
+        handleDownloadExcel={ctrl.handleDownloadExcel}
       />
     </Col>
   );

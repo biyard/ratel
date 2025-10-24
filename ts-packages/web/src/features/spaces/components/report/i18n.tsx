@@ -9,7 +9,7 @@ const en = {
 const ko = {
   download_excel_button_label: '엑셀 다운로드',
   total_response_count_unit: '명 응답',
-  total_participant_label: '참여자',
+  total_participants_label: '참여자',
   remaining_days_label: '남은 일자',
   date_range_label: '설문 기간',
 };
