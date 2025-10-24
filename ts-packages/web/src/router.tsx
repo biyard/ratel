@@ -36,6 +36,7 @@ import DiscussionPage from './app/spaces/[id]/discussions/[discussion-id]/discus
 // Admin
 import AdminPage from './app/admin/page';
 import { MembershipsPage } from './app/admin/memberships/memberships-page';
+import TelegramPage from './app/telegram/page';
 
 export const routes = createBrowserRouter([
   {
@@ -208,7 +209,11 @@ export const routes = createBrowserRouter([
           }, // End of Recommendation Feature
         ],
       }, // End of Space Layout
-
+      {
+        id: 'telegram-page',
+        path: 'telegram',
+        Component: TelegramPage,
+      },
       // Test Report Page
       {
         id: 'test-report-page',

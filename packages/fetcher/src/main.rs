@@ -1,13 +1,11 @@
 mod config;
 mod controllers;
 
-use crate::controllers::telegram::*;
 use bdk::prelude::{
     by_axum::{auth::authorization_middleware, axum::Router, axum::middleware},
     *,
 };
 use dto::{sqlx::PgPool, *};
-use teloxide::{Bot, dispatching::UpdateFilterExt, dptree, prelude::Dispatcher, types::Update};
 use tokio::net::TcpListener;
 
 macro_rules! migrate {
@@ -78,44 +76,44 @@ async fn main() -> Result<()> {
     let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
         .await
         .unwrap();
-    let axum_server = by_axum::serve(listener, app);
+    by_axum::serve(listener, app).await.unwrap();
 
-    if let Some(token) = config::get().telegram_token {
-        let bot = Bot::new(token);
-        set_command(bot.clone()).await;
+    // if let Some(token) = config::get().telegram_token {
+    //     let bot = Bot::new(token);
+    //     set_command(bot.clone()).await;
 
-        let handler = dptree::entry()
-            .branch(Update::filter_message().endpoint(message_handler))
-            .branch(Update::filter_my_chat_member().endpoint(member_update_handler));
+    //     let handler = dptree::entry()
+    //         .branch(Update::filter_message().endpoint(message_handler))
+    //         .branch(Update::filter_my_chat_member().endpoint(member_update_handler));
 
-        let mut dispatcher = Dispatcher::builder(bot, handler)
-            .dependencies(dptree::deps![pool.clone()])
-            .enable_ctrlc_handler()
-            .build();
+    //     let mut dispatcher = Dispatcher::builder(bot, handler)
+    //         .dependencies(dptree::deps![pool.clone()])
+    //         .enable_ctrlc_handler()
+    //         .build();
 
-        let teloxide_dispatcher = dispatcher.dispatch();
+    //     let teloxide_dispatcher = dispatcher.dispatch();
 
-        tokio::select! {
-            result = teloxide_dispatcher => {
-                tracing::info!("Teloxide dispatcher finished: {:?}", result);
-            }
-            result = axum_server => {
-                if let Err(e) = result {
-                    tracing::error!("Axum server has failed: {}", e);
-                } else {
-                    tracing::info!("Axum server finished successfully");
-                }
-            }
-        }
-    } else {
-        tracing::warn!("TELEGRAM_TOKEN not set, skipping Telegram bot functionality");
-        // Only run the axum server if no telegram dispatcher
-        if let Err(e) = axum_server.await {
-            tracing::error!("Axum server has failed: {}", e);
-        } else {
-            tracing::info!("Axum server finished successfully");
-        }
-    }
+    //     tokio::select! {
+    //         result = teloxide_dispatcher => {
+    //             tracing::info!("Teloxide dispatcher finished: {:?}", result);
+    //         }
+    //         result = axum_server => {
+    //             if let Err(e) = result {
+    //                 tracing::error!("Axum server has failed: {}", e);
+    //             } else {
+    //                 tracing::info!("Axum server finished successfully");
+    //             }
+    //         }
+    //     }
+    // } else {
+    //     tracing::warn!("TELEGRAM_TOKEN not set, skipping Telegram bot functionality");
+    //     // Only run the axum server if no telegram dispatcher
+    //     if let Err(e) = axum_server.await {
+    //         tracing::error!("Axum server has failed: {}", e);
+    //     } else {
+    //         tracing::info!("Axum server finished successfully");
+    //     }
+    // }
 
     Ok(())
 }

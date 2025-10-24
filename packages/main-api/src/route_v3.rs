@@ -38,7 +38,10 @@ use crate::{
         },
         users::find_user::find_user_handler,
     },
-    utils::aws::{DynamoClient, SesClient},
+    utils::{
+        aws::{DynamoClient, SesClient},
+        telegram::ArcTelegramBot,
+    },
 };
 use bdk::prelude::*;
 use by_axum::aide::axum::routing::*;
@@ -55,6 +58,7 @@ pub struct RouteDeps {
     pub dynamo_client: DynamoClient,
     pub ses_client: SesClient,
     pub pool: bdk::prelude::sqlx::PgPool,
+    pub bot: Option<ArcTelegramBot>,
 }
 
 pub fn route(
@@ -62,6 +66,7 @@ pub fn route(
         dynamo_client,
         ses_client,
         pool,
+        bot,
     }: RouteDeps,
 ) -> Result<Router, Error2> {
     Ok(Router::new()
@@ -125,6 +130,7 @@ pub fn route(
                         .patch(update_space_handler)
                         .get(get_space_handler),
                 )
+                .layer(Extension(bot.clone()))
                 .nest(
                     "/:space_pk",
                     Router::new()
