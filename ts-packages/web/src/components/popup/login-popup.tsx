@@ -19,7 +19,7 @@ import { ratelApi } from '@/lib/api/ratel_api';
 import { useNetwork } from '@/app/(social)/_hooks/use-network';
 import { isWebView } from '@/lib/webview-utils';
 import { TelegramIcon } from '../icons';
-import { type User as TelegramUser } from '@telegram-apps/sdk-react';
+import { type User as TelegramUser } from '@tma.js/sdk-react';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { useTranslation } from 'react-i18next';
 import { feedKeys } from '@/constants';
@@ -101,7 +101,7 @@ export const LoginModal = ({
 
   const validatePassword = (pw: string) => {
     const regex =
-      /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}\[\]:;<>,.?~\\/-]).{8,}$/;
+      /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}[\]:;<>,.?~\\/-]).{8,}$/;
     return regex.test(pw);
   };
 

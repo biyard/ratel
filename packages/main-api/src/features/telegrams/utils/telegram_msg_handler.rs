@@ -1,13 +1,34 @@
-use dto::{TelegramChannel, sqlx::PgPool};
-use teloxide::{prelude::*, types::ChatMemberUpdated, utils::command::BotCommands};
+use teloxide::{prelude::*, types::BotCommand, utils::command::BotCommands};
 
-use super::Command;
+use crate::features::telegrams::TelegramChannel;
 
-pub async fn message_handler(
-    bot: Bot,
-    msg: Message,
-    _: PgPool,
-) -> std::result::Result<(), teloxide::RequestError> {
+#[derive(BotCommands, Clone, Debug)]
+#[command(rename_rule = "lowercase", description = "Commands for Telegram Bot")]
+pub enum Command {
+    #[command(description = "Show help information.")]
+    Help,
+}
+
+pub async fn set_command(bot: Bot) {
+    let command_ko = vec![BotCommand::new("help", "도움말")];
+    let command_en = vec![BotCommand::new("help", "Help")];
+
+    bot.set_my_commands(command_ko)
+        .language_code("ko")
+        .await
+        .expect("Failed to set commands in Korean");
+
+    bot.set_my_commands(command_en.clone())
+        .language_code("en")
+        .await
+        .expect("Failed to set commands in English");
+
+    bot.set_my_commands(command_en)
+        .await
+        .expect("Failed to set commands in Default");
+}
+
+pub async fn message_handler(bot: Bot, msg: Message) -> crate::Result<()> {
     tracing::debug!("Received message: {:?}", msg);
 
     let me = bot.get_me().await?;
@@ -38,40 +59,22 @@ pub async fn message_handler(
     Ok(())
 }
 
-pub async fn member_update_handler(
+pub async fn chat_member_update_handler(
+    cli: aws_sdk_dynamodb::Client,
     bot: Bot,
     update: ChatMemberUpdated,
-    pool: PgPool,
-) -> std::result::Result<(), teloxide::RequestError> {
+) -> crate::Result<()> {
     let chat_id = update.chat.id.0;
     let old_status = &update.old_chat_member.status();
     let new_status = &update.new_chat_member.status();
 
     if update.new_chat_member.user.id == bot.get_me().await?.id {
-        let repo = TelegramChannel::get_repository(pool.clone());
-
         if !old_status.is_administrator() && new_status.is_administrator() {
             tracing::info!("Bot added as admin to channel: {}", chat_id);
-            let _ = repo.insert(chat_id, None).await.map_err(|e| {
-                tracing::error!("Failed to insert channel {}: {}", chat_id, e);
-                teloxide::RequestError::Api(teloxide::ApiError::BotBlocked)
-            })?;
+            TelegramChannel::add_channel(&cli, chat_id, None).await?;
         } else if new_status.is_left() || new_status.is_banned() {
             tracing::info!("Bot left channel: {}", chat_id);
-            let channel = TelegramChannel::query_builder()
-                .chat_id_equals(chat_id)
-                .query()
-                .map(TelegramChannel::from)
-                .fetch_one(&pool)
-                .await
-                .map_err(|e| {
-                    tracing::error!("Failed to find channel {}: {}", chat_id, e);
-                    teloxide::RequestError::Api(teloxide::ApiError::ChatNotFound)
-                })?;
-            repo.delete(channel.id).await.map_err(|e| {
-                tracing::error!("Failed to delete channel {}: {}", chat_id, e);
-                teloxide::RequestError::Api(teloxide::ApiError::ChatNotFound)
-            })?;
+            TelegramChannel::remove_channel(&cli, chat_id).await?;
         };
     }
 
