@@ -4,7 +4,7 @@ import { useSpaceHomeData } from './use-space-home-data';
 import { SideMenuProps } from '@/features/spaces/components/space-side-menu';
 import { route } from '@/route';
 import { Space } from '@/features/spaces/types/space';
-import { Settings } from '@/components/icons';
+import { Post, Settings } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { UserResponse } from '@/lib/api/ratel/me.v3';
@@ -50,7 +50,7 @@ export class SpaceHomeController {
   get menus() {
     const menus: SideMenuProps[] = [
       {
-        Icon: Settings,
+        Icon: Post,
         to: route.spaceByType(this.space.spaceType, this.space.pk),
         label: this.t('menu_overview'),
       },
