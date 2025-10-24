@@ -6,7 +6,8 @@ import { useState } from 'react';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { config } from '@/config';
 import { apiFetch } from '@/lib/api/apiFetch';
-import { isTMA, postEvent } from '@telegram-apps/sdk-react';
+import { isTMA, postEvent } from '@tma.js/sdk-react';
+
 import { Service, useAuthStore } from '../store';
 import { useNavigate } from 'react-router';
 
