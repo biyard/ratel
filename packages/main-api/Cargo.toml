@@ -51,7 +51,8 @@ rand = "0.9.1"
 url = "2.5.4"
 hmac = "0.12.1"
 base64 = "0.22.1"
-teloxide = "0.17.0"
+teloxide = { version = "0.17.0", features = ["macros"] }
+
 photon-rs = { version = "0.3.2", git = "https://github.com/silvia-odwyer/photon" }
 aws-sdk-rdsdata = "1.83.0"
 # ssi = { version = "0.12.0", features = ["w3c", "bbs"] }
