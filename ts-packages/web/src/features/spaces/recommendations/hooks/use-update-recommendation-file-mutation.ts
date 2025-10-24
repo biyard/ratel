@@ -20,7 +20,7 @@ export function useUpdateRecommendationFileMutation<
       await updateRecommendationFiles(spacePk, files);
     },
     onSuccess: async (_, { spacePk, files }) => {
-      const spaceQK = spaceKeys.recommendation(spacePk);
+      const spaceQK = spaceKeys.recommendations(spacePk);
       await optimisticUpdate<T>({ queryKey: spaceQK }, (response) => {
         response.files = files;
         return response;

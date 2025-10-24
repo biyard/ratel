@@ -1,5 +1,4 @@
-import { SpaceType } from './features/spaces/types/space-type';
-import { FeedStatus } from './lib/api/models/feeds';
+import { FeedStatus } from './features/posts/types/post';
 
 // LocalStorage keys
 export const SK_IDENTITY_KEY = 'identity';
@@ -90,46 +89,62 @@ export const feedKeys = {
     [QK_FEEDS, 'comments', postPk, commentSk] as const,
 };
 
+// Note: Structured Query Key Hierarchy for Space Features
+//
+// Each space feature should follow a consistent, hierarchical query key structure
+// to enable efficient cache invalidation and refreshing. This hierarchy allows
+// invalidating data at different levels (e.g., entire space or specific features).
+//
+// Key Structure:
+// - Base: QK_SPACES > space_pk
+// - Feature-specific: QK_SPACES > space_pk > 'feature_name' > sub_keys
+//
+// Examples:
+// - Polls: QK_SPACES > space_pk > 'polls' > 'survey' | 'poll'
+//   - Invalidate all polls: QK_SPACES > space_pk > 'polls'
+//   - Invalidate specific poll: QK_SPACES > space_pk > 'polls' > poll_pk
+//
+// - Discussions: QK_SPACES > space_pk > 'discussions' > discussion_pk > 'participants' | 'meeting'
+//   - Invalidate all discussions: QK_SPACES > space_pk > 'discussions'
+//   - Invalidate specific discussion: QK_SPACES > space_pk > 'discussions' > discussion_pk
+//
+// Benefits:
+// - Entire space invalidation: Use QK_SPACES > space_pk
+// - Feature-level invalidation: Use QK_SPACES > space_pk > 'feature_name'
+// - Granular control: Target specific sub-keys for precise updates
+
 const QK_SPACES = 'spaces';
 
 export const spaceKeys = {
   all: [QK_SPACES] as const,
-  detail: (pk: string) => [...spaceKeys.all, 'detail', pk] as const,
-  sprint_leagues: (space_pk: string) =>
-    [...spaceKeys.detail(space_pk), 'sprint_leagues'] as const,
 
-  polls: (space_pk: string) =>
-    [...spaceKeys.detail(space_pk), 'polls'] as const,
-  poll: (space_pk: string, poll_pk: string) =>
-    [...spaceKeys.detail(space_pk), 'polls', poll_pk] as const,
-  file: (space_pk: string) => [...spaceKeys.detail(space_pk), 'files'] as const,
-  recommendation: (space_pk: string) =>
-    [...spaceKeys.detail(space_pk), 'recommendations'] as const,
-  discussions: (space_pk: string) =>
-    [...spaceKeys.detail(space_pk), 'discussions'] as const,
-  discussion: (space_pk: string, discussion_pk: string) =>
-    [...spaceKeys.detail(space_pk), 'discussions', discussion_pk] as const,
-  discussion_participants: (space_pk: string, discussion_pk: string) =>
-    [
-      ...spaceKeys.detail(space_pk),
-      'discussions',
-      discussion_pk,
-      'participants',
-    ] as const,
-};
+  lists: () => [...spaceKeys.all, 'list'] as const,
 
-export const pollSpaceKeys = {
-  all: [QK_SPACES, SpaceType.Poll] as const,
-  summary: (pk: string) => [...pollSpaceKeys.all, pk, 'summary'] as const,
-};
+  details: () => [...spaceKeys.all, 'detail'] as const,
+  detail: (spacePk: string) => [...spaceKeys.details(), spacePk] as const,
 
-const QK_DISCUSSION = 'discussions';
+  sprint_leagues: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'sprint_leagues'] as const,
 
-export const discussionKeys = {
-  detail: (spacePk: string, discussionPk: string) =>
-    [QK_DISCUSSION, spacePk, discussionPk] as const,
-  meeting: (spacePk: string, discussionPk: string) =>
-    [QK_DISCUSSION, 'meeting', spacePk, discussionPk] as const,
+  polls: (spacePk: string) => [...spaceKeys.detail(spacePk), 'polls'] as const,
+  poll: (spacePk: string, pollSk: string = 'default') =>
+    [...spaceKeys.polls(spacePk), pollSk] as const,
+  poll_summary: (spacePk: string, pollSk: string) =>
+    [...spaceKeys.poll(spacePk, pollSk), 'summary'] as const,
+
+  files: (spacePk: string) => [...spaceKeys.detail(spacePk), 'files'] as const,
+
+  recommendations: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'recommendations'] as const,
+
+  discussions: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'discussions'] as const,
+  discussion: (spacePk: string, discussionPk: string) =>
+    [...spaceKeys.discussions(spacePk), discussionPk] as const,
+  discussion_participants: (spacePk: string, discussionPk: string) =>
+    [...spaceKeys.discussion(spacePk, discussionPk), 'participants'] as const,
+  discussion_meeting: (spacePk: string, discussionPk: string) =>
+    [...spaceKeys.discussion(spacePk, discussionPk), 'meeting'] as const,
 };
 
 export const QK_MEMBERSHIPS = 'memberships';

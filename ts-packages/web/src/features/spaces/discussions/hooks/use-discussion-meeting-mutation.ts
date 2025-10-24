@@ -1,4 +1,4 @@
-import { discussionKeys } from '@/constants';
+import { spaceKeys } from '@/constants';
 import { getMeetingByDiscussionPk } from '@/lib/api/ratel/discussion.spaces.v3';
 import { logger } from '@/lib/logger';
 import { showErrorToast } from '@/lib/toast';
@@ -27,7 +27,7 @@ export function useDiscussionMeetingMutation() {
       logger.debug('discussion meeting response: ', response);
 
       queryClient.invalidateQueries({
-        queryKey: discussionKeys.meeting(sp, dp),
+        queryKey: spaceKeys.discussion_meeting(sp, dp),
       });
     },
 
