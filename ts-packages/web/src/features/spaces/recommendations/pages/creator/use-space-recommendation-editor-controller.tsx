@@ -7,14 +7,14 @@ import useRecommendationSpace from '../../hooks/use-recommendation-space';
 import { useUpdateRecommendationContentMutation } from '../../hooks/use-update-recommendation-content-mutation';
 import { useUpdateRecommendationFileMutation } from '../../hooks/use-update-recommendation-file-mutation';
 import { SpaceRecommendationResponse } from '../../types/recommendation-response';
-import FileType from '@/features/spaces/files/types/file';
+import FileModel from '@/features/spaces/files/types/file';
 
 export class SpaceRecommendationEditorController {
   constructor(
     public spacePk: string,
     public space: Space,
     public recommendation: SpaceRecommendationResponse,
-    public files: State<FileType[]>,
+    public files: State<FileModel[]>,
     public htmlContents: State<string>,
     public editing: State<boolean>,
     public updateContent: ReturnType<
@@ -63,7 +63,7 @@ export class SpaceRecommendationEditorController {
     this.editing.set(false);
   };
 
-  handleAddFile = (file: FileType) => {
+  handleAddFile = (file: FileModel) => {
     this.files.set([...this.files.get(), file]);
   };
 

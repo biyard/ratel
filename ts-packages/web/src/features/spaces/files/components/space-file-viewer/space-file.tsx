@@ -10,10 +10,10 @@ import {
   Word,
   Zip,
 } from '@/components/icons';
-import FileType, { FileExtension } from '@/features/spaces/files/types/file';
+import FileModel, { FileExtension } from '@/features/spaces/files/types/file';
 
 export interface SpaceFileProps {
-  file: FileType;
+  file: FileModel;
   onclick: () => void;
 }
 

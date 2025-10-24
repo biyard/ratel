@@ -10,10 +10,10 @@ import {
   Word,
   Zip,
 } from '@/components/icons';
-import FileType, { FileExtension } from '../../types/file';
+import FileModel, { FileExtension } from '../../types/file';
 
 export interface EditableFileProps {
-  file: FileType;
+  file: FileModel;
   onclick: () => void;
 }
 

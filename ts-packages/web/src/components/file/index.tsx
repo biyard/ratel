@@ -8,12 +8,12 @@ import {
   Excel,
   Upload,
 } from '@/components/icons';
-import FileType, { FileExtension } from '@/features/spaces/files/types/file';
+import FileModel, { FileExtension } from '@/features/spaces/files/types/file';
 export function File({
   file,
   onClick,
 }: {
-  file: FileType;
+  file: FileModel;
   onClick?: () => void;
 }) {
   const handleDownload = () => {

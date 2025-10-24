@@ -3,14 +3,14 @@ import { checkString } from '@/lib/string-filter-utils';
 
 import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 import SpaceFile from './space-file';
-import FileType from '../../types/file';
+import FileModel from '../../types/file';
 
 export interface SpaceFilesProps {
-  files: FileType[];
+  files: FileModel[];
 }
 
 export default function SpaceFileViewer({ files }: SpaceFilesProps) {
-  const handlePdfDownload = async (file: FileType) => {
+  const handlePdfDownload = async (file: FileModel) => {
     await downloadPdfFromUrl({
       url: file.url ?? '',
       fileName: file.name,
