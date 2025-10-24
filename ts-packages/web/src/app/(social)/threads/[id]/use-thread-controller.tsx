@@ -1,7 +1,6 @@
 import { useDeletePostMutation } from '@/features/posts/hooks/use-delete-post-mutation';
 import { useLikePostMutation } from '@/features/posts/hooks/use-like-post-mutation';
 import { useReplyCommentMutation } from '@/features/comments/hooks/use-reply-comment-mutation';
-import { useLoggedIn, useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { GroupPermission } from '@/lib/api/models/group';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { TeamContext } from '@/lib/contexts/team-context';
@@ -20,6 +19,7 @@ import usePostById from '@/features/posts/hooks/use-post';
 import { useCommentMutation } from '@/features/posts/hooks/use-comment-mutation';
 import { PostDetailResponse } from '@/features/posts/dto/post-detail-response';
 import { FeedStatus } from '@/features/posts/types/post';
+import { useLoggedIn, useSuspenseUserInfo } from '@/hooks/use-user-info';
 
 export class ThreadController {
   readonly isPostOwner: boolean;

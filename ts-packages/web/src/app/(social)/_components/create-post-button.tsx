@@ -1,10 +1,10 @@
 'use client';
 import { Edit1 } from '@/components/icons';
-import { useLoggedIn } from '@/lib/api/hooks/users';
 import { useTranslation } from 'react-i18next';
 import { usePostEditorContext } from './post-editor/provider';
 import { Button } from '@/components/ui/button';
 import { useCreatePostMutation } from '@/features/posts/hooks/use-create-post-mutation';
+import { useLoggedIn } from '@/hooks/use-user-info';
 
 export default function CreatePostButton({
   team_pk,

@@ -1,8 +1,8 @@
+import Card from '@/components/card';
 import { Col } from '@/components/ui/col';
 import { useTranslation } from 'react-i18next';
-import DisableBorderCard from './disable-border-card';
-import { useNews } from '../_hooks/use-news';
 import { useNavigate } from 'react-router';
+import { useNews } from '../_hook/use-list-news';
 
 export interface NewsItem {
   id: number;
@@ -11,11 +11,7 @@ export interface NewsItem {
   created_at: number;
 }
 
-export default function Wrapper() {
-  return <News />;
-}
-
-function News() {
+export default function ListNews() {
   const { t } = useTranslation('Home');
   const navigate = useNavigate();
   const news = useNews().data.items;
@@ -29,7 +25,7 @@ function News() {
   }
 
   return (
-    <DisableBorderCard>
+    <Card variant="secondary">
       <Col className="w-full rounded-[10px]">
         <h3 className="text-[15px]/[20px] tracking-[0.5px] font-bold text-text-primary">
           {t('latest_news')}
@@ -54,6 +50,6 @@ function News() {
           ))}
         </Col>
       </Col>
-    </DisableBorderCard>
+    </Card>
   );
 }

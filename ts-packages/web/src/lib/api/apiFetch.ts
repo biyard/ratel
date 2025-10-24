@@ -8,6 +8,10 @@ export type FetchResponse<T = unknown> = {
   ok: boolean;
 };
 
+/**
+ * @deprecated Use `Call('GET', path)` from '@/lib/api/ratel/call' instead.
+ */
+
 export async function apiFetch<T = unknown>(
   url: string,
   options?: RequestInit & {

@@ -1,30 +1,24 @@
-import { useEffect, useState } from 'react';
-import { useNetwork } from '../_hooks/use-network';
+import { useNetwork } from './_hook/use-network';
 import { logger } from '@/lib/logger';
 import type { Follower } from '@/lib/api/models/network';
-import { UserType } from '@/lib/api/models/user';
+import { UserType } from '@/lib/api/ratel/users.v3';
+
 import { Add } from '@/components/icons';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { followRequest } from '@/lib/api/models/networks/follow';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { checkString } from '@/lib/string-filter-utils';
 import { route } from '@/route';
 import { NavLink } from 'react-router';
+import { useState } from 'react';
 
 export default function MyNetwork() {
   const { post } = useApiCall();
   const data = useSuspenseUserInfo();
   const network = useNetwork();
   const networkData = network.data;
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      network.refetch();
-    }, 0);
-    return () => clearTimeout(timer);
-  }, [network]);
 
   const handleFollow = async (userId: number) => {
     await post(ratelApi.networks.follow(userId), followRequest());

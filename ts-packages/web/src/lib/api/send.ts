@@ -5,6 +5,9 @@ import { logger } from '../logger';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
 import { encode_base64 } from '../base64';
 
+/**
+ * @deprecated Use `Call('GET', path)` from '@/lib/api/ratel/call' instead.
+ */
 export async function send(
   keyPair: Ed25519KeyIdentity,
   path: string,

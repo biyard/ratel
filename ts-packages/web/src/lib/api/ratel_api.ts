@@ -1,15 +1,10 @@
-import {
-  QK_GET_NETWORK,
-  QK_GET_PROMOTION,
-  QK_GET_REDEEM_CODE,
-} from '@/constants';
+import { QK_GET_PROMOTION, QK_GET_REDEEM_CODE } from '@/constants';
 import {
   useSuspenseQuery,
   type UseSuspenseQueryResult,
 } from '@tanstack/react-query';
 import { useApiCall } from './use-send';
 import type { RedeemCode } from './models/redeem-code';
-import type { NetworkData } from './models/network';
 import type { Promotion } from './models/promotion';
 import { GroupPermission } from './models/group';
 import { FeedStatus } from '@/features/posts/types/post';
@@ -40,42 +35,17 @@ export function useRedeemCode(
   return query;
 }
 
-// export function usePostByIdV2(id: string): UseSuspenseQueryResult<FeedV2> {
-//   const feedPk = 'FEED%23' + id;
+// export function useNetwork(): UseSuspenseQueryResult<NetworkData> {
 //   const { get } = useApiCall();
 
 //   const query = useSuspenseQuery({
-//     queryKey: [QK_GET_FEED_BY_FEED_ID_V2, feedPk],
-//     queryFn: () => get(ratelApi.feeds.getFeedById(feedPk)),
+//     queryKey: [QK_GET_NETWORK],
+//     queryFn: () => get(ratelApi.networks.getNetworks()),
 //     refetchOnWindowFocus: false,
 //   });
 
 //   return query;
 // }
-
-// export function useFeedById(id: number): UseSuspenseQueryResult<Feed> {
-//   const { get } = useApiCall();
-
-//   const query = useSuspenseQuery({
-//     queryKey: [QK_GET_FEED_BY_FEED_ID, id],
-//     queryFn: () => get(ratelApi.feeds.getFeedsByFeedId(id)),
-//     refetchOnWindowFocus: false,
-//   });
-
-//   return query;
-// }
-
-export function useNetwork(): UseSuspenseQueryResult<NetworkData> {
-  const { get } = useApiCall();
-
-  const query = useSuspenseQuery({
-    queryKey: [QK_GET_NETWORK],
-    queryFn: () => get(ratelApi.networks.getNetworks()),
-    refetchOnWindowFocus: false,
-  });
-
-  return query;
-}
 
 export function usePromotion(): UseSuspenseQueryResult<Promotion> {
   const { get } = useApiCall();
@@ -160,12 +130,6 @@ export function usePromotion(): UseSuspenseQueryResult<Promotion> {
 //   });
 // }
 
-export const proxy = {
-  login: {
-    loginWithTelegram: (telegram_raw: string) =>
-      `/api/login?telegram-raw=${btoa(telegram_raw)}`,
-  },
-};
 export const ratelApi = {
   permissions: {
     // DEPRECATED: Use embedded permissions in v3 team detail instead
@@ -173,21 +137,18 @@ export const ratelApi = {
       `/v3/teams/permissions?team_pk=${teamPk}&permission=${permission}`,
   },
   users: {
-    getUserInfo: () => '/v3/me',
-    getUserByEmail: (email: string) =>
-      `/v3/users?type=email&value=${encodeURIComponent(email)}`,
-    getUserByUsername: (username: string) =>
-      `/v3/users?type=username&value=${username}`,
-    getUserByPhoneNumber: (phoneNumber: string) =>
-      `/v3/users?type=phone-number&value=${phoneNumber}`,
-
-    signup: () => '/v3/auth/signup',
-    editProfile: (user_id: number) => `/v1/users/${user_id}`,
-    updateEvmAddress: () => '/v1/users',
-
-    updateTelegramId: () => '/v2/users/telegram',
-
-    sendVerificationCode: () => '/v1/users/verifications',
+    // getUserInfo: () => '/v3/me',
+    // getUserByEmail: (email: string) =>
+    //   `/v3/users?type=email&value=${encodeURIComponent(email)}`,
+    // getUserByUsername: (username: string) =>
+    //   `/v3/users?type=username&value=${username}`,
+    // getUserByPhoneNumber: (phoneNumber: string) =>
+    //   `/v3/users?type=phone-number&value=${phoneNumber}`,
+    // signup: () => '/v3/auth/signup',
+    // editProfile: (user_id: number) => `/v1/users/${user_id}`,
+    // updateEvmAddress: () => '/v1/users',
+    // updateTelegramId: () => '/v2/users/telegram',
+    // sendVerificationCode: () => '/v1/users/verifications',
   },
 
   // assets: {

@@ -1,7 +1,8 @@
 import { ListPostResponse } from '@/features/posts/dto/list-post-response';
 import { call } from './call';
+import { UserDetailResponse } from './users.v3';
 
-export async function getUserInfo(): Promise<UserResponse> {
+export async function getUserInfo(): Promise<UserDetailResponse> {
   return call('GET', '/v3/me');
 }
 
@@ -27,33 +28,10 @@ export async function listMyDrafts(
   return call('GET', path);
 }
 
-export type UserResponse = {
-  pk: string;
-  email: string;
-  nickname: string;
-  profile_url: string;
-  description: string;
-  user_type: number;
-  username: string;
-
-  followers_count: number;
-  followings_count: number;
-
-  membership: number;
-  theme: number;
-  point: number;
-
-  referral_code?: string;
-  phone_number?: string;
-  principal?: string;
-  evm_address?: string;
-  telegram_id?: number;
-  teams?: UserTeam[];
-};
-
-export type UserTeam = {
-  nickname: string;
-  profile_url: string;
-  username: string;
-  user_type: number;
-};
+export async function updateUserEvmAddress(
+  evmAddress: string,
+): Promise<UserDetailResponse> {
+  return call('PATCH', '/v3/me', {
+    body: { evm_address: evmAddress },
+  });
+}

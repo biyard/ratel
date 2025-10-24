@@ -9,14 +9,11 @@ import { logger } from '@/lib/logger';
 import { useAuth, useEd25519KeyPair } from '@/lib/contexts/auth-context';
 import { AuthUserInfo } from '@/lib/service/firebase-service';
 import { send } from '@/lib/api/send';
-import { refetchUserInfo } from '@/lib/api/hooks/users';
 import { Col } from '../ui/col';
 import { Row } from '../ui/row';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { sha3 } from '@/lib/utils';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { useNetwork } from '@/app/(social)/_hooks/use-network';
 import { isWebView } from '@/lib/webview-utils';
 import { TelegramIcon } from '../icons';
 import { type User as TelegramUser } from '@tma.js/sdk-react';
@@ -27,6 +24,8 @@ import { FeedStatus } from '@/features/posts/types/post';
 import { useApiCall } from '@/lib/api/use-send';
 import { OAuthProvider } from '@/types/oauth-provider';
 import { ratelSdk } from '@/lib/api/ratel';
+import { useNetwork } from '@/app/(social)/my-network/_hook/use-network';
+import { refetchUserInfo } from '@/hooks/use-user-info';
 
 interface LoginModalProps {
   id?: string;
@@ -62,26 +61,27 @@ export const LoginModal = ({
 
   const updateTelegramId = async () => {
     if (telegramRaw) {
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}${ratelApi.users.updateTelegramId()}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-              telegram_raw: telegramRaw,
-            }),
-          },
-        );
-        if (!response.ok) {
-          logger.error('Failed to update Telegram ID:', response.status);
-        }
-      } catch (error) {
-        logger.error('Error updating Telegram ID:', error);
-      }
+      logger.error('Updating Telegram ID is not implemented yet.');
+      // try {
+      //   const response = await fetch(
+      //     `${process.env.NEXT_PUBLIC_API_URL}${ratelApi.users.updateTelegramId()}`,
+      //     {
+      //       method: 'POST',
+      //       headers: {
+      //         'Content-Type': 'application/json',
+      //       },
+      //       credentials: 'include',
+      //       body: JSON.stringify({
+      //         telegram_raw: telegramRaw,
+      //       }),
+      //     },
+      //   );
+      //   if (!response.ok) {
+      //     logger.error('Failed to update Telegram ID:', response.status);
+      //   }
+      // } catch (error) {
+      //   logger.error('Error updating Telegram ID:', error);
+      // }
     }
   };
 

@@ -33,7 +33,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { HexColorPicker } from 'react-colorful';
-import { useUserInfo } from '../../_hooks/user';
 
 import { usePostEditorContext } from './provider';
 import { EditorStatus, PostTypeLabel } from './type';
@@ -41,6 +40,7 @@ import {
   ArtworkTrait,
   ArtworkTraitDisplayType,
 } from '@/features/posts/types/post-artwork';
+import { useUserInfo } from '@/hooks/use-user-info';
 
 export { usePostEditorContext, PostEditorProvider } from './provider';
 
