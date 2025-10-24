@@ -16,4 +16,8 @@ export const CONFIGS = {
     password: process.env.PASSWORD,
     testemail: process.env.EMAIL,
   },
+  ADMIN: {
+    id: process.env.RATEL_TEST_ADMIN_ID || 'admin@ratel.foundation',
+    password: process.env.RATEL_TEST_ADMIN_PASSWORD || 'admin!234',
+  },
 };

@@ -14,6 +14,7 @@ pub struct TestContextV3 {
     pub ddb: aws_sdk_dynamodb::Client,
     pub test_user: (User, axum::http::HeaderMap),
     pub user2: (User, axum::http::HeaderMap),
+    pub admin_user: (User, axum::http::HeaderMap),
 }
 
 impl TestContextV3 {
@@ -66,11 +67,21 @@ pub async fn setup_v3() -> TestContextV3 {
     let (user, headers) = create_user_session(app.clone(), &ddb).await;
     let (user2, headers2) = create_user_session(app.clone(), &ddb).await;
 
+    // Create admin user
+    let (mut admin, admin_headers) = create_user_session(app.clone(), &ddb).await;
+    admin.user_type = crate::types::UserType::Admin;
+    User::updater(admin.pk.clone(), admin.sk.clone())
+        .with_user_type(crate::types::UserType::Admin)
+        .execute(&ddb)
+        .await
+        .unwrap();
+
     TestContextV3 {
         app,
         now,
         ddb,
         test_user: (user, headers),
         user2: (user2, headers2),
+        admin_user: (admin, admin_headers),
     }
 }

@@ -22,17 +22,19 @@ export default function UserSidemenu() {
   if (
     isLoading ||
     !user ||
-    (user.user_type !== UserType.Individual && user.user_type !== UserType.Team)
+    (user.user_type !== UserType.Individual &&
+      user.user_type !== UserType.Team &&
+      user.user_type !== UserType.Admin)
   ) {
     return <div />;
   }
 
   return (
-    <div className="w-62.5 flex flex-col gap-2.5 max-mobile:hidden shrink-0">
+    <div className="flex flex-col gap-2.5 w-62.5 max-mobile:hidden shrink-0">
       <ProfileSection />
 
       {/* Navigation */}
-      <nav className="py-5 px-3 w-full rounded-[10px] bg-card-bg border border-card-border text-text-primary">
+      <nav className="py-5 px-3 w-full border rounded-[10px] bg-card-bg border-card-border text-text-primary">
         <NavLink
           to={route.myPosts()}
           className="sidemenu-link text-text-primary"

@@ -54,7 +54,6 @@ pub struct User {
     #[dynamo(index = "gsi1", sk)]
     pub password: Option<String>,
 
-    pub membership: Membership,
     pub theme: Theme,
     pub points: i64,
 }
@@ -169,6 +168,11 @@ impl User {
             password,
             ..Default::default()
         }
+    }
+
+    /// Check if the user is an admin
+    pub fn is_admin(&self) -> bool {
+        self.user_type == UserType::Admin
     }
 }
 

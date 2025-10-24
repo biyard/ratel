@@ -17,43 +17,39 @@ export function SpaceRecommendationEditorPage({ spacePk }: SpacePathProps) {
 
   return (
     <>
-      <>
-        <Col className="gap-8">
-          <Col>
-            <SpaceHTMLContentEditor
-              htmlContent={ctrl.htmlContents.get()}
-              canEdit={true}
-              onContentChange={ctrl.handleUpdateContent}
-            />
-          </Col>
-          <Col className="gap-0">
-            <Row className="gap-2 justify-end mb-4">
-              {ctrl.editing.get() ? (
-                <>
-                  <Button variant="primary" onClick={ctrl.handleFileSave}>
-                    {t('btn_save')}
-                  </Button>
-                  <Button onClick={ctrl.handleDiscard}>
-                    {t('btn_discard')}
-                  </Button>
-                </>
-              ) : (
-                <Button onClick={ctrl.handleEdit}>{t('btn_edit')}</Button>
-              )}
-            </Row>
-
-            {ctrl.editing.get() ? (
-              <SpaceFileEditors
-                files={ctrl.files.get()}
-                onremove={ctrl.handleRemoveFile}
-                onadd={ctrl.handleAddFile}
-              />
-            ) : (
-              <SpaceFileViewer files={ctrl.files.get()} />
-            )}
-          </Col>
+      <Col className="gap-8">
+        <Col>
+          <SpaceHTMLContentEditor
+            htmlContent={ctrl.htmlContents.get()}
+            canEdit={true}
+            onContentChange={ctrl.handleUpdateContent}
+          />
         </Col>
-      </>
+        <Col className="gap-0">
+          <Row className="gap-2 justify-end mb-4">
+            {ctrl.editing.get() ? (
+              <>
+                <Button variant="primary" onClick={ctrl.handleFileSave}>
+                  {t('btn_save')}
+                </Button>
+                <Button onClick={ctrl.handleDiscard}>{t('btn_discard')}</Button>
+              </>
+            ) : (
+              <Button onClick={ctrl.handleEdit}>{t('btn_edit')}</Button>
+            )}
+          </Row>
+
+          {ctrl.editing.get() ? (
+            <SpaceFileEditors
+              files={ctrl.files.get()}
+              onremove={ctrl.handleRemoveFile}
+              onadd={ctrl.handleAddFile}
+            />
+          ) : (
+            <SpaceFileViewer files={ctrl.files.get()} />
+          )}
+        </Col>
+      </Col>
     </>
   );
 }

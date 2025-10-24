@@ -49,6 +49,12 @@ pub enum Partition {
 
     Promotion(String),
 
+    // Membership
+    Membership(String),
+
+    // ServiceAdmin
+    ServiceAdmin(String),
+
     //Telegram Channel
     TelegramChannel,
 }

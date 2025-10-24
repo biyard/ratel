@@ -109,6 +109,13 @@ pub enum EntityType {
     SpaceRecommendation,
     SpaceSurveyResponse(String), //Space pk
 
+    // Membership
+    Membership,
+    UserMembership, // PK: {USER_PK}, SK: UserMembership
+
+    // ServiceAdmin
+    ServiceAdmin, // PK: SERVICE_ADMIN#{USER_PK}, SK: ServiceAdmin
+
     //Telegram Feature
     TelegramChannel(String), // Telegram Chat ID
 }

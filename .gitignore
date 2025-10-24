@@ -39,3 +39,4 @@ benchmark/**/*.csv
 /cdk/cdk.context.json
 /user.json
 user.json
+/ts-packages/web/admin.json
