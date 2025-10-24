@@ -15,7 +15,6 @@ import {
   QK_LATEST_QUIZ_ATTEMPT,
   QK_QUIZ_ATTEMPTS,
   QK_QUIZ_ANSWERS,
-  QK_GET_DELIBERATION_SPACE_BY_SPACE_ID,
   QK_GET_FEED_BY_FEED_ID_V2,
 } from '@/constants';
 import {
@@ -29,22 +28,6 @@ import type { RedeemCode } from './models/redeem-code';
 import type { NetworkData } from './models/network';
 import type { Promotion } from './models/promotion';
 import { GroupPermission } from './models/group';
-import { DeliberationSpace } from '@/features/spaces/deliberations/utils/deliberation.spaces.v3';
-
-export function useDeliberationSpaceById(
-  id: string,
-): UseSuspenseQueryResult<DeliberationSpace> {
-  const spacePk = 'DELIBERATION_SPACE%23' + id;
-  const { get } = useApiCall();
-
-  const query = useSuspenseQuery({
-    queryKey: [QK_GET_DELIBERATION_SPACE_BY_SPACE_ID, spacePk],
-    queryFn: () => get(ratelApi.spaces.getDeliberationSpaceBySpaceId(spacePk)),
-    refetchOnWindowFocus: false,
-  });
-
-  return query;
-}
 
 export function useSpaceById(id: number): UseSuspenseQueryResult<Space> {
   const { get } = useApiCall();
@@ -224,10 +207,10 @@ export const ratelApi = {
 
   assets: {
     getPresignedUrl: (file_type: FileType, total_count = 1) =>
-      `/v1/assets?action=get-presigned-uris&file_type=${file_type}&total_count=${total_count}`,
+      `/v3/assets?file_type=${file_type}&total_count=${total_count}`,
     getMultipartPresignedUrl: (file_type: FileType, total_count = 1) =>
-      `/v1/assets/multipart?action=get-presigned-uris&file_type=${file_type}&total_count=${total_count}`,
-    createMultipartUpload: () => `/v1/assets/multipart/complete`,
+      `/v3/assets/multiparts?file_type=${file_type}&total_count=${total_count}`,
+    createMultipartUpload: () => `/v3/assets/multiparts/complete`,
   },
   teams: {
     createTeam: () => '/v3/teams',

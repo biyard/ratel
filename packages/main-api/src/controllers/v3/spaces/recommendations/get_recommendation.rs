@@ -23,7 +23,7 @@ pub async fn get_recommendation_handler(
         &dynamo.client,
         &space_pk,
         user.as_ref().map(|u| &u.pk),
-        TeamGroupPermission::SpaceEdit,
+        TeamGroupPermission::SpaceRead,
     )
     .await?;
     if !has_perm {

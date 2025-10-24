@@ -48,6 +48,15 @@ pub enum Partition {
     Team(String),
 
     Promotion(String),
+
+    // Membership
+    Membership(String),
+
+    // ServiceAdmin
+    ServiceAdmin(String),
+
+    //Telegram Channel
+    TelegramChannel,
 }
 
 impl Partition {

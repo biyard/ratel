@@ -28,7 +28,6 @@ pub struct UserResponse {
     pub followers_count: i64,
     pub followings_count: i64,
 
-    pub membership: u8,
     pub theme: u8,
     pub point: i64,
 }
@@ -44,7 +43,6 @@ impl From<User> for UserResponse {
             user_type: user.user_type as u8,
             followers_count: user.followers_count,
             followings_count: user.followings_count,
-            membership: user.membership as u8,
             theme: user.theme as u8,
             point: user.points,
             username: user.username,

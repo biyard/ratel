@@ -39,7 +39,7 @@ export const route = {
     `/spaces/${spaceId}/discussions/${discussionId}`,
 
   discussionByPk: (spacePk: string, discussionPk: string) =>
-    `/spaces/${encodeURIComponent(spacePk)}/discussion/${encodeURIComponent(discussionPk)}`,
+    `/spaces/${encodeURIComponent(spacePk)}/discussions/${encodeURIComponent(discussionPk)}`,
 
   spaceSetting: (spacePk: string) =>
     `/spaces/${encodeURIComponent(spacePk)}/settings`,
@@ -54,7 +54,12 @@ export const route = {
 
   spacePollById: (spaceId: string, pollId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/polls/${encodeURIComponent(pollId)}`,
-
+  spaceFiles: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/files`,
+  spaceDiscussions: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/discussions`,
+  spaceRecommendations: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/recommendations`,
   spaceSprintLeagues: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/sprint-leagues`,
 
@@ -65,4 +70,8 @@ export const route = {
       lang ? `&lang=${lang}` : ''
     }`;
   },
+
+  // Admin routes
+  admin: () => '/admin',
+  adminMemberships: () => '/admin/memberships',
 };

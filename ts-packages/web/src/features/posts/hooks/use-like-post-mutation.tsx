@@ -3,8 +3,13 @@ import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
 
 import { showErrorToast } from '@/lib/toast';
-import { likePost, PostDetailResponse } from '@/lib/api/ratel/posts.v3';
+import {
+  likePost,
+  PostDetailResponse,
+  PostResponse,
+} from '@/lib/api/ratel/posts.v3';
 import { optimisticListUpdate, optimisticUpdate } from '@/lib/hook-utils';
+import { ListResponse } from '@/lib/api/ratel/common';
 
 export function useLikePostMutation() {
   const queryClient = getQueryClient();
@@ -35,24 +40,26 @@ export function useLikePostMutation() {
         },
       );
 
-      const previousFeedLists = await optimisticListUpdate<PostDetailResponse>(
-        { queryKey: listQueryKey },
-        (post) => {
-          if (post.post.pk === feedId) {
-            const likeCount = post.post.likes ?? 0;
+      const previousFeedLists = await optimisticListUpdate<
+        ListResponse<PostResponse>
+      >({ queryKey: listQueryKey }, (page) => {
+        page.items.map((post) => {
+          if (post.pk === feedId) {
+            const likeCount = post.likes ?? 0;
             const delta = like ? 1 : -1;
             return {
               ...post,
               post: {
-                ...post.post,
+                ...post,
                 likes: Math.max(0, likeCount + delta),
               },
               is_liked: like,
             };
           }
           return post;
-        },
-      );
+        });
+        return page;
+      });
 
       return { previousFeedDetail, previousFeedLists };
     },
