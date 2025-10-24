@@ -1,6 +1,5 @@
 import { UserType } from '@/lib/api/models/user';
 import {
-  normalizeVisibility,
   SpacePublishState,
   SpaceStatus,
   SpaceVisibility,
@@ -52,7 +51,7 @@ export class Space {
   }
 
   get isPublic() {
-    return normalizeVisibility(this.visibility).type === 'public';
+    return this.visibility.type === 'Public';
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

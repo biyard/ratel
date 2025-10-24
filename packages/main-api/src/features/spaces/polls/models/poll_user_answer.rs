@@ -1,4 +1,4 @@
-use crate::{Error, types::*, utils::time::get_now_timestamp_millis};
+use crate::{types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
 use crate::features::spaces::polls::{PollQuestion, PollSummary};
@@ -47,10 +47,14 @@ impl PollUserAnswer {
     ) -> crate::Result<Vec<PollSummary>> {
         // Loop until next_bookmark is None
 
-        let question: PollQuestion =
-            PollQuestion::get(cli, &space_pk, Some(EntityType::SpacePollQuestion))
-                .await?
-                .ok_or(Error::NotFoundPoll)?;
+        let question =
+            PollQuestion::get(cli, &space_pk, Some(EntityType::SpacePollQuestion)).await?;
+
+        if question.is_none() {
+            return Ok(vec![]);
+        }
+
+        let question: PollQuestion = question.unwrap_or_default();
         let mut summaries: Vec<PollSummary> = question
             .questions
             .into_iter()
