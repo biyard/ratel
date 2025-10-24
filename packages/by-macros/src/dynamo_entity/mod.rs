@@ -851,6 +851,35 @@ fn generate_updater(
                     .build()
             }
 
+            pub fn transact_upsert_item(self) -> aws_sdk_dynamodb::types::TransactWriteItem {
+                let mut req = aws_sdk_dynamodb::types::Update::builder()
+                    .table_name(#ident::table_name())
+                    .set_key(Some(self.k));
+
+                let mut update_expr = "".to_string();
+                if !self.remove_update_expressions.is_empty() {
+                    update_expr = format!("REMOVE {}", self.remove_update_expressions.join(", "));
+                }
+
+                if !self.set_update_expressions.is_empty() {
+                    update_expr = format!("SET {} {}", self.set_update_expressions.join(", "), update_expr);
+                };
+
+                if !update_expr.is_empty() {
+                    req = req.update_expression(update_expr);
+                }
+                if !self.expression_attribute_names.is_empty() {
+                    req = req.set_expression_attribute_names(Some(self.expression_attribute_names));
+                }
+                if !self.expression_attribute_values.is_empty() {
+                    req = req.set_expression_attribute_values(Some(self.expression_attribute_values));
+                }
+
+                aws_sdk_dynamodb::types::TransactWriteItem::builder()
+                    .update(req.build().expect("invalid transact write item request"))
+                    .build()
+            }
+
             pub async fn execute(
                 self,
                 cli: &aws_sdk_dynamodb::Client,
