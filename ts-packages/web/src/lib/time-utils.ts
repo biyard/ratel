@@ -35,7 +35,7 @@ export function getTimeAgo(timestamp: number): string {
   const diff = currentTime - timestamp;
 
   if (diff < 60 * 1000) {
-    return `${diff}s ago`; // seconds ago
+    return `${Math.floor(diff / 1000)}s ago`; // seconds ago
   } else if (diff < 3600 * 1000) {
     return `${Math.floor(diff / 1000 / 60)}m ago`; // minutes ago
   } else if (diff < 86400 * 1000) {
