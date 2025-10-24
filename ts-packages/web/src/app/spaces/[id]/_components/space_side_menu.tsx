@@ -2,13 +2,13 @@ import { useSpaceBySpaceId } from '@/app/(social)/_hooks/use-spaces';
 import { getTimeWithFormat } from '@/lib/time-utils';
 import Clock from '@/assets/icons/clock.svg?react';
 
-import useFeedById from '@/hooks/feeds/use-feed-by-id';
-import BorderSpaceCard from '@/app/(social)/_components/border-space-card';
+import usePostById from '@/features/posts/hooks/use-post';
+import Card from '@/components/card';
 
 export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
   const { data: space } = useSpaceBySpaceId(spaceId);
   // TODO: Update space API to use string feed_id in v3
-  const { data: feed } = useFeedById(space?.feed_id.toString());
+  const { data: feed } = usePostById(space?.feed_id.toString());
 
   return (
     <div className="flex flex-col max-w-[250px] max-tablet:!hidden w-full gap-2.5">
@@ -24,7 +24,7 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
         <div className="w-6 h-6 rounded-[10px] border border-neutral-500 bg-neutral-600" />
       )}
 
-      <BorderSpaceCard>
+      <Card>
         <div className="flex flex-col gap-5">
           <div className="flex flex-row gap-1 items-center">
             <Clock width={20} height={20} />
@@ -37,7 +37,7 @@ export default function SpaceSideMenu({ spaceId }: { spaceId: number }) {
             {getTimeWithFormat(space.created_at)}
           </div>
         </div>
-      </BorderSpaceCard>
+      </Card>
     </div>
   );
 }

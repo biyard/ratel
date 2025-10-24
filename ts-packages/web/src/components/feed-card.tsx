@@ -24,8 +24,9 @@ import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { useTranslation } from 'react-i18next';
 import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
-import { likePost, PostResponse } from '@/lib/api/ratel/posts.v3';
 import { BoosterType } from '@/features/spaces/types/booster-type';
+import PostResponse from '@/features/posts/dto/list-post-response';
+import { useLikePostMutation } from '@/features/posts/hooks/use-like-post-mutation';
 
 export interface FeedCardProps {
   post: PostResponse;
@@ -50,7 +51,7 @@ export default function FeedCard(props: FeedCardProps) {
   // const { t } = useTranslation('Feeds');
 
   const r = useRepostDraft();
-
+  const likePost = useLikePostMutation().mutateAsync;
   // Sync with props when they change
   useEffect(() => {
     setLocalLikes(post.likes);
@@ -67,7 +68,10 @@ export default function FeedCard(props: FeedCardProps) {
     setLocalLikes((prev) => (value ? prev + 1 : prev - 1));
 
     try {
-      await likePost(post.pk, value);
+      await likePost({
+        feedId: post.pk,
+        like: value,
+      });
 
       // Success - trigger callbacks
       props.onLikeClick?.(value);

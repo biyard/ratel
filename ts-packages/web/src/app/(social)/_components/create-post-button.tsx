@@ -3,8 +3,8 @@ import { Edit1 } from '@/components/icons';
 import { useLoggedIn } from '@/lib/api/hooks/users';
 import { useTranslation } from 'react-i18next';
 import { usePostEditorContext } from './post-editor/provider';
-import { createPost } from '@/lib/api/ratel/posts.v3';
 import { Button } from '@/components/ui/button';
+import { useCreatePostMutation } from '@/features/posts/hooks/use-create-post-mutation';
 
 export default function CreatePostButton({
   team_pk,
@@ -16,7 +16,7 @@ export default function CreatePostButton({
   const { t } = useTranslation('Home');
   const loggedIn = useLoggedIn();
   const p = usePostEditorContext();
-
+  const createPost = useCreatePostMutation().mutateAsync;
   return (
     <Button
       aria-expanded={expanded}
@@ -27,7 +27,7 @@ export default function CreatePostButton({
       className="w-full justify-start max-tablet:aria-[expanded=false]:hidden aria-hidden:hidden"
       onClick={async () => {
         p?.setClose(false);
-        const { post_pk } = await createPost(team_pk);
+        const { post_pk } = await createPost({ teamPk: team_pk });
         p?.openPostEditorPopup(post_pk);
       }}
     >

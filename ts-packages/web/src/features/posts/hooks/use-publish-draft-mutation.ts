@@ -1,11 +1,24 @@
 import { useMutation } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
 import { showErrorToast } from '@/lib/toast';
-import { type PostResponse, publishPost } from '@/lib/api/ratel/posts.v3';
 import { optimisticListUpdate, removeQueries } from '@/lib/hook-utils';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { getQueryClient } from '@/providers/getQueryClient';
+import PostResponse from '@/features/posts/dto/list-post-response';
+import Post from '../types/post';
+import { call } from '@/lib/api/ratel/call';
 
+export function publishPost(
+  postPk: string,
+  title: string,
+  content: string,
+): Promise<Post> {
+  return call('PATCH', `/v3/posts/${encodeURIComponent(postPk)}`, {
+    publish: true,
+    title,
+    content,
+  });
+}
 export function usePublishDraftMutation() {
   const { data: user } = useSuspenseUserInfo();
 
