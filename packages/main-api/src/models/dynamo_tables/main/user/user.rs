@@ -59,7 +59,7 @@ pub struct User {
 }
 
 // impl User {
-//     pub async fn migrate(cli: &aws_sdk_dynamodb::Client) -> Result<(), crate::Error2> {
+//     pub async fn migrate(cli: &aws_sdk_dynamodb::Client) -> Result<(), crate::Error> {
 //         use aws_sdk_dynamodb::operation::get_item::GetItemOutput;
 
 //         let GetItemOutput { item, .. } = cli

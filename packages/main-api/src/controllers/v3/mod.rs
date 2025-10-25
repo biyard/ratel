@@ -101,8 +101,8 @@ pub fn extract_state(State(AppState { dynamo, .. }): State<AppState>) -> aws_sdk
 ///
 /// # Returns
 /// * `Ok(User)` - If user is authenticated and is a ServiceAdmin
-/// * `Err(Error2::NoUserFound)` - If no user is authenticated
-/// * `Err(Error2::NoPermission)` - If user is not a ServiceAdmin
+/// * `Err(Error::NoUserFound)` - If no user is authenticated
+/// * `Err(Error::NoPermission)` - If user is not a ServiceAdmin
 ///
 /// # Example
 /// ```no_run
@@ -113,7 +113,7 @@ pub fn extract_state(State(AppState { dynamo, .. }): State<AppState>) -> aws_sdk
 /// async fn admin_only_handler(
 ///     state: State<AppState>,
 ///     NoApi(user): NoApi<Option<User>>,
-/// ) -> Result<Json<Response>, Error2> {
+/// ) -> Result<Json<Response>, Error> {
 ///     let cli = &state.dynamo.client;
 ///
 ///     // Verify user is a ServiceAdmin

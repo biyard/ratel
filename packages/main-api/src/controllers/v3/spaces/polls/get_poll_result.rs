@@ -44,7 +44,7 @@ pub async fn get_poll_result(
     //     Some(EntityType::PollSpaceSurveyResult),
     // )
     // .await?
-    // .ok_or(Error2::NotFoundSurveySummary)?;
+    // .ok_or(Error::NotFoundSurveySummary)?;
 
     // Ok(Json(PollSpaceSurveySummary {
     //     created_at: res.created_at,
