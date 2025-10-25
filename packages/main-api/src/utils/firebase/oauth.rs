@@ -6,8 +6,8 @@ pub use noop::*;
 
 #[cfg(not(feature = "no-secret"))]
 mod r {
-    use chrono::Utc;
     use bdk::prelude::reqwest;
+    use chrono::Utc;
     use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode, decode_header};
     use once_cell::sync::Lazy;
     use serde::Deserialize;
@@ -81,9 +81,7 @@ mod r {
             .map(|(kid, pem)| {
                 DecodingKey::from_rsa_pem(pem.as_bytes())
                     .map(|key| (kid, key))
-                    .map_err(|e| {
-                        Error::InternalServerError(format!("Invalid PEM for kid {:?}", e))
-                    })
+                    .map_err(|e| Error::InternalServerError(format!("Invalid PEM for kid {:?}", e)))
             })
             .collect::<Result<HashMap<_, _>, _>>()?;
 
@@ -172,7 +170,7 @@ mod noop {
     /// No-op token verification for testing.
     ///
     /// Always returns the token string as uid.
-    pub async fn verify_token(token_str: &str) -> Result<String, Error2> {
+    pub async fn verify_token(token_str: &str) -> Result<String, Error> {
         // NOTE: token_str must be email address.
         Ok(token_str.to_string())
     }
