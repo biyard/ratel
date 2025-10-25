@@ -30,7 +30,7 @@ impl SpaceRecommendation {
         cli: &aws_sdk_dynamodb::Client,
         space_pk: Partition,
         files: Vec<File>,
-    ) -> Result<Self, crate::Error2> {
+    ) -> Result<Self, crate::Error> {
         let (pk, sk) = Self::keys(&space_pk);
 
         let recommendation = SpaceRecommendation::get(&cli, pk.clone(), Some(sk.clone())).await?;
@@ -56,7 +56,7 @@ impl SpaceRecommendation {
         cli: &aws_sdk_dynamodb::Client,
         space_pk: Partition,
         html_contents: String,
-    ) -> Result<Self, crate::Error2> {
+    ) -> Result<Self, crate::Error> {
         let (pk, sk) = Self::keys(&space_pk);
 
         let recommendation = SpaceRecommendation::get(&cli, pk.clone(), Some(sk.clone())).await?;

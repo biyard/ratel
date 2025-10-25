@@ -3,7 +3,7 @@ use crate::controllers::v3::spaces::SpaceDiscussionPathParam;
 use crate::features::spaces::discussions::dto::GetDiscussionResponse;
 use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
 use crate::types::Partition;
-use crate::{AppState, Error2, models::user::User};
+use crate::{AppState, Error, models::user::User};
 use aide::NoApi;
 use bdk::prelude::axum::extract::{Json, Path, State};
 use bdk::prelude::*;
@@ -15,9 +15,9 @@ pub async fn get_discussion_handler(
         space_pk,
         discussion_pk,
     }): SpaceDiscussionPath,
-) -> Result<Json<GetDiscussionResponse>, Error2> {
+) -> Result<Json<GetDiscussionResponse>, Error> {
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundSpace);
+        return Err(Error::NotFoundSpace);
     }
 
     let discussion =

@@ -1,4 +1,4 @@
-pub mod auth;
+// pub mod auth;
 pub mod axum;
 
 pub use tower_http::cors;
@@ -15,7 +15,6 @@ use router::BiyardRouter;
 pub mod logger;
 pub mod router;
 pub use aide;
-pub mod rest_api_adapter;
 
 pub use by_types::ApiError;
 pub type Result<T, E> = std::result::Result<Json<T>, ApiError<E>>;
@@ -68,9 +67,4 @@ pub async fn serve_wo_cors_layer(
     axum::serve(_tcp_listener, app).await?;
 
     Ok(())
-}
-
-pub fn into_api_adapter(app: BiyardRouter) -> rest_api_adapter::RestApiAdapter {
-    let app = finishing(app);
-    rest_api_adapter::RestApiAdapter::new(app)
 }

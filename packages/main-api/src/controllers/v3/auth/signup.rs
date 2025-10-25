@@ -1,5 +1,5 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     constants::SESSION_KEY_USER_ID,
     models::{
         email::{EmailVerification, EmailVerificationQueryOption},
@@ -64,10 +64,10 @@ pub async fn signup_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<Session>,
     Json(req): Json<SignupRequest>,
-) -> Result<Json<User>, Error2> {
+) -> Result<Json<User>, Error> {
     tracing::info!("signup_handler: req = {:?}", req);
     req.validate()
-        .map_err(|e| Error2::BadRequest(format!("Invalid input: {}", e)))?;
+        .map_err(|e| Error::BadRequest(format!("Invalid input: {}", e)))?;
 
     let evm_address = req.evm_address.clone();
     let user = match req.signup_type.clone() {
@@ -114,7 +114,7 @@ async fn signup_with_email_password(
     email: String,
     password: String,
     code: String,
-) -> Result<User, Error2> {
+) -> Result<User, Error> {
     tracing::debug!("Signing up with email: {}", email);
 
     let is_invalid = EmailVerification::find_by_email_and_code(
@@ -133,12 +133,12 @@ async fn signup_with_email_password(
     let is_invalid = is_invalid && !code.eq("000000");
 
     if is_invalid {
-        return Err(Error2::InvalidVerificationCode);
+        return Err(Error::InvalidVerificationCode);
     }
 
     let (users, _) = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
     if users.len() > 0 {
-        return Err(Error2::Duplicate(format!(
+        return Err(Error::Duplicate(format!(
             "Email already registered: {}",
             email
         )));
@@ -173,14 +173,14 @@ async fn signup_with_oauth(
     }: SignupRequest,
     provider: Provider,
     access_token: String,
-) -> Result<User, Error2> {
+) -> Result<User, Error> {
     tracing::debug!("Verifying id_token with provider: {:?}", provider);
     let email = provider.get_email(&access_token).await?;
 
     let (user, _bookmark) =
         User::find_by_email(cli, &email, UserQueryOption::builder().limit(1)).await?;
     if user.len() > 0 {
-        return Err(Error2::Duplicate(format!(
+        return Err(Error::Duplicate(format!(
             "Email already registered: {}",
             email
         )));

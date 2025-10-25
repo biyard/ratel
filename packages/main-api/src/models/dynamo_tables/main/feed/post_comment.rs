@@ -73,11 +73,11 @@ impl PostComment {
         cli: &aws_sdk_dynamodb::Client,
         post_pk: Partition,
         comment_sk: EntityType,
-    ) -> Result<(Vec<Self>, Option<String>), crate::Error2> {
+    ) -> Result<(Vec<Self>, Option<String>), crate::Error> {
         let parent_comment_id = match comment_sk {
             EntityType::PostComment(id) => id,
             _ => {
-                return Err(crate::Error2::InvalidPartitionKey(
+                return Err(crate::Error::InvalidPartitionKey(
                     "comment_sk must be a PostComment".into(),
                 ));
             }
@@ -99,7 +99,7 @@ impl PostComment {
         parent_comment_sk: EntityType,
         content: String,
         user: User,
-    ) -> Result<Self, crate::Error2> {
+    ) -> Result<Self, crate::Error> {
         let parent_comment = Self::updater(&post_pk, &parent_comment_sk)
             .increase_replies(1)
             .transact_write_item();
@@ -108,7 +108,7 @@ impl PostComment {
             EntityType::PostComment(id) => id.to_string(),
             _ => {
                 tracing::error!("Invalid parent_comment_sk: {:?}", parent_comment_sk);
-                return Err(crate::Error2::PostReplyError);
+                return Err(crate::Error::PostReplyError);
             }
         };
 
@@ -130,7 +130,7 @@ impl PostComment {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to add comment: {}", e);
-                crate::Error2::PostReplyError
+                crate::Error::PostReplyError
             })?;
 
         Ok(comment)
