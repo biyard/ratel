@@ -9,7 +9,7 @@ use crate::features::spaces::discussions::models::space_discussion_participant::
 };
 use crate::models::{SpaceCommon, User};
 use crate::types::{EntityType, Partition, TeamGroupPermission};
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 use axum::extract::{Path, State};
 use bdk::prelude::aide::NoApi;
 use bdk::prelude::axum::Json;
@@ -22,9 +22,9 @@ pub async fn delete_discussion_handler(
         space_pk,
         discussion_pk,
     }): SpaceDiscussionPath,
-) -> Result<Json<DeleteDiscussionResponse>, Error2> {
+) -> Result<Json<DeleteDiscussionResponse>, Error> {
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundSpace);
+        return Err(Error::NotFoundSpace);
     }
 
     let (_, has_perm) = SpaceCommon::has_permission(
@@ -35,7 +35,7 @@ pub async fn delete_discussion_handler(
     )
     .await?;
     if !has_perm {
-        return Err(Error2::NoPermission);
+        return Err(Error::NoPermission);
     }
 
     let discussion_id = match discussion_pk.clone() {
@@ -51,7 +51,7 @@ pub async fn delete_discussion_handler(
     .await?;
 
     if discussion.is_none() {
-        return Err(Error2::NotFoundDiscussion);
+        return Err(Error::NotFoundDiscussion);
     }
 
     SpaceDiscussion::delete(

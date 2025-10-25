@@ -1,5 +1,5 @@
 use crate::features::membership::dto::*;
-use crate::{AppState, Error2, aide::OperationIo, features::membership::*, types::*};
+use crate::{AppState, Error, aide::OperationIo, features::membership::*, types::*};
 use axum::{
     Json,
     extract::{Path, State},
@@ -16,7 +16,7 @@ pub struct DeleteMembershipResponse {
 pub async fn delete_membership_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Path(MembershipPathParam { membership_id }): Path<MembershipPathParam>,
-) -> Result<Json<DeleteMembershipResponse>, Error2> {
+) -> Result<Json<DeleteMembershipResponse>, Error> {
     let cli = &dynamo.client;
 
     // Delete membership

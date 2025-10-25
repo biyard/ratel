@@ -27,11 +27,11 @@ impl Visibility {
         Visibility::Public
     }
 
-    pub fn team_only(team_pk: Partition) -> Result<Self, crate::Error2> {
+    pub fn team_only(team_pk: Partition) -> Result<Self, crate::Error> {
         if let Partition::Team(pk) = team_pk {
             Ok(Visibility::TeamOnly(pk))
         } else {
-            Err(crate::Error2::PostIncorrectConfiguredVisibility(
+            Err(crate::Error::PostIncorrectConfiguredVisibility(
                 "Visibility::team_only requires a team Partition".into(),
             ))
         }

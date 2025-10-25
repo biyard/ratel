@@ -19,7 +19,7 @@ pub struct GetTopPromotionResponse {
     space_type: Option<SpaceType>,
 }
 
-pub async fn get_top_promotion_handler() -> Result<Json<GetTopPromotionResponse>, crate::Error2> {
+pub async fn get_top_promotion_handler() -> Result<Json<GetTopPromotionResponse>, crate::Error> {
     // TODO: implement the logic to fetch the top promotion
 
     Ok(Json(GetTopPromotionResponse {

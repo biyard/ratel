@@ -8,7 +8,7 @@ use crate::types::{
     BoosterType, EntityType, SpacePublishState, SpaceVisibility, TeamGroupPermission,
 };
 use crate::utils::telegram::ArcTelegramBot;
-use crate::{AppState, Error2, transact_write};
+use crate::{AppState, Error, transact_write};
 use aide::NoApi;
 use axum::extract::{Json, Path, State};
 use bdk::prelude::axum::Extension;
@@ -39,7 +39,7 @@ pub async fn update_space_handler(
     Extension(telegram_bot): Extension<Option<ArcTelegramBot>>,
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
     Json(req): Json<UpdateSpaceRequest>,
-) -> Result<Json<SpaceCommonResponse>, Error2> {
+) -> Result<Json<SpaceCommonResponse>, Error> {
     let (mut space, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
@@ -48,7 +48,7 @@ pub async fn update_space_handler(
     )
     .await?;
     if !has_perm {
-        return Err(Error2::NoPermission);
+        return Err(Error::NoPermission);
     }
 
     let now = chrono::Utc::now().timestamp_millis();
@@ -62,7 +62,7 @@ pub async fn update_space_handler(
             visibility,
         } => {
             if !publish {
-                return Err(Error2::NotSupported(
+                return Err(Error::NotSupported(
                     "it does not support unpublished now".into(),
                 ));
             }

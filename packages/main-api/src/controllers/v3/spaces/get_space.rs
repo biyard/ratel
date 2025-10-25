@@ -2,7 +2,7 @@ use super::*;
 use crate::models::user::User;
 use crate::models::{Post, SpaceCommon};
 use crate::types::*;
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 use aide::NoApi;
 use axum::extract::*;
 use bdk::prelude::*;
@@ -42,7 +42,7 @@ pub async fn get_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Path(SpacePathParam { space_pk }): SpacePath,
-) -> Result<Json<GetSpaceResponse>, Error2> {
+) -> Result<Json<GetSpaceResponse>, Error> {
     let space = SpaceCommon::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceCommon));
 
     let post_pk = space_pk.clone().to_post_key()?;
@@ -50,8 +50,8 @@ pub async fn get_space_handler(
 
     let (space, post) = tokio::try_join!(space, post)?;
 
-    let space = space.ok_or(Error2::SpaceNotFound)?;
-    let post = post.ok_or(Error2::PostNotFound)?;
+    let space = space.ok_or(Error::SpaceNotFound)?;
+    let post = post.ok_or(Error::PostNotFound)?;
 
     let permissions = post.get_permissions(&dynamo.client, user).await?;
 

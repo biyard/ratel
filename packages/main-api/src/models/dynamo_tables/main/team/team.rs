@@ -74,7 +74,7 @@ impl Team {
         cli: &aws_sdk_dynamodb::Client,
         team_pk: &Partition,
         user_pk: &Partition,
-    ) -> Result<TeamGroupPermissions, crate::Error2> {
+    ) -> Result<TeamGroupPermissions, crate::Error> {
         // Check if the user is the team owner first
         let owner = TeamOwner::get(cli, team_pk, Some(EntityType::TeamOwner)).await?;
         if let Some(owner) = owner {
@@ -112,12 +112,12 @@ impl Team {
         team_pk: Partition,
         _user_pk: Partition,
         _perm: TeamGroupPermission,
-    ) -> Result<Self, crate::Error2> {
+    ) -> Result<Self, crate::Error> {
         // TODO: Implement permission check logic
 
         let team = Self::get(cli, team_pk, Some(EntityType::Team))
             .await?
-            .ok_or(crate::Error2::TeamNotFound)?;
+            .ok_or(crate::Error::TeamNotFound)?;
 
         Ok(team)
     }
@@ -127,7 +127,7 @@ impl Team {
         _team_pk: &Partition,
         _user_pk: &Partition,
         _perm: TeamGroupPermission,
-    ) -> Result<bool, crate::Error2> {
+    ) -> Result<bool, crate::Error> {
         // TODO: Implement permission check logic
 
         Ok(true)
