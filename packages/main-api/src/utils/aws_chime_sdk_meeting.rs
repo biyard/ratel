@@ -400,7 +400,7 @@ impl ChimeMeetingService {
 
         let created = client.create_meeting(&discussion.name).await.map_err(|e| {
             tracing::error!("create_meeting failed: {:?}", e);
-            Error2::AwsChimeError(e.to_string())
+            Error::AwsChimeError(e.to_string())
         })?;
 
         let new_id = created.meeting_id().unwrap_or_default().to_string();
@@ -424,10 +424,10 @@ impl ChimeMeetingService {
         let m = client
             .get_meeting_info(meeting_id)
             .await
-            .ok_or_else(|| Error2::AwsChimeError("Missing meeting from Chime".into()))?;
+            .ok_or_else(|| Error::AwsChimeError("Missing meeting from Chime".into()))?;
         let mp = m
             .media_placement()
-            .ok_or_else(|| Error2::AwsChimeError("Missing media_placement".into()))?;
+            .ok_or_else(|| Error::AwsChimeError("Missing media_placement".into()))?;
         Ok(MeetingInfo {
             meeting_id: meeting_id.to_string(),
             media_region: m.media_region.clone().unwrap_or_default(),

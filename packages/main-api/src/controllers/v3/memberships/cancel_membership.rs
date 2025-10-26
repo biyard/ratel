@@ -1,6 +1,6 @@
 use crate::features::membership::dto::*;
 
-use crate::{AppState, Error2, features::membership::*, models::user::User, types::*};
+use crate::{AppState, Error, features::membership::*, models::user::User, types::*};
 use aide::NoApi;
 use axum::{Json, extract::State};
 use bdk::prelude::*;
@@ -10,10 +10,10 @@ pub async fn cancel_membership_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Json(req): Json<CancelMembershipRequest>,
-) -> Result<Json<UserMembershipResponse>, Error2> {
+) -> Result<Json<UserMembershipResponse>, Error> {
     let cli = &dynamo.client;
 
-    let user = user.ok_or(Error2::NoUserFound)?;
+    let user = user.ok_or(Error::NoUserFound)?;
 
     // Get user's membership
     let pk = user.pk.clone();
@@ -21,11 +21,11 @@ pub async fn cancel_membership_handler(
 
     let mut user_membership = UserMembership::get(cli, pk, sk)
         .await?
-        .ok_or(Error2::NotFound("No active membership found".to_string()))?;
+        .ok_or(Error::NotFound("No active membership found".to_string()))?;
 
     // Check if membership is already cancelled
     if user_membership.get_status() == MembershipStatus::Cancelled {
-        return Err(Error2::BadRequest(
+        return Err(Error::BadRequest(
             "Membership is already cancelled".to_string(),
         ));
     }

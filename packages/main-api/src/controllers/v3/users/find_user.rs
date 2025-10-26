@@ -1,5 +1,5 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     models::user::{User, UserDetailResponse, UserMetadata, UserPhoneNumber},
 };
 use bdk::prelude::*;
@@ -29,14 +29,14 @@ pub type FindUserResponse = UserDetailResponse;
 pub async fn find_user_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Query(params): Query<FindUserQueryParams>,
-) -> Result<Json<FindUserResponse>, Error2> {
+) -> Result<Json<FindUserResponse>, Error> {
     let user_pk = match params.r#type {
         FindUserQueryType::Email => {
             let email = params.value;
             let (users, _bookmark) =
                 User::find_by_email(&dynamo.client, &email, Default::default()).await?;
             if users.len() == 0 {
-                return Err(Error2::NotFound(format!(
+                return Err(Error::NotFound(format!(
                     "User not found with email: {}",
                     email
                 )));
@@ -48,7 +48,7 @@ pub async fn find_user_handler(
             let (users, _bookmark) =
                 User::find_by_username(&dynamo.client, &username, Default::default()).await?;
             if users.len() == 0 {
-                return Err(Error2::NotFound(format!(
+                return Err(Error::NotFound(format!(
                     "User not found with username: {}",
                     username
                 )));
@@ -64,7 +64,7 @@ pub async fn find_user_handler(
             )
             .await?;
             if users.len() == 0 {
-                return Err(Error2::NotFound(format!(
+                return Err(Error::NotFound(format!(
                     "User not found with phone number: {}",
                     phone_number
                 )));

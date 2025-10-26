@@ -1,6 +1,6 @@
 use crate::features::membership::dto::*;
 
-use crate::{AppState, Error2, features::membership::*};
+use crate::{AppState, Error, features::membership::*};
 use axum::{Json, extract::State};
 use bdk::prelude::*;
 
@@ -8,7 +8,7 @@ use bdk::prelude::*;
 pub async fn create_membership_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Json(req): Json<CreateMembershipRequest>,
-) -> Result<Json<MembershipResponse>, Error2> {
+) -> Result<Json<MembershipResponse>, Error> {
     let cli = &dynamo.client;
 
     // Create membership

@@ -63,13 +63,13 @@ impl UserMembership {
     ) -> crate::Result<Self> {
         // Validation
         if !matches!(user_pk, Partition::User(_)) {
-            return Err(crate::Error2::InvalidPartitionKey(
+            return Err(crate::Error::InvalidPartitionKey(
                 "pk must be User partition".to_string(),
             ));
         }
 
         if !matches!(membership_pk, Partition::Membership(_)) {
-            return Err(crate::Error2::InvalidPartitionKey(
+            return Err(crate::Error::InvalidPartitionKey(
                 "membership_pk must be Membership partition".to_string(),
             ));
         }
@@ -162,7 +162,7 @@ impl UserMembership {
     /// Use credits from this membership
     pub fn use_credits(&mut self, amount: i64) -> crate::Result<()> {
         if self.remaining_credits < amount {
-            return Err(crate::Error2::InsufficientCredits);
+            return Err(crate::Error::InsufficientCredits);
         }
 
         self.remaining_credits -= amount;
