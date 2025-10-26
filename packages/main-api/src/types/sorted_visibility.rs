@@ -32,11 +32,11 @@ impl SortedVisibility {
         SortedVisibility::Public(now.to_string())
     }
 
-    pub fn team_only(team_pk: Partition, now: i64) -> Result<SortedVisibility, crate::Error2> {
+    pub fn team_only(team_pk: Partition, now: i64) -> Result<SortedVisibility, crate::Error> {
         let pk = match team_pk {
             Partition::Team(pk) => pk,
             _ => {
-                return Err(crate::Error2::PostIncorrectConfiguredVisibility(
+                return Err(crate::Error::PostIncorrectConfiguredVisibility(
                     "SortedVisibility::team_only requires a team Partition".into(),
                 ));
             }

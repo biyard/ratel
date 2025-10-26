@@ -204,7 +204,7 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
         impl std::str::FromStr for #name {
             type Err = #error_type;
 
-            fn from_str(s: &str) -> Result<Self, Self::Err> {
+            fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
                 let s = percent_encoding::percent_decode_str(s)
                     .decode_utf8().map_err(|e| format!("Invalid percent-encoding: {}", e))?;
                 let s = s.into_owned();
@@ -217,7 +217,7 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
         }
 
         impl #name {
-            pub fn try_into_inner(&self) -> Result<String, crate::Error2> {
+            pub fn try_into_inner(&self) -> std::result::Result<String, crate::Error> {
                 match self {
                     #(#inner_arms)*
                 }

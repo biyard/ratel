@@ -67,11 +67,11 @@ impl SpaceDiscussion {
         space_pk: &Partition,
         discussion_pk: &Partition,
         user_pk: &Partition,
-    ) -> Result<SpaceDiscussionResponse, crate::Error2> {
+    ) -> Result<SpaceDiscussionResponse, crate::Error> {
         let (pk, sk) = Self::keys(space_pk, discussion_pk);
         let discussion = SpaceDiscussion::get(&cli, pk.clone(), Some(sk.clone())).await?;
         if discussion.is_none() {
-            return Err(crate::Error2::NotFoundDiscussion);
+            return Err(crate::Error::NotFoundDiscussion);
         }
 
         let mut discussion: SpaceDiscussionResponse = discussion.unwrap().into();

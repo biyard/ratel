@@ -1,5 +1,5 @@
 use crate::{
-    Error2,
+    Error,
     controllers::v3::{
         assets::{
             complete_multipart_upload::complete_multipart_upload,
@@ -68,7 +68,7 @@ pub fn route(
         pool,
         bot,
     }: RouteDeps,
-) -> Result<Router, Error2> {
+) -> Result<Router, Error> {
     Ok(Router::new()
         .nest(
             "/networks",

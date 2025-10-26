@@ -3,7 +3,7 @@ use bdk::prelude::*;
 use by_axum::axum::{Json, extract::State};
 use serde::Deserialize;
 
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct CompleteMultipartUploadRequest {
@@ -21,7 +21,7 @@ pub struct UploadedPart {
 pub async fn complete_multipart_upload(
     State(AppState { .. }): State<AppState>,
     Json(req): Json<CompleteMultipartUploadRequest>,
-) -> Result<Json<String>, crate::Error2> {
+) -> Result<Json<String>, crate::Error> {
     use aws_config::{BehaviorVersion, Region, defaults};
     use aws_sdk_s3::types::CompletedMultipartUpload;
     use aws_sdk_s3::{Client, config::Credentials};
@@ -68,7 +68,7 @@ pub async fn complete_multipart_upload(
         .await
         .map_err(|e| {
             tracing::error!("Failed to complete multipart upload: {}", e);
-            Error2::AssetError(e.to_string())
+            Error::AssetError(e.to_string())
         })?;
 
     let final_url = format!("https://{}/{}", bucket_name, req.key);

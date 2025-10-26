@@ -24,7 +24,7 @@ pub async fn list_comments_handler(
         post_pk,
     }): PostCommentPath,
     Query(_query): ListItemsQuery,
-) -> Result<Json<ListItemsResponse<PostComment>>, crate::Error2> {
+) -> Result<Json<ListItemsResponse<PostComment>>, crate::Error> {
     let comments = PostComment::list_by_comment(&dynamo.client, post_pk, comment_sk).await?;
 
     // TODO: compose with comment like

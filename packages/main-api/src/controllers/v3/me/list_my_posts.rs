@@ -18,7 +18,7 @@ pub async fn list_my_posts_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
     Query(Pagination { bookmark }): ListItemsQuery,
-) -> Result<Json<ListItemsResponse<PostResponse>>, crate::Error2> {
+) -> Result<Json<ListItemsResponse<PostResponse>>, crate::Error> {
     tracing::debug!("Handling request: {:?}", bookmark);
 
     let mut opt = PostQueryOption::builder().sk(PostStatus::Published.to_string());
