@@ -1,5 +1,5 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     models::{
         team::{Team, TeamMetadata},
         user::User,
@@ -28,10 +28,10 @@ pub async fn get_team_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Path(path): Path<GetTeamPathParams>,
-) -> Result<Json<GetTeamResponse>, Error2> {
+) -> Result<Json<GetTeamResponse>, Error> {
     let team = TeamMetadata::query(&dynamo.client, path.team_pk.clone()).await?;
     if team.is_empty() {
-        return Err(Error2::NotFound("Team not found".into()));
+        return Err(Error::NotFound("Team not found".into()));
     }
 
     let mut team_response = TeamDetailResponse::from(team);

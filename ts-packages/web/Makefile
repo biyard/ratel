@@ -72,14 +72,5 @@ run: node_module
 build: node_module
 	$(BUILD_ENV) pnpm build
 
-docker.build:
-	docker build -t $(ECR_NAME):$(COMMIT) --no-cache $(DOCKER_FLAGS) -f Dockerfile ../..
-
-docker.push:
-	docker push $(ECR_NAME):$(COMMIT)
-
-docker.login:
-	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
-
 test: node_modules
 	$(PLAYWRIGHT_ENV) npx playwright test $(PLAYWRIGHT_ARGS)

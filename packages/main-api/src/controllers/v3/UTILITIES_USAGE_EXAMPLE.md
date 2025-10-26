@@ -35,18 +35,18 @@ Verifies that a user is authenticated and has ServiceAdmin privileges by queryin
 pub async fn verify_service_admin(
     user: Option<User>,
     cli: &aws_sdk_dynamodb::Client,
-) -> Result<User, Error2>
+) -> Result<User, Error>
 ```
 
 **Returns:**
 - `Ok(User)` - If user is authenticated and is a ServiceAdmin
-- `Err(Error2::NoUserFound)` - If no user is authenticated
-- `Err(Error2::NoPermission)` - If user is not a ServiceAdmin
+- `Err(Error::NoUserFound)` - If no user is authenticated
+- `Err(Error::NoPermission)` - If user is not a ServiceAdmin
 
 **Usage Example:**
 ```rust
 use crate::controllers::v3::verify_service_admin;
-use crate::{AppState, Error2, models::user::User};
+use crate::{AppState, Error, models::user::User};
 use aide::NoApi;
 use axum::{extract::State, Json};
 
@@ -59,7 +59,7 @@ struct AdminResponse {
 async fn admin_only_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-) -> Result<Json<AdminResponse>, Error2> {
+) -> Result<Json<AdminResponse>, Error> {
     let cli = &dynamo.client;
 
     // Verify user is a ServiceAdmin
@@ -82,7 +82,7 @@ Here's a complete example of a ServiceAdmin-only endpoint that manages system se
 use crate::{
     controllers::v3::verify_service_admin,
     models::user::User,
-    AppState, Error2,
+    AppState, Error,
 };
 use aide::NoApi;
 use axum::{extract::State, Json};
@@ -105,7 +105,7 @@ pub async fn update_system_settings_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Json(req): Json<UpdateSystemSettingsRequest>,
-) -> Result<Json<SystemSettingsResponse>, Error2> {
+) -> Result<Json<SystemSettingsResponse>, Error> {
     let cli = &dynamo.client;
 
     // Step 1: Verify user is a ServiceAdmin
@@ -126,8 +126,8 @@ pub async fn update_system_settings_handler(
 1. **Always verify ServiceAdmin first**: Call `verify_service_admin` at the beginning of your handler to ensure only authorized users can access the endpoint.
 
 2. **Handle errors appropriately**: The function returns specific errors:
-   - `Error2::NoUserFound` - User not authenticated (401)
-   - `Error2::NoPermission` - User not a ServiceAdmin (403)
+   - `Error::NoUserFound` - User not authenticated (401)
+   - `Error::NoPermission` - User not a ServiceAdmin (403)
 
 3. **Use with NoApi wrapper**: Always extract the user with `NoApi<Option<User>>` to prevent it from appearing in API documentation.
 

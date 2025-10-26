@@ -4,7 +4,7 @@ use crate::models::space::SpaceCommon;
 
 use crate::models::user::User;
 use crate::types::{Partition, TeamGroupPermission};
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 
 use aide::NoApi;
 
@@ -21,9 +21,9 @@ pub async fn get_files_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Path(SpacePathParam { space_pk }): SpacePath,
-) -> Result<Json<GetSpaceFileResponse>, Error2> {
+) -> Result<Json<GetSpaceFileResponse>, Error> {
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundDeliberationSpace);
+        return Err(Error::NotFoundDeliberationSpace);
     }
 
     let (_, has_perm) = SpaceCommon::has_permission(
@@ -34,7 +34,7 @@ pub async fn get_files_handler(
     )
     .await?;
     if !has_perm {
-        return Err(Error2::NoPermission);
+        return Err(Error::NoPermission);
     }
 
     let (pk, sk) = SpaceFile::keys(&space_pk);

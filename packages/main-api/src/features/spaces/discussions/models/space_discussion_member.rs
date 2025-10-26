@@ -49,7 +49,7 @@ impl SpaceDiscussionMember {
         cli: &aws_sdk_dynamodb::Client,
         discussion_pk: &Partition,
         user_pk: &Partition,
-    ) -> Result<bool, crate::Error2> {
+    ) -> Result<bool, crate::Error> {
         let (pk, sk) = Self::keys(discussion_pk, user_pk);
         let member = SpaceDiscussionMember::get(&cli, pk, Some(sk)).await?;
 

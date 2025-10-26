@@ -6,7 +6,7 @@ use crate::axum::{
     http::{Response, StatusCode, header::AUTHORIZATION},
     middleware::Next,
 };
-use by_types::{AuthConfig, Claims, TokenScheme};
+use by_types::{AuthConfig, Claims};
 use http::header::COOKIE;
 use jsonwebtoken::{Algorithm, DecodingKey, Validation};
 use rest_api::Signature;

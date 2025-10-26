@@ -74,7 +74,7 @@ impl IndexTmpl {
 }
 
 impl FromRequestParts<AppState> for IndexTmpl {
-    type Rejection = crate::Error2;
+    type Rejection = crate::Error;
 
     async fn from_request_parts(
         parts: &mut Parts,
