@@ -1,5 +1,5 @@
 use crate::{
-    Error2,
+    Error,
     models::{PostCommentLike, team::Team, user::User},
     types::{author::Author, *},
 };
@@ -126,7 +126,7 @@ impl Post {
         &self,
         cli: &aws_sdk_dynamodb::Client,
         user: Option<User>,
-    ) -> Result<TeamGroupPermissions, crate::Error2> {
+    ) -> Result<TeamGroupPermissions, crate::Error> {
         if user.is_none() {
             return Ok(self.get_permissions_for_guest());
         }
@@ -168,7 +168,7 @@ impl Post {
         &self,
         cli: &aws_sdk_dynamodb::Client,
         user_pk: &Partition,
-    ) -> Result<bool, crate::Error2> {
+    ) -> Result<bool, crate::Error> {
         Ok(PostLike::find_one(cli, &self.pk, user_pk).await?.is_some())
     }
 
@@ -177,10 +177,10 @@ impl Post {
         post_pk: &Partition,
         user_pk: Option<&Partition>,
         perm: TeamGroupPermission,
-    ) -> Result<(Self, bool), crate::Error2> {
+    ) -> Result<(Self, bool), crate::Error> {
         let post = Post::get(cli, post_pk, Some(EntityType::Post))
             .await?
-            .ok_or(Error2::PostNotFound)?;
+            .ok_or(Error::PostNotFound)?;
 
         if post.status == PostStatus::Published && post.visibility == Some(Visibility::Public) {
             return Ok((post, true));
@@ -202,7 +202,7 @@ impl Post {
                 let has_perm = &post.user_pk == user_pk;
                 Ok((post, has_perm))
             }
-            _ => Err(Error2::InternalServerError("Invalid post author".into())),
+            _ => Err(Error::InternalServerError("Invalid post author".into())),
         }
     }
 
@@ -210,7 +210,7 @@ impl Post {
         cli: &aws_sdk_dynamodb::Client,
         post_pk: Partition,
         user_pk: Partition,
-    ) -> Result<(), crate::Error2> {
+    ) -> Result<(), crate::Error> {
         tracing::debug!("Liking post {} by user {}", post_pk, user_pk);
         let post_tx = Self::updater(&post_pk, EntityType::Post)
             .increase_likes(1)
@@ -225,7 +225,7 @@ impl Post {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to like post: {}", e);
-                crate::Error2::PostLikeError
+                crate::Error::PostLikeError
             })?;
 
         Ok(())
@@ -235,7 +235,7 @@ impl Post {
         cli: &aws_sdk_dynamodb::Client,
         post_pk: Partition,
         user_pk: Partition,
-    ) -> Result<(), crate::Error2> {
+    ) -> Result<(), crate::Error> {
         let post_tx = Self::updater(&post_pk, EntityType::Post)
             .decrease_likes(1)
             .transact_write_item();
@@ -248,7 +248,7 @@ impl Post {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to unlike post: {}", e);
-                crate::Error2::PostLikeError
+                crate::Error::PostLikeError
             })?;
 
         Ok(())
@@ -259,7 +259,7 @@ impl Post {
         post_pk: Partition,
         content: String,
         user: User,
-    ) -> Result<PostComment, crate::Error2> {
+    ) -> Result<PostComment, crate::Error> {
         let post = Post::updater(&post_pk, EntityType::Post)
             .increase_comments(1)
             .transact_write_item();
@@ -272,7 +272,7 @@ impl Post {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to add comment: {}", e);
-                crate::Error2::PostCommentError
+                crate::Error::PostCommentError
             })?;
 
         Ok(comment)
@@ -283,7 +283,7 @@ impl Post {
         post_pk: Partition,
         comment_pk: EntityType,
         user_pk: Partition,
-    ) -> Result<(), crate::Error2> {
+    ) -> Result<(), crate::Error> {
         let comment_tx = PostComment::updater(&post_pk, &comment_pk)
             .increase_likes(1)
             .transact_write_item();
@@ -295,7 +295,7 @@ impl Post {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to like comment: {}", e);
-                crate::Error2::PostLikeError
+                crate::Error::PostLikeError
             })?;
         Ok(())
     }
@@ -305,7 +305,7 @@ impl Post {
         post_pk: Partition,
         comment_pk: EntityType,
         user_pk: Partition,
-    ) -> Result<(), crate::Error2> {
+    ) -> Result<(), crate::Error> {
         let comment_tx = PostComment::updater(&post_pk, &comment_pk)
             .decrease_likes(1)
             .transact_write_item();
@@ -318,7 +318,7 @@ impl Post {
             .await
             .map_err(|e| {
                 tracing::error!("Failed to unlike comment: {}", e);
-                crate::Error2::PostLikeError
+                crate::Error::PostLikeError
             })?;
         Ok(())
     }

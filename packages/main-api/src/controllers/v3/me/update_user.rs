@@ -1,5 +1,5 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     models::{
         team::{TeamOwner, TeamOwnerQueryOption},
         user::{User, UserDetailResponse, UserEvmAddress, UserMetadata},
@@ -39,10 +39,10 @@ pub async fn update_user_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Json(req): Json<UpdateUserRequest>,
-) -> Result<Json<UpdateUserResponse>, Error2> {
+) -> Result<Json<UpdateUserResponse>, Error> {
     let user = match user {
         Some(u) => u,
-        None => return Err(Error2::Unauthorized("Authentication required".into())),
+        None => return Err(Error::Unauthorized("Authentication required".into())),
     };
 
     match req {

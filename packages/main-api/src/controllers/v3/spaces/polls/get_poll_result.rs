@@ -5,7 +5,7 @@ use crate::models::user::User;
 use crate::controllers::v3::spaces::dto::*;
 use crate::types::TeamGroupPermission;
 use crate::utils::time::get_now_timestamp_millis;
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 
 use bdk::prelude::*;
 use by_axum::axum::extract::{Json, Path, State};
@@ -16,7 +16,7 @@ pub async fn get_poll_result(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
-) -> Result<Json<PollResultResponse>, Error2> {
+) -> Result<Json<PollResultResponse>, Error> {
     let (_, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
@@ -25,7 +25,7 @@ pub async fn get_poll_result(
     )
     .await?;
     if !has_perm {
-        return Err(Error2::NoPermission);
+        return Err(Error::NoPermission);
     }
     //FIXME: This logic should be removed once the fetcher is ready.
     // This logic is extremely computationally intensive.
@@ -44,7 +44,7 @@ pub async fn get_poll_result(
     //     Some(EntityType::PollSpaceSurveyResult),
     // )
     // .await?
-    // .ok_or(Error2::NotFoundSurveySummary)?;
+    // .ok_or(Error::NotFoundSurveySummary)?;
 
     // Ok(Json(PollSpaceSurveySummary {
     //     created_at: res.created_at,

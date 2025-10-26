@@ -53,7 +53,7 @@ pub async fn db_init(url: &'static str, max_conn: u32) -> PgPool {
     pool
 }
 
-pub async fn api_main(bot: Option<ArcTelegramBot>) -> Result<Router, crate::Error2> {
+pub async fn api_main(bot: Option<ArcTelegramBot>) -> Result<Router, crate::Error> {
     let app = by_axum::new();
     let conf = config::get();
 

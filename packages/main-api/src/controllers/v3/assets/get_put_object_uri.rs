@@ -5,7 +5,7 @@ use by_axum::axum::{
 };
 use serde::Deserialize;
 
-use crate::{AppState, Error2, types::file_type::FileType};
+use crate::{AppState, Error, types::file_type::FileType};
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct GetPutObjectUriQueryParams {
@@ -35,7 +35,7 @@ pub struct AssetPresignedUris {
 pub async fn get_put_object_uri(
     State(AppState { .. }): State<AppState>,
     Query(req): Query<GetPutObjectUriQueryParams>,
-) -> Result<Json<AssetPresignedUris>, crate::Error2> {
+) -> Result<Json<AssetPresignedUris>, crate::Error> {
     use aws_sdk_s3::presigning::PresigningConfig;
     use uuid::Uuid;
 
@@ -79,14 +79,14 @@ pub async fn get_put_object_uri(
                 PresigningConfig::expires_in(std::time::Duration::from_secs(expire)).map_err(
                     |e| {
                         tracing::error!("Failed to set expired time {}", e.to_string());
-                        Error2::AssetError(e.to_string())
+                        Error::AssetError(e.to_string())
                     },
                 )?,
             )
             .await
             .map_err(|e| {
                 tracing::error!("Failed to put object {}", e.to_string());
-                Error2::AssetError(e.to_string())
+                Error::AssetError(e.to_string())
             })?;
         presigned_uris.push(presigned_request.uri().to_string());
         uris.push(format!("https://{}/{}", bucket_name, key));

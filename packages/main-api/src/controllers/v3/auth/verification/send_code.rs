@@ -1,5 +1,5 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT},
     models::email::{EmailVerification, EmailVerificationQueryOption},
     utils::time::get_now_timestamp,
@@ -26,7 +26,7 @@ pub struct SendCodeResponse {
 pub async fn send_code_handler(
     State(AppState { dynamo, ses, .. }): State<AppState>,
     Json(req): Json<SendCodeRequest>,
-) -> Result<Json<SendCodeResponse>, Error2> {
+) -> Result<Json<SendCodeResponse>, Error> {
     // let _ses = ses.clone();
     let (verification_list, _) = EmailVerification::find_by_email(
         &dynamo.client,
@@ -46,7 +46,7 @@ pub async fn send_code_handler(
         && verification_list[0].attempt_count >= MAX_ATTEMPT_COUNT
         && verification_list[0].expired_at < (get_now_timestamp() - ATTEMPT_BLOCK_TIME)
     {
-        return Err(Error2::ExceededAttemptEmailVerification);
+        return Err(Error::ExceededAttemptEmailVerification);
     } else {
         let code = generate_random_code();
         let expired_at = get_now_timestamp() + EXPIRATION_TIME as i64;
@@ -92,7 +92,7 @@ pub async fn send_code_handler(
             tokio::time::sleep(std::time::Duration::from_secs(1)).await;
             i += 1;
             if i >= 3 {
-                return Err(Error2::AwsSesSendEmailException(e.to_string()));
+                return Err(Error::AwsSesSendEmailException(e.to_string()));
             }
         }
     }

@@ -1,7 +1,7 @@
 use crate::features::spaces::polls::*;
 use crate::types::SpacePublishState;
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     models::{space::SpaceCommon, user::User},
     types::{Partition, TeamGroupPermission},
 };
@@ -18,10 +18,10 @@ pub async fn get_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Path(PollPathParam { space_pk, poll_sk }): PollPath,
-) -> Result<Json<PollResponse>, Error2> {
+) -> Result<Json<PollResponse>, Error> {
     // Request Validation
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundPoll);
+        return Err(Error::NotFoundPoll);
     }
 
     let (sc, has_perm) = SpaceCommon::has_permission(
@@ -32,12 +32,12 @@ pub async fn get_poll_handler(
     )
     .await?;
     if !has_perm {
-        return Err(Error2::NoPermission);
+        return Err(Error::NoPermission);
     }
 
     let poll = Poll::get(&dynamo.client, &space_pk, Some(&poll_sk))
         .await?
-        .ok_or(Error2::NotFoundPoll)?;
+        .ok_or(Error::NotFoundPoll)?;
 
     let mut poll_response: PollResponse = PollResponse::from(poll);
     let now = crate::utils::time::get_now_timestamp_millis();

@@ -1,5 +1,5 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     constants::MAX_ATTEMPT_COUNT,
     models::email::{EmailVerification, EmailVerificationQueryOption},
     utils::time::get_now_timestamp,
@@ -27,7 +27,7 @@ pub struct VerifyCodeResponse {
 pub async fn verify_code_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Json(req): Json<VerifyCodeRequest>,
-) -> Result<Json<VerifyCodeResponse>, Error2> {
+) -> Result<Json<VerifyCodeResponse>, Error> {
     let now = get_now_timestamp();
     let (verification_list, _) = EmailVerification::find_by_email(
         &dynamo.client,
@@ -37,7 +37,7 @@ pub async fn verify_code_handler(
     .await?;
 
     if verification_list.is_empty() {
-        return Err(Error2::NotFoundVerificationCode);
+        return Err(Error::NotFoundVerificationCode);
     }
 
     tracing::debug!("code {}", req.code);
@@ -51,11 +51,11 @@ pub async fn verify_code_handler(
     let email_verification = verification_list[0].clone();
 
     if email_verification.attempt_count >= MAX_ATTEMPT_COUNT {
-        return Err(Error2::ExceededAttemptEmailVerification);
+        return Err(Error::ExceededAttemptEmailVerification);
     }
 
     if email_verification.expired_at < now {
-        return Err(Error2::ExpiredVerification);
+        return Err(Error::ExpiredVerification);
     }
 
     if email_verification.value != req.code {
@@ -63,7 +63,7 @@ pub async fn verify_code_handler(
             .increase_attempt_count(1)
             .execute(&dynamo.client)
             .await?;
-        return Err(Error2::InvalidVerificationCode);
+        return Err(Error::InvalidVerificationCode);
     }
 
     Ok(Json(VerifyCodeResponse { success: true }))

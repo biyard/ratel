@@ -2,7 +2,7 @@
 use crate::models::user::User;
 use crate::models::{SpaceCommon, SpaceCommonQueryOption};
 use crate::types::{ListItemsResponse, SpaceVisibility};
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 use aide::NoApi;
 use axum::extract::*;
 use bdk::prelude::*;
@@ -18,7 +18,7 @@ pub struct ListSpacesResponse {
 pub async fn list_spaces_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(_user): NoApi<Option<User>>,
-) -> Result<Json<ListItemsResponse<SpaceCommon>>, Error2> {
+) -> Result<Json<ListItemsResponse<SpaceCommon>>, Error> {
     let cli = &dynamo.client;
 
     let pk = SpaceCommon::generate_pk_for_find_by_visibility(

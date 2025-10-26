@@ -7,7 +7,7 @@ use crate::features::spaces::discussions::models::space_discussion::SpaceDiscuss
 use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussionQueryOption;
 use crate::features::spaces::discussions::models::space_discussion_member::SpaceDiscussionMember;
 use crate::types::Partition;
-use crate::{AppState, Error2, models::user::User};
+use crate::{AppState, Error, models::user::User};
 use aide::NoApi;
 use bdk::prelude::axum::extract::{Json, Path, Query, State};
 use bdk::prelude::*;
@@ -17,9 +17,9 @@ pub async fn list_discussions_handler(
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Query(ListDiscussionQueryParams { bookmark }): Query<ListDiscussionQueryParams>,
-) -> Result<Json<ListDiscussionResponse>, Error2> {
+) -> Result<Json<ListDiscussionResponse>, Error> {
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundSpace);
+        return Err(Error::NotFoundSpace);
     }
 
     let mut query_options = SpaceDiscussionQueryOption::builder()

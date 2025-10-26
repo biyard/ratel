@@ -1,7 +1,7 @@
 use super::*;
 use crate::models::Post;
 use crate::models::user::User;
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 use aide::NoApi;
 use axum::extract::*;
 use bdk::prelude::*;
@@ -28,7 +28,7 @@ pub async fn like_comment_handler(
         comment_sk,
     }): PostCommentPath,
     Json(req): Json<LikeCommentRequest>,
-) -> Result<Json<LikeCommentResponse>, Error2> {
+) -> Result<Json<LikeCommentResponse>, Error> {
     tracing::debug!("Handling request: {:?}", req);
     let cli = &dynamo.client;
 
