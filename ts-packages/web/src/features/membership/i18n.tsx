@@ -41,7 +41,16 @@ export const i18nMemberships = {
     infinite_duration: 'Infinite Duration',
     unlimited_credits_per_space: 'Unlimited Credits Per Space',
     infinite_duration_help: 'This membership will never expire',
-    unlimited_credits_per_space_help: 'Users can use unlimited credits per space',
+    unlimited_credits_per_space_help:
+      'Users can use unlimited credits per space',
+
+    subscribe_desc_1: 'Premium products loved around the world',
+    subscribe_desc_2: 'Stay ahead with Ratel Premium.',
+    subscribe_desc_3: 'Start using it now.',
+    subscribe_info: 'Plans can be changed or cancelled at any time.',
+    select: 'Select',
+    success_subscribe_info: 'Success to subscribe ratel service',
+    unsubscribe: 'UnSubscribe',
   },
   ko: {
     title: '멤버십 관리',
@@ -83,7 +92,16 @@ export const i18nMemberships = {
     infinite_duration: '무제한 기간',
     unlimited_credits_per_space: '공간당 무제한 크레딧',
     infinite_duration_help: '이 멤버십은 만료되지 않습니다',
-    unlimited_credits_per_space_help: '사용자가 공간당 무제한 크레딧을 사용할 수 있습니다',
+    unlimited_credits_per_space_help:
+      '사용자가 공간당 무제한 크레딧을 사용할 수 있습니다',
+
+    subscribe_desc_1: '전 세계에서 애용하는 프리미엄',
+    subscribe_desc_2: 'Ratel 프리미엄으로 앞서가세요.',
+    subscribe_desc_3: '지금 이용을 시작하세요.',
+    subscribe_info: '계획은 언제든 변경 또는 취소할 수 있습니다.',
+    select: '선택',
+    success_subscribe_info: '라텔 서비스를 성공적으로 구독하셨습니다.',
+    unsubscribe: '구독 취소',
   },
 };
 
@@ -131,6 +149,14 @@ export interface MembershipsI18n {
   unlimitedCreditsPerSpace: string;
   infiniteDurationHelp: string;
   unlimitedCreditsPerSpaceHelp: string;
+
+  subscribeDesc1: string;
+  subscribeDesc2: string;
+  subscribeDesc3: string;
+  subscribeInfo: string;
+  select: string;
+  successSubscribeInfo: string;
+  unsubscribe: string;
 }
 
 export function useMembershipsI18n(): MembershipsI18n {
@@ -175,5 +201,13 @@ export function useMembershipsI18n(): MembershipsI18n {
     unlimitedCreditsPerSpace: t('unlimited_credits_per_space'),
     infiniteDurationHelp: t('infinite_duration_help'),
     unlimitedCreditsPerSpaceHelp: t('unlimited_credits_per_space_help'),
+
+    subscribeDesc1: t('subscribe_desc_1'),
+    subscribeDesc2: t('subscribe_desc_2'),
+    subscribeDesc3: t('subscribe_desc_3'),
+    subscribeInfo: t('subscribe_info'),
+    select: t('select'),
+    successSubscribeInfo: t('success_subscribe_info'),
+    unsubscribe: t('unsubscribe'),
   };
 }
