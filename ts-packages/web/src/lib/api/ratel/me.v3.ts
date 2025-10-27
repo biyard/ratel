@@ -57,3 +57,37 @@ export type UserTeam = {
   username: string;
   user_type: number;
 };
+
+// Update user request types matching backend UpdateUserRequest enum
+// Note: Keys must be capitalized to match Rust enum variant names
+export type UpdateUserProfileRequest = {
+  Profile: {
+    nickname: string;
+    profile_url: string;
+    description: string;
+  };
+};
+
+export type UpdateUserThemeRequest = {
+  Theme: {
+    theme: 1 | 2 | 3; // 1 = Light, 2 = Dark, 3 = SystemDefault
+  };
+};
+
+export type UpdateUserEvmAddressRequest = {
+  EvmAddress: {
+    evm_address: string;
+  };
+};
+
+export type UpdateUserRequest =
+  | UpdateUserProfileRequest
+  | UpdateUserThemeRequest
+  | UpdateUserEvmAddressRequest;
+
+// Update user function
+export async function updateUser(
+  request: UpdateUserRequest,
+): Promise<UserResponse> {
+  return call('PATCH', '/v3/me', request);
+}
