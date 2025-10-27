@@ -11,7 +11,7 @@ import { checkString } from '@/lib/string-filter-utils';
 import { route } from '@/route';
 import { logger } from '@/lib/logger';
 import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { useSettingsContext } from '../../providers.client';
+import { useSettingsContext } from '../../settings-context';
 import WalletSummary from '../wallet-summary';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
