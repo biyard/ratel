@@ -4,7 +4,7 @@ pub enum RatelResource {
     Reply { team_id: i64 },
     News,
     Promotions,
-    Space { team_id: i64 },
+    Space { team_id: i64, space_id: i64 },
     Team { team_id: i64 },
     Oracles,
 }

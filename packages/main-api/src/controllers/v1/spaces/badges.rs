@@ -100,7 +100,10 @@ impl SpaceBadgeController {
         let user = check_perm(
             &self.pool,
             auth,
-            RatelResource::Space { team_id: user.id },
+            RatelResource::Space {
+                team_id: user.id,
+                space_id,
+            },
             GroupPermission::ManageSpace,
         )
         .await?;

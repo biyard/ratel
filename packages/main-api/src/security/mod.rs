@@ -8,7 +8,10 @@ pub use team_permission_verifier::*;
 use bdk::prelude::{by_axum::auth::Authorization, *};
 use dto::*;
 
-use crate::utils::users::extract_user_with_options;
+use crate::{
+    security::space_permission_verifier::SpacePermissionVerifier,
+    utils::users::extract_user_with_options,
+};
 
 pub trait PermissionVerifier {
     fn has_permission(&self, user: &User, perm: GroupPermission) -> bool;
@@ -36,8 +39,8 @@ pub async fn check_perm_without_error(
         RatelResource::News | RatelResource::Promotions | RatelResource::Oracles => {
             Box::new(GeneralPermissionVerifier::new())
         }
-        RatelResource::Space { team_id } => {
-            Box::new(TeamPermissionVerifier::new(team_id, pool).await)
+        RatelResource::Space { team_id, space_id } => {
+            Box::new(SpacePermissionVerifier::new(team_id, space_id, pool).await)
         }
         RatelResource::Team { team_id } => {
             Box::new(TeamPermissionVerifier::new(team_id, pool).await)
@@ -69,8 +72,8 @@ pub async fn check_perm(
         RatelResource::News | RatelResource::Promotions | RatelResource::Oracles => {
             Box::new(GeneralPermissionVerifier::new())
         }
-        RatelResource::Space { team_id } => {
-            Box::new(TeamPermissionVerifier::new(team_id, pool).await)
+        RatelResource::Space { team_id, space_id } => {
+            Box::new(SpacePermissionVerifier::new(team_id, space_id, pool).await)
         }
         RatelResource::Team { team_id } => {
             Box::new(TeamPermissionVerifier::new(team_id, pool).await)

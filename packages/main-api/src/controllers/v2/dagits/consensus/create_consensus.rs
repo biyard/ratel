@@ -49,7 +49,10 @@ pub async fn create_consensus_handler(
     check_perm(
         &pool,
         auth,
-        dto::RatelResource::Space { team_id: user.id },
+        dto::RatelResource::Space {
+            team_id: user.id,
+            space_id,
+        },
         GroupPermission::ManageSpace,
     )
     .await?;

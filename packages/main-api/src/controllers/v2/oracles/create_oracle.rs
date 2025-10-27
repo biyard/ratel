@@ -73,7 +73,10 @@ pub async fn create_oracle_handler(
         check_perm(
             &pool,
             auth,
-            RatelResource::Space { team_id: user.id },
+            RatelResource::Space {
+                team_id: user.id,
+                space_id: req.space_id.unwrap_or_default(),
+            },
             GroupPermission::ManageSpace,
         )
         .await?;

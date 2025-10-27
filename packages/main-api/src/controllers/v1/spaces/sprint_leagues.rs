@@ -129,7 +129,10 @@ impl SprintLeagueController {
         check_perm(
             &self.pool,
             auth.clone(),
-            RatelResource::Space { team_id: user.id },
+            RatelResource::Space {
+                team_id: user.id,
+                space_id,
+            },
             GroupPermission::ManageSpace,
         )
         .await?;
@@ -271,7 +274,10 @@ impl SprintLeagueController {
         check_perm(
             &self.pool,
             auth.clone(),
-            RatelResource::Space { team_id: user.id },
+            RatelResource::Space {
+                team_id: user.id,
+                space_id,
+            },
             GroupPermission::ManageSpace,
         )
         .await?;

@@ -56,7 +56,10 @@ pub async fn delete_space_handler(
     crate::security::check_perm(
         &pool,
         auth,
-        dto::RatelResource::Space { team_id: user.id },
+        dto::RatelResource::Space {
+            team_id: user.id,
+            space_id,
+        },
         GroupPermission::ManageSpace,
     )
     .await?;
