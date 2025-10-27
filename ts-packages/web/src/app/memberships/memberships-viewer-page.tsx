@@ -30,7 +30,10 @@ export function MembershipsViewerPage() {
     <div className="w-full max-w-desktop mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Membership</h1>
 
-      <MembershipPriceTable memberships={memberships} />
+      <MembershipPriceTable
+        memberships={memberships}
+        handlePurchaseMembership={ctrl.handlePurchaseMembership}
+      />
     </div>
   );
 }

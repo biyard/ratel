@@ -7,6 +7,7 @@ use crate::types::Partition;
 use crate::utils::crypto::sign_for_binance;
 use crate::utils::generate_merchant_trade_no::gen_merchant_trade_no;
 use bdk::prelude::*;
+use chrono::{DateTime, Datelike, Duration, NaiveDate, TimeZone, Timelike, Utc};
 
 pub async fn create_binance_subscription(
     user_pk: Partition,
@@ -51,7 +52,10 @@ pub async fn create_binance_subscription(
         base_domain,
         binance_webhook
     );
-    let merchant_contract_code = format!("contract_{}", merchant_trade_no);
+    let merchant_contract_code = sanitize_contract_code(format!("contract{}", merchant_trade_no));
+    tracing::debug!("merchant contract code: {:?}", merchant_contract_code);
+
+    let first_deduct_ms = next_first_deduct_time_monthly_ms(Utc::now());
 
     let body = serde_json::json!({
       "env": { "terminalType": "WEB" },
@@ -76,12 +80,13 @@ pub async fn create_binance_subscription(
       "directDebitContract": {
         "merchantContractCode": merchant_contract_code,
         "serviceName": "Ratel",
-        "scenarioCode": "SUBSCRIPTION",
+        "scenarioCode": "Membership",
         "singleUpperLimit": amount_usdt,
         "periodic": true,
         "cycleDebitFixed": true,
         "cycleType": "MONTH",
         "cycleValue": 1,
+        "firstDeductTime": first_deduct_ms
      }
     });
 
@@ -133,4 +138,48 @@ pub async fn create_binance_subscription(
     };
 
     Ok(out)
+}
+
+fn next_first_deduct_time_monthly_ms(now: DateTime<Utc>) -> i64 {
+    let mut year = now.year();
+    let mut month = now.month() as i32;
+    if month == 12 {
+        year += 1;
+        month = 1;
+    } else {
+        month += 1;
+    }
+
+    let day = now.day().min(28);
+
+    let naive_date = NaiveDate::from_ymd_opt(year, month as u32, day).expect("valid y-m-d");
+
+    let naive_dt = naive_date
+        .and_hms_opt(now.hour(), now.minute(), 0)
+        .or_else(|| naive_date.and_hms_opt(9, 0, 0))
+        .expect("valid h:m:s");
+
+    let target = Utc.from_utc_datetime(&naive_dt);
+
+    let min_time = now + Duration::minutes(10);
+    let final_time = if target <= min_time { min_time } else { target };
+
+    final_time.timestamp_millis()
+}
+
+fn sanitize_contract_code<S: AsRef<str>>(raw: S) -> String {
+    let mut s: String = raw
+        .as_ref()
+        .chars()
+        .filter(|c| c.is_ascii_alphanumeric())
+        .collect();
+
+    if s.is_empty() {
+        s.push_str("RATEL");
+    }
+
+    if s.len() > 32 {
+        s.truncate(32);
+    }
+    s
 }

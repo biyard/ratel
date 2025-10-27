@@ -1,10 +1,12 @@
 import { MembershipResponse } from '../dto/membership-response';
+import { PurchaseMembershipRequest } from '../dto/purchase-membership-request';
 import { useMembershipsI18n } from '../i18n';
 import { MembershipTier } from '../types/membership-tier';
 import MembershipPriceCard from './membership-price-card';
 
 interface MembershipPriceTableProps {
   memberships: MembershipResponse[];
+  handlePurchaseMembership: (request: PurchaseMembershipRequest) => void;
 }
 
 const features: Record<MembershipTier, string[]> = {
@@ -46,6 +48,7 @@ function normalizeTier(tier: string | undefined | null): MembershipTier | null {
 
 export function MembershipPriceTable({
   memberships,
+  handlePurchaseMembership,
 }: MembershipPriceTableProps) {
   const i18n = useMembershipsI18n();
 
@@ -90,7 +93,13 @@ export function MembershipPriceTable({
                   features={f}
                   buttonEnabled
                   selected={false}
-                  onClick={() => {}}
+                  onClick={() =>
+                    handlePurchaseMembership({
+                      membership_id: p.id,
+                      payment_method: null,
+                      transaction_id: null,
+                    })
+                  }
                   onUnsubscribe={() => {}}
                 />
               </div>
