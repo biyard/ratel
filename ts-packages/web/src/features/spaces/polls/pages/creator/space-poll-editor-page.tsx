@@ -27,7 +27,7 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
           className="justify-end"
         />
 
-        {ctrl.space.isAdmin() && (
+        {ctrl.space.isAdmin() && ctrl.space.isDraft && (
           <div className="flex flex-row items-center gap-3 mb-4">
             <CustomCheckbox
               checked={ctrl.poll.response_editable}
@@ -49,20 +49,22 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
 
         <Card>
           <Col>
-            <Row className="gap-2 justify-end mb-4">
-              {ctrl.editing.get() ? (
-                <>
-                  <Button variant="primary" onClick={ctrl.handleSave}>
-                    {t('btn_save')}
-                  </Button>
-                  <Button onClick={ctrl.handleDiscard}>
-                    {t('btn_discard')}
-                  </Button>
-                </>
-              ) : (
-                <Button onClick={ctrl.handleEdit}>{t('btn_edit')}</Button>
-              )}
-            </Row>
+            {ctrl.space.isAdmin() && ctrl.space.isDraft && (
+              <Row className="gap-2 justify-end mb-4">
+                {ctrl.editing.get() ? (
+                  <>
+                    <Button variant="primary" onClick={ctrl.handleSave}>
+                      {t('btn_save')}
+                    </Button>
+                    <Button onClick={ctrl.handleDiscard}>
+                      {t('btn_discard')}
+                    </Button>
+                  </>
+                ) : (
+                  <Button onClick={ctrl.handleEdit}>{t('btn_edit')}</Button>
+                )}
+              </Row>
+            )}
 
             {ctrl.editing.get() ? (
               <SurveyEditor ctrl={ctrl} />
