@@ -4,21 +4,8 @@ import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { updateUser } from '@/lib/api/ratel/me.v3';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
-import { createContext, useContext, useState } from 'react';
-
-type ContextType = {
-  profileUrl: string;
-  handleProfileUrl: (profile: string) => void;
-  nickname: string;
-  handleNickname: (evt: React.FormEvent<HTMLInputElement>) => void;
-  htmlContents: string;
-  handleContents: (evt: React.FormEvent<HTMLTextAreaElement>) => void;
-  showWalletConnect: boolean;
-  handleShowWalletConnect: (walletConnect: boolean) => void;
-  handleSave: () => Promise<boolean>;
-};
-
-export const Context = createContext<ContextType | undefined>(undefined);
+import { useState } from 'react';
+import { SettingsContext } from './settings-context';
 
 export default function ClientProviders({
   children,
@@ -98,7 +85,7 @@ export default function ClientProviders({
     }
   };
   return (
-    <Context.Provider
+    <SettingsContext.Provider
       value={{
         profileUrl,
         handleProfileUrl,
@@ -112,16 +99,6 @@ export default function ClientProviders({
       }}
     >
       {children}
-    </Context.Provider>
+    </SettingsContext.Provider>
   );
-}
-
-export function useSettingsContext() {
-  const context = useContext(Context);
-  if (!context)
-    throw new Error(
-      'Context has not been provided. Please wrap your component with ClientProviders.',
-    );
-
-  return context;
 }
