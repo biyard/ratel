@@ -38,6 +38,7 @@ import AdminPage from './app/admin/page';
 import { MembershipsPage } from './app/admin/memberships/memberships-page';
 import TelegramPage from './app/telegram/page';
 import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
+import { MembershipsViewerPage } from './app/memberships/memberships-viewer-page';
 
 export const routes = createBrowserRouter([
   {
@@ -239,6 +240,13 @@ export const routes = createBrowserRouter([
         path: 'storybook',
         Component: StorybookPage,
       }, // End of StorybookPage
+
+      // Membership Routes
+      {
+        id: 'membership-page',
+        path: 'memberships',
+        Component: MembershipsViewerPage,
+      },
 
       // Admin Routes
       {
