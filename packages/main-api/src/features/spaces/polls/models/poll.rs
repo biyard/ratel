@@ -67,6 +67,36 @@ impl Poll {
         })
     }
 
+    pub async fn delete_one(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: &Partition,
+    ) -> crate::Result<()> {
+        let space_id = match space_pk {
+            Partition::Space(v) => v.to_string(),
+            _ => "".to_string(),
+        };
+
+        let poll = Poll::get(
+            &cli,
+            space_pk.clone(),
+            Some(EntityType::SpacePoll(space_id.clone())),
+        )
+        .await?;
+
+        if poll.is_none() {
+            return Ok(());
+        }
+
+        Poll::delete(
+            &cli,
+            &space_pk.clone(),
+            Some(EntityType::SpacePoll(space_id.clone())),
+        )
+        .await?;
+
+        Ok(())
+    }
+
     pub fn status(&self) -> PollStatus {
         let now = get_now_timestamp_millis();
         if now < self.started_at {
