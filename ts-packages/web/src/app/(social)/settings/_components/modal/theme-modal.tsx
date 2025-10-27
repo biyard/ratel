@@ -33,6 +33,7 @@ export default function ThemeModal({
         {options.map((opt) => (
           <button
             key={opt.value}
+            data-pw={`theme-option-${opt.value}`}
             onClick={() => {
               onPreview(opt.value);
               setSelectedTheme(opt.value);
@@ -52,12 +53,14 @@ export default function ThemeModal({
       {/* Footer */}
       <div className="flex flex-row justify-end gap-4 mt-4">
         <button
+          data-pw="theme-cancel-button"
           onClick={onCancel}
           className="px-10 py-[14.5px] bg-cancel-button-bg font-bold text-base text-cancel-button-text hover:text-cancel-button-text/80 transition-colors"
         >
           Cancel
         </button>
         <button
+          data-pw="theme-save-button"
           onClick={() => onSave(selectedTheme)}
           className="w-full py-[14.5px] font-bold text-base text-submit-button-text rounded-[10px] bg-submit-button-bg hover:bg-submit-button-bg/80"
         >

@@ -31,6 +31,7 @@ export default function LocaleModal({
           return (
             <button
               key={opt.value}
+              data-pw={`locale-option-${opt.value}`}
               onClick={() => setSelected(opt.value)}
               className={`flex items-center gap-3 w-full text-left px-3 py-3 rounded-[10px] transition-colors border ${isSelected ? ' border-neutral-400 light:border-primary light:bg-primary/10' : 'border-modal-card-border bg-modal-card-bg'}`}
             >
@@ -49,12 +50,14 @@ export default function LocaleModal({
 
       <div className="flex items-center justify-end gap-4 mt-6 px-5 pb-2">
         <button
+          data-pw="locale-cancel-button"
           onClick={onCancel}
           className="px-6 py-[12px] bg-cancel-button-bg font-bold text-base text-cancel-button-text hover:text-cancel-button-text/80 transition-colors"
         >
           {t('cancel')}
         </button>
         <button
+          data-pw="locale-save-button"
           onClick={() => onSave(selected)}
           className="px-8 py-[12px] font-bold text-base text-submit-button-text rounded-[10px] bg-submit-button-bg hover:bg-submit-button-bg/80"
         >

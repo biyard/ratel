@@ -197,6 +197,7 @@ export const ratelApi = {
       `/v3/users?type=phone-number&value=${phoneNumber}`,
 
     signup: () => '/v3/auth/signup',
+    // Deprecated V1 endpoints - use me.v3.ts functions instead
     editProfile: (user_id: number) => `/v1/users/${user_id}`,
     updateEvmAddress: () => '/v1/users',
 
