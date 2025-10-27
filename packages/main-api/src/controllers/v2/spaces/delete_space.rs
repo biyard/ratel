@@ -1,14 +1,25 @@
+use crate::{by_axum::auth::Authorization, utils::users::extract_user};
 use bdk::prelude::*;
-use by_axum::axum::{extract::{Path, State}, Extension, Json};
-use crate::by_axum::auth::Authorization;
+use by_axum::axum::{
+    Extension, Json,
+    extract::{Path, State},
+};
 use dto::{
     Discussion, DiscussionParticipant, Elearning, Error, Feed, GroupPermission, NoticeQuizAnswer,
-    NoticeQuizAttempt, Result, Space, SpaceComment, SpaceDeleteConfirmation, SpaceDraft, SpaceGroup,
-    SpaceLikeUser, SpaceMember, SpaceShareUser, sqlx::{Pool, Postgres},
+    NoticeQuizAttempt, Result, Space, SpaceComment, SpaceDeleteConfirmation, SpaceDraft,
+    SpaceGroup, SpaceLikeUser, SpaceMember, SpaceShareUser,
+    sqlx::{Pool, Postgres},
 };
 
 #[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, PartialEq, Default, aide::OperationIo, JsonSchema,
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    PartialEq,
+    Default,
+    aide::OperationIo,
+    JsonSchema,
 )]
 pub struct DeleteSpacePathParams {
     #[schemars(description = "Space ID")]
@@ -24,6 +35,7 @@ pub async fn delete_space_handler(
     Path(DeleteSpacePathParams { space_id }): Path<DeleteSpacePathParams>,
     Json(req): Json<SpaceDeleteConfirmation>,
 ) -> Result<Json<()>> {
+    let user = extract_user(&pool, auth.clone()).await.unwrap_or_default();
     // Fetch the space first
     let space = Space::query_builder(0)
         .id_equals(space_id)
@@ -44,7 +56,7 @@ pub async fn delete_space_handler(
     crate::security::check_perm(
         &pool,
         auth,
-        dto::RatelResource::Space { space_id },
+        dto::RatelResource::Space { team_id: user.id },
         GroupPermission::ManageSpace,
     )
     .await?;
@@ -73,7 +85,9 @@ pub async fn delete_space_handler(
                 .delete_with_tx(&mut *tx, participant.id)
                 .await?;
         }
-        discussion_repo.delete_with_tx(&mut *tx, discussion.id).await?;
+        discussion_repo
+            .delete_with_tx(&mut *tx, discussion.id)
+            .await?;
     }
 
     // Delete surveys and responses
@@ -109,7 +123,9 @@ pub async fn delete_space_handler(
         .await?;
     let elearning_repo = Elearning::get_repository(pool.clone());
     for elearning in elearnings {
-        elearning_repo.delete_with_tx(&mut *tx, elearning.id).await?;
+        elearning_repo
+            .delete_with_tx(&mut *tx, elearning.id)
+            .await?;
     }
 
     // Delete space members
@@ -121,7 +137,9 @@ pub async fn delete_space_handler(
         .await?;
     let space_member_repo = SpaceMember::get_repository(pool.clone());
     for member in members {
-        space_member_repo.delete_with_tx(&mut *tx, member.id).await?;
+        space_member_repo
+            .delete_with_tx(&mut *tx, member.id)
+            .await?;
     }
 
     // Delete drafts

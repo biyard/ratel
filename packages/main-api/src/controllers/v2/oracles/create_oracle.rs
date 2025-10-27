@@ -28,7 +28,7 @@ pub struct CreateOracleRequest {
     pub space_id: Option<i64>,
 }
 
-use crate::security::check_perm;
+use crate::{security::check_perm, utils::users::extract_user};
 
 pub async fn create_oracle_handler(
     Extension(auth): Extension<Option<Authorization>>,
@@ -43,6 +43,7 @@ pub async fn create_oracle_handler(
     //     GroupPermission::ManageOracles,
     // )
     // .await?;
+    let user = extract_user(&pool, auth.clone()).await.unwrap_or_default();
     let mut tx = pool.begin().await?;
     let oracle = Oracle::query_builder()
         .user_id_equals(req.user_id)
@@ -63,7 +64,7 @@ pub async fn create_oracle_handler(
         .ok_or(Error::ServerError("Failed to create oracle".to_string()))?;
 
     if req.space_id.is_some() {
-        let dagit = DagitWithoutJoin::query_builder()
+        let _dagit = DagitWithoutJoin::query_builder()
             .id_equals(req.space_id.unwrap())
             .query()
             .map(DagitWithoutJoin::from)
@@ -72,7 +73,7 @@ pub async fn create_oracle_handler(
         check_perm(
             &pool,
             auth,
-            RatelResource::Space { space_id: dagit.id },
+            RatelResource::Space { team_id: user.id },
             GroupPermission::ManageSpace,
         )
         .await?;

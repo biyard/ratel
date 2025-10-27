@@ -1,4 +1,7 @@
-use crate::{security::check_perm, utils::users::extract_user_id};
+use crate::{
+    security::check_perm,
+    utils::users::{extract_user, extract_user_id},
+};
 use bdk::prelude::*;
 use by_axum::{
     aide,
@@ -119,10 +122,14 @@ impl SprintLeagueController {
         auth: Option<Authorization>,
         param: SprintLeagueCreateRequest,
     ) -> Result<SprintLeague> {
+        let user = extract_user(&self.pool, auth.clone())
+            .await
+            .unwrap_or_default();
+
         check_perm(
             &self.pool,
             auth.clone(),
-            RatelResource::Space { space_id },
+            RatelResource::Space { team_id: user.id },
             GroupPermission::ManageSpace,
         )
         .await?;
@@ -251,6 +258,9 @@ impl SprintLeagueController {
         auth: Option<Authorization>,
         param: SprintLeaguePlayerUpdateRequest,
     ) -> Result<SprintLeaguePlayer> {
+        let user = extract_user(&self.pool, auth.clone())
+            .await
+            .unwrap_or_default();
         tracing::debug!(
             "Updating player: space_id={}, sprint_league_id={}, player_id={} param={:?}",
             space_id,
@@ -261,7 +271,7 @@ impl SprintLeagueController {
         check_perm(
             &self.pool,
             auth.clone(),
-            RatelResource::Space { space_id },
+            RatelResource::Space { team_id: user.id },
             GroupPermission::ManageSpace,
         )
         .await?;

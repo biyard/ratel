@@ -6,7 +6,7 @@ use dto::{
     sqlx::{Pool, Postgres, postgres::PgRow},
 };
 
-use crate::security::check_perm;
+use crate::{security::check_perm, utils::users::extract_user};
 
 #[derive(
     Debug,
@@ -44,10 +44,12 @@ pub async fn create_consensus_handler(
     Path(CreateConsensusPathParams { space_id }): Path<CreateConsensusPathParams>,
     Json(req): Json<CreateConsensusRequest>,
 ) -> Result<Json<Consensus>> {
+    let user = extract_user(&pool, auth.clone()).await.unwrap_or_default();
+
     check_perm(
         &pool,
         auth,
-        dto::RatelResource::Space { space_id },
+        dto::RatelResource::Space { team_id: user.id },
         GroupPermission::ManageSpace,
     )
     .await?;
