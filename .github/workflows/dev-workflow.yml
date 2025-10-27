@@ -128,7 +128,7 @@ jobs:
 
           BINANCE_API_KEY: ${{ secrets.DEV_BINANCE_API_KEY }}
           BINANCE_SECRET_KEY: ${{ secrets.DEV_BINANCE_SECRET_KEY }}
-          BINANCE_WEBHOOK: https://api.dev.ratel.foundation/v2/binances/webhooks
+          BINANCE_WEBHOOK: https://api.dev.ratel.foundation/v3/memberships/webhooks
           REDIRECT_DOMAIN: https://dev.ratel.foundation
 
           KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
@@ -326,7 +326,6 @@ jobs:
           path: ${{ github.workspace }}/dist.tar.gz
           if-no-files-found: error
           retention-days: 7
-
 
   ratel-storybook:
     runs-on: ubuntu-latest

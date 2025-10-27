@@ -4,7 +4,7 @@ ENV ?= local
 REDIRECT_DOMAIN ?= https://dev.ratel.foundation
 AUTH_DOMAIN ?= dev.ratel.foundation
 DOMAIN ?= dev.ratel.foundation
-BINANCE_WEBHOOK ?= https://dev.ratel.foundation/v2/binances/webhooks 
+BINANCE_WEBHOOK ?= https://dev.ratel.foundation/v3/memberships/webhooks 
 
 WORKSPACE_ROOT ?= $(PWD)/../..
 AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query "Account" --output text)

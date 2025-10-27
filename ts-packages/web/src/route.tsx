@@ -73,6 +73,9 @@ export const route = {
     }`;
   },
 
+  // Membership routes
+  membership: () => '/memberships',
+
   // Admin routes
   admin: () => '/admin',
   adminMemberships: () => '/admin/memberships',

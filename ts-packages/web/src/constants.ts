@@ -133,3 +133,4 @@ export const discussionKeys = {
 };
 
 export const QK_MEMBERSHIPS = 'memberships';
+export const QK_MY_MEMBERSHIPS = 'my_memberships';
