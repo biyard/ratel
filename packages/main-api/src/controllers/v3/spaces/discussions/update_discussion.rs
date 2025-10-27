@@ -9,7 +9,7 @@ use crate::features::spaces::discussions::models::space_discussion_participant::
 };
 use crate::models::{SpaceCommon, User};
 use crate::types::{EntityType, Partition, TeamGroupPermission};
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 use axum::extract::{Json, Path, State};
 use bdk::prelude::aide::NoApi;
 use bdk::prelude::*;
@@ -22,9 +22,9 @@ pub async fn update_discussion_handler(
         discussion_pk,
     }): SpaceDiscussionPath,
     Json(req): Json<SpaceDiscussionRequest>,
-) -> Result<Json<UpdateDiscussionResponse>, Error2> {
+) -> Result<Json<UpdateDiscussionResponse>, Error> {
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundSpace);
+        return Err(Error::NotFoundSpace);
     }
 
     let (pk, sk) = SpaceDiscussion::keys(&space_pk, &discussion_pk);
@@ -37,7 +37,7 @@ pub async fn update_discussion_handler(
     )
     .await?;
     if !has_perm {
-        return Err(Error2::NoPermission);
+        return Err(Error::NoPermission);
     }
 
     let _discussion =
@@ -109,7 +109,7 @@ pub async fn update_discussion_handler(
     for member in req.user_ids {
         let user = User::get(&dynamo.client, member, Some(EntityType::User))
             .await?
-            .ok_or(Error2::NotFound("User not found".into()))?;
+            .ok_or(Error::NotFound("User not found".into()))?;
 
         let m =
             SpaceDiscussionMember::new(discussion_pk.clone(), user).create_transact_write_item();
@@ -125,7 +125,7 @@ pub async fn update_discussion_handler(
                 .await
                 .map_err(|e| {
                     tracing::error!("Failed to update discussion: {:?}", e);
-                    Error2::InternalServerError("Failed to update discussion".into())
+                    Error::InternalServerError("Failed to update discussion".into())
                 })?;
 
             tx.clear();
@@ -141,7 +141,7 @@ pub async fn update_discussion_handler(
             .await
             .map_err(|e| {
                 tracing::error!("Failed to update discussion: {:?}", e);
-                Error2::InternalServerError("Failed to update discussion".into())
+                Error::InternalServerError("Failed to update discussion".into())
             })?;
     }
 

@@ -10,7 +10,7 @@ pub struct LogoutResponse {
 
 pub async fn logout_handler(
     Extension(session): Extension<tower_sessions::Session>,
-) -> Result<Json<LogoutResponse>, crate::Error2> {
+) -> Result<Json<LogoutResponse>, crate::Error> {
     tracing::debug!("Logging out session: {:?}", session.id());
     let _ = session.flush().await?;
 

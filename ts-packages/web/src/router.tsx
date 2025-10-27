@@ -37,6 +37,7 @@ import DiscussionPage from './app/spaces/[id]/discussions/[discussion-id]/discus
 import AdminPage from './app/admin/page';
 import { MembershipsPage } from './app/admin/memberships/memberships-page';
 import TelegramPage from './app/telegram/page';
+import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
 
 export const routes = createBrowserRouter([
   {
@@ -178,6 +179,18 @@ export const routes = createBrowserRouter([
               },
             ],
           }, // End of Poll Feature
+          // Space Analyze Feature
+          {
+            id: 'space-poll-analyze-feature',
+            path: 'polls',
+            children: [
+              {
+                id: 'poll-analyze-by-id',
+                path: ':pollPk/analyzes',
+                Component: SpaceAnalyzePage,
+              },
+            ],
+          }, // End of Analyze Feature
           // Space Discussion Feature
           {
             id: 'space-discussion',

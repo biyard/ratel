@@ -15,7 +15,7 @@ pub struct GetSuggestionsResponse {
 
 pub async fn get_suggestions_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-) -> Result<Json<GetSuggestionsResponse>, crate::Error2> {
+) -> Result<Json<GetSuggestionsResponse>, crate::Error> {
     let (users, _) = User::find_by_follwers(
         &dynamo.client,
         EntityType::User.to_string(),

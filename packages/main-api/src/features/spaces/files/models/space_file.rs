@@ -22,4 +22,19 @@ impl SpaceFile {
     pub fn keys(space_pk: &Partition) -> (Partition, EntityType) {
         (space_pk.clone(), EntityType::SpaceFile)
     }
+
+    pub async fn delete_one(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: &Partition,
+    ) -> crate::Result<()> {
+        let file = SpaceFile::get(&cli, space_pk.clone(), Some(EntityType::SpaceFile)).await?;
+
+        if file.is_none() {
+            return Ok(());
+        }
+
+        SpaceFile::delete(&cli, &space_pk.clone(), Some(EntityType::SpaceFile)).await?;
+
+        Ok(())
+    }
 }

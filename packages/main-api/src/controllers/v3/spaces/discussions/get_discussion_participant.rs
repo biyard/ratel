@@ -1,12 +1,13 @@
 use crate::controllers::v3::spaces::SpaceDiscussionPath;
 use crate::controllers::v3::spaces::SpaceDiscussionPathParam;
+use crate::features::spaces::discussions::dto::ListDiscussionQueryParams;
 use crate::features::spaces::discussions::dto::SpaceDiscussionParticipantResponse;
 use crate::features::spaces::discussions::models::space_discussion_participant::SpaceDiscussionParticipant;
 use crate::features::spaces::discussions::models::space_discussion_participant::SpaceDiscussionParticipantQueryOption;
 use crate::types::Partition;
-use crate::{AppState, Error2, models::user::User};
+use crate::{AppState, Error, models::user::User};
 use aide::NoApi;
-use bdk::prelude::axum::extract::{Json, Path, State};
+use bdk::prelude::axum::extract::{Json, Path, Query, State};
 use bdk::prelude::*;
 
 pub async fn get_discussion_participants_handler(
@@ -16,28 +17,24 @@ pub async fn get_discussion_participants_handler(
         space_pk,
         discussion_pk,
     }): SpaceDiscussionPath,
-) -> Result<Json<Vec<SpaceDiscussionParticipantResponse>>, Error2> {
+    Query(ListDiscussionQueryParams { mut bookmark }): Query<ListDiscussionQueryParams>,
+) -> Result<Json<Vec<SpaceDiscussionParticipantResponse>>, Error> {
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error2::NotFoundSpace);
+        return Err(Error::NotFoundSpace);
     }
 
     let mut participants: Vec<SpaceDiscussionParticipantResponse> = vec![];
-    let mut bookmark = None::<String>;
 
     loop {
-        let (responses, new_bookmark) = SpaceDiscussionParticipant::query(
-            &dynamo.client,
-            discussion_pk.clone(),
-            if let Some(b) = &bookmark {
-                SpaceDiscussionParticipantQueryOption::builder()
-                    .sk("SPACE_DISCUSSION_PARTICIPANT#".into())
-                    .bookmark(b.clone())
-            } else {
-                SpaceDiscussionParticipantQueryOption::builder()
-                    .sk("SPACE_DISCUSSION_PARTICIPANT#".into())
-            },
-        )
-        .await?;
+        let mut opt = SpaceDiscussionParticipantQueryOption::builder()
+            .sk("SPACE_DISCUSSION_PARTICIPANT#".into());
+
+        if let Some(b) = &bookmark {
+            opt = opt.bookmark(b.clone())
+        }
+
+        let (responses, new_bookmark) =
+            SpaceDiscussionParticipant::query(&dynamo.client, discussion_pk.clone(), opt).await?;
 
         for response in responses {
             participants.push(response.into());

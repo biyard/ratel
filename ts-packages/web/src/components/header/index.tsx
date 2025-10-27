@@ -132,7 +132,7 @@ export default function Header(props: HeaderProps) {
       authorized: false,
     },
     {
-      name: 'Stroybook',
+      name: 'Storybook',
       icon: (
         <InternetIcon
           className="group-hover:[&>path]:stroke-white group-hover:[&>circle]:stroke-white transition-all"

@@ -1,5 +1,5 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     models::{feed::Post, user::User},
     types::{EntityType, Partition},
 };
@@ -25,7 +25,7 @@ pub async fn delete_post_handler(
     NoApi(user): NoApi<User>,
     Query(DeletePostParams { force }): Query<DeletePostParams>,
     Path(super::dto::PostPathParam { post_pk }): super::dto::PostPath,
-) -> Result<Json<Post>, Error2> {
+) -> Result<Json<Post>, Error> {
     let cli = &dynamo.client;
 
     if !Post::has_permission(
@@ -37,7 +37,7 @@ pub async fn delete_post_handler(
     .await?
     .1
     {
-        return Err(Error2::NoPermission);
+        return Err(Error::NoPermission);
     }
 
     // TODO: Check dependancies
@@ -49,7 +49,7 @@ pub async fn delete_post_handler(
         // TODO: delete all dependancies
         tracing::warn!("Force delete is not implemented yet");
     } else if !dependancies.is_empty() {
-        return Err(Error2::HasDependencies(dependancies));
+        return Err(Error::HasDependencies(dependancies));
     }
 
     let post = Post::delete(cli, post_pk, Some(EntityType::Post)).await?;

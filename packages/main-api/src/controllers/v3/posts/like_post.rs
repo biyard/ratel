@@ -1,6 +1,6 @@
 use crate::models::feed::Post;
 use crate::models::user::User;
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 use aide::NoApi;
 use bdk::prelude::*;
 use by_axum::axum::extract::{Json, Path, State};
@@ -21,7 +21,7 @@ pub async fn like_post_handler(
     NoApi(User { pk: user_pk, .. }): NoApi<User>,
     Path(super::dto::PostPathParam { post_pk }): super::dto::PostPath,
     Json(req): Json<LikePostRequest>,
-) -> Result<Json<LikePostResponse>, Error2> {
+) -> Result<Json<LikePostResponse>, Error> {
     let cli = &dynamo.client;
 
     if req.like {

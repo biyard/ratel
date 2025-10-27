@@ -1,13 +1,11 @@
-'use client';
 import { Input } from '@/components/ui/input';
 import {
   Select,
-  SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@radix-ui/react-select';
-import { TFunction } from 'i18next';
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select';
 
 import { PollQuestion } from '@/features/spaces/polls/types/poll-question';
 import { I18nFunction } from '..';
@@ -56,7 +54,7 @@ export default function LinearScaleQuestionEditor({
             }
           }}
         >
-          <SelectTrigger className="w-full max-w-70">
+          <SelectTrigger className="w-full h-[50px] max-w-30">
             <SelectValue placeholder={t('dropdown_select_placeholder')} />
           </SelectTrigger>
           <SelectContent>
