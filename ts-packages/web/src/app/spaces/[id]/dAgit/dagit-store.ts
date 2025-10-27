@@ -9,7 +9,7 @@ export const Tab = {
   Artwork: 2,
 } as const;
 
-export type Tab = typeof Tab[keyof typeof Tab];
+export type Tab = (typeof Tab)[keyof typeof Tab];
 
 type DagitState = {
   artworks: Artwork[];

@@ -15,7 +15,7 @@ export const PublishType = {
   Public: 'public',
 } as const;
 
-export type PublishType = typeof PublishType[keyof typeof PublishType];
+export type PublishType = (typeof PublishType)[keyof typeof PublishType];
 
 export const openModal = (
   popup: ReturnType<typeof usePopup>,

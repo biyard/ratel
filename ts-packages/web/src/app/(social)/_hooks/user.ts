@@ -1,5 +1,9 @@
 import { QK_USERS_GET_INFO } from '@/constants';
-import { QueryClient, useQuery, type UseQueryResult } from '@tanstack/react-query';
+import {
+  QueryClient,
+  useQuery,
+  type UseQueryResult,
+} from '@tanstack/react-query';
 
 import { getUserInfo, type UserResponse } from '@/lib/api/ratel/me.v3';
 

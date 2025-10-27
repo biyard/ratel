@@ -7,7 +7,6 @@ import type { Badge } from '@/lib/api/models/badge';
 import Loading from '@/app/loading';
 import RoundCheckIcon from '@/components/round-checkicon';
 
-
 interface NftSelectModalProps {
   id?: string;
   badges: Badge[];

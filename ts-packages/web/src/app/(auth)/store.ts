@@ -4,7 +4,7 @@ export const Service = {
   Telegram: 'Telegram',
 } as const;
 
-export type Service = typeof Service[keyof typeof Service];
+export type Service = (typeof Service)[keyof typeof Service];
 
 interface State {
   redirectUrl?: string;

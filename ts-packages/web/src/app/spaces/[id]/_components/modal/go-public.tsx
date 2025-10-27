@@ -17,10 +17,7 @@ export default function GoPublicPopup({
       </div>
 
       <div className="text-center font-medium text-desc-text text-base">
-        <Trans
-          i18nKey="make_public_desc_line1"
-          ns="Space"
-        />
+        <Trans i18nKey="make_public_desc_line1" ns="Space" />
         <br />
         <Trans
           i18nKey="make_public_desc_line2"

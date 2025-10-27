@@ -27,4 +27,4 @@ export const FileType = {
   PPTX: 'pptx',
 } as const;
 
-export type FileType = typeof FileType[keyof typeof FileType];
+export type FileType = (typeof FileType)[keyof typeof FileType];
