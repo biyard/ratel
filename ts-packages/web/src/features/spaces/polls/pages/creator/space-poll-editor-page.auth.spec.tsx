@@ -1,165 +1,194 @@
 import { test, expect } from '@playwright/test';
 import { CONFIGS } from '@tests/config';
+import { click, fill } from '@tests/utils';
 
-test.describe('[SpacePollEditorPage] Authenticated Users', () => {
-  // Note: These tests verify the behavior of the poll editor page for authenticated users
-  // who have admin access to a space. The response_editable checkbox should only be
-  // visible to space admins.
+test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
+  let context: import('@playwright/test').BrowserContext;
+  let page: import('@playwright/test').Page;
 
-  test('[SPEP-001] Authenticated user can access the application', async ({
-    page,
-  }) => {
-    // This test verifies that authenticated user can access the app
-    // The storage state from user.json should provide authentication
+  let threadUrl = '';
+  let spaceUrl = '';
+  let pollUrl = '';
 
-    // Navigate to home as authenticated user
+  async function navigateToPoll() {
+    await page.goto(pollUrl);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
+  }
+
+  test.beforeAll('Create a post and poll space', async ({ browser }) => {
+    context = await browser.newContext({ storageState: 'user.json' });
+    page = await context.newPage();
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    // Verify the page loaded successfully for authenticated user
-    // The baseURL should be accessible
     const currentUrl = page.url();
     expect(currentUrl).toBeTruthy();
     expect(currentUrl).toContain(CONFIGS.PLAYWRIGHT.BASE_URL);
+
+    const testTitle = 'Automated Post for Poll Editor Feature';
+    const testContent =
+      'This is an automated post content created by Playwright E2E for verifying poll editor functionality. ' +
+      'The purpose of this is to verify that the poll space creation, question editing, and admin features ' +
+      'work correctly from end to end. This content is intentionally long to meet the minimum character ' +
+      'requirements for post publishing. We will verify creating a poll space, editing questions, toggling ' +
+      'response_editable, and saving changes.';
+
+    await click(page, { text: 'Create Post' });
+    await fill(page, { placeholder: 'Write a title...' }, testTitle);
+    await fill(page, { label: 'general-post-editor' }, testContent);
+
+    await click(page, { label: 'Publish' });
+
+    await page.waitForURL(/\/threads\/.+/, { timeout: 15000 });
+    threadUrl = page.url();
   });
 
-  test('[SPEP-002] Checkbox toggle sends correct API request format', async ({
-    page,
-  }) => {
-    // This test verifies the API call structure when toggling the checkbox
-    // We'll intercept any PUT requests to poll endpoints
+  test('[SPEP-001] Create a Poll Space', async () => {
+    await page.goto(threadUrl);
+    await page.waitForTimeout(3000);
 
-    let capturedRequest: any = null;
-
-    await page.route('**/v3/spaces/*/polls/*', (route) => {
-      if (route.request().method() === 'PUT') {
-        capturedRequest = {
-          url: route.request().url(),
-          body: route.request().postDataJSON(),
-          method: route.request().method(),
-        };
-        // Continue with the request
-        route.continue();
-      } else {
-        route.continue();
-      }
-    });
-
-    // Navigate to home page
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-
-    // The checkbox should send a PUT request with response_editable field
-    // We verify the structure is correct
-    expect(true).toBeTruthy(); // Basic test to ensure route interception is set up
-
-    await page.unroute('**/v3/spaces/*/polls/*');
-  });
-
-  test('[SPEP-003] Response editable checkbox has correct data-pw attribute', async ({
-    page,
-  }) => {
-    // This test verifies that the checkbox element has the correct data-pw attribute
-    // for test automation purposes
-
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-
-    // The selector should be available in the page's JavaScript
-    // Even if not visible (due to not being admin), the selector pattern is valid
-    const checkboxSelector = '[data-pw="response-editable-checkbox"]';
-    const selectorPattern = /data-pw="response-editable-checkbox"/;
-
-    expect(checkboxSelector).toMatch(selectorPattern);
-  });
-
-  test('[SPEP-004] Poll editor page supports Edit button for admins', async ({
-    page,
-  }) => {
-    // Verify that the Edit button pattern exists in the application
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
-
-    // The button text should be defined in i18n
-    const editButtonText = 'Edit';
-    const saveButtonText = 'Save';
-    const discardButtonText = 'Discard';
-
-    // These are the expected button labels from i18n
-    expect(editButtonText).toBe('Edit');
-    expect(saveButtonText).toBe('Save');
-    expect(discardButtonText).toBe('Discard');
-  });
-
-  test('[SPEP-005] API endpoint structure is correct for response_editable update', async ({
-    page,
-  }) => {
-    // Verify the API endpoint pattern matches expected format
-    const testSpacePk = 'SPACE#test';
-    const testPollSk = 'POLL#test';
-    const expectedEndpoint = `/v3/spaces/${encodeURIComponent(testSpacePk)}/polls/${encodeURIComponent(testPollSk)}`;
-
-    // Verify the endpoint format is correct
-    expect(expectedEndpoint).toContain('/v3/spaces/');
-    expect(expectedEndpoint).toContain('/polls/');
-    expect(expectedEndpoint).toBe('/v3/spaces/SPACE%23test/polls/POLL%23test');
-  });
-
-  test('[SPEP-006] Verify response_editable field structure', async ({
-    page,
-  }) => {
-    // Test that the expected request body structure is correct
-    const requestBody = {
-      response_editable: true,
-    };
-
-    expect(requestBody).toHaveProperty('response_editable');
-    expect(typeof requestBody.response_editable).toBe('boolean');
-
-    // Test with false value
-    const requestBodyFalse = {
-      response_editable: false,
-    };
-
-    expect(requestBodyFalse.response_editable).toBe(false);
-  });
-
-  test('[SPEP-007] Checkbox label text matches i18n definitions', async ({
-    page,
-  }) => {
-    // Verify the i18n text is correctly defined
-    const expectedLabel = 'Allow users to edit their responses';
-    const expectedDescription =
-      'When enabled, users can modify their poll responses after submission';
-
-    expect(expectedLabel).toBe('Allow users to edit their responses');
-    expect(expectedDescription).toBe(
-      'When enabled, users can modify their poll responses after submission',
+    await expect(page.getByText('Create a Space', { exact: true })).toBeVisible(
+      { timeout: 20000 },
     );
+    await page.getByText('Create a Space', { exact: true }).click();
+
+    const modal = page.getByRole('dialog', { name: 'Select a Space Type' });
+    await modal.locator('div.cursor-pointer', { hasText: 'Poll' }).click();
+
+    await modal.getByRole('button', { name: 'Create' }).click();
+
+    await page.waitForURL(/\/spaces\/[^/]+(?:\?.*)?$/, { timeout: 15000 });
+
+    spaceUrl = page.url();
   });
 
-  test('[SPEP-008] Time range setting component is available for admins', async ({
-    page,
-  }) => {
-    // Verify that time range settings are part of the page structure
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+  test('[SPEP-002] Navigate to Poll editor page', async () => {
+    await page.goto(spaceUrl);
+    await page.waitForTimeout(5000);
 
-    // The TimeRangeSetting component should be imported and available
-    // This is a structural test to ensure the component exists in the codebase
-    expect(true).toBeTruthy();
+    // Extract space ID and construct poll URL
+    const urlParts = spaceUrl.split('/');
+    const spaceId = urlParts[urlParts.length - 1].split('?')[0];
+    const pollPk = `SPACE_POLL#${decodeURIComponent(spaceId).split('#')[1]}`;
+    pollUrl = `/spaces/${encodeURIComponent(spaceId)}/polls/${encodeURIComponent(pollPk)}`;
+
+    // Navigate to poll page
+    await navigateToPoll();
+
+    const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
+    await expect(editButton).toBeVisible({ timeout: 10000 });
   });
 
-  test('[SPEP-009] Poll editor controller handles checkbox state correctly', async ({
-    page,
-  }) => {
-    // This test verifies the controller logic is sound
-    // The onChangeResponseEditable method should accept a boolean parameter
+  test('[SPEP-003] Response editable checkbox is visible for admin', async () => {
+    await navigateToPoll();
 
-    const testBoolean = true;
-    const toggledBoolean = !testBoolean;
+    const checkbox = page.locator('[data-pw="response-editable-checkbox"]');
+    await expect(checkbox).toBeVisible({ timeout: 5000 });
+  });
 
-    expect(toggledBoolean).toBe(false);
-    expect(!toggledBoolean).toBe(true);
+  test('[SPEP-004] Response_editable checkbox is visible and clickable', async () => {
+    await navigateToPoll();
+
+    const checkbox = page.locator('[data-pw="response-editable-checkbox"]');
+    await expect(checkbox).toBeVisible({ timeout: 5000 });
+
+    // Verify checkbox is enabled and clickable
+    await expect(checkbox).toBeEnabled();
+
+    // Just verify we can click it without error
+    await checkbox.click();
+    await page.waitForTimeout(500);
+  });
+
+  test('[SPEP-005] Enter edit mode by clicking Edit button', async () => {
+    await navigateToPoll();
+
+    const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
+    await expect(editButton).toBeVisible({ timeout: 5000 });
+    await editButton.click();
+
+    const saveButton = page.locator('[data-pw="poll-editor-save-btn"]');
+    const discardButton = page.locator('[data-pw="poll-editor-discard-btn"]');
+
+    await expect(saveButton).toBeVisible({ timeout: 5000 });
+    await expect(discardButton).toBeVisible({ timeout: 5000 });
+    await expect(editButton).not.toBeVisible();
+  });
+
+  test('[SPEP-006] Add a new question in edit mode', async () => {
+    await navigateToPoll();
+
+    const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
+    await editButton.click();
+    await page.waitForTimeout(1000);
+
+    const addQuestionBtn = page.locator('[data-pw="survey-add-question-btn"]');
+    const isAddQuestionVisible = await addQuestionBtn
+      .isVisible({ timeout: 3000 })
+      .catch(() => false);
+
+    if (isAddQuestionVisible) {
+      await addQuestionBtn.click();
+      await page.waitForTimeout(1000);
+
+      const hasQuestionEditor = await page
+        .locator('.flex.flex-col')
+        .first()
+        .isVisible();
+      expect(hasQuestionEditor).toBe(true);
+    }
+  });
+
+  test('[SPEP-007] Save changes in edit mode', async () => {
+    await navigateToPoll();
+
+    const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
+    await editButton.click();
+    await page.waitForTimeout(1000);
+
+    const saveButton = page.locator('[data-pw="poll-editor-save-btn"]');
+    await saveButton.click();
+    await page.waitForTimeout(2000);
+
+    await expect(editButton).toBeVisible({ timeout: 5000 });
+  });
+
+  test('[SPEP-008] Discard changes in edit mode', async () => {
+    await navigateToPoll();
+
+    const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
+    await editButton.click();
+    await page.waitForTimeout(1000);
+
+    const discardButton = page.locator('[data-pw="poll-editor-discard-btn"]');
+    await discardButton.click();
+    await page.waitForTimeout(1000);
+
+    await expect(editButton).toBeVisible({ timeout: 5000 });
+  });
+
+  test('[SPEP-009] Edit and Save workflow completes successfully', async () => {
+    await navigateToPoll();
+
+    const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
+    await editButton.click();
+    await page.waitForTimeout(1000);
+
+    const addQuestionBtn = page.locator('[data-pw="survey-add-question-btn"]');
+    const canAddQuestion = await addQuestionBtn
+      .isVisible({ timeout: 2000 })
+      .catch(() => false);
+
+    if (canAddQuestion) {
+      await addQuestionBtn.click();
+      await page.waitForTimeout(1000);
+    }
+
+    const saveButton = page.locator('[data-pw="poll-editor-save-btn"]');
+    await saveButton.click();
+    await page.waitForTimeout(2000);
+
+    await expect(editButton).toBeVisible({ timeout: 5000 });
   });
 });

@@ -52,15 +52,27 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
             <Row className="gap-2 justify-end mb-4">
               {ctrl.editing.get() ? (
                 <>
-                  <Button variant="primary" onClick={ctrl.handleSave}>
+                  <Button
+                    variant="primary"
+                    onClick={ctrl.handleSave}
+                    data-pw="poll-editor-save-btn"
+                  >
                     {t('btn_save')}
                   </Button>
-                  <Button onClick={ctrl.handleDiscard}>
+                  <Button
+                    onClick={ctrl.handleDiscard}
+                    data-pw="poll-editor-discard-btn"
+                  >
                     {t('btn_discard')}
                   </Button>
                 </>
               ) : (
-                <Button onClick={ctrl.handleEdit}>{t('btn_edit')}</Button>
+                <Button
+                  onClick={ctrl.handleEdit}
+                  data-pw="poll-editor-edit-btn"
+                >
+                  {t('btn_edit')}
+                </Button>
               )}
             </Row>
 

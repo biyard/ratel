@@ -17,7 +17,7 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
 
   if (ctrl.user && ctrl.poll.myResponse.length === 0) {
     button = (
-      <Button onClick={ctrl.handleSubmit}>
+      <Button onClick={ctrl.handleSubmit} data-pw="poll-viewer-submit-btn">
         {ctrl.t('SpacePollViewer:btn_submit')}
       </Button>
     );
@@ -27,13 +27,13 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
     ctrl.poll.response_editable
   ) {
     button = (
-      <Button onClick={ctrl.handleSubmit}>
+      <Button onClick={ctrl.handleSubmit} data-pw="poll-viewer-update-btn">
         {ctrl.t('SpacePollViewer:btn_update')}
       </Button>
     );
   } else if (!ctrl.user) {
     button = (
-      <Button onClick={ctrl.handleLogin}>
+      <Button onClick={ctrl.handleLogin} data-pw="poll-viewer-login-btn">
         {ctrl.t('SpacePollViewer:btn_login')}
       </Button>
     );
