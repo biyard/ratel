@@ -33,9 +33,8 @@ export default function MembershipPriceCard({
 
         <div className="mt-3 flex items-baseline gap-2">
           <span className="text-3xl font-extrabold">${price}</span>
-          {/* <span className="text-base font-medium opacity-80">/mo</span> */}
+          <span className="text-base font-medium opacity-80">/mo</span>
         </div>
-        {/* <div className="mt-1 text-xs opacity-70">billed yearly</div> */}
 
         <ul className="mt-6 space-y-3 text-sm/6">
           {features.map((f, i) => (
