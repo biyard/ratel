@@ -1,5 +1,6 @@
 use crate::features::membership::dto::*;
 
+use crate::features::binances::{PurchaseMembershipResponse, create_binance_subscription};
 use crate::{AppState, Error, features::membership::*, models::user::User, types::*};
 use aide::NoApi;
 use axum::{Json, extract::State};
@@ -10,7 +11,7 @@ pub async fn purchase_membership_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Json(req): Json<PurchaseMembershipRequest>,
-) -> Result<Json<UserMembershipResponse>, Error> {
+) -> Result<Json<PurchaseMembershipResponse>, Error> {
     let cli = &dynamo.client;
 
     let user = user.ok_or(Error::NoUserFound)?;
@@ -42,21 +43,23 @@ pub async fn purchase_membership_handler(
         }
     }
 
+    let membership = create_binance_subscription(user.pk, membership).await?;
+
     // Create user membership
-    let mut user_membership = UserMembership::new(
-        user.pk.clone(),
-        membership_pk,
-        membership.duration_days,
-        membership.credits,
-        membership.price_dollars,
-    )?;
+    // let mut user_membership = UserMembership::new(
+    //     user.pk.clone(),
+    //     membership_pk,
+    //     membership.duration_days,
+    //     membership.credits,
+    //     membership.price_dollars,
+    // )?;
 
-    // Set transaction details if provided
-    if let Some(transaction_id) = req.transaction_id {
-        user_membership.transaction_id = Some(transaction_id);
-    }
+    // // Set transaction details if provided
+    // if let Some(transaction_id) = req.transaction_id {
+    //     user_membership.transaction_id = Some(transaction_id);
+    // }
 
-    user_membership.create(cli).await?;
+    // user_membership.create(cli).await?;
 
-    Ok(Json(user_membership.into()))
+    Ok(Json(membership))
 }

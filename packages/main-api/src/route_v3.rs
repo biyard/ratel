@@ -189,6 +189,7 @@ pub fn route(
                 .route("/multiparts", get(get_put_multi_object_uri))
                 .route("/multiparts/complete", post(complete_multipart_upload)),
         )
+        .nest("/memberships", crate::controllers::v3::memberships::route())
         .with_state(AppState {
             dynamo: dynamo_client,
             ses: ses_client,
