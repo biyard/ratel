@@ -5,9 +5,13 @@ import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { ParsedResult } from './models/parsed';
 
-const COLORS = ['#a1a1a1', '#737373'];
-
-export default function PieChartResponse({ parsed }: { parsed: ParsedResult }) {
+export default function PieChartResponse({
+  parsed,
+  colors,
+}: {
+  parsed: ParsedResult;
+  colors: string[];
+}) {
   const { options } = parsed;
 
   const renderCustomizedLabel = ({
@@ -80,7 +84,7 @@ export default function PieChartResponse({ parsed }: { parsed: ParsedResult }) {
             {options.map((_, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
+                fill={colors[index % colors.length]}
               />
             ))}
           </Pie>
