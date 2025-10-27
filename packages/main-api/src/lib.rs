@@ -1,7 +1,5 @@
 pub type Result<T> = std::result::Result<T, crate::error::Error>;
-// pub type Error = dto::Error;
 pub type Error = crate::error::Error;
-pub type Error2 = crate::error::Error;
 
 pub mod api_main;
 pub mod config;

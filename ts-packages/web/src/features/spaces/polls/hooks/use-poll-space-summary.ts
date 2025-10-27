@@ -9,11 +9,11 @@ import {
 } from '@/lib/api/ratel/poll.spaces.v3';
 import { spaceKeys } from '@/constants';
 
-export function getOption(spacePk: string, pollSk: string = 'default') {
+export function getOption(spacePk: string, pollSk: string) {
   return {
     queryKey: spaceKeys.poll_summary(spacePk, pollSk),
     queryFn: async () => {
-      const post = await getPollSurveySummaries(spacePk);
+      const post = await getPollSurveySummaries(spacePk, pollSk);
       return post;
     },
     refetchOnWindowFocus: false,
@@ -22,7 +22,8 @@ export function getOption(spacePk: string, pollSk: string = 'default') {
 
 export default function usePollSpaceSummaries(
   spacePk: string,
+  pollSk: string,
 ): UseSuspenseQueryResult<PollSurveySummariesResponse> {
-  const query = useSuspenseQuery(getOption(spacePk));
+  const query = useSuspenseQuery(getOption(spacePk, pollSk));
   return query;
 }

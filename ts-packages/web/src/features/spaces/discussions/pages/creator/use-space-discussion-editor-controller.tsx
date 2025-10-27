@@ -137,7 +137,7 @@ export function useSpaceDiscussionEditorController(spacePk: string) {
   useEffect(() => {
     discussions[1](discussion?.discussions ?? []);
     bookmark[1](discussion?.bookmark ?? null);
-  }, [discussionsKey, discussion?.bookmark]);
+  }, [discussionsKey, discussion?.bookmark, discussion?.discussions]);
 
   return new SpaceDiscussionEditorController(
     spacePk,

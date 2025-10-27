@@ -1,5 +1,5 @@
 use crate::features::membership::dto::*;
-use crate::{AppState, Error2, features::membership::*, types::*};
+use crate::{AppState, Error, features::membership::*, types::*};
 use axum::{
     Json,
     extract::{Path, State},
@@ -11,7 +11,7 @@ pub async fn update_membership_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Path(MembershipPathParam { membership_id }): Path<MembershipPathParam>,
     Json(req): Json<UpdateMembershipRequest>,
-) -> Result<Json<MembershipResponse>, Error2> {
+) -> Result<Json<MembershipResponse>, Error> {
     let cli = &dynamo.client;
 
     let pk = Partition::Membership(membership_id);

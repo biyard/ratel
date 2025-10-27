@@ -36,6 +36,10 @@ export function publishSpace(
   });
 }
 
+export function deleteSpace(spacePk: string): Promise<void> {
+  return call('DELETE', `/v3/spaces/${encodeURIComponent(spacePk)}`);
+}
+
 export function updateSpaceVisibility(
   spacePk: string,
   visibility: SpaceVisibility,

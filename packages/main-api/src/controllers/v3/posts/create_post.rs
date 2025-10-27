@@ -1,6 +1,6 @@
 #![allow(warnings)]
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     models::{feed::Post, team::Team, user::User},
     types::{Partition, TeamGroupPermission, author::Author},
 };
@@ -23,7 +23,7 @@ pub async fn create_post_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
     req: Option<Json<CreatePostRequest>>,
-) -> Result<Json<CreatePostResponse>, Error2> {
+) -> Result<Json<CreatePostResponse>, Error> {
     tracing::info!("create_post_handler {:?}", req);
     let cli = &dynamo.client;
     let author: Author = if let Some(Json(CreatePostRequest { team_pk })) = req {
