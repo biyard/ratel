@@ -13,6 +13,24 @@ import BarChartResponse from '../charts/bar-chart-response';
 import PieChartResponse from '../charts/pie-chart-response';
 import { useTranslations } from 'next-intl';
 
+const colors = [
+  '#f97316',
+  '#22c55e',
+  '#6366f1',
+  '#274c9d',
+  '#2959c1',
+  '#2853af',
+];
+
+function shuffle<T>(arr: T[]): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
 function parseObjectiveAnswers(
   question:
     | SingleChoiceQuestion
@@ -88,6 +106,7 @@ export default function ObjectiveResponse({
     | LinearScaleQuestion;
   answers: Answer[];
 }) {
+  const shuffledColors = shuffle(colors);
   const t = useTranslations('PollSpace');
   const parsed = parseObjectiveAnswers(question, answers);
   const validAnswers = answers
@@ -106,8 +125,14 @@ export default function ObjectiveResponse({
       </div>
       {validAnswers.length != 0 && (
         <div className="flex flex-col gap-3">
-          <BarChartResponse parsed={{ question, ...parsed }} />
-          <PieChartResponse parsed={{ question, ...parsed }} />
+          <BarChartResponse
+            parsed={{ question, ...parsed }}
+            colors={shuffledColors}
+          />
+          <PieChartResponse
+            parsed={{ question, ...parsed }}
+            colors={shuffledColors}
+          />
         </div>
       )}
     </div>

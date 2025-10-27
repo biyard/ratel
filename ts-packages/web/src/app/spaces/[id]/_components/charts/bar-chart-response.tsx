@@ -3,7 +3,13 @@
 import React from 'react';
 import { ParsedResult } from './models/parsed';
 
-export default function BarChartResponse({ parsed }: { parsed: ParsedResult }) {
+export default function BarChartResponse({
+  parsed,
+  colors,
+}: {
+  parsed: ParsedResult;
+  colors: string[];
+}) {
   const { options } = parsed;
 
   return (
@@ -16,10 +22,13 @@ export default function BarChartResponse({ parsed }: { parsed: ParsedResult }) {
           >
             {opt.label}
           </div>
-          <div className="flex-1 h-4 bg-neutral-700 rounded-full overflow-hidden">
+          <div className="flex-1 h-4 bg-neutral-300 rounded-full overflow-hidden">
             <div
-              className="h-full rounded-full bg-neutral-400 transition-[width] duration-500 ease-out"
-              style={{ width: `${opt.ratio}%` }}
+              className="h-full rounded-full transition-[width] duration-500 ease-out"
+              style={{
+                width: `${opt.ratio}%`,
+                backgroundColor: colors[idx % colors.length],
+              }}
             ></div>
           </div>
           <div className="w-[80px] text-sm text-left text-neutral-400">

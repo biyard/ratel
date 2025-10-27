@@ -6,7 +6,7 @@ use dto::{
     sqlx::{Pool, Postgres},
 };
 
-use crate::security::check_perm;
+use crate::{security::check_perm, utils::users::extract_user};
 
 #[derive(
     Debug,
@@ -44,7 +44,9 @@ pub async fn add_oracle_handler(
     Json(req): Json<AddOracleRequest>,
 ) -> Result<()> {
     tracing::info!("TIMER 1: {:?}", chrono::Utc::now());
-    let dagit = DagitWithoutJoin::query_builder()
+    let user = extract_user(&pool, auth.clone()).await.unwrap_or_default();
+
+    let _dagit = DagitWithoutJoin::query_builder()
         .id_equals(space_id)
         .query()
         .map(DagitWithoutJoin::from)
@@ -54,7 +56,10 @@ pub async fn add_oracle_handler(
     check_perm(
         &pool,
         auth,
-        dto::RatelResource::Space { space_id: dagit.id },
+        dto::RatelResource::Space {
+            team_id: user.id,
+            space_id,
+        },
         GroupPermission::ManageSpace,
     )
     .await?;

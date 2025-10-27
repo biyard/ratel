@@ -18,7 +18,7 @@ use crate::{
     security::check_perm,
     utils::{
         contracts::erc1155::Erc1155Contract,
-        users::extract_user_with_allowing_anonymous,
+        users::{extract_user, extract_user_with_allowing_anonymous},
         wallets::{kaia_local_wallet::KaiaLocalWallet, local_fee_payer::LocalFeePayer},
     },
 };
@@ -94,10 +94,16 @@ impl SpaceBadgeController {
         SpaceBadgeCreateRequest { badges }: SpaceBadgeCreateRequest,
     ) -> Result<SpaceBadge> {
         let repo = Badge::get_repository(self.pool.clone());
+        let user = extract_user(&self.pool, auth.clone())
+            .await
+            .unwrap_or_default();
         let user = check_perm(
             &self.pool,
             auth,
-            RatelResource::Space { space_id },
+            RatelResource::Space {
+                team_id: user.id,
+                space_id,
+            },
             GroupPermission::ManageSpace,
         )
         .await?;
