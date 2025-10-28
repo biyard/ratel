@@ -1,9 +1,9 @@
 import { feedKeys } from '@/constants';
-import { PostDetailResponse } from '@/lib/api/ratel/posts.v3';
 import { createSpace } from '@/lib/api/ratel/spaces.v3';
 import { optimisticUpdate } from '@/lib/hook-utils';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { useMutation } from '@tanstack/react-query';
+import { type PostDetailResponse } from '@/features/posts/dto/post-detail-response';
 
 export function useCreateSpaceMutation() {
   const mutation = useMutation({

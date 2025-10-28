@@ -25,6 +25,11 @@ fn main() {
     let dist_dst = manifest_dir.join("dist");
     let assets_dir = dist_dst.join("assets");
 
+    let skip_web_build = env::var("CARGO_FEATURE_MODEL_ONLY").is_ok();
+    if skip_web_build {
+        println!("cargo:warning=Skipping web build because feature `model-only` is enabled");
+        return;
+    }
     if env::var("WEB_BUILD").unwrap_or_default() != "false"
         || !fs::exists(&dist_dst).unwrap_or_default()
     {
@@ -52,7 +57,6 @@ fn main() {
         println!("cargo:rerun-if-changed={}", web_dir.display());
         println!("cargo:rerun-if-changed={}", assets_dir.display());
     }
-
     let css = newest_match(&format!("{}/index-*.css", assets_dir.display()))
         .expect("no index-*.css found");
     let js =

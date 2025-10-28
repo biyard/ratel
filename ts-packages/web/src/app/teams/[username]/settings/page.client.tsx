@@ -17,17 +17,17 @@ import { showErrorToast, showInfoToast } from '@/lib/toast';
 import { useTranslation } from 'react-i18next';
 import { usePopup } from '@/lib/contexts/popup-service';
 import DeleteTeamPopup from './_components/delete-team-popup';
-import { useUserInfo } from '@/app/(social)/_hooks/user';
 import { logger } from '@/lib/logger';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
-import { FeedStatus } from '@/lib/api/models/feeds';
+import { FeedStatus } from '@/features/posts/types/post';
 import {
   useTeamDetailByUsername,
   useTeamPermissionsFromDetail,
 } from '@/features/teams/hooks/use-team';
 import { TeamGroupPermission } from '@/features/auth/utils/team-group-permissions';
 import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
+import { useUserInfo } from '@/hooks/use-user-info';
 
 export default function SettingsPage({ username }: { username: string }) {
   const { t } = useTranslation('Team');

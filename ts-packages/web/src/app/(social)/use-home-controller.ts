@@ -1,9 +1,11 @@
-import { ListPostResponse, PostResponse } from '@/lib/api/ratel/posts.v3';
 import { useHomeData } from './use-home-data';
 import { TopPromotionResponse } from '@/lib/api/ratel/promotions.v3';
 import { useCallback } from 'react';
 import { usePostEditorContext } from './_components/post-editor';
 import { useObserver } from '@/hooks/use-observer';
+import PostResponse, {
+  ListPostResponse,
+} from '@/features/posts/dto/list-post-response';
 
 class HomeController {
   posts: PostResponse[];

@@ -1,4 +1,4 @@
-import { useNewsByID } from '@/app/(social)/_hooks/news';
+import { useNewsByID } from '@/app/notifications/_hook/use-news';
 import LexicalHtmlViewer from '../../../../../components/lexical/lexical-html-viewer';
 import DisableBorderCard from '@/app/(social)/_components/disable-border-card';
 

@@ -3,13 +3,25 @@ import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
 
 import { showErrorToast } from '@/lib/toast';
-import {
-  likePost,
-  PostDetailResponse,
-  PostResponse,
-} from '@/lib/api/ratel/posts.v3';
+
 import { optimisticListUpdate, optimisticUpdate } from '@/lib/hook-utils';
 import { ListResponse } from '@/lib/api/ratel/common';
+import { PostDetailResponse } from '../dto/post-detail-response';
+import PostResponse from '../dto/list-post-response';
+import { call } from '@/lib/api/ratel/call';
+
+export type LikePostResponse = {
+  like: boolean;
+};
+
+export async function likePost(
+  postPk: string,
+  like: boolean,
+): Promise<LikePostResponse> {
+  return call('POST', `/v3/posts/${encodeURIComponent(postPk)}/likes`, {
+    like,
+  });
+}
 
 export function useLikePostMutation() {
   const queryClient = getQueryClient();
