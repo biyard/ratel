@@ -11,7 +11,7 @@ import { useState } from 'react';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { LoginModal } from '@/components/popup/login-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { UserResponse } from '@/lib/api/ratel/me.v3';
+import { UserResponse } from '@/lib/api/ratel/users.v3';
 import { usePollResponseMutation } from '../../hooks/use-poll-response-mutation';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 

@@ -1,7 +1,7 @@
-import useFeedById from '@/hooks/feeds/use-feed-by-id';
+import usePostById from '@/features/posts/hooks/use-post';
 
 export function useThreadData(postId: string) {
-  const post = useFeedById(postId);
+  const post = usePostById(postId);
 
   return { post };
 }

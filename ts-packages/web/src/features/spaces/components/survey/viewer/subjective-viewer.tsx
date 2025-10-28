@@ -1,7 +1,10 @@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import Title, { type TitleProps } from './title';
-import { SubjectiveQuestion, SurveyAnswerType } from '@/features/spaces/polls/types/poll-question';
+import {
+  SubjectiveQuestion,
+  SurveyAnswerType,
+} from '@/features/spaces/polls/types/poll-question';
 
 interface SubjectiveViewerProps extends SubjectiveQuestion, TitleProps {
   inputValue: string;

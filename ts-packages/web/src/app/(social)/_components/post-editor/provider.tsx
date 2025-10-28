@@ -1,5 +1,3 @@
-import type { ArtworkTrait } from '@/lib/api/models/feeds';
-import { ArtworkTraitDisplayType } from '@/lib/api/models/feeds';
 import { checkString } from '@/lib/string-filter-utils';
 import {
   createContext,
@@ -8,36 +6,24 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { apiFetch } from '@/lib/api/apiFetch';
-import { config } from '@/config';
-import { ratelApi } from '@/lib/api/ratel_api';
 import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
-import type { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
-import { getPost, type Post, PostType as PT } from '@/lib/api/ratel/posts.v3';
-import { useUpdateDraftMutation } from './use-update-draft-mutation';
-import { useUpdateDraftImageMutation } from './use-update-draft-image-mutation';
-import { usePublishDraftMutation } from './use-publish-draft';
+
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
 import { logger } from '@/lib/logger';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useTranslation } from 'react-i18next';
-
-export const Status = {
-  Idle: 'Idle',
-  Loading: 'Loading',
-  Saving: 'Saving',
-  Publishing: 'Publishing',
-} as const;
-
-export type Status = (typeof Status)[keyof typeof Status];
-
-export const PostType = {
-  Artwork: 'Artwork',
-  General: 'General',
-} as const;
-
-export type PostType = (typeof PostType)[keyof typeof PostType];
+import Post, { PostType } from '@/features/posts/types/post';
+import { getPost } from '@/features/posts/hooks/use-post';
+import { EditorStatus, PostTypeLabel } from './type';
+import { useUpdateDraftMutation } from '@/features/posts/hooks/use-update-draft-mutation';
+import { useUpdateDraftImageMutation } from '@/features/posts/hooks/use-update-draft-image-mutation';
+import { usePublishDraftMutation } from '@/features/posts/hooks/use-publish-draft-mutation';
+import { getPutObjectUrl } from '@/lib/api/ratel/assets.v3';
+import {
+  ArtworkTrait,
+  ArtworkTraitDisplayType,
+} from '@/features/posts/types/post-artwork';
 
 const AUTO_SAVE_DELAY = 5000; // ms
 export interface PostEditorContextType {
@@ -46,8 +32,8 @@ export interface PostEditorContextType {
 
   expand: boolean;
   toggleExpand: () => void;
-  postType: PostType;
-  updatePostType: (type: PostType) => void;
+  postType: PostTypeLabel;
+  updatePostType: (type: PostTypeLabel) => void;
 
   title: string;
   updateTitle: (title: string) => void;
@@ -64,9 +50,10 @@ export interface PostEditorContextType {
   close: boolean;
   setClose: (value: boolean) => void;
   isSubmitDisabled: boolean;
-  status: Status;
+  status: EditorStatus;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const PostDraftContext = createContext<
   PostEditorContextType | undefined
 >(undefined);
@@ -88,9 +75,11 @@ export function PostEditorProvider({
   //Interal State
   const [close, setClose] = useState(true);
   const [expand, setExpand] = useState(false);
-  const [status, setStatus] = useState<Status>(Status.Idle);
+  const [status, setStatus] = useState<EditorStatus>(EditorStatus.Idle);
   const [feed, setFeed] = useState<Post | null>(null);
-  const [postType, setPostType] = useState<PostType>(PostType.General);
+  const [postType, setPostType] = useState<PostTypeLabel>(
+    PostTypeLabel.General,
+  );
   const [isModified, setIsModified] = useState(false);
 
   //State
@@ -150,7 +139,9 @@ export function PostEditorProvider({
       title.trim() !== '' &&
       content &&
       content.trim() !== '' &&
-      (postType !== PostType.Artwork ? true : isArtworkRequiredFieldsFilled),
+      (postType !== PostTypeLabel.Artwork
+        ? true
+        : isArtworkRequiredFieldsFilled),
   );
   const resetState = useCallback(() => {
     setExpand(false);
@@ -158,7 +149,7 @@ export function PostEditorProvider({
     setContent('');
     setTitle('');
     setImage(null);
-    setStatus(Status.Idle);
+    setStatus(EditorStatus.Idle);
     setIsModified(false);
   }, []);
 
@@ -177,7 +168,7 @@ export function PostEditorProvider({
     setIsModified(true);
   };
 
-  const updatePostType = (type: PostType) => {
+  const updatePostType = (type: PostTypeLabel) => {
     setPostType(type);
     setIsModified(true);
   };
@@ -194,26 +185,18 @@ export function PostEditorProvider({
 
     const mime = image.match(/^data:([^;]+);base64,/);
     if (mime && mime[1]) {
-      const res = await apiFetch<AssetPresignedUris>(
-        `${config.api_url}${ratelApi.assets.getPresignedUrl(parseFileType(mime[1]))}`,
-        {
-          method: 'GET',
-        },
-      );
-      if (
-        res.data &&
-        res.data.presigned_uris?.length > 0 &&
-        res.data.uris?.length > 0
-      ) {
+      const res = await getPutObjectUrl(1, parseFileType(mime[1]));
+
+      if (res && res.presigned_uris?.length > 0 && res.uris?.length > 0) {
         const blob = await dataUrlToBlob(image);
-        await fetch(res.data.presigned_uris[0], {
+        await fetch(res.presigned_uris[0], {
           method: 'PUT',
           headers: {
             'Content-Type': mime[1],
           },
           body: blob,
         });
-        const imageUrl = res.data.uris[0];
+        const imageUrl = res.uris[0];
 
         await handleUpdateImage({ postPk: feed!.pk, image: imageUrl });
 
@@ -247,11 +230,11 @@ export function PostEditorProvider({
   };
 
   const openPostEditorPopup = async (id: string) => {
-    if (status === Status.Loading) {
+    if (status === EditorStatus.Loading) {
       return;
     }
     resetState();
-    setStatus(Status.Loading);
+    setStatus(EditorStatus.Loading);
     try {
       const { post: draft, artwork_metadata } = await getPost(id);
       setFeed(draft);
@@ -262,10 +245,12 @@ export function PostEditorProvider({
       setContent(draft.html_contents || '');
 
       setPostType(
-        draft.post_type === PT.Artwork ? PostType.Artwork : PostType.General,
+        draft.post_type === PostType.Artwork
+          ? PostTypeLabel.Artwork
+          : PostTypeLabel.General,
       );
 
-      if (draft.post_type === PT.Artwork && artwork_metadata) {
+      if (draft.post_type === PostType.Artwork && artwork_metadata) {
         setTraits(artwork_metadata.traits || []);
       }
       setExpand(true);
@@ -273,21 +258,21 @@ export function PostEditorProvider({
       console.error(e);
       throw new Error('Failed to load draft');
     } finally {
-      setStatus(Status.Idle);
+      setStatus(EditorStatus.Idle);
       setClose(false);
     }
   };
 
   const autoSaveDraft = useCallback(async () => {
     if (
-      status === Status.Saving ||
+      status === EditorStatus.Saving ||
       isModified === false ||
       content.length < 50
     ) {
       return;
     }
 
-    setStatus(Status.Saving);
+    setStatus(EditorStatus.Saving);
 
     try {
       await handleUpdateWithTitleAndContent({
@@ -301,7 +286,7 @@ export function PostEditorProvider({
       console.error(error);
       throw new Error(`Failed to auto save draft ${error}`);
     } finally {
-      setStatus(Status.Idle);
+      setStatus(EditorStatus.Idle);
     }
   }, [
     feed,
@@ -331,10 +316,10 @@ export function PostEditorProvider({
    * }, [pathname, resetState]); */
 
   const handleUpdate = useCallback(async () => {
-    if (status !== Status.Idle || !isAllFieldsFilled) {
+    if (status !== EditorStatus.Idle || !isAllFieldsFilled) {
       return;
     }
-    setStatus(Status.Publishing);
+    setStatus(EditorStatus.Publishing);
 
     try {
       if (checkString(title) || checkString(content || '')) {
