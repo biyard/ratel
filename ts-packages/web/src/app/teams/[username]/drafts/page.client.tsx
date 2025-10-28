@@ -11,7 +11,6 @@ import { Delete2 } from '@/components/icons';
 import { useTeamDetailByUsername } from '@/features/teams/hooks/use-team';
 import CreatePostButton from '../_components/create-post-button';
 import { useTranslation } from 'react-i18next';
-import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
 import useTeamInfiniteFeeds from '@/hooks/feeds/use-team-feeds-infinite-query';
 import { useObserver } from '@/hooks/use-observer';
 import { useDeletePostMutation } from '@/features/posts/hooks/use-delete-post-mutation';
@@ -19,7 +18,6 @@ import { useDeletePostMutation } from '@/features/posts/hooks/use-delete-post-mu
 export default function TeamDraftPage({ username }: { username: string }) {
   const { t } = useTranslation('Team');
   const teamQuery = useTeamDetailByUsername(username);
-  const p = usePostEditorContext();
 
   const team = teamQuery.data;
   const teamPk = team?.id || '';
@@ -80,10 +78,11 @@ export default function TeamDraftPage({ username }: { username: string }) {
                 <Col
                   key={post.pk}
                   className="cursor-pointer pt-5 pb-2.5 bg-card-bg border border-card-border rounded-lg"
-                  onClick={async (evt) => {
-                    await p?.openPostEditorPopup(post.pk);
-                    evt.preventDefault();
-                    evt.stopPropagation();
+                  onClick={() => {
+                    console.log('Move to post edit page - postPk:', post.pk);
+                    // await p?.openPostEditorPopup(post.pk);
+                    // evt.preventDefault();
+                    // evt.stopPropagation();
                   }}
                 >
                   <Row className="justify-end px-5 items-center">

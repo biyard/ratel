@@ -2,7 +2,6 @@ import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { useCallback, useRef } from 'react';
 import { Col } from '@/components/ui/col';
 import { FeedStatus } from '@/features/posts/types/post';
-import { usePostEditorContext } from '../_components/post-editor';
 import CreatePostButton from '../_components/create-post-button';
 import { Row } from '@/components/ui/row';
 import { FeedContents, UserBadge } from '@/components/feed-card';
@@ -22,7 +21,6 @@ export default function MyDraftPage() {
     isFetchingNextPage,
   } = useInfiniteMyDrafts();
 
-  const p = usePostEditorContext();
   const username = user?.username || '';
 
   const { mutateAsync: handleRemoveDraft } = useDeletePostMutation(
@@ -45,10 +43,7 @@ export default function MyDraftPage() {
     [isFetchingNextPage, fetchNextPage, hasNextPage],
   );
 
-  if (!p) return null;
   if (!user) return null;
-
-  const { openPostEditorPopup } = p;
 
   if (drafts.pages.length === 0) {
     return (
@@ -66,10 +61,8 @@ export default function MyDraftPage() {
             <Col
               key={post?.pk}
               className="cursor-pointer pt-5 pb-2.5 bg-card-bg border border-card-enable-border rounded-lg"
-              onClick={async (evt) => {
-                await openPostEditorPopup(post?.pk);
-                evt.preventDefault();
-                evt.stopPropagation();
+              onClick={() => {
+                console.log('Move to post edit page - postPk:', post?.pk);
               }}
             >
               <Row className="justify-end px-5 items-center">

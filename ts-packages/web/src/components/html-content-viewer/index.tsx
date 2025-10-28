@@ -1,3 +1,8 @@
+/**
+ * @deprecated
+ * * Use this component instead:
+ * `<TiptapEditor content={content} editable={false} showToolbar={false}/> from '@/components/text-editor'`
+ */
 export default function HtmlContentViewer({
   htmlContent,
 }: {
