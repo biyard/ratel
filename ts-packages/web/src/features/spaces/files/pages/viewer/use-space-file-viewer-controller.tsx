@@ -1,13 +1,13 @@
-import useSpaceById from '@/hooks/use-space-by-id';
+import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import useFileSpace from '../../hooks/use-file-space';
-import { Space } from '@/lib/api/models/spaces';
-import { File } from '@/lib/api/models/feeds';
+import { Space } from '@/features/spaces/types/space';
+import FileModel from '../../types/file';
 
 export class SpaceFileViewerController {
   constructor(
     public spacePk: string,
     public space: Space,
-    public files: File[],
+    public files: FileModel[],
   ) {}
 }
 

@@ -1,10 +1,11 @@
 'use client';
 import { useCallback } from 'react';
 import { Col } from '@/components/ui/col';
-import { FeedStatus } from '@/lib/api/models/feeds';
+import { FeedStatus } from '@/features/posts/types/post';
 import { Row } from '@/components/ui/row';
 import { FeedContents, UserBadge } from '@/components/feed-card';
-import { UserType } from '@/lib/api/models/user';
+import { UserType } from '@/lib/api/ratel/users.v3';
+
 import TimeAgo from '@/components/time-ago';
 import { Delete2 } from '@/components/icons';
 import { useTeamDetailByUsername } from '@/features/teams/hooks/use-team';

@@ -3,14 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { ChangeThemeRequest } from '@/lib/api/models/themes/theme';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { ThemeType } from '@/lib/api/models/user';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { useQueryClient } from '@tanstack/react-query';
 import { QK_USERS_GET_INFO } from '@/constants';
 import LocaleModal from '../../settings/_components/modal/locale-modal';
 import ThemeModal from '../../settings/_components/modal/theme-modal';
 import SpecBox from '../../_components/spec-box';
 import { useNavigate } from 'react-router';
+import { ThemeType } from '@/lib/api/ratel/users.v3';
 
 export default function ExperimentalSettingsPage() {
   const { post } = useApiCall();

@@ -1,12 +1,9 @@
-'use client';
-
 import FileUploader from '@/features/spaces/files/components/file-uploader';
 import { Button } from '@/components/ui/button';
 import { Col } from '@/components/ui/col';
 import { Input } from '@/components/ui/input';
 import { Row } from '@/components/ui/row';
 import { Textarea } from '@/components/ui/textarea';
-import { updateUser } from '@/lib/api/ratel/me.v3';
 import { checkString } from '@/lib/string-filter-utils';
 import { route } from '@/route';
 import { logger } from '@/lib/logger';
@@ -16,6 +13,7 @@ import WalletSummary from '../wallet-summary';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router';
 import { showErrorToast } from '@/lib/toast';
+import { updateUserEvmAddress } from '@/lib/api/ratel/me.v3';
 
 export default function MyInfo() {
   const { t } = useTranslation('Settings');
@@ -97,14 +95,8 @@ export default function MyInfo() {
           <WalletSummary
             onUpdate={async (address) => {
               logger.debug('Updating wallet address...', address);
-
               try {
-                // Use v3 API to update EVM address
-                await updateUser({
-                  EvmAddress: {
-                    evm_address: address,
-                  },
-                });
+                await updateUserEvmAddress(address);
 
                 await userInfo.refetch();
                 handleShowWalletConnect(false);

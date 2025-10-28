@@ -23,5 +23,8 @@
   "repost": "Repost",
   "feed_end_message": "You've reached the end of the feed.",
   "write_title": "Write a title...",
-  "write_content": "Type here, Use Markdown, BB code, or HTML to format."
+  "write_content": "Type here, Use Markdown, BB code, or HTML to format.",
+
+  "success_create_post": "Success to Create Post",
+  "failed_create_post": "Failed to Create Post. Please try again."
 }

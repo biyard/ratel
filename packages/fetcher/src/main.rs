@@ -1,201 +1,115 @@
 mod config;
-mod controllers;
 
-use bdk::prelude::{
-    by_axum::{auth::authorization_middleware, axum::Router, axum::middleware},
-    *,
-};
-use dto::{sqlx::PgPool, *};
-use tokio::net::TcpListener;
+use aws_config::Region;
+use aws_credential_types::Credentials;
+use bdk::prelude::*;
 
-macro_rules! migrate {
-    ($pool:ident, $($table:ident),* $(,)?) => {
-        {
-            $(
-                let t = $table::get_repository($pool.clone());
-                t.create_this_table().await?;
-            )*
-                $(
-                    let t = $table::get_repository($pool.clone());
-                    t.create_related_tables().await?;
-                )*
-        }
-    };
-}
+use main_api::utils::telegram::TelegramBot;
 
-async fn migration(pool: &sqlx::Pool<sqlx::Postgres>) -> Result<()> {
-    tracing::info!("Running migration");
+// mod controllers;
+// use bdk::prelude::sqlx::PgPool;
+use by_axum::axum::Router;
+// use tokio::net::TcpListener;
 
-    migrate!(
-        pool,
-        EventLog,
-        Space,
-        SpaceComment,
-        SpaceUser,
-        SpaceMember,
-        SpaceContract,
-        SpaceHolder,
-        TelegramChannel
-    );
+async fn api_main() -> main_api::Result<Router> {
+    // let conf = config::get();
 
-    tracing::info!("Migration done");
-    Ok(())
-}
+    // let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
+    //     let pool = db_init(url, pool_size).await;
+    //     tracing::info!(
+    //         "Connected to Postgres at {}",
+    //         pool.connect_options().get_host()
+    //     );
+    //     pool
+    // } else {
+    //     panic!("Database is not initialized. Call init() first.");
+    // };
 
-async fn api_main(pool: &PgPool) -> Result<Router> {
+    // let aws_sdk_config = get_aws_config();
+    // let dynamo_client = DynamoClient::new(Some(aws_sdk_config.clone()));
+
     let app = by_axum::new();
-    let conf = config::get();
-    tracing::debug!("config: {:?}", conf);
-
-    if conf.migrate {
-        migration(pool).await?;
-    }
-
-    let app = app
-        .nest("/m1", controllers::m1::route(pool.clone()).await?)
-        .layer(middleware::from_fn(authorization_middleware));
-
     Ok(app)
 }
 
-#[tokio::main]
-async fn main() -> Result<()> {
-    let pool = if let by_types::DatabaseConfig::Postgres { url, pool_size } = config::get().database
-    {
-        sqlx::postgres::PgPoolOptions::new()
-            .max_connections(pool_size)
-            .connect(url)
-            .await?
-    } else {
-        panic!("Database is not initialized. Call init() first.");
-    };
+pub fn get_dynamo_client() -> aws_sdk_dynamodb::Client {
+    let conf = config::get();
 
-    let app = api_main(&pool).await?;
+    match conf.dynamodb {
+        by_types::DatabaseConfig::DynamoDb {
+            ref aws, endpoint, ..
+        } => {
+            let mut builder = aws_sdk_dynamodb::Config::builder()
+                .credentials_provider(
+                    Credentials::builder()
+                        .access_key_id(aws.access_key_id)
+                        .secret_access_key(aws.secret_access_key)
+                        .provider_name("ratel")
+                        .build(),
+                )
+                .region(Region::new(aws.region))
+                .behavior_version_latest();
 
-    let port = option_env!("PORT").unwrap_or("4000");
-    let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
-        .await
-        .unwrap();
-    by_axum::serve(listener, app).await.unwrap();
-
-    // if let Some(token) = config::get().telegram_token {
-    //     let bot = Bot::new(token);
-    //     set_command(bot.clone()).await;
-
-    //     let handler = dptree::entry()
-    //         .branch(Update::filter_message().endpoint(message_handler))
-    //         .branch(Update::filter_my_chat_member().endpoint(member_update_handler));
-
-    //     let mut dispatcher = Dispatcher::builder(bot, handler)
-    //         .dependencies(dptree::deps![pool.clone()])
-    //         .enable_ctrlc_handler()
-    //         .build();
-
-    //     let teloxide_dispatcher = dispatcher.dispatch();
-
-    //     tokio::select! {
-    //         result = teloxide_dispatcher => {
-    //             tracing::info!("Teloxide dispatcher finished: {:?}", result);
-    //         }
-    //         result = axum_server => {
-    //             if let Err(e) = result {
-    //                 tracing::error!("Axum server has failed: {}", e);
-    //             } else {
-    //                 tracing::info!("Axum server finished successfully");
-    //             }
-    //         }
-    //     }
-    // } else {
-    //     tracing::warn!("TELEGRAM_TOKEN not set, skipping Telegram bot functionality");
-    //     // Only run the axum server if no telegram dispatcher
-    //     if let Err(e) = axum_server.await {
-    //         tracing::error!("Axum server has failed: {}", e);
-    //     } else {
-    //         tracing::info!("Axum server finished successfully");
-    //     }
-    // }
-
-    Ok(())
+            if let Some(endpoint) = endpoint {
+                builder = builder.endpoint_url(endpoint.to_string());
+            }
+            let conf = builder.build();
+            let client = aws_sdk_dynamodb::Client::from_conf(conf);
+            client
+        }
+        _ => {
+            tracing::error!("DynamoDB config not found.");
+            panic!(
+                "DynamoDB config not found. In Local env, you must set DynamoDB config with Endpoint"
+            )
+        }
+    }
 }
 
-#[cfg(test)]
-pub mod tests {
-    use bdk::prelude::{by_types::DatabaseConfig, sqlx::postgres::PgPoolOptions};
-    use std::time::SystemTime;
+#[tokio::main]
+async fn main() -> main_api::Result<()> {
+    let _ = api_main().await?;
+    let conf = config::get();
 
-    use super::*;
-    use rest_api::ApiService;
+    let client = get_dynamo_client();
 
-    pub struct TestContext {
-        pub pool: sqlx::Pool<sqlx::Postgres>,
-        pub app: Box<dyn ApiService>,
-        pub now: i64,
-        pub endpoint: String,
-    }
-
-    pub async fn setup() -> Result<TestContext> {
-        let conf = config::get();
-        let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
-            PgPoolOptions::new()
-                .max_connections(pool_size)
-                .connect(url)
-                .await
-                .expect("Failed to connect to Postgres")
+    let bot = if let Some(token) = conf.telegram_token {
+        let res = TelegramBot::new(token).await;
+        if let Err(err) = res {
+            tracing::error!("Failed to initialize Telegram bot: {}", err);
+            None
         } else {
-            panic!("Database is not initialized. Call init() first.");
-        };
+            Some(res.unwrap())
+        }
+    } else {
+        None
+    };
 
-        let app = api_main(&pool).await?;
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos() as u64;
-
-        tracing::debug!("config: {:?}", conf);
-
-        let _ = sqlx::query(
-            r#"
-        CREATE OR REPLACE FUNCTION set_updated_at()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                NEW.updated_at := EXTRACT(EPOCH FROM now()); -- seconds
-                RETURN NEW;
-            END;
-        $$ LANGUAGE plpgsql;
-        "#,
-        )
-        .execute(&pool)
-        .await;
-
-        let _ = sqlx::query(
-            r#"
-        CREATE OR REPLACE FUNCTION set_created_at()
-            RETURNS TRIGGER AS $$
-            BEGIN
-                NEW.created_at := EXTRACT(EPOCH FROM now()); -- seconds
-                RETURN NEW;
-            END;
-        $$ LANGUAGE plpgsql;
-        "#,
-        )
-        .execute(&pool)
-        .await;
-
-        let _ = migration(&pool).await;
-
-        let app = by_axum::into_api_adapter(app);
-        let app = Box::new(app);
-        rest_api::set_api_service(app.clone());
-        rest_api::add_authorization(&format!(
-            "x-server-key {}",
-            option_env!("SERVER_KEY").unwrap()
-        ));
-
-        Ok(TestContext {
-            pool,
-            app,
-            now: now as i64,
-            endpoint: format!("http://localhost:3000"),
-        })
+    // let port = env::var("PORT").unwrap_or("3000".to_string());
+    // let listener = TcpListener::bind(format!("0.0.0.0:{}", port))
+    //     .await
+    //     .unwrap();
+    // tracing::info!("listening on {}", listener.local_addr().unwrap());
+    // let axum_handler = by_axum::serve(listener, app);
+    if let Some(ref bot) = bot {
+        tokio::select! {
+            result = bot.dispatcher(&client) => {
+                tracing::debug!("Teloxide dispatcher finished: {:?}", result);
+            }
+            _ = tokio::signal::ctrl_c() => {
+                tracing::info!("Received Ctrl+C, shutting down gracefully...");
+            }
+            // result = axum_handler => {
+            //     if let Err(e) = result {
+            //         tracing::error!("Axum server has failed: {}", e);
+            //     } else {
+            //         tracing::info!("Axum server finished successfully");
+            //     }
+            // }
+        }
+    } else {
+        // axum_handler.await.unwrap();
     }
+
+    Ok(())
 }

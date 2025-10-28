@@ -1,5 +1,5 @@
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 
 export function useSpaceHomeData(spacePk: string) {
   return {
