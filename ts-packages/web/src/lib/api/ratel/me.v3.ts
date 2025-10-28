@@ -32,6 +32,26 @@ export async function updateUserEvmAddress(
   evmAddress: string,
 ): Promise<UserDetailResponse> {
   return call('PATCH', '/v3/me', {
-    body: { evm_address: evmAddress },
+    body: {
+      EvmAddress: {
+        evmAddress,
+      },
+    },
+  });
+}
+
+export async function updateUserProfile(
+  nickname: string,
+  profileUrl: string,
+  description: string,
+): Promise<UserDetailResponse> {
+  return call('PATCH', '/v3/me', {
+    body: {
+      Profile: {
+        nickname,
+        profile_url: profileUrl,
+        description,
+      },
+    },
   });
 }
