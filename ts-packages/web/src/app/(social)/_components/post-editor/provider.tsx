@@ -19,6 +19,9 @@ import { useUpdateDraftImageMutation } from './use-update-draft-image-mutation';
 import { usePublishDraftMutation } from './use-publish-draft';
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
+import { logger } from '@/lib/logger';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import { useTranslation } from 'react-i18next';
 
 export const Status = {
   Idle: 'Idle',
@@ -80,6 +83,7 @@ export function PostEditorProvider({
   */
 
   const nav = useNavigate();
+  const { t } = useTranslation('Home');
 
   //Interal State
   const [close, setClose] = useState(true);
@@ -337,11 +341,18 @@ export function PostEditorProvider({
         throw new Error('Please remove the test keyword');
       }
 
-      await publishDraft({
-        postPk: feed!.pk,
-        title,
-        content,
-      });
+      try {
+        await publishDraft({
+          postPk: feed!.pk,
+          title,
+          content,
+        });
+
+        showSuccessToast(t('success_create_post'));
+      } catch (e) {
+        logger.error('failed to publish draft: ', e);
+        showErrorToast(t('failed_create_post'));
+      }
 
       // TODO: Navigate to thread
       nav(route.threadByFeedId(feed!.pk));
