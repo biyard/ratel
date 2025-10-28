@@ -1,4 +1,4 @@
-import { UserType } from './user';
+import { UserType } from '../ratel/users.v3';
 
 export interface NetworkData {
   industries: Industry[];

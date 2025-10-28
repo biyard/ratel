@@ -1,9 +1,6 @@
 import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
 
-import { UserType } from '@/lib/api/models/user';
-
-import { type Space } from '@/lib/api/models/spaces';
 import FeedEndMessage from './_components/feed-end-message';
 import CreatePostButton from './_components/create-post-button';
 import PromotionCard from './_components/promotion-card';
@@ -12,29 +9,6 @@ import DisableBorderCard from './_components/disable-border-card';
 import { useHomeController } from './use-home-controller';
 
 export const SIZE = 10;
-
-export interface Post {
-  id: number;
-  industry: string;
-  title: string;
-  contents: string;
-  url?: string;
-  author_id: number;
-  author_profile_url: string;
-  author_name: string;
-  author_type: UserType;
-  space_id?: number;
-  space_type?: number;
-  likes: number;
-  is_liked: boolean;
-  comments: number;
-  rewards: number;
-  shares: number;
-  created_at: number;
-  onboard: boolean;
-
-  spaces: Space[];
-}
 
 export default function HomePage() {
   const ctrl = useHomeController();
@@ -76,7 +50,9 @@ export default function HomePage() {
         className="flex-col w-70 pl-4 max-tablet:fixed bottom-4 max-tablet:right-4 max-tablet:z-50 max-tablet:pl-0"
         aria-label="Sidebar"
       >
-        <CreatePostButton expanded={ctrl.close} />
+        <div className="mb-2.5">
+          <CreatePostButton expanded={ctrl.close} />
+        </div>
         <div className="max-tablet:hidden">
           {ctrl.topPromotion && (
             <DisableBorderCard>

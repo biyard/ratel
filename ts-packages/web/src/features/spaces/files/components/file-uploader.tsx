@@ -1,6 +1,4 @@
-import type { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { useApiCall } from '@/lib/api/use-send';
+import { getPutObjectUrl } from '@/lib/api/ratel/assets.v3';
 import { getFileType, toContentType } from '@/lib/file-utils';
 import { logger } from '@/lib/logger';
 import { cn } from '@/lib/utils';
@@ -16,7 +14,6 @@ export default function FileUploader({
   ...props
 }: React.ComponentProps<'div'> & FileUploaderProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const { get } = useApiCall();
   const handleUpload = async () => {
     inputRef.current?.click();
   };
@@ -35,9 +32,7 @@ export default function FileUploader({
     const fileType = getFileType(file);
     logger.debug('FileType:', fileType);
 
-    const res: AssetPresignedUris = await get(
-      ratelApi.assets.getPresignedUrl(fileType),
-    );
+    const res = await getPutObjectUrl(1, fileType);
     logger.debug('Presigned URL response:', res);
     if (
       !res.presigned_uris ||

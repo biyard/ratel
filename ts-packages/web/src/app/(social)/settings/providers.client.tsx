@@ -1,7 +1,7 @@
 'use client';
 
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { updateUser } from '@/lib/api/ratel/me.v3';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
+import { updateUserProfile } from '@/lib/api/ratel/me.v3';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useState } from 'react';
@@ -63,14 +63,7 @@ export default function ClientProviders({
     }
 
     try {
-      // Use v3 API to update user profile
-      await updateUser({
-        Profile: {
-          nickname: trimmedNickname,
-          profile_url: profileUrl,
-          description: htmlContents!,
-        },
-      });
+      await updateUserProfile(trimmedNickname, profileUrl, htmlContents!);
 
       // Refetch user info to get updated data
       await userinfo.refetch();

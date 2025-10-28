@@ -1,12 +1,7 @@
 import { useDeletePostMutation } from '@/features/posts/hooks/use-delete-post-mutation';
 import { useLikePostMutation } from '@/features/posts/hooks/use-like-post-mutation';
-import { useCommentMutation } from '@/hooks/feeds/use-comment-mutation';
-import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import { useReplyCommentMutation } from '@/features/comments/hooks/use-reply-comment-mutation';
-import { useLoggedIn, useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { FeedStatus } from '@/lib/api/models/feeds';
 import { GroupPermission } from '@/lib/api/models/group';
-import { PostDetailResponse } from '@/lib/api/ratel/posts.v3';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { logger } from '@/lib/logger';
@@ -20,6 +15,12 @@ import SpaceCreateModal from '../../../../features/spaces/modals/space-type-sele
 import { useThreadData } from './use-thread-data';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
 import { useLikeCommentMutation } from '@/features/comments/hooks/use-like-comment-mutation';
+import usePostById from '@/features/posts/hooks/use-post';
+import { useCommentMutation } from '@/features/posts/hooks/use-comment-mutation';
+import { PostDetailResponse } from '@/features/posts/dto/post-detail-response';
+import { FeedStatus } from '@/features/posts/types/post';
+import { useLoggedIn, useSuspenseUserInfo } from '@/hooks/use-user-info';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 
 export class ThreadController {
   readonly isPostOwner: boolean;
@@ -102,8 +103,14 @@ export class ThreadController {
   handleDeletePost = async () => {
     logger.debug('handleDeletePost', this.postId);
     if (!this.deletePost.isPending) {
-      await this.deletePost.mutateAsync(this.postId);
-      this.navigate(route.home());
+      try {
+        await this.deletePost.mutateAsync(this.postId);
+        this.navigate(route.home());
+        showSuccessToast(this.t('success_delete_post'));
+      } catch (e) {
+        logger.error('delete post failed: ', e);
+        showErrorToast(this.t('failed_delete_post'));
+      }
     }
   };
 
@@ -125,7 +132,7 @@ export function useThreadController() {
   logger.debug('post id', postId);
   const { data: user } = useSuspenseUserInfo();
   const isLoggedIn = useLoggedIn();
-  const { data: feed } = useFeedById(postId);
+  const { data: feed } = usePostById(postId);
 
   const data = useThreadData(postId);
   const expandComment = useState(false);

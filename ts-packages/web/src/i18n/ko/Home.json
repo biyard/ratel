@@ -23,5 +23,8 @@
   "repost": "공유하기",
   "feed_end_message": "피드의 목적지에 도달했습니다.",
   "write_title": "제목을 입력해주세요.",
-  "write_content": "여기에 마크다운 형태를 활용하여 설명을 입력해주세요."
+  "write_content": "여기에 마크다운 형태를 활용하여 설명을 입력해주세요.",
+
+  "success_create_post": "게시물을 성공적으로 등록했습니다.",
+  "failed_create_post": "게시물 등록에 실패했습니다. 잠시 후 다시 시도해 주세요."
 }

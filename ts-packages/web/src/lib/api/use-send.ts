@@ -10,6 +10,10 @@ export interface ApiCallFns {
   post: (path: string, body?: any) => Promise<any>;
 }
 
+/**
+ * @deprecated Use `Call('GET', path)` from '@/lib/api/ratel/call' instead.
+ */
+
 export function useApiCall(): ApiCallFns {
   return {
     get: async (path: string): Promise<any> => {
