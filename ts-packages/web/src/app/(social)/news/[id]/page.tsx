@@ -3,7 +3,7 @@ import News from './_components/news';
 import NewsHeader from './_components/header';
 import { useParams } from 'react-router';
 
-export default async function Page() {
+export default function Page() {
   const params = useParams();
   const news_id = parseInt(params.id, 10);
 

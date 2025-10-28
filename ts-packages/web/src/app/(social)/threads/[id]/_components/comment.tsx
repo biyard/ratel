@@ -2,8 +2,8 @@ import { CommentIcon } from '@/components/icons';
 import { NewComment, Comment } from '@/components/comment';
 
 import { TFunction } from 'i18next';
-import { PostDetailResponse } from '@/lib/api/ratel/posts.v3';
 import { State } from '@/types/state';
+import { PostDetailResponse } from '@/features/posts/dto/post-detail-response';
 
 export type ThreadCommentProps = {
   t: TFunction<'Thread', undefined>;

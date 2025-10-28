@@ -6,9 +6,9 @@ import { route } from '@/route';
 import { useAuth } from '@/lib/contexts/auth-context';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { LoginModal } from '@/components/popup/login-popup';
-import { useUserInfo } from '../_hooks/user';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
+import { useUserInfo } from '@/hooks/use-user-info';
 
 export default function ClientLayout({
   children,

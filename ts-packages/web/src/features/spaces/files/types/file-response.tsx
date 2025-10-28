@@ -1,7 +1,7 @@
-import { File } from '@/lib/api/models/feeds';
+import FileModel from './file';
 
 export class FileResponse {
-  files: File[];
+  files: FileModel[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {

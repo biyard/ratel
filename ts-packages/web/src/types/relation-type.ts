@@ -3,4 +3,4 @@ export const RelationType = {
   FOLLOWING: 'followings',
 } as const;
 
-export type RelationType = typeof RelationType[keyof typeof RelationType];
+export type RelationType = (typeof RelationType)[keyof typeof RelationType];

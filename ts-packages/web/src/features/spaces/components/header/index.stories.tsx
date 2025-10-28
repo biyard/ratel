@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/react';
 import SpaceHeader, { SpaceHeaderProps } from './index';
-import { Post } from '@/lib/api/ratel/posts.v3';
+import { Post } from '@/features/posts/types/post';
 import { PopupProvider } from '@/lib/contexts/popup-service';
 import {
   SpacePublishState,
