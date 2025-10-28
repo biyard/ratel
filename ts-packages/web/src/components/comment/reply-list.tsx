@@ -1,5 +1,5 @@
 import { useReplies } from '@/features/comments/hooks/use-replies';
-import LexicalHtmlViewer from '../lexical/lexical-html-viewer';
+import { TiptapEditor } from '../text-editor';
 
 export type ReplyListProp = {
   postPk: string;
@@ -33,7 +33,11 @@ export function ReplyList({ postPk, commentSk }: ReplyListProp) {
               </div>
             </div>
           </div>
-          <LexicalHtmlViewer htmlString={reply.content} />
+          <TiptapEditor
+            content={reply.content}
+            editable={false}
+            showToolbar={false}
+          />
         </div>
       ))}
     </div>

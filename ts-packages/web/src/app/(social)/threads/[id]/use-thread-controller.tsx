@@ -10,7 +10,6 @@ import { State } from '@/types/state';
 import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
-import { usePostEditorContext } from '../../_components/post-editor';
 import SpaceCreateModal from '../../../../features/spaces/modals/space-type-selector-modal';
 import { useThreadData } from './use-thread-data';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
@@ -43,7 +42,6 @@ export class ThreadController {
     public likePost,
     public user,
     public teams,
-    public postEditor,
     public likeComment,
   ) {
     this.username = this.user?.username || '';
@@ -95,8 +93,7 @@ export class ThreadController {
   };
 
   handleEditPost = async () => {
-    logger.debug('handleEditPost', this.postId);
-    await this.postEditor?.openPostEditorPopup(this.postId);
+    logger.error('handleEditPost Not Implemented', this.postId);
   };
 
   handleDeletePost = async () => {
@@ -144,7 +141,6 @@ export function useThreadController() {
   const likePost = useLikePostMutation();
   const { teams } = useContext(TeamContext);
 
-  const postEditor = usePostEditorContext();
   const likeComment = useLikeCommentMutation();
 
   useEffect(() => {
@@ -170,7 +166,6 @@ export function useThreadController() {
     likePost,
     user,
     teams,
-    postEditor,
     likeComment,
   );
 }

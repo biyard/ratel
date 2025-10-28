@@ -1,11 +1,11 @@
-export enum EditorStatus {
-  Idle = 'Idle',
-  Loading = 'Loading',
-  Saving = 'Saving',
-  Publishing = 'Publishing',
-}
+// export enum EditorStatus {
+//   Idle = 'Idle',
+//   Loading = 'Loading',
+//   Saving = 'Saving',
+//   Publishing = 'Publishing',
+// }
 
-export enum PostTypeLabel {
-  Artwork = 'Artwork',
-  General = 'General',
-}
+// export enum PostTypeLabel {
+//   Artwork = 'Artwork',
+//   General = 'General',
+// }
