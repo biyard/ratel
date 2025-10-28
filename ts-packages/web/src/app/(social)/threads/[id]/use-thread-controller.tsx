@@ -20,6 +20,7 @@ import SpaceCreateModal from '../../../../features/spaces/modals/space-type-sele
 import { useThreadData } from './use-thread-data';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
 import { useLikeCommentMutation } from '@/features/comments/hooks/use-like-comment-mutation';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 
 export class ThreadController {
   readonly isPostOwner: boolean;
@@ -102,8 +103,14 @@ export class ThreadController {
   handleDeletePost = async () => {
     logger.debug('handleDeletePost', this.postId);
     if (!this.deletePost.isPending) {
-      await this.deletePost.mutateAsync(this.postId);
-      this.navigate(route.home());
+      try {
+        await this.deletePost.mutateAsync(this.postId);
+        this.navigate(route.home());
+        showSuccessToast(this.t('success_delete_post'));
+      } catch (e) {
+        logger.error('delete post failed: ', e);
+        showErrorToast(this.t('failed_delete_post'));
+      }
     }
   };
 
