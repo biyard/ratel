@@ -1,4 +1,6 @@
 import {
+  useQuery,
+  UseQueryResult,
   useSuspenseQuery,
   UseSuspenseQueryResult,
 } from '@tanstack/react-query';
@@ -22,9 +24,18 @@ export function getOption(postPk: string) {
   };
 }
 
-export default function usePostById(
+export default function useSuspensePostById(
   postPk: string,
 ): UseSuspenseQueryResult<PostDetailResponse> {
-  const query = useSuspenseQuery(getOption(postPk));
+  const query = useSuspenseQuery({ ...getOption(postPk) });
   return query;
+}
+
+export function usePostById(
+  postPk?: string,
+): UseQueryResult<PostDetailResponse> {
+  return useQuery({
+    ...getOption(postPk!),
+    enabled: !!postPk,
+  });
 }

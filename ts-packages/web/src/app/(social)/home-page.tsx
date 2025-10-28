@@ -1,12 +1,14 @@
 import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
 
-import FeedEndMessage from './_components/feed-end-message';
-import CreatePostButton from './_components/create-post-button';
 import PromotionCard from './_components/promotion-card';
 import Suggestions from './_components/suggestions';
-import DisableBorderCard from './_components/disable-border-card';
 import { useHomeController } from './use-home-controller';
+import {
+  CreatePostButton,
+  FeedEndMessage,
+} from '@/features/drafts/components/list-drafts';
+import Card from '@/components/card';
 
 export const SIZE = 10;
 
@@ -29,7 +31,9 @@ export default function HomePage() {
         ))}
 
         <div ref={ctrl.observerRef} />
-        {!ctrl.hasNext && <FeedEndMessage />}
+        {!ctrl.hasNext && (
+          <FeedEndMessage msg="You have reached the end of your feed." />
+        )}
       </Col>
     </Col>
   );
@@ -50,12 +54,16 @@ export default function HomePage() {
         className="flex-col w-70 pl-4 max-tablet:fixed bottom-4 max-tablet:right-4 max-tablet:z-50 max-tablet:pl-0"
         aria-label="Sidebar"
       >
-        <CreatePostButton expanded={ctrl.close} />
+        <CreatePostButton
+          onClick={async () => {
+            console.error('NOT implemented');
+          }}
+        />
         <div className="max-tablet:hidden">
           {ctrl.topPromotion && (
-            <DisableBorderCard>
+            <Card variant="secondary">
               <PromotionCard promotion={ctrl.topPromotion} />
-            </DisableBorderCard>
+            </Card>
           )}
 
           {/* TODO: implement with v3

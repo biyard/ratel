@@ -91,7 +91,6 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
     useEffect(() => {
       return () => {
         if (editor) {
-          console.log('Destroying editor instance');
           editor.destroy();
         }
       };

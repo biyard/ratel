@@ -1,5 +1,4 @@
 'use client';
-import FeedEndMessage from '@/app/(social)/_components/feed-end-message';
 import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
 import useTeamInfiniteFeeds from '@/hooks/feeds/use-team-feeds-infinite-query';
@@ -7,6 +6,7 @@ import { useObserver } from '@/hooks/use-observer';
 import { useCallback } from 'react';
 import { useTeamDetailByUsername } from '@/features/teams/hooks/use-team';
 import { useParams } from 'react-router';
+import { FeedEndMessage } from '@/features/drafts/components/list-drafts';
 
 export default function TeamHome() {
   const { username } = useParams<{ username: string }>();

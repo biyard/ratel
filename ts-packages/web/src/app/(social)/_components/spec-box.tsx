@@ -1,4 +1,3 @@
-'use client';
 import { ChevronRight } from 'lucide-react';
 
 export default function SpecBox({
@@ -13,7 +12,10 @@ export default function SpecBox({
   'data-pw'?: string;
 }) {
   return (
-    <div data-pw={dataPw} className="flex items-center justify-between border border-setting-card-border px-4 py-8 rounded-md">
+    <div
+      data-pw={dataPw}
+      className="flex items-center justify-between border border-setting-card-border px-4 py-8 rounded-md"
+    >
       <p className="text-base font-bold text-text-primary">{left_text}</p>
       <button
         data-pw={dataPw ? `${dataPw}-button` : undefined}
