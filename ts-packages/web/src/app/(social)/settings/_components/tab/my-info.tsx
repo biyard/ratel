@@ -10,7 +10,7 @@ import { updateUser } from '@/lib/api/ratel/me.v3';
 import { checkString } from '@/lib/string-filter-utils';
 import { route } from '@/route';
 import { logger } from '@/lib/logger';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { useSettingsContext } from '../../settings-context';
 import WalletSummary from '../wallet-summary';
 import { useTranslation } from 'react-i18next';
