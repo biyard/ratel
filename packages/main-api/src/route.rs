@@ -97,6 +97,7 @@ use crate::{
             users::{
                 connect_telegram::connect_telegram_handler, delete_team::delete_team_handler,
                 find_user::find_user_handler, logout::logout_handler,
+                reset_password::reset_password_handler,
             },
         },
         v3::users::{
@@ -241,6 +242,14 @@ pub async fn route(
                 .layer(Extension(bot.map(Arc::new))),
         )
         .native_route("/v2/users/logout", npost(logout_handler))
+        .route(
+            "/v2/users/reset",
+            post_with(
+                reset_password_handler,
+                api_docs!("Reset Password", "Reset Password by user email"),
+            )
+            .with_state(pool.clone()),
+        )
         .route(
             "/v2/binances/subscriptions",
             post_with(

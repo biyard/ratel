@@ -12,6 +12,7 @@ pub mod controllers {
             pub mod delete_team;
             pub mod find_user;
             pub mod logout;
+            pub mod reset_password;
         }
         pub mod industries {
             pub mod industry;
