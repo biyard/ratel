@@ -18,9 +18,9 @@ import {
 } from '@/lib/wallet/ed25519';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
 import { HDNodeWallet } from 'ethers';
-import { removeUserInfo } from '@/lib/api/hooks/users';
 import { useQueryClient } from '@tanstack/react-query';
 import { config } from '@/config';
+import { removeUserInfo } from '@/hooks/use-user-info';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | undefined>(undefined);

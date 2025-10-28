@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
-  QK_GET_SPACE_BY_SPACE_ID,
   QK_LATEST_QUIZ_ATTEMPT,
   QK_QUIZ_ATTEMPTS,
   QK_QUIZ_ATTEMPT,
@@ -30,9 +29,9 @@ export function useQuizUpdates(spaceId: number) {
         queryKey: [QK_QUIZ_ATTEMPTS, spaceId],
       }),
       // Space data (may contain quiz configuration)
-      queryClient.invalidateQueries({
-        queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
-      }),
+      // queryClient.invalidateQueries({
+      //   queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
+      // }),
       // Any other quiz-related queries
       queryClient.invalidateQueries({
         queryKey: [QK_QUIZ_ATTEMPT],
@@ -59,10 +58,10 @@ export function useQuizUpdates(spaceId: number) {
         queryKey: [QK_QUIZ_ATTEMPTS, spaceId],
         type: 'active',
       }),
-      queryClient.refetchQueries({
-        queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
-        type: 'active',
-      }),
+      // queryClient.refetchQueries({
+      //   queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
+      //   type: 'active',
+      // }),
     ]);
   };
 
@@ -75,9 +74,9 @@ export function useQuizUpdates(spaceId: number) {
       queryClient.refetchQueries({
         queryKey: [QK_QUIZ_ATTEMPTS, spaceId],
       }),
-      queryClient.refetchQueries({
-        queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
-      }),
+      // queryClient.refetchQueries({
+      //   queryKey: [QK_GET_SPACE_BY_SPACE_ID, spaceId],
+      // }),
     ]);
   };
 

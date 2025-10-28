@@ -19,7 +19,7 @@ export function useUpdateRecommendationContentMutation<
       await updateRecommendationContents(spacePk, htmlContents);
     },
     onSuccess: async (_, { spacePk, htmlContents }) => {
-      const spaceQK = spaceKeys.recommendation(spacePk);
+      const spaceQK = spaceKeys.recommendations(spacePk);
       await optimisticUpdate<T>({ queryKey: spaceQK }, (response) => {
         response.html_contents = htmlContents;
         return response;

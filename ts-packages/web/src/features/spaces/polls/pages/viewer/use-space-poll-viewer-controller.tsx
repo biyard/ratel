@@ -11,8 +11,9 @@ import { useState } from 'react';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { LoginModal } from '@/components/popup/login-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { UserResponse } from '@/lib/api/ratel/me.v3';
+import { UserResponse } from '@/lib/api/ratel/users.v3';
 import { usePollResponseMutation } from '../../hooks/use-poll-response-mutation';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 
 export class SpacePollViewerController {
   constructor(
@@ -36,11 +37,18 @@ export class SpacePollViewerController {
   };
 
   handleSubmit = () => {
-    this.submitPollResponse.mutate({
-      spacePk: this.space.pk,
-      pollSk: this.poll.sk,
-      answers: Object.values(this.answers.get()),
-    });
+    try {
+      this.submitPollResponse.mutate({
+        spacePk: this.space.pk,
+        pollSk: this.poll.sk,
+        answers: Object.values(this.answers.get()),
+      });
+
+      showSuccessToast(this.t('success_submit_answer'));
+    } catch (err) {
+      logger.error('submit answer failed: ', err);
+      showErrorToast(this.t('failed_submit_answer'));
+    }
   };
 
   handleLogin = () => {

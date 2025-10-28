@@ -1,8 +1,8 @@
 import { useContext, useMemo } from 'react';
 import TeamSelector from './team-selector';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
 import { TeamContext } from '@/lib/contexts/team-context';
 import UserFollows from './user-follows';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 
 export default function ProfileSection() {
   const { data } = useSuspenseUserInfo();

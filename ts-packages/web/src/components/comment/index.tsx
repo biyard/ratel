@@ -10,9 +10,10 @@ import { validateString } from '@/lib/string-filter-utils';
 import { ChevronDoubleDownIcon } from '@heroicons/react/20/solid';
 import { useEffect, useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
-import { PostComment } from '@/lib/api/ratel/posts.v3';
 import { ReplyList } from './reply-list';
 import { TFunction } from 'i18next';
+import PostComment from '@/features/posts/types/post-comment';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 
 interface CommentProps {
   comment: PostComment;
@@ -193,8 +194,10 @@ export function NewComment({
         await onSubmit(content);
         editorRef.current?.clear();
         setDisabled(false);
+        showSuccessToast(t('success_create_comment'));
         onClose();
       } catch (error) {
+        showErrorToast(t('failed_create_comment'));
         logger.debug('Error submitting comment:', error);
       } finally {
         setLoading(false);

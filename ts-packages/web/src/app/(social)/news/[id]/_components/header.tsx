@@ -1,9 +1,10 @@
 import { ArrowLeft } from '@/components/icons';
-import { UserType } from '@/lib/api/models/user';
+import { UserType } from '@/lib/api/ratel/users.v3';
+
 import { getTimeAgo } from '@/lib/time-utils';
 import { BadgeIcon } from '@/components/icons';
-import { useNewsByID } from '@/app/(social)/_hooks/news';
 import { useNavigate } from 'react-router';
+import { useNewsByID } from '@/app/notifications/_hook/use-news';
 
 export default function NewsHeader({ news_id }: { news_id: number }) {
   const { data: news } = useNewsByID(news_id);

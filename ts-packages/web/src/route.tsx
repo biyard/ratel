@@ -65,14 +65,6 @@ export const route = {
   spaceSprintLeagues: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/sprint-leagues`,
 
-  telegramSprintLeague: (space_id: number | string) =>
-    `/telegram/sprint-league/${encodeURIComponent(space_id)}`,
-  telegramSubscribe: (chat_id: number, lang?: string) => {
-    return `/telegram/subscribe?chat_id=${chat_id}${
-      lang ? `&lang=${lang}` : ''
-    }`;
-  },
-
   // Admin routes
   admin: () => '/admin',
   adminMemberships: () => '/admin/memberships',
