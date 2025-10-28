@@ -32,6 +32,7 @@ pub mod assets {
 pub mod auth {
     pub mod login;
     pub mod logout;
+    pub mod reset_password;
     pub mod signup;
 
     #[cfg(test)]

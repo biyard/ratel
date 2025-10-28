@@ -13,6 +13,7 @@ import { logger } from '@/lib/logger';
 import { ReplyList } from './reply-list';
 import { TFunction } from 'i18next';
 import PostComment from '@/features/posts/types/post-comment';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 
 interface CommentProps {
   comment: PostComment;
@@ -193,8 +194,10 @@ export function NewComment({
         await onSubmit(content);
         editorRef.current?.clear();
         setDisabled(false);
+        showSuccessToast(t('success_create_comment'));
         onClose();
       } catch (error) {
+        showErrorToast(t('failed_create_comment'));
         logger.debug('Error submitting comment:', error);
       } finally {
         setLoading(false);
