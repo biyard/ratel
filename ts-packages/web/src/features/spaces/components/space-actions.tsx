@@ -52,7 +52,7 @@ export function SpaceActionDropdown({
               <Button
                 aria-role={firstAction.label}
                 variant="rounded_secondary"
-                className="w-full rounded-r-none !important"
+                className="w-full rounded-r-none !important text-[#262626]"
                 onPointerDown={(e) => {
                   e.stopPropagation();
                   e.preventDefault();

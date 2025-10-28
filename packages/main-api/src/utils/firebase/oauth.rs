@@ -6,8 +6,8 @@ pub use noop::*;
 
 #[cfg(not(feature = "no-secret"))]
 mod r {
-    use chrono::Utc;
     use bdk::prelude::reqwest;
+    use chrono::Utc;
     use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode, decode_header};
     use once_cell::sync::Lazy;
     use serde::Deserialize;
@@ -15,7 +15,7 @@ mod r {
     use std::time::{Duration, Instant};
     use tokio::sync::Mutex;
 
-    use crate::{Error2, config};
+    use crate::{Error, config};
 
     // https://firebase.google.com/docs/auth/admin/verify-id-tokens?_gl=1*rpu45t*_up*MQ..*_ga*MTA3NjIzNjEyOS4xNzU4Njk1MDI0*_ga_CW55HF8NVT*czE3NTg2OTUwMjMkbzEkZzAkdDE3NTg2OTUwMjMkajYwJGwwJGgw#c++
 
@@ -50,14 +50,14 @@ mod r {
     const GOOGLE_PUBLIC_KEYS_URL: &str =
         "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
 
-    async fn fetch_and_cache_keys() -> Result<(), Error2> {
+    async fn fetch_and_cache_keys() -> Result<(), Error> {
         let client = reqwest::Client::new();
         let response = client
             .get(GOOGLE_PUBLIC_KEYS_URL)
             .send()
             .await
             .map_err(|e| {
-                Error2::InternalServerError(format!("Failed to fetch public keys: {}", e))
+                Error::InternalServerError(format!("Failed to fetch public keys: {}", e))
             })?;
 
         let cache_control = response
@@ -73,7 +73,7 @@ mod r {
             .unwrap_or(0);
 
         let fetched_keys: HashMap<String, String> = response.json().await.map_err(|e| {
-            Error2::InternalServerError(format!("Failed to parse public keys JSON: {}", e))
+            Error::InternalServerError(format!("Failed to parse public keys JSON: {}", e))
         })?;
 
         let decoding_keys = fetched_keys
@@ -81,9 +81,7 @@ mod r {
             .map(|(kid, pem)| {
                 DecodingKey::from_rsa_pem(pem.as_bytes())
                     .map(|key| (kid, key))
-                    .map_err(|e| {
-                        Error2::InternalServerError(format!("Invalid PEM for kid {:?}", e))
-                    })
+                    .map_err(|e| Error::InternalServerError(format!("Invalid PEM for kid {:?}", e)))
             })
             .collect::<Result<HashMap<_, _>, _>>()?;
 
@@ -105,19 +103,19 @@ mod r {
     /// # Returns
     /// * `Ok(String)` - User uid
     /// * `Err(String)` - Err Message
-    pub async fn verify_token(token_str: &str) -> Result<String, Error2> {
+    pub async fn verify_token(token_str: &str) -> Result<String, Error> {
         let project_id = config::get().firebase.project_id;
 
         let header = decode_header(token_str)
-            .map_err(|e| Error2::BadRequest(format!("Invalid Firebase token header: {}", e)))?;
+            .map_err(|e| Error::BadRequest(format!("Invalid Firebase token header: {}", e)))?;
 
         if header.alg != Algorithm::RS256 {
-            return Err(Error2::BadRequest(
+            return Err(Error::BadRequest(
                 "Invalid Firebase token algorithm".to_string(),
             ));
         }
 
-        let kid = header.kid.ok_or(Error2::BadRequest(
+        let kid = header.kid.ok_or(Error::BadRequest(
             "Token header missing 'kid' field".to_string(),
         ))?;
 
@@ -135,7 +133,7 @@ mod r {
                 .keys
                 .get(&kid)
                 .cloned()
-                .ok_or(Error2::BadRequest(format!("Unknown kid: {}", kid)))?
+                .ok_or(Error::BadRequest(format!("Unknown kid: {}", kid)))?
         };
 
         let mut validation = Validation::new(Algorithm::RS256);
@@ -143,19 +141,19 @@ mod r {
         validation.set_issuer(&[format!("https://securetoken.google.com/{}", project_id)]);
 
         let token_data = decode::<Claims>(token_str, &decoding_key, &validation)
-            .map_err(|e| Error2::BadRequest(format!("Failed to decode token: {}", e)))?;
+            .map_err(|e| Error::BadRequest(format!("Failed to decode token: {}", e)))?;
 
         let claims = token_data.claims;
         let now = Utc::now().timestamp();
         tracing::info!("Token claims: {:?}", claims);
 
         if claims.auth_time > now {
-            return Err(Error2::BadRequest(
+            return Err(Error::BadRequest(
                 "auth_time must be in the past".to_string(),
             ));
         }
         if claims.sub.is_empty() {
-            return Err(Error2::BadRequest(
+            return Err(Error::BadRequest(
                 "sub (uid) must be a non-empty string".to_string(),
             ));
         }
@@ -167,12 +165,12 @@ mod r {
 
 #[cfg(feature = "no-secret")]
 mod noop {
-    use crate::Error2;
+    use crate::Error;
 
     /// No-op token verification for testing.
     ///
     /// Always returns the token string as uid.
-    pub async fn verify_token(token_str: &str) -> Result<String, Error2> {
+    pub async fn verify_token(token_str: &str) -> Result<String, Error> {
         // NOTE: token_str must be email address.
         Ok(token_str.to_string())
     }

@@ -18,7 +18,7 @@ impl TeamPermissionVerifier {
         client: &aws_sdk_dynamodb::Client,
         user_pk: String,
         team_pk: String,
-    ) -> Result<Self, Error2> {
+    ) -> Result<Self, Error> {
         // Check if user is the team owner
         let team_owner = TeamOwner::get(client, &team_pk, Some(EntityType::TeamOwner)).await?;
 

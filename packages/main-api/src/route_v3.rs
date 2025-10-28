@@ -1,5 +1,5 @@
 use crate::{
-    Error2,
+    Error,
     controllers::v3::{
         assets::{
             complete_multipart_upload::complete_multipart_upload,
@@ -9,6 +9,7 @@ use crate::{
         auth::{
             login::login_handler,
             logout::logout_handler,
+            reset_password::reset_password_handler,
             signup::signup_handler,
             verification::{send_code::send_code_handler, verify_code::verify_code_handler},
         },
@@ -68,7 +69,7 @@ pub fn route(
         pool,
         bot,
     }: RouteDeps,
-) -> Result<Router, Error2> {
+) -> Result<Router, Error> {
     Ok(Router::new()
         .nest(
             "/networks",
@@ -113,6 +114,7 @@ pub fn route(
                 .route("/login", post(login_handler))
                 .route("/logout", post(logout_handler))
                 .route("/signup", post(signup_handler))
+                .route("/reset", post(reset_password_handler))
                 .nest(
                     "/verification",
                     Router::new()

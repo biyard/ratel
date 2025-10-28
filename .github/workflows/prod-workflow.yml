@@ -11,7 +11,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [main-api, nextjs-web, fetcher, image-worker]
+    needs: [main-api, nextjs-web, image-worker, fetcher]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -238,7 +238,6 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
 
           DYNAMO_TABLE_PREFIX: ratel-prod
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           MIGRATE: false
         run: |
           make docker.build

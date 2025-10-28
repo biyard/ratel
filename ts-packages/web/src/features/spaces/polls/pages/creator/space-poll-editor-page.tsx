@@ -27,7 +27,7 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
           className="justify-end"
         />
 
-        {ctrl.space.isAdmin() && (
+        {ctrl.space.isAdmin() && ctrl.space.isDraft && (
           <div className="flex flex-row items-center gap-3 mb-4">
             <CustomCheckbox
               checked={ctrl.poll.response_editable}

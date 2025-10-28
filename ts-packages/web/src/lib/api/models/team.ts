@@ -1,4 +1,5 @@
-import type { Group, User, UserType } from './user';
+import { User, UserType } from '../ratel/users.v3';
+import type { Group } from './user';
 
 export interface DeleteTeamRequest {
   team_id: number;

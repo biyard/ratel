@@ -16,6 +16,31 @@ pub fn validate_username(name: &str) -> Result<(), ValidationError> {
     Ok(())
 }
 
+pub fn validate_nickname(nickname: &str) -> Result<(), ValidationError> {
+    let trimmed = nickname.trim();
+    let len = trimmed.chars().count();
+
+    if len < 1 || len > 30 {
+        return Err(ValidationError::new(
+            "Display name must be between 1 and 30 characters",
+        ));
+    }
+
+    if trimmed.is_empty() {
+        return Err(ValidationError::new(
+            "Display name cannot be empty or only whitespace",
+        ));
+    }
+
+    // Count words (split by whitespace)
+    let word_count = trimmed.split_whitespace().count();
+    if word_count > 2 {
+        return Err(ValidationError::new("Display name must be at most 2 words"));
+    }
+
+    Ok(())
+}
+
 pub fn validate_description(description: &str) -> Result<(), ValidationError> {
     let len = description.chars().count();
     if len < 10 {

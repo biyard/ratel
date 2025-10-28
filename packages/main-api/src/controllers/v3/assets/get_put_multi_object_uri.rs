@@ -6,7 +6,7 @@ use by_axum::axum::{
 use serde::Deserialize;
 
 use crate::{
-    AppState, Error2, controllers::v3::assets::get_put_object_uri::AssetPresignedUris,
+    AppState, Error, controllers::v3::assets::get_put_object_uri::AssetPresignedUris,
     types::file_type::FileType,
 };
 
@@ -21,7 +21,7 @@ pub struct GetPutObjectUriQueryParams {
 pub async fn get_put_multi_object_uri(
     State(AppState { .. }): State<AppState>,
     Query(req): Query<GetPutObjectUriQueryParams>,
-) -> Result<Json<AssetPresignedUris>, crate::Error2> {
+) -> Result<Json<AssetPresignedUris>, crate::Error> {
     use aws_config::{BehaviorVersion, Region, defaults};
     use aws_sdk_s3::{config::Credentials, presigning::PresigningConfig};
     use std::time::Duration;
@@ -61,12 +61,12 @@ pub async fn get_put_multi_object_uri(
         .await
         .map_err(|e| {
             tracing::error!("Failed to initiate multipart upload: {}", e);
-            Error2::AssetError(e.to_string())
+            Error::AssetError(e.to_string())
         })?;
 
     let upload_id = upload_resp
         .upload_id()
-        .ok_or_else(|| Error2::AssetError("Upload ID missing".to_string()))?
+        .ok_or_else(|| Error::AssetError("Upload ID missing".to_string()))?
         .to_string();
 
     // 2. Generate presigned URL for each part
@@ -83,13 +83,13 @@ pub async fn get_put_multi_object_uri(
             .presigned(
                 PresigningConfig::expires_in(Duration::from_secs(expire)).map_err(|e| {
                     tracing::error!("Failed to set expiration: {}", e);
-                    Error2::AssetError(e.to_string())
+                    Error::AssetError(e.to_string())
                 })?,
             )
             .await
             .map_err(|e| {
                 tracing::error!("Failed to create presigned part URL: {}", e);
-                Error2::AssetError(e.to_string())
+                Error::AssetError(e.to_string())
             })?;
 
         presigned_uris.push(presigned.uri().to_string());

@@ -1,4 +1,4 @@
-use crate::{Error2, models::team::Team, types::*, utils::time::get_now_timestamp_millis};
+use crate::{Error, models::team::Team, types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
 #[derive(
@@ -158,10 +158,10 @@ impl SpaceCommon {
         space_pk: &Partition,
         user_pk: Option<&Partition>,
         perm: TeamGroupPermission,
-    ) -> Result<(Self, bool), crate::Error2> {
+    ) -> Result<(Self, bool), crate::Error> {
         let space = SpaceCommon::get(cli, space_pk, Some(EntityType::SpaceCommon))
             .await?
-            .ok_or(Error2::SpaceNotFound)?;
+            .ok_or(Error::SpaceNotFound)?;
 
         let permissions = space.permissions_for_guest();
 
@@ -193,7 +193,7 @@ impl SpaceCommon {
                 let has_perm = Team::has_permission(cli, author_pk, user_pk, perm).await?;
                 Ok((space, has_perm))
             }
-            _ => Err(Error2::InternalServerError("Invalid space author".into())),
+            _ => Err(Error::InternalServerError("Invalid space author".into())),
         }
     }
 

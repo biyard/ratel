@@ -1,11 +1,11 @@
-use crate::{Error2, config};
+use crate::{Error, config};
 use ethers::core::k256::sha2::Sha256;
 use hmac::{Hmac, Mac};
 use serde::Deserialize;
 
 // https://core.telegram.org/bots/webapps#validating-data-received-via-the-mini-app
 
-pub fn parse_telegram_raw(telegram_raw: String) -> Result<TelegramUser, Error2> {
+pub fn parse_telegram_raw(telegram_raw: String) -> Result<TelegramUser, Error> {
     let config = config::get();
     let telegram_token = config.telegram_token.unwrap_or_default();
 
@@ -57,7 +57,7 @@ pub fn parse_telegram_raw(telegram_raw: String) -> Result<TelegramUser, Error2> 
     if let Some(validation_result) = validation_result {
         Ok(validation_result)
     } else {
-        return Err(Error2::InternalServerError(
+        return Err(Error::InternalServerError(
             "Failed to validate and parse Telegram data".into(),
         ));
     }

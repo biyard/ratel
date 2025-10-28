@@ -1,6 +1,6 @@
-use bdk::prelude::*;
 use aws_config::{Region, SdkConfig};
 use aws_sdk_dynamodb::{Client, Config, config::Credentials};
+use bdk::prelude::*;
 use by_types::DatabaseConfig;
 
 use crate::config;

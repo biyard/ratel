@@ -30,7 +30,7 @@ impl SpaceRecommendation {
         cli: &aws_sdk_dynamodb::Client,
         space_pk: Partition,
         files: Vec<File>,
-    ) -> Result<Self, crate::Error2> {
+    ) -> Result<Self, crate::Error> {
         let (pk, sk) = Self::keys(&space_pk);
 
         let recommendation = SpaceRecommendation::get(&cli, pk.clone(), Some(sk.clone())).await?;
@@ -56,7 +56,7 @@ impl SpaceRecommendation {
         cli: &aws_sdk_dynamodb::Client,
         space_pk: Partition,
         html_contents: String,
-    ) -> Result<Self, crate::Error2> {
+    ) -> Result<Self, crate::Error> {
         let (pk, sk) = Self::keys(&space_pk);
 
         let recommendation = SpaceRecommendation::get(&cli, pk.clone(), Some(sk.clone())).await?;
@@ -76,6 +76,31 @@ impl SpaceRecommendation {
         recommendation.html_contents = html_contents;
 
         Ok(recommendation)
+    }
+
+    pub async fn delete_one(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: &Partition,
+    ) -> crate::Result<()> {
+        let recommendation = SpaceRecommendation::get(
+            &cli,
+            space_pk.clone(),
+            Some(EntityType::SpaceRecommendation),
+        )
+        .await?;
+
+        if recommendation.is_none() {
+            return Ok(());
+        }
+
+        SpaceRecommendation::delete(
+            &cli,
+            &space_pk.clone(),
+            Some(EntityType::SpaceRecommendation),
+        )
+        .await?;
+
+        Ok(())
     }
 }
 

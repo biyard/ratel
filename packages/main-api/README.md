@@ -39,7 +39,7 @@ Also, you can stop compose with `make stop` (`docker compose down`)
 
 ---
 
-### 1. Don't use `dto:Error`. Please Use `Error2` instead.
+### 1. Don't use `dto:Error`. Please Use `Error` instead.
 
 ### 2. Record all routes in the `route_v3.rs` file.
 To avoid conflicts with existing routes and namespaces, all new routes should be separated into this file.
@@ -96,7 +96,7 @@ Please add this code to `settings.json`
 "Axum POST Handler": {
 		"prefix": "axum_post_handler",
 		"body": [
-			"use crate::{AppState, Error2};",
+			"use crate::{AppState, Error};",
 			"use dto::{JsonSchema, aide, schemars};",
 			"use dto::by_axum::{",
 			"    auth::Authorization,",
@@ -124,7 +124,7 @@ Please add this code to `settings.json`
 			"    Extension(auth): Extension<Option<Authorization>>,",
 			"    Path(params): Path<${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}PathParams>,",
 			"    Json(req): Json<${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}Request>,",
-			") -> Result<Json<${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}Response>, Error2> {",
+			") -> Result<Json<${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}Response>, Error> {",
 			"    $0",
 			"    Ok(Json(${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}Response::default()))",
 			"}"
@@ -134,7 +134,7 @@ Please add this code to `settings.json`
 	"Axum GET Handler": {
 		"prefix": "axum_get_handler",
 		"body": [
-			"use crate::{AppState, Error2};",
+			"use crate::{AppState, Error};",
 			"use dto::{JsonSchema, aide, schemars};",
 			"use dto::by_axum::{",
 			"    auth::Authorization,",
@@ -162,7 +162,7 @@ Please add this code to `settings.json`
 			"    Extension(auth): Extension<Option<Authorization>>,",
 			"    Path(path): Path<${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}PathParams>,",
 			"    Query(params): Query<${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}QueryParams>,",
-			") -> Result<Json<${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}Response>, Error2> {",
+			") -> Result<Json<${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}Response>, Error> {",
 			"    $0",
 			"    Ok(Json(${TM_FILENAME_BASE/(.*)/${1:/pascalcase}/}Response::default()))",
 			"}"

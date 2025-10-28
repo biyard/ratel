@@ -1,8 +1,9 @@
 import { showErrorToast } from '@/components/custom-toast/toast';
 import { feedKeys } from '@/constants';
+import { PostDetailResponse } from '@/features/posts/dto/post-detail-response';
+import PostComment from '@/features/posts/types/post-comment';
 import { likeComment } from '@/lib/api/ratel/comments.v3';
 import { ListResponse } from '@/lib/api/ratel/common';
-import { PostComment, PostDetailResponse } from '@/lib/api/ratel/posts.v3';
 import { optimisticListUpdate, optimisticUpdate } from '@/lib/hook-utils';
 import { logger } from '@/lib/logger';
 import { useMutation } from '@tanstack/react-query';
@@ -27,7 +28,7 @@ export function useLikeCommentMutation() {
       const queryKey = feedKeys.detail(postPk);
       const repliesQueryKey = feedKeys.repliesOfComment(postPk, commentSk);
 
-      let backupPost = await optimisticUpdate<PostDetailResponse>(
+      const backupPost = await optimisticUpdate<PostDetailResponse>(
         { queryKey },
         (post) => {
           const comments = post.comments.map((c) => {
@@ -59,36 +60,35 @@ export function useLikeCommentMutation() {
         },
       );
 
-      let backupReplies = await optimisticListUpdate<ListResponse<PostComment>>(
-        { queryKey: repliesQueryKey },
-        (replies) => {
-          const items = replies.items.map((c) => {
-            if (c.sk === commentSk) {
-              if (c.liked === like) {
-                return c;
-              }
-
-              if (like) {
-                return {
-                  ...c,
-                  liked: like,
-                  likes: c.likes + 1,
-                };
-              } else {
-                return {
-                  ...c,
-                  liked: like,
-                  likes: Math.max(0, c.likes - 1),
-                };
-              }
+      const backupReplies = await optimisticListUpdate<
+        ListResponse<PostComment>
+      >({ queryKey: repliesQueryKey }, (replies) => {
+        const items = replies.items.map((c) => {
+          if (c.sk === commentSk) {
+            if (c.liked === like) {
+              return c;
             }
 
-            return c;
-          });
+            if (like) {
+              return {
+                ...c,
+                liked: like,
+                likes: c.likes + 1,
+              };
+            } else {
+              return {
+                ...c,
+                liked: like,
+                likes: Math.max(0, c.likes - 1),
+              };
+            }
+          }
 
-          return { ...replies, items };
-        },
-      );
+          return c;
+        });
+
+        return { ...replies, items };
+      });
 
       return { backupPost, backupReplies };
     },

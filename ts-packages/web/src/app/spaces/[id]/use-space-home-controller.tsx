@@ -4,26 +4,30 @@ import { useSpaceHomeData } from './use-space-home-data';
 import { SideMenuProps } from '@/features/spaces/components/space-side-menu';
 import { route } from '@/route';
 import { Space } from '@/features/spaces/types/space';
-import { Settings } from '@/components/icons';
+import { Post, Settings } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
-import { UserResponse } from '@/lib/api/ratel/me.v3';
 import { logger } from '@/lib/logger';
 import { useSpaceUpdateContentMutation } from '@/features/spaces/hooks/use-space-update-content-mutation';
-import { showErrorToast } from '@/lib/toast';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useSpaceUpdateTitleMutation } from '@/features/spaces/hooks/use-space-update-title-mutation';
 import { sideMenusForSpaceType } from '@/features/spaces/utils/side-menus-for-space-type';
 import { usePopup } from '@/lib/contexts/popup-service';
 import PublishSpaceModal from '@/features/spaces/modals/space-publish-modal';
 import { usePublishSpaceMutation } from '@/features/spaces/hooks/use-publish-mutation';
+import SpaceDeleteModal from '@/features/spaces/modals/space-delete-modal';
+import { useDeleteSpaceMutation } from '@/features/spaces/hooks/use-delete-mutation';
+import { NavigateFunction, useNavigate } from 'react-router';
+import { UserDetailResponse } from '@/lib/api/ratel/users.v3';
 
 export class SpaceHomeController {
   public space: Space;
-  public user: UserResponse | null;
+  public user: UserDetailResponse | null;
   public saveHook?: () => Promise<void>;
   public publishHook?: () => Promise<void>;
 
   constructor(
+    public navigate: NavigateFunction,
     public data: ReturnType<typeof useSpaceHomeData>,
     public state: State<boolean>,
     public t: TFunction<'Space'>,
@@ -33,6 +37,7 @@ export class SpaceHomeController {
     public saveState: State<boolean>,
     public popup: ReturnType<typeof usePopup>,
     public publishSpace: ReturnType<typeof usePublishSpaceMutation>,
+    public deleteSpace: ReturnType<typeof useDeleteSpaceMutation>,
   ) {
     this.space = this.data.space.data;
   }
@@ -50,7 +55,7 @@ export class SpaceHomeController {
   get menus() {
     const menus: SideMenuProps[] = [
       {
-        Icon: Settings,
+        Icon: Post,
         to: route.spaceByType(this.space.spaceType, this.space.pk),
         label: this.t('menu_overview'),
       },
@@ -99,6 +104,7 @@ export class SpaceHomeController {
         spacePk: this.space.pk,
         content: text,
       });
+      showSuccessToast('Success to update space content');
     } catch (error) {
       logger.error('Failed to update space content', error);
       showErrorToast(`Failed to update space content: ${error}`);
@@ -112,6 +118,7 @@ export class SpaceHomeController {
         spacePk: this.space.pk,
         title,
       });
+      showSuccessToast('Success to update space title');
     } catch (error) {
       logger.error('Failed to update space title', error);
       showErrorToast(`Failed to update space title: ${error}`);
@@ -143,10 +150,40 @@ export class SpaceHomeController {
 
     const visibility = { type: publishType };
 
-    this.publishSpace.mutateAsync({
-      spacePk: this.space.pk,
-      visibility,
-    });
+    try {
+      this.publishSpace.mutateAsync({
+        spacePk: this.space.pk,
+        visibility,
+      });
+
+      showSuccessToast(this.t('success_publish_space'));
+    } catch (err) {
+      logger.error('publish space failed: ', err);
+      showErrorToast(this.t('failed_publish_space'));
+    } finally {
+      this.popup.close();
+    }
+  };
+
+  handleDelete = async () => {
+    if (this.publishHook) {
+      this.publishHook();
+    }
+
+    try {
+      this.deleteSpace.mutateAsync({
+        spacePk: this.space.pk,
+      });
+
+      this.navigate(route.home());
+      showSuccessToast(this.t('success_delete_space'));
+    } catch (err) {
+      logger.error('delete space failed: ', err);
+      showErrorToast(this.t('failed_delete_space'));
+    } finally {
+      this.popup.close();
+    }
+
     this.popup.close();
   };
 
@@ -161,13 +198,26 @@ export class SpaceHomeController {
 
   handleActionDelete = async () => {
     logger.debug('Action delete triggered');
+
+    this.popup
+      .open(
+        <SpaceDeleteModal
+          spaceName={this.space.title}
+          onDelete={this.handleDelete}
+          onClose={() => {
+            this.popup.close();
+          }}
+        />,
+      )
+      .withTitle(this.t('delete_space'))
+      .withoutBackdropClose();
   };
 
   get actions() {
     const ret = [
       {
         label: this.t('delete'),
-        onClick: this.handleActionPublish,
+        onClick: this.handleActionDelete,
       },
     ];
 
@@ -186,15 +236,18 @@ export function useSpaceHomeController(spacePk: string) {
   const data = useSpaceHomeData(spacePk);
   const state = useState(false);
   const { t } = useTranslation('Space');
+  const navigate = useNavigate();
   const updateSpaceContent = useSpaceUpdateContentMutation();
   const updateSpaceTitle = useSpaceUpdateTitleMutation();
   const publishSpace = usePublishSpaceMutation();
+  const deleteSpace = useDeleteSpaceMutation();
 
   const edit = useState(false);
   const save = useState(false);
   const popup = usePopup();
 
   return new SpaceHomeController(
+    navigate,
     data,
     new State(state),
     t,
@@ -204,5 +257,6 @@ export function useSpaceHomeController(spacePk: string) {
     new State(save),
     popup,
     publishSpace,
+    deleteSpace,
   );
 }

@@ -2,7 +2,7 @@ use crate::models::feed::{Post, PostLike, PostQueryOption};
 use crate::models::user::User;
 use crate::types::list_items_response::ListItemsResponse;
 use crate::types::{EntityType, Visibility};
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 use aide::NoApi;
 use bdk::prelude::*;
 use by_axum::axum::{
@@ -23,7 +23,7 @@ pub async fn list_posts_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Query(ListPostsQueryParams { bookmark }): Query<ListPostsQueryParams>,
-) -> Result<Json<ListItemsResponse<PostResponse>>, Error2> {
+) -> Result<Json<ListItemsResponse<PostResponse>>, Error> {
     tracing::debug!(
         "list_posts_handler: user = {:?} bookmark = {:?}",
         user,
