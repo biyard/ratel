@@ -181,35 +181,11 @@ impl FromRequestParts<AppState> for Option<User> {
 
     async fn from_request_parts(
         parts: &mut Parts,
-        _state: &AppState,
+        state: &AppState,
     ) -> Result<Self, Self::Rejection> {
         tracing::debug!("extracting optional user from request parts");
-        let session = Session::from_request_parts(parts, _state).await;
 
-        if let Err(_e) = &session {
-            return Ok(None);
-        }
-
-        let session = session.unwrap();
-
-        let user_pk: Partition = if let Ok(Some(u)) = session.get(SESSION_KEY_USER_ID).await {
-            tracing::debug!("found user id in session: {:?}", u);
-            u
-        } else {
-            let _ = session.flush().await;
-            return Ok(None);
-        };
-
-        let user = if let Ok(Some(u)) =
-            User::get(&(_state.dynamo.client), user_pk, Some(EntityType::User)).await
-        {
-            u
-        } else {
-            let _ = session.flush().await;
-            return Ok(None);
-        };
-
-        Ok(Some(user))
+        Ok(User::from_request_parts(parts, state).await.ok())
     }
 }
 
@@ -222,6 +198,11 @@ impl FromRequestParts<AppState> for User {
         _state: &AppState,
     ) -> Result<Self, Self::Rejection> {
         tracing::debug!("extracting user from request parts");
+
+        if let Some(user) = parts.extensions.get::<User>() {
+            return Ok(user.clone());
+        }
+
         let session = Session::from_request_parts(parts, _state)
             .await
             .map_err(|e| {
@@ -261,6 +242,8 @@ impl FromRequestParts<AppState> for User {
             }
             return Err(crate::Error::NoUserFound);
         }
+
+        parts.extensions.insert(user.as_ref().unwrap().clone());
 
         Ok(user.unwrap())
     }
