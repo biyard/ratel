@@ -24,6 +24,7 @@ OPENAPI_KEY ?=
 SLACK_CHANNEL_BILL ?=
 SERVER_KEY ?=
 US_CONGRESS_KEY ?=
+WEB_BUILD ?= false
 RPC_ENDPOINT ?= https://public-en-kairos.node.kaia.io
 TELEGRAM_TOKEN ?=
 BUILD_ENV ?= ENV=$(ENV) \
@@ -54,7 +55,8 @@ BUILD_ENV ?= ENV=$(ENV) \
                                 DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
                                 TELEGRAM_TOKEN=$(TELEGRAM_TOKEN) \
                                 DYNAMO_ENDPOINT=$(DYNAMO_ENDPOINT) \
-								DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX)
+								DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
+                                WEB_BUILD=$(WEB_BUILD)
 
 run:
 	$(BUILD_ENV) cargo watch -x run -w src -w $(PWD)/..

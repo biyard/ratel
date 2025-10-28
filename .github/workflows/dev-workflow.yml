@@ -271,6 +271,7 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
 
           DYNAMO_TABLE_PREFIX: ratel-dev
+          WEB_BUILD: false
           MIGRATE: false
         run: |
           make docker.build
