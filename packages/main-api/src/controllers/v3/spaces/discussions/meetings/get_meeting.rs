@@ -5,7 +5,7 @@ use crate::features::spaces::discussions::models::space_discussion_participant::
 use crate::types::attendee_info::AttendeeInfo;
 use crate::types::media_placement_info::MediaPlacementInfo;
 use crate::types::meeting_info::MeetingInfo;
-use crate::{AppState, Error2, models::user::User};
+use crate::{AppState, Error, models::user::User};
 use bdk::prelude::axum::extract::{Json, Path, State};
 use bdk::prelude::*;
 
@@ -18,7 +18,7 @@ pub async fn get_meeting_handler(
         space_pk,
         discussion_pk,
     }): SpaceDiscussionPath,
-) -> Result<Json<MeetingData>, Error2> {
+) -> Result<Json<MeetingData>, Error> {
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
     let (pk, sk) = SpaceDiscussion::keys(&space_pk, &discussion_pk);
 
@@ -35,7 +35,7 @@ pub async fn get_meeting_handler(
         SpaceDiscussionParticipant::get(&dynamo.client, p_pk.clone(), Some(p_sk.clone())).await?;
 
     if participant.is_none() {
-        return Err(Error2::AwsChimeError("Not Found Participant".into()));
+        return Err(Error::AwsChimeError("Not Found Participant".into()));
     }
 
     let participant = participant.unwrap();
@@ -52,7 +52,7 @@ pub async fn get_meeting_handler(
             Ok(v) => Ok(v),
             Err(e) => {
                 tracing::error!("create meeting failed with error: {:?}", e);
-                Err(Error2::AwsChimeError(e.to_string()))
+                Err(Error::AwsChimeError(e.to_string()))
             }
         }?;
 
@@ -62,7 +62,7 @@ pub async fn get_meeting_handler(
     let meeting_id = meeting.clone().meeting_id.unwrap_or_default();
     let mp = meeting
         .media_placement()
-        .ok_or(Error2::AwsChimeError("Missing media_placement".to_string()))?;
+        .ok_or(Error::AwsChimeError("Missing media_placement".to_string()))?;
 
     let meeting_info = MeetingInfo {
         meeting_id: meeting_id.clone(),
@@ -92,7 +92,7 @@ pub async fn get_meeting_handler(
             Ok(v) => v,
             Err(e) => {
                 tracing::error!("create attendee failed: {:?}", e);
-                return Err(Error2::AwsChimeError(e.to_string()));
+                return Err(Error::AwsChimeError(e.to_string()));
             }
         };
 
@@ -102,7 +102,7 @@ pub async fn get_meeting_handler(
         {
             Some(a) => a,
             None => {
-                return Err(Error2::AwsChimeError(
+                return Err(Error::AwsChimeError(
                     "Failed to fetch created attendee".to_string(),
                 ));
             }

@@ -1,5 +1,5 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     models::{PostCommentLike, feed::PostMetadata, user::User},
 };
 use aide::NoApi;
@@ -15,7 +15,7 @@ pub async fn get_post_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Path(PostPathParam { post_pk }): PostPath,
-) -> Result<Json<PostDetailResponse>, Error2> {
+) -> Result<Json<PostDetailResponse>, Error> {
     let cli = &dynamo.client;
     tracing::debug!("Get post for post_pk: {}", post_pk);
 
@@ -35,11 +35,11 @@ pub async fn get_post_handler(
         }
     }
 
-    let post = post.ok_or(Error2::PostNotFound)?;
+    let post = post.ok_or(Error::PostNotFound)?;
 
     let permissions = post.get_permissions(cli, user.clone()).await?;
     if !permissions.contains(crate::types::TeamGroupPermission::PostRead) {
-        return Err(Error2::Unauthorized(
+        return Err(Error::Unauthorized(
             "You do not have permission to view this post".into(),
         ));
     }

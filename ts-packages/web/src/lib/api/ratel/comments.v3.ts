@@ -1,6 +1,6 @@
+import PostComment from '@/features/posts/types/post-comment';
 import { call } from './call';
 import { ListResponse } from './common';
-import { PostComment } from './posts.v3';
 
 export function comment(postPk: string, content: string): Promise<PostComment> {
   return call('POST', `/v3/posts/${encodeURIComponent(postPk)}/comments`, {

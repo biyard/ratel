@@ -1,7 +1,7 @@
 use crate::models::{team::TeamGroup, user::User};
 use crate::types::{EntityType, Partition, TeamGroupPermission, TeamGroupPermissions};
 use crate::utils::security::{RatelResource, check_any_permission_with_user};
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 use bdk::prelude::*;
 use by_axum::{
     aide::NoApi,
@@ -35,7 +35,7 @@ pub async fn update_group_handler(
     NoApi(user): NoApi<User>,
     Path(params): Path<UpdateGroupPathParams>,
     Json(req): Json<UpdateGroupRequest>,
-) -> Result<(), Error2> {
+) -> Result<(), Error> {
     let required_permissions = if req.permissions.is_some() {
         vec![TeamGroupPermission::TeamAdmin]
     } else {

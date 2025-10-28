@@ -50,7 +50,7 @@ export default function SurveyEditor({ ctrl }: SurveyEditorProps) {
           className="flex z-10 justify-center items-center rounded-full border cursor-pointer bg-background w-fit h-fit p-[13px] border-neutral-500"
           onClick={ctrl.handleAddQuestion}
         >
-          <Add className="w-4 h-4 stroke-neutral-500 text-neutral-500" />
+          <Add className="w-4 h-4 [&>path]:stroke-neutral-500 stroke-neutral-500 text-neutral-500" />
         </div>
       </div>
     </div>

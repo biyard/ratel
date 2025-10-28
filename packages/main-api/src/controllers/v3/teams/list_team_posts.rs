@@ -2,7 +2,7 @@ use crate::models::feed::{Post, PostLike, PostQueryOption};
 use crate::models::user::User;
 use crate::types::list_items_response::ListItemsResponse;
 use crate::types::{EntityType, Partition, PostStatus, Visibility};
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 use aide::NoApi;
 use bdk::prelude::*;
 use by_axum::axum::{
@@ -26,7 +26,7 @@ pub async fn list_team_posts_handler(
     NoApi(user): NoApi<Option<User>>,
     Path(team_pk): Path<String>,
     Query(ListTeamPostsQueryParams { bookmark, status }): Query<ListTeamPostsQueryParams>,
-) -> Result<Json<ListItemsResponse<PostResponse>>, Error2> {
+) -> Result<Json<ListItemsResponse<PostResponse>>, Error> {
     tracing::debug!(
         "list_team_posts_handler: user = {:?}, team_pk = {:?}, bookmark = {:?}, status = {:?}",
         user,
@@ -39,7 +39,7 @@ pub async fn list_team_posts_handler(
     let team_partition: Partition = if team_pk.starts_with("TEAM#") {
         Partition::Team(team_pk.strip_prefix("TEAM#").unwrap().to_string())
     } else {
-        return Err(Error2::BadRequest(format!(
+        return Err(Error::BadRequest(format!(
             "Invalid team_pk format: {}",
             team_pk
         )));
@@ -56,7 +56,7 @@ pub async fn list_team_posts_handler(
         let post_status = match status_val {
             1 => PostStatus::Draft,
             2 => PostStatus::Published,
-            _ => return Err(Error2::BadRequest("Invalid status value".into())),
+            _ => return Err(Error::BadRequest("Invalid status value".into())),
         };
 
         // Query all posts for the team

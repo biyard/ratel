@@ -13,7 +13,6 @@ import {
   TitleSection,
 } from '@/components/post-header';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { Post } from '@/lib/api/ratel/posts.v3';
 
 import {
   BackButton,
@@ -23,6 +22,7 @@ import {
   SaveButton,
 } from '@/components/post-header/buttons';
 import { useTranslation } from 'react-i18next';
+import Post from '@/features/posts/types/post';
 
 export type SpaceHeaderProps = {
   post: Post;

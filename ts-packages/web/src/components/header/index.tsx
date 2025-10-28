@@ -9,7 +9,8 @@ import Profile from '../profile';
 import { LoginModal } from '../popup/login-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { route } from '@/route';
-import { UserType } from '@/lib/api/models/user';
+import { UserType } from '@/lib/api/ratel/users.v3';
+
 import LoginIcon from '@/assets/icons/login.svg?react';
 import { useTranslation } from 'react-i18next';
 import { Us } from '../icons';
@@ -131,7 +132,7 @@ export default function Header(props: HeaderProps) {
       authorized: false,
     },
     {
-      name: 'Stroybook',
+      name: 'Storybook',
       icon: (
         <InternetIcon
           className="group-hover:[&>path]:stroke-white group-hover:[&>circle]:stroke-white transition-all"

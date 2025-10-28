@@ -11,7 +11,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [main-api, ratel-web, fetcher, image-worker, ratel-storybook]
+    needs: [main-api, ratel-web, image-worker, ratel-storybook]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -189,7 +189,7 @@ jobs:
         run: |
           cargo binstall toml-cli --force
       - name: Cache builder
-        id: fetcher-build-cache
+        id: image-worker-build-cache
         uses: actions/cache@v4
         with:
           key: image-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
@@ -326,7 +326,6 @@ jobs:
           path: ${{ github.workspace }}/dist.tar.gz
           if-no-files-found: error
           retention-days: 7
-
 
   ratel-storybook:
     runs-on: ubuntu-latest

@@ -22,7 +22,7 @@ pub struct RouteDeps {
     pub ses_client: SesClient,
 }
 
-pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Error2> {
+pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Error> {
     let RouteDeps {
         pool,
         // sqs_client,

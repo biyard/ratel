@@ -83,6 +83,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { I18nFunction } from '.';
+import { useEffect, useRef, useState } from 'react';
 
 const COLORS = ['#a1a1a1', '#737373'];
 
@@ -92,84 +93,102 @@ interface PieChartProps {
 }
 
 function PieChart({ answers, total_count }: PieChartProps) {
-  const options = Object.entries(answers).map(([label, count]) => ({
-    label,
-    count,
-    ratio: (count / total_count) * 100,
-  }));
-  const renderCustomizedLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percent,
-    index,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }: any) => {
-    if (
-      cx === undefined ||
-      cy === undefined ||
-      midAngle === undefined ||
-      innerRadius === undefined ||
-      outerRadius === undefined ||
-      percent === undefined ||
-      index === undefined
-    ) {
-      return null;
-    }
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
 
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-    const option = options[index];
+  useEffect(() => {
+    const el = hostRef.current;
+    if (!el) return;
 
-    if (!option || option.count === 0) return null;
+    const measure = () => setWidth(el.getBoundingClientRect().width || 0);
+    measure();
 
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="#fff"
-        textAnchor="middle"
-        dominantBaseline="central"
-        style={{ fontSize: 12 }}
-      >
-        {`${option.label}: ${option.count}`}
-        <tspan x={x} dy="1.2em">
-          {`${option.ratio.toFixed(0)}%`}
-        </tspan>
-      </text>
-    );
-  };
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
+
+  const data = Object.entries(answers).map(([label, count]) => {
+    const c = Number(count);
+    return {
+      label,
+      count: Number.isFinite(c) && c > 0 ? c : 0,
+      ratio:
+        total_count > 0 && Number.isFinite(c) ? (c / total_count) * 100 : 0,
+    };
+  });
+
+  const sum = data.reduce((s, d) => s + d.count, 0);
+  if (width <= 0 || sum <= 0) {
+    return <div ref={hostRef} className="w-full min-w-0 h-[250px]" />;
+  }
+
+  const W = Math.floor(width);
+  const H = 250;
+  const cx = Math.floor(W / 2);
+  const cy = Math.floor(H / 2);
+  const outerRadius = Math.min(100, Math.floor(Math.min(W, H) / 2) - 8);
 
   return (
-    <div className="flex flex-col justify-start items-start w-full">
+    <div ref={hostRef} className="w-full min-w-0">
       <ResponsiveContainer
         width="100%"
         height={250}
         className="focus:outline-none"
       >
-        <RechartsPieChart>
+        <RechartsPieChart width={W} height={H} key={`pie-${W}`}>
           <Pie
-            data={options}
+            data={data}
             dataKey="count"
             nameKey="label"
-            cx="50%"
-            cy="50%"
-            outerRadius={100}
+            cx={cx}
+            cy={cy}
+            outerRadius={outerRadius}
+            startAngle={90}
+            endAngle={450}
+            paddingAngle={0}
             labelLine={false}
-            label={renderCustomizedLabel}
-            fill="none"
-            strokeWidth={0}
             isAnimationActive={true}
+            minAngle={0}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            label={(props: any) => {
+              const { cx, cy, midAngle, innerRadius, outerRadius, index } =
+                props;
+              if (
+                [cx, cy, midAngle, innerRadius, outerRadius, index].some(
+                  (v) => v === undefined,
+                )
+              )
+                return null;
+
+              const RAD = Math.PI / 180;
+              const r = innerRadius + (outerRadius - innerRadius) * 0.5;
+              const x = cx + r * Math.cos(-midAngle * RAD);
+              const y = cy + r * Math.sin(-midAngle * RAD);
+              const o = data[index];
+              if (!o || o.count === 0) return null;
+
+              return (
+                <text
+                  x={x}
+                  y={y}
+                  fill="#fff"
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  style={{ fontSize: 12 }}
+                >
+                  {`${o.label}: ${o.count}`}
+                  <tspan x={x} dy="1.2em">{`${o.ratio.toFixed(0)}%`}</tspan>
+                </text>
+              );
+            }}
           >
-            {options.map((_, index) => (
-              <Cell
-                key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
-              />
+            {data.map((_, i) => (
+              <Cell key={i} fill={COLORS[i % COLORS.length]} />
             ))}
           </Pie>
         </RechartsPieChart>

@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@radix-ui/react-dropdown-menu';
-import { NavLink } from "react-router";
+import { NavLink } from 'react-router';
 import { route } from '@/route';
 import TeamCreationPopup from '@/app/(social)/_popups/team-creation-popup';
 import { useTranslation } from 'react-i18next';

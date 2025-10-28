@@ -4,7 +4,7 @@ use crate::models::{
     user::User,
 };
 use crate::types::EntityType;
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 use bdk::prelude::*;
 use by_axum::{
     aide::NoApi,
@@ -27,11 +27,11 @@ pub async fn delete_group_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Path((team_username, group_id)): Path<(String, String)>,
-) -> Result<Json<DeleteGroupResponse>, Error2> {
+) -> Result<Json<DeleteGroupResponse>, Error> {
     tracing::debug!("Deleting group {} from team: {}", group_id, team_username);
 
     // Check if user is authenticated
-    let auth_user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
+    let auth_user = user.ok_or(Error::Unauthorized("Authentication required".into()))?;
 
     // Get team by username
     let team_results =
@@ -42,17 +42,17 @@ pub async fn delete_group_handler(
         .0
         .into_iter()
         .find(|t| t.username == team_username)
-        .ok_or(Error2::NotFound("Team not found".into()))?;
+        .ok_or(Error::NotFound("Team not found".into()))?;
 
     let team_pk = team.pk.clone();
 
     // Check if user is the team owner
     let team_owner = TeamOwner::get(&dynamo.client, &team_pk, Some(&EntityType::TeamOwner))
         .await?
-        .ok_or(Error2::NotFound("Team owner not found".into()))?;
+        .ok_or(Error::NotFound("Team owner not found".into()))?;
 
     if team_owner.user_pk != auth_user.pk {
-        return Err(Error2::Unauthorized(
+        return Err(Error::Unauthorized(
             "Only the team owner can delete groups".into(),
         ));
     }
@@ -78,7 +78,7 @@ pub async fn delete_group_handler(
                 false
             }
         })
-        .ok_or(Error2::NotFound("Group not found".into()))?;
+        .ok_or(Error::NotFound("Group not found".into()))?;
 
     // Delete all UserTeamGroup relationships for this specific group
     // We need to query by team_pk and then filter for the specific group

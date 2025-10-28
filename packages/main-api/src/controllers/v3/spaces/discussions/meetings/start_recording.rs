@@ -3,7 +3,7 @@ use crate::features::spaces::discussions::dto::SpaceDiscussionResponse;
 use crate::features::spaces::discussions::models::space_discussion::SpaceDiscussion;
 
 use crate::models::User;
-use crate::{AppState, Error2};
+use crate::{AppState, Error};
 use aws_sdk_chimesdkmeetings::types::Meeting;
 use axum::extract::{Path, State};
 use bdk::prelude::aide::NoApi;
@@ -17,7 +17,7 @@ pub async fn start_recording_handler(
         space_pk,
         discussion_pk,
     }): SpaceDiscussionPath,
-) -> Result<Json<SpaceDiscussionResponse>, Error2> {
+) -> Result<Json<SpaceDiscussionResponse>, Error> {
     let client = crate::utils::aws_chime_sdk_meeting::ChimeMeetingService::new().await;
 
     let (pk, sk) = SpaceDiscussion::keys(&space_pk, &discussion_pk);
@@ -41,7 +41,7 @@ pub async fn start_recording_handler(
         .await
         .map_err(|e| {
             tracing::error!("failed to create pipeline: {:?}", e);
-            Error2::AwsChimeError(e.to_string())
+            Error::AwsChimeError(e.to_string())
         })?;
 
     SpaceDiscussion::updater(pk.clone(), sk.clone())
@@ -61,7 +61,7 @@ async fn build_meeting(
     client: &crate::utils::aws_chime_sdk_meeting::ChimeMeetingService,
     meeting_id: &str,
     discussion_name: String,
-) -> Result<Meeting, Error2> {
+) -> Result<Meeting, Error> {
     let m = client.get_meeting_info(&meeting_id).await;
 
     let meeting = if m.is_some() {
@@ -71,7 +71,7 @@ async fn build_meeting(
             Ok(v) => Ok(v),
             Err(e) => {
                 tracing::error!("create meeting failed with error: {:?}", e);
-                Err(Error2::AwsChimeError(e.to_string()))
+                Err(Error::AwsChimeError(e.to_string()))
             }
         }?;
 

@@ -1,6 +1,6 @@
 use crate::features::membership::dto::*;
 
-use crate::{AppState, Error2, features::membership::*, models::user::User, types::*};
+use crate::{AppState, Error, features::membership::*, models::user::User, types::*};
 use aide::NoApi;
 use axum::{Json, extract::State};
 use bdk::prelude::*;
@@ -9,10 +9,10 @@ use bdk::prelude::*;
 pub async fn renew_membership_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-) -> Result<Json<UserMembershipResponse>, Error2> {
+) -> Result<Json<UserMembershipResponse>, Error> {
     let cli = &dynamo.client;
 
-    let user = user.ok_or(Error2::NoUserFound)?;
+    let user = user.ok_or(Error::NoUserFound)?;
 
     // Get user's membership
     let pk = user.pk.clone();
@@ -20,11 +20,11 @@ pub async fn renew_membership_handler(
 
     let mut user_membership = UserMembership::get(cli, pk, sk)
         .await?
-        .ok_or(Error2::NotFound("No membership found".to_string()))?;
+        .ok_or(Error::NotFound("No membership found".to_string()))?;
 
     // Check if membership is cancelled
     if user_membership.get_status() == MembershipStatus::Cancelled {
-        return Err(Error2::BadRequest(
+        return Err(Error::BadRequest(
             "Cannot renew a cancelled membership. Please purchase a new one.".to_string(),
         ));
     }
@@ -35,7 +35,7 @@ pub async fn renew_membership_handler(
 
     let membership = Membership::get(cli, membership_pk, membership_sk)
         .await?
-        .ok_or(Error2::NotFound(
+        .ok_or(Error::NotFound(
             "Associated membership not found".to_string(),
         ))?;
 
