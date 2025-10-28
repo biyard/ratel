@@ -1,115 +1,120 @@
-import { FileType } from './api/models/file-type';
+// import { FileType } from './api/models/file-type';
 
-export function getFileType(file: File): FileType {
+import { FileExtension } from '@/features/spaces/files/types/file';
+
+export function getFileType(file: File): FileExtension {
   const mime = file.type;
   const name = file.name.toLowerCase();
 
-  if (mime === 'image/png' || name.endsWith('.png')) return FileType.PNG;
+  if (mime === 'image/png' || name.endsWith('.png')) return FileExtension.PNG;
   if (mime === 'image/jpeg' || name.endsWith('.jpg') || name.endsWith('.jpeg'))
-    return FileType.JPG;
-  if (mime === 'image/gif' || name.endsWith('.gif')) return FileType.GIF;
-  if (mime === 'image/webp' || name.endsWith('.webm')) return FileType.WEBM;
-  if (mime === 'image/svg+xml' || name.endsWith('.svg')) return FileType.SVG;
-  if (name.endsWith('.ai')) return FileType.AI;
+    return FileExtension.JPG;
+  if (mime === 'image/gif' || name.endsWith('.gif')) return FileExtension.GIF;
+  if (mime === 'image/webp' || name.endsWith('.webm'))
+    return FileExtension.WEBM;
+  if (mime === 'image/svg+xml' || name.endsWith('.svg'))
+    return FileExtension.SVG;
+  if (name.endsWith('.ai')) return FileExtension.AI;
 
-  if (mime === 'application/pdf' || name.endsWith('.pdf')) return FileType.PDF;
+  if (mime === 'application/pdf' || name.endsWith('.pdf'))
+    return FileExtension.PDF;
   if (
     mime ===
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
     name.endsWith('.xlsx')
   )
-    return FileType.XLSX;
+    return FileExtension.XLSX;
 
-  if (name.endsWith('.glb')) return FileType.GLB;
-  if (name.endsWith('.gltf')) return FileType.GLTF;
+  if (name.endsWith('.glb')) return FileExtension.GLB;
+  if (name.endsWith('.gltf')) return FileExtension.GLTF;
 
-  if (mime === 'audio/mpeg' || name.endsWith('.mp3')) return FileType.MP3;
-  if (mime === 'audio/wav' || name.endsWith('.wav')) return FileType.WAV;
+  if (mime === 'audio/mpeg' || name.endsWith('.mp3')) return FileExtension.MP3;
+  if (mime === 'audio/wav' || name.endsWith('.wav')) return FileExtension.WAV;
 
-  if (mime === 'video/mp4' || name.endsWith('.mp4')) return FileType.MP4;
-  if (mime === 'video/mov' || name.endsWith('.mov')) return FileType.MOV;
+  if (mime === 'video/mp4' || name.endsWith('.mp4')) return FileExtension.MP4;
+  if (mime === 'video/mov' || name.endsWith('.mov')) return FileExtension.MOV;
 
   if (
     mime ===
       'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
     name.endsWith('.pptx')
   )
-    return FileType.PPTX;
+    return FileExtension.PPTX;
 
-  return FileType.None;
+  return FileExtension.None;
 }
 
-export function toContentType(fileType: FileType): string {
-  switch (fileType) {
-    case FileType.PNG:
+export function toContentType(ext: FileExtension): string {
+  switch (ext) {
+    case FileExtension.PNG:
       return 'image/png';
-    case FileType.JPG:
+    case FileExtension.JPG:
       return 'image/jpeg';
-    case FileType.GIF:
+    case FileExtension.GIF:
       return 'image/gif';
-    case FileType.WEBM:
+    case FileExtension.WEBM:
       return 'image/webp';
-    case FileType.SVG:
+    case FileExtension.SVG:
       return 'image/svg+xml';
-    case FileType.AI:
+    case FileExtension.AI:
       return 'application/postscript';
-    case FileType.PDF:
+    case FileExtension.PDF:
       return 'application/pdf';
-    case FileType.XLSX:
+    case FileExtension.XLSX:
       return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-    case FileType.GLB:
+    case FileExtension.GLB:
       return 'model/gltf-binary';
-    case FileType.GLTF:
+    case FileExtension.GLTF:
       return 'model/gltf+json';
-    case FileType.MP3:
+    case FileExtension.MP3:
       return 'audio/mpeg';
-    case FileType.WAV:
+    case FileExtension.WAV:
       return 'audio/wav';
-    case FileType.MP4:
+    case FileExtension.MP4:
       return 'video/mp4';
-    case FileType.MOV:
+    case FileExtension.MOV:
       return 'video/mov';
-    case FileType.PPTX:
+    case FileExtension.PPTX:
       return 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
     default:
       return '';
   }
 }
 
-export function parseFileType(mime: string): FileType {
+export function parseFileType(mime: string): FileExtension {
   switch (mime) {
     case 'image/png':
-      return FileType.PNG;
+      return FileExtension.PNG;
     case 'image/jpeg':
-      return FileType.JPG;
+      return FileExtension.JPG;
     case 'image/gif':
-      return FileType.GIF;
+      return FileExtension.GIF;
     case 'image/webp':
-      return FileType.WEBM;
+      return FileExtension.WEBM;
     case 'image/svg+xml':
-      return FileType.SVG;
+      return FileExtension.SVG;
     case 'application/postscript':
-      return FileType.AI;
+      return FileExtension.AI;
     case 'application/pdf':
-      return FileType.PDF;
+      return FileExtension.PDF;
     case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
-      return FileType.XLSX;
+      return FileExtension.XLSX;
     case 'model/gltf-binary':
-      return FileType.GLB;
+      return FileExtension.GLB;
     case 'model/gltf+json':
-      return FileType.GLTF;
+      return FileExtension.GLTF;
     case 'audio/mpeg':
-      return FileType.MP3;
+      return FileExtension.MP3;
     case 'audio/wav':
-      return FileType.WAV;
+      return FileExtension.WAV;
     case 'video/mp4':
-      return FileType.MP4;
+      return FileExtension.MP4;
     case 'video/mov':
-      return FileType.MOV;
+      return FileExtension.MOV;
     case 'application/vnd.openxmlformats-officedocument.presentationml.presentation':
-      return FileType.PPTX;
+      return FileExtension.PPTX;
     default:
-      return FileType.None;
+      return FileExtension.None;
   }
 }
 

@@ -1,5 +1,6 @@
 import { OAuthProvider } from '@/types/oauth-provider';
 import { call } from './call';
+import { User } from './users.v3';
 
 export async function sendVerificationCode(email: string): Promise<void> {
   await call('POST', '/v3/auth/verification/send-verification-code', {
@@ -33,45 +34,28 @@ export async function loginWithTelegram(telegram_raw: string): Promise<User> {
 
   return user;
 }
-export async function getMe(): Promise<User> {
-  const user: User = await call('GET', '/v3/me');
 
-  return user;
-}
-
-export interface User {
-  pk: string;
-  sk: string;
-
-  created_at: number; // i64 -> number (epoch)
-  updated_at: number;
-
+export interface SignupRequest {
   display_name: string;
-  profile_url: string;
-  nickname: string;
-
-  email: string;
-
   username: string;
-
+  profile_url: string;
+  description: string;
   term_agreed: boolean;
   informed_agreed: boolean;
 
-  // FIXME: use enum for user_type
-  user_type: number;
+  email?: string;
+  password?: string;
+  code?: string;
 
-  followers_count: number;
-  followings_count: number;
+  provider?: OAuthProvider;
+  access_token?: string;
 
-  // profile contents
-  description: string;
+  evm_address?: string;
+  telegram_raw?: string;
+}
 
-  password: string | null;
+export async function signup(data: SignupRequest): Promise<User> {
+  const user: User = await call('POST', '/v3/auth/signup', data);
 
-  // FIXME: use enum for membership
-  membership: number;
-
-  // FIXME: use enum for theme
-  theme: number;
-  points: number;
+  return user;
 }

@@ -6,7 +6,8 @@ export const NotificationType = {
   CONNECT_NETWORK: 4,
 } as const;
 
-export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
+export type NotificationType =
+  (typeof NotificationType)[keyof typeof NotificationType];
 
 // Frontend-only filter type; compose with the enum instead of polluting it
 export type NotificationsFilter = NotificationType | 'all';

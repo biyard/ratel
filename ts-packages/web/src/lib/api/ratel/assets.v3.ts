@@ -1,10 +1,11 @@
-import { FileType } from '../models/file-type';
+import { FileExtension } from '@/features/spaces/files/types/file';
 import { call } from './call';
+import { AssetPresignedUris } from '../models/asset-presigned-uris';
 
 export function getPutObjectUrl(
   total_count: number | null | undefined,
-  file_type: FileType,
-): Promise<void> {
+  file_type: FileExtension,
+): Promise<AssetPresignedUris> {
   return call(
     'GET',
     `/v3/assets?total_count=${total_count}&file_type=${file_type}`,
@@ -13,20 +14,24 @@ export function getPutObjectUrl(
 
 export function getPutMultiObjectUrl(
   total_count: number | null | undefined,
-  file_type: FileType,
-): Promise<void> {
+  file_type: FileExtension,
+): Promise<AssetPresignedUris> {
   return call(
     'GET',
     `/v3/assets/multiparts?total_count=${total_count}&file_type=${file_type}`,
   );
 }
 
+export interface CompleteMultipartUploadBody {
+  upload_id: string;
+  key: string;
+  parts: {
+    part_number: number;
+    etag: string;
+  }[];
+}
 export function completeMultipartUpload(
-  total_count: number | null | undefined,
-  file_type: FileType,
+  body: CompleteMultipartUploadBody,
 ): Promise<void> {
-  return call(
-    'GET',
-    `/v3/assets/multiparts/complete?total_count=${total_count}&file_type=${file_type}`,
-  );
+  return call('POST', `/v3/assets/multiparts`, body);
 }

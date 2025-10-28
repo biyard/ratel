@@ -1,7 +1,8 @@
 import { ArtworkPost } from '@/app/(social)/_components/post-editor';
-import DisableBorderCard from '@/app/(social)/_components/disable-border-card';
-import { Post, PostDetailResponse } from '@/lib/api/ratel/posts.v3';
 import LexicalHtmlViewer from '@/components/lexical/lexical-html-viewer';
+import { PostDetailResponse } from '@/features/posts/dto/post-detail-response';
+import Card from '@/components/card';
+import Post from '@/features/posts/types/post';
 
 export type ThreadPostProps = {
   feed: PostDetailResponse;
@@ -10,13 +11,13 @@ export type ThreadPostProps = {
 export default function ThreadPost({ feed }: ThreadPostProps) {
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <DisableBorderCard>
+      <Card variant="secondary">
         {feed?.post?.post_type === 3 ? (
           <Artwork post={feed.post} metadata={feed.artwork_metadata} />
         ) : (
           <GeneralPost post={feed.post} />
         )}
-      </DisableBorderCard>
+      </Card>
     </div>
   );
 }

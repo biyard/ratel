@@ -2,7 +2,7 @@
 
 import { Suspense, useState } from 'react';
 import Badge from '@/assets/icons/badge.svg?react';
-import { UserType } from '@/lib/api/models/user';
+import { UserType } from '@/lib/api/ratel/users.v3';
 
 import { Input } from '@/components/ui/input';
 

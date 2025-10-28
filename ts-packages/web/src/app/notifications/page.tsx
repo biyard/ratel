@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router';
 
 import { Check } from 'lucide-react';
 import { useInView } from 'react-intersection-observer';
-import News from '@/app/(social)/_components/News';
 import Suggestions from '@/app/(social)/_components/suggestions';
 import PromotionCard from '@/app/(social)/_components/promotion-card';
 import { Col } from '@/components/ui/col';
@@ -18,9 +17,11 @@ import {
   getNotificationContent,
 } from './types';
 import { useNotificationsInfinite } from '@/hooks/use-notifications';
-import NotificationDropdown from './notification-dropdown';
-import NotificationReadStatus from './notification-read-status';
-import DisableBorderCard from '../(social)/_components/disable-border-card';
+
+import NotificationReadStatus from './components/notification-read-status';
+import NotificationDropdown from './components/notification-dropdown';
+import ListNews from './components/news';
+import Card from '@/components/card';
 
 const NotificationTab = {
   NOTIFICATIONS: 'Notifications',
@@ -60,11 +61,11 @@ export default function NotificationPage() {
         <aside className="w-70 pl-4 max-tablet:!hidden" aria-label="Sidebar">
           {/* <CreatePostButton /> */}
 
-          <DisableBorderCard>
+          <Card variant="secondary">
             <PromotionCard promotion={promotion} />
-          </DisableBorderCard>
+          </Card>
 
-          <News />
+          <ListNews />
           <div className="mt-[10px]">
             <Suggestions />
           </div>
