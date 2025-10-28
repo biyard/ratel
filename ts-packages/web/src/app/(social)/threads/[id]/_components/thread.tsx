@@ -8,6 +8,7 @@ export type ThreadPostProps = {
 };
 
 export default function ThreadPost({ feed }: ThreadPostProps) {
+  console.log('ThreadPost feed', feed);
   return (
     <div className="flex flex-col w-full gap-2.5">
       <Card variant="secondary">
