@@ -1,11 +1,9 @@
 'use client';
 
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { userEditProfileRequest } from '@/lib/api/models/user';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { useApiCall } from '@/lib/api/use-send';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
+import { updateUserProfile } from '@/lib/api/ratel/me.v3';
 import { checkString } from '@/lib/string-filter-utils';
-import { showErrorToast } from '@/lib/toast';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { createContext, useContext, useState } from 'react';
 
 type ContextType = {
@@ -17,7 +15,7 @@ type ContextType = {
   handleContents: (evt: React.FormEvent<HTMLTextAreaElement>) => void;
   showWalletConnect: boolean;
   handleShowWalletConnect: (walletConnect: boolean) => void;
-  handleSave: () => void;
+  handleSave: () => Promise<boolean>;
 };
 
 export const Context = createContext<ContextType | undefined>(undefined);
@@ -27,7 +25,6 @@ export default function ClientProviders({
 }: {
   children: React.ReactNode;
 }) {
-  const { post } = useApiCall();
   const userinfo = useSuspenseUserInfo();
   const { data: user } = userinfo;
   const [profileUrl, setProfileUrl] = useState(user?.profile_url || '');
@@ -50,17 +47,48 @@ export default function ClientProviders({
     setShowWalletConnect(walletConnect);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<boolean> => {
     if (checkString(nickname) || checkString(htmlContents)) {
       showErrorToast('Please remove the test keyword');
-      return;
+      return false;
     }
 
-    post(
-      ratelApi.users.editProfile(0), // TODO: Migrate to v3 user update endpoint
-      userEditProfileRequest(nickname!, htmlContents!, profileUrl),
-    );
-    userinfo.refetch();
+    // Validate nickname (display name)
+    const trimmedNickname = nickname.trim();
+    if (trimmedNickname.length < 1 || trimmedNickname.length > 30) {
+      showErrorToast('Display name must be between 1 and 30 characters');
+      return false;
+    }
+
+    // Check word count (max 2 words)
+    const wordCount = trimmedNickname
+      .split(/\s+/)
+      .filter((w) => w.length > 0).length;
+    if (wordCount > 2) {
+      showErrorToast('Display name must be at most 2 words');
+      return false;
+    }
+
+    // Validate description (min 10 characters)
+    if (htmlContents && htmlContents.trim().length < 10) {
+      showErrorToast('Description must be at least 10 characters');
+      return false;
+    }
+
+    try {
+      await updateUserProfile(trimmedNickname, profileUrl, htmlContents!);
+
+      // Refetch user info to get updated data
+      await userinfo.refetch();
+
+      // Show success message
+      showSuccessToast('Profile updated successfully!');
+      return true;
+    } catch (error) {
+      showErrorToast('Failed to update profile');
+      console.error('Failed to update user profile:', error);
+      return false;
+    }
   };
   return (
     <Context.Provider

@@ -1,3 +1,3 @@
-import { Space } from '@/lib/api/models/spaces';
+import { Space } from '../types/space';
 
-export function useSpacePageFactory(space: Space) {}
+export function useSpacePageFactory(_: Space) {}

@@ -11,7 +11,7 @@ use crate::{
         },
         dynamo_session_store::DynamoSessionStore,
         sqs_client,
-        telegram::ArcTelegramBot,
+        telegram::TelegramBot,
     },
 };
 
@@ -53,7 +53,7 @@ pub async fn db_init(url: &'static str, max_conn: u32) -> PgPool {
     pool
 }
 
-pub async fn api_main(bot: Option<ArcTelegramBot>) -> Result<Router, crate::Error2> {
+pub async fn api_main() -> Result<Router, crate::Error> {
     let app = by_axum::new();
     let conf = config::get();
 
@@ -79,7 +79,17 @@ pub async fn api_main(bot: Option<ArcTelegramBot>) -> Result<Router, crate::Erro
     let textract_client = TextractClient::new();
     let private_s3_client = S3Client::new(conf.private_bucket_name);
     let metadata_s3_client = S3Client::new(conf.bucket.name);
-
+    let bot = if let Some(token) = conf.telegram_token {
+        let res = TelegramBot::new(token).await;
+        if let Err(err) = res {
+            tracing::error!("Failed to initialize Telegram bot: {}", err);
+            None
+        } else {
+            Some(res.unwrap())
+        }
+    } else {
+        None
+    };
     let session_store = DynamoSessionStore::new(dynamo_client.client.clone());
 
     let session_layer = SessionManagerLayer::new(session_store)

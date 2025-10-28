@@ -1,10 +1,15 @@
 import { useMutation } from '@tanstack/react-query';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
-import { FeedStatus } from '@/lib/api/models/feeds'; // FeedType 추가
+import { FeedStatus } from '@/features/posts/types/post'; // FeedType 추가
 import { showErrorToast } from '@/lib/toast';
-import { deletePost, PostResponse } from '@/lib/api/ratel/posts.v3';
 import { optimisticListUpdate, removeQueries } from '@/lib/hook-utils';
+import PostResponse from '../dto/list-post-response';
+import { call } from '@/lib/api/ratel/call';
+
+export function deletePost(postPk: string): Promise<void> {
+  return call('DELETE', `/v3/posts/${encodeURIComponent(postPk)}`);
+}
 
 export function useDeletePostMutation(username: string, status: FeedStatus) {
   const queryClient = getQueryClient();

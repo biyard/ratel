@@ -420,32 +420,6 @@ pub use types::*;
 
 The `DynamoEntity` derive macro provides a comprehensive solution for interacting with DynamoDB tables. It automatically generates CRUD methods, query builders, transaction support, and update utilities for DynamoDB entities.
 
-##### Table of Contents
-
-- [Overview](#overview)
-- [Basic Usage](#basic-usage)
-- [Configuration](#configuration)
-  - [Struct Attributes](#struct-attributes)
-  - [Field Attributes](#field-attributes)
-- [Generated Methods](#generated-methods)
-  - [Core CRUD Methods](#core-crud-methods)
-  - [Query Methods](#query-methods)
-  - [Transaction Methods](#transaction-methods)
-  - [Updater Methods](#updater-methods)
-- [Examples](#examples)
-  - [Simple Entity](#simple-entity)
-  - [Entity with GSI](#entity-with-gsi)
-  - [Multiple Indices](#multiple-indices)
-- [Transactions](#transactions)
-  - [Transaction Overview](#transaction-overview)
-  - [Transaction Use Cases](#transaction-use-cases)
-  - [Transaction Best Practices](#transaction-best-practices)
-  - [Error Handling](#error-handling)
-  - [Advanced Transaction Examples](#advanced-transaction-examples)
-- [Best Practices](#best-practices)
-- [Testing](#testing)
-- [Additional Resources](#additional-resources)
-
 ##### Overview
 
 The `DynamoEntity` macro simplifies DynamoDB operations by:

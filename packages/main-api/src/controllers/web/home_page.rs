@@ -16,7 +16,7 @@ pub async fn home_page_handler(
     State(app_state): State<AppState>,
     tmpl: IndexTmpl,
     user: Option<User>,
-) -> Result<impl IntoResponse, crate::Error2> {
+) -> Result<impl IntoResponse, crate::Error> {
     let user_info = if let Some(ref user) = user {
         let user = UserMetadata::query(&app_state.dynamo.client, &user.pk).await?;
         let user_info: GetInfoResponse = user.into();

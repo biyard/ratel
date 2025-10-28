@@ -1,4 +1,8 @@
-use crate::{AppState, Error2, models::{team::Team, user::User}};
+use crate::{
+    AppState, Error,
+    models::{team::Team, user::User},
+};
+use bdk::prelude::*;
 use by_axum::{
     aide::NoApi,
     axum::{
@@ -6,7 +10,6 @@ use by_axum::{
         extract::{Query, State},
     },
 };
-use bdk::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use super::dto::TeamResponse;
@@ -26,7 +29,7 @@ pub async fn find_team_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(_user): NoApi<Option<User>>,
     Query(params): Query<FindTeamQueryParams>,
-) -> Result<Json<FindTeamResponse>, Error2> {
+) -> Result<Json<FindTeamResponse>, Error> {
     if let Some(username) = params.username {
         let (teams, _) =
             Team::find_by_username_prefix(&dynamo.client, &username, Default::default()).await?;
@@ -35,6 +38,6 @@ pub async fn find_team_handler(
             teams: teams.into_iter().map(TeamResponse::from).collect(),
         }))
     } else {
-        Err(Error2::BadRequest("No search parameters provided".into()))
+        Err(Error::BadRequest("No search parameters provided".into()))
     }
 }

@@ -3,7 +3,7 @@ use crate::models::user::User;
 use crate::models::{PostArtwork, PostArtworkMetadata};
 use crate::types::{EntityType, PostStatus, PostType, TeamGroupPermission, Visibility};
 use crate::utils::validator::{validate_content, validate_title};
-use crate::{AppState, Error2, transact_write_items};
+use crate::{AppState, Error, transact_write_items};
 use aide::NoApi;
 use axum::extract::{Json, Path, State};
 use bdk::prelude::*;
@@ -44,7 +44,7 @@ pub async fn update_post_handler(
     NoApi(user): NoApi<User>,
     Path(super::dto::PostPathParam { post_pk }): super::dto::PostPath,
     Json(req): Json<UpdatePostRequest>,
-) -> Result<Json<Post>, Error2> {
+) -> Result<Json<Post>, Error> {
     tracing::debug!(
         "update_post_handler: user = {:?}, post_pk = {:?}, req = {:?}",
         user,
@@ -55,7 +55,7 @@ pub async fn update_post_handler(
     let (mut post, has_permission) =
         Post::has_permission(cli, &post_pk, Some(&user.pk), TeamGroupPermission::PostEdit).await?;
     if !has_permission {
-        return Err(Error2::NoPermission);
+        return Err(Error::NoPermission);
     }
 
     let now = chrono::Utc::now().timestamp();
@@ -102,7 +102,7 @@ pub async fn update_post_handler(
 
             if !publish {
                 // TODO: support unpublish if no dependencies
-                return Err(Error2::NotSupported(
+                return Err(Error::NotSupported(
                     "it does not support unpublished now".into(),
                 ));
             }

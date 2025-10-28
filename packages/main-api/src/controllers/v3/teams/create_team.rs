@@ -1,13 +1,11 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     models::{
         team::{Team, TeamOwner},
         user::{User, UserTeam},
     },
-    utils::{
-        validator::{validate_description, validate_image_url, validate_username},
-    },
     types::Partition,
+    utils::validator::{validate_description, validate_image_url, validate_username},
 };
 use bdk::prelude::*;
 use by_axum::{
@@ -43,13 +41,13 @@ pub async fn create_team_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Json(req): Json<CreateTeamRequest>,
-) -> Result<Json<CreateTeamResponse>, Error2> {
-    let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
+) -> Result<Json<CreateTeamResponse>, Error> {
+    let user = user.ok_or(Error::Unauthorized("Authentication required".into()))?;
     let (team, _) =
         Team::find_by_username_prefix(&dynamo.client, &req.username, Default::default()).await?;
 
     if !team.is_empty() {
-        return Err(Error2::Duplicate("Username already taken".into()));
+        return Err(Error::Duplicate("Username already taken".into()));
     }
     let team = Team::new(req.nickname, req.profile_url, req.username, req.description);
     team.create(&dynamo.client).await?;
@@ -61,5 +59,4 @@ pub async fn create_team_handler(
     UserTeam::new(user_pk, team).create(&dynamo.client).await?;
 
     Ok(Json(CreateTeamResponse { team_pk }))
-
 }

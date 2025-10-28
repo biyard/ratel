@@ -27,13 +27,17 @@ export function updatePollSpace(
 }
 
 export interface PollSurveySummariesResponse {
-  created_at: string;
+  created_at: number;
   summaries: SurveySummary[];
 }
 export function getPollSurveySummaries(
   spacePk: string,
+  pollPk: string,
 ): Promise<PollSurveySummariesResponse> {
-  return call('GET', `/v3/spaces/${encodeURIComponent(spacePk)}/polls/summary`);
+  return call(
+    'GET',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/polls/${encodeURIComponent(pollPk)}/results`,
+  );
 }
 
 // export function listPollSurveyAnswers(

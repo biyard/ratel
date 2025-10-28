@@ -1,5 +1,5 @@
+import { Space } from '@/features/spaces/types/space';
 import { create } from 'zustand';
-import type { Space } from '@/lib/api/models/spaces';
 
 type PageSaveHandler = (
   commonData: Partial<CommonEditableData>,
@@ -7,10 +7,7 @@ type PageSaveHandler = (
 
 type PageDeleteHandler = () => Promise<boolean>;
 
-export type CommonEditableData = Pick<
-  Space,
-  'title' | 'html_contents' | 'started_at' | 'ended_at'
->;
+export type CommonEditableData = Pick<Space, 'title' | 'content'>;
 
 type State = {
   isEdit: boolean;

@@ -1,5 +1,5 @@
 use crate::features::membership::dto::*;
-use crate::{AppState, Error2, features::membership::*, models::user::User, types::*};
+use crate::{AppState, Error, features::membership::*, models::user::User, types::*};
 use aide::NoApi;
 use axum::{Json, extract::State};
 use bdk::prelude::*;
@@ -8,10 +8,10 @@ use bdk::prelude::*;
 pub async fn get_my_membership_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-) -> Result<Json<Option<UserMembershipResponse>>, Error2> {
+) -> Result<Json<Option<UserMembershipResponse>>, Error> {
     let cli = &dynamo.client;
 
-    let user = user.ok_or(Error2::NoUserFound)?;
+    let user = user.ok_or(Error::NoUserFound)?;
 
     // Get user's membership
     let pk = user.pk.clone();

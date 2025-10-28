@@ -11,6 +11,22 @@
       rel="stylesheet"
     />
     <title>Ratel</title>
+    
+    <!-- Apply theme immediately to prevent flash -->
+    <script>
+      (function() {
+        const savedTheme = localStorage.getItem('user-theme') || 'system';
+        let themeToApply = savedTheme;
+        
+        // If system theme, resolve to actual light/dark based on system preference
+        if (savedTheme === 'system') {
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          themeToApply = prefersDark ? 'dark' : 'light';
+        }
+        
+        document.documentElement.setAttribute('data-theme', themeToApply);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

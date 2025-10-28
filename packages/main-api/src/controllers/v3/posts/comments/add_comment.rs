@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     controllers::v3::posts::PostPath,
     models::{
         feed::{Post, PostComment},
@@ -29,10 +29,10 @@ pub async fn add_comment_handler(
     NoApi(user): NoApi<User>,
     Path(params): PostPath,
     Json(req): Json<AddCommentRequest>,
-) -> Result<Json<PostComment>, Error2> {
+) -> Result<Json<PostComment>, Error> {
     let post = Post::get(&dynamo.client, &params.post_pk, Some(EntityType::Post))
         .await?
-        .ok_or(Error2::PostNotFound)?;
+        .ok_or(Error::PostNotFound)?;
     match &post.user_pk {
         team_pk if matches!(team_pk, &Partition::Team(_)) => {
             Team::has_permission(

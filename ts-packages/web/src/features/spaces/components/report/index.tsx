@@ -1,5 +1,3 @@
-import { logger } from '@/lib/logger';
-
 import {
   SurveyAnswerType,
   PollQuestion,
@@ -12,11 +10,6 @@ import ObjectiveQuestionSummary from './objective-question-summary';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 
-const handleDownloadExcel = (summaries: SurveySummary[]) => {
-  logger.debug('Download Excel clicked with summaries: ', summaries);
-  // FIXME: Implement download excel for Survey
-};
-
 export type I18nFunction = TFunction<'SpaceSurveyReport', undefined>;
 export interface ReportProps {
   startedAt: number;
@@ -24,6 +17,8 @@ export interface ReportProps {
   totalResponses: number;
   questions: PollQuestion[];
   summaries: SurveySummary[];
+
+  handleDownloadExcel: () => void;
 }
 export default function Report({
   startedAt,
@@ -31,6 +26,7 @@ export default function Report({
   totalResponses,
   questions,
   summaries,
+  handleDownloadExcel,
 }: ReportProps) {
   const { t } = useTranslation('SpaceSurveyReport');
   return (
@@ -40,7 +36,7 @@ export default function Report({
           <Button
             variant="rounded_primary"
             onClick={() => {
-              handleDownloadExcel(summaries);
+              handleDownloadExcel();
             }}
           >
             {t('download_excel_button_label')}

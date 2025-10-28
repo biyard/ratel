@@ -1,5 +1,5 @@
 use crate::{
-    AppState, Error2,
+    AppState, Error,
     models::{
         team::{Team, TeamGroup},
         user::{User, UserTeamGroup},
@@ -43,8 +43,8 @@ pub async fn create_group_handler(
     NoApi(user): NoApi<Option<User>>,
     Path(params): Path<CreateGroupPathParams>,
     Json(req): Json<CreateGroupRequest>,
-) -> Result<Json<CreateGroupResponse>, Error2> {
-    let user = user.ok_or(Error2::Unauthorized("Authentication required".into()))?;
+) -> Result<Json<CreateGroupResponse>, Error> {
+    let user = user.ok_or(Error::Unauthorized("Authentication required".into()))?;
 
     // If Admin permissions are requested, require TeamAdmin
     let required_permissions = if req
@@ -77,7 +77,7 @@ pub async fn create_group_handler(
     )
     .await?;
     if team.is_none() {
-        return Err(Error2::NotFound("Team not found".into()));
+        return Err(Error::NotFound("Team not found".into()));
     }
     let team = team.unwrap();
     let user_pk = user.pk.clone();
@@ -102,8 +102,5 @@ pub async fn create_group_handler(
         .execute(&dynamo.client)
         .await?;
 
-    Ok(Json(CreateGroupResponse {
-        group_pk,
-        group_sk,
-    }))
+    Ok(Json(CreateGroupResponse { group_pk, group_sk }))
 }

@@ -8,7 +8,7 @@ impl InitialQuery {
     pub fn new(
         key: impl serde::Serialize,
         value: impl serde::Serialize,
-    ) -> Result<Self, crate::Error2> {
+    ) -> Result<Self, crate::Error> {
         Ok(Self {
             key: serde_json::to_value(key)?,
             data: serde_json::to_value(value)?,
@@ -19,7 +19,7 @@ impl InitialQuery {
         key: impl serde::Serialize,
         value: impl serde::Serialize,
         bookmark: Option<String>,
-    ) -> Result<Self, crate::Error2> {
+    ) -> Result<Self, crate::Error> {
         let page = serde_json::to_value(value)?;
 
         Ok(Self {
@@ -42,7 +42,7 @@ impl BootData {
         Self { react_query }
     }
 
-    pub fn to_json(&self) -> Result<String, crate::Error2> {
+    pub fn to_json(&self) -> Result<String, crate::Error> {
         Ok(serde_json::to_string(self)?.replace("</", "\\u003c/"))
     }
 }

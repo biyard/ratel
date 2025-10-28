@@ -10,7 +10,7 @@ import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useDeletePostMutation } from '@/features/posts/hooks/use-delete-post-mutation';
-import { FeedStatus } from '@/lib/api/models/feeds';
+import { FeedStatus } from '@/features/posts/types/post';
 import { useUserInfo } from '@/hooks/use-user-info';
 
 export interface DeletePostDropdownProps {

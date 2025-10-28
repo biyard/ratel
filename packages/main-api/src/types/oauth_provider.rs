@@ -23,7 +23,7 @@ impl Provider {
         }
     }
 
-    pub async fn get_email(&self, access_token: &str) -> Result<String, crate::Error2> {
+    pub async fn get_email(&self, access_token: &str) -> Result<String, crate::Error> {
         let url = self.oidc_userinfo_url();
         let UserInfo { email } = reqwest::Client::new()
             .get(url)

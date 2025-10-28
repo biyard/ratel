@@ -53,7 +53,6 @@ pub async fn update_poll_handler(
 
     let space = SpaceCommon::updater(&space_pk, EntityType::SpaceCommon).with_updated_at(now);
     let mut poll_updater = Poll::updater(&space_pk, &poll_sk).with_updated_at(now);
-
     match req {
         UpdatePollSpaceRequest::Time {
             started_at,
@@ -73,9 +72,23 @@ pub async fn update_poll_handler(
             }
             poll_updater = poll_updater.with_questions(questions.clone());
 
+            let poll_question = PollQuestion::get(
+                &dynamo.client,
+                space_pk.clone(),
+                Some(EntityType::SpacePollQuestion),
+            )
+            .await?;
+
             // Also create/update PollQuestion entity for result aggregation
-            let poll_question = PollQuestion::new(space_pk.clone(), questions);
-            poll_question.create(&dynamo.client).await?;
+            if poll_question.is_none() {
+                let poll_question = PollQuestion::new(space_pk.clone(), questions);
+                poll_question.create(&dynamo.client).await?;
+            } else {
+                PollQuestion::updater(space_pk.clone(), EntityType::SpacePollQuestion)
+                    .with_questions(questions)
+                    .execute(&dynamo.client)
+                    .await?;
+            }
         }
         UpdatePollSpaceRequest::ResponseEditable { response_editable } => {
             poll_updater = poll_updater.with_response_editable(response_editable);

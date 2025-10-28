@@ -117,7 +117,7 @@ fn parse_struct_cfg(attrs: &[Attribute]) -> StructCfg {
         table_prefix: env!("DYNAMO_TABLE_PREFIX").into(),
         result_ty: "std::result::Result".into(),
         // FIXME: rename after finishing migration
-        error_ctor: "crate::Error2".into(),
+        error_ctor: "crate::Error".into(),
         pk_name: "pk".into(),
         sk_name: Some("sk".into()),
         indice: vec![],
@@ -851,6 +851,35 @@ fn generate_updater(
                     .build()
             }
 
+            pub fn transact_upsert_item(self) -> aws_sdk_dynamodb::types::TransactWriteItem {
+                let mut req = aws_sdk_dynamodb::types::Update::builder()
+                    .table_name(#ident::table_name())
+                    .set_key(Some(self.k));
+
+                let mut update_expr = "".to_string();
+                if !self.remove_update_expressions.is_empty() {
+                    update_expr = format!("REMOVE {}", self.remove_update_expressions.join(", "));
+                }
+
+                if !self.set_update_expressions.is_empty() {
+                    update_expr = format!("SET {} {}", self.set_update_expressions.join(", "), update_expr);
+                };
+
+                if !update_expr.is_empty() {
+                    req = req.update_expression(update_expr);
+                }
+                if !self.expression_attribute_names.is_empty() {
+                    req = req.set_expression_attribute_names(Some(self.expression_attribute_names));
+                }
+                if !self.expression_attribute_values.is_empty() {
+                    req = req.set_expression_attribute_values(Some(self.expression_attribute_values));
+                }
+
+                aws_sdk_dynamodb::types::TransactWriteItem::builder()
+                    .update(req.build().expect("invalid transact write item request"))
+                    .build()
+            }
+
             pub async fn execute(
                 self,
                 cli: &aws_sdk_dynamodb::Client,
@@ -989,6 +1018,55 @@ fn generate_struct_impl(
     } else {
         quote! {}
     };
+    let sk_fn = if let Some(ref sk) = s_cfg.sk_name {
+        let sk_field_name = syn::LitStr::new(sk, proc_macro2::Span::call_site());
+
+        quote! {
+            pub async fn query_begins_with_sk(
+                cli: &aws_sdk_dynamodb::Client,
+                pk: impl std::fmt::Display,
+                sk: impl std::fmt::Display,
+            ) -> #result_ty <(Vec<#ident>, Option<String>), #err_ctor> {
+                let resp = cli
+                    .query()
+                    .table_name(#table_lit_str)
+                    .limit(100)
+                    .scan_index_forward(false)
+                    .key_condition_expression("#pk = :pk AND begins_with(#sk, :sk)")
+                    .expression_attribute_names("#pk", #pk_field_name)
+                    .expression_attribute_names("#sk", #sk_field_name)
+                    .expression_attribute_values(
+                        ":pk",
+                        aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
+                    )
+                    .expression_attribute_values(
+                        ":sk",
+                        aws_sdk_dynamodb::types::AttributeValue::S(sk.to_string()),
+                    )
+                    .send()
+                    .await
+                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                let items = resp
+                    .items
+                    .unwrap_or_default()
+                    .into_iter()
+                    .map(|item| serde_dynamo::from_item(item))
+                    .collect::<std::result::Result<Vec<#ident>, _>>()?;
+
+                let bookmark = if let Some(ref last_evaluated_key) = resp.last_evaluated_key {
+                    Some(Self::encode_lek_all(last_evaluated_key)?)
+                } else {
+                    None
+                };
+
+                Ok((items, bookmark))
+            }
+
+        }
+    } else {
+        quote! {}
+    };
 
     let st_query_option = generate_query_option(&st_name, &s_cfg);
     let query_fn = generate_query_fn(&st_name, &s_cfg, &fields, &indice_fn, &indice_v2);
@@ -1093,7 +1171,7 @@ fn generate_struct_impl(
                     .unwrap_or_default()
                     .into_iter()
                     .map(|item| serde_dynamo::from_item(item))
-                    .collect::<Result<Vec<_>, _>>()?;
+                    .collect::<std::result::Result<Vec<_>, _>>()?;
 
                 let bookmark = if let Some(ref last_evaluated_key) = resp.last_evaluated_key {
                     Some(Self::encode_lek_all(last_evaluated_key)?)
@@ -1103,6 +1181,8 @@ fn generate_struct_impl(
 
                 Ok((items, bookmark))
             }
+
+            #sk_fn
 
             pub async fn create(
                 &self,
@@ -1181,7 +1261,7 @@ fn generate_struct_impl(
             pub async fn batch_get(
                 cli: &aws_sdk_dynamodb::Client,
                 keys: Vec<#batch_get_param>,
-            ) -> Result<Vec<Self>, #err_ctor> {
+            ) -> std::result::Result<Vec<Self>, #err_ctor> {
                 if keys.is_empty() {
                     return Ok(vec![]);
                 }
@@ -1383,7 +1463,7 @@ fn generate_enum_impl(ident: Ident, _ds: &DataEnum, s_cfg: StructCfg) -> proc_ma
                     .unwrap_or_default()
                     .into_iter()
                     .map(|item| serde_dynamo::from_item(item))
-                    .collect::<Result<Vec<#ident>, _>>()?;
+                    .collect::<std::result::Result<Vec<#ident>, _>>()?;
                 Ok(items)
             }
 
@@ -1427,7 +1507,7 @@ fn generate_enum_impl(ident: Ident, _ds: &DataEnum, s_cfg: StructCfg) -> proc_ma
                     .unwrap_or_default()
                     .into_iter()
                     .map(|item| serde_dynamo::from_item(item))
-                    .collect::<Result<Vec<#ident>, _>>()?;
+                    .collect::<std::result::Result<Vec<#ident>, _>>()?;
                 Ok(items)
             }
 
@@ -1540,7 +1620,7 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
     quote! {
         pub fn encode_lek_all(
             lek: &std::collections::HashMap<String, aws_sdk_dynamodb::types::AttributeValue>,
-        ) -> std::result::Result<String, crate::Error2> {
+        ) -> std::result::Result<String, crate::Error> {
             let mut bookmark = vec![];
             for (k, v) in lek.iter() {
                 match v {
@@ -1548,7 +1628,7 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
                         bookmark.push(format!("{};;;{}", k, s));
                     }
                     _ => {
-                        return Err(crate::Error2::InternalServerError(
+                        return Err(crate::Error::InternalServerError(
                             "Unsupported AttributeValue type in LEK".into(),
                         ));
                     }
@@ -1566,7 +1646,7 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
             bookmark: &str,
         ) -> std::result::Result<
             std::collections::HashMap<String, aws_sdk_dynamodb::types::AttributeValue>,
-        crate::Error2,
+        crate::Error,
         > {
             use base64::Engine as _;
 
@@ -1574,7 +1654,7 @@ fn generate_query_common_fn() -> proc_macro2::TokenStream {
             let s = String::from_utf8(bytes).map_err(|e| e.to_string())?;
             let parts: Vec<&str> = s.split(";;;").collect();
             if parts.len() % 2 != 0 {
-                return Err(crate::Error2::InvalidBookmark);
+                return Err(crate::Error::InvalidBookmark);
             }
             let mut v = std::collections::HashMap::new();
             for i in (0..parts.len()).step_by(2) {
@@ -1677,7 +1757,7 @@ fn generate_index_fn(
                 .unwrap_or_default()
                 .into_iter()
                 .map(|item| serde_dynamo::from_item(item))
-                .collect::<Result<Vec<_>, _>>()?;
+                .collect::<std::result::Result<Vec<_>, _>>()?;
 
             let bookmark = if let Some(ref last_evaluated_key) = resp.last_evaluated_key {
                 Some(Self::encode_lek_all(last_evaluated_key)?)

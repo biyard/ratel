@@ -54,6 +54,8 @@ export const route = {
 
   spacePollById: (spaceId: string, pollId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/polls/${encodeURIComponent(pollId)}`,
+  spaceAnalyzePollById: (spaceId: string, pollId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/polls/${encodeURIComponent(pollId)}/analyzes`,
   spaceFiles: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/files`,
   spaceDiscussions: (spaceId: string) =>
@@ -62,14 +64,6 @@ export const route = {
     `/spaces/${encodeURIComponent(spaceId)}/recommendations`,
   spaceSprintLeagues: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/sprint-leagues`,
-
-  telegramSprintLeague: (space_id: number | string) =>
-    `/telegram/sprint-league/${encodeURIComponent(space_id)}`,
-  telegramSubscribe: (chat_id: number, lang?: string) => {
-    return `/telegram/subscribe?chat_id=${chat_id}${
-      lang ? `&lang=${lang}` : ''
-    }`;
-  },
 
   // Admin routes
   admin: () => '/admin',

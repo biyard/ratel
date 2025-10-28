@@ -6,9 +6,9 @@ import { convertNumberToString } from '@/lib/number-utils';
 import TimeAgo from './time-ago';
 import DOMPurify from 'dompurify';
 import { NavLink, useNavigate } from 'react-router';
-import { UserType } from '@/lib/api/models/user';
+import { UserType } from '@/lib/api/ratel/users.v3';
+
 import { route } from '@/route';
-import { SpaceType } from '@/lib/api/models/spaces';
 import { Button } from './ui/button';
 import {
   DropdownMenuContent,
@@ -19,13 +19,15 @@ import {
 import { Edit1 } from './icons';
 import { useRepostDraft } from '@/app/(social)/_components/create-repost';
 import { showSuccessToast, showErrorToast } from './custom-toast/toast';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { useTranslation } from 'react-i18next';
 import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
-import { likePost, PostResponse } from '@/lib/api/ratel/posts.v3';
 import { BoosterType } from '@/features/spaces/types/booster-type';
+import PostResponse from '@/features/posts/dto/list-post-response';
+import { useLikePostMutation } from '@/features/posts/hooks/use-like-post-mutation';
+import { SpaceType } from '@/features/spaces/types/space-type';
 
 export interface FeedCardProps {
   post: PostResponse;
@@ -50,7 +52,7 @@ export default function FeedCard(props: FeedCardProps) {
   // const { t } = useTranslation('Feeds');
 
   const r = useRepostDraft();
-
+  const likePost = useLikePostMutation().mutateAsync;
   // Sync with props when they change
   useEffect(() => {
     setLocalLikes(post.likes);
@@ -67,7 +69,10 @@ export default function FeedCard(props: FeedCardProps) {
     setLocalLikes((prev) => (value ? prev + 1 : prev - 1));
 
     try {
-      await likePost(post.pk, value);
+      await likePost({
+        feedId: post.pk,
+        like: value,
+      });
 
       // Success - trigger callbacks
       props.onLikeClick?.(value);

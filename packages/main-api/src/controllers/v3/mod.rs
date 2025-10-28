@@ -1,4 +1,4 @@
-use crate::{AppState, Error2, models::user::User, types::*};
+use crate::{AppState, Error, models::user::User, types::*};
 use axum::extract::State;
 use bdk::prelude::*;
 
@@ -30,7 +30,6 @@ pub mod assets {
 }
 
 pub mod auth {
-    pub mod health;
     pub mod login;
     pub mod logout;
     pub mod signup;
@@ -102,8 +101,8 @@ pub fn extract_state(State(AppState { dynamo, .. }): State<AppState>) -> aws_sdk
 ///
 /// # Returns
 /// * `Ok(User)` - If user is authenticated and is a ServiceAdmin
-/// * `Err(Error2::NoUserFound)` - If no user is authenticated
-/// * `Err(Error2::NoPermission)` - If user is not a ServiceAdmin
+/// * `Err(Error::NoUserFound)` - If no user is authenticated
+/// * `Err(Error::NoPermission)` - If user is not a ServiceAdmin
 ///
 /// # Example
 /// ```no_run
@@ -114,7 +113,7 @@ pub fn extract_state(State(AppState { dynamo, .. }): State<AppState>) -> aws_sdk
 /// async fn admin_only_handler(
 ///     state: State<AppState>,
 ///     NoApi(user): NoApi<Option<User>>,
-/// ) -> Result<Json<Response>, Error2> {
+/// ) -> Result<Json<Response>, Error> {
 ///     let cli = &state.dynamo.client;
 ///
 ///     // Verify user is a ServiceAdmin
@@ -127,13 +126,13 @@ pub fn extract_state(State(AppState { dynamo, .. }): State<AppState>) -> aws_sdk
 pub async fn verify_service_admin(
     user: Option<User>,
     _cli: &aws_sdk_dynamodb::Client,
-) -> Result<User, Error2> {
+) -> Result<User, Error> {
     // Check if user is authenticated
-    let user = user.ok_or(Error2::NoUserFound)?;
+    let user = user.ok_or(Error::NoUserFound)?;
 
     if user.user_type == UserType::Admin {
         Ok(user)
     } else {
-        Err(Error2::NoPermission)
+        Err(Error::NoPermission)
     }
 }

@@ -1,7 +1,6 @@
-
 import type { Team } from '@/lib/api/models/team';
 import TeamSelector from '@/app/(social)/_components/team-selector';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { useApiCall } from '@/lib/api/use-send';
 import {
