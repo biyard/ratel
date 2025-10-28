@@ -50,7 +50,9 @@ export default function HomePage() {
         className="flex-col w-70 pl-4 max-tablet:fixed bottom-4 max-tablet:right-4 max-tablet:z-50 max-tablet:pl-0"
         aria-label="Sidebar"
       >
-        <CreatePostButton expanded={ctrl.close} />
+        <div className="mb-2.5">
+          <CreatePostButton expanded={ctrl.close} />
+        </div>
         <div className="max-tablet:hidden">
           {ctrl.topPromotion && (
             <DisableBorderCard>
