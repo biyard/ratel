@@ -55,7 +55,7 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
   healthCheckPath: "/version",
   commit: process.env.COMMIT!,
   pghost: process.env.PGHOST_AP!,
-  enableDaemon: false,
+  enableDaemon: true,
   baseDomain,
   apiDomain,
 });

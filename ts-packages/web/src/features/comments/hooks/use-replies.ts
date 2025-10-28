@@ -1,7 +1,7 @@
 import { feedKeys } from '@/constants';
+import PostComment from '@/features/posts/types/post-comment';
 import { listReplies } from '@/lib/api/ratel/comments.v3';
 import { ListResponse } from '@/lib/api/ratel/common';
-import { PostComment } from '@/lib/api/ratel/posts.v3';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 
 export function useReplies(postPk: string, commentSk: string) {

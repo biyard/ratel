@@ -9,7 +9,7 @@ import { FileResponse } from '../types/file-response';
 
 export function getOption(spacePk: string) {
   return {
-    queryKey: spaceKeys.file(spacePk),
+    queryKey: spaceKeys.files(spacePk),
     queryFn: async () => {
       const file = await call(
         'GET',

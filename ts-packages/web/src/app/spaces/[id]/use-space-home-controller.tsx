@@ -7,7 +7,6 @@ import { Space } from '@/features/spaces/types/space';
 import { Post, Settings } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
-import { UserResponse } from '@/lib/api/ratel/me.v3';
 import { logger } from '@/lib/logger';
 import { useSpaceUpdateContentMutation } from '@/features/spaces/hooks/use-space-update-content-mutation';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
@@ -19,10 +18,11 @@ import { usePublishSpaceMutation } from '@/features/spaces/hooks/use-publish-mut
 import SpaceDeleteModal from '@/features/spaces/modals/space-delete-modal';
 import { useDeleteSpaceMutation } from '@/features/spaces/hooks/use-delete-mutation';
 import { NavigateFunction, useNavigate } from 'react-router';
+import { UserDetailResponse } from '@/lib/api/ratel/users.v3';
 
 export class SpaceHomeController {
   public space: Space;
-  public user: UserResponse | null;
+  public user: UserDetailResponse | null;
   public saveHook?: () => Promise<void>;
   public publishHook?: () => Promise<void>;
 

@@ -2,15 +2,15 @@ import { useMutation } from '@tanstack/react-query';
 import { feedKeys, spaceKeys } from '@/constants';
 import { showErrorToast } from '@/lib/toast';
 import { optimisticListUpdate, optimisticUpdate } from '@/lib/hook-utils';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import {
   PollSpaceResponse,
   updatePollSpace,
 } from '@/lib/api/ratel/poll.spaces.v3';
 import { PollQuestion } from '@/features/spaces/polls/types/poll-question';
 import { TimeRange } from '@/types/time-range';
-import { FeedStatus } from '@/lib/api/models/feeds';
-import { PostResponse } from '@/lib/api/ratel/posts.v3';
+import PostResponse from '@/features/posts/dto/list-post-response';
+import { FeedStatus } from '@/features/posts/types/post';
 
 export function useUpdatePollSpaceMutation() {
   const { data: user } = useSuspenseUserInfo();
