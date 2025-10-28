@@ -1,6 +1,5 @@
 import { call } from './call';
-import { File } from '@/lib/api/models/feeds';
-
+import File from '@/features/spaces/files/types/file';
 export function updateRecommendationContents(
   spacePk: string,
   html_contents: string,

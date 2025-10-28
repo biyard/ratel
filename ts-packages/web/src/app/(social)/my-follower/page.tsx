@@ -1,8 +1,9 @@
 import { Add, ArrowLeft } from '@/components/icons';
 import type { Follower } from '@/lib/api/models/network';
 import { useState } from 'react';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { UserType } from '@/lib/api/models/user';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
+import { UserType } from '@/lib/api/ratel/users.v3';
+
 import { usePopup } from '@/lib/contexts/popup-service';
 import UnFollowPopup from '../_popups/unfollow-popup';
 import { useApiCall } from '@/lib/api/use-send';

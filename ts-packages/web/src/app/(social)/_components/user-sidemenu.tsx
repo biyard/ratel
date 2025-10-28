@@ -2,11 +2,11 @@ import ProfileSection from './profile-section';
 
 import { route } from '@/route';
 import { Post, Draft, Settings } from '@/components/icons';
-import { UserType } from '@/lib/api/models/user';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { NavLink } from 'react-router';
+import { UserType } from '@/lib/api/ratel/users.v3';
 // import DevTools from './dev-tools';
 
 export default function UserSidemenu() {

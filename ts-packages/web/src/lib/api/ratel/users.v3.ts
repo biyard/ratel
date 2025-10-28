@@ -1,21 +1,21 @@
 import { call } from './call';
 
-// UserDetailResponse has the user fields flattened at the root level
-// because the backend uses #[serde(flatten)] on the user field
-export interface UserDetailResponse {
-  // Flattened user fields
+export interface UserResponse {
   pk: string;
   email: string;
   nickname: string;
   profile_url: string;
   description: string;
-  user_type: number;
+  user_type: UserType;
   username: string;
   followers_count: number;
   followings_count: number;
-  membership: number;
-  theme: number;
+  theme: ThemeType;
   point: number;
+  membership: MembershipType;
+}
+
+export interface UserDetailResponse extends UserResponse {
   // Additional metadata fields
   referral_code?: string;
   phone_number?: string;
@@ -60,4 +60,59 @@ export async function findUserByPhoneNumber(
   phoneNumber: string,
 ): Promise<UserDetailResponse> {
   return await findUser('phone-number', phoneNumber);
+}
+
+export interface User {
+  pk: string;
+  sk: string;
+
+  created_at: number; // i64 -> number (epoch)
+  updated_at: number;
+
+  display_name: string;
+  profile_url: string;
+  nickname: string;
+
+  email: string;
+
+  username: string;
+
+  term_agreed: boolean;
+  informed_agreed: boolean;
+
+  user_type: UserType;
+
+  followers_count: number;
+  followings_count: number;
+
+  // profile contents
+  description: string;
+
+  password: string | null;
+  membership: MembershipType;
+
+  theme: ThemeType;
+  points: number;
+}
+
+export enum UserType {
+  Individual = 1,
+  Team = 2,
+  Bot = 3,
+  Admin = 98,
+  Anonymous = 99,
+}
+// FIXME: Use Membership model in `features/membership`
+export enum MembershipType {
+  Free = 1,
+  Paid1 = 2,
+  Paid2 = 3,
+  Paid3 = 4,
+  Admin = 99,
+}
+
+export enum ThemeType {
+  Light = 1,
+  Dark = 2,
+  SystemDefault = 3,
 }
