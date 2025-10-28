@@ -87,4 +87,5 @@ export const GroupPermission = {
   ManageNews: 63,
 } as const;
 
-export type GroupPermission = typeof GroupPermission[keyof typeof GroupPermission];
+export type GroupPermission =
+  (typeof GroupPermission)[keyof typeof GroupPermission];

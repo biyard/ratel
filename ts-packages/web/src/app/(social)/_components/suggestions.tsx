@@ -4,13 +4,14 @@ import { NavLink } from 'react-router';
 import { route } from '@/route';
 import { ChevronRight } from 'lucide-react';
 import { useApiCall } from '@/lib/api/use-send';
-import { ratelApi, useNetwork } from '@/lib/api/ratel_api';
+import { ratelApi } from '@/lib/api/ratel_api';
 import { followRequest } from '@/lib/api/models/networks/follow';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import type { Follower } from '@/lib/api/models/network';
 import { useTranslation } from 'react-i18next';
 import DisableBorderCard from './disable-border-card';
+import { useNetwork } from '../my-network/_hook/use-network';
 
 export default function Suggestions() {
   const { t } = useTranslation('Home');

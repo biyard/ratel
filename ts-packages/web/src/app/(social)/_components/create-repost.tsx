@@ -7,7 +7,6 @@ import {
 } from 'react';
 import { Clear } from '@/components/icons';
 import { Loader } from '@/components/icons';
-import { useUserInfo } from '../_hooks/user';
 import { useApiCall } from '@/lib/api/use-send';
 import { ratelApi } from '@/lib/api/ratel_api';
 import { route } from '@/route';
@@ -29,6 +28,7 @@ import ShapeDownArrow from '@/assets/icons/editor/shape-arrow-down.svg?react';
 import ArrowDown from '@/assets/icons/editor/arr-down.svg?react';
 import SaveIcon from '@/assets/icons/save.svg?react';
 import { useNavigate } from 'react-router';
+import { useUserInfo } from '@/hooks/use-user-info';
 
 export function CreateRePost() {
   const repostDraftContext = useRepostDraft();

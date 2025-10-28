@@ -1,16 +1,16 @@
-import { File } from '@/lib/api/models/feeds';
 import Card from '@/components/card';
 import { checkString } from '@/lib/string-filter-utils';
 
 import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 import SpaceFile from './space-file';
+import FileModel from '../../types/file';
 
 export interface SpaceFilesProps {
-  files: File[];
+  files: FileModel[];
 }
 
 export default function SpaceFileViewer({ files }: SpaceFilesProps) {
-  const handlePdfDownload = async (file: File) => {
+  const handlePdfDownload = async (file: FileModel) => {
     await downloadPdfFromUrl({
       url: file.url ?? '',
       fileName: file.name,
