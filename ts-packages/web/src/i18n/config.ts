@@ -128,8 +128,13 @@ i18next.on('missingKey', (lngs, ns, key) => {
   console.warn('[i18next] missingKey:', { lngs, ns, key });
 });
 
+// Read saved language from localStorage, fallback to 'en'
+const savedLanguage = typeof window !== 'undefined' 
+  ? localStorage.getItem('user-language') || 'en'
+  : 'en';
+
 i18next.init({
-  lng: 'en',
+  lng: savedLanguage,
   debug: true,
   resources,
   fallbackLng: {

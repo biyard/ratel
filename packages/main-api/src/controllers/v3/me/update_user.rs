@@ -5,7 +5,7 @@ use crate::{
         user::{User, UserDetailResponse, UserEvmAddress, UserMetadata},
     },
     types::Theme,
-    utils::validator::{validate_description, validate_image_url, validate_username},
+    utils::validator::{validate_description, validate_image_url, validate_nickname},
 };
 use bdk::prelude::*;
 use by_axum::{
@@ -62,7 +62,7 @@ pub async fn update_user_handler(
             profile_url,
             description,
         } => {
-            validate_username(&nickname)?;
+            validate_nickname(&nickname)?;
             validate_image_url(&profile_url)?;
             validate_description(&description)?;
             User::updater(user.pk.clone(), user.sk)
