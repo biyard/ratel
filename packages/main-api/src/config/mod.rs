@@ -1,3 +1,6 @@
+pub mod portone_config;
+pub use portone_config::*;
+
 use bdk::prelude::*;
 use by_types::config::*;
 
@@ -42,6 +45,8 @@ pub struct Config {
     #[cfg(not(feature = "no-secret"))]
     // FIXME: integrate with localstack SQS
     pub watermark_sqs_url: &'static str,
+
+    pub portone: PortoneConfig,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -156,6 +161,8 @@ impl Default for Config {
 
             #[cfg(not(feature = "no-secret"))]
             watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL").expect("You must set WATERMARK_QUEUE_URL"),
+
+            portone: PortoneConfig::default(),
         }
     }
 }

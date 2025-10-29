@@ -15,6 +15,10 @@ type Config = {
   telegram_botname: string;
   version: string;
   storybookUrl: string;
+
+  // Identity Verification
+  portone_store_id: string;
+  portone_inicis_channel_key: string;
 };
 
 export const Env = {
@@ -48,4 +52,8 @@ export const config: Config = {
   telegram_botname:
     import.meta.env.VITE_TELEGRAM_BOTNAME || 'cryto_ratel_dev_bot',
   storybookUrl: import.meta.env.VITE_STORYBOOK_URL || 'http://localhost:6006',
+
+  portone_store_id: import.meta.env.VITE_PORTONE_STORE_ID || '',
+  portone_inicis_channel_key:
+    import.meta.env.VITE_PORTONE_INICIS_CHANNEL_KEY || '',
 };
