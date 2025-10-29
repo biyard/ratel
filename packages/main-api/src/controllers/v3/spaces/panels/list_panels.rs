@@ -1,6 +1,5 @@
 use crate::aide::NoApi;
-use crate::controllers::v3::spaces::SpacePanelPath;
-use crate::controllers::v3::spaces::SpacePanelPathParam;
+use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
 use crate::features::spaces::panels::ListPanelQueryParams;
 use crate::features::spaces::panels::ListPanelResponse;
 use crate::features::spaces::panels::SpacePanel;
@@ -14,7 +13,7 @@ use bdk::prelude::axum::extract::{Json, Path, Query, State};
 pub async fn list_panels_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(_user): NoApi<Option<User>>,
-    Path(SpacePanelPathParam { space_pk, panel_pk }): SpacePanelPath,
+    Path(SpacePathParam { space_pk }): SpacePath,
     Query(ListPanelQueryParams { bookmark }): Query<ListPanelQueryParams>,
 ) -> Result<Json<ListPanelResponse>, Error> {
     if !matches!(space_pk, Partition::Space(_)) {
@@ -22,7 +21,7 @@ pub async fn list_panels_handler(
     }
 
     let mut query_options = SpacePanelQueryOption::builder()
-        .sk(format!("SPACE_PANEL#{}", panel_pk))
+        .sk("SPACE_PANEL#".into())
         .limit(10);
 
     if let Some(bookmark) = bookmark {
