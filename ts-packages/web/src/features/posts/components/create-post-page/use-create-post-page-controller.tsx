@@ -350,8 +350,18 @@ export function useCreatePostPageController() {
   );
 
   // Initialize post on mount
+  // Track if initialization has already occurred (prevents double-init in React StrictMode)
+  const initializedRef = useRef(false);
+
   useEffect(() => {
     const initializePost = async () => {
+      // Prevent double initialization in React StrictMode
+      if (initializedRef.current) {
+        logger.debug('Skipping duplicate initialization (React StrictMode)');
+        return;
+      }
+      initializedRef.current = true;
+
       // If postPk is already set from query params, fetch existing post data
       if (postPkParam) {
         logger.debug('Using existing postPk from query params:', postPkParam);
