@@ -5,6 +5,7 @@ import CheckboxIcon from '@/assets/icons/checkbox-icon.svg?react';
 interface CheckboxProps {
   isRounded?: boolean;
   id?: string;
+  value?: boolean;
   onChange: (check: boolean) => void;
   children?: React.ReactNode;
 }
@@ -13,16 +14,18 @@ export const Checkbox = ({
   isRounded = false,
   id,
   onChange,
+  value,
   children,
 }: CheckboxProps) => {
-  const [checked, setChecked] = useState(false);
+  const [checked, setChecked] = useState(value || false);
+
   return (
-    <div className="text-white text-sm/16 font-normal flex flex-row gap-2.25 items-start">
-      <div className="relative flex flex-row items-center justify-start gap-[6px] cursor-pointer">
+    <div className="flex flex-row items-start font-normal text-white text-sm/16 gap-2.25">
+      <div className="flex relative flex-row justify-start items-center cursor-pointer gap-[6px]">
         <input
           id={id}
           type="checkbox"
-          className="peer hidden"
+          className="hidden peer"
           checked={checked}
           onChange={() => {
             const check = checked;

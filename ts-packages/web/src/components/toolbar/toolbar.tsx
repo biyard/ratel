@@ -11,14 +11,39 @@ import {
   SELECTION_CHANGE_COMMAND,
 } from 'lexical';
 import {
+  $getTableCellNodeFromLexicalNode,
+  $isTableCellNode,
+  $isTableNode,
+  INSERT_TABLE_COMMAND,
+  TableCellNode,
+  $insertTableRow__EXPERIMENTAL,
+  $deleteTableRow__EXPERIMENTAL,
+  $insertTableRowAtSelection,
+  $deleteTableRowAtSelection,
+  $insertTableColumnAtSelection,
+  $deleteTableColumnAtSelection,
+} from '@lexical/table';
+import {
   ImagePlus,
   Bold,
   Italic,
   Underline,
   Strikethrough,
+  Table,
+  Plus,
+  Minus,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FileUploader from '@/features/spaces/files/components/file-uploader';
+import {
+  EditorDeleteCol,
+  EditorDeleteRow,
+  EditorInsertAboveRow,
+  EditorInsertBelowRow,
+  EditorInsertLeftCol,
+  EditorInsertRightCol,
+} from '../icons';
 
 export default function ToolbarPlugin({
   onImageUpload,
@@ -33,6 +58,7 @@ export default function ToolbarPlugin({
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
+  const [isInTable, setIsInTable] = useState(false);
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
@@ -41,6 +67,11 @@ export default function ToolbarPlugin({
       setIsItalic(selection.hasFormat('italic'));
       setIsUnderline(selection.hasFormat('underline'));
       setIsStrikethrough(selection.hasFormat('strikethrough'));
+
+      // Check if selection is in a table
+      const anchorNode = selection.anchor.getNode();
+      const tableCell = $getTableCellNodeFromLexicalNode(anchorNode);
+      setIsInTable(tableCell !== null);
     }
   }, []);
 
@@ -66,6 +97,50 @@ export default function ToolbarPlugin({
 
   const formatText = (format: TextFormatType) => {
     activeEditor.dispatchCommand(FORMAT_TEXT_COMMAND, format);
+  };
+
+  const insertTable = () => {
+    activeEditor.dispatchCommand(INSERT_TABLE_COMMAND, {
+      columns: '3',
+      rows: '3',
+      includeHeaders: false,
+    });
+  };
+
+  const insertTableRowAbove = () => {
+    activeEditor.update(() => {
+      $insertTableRowAtSelection(false);
+    });
+  };
+
+  const insertTableRowBelow = () => {
+    activeEditor.update(() => {
+      $insertTableRowAtSelection(true);
+    });
+  };
+
+  const insertTableColLeft = () => {
+    activeEditor.update(() => {
+      $insertTableColumnAtSelection(false);
+    });
+  };
+
+  const insertTableColRight = () => {
+    activeEditor.update(() => {
+      $insertTableColumnAtSelection(true);
+    });
+  };
+
+  const deleteTableRow = () => {
+    activeEditor.update(() => {
+      $deleteTableRowAtSelection();
+    });
+  };
+
+  const deleteTableCol = () => {
+    activeEditor.update(() => {
+      $deleteTableColumnAtSelection();
+    });
   };
 
   return (
@@ -105,6 +180,74 @@ export default function ToolbarPlugin({
         </FileUploader>
       ) : (
         <></>
+      )}
+
+      {/* Table Tools */}
+      <div className="w-px h-4 bg-neutral-600" />
+
+      {!isInTable && (
+        <button
+          onClick={insertTable}
+          className="flex gap-1 items-center"
+          aria-label="Insert table"
+          title="Insert 3x3 table"
+        >
+          <Table size={16} />
+        </button>
+      )}
+
+      {isInTable && (
+        <>
+          <button
+            onClick={insertTableRowAbove}
+            className="flex items-center w-[30px] h-[30px]"
+            aria-label="Insert row above"
+            title="Insert row above"
+          >
+            <EditorInsertAboveRow width={30} height={30} />
+          </button>
+          <button
+            onClick={insertTableRowBelow}
+            className="flex items-center"
+            aria-label="Insert row below"
+            title="Insert row below"
+          >
+            <EditorInsertBelowRow width={30} height={30} />
+          </button>
+          <button
+            onClick={deleteTableRow}
+            className="flex items-center text-red-500 hover:text-red-600"
+            aria-label="Delete row"
+            title="Delete current row"
+          >
+            <EditorDeleteRow width={30} height={30} />
+          </button>
+
+          <button
+            onClick={insertTableColLeft}
+            className="flex items-center"
+            aria-label="Insert col left"
+            title="Insert col left"
+          >
+            <EditorInsertLeftCol width={30} height={30} />
+          </button>
+          <button
+            onClick={insertTableColRight}
+            className="flex items-center"
+            aria-label="Insert col right"
+            title="Insert col right"
+          >
+            <EditorInsertRightCol width={30} height={30} />
+          </button>
+          <button
+            onClick={deleteTableCol}
+            className="flex items-center text-red-500 hover:text-red-600"
+            aria-label="Delete col"
+            title="Delete current col"
+          >
+            <EditorDeleteCol width={30} height={30} />
+          </button>
+        </>
       )}
     </div>
   );

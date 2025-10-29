@@ -38,6 +38,7 @@ import AdminPage from './app/admin/page';
 import { MembershipsPage } from './app/admin/memberships/memberships-page';
 import TelegramPage from './app/telegram/page';
 import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
+import CreatePostPage from './features/posts/components/create-post-page';
 
 export const routes = createBrowserRouter([
   {
@@ -45,6 +46,12 @@ export const routes = createBrowserRouter([
     Component: RootLayout,
     ErrorBoundary: ErrorBoundary,
     children: [
+      {
+        id: 'create-post-page',
+        path: 'create-post',
+        Component: CreatePostPage,
+      },
+
       // Social Layout
       {
         id: 'social-layout',

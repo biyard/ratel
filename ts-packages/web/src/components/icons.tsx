@@ -1,5 +1,5 @@
 // Auto-generated icon exports
-// Total icons: 656
+// Total icons: 662
 
 // Root Icons (92)
 export { default as Add } from '@/assets/icons/add.svg?react';
@@ -320,10 +320,16 @@ export { default as EditSearch } from '@/assets/icons/edit/search.svg?react';
 export { default as EditZoomIn } from '@/assets/icons/edit/zoom-in.svg?react';
 export { default as EditZoomOut } from '@/assets/icons/edit/zoom-out.svg?react';
 
-// Editor (23)
+// Editor (29)
 export { default as EditorFormatting } from '@/assets/icons/editor/Formatting.svg?react';
 export { default as EditorArrDown } from '@/assets/icons/editor/arr-down.svg?react';
 export { default as EditorBold } from '@/assets/icons/editor/bold.svg?react';
+export { default as EditorDeleteCol } from '@/assets/icons/editor/DeleteCol.svg?react';
+export { default as EditorDeleteRow } from '@/assets/icons/editor/DeleteRow.svg?react';
+export { default as EditorInsertAboveRow } from '@/assets/icons/editor/InsertAboveRow.svg?react';
+export { default as EditorInsertBelowRow } from '@/assets/icons/editor/InsertBelowRow.svg?react';
+export { default as EditorInsertLeftCol } from '@/assets/icons/editor/InsertLeftCol.svg?react';
+export { default as EditorInsertRightCol } from '@/assets/icons/editor/InsertRightCol.svg?react';
 export { default as EditorCapslock } from '@/assets/icons/editor/capslock.svg?react';
 export { default as EditorCodespen } from '@/assets/icons/editor/codespen.svg?react';
 export { default as EditorCommentPasteWhite } from '@/assets/icons/editor/comment-paste-white.svg?react';
