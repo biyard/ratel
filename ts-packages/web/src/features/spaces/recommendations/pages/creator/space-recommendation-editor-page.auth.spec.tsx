@@ -10,7 +10,7 @@ test.describe
   let threadUrl = '';
   let spaceUrl = '';
 
-  test.beforeAll('Create a post', async ({ browser }) => {
+  test.beforeAll('Create post', async ({ browser }) => {
     context = await browser.newContext({ storageState: 'user.json' });
     page = await context.newPage();
     await page.goto('/');

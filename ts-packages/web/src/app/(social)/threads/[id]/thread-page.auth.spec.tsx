@@ -5,7 +5,7 @@ import { click, fill, waitForVisible } from '@tests/utils';
 test.describe.serial('[ThreadPage] Authenticated Users ', () => {
   let threadUrl = '';
 
-  test('[TP-001] Create a post', async ({ page }) => {
+  test('[TP-001] Create post', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
