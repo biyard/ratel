@@ -168,7 +168,7 @@ export function NewComment({
   // className = '',
   onClose,
   onSubmit,
-  // t,
+  t,
 }: {
   className?: string;
   onClose: () => void;
