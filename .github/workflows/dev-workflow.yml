@@ -156,6 +156,7 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           RUST_FLAG: --features bypass
           WEB_BUILD: false
+          PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
         run: |
           tar xzvf dist.tar.gz
           mv cdk/dist ./
@@ -308,12 +309,17 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
 
+          VITE_PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID}}
+          VITE_PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_INICIS_CHANNEL_KEY }}
+
           VITE_ENV: dev
           VITE_SIGN_DOMAIN: dev.ratel.foundation
           VITE_API_URL: https://dev.ratel.foundation
           VITE_EXPERIMENT: true
           VITE_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
           VITE_STORYBOOK_URL: https://storybook.dev.ratel.foundation
+
+
         run: |
           make build
           mv dist ../../cdk/

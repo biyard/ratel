@@ -10,12 +10,10 @@ import { State } from '@/types/state';
 import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
-import { usePostEditorContext } from '../../_components/post-editor';
 import SpaceCreateModal from '../../../../features/spaces/modals/space-type-selector-modal';
 import { useThreadData } from './use-thread-data';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
 import { useLikeCommentMutation } from '@/features/comments/hooks/use-like-comment-mutation';
-import usePostById from '@/features/posts/hooks/use-post';
 import { useCommentMutation } from '@/features/posts/hooks/use-comment-mutation';
 import { PostDetailResponse } from '@/features/posts/dto/post-detail-response';
 import { FeedStatus } from '@/features/posts/types/post';
@@ -31,7 +29,6 @@ export class ThreadController {
 
   constructor(
     public postId: string,
-    public data,
     public expandComment: State<boolean>,
     public isLoggedIn: boolean,
     public feed: PostDetailResponse,
@@ -44,7 +41,6 @@ export class ThreadController {
     public likePost,
     public user,
     public teams,
-    public postEditor,
     public likeComment,
   ) {
     this.username = this.user?.username || '';
@@ -96,8 +92,7 @@ export class ThreadController {
   };
 
   handleEditPost = async () => {
-    logger.debug('handleEditPost', this.postId);
-    await this.postEditor?.openPostEditorPopup(this.postId);
+    logger.error('handleEditPost Not Implemented', this.postId);
   };
 
   handleDeletePost = async () => {
@@ -132,9 +127,11 @@ export function useThreadController() {
   logger.debug('post id', postId);
   const { data: user } = useSuspenseUserInfo();
   const isLoggedIn = useLoggedIn();
-  const { data: feed } = usePostById(postId);
 
-  const data = useThreadData(postId);
+  const {
+    post: { data: feed },
+  } = useThreadData(postId);
+  console.log('feed', feed);
   const expandComment = useState(false);
 
   const { mutateAsync } = useCommentMutation();
@@ -151,7 +148,6 @@ export function useThreadController() {
   const likePost = useLikePostMutation();
   const { teams } = useContext(TeamContext);
 
-  const postEditor = usePostEditorContext();
   const likeComment = useLikeCommentMutation();
 
   useEffect(() => {
@@ -164,7 +160,6 @@ export function useThreadController() {
 
   return new ThreadController(
     postId,
-    data,
     new State(expandComment),
     isLoggedIn,
     feed,
@@ -177,7 +172,6 @@ export function useThreadController() {
     likePost,
     user,
     teams,
-    postEditor,
     likeComment,
   );
 }
