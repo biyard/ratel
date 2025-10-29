@@ -158,7 +158,10 @@ test.describe('Create Post Page - Authenticated User', () => {
     const testContent = 'List item text';
 
     // Fill in content
-    const editor = page.locator('[data-pw="post-content-editor"]');
+    const editor = page.locator(
+      '[data-pw="post-content-editor"] [contenteditable]',
+    );
+    await editor.waitFor({ state: 'visible' });
     await editor.click();
     await editor.fill(testContent);
 
@@ -276,11 +279,12 @@ test.describe('Create Post Page - Authenticated User', () => {
     await expect(publishButton).toBeDisabled();
 
     // Fill content
-    await fill(
-      page,
-      { 'data-pw': 'post-content-editor' },
-      'Test content with enough text',
+    const editor = page.locator(
+      '[data-pw="post-content-editor"] [contenteditable]',
     );
+    await editor.waitFor({ state: 'visible' });
+    await editor.click();
+    await editor.fill('Test content with enough text');
 
     // Wait for auto-save to complete
     await page.waitForTimeout(6000);
@@ -385,7 +389,9 @@ test.describe('Create Post Page - Authenticated User', () => {
       await titleInput.clear();
       await titleInput.fill(updatedTitle);
 
-      const editor = page.locator('[data-pw="post-content-editor"]');
+      const editor = page.locator(
+        '[data-pw="post-content-editor"] [contenteditable]',
+      );
       await editor.clear();
       await editor.fill(updatedContent);
 
