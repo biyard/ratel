@@ -54,7 +54,7 @@ import { i18nAdmin } from '@/app/admin/admin-page-i18n';
 import { i18nMemberships } from '@/features/membership/i18n';
 import { i18nHeader } from '@/components/header/i18n';
 import i18nListDrafts from '@/features/drafts/components/list-drafts/i18n';
-import i18nEditDraftPage from '@/app/(social)/drafts/[post-id]/edit/i18n';
+import { CreatePostPage } from '@/features/posts/components/create-post-page/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -118,7 +118,7 @@ Object.entries({
   Memberships: i18nMemberships,
   Nav: i18nHeader,
   ListDrafts: i18nListDrafts,
-  EditDraftPage: i18nEditDraftPage,
+  CreatePostPage,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;

@@ -18,6 +18,7 @@ export const ToolbarButton = ({
   return (
     <button
       type="button"
+      tabIndex={-1}
       onClick={onClick}
       onMouseDown={handleMouseDown}
       disabled={disabled}
@@ -33,7 +34,7 @@ export const ToolbarButton = ({
         '[&_svg]:size-6',
         active
           ? '[&_svg]:text-primary [&_svg_path]:fill-primary [&_svg_path]:stroke-primary' // Use primary color for active state
-          : '[&_svg]:text-foreground-muted [&_svg_path]:fill-foreground-muted [&_svg_path]:stroke-gray-500', // Muted color with hover effect
+          : '[&_svg]:text-foreground-muted [&_svg_path]:fill-foreground-muted [&_svg_path]:stroke-gray-500 [&_svg_line]:stroke-gray-500 [&_svg_rect]:stroke-gray-500', // Muted color with hover effect
 
         // Background and hover states with better contrast
         active
