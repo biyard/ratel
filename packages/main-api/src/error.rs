@@ -183,6 +183,10 @@ pub enum Error {
     #[rest_error(code = 8000)]
     #[error("panel not found")]
     NotFoundPanel,
+    #[error("already participate user")]
+    AlreadyParticipateUser,
+    #[error("already full panel")]
+    AlreadyFullPanel,
 
     // web 1,000,000 ~
     #[error("Web error: {0}")]

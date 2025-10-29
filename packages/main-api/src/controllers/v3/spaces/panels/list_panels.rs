@@ -22,7 +22,7 @@ pub async fn list_panels_handler(
 
     let mut query_options = SpacePanelQueryOption::builder()
         .sk("SPACE_PANEL#".into())
-        .limit(2);
+        .limit(10);
 
     if let Some(bookmark) = bookmark {
         query_options = query_options.bookmark(bookmark);
