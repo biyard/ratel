@@ -163,8 +163,7 @@ test.describe('Create Post Page - Authenticated User', () => {
     await editor.fill(testContent);
 
     // Try to find and click bullet list button
-    const listButtons = page.locator('button').filter({ hasText: /list/i });
-    const bulletListButton = listButtons.first();
+    const bulletListButton = page.getByLabel('Bullet List', { exact: true });
 
     if (await bulletListButton.isVisible().catch(() => false)) {
       await bulletListButton.click();
@@ -213,10 +212,11 @@ test.describe('Create Post Page - Authenticated User', () => {
     // Find and click skip checkbox
     const skipCheckbox = page.getByText('Skip creating a space');
     if (await skipCheckbox.isVisible()) {
-      await skipCheckbox.click();
-
       // Button text should change to "Publish"
-      const publishButton = page.getByRole('button', { name: 'Publish' });
+      const publishButton = page.getByRole('button', {
+        name: 'Publish',
+        exact: true,
+      });
       await expect(publishButton).toBeVisible();
     }
   });
@@ -278,7 +278,7 @@ test.describe('Create Post Page - Authenticated User', () => {
     // Fill content
     await fill(
       page,
-      { label: 'post-content-editor' },
+      { 'data-pw': 'post-content-editor' },
       'Test content with enough text',
     );
 
@@ -306,11 +306,6 @@ test.describe('Create Post Page - Authenticated User', () => {
     await editor1.click();
     await editor1.fill(createContent);
 
-    const skipCheckbox = page.getByText('Skip creating a space');
-    if (await skipCheckbox.isVisible()) {
-      await skipCheckbox.click();
-    }
-
     const publishButton = page.getByRole('button', { name: 'Publish' });
     await publishButton.click();
     await page.waitForURL(/\/threads\/.+/, {
@@ -325,7 +320,7 @@ test.describe('Create Post Page - Authenticated User', () => {
       const postPk = match[1];
 
       // Navigate to edit page with postPk
-      await page.goto(`/posts/new?post-pk=${postPk}`);
+      await page.goto(`/posts/new?post-pk=${encodeURIComponent(postPk)}`);
       await page.waitForLoadState('networkidle');
 
       // Title and content should be loaded
@@ -366,11 +361,6 @@ test.describe('Create Post Page - Authenticated User', () => {
     await editor1.click();
     await editor1.fill(createContent);
 
-    const skipCheckbox = page.getByText('Skip creating a space');
-    if (await skipCheckbox.isVisible()) {
-      await skipCheckbox.click();
-    }
-
     const publishButton = page.getByRole('button', { name: 'Publish' });
     await publishButton.click();
     await page.waitForURL(/\/threads\/.+/, {
@@ -384,7 +374,7 @@ test.describe('Create Post Page - Authenticated User', () => {
       const postPk = match[1];
 
       // Navigate to edit page
-      await page.goto(`/posts/new?post-pk=${postPk}`);
+      await page.goto(`/posts/new?post-pk=${encodeURIComponent(postPk)}`);
       await page.waitForLoadState('networkidle');
 
       // Modify title and content
