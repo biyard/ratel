@@ -15,5 +15,12 @@
   "appearance": "설정",
   "language": "언어",
   "select_language": "언어 선택",
-  "cancel": "취소"
+  "cancel": "취소",
+  "identity_verification": "본인인증",
+  "verify_identity": "본인인증 하기",
+  "verifying": "인증 중...",
+  "loading_verification_sdk": "인증 SDK 로딩 중...",
+  "identity_verification_success": "본인인증이 완료되었습니다.",
+  "identity_verification_failed": "본인인증에 실패했습니다.",
+  "identity_verification_error": "본인인증 중 오류가 발생했습니다."
 }
