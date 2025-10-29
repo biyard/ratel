@@ -45,6 +45,11 @@ export const i18nSpaceHome = {
     // Admin Menus
     menu_admin_settings: 'Settings',
     menu_analyze: 'Analyze',
+
+    success_publish_space: 'Success to publish space.',
+    failed_publish_space: 'Failed to publish space. please try later.',
+    success_delete_space: 'Success to delete space.',
+    failed_delete_space: 'Failed to delete space. please try later.',
   },
   ko: {
     publish_space: '스페이스 게시',
@@ -93,5 +98,12 @@ export const i18nSpaceHome = {
     // Admin Menus
     menu_admin_settings: '설정',
     menu_analyze: '분석',
+
+    success_publish_space: '스페이스를 성공적으로 게시했습니다.',
+    failed_publish_space:
+      '스페이스 게시에 실패했습니다. 잠시 후 다시 시도해보세요.',
+    success_delete_space: '스페이스를 성공적으로 삭제했습니다.',
+    failed_delete_space:
+      '스페이스 삭제에 실패했습니다. 잠시 후 다시 시도해보세요.',
   },
 };

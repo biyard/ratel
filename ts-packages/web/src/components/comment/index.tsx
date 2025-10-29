@@ -9,8 +9,9 @@ import { logger } from '@/lib/logger';
 import { ReplyList } from './reply-list';
 import { TFunction } from 'i18next';
 import PostComment from '@/features/posts/types/post-comment';
-import { TiptapEditor } from '../text-editor';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { Button } from '../ui/button';
+import { TiptapEditor } from '../text-editor';
 
 interface CommentProps {
   comment: PostComment;
@@ -192,8 +193,10 @@ export function NewComment({
       try {
         setLoading(true);
         await onSubmit?.(content);
+        showSuccessToast(t('success_create_comment'));
         onClose();
       } catch (error) {
+        showErrorToast(t('failed_create_comment'));
         logger.debug('Error submitting comment:', error);
       } finally {
         setLoading(false);
@@ -222,7 +225,7 @@ export function NewComment({
         <TiptapEditor
           content={content}
           editable={true}
-          showToolbar={true}
+          showToolbar={false}
           onUpdate={(content) => {
             setContent(content);
           }}

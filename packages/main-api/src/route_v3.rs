@@ -9,6 +9,7 @@ use crate::{
         auth::{
             login::login_handler,
             logout::logout_handler,
+            reset_password::reset_password_handler,
             signup::signup_handler,
             verification::{send_code::send_code_handler, verify_code::verify_code_handler},
         },
@@ -113,6 +114,7 @@ pub fn route(
                 .route("/login", post(login_handler))
                 .route("/logout", post(logout_handler))
                 .route("/signup", post(signup_handler))
+                .route("/reset", post(reset_password_handler))
                 .nest(
                     "/verification",
                     Router::new()

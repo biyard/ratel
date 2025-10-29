@@ -60,16 +60,19 @@ export default function HomePage() {
         className="flex-col w-70 pl-4 max-tablet:fixed bottom-4 max-tablet:right-4 max-tablet:z-50 max-tablet:pl-0"
         aria-label="Sidebar"
       >
-        <CreatePostButton
-          onClick={async () => {
-            try {
-              const draft = await createDraft({});
-              navigate(route.draftEdit(draft.post_pk));
-            } catch (error) {
-              console.error('Error creating draft:', error);
-            }
-          }}
-        />
+        <div className="mb-2.5">
+          <CreatePostButton
+            onClick={async () => {
+              try {
+                const draft = await createDraft({});
+                navigate(route.draftEdit(draft.post_pk));
+              } catch (error) {
+                console.error('Error creating draft:', error);
+              }
+            }}
+          />
+        </div>
+
         <div className="max-tablet:hidden">
           {ctrl.topPromotion && (
             <Card variant="secondary">

@@ -264,79 +264,79 @@ jobs:
           path: /tmp/main-api-image.tar.gz
           key: main-api-image-${{ github.sha }}
 
-  # fetcher:
-  #   runs-on: ubuntu-latest
+  fetcher:
+    runs-on: ubuntu-latest
 
-  #   outputs:
-  #     image: ${{ steps.build.outputs.image }}
+    outputs:
+      image: ${{ steps.build.outputs.image }}
 
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: recursive
-  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
-  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
-  #       with:
-  #         components: clippy, rustfmt
-  #         target: wasm32-unknown-unknown
-  #         toolchain: stable
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
 
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-  #     - uses: cargo-bins/cargo-binstall@main
-  #     - name: Install dependencies
-  #       run: |
-  #         cargo binstall toml-cli
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install dependencies
+        run: |
+          cargo binstall toml-cli
 
-  #     - name: Cache builder
-  #       id: fetcher-build-cache
-  #       uses: actions/cache@v4
-  #       with:
-  #         key: fetcher-build-${{ hashFiles('Cargo.lock') }}
-  #         restore-keys: |
-  #           fetcher-build-
-  #         path: |
-  #           packages/fetcher/target
+      - name: Cache builder
+        id: fetcher-build-cache
+        uses: actions/cache@v4
+        with:
+          key: fetcher-build-${{ hashFiles('Cargo.lock') }}
+          restore-keys: |
+            fetcher-build-
+          path: |
+            packages/fetcher/target
 
-  #     - name: Build and cache Docker image
-  #       id: build
-  #       env:
-  #         REGION: ap-northeast-2
-  #         ACCESS_KEY_ID: test
-  #         SECRET_ACCESS_KEY: test
-  #         ENV: dev
-  #         RUST_LOG: info
-  #         SERVICE: fetcher
-  #         DOMAIN: fetcher-api.dev.ratel.foundation
-  #         AUTH_DOMAIN: dev.ratel.foundation
-  #         DATABASE_TYPE: postgres
-  #         BASE_DOMAIN: ratel.foundation
-  #         REPO_NAME: ratel/fetcher
-  #         ECR_NAME: fetcher
-  #         COMMIT: pr-${{ github.sha }}
-  #         DYNAMO_TABLE_PREFIX: ratel-local
-  #       run: |
-  #         npm i -g aws-cdk
-  #         cd packages/fetcher
-  #         # Build and tag image
-  #         make docker.build
+      - name: Build and cache Docker image
+        id: build
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: test
+          SECRET_ACCESS_KEY: test
+          ENV: dev
+          RUST_LOG: info
+          SERVICE: fetcher
+          DOMAIN: fetcher-api.dev.ratel.foundation
+          AUTH_DOMAIN: dev.ratel.foundation
+          DATABASE_TYPE: postgres
+          BASE_DOMAIN: ratel.foundation
+          REPO_NAME: ratel/fetcher
+          ECR_NAME: fetcher
+          COMMIT: pr-${{ github.sha }}
+          DYNAMO_TABLE_PREFIX: ratel-local
+        run: |
+          npm i -g aws-cdk
+          cd packages/fetcher
+          # Build and tag image
+          make docker.build
 
-  #         # Save image to cache
-  #         docker save $ECR_NAME:$COMMIT | gzip > /tmp/fetcher-image.tar.gz
-  #         echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
+          # Save image to cache
+          docker save $ECR_NAME:$COMMIT | gzip > /tmp/fetcher-image.tar.gz
+          echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
 
-  #     - name: Cache Docker image
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: /tmp/fetcher-image.tar.gz
-  #         key: fetcher-image-${{ github.sha }}
+      - name: Cache Docker image
+        uses: actions/cache@v4
+        with:
+          path: /tmp/fetcher-image.tar.gz
+          key: fetcher-image-${{ github.sha }}
 
   playwright-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    needs: [ratel-web, main-api]
+    needs: [ratel-web, main-api, fetcher]
 
     steps:
       - uses: actions/checkout@v4
