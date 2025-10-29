@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { route } from '@/route';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
@@ -11,6 +11,7 @@ import { usePublishDraftMutation } from '@/features/posts/hooks/use-publish-draf
 import { getPost } from '@/features/posts/hooks/use-post';
 import { State } from '@/types/state';
 import { useCreatePostPageI18n } from './i18n';
+import { Editor } from '@tiptap/core';
 
 import { SPACE_DEFINITIONS } from '@/features/spaces/types/space-definition';
 import { stripHtml } from '@/lib/string-filter-utils';
@@ -47,6 +48,7 @@ export class CreatePostPageController {
     public previousContent: State<string>,
     public disableSpaceSelector: State<boolean>,
     public spacePk: State<string | null>,
+    public editorRef: React.RefObject<Editor | null>,
     public createPost: ReturnType<typeof useCreatePostMutation>['mutateAsync'],
     public updateDraft: ReturnType<
       typeof useUpdateDraftMutation
@@ -97,6 +99,10 @@ export class CreatePostPageController {
   handleContentChange = (newContent: string) => {
     this.content.set(newContent);
     this.isModified.set(true);
+  };
+
+  handleContentUpdate = (html: string) => {
+    this.handleContentChange(html);
   };
 
   handleSelectSpace = (idx: number) => {
@@ -309,6 +315,7 @@ export function useCreatePostPageController() {
   const previousContent = useState<string>('');
   const disableSpaceSelector = useState(false);
   const spacePk = useState<string | null>(null);
+  const editorRef = useRef<Editor | null>(null);
 
   // Mutations
   const { mutateAsync: createPost } = useCreatePostMutation();
@@ -333,6 +340,7 @@ export function useCreatePostPageController() {
     new State(previousContent),
     new State(disableSpaceSelector),
     new State(spacePk),
+    editorRef,
     createPost,
     updateDraft,
     publishDraft,

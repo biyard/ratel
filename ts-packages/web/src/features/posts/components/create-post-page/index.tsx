@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/checkbox/checkbox';
 import { cn } from '@/lib/utils';
 import { TiptapEditor } from '@/components/text-editor';
-import { Editor } from '@tiptap/core';
 
 import {
   useCreatePostPageController,
@@ -14,18 +13,9 @@ import { SpaceTypeCarousel } from './space-type-carousel';
 import SpaceTypeItem from '@/features/spaces/components/space-type-item';
 import { Row } from '@/components/ui/row';
 import { Col } from '@/components/ui/col';
-import { useRef, useCallback } from 'react';
 
 export default function CreatePostPage() {
   const ctrl = useCreatePostPageController();
-  const editorRef = useRef<Editor | null>(null);
-
-  const handleContentUpdate = useCallback(
-    (html: string) => {
-      ctrl.handleContentChange(html);
-    },
-    [ctrl],
-  );
 
   const renderedForms = ctrl.spaceDefinitions.map((form, i) => (
     <SpaceTypeItem
@@ -61,9 +51,9 @@ export default function CreatePostPage() {
         {/* Rich Text Editor - TipTap */}
         <div className="relative">
           <TiptapEditor
-            ref={editorRef}
+            ref={ctrl.editorRef}
             content={ctrl.content.get() || ''}
-            onUpdate={handleContentUpdate}
+            onUpdate={ctrl.handleContentUpdate}
             placeholder={ctrl.t.content_placeholder}
             data-pw="post-content-editor"
             minHeight="300px"
@@ -123,7 +113,12 @@ export default function CreatePostPage() {
             value={ctrl.skipCreatingSpace.get()}
             onChange={(checked) => ctrl.skipCreatingSpace.set(checked)}
           >
-            <span className="text-sm text-text-primary">
+            <span
+              className="text-sm cursor-pointer text-text-primary"
+              onClick={() =>
+                ctrl.skipCreatingSpace.set(!ctrl.skipCreatingSpace.get())
+              }
+            >
               {ctrl.t.skip_creating_space}
             </span>
           </Checkbox>

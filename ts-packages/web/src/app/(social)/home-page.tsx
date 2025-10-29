@@ -23,14 +23,14 @@ export default function HomePage() {
 
   if (ctrl.isLoading) {
     return (
-      <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-gray-500">
+      <div className="flex flex-row justify-start items-center w-full text-base font-medium text-gray-500 border border-gray-500 h-fit px-[16px] py-[20px] rounded-[8px]">
         Loading...
       </div>
     );
   }
 
   let feedSection = (
-    <Col className="flex-1 flex max-mobile:px-[10px]">
+    <Col className="flex flex-1 max-mobile:px-[10px]">
       <Col className="flex-1">
         {ctrl.posts.map((post) => (
           <FeedCard key={`feed-${post.pk}`} post={post} />
@@ -46,31 +46,22 @@ export default function HomePage() {
 
   if (ctrl.posts.length === 0) {
     feedSection = (
-      <div className="flex flex-row w-full h-fit justify-start items-center px-[16px] py-[20px] border border-gray-500 rounded-[8px] font-medium text-base text-gray-500">
+      <div className="flex flex-row justify-start items-center w-full text-base font-medium text-gray-500 border border-gray-500 h-fit px-[16px] py-[20px] rounded-[8px]">
         No posts available
       </div>
     );
   }
 
   return (
-    <div className="flex-1 flex relative">
+    <div className="flex relative flex-1">
       {feedSection}
 
       <div
-        className="flex-col w-70 pl-4 max-tablet:fixed bottom-4 max-tablet:right-4 max-tablet:z-50 max-tablet:pl-0"
+        className="bottom-4 flex-col pl-4 w-70 max-tablet:fixed max-tablet:right-4 max-tablet:z-50 max-tablet:pl-0"
         aria-label="Sidebar"
       >
         <div className="mb-2.5">
-          <CreatePostButton
-            onClick={async () => {
-              try {
-                const draft = await createDraft({});
-                navigate(route.draftEdit(draft.post_pk));
-              } catch (error) {
-                console.error('Error creating draft:', error);
-              }
-            }}
-          />
+          <CreatePostButton />
         </div>
 
         <div className="max-tablet:hidden">

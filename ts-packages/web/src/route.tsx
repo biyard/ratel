@@ -74,4 +74,21 @@ export const route = {
   // Admin routes
   admin: () => '/admin',
   adminMemberships: () => '/admin/memberships',
+  newPost: (postPk?: string, teamPk?: string) => {
+    let to = '/posts/new';
+    const params: string[] = [];
+
+    if (teamPk) {
+      params.push(`team-pk=${encodeURIComponent(teamPk)}`);
+    }
+    if (postPk) {
+      params.push(`post-pk=${encodeURIComponent(postPk)}`);
+    }
+
+    if (params.length > 0) {
+      to += `?${params.join('&')}`;
+    }
+
+    return to;
+  },
 };

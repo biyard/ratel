@@ -51,8 +51,8 @@ export default function TeamDraftPage({ username }: { username: string }) {
 
   const flattedDrafts = drafts?.pages.flatMap((page) => page.items) ?? [];
   return (
-    <div className="flex flex-1 relative">
-      <div className="flex-1 flex max-mobile:px-[10px]">
+    <div className="flex relative flex-1">
+      <div className="flex flex-1 max-mobile:px-[10px]">
         <ListDrafts
           drafts={flattedDrafts}
           fetchNextPage={fetchNextPage}
@@ -66,16 +66,7 @@ export default function TeamDraftPage({ username }: { username: string }) {
         className={`h-fit max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 tablet:w-80 tablet:pl-4 tablet:static`}
       ></div>
 
-      <CreatePostButton
-        onClick={async () => {
-          try {
-            const draft = await createDraft({ teamPk: team.id });
-            navigate(route.draftEdit(draft.post_pk));
-          } catch (error) {
-            console.error('Error creating draft:', error);
-          }
-        }}
-      />
+      <CreatePostButton />
     </div>
   );
 }
