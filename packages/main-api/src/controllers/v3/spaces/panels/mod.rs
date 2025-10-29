@@ -9,6 +9,9 @@ pub use get_panel::*;
 pub use list_panels::*;
 pub use update_panel::*;
 
+#[cfg(test)]
+pub mod tests;
+
 use crate::AppState;
 use bdk::prelude::*;
 use by_axum::aide::axum::routing::*;
