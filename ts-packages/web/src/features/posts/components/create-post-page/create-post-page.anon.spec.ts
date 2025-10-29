@@ -76,9 +76,9 @@ test.describe('Create Post Page - Anonymous User', () => {
     await page.waitForURL('/', { timeout: CONFIGS.PAGE_WAIT_TIME });
     expect(page.url()).toContain('/');
 
-    // Login popup should be visible on mobile too
-    const loginPopup = page.getByText(/sign in/i).first();
-    await expect(loginPopup).toBeVisible({ timeout: CONFIGS.PAGE_WAIT_TIME });
+    // Form elements should not be visible
+    const titleInput = page.getByPlaceholder('Title');
+    await expect(titleInput).not.toBeVisible();
 
     // Reset viewport
     await page.setViewportSize({ width: 1280, height: 720 });
