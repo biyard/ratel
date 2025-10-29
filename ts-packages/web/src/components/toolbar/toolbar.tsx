@@ -24,6 +24,17 @@ import {
   $deleteTableColumnAtSelection,
 } from '@lexical/table';
 import {
+  INSERT_ORDERED_LIST_COMMAND,
+  INSERT_UNORDERED_LIST_COMMAND,
+  REMOVE_LIST_COMMAND,
+  $isListNode,
+  ListNode,
+} from '@lexical/list';
+import {
+  $getNearestNodeOfType,
+  $findMatchingParent,
+} from '@lexical/utils';
+import {
   ImagePlus,
   Bold,
   Italic,
@@ -33,6 +44,8 @@ import {
   Plus,
   Minus,
   Trash2,
+  List,
+  ListOrdered,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import FileUploader from '@/features/spaces/files/components/file-uploader';
@@ -59,6 +72,8 @@ export default function ToolbarPlugin({
   const [isUnderline, setIsUnderline] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [isInTable, setIsInTable] = useState(false);
+  const [isBulletList, setIsBulletList] = useState(false);
+  const [isNumberedList, setIsNumberedList] = useState(false);
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
@@ -72,6 +87,24 @@ export default function ToolbarPlugin({
       const anchorNode = selection.anchor.getNode();
       const tableCell = $getTableCellNodeFromLexicalNode(anchorNode);
       setIsInTable(tableCell !== null);
+
+      // Check if selection is in a list
+      const element = anchorNode.getKey() === 'root'
+        ? anchorNode
+        : $findMatchingParent(anchorNode, (e) => {
+            const parent = e.getParent();
+            return parent !== null && $isListNode(parent);
+          });
+
+      if ($isListNode(element)) {
+        const parentList = element.getParent();
+        const type = parentList ? (parentList as ListNode).getListType() : element.getListType();
+        setIsBulletList(type === 'bullet');
+        setIsNumberedList(type === 'number');
+      } else {
+        setIsBulletList(false);
+        setIsNumberedList(false);
+      }
     }
   }, []);
 
@@ -143,6 +176,22 @@ export default function ToolbarPlugin({
     });
   };
 
+  const toggleBulletList = () => {
+    if (isBulletList) {
+      activeEditor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+    } else {
+      activeEditor.dispatchCommand(INSERT_UNORDERED_LIST_COMMAND, undefined);
+    }
+  };
+
+  const toggleNumberedList = () => {
+    if (isNumberedList) {
+      activeEditor.dispatchCommand(REMOVE_LIST_COMMAND, undefined);
+    } else {
+      activeEditor.dispatchCommand(INSERT_ORDERED_LIST_COMMAND, undefined);
+    }
+  };
+
   return (
     <div className="flex items-center gap-4 [&>button]:size-6 [&>button]:rounded [&>button]:hover:bg-hover">
       <button
@@ -172,6 +221,26 @@ export default function ToolbarPlugin({
         aria-label="Format text with a strikethrough"
       >
         <Strikethrough />
+      </button>
+
+      {/* List Tools */}
+      <div className="w-px h-4 bg-neutral-600" />
+
+      <button
+        onClick={toggleBulletList}
+        className={cn(isBulletList && 'bg-neutral-600 text-white')}
+        aria-label="Bullet list"
+        title="Bullet list"
+      >
+        <List />
+      </button>
+      <button
+        onClick={toggleNumberedList}
+        className={cn(isNumberedList && 'bg-neutral-600 text-white')}
+        aria-label="Numbered list"
+        title="Numbered list"
+      >
+        <ListOrdered />
       </button>
 
       {enableImage ? (

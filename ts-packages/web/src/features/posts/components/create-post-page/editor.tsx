@@ -5,6 +5,7 @@ import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { TablePlugin } from '@lexical/react/LexicalTablePlugin';
+import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import {
   type LexicalEditor,
   type EditorState,
@@ -111,6 +112,7 @@ export function Editor({
       <OnChangePlugin onChange={handleLexicalChange} />
       <HistoryPlugin />
       <TablePlugin />
+      <ListPlugin />
       <EditorRefPlugin
         setEditorRef={(editor) => (editorRef.current = editor)}
       />
