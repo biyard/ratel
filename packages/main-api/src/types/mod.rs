@@ -68,3 +68,6 @@ pub use question::*;
 
 pub mod answer;
 pub use answer::*;
+
+pub mod attribute;
+pub use attribute::*;
