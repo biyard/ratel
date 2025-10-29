@@ -7,10 +7,17 @@ import {
   CreatePostButton,
   FeedEndMessage,
 } from '@/features/drafts/components/list-drafts';
+import { useCreatePostMutation } from '@/features/posts/hooks/use-create-post-mutation';
+import { useNavigate } from 'react-router';
+import { route } from '@/route';
 
 export default function MyPostsPage() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteMyPosts();
+
+  const navigate = useNavigate();
+
+  const createDraft = useCreatePostMutation().mutateAsync;
 
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -50,7 +57,12 @@ export default function MyPostsPage() {
       >
         <CreatePostButton
           onClick={async () => {
-            console.error('NOT implemented');
+            try {
+              const draft = await createDraft({});
+              navigate(route.draftEdit(draft.post_pk));
+            } catch (error) {
+              console.error('Error creating draft:', error);
+            }
           }}
         />
       </div>
