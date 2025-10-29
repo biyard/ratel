@@ -48,7 +48,7 @@ export const routes = createBrowserRouter([
     children: [
       {
         id: 'create-post-page',
-        path: 'create-post',
+        path: 'posts/new',
         Component: CreatePostPage,
       },
 

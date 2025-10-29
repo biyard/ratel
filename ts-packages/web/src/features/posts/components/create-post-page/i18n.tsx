@@ -15,6 +15,8 @@ export const CreatePostPage = {
     saving: 'Saving...',
     last_saved_at: 'Last saved at',
     remove_image: 'Remove image',
+    unsaved_changes: 'Unsaved changes',
+    all_changes_saved: 'All changes saved',
 
     // Success messages
     success_publish: 'Post published successfully!',
@@ -41,6 +43,8 @@ export const CreatePostPage = {
     saving: '저장 중...',
     last_saved_at: '마지막 저장',
     remove_image: '이미지 제거',
+    unsaved_changes: '저장되지 않은 변경사항',
+    all_changes_saved: '모든 변경사항 저장됨',
 
     // Success messages
     success_publish: '게시물이 성공적으로 게시되었습니다!',
@@ -69,6 +73,8 @@ export interface I18nCreatePostPage {
   saving: string;
   last_saved_at: string;
   remove_image: string;
+  unsaved_changes: string;
+  all_changes_saved: string;
 
   // Success messages
   success_publish: string;
@@ -101,6 +107,8 @@ export function useCreatePostPageI18n() {
     saving: t('CreatePostPage:saving'),
     last_saved_at: t('CreatePostPage:last_saved_at'),
     remove_image: t('CreatePostPage:remove_image'),
+    unsaved_changes: t('CreatePostPage:unsaved_changes'),
+    all_changes_saved: t('CreatePostPage:all_changes_saved'),
 
     // Success messages
     success_publish: t('CreatePostPage:success_publish'),

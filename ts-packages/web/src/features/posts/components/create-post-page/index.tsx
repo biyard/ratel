@@ -1,6 +1,6 @@
 'use client';
 
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Check, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/checkbox/checkbox';
@@ -95,14 +95,38 @@ export default function CreatePostPage() {
                 onImageUpload={ctrl.handleImageUpload}
                 enableImage={true}
               />
+
+              {/* Saving Status Icon */}
+              <div className="flex gap-2 items-center text-xs text-neutral-400">
+                {ctrl.status.get() === EditorStatus.Saving ? (
+                  <>
+                    <Loader2 className="animate-spin" size={14} />
+                    <span>{ctrl.t.saving}</span>
+                  </>
+                ) : ctrl.isModified.get() ? (
+                  <>
+                    <Clock size={14} className="text-yellow-500" />
+                    <span className="text-yellow-500">
+                      {ctrl.t.unsaved_changes}
+                    </span>
+                  </>
+                ) : ctrl.lastSavedAt.get() ? (
+                  <>
+                    <Check size={14} className="text-green-500" />
+                    <span className="text-green-500">
+                      {ctrl.t.all_changes_saved}
+                    </span>
+                  </>
+                ) : null}
+              </div>
             </div>
           </LexicalComposer>
         </div>
 
         {ctrl.lastSavedAt.get() && (
-          <div className="text-xs text-neutral-400">
+          <Row className="justify-end items-center w-full text-xs text-neutral-400">
             {ctrl.formatLastSaved(ctrl.lastSavedAt.get())}
-          </div>
+          </Row>
         )}
       </Col>
 
@@ -126,7 +150,7 @@ export default function CreatePostPage() {
         <Button
           variant="rounded_primary"
           size="default"
-          onClick={ctrl.handlePublish}
+          onClick={ctrl.handleSubmit}
           disabled={ctrl.isPublishDisabled}
           className={cn(
             'min-w-[150px]',

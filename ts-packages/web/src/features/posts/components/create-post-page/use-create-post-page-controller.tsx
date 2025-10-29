@@ -1,5 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router';
+import {
+  useLoaderData,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router';
 import { route } from '@/route';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
@@ -9,6 +14,7 @@ import { useCreatePostMutation } from '@/features/posts/hooks/use-create-post-mu
 import { useUpdateDraftMutation } from '@/features/posts/hooks/use-update-draft-mutation';
 import { useUpdateDraftImageMutation } from '@/features/posts/hooks/use-update-draft-image-mutation';
 import { usePublishDraftMutation } from '@/features/posts/hooks/use-publish-draft-mutation';
+import { getPost } from '@/features/posts/hooks/use-post';
 import { State } from '@/types/state';
 import { useCreatePostPageI18n } from './i18n';
 
@@ -31,6 +37,7 @@ export class CreatePostPageController {
 
   constructor(
     public postPk: State<string | null>,
+    public teamPk: State<string | null>,
     public title: State<string>,
     public content: State<string | null>,
     public image: State<string | null>,
@@ -137,6 +144,12 @@ export class CreatePostPageController {
     this.image.set(null);
   };
 
+  handleSubmit = async () => {
+    if (this.skipCreatingSpace.get()) {
+      return this.handlePublish();
+    }
+  };
+
   handlePublish = async () => {
     const postPkValue = this.postPk.get();
     if (
@@ -207,6 +220,8 @@ export class CreatePostPageController {
       });
       this.lastSavedAt.set(new Date());
       this.isModified.set(false);
+      this.previousTitle.set(this.title.get());
+      this.previousContent.set(this.content.get() || '');
     } catch (error) {
       logger.error('Auto-save failed:', error);
     } finally {
@@ -221,16 +236,21 @@ export class CreatePostPageController {
     const day = String(date.getDate()).padStart(2, '0');
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
-    return `${this.t.last_saved_at} ${year}.${month}.${day} ${hours}:${minutes}`;
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${this.t.last_saved_at} ${year}.${month}.${day} ${hours}:${minutes}:${seconds}`;
   };
 }
 
 export function useCreatePostPageController() {
   const navigate = useNavigate();
   const t = useCreatePostPageI18n();
+  const [searchParams] = useSearchParams();
+  const postPkParam = searchParams.get('post-pk');
+  const teamPkParam = searchParams.get('team-pk');
 
   // State
-  const postPk = useState<string | null>(null);
+  const postPk = useState<string | null>(postPkParam);
+  const teamPk = useState<string | null>(teamPkParam);
   const title = useState('');
   const content = useState<string | null>(null);
   const image = useState<string | null>(null);
@@ -253,6 +273,7 @@ export function useCreatePostPageController() {
 
   const controller = new CreatePostPageController(
     new State(postPk),
+    new State(teamPk),
     new State(title),
     new State(content),
     new State(image),
@@ -277,6 +298,32 @@ export function useCreatePostPageController() {
   // Initialize post on mount
   useEffect(() => {
     const initializePost = async () => {
+      // If postPk is already set from query params, fetch existing post data
+      if (postPkParam) {
+        logger.debug('Using existing postPk from query params:', postPkParam);
+        try {
+          const postData = await getPost(postPkParam);
+          controller.title.set(postData.post.title);
+          controller.content.set(postData.post.html_contents);
+          controller.previousTitle.set(postData.post.title);
+          controller.previousContent.set(postData.post.html_contents);
+
+          // Set image if exists (first URL in the urls array)
+          if (postData.post.urls && postData.post.urls.length > 0) {
+            controller.image.set(postData.post.urls[0]);
+          }
+
+          // Mark as not modified since we just loaded from server
+          controller.isModified.set(false);
+          controller.lastSavedAt.set(new Date(postData.post.updated_at * 1000));
+        } catch (error) {
+          logger.error('Failed to fetch post data:', error);
+          showErrorToast(t.error_init);
+        }
+        return;
+      }
+
+      // Create new post if no postPk provided
       try {
         const result = await createPost({});
         controller.postPk.set(result.post_pk);
