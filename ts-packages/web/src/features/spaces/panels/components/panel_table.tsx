@@ -60,6 +60,7 @@ export function PanelTable({
             <th className="p-3 font-semibold text-left">
               {canEdit && (
                 <div
+                  id="add-panel-button"
                   className="cursor-pointer w-6 h-6 bg-neutral-300 rounded-md"
                   onClick={onadd}
                 >
@@ -87,6 +88,7 @@ export function PanelTable({
                 />
               </td>
               <td
+                id="age-td"
                 className={`p-3 ${canEdit ? 'cursor-pointer' : ''}`}
                 onClick={() => {
                   if (canEdit) {
@@ -97,6 +99,7 @@ export function PanelTable({
                 <PanelAge t={t} attributes={panel.attributes} />
               </td>
               <td
+                id="gender-td"
                 className={`p-3 ${canEdit ? 'cursor-pointer' : ''}`}
                 onClick={() => {
                   if (canEdit) {
@@ -106,7 +109,7 @@ export function PanelTable({
               >
                 <PanelGender t={t} attributes={panel.attributes} />
               </td>
-              <td className="p-3">
+              <td id="quotas-td" className="p-3">
                 <PanelQuotas
                   quotas={panel.quotas}
                   canEdit={canEdit}
@@ -158,7 +161,7 @@ export function ContextMenu({
             aria-haspopup="true"
             aria-label="Post options for desktop"
           >
-            <Extra className="size-6 text-gray-400" />
+            <Extra id="menu-option" className="size-6 text-gray-400" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent

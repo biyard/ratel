@@ -143,6 +143,7 @@ export default function AgePopup({
                   disabled={false}
                 />
                 <label
+                  onClick={() => toggle(p.key)}
                   htmlFor={id}
                   className="cursor-pointer text-[15px] text-text-primary select-none"
                 >
