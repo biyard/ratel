@@ -40,7 +40,6 @@ import TelegramPage from './app/telegram/page';
 import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
 import SpacePanelPage from './app/spaces/[id]/panels/space-panel-page';
 
-import MyDraftEditPage from './app/(social)/drafts/[post-id]/edit/page';
 import CreatePostPage from './features/posts/components/create-post-page';
 
 export const routes = createBrowserRouter([
