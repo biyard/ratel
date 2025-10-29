@@ -14,6 +14,7 @@ import { useCreatePostPageI18n } from './i18n';
 
 import type { LexicalEditor, EditorState } from 'lexical';
 import { SPACE_DEFINITIONS } from '@/features/spaces/types/space-definition';
+import { stripHtml } from '@/lib/string-filter-utils';
 
 const TITLE_MAX_LENGTH = 50;
 const AUTO_SAVE_DELAY = 5000; // 5 seconds
@@ -40,6 +41,8 @@ export class CreatePostPageController {
     public lastSavedAt: State<Date | null>,
     public isModified: State<boolean>,
     public selected: State<number>,
+    public previousTitle: State<string>,
+    public previousContent: State<string>,
     public editorRef: React.RefObject<LexicalEditor | null>,
     public createPost: ReturnType<typeof useCreatePostMutation>['mutateAsync'],
     public updateDraft: ReturnType<
@@ -54,7 +57,6 @@ export class CreatePostPageController {
     public navigate: ReturnType<typeof useNavigate>,
     public t: ReturnType<typeof useCreatePostPageI18n>,
   ) {
-    logger.debug('CreatePostPageController initialized');
     this.spaceDefinitions = SPACE_DEFINITIONS;
   }
 
@@ -65,6 +67,21 @@ export class CreatePostPageController {
       this.status.get() !== EditorStatus.Idle
     );
   }
+
+  get actionButtonText(): string {
+    if (!this.skipCreatingSpace.get()) {
+      return this.t.btn_next;
+    }
+
+    return this.t.publish;
+  }
+
+  detectChanged = () => {
+    const titleChanged = this.previousTitle.get() !== this.title.get();
+    const contentChanged = this.previousContent.get() !== this.content.get();
+
+    return titleChanged || contentChanged;
+  };
 
   handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -157,6 +174,29 @@ export class CreatePostPageController {
     ) {
       return;
     }
+    // strip html tags
+    const contents = stripHtml(this.content.get() || '').trim();
+    const title = stripHtml(this.title.get()).trim();
+    logger.debug('Auto-saving draft:', {
+      title: this.title.get(),
+      content: contents,
+      realContent: this.content.get(),
+    });
+
+    if (title === '' && contents === '') {
+      logger.debug('Both title and content are empty. Skipping auto-save.');
+      return;
+    }
+
+    if (
+      this.previousTitle.get() === this.title.get() &&
+      this.previousContent.get() === this.content.get()
+    ) {
+      logger.debug(
+        'No changes detected since last auto-save. Skipping auto-save.',
+      );
+      return;
+    }
 
     this.status.set(EditorStatus.Saving);
     try {
@@ -202,6 +242,8 @@ export function useCreatePostPageController() {
   const isModified = useState(false);
   const editorRef = useRef<LexicalEditor | null>(null);
   const selected = useState(0);
+  const previousTitle = useState('');
+  const previousContent = useState<string>('');
 
   // Mutations
   const { mutateAsync: createPost } = useCreatePostMutation();
@@ -221,6 +263,8 @@ export function useCreatePostPageController() {
     new State(lastSavedAt),
     new State(isModified),
     new State(selected),
+    new State(previousTitle),
+    new State(previousContent),
     editorRef,
     createPost,
     updateDraft,

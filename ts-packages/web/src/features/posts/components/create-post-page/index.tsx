@@ -15,9 +15,10 @@ import {
 } from './use-create-post-page-controller';
 import { editorConfig } from './editor-config';
 import { Editor } from './editor';
-import { SpaceCreationCard } from './space-creation-card';
 import { SpaceTypeCarousel } from './space-type-carousel';
 import SpaceTypeItem from '@/features/spaces/components/space-type-item';
+import { Row } from '@/components/ui/row';
+import { Col } from '@/components/ui/col';
 
 export { editorTheme } from './editor-theme';
 
@@ -34,16 +35,14 @@ export default function CreatePostPage() {
   ));
 
   return (
-    <div className="py-5 px-4 mx-auto w-full max-w-[906px]">
+    <Col className="gap-5 py-5 px-4 mx-auto w-full max-w-[906px]">
       {/* Header */}
-      <div className="mb-5">
-        <h1 className="text-2xl font-bold text-text-primary">
-          {ctrl.t.page_title}
-        </h1>
-      </div>
+      <h1 className="text-2xl font-bold text-text-primary">
+        {ctrl.t.page_title}
+      </h1>
 
-      {/* Title Input */}
-      <div className="mb-5">
+      <Col>
+        {/* Title Input */}
         <div className="relative">
           <Input
             type="text"
@@ -56,10 +55,8 @@ export default function CreatePostPage() {
             {ctrl.title.get().length}/{ctrl.TITLE_MAX_LENGTH}
           </div>
         </div>
-      </div>
 
-      {/* Rich Text Editor */}
-      <div className="mb-5">
+        {/* Rich Text Editor */}
         <div className="relative rounded-md border border-input-box-border bg-input-box-bg">
           <LexicalComposer initialConfig={editorConfig}>
             <div className="relative text-base min-h-[200px] text-text-primary">
@@ -98,16 +95,16 @@ export default function CreatePostPage() {
                 onImageUpload={ctrl.handleImageUpload}
                 enableImage={true}
               />
-
-              {ctrl.lastSavedAt.get() && (
-                <div className="text-xs text-neutral-400">
-                  {ctrl.formatLastSaved(ctrl.lastSavedAt.get())}
-                </div>
-              )}
             </div>
           </LexicalComposer>
         </div>
-      </div>
+
+        {ctrl.lastSavedAt.get() && (
+          <div className="text-xs text-neutral-400">
+            {ctrl.formatLastSaved(ctrl.lastSavedAt.get())}
+          </div>
+        )}
+      </Col>
 
       {/* Space Creation Section */}
       {!ctrl.skipCreatingSpace.get() && (
@@ -142,7 +139,7 @@ export default function CreatePostPage() {
               <span>{ctrl.t.publishing}</span>
             </>
           ) : (
-            <span>{ctrl.t.publish}</span>
+            <span>{ctrl.actionButtonText}</span>
           )}
         </Button>
       </div>
@@ -154,6 +151,6 @@ export default function CreatePostPage() {
           <span>{ctrl.t.saving}</span>
         </div>
       )}
-    </div>
+    </Col>
   );
 }
