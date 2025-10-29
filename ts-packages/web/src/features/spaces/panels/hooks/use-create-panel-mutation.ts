@@ -19,7 +19,6 @@ export function useCreatePanelMutation() {
     mutationKey: ['create-panel'],
     mutationFn: async (v: Vars) => {
       const { spacePk, name, quotas, attributes } = v;
-
       await createSpacePanel(spacePk, name, quotas, attributes);
       return v;
     },
@@ -33,7 +32,7 @@ export function useCreatePanelMutation() {
       const prev = qc.getQueryData<ListPanelResponse>(qk);
 
       const optimisticItem: SpacePanelResponse = {
-        pk: '' as unknown as string,
+        pk: crypto.randomUUID(),
         name,
         quotas,
         attributes,
@@ -41,24 +40,20 @@ export function useCreatePanelMutation() {
 
       qc.setQueryData<ListPanelResponse>(qk, (old) => {
         if (!old) {
-          return new ListPanelResponse({
-            panels: [optimisticItem],
-            bookmark: null,
-          });
+          return { panels: [optimisticItem], bookmark: null };
         }
-        return new ListPanelResponse({
-          discussions: [optimisticItem, ...old.panels],
-          bookmark: old.bookmark,
-        });
+
+        return {
+          ...old,
+          panels: [optimisticItem, ...old.panels],
+        };
       });
 
       return { qk, prev };
     },
 
     onError: (_err, _vars, ctx) => {
-      if (ctx?.qk) {
-        qc.setQueryData(ctx.qk, ctx.prev);
-      }
+      if (ctx?.qk) qc.setQueryData(ctx.qk, ctx.prev);
     },
 
     onSettled: async (_data, _error, { spacePk }) => {
