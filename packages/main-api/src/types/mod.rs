@@ -71,3 +71,6 @@ pub mod answer;
 pub use answer::*;
 
 pub use app_state::*;
+
+pub mod attribute;
+pub use attribute::*;
