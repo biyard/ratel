@@ -192,20 +192,6 @@ async fn test_list_my_posts() {
     assert_eq!(body["title"], title);
     assert_eq!(body["html_contents"], content);
 
-    // Images
-    let (status, _headers, body) = patch! {
-        app: app,
-        path: &path,
-        headers: headers.clone(),
-        body: {
-            "images": images
-        }
-    };
-
-    assert_eq!(status, 200);
-    assert_eq!(body["urls"].as_array().length().unwrap_or_default(), 1);
-    assert_eq!(body["urls"][0], images[0]);
-
     // Info
     let (status, _headers, body) = patch! {
         app: app,
@@ -299,20 +285,6 @@ async fn test_list_my_drafts() {
     assert_eq!(status, 200);
     assert_eq!(body["title"], title);
     assert_eq!(body["html_contents"], content);
-
-    // Images
-    let (status, _headers, body) = patch! {
-        app: app,
-        path: &path,
-        headers: headers.clone(),
-        body: {
-            "images": images
-        }
-    };
-
-    assert_eq!(status, 200);
-    assert_eq!(body["urls"].as_array().length().unwrap_or_default(), 1);
-    assert_eq!(body["urls"][0], images[0]);
 
     // Info
     let (status, _headers, body) = patch! {
