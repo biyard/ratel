@@ -45,6 +45,9 @@ export interface TiptapEditorProps {
   // Focus state
   onFocus?: () => void;
   onBlur?: () => void;
+
+  // Test identifier
+  'data-pw'?: string;
 }
 
 /**

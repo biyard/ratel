@@ -129,7 +129,11 @@ export default function MyDraftEditPage() {
 
   return (
     <Col>
-      <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+      <Input
+        id="post-title-input"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
       <TiptapEditor
         ref={editorRef}
         content={content}
@@ -137,9 +141,11 @@ export default function MyDraftEditPage() {
           setContent(editorRef.current?.getHTML() || '');
           setIsModified(true);
         }}
+        data-pw="post-content-editor"
       />
       <Row>
         <Button
+          id="save-draft-button"
           variant="rounded_secondary"
           onClick={handleSaveDraft}
           disabled={isSaving}
@@ -147,6 +153,7 @@ export default function MyDraftEditPage() {
           Save Draft
         </Button>
         <Button
+          id="publish-post-button"
           variant="rounded_primary"
           onClick={handleNext}
           disabled={isSaving}

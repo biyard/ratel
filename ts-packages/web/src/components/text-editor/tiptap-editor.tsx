@@ -29,6 +29,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       maxHeight,
       onFocus,
       onBlur,
+      'data-pw': dataPw,
     },
     ref,
   ) => {
@@ -108,6 +109,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           'focus-within:border-primary',
           className,
         )}
+        data-pw={dataPw}
       >
         {showToolbar && toolbarPosition === 'top' && (
           <TiptapToolbar
