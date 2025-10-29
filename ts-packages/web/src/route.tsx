@@ -51,7 +51,8 @@ export const route = {
   },
   spacePolls: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/polls`,
-
+  spacePanels: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/panels`,
   spacePollById: (spaceId: string, pollId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/polls/${encodeURIComponent(pollId)}`,
   spaceAnalyzePollById: (spaceId: string, pollId: string) =>
