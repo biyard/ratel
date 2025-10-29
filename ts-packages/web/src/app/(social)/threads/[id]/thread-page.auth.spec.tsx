@@ -19,7 +19,7 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
       'meet the minimum character requirements for post publishing.';
 
     await click(page, { label: 'Create Post' });
-    await page.waitForURL(/\/drafts\/.+\/edit/, {
+    await page.waitForURL(/\/posts\/new/, {
       timeout: CONFIGS.PAGE_WAIT_TIME,
     });
 

@@ -13,8 +13,17 @@ import { SpaceTypeCarousel } from './space-type-carousel';
 import SpaceTypeItem from '@/features/spaces/components/space-type-item';
 import { Row } from '@/components/ui/row';
 import { Col } from '@/components/ui/col';
+import { RequireAuth } from '@/components/auth/require-auth';
 
 export default function CreatePostPage() {
+  return (
+    <RequireAuth>
+      <CreatePostPageContent />
+    </RequireAuth>
+  );
+}
+
+function CreatePostPageContent() {
   const ctrl = useCreatePostPageController();
 
   const renderedForms = ctrl.spaceDefinitions.map((form, i) => (
@@ -37,6 +46,7 @@ export default function CreatePostPage() {
         {/* Title Input */}
         <div className="relative">
           <Input
+            id="post-title-input"
             type="text"
             placeholder={ctrl.t.title_placeholder}
             value={ctrl.title.get()}

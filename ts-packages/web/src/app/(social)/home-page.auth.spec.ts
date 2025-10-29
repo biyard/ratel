@@ -19,7 +19,7 @@ test.describe('Create Post - Authenticated User', () => {
 
     await click(page, { label: 'Create Post' });
 
-    await page.waitForURL(/\/drafts\/.+\/edit/, {
+    await page.waitForURL(/\/posts\/new/, {
       timeout: CONFIGS.PAGE_WAIT_TIME,
     });
 
