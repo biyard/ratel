@@ -36,7 +36,7 @@ test.describe('Create Post Page - Authenticated User', () => {
     await expect(actionButton).toBeVisible();
   });
 
-  test('[CP-AUTH-002] should create a new post successfully', async ({
+  test('[CP-AUTH-002] should create a new post with a poll space successfully', async ({
     page,
   }) => {
     const testTitle = 'Automated Test Post - E2E';
@@ -48,7 +48,9 @@ test.describe('Create Post Page - Authenticated User', () => {
     await fill(page, { placeholder: 'Title' }, testTitle);
 
     // Fill in content using TipTap's contenteditable div
-    const editor = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    const editor = page.locator(
+      '[data-pw="post-content-editor"] [contenteditable]',
+    );
     await editor.waitFor({ state: 'visible' });
     await editor.click();
     await editor.fill(testContent);
@@ -70,7 +72,7 @@ test.describe('Create Post Page - Authenticated User', () => {
     await publishButton.click();
 
     // Should redirect to thread page
-    await page.waitForURL(/\/threads\/.+/, { timeout: CONFIGS.PAGE_WAIT_TIME });
+    await page.waitForURL(/\/spaces\/.+/, { timeout: CONFIGS.PAGE_WAIT_TIME });
   });
 
   test('[CP-AUTH-003] should enforce title character limit', async ({
@@ -102,7 +104,9 @@ test.describe('Create Post Page - Authenticated User', () => {
     await fill(page, { placeholder: 'Title' }, testTitle);
 
     // Fill in content using TipTap's contenteditable div
-    const editor = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    const editor = page.locator(
+      '[data-pw="post-content-editor"] [contenteditable]',
+    );
     await editor.waitFor({ state: 'visible' });
     await editor.click();
     await editor.fill(testContent);
@@ -135,15 +139,13 @@ test.describe('Create Post Page - Authenticated User', () => {
     page,
   }) => {
     // Check for list formatting buttons
-    const bulletListButton = page.locator('button[aria-label*="list"]').first();
-    const numberedListButton = page
-      .locator('button[aria-label*="list"]')
-      .nth(1);
+    const bulletListButton = page.getByLabel('Bullet List', { exact: true });
+    const numberedListButton = page.getByLabel('Numbered List', {
+      exact: true,
+    });
 
     // Verify toolbar buttons exist (may vary based on implementation)
-    const hasBulletList = await bulletListButton
-      .isVisible()
-      .catch(() => false);
+    const hasBulletList = await bulletListButton.isVisible().catch(() => false);
     const hasNumberedList = await numberedListButton
       .isVisible()
       .catch(() => false);
@@ -170,9 +172,7 @@ test.describe('Create Post Page - Authenticated User', () => {
 
       // Content should now be in a list
       const listElement = page.locator('ul li, ol li');
-      const hasListElement = await listElement
-        .isVisible()
-        .catch(() => false);
+      const hasListElement = await listElement.isVisible().catch(() => false);
 
       if (hasListElement) {
         await expect(listElement).toBeVisible();
@@ -203,7 +203,9 @@ test.describe('Create Post Page - Authenticated User', () => {
 
     await fill(page, { placeholder: 'Title' }, testTitle);
 
-    const editor = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    const editor = page.locator(
+      '[data-pw="post-content-editor"] [contenteditable]',
+    );
     await editor.waitFor({ state: 'visible' });
     await editor.click();
     await editor.fill(testContent);
@@ -227,7 +229,9 @@ test.describe('Create Post Page - Authenticated User', () => {
 
     await fill(page, { placeholder: 'Title' }, testTitle);
 
-    const editor = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    const editor = page.locator(
+      '[data-pw="post-content-editor"] [contenteditable]',
+    );
     await editor.waitFor({ state: 'visible' });
     await editor.click();
     await editor.fill(testContent);
@@ -295,7 +299,9 @@ test.describe('Create Post Page - Authenticated User', () => {
 
     await fill(page, { placeholder: 'Title' }, createTitle);
 
-    const editor1 = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    const editor1 = page.locator(
+      '[data-pw="post-content-editor"] [contenteditable]',
+    );
     await editor1.waitFor({ state: 'visible' });
     await editor1.click();
     await editor1.fill(createContent);
@@ -353,7 +359,9 @@ test.describe('Create Post Page - Authenticated User', () => {
 
     await fill(page, { placeholder: 'Title' }, createTitle);
 
-    const editor1 = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    const editor1 = page.locator(
+      '[data-pw="post-content-editor"] [contenteditable]',
+    );
     await editor1.waitFor({ state: 'visible' });
     await editor1.click();
     await editor1.fill(createContent);
@@ -433,7 +441,9 @@ test.describe('Create Post Page - Authenticated User', () => {
 
     await fill(page, { placeholder: 'Title' }, testTitle);
 
-    const editor = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    const editor = page.locator(
+      '[data-pw="post-content-editor"] [contenteditable]',
+    );
     await editor.waitFor({ state: 'visible' });
     await editor.click();
     await editor.fill(testContent);
@@ -457,7 +467,9 @@ test.describe('Create Post Page - Authenticated User', () => {
     // Note: Requires actual image upload to test removal
 
     // Check if there's an image removal button
-    const removeImageButton = page.locator('button[aria-label*="Remove image"]');
+    const removeImageButton = page.locator(
+      'button[aria-label*="Remove image"]',
+    );
     const hasRemoveButton = await removeImageButton
       .isVisible()
       .catch(() => false);
@@ -481,7 +493,9 @@ test.describe('Create Post Page - Authenticated User', () => {
 
     await fill(page, { placeholder: 'Title' }, testTitle);
 
-    const editor = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    const editor = page.locator(
+      '[data-pw="post-content-editor"] [contenteditable]',
+    );
     await editor.waitFor({ state: 'visible' });
     await editor.click();
     await editor.fill(testContent);
