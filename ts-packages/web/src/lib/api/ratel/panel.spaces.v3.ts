@@ -44,3 +44,14 @@ export function deleteSpacePanel(
     {},
   );
 }
+
+export function participateSpacePanel(
+  spacePk: string,
+  panelPk: string,
+): Promise<void> {
+  return call(
+    'PATCH',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/panels/${encodeURIComponent(panelPk)}/participants`,
+    {},
+  );
+}
