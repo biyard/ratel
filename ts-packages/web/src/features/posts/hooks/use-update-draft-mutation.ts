@@ -7,6 +7,7 @@ import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import Post from '../types/post';
 import { call } from '@/lib/api/ratel/call';
 import PostResponse from '../dto/list-post-response';
+import { PostDetailResponse } from '../dto/post-detail-response';
 
 export function updatePostWithTitleAndContents(
   postPk: string,
@@ -26,6 +27,7 @@ export function useUpdateDraftMutation() {
   const username = user?.username;
 
   return useMutation({
+    mutationKey: ['update-draft'],
     mutationFn: async ({
       postPk,
       title,
@@ -42,14 +44,19 @@ export function useUpdateDraftMutation() {
     onMutate: async ({ postPk, title, content }) => {
       const queryKey = feedKeys.detail(postPk);
       const listQueryKey = feedKeys.drafts(username!);
-
-      const rollbackDraft = await optimisticUpdate<PostResponse>(
+      const draft: Partial<Post> = {
+        title,
+        html_contents: content,
+      };
+      const rollbackDraft = await optimisticUpdate<PostDetailResponse>(
         { queryKey },
-        (post) => {
+        (prev) => {
           return {
-            ...post!,
-            title,
-            content,
+            ...prev!,
+            post: {
+              ...prev!.post,
+              ...draft,
+            },
           };
         },
       );
@@ -61,8 +68,7 @@ export function useUpdateDraftMutation() {
 
           return {
             ...post,
-            title,
-            content,
+            ...draft,
           };
         },
       );

@@ -1,63 +1,65 @@
 import Card from '@/components/card';
-import HtmlContentViewer from '@/components/html-content-viewer';
 import { Edit1, Save } from '@/components/icons';
-import TextEditor from '@/components/text-editor/text-editor';
+
 import { useState } from 'react';
-import TextViewer from './text-viewer';
-import { executeOnKeyStroke } from '@/utils/key-event-handle';
+import { TiptapEditor } from '@/components/text-editor';
+// import { executeOnKeyStroke } from '@/utils/key-event-handle';
 
 export default function SpaceHTMLContentEditor({
   htmlContent,
   canEdit,
+  // enableEnterToSave = false,
   onContentChange,
 }: {
   htmlContent: string;
   canEdit: boolean;
+  enableEnterToSave?: boolean;
   onContentChange: (newContent: string) => void;
 }) {
-  const [editable, setEditable] = useState(false);
-  const [content, setContent] = useState(htmlContent);
+  const [isEditing, setEditing] = useState<boolean>(false);
+  const [content, setContent] = useState<string>(htmlContent);
+  const Icon = !isEditing ? Edit1 : Save;
 
-  if (!canEdit) {
-    return <TextViewer htmlContent={htmlContent} />;
-  }
-
-  const Icon = !editable ? Edit1 : Save;
-  const onClick = () => {
-    if (editable) {
-      onContentChange(content);
-    }
-    setEditable(!editable);
-  };
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (!editable) return;
-    executeOnKeyStroke(
-      e,
-      () => {
-        onContentChange(content);
-        setEditable(false);
-      },
-      () => setEditable(false),
-    );
-  };
+  // const onKeyDown = (e: React.KeyboardEvent) => {
+  //   if (!isEditing || !enableEnterToSave) return;
+  //   executeOnKeyStroke(
+  //     e,
+  //     () => {
+  //       setEditing(false);
+  //       onContentChange(content);
+  //     },
+  //     () => setEditing(false),
+  //   );
+  // };
 
   return (
     <>
       <Card className="relative">
-        <Icon
-          role="button"
-          className="absolute top-3 right-3 w-5 h-5 [&>path]:stroke-1  text-gray-400 cursor-pointer hover:text-gray-600"
-          onClick={onClick}
-        />
-        {editable ? (
-          <TextEditor
-            content={content}
-            onChange={setContent}
-            onKeyDown={onKeyDown}
+        {canEdit && (
+          <Icon
+            role="button"
+            className="absolute right-5 bottom-6 w-5 h-5 [&>path]:stroke-1  text-gray-400 cursor-pointer hover:text-gray-600"
+            onClick={() => {
+              if (isEditing) {
+                console.log('save');
+                onContentChange(content);
+                setEditing(false);
+              } else if (canEdit) {
+                console.log('Start editing');
+                setEditing(true);
+              }
+            }}
           />
-        ) : (
-          <HtmlContentViewer htmlContent={htmlContent} />
         )}
+        <TiptapEditor
+          content={content}
+          onUpdate={(nextContent) => {
+            setContent(nextContent);
+          }}
+          editable={isEditing}
+          showToolbar={isEditing}
+          data-pw="space-recommendation-editor"
+        />
       </Card>
     </>
   );

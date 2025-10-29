@@ -3,20 +3,25 @@ import { feedKeys } from '@/constants';
 import { showErrorToast } from '@/lib/toast';
 import { optimisticListUpdate, removeQueries } from '@/lib/hook-utils';
 import { useSuspenseUserInfo } from '@/hooks/use-user-info';
-import { getQueryClient } from '@/providers/getQueryClient';
 import PostResponse from '@/features/posts/dto/list-post-response';
-import Post from '../types/post';
+import Post, { Visibility } from '../types/post';
 import { call } from '@/lib/api/ratel/call';
+import { getQueryClient } from '@/providers/getQueryClient';
+import { PostDetailResponse } from '../dto/post-detail-response';
 
 export function publishPost(
   postPk: string,
   title: string,
   content: string,
+  imageUrls: string[] = [],
+  visibility?: Visibility,
 ): Promise<Post> {
   return call('PATCH', `/v3/posts/${encodeURIComponent(postPk)}`, {
     publish: true,
     title,
     content,
+    image_urls: imageUrls,
+    visibility,
   });
 }
 export function usePublishDraftMutation() {
@@ -25,24 +30,32 @@ export function usePublishDraftMutation() {
   const username = user?.username;
 
   return useMutation({
+    mutationKey: ['publish-draft'],
     mutationFn: async ({
       postPk,
       title,
       content,
+      imageUrls,
+      visibility,
     }: {
       postPk: string;
       title: string;
       content: string;
+      imageUrls?: string[];
+      visibility?: Visibility;
     }) => {
-      await publishPost(postPk, title, content);
-      return { postPk };
+      const updatedPost = await publishPost(
+        postPk,
+        title,
+        content,
+        imageUrls,
+        visibility,
+      );
+      return { postPk, updatedPost };
     },
 
     onMutate: async ({ postPk }) => {
-      const queryKey = feedKeys.detail(postPk);
       const listQueryKey = feedKeys.drafts(username!);
-
-      const rollbackDraft = await removeQueries({ queryKey });
 
       const rollbackDrafts = await optimisticListUpdate<PostResponse>(
         { queryKey: listQueryKey },
@@ -53,24 +66,47 @@ export function usePublishDraftMutation() {
         },
       );
 
-      return { rollbackDraft, rollbackDrafts };
+      return { rollbackDrafts };
     },
-
-    onError: (error: Error, _variables, context) => {
-      context?.rollbackDraft?.rollback();
-      context?.rollbackDrafts?.rollback();
-
-      showErrorToast(error.message || 'Failed to delete feed');
-    },
-
-    onSettled: () => {
+    onSuccess: ({ postPk, updatedPost }) => {
       const queryClient = getQueryClient();
-      queryClient.invalidateQueries({
-        queryKey: feedKeys.drafts(username!),
-      });
+      console.log('Published post:', updatedPost);
+      queryClient.setQueryData(
+        feedKeys.detail(postPk),
+        (oldData: PostDetailResponse) => {
+          console.log('Old data:', oldData);
+          if (!oldData) {
+            return { post: updatedPost };
+          }
+
+          return {
+            ...oldData,
+            post: {
+              ...oldData.post,
+              ...updatedPost,
+            },
+          };
+        },
+      );
+
       queryClient.invalidateQueries({
         queryKey: feedKeys.my_posts(username!),
       });
     },
+    onError: (error: Error, _variables, context) => {
+      context?.rollbackDrafts?.rollback();
+
+      showErrorToast(error.message || 'Failed to publish feed');
+    },
+
+    // onSettled: () => {
+    //   const queryClient = getQueryClient();
+    //   queryClient.invalidateQueries({
+    //     queryKey: feedKeys.drafts(username!),
+    //   });
+    //   queryClient.invalidateQueries({
+    //     queryKey: feedKeys.my_posts(username!),
+    //   });
+    // },
   });
 }

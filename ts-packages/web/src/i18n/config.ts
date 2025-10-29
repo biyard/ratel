@@ -52,6 +52,8 @@ import { i18nSpaceRecommendationEditor } from '@/features/spaces/recommendations
 import { i18nAdmin } from '@/app/admin/admin-page-i18n';
 import { i18nMemberships } from '@/features/membership/i18n';
 import { i18nHeader } from '@/components/header/i18n';
+import i18nListDrafts from '@/features/drafts/components/list-drafts/i18n';
+import i18nEditDraftPage from '@/app/(social)/drafts/[post-id]/edit/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -113,6 +115,8 @@ Object.entries({
   Admin: i18nAdmin,
   Memberships: i18nMemberships,
   Nav: i18nHeader,
+  ListDrafts: i18nListDrafts,
+  EditDraftPage: i18nEditDraftPage,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
@@ -141,9 +145,10 @@ const getBrowserLanguage = (): string => {
 };
 
 // Read saved language from localStorage, fallback to browser language
-const savedLanguage = typeof window !== 'undefined'
-  ? localStorage.getItem('user-language') || getBrowserLanguage()
-  : 'en';
+const savedLanguage =
+  typeof window !== 'undefined'
+    ? localStorage.getItem('user-language') || getBrowserLanguage()
+    : 'en';
 
 i18next.init({
   lng: savedLanguage,

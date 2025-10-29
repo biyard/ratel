@@ -1,11 +1,7 @@
 import { getTimeAgo } from '@/lib/time-utils';
 import { ChevronDown } from 'lucide-react';
-import { BendArrowRight, ThumbUp } from '@/components/icons';
-import LexicalHtmlViewer from '@/components/lexical/lexical-html-viewer';
-import {
-  LexicalHtmlEditor,
-  LexicalHtmlEditorRef,
-} from '../lexical/lexical-html-editor';
+import { BendArrowRight, CommentIcon, ThumbUp } from '@/components/icons';
+
 import { validateString } from '@/lib/string-filter-utils';
 import { ChevronDoubleDownIcon } from '@heroicons/react/20/solid';
 import { useEffect, useRef, useState } from 'react';
@@ -14,6 +10,8 @@ import { ReplyList } from './reply-list';
 import { TFunction } from 'i18next';
 import PostComment from '@/features/posts/types/post-comment';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import { Button } from '../ui/button';
+import { TiptapEditor } from '../text-editor';
 
 interface CommentProps {
   comment: PostComment;
@@ -76,7 +74,11 @@ export function Comment({ comment, onComment, onLike, t }: CommentProps) {
         )} */}
 
         {/* Content */}
-        <LexicalHtmlViewer htmlString={comment.content} />
+        <TiptapEditor
+          content={comment.content}
+          editable={false}
+          showToolbar={false}
+        />
 
         {/* Actions */}
         <div className="flex flex-row w-full justify-between items-center gap-2">
@@ -163,7 +165,7 @@ export function Comment({ comment, onComment, onLike, t }: CommentProps) {
 }
 
 export function NewComment({
-  className = '',
+  // className = '',
   onClose,
   onSubmit,
   t,
@@ -173,27 +175,24 @@ export function NewComment({
   onSubmit?: (content: string) => Promise<void>;
   t: TFunction<'Thread', undefined>;
 }) {
-  const [isLoading, setLoading] = useState(false);
-  const [disabled, setDisabled] = useState(true);
-  const editorRef = useRef<LexicalHtmlEditorRef>(null);
+  const [loading, setLoading] = useState(false);
+  const [content, setContent] = useState('');
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [ref]);
 
   const handleSubmit = async () => {
-    const content = editorRef.current?.getContent() || '';
+    // const content = editorRef.current?.getContent() || '';
     if (
       onSubmit &&
-      !isLoading &&
+      !loading &&
       content.trim() !== '' &&
       validateString(content)
     ) {
-      setLoading(true);
       try {
-        await onSubmit(content);
-        editorRef.current?.clear();
-        setDisabled(false);
+        setLoading(true);
+        await onSubmit?.(content);
         showSuccessToast(t('success_create_comment'));
         onClose();
       } catch (error) {
@@ -223,17 +222,30 @@ export function NewComment({
         </button>
       </div>
       <div className="flex-1 w-full">
-        <LexicalHtmlEditor
+        <TiptapEditor
           placeholder={t('contents_hint')}
-          className={className}
-          ref={editorRef}
-          onChange={(content) => {
-            setDisabled(content.trim() === '' || !validateString(content));
+          content={content}
+          editable={true}
+          showToolbar={false}
+          onUpdate={(content) => {
+            setContent(content);
           }}
-          enableButton={true}
-          handleSubmit={handleSubmit}
-          disabled={disabled}
+          data-pw="comment-editor"
         />
+        <Button
+          id="publish-comment-button"
+          aria-label="Publish"
+          variant="rounded_primary"
+          size="default"
+          onClick={handleSubmit}
+          className="gap-2"
+        >
+          <CommentIcon
+            width={24}
+            height={24}
+            className="[&>path]:stroke-black [&>line]:stroke-black"
+          />
+        </Button>
       </div>
     </div>
   );
