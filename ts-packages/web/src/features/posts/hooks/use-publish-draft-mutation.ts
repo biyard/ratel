@@ -68,29 +68,20 @@ export function usePublishDraftMutation() {
 
       return { rollbackDrafts };
     },
-    onSuccess: ({ postPk, updatedPost }) => {
+    onSuccess: ({ postPk }) => {
       const queryClient = getQueryClient();
-      console.log('Published post:', updatedPost);
-      queryClient.setQueryData(
-        feedKeys.detail(postPk),
-        (oldData: PostDetailResponse) => {
-          console.log('Old data:', oldData);
-          if (!oldData) {
-            return { post: updatedPost };
-          }
 
-          return {
-            ...oldData,
-            post: {
-              ...oldData.post,
-              ...updatedPost,
-            },
-          };
-        },
-      );
+      queryClient.invalidateQueries({
+        queryKey: feedKeys.detail(postPk),
+      });
 
       queryClient.invalidateQueries({
         queryKey: feedKeys.my_posts(username!),
+      });
+
+      // Invalidate homepage feed to show newly published post
+      queryClient.invalidateQueries({
+        queryKey: feedKeys.lists(),
       });
     },
     onError: (error: Error, _variables, context) => {

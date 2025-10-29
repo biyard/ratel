@@ -48,6 +48,7 @@ export const HeadingDropdown = ({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
+          tabIndex={-1}
           type="button"
           disabled={disabled}
           onMouseDown={handleMouseDown}
@@ -67,7 +68,7 @@ export const HeadingDropdown = ({
               'data-[state=open]:text-primary data-[state=open]:[&_path]:fill-primary',
             )}
           />
-          <span className="text-sm font-medium text-foreground min-w-[60px] text-left">
+          <span className="text-sm font-medium text-left text-foreground min-w-[60px]">
             {getCurrentHeading()}
           </span>
           <EditorArrDown

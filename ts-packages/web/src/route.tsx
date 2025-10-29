@@ -7,6 +7,8 @@ export const route = {
   explore: () => '/explore',
   settings: () => '/settings',
   myPosts: () => '/my-posts',
+  createPost: (postPk?: string) =>
+    postPk ? `/posts/new?post-pk=${encodeURIComponent(postPk)}` : '/posts/new',
   drafts: () => '/drafts',
   draftEdit: (postPk: string) => `/drafts/${encodeURIComponent(postPk)}/edit`,
   teams: () => '/teams',
@@ -72,4 +74,21 @@ export const route = {
   // Admin routes
   admin: () => '/admin',
   adminMemberships: () => '/admin/memberships',
+  newPost: (postPk?: string, teamPk?: string) => {
+    let to = '/posts/new';
+    const params: string[] = [];
+
+    if (teamPk) {
+      params.push(`team-pk=${encodeURIComponent(teamPk)}`);
+    }
+    if (postPk) {
+      params.push(`post-pk=${encodeURIComponent(postPk)}`);
+    }
+
+    if (params.length > 0) {
+      to += `?${params.join('&')}`;
+    }
+
+    return to;
+  },
 };

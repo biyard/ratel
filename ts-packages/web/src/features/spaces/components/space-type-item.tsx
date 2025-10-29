@@ -23,11 +23,11 @@ export default function SpaceTypeItem({
   return (
     <div
       aria-label={`space-setting-form-${labelKey}`}
-      className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] transition-colors cursor-pointer hover:border-primary
+      className={`flex flex-row gap-5 justify-center items-center w-100 p-5 border rounded-[10px] transition-colors cursor-pointer hover:border-primary
               ${selected ? 'border-primary' : 'border-modal-card-border'}`}
       onClick={onClick}
     >
-      <div className="size-8 [&>svg]:size-8">{Icon}</div>
+      {/* <div className="size-8 [&>svg]:size-8">{Icon}</div> */}
       <div className="flex flex-col flex-1 gap-1">
         <span className="font-bold text-[15px]/[20px] text-text-primary">
           {t(labelKey)}

@@ -18,6 +18,7 @@ export interface EnabledFeatures {
   link?: boolean;
   image?: boolean;
   indent?: boolean;
+  table?: boolean;
 }
 
 /**
@@ -107,4 +108,5 @@ export const DEFAULT_ENABLED_FEATURES: EnabledFeatures = {
   link: false, // Disabled for now
   image: true, // Enabled
   indent: false, // Disabled for now
+  table: true, // Enabled
 };
