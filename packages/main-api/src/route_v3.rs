@@ -137,6 +137,7 @@ pub fn route(
                     "/:space_pk",
                     Router::new()
                         .nest("/files", crate::controllers::v3::spaces::files::route())
+                        .nest("/panels", crate::controllers::v3::spaces::panels::route())
                         .nest(
                             "/recommendations",
                             crate::controllers::v3::spaces::recommendations::route(),

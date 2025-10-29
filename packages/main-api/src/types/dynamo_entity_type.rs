@@ -107,6 +107,8 @@ pub enum EntityType {
     SpaceDiscussionParticipant(String, String),
     SpaceQuiz(String),
     SpaceRecommendation,
+    SpacePanel(String),
+    SpacePanelParticipant(String, String),
     SpaceSurveyResponse(String), //Space pk
 
     // Membership
