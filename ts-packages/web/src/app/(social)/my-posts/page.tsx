@@ -1,14 +1,23 @@
 import { useCallback } from 'react';
 import { Col } from '@/components/ui/col';
 import FeedCard from '@/components/feed-card';
-import CreatePostButton from '../_components/create-post-button';
 import { useObserver } from '@/hooks/use-observer';
-import FeedEndMessage from '../_components/feed-end-message';
 import useInfiniteMyPosts from './_hooks/use-my-posts';
+import {
+  CreatePostButton,
+  FeedEndMessage,
+} from '@/features/drafts/components/list-drafts';
+import { useCreatePostMutation } from '@/features/posts/hooks/use-create-post-mutation';
+import { useNavigate } from 'react-router';
+import { route } from '@/route';
 
 export default function MyPostsPage() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useInfiniteMyPosts();
+
+  const navigate = useNavigate();
+
+  const createDraft = useCreatePostMutation().mutateAsync;
 
   const handleIntersect = useCallback(() => {
     if (hasNextPage && !isFetchingNextPage) {
@@ -37,14 +46,25 @@ export default function MyPostsPage() {
           ))}
 
           <div ref={observerRef} />
-          {!hasNextPage && <FeedEndMessage />}
+          {!hasNextPage && (
+            <FeedEndMessage msg="You have reached the end of your feed." />
+          )}
         </Col>
       </Col>
 
       <div
         className={`h-fit max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 tablet:w-80 tablet:pl-4 tablet:static`}
       >
-        <CreatePostButton />
+        <CreatePostButton
+          onClick={async () => {
+            try {
+              const draft = await createDraft({});
+              navigate(route.draftEdit(draft.post_pk));
+            } catch (error) {
+              console.error('Error creating draft:', error);
+            }
+          }}
+        />
       </div>
     </div>
   );

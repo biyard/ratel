@@ -8,6 +8,7 @@ export const route = {
   settings: () => '/settings',
   myPosts: () => '/my-posts',
   drafts: () => '/drafts',
+  draftEdit: (postPk: string) => `/drafts/${encodeURIComponent(postPk)}/edit`,
   teams: () => '/teams',
   groups: () => '/groups',
 
@@ -24,6 +25,8 @@ export const route = {
   teamMembers: (username: string) => `/teams/${username}/members`,
   teamSettings: (username: string) => `/teams/${username}/settings`,
   teamDrafts: (username: string) => `/teams/${username}/drafts`,
+  teamDraftEdit: (username: string, postPk: string) =>
+    `/teams/${username}/drafts/${encodeURIComponent(postPk)}/edit`,
   space: (spaceId: number | string) => `/spaces/${encodeURIComponent(spaceId)}`,
 
   commiteeSpaceById: (spaceId: number | string) =>
