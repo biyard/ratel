@@ -24,7 +24,7 @@ test.describe
       'auto-save, and final publication. This content is intentionally long to ' +
       'meet the minimum character requirements for post publishing.';
 
-    await click(page, { text: 'Create Post' });
+    await click(page, { label: 'Create Post' });
     await page.waitForURL(/\/posts\/new/, {
       timeout: CONFIGS.PAGE_WAIT_TIME,
     });
