@@ -223,14 +223,17 @@ export function NewComment({
       </div>
       <div className="flex-1 w-full">
         <TiptapEditor
+          placeholder={t('contents_hint')}
           content={content}
           editable={true}
           showToolbar={false}
           onUpdate={(content) => {
             setContent(content);
           }}
+          data-pw="comment-editor"
         />
         <Button
+          id="publish-comment-button"
           aria-label="Publish"
           variant="rounded_primary"
           size="default"
