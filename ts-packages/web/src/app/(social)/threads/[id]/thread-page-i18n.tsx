@@ -21,6 +21,11 @@ export const i18nThreadPage = {
     not_found_title: 'Thread Not Found',
     not_found_description: 'This thread does not exist.',
     go_home: 'Go Home',
+
+    success_create_comment: 'Success to Create Comment',
+    failed_create_comment: 'Failed to Create Comment. Please try again.',
+    success_delete_post: 'Success to Delete Post',
+    failed_delete_post: 'Failed to Delete Post. Please try again.',
   },
   ko: {
     edit: '편집하기',
@@ -46,5 +51,12 @@ export const i18nThreadPage = {
     not_found_title: '존재하지 않는 스레드',
     not_found_description: '스레드가 존재하지 않습니다.',
     go_home: '홈으로 돌아가기',
+
+    success_create_comment: '댓글을 성공적으로 게시했습니다.',
+    failed_create_comment:
+      '댓글 게시에 실패했습니다. 잠시 후 다시 시도해 주세요.',
+    success_delete_post: '게시물을 성공적으로 삭제했습니다.',
+    failed_delete_post:
+      '게시물 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.',
   },
 };
