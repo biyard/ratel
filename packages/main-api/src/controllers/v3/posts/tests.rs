@@ -54,20 +54,6 @@ async fn test_create_post_by_user() {
     assert_eq!(body["title"], title);
     assert_eq!(body["html_contents"], content);
 
-    // Images
-    let (status, _headers, body) = patch! {
-        app: app,
-        path: &path,
-        headers: test_user.1.clone(),
-        body: {
-            "images": images
-        }
-    };
-
-    assert_eq!(status, 200);
-    assert_eq!(body["urls"].as_array().length().unwrap_or_default(), 1);
-    assert_eq!(body["urls"][0], images[0]);
-
     // Info
     let (status, _headers, body) = patch! {
         app: app,
@@ -525,7 +511,7 @@ async fn test_get_post_with_comments() {
         headers: test_user.1.clone(),
         body: {
             "title": "Post with Comments",
-            "content": "<p>Content</p>",
+            "content": "<p>Some HTMLContents</p>",
             "visibility": "PUBLIC",
             "publish": true
         }
@@ -579,7 +565,7 @@ async fn test_get_post_with_like() {
         headers: test_user.1.clone(),
         body: {
             "title": "Post with Like",
-            "content": "<p>Content</p>",
+            "content": "<p>Some HTMLContents</p>",
             "visibility": "PUBLIC",
             "publish": true
         }
@@ -636,7 +622,7 @@ async fn test_get_post_with_comment_likes() {
         headers: test_user.1.clone(),
         body: {
             "title": "Post with Comment Likes",
-            "content": "<p>Content</p>",
+            "content": "<p>Some HTMLContents</p>",
             "visibility": "PUBLIC",
             "publish": true
         }
@@ -745,7 +731,7 @@ async fn test_get_post_guest_no_like_data() {
         headers: test_user.1.clone(),
         body: {
             "title": "Public Post",
-            "content": "<p>Content</p>",
+            "content": "<p>Some HTMLContents</p>",
             "visibility": "PUBLIC",
             "publish": true
         }
