@@ -64,9 +64,6 @@ pub async fn update_post_handler(
 
     let transacts = match req {
         UpdatePostRequest::Writing { title, content } => {
-            validate_title(&title)?;
-            validate_content(&content)?;
-
             post.title = title.clone();
             post.html_contents = content.clone();
 
@@ -89,6 +86,9 @@ pub async fn update_post_handler(
             visibility,
             image_urls,
         } => {
+            validate_title(&title)?;
+            validate_content(&content)?;
+
             tracing::debug!(
                 "Publish request: publish = {}, title = {}, content = [REDACTED]",
                 publish,
