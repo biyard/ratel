@@ -132,10 +132,22 @@ i18next.on('missingKey', (lngs, ns, key) => {
   console.warn('[i18next] missingKey:', { lngs, ns, key });
 });
 
-// Read saved language from localStorage, fallback to 'en'
+// Detect browser language and normalize it
+const getBrowserLanguage = (): string => {
+  if (typeof window === 'undefined') return 'en';
+
+  const browserLang = navigator.language || (navigator as any).userLanguage;
+  // Extract the language code (e.g., 'ko' from 'ko-KR', 'en' from 'en-US')
+  const langCode = browserLang.split('-')[0].toLowerCase();
+
+  // Check if the detected language is supported, otherwise default to 'en'
+  return LANGUAGES.includes(langCode) ? langCode : 'en';
+};
+
+// Read saved language from localStorage, fallback to browser language
 const savedLanguage =
   typeof window !== 'undefined'
-    ? localStorage.getItem('user-language') || 'en'
+    ? localStorage.getItem('user-language') || getBrowserLanguage()
     : 'en';
 
 i18next.init({

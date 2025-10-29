@@ -7,20 +7,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { checkString } from '@/lib/string-filter-utils';
 import { route } from '@/route';
 import { logger } from '@/lib/logger';
-import { useSuspenseUserInfo } from '@/hooks/use-user-info';
-import { useSettingsContext } from '../../providers.client';
-import WalletSummary from '../wallet-summary';
-import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router';
+import { useSettingsContext } from '../../../providers.client';
+import WalletSummary from '../../wallet-summary';
 import { showErrorToast } from '@/lib/toast';
 import { updateUserEvmAddress } from '@/lib/api/ratel/me.v3';
+import { useController } from './use-controller';
 
 export default function MyInfo() {
-  const { t } = useTranslation('Settings');
-  const userInfo = useSuspenseUserInfo();
-  const { data: user } = userInfo;
-  const navigate = useNavigate();
-
+  const ctrl = useController();
+  const { user, navigate, t } = ctrl;
   const {
     profileUrl,
     handleProfileUrl,
@@ -34,26 +29,26 @@ export default function MyInfo() {
   } = useSettingsContext();
 
   return (
-    <div className="w-full max-tablet:w-full flex flex-col gap-10 items-center">
+    <div className="flex flex-col gap-10 items-center w-full max-tablet:w-full">
       <FileUploader onUploadSuccess={handleProfileUrl}>
         {profileUrl ? (
           <img
             src={profileUrl}
             alt="Team Logo"
             data-pw="profile-image"
-            className="w-40 h-40 rounded-full object-cover cursor-pointer"
+            className="object-cover w-40 h-40 rounded-full cursor-pointer"
           />
         ) : (
           <button
             data-pw="upload-profile-button"
-            className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-text-primary"
+            className="flex justify-center items-center w-40 h-40 text-sm font-semibold rounded-full bg-c-wg-80 text-text-primary"
           >
             {t('upload_logo')}
           </button>
         )}
       </FileUploader>
 
-      <Col className="w-full gap-2.5">
+      <Col className="gap-2.5 w-full">
         <Row className="max-tablet:flex-col">
           <label className="w-40 font-bold text-text-primary">
             {t('username')}
@@ -98,7 +93,7 @@ export default function MyInfo() {
               try {
                 await updateUserEvmAddress(address);
 
-                await userInfo.refetch();
+                await ctrl.userInfo.refetch();
                 handleShowWalletConnect(false);
               } catch (error) {
                 showErrorToast('Failed to update EVM address');
@@ -121,6 +116,25 @@ export default function MyInfo() {
             onInput={handleNickname}
             maxLength={30}
           />
+        </Row>
+
+        <Row className="max-tablet:flex-col">
+          <label className="w-40 font-bold text-text-primary">
+            {t('identity_verification')}
+          </label>
+          <Row className="gap-2 items-center">
+            <Button
+              variant={'rounded_secondary'}
+              data-pw="identity-verification-button"
+              className="py-2 px-4 rounded-sm disabled:cursor-not-allowed bg-enable-button-bg text-enable-button-white-text hover:bg-enable-button-bg/80 disabled:bg-disable-button-bg disabled:text-disable-button-white-text"
+              onClick={ctrl.handleIdentityVerification}
+              disabled={ctrl.identityVerification.verifying}
+            >
+              {ctrl.identityVerification.verifying
+                ? t('verifying')
+                : t('verify_identity')}
+            </Button>
+          </Row>
         </Row>
         <Col>
           <label className="w-40 font-bold text-text-primary">
