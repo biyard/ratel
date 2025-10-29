@@ -69,7 +69,6 @@ export default function TeamDraftPage({ username }: { username: string }) {
       <CreatePostButton
         onClick={async () => {
           try {
-            // pass an empty variables object as the mutation requires at least one argument
             const draft = await createDraft({ teamPk: team.id });
             navigate(route.draftEdit(draft.post_pk));
           } catch (error) {

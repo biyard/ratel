@@ -9,11 +9,17 @@ import {
   FeedEndMessage,
 } from '@/features/drafts/components/list-drafts';
 import Card from '@/components/card';
+import { useNavigate } from 'react-router';
+import { useCreatePostMutation } from '@/features/posts/hooks/use-create-post-mutation';
+import { route } from '@/route';
 
 export const SIZE = 10;
 
 export default function HomePage() {
   const ctrl = useHomeController();
+  const navigate = useNavigate();
+
+  const createDraft = useCreatePostMutation().mutateAsync;
 
   if (ctrl.isLoading) {
     return (
@@ -56,7 +62,12 @@ export default function HomePage() {
       >
         <CreatePostButton
           onClick={async () => {
-            console.error('NOT implemented');
+            try {
+              const draft = await createDraft({});
+              navigate(route.draftEdit(draft.post_pk));
+            } catch (error) {
+              console.error('Error creating draft:', error);
+            }
           }}
         />
         <div className="max-tablet:hidden">
