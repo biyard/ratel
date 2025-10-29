@@ -59,7 +59,12 @@ export const TiptapToolbar = ({
     const reader = new FileReader();
     reader.onload = (e) => {
       const base64 = e.target?.result as string;
-      editor.chain().focus().setImage({ src: base64 }).run();
+      // Store filename in alt attribute for later use
+      editor
+        .chain()
+        .focus()
+        .setImage({ src: base64, alt: file.name, title: file.name })
+        .run();
     };
     reader.readAsDataURL(file);
 

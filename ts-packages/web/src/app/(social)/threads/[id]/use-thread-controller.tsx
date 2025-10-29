@@ -131,6 +131,7 @@ export function useThreadController() {
   const {
     post: { data: feed },
   } = useThreadData(postId);
+  console.log('feed', feed);
   const expandComment = useState(false);
 
   const { mutateAsync } = useCommentMutation();
