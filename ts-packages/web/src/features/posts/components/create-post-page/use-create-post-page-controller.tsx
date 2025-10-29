@@ -21,6 +21,8 @@ import { useCreatePostPageI18n } from './i18n';
 import type { LexicalEditor, EditorState } from 'lexical';
 import { SPACE_DEFINITIONS } from '@/features/spaces/types/space-definition';
 import { stripHtml } from '@/lib/string-filter-utils';
+import { SpaceType } from '@/features/spaces/types/space-type';
+import { useCreateSpaceMutation } from '@/features/spaces/hooks/use-create-space-mutation';
 
 const TITLE_MAX_LENGTH = 50;
 const AUTO_SAVE_DELAY = 5000; // 5 seconds
@@ -50,6 +52,8 @@ export class CreatePostPageController {
     public selected: State<number>,
     public previousTitle: State<string>,
     public previousContent: State<string>,
+    public disableSpaceSelector: State<boolean>,
+    public spacePk: State<string | null>,
     public editorRef: React.RefObject<LexicalEditor | null>,
     public createPost: ReturnType<typeof useCreatePostMutation>['mutateAsync'],
     public updateDraft: ReturnType<
@@ -63,6 +67,9 @@ export class CreatePostPageController {
     >['mutateAsync'],
     public navigate: ReturnType<typeof useNavigate>,
     public t: ReturnType<typeof useCreatePostPageI18n>,
+    public createSpace: ReturnType<
+      typeof useCreateSpaceMutation
+    >['mutateAsync'],
   ) {
     this.spaceDefinitions = SPACE_DEFINITIONS;
   }
@@ -144,10 +151,58 @@ export class CreatePostPageController {
     this.image.set(null);
   };
 
+  get selectedSpace() {
+    return this.spaceDefinitions[this.selected.get()];
+  }
+
+  handleCreateSpace = async ({
+    spaceType,
+    postPk,
+  }: {
+    spaceType: SpaceType;
+    postPk: string;
+  }) => {
+    try {
+      const { space_pk } = await this.createSpace({
+        postPk,
+        spaceType: this.selectedSpace.type,
+      });
+
+      this.navigate(route.spaceByType(spaceType, space_pk));
+    } catch {
+      logger.error('Error creating space');
+      showErrorToast('Failed to create space');
+    }
+  };
+
+  handleNext = async () => {
+    try {
+      await this.autoSave();
+
+      if (this.disableSpaceSelector.get()) {
+        this.navigate(
+          route.spaceByType(this.selectedSpace.type, this.spacePk.get()),
+        );
+        return;
+      }
+
+      await this.handleCreateSpace({
+        spaceType: this.selectedSpace.type,
+        postPk: this.postPk.get(),
+      });
+      showSuccessToast('Success to process request');
+    } catch (error) {
+      logger.error('Error in handleSend:', error);
+      showErrorToast('Failed to process request');
+    }
+  };
+
   handleSubmit = async () => {
     if (this.skipCreatingSpace.get()) {
       return this.handlePublish();
     }
+
+    return this.handleNext();
   };
 
   handlePublish = async () => {
@@ -264,12 +319,15 @@ export function useCreatePostPageController() {
   const selected = useState(0);
   const previousTitle = useState('');
   const previousContent = useState<string>('');
+  const disableSpaceSelector = useState(false);
+  const spacePk = useState<string | null>(null);
 
   // Mutations
   const { mutateAsync: createPost } = useCreatePostMutation();
   const { mutateAsync: updateDraft } = useUpdateDraftMutation();
   const { mutateAsync: updateDraftImage } = useUpdateDraftImageMutation();
   const { mutateAsync: publishDraft } = usePublishDraftMutation();
+  const { mutateAsync: createSpace } = useCreateSpaceMutation();
 
   const controller = new CreatePostPageController(
     new State(postPk),
@@ -286,6 +344,8 @@ export function useCreatePostPageController() {
     new State(selected),
     new State(previousTitle),
     new State(previousContent),
+    new State(disableSpaceSelector),
+    new State(spacePk),
     editorRef,
     createPost,
     updateDraft,
@@ -293,6 +353,7 @@ export function useCreatePostPageController() {
     publishDraft,
     navigate,
     t,
+    createSpace,
   );
 
   // Initialize post on mount
@@ -313,6 +374,19 @@ export function useCreatePostPageController() {
             controller.image.set(postData.post.urls[0]);
           }
 
+          if (postData.post.space_pk) {
+            controller.skipCreatingSpace.set(false);
+            controller.disableSpaceSelector.set(true);
+            controller.spacePk.set(postData.post.space_pk);
+            for (let i = 0; i < controller.spaceDefinitions.length; i++) {
+              if (
+                controller.spaceDefinitions[i].type == postData.post.space_type
+              ) {
+                controller.selected.set(i);
+                break;
+              }
+            }
+          }
           // Mark as not modified since we just loaded from server
           controller.isModified.set(false);
           controller.lastSavedAt.set(new Date(postData.post.updated_at * 1000));

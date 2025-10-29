@@ -131,21 +131,32 @@ export default function CreatePostPage() {
       </Col>
 
       {/* Space Creation Section */}
-      {!ctrl.skipCreatingSpace.get() && (
+      {!ctrl.disableSpaceSelector.get() && !ctrl.skipCreatingSpace.get() && (
         <SpaceTypeCarousel>{renderedForms}</SpaceTypeCarousel>
+      )}
+
+      {ctrl.disableSpaceSelector.get() && (
+        <SpaceTypeItem
+          key={ctrl.spaceDefinitions[ctrl.selected.get()].labelKey}
+          spaceDefinition={ctrl.spaceDefinitions[ctrl.selected.get()]}
+          selected={true}
+          onClick={() => {}}
+        />
       )}
 
       {/* Bottom Actions */}
       <div className="flex gap-4 justify-end items-center">
-        <Checkbox
-          id="skip-space"
-          value={ctrl.skipCreatingSpace.get()}
-          onChange={(checked) => ctrl.skipCreatingSpace.set(checked)}
-        >
-          <span className="text-sm text-text-primary">
-            {ctrl.t.skip_creating_space}
-          </span>
-        </Checkbox>
+        {!ctrl.disableSpaceSelector && (
+          <Checkbox
+            id="skip-space"
+            value={ctrl.skipCreatingSpace.get()}
+            onChange={(checked) => ctrl.skipCreatingSpace.set(checked)}
+          >
+            <span className="text-sm text-text-primary">
+              {ctrl.t.skip_creating_space}
+            </span>
+          </Checkbox>
+        )}
 
         <Button
           variant="rounded_primary"

@@ -26,7 +26,7 @@ export const Checkbox = ({
           id={id}
           type="checkbox"
           className="hidden peer"
-          checked={checked}
+          checked={value}
           onChange={() => {
             const check = checked;
             setChecked(!check);

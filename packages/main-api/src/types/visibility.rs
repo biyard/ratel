@@ -19,6 +19,7 @@ use super::Partition;
 pub enum Visibility {
     #[default]
     Public, // All user/team can access
+    Private,
     TeamOnly(String), // Only team members with permission can access
 }
 
