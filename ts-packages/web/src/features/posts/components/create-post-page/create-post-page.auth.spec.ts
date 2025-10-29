@@ -403,7 +403,7 @@ test.describe('Create Post Page - Authenticated User', () => {
       });
 
       // Verify we're on the same post page
-      expect(page.url()).toContain(postPk);
+      expect(page.url()).toContain(encodeURIComponent(postPk));
     }
   });
 
