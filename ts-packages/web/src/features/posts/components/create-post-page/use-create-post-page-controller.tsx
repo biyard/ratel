@@ -1,10 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import {
-  useLoaderData,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from 'react-router';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { route } from '@/route';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
@@ -12,7 +7,6 @@ import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
 import { getPutObjectUrl } from '@/lib/api/ratel/assets.v3';
 import { useCreatePostMutation } from '@/features/posts/hooks/use-create-post-mutation';
 import { useUpdateDraftMutation } from '@/features/posts/hooks/use-update-draft-mutation';
-import { useUpdateDraftImageMutation } from '@/features/posts/hooks/use-update-draft-image-mutation';
 import { usePublishDraftMutation } from '@/features/posts/hooks/use-publish-draft-mutation';
 import { getPost } from '@/features/posts/hooks/use-post';
 import { State } from '@/types/state';
@@ -59,9 +53,9 @@ export class CreatePostPageController {
     public updateDraft: ReturnType<
       typeof useUpdateDraftMutation
     >['mutateAsync'],
-    public updateDraftImage: ReturnType<
-      typeof useUpdateDraftImageMutation
-    >['mutateAsync'],
+    /* public updateDraftImage: ReturnType<
+     *   typeof useUpdateDraftImageMutation
+     * >['mutateAsync'], */
     public publishDraft: ReturnType<
       typeof usePublishDraftMutation
     >['mutateAsync'],
@@ -134,10 +128,10 @@ export class CreatePostPageController {
           });
           const uploadedUrl = res.uris[0];
 
-          await this.updateDraftImage({
-            postPk: postPkValue,
-            image: uploadedUrl,
-          });
+          /* await this.updateDraftImage({
+           *   postPk: postPkValue,
+           *   image: uploadedUrl,
+           * }); */
           this.image.set(uploadedUrl);
         }
       }
@@ -325,7 +319,7 @@ export function useCreatePostPageController() {
   // Mutations
   const { mutateAsync: createPost } = useCreatePostMutation();
   const { mutateAsync: updateDraft } = useUpdateDraftMutation();
-  const { mutateAsync: updateDraftImage } = useUpdateDraftImageMutation();
+  /* const { mutateAsync: updateDraftImage } = useUpdateDraftImageMutation(); */
   const { mutateAsync: publishDraft } = usePublishDraftMutation();
   const { mutateAsync: createSpace } = useCreateSpaceMutation();
 
@@ -349,7 +343,7 @@ export function useCreatePostPageController() {
     editorRef,
     createPost,
     updateDraft,
-    updateDraftImage,
+    /* updateDraftImage, */
     publishDraft,
     navigate,
     t,
