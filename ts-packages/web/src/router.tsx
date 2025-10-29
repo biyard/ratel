@@ -39,6 +39,7 @@ import { MembershipsPage } from './app/admin/memberships/memberships-page';
 import TelegramPage from './app/telegram/page';
 import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
 import CreatePostPage from './features/posts/components/create-post-page';
+import SpacePanelPage from './app/spaces/[id]/panels/space-panel-page';
 
 import MyDraftEditPage from './app/(social)/drafts/[post-id]/edit/page';
 
@@ -234,6 +235,12 @@ export const routes = createBrowserRouter([
             path: 'files',
             Component: SpaceFilePage,
           }, // End of File Feature
+          // Space Panel Feature
+          {
+            id: 'space-panel-feature',
+            path: 'panels',
+            Component: SpacePanelPage,
+          }, // End of Panel Feature
           // Space Recommendation Feature
           {
             id: 'space-recommendation-feature',
