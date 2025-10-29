@@ -24,7 +24,7 @@ test.describe.serial('[SpaceDiscussionEditorPage] Authenticated Users ', () => {
       'meet the minimum character requirements for post publishing.';
 
     await click(page, { text: 'Create Post' });
-    await page.waitForURL(/\/drafts\/.+\/edit/, {
+    await page.waitForURL(/\/posts\/new/, {
       timeout: CONFIGS.PAGE_WAIT_TIME,
     });
 

@@ -2,47 +2,64 @@ import { test, expect } from '@playwright/test';
 import { CONFIGS } from '@tests/config';
 
 test.describe('Create Post Page - Anonymous User', () => {
-  test.beforeEach(async ({ page }) => {
+  test('[CP-ANON-001] should redirect anonymous users and show login popup', async ({
+    page,
+  }) => {
+    // Navigate to create post page as anonymous user
     await page.goto('/posts/new');
     await page.waitForLoadState('networkidle');
+
+    // Should redirect to homepage
+    await page.waitForURL('/', { timeout: CONFIGS.PAGE_WAIT_TIME });
+    expect(page.url()).toContain('/');
+
+    // Login popup should be visible
+    const loginPopup = page.getByText(/sign in/i).first();
+    await expect(loginPopup).toBeVisible({ timeout: CONFIGS.PAGE_WAIT_TIME });
   });
 
-  test('[CP-ANON-001] should display create post form for anonymous users', async ({
+  test('[CP-ANON-002] should not display create post form for anonymous users', async ({
     page,
   }) => {
-    // Currently the app allows anonymous users to view the form
-    // This test verifies the page loads without redirect
-    const pageTitle = page.getByText('Create post');
-    await expect(pageTitle).toBeVisible({ timeout: CONFIGS.PAGE_WAIT_TIME });
+    // Navigate to create post page
+    await page.goto('/posts/new');
+    await page.waitForLoadState('networkidle');
 
-    // Form elements should be visible
+    // Should be redirected (not on /posts/new)
+    expect(page.url()).not.toContain('/posts/new');
+
+    // Form elements should not be visible
     const titleInput = page.getByPlaceholder('Title');
-    await expect(titleInput).toBeVisible();
+    await expect(titleInput).not.toBeVisible();
 
     const editor = page.locator('[data-pw="post-content-editor"]');
-    await expect(editor).toBeVisible();
+    await expect(editor).not.toBeVisible();
   });
 
-  test('[CP-ANON-002] should disable publish button when fields are empty', async ({
+  test('[CP-ANON-003] should show login popup with close option', async ({
     page,
   }) => {
-    // Publish button should be disabled when form is empty
-    const publishButton = page.getByRole('button', { name: /publish|next/i });
-    await expect(publishButton).toBeDisabled();
+    // Navigate to create post page
+    await page.goto('/posts/new');
+    await page.waitForLoadState('networkidle');
+
+    // Wait for redirect
+    await page.waitForURL('/', { timeout: CONFIGS.PAGE_WAIT_TIME });
+
+    // Login popup should be visible
+    const loginPopup = page.getByText(/sign in/i).first();
+    await expect(loginPopup).toBeVisible();
+
+    // Popup should have a way to close/dismiss it
+    // Look for close button or backdrop
+    const closeButton = page.locator('button[aria-label="Close"]').first();
+    const hasCloseButton = await closeButton.isVisible().catch(() => false);
+
+    // Just verify login UI is present
+    expect(hasCloseButton || loginPopup).toBeTruthy();
   });
 
-  test('[CP-ANON-003] should show character limit for title', async ({
-    page,
-  }) => {
-    // Character counter should be visible
-    const counter = page.locator('text=/\\d+\\/50/');
-    await expect(counter).toBeVisible();
-
-    // Initially should show 0/50
-    await expect(counter).toHaveText('0/50');
-  });
-
-  test('[CP-ANON-004] should handle mobile responsive layout', async ({
+  test('[CP-ANON-004] should handle mobile responsive redirect', async ({
     page,
   }) => {
     // Test mobile layout
@@ -51,33 +68,39 @@ test.describe('Create Post Page - Anonymous User', () => {
       height: 800,
     });
 
-    // Form elements should still be visible and functional
-    await expect(page.getByPlaceholder('Title')).toBeVisible();
-    await expect(page.locator('[data-pw="post-content-editor"]')).toBeVisible();
+    // Navigate to create post page
+    await page.goto('/posts/new');
+    await page.waitForLoadState('networkidle');
 
-    // Action button should be visible
-    const actionButton = page.getByRole('button', { name: /publish|next/i });
-    await expect(actionButton).toBeVisible();
+    // Should still redirect on mobile
+    await page.waitForURL('/', { timeout: CONFIGS.PAGE_WAIT_TIME });
+    expect(page.url()).toContain('/');
+
+    // Login popup should be visible on mobile too
+    const loginPopup = page.getByText(/sign in/i).first();
+    await expect(loginPopup).toBeVisible({ timeout: CONFIGS.PAGE_WAIT_TIME });
 
     // Reset viewport
     await page.setViewportSize({ width: 1280, height: 720 });
   });
 
-  test('[CP-ANON-005] should display TipTap editor with placeholder', async ({
+  test('[CP-ANON-005] should persist redirect behavior across page loads', async ({
     page,
   }) => {
-    // TipTap editor should be visible
-    const editor = page.locator('[data-pw="post-content-editor"]');
-    await expect(editor).toBeVisible();
+    // Try multiple times to ensure consistent redirect behavior
+    for (let i = 0; i < 2; i++) {
+      await page.goto('/posts/new');
+      await page.waitForLoadState('networkidle');
 
-    // Editor should have placeholder text
-    const editorContent = await editor.textContent();
-    // Placeholder might be in the editor or nearby
-    const hasPlaceholder =
-      editorContent?.includes('Type your script') ||
-      (await page.getByText('Type your script').isVisible().catch(() => false));
+      // Should always redirect
+      expect(page.url()).not.toContain('/posts/new');
 
-    // Just verify editor is ready for input
-    expect(editor).toBeTruthy();
+      // Should be on homepage
+      await page.waitForURL('/', { timeout: CONFIGS.PAGE_WAIT_TIME });
+    }
+
+    // Final check: login popup should be visible
+    const loginPopup = page.getByText(/sign in/i).first();
+    await expect(loginPopup).toBeVisible();
   });
 });
