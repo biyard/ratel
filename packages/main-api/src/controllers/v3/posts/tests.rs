@@ -237,8 +237,8 @@ async fn test_delete_post() {
         path: format!("/v3/posts/{}", post_pk),
         headers: test_user.1.clone(),
         body: {
-            "title": "",
-            "content": "",
+            "title": "DELETE POST TITLE",
+            "content": "<p>Some HTMLContents</p>",
             "visibility": "PUBLIC",
             "publish": true
         }
