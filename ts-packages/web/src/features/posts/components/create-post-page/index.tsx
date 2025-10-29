@@ -135,6 +135,7 @@ function CreatePostPageContent() {
         )}
 
         <Button
+          id="publish-post-button"
           variant="rounded_primary"
           size="default"
           onClick={ctrl.handleSubmit}
