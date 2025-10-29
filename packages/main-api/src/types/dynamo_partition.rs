@@ -34,6 +34,8 @@ pub enum Partition {
 
     Discussion(String),
     DiscussionUser(String),
+
+    Panel(String),
     // Survey(String),
     // SurveyResponse(String),
 
