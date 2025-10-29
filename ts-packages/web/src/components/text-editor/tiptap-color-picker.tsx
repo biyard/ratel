@@ -65,6 +65,7 @@ export const ColorPicker = ({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
+          tabIndex={-1}
           type="button"
           disabled={disabled}
           onMouseDown={handleMouseDown}
@@ -85,9 +86,9 @@ export const ColorPicker = ({
           {iconContent}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-56 p-3">
+      <DropdownMenuContent align="start" className="p-3 w-56">
         <div className="mb-3">
-          <p className="text-xs font-medium text-foreground-muted mb-2">
+          <p className="mb-2 text-xs font-medium text-foreground-muted">
             {type === 'text' ? 'Text Color' : 'Highlight Color'}
           </p>
           <div className="grid grid-cols-5 gap-2">
@@ -112,7 +113,7 @@ export const ColorPicker = ({
         </div>
 
         <div className="pt-3 border-t border-border">
-          <label className="text-xs font-medium text-foreground-muted mb-2 block">
+          <label className="block mb-2 text-xs font-medium text-foreground-muted">
             Custom Color
           </label>
           <div className="flex gap-2 items-center">
@@ -120,7 +121,7 @@ export const ColorPicker = ({
               type="color"
               value={customColor}
               onChange={handleCustomColorChange}
-              className="w-10 h-10 rounded cursor-pointer border border-border"
+              className="w-10 h-10 rounded border cursor-pointer border-border"
             />
             <input
               type="text"
