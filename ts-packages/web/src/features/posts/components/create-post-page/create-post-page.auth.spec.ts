@@ -47,17 +47,27 @@ test.describe('Create Post Page - Authenticated User', () => {
     // Fill in title
     await fill(page, { placeholder: 'Title' }, testTitle);
 
-    // Fill in content
-    await fill(page, { 'data-pw': 'post-content-editor' }, testContent);
+    // Fill in content using TipTap's contenteditable div
+    const editor = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    await editor.waitFor({ state: 'visible' });
+    await editor.click();
+    await editor.fill(testContent);
+
+    // Wait for auto-save to complete (5 second delay + processing time)
+    await page.waitForTimeout(6000);
 
     // Check skip creating space to go straight to publish
     const skipCheckbox = page.getByText('Skip creating a space');
     if (await skipCheckbox.isVisible()) {
       await skipCheckbox.click();
+      await page.waitForTimeout(500); // Wait for button text to update
     }
 
-    // Click publish button
-    await click(page, { label: 'Publish' });
+    // Click publish button (either "Publish" or "Next")
+    const publishButton = page.getByRole('button', { name: /Publish|Next/i });
+    await publishButton.waitFor({ state: 'visible', timeout: 5000 });
+    await expect(publishButton).toBeEnabled();
+    await publishButton.click();
 
     // Should redirect to thread page
     await page.waitForURL(/\/threads\/.+/, { timeout: CONFIGS.PAGE_WAIT_TIME });
@@ -91,8 +101,11 @@ test.describe('Create Post Page - Authenticated User', () => {
     // Fill in title
     await fill(page, { placeholder: 'Title' }, testTitle);
 
-    // Fill in content
-    await fill(page, { 'data-pw': 'post-content-editor' }, testContent);
+    // Fill in content using TipTap's contenteditable div
+    const editor = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    await editor.waitFor({ state: 'visible' });
+    await editor.click();
+    await editor.fill(testContent);
 
     // Should show "Saving..." or "Unsaved changes"
     const savingIndicator = page.getByText(/saving\.\.\.|unsaved changes/i);
@@ -189,7 +202,11 @@ test.describe('Create Post Page - Authenticated User', () => {
     const testContent = 'Testing space creation workflow';
 
     await fill(page, { placeholder: 'Title' }, testTitle);
-    await fill(page, { 'data-pw': 'post-content-editor' }, testContent);
+
+    const editor = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    await editor.waitFor({ state: 'visible' });
+    await editor.click();
+    await editor.fill(testContent);
 
     // Find and click skip checkbox
     const skipCheckbox = page.getByText('Skip creating a space');
@@ -209,7 +226,11 @@ test.describe('Create Post Page - Authenticated User', () => {
     const testContent = 'Testing space type selector';
 
     await fill(page, { placeholder: 'Title' }, testTitle);
-    await fill(page, { 'data-pw': 'post-content-editor' }, testContent);
+
+    const editor = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    await editor.waitFor({ state: 'visible' });
+    await editor.click();
+    await editor.fill(testContent);
 
     // Ensure skip checkbox is not checked
     const skipCheckbox = page.locator('input#skip-space');
@@ -273,14 +294,19 @@ test.describe('Create Post Page - Authenticated User', () => {
     const createContent = 'Original content for editing test';
 
     await fill(page, { placeholder: 'Title' }, createTitle);
-    await fill(page, { 'data-pw': 'post-content-editor' }, createContent);
+
+    const editor1 = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    await editor1.waitFor({ state: 'visible' });
+    await editor1.click();
+    await editor1.fill(createContent);
 
     const skipCheckbox = page.getByText('Skip creating a space');
     if (await skipCheckbox.isVisible()) {
       await skipCheckbox.click();
     }
 
-    await click(page, { label: 'Publish' });
+    const publishButton = page.getByRole('button', { name: 'Publish' });
+    await publishButton.click();
     await page.waitForURL(/\/threads\/.+/, {
       timeout: CONFIGS.PAGE_WAIT_TIME,
     });
@@ -326,14 +352,19 @@ test.describe('Create Post Page - Authenticated User', () => {
     const createContent = 'Original content for update test';
 
     await fill(page, { placeholder: 'Title' }, createTitle);
-    await fill(page, { 'data-pw': 'post-content-editor' }, createContent);
+
+    const editor1 = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    await editor1.waitFor({ state: 'visible' });
+    await editor1.click();
+    await editor1.fill(createContent);
 
     const skipCheckbox = page.getByText('Skip creating a space');
     if (await skipCheckbox.isVisible()) {
       await skipCheckbox.click();
     }
 
-    await click(page, { label: 'Publish' });
+    const publishButton = page.getByRole('button', { name: 'Publish' });
+    await publishButton.click();
     await page.waitForURL(/\/threads\/.+/, {
       timeout: CONFIGS.PAGE_WAIT_TIME,
     });
@@ -364,7 +395,8 @@ test.describe('Create Post Page - Authenticated User', () => {
       await page.waitForTimeout(6000);
 
       // Publish the updated post
-      await click(page, { label: 'Publish' });
+      const publishButton2 = page.getByRole('button', { name: 'Publish' });
+      await publishButton2.click();
       await page.waitForURL(/\/threads\/.+/, {
         timeout: CONFIGS.PAGE_WAIT_TIME,
       });
@@ -400,7 +432,11 @@ test.describe('Create Post Page - Authenticated User', () => {
     const testContent = 'Testing last saved timestamp';
 
     await fill(page, { placeholder: 'Title' }, testTitle);
-    await fill(page, { 'data-pw': 'post-content-editor' }, testContent);
+
+    const editor = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    await editor.waitFor({ state: 'visible' });
+    await editor.click();
+    await editor.fill(testContent);
 
     // Wait for auto-save
     await page.waitForTimeout(6000);
@@ -444,7 +480,11 @@ test.describe('Create Post Page - Authenticated User', () => {
     const testContent = 'Content that should be preserved during auto-save';
 
     await fill(page, { placeholder: 'Title' }, testTitle);
-    await fill(page, { 'data-pw': 'post-content-editor' }, testContent);
+
+    const editor = page.locator('[data-pw="post-content-editor"] [contenteditable]');
+    await editor.waitFor({ state: 'visible' });
+    await editor.click();
+    await editor.fill(testContent);
 
     // Wait for auto-save
     await page.waitForTimeout(6000);
@@ -453,7 +493,6 @@ test.describe('Create Post Page - Authenticated User', () => {
     const titleInput = page.getByPlaceholder('Title');
     const titleValue = await titleInput.inputValue();
 
-    const editor = page.locator('[data-pw="post-content-editor"]');
     const editorContent = await editor.textContent();
 
     // Content should be preserved
