@@ -27,6 +27,7 @@ pub mod space_status;
 pub mod space_type;
 pub mod space_visibility;
 
+pub mod app_state;
 pub mod team_group_permission;
 pub mod theme;
 pub mod url_type;
@@ -68,6 +69,8 @@ pub use question::*;
 
 pub mod answer;
 pub use answer::*;
+
+pub use app_state::*;
 
 pub mod attribute;
 pub use attribute::*;
