@@ -16,6 +16,7 @@ const en = {
 
   male: 'Male',
   female: 'Female',
+  more: 'More',
 };
 
 const ko = {
@@ -36,6 +37,7 @@ const ko = {
 
   male: '남성',
   female: '여성',
+  more: '더보기',
 };
 
 const i18n = { en, ko };

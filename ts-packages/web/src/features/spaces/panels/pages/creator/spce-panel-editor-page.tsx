@@ -23,6 +23,8 @@ export function SpacePanelEditorPage({ spacePk }: SpacePathProps) {
             handleUpdateQuotas={ctrl.handleUpdateQuotas}
             openGenderPopup={ctrl.openGenderPopup}
             openAgePopup={ctrl.openAgePopup}
+            bookmark={ctrl.bookmark.get()}
+            onloadmore={ctrl.loadMore}
           />
         </Col>
       </Col>

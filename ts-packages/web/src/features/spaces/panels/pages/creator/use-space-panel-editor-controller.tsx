@@ -14,12 +14,14 @@ import GenderPopup from '../../components/modals/gender_popup';
 import { useDeletePanelMutation } from '../../hooks/use-delete-panel-mutation';
 import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
+import { call } from '@/lib/api/ratel/call';
 
 export class SpacePanelEditorController {
   constructor(
     public spacePk: string,
     public space: Space,
     public panel: ListPanelResponse,
+    public bookmark: State<string | null | undefined>,
     public panels: State<SpacePanelResponse[]>,
     public popup: ReturnType<typeof usePopup>,
     public t: TFunction<'SpacePanelEditor', undefined>,
@@ -123,6 +125,23 @@ export class SpacePanelEditorController {
       .withTitle(this.t('age_modal_title'));
   };
 
+  loadMore = async () => {
+    const bm = this.bookmark.get();
+    if (!bm) return;
+
+    const next = await call(
+      'GET',
+      `/v3/spaces/${encodeURIComponent(this.spacePk)}/panels?bookmark=${encodeURIComponent(
+        bm,
+      )}`,
+    );
+
+    const page = new ListPanelResponse(next);
+    const prev = this.panels.get() ?? [];
+    this.panels.set([...prev, ...page.panels]);
+    this.bookmark.set(page.bookmark ?? null);
+  };
+
   handleDeletePanel = async (index: number) => {
     const panel = this.panels.get()[index];
     const panelPk = panel.pk;
@@ -140,10 +159,12 @@ export function useSpacePanelEditorController(spacePk: string) {
   const { data: space } = useSpaceById(spacePk);
   const { data: panel } = usePanelSpace(spacePk);
   const panels = useState(panel.panels || []);
+  const bookmark = useState<string | null>(panel.bookmark ?? null);
 
   useEffect(() => {
+    bookmark[1](panel.bookmark ?? null);
     panels[1](panel.panels || []);
-  }, [panel.panels]);
+  }, [panel.panels, panel.bookmark]);
 
   const createPanel = useCreatePanelMutation();
   const updatePanel = useUpdatePanelMutation();
@@ -153,6 +174,7 @@ export function useSpacePanelEditorController(spacePk: string) {
     spacePk,
     space,
     panel,
+    new State(bookmark),
     new State(panels),
     popup,
     t,

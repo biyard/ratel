@@ -16,6 +16,7 @@ import { TFunction } from 'i18next';
 export type PanelTableProps = {
   panels: SpacePanelResponse[];
   t: TFunction<'SpacePanelEditor', undefined>;
+  bookmark: string | null | undefined;
   canEdit: boolean;
   onadd: () => void;
   handleDeletePanel?: (index: number) => void;
@@ -23,21 +24,25 @@ export type PanelTableProps = {
   openGenderPopup?: (index: number) => void;
   handleUpdateName?: (index: number, name: string) => void;
   handleUpdateQuotas?: (index: number, quotas: number) => void;
+  onloadmore: () => void;
 };
 
 export function PanelTable({
   panels,
   t,
   canEdit,
+  bookmark,
   onadd,
   handleDeletePanel,
   openAgePopup,
   openGenderPopup,
   handleUpdateName,
   handleUpdateQuotas,
+  onloadmore,
 }: PanelTableProps) {
+  const hasMore = !!bookmark;
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto gap-2.5">
       <table className="w-full border-collapse">
         <colgroup>
           <col className="w-[20%]" />
@@ -124,6 +129,15 @@ export function PanelTable({
           ))}
         </tbody>
       </table>
+
+      {hasMore && (
+        <button
+          className="flex flex-row w-full justify-center items-center mt-2 px-4 py-2 rounded-md border border-divider hover:bg-white/5"
+          onClick={onloadmore}
+        >
+          {t('more')}
+        </button>
+      )}
     </div>
   );
 }
