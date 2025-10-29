@@ -1,7 +1,7 @@
-import usePostById from '@/features/posts/hooks/use-post';
+import useSuspensePostById from '@/features/posts/hooks/use-post';
 
 export function useThreadData(postId: string) {
-  const post = usePostById(postId);
+  const post = useSuspensePostById(postId);
 
   return { post };
 }

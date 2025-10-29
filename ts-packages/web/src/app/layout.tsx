@@ -1,6 +1,6 @@
 import Providers from '@/providers/providers';
 import { PopupZone } from '@/components/popupzone';
-import ClientLayout from './(social)/_components/client-layout';
+import ClientLayout from './client-layout';
 import { ToastContainer } from 'react-toastify';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import 'react-toastify/dist/ReactToastify.css';
