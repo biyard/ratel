@@ -395,9 +395,6 @@ test.describe('Create Post Page - Authenticated User', () => {
       await editor.clear();
       await editor.fill(updatedContent);
 
-      // Wait for auto-save
-      await page.waitForTimeout(6000);
-
       // Publish the updated post
       const publishButton2 = page.getByRole('button', { name: 'Publish' });
       await publishButton2.click();
