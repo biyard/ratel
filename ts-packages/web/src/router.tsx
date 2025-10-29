@@ -80,11 +80,6 @@ export const routes = createBrowserRouter([
                 path: '',
                 Component: MyDraftPage,
               },
-              {
-                id: 'my-drafts-edit',
-                path: ':postPk/edit',
-                Component: MyDraftEditPage,
-              },
             ],
           },
           {
