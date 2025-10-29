@@ -92,6 +92,11 @@ export function usePublishDraftMutation() {
       queryClient.invalidateQueries({
         queryKey: feedKeys.my_posts(username!),
       });
+
+      // Invalidate homepage feed to show newly published post
+      queryClient.invalidateQueries({
+        queryKey: feedKeys.lists(),
+      });
     },
     onError: (error: Error, _variables, context) => {
       context?.rollbackDrafts?.rollback();
