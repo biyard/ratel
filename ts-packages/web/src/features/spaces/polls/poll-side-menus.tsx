@@ -1,4 +1,4 @@
-import { PieChart1, Settings, Vote } from '@/components/icons';
+import { PieChart1, Vote } from '@/components/icons';
 import { SpaceType } from '../types/space-type';
 import { addSideMenusForSpaceType } from '../utils/side-menus-for-space-type';
 import { route } from '@/route';
@@ -8,8 +8,7 @@ addSideMenusForSpaceType(SpaceType.Poll, [
   {
     Icon: Vote,
     to: (space) => {
-      const pollPk = `SPACE_POLL#${space.pk.split('#')[1]}`;
-      return route.spacePollById(space.pk, pollPk);
+      return route.spacePolls(space.pk);
     },
     label: 'menu_poll',
   },
@@ -17,8 +16,7 @@ addSideMenusForSpaceType(SpaceType.Poll, [
   {
     Icon: PieChart1,
     to: (space) => {
-      const pollPk = `SPACE_POLL#${space.pk.split('#')[1]}`;
-      return route.spaceAnalyzePollById(space.pk, pollPk);
+      return route.spaceAnalyzePolls(space.pk);
     },
     visible: (space) => !space.isDraft && space.isAdmin(),
     label: 'menu_analyze',

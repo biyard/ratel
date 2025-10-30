@@ -57,8 +57,7 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
   {
     Icon: PieChart1,
     to: (space) => {
-      const pollPk = `SPACE_POLL#${space.pk.split('#')[1]}`;
-      return route.spaceAnalyzePollById(space.pk, pollPk);
+      return route.spaceAnalyzePolls(space.pk);
     },
     visible: (space) => !space.isDraft && space.isAdmin(),
     label: 'menu_analyze',
