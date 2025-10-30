@@ -5,3 +5,4 @@ pub mod polls;
 pub mod recommendations;
 
 pub mod sprint_leagues;
+pub mod topics;
