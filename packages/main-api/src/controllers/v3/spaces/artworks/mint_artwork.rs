@@ -114,10 +114,10 @@ pub async fn mint_space_artwork_handler(
     // Get contract address from space or post data
     // TODO: Retrieve contract_address from Space/Post configuration
     let contract_address = "0x0000000000000000000000000000000000000000".to_string();
-    let tx_hash = "0x0000000000000000000000000000000000000000".to_string();
+    let _tx_hash = "0x0000000000000000000000000000000000000000".to_string();
     //
     #[cfg(not(feature = "bypass"))]
-    let tx_hash = {
+    let _tx_hash = {
         let conf = config::get();
         let provider = Provider::<Http>::try_from(&conf.kaia.endpoint as &str)
             .map_err(|e| Error::Klaytn(e.to_string()))?;
@@ -151,7 +151,7 @@ pub async fn mint_space_artwork_handler(
     );
 
     // Create trade record
-    let trade = SpaceArtworkTrade::new_mint(space_pk.clone(), owner_evm_address.clone(), tx_hash);
+    let trade = SpaceArtworkTrade::new_mint(space_pk.clone(), owner_evm_address.clone(), _tx_hash);
 
     transact_write!(
         dynamo.client,

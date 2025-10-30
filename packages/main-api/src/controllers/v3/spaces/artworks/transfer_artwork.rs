@@ -61,10 +61,10 @@ pub async fn transfer_space_artwork_handler(
     .ok_or(Error::InvalidUserEvmAddress)?
     .evm_address;
 
-    let tx_hash = "0x0000000000000000000000000000000000000000".to_string();
+    let _tx_hash = "0x0000000000000000000000000000000000000000".to_string();
 
     #[cfg(not(feature = "bypass"))]
-    let tx_hash = {
+    let _tx_hash = {
         // Prepare blockchain transaction
         let conf = config::get();
         let provider = Provider::<Http>::try_from(&conf.kaia.endpoint as &str)
@@ -104,7 +104,7 @@ pub async fn transfer_space_artwork_handler(
         space_pk.clone(),
         space_artwork.owner_evm_address.clone(),
         receiver_evm_address.clone(),
-        tx_hash,
+        _tx_hash,
     );
 
     let updater = SpaceArtwork::updater(&space_pk, EntityType::SpaceArtwork)
