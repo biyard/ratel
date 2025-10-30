@@ -14,9 +14,9 @@ addSideMenusForSpaceType(SpaceType.Nft, [
   {
     Icon: ShoppingCube,
     to: (space) => {
-      return route.spaceNftSetting(space.pk);
+      return route.spaceNftAttributes(space.pk);
     },
-    label: 'menu_nft_setting',
+    label: 'menu_nft_attributes',
   },
   {
     Icon: ShoppingCube,

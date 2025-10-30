@@ -9,10 +9,11 @@ import PostResponse from '../dto/list-post-response';
 
 export function updatePostWithImage(
   postPk: string,
-  image: string,
+  image: string | null,
 ): Promise<Post> {
+  const req = image ? [image] : [];
   return call('PATCH', `/v3/posts/${encodeURIComponent(postPk)}`, {
-    images: [image],
+    images: req,
   });
 }
 
@@ -27,7 +28,7 @@ export function useUpdateDraftImageMutation() {
       image,
     }: {
       postPk: string;
-      image: string;
+      image: string | null;
     }) => {
       await updatePostWithImage(postPk, image);
       return { postPk };
