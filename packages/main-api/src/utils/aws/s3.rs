@@ -1,5 +1,7 @@
 use crate::{Error, Result};
 use aws_config::Region;
+#[cfg(test)]
+use aws_config::SdkConfig;
 use aws_sdk_s3::{
     Client, Config,
     config::Credentials,
@@ -187,5 +189,13 @@ impl S3Client {
             })?;
 
         Ok(())
+    }
+
+    #[cfg(test)]
+    pub fn mock(config: SdkConfig) -> Self {
+        Self {
+            client: Client::from_conf(Config::from(&config)),
+            bucket_name: "test-bucket".to_string(),
+        }
     }
 }
