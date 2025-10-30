@@ -31,7 +31,7 @@ impl From<SpaceArtworkTrade> for SpaceArtworkTradeItem {
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, JsonSchema, aide::OperationIo)]
-pub struct ListSpaceArtworkHistoryResponse {
+pub struct ListSpaceArtworkTradeResponse {
     pub items: Vec<SpaceArtworkTradeItem>,
     pub bookmark: Option<String>,
 }

@@ -114,28 +114,33 @@ pub async fn mint_space_artwork_handler(
     // Get contract address from space or post data
     // TODO: Retrieve contract_address from Space/Post configuration
     let contract_address = "0x0000000000000000000000000000000000000000".to_string();
+    let tx_hash = "0x0000000000000000000000000000000000000000".to_string();
+    //
+    #[cfg(not(feature = "bypass"))]
+    let tx_hash = {
+        let conf = config::get();
+        let provider = Provider::<Http>::try_from(&conf.kaia.endpoint as &str)
+            .map_err(|e| Error::Klaytn(e.to_string()))?;
+        let provider = Arc::new(provider);
 
-    let conf = config::get();
-    let provider = Provider::<Http>::try_from(&conf.kaia.endpoint as &str)
-        .map_err(|e| Error::Klaytn(e.to_string()))?;
-    let provider = Arc::new(provider);
-
-    let owner = KaiaLocalWallet::new(&conf.kaia.owner_key, provider.clone()).await?;
-    let feepayer = LocalFeePayer::new(
-        &conf.kaia.feepayer_address,
-        &conf.kaia.feepayer_key,
-        provider.clone(),
-    )
-    .await?;
-
-    let mut contract = Erc1155Contract::new(&contract_address, provider.clone());
-    contract.set_wallet(owner);
-    contract.set_fee_payer(feepayer);
-
-    // Mint NFT (token_id = 1, amount = 1)
-    let tx_hash = contract
-        .mint_batch(owner_evm_address.clone(), vec![ART_TWIN_TOKEN_ID], vec![1])
+        let owner = KaiaLocalWallet::new(&conf.kaia.owner_key, provider.clone()).await?;
+        let feepayer = LocalFeePayer::new(
+            &conf.kaia.feepayer_address,
+            &conf.kaia.feepayer_key,
+            provider.clone(),
+        )
         .await?;
+
+        let mut contract = Erc1155Contract::new(&contract_address, provider.clone());
+        contract.set_wallet(owner);
+        contract.set_fee_payer(feepayer);
+
+        // Mint NFT (token_id = 1, amount = 1)
+        let tx_hash = contract
+            .mint_batch(owner_evm_address.clone(), vec![ART_TWIN_TOKEN_ID], vec![1])
+            .await?;
+        tx_hash
+    };
 
     let artwork = SpaceArtwork::new(
         space_pk.clone(),
