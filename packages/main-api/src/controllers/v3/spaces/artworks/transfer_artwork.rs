@@ -20,6 +20,7 @@ use crate::{
     },
 };
 
+#[cfg(not(feature = "bypass"))]
 const ART_TWIN_TOKEN_ID: u64 = 1;
 
 pub async fn transfer_space_artwork_handler(
@@ -60,37 +61,43 @@ pub async fn transfer_space_artwork_handler(
     .ok_or(Error::InvalidUserEvmAddress)?
     .evm_address;
 
-    // Prepare blockchain transaction
-    let conf = config::get();
-    let provider = Provider::<Http>::try_from(&conf.kaia.endpoint as &str)
-        .map_err(|e| Error::Klaytn(e.to_string()))?;
-    let provider = Arc::new(provider);
+    let tx_hash = "0x0000000000000000000000000000000000000000".to_string();
 
-    let owner = KaiaLocalWallet::new(&conf.kaia.owner_key, provider.clone()).await?;
-    let feepayer = LocalFeePayer::new(
-        &conf.kaia.feepayer_address,
-        &conf.kaia.feepayer_key,
-        provider.clone(),
-    )
-    .await?;
+    #[cfg(not(feature = "bypass"))]
+    let tx_hash = {
+        // Prepare blockchain transaction
+        let conf = config::get();
+        let provider = Provider::<Http>::try_from(&conf.kaia.endpoint as &str)
+            .map_err(|e| Error::Klaytn(e.to_string()))?;
+        let provider = Arc::new(provider);
 
-    // Execute safe transfer
-    let mut contract = crate::utils::contracts::erc1155::Erc1155Contract::new(
-        &space_artwork.contract_address,
-        provider.clone(),
-    );
-    contract.set_wallet(owner);
-    contract.set_fee_payer(feepayer);
-
-    let tx_hash = contract
-        .safe_transfer_from(
-            space_artwork.owner_evm_address.clone(),
-            receiver_evm_address.clone(),
-            ART_TWIN_TOKEN_ID,
-            1,
-            vec![],
+        let owner = KaiaLocalWallet::new(&conf.kaia.owner_key, provider.clone()).await?;
+        let feepayer = LocalFeePayer::new(
+            &conf.kaia.feepayer_address,
+            &conf.kaia.feepayer_key,
+            provider.clone(),
         )
         .await?;
+
+        // Execute safe transfer
+        let mut contract = crate::utils::contracts::erc1155::Erc1155Contract::new(
+            &space_artwork.contract_address,
+            provider.clone(),
+        );
+        contract.set_wallet(owner);
+        contract.set_fee_payer(feepayer);
+
+        let tx_hash = contract
+            .safe_transfer_from(
+                space_artwork.owner_evm_address.clone(),
+                receiver_evm_address.clone(),
+                ART_TWIN_TOKEN_ID,
+                1,
+                vec![],
+            )
+            .await?;
+        tx_hash
+    };
 
     // Create trade record
     let trade = SpaceArtworkTrade::new_transfer(

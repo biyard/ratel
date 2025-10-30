@@ -5,7 +5,7 @@ use crate::{
     AppState, Error,
     controllers::v3::spaces::{SpacePath, SpacePathParam},
     features::spaces::artworks::{
-        ListSpaceArtworkHistoryResponse, SpaceArtworkTrade, SpaceArtworkTradeItem,
+        ListSpaceArtworkTradeResponse, SpaceArtworkTrade, SpaceArtworkTradeItem,
         SpaceArtworkTradeQueryOption,
     },
     types::{
@@ -14,11 +14,11 @@ use crate::{
     },
 };
 
-pub async fn list_space_artwork_history_handler(
+pub async fn list_space_artwork_trades_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Query(Pagination { bookmark }): ListItemsQuery,
-) -> Result<Json<ListSpaceArtworkHistoryResponse>, Error> {
+) -> Result<Json<ListSpaceArtworkTradeResponse>, Error> {
     let space_pk = match space_pk {
         Partition::Space(_) => space_pk,
         _ => return Err(Error::InvalidSpacePartitionKey),
@@ -39,7 +39,7 @@ pub async fn list_space_artwork_history_handler(
 
     let items: Vec<SpaceArtworkTradeItem> = trades.into_iter().map(|trade| trade.into()).collect();
 
-    Ok(Json(ListSpaceArtworkHistoryResponse {
+    Ok(Json(ListSpaceArtworkTradeResponse {
         items,
         bookmark: new_bookmark,
     }))
