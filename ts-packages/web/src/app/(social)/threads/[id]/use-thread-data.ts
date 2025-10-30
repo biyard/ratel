@@ -1,7 +1,7 @@
-import useFeedById from '@/hooks/feeds/use-feed-by-id';
+import useSuspensePostById from '@/features/posts/hooks/use-post';
 
 export function useThreadData(postId: string) {
-  const post = useFeedById(postId);
+  const post = useSuspensePostById(postId);
 
   return { post };
 }

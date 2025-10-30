@@ -1,10 +1,15 @@
 import { useMutation } from '@tanstack/react-query';
 import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
-import { FeedStatus } from '@/lib/api/models/feeds'; // FeedType 추가
+import { FeedStatus } from '@/features/posts/types/post'; // FeedType 추가
 import { showErrorToast } from '@/lib/toast';
-import { deletePost, PostResponse } from '@/lib/api/ratel/posts.v3';
 import { optimisticListUpdate, removeQueries } from '@/lib/hook-utils';
+import PostResponse, { ListPostResponse } from '../dto/list-post-response';
+import { call } from '@/lib/api/ratel/call';
+
+export function deletePost(postPk: string): Promise<void> {
+  return call('DELETE', `/v3/posts/${encodeURIComponent(postPk)}`);
+}
 
 export function useDeletePostMutation(username: string, status: FeedStatus) {
   const queryClient = getQueryClient();
@@ -28,21 +33,38 @@ export function useDeletePostMutation(username: string, status: FeedStatus) {
 
       const rollbackPosts = await optimisticListUpdate<PostResponse>(
         { queryKey: listQueryKey },
-        (post) => (post.pk !== postPk ? undefined : post),
+        (post) => (post.pk === postPk ? undefined : post),
       );
 
-      return { rollbackPostDetail, rollbackPosts };
+      let rollbackDrafts;
+
+      if (status === FeedStatus.Draft) {
+        const queryKey = feedKeys.drafts(username);
+
+        rollbackDrafts = await optimisticListUpdate<ListPostResponse>(
+          { queryKey },
+          (post) => {
+            const items = post.items.filter((p) => p.pk !== postPk);
+            post.items = items;
+
+            return post;
+          },
+        );
+      }
+
+      return { rollbackPostDetail, rollbackPosts, rollbackDrafts };
     },
 
     onError: (error: Error, _variables, context) => {
       context?.rollbackPostDetail?.rollback();
       context?.rollbackPosts?.rollback();
+      context?.rollbackDrafts?.rollback();
 
       showErrorToast(error.message || 'Failed to delete feed');
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: feedKeys.lists() });
+      // queryClient.invalidateQueries({ queryKey: feedKeys.lists() });
     },
   });
 }

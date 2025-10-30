@@ -9,7 +9,8 @@ import Profile from '../profile';
 import { LoginModal } from '../popup/login-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { route } from '@/route';
-import { UserType } from '@/lib/api/models/user';
+import { UserType } from '@/lib/api/ratel/users.v3';
+
 import LoginIcon from '@/assets/icons/login.svg?react';
 import { useTranslation } from 'react-i18next';
 import { Us } from '../icons';
@@ -163,6 +164,7 @@ export default function Header(props: HeaderProps) {
           {navItems.map((item, index) => (
             <NavLink
               key={`nav-item-${index}`}
+              aria-label={`nav-${item.name}`}
               to={item.href}
               className="flex flex-col justify-center items-center p-2.5 group"
               hidden={!item.visible || (item.authorized && !loggedIn)}

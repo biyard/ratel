@@ -1,5 +1,4 @@
 import { PublishType } from '@/components/post-header/modals/publish-space';
-import { Post } from '@/lib/api/ratel/posts.v3';
 import {
   SpaceCommon,
   SpacePublishState,
@@ -11,6 +10,7 @@ import { usePublishSpaceMutation } from '@/features/spaces/hooks/use-publish-mut
 import { useUpdateSpaceVisibilityMutation } from '@/features/spaces/hooks/use-update-visibility-mutation';
 
 import { create } from 'zustand';
+import Post from '@/features/posts/types/post';
 
 export interface SpaceHeaderStore {
   title: string;

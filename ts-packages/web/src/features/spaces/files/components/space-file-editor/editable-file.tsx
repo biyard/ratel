@@ -1,4 +1,3 @@
-import { File, FileExtension } from '@/lib/api/models/feeds';
 import {
   CircleClose,
   Excel,
@@ -11,9 +10,10 @@ import {
   Word,
   Zip,
 } from '@/components/icons';
+import FileModel, { FileExtension } from '../../types/file';
 
 export interface EditableFileProps {
-  file: File;
+  file: FileModel;
   onclick: () => void;
 }
 
