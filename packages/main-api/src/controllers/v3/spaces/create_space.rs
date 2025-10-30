@@ -51,16 +51,16 @@ pub async fn create_space_handler(
         .with_space_pk(space.pk.clone())
         .with_space_type(space_type);
 
-    let mut tx = vec![
+    let tx = vec![
         space.create_transact_write_item(),
         post_updater.transact_write_item(),
     ];
 
-    if space.space_type == SpaceType::Poll || space.space_type == SpaceType::Deliberation {
-        let poll: Poll = space.pk.clone().try_into()?;
+    // if space.space_type == SpaceType::Poll || space.space_type == SpaceType::Deliberation {
+    //     let poll: Poll = space.pk.clone().try_into()?;
 
-        tx.push(poll.create_transact_write_item());
-    }
+    //     tx.push(poll.create_transact_write_item());
+    // }
 
     transact_write_items!(dynamo.client, tx)?;
 

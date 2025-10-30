@@ -1,4 +1,5 @@
 use crate::features::spaces::polls::{Poll, PollResponse, PollUserAnswer};
+use crate::types::Partition;
 use crate::utils::time::get_now_timestamp_millis;
 use crate::{
     models::{feed::Post, space::SpaceCommon},
@@ -64,8 +65,14 @@ async fn test_poll_space_creation() {
 
     assert_eq!(response.questions.len(), 2, "should have 2 questions");
 
+    let poll_pk = match poll.sk {
+        EntityType::SpacePoll(v) => Partition::Poll(v),
+        _ => Partition::Poll("".to_string()),
+    };
+
     PollUserAnswer::new(
         poll.pk.clone(),
+        poll_pk.clone(),
         user.pk.clone(),
         vec![
             Answer::SingleChoice { answer: Some(0) },
@@ -80,7 +87,7 @@ async fn test_poll_space_creation() {
 
     let (res, _) = PollUserAnswer::find_by_space_pk(
         &cli,
-        &EntityType::SpacePollUserAnswer(poll.pk.to_string()),
+        &EntityType::SpacePollUserAnswer(poll.pk.to_string(), poll_pk.to_string()),
         Default::default(),
     )
     .await
@@ -103,14 +110,14 @@ async fn test_poll_space_creation() {
 
     let (res, _) = PollUserAnswer::find_by_space_pk(
         &cli,
-        &EntityType::SpacePollUserAnswer(poll.pk.to_string()),
+        &EntityType::SpacePollUserAnswer(poll.pk.to_string(), poll_pk.to_string()),
         Default::default(),
     )
     .await
     .expect("failed to find spaces survey response");
     assert_eq!(res.len(), 1, "should have 1 response");
 
-    let my_survey = PollUserAnswer::find_one(&cli, &poll.pk, &user.pk)
+    let my_survey = PollUserAnswer::find_one(&cli, &poll.pk, &poll_pk, &user.pk)
         .await
         .expect("failed to get my survey response");
 

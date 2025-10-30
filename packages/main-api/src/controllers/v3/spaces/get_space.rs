@@ -36,6 +36,7 @@ pub struct GetSpaceResponse {
     pub visibility: SpaceVisibility,
     pub publish_state: SpacePublishState,
     pub booster: BoosterType,
+    pub files: Option<Vec<File>>,
 }
 
 pub async fn get_space_handler(
@@ -89,6 +90,8 @@ impl From<(SpaceCommon, Post, TeamGroupPermissions)> for GetSpaceResponse {
             visibility: space.visibility,
             publish_state: space.publish_state,
             booster: space.booster,
+
+            files: space.files,
         }
     }
 }
