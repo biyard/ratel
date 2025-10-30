@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/checkbox/checkbox';
 import { cn } from '@/lib/utils';
-import { TiptapEditor } from '@/components/text-editor';
 
 import {
   useCreatePostPageController,
@@ -14,6 +13,7 @@ import SpaceTypeItem from '@/features/spaces/components/space-type-item';
 import { Row } from '@/components/ui/row';
 import { Col } from '@/components/ui/col';
 import { RequireAuth } from '@/components/auth/require-auth';
+import { PostEditor } from '../post-editor';
 
 export default function CreatePostPage() {
   return (
@@ -60,13 +60,16 @@ function CreatePostPageContent() {
 
         {/* Rich Text Editor - TipTap */}
         <div className="relative">
-          <TiptapEditor
+          <PostEditor
             ref={ctrl.editorRef}
             content={ctrl.content.get() || ''}
             onUpdate={ctrl.handleContentUpdate}
             placeholder={ctrl.t.content_placeholder}
             data-pw="post-content-editor"
             minHeight="300px"
+            url={ctrl.image.get()}
+            onImageUpload={ctrl.handleImageUpload}
+            onRemoveImage={ctrl.handleRemoveImage}
           />
 
           {/* Saving Status Indicator - positioned at bottom right of editor */}

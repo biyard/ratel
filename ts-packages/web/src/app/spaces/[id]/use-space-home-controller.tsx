@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { State } from '@/types/state';
 import { useSpaceHomeData } from './use-space-home-data';
 import { SideMenuProps } from '@/features/spaces/components/space-side-menu';
@@ -19,6 +19,10 @@ import SpaceDeleteModal from '@/features/spaces/modals/space-delete-modal';
 import { useDeleteSpaceMutation } from '@/features/spaces/hooks/use-delete-mutation';
 import { NavigateFunction, useNavigate } from 'react-router';
 import { UserDetailResponse } from '@/lib/api/ratel/users.v3';
+import { useUpdateDraftImageMutation } from '@/features/posts/hooks/use-update-draft-image-mutation';
+import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
+import { getPutObjectUrl } from '@/lib/api/ratel/assets.v3';
+import { spacePkToPostPk } from '@/features/spaces/utils/partition-key-utils';
 
 export class SpaceHomeController {
   public space: Space;
@@ -38,6 +42,10 @@ export class SpaceHomeController {
     public popup: ReturnType<typeof usePopup>,
     public publishSpace: ReturnType<typeof usePublishSpaceMutation>,
     public deleteSpace: ReturnType<typeof useDeleteSpaceMutation>,
+    public image: State<string | null>,
+    public updateDraftImage: ReturnType<
+      typeof useUpdateDraftImageMutation
+    >['mutateAsync'],
   ) {
     this.space = this.data.space.data;
   }
@@ -213,6 +221,53 @@ export class SpaceHomeController {
       .withoutBackdropClose();
   };
 
+  handleImageUpload = async (imageUrl: string) => {
+    const postPk = spacePkToPostPk(this.space.pk);
+    if (!postPk) return;
+
+    try {
+      const mime = imageUrl.match(/^data:([^;]+);base64,/);
+      if (mime && mime[1]) {
+        const res = await getPutObjectUrl(1, parseFileType(mime[1]));
+
+        if (res && res.presigned_uris?.length > 0 && res.uris?.length > 0) {
+          const blob = await dataUrlToBlob(imageUrl);
+          await fetch(res.presigned_uris[0], {
+            method: 'PUT',
+            headers: {
+              'Content-Type': mime[1],
+            },
+            body: blob,
+          });
+          const uploadedUrl = res.uris[0];
+          logger.debug('Uploaded image URL:', uploadedUrl, postPk);
+          if (uploadedUrl) {
+            await this.updateDraftImage({
+              postPk: postPk,
+              image: uploadedUrl,
+            });
+          }
+
+          this.image.set(uploadedUrl);
+        }
+      }
+    } catch (error) {
+      logger.error('Image upload failed:', error);
+      showErrorToast('Failed to upload image');
+    }
+  };
+
+  handleRemoveImage = async () => {
+    const postPk = spacePkToPostPk(this.space.pk);
+    if (!postPk) return;
+
+    await this.updateDraftImage({
+      postPk: postPk,
+      image: null,
+    });
+    this.image.set(null);
+  };
+
   get actions() {
     const ret = [
       {
@@ -241,10 +296,23 @@ export function useSpaceHomeController(spacePk: string) {
   const updateSpaceTitle = useSpaceUpdateTitleMutation();
   const publishSpace = usePublishSpaceMutation();
   const deleteSpace = useDeleteSpaceMutation();
+  const { mutateAsync: updateDraftImage } = useUpdateDraftImageMutation();
 
   const edit = useState(false);
   const save = useState(false);
   const popup = usePopup();
+  const image = useState<string | null>(null);
+
+  // Initialize image from space data
+  useEffect(() => {
+    if (
+      data.space.data &&
+      data.space.data.urls &&
+      data.space.data.urls.length > 0
+    ) {
+      image[1](data.space.data.urls[0]);
+    }
+  }, [data.space.data, image]);
 
   return new SpaceHomeController(
     navigate,
@@ -258,5 +326,7 @@ export function useSpaceHomeController(spacePk: string) {
     popup,
     publishSpace,
     deleteSpace,
+    new State(image),
+    updateDraftImage,
   );
 }

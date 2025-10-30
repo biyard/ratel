@@ -2,19 +2,25 @@ import Card from '@/components/card';
 import { Edit1, Save } from '@/components/icons';
 
 import { useState } from 'react';
-import { TiptapEditor } from '@/components/text-editor';
+import { PostEditor } from '@/features/posts/components/post-editor';
 // import { executeOnKeyStroke } from '@/utils/key-event-handle';
 
 export default function SpaceHTMLContentEditor({
   htmlContent,
+  url,
   canEdit,
   // enableEnterToSave = false,
   onContentChange,
+  onImageUpload,
+  onRemoveImage,
 }: {
   htmlContent: string;
+  url: string | null;
   canEdit: boolean;
   enableEnterToSave?: boolean;
   onContentChange: (newContent: string) => void;
+  onImageUpload: (imageUrl: string) => Promise<void>;
+  onRemoveImage: () => Promise<void>;
 }) {
   const [isEditing, setEditing] = useState<boolean>(false);
   const [content, setContent] = useState<string>(htmlContent);
@@ -34,7 +40,7 @@ export default function SpaceHTMLContentEditor({
 
   return (
     <>
-      <Card className="relative">
+      <Card className="relative pb-20">
         {canEdit && (
           <Icon
             role="button"
@@ -51,13 +57,17 @@ export default function SpaceHTMLContentEditor({
             }}
           />
         )}
-        <TiptapEditor
+
+        <PostEditor
           content={content}
           onUpdate={(nextContent) => {
             setContent(nextContent);
           }}
           editable={isEditing}
           showToolbar={isEditing}
+          onImageUpload={onImageUpload}
+          onRemoveImage={onRemoveImage}
+          url={url}
           data-pw="space-recommendation-editor"
         />
       </Card>
