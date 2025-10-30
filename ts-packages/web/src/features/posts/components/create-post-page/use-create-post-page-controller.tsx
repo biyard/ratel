@@ -392,7 +392,7 @@ export function useCreatePostPageController() {
           }
           // Mark as not modified since we just loaded from server
           controller.isModified.set(false);
-          controller.lastSavedAt.set(new Date(postData.post.updated_at * 1000));
+          controller.lastSavedAt.set(new Date(postData.post.updated_at));
         } catch (error) {
           logger.error('Failed to fetch post data:', error);
           showErrorToast(t.error_init);
