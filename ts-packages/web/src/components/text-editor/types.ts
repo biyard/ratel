@@ -58,6 +58,7 @@ export interface TiptapToolbarProps {
   editor: Editor | null;
   enabledFeatures?: EnabledFeatures;
   className?: string;
+  openVideoPicker?: () => void;
 }
 
 /**
