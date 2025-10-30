@@ -1,19 +1,18 @@
 import { useMutation } from '@tanstack/react-query';
 import { feedKeys } from '@/constants';
 import { showErrorToast } from '@/lib/toast';
-import { optimisticListUpdate, removeQueries } from '@/lib/hook-utils';
+import { optimisticListUpdate } from '@/lib/hook-utils';
 import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import PostResponse from '@/features/posts/dto/list-post-response';
 import Post, { Visibility } from '../types/post';
 import { call } from '@/lib/api/ratel/call';
 import { getQueryClient } from '@/providers/getQueryClient';
-import { PostDetailResponse } from '../dto/post-detail-response';
 
 export function publishPost(
   postPk: string,
   title: string,
   content: string,
-  imageUrls: string[] = [],
+  imageUrls: string[] | null = null,
   visibility?: Visibility,
 ): Promise<Post> {
   return call('PATCH', `/v3/posts/${encodeURIComponent(postPk)}`, {

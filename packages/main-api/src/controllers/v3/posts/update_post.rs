@@ -77,12 +77,7 @@ pub async fn update_post_handler(
         }
         UpdatePostRequest::Image { images } => {
             post.urls = images.clone();
-            vec![
-                updater
-                    .with_urls(images)
-                    .with_updated_at(now)
-                    .transact_write_item(),
-            ]
+            vec![updater.with_urls(images).transact_write_item()]
         }
 
         UpdatePostRequest::Info { visibility } => {
@@ -117,22 +112,22 @@ pub async fn update_post_handler(
             validate_title(&title)?;
             validate_content(&content)?;
 
-            let image_urls = image_urls.unwrap_or_default();
-            post.urls = image_urls.clone();
             post.status = PostStatus::Published;
             post.title = title.clone();
             post.html_contents = content.clone();
             post.visibility = Some(visibility.clone());
             post.status = PostStatus::Published;
-            vec![
-                updater
-                    .with_status(PostStatus::Published)
-                    .with_title(title)
-                    .with_html_contents(content)
-                    .with_visibility(visibility)
-                    .with_urls(image_urls)
-                    .transact_write_item(),
-            ]
+            let updater = updater
+                .with_status(PostStatus::Published)
+                .with_title(title)
+                .with_html_contents(content)
+                .with_visibility(visibility);
+            if let Some(image_urls) = image_urls {
+                post.urls = image_urls.clone();
+                vec![updater.with_urls(image_urls).transact_write_item()]
+            } else {
+                vec![updater.transact_write_item()]
+            }
         }
         UpdatePostRequest::PostType { r#type } => {
             post.post_type = r#type.clone();
