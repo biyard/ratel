@@ -2,6 +2,7 @@ use crate::models::feed::Post;
 use crate::models::user::User;
 use crate::models::{PostArtwork, PostArtworkMetadata};
 use crate::types::{EntityType, PostStatus, PostType, TeamGroupPermission, Visibility};
+use crate::utils::time::get_now_timestamp_millis;
 use crate::utils::validator::{validate_content, validate_title};
 use crate::{AppState, Error, transact_write_items};
 use aide::NoApi;
@@ -58,7 +59,7 @@ pub async fn update_post_handler(
         return Err(Error::NoPermission);
     }
 
-    let now = chrono::Utc::now().timestamp();
+    let now = get_now_timestamp_millis();
     let updater = Post::updater(&post.pk, &post.sk).with_updated_at(now);
     post.updated_at = now;
 
