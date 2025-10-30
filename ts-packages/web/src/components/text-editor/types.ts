@@ -46,7 +46,7 @@ export interface TiptapEditorProps {
   // Focus state
   onFocus?: () => void;
   onBlur?: () => void;
-
+  onImageUpload?: (imageUrl: string) => Promise<void>;
   // Test identifier
   'data-pw'?: string;
 }
@@ -58,6 +58,7 @@ export interface TiptapToolbarProps {
   editor: Editor | null;
   enabledFeatures?: EnabledFeatures;
   className?: string;
+  onImageUpload?: (imageUrl: string) => Promise<void>;
 }
 
 /**
