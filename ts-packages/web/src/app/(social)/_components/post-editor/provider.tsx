@@ -1,395 +1,380 @@
-import type { ArtworkTrait } from '@/lib/api/models/feeds';
-import { ArtworkTraitDisplayType } from '@/lib/api/models/feeds';
-import { checkString } from '@/lib/string-filter-utils';
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
-import { apiFetch } from '@/lib/api/apiFetch';
-import { config } from '@/config';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
-import type { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
-import { getPost, type Post, PostType as PT } from '@/lib/api/ratel/posts.v3';
-import { useUpdateDraftMutation } from './use-update-draft-mutation';
-import { useUpdateDraftImageMutation } from './use-update-draft-image-mutation';
-import { usePublishDraftMutation } from './use-publish-draft';
-import { useNavigate } from 'react-router';
-import { route } from '@/route';
+// import { checkString } from '@/lib/string-filter-utils';
+// import {
+//   createContext,
+//   useCallback,
+//   useContext,
+//   useEffect,
+//   useState,
+// } from 'react';
+// import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
 
-export const Status = {
-  Idle: 'Idle',
-  Loading: 'Loading',
-  Saving: 'Saving',
-  Publishing: 'Publishing',
-} as const;
+// import { useNavigate } from 'react-router';
+// import { route } from '@/route';
+// import Post, { PostType } from '@/features/posts/types/post';
+// import { getPost } from '@/features/posts/hooks/use-post';
+// import { EditorStatus, PostTypeLabel } from './type';
+// import { useUpdateDraftMutation } from '@/features/posts/hooks/use-update-draft-mutation';
+// import { useUpdateDraftImageMutation } from '@/features/posts/hooks/use-update-draft-image-mutation';
+// import { usePublishDraftMutation } from '@/features/posts/hooks/use-publish-draft-mutation';
+// import { getPutObjectUrl } from '@/lib/api/ratel/assets.v3';
+// import {
+//   ArtworkTrait,
+//   ArtworkTraitDisplayType,
+// } from '@/features/posts/types/post-artwork';
 
-export type Status = (typeof Status)[keyof typeof Status];
+// const AUTO_SAVE_DELAY = 5000; // ms
+// export interface PostEditorContextType {
+//   openPostEditorPopup: (postId: string) => Promise<void>;
+//   // openPostEditorPopupWithState: (id: number) => Promise<void>;
 
-export const PostType = {
-  Artwork: 'Artwork',
-  General: 'General',
-} as const;
+//   expand: boolean;
+//   toggleExpand: () => void;
+//   postType: PostTypeLabel;
+//   updatePostType: (type: PostTypeLabel) => void;
 
-export type PostType = (typeof PostType)[keyof typeof PostType];
+//   title: string;
+//   updateTitle: (title: string) => void;
+//   content: string | null;
+//   updateContent: (content: string) => void;
+//   image: string | null;
+//   updateImage: (image: string | null) => void;
 
-const AUTO_SAVE_DELAY = 5000; // ms
-export interface PostEditorContextType {
-  openPostEditorPopup: (postId: string) => Promise<void>;
-  // openPostEditorPopupWithState: (id: number) => Promise<void>;
+//   traits: ArtworkTrait[];
+//   updateTrait: (trait_type: string, value: string) => void;
 
-  expand: boolean;
-  toggleExpand: () => void;
-  postType: PostType;
-  updatePostType: (type: PostType) => void;
+//   handleUpdate: () => Promise<void>;
 
-  title: string;
-  updateTitle: (title: string) => void;
-  content: string | null;
-  updateContent: (content: string) => void;
-  image: string | null;
-  updateImage: (image: string | null) => void;
+//   close: boolean;
+//   setClose: (value: boolean) => void;
+//   isSubmitDisabled: boolean;
+//   status: EditorStatus;
+// }
 
-  traits: ArtworkTrait[];
-  updateTrait: (trait_type: string, value: string) => void;
+// // eslint-disable-next-line react-refresh/only-export-components
+// export const PostDraftContext = createContext<
+//   PostEditorContextType | undefined
+// >(undefined);
 
-  handleUpdate: () => Promise<void>;
+// export function PostEditorProvider({
+//   children,
+// }: {
+//   children: React.ReactNode;
+// }) {
+//   /*
+//     If Team is selected, use `team_id` as targetId
+//     Otherwise, use `user_id` as targetId
+//     if Not Logged in, use `0` as targetId
+//   */
 
-  close: boolean;
-  setClose: (value: boolean) => void;
-  isSubmitDisabled: boolean;
-  status: Status;
-}
+//   const nav = useNavigate();
 
-export const PostDraftContext = createContext<
-  PostEditorContextType | undefined
->(undefined);
+//   //Interal State
+//   const [close, setClose] = useState(true);
+//   const [expand, setExpand] = useState(false);
+//   const [status, setStatus] = useState<EditorStatus>(EditorStatus.Idle);
+//   const [feed, setFeed] = useState<Post | null>(null);
+//   const [postType, setPostType] = useState<PostTypeLabel>(
+//     PostTypeLabel.General,
+//   );
+//   const [isModified, setIsModified] = useState(false);
 
-export function PostEditorProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  /*
-    If Team is selected, use `team_id` as targetId
-    Otherwise, use `user_id` as targetId
-    if Not Logged in, use `0` as targetId
-  */
+//   //State
+//   const [title, setTitle] = useState('');
+//   const [content, setContent] = useState('');
+//   const [image, setImage] = useState<string | null>(null);
+//   // const [artistName, setArtistName] = useState<string | null>(null);
+//   // const [backgroundColor, setBackgroundColor] = useState<string>('#ffffff');
+//   // const [size, setSize] = useState<string | null>(null);
+//   const [traits, setTraits] = useState<ArtworkTrait[]>([
+//     {
+//       trait_type: 'artist_name',
+//       value: '',
+//     },
+//     {
+//       trait_type: 'medium',
+//       value: '',
+//     },
+//     {
+//       trait_type: 'year',
+//       value: '',
+//     },
+//     {
+//       trait_type: 'size',
+//       value: '',
+//     },
 
-  const nav = useNavigate();
+//     {
+//       trait_type: 'background_color',
+//       value: '#ffffff',
+//       display_type: ArtworkTraitDisplayType.Color,
+//     },
+//   ]);
 
-  //Interal State
-  const [close, setClose] = useState(true);
-  const [expand, setExpand] = useState(false);
-  const [status, setStatus] = useState<Status>(Status.Idle);
-  const [feed, setFeed] = useState<Post | null>(null);
-  const [postType, setPostType] = useState<PostType>(PostType.General);
-  const [isModified, setIsModified] = useState(false);
+//   const isArtworkRequiredFieldsFilled = Boolean(
+//     typeof traits.find((t) => t.trait_type === 'artist_name')?.value ===
+//       'string' &&
+//       (
+//         traits.find((t) => t.trait_type === 'artist_name')?.value as string
+//       ).trim() !== '' &&
+//       typeof traits.find((t) => t.trait_type === 'background_color')?.value ===
+//         'string' &&
+//       (
+//         traits.find((t) => t.trait_type === 'background_color')?.value as string
+//       ).trim() !== '' &&
+//       typeof traits.find((t) => t.trait_type === 'size')?.value === 'string' &&
+//       (traits.find((t) => t.trait_type === 'size')?.value as string).trim() !==
+//         '' &&
+//       typeof traits.find((t) => t.trait_type === 'medium')?.value ===
+//         'string' &&
+//       (
+//         traits.find((t) => t.trait_type === 'medium')?.value as string
+//       ).trim() !== '',
+//   );
+//   const isAllFieldsFilled = Boolean(
+//     title &&
+//       title.trim() !== '' &&
+//       content &&
+//       content.trim() !== '' &&
+//       (postType !== PostTypeLabel.Artwork
+//         ? true
+//         : isArtworkRequiredFieldsFilled),
+//   );
+//   const resetState = useCallback(() => {
+//     setExpand(false);
+//     setFeed(null);
+//     setContent('');
+//     setTitle('');
+//     setImage(null);
+//     setStatus(EditorStatus.Idle);
+//     setIsModified(false);
+//   }, []);
 
-  //State
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [image, setImage] = useState<string | null>(null);
-  // const [artistName, setArtistName] = useState<string | null>(null);
-  // const [backgroundColor, setBackgroundColor] = useState<string>('#ffffff');
-  // const [size, setSize] = useState<string | null>(null);
-  const [traits, setTraits] = useState<ArtworkTrait[]>([
-    {
-      trait_type: 'artist_name',
-      value: '',
-    },
-    {
-      trait_type: 'medium',
-      value: '',
-    },
-    {
-      trait_type: 'year',
-      value: '',
-    },
-    {
-      trait_type: 'size',
-      value: '',
-    },
+//   const toggleExpand = useCallback(() => {
+//     setExpand((prev) => !prev);
+//     setClose(true);
+//   }, []);
 
-    {
-      trait_type: 'background_color',
-      value: '#ffffff',
-      display_type: ArtworkTraitDisplayType.Color,
-    },
-  ]);
+//   const updateTitle = (newTitle: string) => {
+//     setTitle(newTitle);
+//     setIsModified(true);
+//   };
 
-  const isArtworkRequiredFieldsFilled = Boolean(
-    typeof traits.find((t) => t.trait_type === 'artist_name')?.value ===
-      'string' &&
-      (
-        traits.find((t) => t.trait_type === 'artist_name')?.value as string
-      ).trim() !== '' &&
-      typeof traits.find((t) => t.trait_type === 'background_color')?.value ===
-        'string' &&
-      (
-        traits.find((t) => t.trait_type === 'background_color')?.value as string
-      ).trim() !== '' &&
-      typeof traits.find((t) => t.trait_type === 'size')?.value === 'string' &&
-      (traits.find((t) => t.trait_type === 'size')?.value as string).trim() !==
-        '' &&
-      typeof traits.find((t) => t.trait_type === 'medium')?.value ===
-        'string' &&
-      (
-        traits.find((t) => t.trait_type === 'medium')?.value as string
-      ).trim() !== '',
-  );
-  const isAllFieldsFilled = Boolean(
-    title &&
-      title.trim() !== '' &&
-      content &&
-      content.trim() !== '' &&
-      (postType !== PostType.Artwork ? true : isArtworkRequiredFieldsFilled),
-  );
-  const resetState = useCallback(() => {
-    setExpand(false);
-    setFeed(null);
-    setContent('');
-    setTitle('');
-    setImage(null);
-    setStatus(Status.Idle);
-    setIsModified(false);
-  }, []);
+//   const updateContent = (newContent: string) => {
+//     setContent(newContent);
+//     setIsModified(true);
+//   };
 
-  const toggleExpand = useCallback(() => {
-    setExpand((prev) => !prev);
-    setClose(true);
-  }, []);
+//   const updatePostType = (type: PostTypeLabel) => {
+//     setPostType(type);
+//     setIsModified(true);
+//   };
 
-  const updateTitle = (newTitle: string) => {
-    setTitle(newTitle);
-    setIsModified(true);
-  };
+//   const { mutateAsync: handleUpdateWithTitleAndContent } =
+//     useUpdateDraftMutation();
+//   const { mutateAsync: handleUpdateImage } = useUpdateDraftImageMutation();
+//   const { mutateAsync: publishDraft } = usePublishDraftMutation();
 
-  const updateContent = (newContent: string) => {
-    setContent(newContent);
-    setIsModified(true);
-  };
+//   const updateImage = async (image: string | null) => {
+//     if (!image) {
+//       return;
+//     }
 
-  const updatePostType = (type: PostType) => {
-    setPostType(type);
-    setIsModified(true);
-  };
+//     const mime = image.match(/^data:([^;]+);base64,/);
+//     if (mime && mime[1]) {
+//       const res = await getPutObjectUrl(1, parseFileType(mime[1]));
 
-  const { mutateAsync: handleUpdateWithTitleAndContent } =
-    useUpdateDraftMutation();
-  const { mutateAsync: handleUpdateImage } = useUpdateDraftImageMutation();
-  const { mutateAsync: publishDraft } = usePublishDraftMutation();
+//       if (res && res.presigned_uris?.length > 0 && res.uris?.length > 0) {
+//         const blob = await dataUrlToBlob(image);
+//         await fetch(res.presigned_uris[0], {
+//           method: 'PUT',
+//           headers: {
+//             'Content-Type': mime[1],
+//           },
+//           body: blob,
+//         });
+//         const imageUrl = res.uris[0];
 
-  const updateImage = async (image: string | null) => {
-    if (!image) {
-      return;
-    }
+//         await handleUpdateImage({ postPk: feed!.pk, image: imageUrl });
 
-    const mime = image.match(/^data:([^;]+);base64,/);
-    if (mime && mime[1]) {
-      const res = await apiFetch<AssetPresignedUris>(
-        `${config.api_url}${ratelApi.assets.getPresignedUrl(parseFileType(mime[1]))}`,
-        {
-          method: 'GET',
-        },
-      );
-      if (
-        res.data &&
-        res.data.presigned_uris?.length > 0 &&
-        res.data.uris?.length > 0
-      ) {
-        const blob = await dataUrlToBlob(image);
-        await fetch(res.data.presigned_uris[0], {
-          method: 'PUT',
-          headers: {
-            'Content-Type': mime[1],
-          },
-          body: blob,
-        });
-        const imageUrl = res.data.uris[0];
+//         setImage(imageUrl);
+//       }
+//     }
+//   };
 
-        await handleUpdateImage({ postPk: feed!.pk, image: imageUrl });
+//   const updateTrait = (
+//     trait_type: string,
+//     value: string,
+//     display_type: ArtworkTraitDisplayType = ArtworkTraitDisplayType.String,
+//   ) => {
+//     setTraits((prevTraits) => {
+//       const traitIndex = prevTraits.findIndex(
+//         (t) => t.trait_type === trait_type,
+//       );
+//       if (traitIndex !== -1) {
+//         const updatedTraits = [...prevTraits];
+//         updatedTraits[traitIndex] = {
+//           ...updatedTraits[traitIndex],
+//           value,
+//           display_type: display_type ?? updatedTraits[traitIndex].display_type,
+//         };
+//         return updatedTraits;
+//       } else {
+//         return [...prevTraits, { trait_type, value, display_type }];
+//       }
+//     });
+//     setIsModified(true);
+//   };
 
-        setImage(imageUrl);
-      }
-    }
-  };
+//   const openPostEditorPopup = async (id: string) => {
+//     if (status === EditorStatus.Loading) {
+//       return;
+//     }
+//     resetState();
+//     setStatus(EditorStatus.Loading);
+//     try {
+//       const { post: draft, artwork_metadata } = await getPost(id);
+//       setFeed(draft);
+//       setTitle(draft.title || '');
+//       if (draft.urls.length > 0) {
+//         setImage(draft.urls[0]);
+//       }
+//       setContent(draft.html_contents || '');
 
-  const updateTrait = (
-    trait_type: string,
-    value: string,
-    display_type: ArtworkTraitDisplayType = ArtworkTraitDisplayType.String,
-  ) => {
-    setTraits((prevTraits) => {
-      const traitIndex = prevTraits.findIndex(
-        (t) => t.trait_type === trait_type,
-      );
-      if (traitIndex !== -1) {
-        const updatedTraits = [...prevTraits];
-        updatedTraits[traitIndex] = {
-          ...updatedTraits[traitIndex],
-          value,
-          display_type: display_type ?? updatedTraits[traitIndex].display_type,
-        };
-        return updatedTraits;
-      } else {
-        return [...prevTraits, { trait_type, value, display_type }];
-      }
-    });
-    setIsModified(true);
-  };
+//       setPostType(
+//         draft.post_type === PostType.Artwork
+//           ? PostTypeLabel.Artwork
+//           : PostTypeLabel.General,
+//       );
 
-  const openPostEditorPopup = async (id: string) => {
-    if (status === Status.Loading) {
-      return;
-    }
-    resetState();
-    setStatus(Status.Loading);
-    try {
-      const { post: draft, artwork_metadata } = await getPost(id);
-      setFeed(draft);
-      setTitle(draft.title || '');
-      if (draft.urls.length > 0) {
-        setImage(draft.urls[0]);
-      }
-      setContent(draft.html_contents || '');
+//       if (draft.post_type === PostType.Artwork && artwork_metadata) {
+//         setTraits(artwork_metadata.traits || []);
+//       }
+//       setExpand(true);
+//     } catch (e) {
+//       console.error(e);
+//       throw new Error('Failed to load draft');
+//     } finally {
+//       setStatus(EditorStatus.Idle);
+//       setClose(false);
+//     }
+//   };
 
-      setPostType(
-        draft.post_type === PT.Artwork ? PostType.Artwork : PostType.General,
-      );
+//   const autoSaveDraft = useCallback(async () => {
+//     if (
+//       status === EditorStatus.Saving ||
+//       isModified === false ||
+//       content.length < 50
+//     ) {
+//       return;
+//     }
 
-      if (draft.post_type === PT.Artwork && artwork_metadata) {
-        setTraits(artwork_metadata.traits || []);
-      }
-      setExpand(true);
-    } catch (e) {
-      console.error(e);
-      throw new Error('Failed to load draft');
-    } finally {
-      setStatus(Status.Idle);
-      setClose(false);
-    }
-  };
+//     setStatus(EditorStatus.Saving);
 
-  const autoSaveDraft = useCallback(async () => {
-    if (
-      status === Status.Saving ||
-      isModified === false ||
-      content.length < 50
-    ) {
-      return;
-    }
+//     try {
+//       await handleUpdateWithTitleAndContent({
+//         postPk: feed!.pk,
+//         title,
+//         content,
+//       });
 
-    setStatus(Status.Saving);
+//       setIsModified(false);
+//     } catch (error) {
+//       console.error(error);
+//       throw new Error(`Failed to auto save draft ${error}`);
+//     } finally {
+//       setStatus(EditorStatus.Idle);
+//     }
+//   }, [
+//     feed,
+//     content,
+//     title,
+//     status,
+//     isModified,
+//     handleUpdateWithTitleAndContent,
+//   ]);
 
-    try {
-      await handleUpdateWithTitleAndContent({
-        postPk: feed!.pk,
-        title,
-        content,
-      });
+//   useEffect(() => {
+//     const timeoutId = setInterval(async () => {
+//       await autoSaveDraft();
+//     }, AUTO_SAVE_DELAY);
+//     return () => clearInterval(timeoutId);
+//   }, [autoSaveDraft]);
 
-      setIsModified(false);
-    } catch (error) {
-      console.error(error);
-      throw new Error(`Failed to auto save draft ${error}`);
-    } finally {
-      setStatus(Status.Idle);
-    }
-  }, [
-    feed,
-    content,
-    title,
-    status,
-    isModified,
-    handleUpdateWithTitleAndContent,
-  ]);
+//   useEffect(() => {
+//     if (!expand) {
+//       resetState();
+//     }
+//   }, [expand, resetState]);
 
-  useEffect(() => {
-    const timeoutId = setInterval(async () => {
-      await autoSaveDraft();
-    }, AUTO_SAVE_DELAY);
-    return () => clearInterval(timeoutId);
-  }, [autoSaveDraft]);
+//   // FIXME: reset
+//   /* useEffect(() => {
+//    *   resetState();
+//    * }, [pathname, resetState]); */
 
-  useEffect(() => {
-    if (!expand) {
-      resetState();
-    }
-  }, [expand, resetState]);
+//   const handleUpdate = useCallback(async () => {
+//     if (status !== EditorStatus.Idle || !isAllFieldsFilled) {
+//       return;
+//     }
+//     setStatus(EditorStatus.Publishing);
 
-  // FIXME: reset
-  /* useEffect(() => {
-   *   resetState();
-   * }, [pathname, resetState]); */
+//     try {
+//       if (checkString(title) || checkString(content || '')) {
+//         throw new Error('Please remove the test keyword');
+//       }
 
-  const handleUpdate = useCallback(async () => {
-    if (status !== Status.Idle || !isAllFieldsFilled) {
-      return;
-    }
-    setStatus(Status.Publishing);
+//       await publishDraft({
+//         postPk: feed!.pk,
+//         title,
+//         content,
+//       });
 
-    try {
-      if (checkString(title) || checkString(content || '')) {
-        throw new Error('Please remove the test keyword');
-      }
+//       // TODO: Navigate to thread
+//       nav(route.threadByFeedId(feed!.pk));
+//       resetState();
+//     } catch {
+//       throw new Error('Failed to publish draft');
+//     }
+//   }, [
+//     content,
+//     feed,
+//     isAllFieldsFilled,
+//     resetState,
+//     nav,
+//     status,
+//     title,
+//     publishDraft,
+//   ]);
 
-      await publishDraft({
-        postPk: feed!.pk,
-        title,
-        content,
-      });
+//   const contextValue: PostEditorContextType = {
+//     openPostEditorPopup,
 
-      // TODO: Navigate to thread
-      nav(route.threadByFeedId(feed!.pk));
-      resetState();
-    } catch {
-      throw new Error('Failed to publish draft');
-    }
-  }, [
-    content,
-    feed,
-    isAllFieldsFilled,
-    resetState,
-    nav,
-    status,
-    title,
-    publishDraft,
-  ]);
+//     expand,
+//     toggleExpand,
+//     title,
+//     updateTitle,
+//     content,
+//     updateContent,
+//     image,
+//     updateImage,
+//     postType,
+//     updatePostType,
+//     traits,
+//     updateTrait,
+//     handleUpdate,
+//     close,
+//     setClose,
+//     isSubmitDisabled: !isAllFieldsFilled,
+//     status,
+//   };
 
-  const contextValue: PostEditorContextType = {
-    openPostEditorPopup,
+//   return (
+//     <PostDraftContext.Provider value={contextValue}>
+//       {children}
+//     </PostDraftContext.Provider>
+//   );
+// }
 
-    expand,
-    toggleExpand,
-    title,
-    updateTitle,
-    content,
-    updateContent,
-    image,
-    updateImage,
-    postType,
-    updatePostType,
-    traits,
-    updateTrait,
-    handleUpdate,
-    close,
-    setClose,
-    isSubmitDisabled: !isAllFieldsFilled,
-    status,
-  };
-
-  return (
-    <PostDraftContext.Provider value={contextValue}>
-      {children}
-    </PostDraftContext.Provider>
-  );
-}
-
-export const usePostEditorContext = () => {
-  const context = useContext(PostDraftContext);
-  return context;
-};
+// export const usePostEditorContext = () => {
+//   const context = useContext(PostDraftContext);
+//   return context;
+// };

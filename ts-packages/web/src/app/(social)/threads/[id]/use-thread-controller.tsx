@@ -1,12 +1,7 @@
 import { useDeletePostMutation } from '@/features/posts/hooks/use-delete-post-mutation';
 import { useLikePostMutation } from '@/features/posts/hooks/use-like-post-mutation';
-import { useCommentMutation } from '@/hooks/feeds/use-comment-mutation';
-import useFeedById from '@/hooks/feeds/use-feed-by-id';
 import { useReplyCommentMutation } from '@/features/comments/hooks/use-reply-comment-mutation';
-import { useLoggedIn, useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { FeedStatus } from '@/lib/api/models/feeds';
 import { GroupPermission } from '@/lib/api/models/group';
-import { PostDetailResponse } from '@/lib/api/ratel/posts.v3';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { logger } from '@/lib/logger';
@@ -15,11 +10,15 @@ import { State } from '@/types/state';
 import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
-import { usePostEditorContext } from '../../_components/post-editor';
 import SpaceCreateModal from '../../../../features/spaces/modals/space-type-selector-modal';
 import { useThreadData } from './use-thread-data';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
 import { useLikeCommentMutation } from '@/features/comments/hooks/use-like-comment-mutation';
+import { useCommentMutation } from '@/features/posts/hooks/use-comment-mutation';
+import { PostDetailResponse } from '@/features/posts/dto/post-detail-response';
+import { FeedStatus } from '@/features/posts/types/post';
+import { useLoggedIn, useSuspenseUserInfo } from '@/hooks/use-user-info';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 
 export class ThreadController {
   readonly isPostOwner: boolean;
@@ -30,7 +29,6 @@ export class ThreadController {
 
   constructor(
     public postId: string,
-    public data,
     public expandComment: State<boolean>,
     public isLoggedIn: boolean,
     public feed: PostDetailResponse,
@@ -43,7 +41,6 @@ export class ThreadController {
     public likePost,
     public user,
     public teams,
-    public postEditor,
     public likeComment,
   ) {
     this.username = this.user?.username || '';
@@ -95,15 +92,20 @@ export class ThreadController {
   };
 
   handleEditPost = async () => {
-    logger.debug('handleEditPost', this.postId);
-    await this.postEditor?.openPostEditorPopup(this.postId);
+    logger.error('handleEditPost Not Implemented', this.postId);
   };
 
   handleDeletePost = async () => {
     logger.debug('handleDeletePost', this.postId);
     if (!this.deletePost.isPending) {
-      await this.deletePost.mutateAsync(this.postId);
-      this.navigate(route.home());
+      try {
+        await this.deletePost.mutateAsync(this.postId);
+        this.navigate(route.home());
+        showSuccessToast(this.t('success_delete_post'));
+      } catch (e) {
+        logger.error('delete post failed: ', e);
+        showErrorToast(this.t('failed_delete_post'));
+      }
     }
   };
 
@@ -125,9 +127,11 @@ export function useThreadController() {
   logger.debug('post id', postId);
   const { data: user } = useSuspenseUserInfo();
   const isLoggedIn = useLoggedIn();
-  const { data: feed } = useFeedById(postId);
 
-  const data = useThreadData(postId);
+  const {
+    post: { data: feed },
+  } = useThreadData(postId);
+  console.log('feed', feed);
   const expandComment = useState(false);
 
   const { mutateAsync } = useCommentMutation();
@@ -144,7 +148,6 @@ export function useThreadController() {
   const likePost = useLikePostMutation();
   const { teams } = useContext(TeamContext);
 
-  const postEditor = usePostEditorContext();
   const likeComment = useLikeCommentMutation();
 
   useEffect(() => {
@@ -157,7 +160,6 @@ export function useThreadController() {
 
   return new ThreadController(
     postId,
-    data,
     new State(expandComment),
     isLoggedIn,
     feed,
@@ -170,7 +172,6 @@ export function useThreadController() {
     likePost,
     user,
     teams,
-    postEditor,
     likeComment,
   );
 }

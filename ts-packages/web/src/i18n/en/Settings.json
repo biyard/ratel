@@ -15,5 +15,12 @@
   "appearance": "Appearance",
   "language": "Language",
   "select_language": "Select a language",
-  "cancel": "Cancel"
+  "cancel": "Cancel",
+  "identity_verification": "Identity Verification",
+  "verify_identity": "Verify Identity",
+  "verifying": "Verifying...",
+  "loading_verification_sdk": "Loading verification SDK...",
+  "identity_verification_success": "Identity verification completed successfully.",
+  "identity_verification_failed": "Identity verification failed.",
+  "identity_verification_error": "An error occurred during identity verification."
 }

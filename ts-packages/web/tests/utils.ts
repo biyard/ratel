@@ -79,9 +79,11 @@ export async function fill(
   {
     placeholder,
     label,
+    'data-pw': dataPw,
   }: {
     placeholder?: string;
     label?: string;
+    'data-pw'?: string;
   },
   value: string,
 ): Promise<Locator> {
@@ -90,7 +92,9 @@ export async function fill(
 
   let selected: Locator;
 
-  if (placeholder) {
+  if (dataPw) {
+    selected = page.locator(`[data-pw="${dataPw}"]`);
+  } else if (placeholder) {
     selected = page.getByPlaceholder(placeholder, opt);
   } else if (label) {
     selected = page.getByLabel(label, opt);

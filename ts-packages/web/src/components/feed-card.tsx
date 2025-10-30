@@ -6,9 +6,9 @@ import { convertNumberToString } from '@/lib/number-utils';
 import TimeAgo from './time-ago';
 import DOMPurify from 'dompurify';
 import { NavLink, useNavigate } from 'react-router';
-import { UserType } from '@/lib/api/models/user';
+import { UserType } from '@/lib/api/ratel/users.v3';
+
 import { route } from '@/route';
-import { SpaceType } from '@/lib/api/models/spaces';
 import { Button } from './ui/button';
 import {
   DropdownMenuContent,
@@ -17,15 +17,16 @@ import {
   DropdownMenuItem,
 } from './ui/dropdown-menu';
 import { Edit1 } from './icons';
-import { useRepostDraft } from '@/app/(social)/_components/create-repost';
 import { showSuccessToast, showErrorToast } from './custom-toast/toast';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { useTranslation } from 'react-i18next';
-import { usePostEditorContext } from '@/app/(social)/_components/post-editor';
-import { likePost, PostResponse } from '@/lib/api/ratel/posts.v3';
 import { BoosterType } from '@/features/spaces/types/booster-type';
+import PostResponse from '@/features/posts/dto/list-post-response';
+import { useLikePostMutation } from '@/features/posts/hooks/use-like-post-mutation';
+import { SpaceType } from '@/features/spaces/types/space-type';
+import { TiptapEditor } from './text-editor';
 
 export interface FeedCardProps {
   post: PostResponse;
@@ -40,8 +41,6 @@ export interface FeedCardProps {
 export default function FeedCard(props: FeedCardProps) {
   const { post } = props;
 
-  const p = usePostEditorContext();
-
   const [localLikes, setLocalLikes] = useState(post.likes);
   const [localIsLiked, setLocalIsLiked] = useState(post.liked);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,8 +48,7 @@ export default function FeedCard(props: FeedCardProps) {
 
   // const { t } = useTranslation('Feeds');
 
-  const r = useRepostDraft();
-
+  const likePost = useLikePostMutation().mutateAsync;
   // Sync with props when they change
   useEffect(() => {
     setLocalLikes(post.likes);
@@ -67,7 +65,10 @@ export default function FeedCard(props: FeedCardProps) {
     setLocalLikes((prev) => (value ? prev + 1 : prev - 1));
 
     try {
-      await likePost(post.pk, value);
+      await likePost({
+        feedId: post.pk,
+        like: value,
+      });
 
       // Success - trigger callbacks
       props.onLikeClick?.(value);
@@ -107,36 +108,18 @@ export default function FeedCard(props: FeedCardProps) {
   };
 
   const handleRepostThought = () => {
-    if (!r) {
-      showErrorToast('Incorrectly set up repost provider');
-      return;
-    }
-    const {
-      setAuthorName,
-      setAuthorProfileUrl,
-      setFeedContent,
-      setFeedImageUrl,
-      setOriginalFeedId,
-      setExpand,
-      setAuthorId,
-    } = r;
-    setAuthorId(post.author_pk);
-    setAuthorName(post.author_display_name);
-    setAuthorProfileUrl(post.author_profile_url);
-    setFeedContent(post.html_contents);
-    setFeedImageUrl(post.urls[0] || null);
-    setOriginalFeedId(post.pk);
-    setExpand(true);
+    console.log('Move to repost page - postId:', post.pk);
   };
 
   const handleEditPost = (postId: string) => async (e: React.MouseEvent) => {
-    e?.preventDefault();
-    e?.stopPropagation();
-    try {
-      await p?.openPostEditorPopup(postId);
-    } catch (error) {
-      console.error('Error editing post:', error);
-    }
+    console.log('Move to post edit page - postId:', postId);
+    // e?.preventDefault();
+    // e?.stopPropagation();
+    // try {
+    //   await p?.openPostEditorPopup(postId);
+    // } catch (error) {
+    //   console.error('Error editing post:', error);
+    // }
   };
 
   const href = post.space_pk
@@ -227,12 +210,20 @@ export function FeedContents({
 
   return (
     <div className="text-desc-text">
-      <p
+      <TiptapEditor
+        editable={false}
+        showToolbar={false}
+        content={sanitized}
+        className="border-none"
+        minHeight="50px"
+        maxHeight="200px"
+      />
+      {/* <p
         className="px-5 font-normal align-middle feed-content text-[15px]/[24px] tracking-[0.5px] text-c-wg-30"
         dangerouslySetInnerHTML={{ __html: sanitized }}
-      ></p>
+      ></p> */}
 
-      {urls.length > 0 && urls[0] !== '' && (
+      {/* {urls.length > 0 && urls[0] !== '' && (
         <div className="px-5">
           <div className="relative w-full max-h-80 aspect-video">
             <img
@@ -243,7 +234,7 @@ export function FeedContents({
             />
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

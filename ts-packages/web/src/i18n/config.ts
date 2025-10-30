@@ -39,6 +39,7 @@ import i18nSpaceSurveyComponent from '@/features/spaces/components/survey/i18n';
 import i18nSpaceSurveyReportComponent from '@/features/spaces/components/report/i18n';
 import i18nSpaceFileComponent from '@/features/spaces/files/components/space-file-editor/i18n';
 import i18nSpaceDiscussionEditorPage from '@/features/spaces/discussions/pages/creator/i18n';
+import i18nSpacePanelEditorPage from '@/features/spaces/panels/pages/creator/i18n';
 import { i18nSpaceTypeSelectModal } from '@/features/spaces/modals/space-type-selector-modal';
 import { i18nSpaceHome } from '@/app/spaces/[id]/space-home-i18n';
 import { i18nSpacePollEditor } from '@/features/spaces/polls/pages/creator/space-poll-editor-i18n';
@@ -52,6 +53,8 @@ import { i18nSpaceRecommendationEditor } from '@/features/spaces/recommendations
 import { i18nAdmin } from '@/app/admin/admin-page-i18n';
 import { i18nMemberships } from '@/features/membership/i18n';
 import { i18nHeader } from '@/components/header/i18n';
+import i18nListDrafts from '@/features/drafts/components/list-drafts/i18n';
+import { CreatePostPage } from '@/features/posts/components/create-post-page/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -109,10 +112,13 @@ Object.entries({
   SpacePollViewer: i18nSpacePollViewerPage,
   SpaceFileEditor: i18nSpaceFileEditor,
   SpaceDiscussionEditor: i18nSpaceDiscussionEditorPage,
+  SpacePanelEditor: i18nSpacePanelEditorPage,
   SpaceRecommendationEditor: i18nSpaceRecommendationEditor,
   Admin: i18nAdmin,
   Memberships: i18nMemberships,
   Nav: i18nHeader,
+  ListDrafts: i18nListDrafts,
+  CreatePostPage,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
@@ -128,8 +134,26 @@ i18next.on('missingKey', (lngs, ns, key) => {
   console.warn('[i18next] missingKey:', { lngs, ns, key });
 });
 
+// Detect browser language and normalize it
+const getBrowserLanguage = (): string => {
+  if (typeof window === 'undefined') return 'en';
+
+  const browserLang = navigator.language || (navigator as any).userLanguage;
+  // Extract the language code (e.g., 'ko' from 'ko-KR', 'en' from 'en-US')
+  const langCode = browserLang.split('-')[0].toLowerCase();
+
+  // Check if the detected language is supported, otherwise default to 'en'
+  return LANGUAGES.includes(langCode) ? langCode : 'en';
+};
+
+// Read saved language from localStorage, fallback to browser language
+const savedLanguage =
+  typeof window !== 'undefined'
+    ? localStorage.getItem('user-language') || getBrowserLanguage()
+    : 'en';
+
 i18next.init({
-  lng: 'en',
+  lng: savedLanguage,
   debug: true,
   resources,
   fallbackLng: {

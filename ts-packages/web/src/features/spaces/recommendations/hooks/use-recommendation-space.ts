@@ -9,7 +9,7 @@ import { SpaceRecommendationResponse } from '../types/recommendation-response';
 
 export function getOption(spacePk: string) {
   return {
-    queryKey: spaceKeys.recommendation(spacePk),
+    queryKey: spaceKeys.recommendations(spacePk),
     queryFn: async () => {
       const recommendation = await call(
         'GET',

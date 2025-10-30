@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { useUpdateTimeRangeMutation } from '../../hooks/use-update-time-range-mutation';
 import { useUpdateQuestionsMutation } from '../../hooks/use-update-questions-mutation';
 import { useUpdateResponseEditableMutation } from '../../hooks/use-update-response-editable-mutation';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 
 export class SpacePollEditorController {
   constructor(
@@ -58,11 +59,19 @@ export class SpacePollEditorController {
 
   handleSave = () => {
     this.editing.set(false);
-    this.updateQuestions.mutate({
-      spacePk: this.space.pk,
-      pollSk: this.poll.sk,
-      questions: this.questions.get(),
-    });
+
+    try {
+      this.updateQuestions.mutate({
+        spacePk: this.space.pk,
+        pollSk: this.poll.sk,
+        questions: this.questions.get(),
+      });
+
+      showSuccessToast(this.t('success_change_response'));
+    } catch (err) {
+      logger.error('save failed: ', err);
+      showErrorToast(this.t('failed_change_response'));
+    }
   };
 
   handleDiscard = () => {
@@ -84,12 +93,19 @@ export class SpacePollEditorController {
       `onChangeTimeRange called: start=${started_at}, end=${ended_at}`,
     );
 
-    this.updateTimeRange.mutate({
-      spacePk: this.space.pk,
-      pollSk: this.poll.sk,
-      started_at,
-      ended_at,
-    });
+    try {
+      this.updateTimeRange.mutate({
+        spacePk: this.space.pk,
+        pollSk: this.poll.sk,
+        started_at,
+        ended_at,
+      });
+
+      showSuccessToast(this.t('success_update_time'));
+    } catch (err) {
+      logger.error('update time range failed: ', err);
+      showErrorToast(this.t('failed_update_time'));
+    }
   };
 
   onChangeResponseEditable = (response_editable: boolean) => {
@@ -97,11 +113,18 @@ export class SpacePollEditorController {
       `onChangeResponseEditable called: response_editable=${response_editable}`,
     );
 
-    this.updateResponseEditable.mutate({
-      spacePk: this.space.pk,
-      pollSk: this.poll.sk,
-      response_editable,
-    });
+    try {
+      this.updateResponseEditable.mutate({
+        spacePk: this.space.pk,
+        pollSk: this.poll.sk,
+        response_editable,
+      });
+
+      showSuccessToast(this.t('success_change_response'));
+    } catch (err) {
+      logger.error('change response failed: ', err);
+      showErrorToast(this.t('failed_change_response'));
+    }
   };
 }
 

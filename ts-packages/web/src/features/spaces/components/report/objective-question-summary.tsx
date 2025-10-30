@@ -9,11 +9,31 @@ interface ObjectiveResponseProps {
   question: ObjectiveQuestionUnion;
   summary: BaseObjectiveSummary;
 }
+
+const colors = [
+  '#f97316',
+  '#22c55e',
+  '#6366f1',
+  '#274c9d',
+  '#2959c1',
+  '#2853af',
+];
+
+function shuffle<T>(arr: T[]): T[] {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
 export default function ObjectiveQuestionSummary({
   t,
   question,
   summary,
 }: ObjectiveResponseProps) {
+  const shuffledColors = shuffle(colors);
   const { answers, total_count } = summary;
 
   const options: Record<string, number> = Object.fromEntries(
@@ -39,8 +59,16 @@ export default function ObjectiveQuestionSummary({
       </div>
 
       <div className="flex flex-col gap-3">
-        <BarChart answers={options} total_count={total_count} />
-        <PieChart answers={options} total_count={total_count} />
+        <BarChart
+          answers={options}
+          total_count={total_count}
+          colors={shuffledColors}
+        />
+        <PieChart
+          answers={options}
+          total_count={total_count}
+          colors={shuffledColors}
+        />
       </div>
     </div>
   );
@@ -49,8 +77,9 @@ export default function ObjectiveQuestionSummary({
 interface BarChartProps {
   answers: Record<string, number>; // (Option Label, Count)
   total_count: number;
+  colors: string[];
 }
-export function BarChart({ answers, total_count }: BarChartProps) {
+export function BarChart({ answers, total_count, colors }: BarChartProps) {
   return (
     <>
       {Object.entries(answers).map(([label, count], idx) => (
@@ -61,10 +90,13 @@ export function BarChart({ answers, total_count }: BarChartProps) {
           >
             {label}
           </div>
-          <div className="overflow-hidden flex-1 h-4 rounded-full bg-neutral-700">
+          <div className="overflow-hidden flex-1 h-4 rounded-full bg-neutral-300">
             <div
-              className="h-full rounded-full duration-500 ease-out bg-neutral-400 transition-[width]"
-              style={{ width: `${(count / total_count) * 100}%` }}
+              className="h-full rounded-full transition-[width] duration-500 ease-out"
+              style={{
+                width: `${(count / total_count) * 100}%`,
+                backgroundColor: colors[idx % colors.length],
+              }}
             ></div>
           </div>
           <div className="text-sm text-left w-[80px] text-neutral-400">
@@ -90,9 +122,10 @@ const COLORS = ['#a1a1a1', '#737373'];
 interface PieChartProps {
   answers: Record<string, number>; // (Option Label, Count)
   total_count: number;
+  colors: string[];
 }
 
-function PieChart({ answers, total_count }: PieChartProps) {
+function PieChart({ answers, total_count, colors }: PieChartProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
 
@@ -188,7 +221,7 @@ function PieChart({ answers, total_count }: PieChartProps) {
             }}
           >
             {data.map((_, i) => (
-              <Cell key={i} fill={COLORS[i % COLORS.length]} />
+              <Cell key={i} fill={colors[i % COLORS.length]} />
             ))}
           </Pie>
         </RechartsPieChart>

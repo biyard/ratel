@@ -4,35 +4,17 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import LocaleModal from '../modal/locale-modal';
 import { useTranslation } from 'react-i18next';
 import ThemeModal from '../modal/theme-modal';
-import { useApiCall } from '@/lib/api/use-send';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { ChangeThemeRequest } from '@/lib/api/models/themes/theme';
-import { useSuspenseUserInfo } from '@/lib/api/hooks/users';
-import { ThemeType } from '@/lib/api/models/user';
-import { useQueryClient } from '@tanstack/react-query';
-import { QK_USERS_GET_INFO } from '@/constants';
 import SpecBox from '@/app/(social)/_components/spec-box';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function MySettings() {
-  const { post } = useApiCall();
-  const { data } = useSuspenseUserInfo();
   const { t, i18n } = useTranslation('Settings');
   const popup = usePopup();
   const locale = i18n.language as 'en' | 'ko';
-  const qc = useQueryClient();
-
   const actionText = locale === 'ko' ? 'Korean' : 'English';
+  const { theme, setTheme } = useTheme();
   const currentThemeLabel =
-    data?.theme === ThemeType.Light
-      ? 'Light'
-      : data?.theme === ThemeType.Dark
-        ? 'Dark'
-        : 'System';
-
-  const changeTheme = async (theme: 'light' | 'dark' | 'system') => {
-    const value = theme === 'light' ? 1 : theme === 'dark' ? 2 : 3;
-    await post(ratelApi.themes.changeTheme(), ChangeThemeRequest(value));
-  };
+    theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'System';
 
   const handleChangeLanguage = () => {
     popup
@@ -40,6 +22,7 @@ export default function MySettings() {
         <LocaleModal
           initialLocale={locale}
           onSave={(newLocale) => {
+            localStorage.setItem('user-language', newLocale);
             document.cookie = `locale=${newLocale}; path=/; max-age=31536000; samesite=lax`;
             i18n.changeLanguage(newLocale);
             popup.close();
@@ -51,33 +34,21 @@ export default function MySettings() {
   };
 
   const handleChangeTheme = () => {
-    const initialTheme: 'light' | 'dark' | 'system' =
-      data?.theme === ThemeType.Light
-        ? 'light'
-        : data?.theme === ThemeType.Dark
-          ? 'dark'
-          : 'system';
-    const prevTheme = initialTheme;
-
+    const prevTheme = theme;
     popup
       .open(
         <ThemeModal
-          initialTheme={initialTheme}
-          onPreview={async (newTheme) => {
-            await changeTheme(newTheme);
-            await qc.invalidateQueries({ queryKey: [QK_USERS_GET_INFO] });
+          initialTheme={theme}
+          onPreview={(newTheme) => {
+            setTheme(newTheme);
           }}
-          onSave={async (newTheme) => {
-            await changeTheme(newTheme);
-            await qc.invalidateQueries({ queryKey: [QK_USERS_GET_INFO] });
+          onSave={(newTheme) => {
+            setTheme(newTheme);
             popup.close();
           }}
           onCancel={() => {
-            changeTheme(prevTheme)
-              .then(() =>
-                qc.invalidateQueries({ queryKey: [QK_USERS_GET_INFO] }),
-              )
-              .finally(() => popup.close());
+            setTheme(prevTheme);
+            popup.close();
           }}
         />,
       )
@@ -95,12 +66,14 @@ export default function MySettings() {
             left_text={t('language')}
             action_text={actionText}
             onClick={handleChangeLanguage}
+            data-pw="language-setting-box"
           />
           {
             <SpecBox
               left_text="Theme"
               action_text={currentThemeLabel}
               onClick={handleChangeTheme}
+              data-pw="theme-setting-box"
             />
           }
         </div>

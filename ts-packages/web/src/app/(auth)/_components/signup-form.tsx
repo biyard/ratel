@@ -4,9 +4,6 @@ import FileUploader from '@/features/spaces/files/components/file-uploader';
 import { Button } from '@/components/ui/button';
 import { useTranslation, Trans } from 'react-i18next';
 import { useState } from 'react';
-import { apiFetch } from '@/lib/api/apiFetch';
-import { config } from '@/config';
-import { ratelApi } from '@/lib/api/ratel_api';
 import {
   validateEmail,
   validateNickname,
@@ -15,44 +12,10 @@ import {
 import { sha3 } from '@/lib/utils';
 import Footer from './footer';
 import LabelInput from './label-input';
+import { sendVerificationCode, verifyCode } from '@/lib/api/ratel/auth.v3';
 
 const defaultImage =
   'https://metadata.ratel.foundation/ratel/default-profile.png';
-
-function sendVerificationCode(email: string) {
-  return apiFetch<void>(
-    `${config.api_url}${ratelApi.users.sendVerificationCode()}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        send_verification_code: {
-          email,
-        },
-      }),
-    },
-  );
-}
-
-function verifyCode(email: string, code: string) {
-  return apiFetch<void>(
-    `${config.api_url}${ratelApi.users.sendVerificationCode()}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        verify: {
-          email,
-          value: code,
-        },
-      }),
-    },
-  );
-}
 
 const Warning = {
   Email: 'Email',
