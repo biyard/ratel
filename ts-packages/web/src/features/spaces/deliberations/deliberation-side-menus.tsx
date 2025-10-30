@@ -29,8 +29,7 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
   {
     Icon: Vote,
     to: (space) => {
-      const pollPk = `SPACE_POLL#${space.pk.split('#')[1]}`;
-      return route.spacePollById(space.pk, pollPk);
+      return route.spacePolls(space.pk);
     },
     label: 'menu_poll',
   },
