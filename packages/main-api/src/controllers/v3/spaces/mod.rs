@@ -15,6 +15,7 @@ pub mod get_space;
 #[cfg(test)]
 pub mod tests;
 
+pub mod artworks;
 pub use create_space::*;
 pub use delete_space::*;
 pub use dto::*;

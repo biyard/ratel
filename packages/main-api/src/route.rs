@@ -33,6 +33,7 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Erro
         bot,
         dynamo_client,
         ses_client,
+        metadata_s3_client,
         ..
     } = deps;
 
@@ -41,6 +42,7 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Erro
             dynamo_client.clone(),
             ses_client.clone(),
             pool.clone(),
+            metadata_s3_client.clone(),
         ))
         .nest(
             "/v3",
@@ -49,6 +51,7 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Erro
                 dynamo_client: dynamo_client.clone(),
                 ses_client: ses_client.clone(),
                 bot: bot.clone(),
+                s3: metadata_s3_client.clone(),
             })?,
         )
         .nest(
@@ -57,6 +60,7 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Erro
                 dynamo_client.clone(),
                 ses_client.clone(),
                 pool.clone(),
+                metadata_s3_client.clone(),
             ))?,
         )
         .layer(
