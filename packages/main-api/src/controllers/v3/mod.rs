@@ -1,3 +1,4 @@
+use crate::utils::aws::S3Client;
 use crate::{AppState, Error, models::user::User, types::*};
 use axum::extract::State;
 use bdk::prelude::*;
@@ -131,6 +132,7 @@ pub struct RouteDeps {
     pub ses_client: SesClient,
     pub pool: bdk::prelude::sqlx::PgPool,
     pub bot: Option<ArcTelegramBot>,
+    pub s3: S3Client,
 }
 
 pub fn route(
@@ -139,6 +141,7 @@ pub fn route(
         ses_client,
         pool,
         bot,
+        s3,
     }: RouteDeps,
 ) -> Result<Router> {
     Ok(Router::new()
@@ -218,6 +221,10 @@ pub fn route(
                             "/discussions",
                             crate::controllers::v3::spaces::discussions::route(),
                         )
+                        .nest(
+                            "/artworks",
+                            crate::controllers::v3::spaces::artworks::route(),
+                        )
                         .nest("/polls", crate::controllers::v3::spaces::polls::route())
                         .nest(
                             "/sprint-leagues",
@@ -264,5 +271,5 @@ pub fn route(
                 .route("/multiparts", get(get_put_multi_object_uri))
                 .route("/multiparts/complete", post(complete_multipart_upload)),
         )
-        .with_state(AppState::new(dynamo_client, ses_client, pool)))
+        .with_state(AppState::new(dynamo_client, ses_client, pool, s3)))
 }

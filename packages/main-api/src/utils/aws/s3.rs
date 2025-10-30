@@ -1,10 +1,11 @@
+use crate::{Error, Result};
 use aws_config::Region;
 use aws_sdk_s3::{
     Client, Config,
     config::Credentials,
+    primitives::ByteStream,
     types::{Delete, ObjectIdentifier},
 };
-use crate::{Error, Result};
 
 use crate::config;
 
@@ -65,6 +66,27 @@ impl S3Client {
         }
     }
 
+    pub async fn upload_object(
+        &self,
+        key: &str,
+        data: Vec<u8>,
+        content_type: &str,
+    ) -> Result<String> {
+        self.client
+            .put_object()
+            .bucket(&self.bucket_name)
+            .key(key)
+            .body(ByteStream::from(data))
+            .content_type(content_type)
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to upload object {}", e.to_string());
+                Error::AssetError(e.to_string())
+            })?;
+        let url = format!("https://{}/{}", &self.bucket_name, key);
+        Ok(url)
+    }
     pub async fn get_object_bytes(&self, key: &str) -> Result<S3Object> {
         let res = self
             .client
