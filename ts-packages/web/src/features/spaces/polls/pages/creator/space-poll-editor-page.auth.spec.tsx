@@ -73,19 +73,25 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
     spaceUrl = page.url();
   });
 
-  test('[SPEP-002] Navigate to Poll editor page', async () => {
+  test('[SPEP-002] Navigate to Polls page and create a poll', async () => {
     await page.goto(spaceUrl);
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(3000);
 
-    // Extract space ID and construct poll URL
-    const urlParts = spaceUrl.split('/');
-    const spaceId = urlParts[urlParts.length - 1].split('?')[0];
-    const pollPk = `SPACE_POLL#${decodeURIComponent(spaceId).split('#')[1]}`;
-    pollUrl = `/spaces/${encodeURIComponent(spaceId)}/polls/${encodeURIComponent(pollPk)}`;
+    // Click on "Polls" in the side menu to go to polls list
+    await page.getByRole('link', { name: 'Polls' }).click();
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
 
-    // Navigate to poll page
-    await navigateToPoll();
+    // Click "Create Poll" button
+    const createPollButton = page.getByRole('button', { name: 'Create Poll' });
+    await expect(createPollButton).toBeVisible({ timeout: 10000 });
+    await createPollButton.click();
 
+    // Wait for navigation to the new poll page
+    await page.waitForURL(/\/spaces\/[^/]+\/polls\/[^/]+/, { timeout: 15000 });
+    pollUrl = page.url();
+
+    // Verify we're on the poll editor page
     const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
     await expect(editButton).toBeVisible({ timeout: 10000 });
   });
