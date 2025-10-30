@@ -160,14 +160,20 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
     await navigateToPoll();
 
     const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
+    await expect(editButton).toBeVisible({ timeout: 10000 });
     await editButton.click();
     await page.waitForTimeout(1000);
 
     const saveButton = page.locator('[data-pw="poll-editor-save-btn"]');
+    await expect(saveButton).toBeVisible({ timeout: 5000 });
     await saveButton.click();
-    await page.waitForTimeout(2000);
 
-    await expect(editButton).toBeVisible({ timeout: 5000 });
+    // Wait for the save operation to complete
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(3000);
+
+    // Edit button should be visible again after save
+    await expect(editButton).toBeVisible({ timeout: 10000 });
   });
 
   test('[SPEP-008] Discard changes in edit mode', async () => {

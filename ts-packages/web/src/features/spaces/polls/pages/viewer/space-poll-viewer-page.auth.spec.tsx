@@ -106,7 +106,7 @@ test.describe.serial('[SpacePollViewerPage] Authenticated Users', () => {
 
     // Click Edit button
     const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
-    await expect(editButton).toBeVisible({ timeout: 5000 });
+    await expect(editButton).toBeVisible({ timeout: 10000 });
     await editButton.click();
 
     // Should now be in editing mode
@@ -126,10 +126,13 @@ test.describe.serial('[SpacePollViewerPage] Authenticated Users', () => {
 
     // Save the poll
     await saveButton.click();
-    await page.waitForTimeout(2000);
 
-    // Should return to view mode
-    await expect(editButton).toBeVisible({ timeout: 5000 });
+    // Wait for the save operation to complete
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(3000);
+
+    // Should return to view mode - edit button visible again
+    await expect(editButton).toBeVisible({ timeout: 10000 });
   });
 
   test('[SPVP-005] Admin sees response_editable checkbox', async () => {
