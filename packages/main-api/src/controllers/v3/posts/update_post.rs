@@ -27,9 +27,9 @@ pub enum UpdatePostRequest {
         title: String,
         content: String,
     },
-    // Image {
-    //     images: Vec<String>,
-    // },
+    Image {
+        images: Vec<String>,
+    },
     Info {
         visibility: Visibility,
     },
@@ -72,6 +72,15 @@ pub async fn update_post_handler(
                 updater
                     .with_title(title)
                     .with_html_contents(content)
+                    .transact_write_item(),
+            ]
+        }
+        UpdatePostRequest::Image { images } => {
+            post.urls = images.clone();
+            vec![
+                updater
+                    .with_urls(images)
+                    .with_updated_at(now)
                     .transact_write_item(),
             ]
         }
