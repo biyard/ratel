@@ -14,9 +14,11 @@ export function SpacePollsEditorPage({ spacePk }: SpacePathProps) {
         <PollList
           t={ctrl.t}
           polls={ctrl.polls.get()}
+          bookmark={ctrl.bookmark.get()}
           canEdit={ctrl.space.isAdmin()}
           createPoll={ctrl.handleCreatePoll}
           enterPoll={ctrl.enterPoll}
+          loadMore={ctrl.loadMore}
         />
       </Col>
     </>

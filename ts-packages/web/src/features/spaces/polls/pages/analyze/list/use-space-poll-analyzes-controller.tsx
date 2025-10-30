@@ -9,6 +9,7 @@ import { NavigateFunction, useNavigate } from 'react-router';
 import { route } from '@/route';
 import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
+import { call } from '@/lib/api/ratel/call';
 
 export class SpacePollAnalyzesController {
   constructor(
@@ -23,6 +24,23 @@ export class SpacePollAnalyzesController {
 
   enterPoll = (pollPk: string) => {
     this.navigate(route.spaceAnalyzePollById(this.spacePk, pollPk));
+  };
+
+  loadMore = async () => {
+    const bm = this.bookmark.get();
+    if (!bm) return;
+
+    const next = await call(
+      'GET',
+      `/v3/spaces/${encodeURIComponent(this.spacePk)}/polls?bookmark=${encodeURIComponent(
+        bm,
+      )}`,
+    );
+
+    const page = new ListPollResponse(next);
+    const prev = this.polls.get() ?? [];
+    this.polls.set([...prev, ...page.polls]);
+    this.bookmark.set(page.bookmark ?? null);
   };
 }
 
