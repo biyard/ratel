@@ -14,7 +14,7 @@ export default function SpaceTypeItem({
   selected,
   onClick,
 }: SpaceTypeItem) {
-  const { t } = useTranslation('SpaceForms');
+  const { t } = useTranslation('SpaceForm');
 
   if (experiment && !config.experiment) {
     return null;

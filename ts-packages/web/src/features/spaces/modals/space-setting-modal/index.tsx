@@ -24,7 +24,7 @@ export default function SpaceBoosterConfigModal({
   spaceType,
 }: SpaceBoosterConfigModalProps) {
   const ctrl = useSpaceSettingModalController(postId, spaceType);
-  const { t } = useTranslation('SpaceForms');
+  const { t } = useTranslation('SpaceForm');
 
   return (
     <div className="w-full max-w-[95vw] max-tablet:w-fit">

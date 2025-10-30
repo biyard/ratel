@@ -3,7 +3,6 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import enSignIn from './en/SignIn.json';
 import enSignup from './en/Signup.json';
-import enSpaceForms from './en/SpaceForms.json';
 import enHome from './en/Home.json';
 import enTeam from './en/Team.json';
 import enSprintSpace from './en/SprintSpace.json';
@@ -20,7 +19,6 @@ import enEditArtworkPost from './en/EditArtworkPost.json';
 
 import koSignIn from './ko/SignIn.json';
 import koSignup from './ko/Signup.json';
-import koSpaceForms from './ko/SpaceForms.json';
 import koHome from './ko/Home.json';
 import koTeam from './ko/Team.json';
 import koSprintSpace from './ko/SprintSpace.json';
@@ -55,6 +53,7 @@ import { i18nMemberships } from '@/features/membership/i18n';
 import { i18nHeader } from '@/components/header/i18n';
 import i18nListDrafts from '@/features/drafts/components/list-drafts/i18n';
 import { CreatePostPage } from '@/features/posts/components/create-post-page/i18n';
+import { i18nSpaceForm } from '@/features/spaces/components/space-form-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -62,7 +61,6 @@ export const resources = {
   en: {
     SignIn: enSignIn,
     Signup: enSignup,
-    SpaceForms: enSpaceForms,
     Home: enHome,
     Team: enTeam,
     SprintSpace: enSprintSpace,
@@ -80,7 +78,6 @@ export const resources = {
   ko: {
     SignIn: koSignIn,
     Signup: koSignup,
-    SpaceForms: koSpaceForms,
     Home: koHome,
     Team: koTeam,
     SprintSpace: koSprintSpace,
@@ -119,6 +116,7 @@ Object.entries({
   Nav: i18nHeader,
   ListDrafts: i18nListDrafts,
   CreatePostPage,
+  SpaceForm: i18nSpaceForm,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
