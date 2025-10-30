@@ -8,6 +8,7 @@ import {
 import { SpaceType } from './space-type';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
 import { BoosterType } from './booster-type';
+import FileModel from '../files/types/file';
 
 export class Space {
   readonly permissions: TeamGroupPermissions;
@@ -37,6 +38,7 @@ export class Space {
     public publishState: SpacePublishState,
 
     public booster: BoosterType | undefined,
+    public files: FileModel[] | undefined,
 
     permissions: bigint,
   ) {
@@ -82,6 +84,7 @@ export class Space {
       json.publish_state,
 
       json.booster,
+      json.files,
 
       json.permissions,
     );

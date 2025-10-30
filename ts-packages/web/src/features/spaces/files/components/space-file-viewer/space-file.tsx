@@ -24,21 +24,21 @@ export default function SpaceFile({ file, onclick }: SpaceFileProps) {
       onClick={onclick}
     >
       <div className="[&>svg]:size-9">
-        {file.ext === FileExtension.JPG ? (
+        {file.ext.toLowerCase() === FileExtension.JPG.toLowerCase() ? (
           <Jpg />
-        ) : file.ext === FileExtension.PNG ? (
+        ) : file.ext.toLowerCase() === FileExtension.PNG.toLowerCase() ? (
           <Png />
-        ) : file.ext === FileExtension.PDF ? (
+        ) : file.ext.toLowerCase() === FileExtension.PDF.toLowerCase() ? (
           <Pdf />
-        ) : file.ext === FileExtension.ZIP ? (
+        ) : file.ext.toLowerCase() === FileExtension.ZIP.toLowerCase() ? (
           <Zip />
-        ) : file.ext === FileExtension.WORD ? (
+        ) : file.ext.toLowerCase() === FileExtension.WORD.toLowerCase() ? (
           <Word />
-        ) : file.ext === FileExtension.PPTX ? (
+        ) : file.ext.toLowerCase() === FileExtension.PPTX.toLowerCase() ? (
           <Pptx />
-        ) : file.ext === FileExtension.MP4 ? (
+        ) : file.ext.toLowerCase() === FileExtension.MP4.toLowerCase() ? (
           <MP4 />
-        ) : file.ext === FileExtension.MOV ? (
+        ) : file.ext.toLowerCase() === FileExtension.MOV.toLowerCase() ? (
           <MOV />
         ) : (
           <Excel />
