@@ -26,7 +26,7 @@ import { BoosterType } from '@/features/spaces/types/booster-type';
 import PostResponse from '@/features/posts/dto/list-post-response';
 import { useLikePostMutation } from '@/features/posts/hooks/use-like-post-mutation';
 import { SpaceType } from '@/features/spaces/types/space-type';
-import { TiptapEditor } from './text-editor';
+import { PostEditor } from '@/features/posts/components/post-editor';
 
 export interface FeedCardProps {
   post: PostResponse;
@@ -208,35 +208,43 @@ export function FeedContents({
     setSanitized(DOMPurify.sanitize(contents));
   }, [contents]);
 
+  const url = urls.length > 0 ? urls[0] : null;
   return (
-    <div className="text-desc-text">
-      <TiptapEditor
-        editable={false}
-        showToolbar={false}
-        content={sanitized}
-        className="border-none"
-        minHeight="50px"
-        maxHeight="200px"
-      />
-      {/* <p
-        className="px-5 font-normal align-middle feed-content text-[15px]/[24px] tracking-[0.5px] text-c-wg-30"
-        dangerouslySetInnerHTML={{ __html: sanitized }}
-      ></p> */}
-
-      {/* {urls.length > 0 && urls[0] !== '' && (
-        <div className="px-5">
-          <div className="relative w-full max-h-80 aspect-video">
-            <img
-              src={urls[0]}
-              alt="Uploaded image"
-              className="object-cover w-full rounded-[8px]"
-              sizes="100vw"
-            />
-          </div>
-        </div>
-      )} */}
-    </div>
+    <PostEditor
+      editable={false}
+      showToolbar={false}
+      content={sanitized}
+      className="border-none"
+      minHeight="50px"
+      maxHeight="200px"
+      url={url}
+    />
   );
+  // return (
+  //   <div className="text-desc-text">
+  //     <TiptapEditor
+  //       editable={false}
+  //       showToolbar={false}
+  //       content={sanitized}
+  //       className="border-none"
+  //       minHeight="50px"
+  //       maxHeight="200px"
+  //     />
+
+  //     {urls.length > 0 && urls[0] !== '' && (
+  //       <div className="px-5">
+  //         <div className="relative w-full max-h-80 aspect-video">
+  //           <img
+  //             src={urls[0]}
+  //             alt="Uploaded image"
+  //             className="object-cover w-full rounded-[8px]"
+  //             sizes="100vw"
+  //           />
+  //         </div>
+  //       </div>
+  //     )}
+  //   </div>
+  // );
 }
 export function IconText({
   children,

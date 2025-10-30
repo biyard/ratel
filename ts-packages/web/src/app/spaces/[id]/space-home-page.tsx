@@ -10,6 +10,9 @@ export function SpaceHomePage() {
         htmlContent={ctrl.space.content}
         canEdit={ctrl.isAdmin}
         onContentChange={ctrl.handleChange}
+        url={ctrl.image.get()}
+        onImageUpload={ctrl.handleImageUpload}
+        onRemoveImage={ctrl.handleRemoveImage}
       />
     </>
   );

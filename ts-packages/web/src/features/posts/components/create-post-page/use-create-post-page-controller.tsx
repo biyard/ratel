@@ -17,6 +17,7 @@ import { SPACE_DEFINITIONS } from '@/features/spaces/types/space-definition';
 import { stripHtml } from '@/lib/string-filter-utils';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { useCreateSpaceMutation } from '@/features/spaces/hooks/use-create-space-mutation';
+import { useUpdateDraftImageMutation } from '../../hooks/use-update-draft-image-mutation';
 
 const TITLE_MAX_LENGTH = 50;
 const AUTO_SAVE_DELAY = 5000; // 5 seconds
@@ -55,6 +56,9 @@ export class CreatePostPageController {
     >['mutateAsync'],
     public publishDraft: ReturnType<
       typeof usePublishDraftMutation
+    >['mutateAsync'],
+    public updateDraftImage: ReturnType<
+      typeof useUpdateDraftImageMutation
     >['mutateAsync'],
     public navigate: ReturnType<typeof useNavigate>,
     public t: ReturnType<typeof useCreatePostPageI18n>,
@@ -128,11 +132,14 @@ export class CreatePostPageController {
             body: blob,
           });
           const uploadedUrl = res.uris[0];
+          console.log('Uploaded image URL:', uploadedUrl, postPkValue);
+          if (uploadedUrl) {
+            await this.updateDraftImage({
+              postPk: postPkValue,
+              image: uploadedUrl,
+            });
+          }
 
-          /* await this.updateDraftImage({
-           *   postPk: postPkValue,
-           *   image: uploadedUrl,
-           * }); */
           this.image.set(uploadedUrl);
         }
       }
@@ -143,7 +150,12 @@ export class CreatePostPageController {
   };
 
   handleRemoveImage = () => {
-    this.image.set(null);
+    this.updateDraftImage({
+      postPk: this.postPk.get(),
+      image: undefined,
+    }).then(() => {
+      this.image.set(null);
+    });
   };
 
   get selectedSpace() {
@@ -322,6 +334,7 @@ export function useCreatePostPageController() {
   const { mutateAsync: updateDraft } = useUpdateDraftMutation();
   const { mutateAsync: publishDraft } = usePublishDraftMutation();
   const { mutateAsync: createSpace } = useCreateSpaceMutation();
+  const { mutateAsync: updateDraftImage } = useUpdateDraftImageMutation();
 
   const controller = new CreatePostPageController(
     new State(postPk),
@@ -344,6 +357,7 @@ export function useCreatePostPageController() {
     createPost,
     updateDraft,
     publishDraft,
+    updateDraftImage,
     navigate,
     t,
     createSpace,

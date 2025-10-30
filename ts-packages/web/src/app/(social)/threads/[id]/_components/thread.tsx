@@ -1,7 +1,7 @@
 import { PostDetailResponse } from '@/features/posts/dto/post-detail-response';
 import Card from '@/components/card';
 import Post, { PostType } from '@/features/posts/types/post';
-import { TiptapEditor } from '@/components/text-editor';
+import { PostEditor } from '@/features/posts/components/post-editor';
 
 export type ThreadPostProps = {
   feed: PostDetailResponse;
@@ -24,13 +24,13 @@ export default function ThreadPost({ feed }: ThreadPostProps) {
 
 function ArtworkPost({ post }: { post: Post }) {
   // const url = post.urls && post.urls.length > 0 ? post.urls[0] : null;
-
   return (
     <div className="w-full h-full">
-      <TiptapEditor
+      <PostEditor
         content={post.html_contents}
         editable={false}
         showToolbar={false}
+        url={post.urls.length > 0 ? post.urls[0] : null}
       />
     </div>
   );
@@ -41,10 +41,11 @@ function GeneralPost({ post }: { post: Post }) {
 
   return (
     <div className="flex flex-col gap-5 w-full">
-      <TiptapEditor
+      <PostEditor
         content={post.html_contents}
         editable={false}
         showToolbar={false}
+        url={post.urls.length > 0 ? post.urls[0] : null}
       />
     </div>
   );
