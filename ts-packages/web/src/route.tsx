@@ -9,6 +9,8 @@ export const route = {
   myPosts: () => '/my-posts',
   createPost: (postPk?: string) =>
     postPk ? `/posts/new?post-pk=${encodeURIComponent(postPk)}` : '/posts/new',
+  createArtwork: (postPk?: string) =>
+    `/artworks/new?post-pk=${encodeURIComponent(postPk)}`,
   drafts: () => '/drafts',
   draftEdit: (postPk: string) => `/drafts/${encodeURIComponent(postPk)}/edit`,
   teams: () => '/teams',
@@ -73,10 +75,10 @@ export const route = {
 
   spaceNftPreview: (spacePk: string) =>
     `/spaces/${encodeURIComponent(spacePk)}/nfts`,
-  spaceNftAttributes: (spacePk: string) =>
-    `/spaces/${encodeURIComponent(spacePk)}/nfts/attributes`,
   spaceNftArtTwin: (spacePk: string) =>
     `/spaces/${encodeURIComponent(spacePk)}/nfts/art-twin`,
+  spaceNftHistory: (spacePk: string) =>
+    `/spaces/${encodeURIComponent(spacePk)}/nfts/history`,
   // Admin routes
   admin: () => '/admin',
   adminMemberships: () => '/admin/memberships',

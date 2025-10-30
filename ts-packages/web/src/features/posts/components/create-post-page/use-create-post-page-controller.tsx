@@ -172,7 +172,7 @@ export class CreatePostPageController {
     try {
       const { space_pk } = await this.createSpace({
         postPk,
-        spaceType: this.selectedSpace.type,
+        spaceType,
       });
 
       this.navigate(route.spaceByType(spaceType, space_pk));

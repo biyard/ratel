@@ -53,6 +53,7 @@ import { i18nMemberships } from '@/features/membership/i18n';
 import { i18nHeader } from '@/components/header/i18n';
 import i18nListDrafts from '@/features/drafts/components/list-drafts/i18n';
 import { CreatePostPage } from '@/features/posts/components/create-post-page/i18n';
+import { CreateArtworkPage } from '@/features/posts/components/create-artwork-page/i18n';
 import { i18nSpaceForm } from '@/features/spaces/components/space-form-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
@@ -116,6 +117,7 @@ Object.entries({
   Nav: i18nHeader,
   ListDrafts: i18nListDrafts,
   CreatePostPage,
+  CreateArtworkPage,
   SpaceForm: i18nSpaceForm,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
