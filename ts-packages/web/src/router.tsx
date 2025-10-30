@@ -41,6 +41,7 @@ import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
 import SpacePanelPage from './app/spaces/[id]/panels/space-panel-page';
 
 import CreatePostPage from './features/posts/components/create-post-page';
+import SpaceArtNftPage from './app/spaces/[id]/nfts/space-art-nft-page';
 
 export const routes = createBrowserRouter([
   {
@@ -241,6 +242,27 @@ export const routes = createBrowserRouter([
             path: 'recommendations',
             Component: SpaceRecommendationPage,
           }, // End of Recommendation Feature
+          {
+            id: 'space-nft-page',
+            path: 'nfts',
+            children: [
+              {
+                id: 'space-nft-preview-feature',
+                path: '',
+                Component: SpaceArtNftPage,
+              },
+              {
+                id: 'space-nft-attributes-feature',
+                path: 'attributes',
+                Component: SpaceArtNftPage,
+              },
+              {
+                id: 'space-nft-art-twin-feature',
+                path: 'art-twin',
+                Component: SpaceArtNftPage,
+              },
+            ],
+          },
         ],
       }, // End of Space Layout
       {

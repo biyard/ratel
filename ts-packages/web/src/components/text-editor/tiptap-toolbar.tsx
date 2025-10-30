@@ -40,8 +40,6 @@ export const TiptapToolbar = ({
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [isInTable, setIsInTable] = useState(false);
 
-  if (!editor) return null;
-
   const features = { ...DEFAULT_ENABLED_FEATURES, ...enabledFeatures };
 
   // Check if cursor is inside a table
@@ -153,6 +151,8 @@ export const TiptapToolbar = ({
     // Reset input
     event.target.value = '';
   };
+
+  if (!editor) return null;
 
   return (
     <div className={cn('relative border-b border-border bg-card', className)}>

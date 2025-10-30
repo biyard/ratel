@@ -71,6 +71,12 @@ export const route = {
   spaceSprintLeagues: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/sprint-leagues`,
 
+  spaceNftPreview: (spacePk: string) =>
+    `/spaces/${encodeURIComponent(spacePk)}/nfts`,
+  spaceNftAttributes: (spacePk: string) =>
+    `/spaces/${encodeURIComponent(spacePk)}/nfts/attributes`,
+  spaceNftArtTwin: (spacePk: string) =>
+    `/spaces/${encodeURIComponent(spacePk)}/nfts/art-twin`,
   // Admin routes
   admin: () => '/admin',
   adminMemberships: () => '/admin/memberships',
