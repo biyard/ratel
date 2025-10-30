@@ -64,8 +64,8 @@ export default function SpaceHTMLContentEditor({
   canEdit: boolean;
   enableEnterToSave?: boolean;
   onContentChange: (newContent: string) => void;
-  onImageUpload: (imageUrl: string) => Promise<void>;
-  onRemoveImage: () => Promise<void>;
+  onImageUpload?: (imageUrl: string) => Promise<void>;
+  onRemoveImage?: () => Promise<void>;
 }) {
   const [isEditing, setEditing] = useState<boolean>(false);
   const [content, setContent] = useState<string>(htmlContent);
