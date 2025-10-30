@@ -11,6 +11,10 @@ export function getPollSpace(spacePk: string): Promise<PollSpaceResponse> {
   return call('GET', `/v3/spaces/${encodeURIComponent(spacePk)}/polls`);
 }
 
+export function createPollSpace(spacePk: string) {
+  return call('POST', `/v3/spaces/${encodeURIComponent(spacePk)}/polls`, {});
+}
+
 export function updatePollSpace(
   spacePk: string,
   title: string,
