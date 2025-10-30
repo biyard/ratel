@@ -14,11 +14,14 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { UserResponse } from '@/lib/api/ratel/users.v3';
 import { usePollResponseMutation } from '../../hooks/use-poll-response-mutation';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import { route } from '@/route';
+import { NavigateFunction, useNavigate } from 'react-router';
 
 export class SpacePollViewerController {
   constructor(
     public space: Space,
     public poll: Poll,
+    public navigate: NavigateFunction,
     public t: TFunction<'SpaceSurvey', undefined>,
     public answers: State<Record<number, SurveyAnswer>>,
     public user: UserResponse | null,
@@ -34,6 +37,10 @@ export class SpacePollViewerController {
     const currentAnswers = this.answers.get();
     currentAnswers[questionIdx] = answer;
     this.answers.set({ ...currentAnswers });
+  };
+
+  handleBack = () => {
+    this.navigate(route.spacePolls(this.space.pk));
   };
 
   handleSubmit = () => {
@@ -64,6 +71,7 @@ export function useSpacePollViewerController(spacePk, pollPk) {
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
   const { data: user } = useUserInfo();
+  const navigator = useNavigate();
 
   // mutations
   const usePollResponse = usePollResponseMutation();
@@ -83,6 +91,7 @@ export function useSpacePollViewerController(spacePk, pollPk) {
   return new SpacePollViewerController(
     space,
     poll,
+    navigator,
     t,
     new State(answers),
     user,

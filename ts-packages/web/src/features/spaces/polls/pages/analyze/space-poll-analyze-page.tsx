@@ -3,6 +3,8 @@ import { SpacePollPathProps } from '../space-poll-path-props';
 import { useSpacePollAnalyzeController } from './space-poll-analyze-controller';
 import { Col } from '@/components/ui/col';
 import Report from '@/features/spaces/components/report';
+import { Button } from '@/components/ui/button';
+import { useTranslation } from 'react-i18next';
 
 export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(
@@ -10,6 +12,7 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
   );
 
   const ctrl = useSpacePollAnalyzeController(spacePk, pollPk);
+  const { t } = useTranslation('SpacePollAnalyze');
 
   return (
     <Col>
@@ -21,6 +24,12 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
         summaries={ctrl.summary.summaries}
         handleDownloadExcel={ctrl.handleDownloadExcel}
       />
+
+      <div className="flex flex-row w-full justify-end">
+        <Button className="w-fit" onClick={ctrl.handleBack}>
+          {t('btn_back')}
+        </Button>
+      </div>
     </Col>
   );
 }

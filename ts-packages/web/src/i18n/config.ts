@@ -43,6 +43,7 @@ import i18nSpacePanelEditorPage from '@/features/spaces/panels/pages/creator/i18
 import { i18nSpaceTypeSelectModal } from '@/features/spaces/modals/space-type-selector-modal';
 import { i18nSpaceHome } from '@/app/spaces/[id]/space-home-i18n';
 import { i18nSpacePollEditor } from '@/features/spaces/polls/pages/creator/space-poll-editor-i18n';
+import { i18nSpacePollAnalyze } from '@/features/spaces/polls/pages/analyze/space-poll-analyze-i18n';
 import { i18nSpacePollsEditor } from '@/features/spaces/polls/pages/creator/list/space-polls-editor-i18n';
 import { i18nPollSpace } from '@/app/spaces/[id]/poll/space-poll-i18n';
 import { i18nDeliberationPage } from '@/app/spaces/[id]/deliberations/deliberation-page-i18n';
@@ -107,6 +108,7 @@ Object.entries({
   SpaceFile: i18nSpaceFileComponent,
   SpaceTypeSelectModal: i18nSpaceTypeSelectModal,
   Space: i18nSpaceHome,
+  SpacePollAnalyze: i18nSpacePollAnalyze,
   SpacePollEditor: i18nSpacePollEditor,
   SpacePollsEditor: i18nSpacePollsEditor,
   SpaceSprintLeague: i18nSpaceSprintLeague,
