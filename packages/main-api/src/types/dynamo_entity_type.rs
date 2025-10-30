@@ -100,6 +100,12 @@ pub enum EntityType {
     Badge,
     Industry,
 
+    // Space - Topic feature
+    Topic(String),                      // TOPIC#{topic_name}
+    TopicArticle(String),               // TOPIC_ARTICLE#{topic_name}#{article_id}
+    TopicArticleReply(String, String),  // TOPIC_ARTICLE_REPLY#{topic_name}#{article_id}#{reply_id}
+    TopicDiscussion(String),            // TOPIC_DISCUSSION#{discussion_id}
+
     //SPACE FEATURE
     SpaceFile,
     SpaceDiscussion(String),
