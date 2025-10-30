@@ -1,6 +1,5 @@
 import { SpaceType } from './space-type';
-import { Discuss, Palace, Mega, Vote } from '@/components/icons';
-import { Cube } from '@/assets/icons/shopping';
+import { Discuss, Palace, Mega, Vote, ShoppingCube } from '@/components/icons';
 
 export type SpaceDefinition = {
   type: SpaceType;
@@ -40,11 +39,14 @@ export const SPACE_DEFINITIONS: SpaceDefinition[] = [
     descKey: 'sprintLeague.desc',
     canBoost: true,
   },
+
   {
-    type: SpaceType.dAgit,
-    Icon: <Cube className="[&>path]:stroke-[var(--color-neutral-500)]" />,
-    labelKey: 'dAgit.label',
-    descKey: 'dAgit.desc',
+    type: SpaceType.Nft,
+    Icon: (
+      <ShoppingCube className="[&>path]:stroke-[var(--color-neutral-500)]" />
+    ),
+    labelKey: 'nft.label',
+    descKey: 'nft.desc',
     experiment: true,
     canBoost: false,
   },
