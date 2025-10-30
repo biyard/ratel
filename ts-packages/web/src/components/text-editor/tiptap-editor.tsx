@@ -18,16 +18,7 @@ import { TiptapEditorProps, DEFAULT_ENABLED_FEATURES } from './types';
 import { TiptapToolbar } from './tiptap-toolbar';
 import { showErrorToast } from '@/lib/toast';
 
-export type UploadResult = { url: string };
-
-type Props = TiptapEditorProps & {
-  uploadAsset?: (file: File) => Promise<UploadResult>;
-  uploadVideo?: (file: File) => Promise<UploadResult>;
-  maxImageSizeMB?: number;
-  maxVideoSizeMB?: number;
-};
-
-export const TiptapEditor = forwardRef<Editor | null, Props>(
+export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
   (
     {
       content = '',
