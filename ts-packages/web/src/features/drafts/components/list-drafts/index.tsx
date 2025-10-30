@@ -7,7 +7,7 @@ import PostResponse from '@/features/posts/dto/list-post-response';
 import { useCallback, useRef } from 'react';
 
 import { Edit1 } from '@/components/icons';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { route } from '@/route';
@@ -116,6 +116,7 @@ export function CreatePostButton() {
     <Link
       to={route.newPost()}
       aria-label="Create Post"
+      data-pw="create-post-button"
       className={cn(baseClass, 'justify-start w-full')}
     >
       <Edit1 className="w-4 h-4 [&>path]:stroke-text-third" />
