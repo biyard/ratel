@@ -269,7 +269,7 @@ pub fn route(
             Router::new()
                 .route("/", get(get_put_object_uri))
                 .route("/multiparts", get(get_put_multi_object_uri))
-                .route("/multiparts/complete", post(complete_multipart_upload)),
+                .route("/multiparts", post(complete_multipart_upload)),
         )
         .with_state(AppState::new(dynamo_client, ses_client, pool, s3)))
 }

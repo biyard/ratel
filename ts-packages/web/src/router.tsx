@@ -41,6 +41,8 @@ import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
 import SpacePanelPage from './app/spaces/[id]/panels/space-panel-page';
 
 import CreatePostPage from './features/posts/components/create-post-page';
+import SpacePollsPage from './app/spaces/[id]/polls/space-polls-page';
+import SpaceAnalyzesPage from './app/spaces/[id]/analyzes/space_analyzes-page';
 import CreateArtworkPage from './features/posts/components/create-artwork-page';
 import SpaceArtNftPreviewPage from './app/spaces/[id]/art-nfts/space-art-nft-page';
 import SpaceArtNftArtTwinPage from './app/spaces/[id]/art-nfts/space-art-nft-twin-page';
@@ -195,6 +197,16 @@ export const routes = createBrowserRouter([
             id: 'space-poll-feature',
             path: 'polls',
             children: [
+              {
+                id: 'poll',
+                path: '',
+                Component: SpacePollsPage,
+              },
+              {
+                id: 'analyzes',
+                path: 'analyzes',
+                Component: SpaceAnalyzesPage,
+              },
               {
                 id: 'poll-by-id',
                 path: ':pollPk',

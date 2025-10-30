@@ -1,217 +1,181 @@
-// INFO: return file info
 import type { AssetPresignedUris } from '@/lib/api/models/asset-presigned-uris';
 import { getFileType, toContentType } from '@/lib/file-utils';
 import { logger } from '@/lib/logger';
 import { showErrorToast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
-import { useRef } from 'react';
-import FileModel from '../types/file';
+import React, { useRef, forwardRef, useImperativeHandle } from 'react';
 import {
   completeMultipartUpload,
   getPutMultiObjectUrl,
   getPutObjectUrl,
 } from '@/lib/api/ratel/assets.v3';
+import FileModel from '../types/file';
 
-interface FileUploaderMetadataProps {
+export type FileUploaderHandle = {
+  uploadFile: (file: File) => Promise<void>;
+  openPicker: () => void;
+};
+
+interface FileUploaderMetadataProps extends React.ComponentProps<'div'> {
   onUploadSuccess?: (file: FileModel) => void;
-  isImage?: boolean; // true: image only / false: PDF only
+  onUploadingChange?: (loading: boolean) => void;
+  disabled?: boolean;
+  isImage?: boolean;
   isMedia?: boolean;
+  maxSizeMB?: number;
 }
 
-export default function FileUploaderMetadata({
-  children,
-  onUploadSuccess,
-  isImage = true,
-  isMedia = false,
-  ...props
-}: React.ComponentProps<'div'> & FileUploaderMetadataProps) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
+const FileUploaderMetadata = forwardRef<
+  FileUploaderHandle,
+  FileUploaderMetadataProps
+>(
+  (
+    {
+      children,
+      onUploadSuccess,
+      onUploadingChange,
+      disabled = false,
+      className,
+      isImage,
+      isMedia,
+      maxSizeMB = 50,
+      ...props
+    },
+    ref,
+  ) => {
+    const inputRef = useRef<HTMLInputElement | null>(null);
+    const openingRef = useRef(false);
 
-  const handleUpload = async () => {
-    inputRef.current?.click();
-  };
+    const openPicker = () => {
+      if (disabled || openingRef.current) return;
+      openingRef.current = true;
+      inputRef.current?.click();
+      setTimeout(() => {
+        openingRef.current = false;
+      }, 0);
+    };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) {
-      logger.debug('No file selected');
-      return;
-    }
-
-    const fileType = file.type;
-    const fileName = file.name;
-
-    const isImageFile = fileType.startsWith('image/');
-    const isVideoFile = fileType.startsWith('video/');
-    const isPdfFile = fileType === 'application/pdf';
-    const isZipFile =
-      fileType === 'application/zip' || fileName.endsWith('.zip');
-
-    const fileTypeKey = getFileType(file);
-    logger.debug('FileType:', fileTypeKey);
-
-    const isValidFile = (() => {
-      if (isImage && isMedia) return isImageFile || isVideoFile;
-      if (isImage && !isMedia) return isImageFile;
-      if (!isImage && isMedia) return isVideoFile || isPdfFile || isZipFile;
-      return isPdfFile;
-    })();
-
-    if (!isValidFile) {
-      showErrorToast('Unsupported file type selected.');
-      return;
-    }
-
-    const partSize = 5 * 1024 * 1024;
-    const totalParts = Math.ceil(file.size / partSize);
-
-    if (totalParts === 1) {
-      const res = await getPutObjectUrl(totalParts, fileTypeKey);
-
-      const presignedUrl = res.presigned_uris[0];
-      const publicUrl = res.uris[0];
-
-      const uploadResponse = await fetch(presignedUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': toContentType(fileTypeKey),
-        },
-        body: file,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('File upload failed');
+    const validateFile = (file: File) => {
+      const maxBytes = maxSizeMB * 1024 * 1024;
+      if (file.size > maxBytes) {
+        showErrorToast(`File size exceeds ${maxSizeMB}MB limit.`);
+        return false;
       }
-
-      logger.debug('File uploaded successfully:', file.name);
-
-      if (onUploadSuccess) {
-        const fileInfo: FileModel = {
-          name: file.name,
-          size: `${(file.size / 1024).toFixed(1)} KB`,
-          ext: fileTypeKey,
-          url: publicUrl,
-        };
-
-        onUploadSuccess(fileInfo);
+      if (isImage && !file.type.startsWith('image/')) {
+        showErrorToast('Only image files are allowed.');
+        return false;
       }
-    } else {
-      const res: AssetPresignedUris = await getPutMultiObjectUrl(
-        totalParts,
-        fileTypeKey,
-      );
-      logger.debug('Presigned URL response:', res);
-
-      const { presigned_uris, uris, upload_id, key } = res;
-
-      if (!presigned_uris?.length || !uris?.length || !upload_id || !key) {
-        logger.error('Missing presigned upload metadata');
-        return;
+      if (isMedia && !file.type.startsWith('video/')) {
+        showErrorToast('Only video files are allowed.');
+        return false;
       }
+      return true;
+    };
 
-      const etags: { etag: string; part_number: number }[] = [];
+    const uploadFile = async (file: File) => {
+      if (!validateFile(file)) return;
+      const fileTypeKey = getFileType(file);
+      onUploadingChange?.(true);
+
+      const partSize = 5 * 1024 * 1024;
+      const totalParts = Math.ceil(file.size / partSize);
 
       try {
-        for (let partNumber = 0; partNumber < totalParts; partNumber++) {
-          const start = partNumber * partSize;
-          const end = Math.min(start + partSize, file.size);
-          const chunk = file.slice(start, end);
-          const url = presigned_uris[partNumber];
-
-          const { etag, partNumber: realPart } = await fetchWithETag(
-            url,
-            chunk,
-            partNumber,
+        if (totalParts === 1) {
+          const res = await getPutObjectUrl(totalParts, fileTypeKey);
+          const presignedUrl = res.presigned_uris[0];
+          const publicUrl = res.uris[0];
+          const uploadResponse = await fetch(presignedUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': toContentType(fileTypeKey) },
+            body: file,
+          });
+          if (!uploadResponse.ok) throw new Error('File upload failed');
+          onUploadSuccess?.({
+            name: file.name,
+            size: `${(file.size / 1024).toFixed(1)} KB`,
+            ext: fileTypeKey,
+            url: publicUrl,
+          });
+        } else {
+          const res: AssetPresignedUris = await getPutMultiObjectUrl(
+            totalParts,
+            fileTypeKey,
           );
+          const { presigned_uris, uris, upload_id, key } = res;
+          if (!presigned_uris?.length || !uris?.length || !upload_id || !key) {
+            throw new Error('Missing presigned upload metadata');
+          }
 
-          etags.push({
-            etag: etag,
-            part_number: realPart,
+          const etags: { etag: string; part_number: number }[] = [];
+          for (let partNumber = 0; partNumber < totalParts; partNumber++) {
+            const start = partNumber * partSize;
+            const end = Math.min(start + partSize, file.size);
+            const chunk = file.slice(start, end);
+            const url = presigned_uris[partNumber];
+            const resp = await fetch(url, {
+              method: 'PUT',
+              body: chunk,
+              credentials: 'omit',
+            });
+            if (!resp.ok)
+              throw new Error(`Upload failed at part ${partNumber + 1}`);
+            const etagHeader = resp.headers.get('etag');
+            if (!etagHeader)
+              throw new Error(`Missing ETag for part ${partNumber + 1}`);
+            etags.push({
+              etag: etagHeader.replaceAll('"', ''),
+              part_number: partNumber + 1,
+            });
+          }
+
+          await completeMultipartUpload({ upload_id, key, parts: etags });
+          onUploadSuccess?.({
+            name: file.name,
+            size: `${(file.size / 1024).toFixed(1)} KB`,
+            ext: fileTypeKey,
+            url: uris[0],
           });
         }
-
-        await completeMultipartUpload({
-          upload_id,
-          key,
-          parts: etags,
-        });
-
-        logger.debug('Multipart upload completed successfully.');
-
-        onUploadSuccess?.({
-          name: file.name,
-          size: `${(file.size / 1024).toFixed(1)} KB`,
-          ext: fileTypeKey,
-          url: uris[0],
-        });
       } catch (error) {
-        logger.error('Multipart upload error:', error);
+        logger.error('Upload error:', error);
         showErrorToast('Failed to upload file. Please try again.');
+      } finally {
+        if (inputRef.current) inputRef.current.value = '';
+        onUploadingChange?.(false);
       }
-    }
-  };
+    };
 
-  const fetchWithETag = async (
-    url: string,
-    chunk: Blob,
-    partNumber: number,
-  ): Promise<{ etag: string; partNumber: number }> => {
-    for (let attempt = 1; attempt <= 5; attempt++) {
-      const resp = await fetch(url, {
-        method: 'PUT',
-        body: chunk,
-        credentials: 'omit',
-      });
+    useImperativeHandle(ref, () => ({ uploadFile, openPicker }));
 
-      if (!resp.ok) {
-        throw new Error(`Upload failed at part ${partNumber + 1}`);
-      }
+    const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      await uploadFile(file);
+    };
 
-      let etag: string | null = null;
-      for (const [key, value] of resp.headers.entries()) {
-        if (key.toLowerCase() === 'etag') {
-          etag = value;
-          break;
-        }
-      }
+    const accept = isImage ? 'image/*' : isMedia ? 'video/*' : '*/*';
 
-      if (etag) {
-        return {
-          etag: etag.replaceAll('"', ''),
-          partNumber: partNumber + 1,
-        };
-      }
+    return (
+      <div
+        aria-disabled={disabled}
+        className={cn(
+          disabled ? 'pointer-events-none select-none' : '',
+          className,
+        )}
+        {...props}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept={accept}
+          className="hidden"
+          onChange={handleChange}
+        />
+        {children}
+      </div>
+    );
+  },
+);
 
-      console.warn(
-        `Retrying upload for part ${partNumber + 1}, attempt ${attempt}`,
-      );
-    }
-
-    throw new Error(`Missing ETag for part ${partNumber + 1}`);
-  };
-
-  const accept = (() => {
-    if (isImage && isMedia) return 'image/*,video/*';
-    if (isImage && !isMedia) return 'image/*';
-    if (!isImage && isMedia)
-      return 'video/*,application/pdf,application/zip,.zip';
-    return 'application/pdf';
-  })();
-
-  return (
-    <div
-      onClick={handleUpload}
-      className={cn('cursor-pointer', props.className)}
-      {...props}
-    >
-      <input
-        ref={inputRef}
-        type="file"
-        accept={accept}
-        className="hidden"
-        onChange={handleFileChange}
-      />
-      {children}
-    </div>
-  );
-}
+export default FileUploaderMetadata;

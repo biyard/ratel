@@ -5,7 +5,7 @@ export function SpaceHomePage() {
   const ctrl = useSpaceLayoutContext();
 
   return (
-    <>
+    <div className="flex flex-col w-full gap-2.5">
       <SpaceHTMLContentEditor
         htmlContent={ctrl.space.content}
         canEdit={ctrl.isAdmin}
@@ -14,6 +14,6 @@ export function SpaceHomePage() {
         onImageUpload={ctrl.handleImageUpload}
         onRemoveImage={ctrl.handleRemoveImage}
       />
-    </>
+    </div>
   );
 }

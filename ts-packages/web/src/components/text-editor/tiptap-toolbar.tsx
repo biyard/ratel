@@ -28,11 +28,13 @@ import {
   ChevronRight2,
 } from '../icons';
 import { useRef, useState, useEffect } from 'react';
+import { Video } from 'lucide-react';
 
 export const TiptapToolbar = ({
   editor,
   enabledFeatures = DEFAULT_ENABLED_FEATURES,
   className,
+  openVideoPicker,
   onImageUpload,
 }: TiptapToolbarProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -394,6 +396,7 @@ export const TiptapToolbar = ({
               />
             </>
           )}
+
           {/* Insert Table button - shown only when NOT in a table */}
           {!isInTable && features.table && (
             <ToolbarButton
@@ -410,6 +413,14 @@ export const TiptapToolbar = ({
               aria-label="Insert Table"
             />
           )}
+
+          <button>
+            <Video
+              type="button"
+              onClick={openVideoPicker}
+              className="w-5 h-5 [&>path]:stroke-neutral-500 [&>rect]:stroke-neutral-500 ml-2"
+            />
+          </button>
         </div>
       </div>
 

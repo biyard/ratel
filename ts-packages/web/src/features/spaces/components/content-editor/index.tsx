@@ -3,7 +3,52 @@ import { Edit1, Save } from '@/components/icons';
 
 import { useState } from 'react';
 import { PostEditor } from '@/features/posts/components/post-editor';
+import { getFileType, toContentType } from '@/lib/file-utils';
+import {
+  completeMultipartUpload,
+  getPutMultiObjectUrl,
+  getPutObjectUrl,
+} from '@/lib/api/ratel/assets.v3';
 // import { executeOnKeyStroke } from '@/utils/key-event-handle';
+
+async function uploadVideo(file: File) {
+  const partSize = 5 * 1024 * 1024;
+  const totalParts = Math.ceil(file.size / partSize);
+  const fileTypeKey = getFileType(file);
+
+  if (totalParts === 1) {
+    const res = await getPutObjectUrl(totalParts, fileTypeKey);
+    const presignedUrl = res.presigned_uris[0];
+    const publicUrl = res.uris[0];
+    const r = await fetch(presignedUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': toContentType(fileTypeKey) },
+      body: file,
+    });
+    if (!r.ok) throw new Error('upload failed');
+    return { url: publicUrl };
+  }
+
+  const res = await getPutMultiObjectUrl(totalParts, fileTypeKey);
+  const { presigned_uris, uris, upload_id, key } = res;
+  const etags: { etag: string; part_number: number }[] = [];
+  for (let i = 0; i < totalParts; i++) {
+    const start = i * partSize;
+    const end = Math.min(start + partSize, file.size);
+    const chunk = file.slice(start, end);
+    const rr = await fetch(presigned_uris[i], {
+      method: 'PUT',
+      body: chunk,
+      credentials: 'omit',
+    });
+    if (!rr.ok) throw new Error(`part ${i + 1} failed`);
+    const etag = (rr.headers.get('etag') || '').replaceAll('"', '');
+    if (!etag) throw new Error(`part ${i + 1} missing etag`);
+    etags.push({ etag, part_number: i + 1 });
+  }
+  await completeMultipartUpload({ upload_id, key, parts: etags });
+  return { url: uris[0] };
+}
 
 export default function SpaceHTMLContentEditor({
   htmlContent,
@@ -63,6 +108,7 @@ export default function SpaceHTMLContentEditor({
           onUpdate={(nextContent) => {
             setContent(nextContent);
           }}
+          uploadVideo={uploadVideo}
           editable={isEditing}
           showToolbar={isEditing}
           onImageUpload={onImageUpload}

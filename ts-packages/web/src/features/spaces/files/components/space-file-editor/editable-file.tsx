@@ -11,6 +11,7 @@ import {
   Zip,
 } from '@/components/icons';
 import FileModel, { FileExtension } from '../../types/file';
+import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 
 export interface EditableFileProps {
   file: FileModel;
@@ -18,24 +19,36 @@ export interface EditableFileProps {
 }
 
 export default function EditableFile({ file, onclick }: EditableFileProps) {
+  const handleDownload = async (file: FileModel) => {
+    await downloadPdfFromUrl({
+      url: file.url ?? '',
+      fileName: file.name,
+    });
+  };
+
   return (
-    <div className="cursor-pointer flex flex-row justify-start items-center w-full gap-2 p-4 bg-[#262626] light:bg-card-bg border border-card-border rounded-[8px]">
+    <div
+      className="cursor-pointer flex flex-row justify-start items-center w-full gap-2 p-4 bg-[#262626] light:bg-card-bg border border-card-border rounded-[8px]"
+      onClick={() => {
+        handleDownload(file);
+      }}
+    >
       <div className="[&>svg]:size-9">
-        {file.ext === FileExtension.JPG ? (
+        {file.ext.toLowerCase() === FileExtension.JPG.toLowerCase() ? (
           <Jpg />
-        ) : file.ext === FileExtension.PNG ? (
+        ) : file.ext.toLowerCase() === FileExtension.PNG.toLowerCase() ? (
           <Png />
-        ) : file.ext === FileExtension.PDF ? (
+        ) : file.ext.toLowerCase() === FileExtension.PDF.toLowerCase() ? (
           <Pdf />
-        ) : file.ext === FileExtension.ZIP ? (
+        ) : file.ext.toLowerCase() === FileExtension.ZIP.toLowerCase() ? (
           <Zip />
-        ) : file.ext === FileExtension.WORD ? (
+        ) : file.ext.toLowerCase() === FileExtension.WORD.toLowerCase() ? (
           <Word />
-        ) : file.ext === FileExtension.PPTX ? (
+        ) : file.ext.toLowerCase() === FileExtension.PPTX.toLowerCase() ? (
           <Pptx />
-        ) : file.ext === FileExtension.MP4 ? (
+        ) : file.ext.toLowerCase() === FileExtension.MP4.toLowerCase() ? (
           <MP4 />
-        ) : file.ext === FileExtension.MOV ? (
+        ) : file.ext.toLowerCase() === FileExtension.MOV.toLowerCase() ? (
           <MOV />
         ) : (
           <Excel />
@@ -49,7 +62,14 @@ export default function EditableFile({ file, onclick }: EditableFileProps) {
           {file.size}
         </div>
       </div>
-      <div className="w-fit h-fit cursor-pointer" onClick={onclick}>
+      <div
+        className="w-fit h-fit cursor-pointer"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onclick();
+        }}
+      >
         <CircleClose className="w-[18px] h-[18px]" />
       </div>
     </div>
