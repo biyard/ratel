@@ -7,6 +7,8 @@ export const route = {
   explore: () => '/explore',
   settings: () => '/settings',
   myPosts: () => '/my-posts',
+  createPost: (postPk?: string) =>
+    postPk ? `/posts/new?post-pk=${encodeURIComponent(postPk)}` : '/posts/new',
   drafts: () => '/drafts',
   draftEdit: (postPk: string) => `/drafts/${encodeURIComponent(postPk)}/edit`,
   teams: () => '/teams',
@@ -54,7 +56,8 @@ export const route = {
   },
   spacePolls: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/polls`,
-
+  spacePanels: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/panels`,
   spacePollById: (spaceId: string, pollId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/polls/${encodeURIComponent(pollId)}`,
   spaceAnalyzePollById: (spaceId: string, pollId: string) =>
@@ -68,7 +71,30 @@ export const route = {
   spaceSprintLeagues: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/sprint-leagues`,
 
+  spaceNftPreview: (spacePk: string) =>
+    `/spaces/${encodeURIComponent(spacePk)}/nfts`,
+  spaceNftAttributes: (spacePk: string) =>
+    `/spaces/${encodeURIComponent(spacePk)}/nfts/attributes`,
+  spaceNftArtTwin: (spacePk: string) =>
+    `/spaces/${encodeURIComponent(spacePk)}/nfts/art-twin`,
   // Admin routes
   admin: () => '/admin',
   adminMemberships: () => '/admin/memberships',
+  newPost: (postPk?: string, teamPk?: string) => {
+    let to = '/posts/new';
+    const params: string[] = [];
+
+    if (teamPk) {
+      params.push(`team-pk=${encodeURIComponent(teamPk)}`);
+    }
+    if (postPk) {
+      params.push(`post-pk=${encodeURIComponent(postPk)}`);
+    }
+
+    if (params.length > 0) {
+      to += `?${params.join('&')}`;
+    }
+
+    return to;
+  },
 };

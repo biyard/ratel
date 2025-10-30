@@ -45,7 +45,10 @@ export default function TeamHome() {
         ))}
 
         <div ref={observerRef} />
-        {!hasNextPage && <FeedEndMessage />}
+        {!hasNextPage && (
+          //FIXME: use i18n
+          <FeedEndMessage msg="You have reached the end of your feed." />
+        )}
       </Col>
     </div>
   );

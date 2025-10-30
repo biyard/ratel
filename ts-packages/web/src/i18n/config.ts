@@ -3,7 +3,6 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import enSignIn from './en/SignIn.json';
 import enSignup from './en/Signup.json';
-import enSpaceForms from './en/SpaceForms.json';
 import enHome from './en/Home.json';
 import enTeam from './en/Team.json';
 import enSprintSpace from './en/SprintSpace.json';
@@ -20,7 +19,6 @@ import enEditArtworkPost from './en/EditArtworkPost.json';
 
 import koSignIn from './ko/SignIn.json';
 import koSignup from './ko/Signup.json';
-import koSpaceForms from './ko/SpaceForms.json';
 import koHome from './ko/Home.json';
 import koTeam from './ko/Team.json';
 import koSprintSpace from './ko/SprintSpace.json';
@@ -39,6 +37,7 @@ import i18nSpaceSurveyComponent from '@/features/spaces/components/survey/i18n';
 import i18nSpaceSurveyReportComponent from '@/features/spaces/components/report/i18n';
 import i18nSpaceFileComponent from '@/features/spaces/files/components/space-file-editor/i18n';
 import i18nSpaceDiscussionEditorPage from '@/features/spaces/discussions/pages/creator/i18n';
+import i18nSpacePanelEditorPage from '@/features/spaces/panels/pages/creator/i18n';
 import { i18nSpaceTypeSelectModal } from '@/features/spaces/modals/space-type-selector-modal';
 import { i18nSpaceHome } from '@/app/spaces/[id]/space-home-i18n';
 import { i18nSpacePollEditor } from '@/features/spaces/polls/pages/creator/space-poll-editor-i18n';
@@ -53,6 +52,8 @@ import { i18nAdmin } from '@/app/admin/admin-page-i18n';
 import { i18nMemberships } from '@/features/membership/i18n';
 import { i18nHeader } from '@/components/header/i18n';
 import i18nListDrafts from '@/features/drafts/components/list-drafts/i18n';
+import { CreatePostPage } from '@/features/posts/components/create-post-page/i18n';
+import { i18nSpaceForm } from '@/features/spaces/components/space-form-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -60,7 +61,6 @@ export const resources = {
   en: {
     SignIn: enSignIn,
     Signup: enSignup,
-    SpaceForms: enSpaceForms,
     Home: enHome,
     Team: enTeam,
     SprintSpace: enSprintSpace,
@@ -78,7 +78,6 @@ export const resources = {
   ko: {
     SignIn: koSignIn,
     Signup: koSignup,
-    SpaceForms: koSpaceForms,
     Home: koHome,
     Team: koTeam,
     SprintSpace: koSprintSpace,
@@ -110,11 +109,14 @@ Object.entries({
   SpacePollViewer: i18nSpacePollViewerPage,
   SpaceFileEditor: i18nSpaceFileEditor,
   SpaceDiscussionEditor: i18nSpaceDiscussionEditorPage,
+  SpacePanelEditor: i18nSpacePanelEditorPage,
   SpaceRecommendationEditor: i18nSpaceRecommendationEditor,
   Admin: i18nAdmin,
   Memberships: i18nMemberships,
   Nav: i18nHeader,
   ListDrafts: i18nListDrafts,
+  CreatePostPage,
+  SpaceForm: i18nSpaceForm,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
@@ -130,10 +132,22 @@ i18next.on('missingKey', (lngs, ns, key) => {
   console.warn('[i18next] missingKey:', { lngs, ns, key });
 });
 
-// Read saved language from localStorage, fallback to 'en'
+// Detect browser language and normalize it
+const getBrowserLanguage = (): string => {
+  if (typeof window === 'undefined') return 'en';
+
+  const browserLang = navigator.language || (navigator as any).userLanguage;
+  // Extract the language code (e.g., 'ko' from 'ko-KR', 'en' from 'en-US')
+  const langCode = browserLang.split('-')[0].toLowerCase();
+
+  // Check if the detected language is supported, otherwise default to 'en'
+  return LANGUAGES.includes(langCode) ? langCode : 'en';
+};
+
+// Read saved language from localStorage, fallback to browser language
 const savedLanguage =
   typeof window !== 'undefined'
-    ? localStorage.getItem('user-language') || 'en'
+    ? localStorage.getItem('user-language') || getBrowserLanguage()
     : 'en';
 
 i18next.init({

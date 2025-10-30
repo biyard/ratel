@@ -38,8 +38,10 @@ import AdminPage from './app/admin/page';
 import { MembershipsPage } from './app/admin/memberships/memberships-page';
 import TelegramPage from './app/telegram/page';
 import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
+import SpacePanelPage from './app/spaces/[id]/panels/space-panel-page';
 
-import MyDraftEditPage from './app/(social)/drafts/[post-id]/edit/page';
+import CreatePostPage from './features/posts/components/create-post-page';
+import SpaceArtNftPage from './app/spaces/[id]/nfts/space-art-nft-page';
 
 export const routes = createBrowserRouter([
   {
@@ -47,6 +49,12 @@ export const routes = createBrowserRouter([
     Component: RootLayout,
     ErrorBoundary: ErrorBoundary,
     children: [
+      {
+        id: 'create-post-page',
+        path: 'posts/new',
+        Component: CreatePostPage,
+      },
+
       // Social Layout
       {
         id: 'social-layout',
@@ -71,11 +79,6 @@ export const routes = createBrowserRouter([
                 id: 'my-drafts-list',
                 path: '',
                 Component: MyDraftPage,
-              },
-              {
-                id: 'my-drafts-edit',
-                path: ':postPk/edit',
-                Component: MyDraftEditPage,
               },
             ],
           },
@@ -227,12 +230,39 @@ export const routes = createBrowserRouter([
             path: 'files',
             Component: SpaceFilePage,
           }, // End of File Feature
+          // Space Panel Feature
+          {
+            id: 'space-panel-feature',
+            path: 'panels',
+            Component: SpacePanelPage,
+          }, // End of Panel Feature
           // Space Recommendation Feature
           {
             id: 'space-recommendation-feature',
             path: 'recommendations',
             Component: SpaceRecommendationPage,
           }, // End of Recommendation Feature
+          {
+            id: 'space-nft-page',
+            path: 'nfts',
+            children: [
+              {
+                id: 'space-nft-preview-feature',
+                path: '',
+                Component: SpaceArtNftPage,
+              },
+              {
+                id: 'space-nft-attributes-feature',
+                path: 'attributes',
+                Component: SpaceArtNftPage,
+              },
+              {
+                id: 'space-nft-art-twin-feature',
+                path: 'art-twin',
+                Component: SpaceArtNftPage,
+              },
+            ],
+          },
         ],
       }, // End of Space Layout
       {

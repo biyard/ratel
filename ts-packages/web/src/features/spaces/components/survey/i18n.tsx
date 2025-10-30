@@ -19,6 +19,13 @@ const en = {
   add_option_button_label: 'Add Option',
 
   no_questions: 'No questions available.',
+
+  success_update_time: 'Success to update time range.',
+  failed_update_time: 'Failed to update time range. please try later.',
+  success_change_response: 'Success to save poll.',
+  failed_change_response: 'Failed to save poll. please try later.',
+  success_submit_answer: 'Success to submit answer.',
+  failed_submit_answer: 'Failed to submit answer. please try later.',
 };
 
 const ko = {
@@ -43,6 +50,14 @@ const ko = {
   add_option_button_label: '옵션 추가하기',
 
   no_questions: '질문이 없습니다.',
+
+  success_update_time: '성공적으로 시간을 설정하셨습니다.',
+  failed_update_time: '시간 설정에 실패했습니다. 잠시 후 다시 시도해주세요.',
+  success_change_response: '성공적으로 설문을 저장했습니다.',
+  failed_change_response:
+    '설문 저장에 실패했습니다. 잠시 후 다시 시도해주세요.',
+  success_submit_answer: '성공적으로 응답을 저장했습니다.',
+  failed_submit_answer: '응답 저장에 실패했습니다. 잠시 후 다시 시도해주세요.',
 };
 const i18n = {
   en,

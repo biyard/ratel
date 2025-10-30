@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { logger } from '@/lib/logger';
 import { useSpaceUpdateContentMutation } from '@/features/spaces/hooks/use-space-update-content-mutation';
-import { showErrorToast } from '@/lib/toast';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useSpaceUpdateTitleMutation } from '@/features/spaces/hooks/use-space-update-title-mutation';
 import { sideMenusForSpaceType } from '@/features/spaces/utils/side-menus-for-space-type';
 import { usePopup } from '@/lib/contexts/popup-service';
@@ -104,6 +104,7 @@ export class SpaceHomeController {
         spacePk: this.space.pk,
         content: text,
       });
+      showSuccessToast('Success to update space content');
     } catch (error) {
       logger.error('Failed to update space content', error);
       showErrorToast(`Failed to update space content: ${error}`);
@@ -117,6 +118,7 @@ export class SpaceHomeController {
         spacePk: this.space.pk,
         title,
       });
+      showSuccessToast('Success to update space title');
     } catch (error) {
       logger.error('Failed to update space title', error);
       showErrorToast(`Failed to update space title: ${error}`);
@@ -148,11 +150,19 @@ export class SpaceHomeController {
 
     const visibility = { type: publishType };
 
-    this.publishSpace.mutateAsync({
-      spacePk: this.space.pk,
-      visibility,
-    });
-    this.popup.close();
+    try {
+      this.publishSpace.mutateAsync({
+        spacePk: this.space.pk,
+        visibility,
+      });
+
+      showSuccessToast(this.t('success_publish_space'));
+    } catch (err) {
+      logger.error('publish space failed: ', err);
+      showErrorToast(this.t('failed_publish_space'));
+    } finally {
+      this.popup.close();
+    }
   };
 
   handleDelete = async () => {
@@ -160,11 +170,21 @@ export class SpaceHomeController {
       this.publishHook();
     }
 
-    this.deleteSpace.mutateAsync({
-      spacePk: this.space.pk,
-    });
+    try {
+      this.deleteSpace.mutateAsync({
+        spacePk: this.space.pk,
+      });
+
+      this.navigate(route.home());
+      showSuccessToast(this.t('success_delete_space'));
+    } catch (err) {
+      logger.error('delete space failed: ', err);
+      showErrorToast(this.t('failed_delete_space'));
+    } finally {
+      this.popup.close();
+    }
+
     this.popup.close();
-    this.navigate(route.home());
   };
 
   handleActionPublish = async () => {

@@ -111,11 +111,7 @@ pub async fn api_main() -> Result<Router, crate::Error> {
     //     .nest_service("/mcp", controllers::mcp::route(pool.clone()).await.expect("MCP router"))
     //     .layer(middleware::from_fn(mcp_middleware));
 
-    let app_state = AppState {
-        dynamo: dynamo_client.clone(),
-        pool: pool.clone(),
-        ses: ses_client.clone(),
-    };
+    let app_state = AppState::new(dynamo_client.clone(), ses_client.clone(), pool.clone());
     let web = web::route(app_state)?;
 
     let api_router = route(RouteDeps {

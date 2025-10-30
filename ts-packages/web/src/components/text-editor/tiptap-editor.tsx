@@ -6,6 +6,10 @@ import Highlight from '@tiptap/extension-highlight';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Image from '@tiptap/extension-image';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
 import { forwardRef, useEffect, useImperativeHandle } from 'react';
 import { Editor } from '@tiptap/core';
 import { cn } from '@/lib/utils';
@@ -29,6 +33,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       maxHeight,
       onFocus,
       onBlur,
+      'data-pw': dataPw,
     },
     ref,
   ) => {
@@ -59,6 +64,23 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             allowBase64: true,
             HTMLAttributes: {
               class: 'rounded-lg max-w-full h-auto my-4 mx-auto block',
+            },
+          }),
+          Table.configure({
+            resizable: true,
+            HTMLAttributes: {
+              class: 'border-collapse table-auto w-full my-4',
+            },
+          }),
+          TableRow,
+          TableHeader.configure({
+            HTMLAttributes: {
+              class: 'bg-muted font-semibold',
+            },
+          }),
+          TableCell.configure({
+            HTMLAttributes: {
+              class: 'border border-border p-2 min-w-[100px]',
             },
           }),
         ],
@@ -108,6 +130,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           'focus-within:border-primary',
           className,
         )}
+        data-pw={dataPw}
       >
         {showToolbar && toolbarPosition === 'top' && (
           <TiptapToolbar
@@ -145,6 +168,20 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
               '[&_.ProseMirror_li]:my-1',
               '[&_.ProseMirror_p]:my-2',
               '[&_.ProseMirror_mark]:bg-yellow-200 [&_.ProseMirror_mark]:px-0.5',
+              // Table styles
+              '[&_.ProseMirror_table]:border-collapse [&_.ProseMirror_table]:table-auto [&_.ProseMirror_table]:w-full [&_.ProseMirror_table]:my-4',
+              '[&_.ProseMirror_td]:border [&_.ProseMirror_td]:border-border [&_.ProseMirror_td]:p-2 [&_.ProseMirror_td]:min-w-[100px] [&_.ProseMirror_td]:relative',
+              '[&_.ProseMirror_th]:border [&_.ProseMirror_th]:border-border [&_.ProseMirror_th]:p-2 [&_.ProseMirror_th]:min-w-[100px] [&_.ProseMirror_th]:bg-muted [&_.ProseMirror_th]:font-semibold [&_.ProseMirror_th]:relative',
+              // Selected cells highlighting for merging
+              '[&_.ProseMirror_.selectedCell]:bg-primary/20',
+              '[&_.ProseMirror_.selectedCell]:border-primary',
+              '[&_.ProseMirror_.selectedCell]:border-2',
+              '[&_.ProseMirror_.selectedCell]:outline',
+              '[&_.ProseMirror_.selectedCell]:outline-2',
+              '[&_.ProseMirror_.selectedCell]:outline-primary/40',
+              '[&_.ProseMirror_.selectedCell]:outline-offset-[-1px]',
+              // Column resize handle
+              '[&_.ProseMirror_.column-resize-handle]:absolute [&_.ProseMirror_.column-resize-handle]:right-[-2px] [&_.ProseMirror_.column-resize-handle]:top-0 [&_.ProseMirror_.column-resize-handle]:bottom-0 [&_.ProseMirror_.column-resize-handle]:w-[4px] [&_.ProseMirror_.column-resize-handle]:bg-primary [&_.ProseMirror_.column-resize-handle]:pointer-events-none',
             )}
             data-placeholder={placeholder}
           />
