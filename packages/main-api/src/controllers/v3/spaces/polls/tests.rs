@@ -1,8 +1,6 @@
 use crate::controllers::v3::posts::CreatePostResponse;
 use crate::controllers::v3::spaces::create_space::CreateSpaceResponse;
-use crate::controllers::v3::spaces::polls::{
-    RespondPollSpaceResponse, UpdatePollSpaceResponse,
-};
+use crate::controllers::v3::spaces::polls::{RespondPollSpaceResponse, UpdatePollSpaceResponse};
 use crate::features::spaces::polls::{Poll, PollResponse, PollResultResponse};
 use crate::tests::v3_setup::TestContextV3;
 use crate::types::{Answer, ChoiceQuestion, EntityType, Partition, Question};
@@ -13,9 +11,7 @@ use crate::*;
 /// Returns (TestContextV3, space_pk, poll_sk)
 pub async fn setup_poll_space() -> (TestContextV3, Partition, EntityType) {
     let ctx = TestContextV3::setup().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx.clone();
+    let TestContextV3 { app, test_user, .. } = ctx.clone();
 
     // Create a post first
     let (_status, _headers, create_post_res) = post! {
@@ -54,22 +50,24 @@ pub async fn setup_poll_space() -> (TestContextV3, Partition, EntityType) {
 
     let space_pk = create_space_res.space_pk;
 
-    // Get the poll_sk from DynamoDB
-    let poll_sk = match &space_pk {
-        Partition::Space(id) => EntityType::SpacePoll(id.clone()),
-        _ => panic!("Expected Space partition"),
+    let (status, _headers, create_poll_res) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/polls", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        response_type: PollResponse
     };
+    assert_eq!(status, 200);
+
+    // Get the poll_sk from DynamoDB
+    let poll_sk = create_poll_res.sk;
 
     (ctx, space_pk, poll_sk)
 }
 
 /// Helper function to setup a published poll space with questions
-pub async fn setup_published_poll_space(
-) -> (TestContextV3, Partition, EntityType, Vec<Question>) {
+pub async fn setup_published_poll_space() -> (TestContextV3, Partition, EntityType, Vec<Question>) {
     let (ctx, space_pk, poll_sk) = setup_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx.clone();
+    let TestContextV3 { app, test_user, .. } = ctx.clone();
 
     let now = get_now_timestamp_millis();
     let questions = vec![
@@ -146,9 +144,7 @@ pub async fn setup_published_poll_space(
 #[tokio::test]
 async fn test_get_poll_when_authenticated() {
     let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let (status, _headers, body) = get! {
         app: app,
@@ -182,9 +178,7 @@ async fn test_get_poll_when_not_authenticated() {
 #[tokio::test]
 async fn test_get_poll_with_my_response() {
     let (ctx, space_pk, poll_sk, _questions) = setup_published_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let answers = vec![
         Answer::SingleChoice { answer: Some(1) },
@@ -221,9 +215,7 @@ async fn test_get_poll_with_my_response() {
 #[tokio::test]
 async fn test_get_poll_not_found() {
     let (ctx, space_pk, _, _) = setup_published_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let fake_poll_sk = EntityType::SpacePoll("nonexistent".to_string());
 
@@ -239,9 +231,7 @@ async fn test_get_poll_not_found() {
 #[tokio::test]
 async fn test_get_poll_with_invalid_space_pk() {
     let (ctx, _, poll_sk, _) = setup_published_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let invalid_pk = Partition::Feed("invalid".to_string());
 
@@ -292,9 +282,7 @@ async fn test_get_poll_without_permission() {
 #[tokio::test]
 async fn test_update_poll_time() {
     let (ctx, space_pk, poll_sk) = setup_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let now = get_now_timestamp_millis();
     let started_at = now + 1000;
@@ -318,9 +306,7 @@ async fn test_update_poll_time() {
 #[tokio::test]
 async fn test_update_poll_questions() {
     let (ctx, space_pk, poll_sk) = setup_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let questions = vec![Question::SingleChoice(ChoiceQuestion {
         title: "Test question".to_string(),
@@ -347,9 +333,7 @@ async fn test_update_poll_questions() {
 #[tokio::test]
 async fn test_update_poll_response_editable() {
     let (ctx, space_pk, poll_sk) = setup_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let (status, _headers, body) = put! {
         app: app,
@@ -368,9 +352,7 @@ async fn test_update_poll_response_editable() {
 #[tokio::test]
 async fn test_update_poll_without_permission() {
     let (ctx, space_pk, poll_sk) = setup_poll_space().await;
-    let TestContextV3 {
-        app, user2, ..
-    } = ctx;
+    let TestContextV3 { app, user2, .. } = ctx;
 
     let now = get_now_timestamp_millis();
 
@@ -390,9 +372,7 @@ async fn test_update_poll_without_permission() {
 #[tokio::test]
 async fn test_update_poll_with_invalid_time_range() {
     let (ctx, space_pk, poll_sk) = setup_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let now = get_now_timestamp_millis();
 
@@ -412,9 +392,7 @@ async fn test_update_poll_with_invalid_time_range() {
 #[tokio::test]
 async fn test_update_poll_with_empty_questions() {
     let (ctx, space_pk, poll_sk) = setup_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let questions: Vec<Question> = vec![];
 
@@ -433,9 +411,7 @@ async fn test_update_poll_with_empty_questions() {
 #[tokio::test]
 async fn test_update_poll_with_invalid_space_pk() {
     let (ctx, _, poll_sk) = setup_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let invalid_pk = Partition::Feed("invalid".to_string());
     let now = get_now_timestamp_millis();
@@ -460,9 +436,7 @@ async fn test_update_poll_with_invalid_space_pk() {
 #[tokio::test]
 async fn test_get_poll_results_when_authenticated_with_permission() {
     let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let (status, _headers, body) = get! {
         app: app,
@@ -573,9 +547,7 @@ async fn test_get_poll_results_without_permission() {
 #[tokio::test]
 async fn test_respond_poll_successfully() {
     let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let answers = vec![
         Answer::SingleChoice { answer: Some(1) },
@@ -641,11 +613,7 @@ async fn test_respond_poll_without_permission() {
 #[tokio::test]
 async fn test_respond_poll_when_not_started() {
     let (ctx, space_pk, poll_sk) = setup_poll_space().await;
-    let TestContextV3 {
-        app,
-        test_user,
-        ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let now = get_now_timestamp_millis();
     let questions = vec![Question::SingleChoice(ChoiceQuestion {
@@ -707,11 +675,7 @@ async fn test_respond_poll_when_not_started() {
 #[tokio::test]
 async fn test_respond_poll_when_already_ended() {
     let (ctx, space_pk, poll_sk) = setup_poll_space().await;
-    let TestContextV3 {
-        app,
-        test_user,
-        ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     let now = get_now_timestamp_millis();
     let questions = vec![Question::SingleChoice(ChoiceQuestion {
@@ -773,9 +737,7 @@ async fn test_respond_poll_when_already_ended() {
 #[tokio::test]
 async fn test_respond_poll_with_mismatched_answers() {
     let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     // Only provide 1 answer when 2 questions exist
     let answers = vec![Answer::SingleChoice { answer: Some(1) }];
@@ -795,9 +757,7 @@ async fn test_respond_poll_with_mismatched_answers() {
 #[tokio::test]
 async fn test_respond_poll_with_invalid_answer_option() {
     let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     // Provide invalid option index (out of bounds)
     let answers = vec![

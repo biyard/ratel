@@ -19,6 +19,8 @@ import SpaceDeleteModal from '@/features/spaces/modals/space-delete-modal';
 import { useDeleteSpaceMutation } from '@/features/spaces/hooks/use-delete-mutation';
 import { NavigateFunction, useNavigate } from 'react-router';
 import { UserDetailResponse } from '@/lib/api/ratel/users.v3';
+import FileModel from '@/features/spaces/files/types/file';
+import { useSpaceUpdateFilesMutation } from '@/features/spaces/hooks/use-space-update-files-mutation';
 import { useUpdateDraftImageMutation } from '@/features/posts/hooks/use-update-draft-image-mutation';
 import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
 import { getPutObjectUrl } from '@/lib/api/ratel/assets.v3';
@@ -37,6 +39,7 @@ export class SpaceHomeController {
     public t: TFunction<'Space'>,
     public updateSpaceContent: ReturnType<typeof useSpaceUpdateContentMutation>,
     public updateSpaceTitle: ReturnType<typeof useSpaceUpdateTitleMutation>,
+    public updateSpaceFiles: ReturnType<typeof useSpaceUpdateFilesMutation>,
     public editState: State<boolean>,
     public saveState: State<boolean>,
     public popup: ReturnType<typeof usePopup>,
@@ -105,6 +108,31 @@ export class SpaceHomeController {
       },
     ];
   }
+
+  handleAddFile = async (file: FileModel) => {
+    const files = this.space.files ?? [];
+    files.push(file);
+
+    this.handleUploadFiles(files);
+  };
+
+  handleRemoveFile = async (index: number) => {
+    const newFiles = this.space.files.filter((_, i) => i !== index);
+    this.handleUploadFiles(newFiles);
+  };
+
+  handleUploadFiles = async (files: FileModel[]) => {
+    try {
+      await this.updateSpaceFiles.mutateAsync({
+        spacePk: this.space.pk,
+        files,
+      });
+      showSuccessToast('Success to update space files');
+    } catch (error) {
+      logger.error('Failed to update space files', error);
+      showErrorToast(`Failed to update space files: ${error}`);
+    }
+  };
 
   handleChange = async (text: string) => {
     try {
@@ -294,6 +322,7 @@ export function useSpaceHomeController(spacePk: string) {
   const navigate = useNavigate();
   const updateSpaceContent = useSpaceUpdateContentMutation();
   const updateSpaceTitle = useSpaceUpdateTitleMutation();
+  const updateSpaceFiles = useSpaceUpdateFilesMutation();
   const publishSpace = usePublishSpaceMutation();
   const deleteSpace = useDeleteSpaceMutation();
   const { mutateAsync: updateDraftImage } = useUpdateDraftImageMutation();
@@ -321,6 +350,7 @@ export function useSpaceHomeController(spacePk: string) {
     t,
     updateSpaceContent,
     updateSpaceTitle,
+    updateSpaceFiles,
     new State(edit),
     new State(save),
     popup,

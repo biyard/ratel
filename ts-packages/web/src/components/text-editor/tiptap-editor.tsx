@@ -10,13 +10,24 @@ import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
-import { forwardRef, useEffect, useImperativeHandle } from 'react';
+import Video from './extensions/video';
+import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { Editor } from '@tiptap/core';
 import { cn } from '@/lib/utils';
 import { TiptapEditorProps, DEFAULT_ENABLED_FEATURES } from './types';
 import { TiptapToolbar } from './tiptap-toolbar';
+import { showErrorToast } from '@/lib/toast';
 
-export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
+export type UploadResult = { url: string };
+
+type Props = TiptapEditorProps & {
+  uploadAsset?: (file: File) => Promise<UploadResult>;
+  uploadVideo?: (file: File) => Promise<UploadResult>;
+  maxImageSizeMB?: number;
+  maxVideoSizeMB?: number;
+};
+
+export const TiptapEditor = forwardRef<Editor | null, Props>(
   (
     {
       content = '',
@@ -33,24 +44,56 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       maxHeight,
       onFocus,
       onBlur,
+      uploadAsset,
+      uploadVideo,
+      maxImageSizeMB = 50,
+      maxVideoSizeMB = 50,
       onImageUpload,
       'data-pw': dataPw,
     },
     ref,
   ) => {
+    const videoInputRef = useRef<HTMLInputElement | null>(null);
+
+    const insertImage = (ed: Editor, src: string, alt?: string) =>
+      ed.chain().focus().setImage({ src, alt }).run();
+    const insertVideo = (ed: Editor, src: string) =>
+      ed.chain().focus().setVideo({ src, controls: true }).run();
+
+    const handleFiles = async (ed: Editor, files: FileList | null) => {
+      if (!files?.length) return true;
+      const file = files[0];
+
+      if (file.type.startsWith('image/')) {
+        if (file.size > maxImageSizeMB * 1024 * 1024) return false;
+        if (uploadAsset) {
+          const { url } = await uploadAsset(file);
+          insertImage(ed, url, file.name);
+          return false;
+        }
+        return true;
+      }
+
+      if (file.type.startsWith('video/')) {
+        if (file.size > maxVideoSizeMB * 1024 * 1024) return false;
+        if (uploadVideo) {
+          const { url } = await uploadVideo(file);
+          insertVideo(ed, url);
+          return false;
+        }
+        return false;
+      }
+
+      return true;
+    };
+
     const editor = useEditor(
       {
         extensions: [
           StarterKit.configure({
-            heading: {
-              levels: [1, 2, 3],
-            },
-            bulletList: {
-              HTMLAttributes: { class: 'list-disc pl-4' },
-            },
-            orderedList: {
-              HTMLAttributes: { class: 'list-decimal pl-4' },
-            },
+            heading: { levels: [1, 2, 3] },
+            bulletList: { HTMLAttributes: { class: 'list-disc pl-4' } },
+            orderedList: { HTMLAttributes: { class: 'list-decimal pl-4' } },
           }),
           TextStyle,
           Color,
@@ -67,38 +110,48 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
               class: 'rounded-lg max-w-full h-auto my-4 mx-auto block',
             },
           }),
+          Video,
           Table.configure({
             resizable: true,
-            HTMLAttributes: {
-              class: 'border-collapse table-auto w-full my-4',
-            },
+            HTMLAttributes: { class: 'border-collapse table-auto w-full my-4' },
           }),
           TableRow,
           TableHeader.configure({
-            HTMLAttributes: {
-              class: 'bg-muted font-semibold',
-            },
+            HTMLAttributes: { class: 'bg-muted font-semibold' },
           }),
           TableCell.configure({
-            HTMLAttributes: {
-              class: 'border border-border p-2 min-w-[100px]',
-            },
+            HTMLAttributes: { class: 'border border-border p-2 min-w-[100px]' },
           }),
         ],
         content,
         editable,
-        onUpdate: ({ editor }: { editor: Editor }) => {
-          const html = editor.getHTML();
-          onUpdate?.(html);
-        },
-        onFocus: () => {
-          onFocus?.();
-        },
-        onBlur: () => {
-          onBlur?.();
+        onUpdate: ({ editor }) => onUpdate?.(editor.getHTML()),
+        onFocus: () => onFocus?.(),
+        onBlur: () => onBlur?.(),
+        editorProps: {
+          handleDrop(view, ev) {
+            const dt = (ev as DragEvent).dataTransfer;
+            if (!dt?.files?.length) return false;
+            ev.preventDefault();
+            ev.stopPropagation();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            handleFiles((view as any).editor, dt.files);
+            return true;
+          },
+          handlePaste(view, ev) {
+            const cb = (ev as ClipboardEvent).clipboardData;
+            const files = cb?.files ?? null;
+            if (files?.length) {
+              ev.preventDefault();
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              handleFiles((view as any).editor, files);
+              return true;
+            }
+            return false;
+          },
         },
       },
-      [editable],
+      [editable, uploadAsset, uploadVideo, maxImageSizeMB, maxVideoSizeMB],
     ) as Editor | null;
 
     useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [
@@ -113,15 +166,11 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
 
     useEffect(() => {
       return () => {
-        if (editor) {
-          editor.destroy();
-        }
+        if (editor) editor.destroy();
       };
     }, [editor]);
 
-    if (!editor) {
-      return <></>;
-    }
+    if (!editor) return <></>;
 
     return (
       <div
@@ -138,6 +187,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             editor={editor}
             enabledFeatures={enabledFeatures}
             className={toolbarClassName}
+            openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
           />
         )}
@@ -170,11 +220,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
               '[&_.ProseMirror_li]:my-1',
               '[&_.ProseMirror_p]:my-2',
               '[&_.ProseMirror_mark]:bg-yellow-200 [&_.ProseMirror_mark]:px-0.5',
-              // Table styles
               '[&_.ProseMirror_table]:border-collapse [&_.ProseMirror_table]:table-auto [&_.ProseMirror_table]:w-full [&_.ProseMirror_table]:my-4',
               '[&_.ProseMirror_td]:border [&_.ProseMirror_td]:border-border [&_.ProseMirror_td]:p-2 [&_.ProseMirror_td]:min-w-[100px] [&_.ProseMirror_td]:relative',
               '[&_.ProseMirror_th]:border [&_.ProseMirror_th]:border-border [&_.ProseMirror_th]:p-2 [&_.ProseMirror_th]:min-w-[100px] [&_.ProseMirror_th]:bg-muted [&_.ProseMirror_th]:font-semibold [&_.ProseMirror_th]:relative',
-              // Selected cells highlighting for merging
               '[&_.ProseMirror_.selectedCell]:bg-primary/20',
               '[&_.ProseMirror_.selectedCell]:border-primary',
               '[&_.ProseMirror_.selectedCell]:border-2',
@@ -182,10 +230,29 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
               '[&_.ProseMirror_.selectedCell]:outline-2',
               '[&_.ProseMirror_.selectedCell]:outline-primary/40',
               '[&_.ProseMirror_.selectedCell]:outline-offset-[-1px]',
-              // Column resize handle
               '[&_.ProseMirror_.column-resize-handle]:absolute [&_.ProseMirror_.column-resize-handle]:right-[-2px] [&_.ProseMirror_.column-resize-handle]:top-0 [&_.ProseMirror_.column-resize-handle]:bottom-0 [&_.ProseMirror_.column-resize-handle]:w-[4px] [&_.ProseMirror_.column-resize-handle]:bg-primary [&_.ProseMirror_.column-resize-handle]:pointer-events-none',
             )}
             data-placeholder={placeholder}
+          />
+          <input
+            ref={videoInputRef}
+            type="file"
+            accept="video/*"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (!file) return;
+              if (file.size > maxVideoSizeMB * 1024 * 1024) {
+                showErrorToast(`File size exceeds ${maxVideoSizeMB}MB limit.`);
+                e.currentTarget.value = '';
+                return;
+              }
+              if (uploadVideo && editor) {
+                const { url } = await uploadVideo(file);
+                insertVideo(editor, url);
+              }
+              e.currentTarget.value = '';
+            }}
           />
         </div>
 
@@ -194,6 +261,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             editor={editor}
             enabledFeatures={enabledFeatures}
             className={toolbarClassName}
+            openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
           />
         )}
