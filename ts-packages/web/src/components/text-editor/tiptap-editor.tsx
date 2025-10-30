@@ -33,6 +33,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       maxHeight,
       onFocus,
       onBlur,
+      onImageUpload,
       'data-pw': dataPw,
     },
     ref,
@@ -137,6 +138,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             editor={editor}
             enabledFeatures={enabledFeatures}
             className={toolbarClassName}
+            onImageUpload={onImageUpload}
           />
         )}
 
@@ -192,6 +194,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             editor={editor}
             enabledFeatures={enabledFeatures}
             className={toolbarClassName}
+            onImageUpload={onImageUpload}
           />
         )}
       </div>

@@ -2,6 +2,7 @@ use crate::models::feed::Post;
 use crate::models::user::User;
 use crate::models::{PostArtwork, PostArtworkMetadata};
 use crate::types::{EntityType, PostStatus, PostType, TeamGroupPermission, Visibility};
+use crate::utils::time::get_now_timestamp_millis;
 use crate::utils::validator::{validate_content, validate_title};
 use crate::{AppState, Error, transact_write_items};
 use aide::NoApi;
@@ -26,9 +27,9 @@ pub enum UpdatePostRequest {
         title: String,
         content: String,
     },
-    // Image {
-    //     images: Vec<String>,
-    // },
+    Image {
+        images: Vec<String>,
+    },
     Info {
         visibility: Visibility,
     },
@@ -58,7 +59,7 @@ pub async fn update_post_handler(
         return Err(Error::NoPermission);
     }
 
-    let now = chrono::Utc::now().timestamp();
+    let now = get_now_timestamp_millis();
     let updater = Post::updater(&post.pk, &post.sk).with_updated_at(now);
     post.updated_at = now;
 
@@ -73,6 +74,10 @@ pub async fn update_post_handler(
                     .with_html_contents(content)
                     .transact_write_item(),
             ]
+        }
+        UpdatePostRequest::Image { images } => {
+            post.urls = images.clone();
+            vec![updater.with_urls(images).transact_write_item()]
         }
 
         UpdatePostRequest::Info { visibility } => {
@@ -107,22 +112,22 @@ pub async fn update_post_handler(
             validate_title(&title)?;
             validate_content(&content)?;
 
-            let image_urls = image_urls.unwrap_or_default();
-            post.urls = image_urls.clone();
             post.status = PostStatus::Published;
             post.title = title.clone();
             post.html_contents = content.clone();
             post.visibility = Some(visibility.clone());
             post.status = PostStatus::Published;
-            vec![
-                updater
-                    .with_status(PostStatus::Published)
-                    .with_title(title)
-                    .with_html_contents(content)
-                    .with_visibility(visibility)
-                    .with_urls(image_urls)
-                    .transact_write_item(),
-            ]
+            let updater = updater
+                .with_status(PostStatus::Published)
+                .with_title(title)
+                .with_html_contents(content)
+                .with_visibility(visibility);
+            if let Some(image_urls) = image_urls {
+                post.urls = image_urls.clone();
+                vec![updater.with_urls(image_urls).transact_write_item()]
+            } else {
+                vec![updater.transact_write_item()]
+            }
         }
         UpdatePostRequest::PostType { r#type } => {
             post.post_type = r#type.clone();

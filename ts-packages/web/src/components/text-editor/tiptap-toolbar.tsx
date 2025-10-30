@@ -33,6 +33,7 @@ export const TiptapToolbar = ({
   editor,
   enabledFeatures = DEFAULT_ENABLED_FEATURES,
   className,
+  onImageUpload,
 }: TiptapToolbarProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -137,16 +138,19 @@ export const TiptapToolbar = ({
       return;
     }
 
-    // Convert to Base64
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const base64 = e.target?.result as string;
+      if (onImageUpload) {
+        await onImageUpload(base64);
+      } else {
+        editor
+          .chain()
+          .focus()
+          .setImage({ src: base64, alt: file.name, title: file.name })
+          .run();
+      }
       // Store filename in alt attribute for later use
-      editor
-        .chain()
-        .focus()
-        .setImage({ src: base64, alt: file.name, title: file.name })
-        .run();
     };
     reader.readAsDataURL(file);
 
