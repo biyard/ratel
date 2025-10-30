@@ -3,24 +3,16 @@ import { CONFIGS } from '@tests/config';
 import { click } from '@tests/utils';
 
 test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
-  let context: import('@playwright/test').BrowserContext;
-  let page: import('@playwright/test').Page;
-
   let threadUrl = '';
   let spaceUrl = '';
   let pollUrl = '';
 
-  async function navigateToPoll() {
-    await page.goto(pollUrl);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-  }
-
   test.beforeAll('Create a post and poll space', async ({ browser }) => {
-    context = await browser.newContext({ storageState: 'user.json' });
-    page = await context.newPage();
+    const context = await browser.newContext({ storageState: 'user.json' });
+    const page = await context.newPage();
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(3000);
 
     const currentUrl = page.url();
     expect(currentUrl).toBeTruthy();
@@ -52,9 +44,11 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
 
     await page.waitForURL(/\/threads\/.+/, { timeout: 15000 });
     threadUrl = page.url();
+
+    await context.close();
   });
 
-  test('[SPEP-001] Create a Poll Space', async () => {
+  test('[SPEP-001] Create a Poll Space', async ({ page }) => {
     await page.goto(threadUrl);
     await page.waitForTimeout(3000);
 
@@ -73,7 +67,9 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
     spaceUrl = page.url();
   });
 
-  test('[SPEP-002] Navigate to Polls page and create a poll', async () => {
+  test('[SPEP-002] Navigate to Polls page and create a poll', async ({
+    page,
+  }) => {
     await page.goto(spaceUrl);
     await page.waitForTimeout(3000);
 
@@ -96,15 +92,23 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
     await expect(editButton).toBeVisible({ timeout: 10000 });
   });
 
-  test('[SPEP-003] Response editable checkbox is visible for admin', async () => {
-    await navigateToPoll();
+  test('[SPEP-003] Response editable checkbox is visible for admin', async ({
+    page,
+  }) => {
+    await page.goto(pollUrl);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
 
     const checkbox = page.locator('[data-pw="response-editable-checkbox"]');
     await expect(checkbox).toBeVisible({ timeout: 5000 });
   });
 
-  test('[SPEP-004] Response_editable checkbox is visible and clickable', async () => {
-    await navigateToPoll();
+  test('[SPEP-004] Response_editable checkbox is visible and clickable', async ({
+    page,
+  }) => {
+    await page.goto(pollUrl);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
 
     const checkbox = page.locator('[data-pw="response-editable-checkbox"]');
     await expect(checkbox).toBeVisible({ timeout: 5000 });
@@ -117,8 +121,12 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
     await page.waitForTimeout(500);
   });
 
-  test('[SPEP-005] Enter edit mode by clicking Edit button', async () => {
-    await navigateToPoll();
+  test('[SPEP-005] Enter edit mode by clicking Edit button', async ({
+    page,
+  }) => {
+    await page.goto(pollUrl);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
 
     const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
     await expect(editButton).toBeVisible({ timeout: 5000 });
@@ -132,8 +140,10 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
     await expect(editButton).not.toBeVisible();
   });
 
-  test('[SPEP-006] Add a new question in edit mode', async () => {
-    await navigateToPoll();
+  test('[SPEP-006] Add a new question in edit mode', async ({ page }) => {
+    await page.goto(pollUrl);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
 
     const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
     await editButton.click();
@@ -156,8 +166,10 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
     }
   });
 
-  test('[SPEP-007] Save changes in edit mode', async () => {
-    await navigateToPoll();
+  test('[SPEP-007] Save changes in edit mode', async ({ page }) => {
+    await page.goto(pollUrl);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
 
     const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
     await expect(editButton).toBeVisible({ timeout: 10000 });
@@ -176,8 +188,10 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
     await expect(editButton).toBeVisible({ timeout: 10000 });
   });
 
-  test('[SPEP-008] Discard changes in edit mode', async () => {
-    await navigateToPoll();
+  test('[SPEP-008] Discard changes in edit mode', async ({ page }) => {
+    await page.goto(pollUrl);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
 
     const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
     await editButton.click();
@@ -190,8 +204,12 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
     await expect(editButton).toBeVisible({ timeout: 5000 });
   });
 
-  test('[SPEP-009] Edit and Save workflow completes successfully', async () => {
-    await navigateToPoll();
+  test('[SPEP-009] Edit and Save workflow completes successfully', async ({
+    page,
+  }) => {
+    await page.goto(pollUrl);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
 
     const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
     await editButton.click();

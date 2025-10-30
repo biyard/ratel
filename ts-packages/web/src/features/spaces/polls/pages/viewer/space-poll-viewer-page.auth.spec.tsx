@@ -3,24 +3,16 @@ import { CONFIGS } from '@tests/config';
 import { click } from '@tests/utils';
 
 test.describe.serial('[SpacePollViewerPage] Authenticated Users', () => {
-  let context: import('@playwright/test').BrowserContext;
-  let page: import('@playwright/test').Page;
-
   let threadUrl = '';
   let spaceUrl = '';
   let pollUrl = '';
 
-  async function navigateToPoll() {
-    await page.goto(pollUrl);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-  }
-
   test.beforeAll('Create a post and poll space', async ({ browser }) => {
-    context = await browser.newContext({ storageState: 'user.json' });
-    page = await context.newPage();
+    const context = await browser.newContext({ storageState: 'user.json' });
+    const page = await context.newPage();
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(3000);
 
     const testTitle = 'Automated Post for Poll Space Verification';
     const testContent =
@@ -48,9 +40,11 @@ test.describe.serial('[SpacePollViewerPage] Authenticated Users', () => {
 
     await page.waitForURL(/\/threads\/.+/, { timeout: 15000 });
     threadUrl = page.url();
+
+    await context.close();
   });
 
-  test('[SPVP-001] Create a Poll Space', async () => {
+  test('[SPVP-001] Create a Poll Space', async ({ page }) => {
     await page.goto(threadUrl);
     await page.waitForTimeout(3000);
 
@@ -69,7 +63,9 @@ test.describe.serial('[SpacePollViewerPage] Authenticated Users', () => {
     spaceUrl = page.url();
   });
 
-  test('[SPVP-002] Navigate to Polls page and create a poll', async () => {
+  test('[SPVP-002] Navigate to Polls page and create a poll', async ({
+    page,
+  }) => {
     await page.goto(spaceUrl);
     await page.waitForTimeout(3000);
 
@@ -88,8 +84,12 @@ test.describe.serial('[SpacePollViewerPage] Authenticated Users', () => {
     pollUrl = page.url();
   });
 
-  test('[SPVP-003] Authenticated admin user can see Edit button', async () => {
-    await navigateToPoll();
+  test('[SPVP-003] Authenticated admin user can see Edit button', async ({
+    page,
+  }) => {
+    await page.goto(pollUrl);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
 
     // Admin should see Edit button instead of viewer buttons
     const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
@@ -101,8 +101,10 @@ test.describe.serial('[SpacePollViewerPage] Authenticated Users', () => {
     expect(isEditVisible).toBe(true);
   });
 
-  test('[SPVP-004] Admin can edit poll and add questions', async () => {
-    await navigateToPoll();
+  test('[SPVP-004] Admin can edit poll and add questions', async ({ page }) => {
+    await page.goto(pollUrl);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
 
     // Click Edit button
     const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
@@ -135,8 +137,10 @@ test.describe.serial('[SpacePollViewerPage] Authenticated Users', () => {
     await expect(editButton).toBeVisible({ timeout: 10000 });
   });
 
-  test('[SPVP-005] Admin sees response_editable checkbox', async () => {
-    await navigateToPoll();
+  test('[SPVP-005] Admin sees response_editable checkbox', async ({ page }) => {
+    await page.goto(pollUrl);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
 
     const checkbox = page.locator('[data-pw="response-editable-checkbox"]');
     await expect(checkbox).toBeVisible({ timeout: 5000 });
@@ -149,8 +153,10 @@ test.describe.serial('[SpacePollViewerPage] Authenticated Users', () => {
     await page.waitForTimeout(500);
   });
 
-  test('[SPVP-006] Discard changes returns to view mode', async () => {
-    await navigateToPoll();
+  test('[SPVP-006] Discard changes returns to view mode', async ({ page }) => {
+    await page.goto(pollUrl);
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(2000);
 
     // Click Edit button
     const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
