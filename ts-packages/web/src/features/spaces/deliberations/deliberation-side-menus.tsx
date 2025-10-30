@@ -3,6 +3,7 @@ import {
   Discuss,
   PieChart1,
   Post,
+  User,
   Vote,
 } from '@/components/icons';
 import { SpaceType } from '../types/space-type';
@@ -39,6 +40,13 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
       return route.spaceDiscussions(space.pk);
     },
     label: 'menu_discussions',
+  },
+  {
+    Icon: User,
+    to: (space) => {
+      return route.spacePanels(space.pk);
+    },
+    label: 'menu_panels',
   },
   {
     Icon: checkCircle2Colored,

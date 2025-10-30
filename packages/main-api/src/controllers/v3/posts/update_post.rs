@@ -2,6 +2,7 @@ use crate::models::feed::Post;
 use crate::models::user::User;
 use crate::models::{PostArtwork, PostArtworkMetadata};
 use crate::types::{EntityType, PostStatus, PostType, TeamGroupPermission, Visibility};
+use crate::utils::time::get_now_timestamp_millis;
 use crate::utils::validator::{validate_content, validate_title};
 use crate::{AppState, Error, transact_write_items};
 use aide::NoApi;
@@ -15,6 +16,7 @@ pub enum UpdatePostRequest {
     Publish {
         title: String,
         content: String,
+        image_urls: Option<Vec<String>>,
         publish: bool,
         visibility: Option<Visibility>,
     },
@@ -25,10 +27,9 @@ pub enum UpdatePostRequest {
         title: String,
         content: String,
     },
-    Image {
-        images: Vec<String>,
-    },
-
+    // Image {
+    //     images: Vec<String>,
+    // },
     Info {
         visibility: Visibility,
     },
@@ -58,15 +59,12 @@ pub async fn update_post_handler(
         return Err(Error::NoPermission);
     }
 
-    let now = chrono::Utc::now().timestamp();
+    let now = get_now_timestamp_millis();
     let updater = Post::updater(&post.pk, &post.sk).with_updated_at(now);
     post.updated_at = now;
 
     let transacts = match req {
         UpdatePostRequest::Writing { title, content } => {
-            validate_title(&title)?;
-            validate_content(&content)?;
-
             post.title = title.clone();
             post.html_contents = content.clone();
 
@@ -77,10 +75,7 @@ pub async fn update_post_handler(
                     .transact_write_item(),
             ]
         }
-        UpdatePostRequest::Image { images } => {
-            post.urls = images.clone();
-            vec![updater.with_urls(images).transact_write_item()]
-        }
+
         UpdatePostRequest::Info { visibility } => {
             post.visibility = Some(visibility.clone());
             vec![updater.with_visibility(visibility).transact_write_item()]
@@ -90,7 +85,11 @@ pub async fn update_post_handler(
             content,
             title,
             visibility,
+            image_urls,
         } => {
+            validate_title(&title)?;
+            validate_content(&content)?;
+
             tracing::debug!(
                 "Publish request: publish = {}, title = {}, content = [REDACTED]",
                 publish,
@@ -106,20 +105,23 @@ pub async fn update_post_handler(
                     "it does not support unpublished now".into(),
                 ));
             }
-            let av: aws_sdk_dynamodb::types::AttributeValue =
-                serde_dynamo::to_attribute_value(&PostStatus::Published)
-                    .expect("failed to serialize field");
+            validate_title(&title)?;
+            validate_content(&content)?;
 
-            tracing::debug!("Publishing post with AV: {:?}", av);
-
+            let image_urls = image_urls.unwrap_or_default();
+            post.urls = image_urls.clone();
             post.status = PostStatus::Published;
-
+            post.title = title.clone();
+            post.html_contents = content.clone();
+            post.visibility = Some(visibility.clone());
+            post.status = PostStatus::Published;
             vec![
                 updater
                     .with_status(PostStatus::Published)
                     .with_title(title)
                     .with_html_contents(content)
                     .with_visibility(visibility)
+                    .with_urls(image_urls)
                     .transact_write_item(),
             ]
         }

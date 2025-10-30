@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { click, fill } from '@tests/utils';
+import { click } from '@tests/utils';
 import { CONFIGS } from '../../../tests/config';
 
 test.describe('Create Post - Authenticated User', () => {
@@ -18,10 +18,21 @@ test.describe('Create Post - Authenticated User', () => {
       'meet the minimum character requirements for post publishing.';
 
     await click(page, { label: 'Create Post' });
-    await fill(page, { placeholder: 'Write a title...' }, testTitle);
-    await fill(page, { label: 'general-post-editor' }, testContent);
 
-    await click(page, { label: 'Publish' });
+    await page.waitForURL(/\/posts\/new/, {
+      timeout: CONFIGS.PAGE_WAIT_TIME,
+    });
+
+    await page.fill('#post-title-input', testTitle);
+
+    const editorSelector = '[data-pw="post-content-editor"] .ProseMirror';
+    await page.waitForSelector(editorSelector, {
+      timeout: CONFIGS.PAGE_WAIT_TIME,
+    });
+    await page.click(editorSelector);
+    await page.fill(editorSelector, testContent);
+
+    await page.click('#publish-post-button');
 
     await page.waitForURL(/\/threads\/.+/, { timeout: CONFIGS.PAGE_WAIT_TIME });
   });

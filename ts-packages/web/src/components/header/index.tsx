@@ -164,6 +164,7 @@ export default function Header(props: HeaderProps) {
           {navItems.map((item, index) => (
             <NavLink
               key={`nav-item-${index}`}
+              aria-label={`nav-${item.name}`}
               to={item.href}
               className="flex flex-col justify-center items-center p-2.5 group"
               hidden={!item.visible || (item.authorized && !loggedIn)}

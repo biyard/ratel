@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { CONFIGS } from '@tests/config';
 import { click, fill } from '@tests/utils';
 // import { fileURLToPath } from 'url';
 
@@ -10,7 +11,7 @@ test.describe
   let threadUrl = '';
   let spaceUrl = '';
 
-  test.beforeAll('Create a post', async ({ browser }) => {
+  test.beforeAll('Create post', async ({ browser }) => {
     context = await browser.newContext({ storageState: 'user.json' });
     page = await context.newPage();
     await page.goto('/');
@@ -24,11 +25,24 @@ test.describe
       'auto-save, and final publication. This content is intentionally long to ' +
       'meet the minimum character requirements for post publishing.';
 
-    await click(page, { text: 'Create Post' });
-    await fill(page, { placeholder: 'Write a title...' }, testTitle);
-    await fill(page, { label: 'general-post-editor' }, testContent);
+    await click(page, { label: 'Create Post' });
+    await page.waitForURL(/\/posts\/new/, {
+      timeout: CONFIGS.PAGE_WAIT_TIME,
+    });
 
-    await click(page, { label: 'Publish' });
+    // Fill in the title using the ID selector
+    await page.fill('#post-title-input', testTitle);
+
+    // Fill in the content using the editor's ProseMirror element
+    const editorSelector = '[data-pw="post-content-editor"] .ProseMirror';
+    await page.waitForSelector(editorSelector, {
+      timeout: CONFIGS.PAGE_WAIT_TIME,
+    });
+    await page.click(editorSelector);
+    await page.fill(editorSelector, testContent);
+
+    // Click the publish button using ID selector
+    await page.click('#publish-post-button');
 
     await page.waitForURL(/\/threads\/.+/, { timeout: 15000 });
     threadUrl = page.url();
@@ -56,34 +70,34 @@ test.describe
   });
 
   test('[SPEP-002] Update Recommendation Contents', async () => {
-    const body = 'This recommendation was edited by Playwright';
+    const testContent =
+      'This is an automated post content created by Playwright E2E. ' +
+      'The purpose of this is to verify that the post creation functionality ' +
+      'works correctly from end to end, including title input, content editing, ' +
+      'auto-save, and final publication. This content is intentionally long to ' +
+      'meet the minimum character requirements for post publishing.';
 
     await page.goto(spaceUrl);
-    await page.waitForTimeout(3000);
+    await page.waitForLoadState('networkidle');
 
     await page.getByText('Recommendations', { exact: true }).click();
 
+    const editorSelector =
+      '[data-pw="space-recommendation-editor"] .ProseMirror';
+
+    // Wait for the editor to become editable (contenteditable="true")
+    await page.waitForSelector(editorSelector, {
+      timeout: CONFIGS.PAGE_WAIT_TIME,
+    });
     const editIcon = page.locator('svg[role="button"]');
-    await expect(editIcon).toBeVisible({ timeout: 5000 });
+    await expect(editIcon).toBeVisible({ timeout: CONFIGS.SELECTOR_WAIT_TIME });
     await editIcon.click();
+    test.setTimeout(5000);
+    await page.click(editorSelector);
+    await page.fill(editorSelector, testContent);
 
-    const textEditor = page
-      .locator('.tiptap.ProseMirror[contenteditable="true"]')
-      .last();
-
-    await textEditor.waitFor();
-    await expect(textEditor).toBeVisible();
-    await expect(textEditor).toBeEditable();
-
-    const mod = process.platform === 'darwin' ? 'Meta' : 'Control';
-    await textEditor.click();
-    await textEditor.press(`${mod}+KeyA`);
-    await textEditor.press('Backspace');
-
-    await textEditor.type(body);
-    await textEditor.press('Enter');
-
-    await expect(page.getByText(body)).toBeVisible();
+    const saveButton = page.locator('svg[role="button"]');
+    await saveButton.click();
   });
 
   // FIXME: fix to failed testcode

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import { SpaceType } from '../../types/space-type';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { useCreateSpaceMutation } from '../../hooks/use-create-space-mutation';
-import { showErrorToast } from '@/lib/toast';
+import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { route } from '@/route';
 import { SPACE_DEFINITIONS } from '../../types/space-definition';
@@ -81,6 +81,7 @@ export class SpaceTypeSelectModalController {
         spaceType: this.selectedSpace.type,
         postPk: this.feed_id,
       });
+      showSuccessToast('Success to process request');
     } catch (error) {
       logger.error('Error in handleSend:', error);
       showErrorToast('Failed to process request');

@@ -60,7 +60,8 @@ services:
       VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-dummy}
       VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID:-dummy}
 
-      API_URL: "http://main-api:3000"
+      VITE_PORTONE_STORE_ID: ${PORTONE_STORE_ID}
+      VITE_PORTONE_INICIS_CHANNEL_KEY: ${PORTONE_INICIS_CHANNEL_KEY}
 
       NODE_ENV: production
     volumes:
@@ -195,7 +196,8 @@ services:
       VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-dummy}
       VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID:-dummy}
 
-      API_URL: "http://main-api:3000"
+      VITE_PORTONE_STORE_ID: ${PORTONE_STORE_ID}
+      VITE_PORTONE_INICIS_CHANNEL_KEY: ${PORTONE_INICIS_CHANNEL_KEY}
 
       NODE_ENV: development
     command: ["bash", "scripts/web-entrypoint.sh"]

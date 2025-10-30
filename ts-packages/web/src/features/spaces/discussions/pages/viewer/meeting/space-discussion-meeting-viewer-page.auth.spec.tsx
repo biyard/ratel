@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { CONFIGS } from '@tests/config';
 import { click, fill } from '@tests/utils';
 
 test.describe
@@ -9,7 +10,7 @@ test.describe
   let threadUrl = '';
   let spaceUrl = '';
 
-  test.beforeAll('Create a post', async ({ browser }) => {
+  test.beforeAll('Create post', async ({ browser }) => {
     context = await browser.newContext({ storageState: 'user.json' });
     page = await context.newPage();
     await page.goto('/');
@@ -23,11 +24,21 @@ test.describe
       'auto-save, and final publication. This content is intentionally long to ' +
       'meet the minimum character requirements for post publishing.';
 
-    await click(page, { text: 'Create Post' });
-    await fill(page, { placeholder: 'Write a title...' }, testTitle);
-    await fill(page, { label: 'general-post-editor' }, testContent);
+    await click(page, { label: 'Create Post' });
+    await page.waitForURL(/\/posts\/new/, {
+      timeout: CONFIGS.PAGE_WAIT_TIME,
+    });
 
-    await click(page, { label: 'Publish' });
+    await page.fill('#post-title-input', testTitle);
+
+    const editorSelector = '[data-pw="post-content-editor"] .ProseMirror';
+    await page.waitForSelector(editorSelector, {
+      timeout: CONFIGS.PAGE_WAIT_TIME,
+    });
+    await page.click(editorSelector);
+    await page.fill(editorSelector, testContent);
+
+    await page.click('#publish-post-button');
 
     await page.waitForURL(/\/threads\/.+/, { timeout: 15000 });
     threadUrl = page.url();

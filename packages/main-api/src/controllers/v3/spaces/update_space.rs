@@ -71,7 +71,10 @@ pub async fn update_space_handler(
                 .with_publish_state(SpacePublishState::Published)
                 .with_visibility(visibility.clone());
 
-            pu = pu.with_space_visibility(SpaceVisibility::Public);
+            pu = pu
+                .with_space_visibility(visibility.clone())
+                .with_visibility(visibility.clone().into())
+                .with_status(crate::types::PostStatus::Published);
 
             should_notify_space = space.booster != BoosterType::NoBoost
                 && (space.publish_state == SpacePublishState::Draft && publish)

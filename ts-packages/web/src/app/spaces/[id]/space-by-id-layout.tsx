@@ -21,7 +21,7 @@ export const Context = createContext<SpaceHomeController | undefined>(
 
 export default function SpaceByIdLayout() {
   const { spacePk } = useParams<{ spacePk: string }>();
-  const ctrl = useSpaceHomeController(spacePk);
+  const ctrl = useSpaceHomeController(spacePk ?? '');
 
   return (
     <Context.Provider value={ctrl}>
@@ -45,7 +45,7 @@ export default function SpaceByIdLayout() {
             likes={ctrl.space.likes}
             shares={ctrl.space.shares}
             comments={ctrl.space.comments}
-            rewards={ctrl.space.rewards}
+            rewards={ctrl.space.rewards ?? 0}
             isDraft={ctrl.space.isDraft}
             isPublic={ctrl.space.isPublic}
           />
