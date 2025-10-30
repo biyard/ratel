@@ -39,7 +39,6 @@ export const SPACE_DEFINITIONS: SpaceDefinition[] = [
     descKey: 'sprintLeague.desc',
     canBoost: true,
   },
-
   {
     type: SpaceType.Nft,
     Icon: (

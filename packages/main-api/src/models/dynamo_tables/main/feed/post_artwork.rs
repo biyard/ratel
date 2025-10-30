@@ -21,6 +21,6 @@ impl PostArtwork {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, Default, JsonSchema)]
 pub struct PostArtworkMetadata {
     pub trait_type: String,
-    pub value: serde_json::Value,
+    pub value: String,
     pub display_type: Option<String>,
 }

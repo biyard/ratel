@@ -7,12 +7,14 @@ export type SpaceTypeItem = React.HTMLAttributes<HTMLDivElement> & {
   spaceDefinition: SpaceDefinition;
   selected: boolean;
   onClick: () => void;
+  disabled?: boolean;
 };
 
 export default function SpaceTypeItem({
   spaceDefinition: { Icon, labelKey, descKey, experiment },
   selected,
   onClick,
+  disabled,
 }: SpaceTypeItem) {
   const { t } = useTranslation('SpaceForm');
 
@@ -23,8 +25,9 @@ export default function SpaceTypeItem({
   return (
     <div
       aria-label={`space-setting-form-${labelKey}`}
-      className={`flex flex-row gap-5 justify-center items-center w-100 p-5 border rounded-[10px] transition-colors cursor-pointer hover:border-primary
-              ${selected ? 'border-primary' : 'border-modal-card-border'}`}
+      className={`flex flex-row gap-5 justify-center items-center w-100 p-5 border rounded-[10px] transition-colors hover:border-primary
+              ${selected ? 'border-primary' : 'border-modal-card-border'}
+              ${disabled ? '' : 'cursor-pointer'}`}
       onClick={onClick}
     >
       {/* <div className="size-8 [&>svg]:size-8">{Icon}</div> */}

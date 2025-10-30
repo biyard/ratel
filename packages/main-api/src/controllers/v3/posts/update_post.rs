@@ -33,9 +33,7 @@ pub enum UpdatePostRequest {
     Info {
         visibility: Visibility,
     },
-    WritingArtwork {
-        title: String,
-        content: String,
+    ArtworkMetadata {
         metadata: Vec<PostArtworkMetadata>,
     },
 }
@@ -133,37 +131,27 @@ pub async fn update_post_handler(
             post.post_type = r#type.clone();
             vec![updater.with_post_type(r#type).transact_write_item()]
         }
-        UpdatePostRequest::WritingArtwork {
-            title,
-            content,
-            metadata,
+        UpdatePostRequest::ArtworkMetadata {
+            metadata: next_metadata,
         } => {
-            validate_title(&title)?;
-            validate_content(&content)?;
-
             let mut transacts = vec![];
-            post.title = title.clone();
-            post.html_contents = content.clone();
-            transacts.push(
-                updater
-                    .with_title(title)
-                    .with_html_contents(content)
-                    .transact_write_item(),
-            );
 
-            let next_metadata =
-                PostArtwork::get(cli, &post.pk, Some(EntityType::PostArtwork)).await?;
-            let _metadata = if let Some(mut meta) = next_metadata {
+            transacts.push(updater.transact_write_item());
+
+            let artwork = PostArtwork::get(cli, &post.pk, Some(EntityType::PostArtwork)).await?;
+            tracing::debug!("Existing artwork metadata: {:?}", artwork);
+            let _metadata = if let Some(mut artwork) = artwork {
                 let artwork_updater =
                     PostArtwork::updater(post.pk.clone(), EntityType::PostArtwork)
-                        .with_metadata(metadata.clone());
+                        .with_metadata(next_metadata.clone());
                 transacts.push(artwork_updater.transact_write_item());
-                meta.metadata = metadata;
-                meta
+                artwork.metadata = next_metadata;
+                artwork
             } else {
-                let next_metadata = PostArtwork::new(post.pk.clone(), metadata);
-                transacts.push(next_metadata.create_transact_write_item());
-                next_metadata
+                let artwork = PostArtwork::new(post.pk.clone(), next_metadata);
+                tracing::debug!("Creating new artwork metadata: {:?}", artwork);
+                transacts.push(artwork.create_transact_write_item());
+                artwork
             };
             transacts
         }

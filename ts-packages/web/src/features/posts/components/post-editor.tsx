@@ -1,18 +1,37 @@
 import { TiptapEditor } from '@/components/text-editor';
 import { forwardRef } from 'react';
-import { TiptapEditorProps } from '@/components/text-editor/types';
+import {
+  DEFAULT_ENABLED_FEATURES,
+  TiptapEditorProps,
+} from '@/components/text-editor/types';
 import { Editor } from '@tiptap/react';
 
 export interface PostEditorProps extends TiptapEditorProps {
   url: string | null;
+  disabledImageUpload?: boolean;
   onRemoveImage?: () => void;
 }
 export const PostEditor = forwardRef<Editor | null, PostEditorProps>(
   (props, ref) => {
-    const { url, onRemoveImage, editable, ...editorProps } = props;
+    const {
+      url,
+      onRemoveImage,
+      editable,
+      disabledImageUpload = false,
+      ...editorProps
+    } = props;
+    let features = DEFAULT_ENABLED_FEATURES;
+    if (disabledImageUpload) {
+      features = { ...features, image: false };
+    }
     return (
       <div className="flex flex-col w-full">
-        <TiptapEditor ref={ref} editable={editable} {...editorProps} />
+        <TiptapEditor
+          ref={ref}
+          editable={editable}
+          enabledFeatures={features}
+          {...editorProps}
+        />
         {url && (
           <div className="px-2 relative">
             <div className="aspect-video relative">
