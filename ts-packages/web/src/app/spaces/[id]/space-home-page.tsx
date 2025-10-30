@@ -6,11 +6,13 @@ export function SpaceHomePage() {
 
   return (
     <>
-      <SpaceHTMLContentEditor
-        htmlContent={ctrl.space.content}
-        canEdit={ctrl.isAdmin}
-        onContentChange={ctrl.handleChange}
-      />
+      <div className="flex flex-col w-full gap-2.5">
+        <SpaceHTMLContentEditor
+          htmlContent={ctrl.space.content}
+          canEdit={ctrl.isAdmin}
+          onContentChange={ctrl.handleChange}
+        />
+      </div>
     </>
   );
 }

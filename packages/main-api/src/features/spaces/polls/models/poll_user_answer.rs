@@ -16,9 +16,14 @@ pub struct PollUserAnswer {
 // /controllers/
 // /features/features/models, utils, types
 impl PollUserAnswer {
-    pub fn new(space_pk: Partition, user_pk: Partition, answers: Vec<Answer>) -> Self {
+    pub fn new(
+        space_pk: Partition,
+        poll_pk: Partition,
+        user_pk: Partition,
+        answers: Vec<Answer>,
+    ) -> Self {
         let created_at = get_now_timestamp_millis();
-        let (pk, sk) = Self::keys(&user_pk, &space_pk);
+        let (pk, sk) = Self::keys(&user_pk, &poll_pk, &space_pk);
         Self {
             pk,
             sk,
@@ -26,24 +31,30 @@ impl PollUserAnswer {
             answers,
         }
     }
-    pub fn keys(user_pk: &Partition, space_pk: &Partition) -> (Partition, EntityType) {
+    pub fn keys(
+        user_pk: &Partition,
+        poll_pk: &Partition,
+        space_pk: &Partition,
+    ) -> (Partition, EntityType) {
         (
             Partition::SpacePollUserAnswer(user_pk.to_string()),
-            EntityType::SpacePollUserAnswer(space_pk.to_string()),
+            EntityType::SpacePollUserAnswer(space_pk.to_string(), poll_pk.to_string()),
         )
     }
     pub async fn find_one(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
+        poll_pk: &Partition,
         user_pk: &Partition,
     ) -> crate::Result<Option<Self>> {
-        let (pk, sk) = Self::keys(user_pk, space_pk);
+        let (pk, sk) = Self::keys(user_pk, poll_pk, space_pk);
         Self::get(cli, &pk, Some(sk)).await
     }
 
     pub async fn summarize_responses(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
+        poll_pk: &Partition,
     ) -> crate::Result<Vec<PollSummary>> {
         // Loop until next_bookmark is None
 
@@ -65,7 +76,7 @@ impl PollUserAnswer {
         loop {
             let (responses, new_bookmark) = Self::find_by_space_pk(
                 cli,
-                &EntityType::SpacePollUserAnswer(space_pk.to_string()),
+                &EntityType::SpacePollUserAnswer(space_pk.to_string(), poll_pk.to_string()),
                 if let Some(b) = &bookmark {
                     PollUserAnswerQueryOption::builder().bookmark(b.clone())
                 } else {
