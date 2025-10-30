@@ -1,5 +1,5 @@
 use crate::features::spaces::polls::*;
-use crate::types::SpacePublishState;
+use crate::types::{EntityType, SpacePublishState};
 use crate::{
     AppState, Error,
     models::{space::SpaceCommon, user::User},
@@ -35,6 +35,11 @@ pub async fn get_poll_handler(
         return Err(Error::NoPermission);
     }
 
+    let poll_pk = match poll_sk.clone() {
+        EntityType::SpacePoll(v) => Partition::Poll(v.to_string()),
+        _ => Partition::Poll("".to_string()),
+    };
+
     let poll = Poll::get(&dynamo.client, &space_pk, Some(&poll_sk))
         .await?
         .ok_or(Error::NotFoundPoll)?;
@@ -48,7 +53,7 @@ pub async fn get_poll_handler(
     {
         let user = user.unwrap();
         let my_survey_response =
-            PollUserAnswer::find_one(&dynamo.client, &space_pk, &user.pk).await?;
+            PollUserAnswer::find_one(&dynamo.client, &space_pk, &poll_pk, &user.pk).await?;
 
         poll_response.my_response = my_survey_response.map(|r| r.answers);
     }
