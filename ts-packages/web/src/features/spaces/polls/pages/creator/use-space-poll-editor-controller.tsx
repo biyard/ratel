@@ -17,11 +17,14 @@ import { useUpdateTimeRangeMutation } from '../../hooks/use-update-time-range-mu
 import { useUpdateQuestionsMutation } from '../../hooks/use-update-questions-mutation';
 import { useUpdateResponseEditableMutation } from '../../hooks/use-update-response-editable-mutation';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import { NavigateFunction, useNavigate } from 'react-router';
+import { route } from '@/route';
 
 export class SpacePollEditorController {
   constructor(
     public space: Space,
     public poll: Poll,
+    public navigate: NavigateFunction,
     public questions: State<PollQuestion[]>,
     public t: TFunction<'SpaceSurvey', undefined>,
     public editing: State<boolean>,
@@ -55,6 +58,10 @@ export class SpacePollEditorController {
 
   handleEdit = () => {
     this.editing.set(true);
+  };
+
+  handleBack = () => {
+    this.navigate(route.spacePolls(this.space.pk));
   };
 
   handleSave = () => {
@@ -131,6 +138,7 @@ export class SpacePollEditorController {
 export function useSpacePollEditorController(spacePk: string, pollPk: string) {
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
+  const navigator = useNavigate();
   const questions = useState(poll.questions || []);
   const { t } = useTranslation('SpaceSurvey');
   const editing = useState(false);
@@ -144,6 +152,7 @@ export function useSpacePollEditorController(spacePk: string, pollPk: string) {
   return new SpacePollEditorController(
     space,
     poll,
+    navigator,
     new State(questions),
     t,
     new State(editing),

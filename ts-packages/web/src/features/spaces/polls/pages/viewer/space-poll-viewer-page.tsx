@@ -12,7 +12,6 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollViewerPage: spacePk=${spacePk}, pollPk=${pollPk}`);
 
   const ctrl = useSpacePollViewerController(spacePk, pollPk);
-
   let button = <></>;
 
   if (ctrl.user && ctrl.poll.myResponse.length === 0) {
@@ -59,7 +58,12 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
           </Col>
         </Card>
 
-        <Row className="justify-end w-full">{button}</Row>
+        <Row className="justify-end w-full">
+          <Button className="w-fit" onClick={ctrl.handleBack}>
+            {ctrl.t('SpacePollViewer:btn_back')}
+          </Button>
+          {button}{' '}
+        </Row>
       </Col>
     </>
   );

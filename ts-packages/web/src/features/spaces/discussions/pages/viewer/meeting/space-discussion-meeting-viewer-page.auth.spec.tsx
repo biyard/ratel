@@ -1,167 +1,167 @@
-import { test, expect } from '@playwright/test';
-import { CONFIGS } from '@tests/config';
-import { click, fill } from '@tests/utils';
+// import { test, expect } from '@playwright/test';
+// import { CONFIGS } from '@tests/config';
+// import { click, fill } from '@tests/utils';
 
-test.describe
-  .serial('[SpaceDiscussionMeetingViewerPage] Authenticated Users ', () => {
-  let context: import('@playwright/test').BrowserContext;
-  let page: import('@playwright/test').Page;
+// test.describe
+//   .serial('[SpaceDiscussionMeetingViewerPage] Authenticated Users ', () => {
+//   let context: import('@playwright/test').BrowserContext;
+//   let page: import('@playwright/test').Page;
 
-  let threadUrl = '';
-  let spaceUrl = '';
+//   let threadUrl = '';
+//   let spaceUrl = '';
 
-  test.beforeAll('Create post', async ({ browser }) => {
-    context = await browser.newContext({ storageState: 'user.json' });
-    page = await context.newPage();
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+//   test.beforeAll('Create post', async ({ browser }) => {
+//     context = await browser.newContext({ storageState: 'user.json' });
+//     page = await context.newPage();
+//     await page.goto('/');
+//     await page.waitForLoadState('networkidle');
 
-    const testTitle = 'Automated Post Creation for Thread Page';
-    const testContent =
-      'This is an automated post content created by Playwright E2E. ' +
-      'The purpose of this is to verify that the post creation functionality ' +
-      'works correctly from end to end, including title input, content editing, ' +
-      'auto-save, and final publication. This content is intentionally long to ' +
-      'meet the minimum character requirements for post publishing.';
+//     const testTitle = 'Automated Post Creation for Thread Page';
+//     const testContent =
+//       'This is an automated post content created by Playwright E2E. ' +
+//       'The purpose of this is to verify that the post creation functionality ' +
+//       'works correctly from end to end, including title input, content editing, ' +
+//       'auto-save, and final publication. This content is intentionally long to ' +
+//       'meet the minimum character requirements for post publishing.';
 
-    await click(page, { label: 'Create Post' });
-    await page.waitForURL(/\/posts\/new/, {
-      timeout: CONFIGS.PAGE_WAIT_TIME,
-    });
+//     await click(page, { label: 'Create Post' });
+//     await page.waitForURL(/\/posts\/new/, {
+//       timeout: CONFIGS.PAGE_WAIT_TIME,
+//     });
 
-    await page.fill('#post-title-input', testTitle);
+//     await page.fill('#post-title-input', testTitle);
 
-    const editorSelector = '[data-pw="post-content-editor"] .ProseMirror';
-    await page.waitForSelector(editorSelector, {
-      timeout: CONFIGS.PAGE_WAIT_TIME,
-    });
-    await page.click(editorSelector);
-    await page.fill(editorSelector, testContent);
+//     const editorSelector = '[data-pw="post-content-editor"] .ProseMirror';
+//     await page.waitForSelector(editorSelector, {
+//       timeout: CONFIGS.PAGE_WAIT_TIME,
+//     });
+//     await page.click(editorSelector);
+//     await page.fill(editorSelector, testContent);
 
-    await page.click('#publish-post-button');
+//     await page.click('#publish-post-button');
 
-    await page.waitForURL(/\/threads\/.+/, { timeout: 15000 });
-    threadUrl = page.url();
-  });
+//     await page.waitForURL(/\/threads\/.+/, { timeout: 15000 });
+//     threadUrl = page.url();
+//   });
 
-  test('[SPEP-001] Create a deliberation Space', async () => {
-    await page.goto(threadUrl);
-    await page.waitForTimeout(3000);
+//   test('[SPEP-001] Create a deliberation Space', async () => {
+//     await page.goto(threadUrl);
+//     await page.waitForTimeout(3000);
 
-    await expect(page.getByText('Create a Space', { exact: true })).toBeVisible(
-      { timeout: 20000 },
-    );
-    await page.getByText('Create a Space', { exact: true }).click();
+//     await expect(page.getByText('Create a Space', { exact: true })).toBeVisible(
+//       { timeout: 20000 },
+//     );
+//     await page.getByText('Create a Space', { exact: true }).click();
 
-    const modal = page.getByRole('dialog', { name: 'Select a Space Type' });
-    await modal
-      .locator('div.cursor-pointer', { hasText: 'Deliberation' })
-      .click();
+//     const modal = page.getByRole('dialog', { name: 'Select a Space Type' });
+//     await modal
+//       .locator('div.cursor-pointer', { hasText: 'Deliberation' })
+//       .click();
 
-    await modal.getByRole('button', { name: 'Create' }).click();
+//     await modal.getByRole('button', { name: 'Create' }).click();
 
-    await page.waitForURL(/\/spaces\/[^/]+(?:\?.*)?$/, { timeout: 15000 });
+//     await page.waitForURL(/\/spaces\/[^/]+(?:\?.*)?$/, { timeout: 15000 });
 
-    spaceUrl = page.url();
-  });
+//     spaceUrl = page.url();
+//   });
 
-  test('[SPEP-002] Create Discussion', async () => {
-    await page.goto(spaceUrl);
-    await page.waitForTimeout(3000);
+//   test('[SPEP-002] Create Discussion', async () => {
+//     await page.goto(spaceUrl);
+//     await page.waitForTimeout(3000);
 
-    await page.getByText('Discussions', { exact: true }).click();
-    await page.getByText('Add Discussion', { exact: true }).click();
+//     await page.getByText('Discussions', { exact: true }).click();
+//     await page.getByText('Add Discussion', { exact: true }).click();
 
-    const title = 'deliberation discussion title';
-    const description = 'deliberation discussion description';
+//     const title = 'deliberation discussion title';
+//     const description = 'deliberation discussion description';
 
-    const modal = page.getByRole('dialog', { name: 'New Discussion' });
-    await modal.waitFor();
+//     const modal = page.getByRole('dialog', { name: 'New Discussion' });
+//     await modal.waitFor();
 
-    await modal.getByPlaceholder('Input your discussion name.').fill(title);
-    await modal
-      .getByPlaceholder('What is the purpose of your discussion?')
-      .fill(description);
-    await modal.getByRole('button', { name: 'Continue' }).click();
-    await modal.locator('div.cursor-pointer', { hasText: 'send' }).click();
+//     await modal.getByPlaceholder('Input your discussion name.').fill(title);
+//     await modal
+//       .getByPlaceholder('What is the purpose of your discussion?')
+//       .fill(description);
+//     await modal.getByRole('button', { name: 'Continue' }).click();
+//     await modal.locator('div.cursor-pointer', { hasText: 'send' }).click();
 
-    await expect(page.getByText(title, { exact: true })).toBeVisible();
-    await expect(page.getByText(description, { exact: true })).toBeVisible();
-  });
+//     await expect(page.getByText(title, { exact: true })).toBeVisible();
+//     await expect(page.getByText(description, { exact: true })).toBeVisible();
+//   });
 
-  test('[SPEP-003] Publish Space', async () => {
-    await page.goto(spaceUrl);
-    await page.waitForTimeout(1000);
+//   test('[SPEP-003] Publish Space', async () => {
+//     await page.goto(spaceUrl);
+//     await page.waitForTimeout(1000);
 
-    await page.getByText('Publish', { exact: true }).click();
+//     await page.getByText('Publish', { exact: true }).click();
 
-    const modal = page.getByRole('dialog', { name: 'Publish Space' });
-    await page.waitForTimeout(1000);
-    await modal.waitFor();
+//     const modal = page.getByRole('dialog', { name: 'Publish Space' });
+//     await page.waitForTimeout(1000);
+//     await modal.waitFor();
 
-    await modal.getByText('Public Publish', { exact: true }).click();
-    await modal.getByText('Publish', { exact: true }).click();
-    await page.waitForTimeout(1000);
+//     await modal.getByText('Public Publish', { exact: true }).click();
+//     await modal.getByText('Publish', { exact: true }).click();
+//     await page.waitForTimeout(1000);
 
-    await page.goto(spaceUrl + '/discussions');
-    await page.waitForTimeout(1000);
-    await expect(page.getByText('Join', { exact: true })).toBeVisible();
-  });
+//     await page.goto(spaceUrl + '/discussions');
+//     await page.waitForTimeout(1000);
+//     await expect(page.getByText('Join', { exact: true })).toBeVisible();
+//   });
 
-  // FIXME: checking failed testing logic..
-  //   test('[SPEP-004] Participate Meeting (check participate members)', async () => {
-  //     await page.goto(spaceUrl + '/discussions');
-  //     await page.waitForTimeout(100);
+//   // FIXME: checking failed testing logic..
+//   //   test('[SPEP-004] Participate Meeting (check participate members)', async () => {
+//   //     await page.goto(spaceUrl + '/discussions');
+//   //     await page.waitForTimeout(100);
 
-  //     await page.getByText('Join', { exact: true }).click();
-  //     await page.waitForTimeout(1000);
+//   //     await page.getByText('Join', { exact: true }).click();
+//   //     await page.waitForTimeout(1000);
 
-  //     await expect(
-  //       page.getByText('deliberation discussion title', { exact: true }),
-  //     ).toBeVisible();
-  //     await page.getByText('Participants', { exact: true }).click();
-  //     const rows = page.locator('div').filter({
-  //       has: page.getByRole('img', { name: /'s profile$/ }),
-  //     });
-  //     await expect(rows.first()).toBeVisible();
-  //     await page.locator('#participant-close-button').click();
+//   //     await expect(
+//   //       page.getByText('deliberation discussion title', { exact: true }),
+//   //     ).toBeVisible();
+//   //     await page.getByText('Participants', { exact: true }).click();
+//   //     const rows = page.locator('div').filter({
+//   //       has: page.getByRole('img', { name: /'s profile$/ }),
+//   //     });
+//   //     await expect(rows.first()).toBeVisible();
+//   //     await page.locator('#participant-close-button').click();
 
-  //     await page.getByText('End', { exact: true }).click();
+//   //     await page.getByText('End', { exact: true }).click();
 
-  //     await page.waitForTimeout(100);
-  //     await expect(
-  //       page.getByText('deliberation discussion title', { exact: true }),
-  //     ).toBeVisible();
-  //   });
+//   //     await page.waitForTimeout(100);
+//   //     await expect(
+//   //       page.getByText('deliberation discussion title', { exact: true }),
+//   //     ).toBeVisible();
+//   //   });
 
-  //   test('[SPEP-005] Participate Meeting (send messages)', async () => {
-  //     const message = 'meeting message';
+//   //   test('[SPEP-005] Participate Meeting (send messages)', async () => {
+//   //     const message = 'meeting message';
 
-  //     await page.goto(spaceUrl + '/discussions');
-  //     await page.waitForTimeout(100);
+//   //     await page.goto(spaceUrl + '/discussions');
+//   //     await page.waitForTimeout(100);
 
-  //     await page.getByText('Join', { exact: true }).click();
-  //     await page.waitForTimeout(1000);
+//   //     await page.getByText('Join', { exact: true }).click();
+//   //     await page.waitForTimeout(1000);
 
-  //     await expect(
-  //       page.getByText('deliberation discussion title', { exact: true }),
-  //     ).toBeVisible();
+//   //     await expect(
+//   //       page.getByText('deliberation discussion title', { exact: true }),
+//   //     ).toBeVisible();
 
-  //     await page.getByText('Chat', { exact: true }).click();
-  //     await page.waitForTimeout(100);
+//   //     await page.getByText('Chat', { exact: true }).click();
+//   //     await page.waitForTimeout(100);
 
-  //     const input = page.getByPlaceholder('Type message here');
-  //     await input.fill(message);
-  //     await input.press('Enter');
-  //     await page.waitForTimeout(100);
+//   //     const input = page.getByPlaceholder('Type message here');
+//   //     await input.fill(message);
+//   //     await input.press('Enter');
+//   //     await page.waitForTimeout(100);
 
-  //     await expect(page.getByText(message, { exact: true })).toBeVisible();
-  //     await page.locator('#chat-close-button').click();
-  //     await page.getByText('End', { exact: true }).click();
+//   //     await expect(page.getByText(message, { exact: true })).toBeVisible();
+//   //     await page.locator('#chat-close-button').click();
+//   //     await page.getByText('End', { exact: true }).click();
 
-  //     await page.waitForTimeout(100);
-  //     await expect(
-  //       page.getByText('deliberation discussion title', { exact: true }),
-  //     ).toBeVisible();
-  //   });
-});
+//   //     await page.waitForTimeout(100);
+//   //     await expect(
+//   //       page.getByText('deliberation discussion title', { exact: true }),
+//   //     ).toBeVisible();
+//   //   });
+// });

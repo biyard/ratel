@@ -2,7 +2,7 @@ use crate::models::space::SpaceCommon;
 
 use crate::features::spaces::polls::*;
 use crate::models::user::User;
-use crate::types::{Answer, Partition, TeamGroupPermission, validate_answers};
+use crate::types::{Answer, EntityType, Partition, TeamGroupPermission, validate_answers};
 use crate::{AppState, Error, transact_write};
 
 use aide::NoApi;
@@ -40,6 +40,11 @@ pub async fn respond_poll_handler(
         return Err(Error::NoPermission);
     }
 
+    let poll_pk = match poll_sk.clone() {
+        EntityType::SpacePoll(v) => Partition::Poll(v.to_string()),
+        _ => Partition::Poll("".to_string()),
+    };
+
     let poll = Poll::get(&dynamo.client, &space_pk, Some(&poll_sk))
         .await?
         .ok_or(Error::NotFoundPoll)?;
@@ -53,8 +58,13 @@ pub async fn respond_poll_handler(
         return Err(Error::PollAnswersMismatchQuestions);
     }
 
-    let create_tx = PollUserAnswer::new(poll.pk.clone(), user.pk.clone(), req.answers)
-        .create_transact_write_item();
+    let create_tx = PollUserAnswer::new(
+        poll.pk.clone(),
+        poll_pk.clone(),
+        user.pk.clone(),
+        req.answers,
+    )
+    .create_transact_write_item();
 
     let space_increment_tx = Poll::updater(&poll.pk, &poll.sk)
         .increase_user_response_count(1)
