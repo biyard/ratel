@@ -40,7 +40,10 @@ export function PollList({
         {polls.map(
           (poll) =>
             (!isAnalyze || poll.questions.length > 0) && (
-              <Card className="flex flex-row w-full justify-between items-center">
+              <Card
+                key={poll.sk}
+                className="flex flex-row w-full justify-between items-center"
+              >
                 <div className="flex flex-col w-full gap-1">
                   <div className="text-[12px] font-semibold text-neutral-300 leading-[20px]">{`${poll.questions.length} ${t('questions')}`}</div>
                   <div className="text-base font-medium text-text-primary leading-[20px]">{`${poll.response_editable ? t('sample_survey') : t('final_survey')}`}</div>
