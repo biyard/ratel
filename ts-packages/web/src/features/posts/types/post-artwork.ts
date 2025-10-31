@@ -1,6 +1,6 @@
 export interface ArtworkTrait {
   trait_type: string;
-  value: string | number | boolean | Record<string, unknown> | null;
+  value: string | null;
   display_type?: ArtworkTraitDisplayType | null;
 }
 

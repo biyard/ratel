@@ -188,6 +188,30 @@ pub enum Error {
     #[error("already full panel")]
     AlreadyFullPanel,
 
+    // NFT Artwork space errors
+    #[rest_error(code = 9000)]
+    #[error("Artwork not found")]
+    NotFoundArtwork,
+    #[rest_error(code = 9001)]
+    #[error("Artwork not found")]
+    ArtworkNotFound,
+    #[rest_error(code = 9002)]
+    #[error("Artwork already minted")]
+    ArtworkAlreadyMinted,
+    #[rest_error(code = 9003)]
+    #[error("Artwork owner mismatch")]
+    ArtworkOwnerMismatch,
+    #[rest_error(code = 9004)]
+    #[error("Contract address not configured")]
+    ContractAddressNotConfigured,
+    #[rest_error(code = 9005)]
+    #[error("JSON serialization error: {0}")]
+    JsonError(String),
+    #[error("Metadata for the artwork is missing or invalid")]
+    ArtworkMetadataMissingOrInvalid,
+    #[error("Invalid user evm address")]
+    InvalidUserEvmAddress,
+
     // web 1,000,000 ~
     #[error("Web error: {0}")]
     #[rest_error(code = 1_000_000)]

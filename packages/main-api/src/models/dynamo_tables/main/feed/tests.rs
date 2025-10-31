@@ -52,12 +52,12 @@ async fn test_artwork_post_creation() {
     let post_artwork_metadata = vec![
         PostArtworkMetadata {
             trait_type: "Background".to_string(),
-            value: serde_json::Value::String("#FFFFFF".to_string()),
+            value: "#FFFFFF".to_string(),
             display_type: Some("Background".to_string()),
         },
         PostArtworkMetadata {
             trait_type: "Size".to_string(),
-            value: serde_json::Value::String("10x10".to_string()),
+            value: "10x10".to_string(),
             display_type: None,
         },
     ];
@@ -117,7 +117,7 @@ async fn test_post_detail_response() {
         post.pk.clone(),
         vec![PostArtworkMetadata {
             trait_type: "Background".to_string(),
-            value: serde_json::Value::String("#FFFFFF".to_string()),
+            value: "#FFFFFF".to_string(),
             display_type: Some("Background".to_string()),
         }],
     );

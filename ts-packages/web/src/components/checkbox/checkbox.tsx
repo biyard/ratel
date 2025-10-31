@@ -8,6 +8,7 @@ interface CheckboxProps {
   value?: boolean;
   onChange: (check: boolean) => void;
   children?: React.ReactNode;
+  disabled?: boolean;
 }
 
 export const Checkbox = ({
@@ -16,6 +17,7 @@ export const Checkbox = ({
   value,
   onChange,
   children,
+  disabled = false,
 }: CheckboxProps) => {
   const [checked, setChecked] = useState(value || false);
   return (
@@ -23,6 +25,7 @@ export const Checkbox = ({
       <div className="flex relative flex-row justify-start items-center cursor-pointer gap-[6px]">
         <input
           id={id}
+          disabled={disabled}
           type="checkbox"
           className="hidden peer"
           checked={value}

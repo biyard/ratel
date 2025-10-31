@@ -1,5 +1,5 @@
 #![allow(warnings)]
-use crate::*;
+use crate::{utils::aws::S3Client, *};
 use aws_config::BehaviorVersion;
 use aws_credential_types::Credentials;
 use axum::AxumRouter;
@@ -39,8 +39,9 @@ pub fn create_app_state() -> AppState {
 
     AppState::new(
         DynamoClient::mock(aws_config.clone()),
-        SesClient::mock(aws_config),
+        SesClient::mock(aws_config.clone()),
         sqlx::Pool::connect_lazy("postgres://postgres:password@localhost/postgres").unwrap(),
+        S3Client::mock(aws_config),
     )
 }
 

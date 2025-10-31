@@ -32,10 +32,8 @@ export async function updateUserEvmAddress(
   evmAddress: string,
 ): Promise<UserDetailResponse> {
   return call('PATCH', '/v3/me', {
-    body: {
-      EvmAddress: {
-        evmAddress,
-      },
+    EvmAddress: {
+      evm_address: evmAddress,
     },
   });
 }

@@ -21,6 +21,8 @@ export interface EnabledFeatures {
   table?: boolean;
 }
 
+export type UploadResult = { url: string };
+
 /**
  * Props for the TiptapEditor component
  */
@@ -46,8 +48,14 @@ export interface TiptapEditorProps {
   // Focus state
   onFocus?: () => void;
   onBlur?: () => void;
-
+  onImageUpload?: (imageUrl: string) => Promise<void>;
   // Test identifier
+
+  uploadAsset?: (file: File) => Promise<UploadResult>;
+  uploadVideo?: (file: File) => Promise<UploadResult>;
+  maxImageSizeMB?: number;
+  maxVideoSizeMB?: number;
+
   'data-pw'?: string;
 }
 
@@ -59,6 +67,7 @@ export interface TiptapToolbarProps {
   enabledFeatures?: EnabledFeatures;
   className?: string;
   openVideoPicker?: () => void;
+  onImageUpload?: (imageUrl: string) => Promise<void>;
 }
 
 /**
