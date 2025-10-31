@@ -75,9 +75,9 @@ export default function HomePage() {
             <div className="mt-[10px]">
           <News />
         </div> */}
-          <div className="mt-[10px]">
+          {/* <div className="mt-[10px]">
             <Suggestions />
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

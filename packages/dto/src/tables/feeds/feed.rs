@@ -4,7 +4,7 @@ use validator::Validate;
 use crate::*;
 
 #[derive(Validate)]
-#[api_model(base = "/v1/feeds", table = feeds,  action_by_id = [delete, publish, like(value = bool), unrepost])]
+#[api_model(base = "/v1/feeds", table = feeds,  action_by_id = [delete, publish, like(value = bool), unrepost, nested])]
 pub struct Feed {
     #[api_model(summary, primary_key)]
     pub id: i64,
