@@ -44,7 +44,7 @@ jobs:
         run: |
           npm i -g aws-cdk
           tar xzvf dist.tar.gz
-          aws cdk/dist $BUCKET
+          aws s3 sync  cdk/dist $BUCKET
           # tar xzvf storybook.tar.gz
           # make cdk/.build/image-worker/bootstrap
           make cdk-deploy-v2
