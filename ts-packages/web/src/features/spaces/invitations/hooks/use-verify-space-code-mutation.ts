@@ -13,7 +13,7 @@ export function useVerifySpaceCodeMutation<
   T extends ListInvitationMemberResponse,
 >() {
   return useMutation({
-    mutationKey: ['upsert-invitation'],
+    mutationKey: ['verify-space-code'],
     mutationFn: async (v: Vars) => {
       const { spacePk, code } = v;
 
