@@ -42,7 +42,7 @@ jobs:
         run: |
           npm i -g aws-cdk
           tar xzvf dist.tar.gz
-          tar xzvf storybook.tar.gz
+          # tar xzvf storybook.tar.gz
           # make cdk/.build/image-worker/bootstrap
           make cdk-deploy-v2
 
