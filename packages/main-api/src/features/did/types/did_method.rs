@@ -3,6 +3,7 @@ use std::fmt;
 use std::str::FromStr;
 
 /// DID Method types supported by the system
+/// NOTE:
 /// Currently focused on did:web, but structured for future expansion
 #[derive(
     Debug,

@@ -118,6 +118,9 @@ pub enum EntityType {
     // ServiceAdmin
     ServiceAdmin, // PK: SERVICE_ADMIN#{USER_PK}, SK: ServiceAdmin
 
+    // DID
+    DidDocument, // PK: DID#{did}, SK: DidDocument
+
     //Telegram Feature
     TelegramChannel(String), // Telegram Chat ID
 }
