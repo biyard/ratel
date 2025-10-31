@@ -209,7 +209,7 @@ pub fn route(
                     "/:space_pk",
                     Router::new()
                         .nest(
-                            "/verifications",
+                            "/invitations",
                             crate::controllers::v3::spaces::invitations::route(),
                         )
                         .nest("/files", crate::controllers::v3::spaces::files::route())

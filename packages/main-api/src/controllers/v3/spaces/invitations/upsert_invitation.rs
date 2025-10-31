@@ -65,9 +65,12 @@ pub async fn upsert_invitation_handler(
             &dynamo.client,
             space_pk.clone(),
             if let Some(b) = &bookmark {
-                SpaceInvitationMemberQueryOption::builder().bookmark(b.clone())
+                SpaceInvitationMemberQueryOption::builder()
+                    .sk("SPACE_INVITATION_MEMBER".to_string())
+                    .bookmark(b.clone())
             } else {
                 SpaceInvitationMemberQueryOption::builder()
+                    .sk("SPACE_INVITATION_MEMBER".to_string())
             },
         )
         .await?;
