@@ -3,6 +3,7 @@ use crate::models::space::SpaceCommon;
 use crate::features::spaces::polls::*;
 use crate::models::user::User;
 use crate::types::{Answer, EntityType, Partition, TeamGroupPermission, validate_answers};
+use crate::utils::time::get_now_timestamp_millis;
 use crate::{AppState, Error, transact_write};
 
 use aide::NoApi;
@@ -55,19 +56,37 @@ pub async fn respond_poll_handler(
         return Err(Error::PollAnswersMismatchQuestions);
     }
 
-    let create_tx = PollUserAnswer::new(
-        poll.pk.clone(),
-        poll_pk.clone(),
-        user.pk.clone(),
-        req.answers,
+    let user_response = PollUserAnswer::find_one(
+        &dynamo.client,
+        &poll.pk.clone(),
+        &poll_pk.clone(),
+        &user.pk.clone(),
     )
-    .create_transact_write_item();
+    .await?;
 
-    let space_increment_tx = Poll::updater(&poll.pk, &poll.sk)
-        .increase_user_response_count(1)
-        .transact_write_item();
+    if user_response.is_none() {
+        let create_tx = PollUserAnswer::new(
+            poll.pk.clone(),
+            poll_pk.clone(),
+            user.pk.clone(),
+            req.answers,
+        )
+        .create_transact_write_item();
 
-    transact_write!(&dynamo.client, create_tx, space_increment_tx)?;
+        let space_increment_tx = Poll::updater(&poll.pk, &poll.sk)
+            .increase_user_response_count(1)
+            .transact_write_item();
+
+        transact_write!(&dynamo.client, create_tx, space_increment_tx)?;
+    } else {
+        let (pk, sk) = PollUserAnswer::keys(&user.pk.clone(), &poll_pk.clone(), &poll.pk.clone());
+        let created_at = get_now_timestamp_millis();
+        let _ = PollUserAnswer::updater(pk, sk)
+            .with_answers(req.answers)
+            .with_created_at(created_at)
+            .execute(&dynamo.client)
+            .await?;
+    }
 
     Ok(Json(RespondPollSpaceResponse {
         poll_space_pk: space_pk,

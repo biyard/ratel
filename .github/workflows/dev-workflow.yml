@@ -50,9 +50,11 @@ jobs:
           DOMAIN: dev.ratel.foundation
           STACK: ratel-dev-stack
           DEPLOY_STORYBOOK: true
+          BUCKET: ${{ secrets.DEV_RATEL_BUCKET }}
         run: |
           npm i -g aws-cdk
           tar xzvf dist.tar.gz
+          aws s3 sync cdk/dist $BUCKET
           tar xzvf storybook.tar.gz
           # make cdk/.build/image-worker/bootstrap
           make cdk-deploy-v2
