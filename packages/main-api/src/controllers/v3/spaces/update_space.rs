@@ -29,9 +29,6 @@ pub enum UpdateSpaceRequest {
     Title {
         title: String,
     },
-    File {
-        files: Vec<File>,
-    },
     Visibility {
         visibility: SpaceVisibility,
     },
@@ -96,11 +93,6 @@ pub async fn update_space_handler(
                 && visibility == SpaceVisibility::Public;
 
             space.visibility = visibility;
-        }
-        UpdateSpaceRequest::File { files } => {
-            su = su.with_files(files.clone());
-
-            space.files = Some(files);
         }
         UpdateSpaceRequest::Content { content } => {
             su = su.with_content(content.clone());

@@ -87,8 +87,6 @@ pub struct SpaceCommon {
     pub booster: BoosterType,
     pub custom_booster: Option<i64>,
     pub rewards: Option<i64>,
-
-    pub files: Option<Vec<File>>,
 }
 
 impl SpaceCommon {
