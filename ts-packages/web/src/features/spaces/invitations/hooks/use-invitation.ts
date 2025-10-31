@@ -21,7 +21,7 @@ export function getOption(spacePk: string) {
   };
 }
 
-export default function useDiscussion(
+export default function useInvitationMember(
   spacePk: string,
 ): UseSuspenseQueryResult<ListInvitationMemberResponse> {
   const query = useSuspenseQuery(getOption(spacePk));

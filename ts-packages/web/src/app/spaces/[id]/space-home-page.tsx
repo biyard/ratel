@@ -1,7 +1,7 @@
 import SpaceHTMLContentEditor from '@/features/spaces/components/content-editor';
 import { useSpaceLayoutContext } from './use-space-layout-context';
-import { SpaceInvitationEditorPage } from '@/features/spaces/invitations/pages/creator/space-invitation-editor-page';
-import { SpaceInvitationViewerPage } from '@/features/spaces/invitations/pages/viewer/space-invitation-viewer-page';
+// import { SpaceInvitationEditorPage } from '@/features/spaces/invitations/pages/creator/space-invitation-editor-page';
+// import { SpaceInvitationViewerPage } from '@/features/spaces/invitations/pages/viewer/space-invitation-viewer-page';
 
 export function SpaceHomePage() {
   const ctrl = useSpaceLayoutContext();
@@ -15,11 +15,11 @@ export function SpaceHomePage() {
           onContentChange={ctrl.handleChange}
         />
 
-        {ctrl.space.isAdmin() ? (
+        {/* {ctrl.space.isAdmin() ? (
           <SpaceInvitationEditorPage spacePk={ctrl.space.pk} />
         ) : (
           <SpaceInvitationViewerPage spacePk={ctrl.space.pk} />
-        )}
+        )} */}
       </div>
     </>
   );

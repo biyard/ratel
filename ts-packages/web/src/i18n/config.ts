@@ -40,6 +40,7 @@ import i18nSpaceSurveyReportComponent from '@/features/spaces/components/report/
 import i18nSpaceFileComponent from '@/features/spaces/files/components/space-file-editor/i18n';
 import i18nSpaceDiscussionEditorPage from '@/features/spaces/discussions/pages/creator/i18n';
 import i18nSpacePanelEditorPage from '@/features/spaces/panels/pages/creator/i18n';
+import i18nSpaceInvitationEditorPage from '@/features/spaces/invitations/pages/creator/i18n';
 import { i18nSpaceTypeSelectModal } from '@/features/spaces/modals/space-type-selector-modal';
 import { i18nSpaceHome } from '@/app/spaces/[id]/space-home-i18n';
 import { i18nSpacePollEditor } from '@/features/spaces/polls/pages/creator/space-poll-editor-i18n';
@@ -120,6 +121,7 @@ Object.entries({
   SpaceDiscussionEditor: i18nSpaceDiscussionEditorPage,
   SpacePanelEditor: i18nSpacePanelEditorPage,
   SpaceRecommendationEditor: i18nSpaceRecommendationEditor,
+  SpaceInvitationEditor: i18nSpaceInvitationEditorPage,
   Admin: i18nAdmin,
   Memberships: i18nMemberships,
   Nav: i18nHeader,
