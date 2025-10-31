@@ -12,31 +12,31 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollViewerPage: spacePk=${spacePk}, pollPk=${pollPk}`);
 
   const ctrl = useSpacePollViewerController(spacePk, pollPk);
-  let button = <></>;
+  // let button = <></>;
 
-  if (ctrl.user && ctrl.poll.myResponse.length === 0) {
-    button = (
-      <Button onClick={ctrl.handleSubmit}>
-        {ctrl.t('SpacePollViewer:btn_submit')}
-      </Button>
-    );
-  } else if (
-    ctrl.user &&
-    ctrl.poll.myResponse.length > 0 &&
-    ctrl.poll.response_editable
-  ) {
-    button = (
-      <Button onClick={ctrl.handleSubmit}>
-        {ctrl.t('SpacePollViewer:btn_update')}
-      </Button>
-    );
-  } else if (!ctrl.user) {
-    button = (
-      <Button onClick={ctrl.handleLogin}>
-        {ctrl.t('SpacePollViewer:btn_login')}
-      </Button>
-    );
-  }
+  // if (ctrl.user && ctrl.poll.myResponse.length === 0) {
+  //   button = (
+  //     <Button onClick={ctrl.handleSubmit}>
+  //       {ctrl.t('SpacePollViewer:btn_submit')}
+  //     </Button>
+  //   );
+  // } else if (
+  //   ctrl.user &&
+  //   ctrl.poll.myResponse.length > 0 &&
+  //   ctrl.poll.response_editable
+  // ) {
+  //   button = (
+  //     <Button onClick={ctrl.handleSubmit}>
+  //       {ctrl.t('SpacePollViewer:btn_update')}
+  //     </Button>
+  //   );
+  // } else if (!ctrl.user) {
+  //   button = (
+  //     <Button onClick={ctrl.handleLogin}>
+  //       {ctrl.t('SpacePollViewer:btn_login')}
+  //     </Button>
+  //   );
+  // }
 
   return (
     <>
@@ -54,6 +54,15 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
               questions={ctrl.poll.questions}
               onUpdateAnswer={ctrl.handleUpdateAnswer}
               selectedAnswers={ctrl.answers.get()}
+              onSubmit={ctrl.handleSubmit}
+              onLogin={ctrl.handleLogin}
+              canSubmit={ctrl.user && ctrl.poll.myResponse.length === 0}
+              canUpdate={
+                ctrl.user &&
+                ctrl.poll.myResponse.length > 0 &&
+                ctrl.poll.response_editable
+              }
+              isLogin={!!ctrl.user}
             />
           </Col>
         </Card>
@@ -62,7 +71,6 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
           <Button className="w-fit" onClick={ctrl.handleBack}>
             {ctrl.t('SpacePollViewer:btn_back')}
           </Button>
-          {button}{' '}
         </Row>
       </Col>
     </>

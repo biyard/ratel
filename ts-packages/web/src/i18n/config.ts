@@ -57,6 +57,7 @@ import { i18nMemberships } from '@/features/membership/i18n';
 import { i18nHeader } from '@/components/header/i18n';
 import i18nListDrafts from '@/features/drafts/components/list-drafts/i18n';
 import { CreatePostPage } from '@/features/posts/components/create-post-page/i18n';
+import { i18nSubmitSurveyModal } from '@/features/spaces/polls/components/modal/submit_survey/submit-survey-modal-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -108,6 +109,7 @@ Object.entries({
   SpaceFile: i18nSpaceFileComponent,
   SpaceTypeSelectModal: i18nSpaceTypeSelectModal,
   Space: i18nSpaceHome,
+  SpacePollSubmitSurvey: i18nSubmitSurveyModal,
   SpacePollAnalyze: i18nSpacePollAnalyze,
   SpacePollEditor: i18nSpacePollEditor,
   SpacePollsEditor: i18nSpacePollsEditor,
