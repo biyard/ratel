@@ -40,10 +40,7 @@ pub async fn respond_poll_handler(
         return Err(Error::NoPermission);
     }
 
-    let poll_pk = match poll_sk.clone() {
-        EntityType::SpacePoll(v) => Partition::Poll(v.to_string()),
-        _ => Partition::Poll("".to_string()),
-    };
+    let poll_pk: Partition = poll_sk.clone().try_into()?;
 
     let poll = Poll::get(&dynamo.client, &space_pk, Some(&poll_sk))
         .await?

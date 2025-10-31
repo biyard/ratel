@@ -12,78 +12,23 @@ use dto::Group as G;
 use dto::Team as T;
 use dto::User as U;
 
-pub async fn migrate_by_id(
-    cli: &aws_sdk_dynamodb::Client,
-    pool: &sqlx::PgPool,
-    id: i64,
-) -> Result<User, crate::Error> {
-    migrate_user(
-        cli,
-        dto::User::query_builder()
-            .id_equals(id)
-            .user_type_equals(dto::UserType::Individual)
-            .query()
-            .map(dto::User::from)
-            .fetch_one(pool)
-            .await
-            .map_err(|e| {
-                crate::Error::InternalServerError(format!(
-                    "Failed to fetch user from Postgres: {}",
-                    e
-                ))
-            })?,
-    )
-    .await
-}
+pub async fn migrate_users(pool: &sqlx::PgPool, cli: &aws_sdk_dynamodb::Client) {
+    let users: Vec<dto::User> = dto::User::query_builder()
+        .user_type_equals(dto::UserType::Individual)
+        .query()
+        .map(Into::into)
+        .fetch_all(pool)
+        .await
+        .expect("Failed to fetch users from Postgres");
 
-pub async fn migrate_by_email(
-    cli: &aws_sdk_dynamodb::Client,
-    pool: &sqlx::PgPool,
-    email: String,
-) -> Result<User, crate::Error> {
-    migrate_user(
-        cli,
-        dto::User::query_builder()
-            .email_equals(email)
-            .user_type_equals(dto::UserType::Individual)
-            .query()
-            .map(dto::User::from)
-            .fetch_one(pool)
-            .await
-            .map_err(|e| {
-                crate::Error::InternalServerError(format!(
-                    "Failed to fetch user from Postgres: {}",
-                    e
-                ))
-            })?,
-    )
-    .await
-}
+    tracing::info!("Total users to migrate: {}", users.len());
 
-pub async fn migrate_by_email_password(
-    cli: &aws_sdk_dynamodb::Client,
-    pool: &sqlx::PgPool,
-    email: String,
-    password: String,
-) -> Result<User, crate::Error> {
-    migrate_user(
-        cli,
-        dto::User::query_builder()
-            .email_equals(email)
-            .password_equals(password)
-            .user_type_equals(dto::UserType::Individual)
-            .query()
-            .map(dto::User::from)
-            .fetch_one(pool)
-            .await
-            .map_err(|e| {
-                crate::Error::InternalServerError(format!(
-                    "Failed to fetch user from Postgres: {}",
-                    e
-                ))
-            })?,
-    )
-    .await
+    for user in users {
+        let user_id = user.id;
+        if let Err(e) = migrate_user(cli, user).await {
+            tracing::error!("Failed to migrate user({}): {}", user_id, e);
+        }
+    }
 }
 
 pub async fn migrate_user(
