@@ -7,6 +7,7 @@ import { TimeRangeSetting } from '../../components/time-range-setting';
 import Card from '@/components/card';
 import { Row } from '@/components/ui/row';
 import { Button } from '@/components/ui/button';
+import { SpaceType } from '@/features/spaces/types/space-type';
 
 export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollViewerPage: spacePk=${spacePk}, pollPk=${pollPk}`);
@@ -67,11 +68,13 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
           </Col>
         </Card>
 
-        <Row className="justify-end w-full">
-          <Button className="w-fit" onClick={ctrl.handleBack}>
-            {ctrl.t('SpacePollViewer:btn_back')}
-          </Button>
-        </Row>
+        {ctrl.space.spaceType == SpaceType.Deliberation && (
+          <Row className="justify-end w-full">
+            <Button className="w-fit" onClick={ctrl.handleBack}>
+              {ctrl.t('SpacePollViewer:btn_back')}
+            </Button>
+          </Row>
+        )}
       </Col>
     </>
   );
