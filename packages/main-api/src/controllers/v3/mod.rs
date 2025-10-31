@@ -208,6 +208,10 @@ pub fn route(
                 .nest(
                     "/:space_pk",
                     Router::new()
+                        .nest(
+                            "/verifications",
+                            crate::controllers::v3::spaces::invitations::route(),
+                        )
                         .nest("/files", crate::controllers::v3::spaces::files::route())
                         .nest("/panels", crate::controllers::v3::spaces::panels::route())
                         .nest(

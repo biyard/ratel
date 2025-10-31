@@ -1,14 +1,20 @@
 use crate::controllers::v3::spaces::dto::*;
+use crate::features::spaces::invitations::{
+    SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
+};
 use crate::features::telegrams::{TelegramChannel, get_space_created_message};
 use crate::models::space::SpaceCommon;
 
 use crate::models::Post;
 use crate::models::user::User;
-use crate::types::File;
 use crate::types::{
     BoosterType, EntityType, SpacePublishState, SpaceVisibility, TeamGroupPermission,
 };
+use crate::types::{File, Partition};
+use crate::utils::aws::DynamoClient;
+use crate::utils::aws::SesClient;
 use crate::utils::telegram::ArcTelegramBot;
+use crate::utils::time::get_now_timestamp;
 use crate::{AppState, Error, transact_write};
 use aide::NoApi;
 use axum::extract::{Json, Path, State};
@@ -35,7 +41,7 @@ pub enum UpdateSpaceRequest {
 }
 
 pub async fn update_space_handler(
-    State(AppState { dynamo, .. }): State<AppState>,
+    State(AppState { dynamo, ses, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
     Extension(telegram_bot): Extension<Option<ArcTelegramBot>>,
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
@@ -80,6 +86,8 @@ pub async fn update_space_handler(
             should_notify_space = space.booster != BoosterType::NoBoost
                 && (space.publish_state == SpacePublishState::Draft && publish)
                 && visibility == SpaceVisibility::Public;
+
+            let _ = send_space_verification_code_handler(&dynamo, &ses, space_pk.clone()).await?;
 
             space.publish_state = SpacePublishState::Published;
             space.visibility = visibility;
@@ -143,4 +151,39 @@ pub async fn update_space_handler(
     }
 
     Ok(Json(SpaceCommonResponse::from(space)))
+}
+
+async fn send_space_verification_code_handler(
+    dynamo: &DynamoClient,
+    ses: &SesClient,
+    space_pk: Partition,
+) -> Result<Json<()>, Error> {
+    let mut bookmark = None::<String>;
+    loop {
+        let (responses, new_bookmark) = SpaceInvitationMember::query(
+            &dynamo.client,
+            space_pk.clone(),
+            if let Some(b) = &bookmark {
+                SpaceInvitationMemberQueryOption::builder()
+                    .sk("SPACE_INVITATION_MEMBER#".into())
+                    .bookmark(b.clone())
+            } else {
+                SpaceInvitationMemberQueryOption::builder().sk("SPACE_INVITATION_MEMBER#".into())
+            },
+        )
+        .await?;
+
+        for response in responses {
+            let user_email = response.email;
+            let _ = SpaceEmailVerification::send_email(&dynamo, &ses, user_email, space_pk.clone())
+                .await?;
+        }
+
+        match new_bookmark {
+            Some(b) => bookmark = Some(b),
+            None => break,
+        }
+    }
+
+    Ok(Json(()))
 }
