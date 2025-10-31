@@ -2,6 +2,8 @@ export const i18nSpacePollEditor = {
   en: {
     btn_edit: 'Edit',
     btn_back: 'Back',
+    btn_prev: 'Prev',
+    btn_next: 'Next',
     btn_save: 'Save',
     btn_discard: 'Discard',
     no_questions: 'No questions available.',
@@ -15,6 +17,8 @@ export const i18nSpacePollEditor = {
   ko: {
     btn_edit: '수정하기',
     btn_back: '뒤로가기',
+    btn_prev: '이전',
+    btn_next: '다음',
     btn_save: '저장하기',
     btn_discard: '취소하기',
     no_questions: '질문이 없습니다.',
