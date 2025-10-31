@@ -119,6 +119,11 @@ export const spaceKeys = {
     [...spaceKeys.discussion(spacePk, discussionPk), 'participants'] as const,
   discussion_meeting: (spacePk: string, discussionPk: string) =>
     [...spaceKeys.discussion(spacePk, discussionPk), 'meeting'] as const,
+
+  panels: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'panels'] as const,
+  panel: (spacePk: string, panelPk: string) =>
+    [...spaceKeys.panels(spacePk), panelPk] as const,
 };
 
 export const QK_MEMBERSHIPS = 'memberships';

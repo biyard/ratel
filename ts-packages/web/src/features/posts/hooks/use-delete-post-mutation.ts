@@ -4,7 +4,7 @@ import { feedKeys } from '@/constants';
 import { FeedStatus } from '@/features/posts/types/post'; // FeedType 추가
 import { showErrorToast } from '@/lib/toast';
 import { optimisticListUpdate, removeQueries } from '@/lib/hook-utils';
-import PostResponse from '../dto/list-post-response';
+import PostResponse, { ListPostResponse } from '../dto/list-post-response';
 import { call } from '@/lib/api/ratel/call';
 
 export function deletePost(postPk: string): Promise<void> {
@@ -33,21 +33,38 @@ export function useDeletePostMutation(username: string, status: FeedStatus) {
 
       const rollbackPosts = await optimisticListUpdate<PostResponse>(
         { queryKey: listQueryKey },
-        (post) => (post.pk !== postPk ? undefined : post),
+        (post) => (post.pk === postPk ? undefined : post),
       );
 
-      return { rollbackPostDetail, rollbackPosts };
+      let rollbackDrafts;
+
+      if (status === FeedStatus.Draft) {
+        const queryKey = feedKeys.drafts(username);
+
+        rollbackDrafts = await optimisticListUpdate<ListPostResponse>(
+          { queryKey },
+          (post) => {
+            const items = post.items.filter((p) => p.pk !== postPk);
+            post.items = items;
+
+            return post;
+          },
+        );
+      }
+
+      return { rollbackPostDetail, rollbackPosts, rollbackDrafts };
     },
 
     onError: (error: Error, _variables, context) => {
       context?.rollbackPostDetail?.rollback();
       context?.rollbackPosts?.rollback();
+      context?.rollbackDrafts?.rollback();
 
       showErrorToast(error.message || 'Failed to delete feed');
     },
 
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: feedKeys.lists() });
+      // queryClient.invalidateQueries({ queryKey: feedKeys.lists() });
     },
   });
 }

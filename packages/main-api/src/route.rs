@@ -5,12 +5,11 @@ use tower_http::trace::TraceLayer;
 use tracing::Level;
 
 use crate::{
-    AppState, controllers, route_v3,
+    AppState, controllers,
     utils::{aws::*, sqs_client::SqsClient, telegram::ArcTelegramBot},
 };
 
 pub struct RouteDeps {
-    pub pool: sqlx::Pool<sqlx::Postgres>,
     pub sqs_client: Arc<SqsClient>,
     pub bedrock_client: BedrockClient,
     pub rek_client: RekognitionClient,
@@ -24,7 +23,6 @@ pub struct RouteDeps {
 
 pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Error> {
     let RouteDeps {
-        pool,
         // sqs_client,
         // bedrock_client,
         // rek_client,
@@ -37,15 +35,10 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Erro
     } = deps;
 
     Ok(by_axum::axum::Router::new()
-        .with_state(AppState {
-            pool: pool.clone(),
-            dynamo: dynamo_client.clone(),
-            ses: ses_client.clone(),
-        })
+        .with_state(AppState::new(dynamo_client.clone(), ses_client.clone()))
         .nest(
             "/v3",
-            route_v3::route(route_v3::RouteDeps {
-                pool: pool.clone(),
+            controllers::v3::route(controllers::v3::RouteDeps {
                 dynamo_client: dynamo_client.clone(),
                 ses_client: ses_client.clone(),
                 bot: bot.clone(),
@@ -53,11 +46,7 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Erro
         )
         .nest(
             "/m3",
-            controllers::m3::route(AppState {
-                dynamo: dynamo_client.clone(),
-                ses: ses_client.clone(),
-                pool: pool.clone(),
-            })?,
+            controllers::m3::route(AppState::new(dynamo_client.clone(), ses_client.clone()))?,
         )
         .layer(
             TraceLayer::new_for_http()

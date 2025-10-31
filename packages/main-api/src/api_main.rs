@@ -18,55 +18,14 @@ use crate::{
 use bdk::prelude::sqlx::PgPool;
 use bdk::prelude::{by_axum::axum::Router, *};
 use by_types::DatabaseConfig;
-use sqlx::postgres::PgPoolOptions;
 use tower_sessions::{
     SessionManagerLayer,
     cookie::time::{Duration, OffsetDateTime},
 };
 
-pub async fn db_init(url: &'static str, max_conn: u32) -> PgPool {
-    let url = if let Ok(host) = env::var("PGHOST") {
-        let url = if let Some(at_pos) = url.rfind('@') {
-            let (before_at, after_at) = url.split_at(at_pos + 1);
-            if let Some(slash_pos) = after_at.find('/') {
-                let (_, after_slash) = after_at.split_at(slash_pos);
-                format!("{}{}{}", before_at, host, after_slash)
-            } else {
-                url.to_string()
-            }
-        } else {
-            url.to_string()
-        };
-        url
-    } else {
-        url.to_string()
-    };
-
-    tracing::debug!("Connecting to database at {}", url);
-
-    let pool = PgPoolOptions::new()
-        .max_connections(max_conn)
-        .connect(&url)
-        .await
-        .expect("Failed to create Postgres connection pool");
-
-    pool
-}
-
 pub async fn api_main() -> Result<Router, crate::Error> {
     let app = by_axum::new();
     let conf = config::get();
-
-    let pool = if let DatabaseConfig::Postgres { url, pool_size } = conf.database {
-        let pool = db_init(url, pool_size).await;
-        tracing::info!(
-            "Connected to Postgres at {}",
-            pool.connect_options().get_host()
-        );
-        pool
-    } else {
-        panic!("Database is not initialized. Call init() first.");
-    };
 
     let is_local = conf.env == "local" || conf.env == "test";
     let aws_sdk_config = get_aws_config();
@@ -111,15 +70,10 @@ pub async fn api_main() -> Result<Router, crate::Error> {
     //     .nest_service("/mcp", controllers::mcp::route(pool.clone()).await.expect("MCP router"))
     //     .layer(middleware::from_fn(mcp_middleware));
 
-    let app_state = AppState {
-        dynamo: dynamo_client.clone(),
-        pool: pool.clone(),
-        ses: ses_client.clone(),
-    };
+    let app_state = AppState::new(dynamo_client.clone(), ses_client.clone());
     let web = web::route(app_state)?;
 
     let api_router = route(RouteDeps {
-        pool,
         sqs_client,
         bedrock_client,
         rek_client,

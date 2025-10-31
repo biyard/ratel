@@ -11,15 +11,22 @@ import {
 } from '../../types/poll-question';
 import { logger } from '@/lib/logger';
 import * as XLSX from 'xlsx';
+import { route } from '@/route';
+import { NavigateFunction, useNavigate } from 'react-router';
 
 export class SpacePollAnalyzeController {
   constructor(
     public spacePk: string,
     public pollPk: string,
+    public navigate: NavigateFunction,
     public space: Space,
     public poll: Poll,
     public summary: PollSurveySummariesResponse,
   ) {}
+
+  handleBack = () => {
+    this.navigate(route.spaceAnalyzePolls(this.spacePk));
+  };
 
   isSubjective = (t: SurveyAnswerType) =>
     t === SurveyAnswerType.ShortAnswer || t === SurveyAnswerType.Subjective;
@@ -117,6 +124,14 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
   const { data: summary } = usePollSpaceSummaries(spacePk, pollPk);
+  const navigator = useNavigate();
 
-  return new SpacePollAnalyzeController(spacePk, pollPk, space, poll, summary);
+  return new SpacePollAnalyzeController(
+    spacePk,
+    pollPk,
+    navigator,
+    space,
+    poll,
+    summary,
+  );
 }

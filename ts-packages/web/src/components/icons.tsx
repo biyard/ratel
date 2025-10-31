@@ -796,3 +796,15 @@ export { default as ChevronRight2 } from '@/assets/icons/arrows/chevron-right.sv
 
 // Arrow aliases
 export { default as ArrowRight } from '@/assets/icons/right.svg?react';
+
+// Table icons
+export { default as TableInsertTable } from '@/assets/icons/table/insert-table.svg?react';
+export { default as TableDeleteTable } from '@/assets/icons/table/delete-table.svg?react';
+export { default as TableAddRowBefore } from '@/assets/icons/table/add-row-before.svg?react';
+export { default as TableAddRowAfter } from '@/assets/icons/table/add-row-after.svg?react';
+export { default as TableDeleteRow } from '@/assets/icons/table/delete-row.svg?react';
+export { default as TableAddColumnBefore } from '@/assets/icons/table/add-column-before.svg?react';
+export { default as TableAddColumnAfter } from '@/assets/icons/table/add-column-after.svg?react';
+export { default as TableDeleteColumn } from '@/assets/icons/table/delete-column.svg?react';
+export { default as TableMergeCells } from '@/assets/icons/table/merge-cells.svg?react';
+export { default as TableSplitCell } from '@/assets/icons/table/split-cell.svg?react';

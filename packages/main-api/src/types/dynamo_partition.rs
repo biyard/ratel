@@ -34,11 +34,14 @@ pub enum Partition {
 
     Discussion(String),
     DiscussionUser(String),
+
+    Panel(String),
     // Survey(String),
     // SurveyResponse(String),
 
     // Poll Space
     // PollSpace(String),
+    Poll(String),
     SpacePollUserAnswer(String), // user_pk
 
     // Sprint League

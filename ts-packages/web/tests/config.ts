@@ -10,7 +10,7 @@ export const CONFIGS = {
     TIMEOUT: timeout,
     NAVIGATION_TIME_OUT: timeout,
     BASE_URL: process.env.RATEL_TEST_PLAYWRIGHT_URL || 'http://localhost:8080',
-    ID: process.env.RATEL_TEST_PLAYWRIGHT_ID || 'playwrightuser',
+    ID: process.env.RATEL_TEST_PLAYWRIGHT_ID || Date.now().toString(),
   },
   SECRETS: {
     password: process.env.PASSWORD,

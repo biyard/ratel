@@ -14,7 +14,7 @@ pub async fn migrate_by_id(
     cli: &aws_sdk_dynamodb::Client,
     pool: &sqlx::PgPool,
     id: i64,
-) -> Result<Team, crate::Error2> {
+) -> Result<Team, crate::Error> {
     migrate_team(
         cli,
         pool,
@@ -26,7 +26,7 @@ pub async fn migrate_by_id(
             .fetch_one(pool)
             .await
             .map_err(|e| {
-                crate::Error2::InternalServerError(format!(
+                crate::Error::InternalServerError(format!(
                     "Failed to fetch user from Postgres: {}",
                     e
                 ))
@@ -57,7 +57,7 @@ pub async fn migrate_team(
         industry: _,
         ..
     }: U,
-) -> Result<Team, crate::Error2> {
+) -> Result<Team, crate::Error> {
     let team_pk = Partition::Team(id.to_string());
     let mut team = Team::new(display_name, profile_url, username, html_contents);
     team.created_at = created_at;

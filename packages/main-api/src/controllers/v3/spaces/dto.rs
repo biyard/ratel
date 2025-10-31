@@ -30,6 +30,14 @@ pub struct SpaceDiscussionPathParam {
     pub discussion_pk: Partition,
 }
 
+pub type SpacePanelPath = Path<SpacePanelPathParam>;
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, aide::OperationIo, JsonSchema)]
+pub struct SpacePanelPathParam {
+    pub space_pk: Partition,
+    pub panel_pk: Partition,
+}
+
 #[derive(Debug, serde::Serialize, aide::OperationIo, JsonSchema)]
 pub struct SpaceCommonResponse {
     pub pk: Partition,
