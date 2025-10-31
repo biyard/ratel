@@ -53,8 +53,8 @@ pub async fn migrate_team(
 ) -> Result<Team, crate::Error> {
     let team_pk = Partition::Team(id.to_string());
     let mut team = Team::new(display_name, profile_url, username.clone(), html_contents);
-    team.created_at = created_at;
-    team.updated_at = updated_at;
+    team.created_at = created_at * 1000;
+    team.updated_at = updated_at * 1000;
     team.pk = team_pk.clone();
     team.followers = followers_count;
     team.followings = followings_count;
@@ -99,7 +99,7 @@ pub async fn migrate_team(
 
         let group_sk = EntityType::TeamGroup(id.to_string());
         tg.sk = group_sk;
-        tg.created_at = created_at;
+        tg.created_at = created_at * 1000;
         tg.members = member_count;
 
         if let Err(e) = tg.create(cli).await {
