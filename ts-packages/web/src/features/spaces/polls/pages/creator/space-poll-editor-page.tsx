@@ -10,6 +10,7 @@ import SurveyViewer from '@/features/spaces/components/survey/viewer';
 import { TimeRangeSetting } from '../../components/time-range-setting';
 import Card from '@/components/card';
 import CustomCheckbox from '@/components/checkbox/custom-checkbox';
+import { SpaceType } from '@/features/spaces/types/space-type';
 
 export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollEditorPage: spacePk=${spacePk}, pollPk=${pollPk}`);
@@ -71,6 +72,8 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
             ) : (
               <SurveyViewer
                 t={ctrl.t}
+                isAdmin={true}
+                isLogin={!!ctrl.user}
                 questions={ctrl.poll.questions}
                 onUpdateAnswer={ctrl.handleUpdateAnswer}
                 selectedAnswers={ctrl.answers.get()}
@@ -79,11 +82,13 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
           </Col>
         </Card>
 
-        <div className="flex flex-row w-full justify-end">
-          <Button className="w-fit" onClick={ctrl.handleBack}>
-            {t('btn_back')}
-          </Button>
-        </div>
+        {ctrl.space.spaceType == SpaceType.Deliberation && (
+          <div className="flex flex-row w-full justify-end">
+            <Button className="w-fit" onClick={ctrl.handleBack}>
+              {t('btn_back')}
+            </Button>
+          </div>
+        )}
       </Col>
     </>
   );

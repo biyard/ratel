@@ -1,4 +1,10 @@
-use crate::{Error, models::team::Team, types::*, utils::time::get_now_timestamp_millis};
+use crate::{
+    Error,
+    features::spaces::invitations::SpaceEmailVerification,
+    models::{User, team::Team},
+    types::*,
+    utils::time::get_now_timestamp_millis,
+};
 use bdk::prelude::*;
 
 #[derive(
@@ -87,8 +93,6 @@ pub struct SpaceCommon {
     pub booster: BoosterType,
     pub custom_booster: Option<i64>,
     pub rewards: Option<i64>,
-
-    pub files: Option<Vec<File>>,
 }
 
 impl SpaceCommon {
@@ -169,6 +173,30 @@ impl SpaceCommon {
 
         if permissions.contains(perm) {
             return Ok((space, true));
+        }
+
+        if user_pk.is_some() {
+            let user_pk = user_pk.unwrap();
+            let user = User::get(&cli, user_pk, Some(EntityType::User)).await?;
+
+            if user.is_some() {
+                let user = user.unwrap_or_default();
+
+                let verification = SpaceEmailVerification::get(
+                    &cli,
+                    &space_pk,
+                    Some(EntityType::SpaceEmailVerification(user.email.clone())),
+                )
+                .await?;
+
+                if verification.is_some()
+                    && verification.unwrap_or_default().authorized
+                    && perm == TeamGroupPermission::SpaceRead
+                    && space.publish_state == SpacePublishState::Published
+                {
+                    return Ok((space, true));
+                }
+            }
         }
 
         let author_pk = &space.user_pk;
