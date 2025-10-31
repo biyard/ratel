@@ -22,7 +22,7 @@ test('create admin storage state', async ({ page }) => {
 
   await click(page, { text: 'Sign in' });
 
-  await expect(page.getByRole('link', { name: 'Admin' })).toBeVisible();
+  await expect(page.getByLabel('nav-Admin', { exact: true })).toBeVisible();
 
   // Save Playwright storage state for authenticated tests
   await page.context().storageState({ path: 'admin.json' });

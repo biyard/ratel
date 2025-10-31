@@ -4,6 +4,7 @@ use crate::models::space::SpaceCommon;
 
 use crate::models::Post;
 use crate::models::user::User;
+use crate::types::File;
 use crate::types::{
     BoosterType, EntityType, SpacePublishState, SpaceVisibility, TeamGroupPermission,
 };
@@ -27,6 +28,9 @@ pub enum UpdateSpaceRequest {
     },
     Title {
         title: String,
+    },
+    File {
+        files: Vec<File>,
     },
     Visibility {
         visibility: SpaceVisibility,
@@ -71,7 +75,10 @@ pub async fn update_space_handler(
                 .with_publish_state(SpacePublishState::Published)
                 .with_visibility(visibility.clone());
 
-            pu = pu.with_space_visibility(SpaceVisibility::Public);
+            pu = pu
+                .with_space_visibility(visibility.clone())
+                .with_visibility(visibility.clone().into())
+                .with_status(crate::types::PostStatus::Published);
 
             should_notify_space = space.booster != BoosterType::NoBoost
                 && (space.publish_state == SpacePublishState::Draft && publish)
@@ -89,6 +96,11 @@ pub async fn update_space_handler(
                 && visibility == SpaceVisibility::Public;
 
             space.visibility = visibility;
+        }
+        UpdateSpaceRequest::File { files } => {
+            su = su.with_files(files.clone());
+
+            space.files = Some(files);
         }
         UpdateSpaceRequest::Content { content } => {
             su = su.with_content(content.clone());

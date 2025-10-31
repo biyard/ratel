@@ -78,6 +78,12 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
             )}
           </Col>
         </Card>
+
+        <div className="flex flex-row w-full justify-end">
+          <Button className="w-fit" onClick={ctrl.handleBack}>
+            {t('btn_back')}
+          </Button>
+        </div>
       </Col>
     </>
   );

@@ -7,7 +7,10 @@ export const route = {
   explore: () => '/explore',
   settings: () => '/settings',
   myPosts: () => '/my-posts',
+  createPost: (postPk?: string) =>
+    postPk ? `/posts/new?post-pk=${encodeURIComponent(postPk)}` : '/posts/new',
   drafts: () => '/drafts',
+  draftEdit: (postPk: string) => `/drafts/${encodeURIComponent(postPk)}/edit`,
   teams: () => '/teams',
   groups: () => '/groups',
 
@@ -24,6 +27,8 @@ export const route = {
   teamMembers: (username: string) => `/teams/${username}/members`,
   teamSettings: (username: string) => `/teams/${username}/settings`,
   teamDrafts: (username: string) => `/teams/${username}/drafts`,
+  teamDraftEdit: (username: string, postPk: string) =>
+    `/teams/${username}/drafts/${encodeURIComponent(postPk)}/edit`,
   space: (spaceId: number | string) => `/spaces/${encodeURIComponent(spaceId)}`,
 
   commiteeSpaceById: (spaceId: number | string) =>
@@ -51,9 +56,12 @@ export const route = {
   },
   spacePolls: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/polls`,
-
+  spacePanels: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/panels`,
   spacePollById: (spaceId: string, pollId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/polls/${encodeURIComponent(pollId)}`,
+  spaceAnalyzePolls: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/polls/analyzes`,
   spaceAnalyzePollById: (spaceId: string, pollId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/polls/${encodeURIComponent(pollId)}/analyzes`,
   spaceFiles: (spaceId: string) =>
@@ -68,4 +76,21 @@ export const route = {
   // Admin routes
   admin: () => '/admin',
   adminMemberships: () => '/admin/memberships',
+  newPost: (postPk?: string, teamPk?: string) => {
+    let to = '/posts/new';
+    const params: string[] = [];
+
+    if (teamPk) {
+      params.push(`team-pk=${encodeURIComponent(teamPk)}`);
+    }
+    if (postPk) {
+      params.push(`post-pk=${encodeURIComponent(postPk)}`);
+    }
+
+    if (params.length > 0) {
+      to += `?${params.join('&')}`;
+    }
+
+    return to;
+  },
 };

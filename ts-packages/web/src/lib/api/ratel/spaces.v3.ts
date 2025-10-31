@@ -1,6 +1,7 @@
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { call } from './call';
 import { SpaceVisibility } from '@/features/spaces/types/space-common';
+import FileModel from '@/features/spaces/files/types/file';
 
 export type CreateSpaceResponse = {
   space_pk: string;
@@ -46,6 +47,15 @@ export function updateSpaceVisibility(
 ): Promise<void> {
   return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
     visibility,
+  });
+}
+
+export function updateSpaceFiles(
+  spacePk: string,
+  files: FileModel[],
+): Promise<void> {
+  return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
+    files,
   });
 }
 

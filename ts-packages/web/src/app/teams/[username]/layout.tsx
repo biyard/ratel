@@ -4,14 +4,14 @@ import Loading from '@/app/loading';
 import { logger } from '@/lib/logger';
 import TeamSidemenu from './_components/team-sidemenu';
 import Provider from './providers';
-import {
-  CreatePost,
-  PostEditorProvider,
-} from '@/app/(social)/_components/post-editor';
-import {
-  CreateRePost,
-  RePostDraftProvider,
-} from '@/app/(social)/_components/create-repost';
+// import {
+//   CreatePost,
+//   PostEditorProvider,
+// } from '@/app/(social)/_components/post-editor';
+// import {
+//   CreateRePost,
+//   RePostDraftProvider,
+// } from '@/app/(social)/_components/create-repost';
 
 export default function TeamLayout() {
   const { username } = useParams<{ username: string }>();
@@ -34,18 +34,11 @@ export default function TeamLayout() {
               </div>
             }
           >
-            <PostEditorProvider>
-              <RePostDraftProvider>
-                <Outlet />
+            <Outlet />
 
-                <div className="fixed bottom-0 left-0 right-0 z-10 flex flex-row items-center justify-center">
-                  <div className="max-w-desktop w-full">
-                    <CreatePost />
-                    <CreateRePost />
-                  </div>
-                </div>
-              </RePostDraftProvider>
-            </PostEditorProvider>
+            {/* <div className="fixed bottom-0 left-0 right-0 z-10 flex flex-row items-center justify-center">
+              <div className="max-w-desktop w-full"></div>
+            </div> */}
           </Suspense>
         </div>
       </div>

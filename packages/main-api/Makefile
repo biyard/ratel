@@ -54,6 +54,7 @@ KAIA_FEEPAYER_ADDR ?= $(strip $(shell ./key.sh | awk '{print $$1}'))
 KAIA_FEEPAYER_KEY ?= $(strip $(shell ./key.sh | awk '{print $$2}'))
 TELEGRAM_TOKEN ?=
 FIREBASE_PROJECT_ID ?=
+PORTONE_API_SECRET ?=
 
 BUILD_ENV ?= ENV=$(ENV) \
 								RUST_LOG=$(RUST_LOG) \
@@ -109,7 +110,8 @@ BUILD_ENV ?= ENV=$(ENV) \
 								BINANCE_SECRET_KEY=$(BINANCE_SECRET_KEY) \
 								BINANCE_WEBHOOK=$(BINANCE_WEBHOOK) \
 								REDIRECT_DOMAIN=$(REDIRECT_DOMAIN) \
-								FIREBASE_PROJECT_ID=$(FIREBASE_PROJECT_ID)
+								FIREBASE_PROJECT_ID=$(FIREBASE_PROJECT_ID) \
+								PORTONE_API_SECRET=$(PORTONE_API_SECRET) \
 
 .build/evm-keys:
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json

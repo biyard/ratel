@@ -23,22 +23,39 @@ impl Default for File {
     Debug, serde::Serialize, serde::Deserialize, Clone, JsonSchema, PartialEq, Eq, Translate,
 )]
 pub enum FileExtension {
+    #[serde(alias = "jpg", alias = "jpeg", alias = "JPEG")]
     #[translate(ko = "JPG", en = "JPG")]
     JPG = 1,
+
+    #[serde(alias = "png", alias = "PNG")]
     #[translate(ko = "PNG", en = "PNG")]
     PNG = 2,
+
+    #[serde(alias = "pdf", alias = "PDF")]
     #[translate(ko = "PDF", en = "PDF")]
     PDF = 3,
+
+    #[serde(alias = "zip", alias = "ZIP")]
     #[translate(ko = "ZIP", en = "ZIP")]
     ZIP = 4,
+
+    #[serde(alias = "doc", alias = "docx", alias = "word", alias = "WORD")]
     #[translate(ko = "WORD", en = "WORD")]
     WORD = 5,
+
+    #[serde(alias = "ppt", alias = "pptx", alias = "PPTX")]
     #[translate(ko = "PPTX", en = "PPTX")]
     PPTX = 6,
+
+    #[serde(alias = "xls", alias = "xlsx", alias = "excel", alias = "EXCEL")]
     #[translate(ko = "EXCEL", en = "EXCEL")]
     EXCEL = 7,
+
+    #[serde(alias = "mp4", alias = "MP4")]
     #[translate(ko = "MP4", en = "MP4")]
     MP4 = 8,
+
+    #[serde(alias = "mov", alias = "MOV")]
     #[translate(ko = "MOV", en = "MOV")]
     MOV = 9,
 }

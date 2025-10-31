@@ -1,6 +1,8 @@
 use bdk::prelude::*;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
+use super::Partition;
+
 #[derive(
     Debug,
     Clone,
@@ -61,7 +63,7 @@ pub enum EntityType {
     SpacePollQuestion,
 
     SpacePollResult,
-    SpacePollUserAnswer(String), // user_pk
+    SpacePollUserAnswer(String, String), // space_pk, poll_pk
 
     // Survery space entity types
     SurveySpace,
@@ -100,6 +102,12 @@ pub enum EntityType {
     Badge,
     Industry,
 
+    // Space - Topic feature
+    Topic(String),                     // TOPIC#{topic_name}
+    TopicArticle(String),              // TOPIC_ARTICLE#{topic_name}#{article_id}
+    TopicArticleReply(String, String), // TOPIC_ARTICLE_REPLY#{topic_name}#{article_id}#{reply_id}
+    TopicDiscussion(String),           // TOPIC_DISCUSSION#{discussion_id}
+
     //SPACE FEATURE
     SpaceFile,
     SpaceDiscussion(String),
@@ -107,6 +115,8 @@ pub enum EntityType {
     SpaceDiscussionParticipant(String, String),
     SpaceQuiz(String),
     SpaceRecommendation,
+    SpacePanel(String),
+    SpacePanelParticipant(String, String),
     SpaceSurveyResponse(String), //Space pk
 
     // Membership
@@ -118,4 +128,19 @@ pub enum EntityType {
 
     //Telegram Feature
     TelegramChannel(String), // Telegram Chat ID
+}
+
+use crate::Error;
+
+impl TryInto<Partition> for EntityType {
+    type Error = Error;
+
+    fn try_into(self) -> Result<Partition, Self::Error> {
+        Ok(match self {
+            EntityType::SpacePoll(v) => Partition::Poll(v),
+            _ => Err(crate::Error::NotSupported(
+                "It is not a type supported converting to Partition.".to_string(),
+            ))?,
+        })
+    }
 }

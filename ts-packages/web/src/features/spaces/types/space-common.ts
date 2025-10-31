@@ -1,3 +1,4 @@
+import FileModel from '../files/types/file';
 import { BoosterType } from './booster-type';
 
 export enum SpacePublishState {
@@ -39,4 +40,5 @@ export interface SpaceCommon {
   booster: BoosterType;
   custom_booster?: number;
   rewards?: number;
+  files?: FileModel[];
 }

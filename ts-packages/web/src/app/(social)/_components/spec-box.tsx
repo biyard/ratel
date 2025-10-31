@@ -1,4 +1,3 @@
-'use client';
 import { ChevronRight } from 'lucide-react';
 
 export default function SpecBox({

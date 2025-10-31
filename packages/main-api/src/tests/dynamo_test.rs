@@ -37,11 +37,10 @@ pub fn get_test_aws_config() -> aws_config::SdkConfig {
 pub fn create_app_state() -> AppState {
     let aws_config = get_test_aws_config();
 
-    AppState {
-        dynamo: DynamoClient::mock(aws_config.clone()),
-        ses: SesClient::mock(aws_config),
-        pool: sqlx::Pool::connect_lazy("postgres://postgres:password@localhost/postgres").unwrap(),
-    }
+    AppState::new(
+        DynamoClient::mock(aws_config.clone()),
+        SesClient::mock(aws_config),
+    )
 }
 
 pub async fn create_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
