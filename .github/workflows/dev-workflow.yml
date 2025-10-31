@@ -85,7 +85,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
-      - name: Download Next.js CDK .next
+      - name: Download Vite Web
         uses: actions/download-artifact@v4
         with:
           name: ratel-web-${{ github.sha }}
@@ -111,14 +111,14 @@ jobs:
           RUST_LOG: info
           SERVICE: main-api
           DOMAIN: dev.ratel.foundation
-          AUTH_DOMAIN: dev.ratel.foundation
-          DATABASE_TYPE: postgres
-          DATABASE_URL: ${{ secrets.RO_DATABASE_URL }}
-          OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
-          AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
-          JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
+          # AUTH_DOMAIN: dev.ratel.foundation
+          # DATABASE_TYPE: postgres
+          # DATABASE_URL: ${{ secrets.RO_DATABASE_URL }}
+          # OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
+          # AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
+          # JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
 
-          MIGRATE: false
+          # MIGRATE: false
           BUCKET_NAME: metadata.ratel.foundation
           SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
           SLACK_CHANNEL_ABUSING: ${{ secrets.DEV_SLACK }}
@@ -133,8 +133,6 @@ jobs:
           KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
           KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
           KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
-
-          NONCELAB_TOKEN: ${{ secrets.NONCELAB_TOKEN }}
 
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
 
@@ -162,63 +160,64 @@ jobs:
           make docker.login
           make docker.push
 
-  image-worker:
-    runs-on: ubuntu-22.04
-    defaults:
-      run:
-        working-directory: packages/image-worker
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-          ssh-key: ${{ secrets.PULL_KEY_REPO }}
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-northeast-2
-      - uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          components: clippy, rustfmt
-          target: wasm32-unknown-unknown
-          toolchain: stable
-      - uses: cargo-bins/cargo-binstall@main
-      - name: Install toml-cli
-        run: |
-          cargo binstall toml-cli --force
-      - name: Cache builder
-        id: image-worker-build-cache
-        uses: actions/cache@v4
-        with:
-          key: image-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            image-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-            image-worker-build-${{ runner.os }}-
-            image-worker-build-
-          path: |
-            packages/image-worker/target
-      - name: Deploy APIs
-        env:
-          REGION: ap-northeast-2
-          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          ENV: dev
-          RUST_LOG: debug
-          SERVICE: image-worker
-          DATABASE_TYPE: postgres
-          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-          MIGRATE: false
-          DYNAMO_TABLE_PREFIX: ratel-dev
-        run: |
-          make build
+  # NOTE: migrate to DynamoDB
+  # image-worker:
+  #   runs-on: ubuntu-22.04
+  #   defaults:
+  #     run:
+  #       working-directory: packages/image-worker
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #       with:
+  #         submodules: recursive
+  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
+  #     - uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: ap-northeast-2
+  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
+  #       with:
+  #         components: clippy, rustfmt
+  #         target: wasm32-unknown-unknown
+  #         toolchain: stable
+  #     - uses: cargo-bins/cargo-binstall@main
+  #     - name: Install toml-cli
+  #       run: |
+  #         cargo binstall toml-cli --force
+  #     - name: Cache builder
+  #       id: image-worker-build-cache
+  #       uses: actions/cache@v4
+  #       with:
+  #         key: image-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+  #         restore-keys: |
+  #           image-worker-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+  #           image-worker-build-${{ runner.os }}-
+  #           image-worker-build-
+  #         path: |
+  #           packages/image-worker/target
+  #     - name: Deploy APIs
+  #       env:
+  #         REGION: ap-northeast-2
+  #         ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         ENV: dev
+  #         RUST_LOG: debug
+  #         SERVICE: image-worker
+  #         DATABASE_TYPE: postgres
+  #         DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
+  #         MIGRATE: false
+  #         DYNAMO_TABLE_PREFIX: ratel-dev
+  #       run: |
+  #         make build
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: image-worker-${{ github.sha }}
-          path: ${{ github.workspace }}/.build/image-worker/bootstrap
-          if-no-files-found: error
-          retention-days: 7
+  #     - name: Upload Artifacts
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: image-worker-${{ github.sha }}
+  #         path: ${{ github.workspace }}/.build/image-worker/bootstrap
+  #         if-no-files-found: error
+  #         retention-days: 7
 
   fetcher:
     runs-on: ubuntu-latest
@@ -263,14 +262,9 @@ jobs:
 
           ENV: dev
           RUST_LOG: info
-          DATABASE_TYPE: postgres
-          DATABASE_URL: ${{ secrets.DEV_DATABASE_URL }}
-          RPC_ENDPOINT: https://public-en-kairos.node.kaia.io
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
 
           DYNAMO_TABLE_PREFIX: ratel-dev
-          WEB_BUILD: false
-          MIGRATE: false
         run: |
           make docker.build
           make docker.login
@@ -315,8 +309,6 @@ jobs:
           VITE_EXPERIMENT: true
           VITE_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
           VITE_STORYBOOK_URL: https://storybook.dev.ratel.foundation
-
-
         run: |
           make build
           mv dist ../../cdk/
