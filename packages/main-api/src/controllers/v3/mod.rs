@@ -129,7 +129,6 @@ use by_axum::axum::*;
 pub struct RouteDeps {
     pub dynamo_client: DynamoClient,
     pub ses_client: SesClient,
-    pub pool: bdk::prelude::sqlx::PgPool,
     pub bot: Option<ArcTelegramBot>,
 }
 
@@ -137,7 +136,6 @@ pub fn route(
     RouteDeps {
         dynamo_client,
         ses_client,
-        pool,
         bot,
     }: RouteDeps,
 ) -> Result<Router> {
@@ -264,5 +262,5 @@ pub fn route(
                 .route("/multiparts", get(get_put_multi_object_uri))
                 .route("/multiparts", post(complete_multipart_upload)),
         )
-        .with_state(AppState::new(dynamo_client, ses_client, pool)))
+        .with_state(AppState::new(dynamo_client, ses_client)))
 }
