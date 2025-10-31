@@ -94,8 +94,8 @@ pub async fn migrate_posts(pool: &sqlx::PgPool, cli: &aws_sdk_dynamodb::Client) 
         post.comments = comments;
         post.shares = shares;
         post.rewards = if rewards == 0 { None } else { Some(rewards) };
-        post.created_at = created_at;
-        post.updated_at = updated_at;
+        post.created_at = created_at * 1000;
+        post.updated_at = updated_at * 1000;
         post.pk = crate::types::Partition::Feed(id.to_string());
         if let Some(url) = url {
             post.urls.push(url);

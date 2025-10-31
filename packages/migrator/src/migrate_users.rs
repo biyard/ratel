@@ -84,8 +84,8 @@ pub async fn migrate_user(
         },
     );
     user.pk = pk.clone();
-    user.created_at = created_at;
-    user.updated_at = updated_at;
+    user.created_at = created_at * 1000;
+    user.updated_at = updated_at * 1000;
     user.description = html_contents;
     user.followers_count = followers_count;
     user.followings_count = followings_count;

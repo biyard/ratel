@@ -87,8 +87,8 @@ pub async fn migrate_poll_spaces(pool: &sqlx::PgPool, cli: &aws_sdk_dynamodb::Cl
 
         let mut space = SpaceCommon::new(post_pk, user)
             .with_space_type(main_api::types::SpaceType::Poll)
-            .with_created_at(created_at)
-            .with_updated_at(updated_at)
+            .with_created_at(created_at * 1000)
+            .with_updated_at(updated_at * 1000)
             .with_content(html_contents)
             .with_visibility(match publishing_scope {
                 dto::PublishingScope::Private => main_api::types::SpaceVisibility::Private,
@@ -105,11 +105,11 @@ pub async fn migrate_poll_spaces(pool: &sqlx::PgPool, cli: &aws_sdk_dynamodb::Cl
             });
 
         if let Some(started_at) = started_at {
-            space = space.with_started_at(started_at);
+            space = space.with_started_at(started_at * 1000);
         }
 
         if let Some(ended_at) = ended_at {
-            space = space.with_ended_at(ended_at);
+            space = space.with_ended_at(ended_at * 1000);
         }
 
         if let Err(e) = space.create(cli).await {
@@ -161,10 +161,10 @@ pub async fn migrate_poll_spaces(pool: &sqlx::PgPool, cli: &aws_sdk_dynamodb::Cl
                 .unwrap()
                 .with_user_response_count(response_count)
                 .with_questions(questions)
-                .with_created_at(created_at)
-                .with_updated_at(updated_at)
-                .with_started_at(started_at)
-                .with_ended_at(ended_at);
+                .with_created_at(created_at * 1000)
+                .with_updated_at(updated_at * 1000)
+                .with_started_at(started_at * 1000)
+                .with_ended_at(ended_at * 1000);
 
             if let Err(e) = poll.create(cli).await {
                 tracing::error!("Failed to create poll for space {}: {:?}", id, e);
