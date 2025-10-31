@@ -51,7 +51,7 @@ pub enum ServiceEndpoint {
 
 /// Complete DID Document structure
 /// Based on W3C DID Core specification: https://www.w3.org/TR/did-core/
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct DidDocument {
     /// JSON-LD context
     #[serde(rename = "@context")]
