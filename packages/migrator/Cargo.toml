@@ -8,3 +8,9 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
+main-api = { path = "../main-api" }
+dto = { path = "../dto" }
+bdk = { workspace = true, features = ["be"] }
+aws-sdk-dynamodb = "1.96.0"
+tokio = { workspace = true, features = ["full"] }
+tracing-subscriber.workspace = true

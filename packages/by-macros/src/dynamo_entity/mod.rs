@@ -1202,6 +1202,23 @@ fn generate_struct_impl(
                 Ok(())
             }
 
+            pub async fn upsert(
+                &self,
+                cli: &aws_sdk_dynamodb::Client,
+            ) -> #result_ty <(), #err_ctor> {
+                let item = serde_dynamo::to_item(self)?;
+
+                let item = self.indexed_fields(item);
+
+                cli.put_item()
+                    .table_name(Self::table_name())
+                    .set_item(Some(item))
+                    .send()
+                    .await.map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                Ok(())
+            }
+
             pub async fn get(
                 cli: &aws_sdk_dynamodb::Client,
                 pk: impl std::fmt::Display,
