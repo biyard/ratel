@@ -40,7 +40,6 @@ pub fn create_app_state() -> AppState {
     AppState::new(
         DynamoClient::mock(aws_config.clone()),
         SesClient::mock(aws_config),
-        sqlx::Pool::connect_lazy("postgres://postgres:password@localhost/postgres").unwrap(),
     )
 }
 

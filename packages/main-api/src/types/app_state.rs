@@ -6,12 +6,11 @@ use crate::utils::aws::{DynamoClient, SesClient};
 pub struct AppState {
     pub dynamo: DynamoClient,
     pub ses: SesClient,
-    pub pool: bdk::prelude::sqlx::PgPool,
     pub portone: PortOne,
 }
 
 impl AppState {
-    pub fn new(dynamo: DynamoClient, ses: SesClient, pool: bdk::prelude::sqlx::PgPool) -> Self {
+    pub fn new(dynamo: DynamoClient, ses: SesClient) -> Self {
         let conf = config::get();
 
         let portone = PortOne::new(&conf.portone.api_secret);
@@ -19,7 +18,6 @@ impl AppState {
         Self {
             dynamo,
             ses,
-            pool,
             portone,
         }
     }
