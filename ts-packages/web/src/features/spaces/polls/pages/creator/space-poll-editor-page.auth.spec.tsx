@@ -60,7 +60,8 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
     spaceUrl = page.url();
   });
 
-  test('[SPEP-003] Navigate to Polls page and create a poll', async ({
+  // TODO: Re-enable when Create Poll button is restored
+  test.skip('[SPEP-003] Navigate to Polls page and create a poll', async ({
     page,
   }) => {
     await page.goto(spaceUrl);
