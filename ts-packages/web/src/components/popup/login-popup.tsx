@@ -1,4 +1,5 @@
 import { useCallback, useState } from 'react';
+import { useNavigate } from 'react-router';
 import GoogleIcon from '@/assets/icons/google.svg?react';
 import { LoginPopupFooter } from './login-popup-footer';
 import { LoaderPopup } from './loader-popup';
@@ -26,6 +27,7 @@ import { OAuthProvider } from '@/types/oauth-provider';
 import { ratelSdk } from '@/lib/api/ratel';
 import { useNetwork } from '@/app/(social)/my-network/_hook/use-network';
 import { refetchUserInfo } from '@/hooks/use-user-info';
+import { route } from '@/route';
 
 interface LoginModalProps {
   id?: string;
@@ -47,6 +49,7 @@ export const LoginModal = ({
   const { t } = useTranslation('SignIn');
   const { t: signupTranslate } = useTranslation('Signup');
   const popup = usePopup();
+  const navigate = useNavigate();
   const network = useNetwork();
   const anonKeyPair = useEd25519KeyPair();
   const queryClient = getQueryClient();
@@ -135,11 +138,9 @@ export const LoginModal = ({
       await updateTelegramId();
       network.refetch();
       popup.close();
-
-      // Redirect to home page to reflect logged-in state
-      window.location.href = '/';
+      navigate(route.home());
     } else {
-      popup.close();
+      setPasswordWarning(t('login_failed'));
     }
   };
 
