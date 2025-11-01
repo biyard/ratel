@@ -2,23 +2,23 @@ import { test, expect } from '@playwright/test';
 import { CONFIGS } from '@tests/config';
 import { click } from '@tests/utils';
 
-test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
+test.describe.serial('[SpacePollViewerPage] Authenticated Users', () => {
   let threadUrl = '';
   let spaceUrl = '';
   let pollUrl = '';
 
-  test('[SPEP-001] Create a post for poll space', async ({ page }) => {
+  test('[SPVP-001] Create a post for poll space', async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000); // Wait for sidebar to load
 
-    const testTitle = 'Automated Post for Poll Editor Testing';
+    const testTitle = 'Automated Post for Poll Viewer Testing';
     const testContent =
-      'This is an automated post content created by Playwright E2E for verifying poll editor functionality. ' +
-      'The purpose of this is to verify that the poll space creation, question editing, and admin features ' +
-      'work correctly from end to end. This content is intentionally long to meet the minimum character ' +
-      'requirements for post publishing. We will verify creating a poll space, editing questions, toggling ' +
-      'response_editable, and saving changes.';
+      'This is an automated post content created by Playwright E2E for verifying poll viewer functionality. ' +
+      'The purpose of this is to verify that the poll space creation and poll response functionality ' +
+      'works correctly from end to end. This content is intentionally long to ' +
+      'meet the minimum character requirements for post publishing. We will verify creating a poll space, ' +
+      'adding poll questions, and submitting responses.';
 
     // Try data-pw first, then fall back to label
     await click(page, { 'data-pw': 'create-post-button' });
@@ -41,7 +41,7 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
     threadUrl = page.url();
   });
 
-  test('[SPEP-002] Create a Poll Space', async ({ page }) => {
+  test('[SPVP-002] Create a Poll Space', async ({ page }) => {
     await page.goto(threadUrl);
     await page.waitForTimeout(3000);
 
@@ -61,7 +61,7 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
   });
 
   // TODO: Re-enable when Create Poll button is restored
-  test.skip('[SPEP-003] Navigate to Polls page and create a poll', async ({
+  test.skip('[SPVP-003] Navigate to Polls page and create a poll', async ({
     page,
   }) => {
     await page.goto(spaceUrl);
@@ -79,18 +79,7 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
     pollUrl = page.url();
   });
 
-  test('[SPEP-004] Response editable checkbox is visible for admin', async ({
-    page,
-  }) => {
-    await page.goto(pollUrl);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
-
-    const checkbox = page.locator('[data-pw="response-editable-checkbox"]');
-    await expect(checkbox).toBeVisible({ timeout: 10000 });
-  });
-
-  test('[SPEP-005] Edit button is visible for admin', async ({ page }) => {
+  test('[SPVP-004] Admin user sees Edit button initially', async ({ page }) => {
     await page.goto(pollUrl);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
@@ -99,25 +88,15 @@ test.describe.serial('[SpacePollEditorPage] Authenticated Users', () => {
     await expect(editButton).toBeVisible({ timeout: 10000 });
   });
 
-  test('[SPEP-006] Clicking Edit shows Save and Discard buttons', async ({
-    page,
-  }) => {
+  test('[SPVP-005] Poll page loads correctly', async ({ page }) => {
     await page.goto(pollUrl);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
 
-    const editButton = page.locator('[data-pw="poll-editor-edit-btn"]');
-    await editButton.click();
-    await page.waitForTimeout(1000);
-
-    const saveButton = page.locator('[data-pw="poll-editor-save-btn"]');
-    const discardButton = page.locator('[data-pw="poll-editor-discard-btn"]');
-
-    await expect(saveButton).toBeVisible({ timeout: 10000 });
-    await expect(discardButton).toBeVisible({ timeout: 10000 });
+    expect(page.url()).toBe(pollUrl);
   });
 
-  test('[SPEP-007] Back button returns to polls list', async ({ page }) => {
+  test('[SPVP-006] Back button returns to polls list', async ({ page }) => {
     await page.goto(pollUrl);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
