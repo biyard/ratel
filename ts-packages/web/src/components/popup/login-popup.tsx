@@ -134,9 +134,13 @@ export const LoginModal = ({
       });
       await updateTelegramId();
       network.refetch();
-    }
+      popup.close();
 
-    popup.close();
+      // Redirect to home page to reflect logged-in state
+      window.location.href = '/';
+    } else {
+      popup.close();
+    }
   };
 
   const handleContinue = async () => {
