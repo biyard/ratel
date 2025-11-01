@@ -36,7 +36,10 @@ export default function TimezoneDropdown({
   };
 
   return (
-    <Popover.Root open={canEdit && dropdownOpen} onOpenChange={setDropdownOpen}>
+    <Popover.Root
+      open={canEdit && dropdownOpen}
+      onOpenChange={canEdit ? setDropdownOpen : undefined}
+    >
       <Popover.Trigger asChild>
         <button
           className="flex flex-row gap-2.5 items-center px-5 mt-2 w-full rounded-lg border sm:mt-0 border-select-date-border bg-select-date-bg py-[10.5px] sm:w-fit hover:border-neutral-500 transition-colors disabled:cursor-not-allowed disabled:opacity-50"
