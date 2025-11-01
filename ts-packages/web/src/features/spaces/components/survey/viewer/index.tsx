@@ -57,15 +57,31 @@ export default function SurveyViewer({
   const total = qa.length;
   const current = qa[idx];
 
+  const isValidAnswer = (answer: SurveyAnswer['answer']) => {
+    return (
+      answer !== undefined &&
+      answer !== null &&
+      !(Array.isArray(answer) && answer.length === 0) &&
+      !(typeof answer === 'string' && answer.trim() === '')
+    );
+  };
+
   const canNext = () => {
     if (isAdmin) return true;
     const ans = current.answer?.answer;
-    const hasAnswer =
-      ans !== undefined &&
-      ans !== null &&
-      !(Array.isArray(ans) && ans.length === 0) &&
-      !(typeof ans === 'string' && ans.trim() === '');
-    if (current.question.is_required && !hasAnswer) return false;
+    if (current.question.is_required && !isValidAnswer(ans)) return false;
+    return true;
+  };
+
+  const validateAllRequiredAnswers = () => {
+    for (let i = 0; i < qa.length; i++) {
+      const question = qa[i];
+      if (!question.question.is_required) continue;
+
+      if (!isValidAnswer(question.answer?.answer)) {
+        return false;
+      }
+    }
     return true;
   };
 
@@ -76,13 +92,10 @@ export default function SurveyViewer({
       <Button
         onClick={() => {
           if (!isAdmin) {
-            const a = current.answer?.answer;
-            const isEmpty =
-              a === undefined ||
-              a === null ||
-              (Array.isArray(a) && a.length === 0) ||
-              (typeof a === 'string' && a.trim() === '');
-            if (current.question.is_required && isEmpty) {
+            if (
+              current.question.is_required &&
+              !isValidAnswer(current.answer?.answer)
+            ) {
               showErrorToast(
                 'Please answer this required question before proceeding.',
               );
@@ -97,9 +110,37 @@ export default function SurveyViewer({
       </Button>
     );
   } else if (canSubmit && !isAdmin) {
-    button = <Button onClick={onSubmit}>{t('btn_submit')}</Button>;
+    button = (
+      <Button
+        onClick={() => {
+          if (!validateAllRequiredAnswers()) {
+            showErrorToast(
+              'Please answer all required questions before submitting.',
+            );
+            return;
+          }
+          onSubmit?.();
+        }}
+      >
+        {t('btn_submit')}
+      </Button>
+    );
   } else if (canUpdate && !isAdmin) {
-    button = <Button onClick={onSubmit}>{t('btn_update')}</Button>;
+    button = (
+      <Button
+        onClick={() => {
+          if (!validateAllRequiredAnswers()) {
+            showErrorToast(
+              'Please answer all required questions before updating.',
+            );
+            return;
+          }
+          onSubmit?.();
+        }}
+      >
+        {t('btn_update')}
+      </Button>
+    );
   }
 
   return (
