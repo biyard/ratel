@@ -6,12 +6,14 @@ const THEME_STORAGE_KEY = 'user-theme';
 
 function getSystemTheme(): 'light' | 'dark' {
   if (typeof window === 'undefined') return 'light';
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
 }
 
 function applyTheme(theme: Theme) {
   if (typeof window === 'undefined') return;
-  
+
   const effectiveTheme = theme === 'system' ? getSystemTheme() : theme;
   document.documentElement.setAttribute('data-theme', effectiveTheme);
 }
@@ -29,9 +31,11 @@ export function useTheme() {
     if (typeof window !== 'undefined') {
       localStorage.setItem(THEME_STORAGE_KEY, newTheme);
       applyTheme(newTheme);
-      
+
       // Dispatch custom event to notify other components
-      window.dispatchEvent(new CustomEvent('theme-change', { detail: newTheme }));
+      window.dispatchEvent(
+        new CustomEvent('theme-change', { detail: newTheme }),
+      );
     }
   };
 
@@ -57,18 +61,19 @@ export function useTheme() {
       }
     };
 
-    const handleThemeChange = (e: CustomEvent<Theme>) => {
-      setThemeState(e.detail);
-      applyTheme(e.detail);
+    const handleThemeChange = (e: Event) => {
+      const customEvent = e as CustomEvent<Theme>;
+      setThemeState(customEvent.detail);
+      applyTheme(customEvent.detail);
     };
 
     window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('theme-change' as any, handleThemeChange as any);
+    window.addEventListener('theme-change', handleThemeChange);
 
     return () => {
       mediaQuery.removeEventListener('change', handleSystemThemeChange);
       window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('theme-change' as any, handleThemeChange as any);
+      window.removeEventListener('theme-change', handleThemeChange);
     };
   }, [theme]);
 

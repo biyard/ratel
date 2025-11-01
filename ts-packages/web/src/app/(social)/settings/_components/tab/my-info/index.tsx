@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { checkString } from '@/lib/string-filter-utils';
 import { route } from '@/route';
 import { logger } from '@/lib/logger';
-import { useSettingsContext } from '../../../providers.client';
+import { useSettingsContext } from '../../../settings-context';
 import WalletSummary from '../../wallet-summary';
 import { showErrorToast } from '@/lib/toast';
 import { updateUserEvmAddress } from '@/lib/api/ratel/me.v3';
