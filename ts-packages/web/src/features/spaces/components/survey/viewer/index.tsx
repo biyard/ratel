@@ -69,6 +69,25 @@ export default function SurveyViewer({
     return true;
   };
 
+  const validateAllRequiredAnswers = () => {
+    for (let i = 0; i < qa.length; i++) {
+      const question = qa[i];
+      if (!question.question.is_required) continue;
+
+      const ans = question.answer?.answer;
+      const hasAnswer =
+        ans !== undefined &&
+        ans !== null &&
+        !(Array.isArray(ans) && ans.length === 0) &&
+        !(typeof ans === 'string' && ans.trim() === '');
+
+      if (!hasAnswer) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   if (!isLogin) {
     button = <Button onClick={onLogin}>{t('btn_login')}</Button>;
   } else if (idx < total - 1) {
@@ -97,9 +116,37 @@ export default function SurveyViewer({
       </Button>
     );
   } else if (canSubmit && !isAdmin) {
-    button = <Button onClick={onSubmit}>{t('btn_submit')}</Button>;
+    button = (
+      <Button
+        onClick={() => {
+          if (!validateAllRequiredAnswers()) {
+            showErrorToast(
+              'Please answer all required questions before submitting.',
+            );
+            return;
+          }
+          onSubmit?.();
+        }}
+      >
+        {t('btn_submit')}
+      </Button>
+    );
   } else if (canUpdate && !isAdmin) {
-    button = <Button onClick={onSubmit}>{t('btn_update')}</Button>;
+    button = (
+      <Button
+        onClick={() => {
+          if (!validateAllRequiredAnswers()) {
+            showErrorToast(
+              'Please answer all required questions before updating.',
+            );
+            return;
+          }
+          onSubmit?.();
+        }}
+      >
+        {t('btn_update')}
+      </Button>
+    );
   }
 
   return (
