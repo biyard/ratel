@@ -57,15 +57,19 @@ export default function SurveyViewer({
   const total = qa.length;
   const current = qa[idx];
 
+  const isValidAnswer = (answer: SurveyAnswer['answer']) => {
+    return (
+      answer !== undefined &&
+      answer !== null &&
+      !(Array.isArray(answer) && answer.length === 0) &&
+      !(typeof answer === 'string' && answer.trim() === '')
+    );
+  };
+
   const canNext = () => {
     if (isAdmin) return true;
     const ans = current.answer?.answer;
-    const hasAnswer =
-      ans !== undefined &&
-      ans !== null &&
-      !(Array.isArray(ans) && ans.length === 0) &&
-      !(typeof ans === 'string' && ans.trim() === '');
-    if (current.question.is_required && !hasAnswer) return false;
+    if (current.question.is_required && !isValidAnswer(ans)) return false;
     return true;
   };
 
@@ -74,14 +78,7 @@ export default function SurveyViewer({
       const question = qa[i];
       if (!question.question.is_required) continue;
 
-      const ans = question.answer?.answer;
-      const hasAnswer =
-        ans !== undefined &&
-        ans !== null &&
-        !(Array.isArray(ans) && ans.length === 0) &&
-        !(typeof ans === 'string' && ans.trim() === '');
-
-      if (!hasAnswer) {
+      if (!isValidAnswer(question.answer?.answer)) {
         return false;
       }
     }
@@ -95,13 +92,10 @@ export default function SurveyViewer({
       <Button
         onClick={() => {
           if (!isAdmin) {
-            const a = current.answer?.answer;
-            const isEmpty =
-              a === undefined ||
-              a === null ||
-              (Array.isArray(a) && a.length === 0) ||
-              (typeof a === 'string' && a.trim() === '');
-            if (current.question.is_required && isEmpty) {
+            if (
+              current.question.is_required &&
+              !isValidAnswer(current.answer?.answer)
+            ) {
               showErrorToast(
                 'Please answer this required question before proceeding.',
               );
