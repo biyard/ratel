@@ -8,7 +8,8 @@ addSideMenusForSpaceType(SpaceType.Poll, [
   {
     Icon: Vote,
     to: (space) => {
-      return route.spacePolls(space.pk);
+      const pollPk = `SPACE_POLL#${space.pk.split('#')[1]}`;
+      return route.spacePollById(space.pk, pollPk);
     },
     label: 'menu_poll',
   },
@@ -16,7 +17,8 @@ addSideMenusForSpaceType(SpaceType.Poll, [
   {
     Icon: PieChart1,
     to: (space) => {
-      return route.spaceAnalyzePolls(space.pk);
+      const pollPk = `SPACE_POLL#${space.pk.split('#')[1]}`;
+      return route.spaceAnalyzePollById(space.pk, pollPk);
     },
     visible: (space) => !space.isDraft && space.isAdmin(),
     label: 'menu_analyze',

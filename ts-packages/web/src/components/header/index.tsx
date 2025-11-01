@@ -10,15 +10,15 @@ import { LoginModal } from '../popup/login-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { route } from '@/route';
 import { UserType } from '@/lib/api/ratel/users.v3';
-
 import LoginIcon from '@/assets/icons/login.svg?react';
 import { useTranslation } from 'react-i18next';
 import { Us } from '../icons';
 import { Kr } from '@/assets/icons/flags';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { config, Env } from '@/config';
+import { Monitor, Moon, Sun } from 'lucide-react';
+import { useTheme } from '@/hooks/use-theme';
 
-// User type constants matching backend
 export interface HeaderProps {
   mobileExtends: boolean;
   setMobileExtends: (extend: boolean) => void;
@@ -28,13 +28,19 @@ export default function Header(props: HeaderProps) {
   const { t, i18n } = useTranslation('Nav');
   const popup = usePopup();
   const locale = i18n.language;
-
   const { data: user } = useUserInfo();
   const loggedIn = user !== null;
+  const { theme, setTheme } = useTheme();
 
   const handleChangeLanguage = (newLocale: string) => {
     document.cookie = `locale=${newLocale}; path=/; max-age=31536000; samesite=lax`;
     i18n.changeLanguage(newLocale);
+  };
+
+  const handleChangeTheme = (newTheme: 'system' | 'light' | 'dark') => {
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    document.cookie = `theme=${newTheme}; path=/; max-age=31536000; samesite=lax`;
   };
 
   const isAdmin = user?.user_type === UserType.Admin;
@@ -53,19 +59,6 @@ export default function Header(props: HeaderProps) {
       href: route.home(),
       authorized: false,
     },
-    /* {
-     *   name: t('explore'),
-     *   icon: (
-     *     <InternetIcon
-     *       className="group-hover:[&>path]:stroke-white group-hover:[&>circle]:stroke-white transition-all"
-     *       width="24"
-     *       height="24"
-     *     />
-     *   ),
-     *   visible: config.experiment,
-     *   href: route.explore(),
-     *   authorized: false,
-     * }, */
     {
       name: t('my_network'),
       icon: (
@@ -79,32 +72,6 @@ export default function Header(props: HeaderProps) {
       href: route.myNetwork(),
       authorized: true,
     },
-    /* {
-     *   name: t('message'),
-     *   icon: (
-     *     <RoundBubbleIcon
-     *       className="group-hover:[&>path]:stroke-white transition-all"
-     *       width="24"
-     *       height="24"
-     *     />
-     *   ),
-     *   visible: config.experiment,
-     *   href: route.messages(),
-     *   authorized: true,
-     * },
-     * {
-     *   name: t('notification'),
-     *   icon: (
-     *     <BellIcon
-     *       className="group-hover:[&>path]:stroke-white transition-all"
-     *       width="24"
-     *       height="24"
-     *     />
-     *   ),
-     *   visible: true,
-     *   href: route.notifications(),
-     *   authorized: true,
-     * }, */
     {
       name: t('admin'),
       icon: (
@@ -146,6 +113,10 @@ export default function Header(props: HeaderProps) {
     },
   ];
 
+  const seq: Array<'system' | 'light' | 'dark'> = ['system', 'light', 'dark'];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nextTheme = seq[(seq.indexOf(theme as any) + 1) % seq.length];
+
   return (
     <header className="border-b border-divider px-2.5 py-2.5 flex items-center justify-center !bg-bg h-[var(--header-height)] z-999">
       <nav className="flex justify-between items-center mx-2.5 w-full gap-12.5 max-w-desktop">
@@ -171,8 +142,7 @@ export default function Header(props: HeaderProps) {
             >
               {item.icon}
               <span className="font-medium whitespace-nowrap transition-all text-menu-text text-[15px] group-hover:text-menu-text/80">
-                {' '}
-                {item.name}{' '}
+                {item.name}
               </span>
             </NavLink>
           ))}
@@ -201,10 +171,32 @@ export default function Header(props: HeaderProps) {
                 )}
               </div>
               <span className="font-medium whitespace-nowrap transition-all text-menu-text text-[15px] group-hover:text-menu-text/80">
-                {' '}
                 {locale == 'en' ? 'EN' : 'KO'}
               </span>
             </div>
+          </button>
+
+          <button
+            className="flex flex-col w-fit justify-center items-center mx-2"
+            aria-label={`Theme: ${theme}`}
+            onClick={() => handleChangeTheme(nextTheme)}
+          >
+            <div className="flex flex-col justify-center items-center h-6 w-fit">
+              {theme === 'system' ? (
+                <Monitor className="[&>path]:stroke-menu-text [&>rect]:stroke-menu-text [&>line]:stroke-menu-text" />
+              ) : theme === 'light' ? (
+                <Sun className="[&>path]:stroke-menu-text [&>circle]:stroke-menu-text" />
+              ) : (
+                <Moon className="[&>path]:stroke-menu-text" />
+              )}
+            </div>
+            <span className="font-medium whitespace-nowrap transition-all text-menu-text text-[15px] group-hover:text-menu-text/80">
+              {theme == 'system'
+                ? 'System'
+                : theme == 'light'
+                  ? 'Light'
+                  : 'Dark'}
+            </span>
           </button>
 
           {user && loggedIn ? (

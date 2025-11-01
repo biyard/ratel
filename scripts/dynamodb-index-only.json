@@ -16,6 +16,19 @@
   ],
   "GlobalSecondaryIndexUpdates": [
     {
+      "IndexName": "type-index",
+      "KeySchema": [
+        {
+          "AttributeName": "sk",
+          "KeyType": "HASH"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      }
+    },
+
+    {
       "Create": {
         "IndexName": "gsi1-index",
         "KeySchema": [

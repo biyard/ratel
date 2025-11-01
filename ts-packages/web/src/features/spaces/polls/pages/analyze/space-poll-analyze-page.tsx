@@ -5,6 +5,7 @@ import { Col } from '@/components/ui/col';
 import Report from '@/features/spaces/components/report';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
+import { SpaceType } from '@/features/spaces/types/space-type';
 
 export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(
@@ -25,11 +26,13 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
         handleDownloadExcel={ctrl.handleDownloadExcel}
       />
 
-      <div className="flex flex-row w-full justify-end">
-        <Button className="w-fit" onClick={ctrl.handleBack}>
-          {t('btn_back')}
-        </Button>
-      </div>
+      {ctrl.space.spaceType == SpaceType.Deliberation && (
+        <div className="flex flex-row w-full justify-end">
+          <Button className="w-fit" onClick={ctrl.handleBack}>
+            {t('btn_back')}
+          </Button>
+        </div>
+      )}
     </Col>
   );
 }

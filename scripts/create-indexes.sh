@@ -1,14 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TABLE="ratel-dev-main"
-REGION="us-east-1"
+TABLE="ratel-prod-main"
+REGION="ap-northeast-2"
 
-# gsi1~gsi6 순서대로 생성 (필요한 것만 나열)
 INDEXES=(
   # "gsi1_pk gsi1_sk gsi1-index"
   # "gsi2_pk gsi2_sk gsi2-index"
-  # "gsi3_pk gsi3_sk gsi3-index"
+  "gsi3_pk gsi3_sk gsi3-index"
   "gsi4_pk gsi4_sk gsi4-index"
   "gsi5_pk gsi5_sk gsi5-index"
   "gsi6_pk gsi6_sk gsi6-index"
@@ -39,7 +38,6 @@ for def in "${INDEXES[@]}"; do
   echo "🚀 Creating $NAME on $TABLE"
 
   # Build AttributeDefinitions only for keys that aren't already defined (optional optimization).
-  # 간단히는 그대로 넣고, 중복이면 에러 나면 아래 주석처럼 빼서 재시도하면 됨.
 
   aws dynamodb update-table \
     --region "$REGION" \
@@ -58,5 +56,7 @@ for def in "${INDEXES[@]}"; do
       }
     ]" > /dev/null
 
-  wait_index_active "$TABLE" "$NAME" "$REGION"
+  wait_index_active "$TABLE" "$NAME" "ap-northeast-2"
+  wait_index_active "$TABLE" "$NAME" "us-east-1"
+  wait_index_active "$TABLE" "$NAME" "eu-central-1"
 done

@@ -57,6 +57,7 @@ export const LoginModal = ({
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [passwordWarning, setPasswordWarning] = useState('');
+  const [loginError, setLoginError] = useState('');
   const { post } = useApiCall();
 
   const updateTelegramId = async () => {
@@ -107,6 +108,7 @@ export const LoginModal = ({
 
   const handleChangePassword = async (pw: string) => {
     setPassword(pw);
+    setLoginError('');
 
     if (!validatePassword(pw)) {
       setPasswordWarning(t('invalid_password_format'));
@@ -117,6 +119,7 @@ export const LoginModal = ({
   };
 
   const handleSignIn = async () => {
+    setLoginError('');
     const hashedPassword = sha3(password);
     const info = await post('/v3/auth/login', {
       email,
@@ -134,9 +137,11 @@ export const LoginModal = ({
       });
       await updateTelegramId();
       network.refetch();
+      popup.close();
+      window.location.href = '/';
+    } else {
+      setLoginError(t('invalid_credentials'));
     }
-
-    popup.close();
   };
 
   const handleContinue = async () => {
@@ -331,9 +336,18 @@ export const LoginModal = ({
             className="w-full rounded-[10px] px-5 py-5.5 font-light"
             value={password}
             onChange={(e) => handleChangePassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSignIn();
+              }
+            }}
           />
           {passwordWarning !== '' && (
             <div className="text-red-500 text-xs mt-1">{passwordWarning}</div>
+          )}
+          {loginError !== '' && (
+            <div className="text-red-500 text-xs mt-1">{loginError}</div>
           )}
         </Col>
 

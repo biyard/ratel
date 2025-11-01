@@ -1,6 +1,6 @@
 import CalendarDropdown from '@/components/calendar-dropdown';
-import { Internet } from '@/components/icons';
 import TimeDropdown from '@/components/time-dropdown';
+import TimezoneDropdown from '@/components/timezone-dropdown';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
@@ -36,6 +36,7 @@ export function TimeRangeSetting({
   const [end, setEnd] = useState(endTimestampMillis);
   const [delta, setDelta] = useState(end - start);
   const localTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const [timezone, setTimezone] = useState(localTimezone);
   const { t } = useTranslation('TimeRangeSetting');
   const [editing, setEditing] = useState(false);
 
@@ -119,16 +120,11 @@ export function TimeRangeSetting({
             </div>
           </div>
 
-          <div className="flex flex-row gap-2.5 items-center px-5 mt-2 w-full rounded-lg border sm:mt-0 border-select-date-border bg-select-date-bg py-[10.5px] sm:w-fit">
-            <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
-              {localTimezone}
-            </div>
-            <Internet
-              className="w-5 h-5 [&>path]:stroke-neutral-600 [&>circle]:stroke-neutral-600"
-              width="20"
-              height="20"
-            />
-          </div>
+          <TimezoneDropdown
+            value={timezone}
+            onChange={setTimezone}
+            canEdit={canEdit && editing}
+          />
         </div>
 
         {button}

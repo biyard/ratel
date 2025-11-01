@@ -13,7 +13,7 @@ pub async fn migrate_posts(
     cli: &aws_sdk_dynamodb::Client,
     pool: &sqlx::PgPool,
     user: Option<crate::models::user::User>,
-) -> Result<(), crate::Error2> {
+) -> Result<(), crate::Error> {
     let mut total_count = 0;
     let user_id = if let Some(user) = &user {
         user.pk.try_into_inner()?.parse::<i64>().unwrap_or(0)
@@ -69,7 +69,7 @@ pub async fn migrate_posts(
 
         let author = author.first().cloned().ok_or_else(|| {
             tracing::error!("Post with ID {} has no associated author", id);
-            crate::Error2::InternalServerError(format!(
+            crate::Error::InternalServerError(format!(
                 "Post with ID {} has no associated author",
                 id
             ))
@@ -86,7 +86,7 @@ pub async fn migrate_posts(
                         author.id,
                         e.to_string()
                     );
-                    crate::Error2::InternalServerError(format!(
+                    crate::Error::InternalServerError(format!(
                         "Failed to migrate author with ID {}: {}",
                         author.id, e
                     ))

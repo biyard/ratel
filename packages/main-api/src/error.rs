@@ -168,6 +168,8 @@ pub enum Error {
     #[rest_error(code = 5000)]
     #[error("space not found")]
     NotFoundSpace,
+    #[error("already published space")]
+    AlreadyPublishedSpace,
 
     // /v3/discussions endpoints 6000 ~
     #[rest_error(code = 6000)]
