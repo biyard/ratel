@@ -178,8 +178,8 @@ export function QuestionFooter({
   };
 
   return (
-    <div className="flex flex-row justify-end items-center mt-4 w-full">
-      <div className="flex flex-wrap gap-10 w-fit max-tablet:gap-4 max-tablet:justify-end">
+    <div className="flex flex-row justify-between items-center mt-4 w-full max-tablet:flex-col max-tablet:items-end max-tablet:gap-4">
+      <div className="flex flex-wrap gap-10 w-fit max-tablet:gap-4">
         {question.answer_type === SurveyAnswerType.Checkbox && (
           <LabelSwitchButton
             bgColor="bg-blue-500"
@@ -197,16 +197,16 @@ export function QuestionFooter({
           value={question.is_required ?? false}
           onChange={handleRequiredChange}
         />
+      </div>
 
-        <div
-          className="flex flex-row items-center cursor-pointer w-fit gap-1.25"
-          onClick={onDelete}
-        >
-          <div className="font-medium cursor-pointer text-[15px] text-neutral-500">
-            {t('delete_button_label')}
-          </div>
-          <Trash2 className="cursor-pointer w-4.5 h-4.5 stroke-white light:stroke-neutral-500" />
-        </div>
+      <div
+        className="flex flex-row items-center cursor-pointer gap-1.25 px-2 py-1 hover:bg-neutral-800 light:hover:bg-neutral-200 rounded transition-colors"
+        onClick={onDelete}
+      >
+        <span className="font-medium text-[15px] text-neutral-500">
+          {t('delete_button_label')}
+        </span>
+        <Trash2 className="w-4.5 h-4.5 stroke-white light:stroke-neutral-500" />
       </div>
     </div>
   );
