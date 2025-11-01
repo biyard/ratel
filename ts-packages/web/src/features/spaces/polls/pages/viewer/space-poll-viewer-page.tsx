@@ -43,6 +43,7 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
     <>
       <Col>
         <TimeRangeSetting
+          canEdit={false}
           startTimestampMillis={ctrl.poll.started_at}
           endTimestampMillis={ctrl.poll.ended_at}
           className="justify-end"
