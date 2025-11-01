@@ -66,7 +66,7 @@ export default function LinearScaleViewer(props: LinearScaleViewerProps) {
 
       <div
         ref={wrapRef}
-        className="w-full select-none max-tablet:overflow-x-auto no-scrollbar touch-pan-x md:cursor-grab"
+        className="w-full select-none overflow-x-auto no-scrollbar touch-pan-x md:cursor-grab"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerEnd}
