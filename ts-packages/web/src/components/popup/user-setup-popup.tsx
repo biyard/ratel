@@ -64,25 +64,54 @@ const UserSetupPopup = ({
   const [warningDisplayName, setWarningDisplayname] = useState('');
   const [isValidDisplayName, setIsValidDisplayName] = useState(true);
   const [emailState, setEmailState] = useState(email);
+  const [emailWarning, setEmailWarning] = useState('');
   const [sentCode, setSentCode] = useState(false);
   const [isValidEmail, setIsValidEmail] = useState(email !== '');
   const [profileUrlState, setProfileUrlState] = useState(profileUrl);
+  const [termsError, setTermsError] = useState('');
 
   const query = useUserInfo();
   const auth = useAuth();
 
   const isValidUsername = (username: string) => /^[a-z0-9_-]+$/.test(username);
 
+  const isValidEmailFormat = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleProfileUrl = (url: string) => {
     setProfileUrlState(url);
   };
 
   const handleSubmit = async () => {
+    // Clear previous errors
+    setTermsError('');
+
+    // Validate all required fields
+    if (!displayName.trim()) {
+      setWarningDisplayname(t('display_name_required'));
+      setIsValidDisplayName(false);
+      return;
+    }
+
+    if (!userName.trim()) {
+      setWarning(t('username_required'));
+      setIsUserNameValid(false);
+      return;
+    }
+
     if (checkString(displayName) || checkString(userName)) {
       showErrorToast(t('remove_test_keyword'));
       return;
     }
-    if (!agreed || !isUserNameValid) return;
+
+    if (!agreed) {
+      setTermsError(t('terms_required'));
+      return;
+    }
+
+    if (!isUserNameValid) return;
 
     if (announcementAgreed) {
       try {
@@ -143,6 +172,12 @@ const UserSetupPopup = ({
   };
 
   const handleSendCode = async () => {
+    if (!isValidEmailFormat(emailState)) {
+      setEmailWarning(t('invalid_email_format'));
+      return;
+    }
+
+    setEmailWarning('');
     logger.debug('Sending verification code to email:', emailState);
     try {
       await ratelSdk.auth.sendVerificationCode(emailState);
@@ -208,7 +243,13 @@ const UserSetupPopup = ({
                 placeholder={t('email')}
                 value={emailState}
                 onChange={(e) => {
-                  setEmailState(e.target.value);
+                  const value = e.target.value;
+                  setEmailState(value);
+                  if (value && !isValidEmailFormat(value)) {
+                    setEmailWarning(t('invalid_email_format'));
+                  } else {
+                    setEmailWarning('');
+                  }
                 }}
               />
               {email === '' && (
@@ -221,6 +262,9 @@ const UserSetupPopup = ({
                 </Button>
               )}
             </Row>
+            {emailWarning && (
+              <p className="text-red-500 text-sm mt-1">{emailWarning}</p>
+            )}
 
             <Row
               className="aria-hidden:hidden"
@@ -282,6 +326,12 @@ const UserSetupPopup = ({
               onInput={(value: string) => {
                 setDisplayName(value);
 
+                if (!value.trim()) {
+                  setWarningDisplayname('');
+                  setIsValidDisplayName(false);
+                  return;
+                }
+
                 if (checkString(value)) {
                   setWarningDisplayname(t('display_name_warning'));
                   setIsValidDisplayName(false);
@@ -302,7 +352,7 @@ const UserSetupPopup = ({
                 setUserName(value);
                 if (value.length === 0) {
                   setWarning('');
-                  setIsUserNameValid(true);
+                  setIsUserNameValid(false);
                   return;
                 }
 
@@ -337,7 +387,15 @@ const UserSetupPopup = ({
           </div>
 
           <div className="flex flex-col gap-2.25 items-start mb-5 mt-5">
-            <Checkbox id="agree_checkbox" onChange={setAgreed}>
+            <Checkbox
+              id="agree_checkbox"
+              onChange={(checked) => {
+                setAgreed(checked);
+                if (checked) {
+                  setTermsError('');
+                }
+              }}
+            >
               <span className="text-sm text-gray-400">
                 <Trans
                   i18nKey="agree_tos"
@@ -349,6 +407,9 @@ const UserSetupPopup = ({
                 />
               </span>
             </Checkbox>
+            {termsError && (
+              <p className="text-red-500 text-sm -mt-1">{termsError}</p>
+            )}
 
             <Checkbox
               id="announcement_checkbox"
