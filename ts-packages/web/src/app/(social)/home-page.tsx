@@ -9,7 +9,7 @@ import {
   FeedEndMessage,
 } from '@/features/drafts/components/list-drafts';
 import Card from '@/components/card';
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation } from 'react-router';
 import { useCreatePostMutation } from '@/features/posts/hooks/use-create-post-mutation';
 import { route } from '@/route';
 
@@ -18,8 +18,10 @@ export const SIZE = 10;
 export default function HomePage() {
   const ctrl = useHomeController();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const createDraft = useCreatePostMutation().mutateAsync;
+  const isCreatingPost = location.pathname.startsWith('/posts/new');
 
   if (ctrl.isLoading) {
     return (
@@ -60,9 +62,11 @@ export default function HomePage() {
         className="bottom-4 flex-col pl-4 w-70 max-tablet:fixed max-tablet:right-4 max-tablet:z-50 max-tablet:pl-0"
         aria-label="Sidebar"
       >
-        <div className="mb-2.5">
-          <CreatePostButton />
-        </div>
+        {!isCreatingPost && (
+          <div className="mb-2.5">
+            <CreatePostButton />
+          </div>
+        )}
 
         <div className="max-tablet:hidden">
           {ctrl.topPromotion && (
