@@ -1,5 +1,6 @@
 pub mod discussions;
 pub mod files;
+pub mod invitations;
 pub mod panels;
 pub mod polls;
 pub mod recommendations;

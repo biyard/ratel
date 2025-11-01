@@ -33,16 +33,19 @@ jobs:
       #     limit-access-to-actor: true
       - name: Deploy
         env:
+          ENV: prod
           REGION: ap-northeast-2
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           DOMAIN: ratel.foundation
           STACK: ratel-prod-stack
           DEPLOY_STORYBOOK: false
+          BUCKET: ${{ secrets.RATEL_BUCKET }}
         run: |
           npm i -g aws-cdk
           tar xzvf dist.tar.gz
-          tar xzvf storybook.tar.gz
+          aws s3 sync  cdk/dist $BUCKET
+          # tar xzvf storybook.tar.gz
           # make cdk/.build/image-worker/bootstrap
           make cdk-deploy-v2
 
