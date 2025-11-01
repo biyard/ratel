@@ -12,10 +12,10 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollViewerPage: spacePk=${spacePk}, pollPk=${pollPk}`);
 
   const ctrl = useSpacePollViewerController(spacePk, pollPk);
-  let button = <></>;
+  let actionButton = <></>;
 
   if (ctrl.user && ctrl.poll.myResponse.length === 0) {
-    button = (
+    actionButton = (
       <Button onClick={ctrl.handleSubmit}>
         {ctrl.t('SpacePollViewer:btn_submit')}
       </Button>
@@ -25,13 +25,13 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
     ctrl.poll.myResponse.length > 0 &&
     ctrl.poll.response_editable
   ) {
-    button = (
+    actionButton = (
       <Button onClick={ctrl.handleSubmit}>
         {ctrl.t('SpacePollViewer:btn_update')}
       </Button>
     );
   } else if (!ctrl.user) {
-    button = (
+    actionButton = (
       <Button onClick={ctrl.handleLogin}>
         {ctrl.t('SpacePollViewer:btn_login')}
       </Button>
@@ -62,7 +62,7 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
           <Button className="w-fit" onClick={ctrl.handleBack}>
             {ctrl.t('SpacePollViewer:btn_back')}
           </Button>
-          {button}{' '}
+          {actionButton}{' '}
         </Row>
       </Col>
     </>
