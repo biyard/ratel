@@ -241,4 +241,70 @@ test.describe('Home page - Authenticated User', () => {
     // Reset viewport
     await page.setViewportSize({ width: 1280, height: 720 });
   });
+
+  test('[HP-001] right sidebar layout should remain stable when scrolling', async ({
+    page,
+  }) => {
+    // Set to desktop viewport
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.waitForTimeout(1000);
+
+    const sidebar = page.locator('[aria-label="Sidebar"]');
+    await expect(sidebar).toBeVisible();
+
+    // Get initial sidebar position
+    const initialBox = await sidebar.boundingBox();
+    expect(initialBox).not.toBeNull();
+
+    // Scroll down the page
+    await page.evaluate(() => window.scrollTo(0, 500));
+    await page.waitForTimeout(500);
+
+    // Get sidebar position after scroll down
+    const scrolledBox = await sidebar.boundingBox();
+    expect(scrolledBox).not.toBeNull();
+
+    // On desktop with static positioning, sidebar should move up (decrease y) when scrolling down
+    // This verifies the sidebar follows normal document flow and doesn't break layout
+    expect(scrolledBox!.y).toBeLessThan(initialBox!.y);
+
+    // Scroll back up
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.waitForTimeout(500);
+
+    // Verify sidebar returns to approximately original position
+    const finalBox = await sidebar.boundingBox();
+    expect(finalBox).not.toBeNull();
+    expect(Math.abs(finalBox!.y - initialBox!.y)).toBeLessThan(10);
+  });
+
+  test('[HP-002] sidebar content should not overflow or break layout on scroll', async ({
+    page,
+  }) => {
+    // Set to desktop viewport
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.waitForTimeout(1000);
+
+    const sidebar = page.locator('[aria-label="Sidebar"]');
+    await expect(sidebar).toBeVisible();
+
+    // Verify sidebar has proper height
+    const sidebarBox = await sidebar.boundingBox();
+    expect(sidebarBox).not.toBeNull();
+    expect(sidebarBox!.height).toBeGreaterThan(0);
+
+    // Scroll down and verify no layout issues
+    await page.evaluate(() => window.scrollTo(0, 500));
+    await page.waitForTimeout(500);
+
+    // Sidebar should still be visible and properly sized
+    await expect(sidebar).toBeVisible();
+    const scrolledBox = await sidebar.boundingBox();
+    expect(scrolledBox).not.toBeNull();
+    expect(scrolledBox!.height).toBeGreaterThan(0);
+
+    // Verify Create Post button is still visible
+    const createPostButton = page.getByLabel('Create Post');
+    await expect(createPostButton).toBeVisible();
+  });
 });
