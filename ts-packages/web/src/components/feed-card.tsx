@@ -205,7 +205,7 @@ export function FeedContents({
   }, [contents]);
 
   return (
-    <div className="text-desc-text">
+    <div className="break-all text-desc-text">
       <TiptapEditor
         editable={false}
         showToolbar={false}
