@@ -31,7 +31,7 @@ export default function PlayerSelectModal({
           >
             <img
               src={playerImage.win}
-              alt={`Player ${index + 1}`}
+              alt=""
               className="w-full h-full object-contain"
             />
           </div>
