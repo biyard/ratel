@@ -2,16 +2,12 @@ import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
 
 import PromotionCard from './_components/promotion-card';
-import Suggestions from './_components/suggestions';
 import { useHomeController } from './use-home-controller';
 import {
   CreatePostButton,
   FeedEndMessage,
 } from '@/features/drafts/components/list-drafts';
 import Card from '@/components/card';
-import { useNavigate } from 'react-router';
-import { useCreatePostMutation } from '@/features/posts/hooks/use-create-post-mutation';
-import { route } from '@/route';
 
 export const SIZE = 10;
 
