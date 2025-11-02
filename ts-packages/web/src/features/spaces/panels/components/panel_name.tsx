@@ -39,7 +39,10 @@ export function PanelName({ t, canEdit, name, setName }: PanelNameProps) {
           value={internalName}
           onChange={(e) => setInternalName(e.target.value)}
           onKeyDown={onKeyDown}
-          onBlur={() => setEditMode(false)}
+          onBlur={() => {
+            setName(internalName.trim());
+            setEditMode(false);
+          }}
           placeholder={t('panel_name_hint')}
         />
       ) : (
