@@ -2,24 +2,17 @@ import FeedCard from '@/components/feed-card';
 import { Col } from '@/components/ui/col';
 
 import PromotionCard from './_components/promotion-card';
-import Suggestions from './_components/suggestions';
 import { useHomeController } from './use-home-controller';
 import {
   CreatePostButton,
   FeedEndMessage,
 } from '@/features/drafts/components/list-drafts';
 import Card from '@/components/card';
-import { useNavigate } from 'react-router';
-import { useCreatePostMutation } from '@/features/posts/hooks/use-create-post-mutation';
-import { route } from '@/route';
 
 export const SIZE = 10;
 
 export default function HomePage() {
   const ctrl = useHomeController();
-  const navigate = useNavigate();
-
-  const createDraft = useCreatePostMutation().mutateAsync;
 
   if (ctrl.isLoading) {
     return (
@@ -53,16 +46,14 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex relative flex-1">
+    <div className="flex relative flex-1 gap-4">
       {feedSection}
 
       <div
-        className="flex flex-col sticky top-4 pl-4 w-70 max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 max-tablet:z-50 max-tablet:pl-0"
+        className="flex flex-col gap-2.5 w-70 max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 max-tablet:z-50 max-tablet:pl-0"
         aria-label="Sidebar"
       >
-        <div className="mb-2.5">
-          <CreatePostButton />
-        </div>
+        <CreatePostButton />
 
         <div className="max-tablet:hidden">
           {ctrl.topPromotion && (

@@ -2,15 +2,7 @@ use crate::models::feed::{Post, PostLike, PostQueryOption};
 use crate::models::user::User;
 use crate::types::list_items_response::ListItemsResponse;
 use crate::types::{EntityType, Visibility};
-use crate::{AppState, Error};
-use aide::NoApi;
-use bdk::prelude::*;
-use by_axum::axum::{
-    Json,
-    extract::{Query, State},
-};
-use serde::Deserialize;
-use validator::Validate;
+use crate::*;
 
 use super::post_response::PostResponse;
 
@@ -23,7 +15,7 @@ pub async fn list_posts_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Query(ListPostsQueryParams { bookmark }): Query<ListPostsQueryParams>,
-) -> Result<Json<ListItemsResponse<PostResponse>>, Error> {
+) -> Result<Json<ListItemsResponse<PostResponse>>> {
     tracing::debug!(
         "list_posts_handler: user = {:?} bookmark = {:?}",
         user,
@@ -45,12 +37,11 @@ pub async fn list_posts_handler(
 
     let likes = match (&user, posts.is_empty()) {
         (Some(user), false) => {
-            let sk = EntityType::PostLike(user.pk.to_string());
             let likes = PostLike::batch_get(
                 &dynamo.client,
                 posts
                     .iter()
-                    .map(|post| (post.pk.clone(), sk.clone()))
+                    .map(|post| PostLike::keys(&post.pk, &user.pk))
                     .collect(),
             )
             .await?;
@@ -60,11 +51,18 @@ pub async fn list_posts_handler(
         _ => vec![],
     };
 
+    info!("likes: {:?}", likes);
+
     tracing::debug!("list_posts_handler: returning {} items", posts.len());
     let items: Vec<PostResponse> = posts
         .into_iter()
         .map(|post| {
-            let liked = likes.iter().any(|like| like.pk == post.pk);
+            let post_like_pk = post
+                .pk
+                .clone()
+                .to_post_like_key()
+                .expect("to_post_like_key");
+            let liked = likes.iter().any(|like| like.pk == post_like_pk);
             PostResponse::from((user.clone(), post)).with_like(liked)
         })
         .collect();

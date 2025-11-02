@@ -18,7 +18,7 @@ import {
 } from './ui/dropdown-menu';
 import { Edit1 } from './icons';
 import { showSuccessToast, showErrorToast } from './custom-toast/toast';
-import { useSuspenseUserInfo } from '@/hooks/use-user-info';
+import { useSuspenseUserInfo, useUserInfo } from '@/hooks/use-user-info';
 import { Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
 import { useTranslation } from 'react-i18next';
@@ -27,6 +27,8 @@ import PostResponse from '@/features/posts/dto/list-post-response';
 import { useLikePostMutation } from '@/features/posts/hooks/use-like-post-mutation';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { TiptapEditor } from './text-editor';
+import { usePopup } from '@/lib/contexts/popup-service';
+import { LoginModal } from './popup/login-popup';
 
 export interface FeedCardProps {
   post: PostResponse;
@@ -41,28 +43,25 @@ export interface FeedCardProps {
 export default function FeedCard(props: FeedCardProps) {
   const { post } = props;
 
-  const [localLikes, setLocalLikes] = useState(post.likes);
-  const [localIsLiked, setLocalIsLiked] = useState(post.liked);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [localShares, setLocalShares] = useState(post.shares);
-
+  const { data: user } = useUserInfo();
+  const isLoggedIn = user !== null;
+  const popup = usePopup();
   // const { t } = useTranslation('Feeds');
 
   const likePost = useLikePostMutation().mutateAsync;
-  // Sync with props when they change
-  useEffect(() => {
-    setLocalLikes(post.likes);
-    setLocalIsLiked(post.liked);
-    setLocalShares(post.shares);
-  }, [post.likes, post.liked, post.shares]);
 
   const handleLike = async (value: boolean) => {
+    if (!isLoggedIn) {
+      popup
+        .open(<LoginModal />)
+        .withTitle('Join the Movement')
+        .withoutBackdropClose();
+    }
     if (isProcessing) return; // Prevent multiple clicks
 
     // Set processing state and optimistic update
     setIsProcessing(true);
-    setLocalIsLiked(value);
-    setLocalLikes((prev) => (value ? prev + 1 : prev - 1));
 
     try {
       await likePost({
@@ -74,8 +73,6 @@ export default function FeedCard(props: FeedCardProps) {
       props.onLikeClick?.(value);
     } catch (error) {
       // Revert optimistic update on error
-      setLocalIsLiked(post.liked);
-      setLocalLikes(post.likes);
       console.error('Failed to update like:', error);
     } finally {
       setIsProcessing(false);
@@ -97,7 +94,6 @@ export default function FeedCard(props: FeedCardProps) {
        *   },
        * }); */
 
-      setLocalShares((prev) => prev + 1);
       showSuccessToast('Reposted successfully');
     } catch (error) {
       logger.error('Failed to repost:', error);
@@ -135,11 +131,11 @@ export default function FeedCard(props: FeedCardProps) {
         space_id={post.space_pk}
         space_type={post.space_type}
         booster_type={post.booster}
-        likes={localLikes}
+        likes={post.likes}
         comments={post.comments}
         rewards={post.rewards || 0}
-        shares={localShares}
-        is_liked={localIsLiked}
+        shares={post.shares}
+        is_liked={post.liked}
         isLikeProcessing={isProcessing}
         onLikeClick={handleLike}
         onRepostThought={handleRepostThought}
@@ -209,7 +205,7 @@ export function FeedContents({
   }, [contents]);
 
   return (
-    <div className="text-desc-text">
+    <div className="break-all text-desc-text">
       <TiptapEditor
         editable={false}
         showToolbar={false}
