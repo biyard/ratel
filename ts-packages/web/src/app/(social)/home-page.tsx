@@ -57,7 +57,7 @@ export default function HomePage() {
       {feedSection}
 
       <div
-        className="h-fit max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 max-tablet:z-50 tablet:w-70 tablet:pl-4 tablet:static"
+        className="flex flex-col sticky top-4 pl-4 w-70 max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 max-tablet:z-50 max-tablet:pl-0"
         aria-label="Sidebar"
       >
         <div className="mb-2.5">

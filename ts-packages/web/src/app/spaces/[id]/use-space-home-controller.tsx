@@ -179,7 +179,7 @@ export class SpaceHomeController {
     const visibility = { type: publishType };
 
     try {
-      await this.publishSpace.mutateAsync({
+      this.publishSpace.mutateAsync({
         spacePk: this.space.pk,
         visibility,
       });
@@ -199,7 +199,7 @@ export class SpaceHomeController {
     }
 
     try {
-      await this.deleteSpace.mutateAsync({
+      this.deleteSpace.mutateAsync({
         spacePk: this.space.pk,
       });
 
@@ -211,6 +211,8 @@ export class SpaceHomeController {
     } finally {
       this.popup.close();
     }
+
+    this.popup.close();
   };
 
   handleActionPublish = async () => {
