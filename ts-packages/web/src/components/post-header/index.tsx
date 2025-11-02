@@ -15,7 +15,6 @@ import { RoundBubble } from '@/assets/icons/chat';
 import { RewardCoin } from '@/assets/icons/money-payment';
 import { ThumbsUp } from '@/assets/icons/emoji';
 import { Expand } from '@/assets/icons';
-import { Edit1 } from '@/assets/icons/edit';
 import Loading from '@/app/loading';
 import { useTranslation } from 'react-i18next';
 import { executeOnKeyStroke } from '@/utils/key-event-handle';
@@ -71,21 +70,13 @@ export function TitleSection({
       ) : (
         <div
           className="flex flex-row justify-between items-center w-full overflow-ellipsis"
+          onClick={() => setEditMode(true)}
         >
-          <div className="font-bold text-text-primary text-[20px]/[30px]" onClick={() => canEdit && setEditMode(true)}>
+          <div className="font-bold text-text-primary text-[20px]/[30px]">
             {title}
           </div>
-          <div className="flex flex-row gap-2 items-center">
-            {canEdit && (
-              <Edit1
-                role="button"
-                className="w-5 h-5 [&>path]:stroke-1 text-gray-400 cursor-pointer hover:text-gray-600"
-                onClick={() => setEditMode(true)}
-              />
-            )}
-            <div className="cursor-pointer w-fit h-fit" onClick={handleShare}>
-              <Expand />
-            </div>
+          <div className="cursor-pointer w-fit h-fit" onClick={handleShare}>
+            <Expand />
           </div>
         </div>
       )}
