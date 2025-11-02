@@ -59,3 +59,17 @@ export async function signup(data: SignupRequest): Promise<User> {
 
   return user;
 }
+
+export async function resetPassword(
+  email: string,
+  password: string,
+  code: string,
+): Promise<User> {
+  const user: User = await call('POST', '/v3/auth/reset', {
+    email,
+    password,
+    code,
+  });
+
+  return user;
+}

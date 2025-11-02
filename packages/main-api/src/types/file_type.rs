@@ -13,8 +13,13 @@ pub enum FileType {
     SVG,
     AI,
 
+    // Documents
     PDF,
     XLSX,
+    DOCX,
+    DOC,
+    XLS,
+    ZIP,
 
     // 3D Model
     GLB,

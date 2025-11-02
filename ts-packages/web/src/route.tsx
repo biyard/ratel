@@ -16,6 +16,7 @@ export const route = {
 
   login: () => '/login',
   signup: () => '/signup',
+  resetPassword: () => '/reset-password',
   connect: () => `/connect`,
 
   myNetwork: () => '/my-network',

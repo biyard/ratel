@@ -39,6 +39,11 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   //   );
   // }
 
+  // Determine if poll options should be disabled
+  // Disable when user has already submitted and editing is not allowed
+  const hasSubmitted = ctrl.poll.myResponse.length > 0;
+  const isDisabled = ctrl.user && hasSubmitted && !ctrl.poll.response_editable;
+
   return (
     <>
       <Col>
@@ -65,6 +70,7 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
                 ctrl.poll.response_editable
               }
               isLogin={!!ctrl.user}
+              disabled={isDisabled}
             />
           </Col>
         </Card>

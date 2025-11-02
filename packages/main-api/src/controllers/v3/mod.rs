@@ -28,6 +28,9 @@ pub mod assets {
     pub mod complete_multipart_upload;
     pub mod get_put_multi_object_uri;
     pub mod get_put_object_uri;
+
+    #[cfg(test)]
+    pub mod tests;
 }
 
 pub mod auth {

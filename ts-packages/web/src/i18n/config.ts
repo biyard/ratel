@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import enSignIn from './en/SignIn.json';
 import enSignup from './en/Signup.json';
+import enResetPassword from './en/ResetPassword.json';
 import enSpaceForms from './en/SpaceForms.json';
 import enHome from './en/Home.json';
 import enTeam from './en/Team.json';
@@ -20,6 +21,7 @@ import enEditArtworkPost from './en/EditArtworkPost.json';
 
 import koSignIn from './ko/SignIn.json';
 import koSignup from './ko/Signup.json';
+import koResetPassword from './ko/ResetPassword.json';
 import koSpaceForms from './ko/SpaceForms.json';
 import koHome from './ko/Home.json';
 import koTeam from './ko/Team.json';
@@ -66,6 +68,7 @@ export const resources = {
   en: {
     SignIn: enSignIn,
     Signup: enSignup,
+    ResetPassword: enResetPassword,
     SpaceForms: enSpaceForms,
     Home: enHome,
     Team: enTeam,
@@ -84,6 +87,7 @@ export const resources = {
   ko: {
     SignIn: koSignIn,
     Signup: koSignup,
+    ResetPassword: koResetPassword,
     SpaceForms: koSpaceForms,
     Home: koHome,
     Team: koTeam,

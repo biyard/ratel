@@ -172,90 +172,187 @@ async fn test_email_with_password_signup_with_invalid_code() {
     assert_eq!(status, 400);
 }
 
-// FIXME: check this failed testcode logic
-// #[tokio::test]
-// async fn test_reset_password() {
-//     let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+#[tokio::test]
+async fn test_reset_password() {
+    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
 
-//     let email = format!("testuser{}@example.com", now);
-//     let username = format!("testuser{:x}", now);
+    let email = format!("testuser_reset{}@example.com", now);
+    let username = format!("testuser_reset{:x}", now);
 
-//     let (status, _headers, body) = post! {
-//         app: app,
-//         path: "/v3/auth/verification/send-verification-code",
-//         body: {
-//             "email": email.clone(),
-//         },
-//         response_type: super::verification::send_code::SendCodeResponse
-//     };
-//     assert_eq!(status, 200);
-//     let EmailVerification { value: code, .. } = EmailVerification::get(
-//         &ddb,
-//         Partition::Email(email.clone()),
-//         Some(EntityType::EmailVerification),
-//     )
-//     .await
-//     .unwrap()
-//     .unwrap();
+    // First, create a user with an initial password
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/auth/verification/send-verification-code",
+        body: {
+            "email": email.clone(),
+        },
+        response_type: super::verification::send_code::SendCodeResponse
+    };
+    assert_eq!(status, 200);
 
-//     let (status, _headers, _user) = post! {
-//         app: app,
-//         path: "/v3/auth/signup",
-//         body: {
-//             "email": email,
-//             "password": "0x1111",
-//             "code": code,
-//             "display_name": "testuser",
-//             "username": username,
-//             "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
-//             "description": "This is a test user.",
-//             "term_agreed": true,
-//             "informed_agreed": true,
-//         },
-//         response_type: crate::models::user::User
-//     };
+    let EmailVerification { value: code, .. } = EmailVerification::get(
+        &ddb,
+        Partition::Email(email.clone()),
+        Some(EntityType::EmailVerification),
+    )
+    .await
+    .unwrap()
+    .unwrap();
 
-//     assert_eq!(status, 200);
+    let (status, _headers, _user) = post! {
+        app: app,
+        path: "/v3/auth/signup",
+        body: {
+            "email": email.clone(),
+            "password": "0x1111",
+            "code": code,
+            "display_name": "testuser",
+            "username": username,
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
+            "description": "This is a test user.",
+            "term_agreed": true,
+            "informed_agreed": true,
+        },
+        response_type: crate::models::user::User
+    };
 
-//     let (status, _headers, body) = post! {
-//         app: app,
-//         path: "/v3/auth/verification/send-verification-code",
-//         body: {
-//             "email": email.clone(),
-//         },
-//         response_type: super::verification::send_code::SendCodeResponse
-//     };
-//     assert_eq!(status, 200);
-//     let EmailVerification { value: code, .. } = EmailVerification::get(
-//         &ddb,
-//         Partition::Email(email.clone()),
-//         Some(EntityType::EmailVerification),
-//     )
-//     .await
-//     .unwrap()
-//     .unwrap();
+    assert_eq!(status, 200);
 
-//     let (status, _headers, body) = post! {
-//         app: app,
-//         path: "/v3/auth/reset",
-//         body: {
-//             "email": email,
-//             "password": "0x11112",
-//             "code": code
-//         },
-//         response_type: crate::models::user::User
-//     };
+    // Now test password reset flow
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/auth/verification/send-verification-code",
+        body: {
+            "email": email.clone(),
+        },
+        response_type: super::verification::send_code::SendCodeResponse
+    };
+    assert_eq!(status, 200);
 
-//     assert_eq!(status, 200);
+    let EmailVerification { value: reset_code, .. } = EmailVerification::get(
+        &ddb,
+        Partition::Email(email.clone()),
+        Some(EntityType::EmailVerification),
+    )
+    .await
+    .unwrap()
+    .unwrap();
 
-//     let (status, _headers, _resp_body) = post! {
-//         app: app,
-//         path: "/v3/auth/login",
-//         body: {
-//             "email": email,
-//             "password": "0x11112",
-//         }
-//     };
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/auth/reset",
+        body: {
+            "email": email.clone(),
+            "password": "0x11112",
+            "code": reset_code
+        },
+        response_type: crate::models::user::User
+    };
 
-//     assert_eq!(status, 200);
-// }
+    assert_eq!(status, 200);
+
+    // Verify that login with old password fails
+    let (status, _headers, _resp_body) = post! {
+        app: app,
+        path: "/v3/auth/login",
+        body: {
+            "email": email.clone(),
+            "password": "0x1111",
+        }
+    };
+
+    assert_eq!(status, 401);
+
+    // Verify that login with new password succeeds
+    let (status, _headers, _resp_body) = post! {
+        app: app,
+        path: "/v3/auth/login",
+        body: {
+            "email": email.clone(),
+            "password": "0x11112",
+        },
+        response_type: crate::models::user::User
+    };
+
+    assert_eq!(status, 200);
+}
+
+#[tokio::test]
+async fn test_reset_password_with_invalid_code() {
+    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+
+    let email = format!("testuser_reset_invalid{}@example.com", now);
+    let username = format!("testuser_reset_invalid{:x}", now);
+
+    // First, create a user
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/auth/verification/send-verification-code",
+        body: {
+            "email": email.clone(),
+        },
+        response_type: super::verification::send_code::SendCodeResponse
+    };
+    assert_eq!(status, 200);
+
+    let EmailVerification { value: code, .. } = EmailVerification::get(
+        &ddb,
+        Partition::Email(email.clone()),
+        Some(EntityType::EmailVerification),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+
+    let (status, _headers, _user) = post! {
+        app: app,
+        path: "/v3/auth/signup",
+        body: {
+            "email": email.clone(),
+            "password": "0x1111",
+            "code": code,
+            "display_name": "testuser",
+            "username": username,
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
+            "description": "This is a test user.",
+            "term_agreed": true,
+            "informed_agreed": true,
+        },
+        response_type: crate::models::user::User
+    };
+
+    assert_eq!(status, 200);
+
+    // Try to reset password with invalid code
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/auth/reset",
+        body: {
+            "email": email.clone(),
+            "password": "0x11112",
+            "code": "invalid_code"
+        }
+    };
+
+    assert_eq!(status, 400);
+}
+
+#[tokio::test]
+async fn test_reset_password_for_nonexistent_user() {
+    let TestContextV3 { app, now, .. } = setup_v3().await;
+
+    let email = format!("nonexistent{}@example.com", now);
+
+    // Try to reset password for non-existent user
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/auth/reset",
+        body: {
+            "email": email,
+            "password": "0x11112",
+            "code": "000000"
+        }
+    };
+
+    assert_eq!(status, 404);
+}

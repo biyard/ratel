@@ -43,6 +43,7 @@ import SpacePanelPage from './app/spaces/[id]/panels/space-panel-page';
 import CreatePostPage from './features/posts/components/create-post-page';
 import SpacePollsPage from './app/spaces/[id]/polls/space-polls-page';
 import SpaceAnalyzesPage from './app/spaces/[id]/analyzes/space_analyzes-page';
+import ResetPasswordPage from './app/reset-password/page';
 
 export const routes = createBrowserRouter([
   {
@@ -54,6 +55,11 @@ export const routes = createBrowserRouter([
         id: 'create-post-page',
         path: 'posts/new',
         Component: CreatePostPage,
+      },
+      {
+        id: 'reset-password-page',
+        path: 'reset-password',
+        Component: ResetPasswordPage,
       },
 
       // Social Layout

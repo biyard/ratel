@@ -17,12 +17,14 @@ export enum FileExtension {
   ZIP = 'zip',
   PDF = 'pdf',
   XLSX = 'xlsx',
+  DOCX = 'docx',
+  DOC = 'doc',
+  XLS = 'xls',
 
   // 3D Model
   GLB = 'glb',
   GLTF = 'gltf',
-  WORD = 'word',
-  EXCEL = 'excel',
+
   // Audio
   MP3 = 'mp3',
   WAV = 'wav',
@@ -84,16 +86,18 @@ export function toFileExtension(
       return FileExtension.PDF;
     case 'zip':
       return FileExtension.ZIP;
-    case 'doc':
     case 'docx':
-      return FileExtension.WORD;
+      return FileExtension.DOCX;
+    case 'doc':
+      return FileExtension.DOC;
     case 'ppt':
     case 'pptx':
       return FileExtension.PPTX;
-    case 'xls':
     case 'xlsx':
+      return FileExtension.XLSX;
+    case 'xls':
     case 'csv':
-      return FileExtension.EXCEL;
+      return FileExtension.XLS;
     case 'mp4':
       return FileExtension.MP4;
     case 'mov':
