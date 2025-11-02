@@ -1,14 +1,12 @@
 import { test, expect } from '@playwright/test';
 import { CONFIGS } from '@tests/config';
 import { click, fill } from '@tests/utils';
-// import { fileURLToPath } from 'url';
 
 test.describe.serial('[SpaceFileEditorPage] Authenticated Users ', () => {
   let context: import('@playwright/test').BrowserContext;
   let page: import('@playwright/test').Page;
 
   let threadUrl = '';
-  //   let spaceUrl = '';
 
   test.beforeAll('Create post', async ({ browser }) => {
     context = await browser.newContext({ storageState: 'user.json' });
@@ -61,32 +59,174 @@ test.describe.serial('[SpaceFileEditorPage] Authenticated Users ', () => {
     await modal.getByRole('button', { name: 'Create' }).click();
 
     await page.waitForURL(/\/spaces\/[^/]+(?:\?.*)?$/, { timeout: 15000 });
-
-    // spaceUrl = page.url();
   });
 
-  // FIXME: fix to failed testcode
-  //   test('Update File', async () => {
-  //     await page.goto(spaceUrl);
-  //     await page.waitForTimeout(3000);
+  test('[SPEP-002] Upload PDF file', async () => {
+    await page.waitForTimeout(2000);
 
-  //     await page.getByText('Files', { exact: true }).click();
-  //     await page.getByText('Edit', { exact: true }).click();
+    await page.getByText('Files', { exact: true }).click();
+    await page.waitForTimeout(1000);
 
-  //     const [fileChooser] = await Promise.all([
-  //       page.waitForEvent('filechooser'),
-  //       page.getByText('Upload', { exact: true }).click(),
-  //     ]);
+    await page.getByText('Edit', { exact: true }).click();
+    await page.waitForTimeout(1000);
 
-  //     const filePath = fileURLToPath(
-  //       new URL('../assets/sample.pdf', import.meta.url),
-  //     );
-  //     await fileChooser.setFiles(filePath);
+    const fileInputSelector = 'input[type="file"]';
+    await page.waitForSelector(fileInputSelector, { state: 'attached' });
 
-  //     await expect(page.getByText('sample.pdf')).toBeVisible({ timeout: 50_000 });
+    const buffer = Buffer.from('PDF test content');
+    await page.setInputFiles(fileInputSelector, {
+      name: 'test-document.pdf',
+      mimeType: 'application/pdf',
+      buffer: buffer,
+    });
 
-  //     await page.getByText('Save', { exact: true }).click();
+    await expect(page.getByText('test-document.pdf')).toBeVisible({
+      timeout: 30000,
+    });
 
-  //     await expect(page.getByText('sample.pdf')).toBeVisible();
-  //   });
+    await page.getByText('Save', { exact: true }).click();
+    await page.waitForTimeout(2000);
+
+    await expect(page.getByText('test-document.pdf')).toBeVisible();
+  });
+
+  test('[SPEP-003] Upload DOCX file', async () => {
+    await page.waitForTimeout(1000);
+
+    await page.getByText('Edit', { exact: true }).click();
+    await page.waitForTimeout(1000);
+
+    const fileInputSelector = 'input[type="file"]';
+    const buffer = Buffer.from('DOCX test content');
+    await page.setInputFiles(fileInputSelector, {
+      name: 'test-document.docx',
+      mimeType:
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      buffer: buffer,
+    });
+
+    await expect(page.getByText('test-document.docx')).toBeVisible({
+      timeout: 30000,
+    });
+
+    await page.getByText('Save', { exact: true }).click();
+    await page.waitForTimeout(2000);
+
+    await expect(page.getByText('test-document.docx')).toBeVisible();
+  });
+
+  test('[SPEP-004] Upload XLSX file', async () => {
+    await page.waitForTimeout(1000);
+
+    await page.getByText('Edit', { exact: true }).click();
+    await page.waitForTimeout(1000);
+
+    const fileInputSelector = 'input[type="file"]';
+    const buffer = Buffer.from('XLSX test content');
+    await page.setInputFiles(fileInputSelector, {
+      name: 'test-spreadsheet.xlsx',
+      mimeType:
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      buffer: buffer,
+    });
+
+    await expect(page.getByText('test-spreadsheet.xlsx')).toBeVisible({
+      timeout: 30000,
+    });
+
+    await page.getByText('Save', { exact: true }).click();
+    await page.waitForTimeout(2000);
+
+    await expect(page.getByText('test-spreadsheet.xlsx')).toBeVisible();
+  });
+
+  test('[SPEP-005] Upload JPG image', async () => {
+    await page.waitForTimeout(1000);
+
+    await page.getByText('Edit', { exact: true }).click();
+    await page.waitForTimeout(1000);
+
+    const fileInputSelector = 'input[type="file"]';
+    const buffer = Buffer.from('JPG test content');
+    await page.setInputFiles(fileInputSelector, {
+      name: 'test-image.jpg',
+      mimeType: 'image/jpeg',
+      buffer: buffer,
+    });
+
+    await expect(page.getByText('test-image.jpg')).toBeVisible({
+      timeout: 30000,
+    });
+
+    await page.getByText('Save', { exact: true }).click();
+    await page.waitForTimeout(2000);
+
+    await expect(page.getByText('test-image.jpg')).toBeVisible();
+  });
+
+  test('[SPEP-006] Upload PNG image', async () => {
+    await page.waitForTimeout(1000);
+
+    await page.getByText('Edit', { exact: true }).click();
+    await page.waitForTimeout(1000);
+
+    const fileInputSelector = 'input[type="file"]';
+    const buffer = Buffer.from('PNG test content');
+    await page.setInputFiles(fileInputSelector, {
+      name: 'test-image.png',
+      mimeType: 'image/png',
+      buffer: buffer,
+    });
+
+    await expect(page.getByText('test-image.png')).toBeVisible({
+      timeout: 30000,
+    });
+
+    await page.getByText('Save', { exact: true }).click();
+    await page.waitForTimeout(2000);
+
+    await expect(page.getByText('test-image.png')).toBeVisible();
+  });
+
+  test('[SPEP-007] Upload GIF image', async () => {
+    await page.waitForTimeout(1000);
+
+    await page.getByText('Edit', { exact: true }).click();
+    await page.waitForTimeout(1000);
+
+    const fileInputSelector = 'input[type="file"]';
+    const buffer = Buffer.from('GIF test content');
+    await page.setInputFiles(fileInputSelector, {
+      name: 'test-animation.gif',
+      mimeType: 'image/gif',
+      buffer: buffer,
+    });
+
+    await expect(page.getByText('test-animation.gif')).toBeVisible({
+      timeout: 30000,
+    });
+
+    await page.getByText('Save', { exact: true }).click();
+    await page.waitForTimeout(2000);
+
+    await expect(page.getByText('test-animation.gif')).toBeVisible();
+  });
+
+  test('[SPEP-008] Remove uploaded file', async () => {
+    await page.waitForTimeout(1000);
+
+    await page.getByText('Edit', { exact: true }).click();
+    await page.waitForTimeout(1000);
+
+    const removeButtons = page.locator('button', { hasText: 'Remove' });
+    const count = await removeButtons.count();
+
+    if (count > 0) {
+      await removeButtons.first().click();
+      await page.waitForTimeout(1000);
+
+      await page.getByText('Save', { exact: true }).click();
+      await page.waitForTimeout(2000);
+    }
+  });
 });
