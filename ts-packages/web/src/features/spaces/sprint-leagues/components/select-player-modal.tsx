@@ -24,12 +24,16 @@ export default function PlayerSelectModal({
           <div
             key={playerImage.win}
             aria-selected={selectedIndex === index}
-            className="aria-selected:border-primary hover:bg-black border border-transparent hover:border-primary light:hover:bg-primary/10 rounded-2xl cursor-pointer aspect-square overflow-hidden"
+            className="aria-selected:border-primary hover:bg-black border border-transparent hover:border-primary light:hover:bg-primary/10 rounded-2xl cursor-pointer aspect-square overflow-hidden flex items-center justify-center"
             onClick={() => {
               setSelectedIndex(index);
             }}
           >
-            {/* <CharacterPreview images={playerImage} /> */}
+            <img
+              src={playerImage.win}
+              alt={`Player ${index + 1}`}
+              className="w-full h-full object-contain"
+            />
           </div>
         ))}
       </div>

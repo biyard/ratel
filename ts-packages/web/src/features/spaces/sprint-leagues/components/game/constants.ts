@@ -1,7 +1,7 @@
 import { PlayerImage } from '../../types/sprint-league-player';
 
 export const VIEWPORT_WIDTH = 360;
-export const VIEWPORT_HEIGHT = 640;
+export const VIEWPORT_HEIGHT = 480;
 export const CHARACTER_SIZE = 200;
 
 export const BasePlayerImages: PlayerImage[] = [
