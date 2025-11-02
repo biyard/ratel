@@ -135,7 +135,94 @@ test.describe.serial('[ThreadPage] Authenticated Users ', () => {
   //   });
   // });
 
-  test('[TP-007] Delete a post', async ({ page }) => {
+  test('[TP-007] Create space modal displays without cutoff', async ({
+    page,
+  }) => {
+    // Create a post without a space first
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const testTitle = 'Post for Space Modal Test';
+    const testContent =
+      'This post is created to test the space creation modal. ' +
+      'We need to verify that the space type selector modal displays correctly ' +
+      'without any content being cut off on the right side. This ensures proper ' +
+      'responsive design and user experience when creating spaces from posts.';
+
+    await click(page, { label: 'Create Post' });
+    await page.waitForURL(/\/posts\/new/, {
+      timeout: CONFIGS.PAGE_WAIT_TIME,
+    });
+
+    await page.fill('#post-title-input', testTitle);
+
+    const editorSelector = '[data-pw="post-content-editor"] .ProseMirror';
+    await page.waitForSelector(editorSelector, {
+      timeout: CONFIGS.PAGE_WAIT_TIME,
+    });
+    await page.click(editorSelector);
+    await page.fill(editorSelector, testContent);
+
+    // Check the skip space checkbox to publish without creating a space
+    const skipSpaceCheckbox = page.locator(
+      'input[type="checkbox"][id="skip-space"]',
+    );
+    if (await skipSpaceCheckbox.isVisible()) {
+      await skipSpaceCheckbox.check();
+    }
+
+    await page.click('#publish-post-button');
+    await page.waitForURL(/\/threads\/.+/, { timeout: 15000 });
+
+    // Now click "Create a Space" button
+    await click(page, { text: 'Create a Space' });
+
+    // Wait for the modal to appear
+    await page.waitForSelector('[role="dialog"]', {
+      timeout: CONFIGS.PAGE_WAIT_TIME,
+    });
+
+    // Verify the modal title is visible
+    const modalTitle = page.locator('#popup-title');
+    await expect(modalTitle).toBeVisible();
+
+    // Get the modal content area
+    const modalContent = page.locator('[role="dialog"]');
+    await expect(modalContent).toBeVisible();
+
+    // Check that all space type items are visible and not cut off
+    const spaceTypeItems = page.locator('[aria-label^="space-setting-form-"]');
+    const itemCount = await spaceTypeItems.count();
+    expect(itemCount).toBeGreaterThan(0);
+
+    // Verify each space type item is fully visible
+    for (let i = 0; i < itemCount; i++) {
+      const item = spaceTypeItems.nth(i);
+      await expect(item).toBeVisible();
+
+      // Get the bounding box to verify it's not cut off
+      const boundingBox = await item.boundingBox();
+      expect(boundingBox).not.toBeNull();
+      if (boundingBox) {
+        // Verify item is within viewport
+        const viewport = page.viewportSize();
+        expect(boundingBox.x).toBeGreaterThanOrEqual(0);
+        expect(boundingBox.x + boundingBox.width).toBeLessThanOrEqual(
+          viewport!.width,
+        );
+      }
+    }
+
+    // Close the modal
+    await page.keyboard.press('Escape');
+
+    // Clean up - delete the post
+    await click(page, { label: 'Post options for desktop' });
+    await click(page, { label: 'Delete Post' });
+    await page.waitForURL('/', { timeout: 15000 });
+  });
+
+  test('[TP-008] Delete a post', async ({ page }) => {
     await page.goto(threadUrl);
 
     await click(page, { label: 'Post options for desktop' });

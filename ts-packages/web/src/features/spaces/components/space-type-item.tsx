@@ -23,7 +23,7 @@ export default function SpaceTypeItem({
   return (
     <div
       aria-label={`space-setting-form-${labelKey}`}
-      className={`flex flex-row gap-5 justify-center items-center w-100 p-5 border rounded-[10px] transition-colors cursor-pointer hover:border-primary
+      className={`flex flex-row gap-5 justify-center items-center w-full p-5 border rounded-[10px] transition-colors cursor-pointer hover:border-primary
               ${selected ? 'border-primary' : 'border-modal-card-border'}`}
       onClick={onClick}
     >
