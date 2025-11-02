@@ -27,7 +27,7 @@ export default function SpaceCreateModal({ feed_id }: { feed_id: string }) {
 
   return (
     <div className="w-full max-w-[95vw]">
-      <div className="mobile:w-[400px] max-mobile:w-full">
+      <div className="max-mobile:w-full">
         <div className="flex flex-col gap-2.5 p-1.5">
           <div className="flex overflow-y-auto flex-col gap-2.5 p-1.5 w-full max-mobile:h-[350px]">
             {renderedForms}
