@@ -39,6 +39,7 @@ export default function TimezoneDropdown({
     <Popover.Root
       open={canEdit && dropdownOpen}
       onOpenChange={canEdit ? setDropdownOpen : undefined}
+      modal={false}
     >
       <Popover.Trigger asChild>
         <button

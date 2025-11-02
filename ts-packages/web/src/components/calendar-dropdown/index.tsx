@@ -22,7 +22,11 @@ export default function CalendarDropdown({
   const selectedDate = value ? new Date(value) : null;
 
   return (
-    <Popover.Root open={canEdit && calendarOpen} onOpenChange={setCalendarOpen}>
+    <Popover.Root
+      open={canEdit && calendarOpen}
+      onOpenChange={setCalendarOpen}
+      modal={false}
+    >
       <Popover.Trigger asChild>
         <button className="flex flex-row justify-between items-center font-medium rounded-lg border shadow-sm focus:outline-none w-[150px] max-tablet:w-full px-[20px] py-[10.5px] text-[15px]/[22.5px] text-neutral-600 bg-select-date-bg border-select-date-border gap-[10px]">
           {selectedDate ? format(selectedDate, 'yyyy/MM/dd') : 'Selected Date'}

@@ -4,19 +4,22 @@
 export default function RadioButton({
   onClick,
   selected,
+  disabled = false,
 }: {
   onClick: () => void;
   selected: boolean;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex items-center">
       <button
         onClick={onClick}
+        disabled={disabled}
         className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${
           selected
             ? 'bg-[#fcb300] hover:bg-[#fcb300]/90'
             : 'border-2 border-[#6b6b6b] hover:border-[#6b6b6b]/80'
-        }`}
+        } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         {selected && (
           <svg
