@@ -18,6 +18,7 @@ export default function LinearScaleViewer(props: LinearScaleViewerProps) {
     max_value,
     selectedValue,
     onSelect,
+    disabled,
   } = props;
 
   const wrapRef = React.useRef<HTMLDivElement | null>(null);
@@ -95,6 +96,7 @@ export default function LinearScaleViewer(props: LinearScaleViewerProps) {
                     <RadioButton
                       selected={selectedValue === val}
                       onClick={() => onSelect(val)}
+                      disabled={disabled}
                     />
                   </div>
                 </div>

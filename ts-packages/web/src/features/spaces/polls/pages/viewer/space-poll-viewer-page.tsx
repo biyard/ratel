@@ -65,6 +65,11 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
                 ctrl.poll.response_editable
               }
               isLogin={!!ctrl.user}
+              disabled={
+                ctrl.user &&
+                ctrl.poll.myResponse.length > 0 &&
+                !ctrl.poll.response_editable
+              }
             />
           </Col>
         </Card>
