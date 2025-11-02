@@ -1,5 +1,6 @@
 use crate::features::did::types::*;
 use crate::types::*;
+use crate::utils::time::get_now_timestamp;
 use bdk::prelude::*;
 
 /// Stored DID Document in DynamoDB
@@ -39,7 +40,7 @@ pub struct StoredDidDocument {
 impl StoredDidDocument {
     /// Create a new stored DID document
     pub fn new(did: String, method: DidMethod, document: DidDocument, owner_pk: Partition) -> Self {
-        let now = chrono::Utc::now().timestamp();
+        let now = get_now_timestamp();
         let pk = Partition::Did(did.clone());
         let sk = EntityType::DidDocument;
 
@@ -72,7 +73,7 @@ impl StoredDidDocument {
         document: DidDocument,
     ) -> Result<(), crate::Error> {
         self.document = document;
-        self.updated_at = chrono::Utc::now().timestamp();
+        self.updated_at = get_now_timestamp();
 
         let updater = Self::updater(&self.pk, &self.sk)
             .with_document(self.document.clone())
@@ -85,7 +86,7 @@ impl StoredDidDocument {
     /// Deactivate the DID
     pub async fn deactivate(&mut self, cli: &aws_sdk_dynamodb::Client) -> Result<(), crate::Error> {
         self.is_active = false;
-        self.updated_at = chrono::Utc::now().timestamp();
+        self.updated_at = get_now_timestamp();
 
         let updater = Self::updater(&self.pk, &self.sk)
             .with_is_active(false)

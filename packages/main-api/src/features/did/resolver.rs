@@ -1,5 +1,6 @@
 use crate::features::did::types::{DidDocument, DidIdentifier};
 use crate::reqwest::Client;
+use crate::utils::time::get_now_timestamp;
 use bdk::prelude::*;
 use std::time::Duration;
 
@@ -143,7 +144,7 @@ impl DidResolver {
                     status_code,
                     success: false,
                     error: Some(format!("HTTP error: {}", status_code)),
-                    retrieved_at: chrono::Utc::now().timestamp(),
+                    retrieved_at: get_now_timestamp(),
                 },
             });
         }
@@ -185,7 +186,7 @@ impl DidResolver {
                 status_code,
                 success: true,
                 error: None,
-                retrieved_at: chrono::Utc::now().timestamp(),
+                retrieved_at: get_now_timestamp(),
             },
         })
     }
