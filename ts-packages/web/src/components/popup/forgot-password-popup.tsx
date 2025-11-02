@@ -34,6 +34,7 @@ export const ForgotPasswordPopup = ({
   const [isLoading, setIsLoading] = useState(false);
 
   const validateEmail = (email: string) => {
+    // Use consistent email validation with login
     return email.includes('@') && email.length > 3;
   };
 
@@ -41,6 +42,11 @@ export const ForgotPasswordPopup = ({
     const regex =
       /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*()_+{}[\]:;<>,.?~\\/-]).{8,}$/;
     return regex.test(pw);
+  };
+
+  const validateCode = (code: string) => {
+    // Validate code is 6 characters of letters and numbers only
+    return /^[A-Za-z0-9]{6}$/.test(code);
   };
 
   const handleSendCode = async () => {
@@ -55,7 +61,7 @@ export const ForgotPasswordPopup = ({
       await ratelSdk.auth.sendVerificationCode(email);
       setStep(ResetPasswordStep.CODE);
     } catch (err) {
-      setError('Failed to send verification code. Please try again.');
+      setError(t('forgot_password.send_code_failed'));
       console.error('Send code error:', err);
     } finally {
       setIsLoading(false);
@@ -64,8 +70,8 @@ export const ForgotPasswordPopup = ({
 
   const handleVerifyCode = async () => {
     setError('');
-    if (code.length < 6) {
-      setError('Please enter a valid 6-character code.');
+    if (!validateCode(code)) {
+      setError(t('forgot_password.invalid_code_format'));
       return;
     }
 
@@ -74,7 +80,7 @@ export const ForgotPasswordPopup = ({
       await ratelSdk.auth.verifyCode(email, code);
       setStep(ResetPasswordStep.PASSWORD);
     } catch (err) {
-      setError('Invalid verification code. Please try again.');
+      setError(t('forgot_password.verify_code_failed'));
       console.error('Verify code error:', err);
     } finally {
       setIsLoading(false);
@@ -88,7 +94,7 @@ export const ForgotPasswordPopup = ({
       return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      setError(t('forgot_password.passwords_not_match'));
       return;
     }
 
@@ -98,7 +104,7 @@ export const ForgotPasswordPopup = ({
       await ratelSdk.auth.resetPassword(email, code, hashedPassword);
       setStep(ResetPasswordStep.SUCCESS);
     } catch (err) {
-      setError('Failed to reset password. Please try again.');
+      setError(t('forgot_password.reset_password_failed'));
       console.error('Reset password error:', err);
     } finally {
       setIsLoading(false);

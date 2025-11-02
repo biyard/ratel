@@ -14,6 +14,13 @@
   "unregistered_email": "This email is not registered.",
   "invalid_password_format": "Password must contain letters, numbers, and special characters (min 8 chars).",
   "invalid_credentials": "Invalid email or password.",
+  "forgot_password": {
+    "send_code_failed": "Failed to send verification code. Please try again.",
+    "verify_code_failed": "Invalid verification code. Please try again.",
+    "invalid_code_format": "Please enter a valid 6-character code.",
+    "reset_password_failed": "Failed to reset password. Please try again.",
+    "passwords_not_match": "Passwords do not match."
+  },
   "GoogleLogin": {
     "label": "Sign in with Google",
     "loading_description": "Signing in with Google..."
