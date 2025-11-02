@@ -24,6 +24,16 @@ export function getFileType(file: File): FileExtension {
     name.endsWith('.xlsx')
   )
     return FileExtension.XLSX;
+  if (mime === 'application/vnd.ms-excel' || name.endsWith('.xls'))
+    return FileExtension.EXCEL;
+  if (mime === 'application/msword' || name.endsWith('.doc'))
+    return FileExtension.WORD;
+  if (
+    mime ===
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    name.endsWith('.docx')
+  )
+    return FileExtension.WORD;
 
   if (name.endsWith('.glb')) return FileExtension.GLB;
   if (name.endsWith('.gltf')) return FileExtension.GLTF;
@@ -62,6 +72,10 @@ export function toContentType(ext: FileExtension): string {
       return 'application/pdf';
     case FileExtension.XLSX:
       return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    case FileExtension.EXCEL:
+      return 'application/vnd.ms-excel';
+    case FileExtension.WORD:
+      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
     case FileExtension.GLB:
       return 'model/gltf-binary';
     case FileExtension.GLTF:
@@ -99,6 +113,12 @@ export function parseFileType(mime: string): FileExtension {
       return FileExtension.PDF;
     case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
       return FileExtension.XLSX;
+    case 'application/vnd.ms-excel':
+      return FileExtension.EXCEL;
+    case 'application/msword':
+      return FileExtension.WORD;
+    case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+      return FileExtension.WORD;
     case 'model/gltf-binary':
       return FileExtension.GLB;
     case 'model/gltf+json':
