@@ -410,13 +410,13 @@ export const TiptapToolbar = ({
             />
           )}
 
-          <button>
-            <Video
-              type="button"
-              onClick={openVideoPicker}
-              className="w-5 h-5 [&>path]:stroke-neutral-500 [&>rect]:stroke-neutral-500 ml-2"
-            />
-          </button>
+          <ToolbarButton
+            icon={<Video />}
+            onClick={openVideoPicker}
+            active={false}
+            tooltip="Upload Video"
+            aria-label="Upload Video"
+          />
         </div>
       </div>
 

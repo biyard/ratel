@@ -35,12 +35,12 @@ export function useLikePostMutation() {
     onMutate: async ({ feedId, like }) => {
       const detailQueryKey = feedKeys.detail(feedId);
       const listQueryKey = feedKeys.lists();
+      const delta = like ? 1 : -1;
 
       const previousFeedDetail = await optimisticUpdate<PostDetailResponse>(
         { queryKey: detailQueryKey },
         (old) => {
           if (!old || old.is_liked === like) return old;
-          const delta = like ? 1 : -1;
           return {
             ...old,
             post: {
@@ -55,22 +55,17 @@ export function useLikePostMutation() {
       const previousFeedLists = await optimisticListUpdate<
         ListResponse<PostResponse>
       >({ queryKey: listQueryKey }, (page) => {
-        page.items.map((post) => {
+        const items = page.items.map((post) => {
           if (post.pk === feedId) {
-            const likeCount = post.likes ?? 0;
-            const delta = like ? 1 : -1;
             return {
               ...post,
-              post: {
-                ...post,
-                likes: Math.max(0, likeCount + delta),
-              },
-              is_liked: like,
+              likes: Math.max(0, post.likes + delta),
+              liked: like,
             };
           }
           return post;
         });
-        return page;
+        return { ...page, items };
       });
 
       return { previousFeedDetail, previousFeedLists };
