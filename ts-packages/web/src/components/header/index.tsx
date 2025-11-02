@@ -16,7 +16,7 @@ import { Us } from '../icons';
 import { Kr } from '@/assets/icons/flags';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { config, Env } from '@/config';
-import { Monitor, Moon, Sun } from 'lucide-react';
+import { Moon, Sun, SunMoon } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 
 export interface HeaderProps {
@@ -177,13 +177,13 @@ export default function Header(props: HeaderProps) {
           </button>
 
           <button
-            className="flex flex-col w-fit justify-center items-center mx-2"
+            className="flex flex-col justify-center items-center mx-2 w-fit"
             aria-label={`Theme: ${theme}`}
             onClick={() => handleChangeTheme(nextTheme)}
           >
             <div className="flex flex-col justify-center items-center h-6 w-fit">
               {theme === 'system' ? (
-                <Monitor className="[&>path]:stroke-menu-text [&>rect]:stroke-menu-text [&>line]:stroke-menu-text" />
+                <SunMoon className="[&>path]:stroke-menu-text [&>rect]:stroke-menu-text [&>line]:stroke-menu-text" />
               ) : theme === 'light' ? (
                 <Sun className="[&>path]:stroke-menu-text [&>circle]:stroke-menu-text" />
               ) : (
