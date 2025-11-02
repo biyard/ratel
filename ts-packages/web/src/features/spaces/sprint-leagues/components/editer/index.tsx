@@ -11,6 +11,7 @@ import unknown from '@/assets/images/unknown.png';
 import { Input } from '@/components/ui/input';
 import PlayerSelectModal from '../select-player-modal';
 import { Row } from '@/components/ui/row';
+import Character from '../character';
 
 export interface SprintLeagueEditorProps {
   players?: SprintLeaguePlayer[];
@@ -106,7 +107,7 @@ export default function SprintLeagueEditor({
                   <div className="flex flex-col flex-1 gap-2.5">
                     <Input
                       className="w-full text-[15px]/[23px] px-4 py-6 text-foreground"
-                      // value={player.name}
+                      value={player.name}
                       onChange={(e) => {
                         updatePlayer(index, {
                           name: e.currentTarget.value || '',
@@ -115,7 +116,7 @@ export default function SprintLeagueEditor({
                     />
                     <Textarea
                       className="flex-1 text-foreground"
-                      // value={player.description}
+                      value={player.description}
                       onChange={(e) =>
                         updatePlayer(index, {
                           description: e.currentTarget.value || '',
@@ -153,8 +154,7 @@ function PlayerSelector({
       </Button>
       <div className="aspect-square size-75 rounded-lg overflow-hidden">
         {spriteSheet ? (
-          // <Character spriteSheet={spriteSheet} />
-          <div> Character Here </div>
+          <Character spriteSheet={spriteSheet} />
         ) : (
           <img src={unknown} alt="Unknown Player" />
         )}

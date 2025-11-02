@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { PlayerImage } from '../types/sprint-league-player';
 import { BasePlayerImages } from './game/constants';
 import { TFunction } from 'i18next';
+import CharacterPreview from './character-preview';
 
 export default function PlayerSelectModal({
   t,
@@ -29,7 +30,7 @@ export default function PlayerSelectModal({
               setSelectedIndex(index);
             }}
           >
-            {/* <CharacterPreview images={playerImage} /> */}
+            <CharacterPreview images={playerImage} />
           </div>
         ))}
       </div>
