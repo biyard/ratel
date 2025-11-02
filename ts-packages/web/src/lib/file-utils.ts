@@ -55,6 +55,8 @@ export function getFileType(file: File): FileExtension {
 }
 
 export function toContentType(ext: FileExtension): string {
+  // Note: For WORD and EXCEL enums, this returns the modern format MIME types (DOCX, XLSX).
+  // When uploading files, prefer using the original file.type to preserve the exact MIME type.
   switch (ext) {
     case FileExtension.PNG:
       return 'image/png';
