@@ -17,9 +17,6 @@ export const SIZE = 10;
 
 export default function HomePage() {
   const ctrl = useHomeController();
-  const navigate = useNavigate();
-
-  const createDraft = useCreatePostMutation().mutateAsync;
 
   if (ctrl.isLoading) {
     return (
@@ -53,16 +50,14 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex relative flex-1">
+    <div className="flex relative flex-1 gap-4">
       {feedSection}
 
       <div
-        className="flex flex-col sticky top-4 pl-4 w-70 max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 max-tablet:z-50 max-tablet:pl-0"
+        className="flex flex-col gap-2.5 w-70 max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 max-tablet:z-50 max-tablet:pl-0"
         aria-label="Sidebar"
       >
-        <div className="mb-2.5">
-          <CreatePostButton />
-        </div>
+        <CreatePostButton />
 
         <div className="max-tablet:hidden">
           {ctrl.topPromotion && (
