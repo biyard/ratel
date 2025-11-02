@@ -66,9 +66,10 @@ export default function MediaUploaderMetadata({
         const presignedUrl = res.presigned_uris[0];
         const publicUrl = res.uris[0];
 
+        const contentType = file.type || toContentType(fileTypeKey);
         const uploadResponse = await fetch(presignedUrl, {
           method: 'PUT',
-          headers: { 'Content-Type': toContentType(fileTypeKey) },
+          headers: { 'Content-Type': contentType },
           body: file,
         });
         if (!uploadResponse.ok) throw new Error('File upload failed');
