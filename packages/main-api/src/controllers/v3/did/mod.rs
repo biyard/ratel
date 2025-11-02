@@ -4,6 +4,9 @@ pub mod reconcil_identity_verification;
 pub mod resolve_did;
 pub mod update_did;
 
+#[cfg(test)]
+mod tests;
+
 use create_did::create_did_handler;
 use deactivate_did::deactivate_did_handler;
 use reconcil_identity_verification::reconcil_identity_verification_handler;
