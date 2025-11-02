@@ -13,6 +13,7 @@
   "invalid_email_format": "Please enter a valid email address.",
   "unregistered_email": "This email is not registered.",
   "invalid_password_format": "Password must contain letters, numbers, and special characters (min 8 chars).",
+  "invalid_credentials": "Invalid email or password.",
   "GoogleLogin": {
     "label": "Sign in with Google",
     "loading_description": "Signing in with Google..."

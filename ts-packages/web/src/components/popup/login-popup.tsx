@@ -4,6 +4,7 @@ import { LoginPopupFooter } from './login-popup-footer';
 import { LoaderPopup } from './loader-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { LoginFailurePopup } from './login-failure-popup';
+import { ForgotPasswordPopup } from './forgot-password-popup';
 import UserSetupPopup, { type UserSetupPopupProps } from './user-setup-popup';
 import { logger } from '@/lib/logger';
 import { useAuth, useEd25519KeyPair } from '@/lib/contexts/auth-context';
@@ -289,6 +290,11 @@ export const LoginModal = ({
     popup.open(<UserSetupPopup email="" />).withoutBackdropClose();
   };
 
+  const handleForgotPassword = () => {
+    logger.debug('Forgot password button clicked');
+    popup.open(<ForgotPasswordPopup />).withoutBackdropClose();
+  };
+
   return (
     <div
       id={id}
@@ -349,6 +355,14 @@ export const LoginModal = ({
           {loginError !== '' && (
             <div className="text-red-500 text-xs mt-1">{loginError}</div>
           )}
+          <Row className="justify-start mt-1">
+            <button
+              className="text-primary/70 hover:text-primary text-xs"
+              onClick={handleForgotPassword}
+            >
+              Forgot your password?
+            </button>
+          </Row>
         </Col>
 
         <Row className="justify-end items-center text-sm">
