@@ -19,6 +19,11 @@ export function PanelName({ t, canEdit, name, setName }: PanelNameProps) {
     if (editMode) inputRef.current?.focus();
   }, [editMode]);
 
+  // Sync internalName with name prop when it changes
+  useEffect(() => {
+    setInternalName(name);
+  }, [name]);
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     executeOnKeyStroke(
       e,
@@ -30,6 +35,14 @@ export function PanelName({ t, canEdit, name, setName }: PanelNameProps) {
     );
   };
 
+  const handleBlur = () => {
+    // Save the internalName before exiting edit mode
+    if (internalName.trim() !== name) {
+      setName(internalName.trim());
+    }
+    setEditMode(false);
+  };
+
   return (
     <div>
       {editMode && canEdit ? (
@@ -39,7 +52,7 @@ export function PanelName({ t, canEdit, name, setName }: PanelNameProps) {
           value={internalName}
           onChange={(e) => setInternalName(e.target.value)}
           onKeyDown={onKeyDown}
-          onBlur={() => setEditMode(false)}
+          onBlur={handleBlur}
           placeholder={t('panel_name_hint')}
         />
       ) : (
