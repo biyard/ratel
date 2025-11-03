@@ -1,4 +1,5 @@
 use super::*;
+use crate::features::spaces::invitations::SpaceEmailVerification;
 use crate::models::user::User;
 use crate::models::{Post, SpaceCommon};
 use crate::types::*;
@@ -36,6 +37,8 @@ pub struct GetSpaceResponse {
     pub visibility: SpaceVisibility,
     pub publish_state: SpacePublishState,
     pub booster: BoosterType,
+
+    pub verified: bool,
 }
 
 pub async fn get_space_handler(
@@ -53,13 +56,39 @@ pub async fn get_space_handler(
     let space = space.ok_or(Error::SpaceNotFound)?;
     let post = post.ok_or(Error::PostNotFound)?;
 
+    let verified = if user.clone().is_some() {
+        let user = user.clone().unwrap_or_default();
+
+        let verification = SpaceEmailVerification::get(
+            &dynamo.client,
+            &space_pk,
+            Some(EntityType::SpaceEmailVerification(user.email.clone())),
+        )
+        .await?;
+
+        if verification.is_some() && verification.unwrap_or_default().authorized {
+            true
+        } else {
+            false
+        }
+    } else {
+        false
+    };
+
     let permissions = post.get_permissions(&dynamo.client, user).await?;
 
-    Ok(Json(GetSpaceResponse::from((space, post, permissions))))
+    Ok(Json(GetSpaceResponse::from((
+        space,
+        post,
+        permissions,
+        verified,
+    ))))
 }
 
-impl From<(SpaceCommon, Post, TeamGroupPermissions)> for GetSpaceResponse {
-    fn from((space, post, permissions): (SpaceCommon, Post, TeamGroupPermissions)) -> Self {
+impl From<(SpaceCommon, Post, TeamGroupPermissions, bool)> for GetSpaceResponse {
+    fn from(
+        (space, post, permissions, verified): (SpaceCommon, Post, TeamGroupPermissions, bool),
+    ) -> Self {
         Self {
             pk: space.pk,
             sk: space.sk,
@@ -89,6 +118,7 @@ impl From<(SpaceCommon, Post, TeamGroupPermissions)> for GetSpaceResponse {
             visibility: space.visibility,
             publish_state: space.publish_state,
             booster: space.booster,
+            verified,
         }
     }
 }
