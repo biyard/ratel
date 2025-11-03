@@ -80,17 +80,15 @@ pub async fn pay_with_billing_key_handler(
         }
     };
 
-    let user_purchase = UserPurchase::new(
+    let mut user_purchase = UserPurchase::new(
         user.pk,
         TransactionType::PurchaseMembership(membership.to_string()),
         amount,
     );
 
-    txs.push(user_purchase.create_transact_write_item());
-
     let res = portone
         .pay_with_billing_key(
-            user_purchase.get_payment_id(),
+            user_purchase.payment_id.clone(),
             user_payment.customer_id.clone(),
             user_payment.name.clone(),
             user_purchase.tx_type.to_string(),
@@ -98,6 +96,11 @@ pub async fn pay_with_billing_key_handler(
             amount,
         )
         .await?;
+
+    user_purchase.tx_id = Some(res.payment.pg_tx_id.clone());
+
+    txs.push(user_purchase.create_transact_write_item());
+    // TODO: Update user's membership status upon successful payment
 
     info!("payment response: {:?}", res);
 
