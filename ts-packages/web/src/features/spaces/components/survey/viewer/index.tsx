@@ -13,6 +13,7 @@ import Card from '@/components/card';
 import { I18nFunction } from '../index';
 import { Button } from '@/components/ui/button';
 import { showErrorToast } from '@/lib/toast';
+import { PollStatus } from '@/features/spaces/polls/types/poll-status';
 
 export interface SurveyViewerProps {
   t: I18nFunction;
@@ -21,6 +22,7 @@ export interface SurveyViewerProps {
   onUpdateAnswer: (questionIdx: number, answer: SurveyAnswer) => void;
   onSubmit?: () => void;
   onLogin?: () => void;
+  status: PollStatus;
   isAdmin?: boolean;
   canSubmit?: boolean;
   canUpdate?: boolean;
@@ -33,6 +35,7 @@ export default function SurveyViewer({
   t,
   disabled,
   questions,
+  status,
   selectedAnswers,
   onUpdateAnswer,
   onSubmit,
@@ -109,7 +112,7 @@ export default function SurveyViewer({
         {t('btn_next')}
       </Button>
     );
-  } else if (canSubmit && !isAdmin) {
+  } else if (canSubmit && !isAdmin && status == PollStatus.InProgress) {
     button = (
       <Button
         onClick={() => {

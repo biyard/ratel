@@ -54,6 +54,7 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
             <SurveyViewer
               t={ctrl.t}
               questions={ctrl.poll.questions}
+              status={ctrl.poll.status}
               onUpdateAnswer={ctrl.handleUpdateAnswer}
               selectedAnswers={ctrl.answers.get()}
               onSubmit={ctrl.handleSubmit}
