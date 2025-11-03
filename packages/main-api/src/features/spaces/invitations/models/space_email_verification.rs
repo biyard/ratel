@@ -119,11 +119,13 @@ impl SpaceEmailVerification {
                 _ => "".to_string(),
             };
 
+            tracing::debug!("space id: {:?}", space_id);
+
             while let Err(e) = ses
                 .send_mail(
                     &user_email,
-                    format!("Please Enter this verification code within 30 minutes with your verification code in space.\nspace link: {}/spaces/SPACE%23{}", domain, space_id).as_ref(),
-                    format!("Verification code: {:?}", value).as_ref(),
+                    format!("Join your space within 30 minutes with your verification code").as_ref(),
+                    format!("Please enter this verification code within 30 minutes to complete your invitation.\nInvite account: {}\nSpace link: {}/spaces/SPACE%23{}\nVerification code: {:?}", user_email, domain, space_id, value).as_ref(),
                 )
                 .await
             {
