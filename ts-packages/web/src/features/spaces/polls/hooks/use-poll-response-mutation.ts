@@ -1,13 +1,16 @@
 import { spaceKeys } from '@/constants';
-import { optimisticUpdate } from '@/lib/hook-utils';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { PollAnswer } from '@/features/spaces/polls/types/poll-question';
-import { useMutation } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { Poll } from '../types/poll';
+import { optimisticUpdate } from '@/lib/hook-utils';
 
 export function usePollResponseMutation() {
+  const queryClient = useQueryClient();
+
   const mutation = useMutation({
     mutationKey: ['poll-response'],
+
     mutationFn: async ({
       spacePk,
       pollSk,
@@ -20,19 +23,23 @@ export function usePollResponseMutation() {
       await call(
         'POST',
         `/v3/spaces/${encodeURIComponent(spacePk)}/polls/${encodeURIComponent(pollSk)}/responses`,
-        {
-          answers,
-        },
+        { answers },
       );
     },
-    onSuccess: async (_, { spacePk, pollSk, answers }) => {
-      const pollSpaceQK = spaceKeys.poll(spacePk, pollSk);
-      await optimisticUpdate<Poll>({ queryKey: pollSpaceQK }, (poll) => {
-        poll.user_response_count += 1;
-        poll.myResponse = answers;
 
-        return poll;
+    onSuccess: async (_, { spacePk, pollSk, answers }) => {
+      const qk = spaceKeys.poll(spacePk, pollSk);
+
+      await optimisticUpdate<Poll>({ queryKey: qk }, (poll) => {
+        if (!poll) return poll;
+        return {
+          ...poll,
+          user_response_count: (poll.user_response_count ?? 0) + 1,
+          myResponse: answers,
+        };
       });
+
+      queryClient.invalidateQueries({ queryKey: qk });
     },
   });
 
