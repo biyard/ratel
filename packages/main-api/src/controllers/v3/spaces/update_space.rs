@@ -8,7 +8,7 @@ use crate::models::space::SpaceCommon;
 use crate::models::Post;
 use crate::models::user::User;
 use crate::types::{
-    BoosterType, EntityType, SpacePublishState, SpaceVisibility, TeamGroupPermission,
+    BoosterType, EntityType, SpacePublishState, SpaceStatus, SpaceVisibility, TeamGroupPermission,
 };
 use crate::types::{File, Partition};
 use crate::utils::aws::DynamoClient;
@@ -37,6 +37,12 @@ pub enum UpdateSpaceRequest {
     },
     Visibility {
         visibility: SpaceVisibility,
+    },
+    Start {
+        start: bool,
+    },
+    Finish {
+        finished: bool,
     },
 }
 
@@ -109,6 +115,36 @@ pub async fn update_space_handler(
         }
         UpdateSpaceRequest::Title { title } => {
             pu = pu.with_title(title.clone());
+        }
+        UpdateSpaceRequest::Start { start } => {
+            if space.status != Some(SpaceStatus::InProgress) {
+                return Err(Error::NotSupported(
+                    "Start is not available for the current status.".into(),
+                ));
+            }
+
+            if !start {
+                return Err(Error::NotSupported("it does not support start now".into()));
+            }
+
+            su = su.with_status(SpaceStatus::Started);
+
+            space.status = Some(SpaceStatus::Started);
+        }
+        UpdateSpaceRequest::Finish { finished } => {
+            if space.status != Some(SpaceStatus::Started) {
+                return Err(Error::NotSupported(
+                    "End is not available for the current status.".into(),
+                ));
+            }
+
+            if !finished {
+                return Err(Error::NotSupported("it does not support end now".into()));
+            }
+
+            su = su.with_status(SpaceStatus::Finished);
+
+            space.status = Some(SpaceStatus::Finished);
         }
     }
 
