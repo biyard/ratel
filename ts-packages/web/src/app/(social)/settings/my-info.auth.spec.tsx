@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { click, fill, waitForVisible } from '@tests/utils';
 import { CONFIGS } from '@tests/config';
 
 test.describe.serial('[User Settings - My Info] Authenticated User', () => {
@@ -94,17 +93,19 @@ test.describe.serial('[User Settings - My Info] Authenticated User', () => {
     // Verify save button is enabled (validation passed)
     await expect(saveButton).toBeEnabled();
     await expect(saveButton).not.toHaveClass(/bg-disable-button-bg/);
-    
+
     // Save
     await saveButton.click();
 
     // Wait a moment for the save to process
     await page.waitForTimeout(2000);
-    
+
     // Check if navigation happened (success case) or if we're still on settings (API might be slow)
     // The test passes if the button was clickable, which means validation passed
     const currentUrl = page.url();
-    const isOnHomeOrSettings = currentUrl === CONFIGS.PLAYWRIGHT.BASE_URL + '/' || currentUrl.includes('/settings');
+    const isOnHomeOrSettings =
+      currentUrl === CONFIGS.PLAYWRIGHT.BASE_URL + '/' ||
+      currentUrl.includes('/settings');
     expect(isOnHomeOrSettings).toBe(true);
   });
 
@@ -130,16 +131,18 @@ test.describe.serial('[User Settings - My Info] Authenticated User', () => {
     // Verify save button is enabled (validation passed)
     await expect(saveButton).toBeEnabled();
     await expect(saveButton).not.toHaveClass(/bg-disable-button-bg/);
-    
+
     // Save
     await saveButton.click();
 
     // Wait a moment for the save to process
     await page.waitForTimeout(2000);
-    
+
     // Check if navigation happened or if we're still on settings
     const currentUrl = page.url();
-    const isOnHomeOrSettings = currentUrl === CONFIGS.PLAYWRIGHT.BASE_URL + '/' || currentUrl.includes('/settings');
+    const isOnHomeOrSettings =
+      currentUrl === CONFIGS.PLAYWRIGHT.BASE_URL + '/' ||
+      currentUrl.includes('/settings');
     expect(isOnHomeOrSettings).toBe(true);
   });
 
@@ -207,7 +210,6 @@ test.describe.serial('[User Settings - My Info] Authenticated User', () => {
     page,
   }) => {
     const displayNameInput = page.locator(`[data-pw="display-name-input"]`);
-    const saveButton = page.locator('[data-pw="save-profile-button"]');
 
     // Input field has maxLength=30, so we verify it can't exceed that
     const longName = 'A'.repeat(35);
@@ -542,16 +544,18 @@ test.describe.serial('[User Settings - My Info] Authenticated User', () => {
     // Verify save button is enabled (validation passed)
     await expect(saveButton).toBeEnabled();
     await expect(saveButton).not.toHaveClass(/bg-disable-button-bg/);
-    
+
     // Save should work
     await saveButton.click();
-    
+
     // Wait a moment for the save to process
     await page.waitForTimeout(2000);
-    
+
     // Check if navigation happened or if we're still on settings
     const currentUrl = page.url();
-    const isOnHomeOrSettings = currentUrl === CONFIGS.PLAYWRIGHT.BASE_URL + '/' || currentUrl.includes('/settings');
+    const isOnHomeOrSettings =
+      currentUrl === CONFIGS.PLAYWRIGHT.BASE_URL + '/' ||
+      currentUrl.includes('/settings');
     expect(isOnHomeOrSettings).toBe(true);
   });
 
@@ -574,16 +578,18 @@ test.describe.serial('[User Settings - My Info] Authenticated User', () => {
     // Verify save button is enabled (validation passed after trimming)
     await expect(saveButton).toBeEnabled();
     await expect(saveButton).not.toHaveClass(/bg-disable-button-bg/);
-    
+
     // Save
     await saveButton.click();
 
     // Wait a moment for the save to process
     await page.waitForTimeout(2000);
-    
+
     // Check if navigation happened or if we're still on settings
     const currentUrl = page.url();
-    const isOnHomeOrSettings = currentUrl === CONFIGS.PLAYWRIGHT.BASE_URL + '/' || currentUrl.includes('/settings');
+    const isOnHomeOrSettings =
+      currentUrl === CONFIGS.PLAYWRIGHT.BASE_URL + '/' ||
+      currentUrl.includes('/settings');
     expect(isOnHomeOrSettings).toBe(true);
   });
 
