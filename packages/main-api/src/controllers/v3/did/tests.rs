@@ -637,3 +637,202 @@ async fn test_did_url_encoding() {
     )
     .await;
 }
+
+#[tokio::test]
+async fn test_kyc_verification_success() {
+    let TestContextV3 {
+        app,
+        test_user,
+        ddb,
+        ..
+    } = TestContextV3::setup().await;
+
+    // Create a DID first
+    let did = format!("did:web:example.com:test-kyc-{}", uuid::Uuid::new_v4());
+    let did_document = serde_json::json!({
+        "@context": "https://www.w3.org/ns/did/v1",
+        "id": &did,
+        "verificationMethod": [{
+            "id": format!("{}#key-1", &did),
+            "type": "Ed25519VerificationKey2020",
+            "controller": &did,
+            "publicKeyMultibase": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+        }],
+        "authentication": [format!("{}#key-1", &did)]
+    });
+
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/did",
+        headers: test_user.1.clone(),
+        body: {
+            "did": &did,
+            "document": did_document
+        }
+    };
+    assert_eq!(status, 200);
+
+    // Now perform KYC verification
+    let verification_id = "test-verification-id";
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/did/kyc",
+        headers: test_user.1.clone(),
+        body: {
+            "id": verification_id,
+            "did": &did
+        }
+    };
+
+    assert_eq!(status, 200, "KYC verification response: {:?}", body);
+
+    // Check the response structure - verified_customer is at the top level of result
+    assert!(
+        body["result"]["verifiedCustomer"].is_object(),
+        "Response: {:?}",
+        body
+    );
+    assert_eq!(body["result"]["verifiedCustomer"]["name"], "Test User");
+    assert_eq!(
+        body["result"]["verifiedCustomer"]["birthDate"],
+        "1990-01-15"
+    );
+    assert_eq!(body["result"]["verifiedCustomer"]["gender"], "MALE");
+
+    // Check the DID document was updated with verified attributes
+    assert!(body["didDocument"].is_object());
+    assert_eq!(body["didDocument"]["did"], did);
+
+    let services = body["didDocument"]["document"]["service"]
+        .as_array()
+        .unwrap();
+    let verified_attrs = services
+        .iter()
+        .find(|s| s["type"].as_str() == Some("VerifiedAttributes"))
+        .expect("Should have VerifiedAttributes service");
+
+    assert_eq!(verified_attrs["serviceEndpoint"]["name"], "Test User");
+    assert_eq!(verified_attrs["serviceEndpoint"]["birthDate"], "1990-01-15");
+    assert_eq!(verified_attrs["serviceEndpoint"]["gender"], "MALE");
+    assert_eq!(
+        verified_attrs["serviceEndpoint"]["phoneNumber"],
+        "+821012345678"
+    );
+    assert_eq!(verified_attrs["serviceEndpoint"]["isForeigner"], false);
+
+    // Age should be calculated correctly (1990-01-15 to now)
+    let age = verified_attrs["serviceEndpoint"]["age"].as_u64().unwrap();
+    assert!(
+        age >= 34 && age <= 35,
+        "Age should be 34 or 35, got {}",
+        age
+    );
+
+    // Cleanup
+    let _ = crate::features::did::StoredDidDocument::delete(
+        &ddb,
+        &Partition::Did(did.to_string()),
+        Some(&EntityType::DidDocument),
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn test_kyc_verification_requires_auth() {
+    let TestContextV3 { app, .. } = TestContextV3::setup().await;
+
+    let did = "did:web:example.com:test";
+    let verification_id = "test-verification-id";
+
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/did/kyc",
+        body: {
+            "id": verification_id,
+            "did": did
+        }
+    };
+
+    assert_eq!(status, 401, "Should require authentication");
+}
+
+#[tokio::test]
+async fn test_kyc_verification_requires_ownership() {
+    let TestContextV3 {
+        app,
+        test_user,
+        user2,
+        ddb,
+        ..
+    } = TestContextV3::setup().await;
+
+    // User1 creates a DID
+    let did = format!(
+        "did:web:example.com:test-kyc-ownership-{}",
+        uuid::Uuid::new_v4()
+    );
+    let did_document = serde_json::json!({
+        "@context": "https://www.w3.org/ns/did/v1",
+        "id": &did,
+        "verificationMethod": [{
+            "id": format!("{}#key-1", &did),
+            "type": "Ed25519VerificationKey2020",
+            "controller": &did,
+            "publicKeyMultibase": "z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK"
+        }],
+        "authentication": [format!("{}#key-1", &did)]
+    });
+
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/did",
+        headers: test_user.1.clone(),
+        body: {
+            "did": &did,
+            "document": did_document
+        }
+    };
+    assert_eq!(status, 200);
+
+    // User2 tries to perform KYC on User1's DID
+    let verification_id = "test-verification-id";
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/did/kyc",
+        headers: user2.1.clone(),
+        body: {
+            "id": verification_id,
+            "did": &did
+        }
+    };
+
+    assert_eq!(status, 401, "Should reject non-owner: {:?}", body);
+
+    // Cleanup
+    let _ = crate::features::did::StoredDidDocument::delete(
+        &ddb,
+        &Partition::Did(did.to_string()),
+        Some(&EntityType::DidDocument),
+    )
+    .await;
+}
+
+#[tokio::test]
+async fn test_kyc_verification_nonexistent_did() {
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
+
+    let did = format!("did:web:nonexistent.com:{}", uuid::Uuid::new_v4());
+    let verification_id = "test-verification-id";
+
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/did/kyc",
+        headers: test_user.1.clone(),
+        body: {
+            "id": verification_id,
+            "did": &did
+        }
+    };
+
+    assert_eq!(status, 404, "Should return 404 for nonexistent DID");
+}
