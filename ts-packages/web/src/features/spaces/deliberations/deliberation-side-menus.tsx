@@ -46,7 +46,7 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
     to: (space) => {
       return route.spaceMembers(space.pk);
     },
-    visible: () => !config.experiment,
+    visible: () => config.experiment,
     label: 'menu_members',
   },
   {
