@@ -5,6 +5,29 @@ export const MembershipPlan = {
     title: 'Membership Plans',
     desciption:
       '<strong class="font-bold text-primary">Credits</strong> are monthly points you can use to create or boost <span class="text-primary">Reward Spaces</span>.',
+    purchaseModal: {
+      birthDate: 'Birth Date',
+      membershipLabel: 'Membership',
+      monthlySubscription: 'Monthly subscription',
+      fullNameLabel: 'Full Name *',
+      fullNamePlaceholder: 'Enter your full name',
+      emailLabel: 'Email Address *',
+      emailPlaceholder: 'Enter your email',
+      phoneLabel: 'Phone Number *',
+      phonePlaceholder: 'Enter your phone number',
+      cardInformationTitle: 'Card Information',
+      cardNumberLabel: 'Card Number *',
+      cardNumberPlaceholder: 'Enter card number',
+      expiryLabel: 'Expiry Date *',
+      expiryMonthPlaceholder: 'MM',
+      expiryYearPlaceholder: 'YY',
+      birthOrBizLabel: 'Birth Date / Business Registration Number *',
+      birthOrBizPlaceholder: 'YYMMDD or 10 digits',
+      cardPasswordLabel: 'Card Password (first 2 digits) *',
+      cardPasswordPlaceholder: '••',
+      cancelButton: 'Cancel',
+      confirmButton: 'Proceed to Payment',
+    },
     memberships: [
       {
         name: 'Free',
@@ -68,6 +91,31 @@ export const MembershipPlan = {
     title: '멤버십 플랜',
     desciption:
       '<strong class="font-bold text-primary">Credits</strong>은 <span class="text-primary">보상 스페이스</span>를 생성하거나 부스팅시키는 데 사용할 수 있는 월간 포인트입니다.',
+    male: '남성',
+    female: '여성',
+    purchaseModal: {
+      birthDate: '생년월일',
+      membershipLabel: '멤버십',
+      monthlySubscription: '월간 구독',
+      fullNameLabel: '성명 *',
+      fullNamePlaceholder: '성명을 입력하세요',
+      emailLabel: '이메일 주소 *',
+      emailPlaceholder: '이메일을 입력하세요',
+      phoneLabel: '전화번호 *',
+      phonePlaceholder: '전화번호를 입력하세요',
+      cardInformationTitle: '카드 정보',
+      cardNumberLabel: '카드 번호 *',
+      cardNumberPlaceholder: '카드 번호를 입력하세요',
+      expiryLabel: '유효 기간 *',
+      expiryMonthPlaceholder: 'MM',
+      expiryYearPlaceholder: 'YY',
+      birthOrBizLabel: '생년월일 / 사업자등록번호 *',
+      birthOrBizPlaceholder: 'YYMMDD 또는 10자리',
+      cardPasswordLabel: '카드 비밀번호 앞 2자리 *',
+      cardPasswordPlaceholder: '••',
+      cancelButton: '취소',
+      confirmButton: '결제 진행',
+    },
     memberships: [
       {
         name: '무료',
@@ -133,8 +181,34 @@ export const MembershipPlan = {
 export interface MembershipPlanI18n {
   title: string;
   description: { __html: string };
+  purchaseModal: PurchaseModalI18n;
   memberships: Array<MembershipPlanItem>;
 }
+
+export interface PurchaseModalI18n {
+  membershipLabel: string;
+  monthlySubscription: string;
+  fullNameLabel: string;
+  fullNamePlaceholder: string;
+  emailLabel: string;
+  emailPlaceholder: string;
+  phoneLabel: string;
+  phonePlaceholder: string;
+  cardInformationTitle: string;
+  cardNumberLabel: string;
+  cardNumberPlaceholder: string;
+  expiryLabel: string;
+  expiryMonthPlaceholder: string;
+  expiryYearPlaceholder: string;
+  birthOrBizLabel: string;
+  birthOrBizPlaceholder: string;
+  cardPasswordLabel: string;
+  cardPasswordPlaceholder: string;
+  cancelButton: string;
+  confirmButton: string;
+  birthDate: string;
+}
+
 export interface MembershipPlanItem {
   name: string;
   description: string;
@@ -149,6 +223,9 @@ export function useMembershipPlanI18n(): MembershipPlanI18n {
   return {
     title: t('title'),
     description: { __html: t('desciption') },
+    purchaseModal: t('purchaseModal', {
+      returnObjects: true,
+    }) as PurchaseModalI18n,
     memberships: t('memberships', {
       returnObjects: true,
     }) as Array<MembershipPlanItem>,

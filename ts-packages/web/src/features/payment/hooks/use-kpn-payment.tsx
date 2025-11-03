@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { logger } from '@/lib/logger';
 import { MembershipTier } from '@/features/membership/types/membership-tier';
 import { useTranslation } from 'react-i18next';
+import { call } from '@/lib/api/ratel/call';
 
 export function useKpnPayment() {
   const { data: user } = useSuspenseUserInfo();
@@ -15,54 +16,28 @@ export function useKpnPayment() {
   const mutation = useMutation({
     mutationFn: async ({
       membership,
-      displayAmount,
-      customerName,
-      customerEmail,
-      customerPhone,
+      cardNumber,
+      expiryYear,
+      expiryMonth,
+      birthOrBusinessRegistrationNumber,
+      passwordTwoDigits,
     }: {
       membership: MembershipTier;
-      displayAmount: number;
-      customerName: string;
-      customerEmail?: string;
-      customerPhone?: string;
+      cardNumber: string;
+      expiryYear: string;
+      expiryMonth: string;
+      birthOrBusinessRegistrationNumber: string;
+      passwordTwoDigits: string;
     }) => {
-      let locale = PortOne.Locale.KO_KR;
-      if (i18n.language === 'en') {
-        locale = PortOne.Locale.EN_US;
-      }
-
-      const issueResponse = await PortOne.requestIssueBillingKey({
-        storeId: config.portone_store_id,
-        channelKey: config.portone_kpn_channel_key,
-        displayAmount,
-        currency: PortOne.Currency.USD,
-        customer: {
-          fullName: customerName,
-          email: customerEmail,
-          phoneNumber: customerPhone,
-        },
-        billingKeyMethod: 'CARD',
-        locale,
+      const _resp = await call('POST', '/v3/payments/memberships', {
+        membership,
+        card_number: cardNumber,
+        expiry_year: expiryYear,
+        expiry_month: expiryMonth,
+        birth_or_business_registration_number:
+          birthOrBusinessRegistrationNumber,
+        password_two_digits: passwordTwoDigits,
       });
-
-      if (issueResponse.code !== undefined) {
-        return alert(issueResponse.message);
-      }
-
-      logger.debug('billing key issue response', issueResponse);
-
-      // 고객사 서버에 빌링키를 전달합니다
-      /* const response = await fetch(`${MY_SEVER_URL}/billings`, {
-       *   method: 'POST',
-       *   header: { 'Content-Type': 'application/json' },
-       *   body: JSON.stringify({
-       *     billingKey: issueResponse.billingKey,
-       *     // ...
-       *   }),
-       * });
-       * if (!response.ok) throw new Error(`response: ${await response.json()}`); */
-
-      /* return { resp }; */
     },
     onSuccess: async () => {
       // update did
