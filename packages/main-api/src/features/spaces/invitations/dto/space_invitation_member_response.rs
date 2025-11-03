@@ -19,6 +19,8 @@ pub struct SpaceInvitationMemberResponse {
     pub profile_url: String,
     pub username: String,
     pub email: String,
+
+    pub authorized: bool,
 }
 
 impl From<SpaceInvitationMember> for SpaceInvitationMemberResponse {
@@ -29,6 +31,8 @@ impl From<SpaceInvitationMember> for SpaceInvitationMemberResponse {
             profile_url: member.profile_url,
             username: member.username,
             email: member.email,
+
+            authorized: false,
         }
     }
 }

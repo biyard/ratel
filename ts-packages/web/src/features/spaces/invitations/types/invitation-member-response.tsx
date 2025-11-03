@@ -5,6 +5,8 @@ export class InvitationMemberResponse {
   username: string;
   email: string;
 
+  authorized: boolean;
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
     this.user_pk = json.user_pk;
@@ -12,5 +14,7 @@ export class InvitationMemberResponse {
     this.profile_url = json.profile_url;
     this.username = json.username;
     this.email = json.email;
+
+    this.authorized = json.authorized;
   }
 }

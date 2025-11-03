@@ -6,13 +6,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Extra } from '@/components/icons';
+import { CheckCircle2, Extra } from '@/components/icons';
+import { Button } from '@/components/ui/button';
 
 export interface InviteMemberTableProps {
   isDraft: boolean;
   inviteMembers: InvitationMemberResponse[];
   t: TFunction<'SpaceInvitationEditor', undefined>;
   handleDeleteMember: (index: number) => void;
+  handleSendCode: (email: string) => void;
 }
 
 export default function InviteMemberTable({
@@ -20,6 +22,7 @@ export default function InviteMemberTable({
   inviteMembers,
   t,
   handleDeleteMember,
+  handleSendCode,
 }: InviteMemberTableProps) {
   return inviteMembers.length === 0 ? (
     <div className="text-sm text-neutral-500">{t('no_invitations')}</div>
@@ -55,6 +58,23 @@ export default function InviteMemberTable({
                 handleDeleteMember(index);
               }}
             />
+          )}
+
+          {!isDraft && (
+            <div>
+              {m.authorized ? (
+                <CheckCircle2 className="[&>path]:stroke-green-500 [&>circle]:stroke-green-500" />
+              ) : (
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    handleSendCode(m.email);
+                  }}
+                >
+                  {t('resend')}
+                </Button>
+              )}
+            </div>
           )}
         </li>
       ))}

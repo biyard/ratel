@@ -37,6 +37,7 @@ export function SpaceInvitationEditorPage({ spacePk }: SpacePathProps) {
         inviteMembers={inviteMembers}
         t={t}
         handleDeleteMember={ctrl.handleDeleteMember}
+        handleSendCode={ctrl.handleResentCode}
       />
     </div>
   );

@@ -18,3 +18,16 @@ export function verifySpaceCode(spacePk: string, code: string): Promise<void> {
     },
   );
 }
+
+export function resentVerificationCode(
+  spacePk: string,
+  email: string,
+): Promise<void> {
+  return call(
+    'PATCH',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/invitations`,
+    {
+      email,
+    },
+  );
+}

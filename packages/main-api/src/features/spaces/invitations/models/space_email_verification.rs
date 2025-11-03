@@ -62,11 +62,6 @@ impl SpaceEmailVerification {
             && verification.clone().unwrap().attempt_count < MAX_ATTEMPT_COUNT
         {
             verification.clone().unwrap_or_default()
-        } else if !verification.clone().is_none()
-            && verification.clone().unwrap().attempt_count < MAX_ATTEMPT_COUNT
-            && verification.clone().unwrap().expired_at < (get_now_timestamp() - ATTEMPT_BLOCK_TIME)
-        {
-            return Err(Error::ExceededAttemptEmailVerification);
         } else {
             let code = Self::generate_random_code();
             let expired_at = get_now_timestamp() + EXPIRATION_TIME as i64;

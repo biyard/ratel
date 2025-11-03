@@ -38,7 +38,7 @@ pub async fn upsert_invitation_handler(
 ) -> Result<Json<UpsertInvitationResponse>, Error> {
     //Request Validation
     if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error::NotFoundPoll);
+        return Err(Error::NotFoundSpace);
     }
 
     // Check Permissions
