@@ -1,8 +1,8 @@
 use crate::NoApi;
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
 use crate::features::spaces::invitations::SpaceEmailVerification;
-use crate::models::User;
-use crate::types::EntityType;
+use crate::models::{SpaceCommon, User};
+use crate::types::{EntityType, SpaceStatus};
 use crate::{
     AppState, Error,
     constants::MAX_ATTEMPT_COUNT,
@@ -38,6 +38,18 @@ pub async fn verify_space_code_handler(
     }
 
     let user = user.unwrap_or_default();
+
+    let space = SpaceCommon::get(
+        &dynamo.client,
+        space_pk.clone(),
+        Some(EntityType::SpaceCommon),
+    )
+    .await?
+    .ok_or(Error::SpaceNotFound)?;
+
+    if space.status == Some(SpaceStatus::Started) || space.status == Some(SpaceStatus::Finished) {
+        return Err(Error::FinishedSpace);
+    }
 
     let now = get_now_timestamp();
     let verification = SpaceEmailVerification::get(

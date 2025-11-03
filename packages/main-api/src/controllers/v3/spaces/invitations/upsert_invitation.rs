@@ -7,6 +7,7 @@ use crate::features::spaces::invitations::{
 };
 use crate::models::{SpaceCommon, User};
 use crate::types::Partition;
+use crate::types::SpaceStatus;
 use crate::types::TeamGroupPermission;
 use crate::types::{EntityType, SpacePublishState};
 use crate::utils::aws::{DynamoClient, SesClient};
@@ -54,6 +55,12 @@ pub async fn upsert_invitation_handler(
     .await?;
     if !has_perm {
         return Err(Error::NoPermission);
+    }
+
+    if space_common.status == Some(SpaceStatus::Started)
+        || space_common.status == Some(SpaceStatus::Finished)
+    {
+        return Err(Error::FinishedSpace);
     }
 
     if space_common.publish_state == SpacePublishState::Published {
@@ -121,7 +128,6 @@ pub async fn published_invitations(
     let current_set: HashSet<String> = members.iter().map(|m| m.user_pk.to_string()).collect();
     let desired_set: HashSet<String> = user_pks.iter().map(|p| p.to_string()).collect();
 
-    let _keep_keys: HashSet<String> = current_set.intersection(&desired_set).cloned().collect();
     let delete_keys: HashSet<String> = current_set.difference(&desired_set).cloned().collect();
     let add_keys: HashSet<String> = desired_set.difference(&current_set).cloned().collect();
 

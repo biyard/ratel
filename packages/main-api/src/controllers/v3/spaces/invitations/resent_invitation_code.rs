@@ -4,9 +4,9 @@ use crate::features::spaces::invitations::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
 use crate::models::{SpaceCommon, User};
-use crate::types::Partition;
 use crate::types::TeamGroupPermission;
 use crate::types::{EntityType, SpacePublishState};
+use crate::types::{Partition, SpaceStatus};
 use crate::{
     AppState, Error,
     constants::MAX_ATTEMPT_COUNT,
@@ -55,6 +55,12 @@ pub async fn resent_invitation_code_handler(
 
     if space_common.publish_state != SpacePublishState::Published {
         return Err(Error::NotPublishedSpace);
+    }
+
+    if space_common.status == Some(SpaceStatus::Started)
+        || space_common.status == Some(SpaceStatus::Finished)
+    {
+        return Err(Error::FinishedSpace);
     }
 
     let user_email = req.email;
