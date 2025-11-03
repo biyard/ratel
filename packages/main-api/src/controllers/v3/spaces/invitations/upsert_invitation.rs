@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::NoApi;
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
 use crate::features::spaces::invitations::{
@@ -7,6 +9,7 @@ use crate::models::{SpaceCommon, User};
 use crate::types::Partition;
 use crate::types::TeamGroupPermission;
 use crate::types::{EntityType, SpacePublishState};
+use crate::utils::aws::{DynamoClient, SesClient};
 use crate::{
     AppState, Error,
     constants::MAX_ATTEMPT_COUNT,
@@ -31,7 +34,7 @@ pub struct UpsertInvitationResponse {
 }
 
 pub async fn upsert_invitation_handler(
-    State(AppState { dynamo, .. }): State<AppState>,
+    State(AppState { dynamo, ses, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<UpsertInvitationRequest>,
@@ -54,7 +57,11 @@ pub async fn upsert_invitation_handler(
     }
 
     if space_common.publish_state == SpacePublishState::Published {
-        return Err(Error::AlreadyPublishedSpace);
+        published_invitations(&dynamo, &ses, &space_pk, req.user_pks.clone()).await?;
+        return Ok(Json(UpsertInvitationResponse {
+            space_pk,
+            user_pks: req.user_pks,
+        }));
     }
 
     let mut bookmark = None::<String>;
@@ -100,4 +107,53 @@ pub async fn upsert_invitation_handler(
         space_pk,
         user_pks: req.user_pks,
     }))
+}
+
+// FIXME: enhancement this logic
+pub async fn published_invitations(
+    dynamo: &DynamoClient,
+    ses: &SesClient,
+    space_pk: &Partition,
+    user_pks: Vec<Partition>,
+) -> Result<(), Error> {
+    let members = SpaceInvitationMember::list_invitation_members(dynamo, space_pk).await?;
+
+    let current_set: HashSet<String> = members.iter().map(|m| m.user_pk.to_string()).collect();
+    let desired_set: HashSet<String> = user_pks.iter().map(|p| p.to_string()).collect();
+
+    let _keep_keys: HashSet<String> = current_set.intersection(&desired_set).cloned().collect();
+    let delete_keys: HashSet<String> = current_set.difference(&desired_set).cloned().collect();
+    let add_keys: HashSet<String> = desired_set.difference(&current_set).cloned().collect();
+
+    for delete_key in delete_keys {
+        let m = SpaceInvitationMember::get(
+            &dynamo.client,
+            space_pk,
+            Some(EntityType::SpaceInvitationMember(delete_key.to_string())),
+        )
+        .await?
+        .unwrap_or_default();
+        SpaceInvitationMember::delete(&dynamo.client, m.pk, Some(m.sk)).await?;
+        SpaceEmailVerification::delete(
+            &dynamo.client,
+            space_pk,
+            Some(EntityType::SpaceEmailVerification(m.email.clone())),
+        )
+        .await?;
+    }
+
+    for add_key in add_keys {
+        let user = User::get(&dynamo.client, add_key.clone(), Some(EntityType::User)).await?;
+        if user.is_none() {
+            continue;
+        }
+
+        let member = SpaceInvitationMember::new(space_pk.clone(), user.unwrap_or_default());
+        member.create(&dynamo.client).await?;
+
+        let _ = SpaceEmailVerification::send_email(&dynamo, &ses, member.email, space_pk.clone())
+            .await?;
+    }
+
+    Ok(())
 }
