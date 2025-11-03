@@ -72,6 +72,7 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
             ) : (
               <SurveyViewer
                 t={ctrl.t}
+                status={ctrl.poll.status}
                 isAdmin={true}
                 isLogin={!!ctrl.user}
                 questions={ctrl.poll.questions}
