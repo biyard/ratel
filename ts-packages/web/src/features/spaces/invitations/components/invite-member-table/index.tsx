@@ -51,31 +51,33 @@ export default function InviteMemberTable({
             </div>
           </div>
 
-          {isDraft && (
-            <ContextMenu
-              t={t}
-              handleDeleteMember={() => {
-                handleDeleteMember(index);
-              }}
-            />
-          )}
+          <div className="flex flex-row w-fit gap-3">
+            {!isDraft && (
+              <div>
+                {m.authorized ? (
+                  <CheckCircle2 className="[&>path]:stroke-green-500 [&>circle]:stroke-green-500" />
+                ) : (
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      handleSendCode(m.email);
+                    }}
+                  >
+                    {t('resend')}
+                  </Button>
+                )}
+              </div>
+            )}
 
-          {!isDraft && (
-            <div>
-              {m.authorized ? (
-                <CheckCircle2 className="[&>path]:stroke-green-500 [&>circle]:stroke-green-500" />
-              ) : (
-                <Button
-                  variant="primary"
-                  onClick={() => {
-                    handleSendCode(m.email);
-                  }}
-                >
-                  {t('resend')}
-                </Button>
-              )}
-            </div>
-          )}
+            {!m.authorized && (
+              <ContextMenu
+                t={t}
+                handleDeleteMember={() => {
+                  handleDeleteMember(index);
+                }}
+              />
+            )}
+          </div>
         </li>
       ))}
     </ul>

@@ -21,15 +21,13 @@ export function SpaceInvitationEditorPage({ spacePk }: SpacePathProps) {
           <div className="text-base font-semibold">{t('invited_members')}</div>
           <div className="text-xs text-neutral-400">{t('invite_info')}</div>
         </div>
-        {isDraft && (
-          <Button
-            variant="primary"
-            className="self-start sm:self-auto w-fit"
-            onClick={ctrl.openInviteMemberPopup}
-          >
-            {t('invite_space')}
-          </Button>
-        )}
+        <Button
+          variant="primary"
+          className="self-start sm:self-auto w-fit"
+          onClick={ctrl.openInviteMemberPopup}
+        >
+          {t('invite_space')}
+        </Button>
       </div>
 
       <InviteMemberTable

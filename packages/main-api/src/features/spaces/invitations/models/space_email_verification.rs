@@ -120,7 +120,7 @@ impl SpaceEmailVerification {
                 .send_mail(
                     &user_email,
                     format!("Join your space within 30 minutes with your verification code").as_ref(),
-                    format!("Please enter this verification code within 30 minutes to complete your invitation.\nInvite account: {}\nSpace link: {}/spaces/SPACE%23{}\nVerification code: {:?}", user_email, domain, space_id, value).as_ref(),
+                    format!("Please enter this verification code within 30 minutes to complete your invitation.\nInvite account: {}\nSpace link: {}/spaces/SPACE%23{}/members?code={}", user_email, domain, space_id, value).as_ref(),
                 )
                 .await
             {
