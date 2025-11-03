@@ -8,17 +8,14 @@ export function MembershipPlan() {
   const ctrl = useController();
 
   const memberships = ctrl.t.memberships.map((membership, i) => {
-    const isEnterprise = membership.name === 'Enterprise';
-    const handleClick = isEnterprise
-      ? ctrl.handleEnterpriseContact
-      : () => ctrl.handleGetMembership(i);
-
     return (
       <MembershipCard
         key={membership.name}
         membership={membership}
-        variant={i === ctrl.t.memberships.length - 1 ? 'horizontal' : 'vertical'}
-        onClick={handleClick}
+        variant={
+          i === ctrl.t.memberships.length - 1 ? 'horizontal' : 'vertical'
+        }
+        onClick={() => ctrl.handleGetMembership(i)}
       />
     );
   });

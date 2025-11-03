@@ -5,28 +5,44 @@ import { config } from '@/config';
 import { useState } from 'react';
 import { logger } from '@/lib/logger';
 import { MembershipTier } from '@/features/membership/types/membership-tier';
+import { useTranslation } from 'react-i18next';
 
 export function useKpnPayment() {
   const { data: user } = useSuspenseUserInfo();
   const [verifying, setVerifying] = useState(false);
+  const { i18n } = useTranslation();
 
   const mutation = useMutation({
     mutationFn: async ({
       membership,
       displayAmount,
+      customerName,
+      customerEmail,
+      customerPhone,
     }: {
       membership: MembershipTier;
       displayAmount: number;
+      customerName: string;
+      customerEmail?: string;
+      customerPhone?: string;
     }) => {
+      let locale = PortOne.Locale.KO_KR;
+      if (i18n.language === 'en') {
+        locale = PortOne.Locale.EN_US;
+      }
+
       const issueResponse = await PortOne.requestIssueBillingKey({
         storeId: config.portone_store_id,
         channelKey: config.portone_kpn_channel_key,
         displayAmount,
         currency: PortOne.Currency.USD,
         customer: {
-          fullName: '최종석',
+          fullName: customerName,
+          email: customerEmail,
+          phoneNumber: customerPhone,
         },
         billingKeyMethod: 'CARD',
+        locale,
       });
 
       if (issueResponse.code !== undefined) {
