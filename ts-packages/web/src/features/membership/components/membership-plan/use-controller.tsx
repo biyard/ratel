@@ -4,6 +4,8 @@ import { useMembershipPlanI18n } from './i18n';
 import { logger } from '@/lib/logger';
 import { useKpnPayment } from '@/features/payment/hooks/use-kpn-payment';
 import { MembershipTier } from '../../types/membership-tier';
+import { usePopup } from '@/lib/contexts/popup-service';
+import { MembershipPurchaseModal } from './membership-purchase-modal';
 
 export class Controller {
   constructor(
@@ -12,6 +14,7 @@ export class Controller {
 
     // hooks
     public kpnPayment: ReturnType<typeof useKpnPayment>,
+    public popup: ReturnType<typeof usePopup>,
   ) {}
 
   handleGetMembership = async (i: number) => {
@@ -33,7 +36,26 @@ export class Controller {
       return this.handleEnterpriseContact();
     }
 
-    this.kpnPayment.mutation.mutateAsync({ membership, displayAmount });
+    this.popup
+      .open(
+        <MembershipPurchaseModal
+          membership={membership}
+          displayAmount={displayAmount}
+          onCancel={() => {
+            logger.debug('Membership purchase cancelled');
+          }}
+          onConfirm={({ name, email, phone }) => {
+            this.kpnPayment.mutation.mutateAsync({
+              membership,
+              displayAmount,
+              customerName: name,
+              customerEmail: email,
+              customerPhone: phone,
+            });
+          }}
+        />,
+      )
+      .withoutClose();
   };
 
   handleEnterpriseContact = () => {
@@ -55,6 +77,7 @@ export function useController() {
   const t = useMembershipPlanI18n();
   const state = useState(false);
   const kpnPayment = useKpnPayment();
+  const popup = usePopup();
 
-  return new Controller(t, new State(state), kpnPayment);
+  return new Controller(t, new State(state), kpnPayment, popup);
 }
