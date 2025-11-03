@@ -12,11 +12,14 @@ const en = {
   success_invitation_users: 'Invitation list has been updated.',
   failed_invitation_users:
     'Failed to save invitation list. Please try again later.',
+  success_send_code: 'Success to resent code to user.',
+  failed_send_code: 'Failed to rseent code to user. Please try again later.',
 
   email_label: 'Email',
   email_hint: 'Enter email (ex: john@example.com)',
   delete: 'Delete',
   send: 'Send',
+  resend: 'Resend',
 };
 
 const ko = {
@@ -32,11 +35,14 @@ const ko = {
   success_invitation_users: '초대 명단이 업데이트되었습니다.',
   failed_invitation_users:
     '초대 명단을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.',
+  success_send_code: '코드 재전송에 성공하셨습니다.',
+  failed_send_code: '코드 재전송에 실패했습니다. 잠시 후 다시 시도해주세요.',
 
   email_label: '이메일',
   email_hint: '이메일을 입력하세요. (예시: john@example.com)',
   delete: '삭제',
   send: '저장하기',
+  resend: '재전송',
 };
 
 const i18n = {

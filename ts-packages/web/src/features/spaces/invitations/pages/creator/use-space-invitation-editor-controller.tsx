@@ -8,6 +8,7 @@ import useInvitationMember from '../../hooks/use-invitation';
 import { InvitationMemberResponse } from '../../types/invitation-member-response';
 import { useUpsertInvitationMutation } from '../../hooks/use-upsert-invitation-mutation';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import { useResentVerificationMutation } from '../../hooks/use-resent-resent-mutation';
 
 export class SpaceInvitationEditorController {
   constructor(
@@ -18,12 +19,28 @@ export class SpaceInvitationEditorController {
     public t: TFunction<'SpaceInvitationEditor', undefined>,
 
     public upsertInvitation: ReturnType<typeof useUpsertInvitationMutation>,
+    public resentVerification: ReturnType<typeof useResentVerificationMutation>,
   ) {}
 
   openInviteMemberPopup = () => {
     this.popup
       .open(<InviteMemberPopup spacePk={this.spacePk} />)
       .withTitle(this.t('invite_member'));
+  };
+
+  handleResentCode = async (email: string) => {
+    try {
+      await this.resentVerification.mutateAsync({
+        spacePk: this.spacePk,
+        email: email,
+      });
+
+      showSuccessToast(this.t('success_send_code'));
+    } catch {
+      showErrorToast(this.t('failed_send_code'));
+    } finally {
+      this.popup.close();
+    }
   };
 
   handleDeleteMember = async (index: number) => {
@@ -41,8 +58,6 @@ export class SpaceInvitationEditorController {
       showSuccessToast(this.t('success_invitation_users'));
     } catch {
       showErrorToast(this.t('failed_invitation_users'));
-    } finally {
-      this.popup.close();
     }
   };
 }
@@ -53,6 +68,7 @@ export function useSpaceInvitationEditorController(spacePk: string) {
   const popup = usePopup();
   const { t } = useTranslation('SpaceInvitationEditor');
   const upsertInvitation = useUpsertInvitationMutation();
+  const resentVerification = useResentVerificationMutation();
 
   return new SpaceInvitationEditorController(
     spacePk,
@@ -62,5 +78,6 @@ export function useSpaceInvitationEditorController(spacePk: string) {
     t,
 
     upsertInvitation,
+    resentVerification,
   );
 }

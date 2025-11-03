@@ -1,8 +1,10 @@
 use crate::controllers::v3::spaces::SpacePath;
 use crate::controllers::v3::spaces::SpacePathParam;
+use crate::features::spaces::invitations::SpaceEmailVerification;
 use crate::features::spaces::invitations::SpaceInvitationMember;
 use crate::features::spaces::invitations::SpaceInvitationMemberQueryOption;
 use crate::features::spaces::invitations::SpaceInvitationMemberResponse;
+use crate::types::EntityType;
 use crate::types::Partition;
 use crate::{AppState, Error, models::user::User};
 use aide::NoApi;
@@ -40,7 +42,22 @@ pub async fn list_invitations_handler(
         .await?;
 
         for response in responses {
-            members.push(response.into());
+            let mut member: SpaceInvitationMemberResponse = response.into();
+
+            let verification = SpaceEmailVerification::get(
+                &dynamo.client,
+                &space_pk,
+                Some(EntityType::SpaceEmailVerification(member.email.clone())),
+            )
+            .await?;
+
+            if verification.is_some() && verification.unwrap_or_default().authorized {
+                member.authorized = true;
+            } else {
+                member.authorized = false;
+            }
+
+            members.push(member);
         }
 
         match new_bookmark {

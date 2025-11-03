@@ -1,8 +1,10 @@
 pub mod list_invitations;
+pub mod resent_invitation_code;
 pub mod upsert_invitation;
 pub mod verify_space_code;
 
 pub use list_invitations::*;
+pub use resent_invitation_code::*;
 pub use upsert_invitation::*;
 pub use verify_space_code::*;
 
@@ -18,7 +20,9 @@ pub fn route() -> Router<AppState> {
     Router::new()
         .route(
             "/",
-            post(upsert_invitation_handler).get(list_invitations_handler),
+            post(upsert_invitation_handler)
+                .get(list_invitations_handler)
+                .patch(resent_invitation_code_handler),
         )
         .route("/verifications", post(verify_space_code_handler))
 }
