@@ -13,10 +13,11 @@ use reconcil_identity_verification::reconcil_identity_verification_handler;
 use resolve_did::resolve_did_handler;
 use update_did::update_did_handler;
 
-use crate::*;
-use by_axum::aide::axum::routing::*;
+use crate::axum::Router;
+use crate::axum::routing::{delete, get, post, put};
+use crate::{AppState, Error};
 
-pub fn route() -> Result<Router<AppState>> {
+pub fn route() -> Result<Router<AppState>, Error> {
     Ok(Router::new()
         .route("/", post(create_did_handler))
         .route(
