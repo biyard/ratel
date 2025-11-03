@@ -4,7 +4,7 @@ use crate::controllers::v3::spaces::files::get_files::GetSpaceFileResponse;
 use crate::controllers::v3::spaces::files::update_files::UpdateSpaceFileResponse;
 
 use crate::controllers::v3::spaces::invitations::{
-    UpsertInvitationResponse, VerifySpaceCodeResponse,
+    ResentInvitationCodeResponse, UpsertInvitationResponse, VerifySpaceCodeResponse,
 };
 use crate::features::spaces::invitations::{SpaceEmailVerification, SpaceInvitationMemberResponse};
 use crate::tests::create_user_session;
@@ -173,6 +173,216 @@ async fn test_verification_space_code_handler() {
 
     assert_eq!(status, 200);
     assert_eq!(res.success, true);
+}
+
+#[tokio::test]
+async fn test_prevent_upsert_invitations() {
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    let app_state = create_app_state();
+    let _cli = &app_state.dynamo.client;
+
+    let CreatedDeliberationSpace { space_pk, .. } =
+        bootstrap_deliberation_space(&app, headers.clone()).await;
+
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+
+    let path = format!("/v3/spaces/{}/invitations", space_pk_encoded);
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "user_pks": vec![user.clone().pk]
+        },
+        response_type: UpsertInvitationResponse
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "publish": true,
+            "visibility": "PRIVATE",
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "start": true,
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    let path = format!("/v3/spaces/{}/invitations", space_pk_encoded);
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "user_pks": vec![user.clone().pk]
+        },
+        response_type: UpsertInvitationResponse
+    };
+
+    assert_eq!(status, 400);
+}
+
+#[tokio::test]
+async fn test_prevent_verification_space_code_handler() {
+    let TestContextV3 {
+        ddb,
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    let app_state = create_app_state();
+    let _cli = &app_state.dynamo.client;
+
+    let CreatedDeliberationSpace { space_pk, .. } =
+        bootstrap_deliberation_space(&app, headers.clone()).await;
+
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+
+    let path = format!("/v3/spaces/{}/invitations", space_pk_encoded);
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "user_pks": vec![user.clone().pk]
+        },
+        response_type: UpsertInvitationResponse
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "publish": true,
+            "visibility": "PRIVATE",
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "start": true,
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    let verification = SpaceEmailVerification::get(
+        &ddb,
+        space_pk.clone(),
+        Some(EntityType::SpaceEmailVerification(user.email.clone())),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+
+    let (status, _, _res) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/invitations/verifications", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "code": verification.value,
+        },
+        response_type: VerifySpaceCodeResponse
+    };
+
+    assert_eq!(status, 400);
+}
+
+#[tokio::test]
+async fn test_prevent_resent_code_handler() {
+    let TestContextV3 {
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    let app_state = create_app_state();
+    let _cli = &app_state.dynamo.client;
+
+    let CreatedDeliberationSpace { space_pk, .. } =
+        bootstrap_deliberation_space(&app, headers.clone()).await;
+
+    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
+
+    let path = format!("/v3/spaces/{}/invitations", space_pk_encoded);
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: path.clone(),
+        headers: headers.clone(),
+        body: {
+            "user_pks": vec![user.clone().pk]
+        },
+        response_type: UpsertInvitationResponse
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "publish": true,
+            "visibility": "PRIVATE",
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "start": true,
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    tracing::debug!(
+        "space url: {:?}",
+        format!("/v3/spaces/{}/invitations", space_pk.to_string())
+    );
+
+    let (status, _headers, _body) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}/invitations", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "email": user.clone().email
+        }
+    };
+
+    assert_eq!(status, 400);
 }
 
 async fn bootstrap_deliberation_space(

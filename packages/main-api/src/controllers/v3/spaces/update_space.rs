@@ -82,6 +82,7 @@ pub async fn update_space_handler(
             // FIXME: check validation if it is well designed to be published.
             su = su
                 .with_publish_state(SpacePublishState::Published)
+                .with_status(SpaceStatus::InProgress)
                 .with_visibility(visibility.clone());
 
             pu = pu
