@@ -172,6 +172,8 @@ pub enum Error {
     AlreadyPublishedSpace,
     #[error("not published space")]
     NotPublishedSpace,
+    #[error("finished space")]
+    FinishedSpace,
 
     // /v3/discussions endpoints 6000 ~
     #[rest_error(code = 6000)]

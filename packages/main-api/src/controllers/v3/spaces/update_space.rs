@@ -130,11 +130,12 @@ pub async fn update_space_handler(
             su = su.with_status(SpaceStatus::Started);
 
             space.status = Some(SpaceStatus::Started);
+            let _ = SpaceEmailVerification::expire_verifications(&dynamo, space_pk.clone()).await?;
         }
         UpdateSpaceRequest::Finish { finished } => {
             if space.status != Some(SpaceStatus::Started) {
                 return Err(Error::NotSupported(
-                    "End is not available for the current status.".into(),
+                    "Finish is not available for the current status.".into(),
                 ));
             }
 

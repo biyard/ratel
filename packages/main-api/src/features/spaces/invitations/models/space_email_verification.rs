@@ -44,6 +44,75 @@ impl SpaceEmailVerification {
         }
     }
 
+    pub async fn expire_verifications(
+        dynamo: &DynamoClient,
+        space_pk: Partition,
+    ) -> Result<(), Error> {
+        let mut bookmark = None::<String>;
+        let mut tx = vec![];
+
+        loop {
+            let (responses, new_bookmark) = SpaceEmailVerification::query(
+                &dynamo.client,
+                space_pk.clone(),
+                if let Some(b) = &bookmark {
+                    SpaceEmailVerificationQueryOption::builder()
+                        .sk("SPACE_EMAIL_VERIFICATION#".into())
+                        .bookmark(b.clone())
+                } else {
+                    SpaceEmailVerificationQueryOption::builder()
+                        .sk("SPACE_EMAIL_VERIFICATION#".into())
+                },
+            )
+            .await?;
+
+            let expired_at = get_now_timestamp();
+
+            for response in responses {
+                let d = SpaceEmailVerification::updater(response.pk, response.sk)
+                    .with_expired_at(expired_at)
+                    .transact_write_item();
+
+                tx.push(d);
+
+                if tx.len() == 10 {
+                    dynamo
+                        .client
+                        .transact_write_items()
+                        .set_transact_items(Some(tx.clone()))
+                        .send()
+                        .await
+                        .map_err(|e| {
+                            tracing::error!("Failed to update verifications: {:?}", e);
+                            Error::InternalServerError("Failed to update verifications".into())
+                        })?;
+
+                    tx.clear();
+                }
+            }
+
+            match new_bookmark {
+                Some(b) => bookmark = Some(b),
+                None => break,
+            }
+        }
+
+        if !tx.is_empty() {
+            dynamo
+                .client
+                .transact_write_items()
+                .set_transact_items(Some(tx.clone()))
+                .send()
+                .await
+                .map_err(|e| {
+                    tracing::error!("Failed to update verifications: {:?}", e);
+                    Error::InternalServerError("Failed to update verifications".into())
+                })?;
+        }
+
+        Ok(())
+    }
+
     pub async fn send_email(
         dynamo: &DynamoClient,
         ses: &SesClient,
