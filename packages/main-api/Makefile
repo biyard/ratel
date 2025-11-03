@@ -112,6 +112,8 @@ BUILD_ENV ?= ENV=$(ENV) \
 								REDIRECT_DOMAIN=$(REDIRECT_DOMAIN) \
 								FIREBASE_PROJECT_ID=$(FIREBASE_PROJECT_ID) \
 								PORTONE_API_SECRET=$(PORTONE_API_SECRET) \
+								PORTONE_KPN_CHANNEL_KEY=$(PORTONE_KPN_CHANNEL_KEY) \
+								PORTONE_STORE_ID=$(PORTONE_STORE_ID) \
 
 .build/evm-keys:
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json
