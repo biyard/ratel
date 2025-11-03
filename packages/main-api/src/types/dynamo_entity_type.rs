@@ -132,6 +132,10 @@ pub enum EntityType {
 
     //Telegram Feature
     TelegramChannel(String), // Telegram Chat ID
+
+    // Payment features
+    UserPayment,
+    UserPurchase(String),
 }
 
 use crate::Error;

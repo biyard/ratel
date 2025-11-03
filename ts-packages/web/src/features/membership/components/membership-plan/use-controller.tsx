@@ -5,7 +5,11 @@ import { logger } from '@/lib/logger';
 import { useKpnPayment } from '@/features/payment/hooks/use-kpn-payment';
 import { MembershipTier } from '../../types/membership-tier';
 import { usePopup } from '@/lib/contexts/popup-service';
-import { MembershipPurchaseModal } from './membership-purchase-modal';
+import {
+  CustomerInfo,
+  MembershipPurchaseModal,
+} from './membership-purchase-modal';
+import { useIdentityVerification } from '@/features/did/hooks/use-identity-verification';
 
 export class Controller {
   constructor(
@@ -15,6 +19,7 @@ export class Controller {
     // hooks
     public kpnPayment: ReturnType<typeof useKpnPayment>,
     public popup: ReturnType<typeof usePopup>,
+    public verification: ReturnType<typeof useIdentityVerification>,
   ) {}
 
   handleGetMembership = async (i: number) => {
@@ -36,26 +41,41 @@ export class Controller {
       return this.handleEnterpriseContact();
     }
 
-    this.popup
-      .open(
-        <MembershipPurchaseModal
-          membership={membership}
-          displayAmount={displayAmount}
-          onCancel={() => {
-            logger.debug('Membership purchase cancelled');
-          }}
-          onConfirm={({ name, email, phone }) => {
-            this.kpnPayment.mutation.mutateAsync({
-              membership,
-              displayAmount,
-              customerName: name,
-              customerEmail: email,
-              customerPhone: phone,
-            });
-          }}
-        />,
-      )
-      .withoutClose();
+    try {
+      const resp = await this.verification.mutation.mutateAsync();
+      logger.debug('Identity verification successful:', resp);
+
+      this.popup
+        .open(
+          <MembershipPurchaseModal
+            membership={membership}
+            customer={resp}
+            displayAmount={displayAmount}
+            t={this.t.purchaseModal}
+            onCancel={() => {
+              logger.debug('Membership purchase cancelled');
+              this.popup.close();
+            }}
+            onConfirm={(cardinfo: CustomerInfo) => {
+              logger.debug('Membership purchase confirmed:', cardinfo);
+              this.popup.close();
+              {
+                this.kpnPayment.mutation.mutateAsync({
+                  membership,
+                  cardNumber: cardinfo.cardNumber,
+                  expiryYear: cardinfo.expiryYear,
+                  expiryMonth: cardinfo.expiryMonth,
+                  birthOrBusinessRegistrationNumber: cardinfo.birthOrBiz,
+                  passwordTwoDigits: cardinfo.cardPassword,
+                });
+              }
+            }}
+          />,
+        )
+        .withoutClose();
+    } catch (e) {
+      logger.error('Identity verification failed:', e);
+    }
   };
 
   handleEnterpriseContact = () => {
@@ -78,6 +98,7 @@ export function useController() {
   const state = useState(false);
   const kpnPayment = useKpnPayment();
   const popup = usePopup();
+  const verification = useIdentityVerification();
 
-  return new Controller(t, new State(state), kpnPayment, popup);
+  return new Controller(t, new State(state), kpnPayment, popup, verification);
 }
