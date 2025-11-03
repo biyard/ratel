@@ -1,6 +1,7 @@
 use crate::features::payment::*;
 use crate::types::*;
 use crate::*;
+const CHARSET: &'static str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-";
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default, JsonSchema, OperationIo)]
 pub struct UserPurchase {
@@ -13,6 +14,8 @@ pub struct UserPurchase {
 
     pub tx_type: TransactionType,
     pub amount: i64,
+    pub payment_id: String,
+    pub tx_id: Option<String>,
 }
 
 impl UserPurchase {
@@ -20,19 +23,16 @@ impl UserPurchase {
         let uuid = uuid::Uuid::new_v4().to_string();
         let created_at = chrono::Utc::now().timestamp_millis();
 
+        let payment_id = random_string::generate(30, CHARSET);
+
         Self {
             pk,
             sk: EntityType::UserPurchase(uuid),
             tx_type,
             amount,
             created_at,
-        }
-    }
-
-    pub fn get_payment_id(&self) -> String {
-        match &self.sk {
-            EntityType::UserPurchase(id) => id.clone(),
-            _ => panic!("Invalid sk for UserPurchase"),
+            payment_id,
+            tx_id: None,
         }
     }
 }

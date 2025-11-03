@@ -1,4 +1,5 @@
 pub mod billing_key_payment_request;
+pub mod billing_key_payment_response;
 pub mod billing_key_request;
 pub mod billing_key_response;
 pub mod channel_response;
@@ -6,6 +7,7 @@ pub mod identify_response;
 pub mod verified_customer;
 
 pub use billing_key_payment_request::*;
+pub use billing_key_payment_response::*;
 pub use billing_key_request::*;
 pub use billing_key_response::*;
 pub use channel_response::*;
@@ -105,7 +107,7 @@ impl PortOne {
         order_name: String,
         billing_key: String,
         amount: i64,
-    ) -> Result<serde_json::Value> {
+    ) -> Result<BillingKeyPaymentResponse> {
         let portone_conf = config::get().portone;
 
         let body = BillingKeyPaymentRequest {
@@ -124,7 +126,7 @@ impl PortOne {
                 tax_free: None,
                 vat: None,
             },
-            currency: "USD".to_string(),
+            currency: "KRW".to_string(),
             locale: None,
         };
 
