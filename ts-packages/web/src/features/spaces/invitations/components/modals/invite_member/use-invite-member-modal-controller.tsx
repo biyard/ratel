@@ -66,6 +66,8 @@ export class InviteMemberModalController {
                 profile_url: data.profile_url,
                 username: data.username,
                 email: data.email,
+
+                authorized: false,
               };
               ns = [...ns, user];
             }
