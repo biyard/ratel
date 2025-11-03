@@ -12,7 +12,7 @@ import { route } from '@/route';
 import { UserType } from '@/lib/api/ratel/users.v3';
 import LoginIcon from '@/assets/icons/login.svg?react';
 import { useTranslation } from 'react-i18next';
-import { Us } from '../icons';
+import { Membership, Us } from '../icons';
 import { Kr } from '@/assets/icons/flags';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { config, Env } from '@/config';
@@ -72,6 +72,20 @@ export default function Header(props: HeaderProps) {
       href: route.myNetwork(),
       authorized: true,
     },
+    {
+      name: t('membership'),
+      icon: (
+        <Membership
+          className="[&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80 transition-all"
+          width="24"
+          height="24"
+        />
+      ),
+      visible: true,
+      href: route.membership(),
+      authorized: false,
+    },
+
     {
       name: t('admin'),
       icon: (
