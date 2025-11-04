@@ -10,3 +10,6 @@ pub use team::*;
 pub use user::*;
 
 pub use crate::features::spaces::{SpaceCommon, SpaceCommonQueryOption};
+pub mod space {
+    pub use crate::features::spaces::{SpaceCommon, SpaceCommonQueryOption};
+}
