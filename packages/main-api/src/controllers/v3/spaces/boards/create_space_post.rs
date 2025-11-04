@@ -68,7 +68,7 @@ pub async fn create_space_post_handler(
     );
     post.create(&dynamo.client).await?;
 
-    // alert message to user with email
+    // TODO: alert message to user with email
 
     let post_id = match post.sk {
         EntityType::SpacePost(v) => v.to_string(),
