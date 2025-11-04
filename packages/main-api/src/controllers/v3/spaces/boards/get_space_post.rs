@@ -48,7 +48,7 @@ pub async fn get_space_post_handler(
     let (pk, sk) = SpacePost::keys(&space_pk, &space_post_pk);
     let post = SpacePost::get(&dynamo.client, pk, Some(sk))
         .await?
-        .unwrap_or_default();
+        .ok_or(Error::PostNotFound)?;
 
     let mut bookmark = None::<String>;
     let mut comment_keys = vec![];
@@ -57,7 +57,7 @@ pub async fn get_space_post_handler(
     loop {
         let (responses, new_bookmark) = SpacePostComment::query(
             &dynamo.client,
-            space_pk.clone(),
+            space_post_pk.clone(),
             if let Some(b) = &bookmark {
                 SpacePostCommentQueryOption::builder()
                     .sk("SPACE_POST_COMMENT#".into())
@@ -67,6 +67,8 @@ pub async fn get_space_post_handler(
             },
         )
         .await?;
+
+        tracing::debug!("comments response: {:?}", responses.clone());
 
         for response in responses {
             comment_keys.push(response.like_keys(&user.pk));
