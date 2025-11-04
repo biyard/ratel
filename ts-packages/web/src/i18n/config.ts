@@ -63,6 +63,10 @@ import { i18nSubmitSurveyModal } from '@/features/spaces/polls/components/modal/
 import { MembershipPlan } from '@/features/membership/components/membership-plan/i18n';
 import { UserSidemenu } from '@/features/users/components/user-sidemenu/i18n';
 import { Credentials } from '@/features/did/components/credentials/i18n';
+import { i18nFooter } from '@/components/footer/i18n';
+import { Terms } from '@/app/terms/i18n';
+import { Privacy } from '@/app/privacy/i18n';
+import { Refund } from '@/app/refund/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -135,6 +139,10 @@ Object.entries({
   MembershipPlan,
   UserSidemenu,
   Credentials,
+  Footer: i18nFooter,
+  Terms,
+  Privacy,
+  Refund,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
