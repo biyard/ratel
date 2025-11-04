@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::dto::*;
-use crate::features::spaces::invitations::{
+use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
 use crate::features::telegrams::{TelegramChannel, get_space_created_message};
@@ -8,7 +8,7 @@ use crate::models::space::SpaceCommon;
 use crate::models::Post;
 use crate::models::user::User;
 use crate::types::{
-    BoosterType, EntityType, SpacePublishState, SpaceVisibility, TeamGroupPermission,
+    BoosterType, EntityType, SpacePublishState, SpaceStatus, SpaceVisibility, TeamGroupPermission,
 };
 use crate::types::{File, Partition};
 use crate::utils::aws::DynamoClient;
@@ -37,6 +37,12 @@ pub enum UpdateSpaceRequest {
     },
     Visibility {
         visibility: SpaceVisibility,
+    },
+    Start {
+        start: bool,
+    },
+    Finish {
+        finished: bool,
     },
 }
 
@@ -76,6 +82,7 @@ pub async fn update_space_handler(
             // FIXME: check validation if it is well designed to be published.
             su = su
                 .with_publish_state(SpacePublishState::Published)
+                .with_status(SpaceStatus::InProgress)
                 .with_visibility(visibility.clone());
 
             pu = pu
@@ -109,6 +116,37 @@ pub async fn update_space_handler(
         }
         UpdateSpaceRequest::Title { title } => {
             pu = pu.with_title(title.clone());
+        }
+        UpdateSpaceRequest::Start { start } => {
+            if space.status != Some(SpaceStatus::InProgress) {
+                return Err(Error::NotSupported(
+                    "Start is not available for the current status.".into(),
+                ));
+            }
+
+            if !start {
+                return Err(Error::NotSupported("it does not support start now".into()));
+            }
+
+            su = su.with_status(SpaceStatus::Started);
+
+            space.status = Some(SpaceStatus::Started);
+            let _ = SpaceEmailVerification::expire_verifications(&dynamo, space_pk.clone()).await?;
+        }
+        UpdateSpaceRequest::Finish { finished } => {
+            if space.status != Some(SpaceStatus::Started) {
+                return Err(Error::NotSupported(
+                    "Finish is not available for the current status.".into(),
+                ));
+            }
+
+            if !finished {
+                return Err(Error::NotSupported("it does not support end now".into()));
+            }
+
+            su = su.with_status(SpaceStatus::Finished);
+
+            space.status = Some(SpaceStatus::Finished);
         }
     }
 
