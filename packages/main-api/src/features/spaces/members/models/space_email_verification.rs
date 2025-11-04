@@ -1,4 +1,6 @@
 use crate::Error;
+use crate::models::SpaceCommon;
+use crate::utils::html::invite_space_html;
 use crate::{
     constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT},
     types::*,
@@ -10,6 +12,7 @@ use crate::{
 use bdk::prelude::axum::Json;
 use bdk::prelude::*;
 use rand::Rng;
+use regex::Regex;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema, Default)]
 pub struct SpaceEmailVerification {
@@ -117,11 +120,12 @@ impl SpaceEmailVerification {
         dynamo: &DynamoClient,
         ses: &SesClient,
         user_email: String,
-        space_pk: Partition,
+        space: SpaceCommon,
+        title: String,
     ) -> Result<Json<()>, Error> {
         let verification = SpaceEmailVerification::get(
             &dynamo.client,
-            &space_pk,
+            &space.pk,
             Some(EntityType::SpaceEmailVerification(user_email.clone())),
         )
         .await?;
@@ -148,7 +152,7 @@ impl SpaceEmailVerification {
                 v
             } else {
                 let email_verification = SpaceEmailVerification::new(
-                    space_pk.clone(),
+                    space.pk.clone(),
                     user_email.clone(),
                     code,
                     expired_at,
@@ -177,20 +181,44 @@ impl SpaceEmailVerification {
                 domain = format!("https://{}", domain).to_string();
             }
 
-            let mut i = 0;
-            let space_id = match space_pk.clone() {
+            let space_id = match space.pk.clone() {
                 Partition::Space(v) => v.to_string(),
                 _ => "".to_string(),
             };
 
-            tracing::debug!("space id: {:?}", space_id);
+            let space_desc = Self::html_excerpt_ellipsis(&space.content, 160);
+            let profile = space.author_profile_url;
+            let username = space.author_username.clone();
+            let display_name = space.author_display_name;
+
+            let html = invite_space_html(
+                title.clone(),
+                profile,
+                display_name,
+                username,
+                space_desc,
+                format!(
+                    "{}/spaces/SPACE%23{}/members?code={}",
+                    domain, space_id, value
+                ),
+            );
+
+            let text = format!(
+                "You're invited to join {space}\n{user} invited you to join {space}.\nOpen: {url}\nVerification code: {code}\nThis code expires in 30 minutes.\n",
+                space = title.clone(),
+                user = space.author_username,
+                url = format!(
+                    "{}/spaces/SPACE%23{}/members?code={}",
+                    domain, space_id, value
+                ),
+                code = value,
+            );
+
+            let mut i = 0;
+            let subject = format!("[Ratel] Complete your invite within 30 minutes");
 
             while let Err(e) = ses
-                .send_mail(
-                    &user_email,
-                    format!("Join your space within 30 minutes with your verification code").as_ref(),
-                    format!("Please enter this verification code within 30 minutes to complete your invitation.\nInvite account: {}\nSpace link: {}/spaces/SPACE%23{}/members?code={}", user_email, domain, space_id, value).as_ref(),
-                )
+                .send_mail_html(&user_email, &subject, &html, Some(&text))
                 .await
             {
                 btracing::notify!(
@@ -206,6 +234,21 @@ impl SpaceEmailVerification {
         }
 
         Ok(Json(()))
+    }
+
+    fn html_excerpt_ellipsis(html: &str, max_chars: usize) -> String {
+        let re = regex::Regex::new(r"(?is)<[^>]+>").unwrap();
+        let no_tags = re.replace_all(html, "");
+        let squashed = no_tags.split_whitespace().collect::<Vec<_>>().join(" ");
+        let mut s = String::new();
+        for (i, ch) in squashed.chars().enumerate() {
+            if i >= max_chars {
+                s.push('…');
+                break;
+            }
+            s.push(ch);
+        }
+        s
     }
 
     fn generate_random_code() -> String {
