@@ -43,14 +43,14 @@ export default function ThreadComment({
             {!expandComment.get() && (
               <button
                 onClick={() => expandComment.set(true)}
-                className="flex flex-row w-full px-3.5 py-2 gap-2 bg-write-comment-box-bg border border-write-comment-box-border items-center rounded-lg"
+                className="flex flex-row w-full px-3.5 py-3 gap-2 bg-write-comment-box-bg border border-write-comment-box-border items-center rounded-lg hover:bg-write-comment-box-bg/80 hover:border-primary/50 transition-all duration-200 cursor-pointer group"
               >
                 <CommentIcon
                   width={24}
                   height={24}
-                  className="[&>path]:stroke-write-comment-box-icon"
+                  className="[&>path]:stroke-write-comment-box-icon group-hover:[&>path]:stroke-primary transition-colors"
                 />
-                <span className="text-write-comment-box-text text-[15px]/[24px] font-medium">
+                <span className="text-write-comment-box-text text-[15px]/[24px] font-medium group-hover:text-primary transition-colors">
                   {t('share_your_thoughts')}
                 </span>
               </button>

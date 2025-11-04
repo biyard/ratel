@@ -22,6 +22,9 @@ export const i18nThreadPage = {
     not_found_description: 'This thread does not exist.',
     go_home: 'Go Home',
 
+    write_comment: 'Write a Comment',
+    publish: 'Publish',
+    publishing: 'Publishing...',
     success_create_comment: 'Success to Create Comment',
     failed_create_comment: 'Failed to Create Comment. Please try again.',
     success_delete_post: 'Success to Delete Post',
@@ -52,6 +55,9 @@ export const i18nThreadPage = {
     not_found_description: '스레드가 존재하지 않습니다.',
     go_home: '홈으로 돌아가기',
 
+    write_comment: '댓글 작성',
+    publish: '게시',
+    publishing: '게시 중...',
     success_create_comment: '댓글을 성공적으로 게시했습니다.',
     failed_create_comment:
       '댓글 게시에 실패했습니다. 잠시 후 다시 시도해 주세요.',
