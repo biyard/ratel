@@ -42,6 +42,8 @@ export class Space {
     public files: FileModel[] | undefined,
 
     permissions: bigint,
+
+    public anonymous_participation: boolean,
   ) {
     this.permissions = new TeamGroupPermissions(permissions);
   }
@@ -89,6 +91,7 @@ export class Space {
       json.files,
 
       json.permissions,
+      json.anonymous_participation,
     );
   }
 }
