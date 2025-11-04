@@ -17,6 +17,12 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 )]
 pub struct CompositePartition(pub Partition, pub Partition);
 
+impl CompositePartition {
+    pub fn user_payment_pk(user_pk: Partition) -> Self {
+        CompositePartition(user_pk, Partition::Payment)
+    }
+}
+
 impl Display for CompositePartition {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}##{}", self.0, self.1)
