@@ -155,6 +155,8 @@ jobs:
           RUST_FLAG: --features bypass
           WEB_BUILD: false
           PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
+          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
+          PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
         run: |
           tar xzvf dist.tar.gz
           mv cdk/dist ./

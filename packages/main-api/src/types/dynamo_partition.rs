@@ -59,6 +59,9 @@ pub enum Partition {
     // ServiceAdmin
     ServiceAdmin(String),
 
+    // DID
+    Did(String),
+
     //Telegram Channel
     TelegramChannel,
 
