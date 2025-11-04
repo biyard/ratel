@@ -13,6 +13,7 @@ import { MembershipReceiptModal } from './membership-receipt-modal';
 import { useIdentityVerification } from '@/features/did/hooks/use-identity-verification';
 import { LoginModal } from '@/components/popup/login-popup';
 import { useUserInfo } from '@/hooks/use-user-info';
+import { useTranslation } from 'react-i18next';
 
 export class Controller {
   constructor(
@@ -24,6 +25,7 @@ export class Controller {
     public kpnPayment: ReturnType<typeof useKpnPayment>,
     public popup: ReturnType<typeof usePopup>,
     public verification: ReturnType<typeof useIdentityVerification>,
+    public i18n: ReturnType<typeof useTranslation>['i18n'],
   ) {}
 
   openLoginModal = () => {
@@ -53,6 +55,10 @@ export class Controller {
       displayAmount = 20;
     } else {
       return this.handleEnterpriseContact();
+    }
+
+    if (this.i18n.language === 'ko') {
+      displayAmount = Math.round(displayAmount * 1000);
     }
 
     try {
@@ -125,6 +131,7 @@ export function useController() {
   const kpnPayment = useKpnPayment();
   const popup = usePopup();
   const verification = useIdentityVerification();
+  const { i18n } = useTranslation();
 
   return new Controller(
     t,
@@ -133,5 +140,6 @@ export function useController() {
     kpnPayment,
     popup,
     verification,
+    i18n,
   );
 }

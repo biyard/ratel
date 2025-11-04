@@ -10,6 +10,7 @@ import { MembershipTier } from '../../types/membership-tier';
 import Card from '@/components/card';
 import { PurchaseModalI18n } from './i18n';
 import { VerifiedCustomer } from '@/features/did/types/verified_customer';
+import { useTranslation } from 'react-i18next';
 
 export interface MembershipPurchaseModalProps {
   membership: MembershipTier;
@@ -45,6 +46,8 @@ export function MembershipPurchaseModal({
     birthOrBiz: customer.birthDate.replaceAll('-', '').slice(0, 6),
     cardPassword: '',
   });
+
+  const { i18n } = useTranslation();
 
   const handleSubmit = () => {
     if (
@@ -83,7 +86,8 @@ export function MembershipPurchaseModal({
               </Paragraph>
             </Col>
             <Heading variant="heading4" className="text-primary">
-              ${displayAmount}
+              {i18n.language === 'ko' ? '₩' : '$'}
+              {displayAmount}
             </Heading>
           </Row>
         </Card>

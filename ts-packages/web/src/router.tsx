@@ -46,6 +46,9 @@ import SpaceAnalyzesPage from './app/spaces/[id]/analyzes/space_analyzes-page';
 import { MembershipPlan } from './features/membership/components/membership-plan';
 import SpaceMemberPage from './app/spaces/[id]/members/space-member-page';
 import { Credentials } from './features/did/components/credentials';
+import { Terms } from './app/terms';
+import { Privacy } from './app/privacy';
+import { Refund } from './app/refund';
 
 export const routes = createBrowserRouter([
   {
@@ -305,6 +308,22 @@ export const routes = createBrowserRouter([
         path: 'admin/memberships',
         Component: MembershipsPage,
       }, // End of Admin Routes
+
+      {
+        id: 'terms-page',
+        path: 'terms',
+        Component: Terms,
+      },
+      {
+        id: 'privacy-page',
+        path: 'privacy',
+        Component: Privacy,
+      },
+      {
+        id: 'refund-page',
+        path: 'refund',
+        Component: Refund,
+      },
     ],
   },
 ]);
