@@ -52,7 +52,7 @@ export default function SpaceByIdLayout() {
           <Outlet />
         </Col>
         <Col className="gap-2.5 w-full max-w-[250px]">
-          {ctrl.space.isAdmin() && <SpaceActions actions={ctrl.actions} />}
+          {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
 
           <SpaceSideMenu menus={ctrl.menus} />
           <TimelineMenu

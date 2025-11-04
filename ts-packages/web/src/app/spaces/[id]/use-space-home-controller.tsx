@@ -296,7 +296,41 @@ export class SpaceHomeController {
     this.image.set(null);
   };
 
+  handleParticipate = async () => {
+    logger.debug('handleParticipate is called');
+  };
+
+  canParticipate() {
+    // FIXME: implement participation logic from VC
+    return true;
+  }
+
   get actions() {
+    if (this.isAdmin) {
+      return this.adminActions;
+    } else if (
+      this.space.shouldParticipateManually() &&
+      this.canParticipate()
+      // check already joined
+    ) {
+      return this.viewerActions;
+    }
+
+    return this.participantActions;
+  }
+
+  get viewerActions() {
+    const ret = [
+      {
+        label: this.t('action_participate'),
+        onClick: this.handleParticipate,
+      },
+    ];
+
+    return ret;
+  }
+
+  get adminActions() {
     const ret = [
       {
         label: this.t('delete'),
@@ -310,6 +344,12 @@ export class SpaceHomeController {
         onClick: this.handleActionPublish,
       });
     }
+
+    return ret;
+  }
+
+  get participantActions() {
+    const ret = [];
 
     return ret;
   }

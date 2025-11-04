@@ -48,6 +48,10 @@ export class Space {
     this.permissions = new TeamGroupPermissions(permissions);
   }
 
+  shouldParticipateManually() {
+    return this.anonymous_participation;
+  }
+
   isAdmin() {
     return this.permissions.isAdmin();
   }
