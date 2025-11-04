@@ -5,7 +5,7 @@ use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
 use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
-use crate::models::{SpaceCommon, User};
+use crate::models::{Post, SpaceCommon, User};
 use crate::types::Partition;
 use crate::types::SpaceStatus;
 use crate::types::TeamGroupPermission;
@@ -64,7 +64,19 @@ pub async fn upsert_invitation_handler(
     }
 
     if space_common.publish_state == SpacePublishState::Published {
-        published_invitations(&dynamo, &ses, &space_pk, req.user_pks.clone()).await?;
+        let post_pk = space_pk.clone().to_post_key()?;
+        let post = Post::get(&dynamo.client, &post_pk, Some(&EntityType::Post))
+            .await?
+            .unwrap_or_default();
+
+        published_invitations(
+            &dynamo,
+            &ses,
+            &space_common,
+            req.user_pks.clone(),
+            post.title,
+        )
+        .await?;
         return Ok(Json(UpsertInvitationResponse {
             space_pk,
             user_pks: req.user_pks,
@@ -120,10 +132,12 @@ pub async fn upsert_invitation_handler(
 pub async fn published_invitations(
     dynamo: &DynamoClient,
     ses: &SesClient,
-    space_pk: &Partition,
+    space_common: &SpaceCommon,
     user_pks: Vec<Partition>,
+    title: String,
 ) -> Result<(), Error> {
-    let members = SpaceInvitationMember::list_invitation_members(dynamo, space_pk).await?;
+    let members =
+        SpaceInvitationMember::list_invitation_members(dynamo, &space_common.pk.clone()).await?;
 
     let current_set: HashSet<String> = members.iter().map(|m| m.user_pk.to_string()).collect();
     let desired_set: HashSet<String> = user_pks.iter().map(|p| p.to_string()).collect();
@@ -134,7 +148,7 @@ pub async fn published_invitations(
     for delete_key in delete_keys {
         let m = SpaceInvitationMember::get(
             &dynamo.client,
-            space_pk,
+            &space_common.pk,
             Some(EntityType::SpaceInvitationMember(delete_key.to_string())),
         )
         .await?
@@ -142,7 +156,7 @@ pub async fn published_invitations(
         SpaceInvitationMember::delete(&dynamo.client, m.pk, Some(m.sk)).await?;
         SpaceEmailVerification::delete(
             &dynamo.client,
-            space_pk,
+            &space_common.pk,
             Some(EntityType::SpaceEmailVerification(m.email.clone())),
         )
         .await?;
@@ -154,11 +168,17 @@ pub async fn published_invitations(
             continue;
         }
 
-        let member = SpaceInvitationMember::new(space_pk.clone(), user.unwrap_or_default());
+        let member = SpaceInvitationMember::new(space_common.pk.clone(), user.unwrap_or_default());
         member.create(&dynamo.client).await?;
 
-        let _ = SpaceEmailVerification::send_email(&dynamo, &ses, member.email, space_pk.clone())
-            .await?;
+        let _ = SpaceEmailVerification::send_email(
+            &dynamo,
+            &ses,
+            member.email,
+            space_common.clone(),
+            title.clone(),
+        )
+        .await?;
     }
 
     Ok(())

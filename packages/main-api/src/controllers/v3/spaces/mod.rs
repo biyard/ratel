@@ -3,6 +3,7 @@ pub mod delete_space;
 pub mod list_spaces;
 pub mod update_space;
 
+pub mod boards;
 pub mod discussions;
 pub mod files;
 pub mod members;
