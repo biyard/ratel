@@ -61,6 +61,8 @@ import { CreateArtworkPage } from '@/features/posts/components/create-artwork-pa
 import { i18nSpaceForm } from '@/features/spaces/components/space-form-i18n';
 import { i18nSubmitSurveyModal } from '@/features/spaces/polls/components/modal/submit_survey/submit-survey-modal-i18n';
 import { MembershipPlan } from '@/features/membership/components/membership-plan/i18n';
+import { UserSidemenu } from '@/features/users/components/user-sidemenu/i18n';
+import { Credentials } from '@/features/did/components/credentials/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -131,6 +133,8 @@ Object.entries({
   CreateArtworkPage,
   SpaceForm: i18nSpaceForm,
   MembershipPlan,
+  UserSidemenu,
+  Credentials,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;

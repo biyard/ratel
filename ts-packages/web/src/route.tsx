@@ -6,6 +6,7 @@ export const route = {
   myProfile: () => '/my-profile',
   explore: () => '/explore',
   settings: () => '/settings',
+  credentials: () => '/credentials',
   myPosts: () => '/my-posts',
   createPost: (postPk?: string) =>
     postPk ? `/posts/new?post-pk=${encodeURIComponent(postPk)}` : '/posts/new',

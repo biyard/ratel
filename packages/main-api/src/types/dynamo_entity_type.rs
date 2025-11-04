@@ -20,6 +20,9 @@ pub enum EntityType {
 
     Session,
 
+    // Common
+    Created(String), // CREATED#${timestamp}
+
     // User entity types
     // USER_PK index is aligned by gsi1-index
     User,

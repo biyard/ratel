@@ -48,6 +48,7 @@ import SpaceArtNftPreviewPage from './app/spaces/[id]/art-nfts/space-art-nft-pag
 import SpaceArtNftArtTwinPage from './app/spaces/[id]/art-nfts/space-art-nft-twin-page';
 import { MembershipPlan } from './features/membership/components/membership-plan';
 import SpaceMemberPage from './app/spaces/[id]/members/space-member-page';
+import { Credentials } from './features/did/components/credentials';
 
 export const routes = createBrowserRouter([
   {
@@ -139,6 +140,12 @@ export const routes = createBrowserRouter([
               return { type };
             },
             Component: MyFollowerPage,
+          },
+
+          {
+            id: 'my-credential-page',
+            path: 'credentials',
+            Component: Credentials,
           },
         ],
       }, // End of Social Layout

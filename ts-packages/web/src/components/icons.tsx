@@ -1,8 +1,9 @@
 // Auto-generated icon exports
-// Total icons: 657
+// Total icons: 661
 
-// Root Icons (93)
+// Root Icons (97)
 export { default as Add } from '@/assets/icons/add.svg?react';
+export { default as Age } from '@/assets/icons/did/attributes/age.svg?react';
 export { default as AlertCircle } from '@/assets/icons/alert-circle.svg?react';
 export { default as ArrowLeft } from '@/assets/icons/arrow-left.svg?react';
 export { default as ArrowUp } from '@/assets/icons/arrow-up.svg?react';
@@ -29,6 +30,7 @@ export { default as Cube } from '@/assets/icons/cube.svg?react';
 export { default as Delete_2 } from '@/assets/icons/delete_2.svg?react';
 export { default as DialPad2 } from '@/assets/icons/dial-pad-2.svg?react';
 export { default as DialPad } from '@/assets/icons/dial-pad.svg?react';
+export { default as Did } from '@/assets/icons/did.svg?react';
 export { default as Discuss } from '@/assets/icons/discuss.svg?react';
 export { default as DoubleArrowDown } from '@/assets/icons/double-arrow-down.svg?react';
 export { default as DoubleArrowUp } from '@/assets/icons/double-arrow-up.svg?react';
@@ -43,6 +45,7 @@ export { default as File } from '@/assets/icons/file.svg?react';
 export { default as Filter } from '@/assets/icons/filter.svg?react';
 export { default as Fire } from '@/assets/icons/fire.svg?react';
 export { default as Folder } from '@/assets/icons/folder.svg?react';
+export { default as Gender } from '@/assets/icons/did/attributes/gender.svg?react';
 export { default as Google } from '@/assets/icons/google.svg?react';
 export { default as Hamburger } from '@/assets/icons/hamburger.svg?react';
 export { default as HexDown } from '@/assets/icons/hex-down.svg?react';
@@ -89,6 +92,7 @@ export { default as Upload } from '@/assets/icons/upload.svg?react';
 export { default as UserCircle } from '@/assets/icons/user-circle.svg?react';
 export { default as UserGroup } from '@/assets/icons/user-group.svg?react';
 export { default as User } from '@/assets/icons/user.svg?react';
+export { default as Verified } from '@/assets/icons/verified.svg?react';
 export { default as VideoOff } from '@/assets/icons/video-off.svg?react';
 export { default as VideoOn } from '@/assets/icons/video-on.svg?react';
 export { default as Vote } from '@/assets/icons/vote.svg?react';

@@ -28,6 +28,18 @@ export const MembershipPlan = {
       cancelButton: 'Cancel',
       confirmButton: 'Proceed to Payment',
     },
+    receiptModal: {
+      title: 'Payment Successful!',
+      thankYouMessage: 'Thank you for your purchase',
+      transactionIdLabel: 'Transaction ID',
+      membershipLabel: 'Membership',
+      amountLabel: 'Amount Paid',
+      durationLabel: 'Duration',
+      creditsLabel: 'Credits',
+      paidAtLabel: 'Payment Date',
+      daysLabel: 'days',
+      closeButton: 'Close',
+    },
     memberships: [
       {
         name: 'Free',
@@ -116,6 +128,18 @@ export const MembershipPlan = {
       cancelButton: '취소',
       confirmButton: '결제 진행',
     },
+    receiptModal: {
+      title: '결제 완료!',
+      thankYouMessage: '구매해 주셔서 감사합니다',
+      transactionIdLabel: '거래 번호',
+      membershipLabel: '멤버십',
+      amountLabel: '결제 금액',
+      durationLabel: '기간',
+      creditsLabel: '크레딧',
+      paidAtLabel: '결제 날짜',
+      daysLabel: '일',
+      closeButton: '닫기',
+    },
     memberships: [
       {
         name: '무료',
@@ -136,7 +160,7 @@ export const MembershipPlan = {
           '보상 스페이스 또는 보상 기능별 최대 2 크레딧 사용 가능',
           '참여자 전체 보상의 10% 생성 보상 획득',
         ],
-        price: '월 $20',
+        price: '월 20,000원',
         btn: 'Pro 신청',
       },
       {
@@ -149,7 +173,7 @@ export const MembershipPlan = {
           '참여자 전체 보상의 10% 생성 보상 획득',
           '신뢰 크리에이터 배지 획득',
         ],
-        price: '월 $50',
+        price: '월 50,000원',
         btn: 'Max 신청',
       },
       {
@@ -164,14 +188,14 @@ export const MembershipPlan = {
           '신뢰 크리에이터 배지 획득',
           '참여자 원본 데이터 열람',
         ],
-        price: '월 $100',
+        price: '월 100,000원',
         btn: 'VIP 신청',
       },
       {
         name: '엔터프라이즈',
         description: '기업 및 기관 맞춤형 파트너 멤버쉽',
         features: ['모든 무료 플랜 포함', '완전 맞춤형 서비스 제공'],
-        price: '월 $1,000 이상',
+        price: '월 1,000,000원 이상',
         btn: 'Contact Us',
       },
     ],
@@ -182,6 +206,7 @@ export interface MembershipPlanI18n {
   title: string;
   description: { __html: string };
   purchaseModal: PurchaseModalI18n;
+  receiptModal: ReceiptModalI18n;
   memberships: Array<MembershipPlanItem>;
 }
 
@@ -209,6 +234,19 @@ export interface PurchaseModalI18n {
   birthDate: string;
 }
 
+export interface ReceiptModalI18n {
+  title: string;
+  thankYouMessage: string;
+  transactionIdLabel: string;
+  membershipLabel: string;
+  amountLabel: string;
+  durationLabel: string;
+  creditsLabel: string;
+  paidAtLabel: string;
+  daysLabel: string;
+  closeButton: string;
+}
+
 export interface MembershipPlanItem {
   name: string;
   description: string;
@@ -226,6 +264,9 @@ export function useMembershipPlanI18n(): MembershipPlanI18n {
     purchaseModal: t('purchaseModal', {
       returnObjects: true,
     }) as PurchaseModalI18n,
+    receiptModal: t('receiptModal', {
+      returnObjects: true,
+    }) as ReceiptModalI18n,
     memberships: t('memberships', {
       returnObjects: true,
     }) as Array<MembershipPlanItem>,
