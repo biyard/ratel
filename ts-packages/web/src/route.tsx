@@ -56,6 +56,12 @@ export const route = {
         return `/spaces/${encodeURIComponent(spaceId)}`;
     }
   },
+  spaceBoards: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/boards`,
+  spaceCreatePost: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/boards/create`,
+  spaceBoardPost: (spaceId: string, spacePostId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/boards/posts/${encodeURIComponent(spacePostId)}`,
   spacePolls: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/polls`,
   spacePanels: (spaceId: string) =>

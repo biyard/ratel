@@ -74,6 +74,11 @@ pub async fn update_space_handler(
             publish,
             visibility,
         } => {
+            let post_pk = space_pk.clone().to_post_key()?;
+            let post = Post::get(&dynamo.client, &post_pk, Some(&EntityType::Post))
+                .await?
+                .unwrap_or_default();
+
             if !publish {
                 return Err(Error::NotSupported(
                     "it does not support unpublished now".into(),
@@ -94,7 +99,13 @@ pub async fn update_space_handler(
                 && (space.publish_state == SpacePublishState::Draft && publish)
                 && visibility == SpaceVisibility::Public;
 
-            let _ = send_space_verification_code_handler(&dynamo, &ses, space_pk.clone()).await?;
+            let _ = send_space_verification_code_handler(
+                &dynamo,
+                &ses,
+                &space.clone(),
+                post.title.clone(),
+            )
+            .await?;
 
             space.publish_state = SpacePublishState::Published;
             space.visibility = visibility;
@@ -194,13 +205,14 @@ pub async fn update_space_handler(
 async fn send_space_verification_code_handler(
     dynamo: &DynamoClient,
     ses: &SesClient,
-    space_pk: Partition,
+    space: &SpaceCommon,
+    title: String,
 ) -> Result<Json<()>, Error> {
     let mut bookmark = None::<String>;
     loop {
         let (responses, new_bookmark) = SpaceInvitationMember::query(
             &dynamo.client,
-            space_pk.clone(),
+            space.pk.clone(),
             if let Some(b) = &bookmark {
                 SpaceInvitationMemberQueryOption::builder()
                     .sk("SPACE_INVITATION_MEMBER#".into())
@@ -213,8 +225,14 @@ async fn send_space_verification_code_handler(
 
         for response in responses {
             let user_email = response.email;
-            let _ = SpaceEmailVerification::send_email(&dynamo, &ses, user_email, space_pk.clone())
-                .await?;
+            let _ = SpaceEmailVerification::send_email(
+                &dynamo,
+                &ses,
+                user_email,
+                space.clone(),
+                title.clone(),
+            )
+            .await?;
         }
 
         match new_bookmark {

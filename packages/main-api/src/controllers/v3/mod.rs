@@ -220,6 +220,7 @@ pub fn route(
                             "/discussions",
                             crate::controllers::v3::spaces::discussions::route(),
                         )
+                        .nest("/boards", crate::controllers::v3::spaces::boards::route())
                         .nest("/polls", crate::controllers::v3::spaces::polls::route())
                         .nest(
                             "/sprint-leagues",
