@@ -56,7 +56,7 @@ export class Controller {
     }
 
     try {
-      const resp = await this.verification.mutation.mutateAsync();
+      const resp = await this.verification.mutateAsync();
       logger.debug('Identity verification successful:', resp);
 
       this.popup
