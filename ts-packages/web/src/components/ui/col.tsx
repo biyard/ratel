@@ -3,6 +3,7 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { Slot } from '@radix-ui/react-slot';
 import { cva, VariantProps } from 'class-variance-authority';
+import { roundToNearestHours } from 'date-fns';
 
 export const colVariants = cva('w-full flex flex-col gap-2.5', {
   variants: {
@@ -18,6 +19,12 @@ export const colVariants = cva('w-full flex flex-col gap-2.5', {
       end: 'items-end',
       stretch: 'items-stretch',
     },
+    rounded: {
+      default: 'rounded-lg',
+    },
+    padding: {
+      sm: 'py-5 px-4',
+    },
   },
 });
 
@@ -25,6 +32,8 @@ export function Col({
   className,
   mainAxisAlignment,
   crossAxisAlignment,
+  rounded,
+  padding,
   asChild = false,
   ...props
 }: React.ComponentProps<'div'> &
@@ -36,7 +45,13 @@ export function Col({
   return (
     <Comp
       className={cn(
-        colVariants({ mainAxisAlignment, crossAxisAlignment, className }),
+        colVariants({
+          mainAxisAlignment,
+          rounded,
+          padding,
+          crossAxisAlignment,
+          className,
+        }),
       )}
       {...props}
     />

@@ -10,7 +10,7 @@ use crate::{
             user_purchase::{self, UserPurchase},
         },
     },
-    types::{EntityType, Partition},
+    types::{CompositePartition, EntityType, Partition},
     *,
 };
 
@@ -29,6 +29,18 @@ pub struct PayWithBillingKeyRequest {
 pub struct PayWithBillingKeyResponse {
     #[schemars(description = "Status of the operation")]
     pub status: String,
+    #[schemars(description = "Payment transaction ID")]
+    pub transaction_id: String,
+    #[schemars(description = "Membership tier purchased")]
+    pub membership_tier: String,
+    #[schemars(description = "Amount paid in dollars")]
+    pub amount: i64,
+    #[schemars(description = "Duration of membership in days")]
+    pub duration_days: i32,
+    #[schemars(description = "Credits included with membership")]
+    pub credits: i64,
+    #[schemars(description = "Payment timestamp (Unix timestamp in microseconds)")]
+    pub paid_at: i64,
 }
 
 pub async fn pay_with_billing_key_handler(
@@ -45,10 +57,10 @@ pub async fn pay_with_billing_key_handler(
         password_two_digits,
     }): Json<PayWithBillingKeyRequest>,
 ) -> Result<Json<PayWithBillingKeyResponse>> {
-    let mut user_payment: UserPayment =
-        UserPayment::get(&dynamo.client, &user.pk, Some(EntityType::UserPayment))
-            .await?
-            .ok_or_else(|| Error::InvalidIdentification)?;
+    let pk = CompositePartition::user_payment_pk(user.pk.clone());
+    let mut user_payment: UserPayment = UserPayment::get(&dynamo.client, &pk, None::<String>)
+        .await?
+        .ok_or_else(|| Error::InvalidIdentification)?;
 
     let mut txs = vec![];
 
@@ -126,5 +138,11 @@ pub async fn pay_with_billing_key_handler(
 
     return Ok(Json(PayWithBillingKeyResponse {
         status: "Payment successful".to_string(),
+        transaction_id: user_purchase.payment_id.clone(),
+        membership_tier: membership.tier.to_string(),
+        amount: membership.price_dollars,
+        duration_days: membership.duration_days,
+        credits: membership.credits,
+        paid_at: user_purchase.created_at,
     }));
 }
