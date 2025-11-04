@@ -18,6 +18,12 @@ export const colVariants = cva('w-full flex flex-col gap-2.5', {
       end: 'items-end',
       stretch: 'items-stretch',
     },
+    rounded: {
+      default: 'rounded-lg',
+    },
+    padding: {
+      sm: 'py-5 px-4',
+    },
   },
 });
 
@@ -25,6 +31,8 @@ export function Col({
   className,
   mainAxisAlignment,
   crossAxisAlignment,
+  rounded,
+  padding,
   asChild = false,
   ...props
 }: React.ComponentProps<'div'> &
@@ -36,7 +44,13 @@ export function Col({
   return (
     <Comp
       className={cn(
-        colVariants({ mainAxisAlignment, crossAxisAlignment, className }),
+        colVariants({
+          mainAxisAlignment,
+          rounded,
+          padding,
+          crossAxisAlignment,
+          className,
+        }),
       )}
       {...props}
     />

@@ -9,6 +9,9 @@ import { LoginModal } from '@/components/popup/login-popup';
 import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router';
 import { useUserInfo } from '@/hooks/use-user-info';
+import { Col } from '@/components/ui/col';
+import { SafeArea } from '@/components/ui/safe-area';
+import Footer from '@/components/footer';
 
 export default function ClientLayout({
   children,
@@ -37,9 +40,8 @@ export default function ClientLayout({
         mobileExtends={mobileExtends}
         setMobileExtends={setMobileExtends}
       />
-
       {children}
-
+      <Footer />
       <div
         className={
           mobileExtends

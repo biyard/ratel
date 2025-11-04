@@ -12,6 +12,7 @@ import PostComment from '@/features/posts/types/post-comment';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { Button } from '../ui/button';
 import { TiptapEditor } from '../text-editor';
+import type { Editor } from '@tiptap/core';
 
 interface CommentProps {
   comment: PostComment;
@@ -26,12 +27,12 @@ export function Comment({ comment, onComment, onLike, t }: CommentProps) {
   const [showReplies, setShowReplies] = useState(false);
 
   return (
-    <div className="flex flex-col gap-[14px] pb-5 border-b border-b-divider">
+    <div className="flex flex-col gap-3 pb-4 border-b border-b-divider">
       <div className="flex flex-row gap-2 items-center">
         <img
           alt={comment.author_display_name}
           src={comment.author_profile_url}
-          className="w-16 h-16 rounded-full object-cover object-top"
+          className="w-10 h-10 rounded-full object-cover object-top"
         />
 
         <div className="flex flex-col gap-[2px]">
@@ -44,7 +45,7 @@ export function Comment({ comment, onComment, onLike, t }: CommentProps) {
         </div>
       </div>
 
-      <div className="flex flex-col mx-10 gap-5">
+      <div className="flex flex-col ml-12 gap-3">
         {/* TODO: Quote */}
         {/* {comment.quote_comment && (
           <div className="flex flex-row bg-[#282828] px-5 py-2.5 gap-2.5">
@@ -177,10 +178,24 @@ export function NewComment({
 }) {
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState('');
-  const ref = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const editorRef = useRef<Editor | null>(null);
+
   useEffect(() => {
-    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [ref]);
+    containerRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+    // Auto-focus the editor when component mounts
+    setTimeout(() => {
+      editorRef.current?.commands.focus();
+    }, 100);
+  }, []);
+
+  const handleEditorContainerClick = () => {
+    // Focus the editor when clicking anywhere in the editor container
+    editorRef.current?.commands.focus();
+  };
 
   const handleSubmit = async () => {
     // const content = editorRef.current?.getContent() || '';
@@ -205,46 +220,67 @@ export function NewComment({
   };
   return (
     <div
-      ref={ref}
-      className="flex flex-col w-full justify-end items-end bg-comment-box-bg border rounded-lg border-primary max-w-desktop"
+      ref={containerRef}
+      className="flex flex-col w-full bg-comment-box-bg border rounded-lg border-primary max-w-desktop"
     >
-      <div className="p-3 flex flex-col justify-between">
+      {/* Header with close button */}
+      <div className="px-3 pt-3 flex flex-row justify-between items-center">
+        <span className="text-sm font-medium text-text-primary">
+          {t('write_comment')}
+        </span>
         <button
-          aria-labe="Reply"
-          className="p-1 flex flex-row justify-center"
+          aria-label="Close"
+          className="p-1 hover:bg-foreground/10 rounded transition-colors"
           onClick={onClose}
         >
           <ChevronDoubleDownIcon
-            width={24}
-            height={24}
-            className="[&>path]:light:stroke-write-comment-box-icon"
+            width={20}
+            height={20}
+            className="[&>path]:stroke-text-primary"
           />
         </button>
       </div>
-      <div className="flex-1 w-full">
+
+      {/* Editor - clickable container */}
+      <div
+        className="flex-1 w-full cursor-text hover:bg-foreground/5 transition-colors rounded-md"
+        onClick={handleEditorContainerClick}
+        role="button"
+        tabIndex={-1}
+        aria-label="Click to focus editor"
+      >
         <TiptapEditor
+          ref={editorRef}
           placeholder={t('contents_hint')}
           content={content}
           editable={true}
           showToolbar={false}
+          minHeight="80px"
           onUpdate={(content) => {
             setContent(content);
           }}
           data-pw="comment-editor"
+          className="border-none"
         />
+      </div>
+
+      {/* Footer with submit button */}
+      <div className="px-3 pb-3 flex flex-row justify-end items-center gap-2 border-t border-divider pt-3">
         <Button
           id="publish-comment-button"
           aria-label="Publish"
           variant="rounded_primary"
-          size="default"
+          size="sm"
           onClick={handleSubmit}
+          disabled={loading || !content.trim()}
           className="gap-2"
         >
           <CommentIcon
-            width={24}
-            height={24}
+            width={20}
+            height={20}
             className="[&>path]:stroke-black [&>line]:stroke-black"
           />
+          <span>{loading ? t('publishing') : t('publish')}</span>
         </Button>
       </div>
     </div>

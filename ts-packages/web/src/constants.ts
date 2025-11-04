@@ -127,6 +127,13 @@ export const spaceKeys = {
     [...spaceKeys.detail(spacePk), 'panels'] as const,
   panel: (spacePk: string, panelPk: string) =>
     [...spaceKeys.panels(spacePk), panelPk] as const,
+
+  art_nfts: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'art_nfts'] as const,
+  art_nft: (spacePk: string, nftPk: string = 'default') =>
+    [...spaceKeys.art_nfts(spacePk), nftPk] as const,
+  art_nft_trades: (spacePk: string, nftPk: string = 'default') =>
+    [...spaceKeys.art_nft(spacePk, nftPk), 'trades'] as const,
 };
 
 export const QK_MEMBERSHIPS = 'memberships';

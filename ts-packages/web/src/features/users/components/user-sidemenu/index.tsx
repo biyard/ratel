@@ -1,16 +1,16 @@
-import ProfileSection from './profile-section';
+import ProfileSection from '../../../../app/(social)/_components/profile-section';
 
 import { route } from '@/route';
-import { Post, Draft, Settings } from '@/components/icons';
-import { useTranslation } from 'react-i18next';
+import { Post, Draft, Settings, Did } from '@/components/icons';
 import { useLocation } from 'react-router';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { NavLink } from 'react-router';
 import { UserType } from '@/lib/api/ratel/users.v3';
+import { useUserSidemenuI18n } from './i18n';
 // import DevTools from './dev-tools';
 
 export default function UserSidemenu() {
-  const { t } = useTranslation('Home');
+  const t = useUserSidemenuI18n();
   const { data: user, isLoading } = useUserInfo();
   const location = useLocation();
   const pathname = location.pathname;
@@ -40,21 +40,31 @@ export default function UserSidemenu() {
           className="sidemenu-link text-text-primary"
         >
           <Post className="w-[24px] h-[24px]" />
-          <span>{t('my_posts')}</span>
+          <span>{t.my_posts}</span>
         </NavLink>
+
         <NavLink
           to={route.drafts()}
           className="sidemenu-link text-text-primary"
         >
           <Draft className="w-[24px] h-[24px]" />
-          <span>{t('drafts')}</span>
+          <span>{t.drafts}</span>
         </NavLink>
+
+        <NavLink
+          to={route.credentials()}
+          className="sidemenu-link text-text-primary"
+        >
+          <Did className="w-[24px] h-[24px]" />
+          <span>{t.credentials}</span>
+        </NavLink>
+
         <NavLink
           to={route.settings()}
           className="sidemenu-link text-text-primary"
         >
           <Settings className="w-[24px] h-[24px]" />
-          <span>{t('settings')}</span>
+          <span>{t.settings}</span>
         </NavLink>
       </nav>
 

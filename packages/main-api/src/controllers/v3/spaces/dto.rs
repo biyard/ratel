@@ -38,6 +38,23 @@ pub struct SpacePanelPathParam {
     pub panel_pk: Partition,
 }
 
+pub type SpacePostCommentPath = Path<SpacePostCommentPathParam>;
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, aide::OperationIo, JsonSchema)]
+pub struct SpacePostCommentPathParam {
+    pub space_pk: Partition,
+    pub space_post_pk: Partition,
+    pub space_post_comment_sk: EntityType,
+}
+
+pub type SpacePostPath = Path<SpacePostPathParam>;
+
+#[derive(Debug, serde::Serialize, serde::Deserialize, aide::OperationIo, JsonSchema)]
+pub struct SpacePostPathParam {
+    pub space_pk: Partition,
+    pub space_post_pk: Partition,
+}
+
 #[derive(Debug, serde::Serialize, aide::OperationIo, JsonSchema)]
 pub struct SpaceCommonResponse {
     pub pk: Partition,
