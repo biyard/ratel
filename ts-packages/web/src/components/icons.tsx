@@ -1,8 +1,9 @@
 // Auto-generated icon exports
-// Total icons: 659
+// Total icons: 661
 
-// Root Icons (95)
+// Root Icons (97)
 export { default as Add } from '@/assets/icons/add.svg?react';
+export { default as Age } from '@/assets/icons/did/attributes/age.svg?react';
 export { default as AlertCircle } from '@/assets/icons/alert-circle.svg?react';
 export { default as ArrowLeft } from '@/assets/icons/arrow-left.svg?react';
 export { default as ArrowUp } from '@/assets/icons/arrow-up.svg?react';
@@ -44,6 +45,7 @@ export { default as File } from '@/assets/icons/file.svg?react';
 export { default as Filter } from '@/assets/icons/filter.svg?react';
 export { default as Fire } from '@/assets/icons/fire.svg?react';
 export { default as Folder } from '@/assets/icons/folder.svg?react';
+export { default as Gender } from '@/assets/icons/did/attributes/gender.svg?react';
 export { default as Google } from '@/assets/icons/google.svg?react';
 export { default as Hamburger } from '@/assets/icons/hamburger.svg?react';
 export { default as HexDown } from '@/assets/icons/hex-down.svg?react';
