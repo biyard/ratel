@@ -41,5 +41,5 @@ export function useIdentityVerification() {
     },
   });
 
-  return { mutation, verifying };
+  return { ...mutation, verifying };
 }

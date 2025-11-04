@@ -47,6 +47,7 @@ import { MembershipPlan } from './features/membership/components/membership-plan
 import SpaceBoardPage from './app/spaces/[id]/boards/[post-id]/space-board-page';
 import SpaceBoardsPage from './app/spaces/[id]/boards/space-boards-page';
 import SpaceBoardCreatePage from './app/spaces/[id]/boards/create/space-board-create-page';
+import { Credentials } from './features/did/components/credentials';
 
 export const routes = createBrowserRouter([
   {
@@ -133,6 +134,12 @@ export const routes = createBrowserRouter([
               return { type };
             },
             Component: MyFollowerPage,
+          },
+
+          {
+            id: 'my-credential-page',
+            path: 'credentials',
+            Component: Credentials,
           },
         ],
       }, // End of Social Layout

@@ -20,6 +20,9 @@ pub enum EntityType {
 
     Session,
 
+    // Common
+    Created(String), // CREATED#${timestamp}
+
     // User entity types
     // USER_PK index is aligned by gsi1-index
     User,
@@ -136,11 +139,15 @@ pub enum EntityType {
     // ServiceAdmin
     ServiceAdmin, // PK: SERVICE_ADMIN#{USER_PK}, SK: ServiceAdmin
 
+    // DID
+    DidDocument, // PK: DID#{did}, SK: DidDocument
+
     //Telegram Feature
     TelegramChannel(String), // Telegram Chat ID
 
     // Payment features
     UserPayment,
+    Purchase,
     UserPurchase(String),
 }
 
