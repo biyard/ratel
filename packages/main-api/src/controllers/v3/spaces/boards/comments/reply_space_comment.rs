@@ -2,7 +2,7 @@ use crate::controllers::v3::spaces::{SpacePostCommentPath, SpacePostCommentPathP
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
 use crate::models::SpaceCommon;
 use crate::models::user::User;
-use crate::types::{Partition, TeamGroupPermission};
+use crate::types::{Partition, SpaceStatus, TeamGroupPermission};
 use crate::{AppState, models::feed::PostComment};
 use aide::NoApi;
 use axum::extract::*;
@@ -30,7 +30,7 @@ pub async fn reply_space_comment_handler(
         return Err(crate::Error::NotFoundSpace);
     }
 
-    let (_, has_perm) = SpaceCommon::has_permission(
+    let (space_common, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
         Some(&user.pk),
@@ -39,6 +39,12 @@ pub async fn reply_space_comment_handler(
     .await?;
     if !has_perm {
         return Err(crate::Error::NoPermission);
+    }
+
+    if space_common.status == Some(SpaceStatus::Started)
+        || space_common.status == Some(SpaceStatus::Finished)
+    {
+        return Err(crate::Error::FinishedSpace);
     }
 
     let comment = SpacePostComment::reply(

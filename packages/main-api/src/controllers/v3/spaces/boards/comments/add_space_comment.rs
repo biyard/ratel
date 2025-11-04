@@ -5,6 +5,7 @@ use crate::features::spaces::boards::models::space_post::SpacePost;
 use crate::models::SpaceCommon;
 use crate::spaces::SpacePostPath;
 use crate::spaces::SpacePostPathParam;
+use crate::types::SpaceStatus;
 use crate::{
     AppState,
     controllers::v3::posts::PostPath,
@@ -43,7 +44,7 @@ pub async fn add_space_comment_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    let (_, has_perm) = SpaceCommon::has_permission(
+    let (space_common, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
         Some(&user.pk),
@@ -52,6 +53,14 @@ pub async fn add_space_comment_handler(
     .await?;
     if !has_perm {
         return Err(Error::NoPermission);
+    }
+
+    tracing::debug!("space common status: {:?}", space_common.status);
+
+    if space_common.status == Some(SpaceStatus::Started)
+        || space_common.status == Some(SpaceStatus::Finished)
+    {
+        return Err(Error::FinishedSpace);
     }
 
     let (pk, sk) = SpacePost::keys(&space_pk, &space_post_pk);
