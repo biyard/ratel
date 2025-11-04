@@ -35,8 +35,21 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Erro
         ..
     } = deps;
 
+    // Create a separate router for non-documented routes (like .well-known)
+    let well_known_router = by_axum::axum::AxumRouter::new().route(
+        "/.well-known/did.json",
+        by_axum::axum::native_routing::get(
+            controllers::well_known::get_did_document::get_did_document_handler,
+        ),
+    );
+
     Ok(by_axum::axum::Router::new()
-        .with_state(AppState::new(dynamo_client.clone(), ses_client.clone(), metadata_s3_client.clone()))
+        .with_state(AppState::new(
+            dynamo_client.clone(),
+            ses_client.clone(),
+            metadata_s3_client.clone(),
+        ))
+        .merge(well_known_router)
         .nest(
             "/v3",
             controllers::v3::route(controllers::v3::RouteDeps {
