@@ -64,7 +64,7 @@ export class SpaceHomeController {
   }
 
   get menus() {
-    const menus: SideMenuProps[] = [
+    let menus: SideMenuProps[] = [
       {
         Icon: Post,
         to: route.spaceByType(this.space.spaceType, this.space.pk),
@@ -88,9 +88,9 @@ export class SpaceHomeController {
       }
     });
 
-    /* if (this.space.isAdmin()) {
-     *   menus = menus.concat(this.adminMenus);
-     * } */
+    if (this.space.isAdmin()) {
+      menus = menus.concat(this.adminMenus);
+    }
 
     return menus;
   }

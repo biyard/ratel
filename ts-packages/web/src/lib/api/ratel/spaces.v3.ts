@@ -76,3 +76,12 @@ export function updateSpaceTitle(
     title,
   });
 }
+
+export function updateSpaceAnonymousParticipation(
+  spacePk: string,
+  anonymousParticipation: boolean,
+): Promise<void> {
+  return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
+    anonymous_participation: anonymousParticipation,
+  });
+}
