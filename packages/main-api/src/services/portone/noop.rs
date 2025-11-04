@@ -50,11 +50,11 @@ impl PortOne {
         _birth_or_business_registration_number: String,
         _password_two_digits: String,
     ) -> Result<BillingKeyResponse> {
-        BilingKeyResponse {
+        Ok(BilingKeyResponse {
             billing_key_info: BillingKeyInfo {
                 billing_key: "test-billing-key".to_string(),
             },
-        }
+        })
     }
 
     pub async fn pay_with_billing_key(
@@ -66,11 +66,11 @@ impl PortOne {
         _billing_key: String,
         _amount: i64,
     ) -> Result<BillingKeyPaymentResponse> {
-        BillingKeyPaymentResponse {
+        Ok(BillingKeyPaymentResponse {
             payment: Payment {
                 paid_at: "2025-11-03T11:01:50.08942321Z".to_string(),
                 pg_tx_id: "merchantest".to_string(),
             },
-        }
+        })
     }
 }
