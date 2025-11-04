@@ -1,6 +1,6 @@
 use crate::NoApi;
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
-use crate::features::spaces::invitations::SpaceEmailVerification;
+use crate::features::spaces::members::SpaceEmailVerification;
 use crate::models::{SpaceCommon, User};
 use crate::types::{EntityType, SpaceStatus};
 use crate::{

@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::NoApi;
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
-use crate::features::spaces::invitations::{
+use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
 use crate::models::{SpaceCommon, User};

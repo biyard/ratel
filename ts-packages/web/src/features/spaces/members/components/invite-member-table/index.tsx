@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 export interface InviteMemberTableProps {
   isDraft: boolean;
   inviteMembers: InvitationMemberResponse[];
-  t: TFunction<'SpaceInvitationEditor', undefined>;
+  t: TFunction<'SpaceMemberEditor', undefined>;
   handleDeleteMember: (index: number) => void;
   handleSendCode: (email: string) => void;
 }
@@ -88,7 +88,7 @@ export function ContextMenu({
   t,
   handleDeleteMember,
 }: {
-  t: TFunction<'SpaceInvitationEditor', undefined>;
+  t: TFunction<'SpaceMemberEditor', undefined>;
   handleDeleteMember: () => void;
 }) {
   return (

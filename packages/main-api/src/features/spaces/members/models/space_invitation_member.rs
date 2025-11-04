@@ -1,4 +1,4 @@
-use crate::features::spaces::invitations::{SpaceEmailVerification, SpaceInvitationMemberResponse};
+use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMemberResponse};
 use crate::types::*;
 use crate::utils::aws::DynamoClient;
 use crate::{Error, User};

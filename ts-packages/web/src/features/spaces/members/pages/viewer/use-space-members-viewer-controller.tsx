@@ -7,11 +7,11 @@ import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 
-export class SpaceInvitationViewerController {
+export class SpaceMembersViewerController {
   constructor(
     public spacePk: string,
     public space: Space,
-    public t: TFunction<'SpaceInvitationViewer', undefined>,
+    public t: TFunction<'SpaceMemberViewer', undefined>,
     public verifySpaceCode: ReturnType<typeof useVerifySpaceCodeMutation>,
   ) {}
 
@@ -21,13 +21,12 @@ export class SpaceInvitationViewerController {
   };
 }
 
-export function useSpaceInvitationViewerController(spacePk: string) {
+export function useSpaceMembersViewerController(spacePk: string) {
   const { data: space } = useSpaceById(spacePk);
-  const { t } = useTranslation('SpaceInvitationViewer');
+  const { t } = useTranslation('SpaceMemberViewer');
   const verifySpaceCode = useVerifySpaceCodeMutation();
   const ctrl = useMemo(
-    () =>
-      new SpaceInvitationViewerController(spacePk, space, t, verifySpaceCode),
+    () => new SpaceMembersViewerController(spacePk, space, t, verifySpaceCode),
     [spacePk, space, t, verifySpaceCode],
   );
 

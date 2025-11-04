@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::dto::*;
-use crate::features::spaces::invitations::{
+use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
 use crate::features::telegrams::{TelegramChannel, get_space_created_message};

@@ -1,9 +1,9 @@
 use crate::controllers::v3::spaces::SpacePath;
 use crate::controllers::v3::spaces::SpacePathParam;
-use crate::features::spaces::invitations::SpaceEmailVerification;
-use crate::features::spaces::invitations::SpaceInvitationMember;
-use crate::features::spaces::invitations::SpaceInvitationMemberQueryOption;
-use crate::features::spaces::invitations::SpaceInvitationMemberResponse;
+use crate::features::spaces::members::SpaceEmailVerification;
+use crate::features::spaces::members::SpaceInvitationMember;
+use crate::features::spaces::members::SpaceInvitationMemberQueryOption;
+use crate::features::spaces::members::SpaceInvitationMemberResponse;
 use crate::types::EntityType;
 use crate::types::Partition;
 use crate::{AppState, Error, models::user::User};

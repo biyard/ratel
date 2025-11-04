@@ -30,7 +30,7 @@ export class InviteMemberModalController {
     public errorCount: State<number>,
 
     public upsertInvitation: ReturnType<typeof useUpsertInvitationMutation>,
-    public t: TFunction<'SpaceInvitationEditor', undefined>,
+    public t: TFunction<'SpaceMemberEditor', undefined>,
   ) {}
 
   handleSearchValue = async (
@@ -137,7 +137,7 @@ export function useInviteMemberModalController(spacePk: string) {
 
   const navigate = useNavigate();
   const popup = usePopup();
-  const { t } = useTranslation('SpaceInvitationEditor');
+  const { t } = useTranslation('SpaceMemberEditor');
 
   const members = useState(member.members || []);
   const isError = useState([]);
