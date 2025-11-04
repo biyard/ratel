@@ -16,9 +16,9 @@ export class SubmitSurveyModalController {
     public answers: SurveyAnswer[],
   ) {}
 
-  handleSubmit = () => {
+  handleSubmit = async () => {
     try {
-      this.submitPollResponse.mutate({
+      this.submitPollResponse.mutateAsync({
         spacePk: this.spacePk,
         pollSk: this.pollSk,
         answers: this.answers,
