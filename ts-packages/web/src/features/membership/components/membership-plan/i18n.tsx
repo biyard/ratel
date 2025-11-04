@@ -28,6 +28,18 @@ export const MembershipPlan = {
       cancelButton: 'Cancel',
       confirmButton: 'Proceed to Payment',
     },
+    receiptModal: {
+      title: 'Payment Successful!',
+      thankYouMessage: 'Thank you for your purchase',
+      transactionIdLabel: 'Transaction ID',
+      membershipLabel: 'Membership',
+      amountLabel: 'Amount Paid',
+      durationLabel: 'Duration',
+      creditsLabel: 'Credits',
+      paidAtLabel: 'Payment Date',
+      daysLabel: 'days',
+      closeButton: 'Close',
+    },
     memberships: [
       {
         name: 'Free',
@@ -116,6 +128,18 @@ export const MembershipPlan = {
       cancelButton: '취소',
       confirmButton: '결제 진행',
     },
+    receiptModal: {
+      title: '결제 완료!',
+      thankYouMessage: '구매해 주셔서 감사합니다',
+      transactionIdLabel: '거래 번호',
+      membershipLabel: '멤버십',
+      amountLabel: '결제 금액',
+      durationLabel: '기간',
+      creditsLabel: '크레딧',
+      paidAtLabel: '결제 날짜',
+      daysLabel: '일',
+      closeButton: '닫기',
+    },
     memberships: [
       {
         name: '무료',
@@ -182,6 +206,7 @@ export interface MembershipPlanI18n {
   title: string;
   description: { __html: string };
   purchaseModal: PurchaseModalI18n;
+  receiptModal: ReceiptModalI18n;
   memberships: Array<MembershipPlanItem>;
 }
 
@@ -209,6 +234,19 @@ export interface PurchaseModalI18n {
   birthDate: string;
 }
 
+export interface ReceiptModalI18n {
+  title: string;
+  thankYouMessage: string;
+  transactionIdLabel: string;
+  membershipLabel: string;
+  amountLabel: string;
+  durationLabel: string;
+  creditsLabel: string;
+  paidAtLabel: string;
+  daysLabel: string;
+  closeButton: string;
+}
+
 export interface MembershipPlanItem {
   name: string;
   description: string;
@@ -226,6 +264,9 @@ export function useMembershipPlanI18n(): MembershipPlanI18n {
     purchaseModal: t('purchaseModal', {
       returnObjects: true,
     }) as PurchaseModalI18n,
+    receiptModal: t('receiptModal', {
+      returnObjects: true,
+    }) as ReceiptModalI18n,
     memberships: t('memberships', {
       returnObjects: true,
     }) as Array<MembershipPlanItem>,
