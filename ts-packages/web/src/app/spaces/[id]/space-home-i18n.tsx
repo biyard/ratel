@@ -52,6 +52,9 @@ export const i18nSpaceHome = {
     menu_nft_settings: 'Settings',
     menu_nft_art_twin: 'Art Twin',
 
+    // Actions
+    action_participate: 'Participate',
+
     success_publish_space: 'Success to publish space.',
     failed_publish_space: 'Failed to publish space. please try later.',
     success_delete_space: 'Success to delete space.',
@@ -112,6 +115,9 @@ export const i18nSpaceHome = {
     // Admin Menus
     menu_admin_settings: '설정',
     menu_analyze: '분석',
+
+    // Actions
+    action_participate: '참여하기',
 
     success_publish_space: '스페이스를 성공적으로 게시했습니다.',
     failed_publish_space:

@@ -93,6 +93,9 @@ pub struct SpaceCommon {
     pub booster: BoosterType,
     pub custom_booster: Option<i64>,
     pub rewards: Option<i64>,
+
+    #[serde(default)]
+    pub anonymous_participation: bool,
 }
 
 impl SpaceCommon {
