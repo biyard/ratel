@@ -15,5 +15,6 @@ pub enum SpaceStatus {
     #[default]
     Waiting,
     InProgress,
+    Started,
     Finished,
 }

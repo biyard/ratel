@@ -1,6 +1,6 @@
 use std::env;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct AwsConfig {
     pub region: &'static str,
     pub access_key_id: &'static str,
@@ -51,7 +51,7 @@ impl Default for AuthConfig {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum DatabaseConfig {
     DynamoDb {
         aws: AwsConfig,

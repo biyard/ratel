@@ -1,4 +1,5 @@
 import { PollAnswer, PollQuestion } from './poll-question';
+import { PollStatus } from './poll-status';
 
 export class Poll {
   public pk: string;
@@ -12,6 +13,7 @@ export class Poll {
 
   public questions: PollQuestion[];
   public myResponse?: PollAnswer[];
+  public status: PollStatus;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
@@ -26,5 +28,6 @@ export class Poll {
     this.user_response_count = json.user_response_count;
     this.questions = json.questions || [];
     this.myResponse = json.my_response || [];
+    this.status = json.status || PollStatus.NotStarted;
   }
 }

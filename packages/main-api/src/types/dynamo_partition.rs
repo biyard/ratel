@@ -5,6 +5,8 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 use serde::{Deserialize, Deserializer, de};
 use std::str::FromStr;
 
+use crate::features::membership::MembershipTier;
+
 #[derive(
     Debug,
     Clone,
@@ -59,6 +61,9 @@ pub enum Partition {
 
     //Telegram Channel
     TelegramChannel,
+
+    // Payment Sub partition
+    Purchase, // For user purchases, USER#{user_id}##PURCHASE
 }
 
 impl Partition {
@@ -91,6 +96,12 @@ impl Partition {
 
     pub fn is_space_key(&self) -> bool {
         matches!(self, Partition::Space(_))
+    }
+}
+
+impl From<MembershipTier> for Partition {
+    fn from(tier: MembershipTier) -> Self {
+        Partition::Membership(tier.to_string())
     }
 }
 

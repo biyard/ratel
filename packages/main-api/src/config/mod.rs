@@ -4,7 +4,7 @@ pub use portone_config::*;
 use bdk::prelude::*;
 use by_types::config::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct BinanceConfig {
     pub redirect_domain: &'static str,
     pub api_key: &'static str,
@@ -13,7 +13,7 @@ pub struct BinanceConfig {
     pub webhook: &'static str,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Config {
     pub env: &'static str,
     pub domain: &'static str,
@@ -56,7 +56,7 @@ pub struct DidConfig {
     pub p256_crv: &'static str,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct KaiaConfig {
     pub endpoint: &'static str,
     pub owner_key: &'static str,
@@ -65,13 +65,13 @@ pub struct KaiaConfig {
     pub feepayer_address: &'static str,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct BucketConfig {
     pub name: &'static str,
     pub asset_dir: &'static str,
     pub expire: u64,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct BedrockConfig {
     pub nova_micro_model_id: &'static str,
     pub nova_lite_model_id: &'static str,

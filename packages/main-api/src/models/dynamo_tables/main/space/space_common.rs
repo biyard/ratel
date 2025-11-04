@@ -1,6 +1,6 @@
 use crate::{
     Error,
-    features::spaces::invitations::SpaceEmailVerification,
+    features::spaces::members::SpaceEmailVerification,
     models::{User, team::Team},
     types::*,
     utils::time::get_now_timestamp_millis,
