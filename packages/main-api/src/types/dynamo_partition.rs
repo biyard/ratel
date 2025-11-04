@@ -34,6 +34,9 @@ pub enum Partition {
     Space(String),
     SurveySpace(String),
 
+    SpacePost(String),
+    SpacePostLike(String),
+
     Discussion(String),
     DiscussionUser(String),
 
