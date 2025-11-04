@@ -20,3 +20,26 @@ pub use update_post::*;
 
 #[cfg(test)]
 pub mod tests;
+
+use crate::*;
+
+pub fn route() -> Result<Router<AppState>> {
+    Ok(Router::new()
+        .route("/", post(create_post_handler).get(list_posts_handler))
+        .route("/:post_pk/likes", post(like_post_handler))
+        .route("/:post_pk/comments", post(add_comment_handler))
+        .route(
+            "/:post_pk/comments/:comment_sk",
+            post(reply_to_comment_handler).get(list_comments_handler),
+        )
+        .route(
+            "/:post_pk/comments/:comment_sk/likes",
+            post(like_comment_handler),
+        )
+        .route(
+            "/:post_pk",
+            get(get_post_handler)
+                .patch(update_post_handler)
+                .delete(delete_post_handler),
+        ))
+}
