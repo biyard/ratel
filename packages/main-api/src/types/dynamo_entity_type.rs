@@ -135,6 +135,7 @@ pub enum EntityType {
 
     // Payment features
     UserPayment,
+    Purchase,
     UserPurchase(String),
 }
 
