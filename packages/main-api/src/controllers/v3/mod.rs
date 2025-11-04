@@ -5,6 +5,7 @@ use bdk::prelude::*;
 
 pub mod did;
 pub mod networks;
+mod payments;
 
 pub mod promotions {
     pub mod get_top_promotion;
@@ -78,8 +79,6 @@ pub mod teams {
 
 pub mod posts;
 
-pub mod memberships;
-
 use crate::*;
 use crate::{
     assets::{
@@ -130,7 +129,6 @@ use by_axum::axum::*;
 pub struct RouteDeps {
     pub dynamo_client: DynamoClient,
     pub ses_client: SesClient,
-    pub pool: bdk::prelude::sqlx::PgPool,
     pub bot: Option<ArcTelegramBot>,
     pub s3: S3Client,
 }
@@ -139,12 +137,12 @@ pub fn route(
     RouteDeps {
         dynamo_client,
         ses_client,
-        pool,
         bot,
         s3,
     }: RouteDeps,
 ) -> Result<Router> {
     Ok(Router::new()
+        .nest("/payments", payments::route()?)
         .nest("/did", did::route()?)
         .nest(
             "/networks",
@@ -211,6 +209,10 @@ pub fn route(
                 .nest(
                     "/:space_pk",
                     Router::new()
+                        .nest(
+                            "/invitations",
+                            crate::controllers::v3::spaces::members::route(),
+                        )
                         .nest("/files", crate::controllers::v3::spaces::files::route())
                         .nest("/panels", crate::controllers::v3::spaces::panels::route())
                         .nest(
@@ -271,5 +273,5 @@ pub fn route(
                 .route("/multiparts", get(get_put_multi_object_uri))
                 .route("/multiparts", post(complete_multipart_upload)),
         )
-        .with_state(AppState::new(dynamo_client, ses_client, pool, s3)))
+        .with_state(AppState::new(dynamo_client, ses_client, s3)))
 }

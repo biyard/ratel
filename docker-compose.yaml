@@ -11,10 +11,6 @@ services:
       timeout: 10s
       retries: 100
     depends_on:
-      postgres:
-        condition: service_healthy
-      postgres-init:
-        condition: service_healthy
       localstack:
         condition: service_healthy
       localstack-init:
@@ -37,7 +33,6 @@ services:
       RUST_LOG: ${RUST_LOG:-info}
       RUSTFLAGS: ${RUSTFLAGS:--A warnings}
       RUST_FLAG: ${RUST_FLAG:---features bypass}
-      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
       DYNAMO_ENDPOINT: ${DYNAMO_ENDPOINT:-http://localstack:4566}
       MIGRATE: ${MIGRATE:-true}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
@@ -62,6 +57,7 @@ services:
 
       VITE_PORTONE_STORE_ID: ${PORTONE_STORE_ID}
       VITE_PORTONE_INICIS_CHANNEL_KEY: ${PORTONE_INICIS_CHANNEL_KEY}
+      VITE_PORTONE_KPN_CHANNEL_KEY: ${PORTONE_KPN_CHANNEL_KEY}
 
       NODE_ENV: production
     volumes:
@@ -82,10 +78,6 @@ services:
       timeout: 10s
       retries: 100
     depends_on:
-      # postgres:
-      #   condition: service_healthy
-      # postgres-init:
-      #   condition: service_healthy
       localstack:
         condition: service_healthy
       localstack-init:
@@ -94,26 +86,6 @@ services:
       - ratel-network
     profiles:
       - development
-
-  # fetcher-testing:
-  #   image: fetcher:${COMMIT}
-  #   restart: always
-  #   ports:
-  #     - "3001:3001"
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "curl -f http://localhost:3001/version || exit 1"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 100
-  #   depends_on:
-  #     postgres:
-  #       condition: service_healthy
-  #     postgres-init:
-  #       condition: service_healthy
-  #   networks:
-  #     - ratel-network
-  #   profiles:
-  #     - testing
 
   # Development fetcher (source code mounting)
   fetcher:
@@ -130,7 +102,6 @@ services:
       ENV: dev
       RUST_LOG: debug
       PORT: 3001
-      DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@postgres:5432/ratel}
       TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
       DYNAMO_TABLE_PREFIX: ratel-local
     command: ["bash", "scripts/fetcher-entrypoint.sh"]
@@ -139,11 +110,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 100
-    # depends_on:
-    #   postgres:
-    #     condition: service_healthy
-    #   postgres-init:
-    #     condition: service_healthy
     networks:
       - ratel-network
     profiles:
@@ -198,6 +164,7 @@ services:
 
       VITE_PORTONE_STORE_ID: ${PORTONE_STORE_ID}
       VITE_PORTONE_INICIS_CHANNEL_KEY: ${PORTONE_INICIS_CHANNEL_KEY}
+      VITE_PORTONE_KPN_CHANNEL_KEY: ${PORTONE_KPN_CHANNEL_KEY}
 
       NODE_ENV: development
     command: ["bash", "scripts/web-entrypoint.sh"]
@@ -253,67 +220,6 @@ services:
       - ratel-network
     profiles:
       - development
-
-  # Database
-  postgres:
-    image: postgres:16
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: ratel
-    volumes:
-      - .build/postgres-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - ratel-network
-    profiles:
-      - testing
-      - infra
-
-  postgres-init:
-    image: postgres:16
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-      PGPASSWORD: postgres
-    volumes:
-      - ./scripts:/scripts
-    # Command will be overridden in specific compose files
-    healthcheck:
-      test: ["CMD", "test", "-f", "/tmp/init-complete"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-    command: >
-      sh -c "
-        echo 'Waiting for PostgreSQL to be ready...' &&
-        until pg_isready -h postgres -U postgres; do
-          sleep 2
-        done &&
-        echo 'Creating ratel database...' &&
-        psql -h postgres -U postgres -d postgres -c 'CREATE DATABASE ratel;' || echo 'Database might already exist' &&
-        echo 'Running init.sql...' &&
-        psql -h postgres -U postgres -d ratel -f /scripts/init.sql &&
-        echo 'Database initialization completed' &&
-        touch /tmp/init-complete &&
-        sleep infinity
-      "
-    depends_on:
-      postgres:
-        condition: service_healthy
-    networks:
-      - ratel-network
-    profiles:
-      - testing
-      - infra
 
   localstack:
     hostname: localstack

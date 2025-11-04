@@ -797,6 +797,22 @@ fn generate_updater(
                     .build()
             }
 
+            pub fn upsert_transact_write_item(&self) -> aws_sdk_dynamodb::types::TransactWriteItem {
+                let item = serde_dynamo::to_item(self)
+                    .expect("failed to serialize struct to dynamodb item");
+                let item = self.indexed_fields(item);
+
+                let req = aws_sdk_dynamodb::types::Put::builder()
+                    .table_name(Self::table_name())
+                    .set_item(Some(item))
+                    .build().unwrap();
+
+                aws_sdk_dynamodb::types::TransactWriteItem::builder()
+                    .put(req)
+                    .build()
+            }
+
+
             pub fn delete_transact_write_item(pk: impl std::fmt::Display, #sk_param) -> aws_sdk_dynamodb::types::TransactWriteItem {
                 let k = std::collections::HashMap::from([
                     (
@@ -1195,6 +1211,23 @@ fn generate_struct_impl(
                 cli.put_item()
                     .table_name(Self::table_name())
                     .condition_expression(#create_key_condition)
+                    .set_item(Some(item))
+                    .send()
+                    .await.map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                Ok(())
+            }
+
+            pub async fn upsert(
+                &self,
+                cli: &aws_sdk_dynamodb::Client,
+            ) -> #result_ty <(), #err_ctor> {
+                let item = serde_dynamo::to_item(self)?;
+
+                let item = self.indexed_fields(item);
+
+                cli.put_item()
+                    .table_name(Self::table_name())
                     .set_item(Some(item))
                     .send()
                     .await.map_err(Into::<aws_sdk_dynamodb::Error>::into)?;

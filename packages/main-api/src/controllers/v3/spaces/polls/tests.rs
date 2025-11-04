@@ -780,6 +780,41 @@ async fn test_respond_poll_with_invalid_answer_option() {
 }
 
 #[tokio::test]
+async fn test_respond_poll_with_started_space() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
+    let TestContextV3 { app, test_user, .. } = ctx;
+
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "start": true,
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    let answers = vec![
+        Answer::SingleChoice { answer: Some(1) },
+        Answer::MultipleChoice {
+            answer: Some(vec![0, 2]),
+        },
+    ];
+
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/polls/{}/responses", space_pk.to_string(), poll_sk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "answers": answers,
+        }
+    };
+
+    assert_eq!(status, 400);
+}
+
+#[tokio::test]
 async fn test_respond_poll_increments_response_count() {
     let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
     let TestContextV3 {

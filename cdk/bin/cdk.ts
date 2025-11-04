@@ -19,12 +19,12 @@ const deployStorybook =
   (process.env.DEPLOY_STORYBOOK && process.env.DEPLOY_STORYBOOK === "true") ||
   false;
 
-new ImageWorkerStack(app, `ratel-${env}-image-worker`, {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: "ap-northeast-2",
-  },
-});
+// new ImageWorkerStack(app, `ratel-${env}-image-worker`, {
+//   env: {
+//     account: process.env.CDK_DEFAULT_ACCOUNT,
+//     region: "ap-northeast-2",
+//   },
+// });
 
 if (deployStorybook) {
   new StorybookStack(app, `ratel-${env}-storybook`, {

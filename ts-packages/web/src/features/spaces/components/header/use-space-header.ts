@@ -77,7 +77,7 @@ export const useSpaceHeader = (
 ): SpaceHeaderController => {
   const store = useSpaceHeaderStore();
 
-  const updatePublishState = usePublishSpaceMutation<SpaceCommon>().mutateAsync;
+  const updatePublishState = usePublishSpaceMutation().mutateAsync;
   const updateVisibility =
     useUpdateSpaceVisibilityMutation<SpaceCommon>().mutateAsync;
   const navigate = useNavigate();

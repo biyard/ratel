@@ -14,10 +14,11 @@ import { Repost } from '@/assets/icons/arrows';
 import { RoundBubble } from '@/assets/icons/chat';
 import { RewardCoin } from '@/assets/icons/money-payment';
 import { ThumbsUp } from '@/assets/icons/emoji';
-import { Expand } from '@/assets/icons';
 import Loading from '@/app/loading';
 import { useTranslation } from 'react-i18next';
 import { executeOnKeyStroke } from '@/utils/key-event-handle';
+import { Row } from '../ui/row';
+import { Edit1, Save } from '@/components/icons';
 
 export function SuspenseWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -31,32 +32,28 @@ interface TitleSectionProps {
   title: string | undefined;
   canEdit: boolean;
   setTitle: (title: string) => void;
-  handleShare: () => Promise<void>;
 }
 
 export function TitleSection({
   title,
   canEdit: canEdit,
   setTitle,
-  handleShare,
 }: TitleSectionProps) {
   const { t } = useTranslation('SprintSpace');
   const [editMode, setEditMode] = useState(false);
   const [internalTitle, setInternalTitle] = useState(title || '');
+  const Icon = !editMode ? Edit1 : Save;
+  const handleSave = () => {
+    setTitle(internalTitle);
+    setEditMode(false);
+  };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    executeOnKeyStroke(
-      e,
-      () => {
-        setTitle(internalTitle);
-        setEditMode(false);
-      },
-      () => setEditMode(false),
-    );
+    executeOnKeyStroke(e, handleSave, () => setEditMode(false));
   };
 
   return (
-    <div>
+    <Row className="items-center">
       {editMode && canEdit ? (
         <Input
           className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-bold text-text-primary text-[24px]/[30px] placeholder:text-neutral-300 placeholder:font-medium rounded-none"
@@ -68,19 +65,30 @@ export function TitleSection({
           placeholder={t('title_hint')}
         />
       ) : (
-        <div
-          className="flex flex-row justify-between items-center w-full overflow-ellipsis"
-          onClick={() => setEditMode(true)}
-        >
-          <div className="font-bold text-text-primary text-[20px]/[30px]">
+        <div className="flex flex-row justify-between items-center w-full overflow-ellipsis">
+          <div
+            className="font-bold text-text-primary text-[20px]/[30px]"
+            onClick={() => {
+              if (canEdit) setEditMode(true);
+            }}
+          >
             {title}
-          </div>
-          <div className="cursor-pointer w-fit h-fit" onClick={handleShare}>
-            <Expand />
           </div>
         </div>
       )}
-    </div>
+      {canEdit && (
+        <Icon
+          className="cursor-pointer w-fit h-fit"
+          onClick={() => {
+            if (editMode) {
+              handleSave();
+            } else {
+              setEditMode(true);
+            }
+          }}
+        />
+      )}
+    </Row>
   );
 }
 

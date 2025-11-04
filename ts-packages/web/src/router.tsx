@@ -46,6 +46,8 @@ import SpaceAnalyzesPage from './app/spaces/[id]/analyzes/space_analyzes-page';
 import CreateArtworkPage from './features/posts/components/create-artwork-page';
 import SpaceArtNftPreviewPage from './app/spaces/[id]/art-nfts/space-art-nft-page';
 import SpaceArtNftArtTwinPage from './app/spaces/[id]/art-nfts/space-art-nft-twin-page';
+import { MembershipPlan } from './features/membership/components/membership-plan';
+import SpaceMemberPage from './app/spaces/[id]/members/space-member-page';
 
 export const routes = createBrowserRouter([
   {
@@ -62,6 +64,12 @@ export const routes = createBrowserRouter([
         id: 'create-artwork-page',
         path: 'artworks/new',
         Component: CreateArtworkPage,
+      },
+
+      {
+        id: 'membership-page',
+        path: 'membership',
+        Component: MembershipPlan,
       },
 
       // Social Layout
@@ -192,6 +200,12 @@ export const routes = createBrowserRouter([
             path: 'sprint-leagues',
             Component: SpaceSprintLeaguePage,
           },
+          // Space Member Feature
+          {
+            id: 'space-member-feature',
+            path: 'members',
+            Component: SpaceMemberPage,
+          }, // End of Poll Feature
           // Space Poll Feature
           {
             id: 'space-poll-feature',

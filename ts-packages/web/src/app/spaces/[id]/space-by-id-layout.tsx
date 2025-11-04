@@ -31,7 +31,6 @@ export default function SpaceByIdLayout() {
             canEdit={ctrl.isAdmin}
             title={ctrl.space.title}
             setTitle={ctrl.handleTitleChange}
-            handleShare={ctrl.handleShare}
           />
           <AuthorSection
             type={ctrl.space.authorType}

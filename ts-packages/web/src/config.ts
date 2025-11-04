@@ -19,6 +19,7 @@ type Config = {
   // Identity Verification
   portone_store_id: string;
   portone_inicis_channel_key: string;
+  portone_kpn_channel_key: string;
 };
 
 export const Env = {
@@ -56,4 +57,5 @@ export const config: Config = {
   portone_store_id: import.meta.env.VITE_PORTONE_STORE_ID || '',
   portone_inicis_channel_key:
     import.meta.env.VITE_PORTONE_INICIS_CHANNEL_KEY || '',
+  portone_kpn_channel_key: import.meta.env.VITE_PORTONE_KPN_CHANNEL_KEY || '',
 };

@@ -7,41 +7,45 @@ import { TimeRangeSetting } from '../../components/time-range-setting';
 import Card from '@/components/card';
 import { Row } from '@/components/ui/row';
 import { Button } from '@/components/ui/button';
+import { SpaceType } from '@/features/spaces/types/space-type';
 
 export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollViewerPage: spacePk=${spacePk}, pollPk=${pollPk}`);
 
   const ctrl = useSpacePollViewerController(spacePk, pollPk);
-  let button = <></>;
+  // let button = <></>;
 
-  if (ctrl.user && ctrl.poll.myResponse.length === 0) {
-    button = (
-      <Button onClick={ctrl.handleSubmit}>
-        {ctrl.t('SpacePollViewer:btn_submit')}
-      </Button>
-    );
-  } else if (
-    ctrl.user &&
-    ctrl.poll.myResponse.length > 0 &&
-    ctrl.poll.response_editable
-  ) {
-    button = (
-      <Button onClick={ctrl.handleSubmit}>
-        {ctrl.t('SpacePollViewer:btn_update')}
-      </Button>
-    );
-  } else if (!ctrl.user) {
-    button = (
-      <Button onClick={ctrl.handleLogin}>
-        {ctrl.t('SpacePollViewer:btn_login')}
-      </Button>
-    );
-  }
+  // if (ctrl.user && ctrl.poll.myResponse.length === 0) {
+  //   button = (
+  //     <Button onClick={ctrl.handleSubmit}>
+  //       {ctrl.t('SpacePollViewer:btn_submit')}
+  //     </Button>
+  //   );
+  // } else if (
+  //   ctrl.user &&
+  //   ctrl.poll.myResponse.length > 0 &&
+  //   ctrl.poll.response_editable
+  // ) {
+  //   button = (
+  //     <Button onClick={ctrl.handleSubmit}>
+  //       {ctrl.t('SpacePollViewer:btn_update')}
+  //     </Button>
+  //   );
+  // } else if (!ctrl.user) {
+  //   button = (
+  //     <Button onClick={ctrl.handleLogin}>
+  //       {ctrl.t('SpacePollViewer:btn_login')}
+  //     </Button>
+  //   );
+  // }
+
+  const canSubmit = ctrl.user && ctrl.poll.myResponse.length === 0;
 
   return (
     <>
       <Col>
         <TimeRangeSetting
+          canEdit={false}
           startTimestampMillis={ctrl.poll.started_at}
           endTimestampMillis={ctrl.poll.ended_at}
           className="justify-end"
@@ -52,18 +56,30 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
             <SurveyViewer
               t={ctrl.t}
               questions={ctrl.poll.questions}
+              status={ctrl.poll.status}
               onUpdateAnswer={ctrl.handleUpdateAnswer}
               selectedAnswers={ctrl.answers.get()}
+              onSubmit={ctrl.handleSubmit}
+              onLogin={ctrl.handleLogin}
+              canSubmit={canSubmit}
+              disabled={!canSubmit}
+              canUpdate={
+                ctrl.user &&
+                ctrl.poll.myResponse.length > 0 &&
+                ctrl.poll.response_editable
+              }
+              isLogin={!!ctrl.user}
             />
           </Col>
         </Card>
 
-        <Row className="justify-end w-full">
-          <Button className="w-fit" onClick={ctrl.handleBack}>
-            {ctrl.t('SpacePollViewer:btn_back')}
-          </Button>
-          {button}{' '}
-        </Row>
+        {ctrl.space.spaceType == SpaceType.Deliberation && (
+          <Row className="justify-end w-full">
+            <Button className="w-fit" onClick={ctrl.handleBack}>
+              {ctrl.t('SpacePollViewer:btn_back')}
+            </Button>
+          </Row>
+        )}
       </Col>
     </>
   );

@@ -4,7 +4,7 @@ pub use portone_config::*;
 use bdk::prelude::*;
 use by_types::config::*;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct BinanceConfig {
     pub redirect_domain: &'static str,
     pub api_key: &'static str,
@@ -13,7 +13,7 @@ pub struct BinanceConfig {
     pub webhook: &'static str,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Config {
     pub env: &'static str,
     pub domain: &'static str,
@@ -21,11 +21,7 @@ pub struct Config {
     pub binance: BinanceConfig,
     pub aws: AwsConfig,
     pub bucket: BucketConfig,
-    pub database: DatabaseConfig,
     pub dynamodb: DatabaseConfig,
-    pub signing_domain: &'static str,
-    pub auth: AuthConfig,
-    pub migrate: bool,
     pub chime_bucket_name: &'static str,
     pub slack_channel_sponsor: &'static str,
     pub slack_channel_abusing: &'static str,
@@ -33,7 +29,6 @@ pub struct Config {
     pub kaia: KaiaConfig,
     pub from_email: &'static str,
     pub telegram_token: Option<&'static str>,
-    pub noncelab_token: &'static str,
     pub did: DidConfig,
     pub private_bucket_name: &'static str,
 
@@ -61,7 +56,7 @@ pub struct DidConfig {
     pub p256_crv: &'static str,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct KaiaConfig {
     pub endpoint: &'static str,
     pub owner_key: &'static str,
@@ -70,13 +65,13 @@ pub struct KaiaConfig {
     pub feepayer_address: &'static str,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct BucketConfig {
     pub name: &'static str,
     pub asset_dir: &'static str,
     pub expire: u64,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct BedrockConfig {
     pub nova_micro_model_id: &'static str,
     pub nova_lite_model_id: &'static str,
@@ -101,21 +96,12 @@ impl Default for Config {
             env: option_env!("ENV").expect("You must set ENV"),
             binance: BinanceConfig { redirect_domain: option_env!("REDIRECT_DOMAIN").unwrap_or("https://dev.ratel.foundation"), api_key: option_env!("BINANCE_API_KEY").expect("BINANCE_API_KEY is required"), base_url: "https://bpay.binanceapi.com/binancepay/openapi", secret_key: option_env!("BINANCE_SECRET_KEY").expect("BINANCE_SECRET_KEY is required"), webhook: option_env!("BINANCE_WEBHOOK").unwrap_or("https://api.dev.ratel.foundation/v2/binances/webhooks"), },
             domain: option_env!("DOMAIN").expect("You must set DOMAIN"),
-            signing_domain: option_env!("AUTH_DOMAIN").expect("AUTH_DOMAIN is required"),
             aws: AwsConfig::default(),
-            database: DatabaseConfig::Postgres {
-                url: option_env!("DATABASE_URL").unwrap_or("postgresql://postgres:postgres@localhost:5432/ratel"),
-                pool_size: option_env!("DATABASE_POOL_SIZE")
-                    .unwrap_or("10".into())
-                    .parse()
-                    .expect("DATABASE_POOL_SIZE must be a number")
-            },
             dynamodb: DatabaseConfig::DynamoDb {
                 aws: AwsConfig::default(),
                 endpoint: option_env!("DYNAMO_ENDPOINT"),
                 table_prefix: option_env!("DYNAMO_TABLE_PREFIX").expect("You must set TABLE_PREFIX"),
             },
-            auth: AuthConfig::default(),
             bucket: BucketConfig {
                 name: option_env!("BUCKET_NAME").expect("You must set BUCKET_NAME"),
                 asset_dir: option_env!("ASSET_DIR").expect("You must set ASSET_DIR"),
@@ -126,9 +112,6 @@ impl Default for Config {
                     .unwrap(),
             },
             chime_bucket_name: option_env!("CHIME_BUCKET").expect("CHIME_BUCKET required"),
-            migrate: option_env!("MIGRATE")
-                .map(|s| s.parse::<bool>().unwrap_or(false))
-                .unwrap_or(false),
             slack_channel_sponsor: option_env!("SLACK_CHANNEL_SPONSOR")
                 .expect("SLACK_CHANNEL_SPONSOR is required"),
             slack_channel_abusing: option_env!("SLACK_CHANNEL_ABUSING")
@@ -136,7 +119,6 @@ impl Default for Config {
             slack_channel_monitor: option_env!("SLACK_CHANNEL_MONITOR")
                 .expect("SLACK_CHANNEL_MONITOR is required"),
             telegram_token: option_env!("TELEGRAM_TOKEN").filter(|s| !s.is_empty()),
-            noncelab_token: option_env!("NONCELAB_TOKEN").expect("You must set NONCELAB_TOKEN"),
             did: DidConfig {
                 bbs_bls_x: option_env!("BBS_BLS_X").expect("You must set BBS_BLS_X"),
                 bbs_bls_y: option_env!("BBS_BLS_Y").expect("You must set BBS_BLS_Y"),

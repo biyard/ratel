@@ -38,6 +38,8 @@ import i18nSpaceSurveyReportComponent from '@/features/spaces/components/report/
 import i18nSpaceFileComponent from '@/features/spaces/files/components/space-file-editor/i18n';
 import i18nSpaceDiscussionEditorPage from '@/features/spaces/discussions/pages/creator/i18n';
 import i18nSpacePanelEditorPage from '@/features/spaces/panels/pages/creator/i18n';
+import i18nSpaceMemberEditorPage from '@/features/spaces/members/pages/creator/i18n';
+import i18nSpaceMemberViewerPage from '@/features/spaces/members/pages/viewer/i18n';
 import { i18nSpaceTypeSelectModal } from '@/features/spaces/modals/space-type-selector-modal';
 import { i18nSpaceHome } from '@/app/spaces/[id]/space-home-i18n';
 import { i18nSpacePollEditor } from '@/features/spaces/polls/pages/creator/space-poll-editor-i18n';
@@ -57,6 +59,8 @@ import i18nListDrafts from '@/features/drafts/components/list-drafts/i18n';
 import { CreatePostPage } from '@/features/posts/components/create-post-page/i18n';
 import { CreateArtworkPage } from '@/features/posts/components/create-artwork-page/i18n';
 import { i18nSpaceForm } from '@/features/spaces/components/space-form-i18n';
+import { i18nSubmitSurveyModal } from '@/features/spaces/polls/components/modal/submit_survey/submit-survey-modal-i18n';
+import { MembershipPlan } from '@/features/membership/components/membership-plan/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -106,6 +110,7 @@ Object.entries({
   SpaceFile: i18nSpaceFileComponent,
   SpaceTypeSelectModal: i18nSpaceTypeSelectModal,
   Space: i18nSpaceHome,
+  SpacePollSubmitSurvey: i18nSubmitSurveyModal,
   SpacePollAnalyze: i18nSpacePollAnalyze,
   SpacePollEditor: i18nSpacePollEditor,
   SpacePollsEditor: i18nSpacePollsEditor,
@@ -116,6 +121,8 @@ Object.entries({
   SpaceDiscussionEditor: i18nSpaceDiscussionEditorPage,
   SpacePanelEditor: i18nSpacePanelEditorPage,
   SpaceRecommendationEditor: i18nSpaceRecommendationEditor,
+  SpaceMemberEditor: i18nSpaceMemberEditorPage,
+  SpaceMemberViewer: i18nSpaceMemberViewerPage,
   Admin: i18nAdmin,
   Memberships: i18nMemberships,
   Nav: i18nHeader,
@@ -123,6 +130,7 @@ Object.entries({
   CreatePostPage,
   CreateArtworkPage,
   SpaceForm: i18nSpaceForm,
+  MembershipPlan,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
