@@ -237,6 +237,7 @@ function QuestionViewer({
           disabled={disabled}
           selectedIndexes={prev}
           onSelect={(i) => {
+            if (disabled) return;
             let next = i;
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             if (prev.includes(i)) next = undefined as any;
@@ -257,6 +258,7 @@ function QuestionViewer({
           disabled={disabled}
           selectedIndexes={prev}
           onSelect={(i) => {
+            if (disabled) return;
             const next = prev.includes(i)
               ? prev.filter((n: number) => n !== i)
               : [...prev, i];
@@ -274,9 +276,10 @@ function QuestionViewer({
           answer_type={question.answer_type}
           disabled={disabled}
           selectedOption={answer?.answer}
-          onSelect={(opt) =>
-            updateAnswer({ answer_type: question.answer_type, answer: opt })
-          }
+          onSelect={(opt) => {
+            if (disabled) return;
+            updateAnswer({ answer_type: question.answer_type, answer: opt });
+          }}
         />
       );
     }
@@ -289,9 +292,10 @@ function QuestionViewer({
           answer_type={question.answer_type}
           disabled={disabled}
           selectedValue={answer?.answer}
-          onSelect={(v) =>
-            updateAnswer({ answer_type: question.answer_type, answer: v })
-          }
+          onSelect={(v) => {
+            if (disabled) return;
+            updateAnswer({ answer_type: question.answer_type, answer: v });
+          }}
         />
       );
     }
@@ -305,9 +309,10 @@ function QuestionViewer({
           answer_type={question.answer_type}
           disabled={disabled}
           inputValue={answer?.answer ?? ''}
-          onInputChange={(v) =>
-            updateAnswer({ answer_type: question.answer_type, answer: v })
-          }
+          onInputChange={(v) => {
+            if (disabled) return;
+            updateAnswer({ answer_type: question.answer_type, answer: v });
+          }}
         />
       );
     }

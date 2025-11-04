@@ -19,6 +19,7 @@ export const route = {
   connect: () => `/connect`,
 
   myNetwork: () => '/my-network',
+  membership: () => '/membership',
   myFollower: (type: RelationType) => `/my-follower?type=${type}`,
   messages: () => '/messages',
   notifications: () => '/notifications',

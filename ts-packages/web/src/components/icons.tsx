@@ -1,7 +1,7 @@
 // Auto-generated icon exports
-// Total icons: 656
+// Total icons: 657
 
-// Root Icons (92)
+// Root Icons (93)
 export { default as Add } from '@/assets/icons/add.svg?react';
 export { default as AlertCircle } from '@/assets/icons/alert-circle.svg?react';
 export { default as ArrowLeft } from '@/assets/icons/arrow-left.svg?react';
@@ -57,6 +57,7 @@ export { default as Lock } from '@/assets/icons/lock.svg?react';
 export { default as Login } from '@/assets/icons/login.svg?react';
 export { default as Logo } from '@/assets/icons/logo.svg?react';
 export { default as Mega } from '@/assets/icons/mega.svg?react';
+export { default as Membership } from '@/assets/icons/membership.svg?react';
 export { default as Menu_veritcal } from '@/assets/icons/menu_veritcal.svg?react';
 export { default as MicOff } from '@/assets/icons/mic-off.svg?react';
 export { default as MicOn } from '@/assets/icons/mic-on.svg?react';

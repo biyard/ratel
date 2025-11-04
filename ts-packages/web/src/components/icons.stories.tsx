@@ -189,3 +189,120 @@ export const SecurityIcons: Story = {
     return <IconGrid title="Security" icons={groupedIcons['Security'] || []} />;
   },
 };
+
+export const MembershipIcon: Story = {
+  render: () => (
+    <div className="p-6 space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Membership Icon</h2>
+        <div className="grid grid-cols-4 gap-6">
+          {/* Default size */}
+          <div className="flex flex-col items-center p-4 border rounded-lg">
+            <Icons.Membership className="w-6 h-6 mb-2" />
+            <span className="text-xs text-center">Default (w-6 h-6)</span>
+          </div>
+
+          {/* Small */}
+          <div className="flex flex-col items-center p-4 border rounded-lg">
+            <Icons.Membership className="w-4 h-4 mb-2" />
+            <span className="text-xs text-center">Small (w-4 h-4)</span>
+          </div>
+
+          {/* Medium */}
+          <div className="flex flex-col items-center p-4 border rounded-lg">
+            <Icons.Membership className="w-8 h-8 mb-2" />
+            <span className="text-xs text-center">Medium (w-8 h-8)</span>
+          </div>
+
+          {/* Large */}
+          <div className="flex flex-col items-center p-4 border rounded-lg">
+            <Icons.Membership className="w-12 h-12 mb-2" />
+            <span className="text-xs text-center">Large (w-12 h-12)</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-bold mb-4">Color Variations</h3>
+        <div className="grid grid-cols-4 gap-6">
+          {/* Default */}
+          <div className="flex flex-col items-center p-4 border rounded-lg">
+            <Icons.Membership className="w-8 h-8 mb-2" />
+            <span className="text-xs text-center">Default</span>
+          </div>
+
+          {/* Primary */}
+          <div className="flex flex-col items-center p-4 border rounded-lg">
+            <Icons.Membership className="w-8 h-8 mb-2 text-primary" />
+            <span className="text-xs text-center">Primary</span>
+          </div>
+
+          {/* Gray */}
+          <div className="flex flex-col items-center p-4 border rounded-lg">
+            <Icons.Membership className="w-8 h-8 mb-2 text-gray-500" />
+            <span className="text-xs text-center">Gray</span>
+          </div>
+
+          {/* Custom stroke */}
+          <div className="flex flex-col items-center p-4 border rounded-lg bg-gray-900">
+            <Icons.Membership className="w-8 h-8 mb-2 [&>path]:stroke-white" />
+            <span className="text-xs text-center text-white">Custom Stroke</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-bold mb-4">Usage Examples</h3>
+        <div className="space-y-4">
+          {/* Button example */}
+          <div className="flex items-center gap-3 p-4 border rounded-lg">
+            <button className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90">
+              <Icons.Membership className="w-5 h-5" />
+              <span>Upgrade Membership</span>
+            </button>
+            <span className="text-sm text-gray-600">Button with icon</span>
+          </div>
+
+          {/* Navigation item */}
+          <div className="flex items-center gap-3 p-4 border rounded-lg">
+            <a href="#" className="flex items-center gap-2 px-3 py-2 rounded hover:bg-gray-100">
+              <Icons.Membership className="w-5 h-5" />
+              <span>Membership Plans</span>
+            </a>
+            <span className="text-sm text-gray-600">Navigation link</span>
+          </div>
+
+          {/* Card header */}
+          <div className="p-4 border rounded-lg">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Icons.Membership className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h4 className="font-semibold">Premium Membership</h4>
+                <p className="text-sm text-gray-600">$29.99/month</p>
+              </div>
+            </div>
+            <p className="text-sm text-gray-600">Card header with icon</p>
+          </div>
+
+          {/* Badge */}
+          <div className="flex items-center gap-3 p-4 border rounded-lg">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary text-white text-sm rounded-full">
+              <Icons.Membership className="w-4 h-4" />
+              <span>Member</span>
+            </div>
+            <span className="text-sm text-gray-600">Badge with icon</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  ),
+  parameters: {
+    docs: {
+      description: {
+        story: 'The Membership icon in various sizes, colors, and usage contexts.',
+      },
+    },
+  },
+};
