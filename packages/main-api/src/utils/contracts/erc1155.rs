@@ -54,7 +54,8 @@ impl<T: KaiaWallet, W: KaiaWallet> Erc1155Contract<T, W> {
         let input = self
             .contract
             .contract
-            .method::<(H160, Vec<U256>, Vec<U256>), ()>("mintBatch", (addr, ids, values)).map_err(|e| Error::Klaytn(e.to_string()))?
+            .method::<(H160, Vec<U256>, Vec<U256>), ()>("mintBatch", (addr, ids, values))
+            .map_err(|e| Error::Klaytn(e.to_string()))?
             .calldata()
             .ok_or(Error::Klaytn("calldata error".to_string()))?;
 
@@ -77,7 +78,46 @@ impl<T: KaiaWallet, W: KaiaWallet> Erc1155Contract<T, W> {
         let input = self
             .contract
             .contract
-            .method::<_, ()>("mint", (addr, ids, values)).map_err(|e| Error::Klaytn(e.to_string()))?
+            .method::<_, ()>("mint", (addr, ids, values))
+            .map_err(|e| Error::Klaytn(e.to_string()))?
+            .calldata()
+            .ok_or(Error::Klaytn("calldata error".to_string()))?;
+
+        let tx_hash = self
+            .contract
+            .sign_and_send_transaction_with_feepayer(input)
+            .await?;
+
+        Ok(tx_hash)
+    }
+
+    pub async fn safe_transfer_from(
+        &self,
+        from: String,
+        to: String,
+        id: u64,
+        amount: u64,
+        data: Vec<u8>,
+    ) -> Result<String> {
+        let from_addr = from
+            .parse::<Address>()
+            .map_err(|e| Error::Klaytn(e.to_string()))?;
+        let to_addr = to
+            .parse::<Address>()
+            .map_err(|e| Error::Klaytn(e.to_string()))?;
+
+        let token_id = U256::from(id);
+        let amount_u256 = U256::from(amount);
+        let data_bytes = Bytes::from(data);
+
+        let input = self
+            .contract
+            .contract
+            .method::<_, ()>(
+                "safeTransferFrom",
+                (from_addr, to_addr, token_id, amount_u256, data_bytes),
+            )
+            .map_err(|e| Error::Klaytn(e.to_string()))?
             .calldata()
             .ok_or(Error::Klaytn("calldata error".to_string()))?;
 

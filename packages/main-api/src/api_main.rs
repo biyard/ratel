@@ -31,7 +31,6 @@ pub async fn api_main() -> Result<Router, crate::Error> {
     let aws_sdk_config = get_aws_config();
     let dynamo_client = DynamoClient::new(Some(aws_sdk_config.clone()));
     let ses_client = SesClient::new(aws_sdk_config, is_local);
-
     let sqs_client = sqs_client::SqsClient::new().await;
     let bedrock_client = BedrockClient::new();
     let rek_client = RekognitionClient::new();
@@ -70,7 +69,8 @@ pub async fn api_main() -> Result<Router, crate::Error> {
     //     .nest_service("/mcp", controllers::mcp::route(pool.clone()).await.expect("MCP router"))
     //     .layer(middleware::from_fn(mcp_middleware));
 
-    let app_state = AppState::new(dynamo_client.clone(), ses_client.clone());
+
+    let app_state = AppState::new(dynamo_client.clone(), ses_client.clone(), metadata_s3_client.clone());
     let web = web::route(app_state)?;
 
     let api_router = route(RouteDeps {

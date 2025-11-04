@@ -43,6 +43,9 @@ import SpacePanelPage from './app/spaces/[id]/panels/space-panel-page';
 import CreatePostPage from './features/posts/components/create-post-page';
 import SpacePollsPage from './app/spaces/[id]/polls/space-polls-page';
 import SpaceAnalyzesPage from './app/spaces/[id]/analyzes/space_analyzes-page';
+import CreateArtworkPage from './features/posts/components/create-artwork-page';
+import SpaceArtNftPreviewPage from './app/spaces/[id]/art-nfts/space-art-nft-page';
+import SpaceArtNftArtTwinPage from './app/spaces/[id]/art-nfts/space-art-nft-twin-page';
 import { MembershipPlan } from './features/membership/components/membership-plan';
 import SpaceBoardPage from './app/spaces/[id]/boards/[post-id]/space-board-page';
 import SpaceBoardsPage from './app/spaces/[id]/boards/space-boards-page';
@@ -62,6 +65,11 @@ export const routes = createBrowserRouter([
         id: 'create-post-page',
         path: 'posts/new',
         Component: CreatePostPage,
+      },
+      {
+        id: 'create-artwork-page',
+        path: 'artworks/new',
+        Component: CreateArtworkPage,
       },
 
       {
@@ -301,6 +309,22 @@ export const routes = createBrowserRouter([
             path: 'recommendations',
             Component: SpaceRecommendationPage,
           }, // End of Recommendation Feature
+          {
+            id: 'space-nft-page',
+            path: 'nfts',
+            children: [
+              {
+                id: 'space-nft-preview-feature',
+                path: '',
+                Component: SpaceArtNftPreviewPage,
+              },
+              {
+                id: 'space-nft-art-twin-feature',
+                path: 'art-twin',
+                Component: SpaceArtNftArtTwinPage,
+              },
+            ],
+          },
         ],
       }, // End of Space Layout
       {

@@ -23,6 +23,7 @@ export function SpaceRecommendationEditorPage({ spacePk }: SpacePathProps) {
             htmlContent={ctrl.htmlContents.get()}
             canEdit={true}
             onContentChange={ctrl.handleUpdateContent}
+            url={null}
           />
         </Col>
         <Col className="gap-0">
