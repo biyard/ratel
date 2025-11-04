@@ -15,6 +15,9 @@ pub use list_categories::*;
 pub use list_space_posts::*;
 pub use update_space_post::*;
 
+#[cfg(test)]
+pub mod tests;
+
 use crate::AppState;
 use bdk::prelude::*;
 use by_axum::aide::axum::routing::*;
@@ -24,7 +27,7 @@ pub fn route() -> Router<AppState> {
     Router::new()
         .route(
             "/",
-            patch(create_space_post_handler).get(list_space_posts_handler),
+            post(create_space_post_handler).get(list_space_posts_handler),
         )
         .route("/categories", get(list_categories_handler))
         .route(

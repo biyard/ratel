@@ -7,3 +7,6 @@ pub use add_space_comment::*;
 pub use like_space_comment::*;
 pub use list_space_comments::*;
 pub use reply_space_comment::*;
+
+#[cfg(test)]
+pub mod tests;

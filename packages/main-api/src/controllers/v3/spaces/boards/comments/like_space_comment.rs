@@ -19,7 +19,7 @@ pub struct SpaceLikeCommentRequest {
 }
 
 #[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, aide::OperationIo, schemars::JsonSchema,
+    Debug, Default, Clone, serde::Serialize, serde::Deserialize, JsonSchema, aide::OperationIo,
 )]
 pub struct SpaceLikeSpaceCommentResponse {
     pub liked: bool,

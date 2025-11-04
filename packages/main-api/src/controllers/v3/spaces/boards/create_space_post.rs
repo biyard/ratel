@@ -21,7 +21,7 @@ pub struct CreateSpacePostRequest {
 
 #[derive(Debug, Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct CreateSpacePostResponse {
-    pub post_pk: Partition,
+    pub space_post_pk: Partition,
 }
 
 pub async fn create_space_post_handler(
@@ -76,6 +76,6 @@ pub async fn create_space_post_handler(
     };
 
     Ok(Json(CreateSpacePostResponse {
-        post_pk: Partition::SpacePost(post_id),
+        space_post_pk: Partition::SpacePost(post_id),
     }))
 }
