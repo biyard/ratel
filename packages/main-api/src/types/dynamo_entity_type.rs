@@ -20,6 +20,9 @@ pub enum EntityType {
 
     Session,
 
+    // Common
+    Created(String), // CREATED#${timestamp}
+
     // User entity types
     // USER_PK index is aligned by gsi1-index
     User,
@@ -87,8 +90,9 @@ pub enum EntityType {
     SprintLeaguePlayer(String), //Uuid
     SprintLeagueVote(String),   //#{SPACE_ID}#{UserPk_ID}
 
-    // Artwork space entity types
-    ArtworkSpace,
+    // Artwork space entity types,
+    SpaceArtwork,
+    SpaceArtworkTrade(String), // Transaction hash
 
     Space,
     SpaceMember,
@@ -103,6 +107,12 @@ pub enum EntityType {
     Comment,
     Badge,
     Industry,
+
+    SpaceCategory(String),
+    SpacePost(String),
+    SpacePostComment(String),
+    SpacePostCommentReply(String, String),
+    SpacePostCommentLike(String, String),
 
     // Space - Topic feature
     Topic(String),                     // TOPIC#{topic_name}

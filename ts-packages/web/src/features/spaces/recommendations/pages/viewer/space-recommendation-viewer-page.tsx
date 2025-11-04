@@ -19,6 +19,7 @@ export function SpaceRecommendationViewerPage({ spacePk }: SpacePathProps) {
               htmlContent={ctrl.htmlContents}
               canEdit={false}
               onContentChange={() => {}}
+              url={null}
             />
           </Col>
           <Col className="gap-0">

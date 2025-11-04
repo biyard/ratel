@@ -26,6 +26,7 @@ import { BoosterType } from '@/features/spaces/types/booster-type';
 import PostResponse from '@/features/posts/dto/list-post-response';
 import { useLikePostMutation } from '@/features/posts/hooks/use-like-post-mutation';
 import { SpaceType } from '@/features/spaces/types/space-type';
+import { PostEditor } from '@/features/posts/components/post-editor';
 import { TiptapEditor } from './text-editor';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { LoginModal } from './popup/login-popup';
@@ -204,16 +205,18 @@ export function FeedContents({
     setSanitized(DOMPurify.sanitize(contents));
   }, [contents]);
 
+  const url = urls.length > 0 ? urls[0] : null;
   return (
     <div className="break-all text-desc-text">
-      <TiptapEditor
-        editable={false}
-        showToolbar={false}
-        content={sanitized}
-        className="border-none"
-        minHeight="50px"
-        maxHeight="200px"
-      />
+      <PostEditor
+      editable={false}
+      showToolbar={false}
+      content={sanitized}
+      className="border-none"
+      minHeight="50px"
+      maxHeight="200px"
+      url={url}
+    />
       {/* <p
         className="px-5 font-normal align-middle feed-content text-[15px]/[24px] tracking-[0.5px] text-c-wg-30"
         dangerouslySetInnerHTML={{ __html: sanitized }}
@@ -233,6 +236,31 @@ export function FeedContents({
       )} */}
     </div>
   );
+  // return (
+  //   <div className="text-desc-text">
+  //     <TiptapEditor
+  //       editable={false}
+  //       showToolbar={false}
+  //       content={sanitized}
+  //       className="border-none"
+  //       minHeight="50px"
+  //       maxHeight="200px"
+  //     />
+
+  //     {urls.length > 0 && urls[0] !== '' && (
+  //       <div className="px-5">
+  //         <div className="relative w-full max-h-80 aspect-video">
+  //           <img
+  //             src={urls[0]}
+  //             alt="Uploaded image"
+  //             className="object-cover w-full rounded-[8px]"
+  //             sizes="100vw"
+  //           />
+  //         </div>
+  //       </div>
+  //     )}
+  //   </div>
+  // );
 }
 export function IconText({
   children,

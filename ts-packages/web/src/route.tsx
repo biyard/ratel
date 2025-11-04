@@ -6,9 +6,12 @@ export const route = {
   myProfile: () => '/my-profile',
   explore: () => '/explore',
   settings: () => '/settings',
+  credentials: () => '/credentials',
   myPosts: () => '/my-posts',
   createPost: (postPk?: string) =>
     postPk ? `/posts/new?post-pk=${encodeURIComponent(postPk)}` : '/posts/new',
+  createArtwork: (postPk?: string) =>
+    `/artworks/new?post-pk=${encodeURIComponent(postPk)}`,
   drafts: () => '/drafts',
   draftEdit: (postPk: string) => `/drafts/${encodeURIComponent(postPk)}/edit`,
   teams: () => '/teams',
@@ -55,6 +58,12 @@ export const route = {
         return `/spaces/${encodeURIComponent(spaceId)}`;
     }
   },
+  spaceBoards: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/boards`,
+  spaceCreatePost: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/boards/create`,
+  spaceBoardPost: (spaceId: string, spacePostId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/boards/posts/${encodeURIComponent(spacePostId)}`,
   spacePolls: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/polls`,
   spacePanels: (spaceId: string) =>
@@ -76,6 +85,11 @@ export const route = {
     `/spaces/${encodeURIComponent(spaceId)}/recommendations`,
   spaceSprintLeagues: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/sprint-leagues`,
+
+  spaceNftPreview: (spacePk: string) =>
+    `/spaces/${encodeURIComponent(spacePk)}/nfts`,
+  spaceNftArtTwin: (spacePk: string) =>
+    `/spaces/${encodeURIComponent(spacePk)}/nfts/art-twin`,
 
   // Admin routes
   admin: () => '/admin',

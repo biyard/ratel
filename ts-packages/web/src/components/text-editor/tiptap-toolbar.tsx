@@ -35,14 +35,13 @@ export const TiptapToolbar = ({
   enabledFeatures = DEFAULT_ENABLED_FEATURES,
   className,
   openVideoPicker,
+  onImageUpload,
 }: TiptapToolbarProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
   const [isInTable, setIsInTable] = useState(false);
-
-  if (!editor) return null;
 
   const features = { ...DEFAULT_ENABLED_FEATURES, ...enabledFeatures };
 
@@ -139,22 +138,27 @@ export const TiptapToolbar = ({
       return;
     }
 
-    // Convert to Base64
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const base64 = e.target?.result as string;
+      if (onImageUpload) {
+        await onImageUpload(base64);
+      } else {
+        editor
+          .chain()
+          .focus()
+          .setImage({ src: base64, alt: file.name, title: file.name })
+          .run();
+      }
       // Store filename in alt attribute for later use
-      editor
-        .chain()
-        .focus()
-        .setImage({ src: base64, alt: file.name, title: file.name })
-        .run();
     };
     reader.readAsDataURL(file);
 
     // Reset input
     event.target.value = '';
   };
+
+  if (!editor) return null;
 
   return (
     <div className={cn('relative border-b border-border bg-card', className)}>

@@ -39,6 +39,7 @@ export const i18nSpaceHome = {
     menu_poll: 'Polls',
     menu_discussions: 'Discussions',
     menu_panels: 'Panels',
+    menu_boards: 'Boards',
     menu_members: 'Members',
     menu_files: 'Files',
     menu_quiz: 'Quizzes',
@@ -47,6 +48,9 @@ export const i18nSpaceHome = {
     // Admin Menus
     menu_admin_settings: 'Settings',
     menu_analyze: 'Analyze',
+    menu_nft_preview: 'ArtNFT',
+    menu_nft_settings: 'Settings',
+    menu_nft_art_twin: 'Art Twin',
 
     success_publish_space: 'Success to publish space.',
     failed_publish_space: 'Failed to publish space. please try later.',
@@ -97,6 +101,7 @@ export const i18nSpaceHome = {
     menu_poll: '설문',
     menu_discussions: '토론',
     menu_panels: '패널',
+    menu_boards: '게시판',
     menu_members: '멤버',
     menu_files: '파일',
     menu_quiz: '퀴즈',

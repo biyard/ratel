@@ -31,22 +31,28 @@ pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Erro
         bot,
         dynamo_client,
         ses_client,
+        metadata_s3_client,
         ..
     } = deps;
 
     Ok(by_axum::axum::Router::new()
-        .with_state(AppState::new(dynamo_client.clone(), ses_client.clone()))
+        .with_state(AppState::new(dynamo_client.clone(), ses_client.clone(), metadata_s3_client.clone()))
         .nest(
             "/v3",
             controllers::v3::route(controllers::v3::RouteDeps {
                 dynamo_client: dynamo_client.clone(),
                 ses_client: ses_client.clone(),
                 bot: bot.clone(),
+                s3: metadata_s3_client.clone(),
             })?,
         )
         .nest(
             "/m3",
-            controllers::m3::route(AppState::new(dynamo_client.clone(), ses_client.clone()))?,
+            controllers::m3::route(AppState::new(
+                dynamo_client.clone(),
+                ses_client.clone(),
+                metadata_s3_client.clone(),
+            ))?,
         )
         .layer(
             TraceLayer::new_for_http()

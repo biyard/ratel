@@ -9,7 +9,11 @@ import {
   CustomerInfo,
   MembershipPurchaseModal,
 } from './membership-purchase-modal';
+import { MembershipReceiptModal } from './membership-receipt-modal';
 import { useIdentityVerification } from '@/features/did/hooks/use-identity-verification';
+import { LoginModal } from '@/components/popup/login-popup';
+import { useUserInfo } from '@/hooks/use-user-info';
+import { useTranslation } from 'react-i18next';
 
 export class Controller {
   constructor(
@@ -17,13 +21,25 @@ export class Controller {
     public state: State<boolean>,
 
     // hooks
+    public user: ReturnType<typeof useUserInfo>,
     public kpnPayment: ReturnType<typeof useKpnPayment>,
     public popup: ReturnType<typeof usePopup>,
     public verification: ReturnType<typeof useIdentityVerification>,
+    public i18n: ReturnType<typeof useTranslation>['i18n'],
   ) {}
+
+  openLoginModal = () => {
+    this.popup
+      .open(<LoginModal />)
+      .withTitle('Join the Movement')
+      .withoutBackdropClose();
+  };
 
   handleGetMembership = async (i: number) => {
     logger.debug('Get membership plan:', i);
+    if (!this.user.data) {
+      return this.openLoginModal();
+    }
 
     let membership = MembershipTier.Pro;
     let displayAmount = 20;
@@ -41,8 +57,12 @@ export class Controller {
       return this.handleEnterpriseContact();
     }
 
+    if (this.i18n.language === 'ko') {
+      displayAmount = Math.round(displayAmount * 1000);
+    }
+
     try {
-      const resp = await this.verification.mutation.mutateAsync();
+      const resp = await this.verification.mutateAsync();
       logger.debug('Identity verification successful:', resp);
 
       this.popup
@@ -56,19 +76,30 @@ export class Controller {
               logger.debug('Membership purchase cancelled');
               this.popup.close();
             }}
-            onConfirm={(cardinfo: CustomerInfo) => {
+            onConfirm={async (cardinfo: CustomerInfo) => {
               logger.debug('Membership purchase confirmed:', cardinfo);
               this.popup.close();
-              {
-                this.kpnPayment.mutation.mutateAsync({
-                  membership,
-                  cardNumber: cardinfo.cardNumber,
-                  expiryYear: cardinfo.expiryYear,
-                  expiryMonth: cardinfo.expiryMonth,
-                  birthOrBusinessRegistrationNumber: cardinfo.birthOrBiz,
-                  passwordTwoDigits: cardinfo.cardPassword,
-                });
-              }
+              const receipt = await this.kpnPayment.mutation.mutateAsync({
+                membership,
+                cardNumber: cardinfo.cardNumber,
+                expiryYear: cardinfo.expiryYear,
+                expiryMonth: cardinfo.expiryMonth,
+                birthOrBusinessRegistrationNumber: cardinfo.birthOrBiz,
+                passwordTwoDigits: cardinfo.cardPassword,
+              });
+
+              // Show receipt modal
+              this.popup
+                .open(
+                  <MembershipReceiptModal
+                    receipt={receipt}
+                    onClose={() => {
+                      this.popup.close();
+                    }}
+                    t={this.t.receiptModal}
+                  />,
+                )
+                .withTitle('Receipt');
             }}
           />,
         )
@@ -95,10 +126,20 @@ export class Controller {
 export function useController() {
   // TODO: use or define hooks
   const t = useMembershipPlanI18n();
+  const user = useUserInfo();
   const state = useState(false);
   const kpnPayment = useKpnPayment();
   const popup = usePopup();
   const verification = useIdentityVerification();
+  const { i18n } = useTranslation();
 
-  return new Controller(t, new State(state), kpnPayment, popup, verification);
+  return new Controller(
+    t,
+    new State(state),
+    user,
+    kpnPayment,
+    popup,
+    verification,
+    i18n,
+  );
 }

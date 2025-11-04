@@ -92,7 +92,7 @@ export class ThreadController {
   };
 
   handleEditPost = async () => {
-    logger.error('handleEditPost Not Implemented', this.postId);
+    this.navigate(route.newPost(this.postId));
   };
 
   handleDeletePost = async () => {

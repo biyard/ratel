@@ -3,7 +3,7 @@ use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
 use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
-use crate::models::{SpaceCommon, User};
+use crate::models::{Post, SpaceCommon, User};
 use crate::types::TeamGroupPermission;
 use crate::types::{EntityType, SpacePublishState};
 use crate::types::{Partition, SpaceStatus};
@@ -53,6 +53,11 @@ pub async fn resent_invitation_code_handler(
         return Err(Error::NoPermission);
     }
 
+    let post_pk = space_pk.clone().to_post_key()?;
+    let post = Post::get(&dynamo.client, &post_pk, Some(&EntityType::Post))
+        .await?
+        .unwrap_or_default();
+
     if space_common.publish_state != SpacePublishState::Published {
         return Err(Error::NotPublishedSpace);
     }
@@ -64,8 +69,14 @@ pub async fn resent_invitation_code_handler(
     }
 
     let user_email = req.email;
-    let _ = SpaceEmailVerification::send_email(&dynamo, &ses, user_email.clone(), space_pk.clone())
-        .await?;
+    let _ = SpaceEmailVerification::send_email(
+        &dynamo,
+        &ses,
+        user_email.clone(),
+        space_common.clone(),
+        post.title,
+    )
+    .await?;
 
     Ok(Json(ResentInvitationCodeResponse {
         is_success: true,

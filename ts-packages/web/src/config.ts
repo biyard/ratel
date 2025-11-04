@@ -20,6 +20,14 @@ type Config = {
   portone_store_id: string;
   portone_inicis_channel_key: string;
   portone_kpn_channel_key: string;
+
+  // Business Information (for PG approval footer)
+  company_name: string;
+  company_ceo: string;
+  business_registration: string;
+  business_address: string;
+  business_phone: string;
+  business_email: string;
 };
 
 export const Env = {
@@ -58,4 +66,14 @@ export const config: Config = {
   portone_inicis_channel_key:
     import.meta.env.VITE_PORTONE_INICIS_CHANNEL_KEY || '',
   portone_kpn_channel_key: import.meta.env.VITE_PORTONE_KPN_CHANNEL_KEY || '',
+
+  // Business Information (for PG approval footer)
+  company_name: import.meta.env.VITE_COMPANY_NAME || 'Ratel Inc.',
+  company_ceo: import.meta.env.VITE_COMPANY_CEO || '박혜진',
+  business_registration:
+    import.meta.env.VITE_BUSINESS_REGISTRATION || '591-87-01919',
+  business_address:
+    import.meta.env.VITE_BUSINESS_ADDRESS || 'Business Address, City, Country',
+  business_phone: import.meta.env.VITE_BUSINESS_PHONE || '+82-2-1234-5678',
+  business_email: import.meta.env.VITE_BUSINESS_EMAIL || 'contact@ratel.com',
 };

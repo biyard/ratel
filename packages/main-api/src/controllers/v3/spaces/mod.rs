@@ -3,6 +3,7 @@ pub mod delete_space;
 pub mod list_spaces;
 pub mod update_space;
 
+pub mod boards;
 pub mod discussions;
 pub mod files;
 pub mod members;
@@ -16,6 +17,7 @@ pub mod get_space;
 #[cfg(test)]
 pub mod tests;
 
+pub mod artworks;
 pub use create_space::*;
 pub use delete_space::*;
 pub use dto::*;

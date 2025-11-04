@@ -34,6 +34,9 @@ pub enum Partition {
     Space(String),
     SurveySpace(String),
 
+    SpacePost(String),
+    SpacePostLike(String),
+
     Discussion(String),
     DiscussionUser(String),
 
@@ -67,6 +70,7 @@ pub enum Partition {
 
     // Payment Sub partition
     Purchase, // For user purchases, USER#{user_id}##PURCHASE
+    Payment,  // For user payment, USER#{user_id}##PAYMENT
 }
 
 impl Partition {
