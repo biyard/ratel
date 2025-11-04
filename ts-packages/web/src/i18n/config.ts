@@ -67,6 +67,7 @@ import { i18nFooter } from '@/components/footer/i18n';
 import { Terms } from '@/app/terms/i18n';
 import { Privacy } from '@/app/privacy/i18n';
 import { Refund } from '@/app/refund/i18n';
+import { SpaceSettings } from '@/app/spaces/[id]/settings/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -143,6 +144,7 @@ Object.entries({
   Terms,
   Privacy,
   Refund,
+  SpaceSettings,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
