@@ -39,6 +39,8 @@ pub struct GetSpaceResponse {
     pub booster: BoosterType,
 
     pub verified: bool,
+
+    pub anonymous_participation: bool,
 }
 
 pub async fn get_space_handler(
@@ -119,6 +121,7 @@ impl From<(SpaceCommon, Post, TeamGroupPermissions, bool)> for GetSpaceResponse 
             publish_state: space.publish_state,
             booster: space.booster,
             verified,
+            anonymous_participation: space.anonymous_participation,
         }
     }
 }
