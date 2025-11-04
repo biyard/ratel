@@ -3,7 +3,7 @@ use crate::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default, JsonSchema, OperationIo)]
 pub struct UserPayment {
-    pub pk: Partition,
+    pub pk: CompositePartition,
     pub sk: EntityType,
 
     pub billing_key: Option<String>,
@@ -17,10 +17,11 @@ impl UserPayment {
         if !matches!(pk, Partition::User(_)) {
             panic!("UserPayment pk must be of Partition::User type");
         }
+        let now = time::get_now_timestamp_millis();
 
         Self {
-            pk,
-            sk: EntityType::UserPayment,
+            pk: CompositePartition(pk, Partition::Payment),
+            sk: EntityType::Created(now.to_string()),
             customer_id,
             name,
             birth_date,

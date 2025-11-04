@@ -28,10 +28,12 @@ pub mod space_type;
 pub mod space_visibility;
 
 pub mod app_state;
+pub mod composite_partition;
 pub mod team_group_permission;
 pub mod theme;
 pub mod url_type;
 pub mod user_type;
+pub use composite_partition::*;
 
 pub use booster_type::*;
 pub use dynamo_entity_type::*;

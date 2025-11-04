@@ -345,7 +345,7 @@ async fn test_list_posts() {
         assert_eq!(status, 200);
         assert_eq!(body["status"], 2);
 
-        sleep(std::time::Duration::from_secs(1)).await; // ensure the order by created_at
+        sleep(std::time::Duration::from_millis(10)).await; // ensure the order by created_at
     }
 
     let (status, _headers, body) = get! {
@@ -366,6 +366,7 @@ async fn test_list_posts() {
         first["html_contents"],
         format!("<p>Updated Content {} 10</p>", now)
     );
+    assert_eq!(items.length().unwrap_or_default(), 10);
 
     let (status, _headers, body) = get! {
         app: app,

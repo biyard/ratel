@@ -22,6 +22,7 @@ export function useCommentMutation() {
 
       await optimisticUpdate<PostDetailResponse>({ queryKey }, (post) => {
         post.comments = [comment, ...post.comments];
+        post.post.comments = post.post.comments + 1;
 
         return post;
       });

@@ -78,8 +78,6 @@ pub mod teams {
 
 pub mod posts;
 
-pub mod memberships;
-
 use crate::*;
 use crate::{
     assets::{

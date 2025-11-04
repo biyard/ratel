@@ -17,7 +17,7 @@ export class Controller {
   }
 
   handleIdentityVerification = async () => {
-    await this.identityVerification.mutation.mutateAsync();
+    await this.identityVerification.mutateAsync();
   };
 }
 

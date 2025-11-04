@@ -40,7 +40,7 @@ jobs:
           DOMAIN: ratel.foundation
           STACK: ratel-prod-stack
           DEPLOY_STORYBOOK: false
-          BUCKET: ${{ secrets.RATEL_BUCKET }}
+          BUCKET: ${{ secrets.PROD_RATEL_BUCKET }}
         run: |
           npm i -g aws-cdk
           tar xzvf dist.tar.gz
@@ -139,6 +139,8 @@ jobs:
 
           # NOTE: Change PORTONE API
           PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
+          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
+          PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
         run: |
           tar xzvf dist.tar.gz
           mv cdk/dist ./
