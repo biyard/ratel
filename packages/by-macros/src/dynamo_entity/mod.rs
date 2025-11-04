@@ -1238,26 +1238,43 @@ fn generate_struct_impl(
             pub async fn get(
                 cli: &aws_sdk_dynamodb::Client,
                 pk: impl std::fmt::Display,
-                #sk_param
+                sk: Option<impl std::fmt::Display>
             ) -> #result_ty <Option<Self>, #err_ctor> {
+                let key_condition = if sk.is_some() {
+                    "#pk = :pk AND begins_with(#sk, :sk)"
+                } else {
+                    "#pk = :pk"
+                };
+
                 let mut req = cli
-                    .get_item()
+                    .query()
                     .table_name(Self::table_name())
-                    .key(
-                        Self::pk_field(),
+                    .key_condition_expression(key_condition)
+                    .expression_attribute_names("#pk", Self::pk_field())
+                    .expression_attribute_values(
+                        ":pk",
                         aws_sdk_dynamodb::types::AttributeValue::S(pk.to_string()),
                     );
 
-                #sk_condition
+                if let Some(sk) = sk {
+                    req = req
+                        .expression_attribute_names("#sk", "sk")
+                        .expression_attribute_values(":sk", aws_sdk_dynamodb::types::AttributeValue::S(sk.to_string()));
+                }
 
-                let item = req
+                let resp = req
+                    .limit(1)
                     .send()
                     .await
                     .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
 
-                if let Some(item) = item.item {
-                    let ev: Self = serde_dynamo::from_item(item)?;
-                    Ok(Some(ev))
+                if let Some(mut items) = resp.items {
+                    if let Some(item) = items.pop() {
+                        let ev: Self = serde_dynamo::from_item(item)?;
+                        Ok(Some(ev))
+                    } else {
+                        Ok(None)
+                    }
                 } else {
                     Ok(None)
                 }

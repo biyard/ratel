@@ -1,7 +1,7 @@
 // Auto-generated icon exports
-// Total icons: 657
+// Total icons: 659
 
-// Root Icons (93)
+// Root Icons (95)
 export { default as Add } from '@/assets/icons/add.svg?react';
 export { default as AlertCircle } from '@/assets/icons/alert-circle.svg?react';
 export { default as ArrowLeft } from '@/assets/icons/arrow-left.svg?react';
@@ -29,6 +29,7 @@ export { default as Cube } from '@/assets/icons/cube.svg?react';
 export { default as Delete_2 } from '@/assets/icons/delete_2.svg?react';
 export { default as DialPad2 } from '@/assets/icons/dial-pad-2.svg?react';
 export { default as DialPad } from '@/assets/icons/dial-pad.svg?react';
+export { default as Did } from '@/assets/icons/did.svg?react';
 export { default as Discuss } from '@/assets/icons/discuss.svg?react';
 export { default as DoubleArrowDown } from '@/assets/icons/double-arrow-down.svg?react';
 export { default as DoubleArrowUp } from '@/assets/icons/double-arrow-up.svg?react';
@@ -89,6 +90,7 @@ export { default as Upload } from '@/assets/icons/upload.svg?react';
 export { default as UserCircle } from '@/assets/icons/user-circle.svg?react';
 export { default as UserGroup } from '@/assets/icons/user-group.svg?react';
 export { default as User } from '@/assets/icons/user.svg?react';
+export { default as Verified } from '@/assets/icons/verified.svg?react';
 export { default as VideoOff } from '@/assets/icons/video-off.svg?react';
 export { default as VideoOn } from '@/assets/icons/video-on.svg?react';
 export { default as Vote } from '@/assets/icons/vote.svg?react';
