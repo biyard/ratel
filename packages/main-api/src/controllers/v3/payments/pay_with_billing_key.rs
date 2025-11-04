@@ -1,9 +1,16 @@
+use std::time::Duration;
+
+use tokio::time::sleep;
+
 use crate::{
     features::{
         membership::*,
-        payment::{TransactionType, UserPayment, user_purchase::UserPurchase},
+        payment::{
+            TransactionType, UserPayment,
+            user_purchase::{self, UserPurchase},
+        },
     },
-    types::EntityType,
+    types::{EntityType, Partition},
     *,
 };
 
@@ -69,22 +76,21 @@ pub async fn pay_with_billing_key_handler(
         debug!("Billing key response: {:?}", res);
     }
 
-    let amount = match membership {
-        MembershipTier::Free => 0,
-        MembershipTier::Max => 20,
-        MembershipTier::Pro => 50,
-        MembershipTier::Vip => 100,
-        MembershipTier::Enterprise(ref _s) => {
-            // TODO: implement customizable pricing
-            1000
-        }
-    };
+    let tx_type = TransactionType::PurchaseMembership(membership.to_string());
+    let membership_pk: Partition = membership.into();
 
-    let mut user_purchase = UserPurchase::new(
-        user.pk,
-        TransactionType::PurchaseMembership(membership.to_string()),
-        amount,
-    );
+    let membership: Membership =
+        Membership::get(&dynamo.client, membership_pk, Some(EntityType::Membership))
+            .await?
+            .ok_or(Error::NotFound("Membership not found".to_string()))?;
+    // NOTE: it's for enterprise membership only
+    if !membership.is_active {
+        return Err(Error::ExpiredMembership);
+    }
+
+    let amount = membership.price_dollars;
+
+    let mut user_purchase = UserPurchase::new(user.pk.clone(), tx_type, amount);
 
     let res = portone
         .pay_with_billing_key(
@@ -100,9 +106,23 @@ pub async fn pay_with_billing_key_handler(
     user_purchase.tx_id = Some(res.payment.pg_tx_id.clone());
 
     txs.push(user_purchase.create_transact_write_item());
-    // TODO: Update user's membership status upon successful payment
+    let tx = UserMembership::new(
+        user.pk.clone(),
+        membership.pk,
+        membership.duration_days,
+        membership.credits,
+    )?
+    .with_purchase_id(user_purchase.pk.clone())
+    .with_auto_renew(true)
+    .upsert_transact_write_item();
 
-    info!("payment response: {:?}", res);
+    txs.push(tx);
+    while let Err(e) = transact_write_items!(&dynamo.client, txs.clone()) {
+        error!("Error in transact write items: {:?}", e);
+        sleep(Duration::from_millis(100)).await;
+    }
+
+    // TODO: Make auto renew cronjob
 
     return Ok(Json(PayWithBillingKeyResponse {
         status: "Payment successful".to_string(),

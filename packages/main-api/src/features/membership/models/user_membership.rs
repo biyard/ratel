@@ -1,8 +1,8 @@
 use crate::{
     features::{membership::MembershipStatus, payment::PaymentMethod},
     types::*,
+    *,
 };
-use bdk::prelude::*;
 
 #[derive(
     Debug,
@@ -27,26 +27,17 @@ pub struct UserMembership {
     // Fixed typo: membership_pk not memberhship_pk
     #[dynamo(prefix = "UM", name = "find_by_membership", index = "gsi1", pk)]
     pub membership_pk: Partition,
-
-    // Status tracking with GSI for queries
-    #[dynamo(index = "gsi2", pk, prefix = "STATUS", name = "find_by_status")]
     pub status: MembershipStatus,
-
-    #[dynamo(index = "gsi2", sk)]
-    pub expiration_timestamp: i64,
 
     // Credits management
     pub total_credits: i64,
     pub remaining_credits: i64,
 
     // Payment tracking
-    pub transaction_id: Option<String>,
-    pub payment_method: Option<PaymentMethod>,
-    pub price_paid: i64,
+    pub purchase_id: Option<CompositePartition>,
 
     // Renewal tracking
     pub auto_renew: bool,
-    pub renewal_count: i32,
 
     // Cancellation tracking
     pub cancelled_at: Option<i64>,
@@ -59,7 +50,6 @@ impl UserMembership {
         membership_pk: Partition,
         duration_days: i32,
         credits: i64,
-        price_paid: i64, // only dollars
     ) -> crate::Result<Self> {
         // Validation
         if !matches!(user_pk, Partition::User(_)) {
@@ -92,24 +82,21 @@ impl UserMembership {
             created_at,
             updated_at: created_at,
             expired_at,
-            expiration_timestamp: expired_at,
-            status: MembershipStatus::Active.into(),
             total_credits: credits,
             remaining_credits: credits,
-            transaction_id: None,
-            payment_method: None,
-            price_paid,
-            auto_renew: false,
-            renewal_count: 0,
+            auto_renew: true,
             cancelled_at: None,
             cancellation_reason: None,
+            purchase_id: None,
+            status: MembershipStatus::Active,
         })
     }
 
     /// Check if membership is currently active and not expired
     pub fn is_active(&self) -> bool {
         self.status == MembershipStatus::Active
-            && (self.expired_at == i64::MAX || self.expired_at > chrono::Utc::now().timestamp_micros())
+            && (self.expired_at == i64::MAX
+                || self.expired_at > chrono::Utc::now().timestamp_micros())
     }
 
     /// Check if membership is expired
@@ -151,9 +138,7 @@ impl UserMembership {
         };
 
         self.expired_at = new_expiration;
-        self.expiration_timestamp = new_expiration;
         self.status = MembershipStatus::Active.into();
-        self.renewal_count += 1;
         self.updated_at = now;
 
         Ok(())
