@@ -40,7 +40,7 @@ jobs:
           DOMAIN: ratel.foundation
           STACK: ratel-prod-stack
           DEPLOY_STORYBOOK: false
-          BUCKET: ${{ secrets.RATEL_BUCKET }}
+          BUCKET: ${{ secrets.PROD_RATEL_BUCKET }}
         run: |
           npm i -g aws-cdk
           tar xzvf dist.tar.gz
