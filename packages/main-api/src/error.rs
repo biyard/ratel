@@ -185,7 +185,7 @@ pub enum Error {
     #[rest_error(status = 400, code = 7000)]
     InsufficientCredits,
 
-    // /v3/panels endpoints 5000 ~
+    // /v3/panels endpoints 8000 ~
     #[rest_error(code = 8000)]
     #[error("panel not found")]
     NotFoundPanel,
@@ -193,6 +193,11 @@ pub enum Error {
     AlreadyParticipateUser,
     #[error("already full panel")]
     AlreadyFullPanel,
+
+    // Payment errors 9000 ~
+    #[error("Invalid identification for payment")]
+    #[rest_error(code = 9000)]
+    InvalidIdentification,
 
     // web 1,000,000 ~
     #[error("Web error: {0}")]

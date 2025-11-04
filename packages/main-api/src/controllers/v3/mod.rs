@@ -4,6 +4,7 @@ use bdk::prelude::*;
 
 pub mod did;
 pub mod networks;
+mod payments;
 
 pub mod promotions {
     pub mod get_top_promotion;
@@ -140,6 +141,7 @@ pub fn route(
     }: RouteDeps,
 ) -> Result<Router> {
     Ok(Router::new()
+        .nest("/payments", payments::route()?)
         .nest("/did", did::route()?)
         .nest(
             "/networks",
@@ -208,7 +210,7 @@ pub fn route(
                     Router::new()
                         .nest(
                             "/invitations",
-                            crate::controllers::v3::spaces::invitations::route(),
+                            crate::controllers::v3::spaces::members::route(),
                         )
                         .nest("/files", crate::controllers::v3::spaces::files::route())
                         .nest("/panels", crate::controllers::v3::spaces::panels::route())

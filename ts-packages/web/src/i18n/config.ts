@@ -60,6 +60,7 @@ import { i18nHeader } from '@/components/header/i18n';
 import i18nListDrafts from '@/features/drafts/components/list-drafts/i18n';
 import { CreatePostPage } from '@/features/posts/components/create-post-page/i18n';
 import { i18nSubmitSurveyModal } from '@/features/spaces/polls/components/modal/submit_survey/submit-survey-modal-i18n';
+import { MembershipPlan } from '@/features/membership/components/membership-plan/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -129,6 +130,7 @@ Object.entries({
   Nav: i18nHeader,
   ListDrafts: i18nListDrafts,
   CreatePostPage,
+  MembershipPlan,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;

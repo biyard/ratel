@@ -98,13 +98,18 @@ export class SpacePollEditorController {
     this.answers.set({ ...currentAnswers });
   };
 
-  onChangeTimeRange = (started_at: number, ended_at: number) => {
+  onChangeTimeRange = async (started_at: number, ended_at: number) => {
     logger.debug(
       `onChangeTimeRange called: start=${started_at}, end=${ended_at}`,
     );
+    // validate time range
+    if (started_at >= ended_at) {
+      showErrorToast(this.t('invalid_time_range'));
+      return;
+    }
 
     try {
-      this.updateTimeRange.mutate({
+      await this.updateTimeRange.mutateAsync({
         spacePk: this.space.pk,
         pollSk: this.poll.sk,
         started_at,

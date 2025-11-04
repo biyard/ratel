@@ -3,7 +3,7 @@ use crate::controllers::v3::spaces::CreateSpaceResponse;
 use crate::controllers::v3::spaces::files::get_files::GetSpaceFileResponse;
 use crate::controllers::v3::spaces::files::update_files::UpdateSpaceFileResponse;
 
-use crate::controllers::v3::spaces::invitations::{
+use crate::controllers::v3::spaces::members::{
     ResentInvitationCodeResponse, UpsertInvitationResponse, VerifySpaceCodeResponse,
 };
 use crate::features::spaces::invitations::{SpaceEmailVerification, SpaceInvitationMemberResponse};
