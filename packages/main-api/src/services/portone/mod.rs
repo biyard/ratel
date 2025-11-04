@@ -17,10 +17,10 @@ pub use verified_customer::*;
 
 const BASE_URL: &str = "https://api.portone.io";
 #[cfg(not(feature = "no-secret"))]
-mod aws;
+mod portone;
 
 #[cfg(not(feature = "no-secret"))]
-pub use aws::*;
+pub use portone::*;
 
 #[cfg(feature = "no-secret")]
 mod noop;

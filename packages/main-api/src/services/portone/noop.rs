@@ -1,6 +1,6 @@
 use crate::*;
 
-use super::{ChannelResponse, IdentifyResponse, VerifiedCustomer, VerifiedGender};
+use super::*;
 
 #[derive(Debug, Clone)]
 pub struct PortOne {}
@@ -39,5 +39,35 @@ impl PortOne {
             },
             version: "1".to_string(),
         })
+    }
+
+    pub async fn get_billing_key(
+        &self,
+        _customer_id: String,
+        _customer_name: String,
+        _card_number: String,
+        _expiry_year: String,
+        _expiry_month: String,
+        _birth_or_business_registration_number: String,
+        _password_two_digits: String,
+    ) -> Result<BillingKeyResponse> {
+        BilingKeyResponse {
+            billing_key: "test-billing-key".to_string(),
+            customer_id: _customer_id,
+            customer_name: _customer_name,
+            pg_raw_response: "{}".to_string(),
+            created_at: "2024-01-01T00:00:00Z".to_string(),
+        }
+    }
+
+    pub async fn pay_with_billing_key(
+        &self,
+        _payment_id: String,
+        _customer_id: String,
+        _customer_name: String,
+        _order_name: String,
+        _billing_key: String,
+        _amount: i64,
+    ) -> Result<BillingKeyPaymentResponse> {
     }
 }
