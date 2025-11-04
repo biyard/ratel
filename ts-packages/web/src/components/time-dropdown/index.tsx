@@ -73,7 +73,7 @@ export default function TimeDropdown({
   };
 
   return (
-    <Popover.Root open={canEdit && open} onOpenChange={setOpen}>
+    <Popover.Root modal={false} open={canEdit && open} onOpenChange={setOpen}>
       <Popover.Trigger asChild>
         <button
           ref={triggerRef}

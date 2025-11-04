@@ -170,6 +170,10 @@ pub enum Error {
     NotFoundSpace,
     #[error("already published space")]
     AlreadyPublishedSpace,
+    #[error("not published space")]
+    NotPublishedSpace,
+    #[error("finished space")]
+    FinishedSpace,
 
     // /v3/discussions endpoints 6000 ~
     #[rest_error(code = 6000)]
@@ -180,8 +184,10 @@ pub enum Error {
     #[error("Insufficient credits")]
     #[rest_error(status = 400, code = 7000)]
     InsufficientCredits,
+    #[error("Membership may be expired")]
+    ExpiredMembership,
 
-    // /v3/panels endpoints 5000 ~
+    // /v3/panels endpoints 8000 ~
     #[rest_error(code = 8000)]
     #[error("panel not found")]
     NotFoundPanel,
@@ -189,6 +195,11 @@ pub enum Error {
     AlreadyParticipateUser,
     #[error("already full panel")]
     AlreadyFullPanel,
+
+    // Payment errors 9000 ~
+    #[error("Invalid identification for payment")]
+    #[rest_error(code = 9000)]
+    InvalidIdentification,
 
     // web 1,000,000 ~
     #[error("Web error: {0}")]

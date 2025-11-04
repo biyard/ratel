@@ -9,6 +9,7 @@ import {
 import { SpaceType } from '../types/space-type';
 import { addSideMenusForSpaceType } from '../utils/side-menus-for-space-type';
 import { route } from '@/route';
+import { config } from '@/config';
 // import { SpaceStatus } from '../types/space-common';
 
 // const checkCircle2Colored = (props) => (
@@ -40,6 +41,14 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
   //   },
   //   label: 'menu_discussions',
   // },
+  {
+    Icon: User,
+    to: (space) => {
+      return route.spaceMembers(space.pk);
+    },
+    visible: () => config.experiment,
+    label: 'menu_members',
+  },
   {
     Icon: User,
     to: (space) => {

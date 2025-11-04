@@ -2,6 +2,7 @@ use crate::models::space::SpaceCommon;
 
 use crate::features::spaces::polls::*;
 use crate::models::user::User;
+use crate::types::SpaceStatus;
 use crate::types::{Answer, EntityType, Partition, TeamGroupPermission, validate_answers};
 use crate::utils::time::get_now_timestamp_millis;
 use crate::{AppState, Error, transact_write};
@@ -30,7 +31,7 @@ pub async fn respond_poll_handler(
 ) -> crate::Result<Json<RespondPollSpaceResponse>> {
     //Validate Request
 
-    let (_, has_perm) = SpaceCommon::has_permission(
+    let (space_common, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
         Some(&user.pk),
@@ -39,6 +40,12 @@ pub async fn respond_poll_handler(
     .await?;
     if !has_perm {
         return Err(Error::NoPermission);
+    }
+
+    if space_common.status == Some(SpaceStatus::Started)
+        || space_common.status == Some(SpaceStatus::Finished)
+    {
+        return Err(Error::FinishedSpace);
     }
 
     let poll_pk: Partition = poll_sk.clone().try_into()?;

@@ -413,7 +413,6 @@ async fn test_user_membership_infinite_duration_logic() {
         membership.pk.clone(),
         -1, // infinite duration
         100,
-        10,
     )
     .unwrap();
 
