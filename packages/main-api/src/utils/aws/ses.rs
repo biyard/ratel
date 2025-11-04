@@ -34,6 +34,68 @@ impl SesClient {
         }
     }
 
+    fn sanitize_subject(subject: &str) -> String {
+        subject
+            .chars()
+            .filter(|&c| c != '\r' && c != '\n')
+            .collect()
+    }
+
+    pub async fn send_mail_html(
+        &self,
+        to: &str,
+        subject: &str,
+        html: &str,
+        text_fallback: Option<&str>,
+    ) -> Result<(), SesServiceError> {
+        let destination = Destination::builder().to_addresses(to).build();
+
+        let mut body_builder = Body::builder().html(
+            Content::builder()
+                .data(html.to_string())
+                .charset("UTF-8")
+                .build()
+                .map_err(|e| SesServiceError::InvalidContent(e.to_string()))?,
+        );
+
+        if let Some(text) = text_fallback {
+            body_builder = body_builder.text(
+                Content::builder()
+                    .data(text.to_string())
+                    .charset("UTF-8")
+                    .build()
+                    .map_err(|e| SesServiceError::InvalidContent(e.to_string()))?,
+            );
+        }
+
+        let msg = Message::builder()
+            .subject(
+                Content::builder()
+                    .data(Self::sanitize_subject(subject))
+                    .charset("UTF-8")
+                    .build()
+                    .map_err(|e| SesServiceError::InvalidContent(e.to_string()))?,
+            )
+            .body(body_builder.build())
+            .build();
+
+        let content = EmailContent::builder().simple(msg).build();
+
+        self.client
+            .send_email()
+            .from_email_address(self.from.as_ref())
+            .destination(destination)
+            .content(content)
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("SES Send Email Error: {:?}", e);
+                SesServiceError::SendEmailFailed(e.to_string())
+            })?;
+
+        Ok(())
+    }
+
     pub async fn send_mail(
         &self,
         to: &str,
