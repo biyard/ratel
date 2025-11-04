@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 
 use crate::features::spaces::discussions::models::space_discussion_member::SpaceDiscussionMember;
-use crate::features::spaces::invitations::SpaceInvitationMember;
+use crate::features::spaces::members::SpaceInvitationMember;
 use crate::types::Partition;
 
 #[derive(

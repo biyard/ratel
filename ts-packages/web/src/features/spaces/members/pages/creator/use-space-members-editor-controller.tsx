@@ -10,13 +10,13 @@ import { useUpsertInvitationMutation } from '../../hooks/use-upsert-invitation-m
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useResentVerificationMutation } from '../../hooks/use-resent-resent-mutation';
 
-export class SpaceInvitationEditorController {
+export class SpaceMembersEditorController {
   constructor(
     public spacePk: string,
     public space: Space,
     public invitationMembers: InvitationMemberResponse[],
     public popup,
-    public t: TFunction<'SpaceInvitationEditor', undefined>,
+    public t: TFunction<'SpaceMemberEditor', undefined>,
 
     public upsertInvitation: ReturnType<typeof useUpsertInvitationMutation>,
     public resentVerification: ReturnType<typeof useResentVerificationMutation>,
@@ -62,15 +62,15 @@ export class SpaceInvitationEditorController {
   };
 }
 
-export function useSpaceInvitationEditorController(spacePk: string) {
+export function useSpaceMembersEditorController(spacePk: string) {
   const { data: space } = useSpaceById(spacePk);
   const { data: invitationMembers } = useInvitationMember(spacePk);
   const popup = usePopup();
-  const { t } = useTranslation('SpaceInvitationEditor');
+  const { t } = useTranslation('SpaceMemberEditor');
   const upsertInvitation = useUpsertInvitationMutation();
   const resentVerification = useResentVerificationMutation();
 
-  return new SpaceInvitationEditorController(
+  return new SpaceMembersEditorController(
     spacePk,
     space,
     invitationMembers.members,

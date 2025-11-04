@@ -1,5 +1,5 @@
 use super::*;
-use crate::features::spaces::invitations::SpaceEmailVerification;
+use crate::features::spaces::members::SpaceEmailVerification;
 use crate::models::user::User;
 use crate::models::{Post, SpaceCommon};
 use crate::types::*;

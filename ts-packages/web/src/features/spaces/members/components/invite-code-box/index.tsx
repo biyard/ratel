@@ -4,7 +4,7 @@ import { TFunction } from 'i18next';
 import { useState } from 'react';
 
 export interface InviteCodeBoxProps {
-  t: TFunction<'SpaceInvitationViewer', undefined>;
+  t: TFunction<'SpaceMemberViewer', undefined>;
   verify: (code: string) => void;
 }
 

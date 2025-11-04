@@ -1,14 +1,14 @@
 import { SpacePathProps } from '@/features/space-path-props';
 import { logger } from '@/lib/logger';
-import { useSpaceInvitationEditorController } from './use-space-invitation-editor-controller';
 import { Button } from '@/components/ui/button';
 import InviteMemberTable from '../../components/invite-member-table';
 import { SpacePublishState } from '@/features/spaces/types/space-common';
+import { useSpaceMembersEditorController } from './use-space-members-editor-controller';
 
-export function SpaceInvitationEditorPage({ spacePk }: SpacePathProps) {
-  logger.debug(`SpaceInvitationEditorPage: spacePk=${spacePk}`);
+export function SpaceMembersEditorPage({ spacePk }: SpacePathProps) {
+  logger.debug(`SpaceMembersEditorPage: spacePk=${spacePk}`);
 
-  const ctrl = useSpaceInvitationEditorController(spacePk);
+  const ctrl = useSpaceMembersEditorController(spacePk);
   const t = ctrl.t;
 
   const inviteMembers = ctrl.invitationMembers ?? [];

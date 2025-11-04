@@ -78,7 +78,7 @@ function InviteMemberButton({
   isError,
   onclick,
 }: {
-  t: TFunction<'SpaceInvitationEditor', undefined>;
+  t: TFunction<'SpaceMemberEditor', undefined>;
   isError: boolean;
   onclick: () => void | Promise<void>;
 }) {

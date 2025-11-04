@@ -6,7 +6,7 @@ use crate::controllers::v3::spaces::files::update_files::UpdateSpaceFileResponse
 use crate::controllers::v3::spaces::members::{
     ResentInvitationCodeResponse, UpsertInvitationResponse, VerifySpaceCodeResponse,
 };
-use crate::features::spaces::invitations::{SpaceEmailVerification, SpaceInvitationMemberResponse};
+use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMemberResponse};
 use crate::tests::create_user_session;
 use crate::tests::{
     create_app_state,

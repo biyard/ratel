@@ -1,12 +1,12 @@
 import { SpacePathProps } from '@/features/space-path-props';
 import { logger } from '@/lib/logger';
-import { useSpaceInvitationViewerController } from './use-space-invitation-viewer-controller';
+import { useSpaceMembersViewerController } from './use-space-members-viewer-controller';
 // import InviteCodeBox from '../../components/invite-code-box';
 
-export function SpaceInvitationViewerPage({ spacePk }: SpacePathProps) {
-  logger.debug(`SpaceInvitationViewerPage: spacePk=${spacePk}`);
+export function SpaceMembersViewerPage({ spacePk }: SpacePathProps) {
+  logger.debug(`SpaceMembersViewerPage: spacePk=${spacePk}`);
 
-  const _ctrl = useSpaceInvitationViewerController(spacePk);
+  const _ctrl = useSpaceMembersViewerController(spacePk);
 
   return (
     <>
