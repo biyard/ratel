@@ -39,6 +39,8 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   //   );
   // }
 
+  const canSubmit = ctrl.user && ctrl.poll.myResponse.length === 0;
+
   return (
     <>
       <Col>
@@ -59,7 +61,8 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
               selectedAnswers={ctrl.answers.get()}
               onSubmit={ctrl.handleSubmit}
               onLogin={ctrl.handleLogin}
-              canSubmit={ctrl.user && ctrl.poll.myResponse.length === 0}
+              canSubmit={canSubmit}
+              disabled={!canSubmit}
               canUpdate={
                 ctrl.user &&
                 ctrl.poll.myResponse.length > 0 &&

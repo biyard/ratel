@@ -40,6 +40,8 @@ export function usePollResponseMutation() {
       });
 
       queryClient.invalidateQueries({ queryKey: qk });
+
+      window.location.reload();
     },
   });
 
