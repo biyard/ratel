@@ -351,7 +351,18 @@ export const LoginModal = ({
           )}
         </Col>
 
-        <Row className="justify-end items-center text-sm">
+        <Row className="justify-between items-center text-sm">
+          <a
+            href="/forgot-password"
+            className="text-primary/70 hover:text-primary text-sm"
+            onClick={(e) => {
+              e.preventDefault();
+              popup.close();
+              window.location.href = '/forgot-password';
+            }}
+          >
+            {t('forgot_password')}
+          </a>
           <Button
             variant={'rounded_secondary'}
             className="text-xs py-1.5 px-4 light:bg-neutral-600"
