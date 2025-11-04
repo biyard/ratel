@@ -19,11 +19,14 @@ import { useUpdateResponseEditableMutation } from '../../hooks/use-update-respon
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { NavigateFunction, useNavigate } from 'react-router';
 import { route } from '@/route';
+import { useUserInfo } from '@/hooks/use-user-info';
+import { UserResponse } from '@/lib/api/ratel/users.v3';
 
 export class SpacePollEditorController {
   constructor(
     public space: Space,
     public poll: Poll,
+    public user: UserResponse | null,
     public navigate: NavigateFunction,
     public questions: State<PollQuestion[]>,
     public t: TFunction<'SpaceSurvey', undefined>,
@@ -95,13 +98,18 @@ export class SpacePollEditorController {
     this.answers.set({ ...currentAnswers });
   };
 
-  onChangeTimeRange = (started_at: number, ended_at: number) => {
+  onChangeTimeRange = async (started_at: number, ended_at: number) => {
     logger.debug(
       `onChangeTimeRange called: start=${started_at}, end=${ended_at}`,
     );
+    // validate time range
+    if (started_at >= ended_at) {
+      showErrorToast(this.t('invalid_time_range'));
+      return;
+    }
 
     try {
-      this.updateTimeRange.mutate({
+      await this.updateTimeRange.mutateAsync({
         spacePk: this.space.pk,
         pollSk: this.poll.sk,
         started_at,
@@ -138,6 +146,7 @@ export class SpacePollEditorController {
 export function useSpacePollEditorController(spacePk: string, pollPk: string) {
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
+  const { data: user } = useUserInfo();
   const navigator = useNavigate();
   const questions = useState(poll.questions || []);
   const { t } = useTranslation('SpaceSurvey');
@@ -152,6 +161,7 @@ export function useSpacePollEditorController(spacePk: string, pollPk: string) {
   return new SpacePollEditorController(
     space,
     poll,
+    user,
     navigator,
     new State(questions),
     t,

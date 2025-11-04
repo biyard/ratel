@@ -1,49 +1,27 @@
+pub mod billing_key_payment_request;
+pub mod billing_key_payment_response;
+pub mod billing_key_request;
+pub mod billing_key_response;
 pub mod channel_response;
 pub mod identify_response;
 pub mod verified_customer;
 
+pub use billing_key_payment_request::*;
+pub use billing_key_payment_response::*;
+pub use billing_key_request::*;
+pub use billing_key_response::*;
 pub use channel_response::*;
 pub use identify_response::*;
 pub use verified_customer::*;
 
-use crate::*;
-use percent_encoding::{AsciiSet, NON_ALPHANUMERIC};
+#[cfg(not(feature = "no-secret"))]
+mod portone;
 
-const BASE_URL: &str = "https://api.portone.io/identity-verifications/";
+#[cfg(not(feature = "no-secret"))]
+pub use portone::*;
 
-#[derive(Debug, Clone)]
-pub struct PortOne {
-    cli: reqwest::Client,
-}
+#[cfg(feature = "no-secret")]
+mod noop;
 
-impl PortOne {
-    pub fn new(api_secret: &str) -> Self {
-        let cli = reqwest::Client::builder()
-            .default_headers({
-                let mut headers = reqwest::header::HeaderMap::new();
-                headers.insert(
-                    "Authorization",
-                    reqwest::header::HeaderValue::from_str(&format!("PortOne {}", api_secret))
-                        .unwrap(),
-                );
-                headers
-            })
-            .build()
-            .unwrap();
-        Self { cli }
-    }
-
-    pub async fn identify(&self, id: &str) -> Result<IdentifyResponse> {
-        let res = self
-            .cli
-            .get(format!(
-                "{}/{}",
-                BASE_URL,
-                percent_encoding::utf8_percent_encode(id, NON_ALPHANUMERIC)
-            ))
-            .send()
-            .await?;
-
-        Ok(res.json().await?)
-    }
-}
+#[cfg(feature = "no-secret")]
+pub use noop::*;

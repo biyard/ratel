@@ -127,9 +127,6 @@ export default function SpaceHeader({
         canEdit={isEditingMode}
         title={title}
         setTitle={(newTitle) => updateTitle(newTitle)}
-        handleShare={async () => {
-          console.error('handleShare not implemented');
-        }}
       />
       <AuthorSection
         type={post.author_type}

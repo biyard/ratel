@@ -1,9 +1,10 @@
 import { useSpaceSettingModalController } from './use-space-setting-modal-controller';
 
 import { LoadablePrimaryButton } from '@/components/button/primary-button';
-import { ArrowLeft, Internet, Fire } from '@/components/icons';
+import { ArrowLeft, Fire } from '@/components/icons';
 import TimeDropdown from '@/components/time-dropdown';
 import CalendarDropdown from '@/components/calendar-dropdown';
+import TimezoneDropdown from '@/components/timezone-dropdown';
 import { useTranslation, Trans } from 'react-i18next';
 import {
   DropdownMenu,
@@ -102,16 +103,11 @@ export default function SpaceBoosterConfigModal({
                 </div>
               </div>
 
-              <div className="flex flex-row gap-2.5 items-center px-5 mt-2 w-full rounded-lg border sm:mt-0 border-select-date-border bg-select-date-bg py-[10.5px] sm:w-fit">
-                <div className="font-medium text-[15px]/[22.5px] text-neutral-600">
-                  {ctrl.timezone.get()}
-                </div>
-                <Internet
-                  className="w-5 h-5 [&>path]:stroke-neutral-600 [&>circle]:stroke-neutral-600"
-                  width="20"
-                  height="20"
-                />
-              </div>
+              <TimezoneDropdown
+                value={ctrl.timezone.get()}
+                onChange={(tz) => ctrl.timezone.set(tz)}
+                canEdit={true}
+              />
             </div>
 
             {/* Boost Section */}

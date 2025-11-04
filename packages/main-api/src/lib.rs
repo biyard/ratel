@@ -19,6 +19,7 @@ pub mod utils;
 use crate::models::User;
 use axum::extract::*;
 pub use bdk::prelude::*;
+use btracing::{notify, notify_error};
 use by_axum::aide::axum::routing::*;
 use by_axum::aide::{NoApi, OperationIo};
 use by_axum::axum::*;
@@ -26,6 +27,7 @@ use controllers::v3::*;
 use serde::{Deserialize, Serialize};
 use tracing::{debug, error, info, warn};
 use types::AppState;
+use validator::Validate;
 
 #[cfg(test)]
 pub mod tests;

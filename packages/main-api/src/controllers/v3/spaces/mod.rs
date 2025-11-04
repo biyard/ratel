@@ -5,6 +5,7 @@ pub mod update_space;
 
 pub mod discussions;
 pub mod files;
+pub mod members;
 pub mod panels;
 pub mod polls;
 pub mod recommendations;

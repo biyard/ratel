@@ -16,7 +16,7 @@ pub async fn migrate_by_id(
     cli: &aws_sdk_dynamodb::Client,
     pool: &sqlx::PgPool,
     id: i64,
-) -> Result<User, crate::Error2> {
+) -> Result<User, crate::Error> {
     migrate_user(
         cli,
         dto::User::query_builder()
@@ -27,7 +27,7 @@ pub async fn migrate_by_id(
             .fetch_one(pool)
             .await
             .map_err(|e| {
-                crate::Error2::InternalServerError(format!(
+                crate::Error::InternalServerError(format!(
                     "Failed to fetch user from Postgres: {}",
                     e
                 ))
@@ -40,7 +40,7 @@ pub async fn migrate_by_email(
     cli: &aws_sdk_dynamodb::Client,
     pool: &sqlx::PgPool,
     email: String,
-) -> Result<User, crate::Error2> {
+) -> Result<User, crate::Error> {
     migrate_user(
         cli,
         dto::User::query_builder()
@@ -51,7 +51,7 @@ pub async fn migrate_by_email(
             .fetch_one(pool)
             .await
             .map_err(|e| {
-                crate::Error2::InternalServerError(format!(
+                crate::Error::InternalServerError(format!(
                     "Failed to fetch user from Postgres: {}",
                     e
                 ))
@@ -65,7 +65,7 @@ pub async fn migrate_by_email_password(
     pool: &sqlx::PgPool,
     email: String,
     password: String,
-) -> Result<User, crate::Error2> {
+) -> Result<User, crate::Error> {
     migrate_user(
         cli,
         dto::User::query_builder()
@@ -77,7 +77,7 @@ pub async fn migrate_by_email_password(
             .fetch_one(pool)
             .await
             .map_err(|e| {
-                crate::Error2::InternalServerError(format!(
+                crate::Error::InternalServerError(format!(
                     "Failed to fetch user from Postgres: {}",
                     e
                 ))
@@ -121,7 +121,7 @@ pub async fn migrate_user(
         telegram_raw,
         industry: _,
     }: U,
-) -> Result<User, crate::Error2> {
+) -> Result<User, crate::Error> {
     let pk = Partition::User(id.to_string());
     let mut user = User::new(
         nickname,

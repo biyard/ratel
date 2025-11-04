@@ -1,14 +1,20 @@
 use crate::controllers::v3::spaces::dto::*;
+use crate::features::spaces::members::{
+    SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
+};
 use crate::features::telegrams::{TelegramChannel, get_space_created_message};
 use crate::models::space::SpaceCommon;
 
 use crate::models::Post;
 use crate::models::user::User;
-use crate::types::File;
 use crate::types::{
-    BoosterType, EntityType, SpacePublishState, SpaceVisibility, TeamGroupPermission,
+    BoosterType, EntityType, SpacePublishState, SpaceStatus, SpaceVisibility, TeamGroupPermission,
 };
+use crate::types::{File, Partition};
+use crate::utils::aws::DynamoClient;
+use crate::utils::aws::SesClient;
 use crate::utils::telegram::ArcTelegramBot;
+use crate::utils::time::get_now_timestamp;
 use crate::{AppState, Error, transact_write};
 use aide::NoApi;
 use axum::extract::{Json, Path, State};
@@ -29,16 +35,19 @@ pub enum UpdateSpaceRequest {
     Title {
         title: String,
     },
-    File {
-        files: Vec<File>,
-    },
     Visibility {
         visibility: SpaceVisibility,
+    },
+    Start {
+        start: bool,
+    },
+    Finish {
+        finished: bool,
     },
 }
 
 pub async fn update_space_handler(
-    State(AppState { dynamo, .. }): State<AppState>,
+    State(AppState { dynamo, ses, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
     Extension(telegram_bot): Extension<Option<ArcTelegramBot>>,
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
@@ -73,6 +82,7 @@ pub async fn update_space_handler(
             // FIXME: check validation if it is well designed to be published.
             su = su
                 .with_publish_state(SpacePublishState::Published)
+                .with_status(SpaceStatus::InProgress)
                 .with_visibility(visibility.clone());
 
             pu = pu
@@ -83,6 +93,8 @@ pub async fn update_space_handler(
             should_notify_space = space.booster != BoosterType::NoBoost
                 && (space.publish_state == SpacePublishState::Draft && publish)
                 && visibility == SpaceVisibility::Public;
+
+            let _ = send_space_verification_code_handler(&dynamo, &ses, space_pk.clone()).await?;
 
             space.publish_state = SpacePublishState::Published;
             space.visibility = visibility;
@@ -97,11 +109,6 @@ pub async fn update_space_handler(
 
             space.visibility = visibility;
         }
-        UpdateSpaceRequest::File { files } => {
-            su = su.with_files(files.clone());
-
-            space.files = Some(files);
-        }
         UpdateSpaceRequest::Content { content } => {
             su = su.with_content(content.clone());
 
@@ -109,6 +116,37 @@ pub async fn update_space_handler(
         }
         UpdateSpaceRequest::Title { title } => {
             pu = pu.with_title(title.clone());
+        }
+        UpdateSpaceRequest::Start { start } => {
+            if space.status != Some(SpaceStatus::InProgress) {
+                return Err(Error::NotSupported(
+                    "Start is not available for the current status.".into(),
+                ));
+            }
+
+            if !start {
+                return Err(Error::NotSupported("it does not support start now".into()));
+            }
+
+            su = su.with_status(SpaceStatus::Started);
+
+            space.status = Some(SpaceStatus::Started);
+            let _ = SpaceEmailVerification::expire_verifications(&dynamo, space_pk.clone()).await?;
+        }
+        UpdateSpaceRequest::Finish { finished } => {
+            if space.status != Some(SpaceStatus::Started) {
+                return Err(Error::NotSupported(
+                    "Finish is not available for the current status.".into(),
+                ));
+            }
+
+            if !finished {
+                return Err(Error::NotSupported("it does not support end now".into()));
+            }
+
+            su = su.with_status(SpaceStatus::Finished);
+
+            space.status = Some(SpaceStatus::Finished);
         }
     }
 
@@ -151,4 +189,39 @@ pub async fn update_space_handler(
     }
 
     Ok(Json(SpaceCommonResponse::from(space)))
+}
+
+async fn send_space_verification_code_handler(
+    dynamo: &DynamoClient,
+    ses: &SesClient,
+    space_pk: Partition,
+) -> Result<Json<()>, Error> {
+    let mut bookmark = None::<String>;
+    loop {
+        let (responses, new_bookmark) = SpaceInvitationMember::query(
+            &dynamo.client,
+            space_pk.clone(),
+            if let Some(b) = &bookmark {
+                SpaceInvitationMemberQueryOption::builder()
+                    .sk("SPACE_INVITATION_MEMBER#".into())
+                    .bookmark(b.clone())
+            } else {
+                SpaceInvitationMemberQueryOption::builder().sk("SPACE_INVITATION_MEMBER#".into())
+            },
+        )
+        .await?;
+
+        for response in responses {
+            let user_email = response.email;
+            let _ = SpaceEmailVerification::send_email(&dynamo, &ses, user_email, space_pk.clone())
+                .await?;
+        }
+
+        match new_bookmark {
+            Some(b) => bookmark = Some(b),
+            None => break,
+        }
+    }
+
+    Ok(Json(()))
 }

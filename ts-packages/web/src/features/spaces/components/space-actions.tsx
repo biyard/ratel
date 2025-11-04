@@ -41,7 +41,31 @@ export function SpaceActionDropdown({
   actions,
   onChange,
 }: SpaceActionsProps & { onChange: (selected: number) => void }) {
+  if (actions.length === 0) return null;
   const firstAction = actions[0];
+
+  if (actions.length === 1) {
+    return (
+      <Button
+        aria-role={firstAction.label}
+        variant="rounded_secondary"
+        className="w-full !important text-[#262626]"
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (firstAction.holdingLabel) onChange(0);
+
+          firstAction.onClick();
+        }}
+      >
+        {firstAction.label}
+      </Button>
+    );
+  }
 
   return (
     <>

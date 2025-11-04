@@ -5,13 +5,14 @@ import { config } from '@/config';
 import { call } from '@/lib/api/ratel/call';
 import { useState } from 'react';
 import { logger } from '@/lib/logger';
+import { VerifiedCustomer } from '../types/verified_customer';
 
 export function useIdentityVerification() {
   const { data: user } = useSuspenseUserInfo();
   const [verifying, setVerifying] = useState(false);
 
   const mutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<VerifiedCustomer> => {
       const identityVerificationId = `iv-${user.pk}-${crypto.randomUUID()}`;
       setVerifying(true);
       const response = await PortOne.requestIdentityVerification({
@@ -22,14 +23,18 @@ export function useIdentityVerification() {
       setVerifying(false);
       logger.debug('identity verification response', response);
       if (response.code !== undefined) {
-        return alert(response.message);
+        throw new Error('Identity verification failed');
       }
 
-      const resp = await call('POST', '/v3/did/kyc', {
-        id: identityVerificationId,
-      });
+      const resp: VerifiedCustomer = await call(
+        'POST',
+        '/v3/payments/identify',
+        {
+          id: identityVerificationId,
+        },
+      );
 
-      return { resp };
+      return resp;
     },
     onSuccess: async () => {
       // update did

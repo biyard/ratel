@@ -38,6 +38,7 @@ export class Space {
     public publishState: SpacePublishState,
 
     public booster: BoosterType | undefined,
+    public verified: boolean,
     public files: FileModel[] | undefined,
 
     permissions: bigint,
@@ -84,6 +85,7 @@ export class Space {
       json.publish_state,
 
       json.booster,
+      json.verified || false,
       json.files,
 
       json.permissions,
