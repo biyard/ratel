@@ -41,29 +41,14 @@ pub fn route() -> Result<Router<AppState>> {
         .nest(
             "/:space_pk",
             Router::new()
-                .nest(
-                    "/invitations",
-                    crate::controllers::v3::spaces::members::route(),
-                )
-                .nest("/files", crate::controllers::v3::spaces::files::route())
-                .nest("/panels", crate::controllers::v3::spaces::panels::route())
-                .nest(
-                    "/recommendations",
-                    crate::controllers::v3::spaces::recommendations::route(),
-                )
-                .nest(
-                    "/discussions",
-                    crate::controllers::v3::spaces::discussions::route(),
-                )
-                .nest(
-                    "/artworks",
-                    crate::controllers::v3::spaces::artworks::route(),
-                )
-                .nest("/boards", crate::controllers::v3::spaces::boards::route())
-                .nest("/polls", crate::controllers::v3::spaces::polls::route())
-                .nest(
-                    "/sprint-leagues",
-                    crate::controllers::v3::spaces::sprint_leagues::route(),
-                ),
+                .nest("/invitations", members::route())
+                .nest("/files", files::route())
+                .nest("/panels", panels::route())
+                .nest("/recommendations", recommendations::route())
+                .nest("/discussions", discussions::route())
+                .nest("/artworks", artworks::route())
+                .nest("/boards", boards::route())
+                .nest("/polls", polls::route())
+                .nest("/sprint-leagues", sprint_leagues::route()),
         ))
 }
