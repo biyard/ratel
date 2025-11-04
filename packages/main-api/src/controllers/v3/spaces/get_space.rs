@@ -39,13 +39,15 @@ pub struct GetSpaceResponse {
     pub booster: BoosterType,
 
     pub verified: bool,
+
+    pub anonymous_participation: bool,
 }
 
 pub async fn get_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Path(SpacePathParam { space_pk }): SpacePath,
-) -> Result<Json<GetSpaceResponse>, Error> {
+) -> Result<Json<GetSpaceResponse>> {
     let space = SpaceCommon::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceCommon));
 
     let post_pk = space_pk.clone().to_post_key()?;
@@ -119,6 +121,7 @@ impl From<(SpaceCommon, Post, TeamGroupPermissions, bool)> for GetSpaceResponse 
             publish_state: space.publish_state,
             booster: space.booster,
             verified,
+            anonymous_participation: space.anonymous_participation,
         }
     }
 }

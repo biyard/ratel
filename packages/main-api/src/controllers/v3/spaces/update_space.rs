@@ -38,6 +38,9 @@ pub enum UpdateSpaceRequest {
     Visibility {
         visibility: SpaceVisibility,
     },
+    Anonymous {
+        anonymous_participation: bool,
+    },
     Start {
         start: bool,
     },
@@ -158,6 +161,13 @@ pub async fn update_space_handler(
             su = su.with_status(SpaceStatus::Finished);
 
             space.status = Some(SpaceStatus::Finished);
+        }
+        UpdateSpaceRequest::Anonymous {
+            anonymous_participation,
+        } => {
+            su = su.with_anonymous_participation(anonymous_participation);
+
+            space.anonymous_participation = anonymous_participation;
         }
     }
 

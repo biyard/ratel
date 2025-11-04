@@ -1,5 +1,4 @@
 'use client';
-import { useState } from 'react';
 import CheckboxIcon from '@/assets/icons/checkbox-icon.svg?react';
 
 interface CheckboxProps {
@@ -19,9 +18,13 @@ export const Checkbox = ({
   children,
   disabled = false,
 }: CheckboxProps) => {
-  const [checked, setChecked] = useState(value || false);
   return (
-    <div className="flex flex-row items-start font-normal text-white text-sm/16 gap-2.25">
+    <div
+      className="flex flex-row items-start text-sm font-normal text-white cursor-pointer gap-2.25"
+      onClick={() => {
+        onChange(!value);
+      }}
+    >
       <div className="flex relative flex-row justify-start items-center cursor-pointer gap-[6px]">
         <input
           id={id}
@@ -29,11 +32,6 @@ export const Checkbox = ({
           type="checkbox"
           className="hidden peer"
           checked={value}
-          onChange={() => {
-            const check = checked;
-            setChecked(!check);
-            onChange(!check);
-          }}
         />
 
         <label

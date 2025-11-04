@@ -1,7 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import { Col } from '@/components/ui/col';
-import { i18nFooter } from './i18n';
-import { config } from '@/config';
 
 export type FooterProps = React.HTMLAttributes<HTMLDivElement> & {
   info?: {
@@ -18,7 +16,7 @@ export type FooterProps = React.HTMLAttributes<HTMLDivElement> & {
 };
 
 export default function Footer({ info, className, ...props }: FooterProps) {
-  const { t, i18n } = useTranslation('Footer', { keyPrefix: 'footer' });
+  const { t } = useTranslation('Footer', { keyPrefix: 'footer' });
 
   // Default business information from config
   const defaultInfo = {

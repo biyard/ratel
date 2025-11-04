@@ -77,7 +77,6 @@ function CreatePostPageContent() {
           <Checkbox
             id="skip-space"
             value={ctrl.skipCreatingSpace.get()}
-            disabled={true}
             onChange={(checked: boolean) => ctrl.skipCreatingSpace.set(checked)}
           >
             <span
