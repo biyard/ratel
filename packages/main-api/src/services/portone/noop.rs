@@ -50,7 +50,7 @@ impl PortOne {
         _birth_or_business_registration_number: String,
         _password_two_digits: String,
     ) -> Result<BillingKeyResponse> {
-        Ok(BilingKeyResponse {
+        Ok(BillingKeyResponse {
             billing_key_info: BillingKeyInfo {
                 billing_key: "test-billing-key".to_string(),
             },
