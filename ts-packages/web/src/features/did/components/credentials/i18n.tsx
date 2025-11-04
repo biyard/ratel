@@ -12,6 +12,9 @@ export const Credentials = {
     registration_required: 'Registration required',
     age_range: '20 - 29',
     kaia: 'KAIA',
+    male: 'Male',
+    female: 'Female',
+    no_data: 'No verified data available.',
   },
   ko: {
     vc: '검증가능한 자격 증명',
@@ -24,6 +27,9 @@ export const Credentials = {
     registration_required: '등록 필요',
     age_range: '20 - 29',
     kaia: 'KAIA',
+    male: '남성',
+    female: '여성',
+    no_data: '검증된 데이터가 없습니다.',
   },
 };
 
@@ -38,6 +44,9 @@ export interface CredentialsI18n {
   registration_required: string;
   age_range: string;
   kaia: string;
+  male: string;
+  female: string;
+  no_data: string;
 }
 
 export function useCredentialsI18n(): CredentialsI18n {
@@ -54,5 +63,8 @@ export function useCredentialsI18n(): CredentialsI18n {
     registration_required: t('registration_required'),
     age_range: t('age_range'),
     kaia: t('kaia'),
+    male: t('male'),
+    female: t('female'),
+    no_data: t('no_data'),
   };
 }
