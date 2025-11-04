@@ -116,6 +116,7 @@ impl SpaceEmailVerification {
         Ok(())
     }
 
+    #[allow(unused_variables)]
     pub async fn send_email(
         dynamo: &DynamoClient,
         ses: &SesClient,
@@ -236,6 +237,7 @@ impl SpaceEmailVerification {
         Ok(Json(()))
     }
 
+    #[allow(dead_code)]
     fn html_excerpt_ellipsis(html: &str, max_chars: usize) -> String {
         let re = regex::Regex::new(r"(?is)<[^>]+>").unwrap();
         let no_tags = re.replace_all(html, "");
