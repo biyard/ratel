@@ -38,7 +38,7 @@ export default function Footer({ info, className, ...props }: FooterProps) {
 
   return (
     <footer
-      className={`w-full bg-bg border-t border-border py-8 px-4 ${className || ''}`}
+      className={`w-full bg-component-bg py-8 px-4 ${className || ''}`}
       {...props}
     >
       <Col className="gap-6 mx-auto max-w-7xl">
