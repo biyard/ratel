@@ -2,11 +2,8 @@ use bdk::prelude::*;
 use by_axum::axum::http::{HeaderMap, HeaderValue, StatusCode};
 use by_axum::axum::response::IntoResponse;
 use serde_json::json;
-// use ssi::JWK;
 
 use crate::config;
-
-// use crate::config;
 
 pub async fn get_did_document_handler() -> impl IntoResponse {
     let conf = config::get();
@@ -16,22 +13,16 @@ pub async fn get_did_document_handler() -> impl IntoResponse {
     let es256_x = conf.did.p256_x;
     let es256_y = conf.did.p256_y;
 
-    //FIXME: remove this comment when conflicting is resolved about session
-    // let bls_multibase = multibase::encode(
-    //     multibase::Base::Base58Btc,
-    //     JWK::generate_bls12381g2()
-    //         .to_multicodec()
-    //         .unwrap()
-    //         .as_bytes(),
-    // );
-
-    let bls_multibase = "".to_string();
+    // BBS BLS keys from config for selective disclosure
+    let bbs_bls_x = conf.did.bbs_bls_x;
+    let bbs_bls_y = conf.did.bbs_bls_y;
+    let bbs_bls_crv = conf.did.bbs_bls_crv;
 
     let did_doc = json!({
         "@context": [
             "https://www.w3.org/ns/did/v1",
             "https://w3id.org/security/suites/jws-2020/v1",
-            "https://w3id.org/security/multikey/v1"
+            "https://w3id.org/security/data-integrity/v2"
         ],
         "id": format!("did:web:{}", domain),
         "verificationMethod": [
@@ -47,10 +38,15 @@ pub async fn get_did_document_handler() -> impl IntoResponse {
                 }
             },
             {
-                "id": format!("did:web:{}#bls-key-1", domain),
-                "type": "Multikey",
+                "id": format!("did:web:{}#bbs-bls-key-1", domain),
+                "type": "JsonWebKey2020",
                 "controller": format!("did:web:{}", domain),
-                "publicKeyMultibase": bls_multibase
+                "publicKeyJwk": {
+                    "kty": "EC",
+                    "crv": bbs_bls_crv,
+                    "x": bbs_bls_x,
+                    "y": bbs_bls_y
+                }
             }
         ],
         "authentication": [
@@ -58,7 +54,7 @@ pub async fn get_did_document_handler() -> impl IntoResponse {
         ],
         "assertionMethod": [
             format!("did:web:{}#es256-1", domain),
-            format!("did:web:{}#bls-key-1", domain)
+            format!("did:web:{}#bbs-bls-key-1", domain)
         ],
         "service": [
             {
