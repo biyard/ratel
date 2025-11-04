@@ -157,6 +157,54 @@ async fn test_list_spaces() {
 }
 
 #[tokio::test]
+pub async fn test_start_space() {
+    let (ctx, post_pk) = setup_post().await;
+
+    let TestContextV3 {
+        app,
+        test_user: (_user, headers),
+        ..
+    } = ctx;
+
+    let (status, _, res) = post! {
+        app: app,
+        path: "/v3/spaces",
+        headers: headers.clone(),
+        body: {
+            "space_type": 2,
+            "post_pk": post_pk,
+        },
+        response_type: CreateSpaceResponse
+    };
+    tracing::debug!("Create space response: {:?}", res);
+    assert_eq!(status, 200);
+
+    let space_pk = res.space_pk;
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "publish": true,
+            "visibility": "PRIVATE",
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "start": true,
+        }
+    };
+
+    assert_eq!(status, 200);
+}
+
+#[tokio::test]
 async fn test_get_space() {}
 
 pub async fn setup_post() -> (TestContextV3, String) {
