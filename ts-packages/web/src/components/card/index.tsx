@@ -2,16 +2,22 @@ import { cn } from '@/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority'; // cva 사용 (버튼처럼)
 
 const cardVariants = cva(
-  'flex flex-col w-full justify-start items-start rounded-[10px] px-4 py-5',
+  'flex flex-col w-full justify-start items-start px-4 py-5',
   {
     variants: {
       variant: {
         default: 'bg-card-bg-secondary border border-card-border',
         secondary: 'bg-card-bg border border-card-border',
+        outlined: 'bg-transparent border border-neutral-800',
+      },
+      rounded: {
+        sm: 'rounded-[4px]',
+        default: 'rounded-[10px]',
       },
     },
     defaultVariants: {
       variant: 'default',
+      rounded: 'default',
     },
   },
 );
@@ -22,9 +28,18 @@ export interface CardProps
   children: React.ReactNode;
 }
 
-const Card = ({ variant, className, children, ...props }: CardProps) => {
+const Card = ({
+  variant,
+  rounded,
+  className,
+  children,
+  ...props
+}: CardProps) => {
   return (
-    <div className={cn(cardVariants({ variant }), className)} {...props}>
+    <div
+      className={cn(cardVariants({ variant, rounded }), className)}
+      {...props}
+    >
       {children}
     </div>
   );

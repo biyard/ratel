@@ -58,6 +58,7 @@ pub async fn update_post_handler(
     }
 
     let now = get_now_timestamp_millis();
+
     let updater = Post::updater(&post.pk, &post.sk).with_updated_at(now);
     post.updated_at = now;
 

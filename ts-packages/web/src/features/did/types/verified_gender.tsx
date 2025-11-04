@@ -1,4 +1,4 @@
 export enum VerifiedGender {
-  Male = 'Male',
-  Female = 'Female',
+  Male = 'MALE',
+  Female = 'FEMALE',
 }
