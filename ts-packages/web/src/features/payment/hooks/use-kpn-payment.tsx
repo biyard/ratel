@@ -1,18 +1,18 @@
 import { useMutation } from '@tanstack/react-query';
-import { useSuspenseUserInfo } from '@/hooks/use-user-info';
-import * as PortOne from '@portone/browser-sdk/v2';
-import { config } from '@/config';
-import { useState } from 'react';
-import { logger } from '@/lib/logger';
 import { MembershipTier } from '@/features/membership/types/membership-tier';
-import { useTranslation } from 'react-i18next';
 import { call } from '@/lib/api/ratel/call';
 
-export function useKpnPayment() {
-  const { data: user } = useSuspenseUserInfo();
-  const [verifying, setVerifying] = useState(false);
-  const { i18n } = useTranslation();
+export interface PaymentReceipt {
+  status: string;
+  transaction_id: string;
+  membership_tier: string;
+  amount: number;
+  duration_days: number;
+  credits: number;
+  paid_at: number;
+}
 
+export function useKpnPayment() {
   const mutation = useMutation({
     mutationFn: async ({
       membership,
@@ -28,8 +28,8 @@ export function useKpnPayment() {
       expiryMonth: string;
       birthOrBusinessRegistrationNumber: string;
       passwordTwoDigits: string;
-    }) => {
-      const _resp = await call('POST', '/v3/payments/memberships', {
+    }): Promise<PaymentReceipt> => {
+      const resp = await call('POST', '/v3/payments/memberships', {
         membership,
         card_number: cardNumber,
         expiry_year: expiryYear,
@@ -38,11 +38,13 @@ export function useKpnPayment() {
           birthOrBusinessRegistrationNumber,
         password_two_digits: passwordTwoDigits,
       });
+
+      return resp as PaymentReceipt;
     },
     onSuccess: async () => {
       // update did
     },
   });
 
-  return { mutation, verifying };
+  return { mutation };
 }
