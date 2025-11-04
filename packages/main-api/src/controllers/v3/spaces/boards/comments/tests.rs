@@ -65,6 +65,17 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
     };
     assert_eq!(status, 200);
 
+    let (status, _headers, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "publish": true,
+            "visibility": "PUBLIC",
+        }
+    };
+    assert_eq!(status, 200);
+
     (ctx, space_pk, create_space_post_res.space_post_pk)
 }
 
@@ -210,4 +221,113 @@ async fn test_reply_space_comment() {
     };
     assert_eq!(status, 200);
     assert_eq!(body.number_of_comments, 3);
+}
+
+#[tokio::test]
+async fn test_add_comment_with_started_space() {
+    let (ctx, space_pk, space_post_pk) = setup_deliberation_space().await;
+    let TestContextV3 { app, test_user, .. } = ctx;
+
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "start": true,
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/boards/{}/comments", space_pk.to_string(), space_post_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "content": "comment".to_string()
+        },
+        response_type: SpacePostComment
+    };
+
+    assert_eq!(status, 400);
+}
+
+#[tokio::test]
+async fn test_like_comment_with_started_space() {
+    let (ctx, space_pk, space_post_pk) = setup_deliberation_space().await;
+    let TestContextV3 { app, test_user, .. } = ctx;
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/boards/{}/comments", space_pk.to_string(), space_post_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "content": "comment".to_string()
+        },
+        response_type: SpacePostComment
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "start": true,
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/boards/{}/comments/{}/likes", space_pk.to_string(), space_post_pk.to_string(), body.sk),
+        headers: test_user.1.clone(),
+        body: {
+            "like": true
+        },
+        response_type: SpaceLikeSpaceCommentResponse
+    };
+    assert_eq!(status, 400);
+}
+
+#[tokio::test]
+async fn test_reply_space_comment_with_started_space() {
+    let (ctx, space_pk, space_post_pk) = setup_deliberation_space().await;
+    let TestContextV3 { app, test_user, .. } = ctx;
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/boards/{}/comments", space_pk.to_string(), space_post_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "content": "comment".to_string()
+        },
+        response_type: SpacePostComment
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "start": true,
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/boards/{}/comments/{}", space_pk.to_string(), space_post_pk.to_string(), body.sk),
+        headers: test_user.1.clone(),
+        body: {
+            "content": "reply contents".to_string()
+        },
+        response_type: SpacePostComment
+    };
+    assert_eq!(status, 400);
 }
