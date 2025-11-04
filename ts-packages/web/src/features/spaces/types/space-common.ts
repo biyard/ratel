@@ -41,4 +41,6 @@ export interface SpaceCommon {
   custom_booster?: number;
   rewards?: number;
   files?: FileModel[];
+
+  anonymous_participation: boolean;
 }
