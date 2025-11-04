@@ -797,6 +797,22 @@ fn generate_updater(
                     .build()
             }
 
+            pub fn upsert_transact_write_item(&self) -> aws_sdk_dynamodb::types::TransactWriteItem {
+                let item = serde_dynamo::to_item(self)
+                    .expect("failed to serialize struct to dynamodb item");
+                let item = self.indexed_fields(item);
+
+                let req = aws_sdk_dynamodb::types::Put::builder()
+                    .table_name(Self::table_name())
+                    .set_item(Some(item))
+                    .build().unwrap();
+
+                aws_sdk_dynamodb::types::TransactWriteItem::builder()
+                    .put(req)
+                    .build()
+            }
+
+
             pub fn delete_transact_write_item(pk: impl std::fmt::Display, #sk_param) -> aws_sdk_dynamodb::types::TransactWriteItem {
                 let k = std::collections::HashMap::from([
                     (

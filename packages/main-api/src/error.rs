@@ -184,6 +184,8 @@ pub enum Error {
     #[error("Insufficient credits")]
     #[rest_error(status = 400, code = 7000)]
     InsufficientCredits,
+    #[error("Membership may be expired")]
+    ExpiredMembership,
 
     // /v3/panels endpoints 8000 ~
     #[rest_error(code = 8000)]
