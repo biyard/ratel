@@ -52,30 +52,7 @@ pub mod auth {
 
 pub mod spaces;
 
-pub mod teams {
-    pub mod create_team;
-    pub mod delete_team;
-    pub mod find_team;
-    pub mod get_team;
-    pub mod list_members;
-    pub mod list_team_posts;
-    pub mod update_team;
-
-    pub mod dto;
-    #[cfg(test)]
-    pub mod tests;
-
-    pub mod groups {
-        pub mod add_member;
-        pub mod create_group;
-        pub mod delete_group;
-        pub mod remove_member;
-        pub mod update_group;
-
-        #[cfg(test)]
-        pub mod tests;
-    }
-}
+pub mod teams;
 
 pub mod posts;
 
@@ -195,78 +172,8 @@ pub fn route(
                         .route("/verify-code", post(verify_code_handler)),
                 ),
         )
-        .nest(
-            "/spaces",
-            Router::new()
-                .route("/", post(create_space_handler).get(list_spaces_handler))
-                .route(
-                    "/:space_pk",
-                    delete(delete_space_handler)
-                        .patch(update_space_handler)
-                        .get(get_space_handler),
-                )
-                .layer(Extension(bot.clone()))
-                .nest(
-                    "/:space_pk",
-                    Router::new()
-                        .nest(
-                            "/invitations",
-                            crate::controllers::v3::spaces::members::route(),
-                        )
-                        .nest("/files", crate::controllers::v3::spaces::files::route())
-                        .nest("/panels", crate::controllers::v3::spaces::panels::route())
-                        .nest(
-                            "/recommendations",
-                            crate::controllers::v3::spaces::recommendations::route(),
-                        )
-                        .nest(
-                            "/discussions",
-                            crate::controllers::v3::spaces::discussions::route(),
-                        )
-                        .nest(
-                            "/artworks",
-                            crate::controllers::v3::spaces::artworks::route(),
-                        )
-                        .nest("/boards", crate::controllers::v3::spaces::boards::route())
-                        .nest("/polls", crate::controllers::v3::spaces::polls::route())
-                        .nest(
-                            "/sprint-leagues",
-                            crate::controllers::v3::spaces::sprint_leagues::route(),
-                        ),
-                ),
-        )
-        .nest(
-            "/teams",
-            Router::new()
-                .route("/", post(create_team_handler).get(find_team_handler))
-                .nest(
-                    "/:team_pk",
-                    Router::new()
-                        .route(
-                            "/",
-                            get(get_team_handler)
-                                .patch(update_team_handler)
-                                .delete(delete_team_handler),
-                        )
-                        .route("/members", get(list_members_handler))
-                        .route("/posts", get(list_team_posts_handler))
-                        .nest(
-                            "/groups",
-                            Router::new().route("/", post(create_group_handler)).nest(
-                                "/:group_sk",
-                                Router::new()
-                                    .route(
-                                        "/",
-                                        post(update_group_handler).delete(delete_group_handler),
-                                    )
-                                    .route(
-                                        "/member",
-                                        post(add_member_handler).delete(remove_member_handler),
-                                    ),
-                            ),
-                        ),
-                ),
-        )
+        .nest("/teams", teams::route()?)
+        .nest("/spaces", spaces::route()?)
         .nest(
             "/assets",
             Router::new()
@@ -274,5 +181,6 @@ pub fn route(
                 .route("/multiparts", get(get_put_multi_object_uri))
                 .route("/multiparts", post(complete_multipart_upload)),
         )
+        .layer(Extension(bot.clone()))
         .with_state(AppState::new(dynamo_client, ses_client, s3)))
 }
