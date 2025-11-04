@@ -64,7 +64,7 @@ export class SpaceHomeController {
   }
 
   get menus() {
-    const menus: SideMenuProps[] = [
+    let menus: SideMenuProps[] = [
       {
         Icon: Post,
         to: route.spaceByType(this.space.spaceType, this.space.pk),
@@ -88,9 +88,9 @@ export class SpaceHomeController {
       }
     });
 
-    /* if (this.space.isAdmin()) {
-     *   menus = menus.concat(this.adminMenus);
-     * } */
+    if (this.space.isAdmin()) {
+      menus = menus.concat(this.adminMenus);
+    }
 
     return menus;
   }
@@ -296,7 +296,41 @@ export class SpaceHomeController {
     this.image.set(null);
   };
 
+  handleParticipate = async () => {
+    logger.debug('handleParticipate is called');
+  };
+
+  canParticipate() {
+    // FIXME: implement participation logic from VC
+    return true;
+  }
+
   get actions() {
+    if (this.isAdmin) {
+      return this.adminActions;
+    } else if (
+      this.space.shouldParticipateManually() &&
+      this.canParticipate()
+      // check already joined
+    ) {
+      return this.viewerActions;
+    }
+
+    return this.participantActions;
+  }
+
+  get viewerActions() {
+    const ret = [
+      {
+        label: this.t('action_participate'),
+        onClick: this.handleParticipate,
+      },
+    ];
+
+    return ret;
+  }
+
+  get adminActions() {
     const ret = [
       {
         label: this.t('delete'),
@@ -310,6 +344,12 @@ export class SpaceHomeController {
         onClick: this.handleActionPublish,
       });
     }
+
+    return ret;
+  }
+
+  get participantActions() {
+    const ret = [];
 
     return ret;
   }
