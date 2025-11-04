@@ -6,7 +6,6 @@ pub mod channel_response;
 pub mod identify_response;
 pub mod verified_customer;
 
-use crate::*;
 pub use billing_key_payment_request::*;
 pub use billing_key_payment_response::*;
 pub use billing_key_request::*;
@@ -15,7 +14,6 @@ pub use channel_response::*;
 pub use identify_response::*;
 pub use verified_customer::*;
 
-const BASE_URL: &str = "https://api.portone.io";
 #[cfg(not(feature = "no-secret"))]
 mod portone;
 
