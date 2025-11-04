@@ -1,6 +1,5 @@
-use crate::*;
-
 use super::*;
+use crate::*;
 
 #[derive(Debug, Clone)]
 pub struct PortOne {}
@@ -52,11 +51,9 @@ impl PortOne {
         _password_two_digits: String,
     ) -> Result<BillingKeyResponse> {
         BilingKeyResponse {
-            billing_key: "test-billing-key".to_string(),
-            customer_id: _customer_id,
-            customer_name: _customer_name,
-            pg_raw_response: "{}".to_string(),
-            created_at: "2024-01-01T00:00:00Z".to_string(),
+            billing_key_info: BillingKeyInfo {
+                billing_key: "test-billing-key".to_string(),
+            },
         }
     }
 
@@ -69,5 +66,11 @@ impl PortOne {
         _billing_key: String,
         _amount: i64,
     ) -> Result<BillingKeyPaymentResponse> {
+        BillingKeyPaymentResponse {
+            payment: Payment {
+                paid_at: "2025-11-03T11:01:50.08942321Z".to_string(),
+                pg_tx_id: "merchantest".to_string(),
+            },
+        }
     }
 }
