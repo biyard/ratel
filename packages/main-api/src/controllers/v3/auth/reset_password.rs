@@ -6,7 +6,6 @@ use bdk::prelude::*;
 
 use crate::models::UserQueryOption;
 use crate::utils::password::hash_password;
-use aide::NoApi;
 use by_axum::axum::extract::{Json, State};
 
 #[derive(
@@ -20,7 +19,6 @@ pub struct ResetPasswordRequest {
 
 pub async fn reset_password_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(_user): NoApi<Option<User>>,
     Json(req): Json<ResetPasswordRequest>,
 ) -> Result<Json<User>, Error> {
     let email = req.email;
