@@ -38,7 +38,6 @@ pub fn route() -> Result<Router<AppState>> {
                 .patch(update_space_handler)
                 .get(get_space_handler),
         )
-        .layer(Extension(bot.clone()))
         .nest(
             "/:space_pk",
             Router::new()
