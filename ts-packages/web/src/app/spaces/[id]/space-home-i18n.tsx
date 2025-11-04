@@ -48,6 +48,9 @@ export const i18nSpaceHome = {
     // Admin Menus
     menu_admin_settings: 'Settings',
     menu_analyze: 'Analyze',
+    menu_nft_preview: 'ArtNFT',
+    menu_nft_settings: 'Settings',
+    menu_nft_art_twin: 'Art Twin',
 
     success_publish_space: 'Success to publish space.',
     failed_publish_space: 'Failed to publish space. please try later.',
