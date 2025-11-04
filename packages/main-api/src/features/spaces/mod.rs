@@ -1,3 +1,4 @@
+pub mod boards;
 pub mod discussions;
 pub mod files;
 pub mod members;

@@ -5,6 +5,7 @@ pub mod contracts;
 // pub mod dynamo_migrate;
 pub mod email;
 pub mod generate_merchant_trade_no;
+pub mod html;
 pub mod middlewares;
 // pub mod notifications;
 // pub mod openapi;

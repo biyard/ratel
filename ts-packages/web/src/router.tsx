@@ -47,8 +47,13 @@ import CreateArtworkPage from './features/posts/components/create-artwork-page';
 import SpaceArtNftPreviewPage from './app/spaces/[id]/art-nfts/space-art-nft-page';
 import SpaceArtNftArtTwinPage from './app/spaces/[id]/art-nfts/space-art-nft-twin-page';
 import { MembershipPlan } from './features/membership/components/membership-plan';
-import SpaceMemberPage from './app/spaces/[id]/members/space-member-page';
+import SpaceBoardPage from './app/spaces/[id]/boards/[post-id]/space-board-page';
+import SpaceBoardsPage from './app/spaces/[id]/boards/space-boards-page';
+import SpaceBoardCreatePage from './app/spaces/[id]/boards/create/space-board-create-page';
 import { Credentials } from './features/did/components/credentials';
+import { Terms } from './app/terms';
+import { Privacy } from './app/privacy';
+import { Refund } from './app/refund';
 
 export const routes = createBrowserRouter([
   {
@@ -191,10 +196,38 @@ export const routes = createBrowserRouter([
         Component: SpaceByIdLayout,
         children: [
           // Space Common
+
           {
             id: 'space-home-page',
             path: '',
             Component: SpaceHomePage,
+          },
+          // Space Boards Feature
+          {
+            id: 'space-boards',
+            path: 'boards',
+            children: [
+              {
+                id: 'space-board-index',
+                index: true,
+                Component: SpaceBoardsPage,
+              },
+              {
+                id: 'create-space-post',
+                path: 'create',
+                Component: SpaceBoardCreatePage,
+              },
+              {
+                id: 'space-post-detail',
+                path: ':postPk',
+                Component: SpaceBoardPage,
+              },
+            ],
+          }, // End of Boards Feature
+          {
+            id: 'space-boards-page',
+            path: 'boards',
+            Component: SpaceBoardsPage,
           },
           {
             id: 'space-settings-page',
@@ -207,12 +240,6 @@ export const routes = createBrowserRouter([
             path: 'sprint-leagues',
             Component: SpaceSprintLeaguePage,
           },
-          // Space Member Feature
-          {
-            id: 'space-member-feature',
-            path: 'members',
-            Component: SpaceMemberPage,
-          }, // End of Poll Feature
           // Space Poll Feature
           {
             id: 'space-poll-feature',
@@ -329,6 +356,22 @@ export const routes = createBrowserRouter([
         path: 'admin/memberships',
         Component: MembershipsPage,
       }, // End of Admin Routes
+
+      {
+        id: 'terms-page',
+        path: 'terms',
+        Component: Terms,
+      },
+      {
+        id: 'privacy-page',
+        path: 'privacy',
+        Component: Privacy,
+      },
+      {
+        id: 'refund-page',
+        path: 'refund',
+        Component: Refund,
+      },
     ],
   },
 ]);

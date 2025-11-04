@@ -227,6 +227,7 @@ pub fn route(
                             "/artworks",
                             crate::controllers::v3::spaces::artworks::route(),
                         )
+                        .nest("/boards", crate::controllers::v3::spaces::boards::route())
                         .nest("/polls", crate::controllers::v3::spaces::polls::route())
                         .nest(
                             "/sprint-leagues",
