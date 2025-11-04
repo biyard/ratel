@@ -58,7 +58,7 @@ impl Membership {
         display_order: i32,
         max_credits_per_space: i64,
     ) -> Self {
-        let uid = uuid::Uuid::new_v4().to_string();
+        let uid = tier.to_string();
         let created_at = chrono::Utc::now().timestamp_micros();
 
         Self {

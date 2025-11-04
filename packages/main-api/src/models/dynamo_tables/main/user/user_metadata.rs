@@ -1,3 +1,5 @@
+use crate::features::membership::UserMembership;
+
 use super::*;
 use bdk::prelude::*;
 
@@ -13,6 +15,7 @@ pub enum UserMetadata {
     UserTelegram(UserTelegram),
     UserTeam(UserTeam),
     UserTeamGroup(UserTeamGroup),
+    UserMembership(UserMembership),
 }
 
 #[derive(Default, serde::Serialize, schemars::JsonSchema)]
