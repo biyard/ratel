@@ -128,6 +128,24 @@ async fn test_list_categories() {
 }
 
 #[tokio::test]
+async fn test_list_space_posts_by_category() {
+    let (ctx, space_pk, _space_post_pk) = setup_deliberation_space().await;
+    let TestContextV3 { app, test_user, .. } = ctx;
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/spaces/{}/boards?category=space_category", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        response_type: ListSpacePostsResponse
+    };
+
+    tracing::debug!("list space posts body: {:?}", body);
+
+    assert_eq!(status, 200);
+    assert_eq!(body.posts.len(), 1);
+}
+
+#[tokio::test]
 async fn test_list_space_posts() {
     let (ctx, space_pk, _space_post_pk) = setup_deliberation_space().await;
     let TestContextV3 { app, test_user, .. } = ctx;
