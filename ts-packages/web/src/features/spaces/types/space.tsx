@@ -42,8 +42,14 @@ export class Space {
     public files: FileModel[] | undefined,
 
     permissions: bigint,
+
+    public anonymous_participation: boolean,
   ) {
     this.permissions = new TeamGroupPermissions(permissions);
+  }
+
+  shouldParticipateManually() {
+    return this.anonymous_participation;
   }
 
   isAdmin() {
@@ -89,6 +95,7 @@ export class Space {
       json.files,
 
       json.permissions,
+      json.anonymous_participation,
     );
   }
 }
