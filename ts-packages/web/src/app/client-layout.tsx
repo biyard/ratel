@@ -40,7 +40,7 @@ export default function ClientLayout({
         mobileExtends={mobileExtends}
         setMobileExtends={setMobileExtends}
       />
-      {children}
+      <div className="w-full min-h-screen">{children}</div>
       <Footer />
       <div
         className={
