@@ -15,7 +15,7 @@ pub async fn get_post_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Path(PostPathParam { post_pk }): PostPath,
-) -> Result<Json<PostDetailResponse>, Error> {
+) -> Result<Json<PostDetailResponse>> {
     let cli = &dynamo.client;
     tracing::debug!("Get post for post_pk: {}", post_pk);
 
