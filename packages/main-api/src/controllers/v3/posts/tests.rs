@@ -366,6 +366,7 @@ async fn test_list_posts() {
         first["html_contents"],
         format!("<p>Updated Content {} 10</p>", now)
     );
+    assert_eq!(items.length().unwrap_or_default(), 10);
 
     let (status, _headers, body) = get! {
         app: app,
