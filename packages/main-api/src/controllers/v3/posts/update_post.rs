@@ -58,7 +58,7 @@ pub async fn update_post_handler(
         return Err(Error::NoPermission);
     }
 
-    let now = chrono::Utc::now().timestamp();
+    let now = chrono::Utc::now().timestamp_millis();
     let updater = Post::updater(&post.pk, &post.sk).with_updated_at(now);
     post.updated_at = now;
 
