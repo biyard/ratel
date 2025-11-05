@@ -58,6 +58,7 @@ import { Credentials } from './features/did/components/credentials';
 import { Terms } from './app/terms';
 import { Privacy } from './app/privacy';
 import { Refund } from './app/refund';
+import SpaceMemberPage from './app/spaces/[id]/members/space-member-page';
 
 export const routes = createBrowserRouter([
   {
@@ -206,6 +207,11 @@ export const routes = createBrowserRouter([
             path: '',
             Component: SpaceHomePage,
           },
+          {
+            id: 'space-members',
+            path: 'members',
+            Component: SpaceMemberPage,
+          },
           // Space Boards Feature
           {
             id: 'space-boards',
@@ -223,16 +229,11 @@ export const routes = createBrowserRouter([
               },
               {
                 id: 'space-post-detail',
-                path: ':postPk',
+                path: 'posts/:postPk',
                 Component: SpaceBoardPage,
               },
             ],
           }, // End of Boards Feature
-          {
-            id: 'space-boards-page',
-            path: 'boards',
-            Component: SpaceBoardsPage,
-          },
           {
             id: 'space-settings-page',
             path: 'settings',
