@@ -97,29 +97,30 @@ pub async fn inject_space(
             && space.should_explicit_participation()
             && !space.is_space_admin(&state.dynamo.client, &user).await
         {
-            let SpaceParticipant {
+            // Check if the user is a participant
+            if let Ok(Some(SpaceParticipant {
                 display_name,
                 profile_url,
                 username,
                 user_type,
                 ..
-            } = SpaceParticipant::get(
+            })) = SpaceParticipant::get(
                 &state.dynamo.client,
                 CompositePartition(space.pk.clone(), user.pk.clone()),
                 Some(EntityType::SpaceParticipant),
             )
             .await
-            .map_err(|e| {
-                tracing::error!("failed to get space participant from db: {:?}", e);
-                crate::Error::NoUserFound
-            })?
-            .ok_or(crate::Error::NoUserFound)?;
-
-            let user: &mut User = parts.extensions.get_mut().unwrap();
-            user.display_name = display_name;
-            user.username = username;
-            user.profile_url = profile_url;
-            user.user_type = user_type;
+            {
+                // Participant mode
+                let user: &mut User = parts.extensions.get_mut().unwrap();
+                user.display_name = display_name;
+                user.username = username;
+                user.profile_url = profile_url;
+                user.user_type = user_type;
+            } else {
+                // Viewer mode
+                parts.extensions.remove::<User>();
+            }
         }
     }
 
