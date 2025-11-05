@@ -62,6 +62,10 @@ impl TeamGroupPermissions {
         ])
     }
 
+    pub fn is_admin(&self) -> bool {
+        self.contains(TeamGroupPermission::TeamAdmin)
+    }
+
     pub fn empty() -> Self {
         Self(vec![])
     }

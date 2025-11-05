@@ -51,7 +51,7 @@ pub async fn list_space_posts_handler(
         let (posts, bookmark) = SpacePost::find_by_cagetory(
             &dynamo.client,
             category.clone().unwrap_or_default(),
-            SpacePostQueryOption::builder().limit(10),
+            SpacePostQueryOption::builder().limit(50),
         )
         .await?;
 

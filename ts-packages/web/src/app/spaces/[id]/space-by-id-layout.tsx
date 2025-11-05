@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { Outlet, useParams } from 'react-router';
+import { Outlet, useLocation, useParams } from 'react-router';
 import {
   SpaceHomeController,
   useSpaceHomeController,
@@ -14,6 +14,7 @@ import {
 } from '@/components/post-header';
 import TimelineMenu from '@/features/spaces/components/side-menu/timeline';
 import { SpaceActions } from '@/features/spaces/components/space-actions';
+import SpaceParticipantProfile from '@/features/spaces/components/space-participant-profile';
 
 export const Context = createContext<SpaceHomeController | undefined>(
   undefined,
@@ -22,37 +23,54 @@ export const Context = createContext<SpaceHomeController | undefined>(
 export default function SpaceByIdLayout() {
   const { spacePk } = useParams<{ spacePk: string }>();
   const ctrl = useSpaceHomeController(spacePk ?? '');
+  const location = useLocation();
+  const showInfo = !/\/boards\/posts(\/|$)/.test(location.pathname);
 
   return (
     <Context.Provider value={ctrl}>
       <Row className="my-5 mx-auto w-full max-w-desktop">
         <Col className="gap-4 w-full">
-          <TitleSection
-            canEdit={ctrl.isAdmin}
-            title={ctrl.space.title}
-            setTitle={ctrl.handleTitleChange}
-          />
-          <AuthorSection
-            type={ctrl.space.authorType}
-            profileImage={ctrl.space.authorProfileUrl}
-            name={ctrl.space.authorDisplayName}
-            isCertified={ctrl.space.certified}
-            createdAt={ctrl.space.createdAt}
-          />
+          {showInfo && (
+            <Col className="gap-4 w-full">
+              <TitleSection
+                canEdit={ctrl.isAdmin}
+                title={ctrl.space.title}
+                setTitle={ctrl.handleTitleChange}
+              />
+              <AuthorSection
+                type={ctrl.space.authorType}
+                profileImage={ctrl.space.authorProfileUrl}
+                name={ctrl.space.authorDisplayName}
+                isCertified={ctrl.space.certified}
+                createdAt={ctrl.space.createdAt}
+              />
 
-          <PostInfoSection
-            likes={ctrl.space.likes}
-            shares={ctrl.space.shares}
-            comments={ctrl.space.comments}
-            rewards={ctrl.space.rewards ?? 0}
-            isDraft={ctrl.space.isDraft}
-            isPublic={ctrl.space.isPublic}
-          />
+              <PostInfoSection
+                likes={ctrl.space.likes}
+                shares={ctrl.space.shares}
+                comments={ctrl.space.comments}
+                rewards={ctrl.space.rewards ?? 0}
+                isDraft={ctrl.space.isDraft}
+                isPublic={ctrl.space.isPublic}
+              />
+            </Col>
+          )}
 
           <Outlet />
         </Col>
         <Col className="gap-2.5 w-full max-w-[250px]">
           {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
+
+          {ctrl.space.participated &&
+            ctrl.space.participantDisplayName &&
+            ctrl.space.participantProfileUrl &&
+            ctrl.space.participantUsername && (
+              <SpaceParticipantProfile
+                displayName={ctrl.space.participantDisplayName}
+                profileUrl={ctrl.space.participantProfileUrl}
+                username={ctrl.space.participantUsername}
+              />
+            )}
 
           <SpaceSideMenu menus={ctrl.menus} />
           <TimelineMenu

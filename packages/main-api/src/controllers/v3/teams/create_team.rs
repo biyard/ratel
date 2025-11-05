@@ -1,6 +1,7 @@
 use crate::{
     AppState, Error,
     models::{
+        TeamGroup, UserTeamGroup,
         team::{Team, TeamOwner},
         user::{User, UserTeam},
     },
@@ -49,14 +50,16 @@ pub async fn create_team_handler(
     if !team.is_empty() {
         return Err(Error::Duplicate("Username already taken".into()));
     }
-    let team = Team::new(req.nickname, req.profile_url, req.username, req.description);
-    team.create(&dynamo.client).await?;
-    let user_pk = user.pk.clone();
-    TeamOwner::new(team.pk.clone(), user)
-        .create(&dynamo.client)
-        .await?;
-    let team_pk = team.pk.clone();
-    UserTeam::new(user_pk, team).create(&dynamo.client).await?;
+
+    let team_pk = Team::create_new_team(
+        &user,
+        &dynamo.client,
+        req.nickname,
+        req.profile_url,
+        req.username,
+        req.description,
+    )
+    .await?;
 
     Ok(Json(CreateTeamResponse { team_pk }))
 }

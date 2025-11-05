@@ -59,6 +59,8 @@ export const i18nSpaceHome = {
     failed_publish_space: 'Failed to publish space. please try later.',
     success_delete_space: 'Success to delete space.',
     failed_delete_space: 'Failed to delete space. please try later.',
+    success_participate_space: 'Successfully joined the space.',
+    failed_participate_space: 'Failed to join the space. please try later.',
 
     upload_media: 'Upload Media',
     uploading: 'Uploading…',
@@ -125,6 +127,9 @@ export const i18nSpaceHome = {
     success_delete_space: '스페이스를 성공적으로 삭제했습니다.',
     failed_delete_space:
       '스페이스 삭제에 실패했습니다. 잠시 후 다시 시도해보세요.',
+    success_participate_space: '스페이스에 성공적으로 참여했습니다.',
+    failed_participate_space:
+      '스페이스 참여에 실패했습니다. 잠시 후 다시 시도해보세요.',
 
     upload_media: '미디어 업로드',
     uploading: '업로드 중…',

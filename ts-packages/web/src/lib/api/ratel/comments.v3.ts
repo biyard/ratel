@@ -49,3 +49,18 @@ export function listReplies(
 
   return call('GET', path);
 }
+
+export function listSpaceReplies(
+  spacePk: string,
+  postPk: string,
+  commentSk: string,
+  bookmark?: string,
+): Promise<ListResponse<PostComment>> {
+  let path = `/v3/spaces/${encodeURIComponent(spacePk)}/boards/${encodeURIComponent(postPk)}/comments/${encodeURIComponent(commentSk)}`;
+
+  if (bookmark) {
+    path = `${path}?bookmark=${encodeURIComponent(bookmark)}`;
+  }
+
+  return call('GET', path);
+}

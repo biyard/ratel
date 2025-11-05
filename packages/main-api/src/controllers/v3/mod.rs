@@ -58,14 +58,7 @@ pub struct RouteDeps {
     pub s3: S3Client,
 }
 
-pub fn route(
-    RouteDeps {
-        dynamo_client,
-        ses_client,
-        bot,
-        s3,
-    }: RouteDeps,
-) -> Result<Router> {
+pub fn route(bot: Option<ArcTelegramBot>) -> Result<Router> {
     Ok(Router::new()
         .nest("/payments", payments::route()?)
         .nest("/did", did::route()?)
@@ -91,5 +84,5 @@ pub fn route(
                 .route("/multiparts", post(complete_multipart_upload)),
         )
         .layer(Extension(bot))
-        .with_state(AppState::new(dynamo_client, ses_client, s3)))
+        .with_state(AppState::default()))
 }
