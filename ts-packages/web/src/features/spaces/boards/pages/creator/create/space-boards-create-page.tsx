@@ -49,15 +49,6 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
 
   return (
     <div className="w-full mt-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-text-primary">
-          {t('create_new_post')}
-        </h1>
-        <p className="mt-1 text-sm text-text-primary">
-          {t('create_new_post_desc')}
-        </p>
-      </div>
-
       <Card className="w-full">
         <div className="grid gap-5 w-full">
           <div className="grid gap-2 w-full">
@@ -210,7 +201,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
                 await ctrl.handleSubmit();
               }}
             >
-              {ctrl.postPk ? t('update') : t('write')}
+              {ctrl.postPk.get() ? t('update') : t('write')}
             </Button>
           </div>
         </div>
