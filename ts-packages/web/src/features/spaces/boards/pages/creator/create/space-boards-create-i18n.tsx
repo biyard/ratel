@@ -9,6 +9,7 @@ export const i18nSpaceBoardsCreate = {
     contents: 'Content',
     cancel: 'Cancel',
     write: 'Write',
+    update: 'Update',
   },
   ko: {
     create_new_post: '새 게시글 작성',
@@ -20,5 +21,6 @@ export const i18nSpaceBoardsCreate = {
     contents: '내용',
     cancel: '취소',
     write: '작성하기',
+    update: '수정하기',
   },
 };

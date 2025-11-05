@@ -16,6 +16,7 @@ export type BoardsListProps = {
   categories: string[];
   posts: SpacePostResponse[];
   changeCategory: (categoryName: string) => void;
+  handleDetailPage: (postPk: string) => void;
 };
 
 export default function BoardsList({
@@ -23,6 +24,7 @@ export default function BoardsList({
   categories,
   posts,
   changeCategory,
+  handleDetailPage,
 }: BoardsListProps) {
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -87,7 +89,10 @@ export default function BoardsList({
         {sortedPosts.map((p) => (
           <div
             key={p.pk}
-            className="w-full bg-card-bg-secondary border-card-enable-border rounded-[10px] py-[20px]"
+            className="cursor-pointer w-full bg-card-bg-secondary border-card-enable-border rounded-[10px] py-[20px]"
+            onClick={() => {
+              handleDetailPage(p.pk);
+            }}
           >
             <div className="flex flex-col w-full gap-3">
               <div className="flex items-start justify-between gap-3">

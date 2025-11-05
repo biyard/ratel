@@ -13,8 +13,11 @@ import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { Button } from '../ui/button';
 import { TiptapEditor } from '../text-editor';
 import type { Editor } from '@tiptap/core';
+import { useLocation } from 'react-router';
+import { SpaceReplyList } from './space-reply-list';
 
 interface CommentProps {
+  spacePk?: string;
   comment: PostComment;
   // TODO: Update to use v3 comment API with string IDs
   onComment?: (commentId: string, content: string) => Promise<void>;
@@ -22,7 +25,15 @@ interface CommentProps {
   t: TFunction<'Thread', undefined>;
 }
 
-export function Comment({ comment, onComment, onLike, t }: CommentProps) {
+export function Comment({
+  spacePk,
+  comment,
+  onComment,
+  onLike,
+  t,
+}: CommentProps) {
+  const location = useLocation();
+  const boards = /\/boards\/posts(\/|$)/.test(location.pathname);
   const [expand, setExpand] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
 
@@ -40,7 +51,7 @@ export function Comment({ comment, onComment, onLike, t }: CommentProps) {
             {comment.author_display_name}
           </div>
           <div className="font-semibold text-xs/[20px] text-time-text">
-            {getTimeAgo(comment.updated_at)}
+            {getTimeAgo(comment.updated_at * 1000)}
           </div>
         </div>
       </div>
@@ -145,7 +156,14 @@ export function Comment({ comment, onComment, onLike, t }: CommentProps) {
             </div>
           </button>
         </div>
-        {showReplies && comment.replies > 0 && (
+        {showReplies && comment.replies > 0 && boards && (
+          <SpaceReplyList
+            spacePk={spacePk ?? ''}
+            postPk={comment.pk}
+            commentSk={comment.sk}
+          />
+        )}
+        {showReplies && comment.replies > 0 && !boards && (
           <ReplyList postPk={comment.pk} commentSk={comment.sk} />
         )}
         {expand && (

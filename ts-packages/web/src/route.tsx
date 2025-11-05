@@ -60,8 +60,20 @@ export const route = {
   },
   spaceBoards: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/boards`,
-  spaceCreatePost: (spaceId: string) =>
-    `/spaces/${encodeURIComponent(spaceId)}/boards/create`,
+  spaceCreatePost: (spaceId: string, postPk?: string) => {
+    let to = `/spaces/${encodeURIComponent(spaceId)}/boards/create`;
+    const params: string[] = [];
+
+    if (postPk) {
+      params.push(`post-pk=${encodeURIComponent(postPk)}`);
+    }
+
+    if (params.length > 0) {
+      to += `?${params.join('&')}`;
+    }
+
+    return to;
+  },
   spaceBoardPost: (spaceId: string, spacePostId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/boards/posts/${encodeURIComponent(spacePostId)}`,
   spacePolls: (spaceId: string) =>

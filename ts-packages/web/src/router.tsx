@@ -219,16 +219,11 @@ export const routes = createBrowserRouter([
               },
               {
                 id: 'space-post-detail',
-                path: ':postPk',
+                path: 'posts/:postPk',
                 Component: SpaceBoardPage,
               },
             ],
           }, // End of Boards Feature
-          {
-            id: 'space-boards-page',
-            path: 'boards',
-            Component: SpaceBoardsPage,
-          },
           {
             id: 'space-settings-page',
             path: 'settings',

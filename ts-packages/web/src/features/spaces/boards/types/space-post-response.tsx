@@ -39,6 +39,6 @@ export class SpacePostResponse {
     this.urls = json.urls;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    this.comments = rows.map((d: any) => new SpacePostResponse(d));
+    this.comments = rows.map((d: any) => new SpacePostCommentResponse(d));
   }
 }

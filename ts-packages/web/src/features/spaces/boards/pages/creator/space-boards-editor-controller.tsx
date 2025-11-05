@@ -27,6 +27,10 @@ export class SpaceBoardsEditorController {
     this.navigate(route.spaceCreatePost(this.spacePk));
   };
 
+  handleDetailPage = (postPk: string) => {
+    this.navigate(route.spaceBoardPost(this.spacePk, postPk));
+  };
+
   changeCategory = async (categoryName: string) => {
     if (categoryName == '') {
       const next = await call(
