@@ -99,6 +99,7 @@ export enum UserType {
   Individual = 1,
   Team = 2,
   Bot = 3,
+  AnonymousSpaceUser = 4,
   Admin = 98,
   Anonymous = 99,
 }

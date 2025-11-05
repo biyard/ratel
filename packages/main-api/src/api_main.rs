@@ -3,7 +3,7 @@ use std::env;
 use crate::{
     AppState, config,
     controllers::web,
-    route::{RouteDeps, route},
+    route::route,
     utils::{
         aws::{
             BedrockClient, DynamoClient, RekognitionClient, S3Client, SesClient, TextractClient,
@@ -30,13 +30,6 @@ pub async fn api_main() -> Result<Router, crate::Error> {
     let is_local = conf.env == "local" || conf.env == "test";
     let aws_sdk_config = get_aws_config();
     let dynamo_client = DynamoClient::new(Some(aws_sdk_config.clone()));
-    let ses_client = SesClient::new(aws_sdk_config, is_local);
-    let sqs_client = sqs_client::SqsClient::new().await;
-    let bedrock_client = BedrockClient::new();
-    let rek_client = RekognitionClient::new();
-    let textract_client = TextractClient::new();
-    let private_s3_client = S3Client::new(conf.private_bucket_name);
-    let metadata_s3_client = S3Client::new(conf.bucket.name);
     let bot = if let Some(token) = conf.telegram_token {
         let res = TelegramBot::new(token).await;
         if let Err(err) = res {
@@ -69,22 +62,10 @@ pub async fn api_main() -> Result<Router, crate::Error> {
     //     .nest_service("/mcp", controllers::mcp::route(pool.clone()).await.expect("MCP router"))
     //     .layer(middleware::from_fn(mcp_middleware));
 
-
-    let app_state = AppState::new(dynamo_client.clone(), ses_client.clone(), metadata_s3_client.clone());
+    let app_state = AppState::default();
     let web = web::route(app_state)?;
 
-    let api_router = route(RouteDeps {
-        sqs_client,
-        bedrock_client,
-        rek_client,
-        textract_client,
-        metadata_s3_client,
-        private_s3_client,
-        bot,
-        dynamo_client,
-        ses_client,
-    })
-    .await?;
+    let api_router = route(bot).await?;
 
     let app = app
         // .merge(mcp_router)

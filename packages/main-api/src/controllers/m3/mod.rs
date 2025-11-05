@@ -12,7 +12,8 @@ use crate::{AppState, models::dynamo_tables::main::user::User};
 
 pub mod memberships;
 
-pub fn route(app_state: AppState) -> crate::Result<by_axum::axum::Router> {
+pub fn route() -> crate::Result<by_axum::axum::Router> {
+    let app_state = AppState::default();
     Ok(axum::Router::new()
         .nest("/memberships", memberships::route()?)
         .layer(middleware::from_fn_with_state(
