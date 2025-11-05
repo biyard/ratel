@@ -132,7 +132,7 @@ run:
 	$(BUILD_ENV) cargo watch -x "run $(RUST_FLAG)" $(WATCH_TARGET)
 
 build:
-	$(BUILD_ENV) cargo build $(RUST_FLAG)
+	$(BUILD_ENV) cargo build $(RUST_FLAG) --release
 
 build-only:
 	$(BUILD_ENV) cargo build --release -p $(SERVICE) --features lambda

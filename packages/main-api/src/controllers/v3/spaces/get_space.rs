@@ -39,21 +39,23 @@ pub struct GetSpaceResponse {
     pub booster: BoosterType,
 
     pub verified: bool,
+
+    pub anonymous_participation: bool,
+    pub participated: bool,
+    pub participant_display_name: Option<String>,
+    pub participant_profile_url: Option<String>,
+    pub participant_username: Option<String>,
 }
 
 pub async fn get_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
+    Extension(space): Extension<SpaceCommon>,
     Path(SpacePathParam { space_pk }): SpacePath,
-) -> Result<Json<GetSpaceResponse>, Error> {
-    let space = SpaceCommon::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceCommon));
-
+) -> Result<Json<GetSpaceResponse>> {
     let post_pk = space_pk.clone().to_post_key()?;
-    let post = Post::get(&dynamo.client, &post_pk, Some(&EntityType::Post));
+    let post = Post::get(&dynamo.client, &post_pk, Some(&EntityType::Post)).await?;
 
-    let (space, post) = tokio::try_join!(space, post)?;
-
-    let space = space.ok_or(Error::SpaceNotFound)?;
     let post = post.ok_or(Error::PostNotFound)?;
 
     let verified = if user.clone().is_some() {
@@ -75,20 +77,48 @@ pub async fn get_space_handler(
         false
     };
 
-    let permissions = post.get_permissions(&dynamo.client, user).await?;
+    let permissions = post.get_permissions(&dynamo.client, user.clone()).await?;
+
+    let user_participant = if user.is_some() && space.should_explicit_participation() {
+        let (pk, sk) = SpaceParticipant::keys(space_pk.clone(), user.as_ref().unwrap().pk.clone());
+        SpaceParticipant::get(&dynamo.client, pk, Some(sk)).await?
+    } else {
+        None
+    };
 
     Ok(Json(GetSpaceResponse::from((
         space,
         post,
         permissions,
         verified,
+        user_participant,
     ))))
 }
 
-impl From<(SpaceCommon, Post, TeamGroupPermissions, bool)> for GetSpaceResponse {
+impl From<(SpaceCommon, Post, TeamGroupPermissions, bool, Option<SpaceParticipant>)>
+    for GetSpaceResponse
+{
     fn from(
-        (space, post, permissions, verified): (SpaceCommon, Post, TeamGroupPermissions, bool),
+        (space, post, permissions, verified, user_participant): (
+            SpaceCommon,
+            Post,
+            TeamGroupPermissions,
+            bool,
+            Option<SpaceParticipant>,
+        ),
     ) -> Self {
+        let (participated, participant_display_name, participant_profile_url, participant_username) =
+            if let Some(participant) = user_participant {
+                (
+                    true,
+                    Some(participant.display_name),
+                    Some(participant.profile_url),
+                    Some(participant.username),
+                )
+            } else {
+                (false, None, None, None)
+            };
+
         Self {
             pk: space.pk,
             sk: space.sk,
@@ -119,6 +149,11 @@ impl From<(SpaceCommon, Post, TeamGroupPermissions, bool)> for GetSpaceResponse 
             publish_state: space.publish_state,
             booster: space.booster,
             verified,
+            anonymous_participation: space.anonymous_participation,
+            participated,
+            participant_display_name,
+            participant_profile_url,
+            participant_username,
         }
     }
 }
