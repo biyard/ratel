@@ -1,6 +1,6 @@
 import { spaceKeys } from '@/constants';
 import { optimisticUpdate } from '@/lib/hook-utils';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { SpacePostResponse } from '../types/space-post-response';
 
@@ -20,6 +20,8 @@ export function createSpacePost(
 }
 
 export function useCreateSpacePostMutation<T extends SpacePostResponse>() {
+  const qc = useQueryClient();
+
   const mutation = useMutation({
     mutationKey: ['create-space-post'],
     mutationFn: async ({
@@ -42,6 +44,8 @@ export function useCreateSpacePostMutation<T extends SpacePostResponse>() {
       await optimisticUpdate<T>({ queryKey: spaceQK }, (response) => {
         return response;
       });
+
+      qc.invalidateQueries({ queryKey: spaceKeys.boards_category(spacePk) });
     },
   });
 

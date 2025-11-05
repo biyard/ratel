@@ -69,6 +69,7 @@ import { Privacy } from '@/app/privacy/i18n';
 import { Refund } from '@/app/refund/i18n';
 import { SpaceSettings } from '@/app/spaces/[id]/settings/i18n';
 import { i18nSpaceBoardsCreate } from '@/features/spaces/boards/pages/creator/create/space-boards-create-i18n';
+import { i18nSpaceBoardsEditor } from '@/features/spaces/boards/pages/creator/space-boards-editor-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -127,6 +128,7 @@ Object.entries({
   SpacePollViewer: i18nSpacePollViewerPage,
   SpaceFileEditor: i18nSpaceFileEditor,
   SpaceBoardsCreate: i18nSpaceBoardsCreate,
+  SpaceBoardsEditor: i18nSpaceBoardsEditor,
   SpaceDiscussionEditor: i18nSpaceDiscussionEditorPage,
   SpacePanelEditor: i18nSpacePanelEditorPage,
   SpaceRecommendationEditor: i18nSpaceRecommendationEditor,
