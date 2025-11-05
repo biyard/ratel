@@ -85,3 +85,22 @@ export function updateSpaceAnonymousParticipation(
     anonymous_participation: anonymousParticipation,
   });
 }
+
+export type ParticipateSpaceRequest = {
+  verifiable_presentation: string;
+};
+
+export type ParticipateSpaceResponse = {
+  username: string;
+  display_name: string;
+  profile_url: string;
+};
+
+export function participateSpace(
+  spacePk: string,
+  verifiablePresentation: string,
+): Promise<ParticipateSpaceResponse> {
+  return call('POST', `/v3/spaces/${encodeURIComponent(spacePk)}/participate`, {
+    verifiable_presentation: verifiablePresentation,
+  });
+}
