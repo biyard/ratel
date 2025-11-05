@@ -34,6 +34,14 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
     },
     label: 'menu_poll',
   },
+  {
+    Icon: Post,
+    to: (space) => {
+      return route.spaceBoards(space.pk);
+    },
+    // visible: () => config.experiment,
+    label: 'menu_boards',
+  },
   // {
   //   Icon: Discuss,
   //   to: (space) => {
@@ -46,7 +54,7 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
     to: (space) => {
       return route.spaceMembers(space.pk);
     },
-    visible: () => config.experiment,
+    // visible: () => config.experiment,
     label: 'menu_members',
   },
   {
@@ -57,15 +65,7 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
     visible: (space) => space.isAdmin(),
     label: 'menu_panels',
   },
-  {
-    // FIXME: fix this icon
-    Icon: User,
-    to: (space) => {
-      return route.spaceBoards(space.pk);
-    },
-    // visible: () => config.experiment,
-    label: 'menu_boards',
-  },
+
   // {
   //   Icon: checkCircle2Colored,
   //   to: (space) => {
