@@ -248,7 +248,7 @@ async fn test_delete_team() {
     let user2 = ctx.create_another_user().await;
     let TestContextV3 { app, test_user, .. } = ctx;
 
-    let team_username = format!("testteam-delete{}", uuid::Uuid::new_v4());
+    let team_username = format!("testteam{}", uuid::Uuid::new_v4());
 
     // Create team
     let (status, _headers, _team) = post! {
