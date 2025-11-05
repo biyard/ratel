@@ -150,7 +150,7 @@ const UserSetupPopup = ({
         //        Consider just update email and password in my profile
         req.telegram_raw = auth.telegramRaw;
         // FIXME: EVM address must be verified by signature in server-side
-        req.evm_address = auth.evmWallet?.address;
+        /* req.evm_address = auth.evmWallet?.address; */
       }
       const res = await signup(req);
       if (res) {
@@ -207,27 +207,27 @@ const UserSetupPopup = ({
   return (
     <div
       id={id}
-      className="h-150 tablet:h-full max-h-screen overflow-y-scroll w-full mt-8.75 scrollbar-hide"
+      className="overflow-y-scroll w-full max-h-screen h-150 tablet:h-full mt-8.75 scrollbar-hide"
     >
-      <div className="flex flex-col max-w-100 w-full gap-4 tablet:gap-8.75 max-mobile:overflow-y-scroll">
+      <div className="flex flex-col gap-4 w-full max-w-100 tablet:gap-8.75 max-mobile:overflow-y-scroll">
         <FileUploader onUploadSuccess={handleProfileUrl}>
-          <div className="group relative flex items-center justify-center size-40 max-mobile:size-20 mx-auto">
+          <div className="flex relative justify-center items-center mx-auto group size-40 max-mobile:size-20">
             <img
               src={profileUrlState}
               alt="Team Logo"
-              className="w-40 h-40 rounded-full object-cover cursor-pointer relative group max-mobile:size-20"
+              className="object-cover relative w-40 h-40 rounded-full cursor-pointer group max-mobile:size-20"
             />
 
-            <div className="absolute w-40 h-40 inset-0 bg-component-bg/50 flex items-center justify-center text-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-semibold">
+            <div className="flex absolute inset-0 justify-center items-center w-40 h-40 font-semibold text-center text-white rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 bg-component-bg/50">
               {t('clicked_image')}
             </div>
           </div>
         </FileUploader>
 
-        <div className="flex flex-col items-start justify-start w-full gap-1.25">
-          <div className="w-full flex flex-col gap-[5px]">
+        <div className="flex flex-col justify-start items-start w-full gap-1.25">
+          <div className="flex flex-col w-full gap-[5px]">
             <div className="flex flex-row items-start">
-              <span className="text-c-cg-30 font-bold text-base/7">
+              <span className="font-bold text-c-cg-30 text-base/7">
                 {t('email')}
               </span>
             </div>
@@ -235,7 +235,7 @@ const UserSetupPopup = ({
             <Row>
               <input
                 type="email"
-                className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 h-11 text-base placeholder-gray-500 font-medium rounded-lg"
+                className="px-5 w-full h-11 text-base font-medium placeholder-gray-500 rounded-lg border outline-none bg-input-box-bg border-input-box-border"
                 disabled={email !== '' || isValidEmail}
                 name="email"
                 aria-label="email"
@@ -263,7 +263,7 @@ const UserSetupPopup = ({
               )}
             </Row>
             {emailWarning && (
-              <p className="text-red-500 text-sm mt-1">{emailWarning}</p>
+              <p className="mt-1 text-sm text-red-500">{emailWarning}</p>
             )}
 
             <Row
@@ -273,7 +273,7 @@ const UserSetupPopup = ({
               <input
                 id="otp"
                 name="otp"
-                className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 h-11 text-text-primary text-base placeholder-gray-500 font-medium rounded-lg"
+                className="px-5 w-full h-11 text-base font-medium placeholder-gray-500 rounded-lg border outline-none bg-input-box-bg border-input-box-border text-text-primary"
                 value={authCode}
                 placeholder={t('verification_code')}
                 onChange={(e) => {
@@ -290,14 +290,14 @@ const UserSetupPopup = ({
             </Row>
           </div>
           {email === '' && (
-            <div className="w-full flex flex-col gap-[5px]">
+            <div className="flex flex-col w-full gap-[5px]">
               <div className="flex flex-row items-start">
-                <span className="text-c-cg-30 font-bold text-base/7">
+                <span className="font-bold text-c-cg-30 text-base/7">
                   {t('password')}
                 </span>
               </div>
               <input
-                className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 h-11 text-text-primary text-base placeholder-gray-500 font-medium rounded-lg"
+                className="px-5 w-full h-11 text-base font-medium placeholder-gray-500 rounded-lg border outline-none bg-input-box-bg border-input-box-border text-text-primary"
                 type="password"
                 name="password"
                 aria-label="password"
@@ -311,7 +311,7 @@ const UserSetupPopup = ({
               />
 
               {!isValid && password.length > 7 && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="mt-1 text-sm text-red-500">
                   {t('invalid_password_format')}
                 </p>
               )}
@@ -386,7 +386,7 @@ const UserSetupPopup = ({
             />
           </div>
 
-          <div className="flex flex-col gap-2.25 items-start mb-5 mt-5">
+          <div className="flex flex-col items-start mt-5 mb-5 gap-2.25">
             <Checkbox
               id="agree_checkbox"
               onChange={(checked) => {
@@ -408,7 +408,7 @@ const UserSetupPopup = ({
               </span>
             </Checkbox>
             {termsError && (
-              <p className="text-red-500 text-sm -mt-1">{termsError}</p>
+              <p className="-mt-1 text-sm text-red-500">{termsError}</p>
             )}
 
             <Checkbox
@@ -446,11 +446,11 @@ const LabeledInput = ({
   onInput,
   warning = '',
 }: LabeledInputProps) => (
-  <div className="w-full flex flex-col items-start gap-[5px]">
-    <div className="text-c-cg-30 font-bold text-base/7">{labelName}</div>
+  <div className="flex flex-col items-start w-full gap-[5px]">
+    <div className="font-bold text-c-cg-30 text-base/7">{labelName}</div>
     <input
       type="text"
-      className="bg-input-box-bg border border-input-box-border w-full outline-none px-5 text-text-primary text-base placeholder-gray-500 font-medium rounded-lg"
+      className="px-5 w-full text-base font-medium placeholder-gray-500 rounded-lg border outline-none bg-input-box-bg border-input-box-border text-text-primary"
       style={{ height: 50 }}
       placeholder={placeholder}
       aria-label={labelName}
