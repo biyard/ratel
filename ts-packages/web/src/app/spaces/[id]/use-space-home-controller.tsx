@@ -25,6 +25,8 @@ import { useUpdateDraftImageMutation } from '@/features/posts/hooks/use-update-d
 import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
 import { getPutObjectUrl } from '@/lib/api/ratel/assets.v3';
 import { spacePkToPostPk } from '@/features/spaces/utils/partition-key-utils';
+import { useParticipateSpaceMutation } from '@/features/spaces/hooks/use-participate-space-mutation';
+import { UserType } from '@/lib/api/ratel/users.v3';
 
 export class SpaceHomeController {
   public space: Space;
@@ -49,8 +51,10 @@ export class SpaceHomeController {
     public updateDraftImage: ReturnType<
       typeof useUpdateDraftImageMutation
     >['mutateAsync'],
+    public participateSpace: ReturnType<typeof useParticipateSpaceMutation>,
   ) {
     this.space = this.data.space.data;
+    this.user = this.data.user.data;
   }
 
   get timelineItems() {
@@ -64,7 +68,7 @@ export class SpaceHomeController {
   }
 
   get menus() {
-    const menus: SideMenuProps[] = [
+    let menus: SideMenuProps[] = [
       {
         Icon: Post,
         to: route.spaceByType(this.space.spaceType, this.space.pk),
@@ -88,9 +92,9 @@ export class SpaceHomeController {
       }
     });
 
-    /* if (this.space.isAdmin()) {
-     *   menus = menus.concat(this.adminMenus);
-     * } */
+    if (this.space.isAdmin()) {
+      menus = menus.concat(this.adminMenus);
+    }
 
     return menus;
   }
@@ -296,7 +300,67 @@ export class SpaceHomeController {
     this.image.set(null);
   };
 
+  handleParticipate = async () => {
+    logger.debug('handleParticipate is called');
+
+    try {
+      // TODO: In the future, implement proper verifiable credential logic
+      // For now, using empty string as the backend has a TODO comment
+      const result = await this.participateSpace.mutateAsync({
+        spacePk: this.space.pk,
+        verifiablePresentation: '',
+      });
+
+      logger.debug('Participation successful:', result);
+      showSuccessToast(this.t('success_participate_space'));
+    } catch (error) {
+      logger.error('Failed to participate in space:', error);
+      showErrorToast(this.t('failed_participate_space'));
+    }
+  };
+
+  canParticipate() {
+    // User can participate if:
+    // 1. User is authenticated
+    // 2. User is not already a space admin
+    // 3. User is not already an anonymous space participant
+    if (this.space.participated) {
+      return false;
+    }
+
+    if (this.isAdmin) {
+      return false;
+    }
+
+    return true;
+  }
+
   get actions() {
+    if (this.isAdmin) {
+      return this.adminActions;
+    } else if (
+      this.space.shouldParticipateManually() &&
+      this.canParticipate()
+      // check already joined
+    ) {
+      return this.viewerActions;
+    }
+
+    return this.participantActions;
+  }
+
+  get viewerActions() {
+    const ret = [
+      {
+        label: this.t('action_participate'),
+        onClick: this.handleParticipate,
+      },
+    ];
+
+    return ret;
+  }
+
+  get adminActions() {
     const ret = [
       {
         label: this.t('delete'),
@@ -313,6 +377,12 @@ export class SpaceHomeController {
 
     return ret;
   }
+
+  get participantActions() {
+    const ret = [];
+
+    return ret;
+  }
 }
 
 export function useSpaceHomeController(spacePk: string) {
@@ -326,6 +396,7 @@ export function useSpaceHomeController(spacePk: string) {
   const publishSpace = usePublishSpaceMutation();
   const deleteSpace = useDeleteSpaceMutation();
   const { mutateAsync: updateDraftImage } = useUpdateDraftImageMutation();
+  const participateSpace = useParticipateSpaceMutation();
 
   const edit = useState(false);
   const save = useState(false);
@@ -358,5 +429,6 @@ export function useSpaceHomeController(spacePk: string) {
     deleteSpace,
     new State(image),
     updateDraftImage,
+    participateSpace,
   );
 }

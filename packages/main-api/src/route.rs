@@ -9,51 +9,20 @@ use crate::{
     utils::{aws::*, sqs_client::SqsClient, telegram::ArcTelegramBot},
 };
 
-pub struct RouteDeps {
-    pub sqs_client: Arc<SqsClient>,
-    pub bedrock_client: BedrockClient,
-    pub rek_client: RekognitionClient,
-    pub textract_client: TextractClient,
-    pub metadata_s3_client: S3Client,
-    pub private_s3_client: S3Client,
-    pub bot: Option<ArcTelegramBot>,
-    pub dynamo_client: DynamoClient,
-    pub ses_client: SesClient,
-}
-
-pub async fn route(deps: RouteDeps) -> Result<by_axum::axum::Router, crate::Error> {
-    let RouteDeps {
-        // sqs_client,
-        // bedrock_client,
-        // rek_client,
-        // textract_client,
-        // private_s3_client,
-        bot,
-        dynamo_client,
-        ses_client,
-        metadata_s3_client,
-        ..
-    } = deps;
+pub async fn route(bot: Option<ArcTelegramBot>) -> Result<by_axum::axum::Router, crate::Error> {
+    // Create a separate router for non-documented routes (like .well-known)
+    let well_known_router = by_axum::axum::AxumRouter::new().route(
+        "/.well-known/did.json",
+        by_axum::axum::native_routing::get(
+            controllers::well_known::get_did_document::get_did_document_handler,
+        ),
+    );
 
     Ok(by_axum::axum::Router::new()
-        .with_state(AppState::new(dynamo_client.clone(), ses_client.clone(), metadata_s3_client.clone()))
-        .nest(
-            "/v3",
-            controllers::v3::route(controllers::v3::RouteDeps {
-                dynamo_client: dynamo_client.clone(),
-                ses_client: ses_client.clone(),
-                bot: bot.clone(),
-                s3: metadata_s3_client.clone(),
-            })?,
-        )
-        .nest(
-            "/m3",
-            controllers::m3::route(AppState::new(
-                dynamo_client.clone(),
-                ses_client.clone(),
-                metadata_s3_client.clone(),
-            ))?,
-        )
+        .with_state(AppState::default())
+        .merge(well_known_router)
+        .nest("/v3", controllers::v3::route(bot)?)
+        .nest("/m3", controllers::m3::route()?)
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(|request: &axum::http::Request<_>| {

@@ -170,7 +170,7 @@ async fn test_list_my_posts() {
     assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
     let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
-    let images = vec!["https://example.com/image1.png".to_string()];
+    let _images = vec!["https://example.com/image1.png".to_string()];
 
     let title = "Updated Title";
     let content = "<p>Updated Content</p>";
@@ -264,7 +264,7 @@ async fn test_list_my_drafts() {
     assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
 
     let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
-    let images = vec!["https://example.com/image1.png".to_string()];
+    let _images = vec!["https://example.com/image1.png".to_string()];
 
     let title = "Draft title";
     let content = "<p>draft Content</p>";
