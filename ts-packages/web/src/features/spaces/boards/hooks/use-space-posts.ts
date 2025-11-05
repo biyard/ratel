@@ -25,7 +25,7 @@ export function getOption(spacePk: string) {
   };
 }
 
-export default function useSpaceCategory(
+export default function useSpacePosts(
   spacePk: string,
 ): UseQueryResult<ListSpacePostsResponse> {
   const query = useQuery({ ...getOption(spacePk) });
