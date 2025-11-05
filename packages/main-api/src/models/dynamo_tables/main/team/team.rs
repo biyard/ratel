@@ -1,3 +1,5 @@
+use crate::models::{TeamGroup, UserTeam};
+use crate::*;
 use crate::{
     models::{
         TeamOwner,
@@ -5,7 +7,6 @@ use crate::{
     },
     types::*,
 };
-use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct Team {
@@ -74,7 +75,7 @@ impl Team {
         cli: &aws_sdk_dynamodb::Client,
         team_pk: &Partition,
         user_pk: &Partition,
-    ) -> Result<TeamGroupPermissions, crate::Error> {
+    ) -> Result<TeamGroupPermissions> {
         // Check if the user is the team owner first
         let owner = TeamOwner::get(cli, team_pk, Some(EntityType::TeamOwner)).await?;
         if let Some(owner) = owner {
@@ -110,10 +111,12 @@ impl Team {
     pub async fn get_permitted_team(
         cli: &aws_sdk_dynamodb::Client,
         team_pk: Partition,
-        _user_pk: Partition,
-        _perm: TeamGroupPermission,
-    ) -> Result<Self, crate::Error> {
-        // TODO: Implement permission check logic
+        user_pk: Partition,
+        perm: TeamGroupPermission,
+    ) -> Result<Self> {
+        if !Self::has_permission(cli, &team_pk, &user_pk, perm).await? {
+            return Err(crate::Error::TeamNotFound);
+        }
 
         let team = Self::get(cli, team_pk, Some(EntityType::Team))
             .await?
@@ -123,13 +126,61 @@ impl Team {
     }
 
     pub async fn has_permission(
-        _cli: &aws_sdk_dynamodb::Client,
-        _team_pk: &Partition,
-        _user_pk: &Partition,
-        _perm: TeamGroupPermission,
-    ) -> Result<bool, crate::Error> {
-        // TODO: Implement permission check logic
+        cli: &aws_sdk_dynamodb::Client,
+        team_pk: &Partition,
+        user_pk: &Partition,
+        perm: TeamGroupPermission,
+    ) -> Result<bool> {
+        let (group, _bookmark) = UserTeamGroup::find_by_team_pk(
+            cli,
+            team_pk.clone(),
+            UserTeamGroupQueryOption::builder()
+                .sk(user_pk.to_string())
+                .limit(1),
+        )
+        .await?;
 
-        Ok(true)
+        let group = group.first().cloned().ok_or(crate::Error::TeamNotFound)?;
+
+        let permissions: TeamGroupPermissions = group.team_group_permissions.into();
+
+        Ok(permissions.contains(perm))
+    }
+
+    pub async fn create_new_team(
+        user: &User,
+        cli: &aws_sdk_dynamodb::Client,
+        display_name: String,
+        profile_url: String,
+        username: String,
+        description: String,
+    ) -> Result<Partition> {
+        let team = Team::new(display_name, profile_url, username, description);
+
+        let team_owner = TeamOwner::new(team.pk.clone(), user.clone());
+
+        let team_group = TeamGroup::new(
+            team.pk.clone(),
+            "Admin".to_string(),
+            "Administrators group with all permissions".to_string(),
+            crate::types::TeamGroupPermissions::all(),
+        );
+
+        let user_pk = user.pk.clone();
+        let team_pk = team.pk.clone();
+
+        let user_team_group = UserTeamGroup::new(user_pk.clone(), team_group.clone());
+        let user_team = UserTeam::new(user_pk, team.clone());
+
+        transact_write!(
+            cli,
+            team.create_transact_write_item(),
+            team_owner.create_transact_write_item(),
+            team_group.create_transact_write_item(),
+            user_team_group.create_transact_write_item(),
+            user_team.create_transact_write_item(),
+        )?;
+
+        Ok(team_pk)
     }
 }

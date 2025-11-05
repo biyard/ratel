@@ -24,9 +24,14 @@ pub async fn create_post_handler(
     NoApi(user): NoApi<User>,
     req: Option<Json<CreatePostRequest>>,
 ) -> Result<Json<CreatePostResponse>, Error> {
-    tracing::info!("create_post_handler {:?}", req);
+    tracing::debug!("create_post_handler {:?}", req);
     let cli = &dynamo.client;
     let author: Author = if let Some(Json(CreatePostRequest { team_pk })) = req {
+        tracing::info!(
+            "Creating post under team: {:?} by user {:?}",
+            team_pk,
+            user.pk
+        );
         Team::get_permitted_team(cli, team_pk, user.pk, TeamGroupPermission::PostWrite)
             .await?
             .into()
@@ -34,6 +39,7 @@ pub async fn create_post_handler(
         user.into()
     };
 
+    tracing::info!("Creating post for author: {:?}", author);
     let post = Post::draft(author);
     post.create(cli).await?;
 
