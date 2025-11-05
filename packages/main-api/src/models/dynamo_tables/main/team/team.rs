@@ -1,3 +1,4 @@
+use crate::models::{TeamGroup, UserTeam};
 use crate::*;
 use crate::{
     models::{
@@ -144,5 +145,42 @@ impl Team {
         let permissions: TeamGroupPermissions = group.team_group_permissions.into();
 
         Ok(permissions.contains(perm))
+    }
+
+    pub async fn create_new_team(
+        user: &User,
+        cli: &aws_sdk_dynamodb::Client,
+        display_name: String,
+        profile_url: String,
+        username: String,
+        description: String,
+    ) -> Result<Partition> {
+        let team = Team::new(display_name, profile_url, username, description);
+
+        let team_owner = TeamOwner::new(team.pk.clone(), user.clone());
+
+        let team_group = TeamGroup::new(
+            team.pk.clone(),
+            "Admin".to_string(),
+            "Administrators group with all permissions".to_string(),
+            crate::types::TeamGroupPermissions::all(),
+        );
+
+        let user_pk = user.pk.clone();
+        let team_pk = team.pk.clone();
+
+        let user_team_group = UserTeamGroup::new(user_pk.clone(), team_group.clone());
+        let user_team = UserTeam::new(user_pk, team.clone());
+
+        transact_write!(
+            cli,
+            team.create_transact_write_item(),
+            team_owner.create_transact_write_item(),
+            team_group.create_transact_write_item(),
+            user_team_group.create_transact_write_item(),
+            user_team.create_transact_write_item(),
+        )?;
+
+        Ok(team_pk)
     }
 }
