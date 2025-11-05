@@ -1592,6 +1592,7 @@ pub fn dynamo_entity_impl(input: TokenStream) -> TokenStream {
 }
 
 fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenStream {
+    let ident = Ident::new(&st_name, proc_macro2::Span::call_site());
     let opt_name = format!("{}QueryOption", st_name.to_case(convert_case::Case::Pascal));
     let opt_ident = Ident::new(&opt_name, proc_macro2::Span::call_site());
 
@@ -1612,8 +1613,23 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
     let sk_fn = if cfg.sk_name.is_some() {
         quote! {
             pub fn sk(mut self, sk: String) -> Self {
-                self.sk = Some(sk);
+                self.sk = Some(format!("{}", sk));
                 self
+            }
+
+        }
+    } else {
+        quote! {}
+    };
+
+    let opt_sk_fn = if cfg.sk_name.is_some() {
+        quote! {
+            pub fn opt_one_with_sk(mut self, sk: impl std::fmt::Display) -> #opt_ident {
+                #opt_ident {
+                    sk: Some(format!("{}", sk)),
+                    limit: 1,
+                    ..Default::default()
+                }
             }
 
         }
@@ -1627,6 +1643,7 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
             pub bookmark: Option<String>,
             pub limit: i32,
             pub scan_index_forward: bool,
+            pub all: bool,
         }
 
         impl Default for #opt_ident {
@@ -1636,8 +1653,32 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
                     bookmark: None,
                     limit: 10,
                     scan_index_forward: false,
+                    all: false,
                 }
             }
+        }
+
+        impl #ident {
+            pub fn opt() -> #opt_ident {
+                #opt_ident::default()
+            }
+
+            pub fn opt_one() -> #opt_ident {
+                #opt_ident {
+                    limit: 1,
+                    ..Default::default()
+                }
+            }
+
+            pub fn opt_all() -> #opt_ident {
+                #opt_ident {
+                    limit: 1_000_000,
+                    all: true,
+                    ..Default::default()
+                }
+            }
+
+            #opt_sk_fn
         }
 
         impl #opt_ident {
@@ -1765,17 +1806,17 @@ fn generate_index_fn(
     );
 
     let sk_condition = quote! {
-        if let Some(sk) = opt.sk {
+        if let Some(sk) = opt.sk.clone() {
             req = req
                 .expression_attribute_names("#sk", #idx_sk_var)
-                .expression_attribute_values(":sk", aws_sdk_dynamodb::types::AttributeValue::S(Self::#sk_composer(sk)));
+                .expression_attribute_values(":sk", aws_sdk_dynamodb::types::AttributeValue::S(Self::#sk_composer(sk.clone())));
         }
     };
 
     quote! {
         pub async fn #idx_ident(
             cli: &aws_sdk_dynamodb::Client,
-            pk: impl std::fmt::Display,
+            pk: impl std::fmt::Display + Clone,
             opt: #opt_ident,
         ) -> #result_ty <(Vec<Self>, Option<String>), #err_ctor> {
             #key_condition
@@ -1785,7 +1826,7 @@ fn generate_index_fn(
                 .table_name(Self::table_name())
                 .index_name(#idx_name)
                 .expression_attribute_names("#pk", #idx_pk_var)
-                .expression_attribute_values(":pk", aws_sdk_dynamodb::types::AttributeValue::S(Self::#pk_composer(pk)));
+                .expression_attribute_values(":pk", aws_sdk_dynamodb::types::AttributeValue::S(Self::#pk_composer(pk.clone())));
 
             #sk_condition
 
@@ -1797,22 +1838,56 @@ fn generate_index_fn(
             let resp = req
                 .limit(opt.limit)
                 .scan_index_forward(opt.scan_index_forward)
-                .key_condition_expression(key_condition)
+                .key_condition_expression(key_condition.clone())
                 .send()
                 .await
                 .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
 
-            let items = resp
+            let mut items = resp
                 .items
                 .unwrap_or_default()
                 .into_iter()
                 .map(|item| serde_dynamo::from_item(item))
                 .collect::<std::result::Result<Vec<_>, _>>()?;
 
-            let bookmark = if let Some(ref last_evaluated_key) = resp.last_evaluated_key {
-                Some(Self::encode_lek_all(last_evaluated_key)?)
-            } else {
+            let bookmark = if opt.all {
+                let mut bookmark = resp.last_evaluated_key;
+                while let Some(bm) = bookmark {
+                    let mut req = cli
+                        .query()
+                        .table_name(Self::table_name())
+                        .index_name(#idx_name)
+                        .set_exclusive_start_key(Some(bm))
+                        .expression_attribute_names("#pk", #idx_pk_var)
+                        .expression_attribute_values(":pk", aws_sdk_dynamodb::types::AttributeValue::S(Self::#pk_composer(pk.clone())));
+
+                    #sk_condition
+
+                    let resp = req
+                        .scan_index_forward(opt.scan_index_forward)
+                        .key_condition_expression(key_condition.clone())
+                        .send()
+                        .await
+                        .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                    let more_items = resp
+                        .items
+                        .unwrap_or_default()
+                        .into_iter()
+                        .map(|item| serde_dynamo::from_item(item))
+                        .collect::<std::result::Result<Vec<_>, _>>()?;
+
+                    items.extend(more_items);
+
+                    bookmark = resp.last_evaluated_key;
+                }
                 None
+            } else {
+                if let Some(ref last_evaluated_key) = resp.last_evaluated_key {
+                    Some(Self::encode_lek_all(last_evaluated_key)?)
+                } else {
+                    None
+                }
             };
 
             Ok((items, bookmark))

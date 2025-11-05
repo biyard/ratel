@@ -70,15 +70,11 @@ if (!isFirebaseConfigValid) {
 }
 
 export interface AuthUserInfo {
-  principal: string | null;
-  event: EventType | null;
-  contents: string | null;
   idToken: string;
   accessToken: string;
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
-  keyPair: Ed25519KeyIdentity | null;
 }
 
 // Conditional Firebase initialization
@@ -107,18 +103,14 @@ export const EventType = {
   SignUp: 2,
 } as const;
 
-export type EventType = typeof EventType[keyof typeof EventType];
+export type EventType = (typeof EventType)[keyof typeof EventType];
 export type GoogleLoginInfo = {
-  eventType: EventType;
-  keyPair: Ed25519KeyIdentity;
-  contents: string;
   idToken: string;
   accessToken: string;
 
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
-  principal: string | null;
 };
 
 // Helper function to check if Firebase is available
@@ -126,9 +118,7 @@ export const isFirebaseAvailable = (): boolean => {
   return auth !== null && provider !== null;
 };
 
-export const loginWithGoogle = async (
-  anonKeyPair: Ed25519KeyIdentity,
-): Promise<GoogleLoginInfo> => {
+export const loginWithGoogle = async (): Promise<GoogleLoginInfo> => {
   // Check if Firebase is properly initialized
   if (!isFirebaseAvailable()) {
     throw new Error(
@@ -141,7 +131,6 @@ export const loginWithGoogle = async (
   }
 
   try {
-    provider.addScope('https://www.googleapis.com/auth/drive.appdata');
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     logger.debug('Google user info:', user);
@@ -151,55 +140,12 @@ export const loginWithGoogle = async (
 
     logger.debug('id Token: ', idToken, ', accessToken:', accessToken);
 
-    const files = await listFiles(config.env, accessToken);
-
-    logger.debug('file data: ', files);
-
-    let eventType: EventType = EventType.Login;
-    let keyPair;
-    let contents;
-
-    if (files.length > 0) {
-      const file = files[0];
-      try {
-        contents = await getFile(accessToken, file.id);
-        keyPair = restoreEd25519KeyPair(contents);
-      } catch (e) {
-        logger.error('Failed to get file content', e);
-        throw new Error('failed to get file');
-      }
-    } else {
-      logger.debug('key pair: ', anonKeyPair);
-
-      contents = encodeEd25519PrivateKeyToPkcs8Base64(anonKeyPair);
-
-      try {
-        const res = await uploadFile(accessToken, contents);
-
-        logger.debug('upload data', res);
-        eventType = EventType.SignUp;
-        keyPair = anonKeyPair;
-      } catch (e) {
-        logger.error('Failed to upload file content', e);
-        throw new Error('failed to upload file');
-      }
-    }
-
-    logger.debug(
-      'principal(google signed in): ',
-      keyPair.getPrincipal().toText(),
-    );
-
     return {
-      keyPair,
-      eventType,
-      contents,
       idToken,
       accessToken,
       email: user.email,
       photoURL: user.photoURL,
       displayName: user.displayName,
-      principal: keyPair.getPrincipal().toText(),
     };
   } catch (error) {
     logger.error('🔥 Google login failed:', error);
