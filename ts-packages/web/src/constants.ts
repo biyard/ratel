@@ -128,6 +128,11 @@ export const spaceKeys = {
   panel: (spacePk: string, panelPk: string) =>
     [...spaceKeys.panels(spacePk), panelPk] as const,
 
+  boards_category: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'categories'] as const,
+  boards_posts: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'posts'] as const,
+
   art_nfts: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'art_nfts'] as const,
   art_nft: (spacePk: string, nftPk: string = 'default') =>
