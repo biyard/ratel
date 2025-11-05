@@ -1,3 +1,4 @@
+use crate::*;
 use crate::{
     models::{
         TeamOwner,
@@ -5,7 +6,6 @@ use crate::{
     },
     types::*,
 };
-use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct Team {
@@ -74,7 +74,7 @@ impl Team {
         cli: &aws_sdk_dynamodb::Client,
         team_pk: &Partition,
         user_pk: &Partition,
-    ) -> Result<TeamGroupPermissions, crate::Error> {
+    ) -> Result<TeamGroupPermissions> {
         // Check if the user is the team owner first
         let owner = TeamOwner::get(cli, team_pk, Some(EntityType::TeamOwner)).await?;
         if let Some(owner) = owner {
@@ -110,10 +110,12 @@ impl Team {
     pub async fn get_permitted_team(
         cli: &aws_sdk_dynamodb::Client,
         team_pk: Partition,
-        _user_pk: Partition,
-        _perm: TeamGroupPermission,
-    ) -> Result<Self, crate::Error> {
-        // TODO: Implement permission check logic
+        user_pk: Partition,
+        perm: TeamGroupPermission,
+    ) -> Result<Self> {
+        if !Self::has_permission(cli, &team_pk, &user_pk, perm).await? {
+            return Err(crate::Error::TeamNotFound);
+        }
 
         let team = Self::get(cli, team_pk, Some(EntityType::Team))
             .await?
@@ -123,13 +125,24 @@ impl Team {
     }
 
     pub async fn has_permission(
-        _cli: &aws_sdk_dynamodb::Client,
-        _team_pk: &Partition,
-        _user_pk: &Partition,
-        _perm: TeamGroupPermission,
-    ) -> Result<bool, crate::Error> {
-        // TODO: Implement permission check logic
+        cli: &aws_sdk_dynamodb::Client,
+        team_pk: &Partition,
+        user_pk: &Partition,
+        perm: TeamGroupPermission,
+    ) -> Result<bool> {
+        let (group, _bookmark) = UserTeamGroup::find_by_team_pk(
+            cli,
+            team_pk.clone(),
+            UserTeamGroupQueryOption::builder()
+                .sk(user_pk.to_string())
+                .limit(1),
+        )
+        .await?;
 
-        Ok(true)
+        let group = group.first().cloned().ok_or(crate::Error::TeamNotFound)?;
+
+        let permissions: TeamGroupPermissions = group.team_group_permissions.into();
+
+        Ok(permissions.contains(perm))
     }
 }

@@ -14,6 +14,7 @@ import {
 } from '@/components/post-header';
 import TimelineMenu from '@/features/spaces/components/side-menu/timeline';
 import { SpaceActions } from '@/features/spaces/components/space-actions';
+import SpaceParticipantProfile from '@/features/spaces/components/space-participant-profile';
 
 export const Context = createContext<SpaceHomeController | undefined>(
   undefined,
@@ -53,6 +54,17 @@ export default function SpaceByIdLayout() {
         </Col>
         <Col className="gap-2.5 w-full max-w-[250px]">
           {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
+
+          {ctrl.space.participated &&
+            ctrl.space.participantDisplayName &&
+            ctrl.space.participantProfileUrl &&
+            ctrl.space.participantUsername && (
+              <SpaceParticipantProfile
+                displayName={ctrl.space.participantDisplayName}
+                profileUrl={ctrl.space.participantProfileUrl}
+                username={ctrl.space.participantUsername}
+              />
+            )}
 
           <SpaceSideMenu menus={ctrl.menus} />
           <TimelineMenu
