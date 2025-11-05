@@ -10,6 +10,7 @@ import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { call } from '@/lib/api/ratel/call';
 import { ListSpacePostsResponse } from '../../types/list-space-posts-response';
+import { route } from '@/route';
 
 export class SpaceBoardsViewerController {
   constructor(
@@ -21,6 +22,10 @@ export class SpaceBoardsViewerController {
     public t: TFunction<'SpaceBoardsEditor', undefined>,
     public categories: string[],
   ) {}
+
+  handleDetailPage = (postPk: string) => {
+    this.navigate(route.spaceBoardPost(this.spacePk, postPk));
+  };
 
   changeCategory = async (categoryName: string) => {
     if (categoryName == '') {

@@ -210,7 +210,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
                 await ctrl.handleSubmit();
               }}
             >
-              {t('write')}
+              {ctrl.postPk ? t('update') : t('write')}
             </Button>
           </div>
         </div>
