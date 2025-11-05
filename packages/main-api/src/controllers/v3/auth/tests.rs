@@ -177,8 +177,8 @@ async fn test_email_with_password_signup_with_invalid_code() {
 async fn test_reset_password() {
     let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
 
-    let email = format!("testuser{}@example.com", now);
-    let username = format!("testuser{:x}", now);
+    let email = format!("testreset{}@example.com", now);
+    let username = format!("testreset{:x}", now);
 
     let (status, _headers, body) = post! {
         app: app,
