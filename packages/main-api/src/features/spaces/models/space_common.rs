@@ -1,11 +1,11 @@
+use crate::*;
 use crate::{
     Error,
     features::spaces::members::SpaceEmailVerification,
-    models::{User, team::Team},
+    models::{User, UserTeamGroup, UserTeamGroupQueryOption, team::Team, *},
     types::*,
     utils::time::get_now_timestamp_millis,
 };
-use bdk::prelude::*;
 
 #[derive(
     Debug,
@@ -96,6 +96,10 @@ pub struct SpaceCommon {
 
     #[serde(default)]
     pub anonymous_participation: bool,
+    #[serde(default)]
+    // participants is the number of participants. It is incremented when a user participates in the space.
+    // It is only used for spaces enabling explicit participation such as anonymous participation.
+    pub participants: i64,
 }
 
 impl SpaceCommon {
@@ -132,23 +136,25 @@ impl SpaceCommon {
         }
     }
 
-    // pub fn with_time(mut self, started_at: i64, ended_at: i64) -> Self {
-    //     self.started_at = Some(started_at);
-    //     self.ended_at = Some(ended_at);
-    //     self
-    // }
-    // pub fn with_booster(mut self, booster: BoosterType) -> Self {
-    //     self.booster = booster;
-    //     self
-    // }
-    // pub fn with_space_type(mut self, space_type: SpaceType) -> Self {
-    //     self.space_type = space_type;
-    //     self
-    // }
-    // pub fn with_visibility(mut self, visibility: SpaceVisibility) -> Self {
-    //     self.visibility = Some(visibility);
-    //     self
-    // }
+    pub fn should_explicit_participation(&self) -> bool {
+        self.anonymous_participation
+    }
+
+    pub fn is_published(&self) -> bool {
+        self.publish_state == SpacePublishState::Published
+    }
+
+    pub async fn is_space_admin(&self, cli: &aws_sdk_dynamodb::Client, user: &User) -> bool {
+        if matches!(&self.user_pk, Partition::User(_)) {
+            &self.user_pk == &user.pk
+        } else if matches!(&self.user_pk, Partition::Team(_)) {
+            Team::has_permission(cli, &self.user_pk, &user.pk, TeamGroupPermission::TeamAdmin)
+                .await
+                .unwrap_or(false)
+        } else {
+            false
+        }
+    }
 }
 
 impl SpaceCommon {
@@ -167,7 +173,7 @@ impl SpaceCommon {
         space_pk: &Partition,
         user_pk: Option<&Partition>,
         perm: TeamGroupPermission,
-    ) -> Result<(Self, bool), crate::Error> {
+    ) -> Result<(Self, bool)> {
         let space = SpaceCommon::get(cli, space_pk, Some(EntityType::SpaceCommon))
             .await?
             .ok_or(Error::SpaceNotFound)?;
