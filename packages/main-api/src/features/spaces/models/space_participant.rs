@@ -28,7 +28,7 @@ pub struct SpaceParticipant {
 impl SpaceParticipant {
     pub fn new(space_pk: Partition, user_pk: Partition, display_name: String) -> Self {
         let created_at = time::get_now_timestamp_millis();
-        let username = display_name.replace(' ', "_").to_lowercase();
+        let username = display_name.replace(' ', "-").to_lowercase();
 
         Self {
             pk: CompositePartition(space_pk.clone(), user_pk.clone()),
@@ -41,6 +41,13 @@ impl SpaceParticipant {
             space_pk,
             user_pk,
         }
+    }
+
+    pub fn keys(space_pk: Partition, user_pk: Partition) -> (CompositePartition, EntityType) {
+        (
+            CompositePartition(space_pk, user_pk),
+            EntityType::SpaceParticipant,
+        )
     }
 }
 
