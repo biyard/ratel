@@ -12,40 +12,68 @@ import FileModel from '../files/types/file';
 
 export class Space {
   readonly permissions: TeamGroupPermissions;
+  public pk: string;
+  public sk: string;
+  public title: string;
+  public content: string;
+  public createdAt: number;
+  public updatedAt: number;
+  public urls: string[];
+  public spaceType: SpaceType;
+  public features: string[];
+  public status: SpaceStatus | null;
+  public authorProfileUrl: string;
+  public authorDisplayName: string;
+  public authorUsername: string;
+  public authorType: UserType;
+  public certified: boolean;
+  public likes: number = 0;
+  public comments: number = 0;
+  public shares: number = 0;
+  public rewards: number | undefined;
+  public visibility: SpaceVisibility;
+  public publishState: SpacePublishState;
+  public booster: BoosterType | undefined;
+  public verified: boolean;
+  public files: FileModel[] | undefined;
+  public anonymous_participation: boolean;
+  public participated: boolean;
+  public participantDisplayName: string | null;
+  public participantProfileUrl: string | null;
+  public participantUsername: string | null;
 
-  constructor(
-    public pk: string,
-    public sk: string,
-    public title: string,
-    public content: string,
-    public createdAt: number,
-    public updatedAt: number,
-    public urls: string[],
-    public spaceType: SpaceType,
-    public features: string[],
-    public status: SpaceStatus | null,
-    public authorProfileUrl: string,
-    public authorDisplayName: string,
-    public authorUsername: string,
-    public authorType: UserType,
-    public certified: boolean,
-
-    public likes: number = 0,
-    public comments: number = 0,
-    public shares: number = 0,
-    public rewards: number | undefined,
-    public visibility: SpaceVisibility,
-    public publishState: SpacePublishState,
-
-    public booster: BoosterType | undefined,
-    public verified: boolean,
-    public files: FileModel[] | undefined,
-
-    permissions: bigint,
-
-    public anonymous_participation: boolean,
-  ) {
-    this.permissions = new TeamGroupPermissions(permissions);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  constructor(json: any) {
+    this.permissions = new TeamGroupPermissions(json.permissions);
+    this.pk = json.pk;
+    this.sk = json.sk;
+    this.title = json.title;
+    this.content = json.content;
+    this.createdAt = json.created_at;
+    this.updatedAt = json.updated_at;
+    this.urls = json.urls;
+    this.spaceType = json.space_type;
+    this.features = json.features;
+    this.status = json.status;
+    this.authorProfileUrl = json.author_profile_url;
+    this.authorDisplayName = json.author_display_name;
+    this.authorUsername = json.author_username;
+    this.authorType = json.author_type;
+    this.certified = json.certified;
+    this.likes = json.likes;
+    this.comments = json.comments;
+    this.shares = json.shares;
+    this.rewards = json.rewards;
+    this.visibility = json.visibility;
+    this.publishState = json.publish_state;
+    this.booster = json.booster;
+    this.verified = json.verified;
+    this.files = json.files;
+    this.anonymous_participation = json.anonymous_participation;
+    this.participated = json.participated;
+    this.participantDisplayName = json.participant_display_name || null;
+    this.participantProfileUrl = json.participant_profile_url || null;
+    this.participantUsername = json.participant_username || null;
   }
 
   shouldParticipateManually() {
@@ -62,40 +90,5 @@ export class Space {
 
   get isPublic() {
     return this.visibility.type === 'Public';
-  }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  static fromJson(json: any): Space {
-    return new Space(
-      json.pk,
-      json.sk,
-      json.title,
-      json.content,
-      json.created_at,
-      json.updated_at,
-      json.urls || [],
-      json.space_type,
-      json.features || [],
-      json.status || SpaceStatus.InProgress,
-      json.author_profile_url,
-      json.author_display_name,
-      json.author_username,
-      json.author_type,
-      json.certified,
-
-      json.likes || 0,
-      json.comments || 0,
-      json.shares || 0,
-      json.rewards,
-      json.visibility,
-      json.publish_state,
-
-      json.booster,
-      json.verified || false,
-      json.files,
-
-      json.permissions,
-      json.anonymous_participation,
-    );
   }
 }
