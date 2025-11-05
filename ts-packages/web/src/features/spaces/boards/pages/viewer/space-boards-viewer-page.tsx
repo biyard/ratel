@@ -1,14 +1,22 @@
 import { SpacePathProps } from '@/features/space-path-props';
 import { logger } from '@/lib/logger';
 import { useSpaceBoardsViewerController } from './space-boards-viewer-controller';
+import BoardsList from '../../components/boards-list';
 
 export function SpaceBoardsViewerPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceBoardsEditorPage: spacePk=${spacePk}`);
-  const _ctrl = useSpaceBoardsViewerController(spacePk);
-
+  const ctrl = useSpaceBoardsViewerController(spacePk);
+  const t = ctrl.t;
   return (
     <>
-      <div>space boards viewer page</div>
+      <BoardsList
+        t={t}
+        spacePk={ctrl.spacePk}
+        categories={ctrl.categories ?? []}
+        posts={ctrl.posts.get() ?? []}
+        changeCategory={ctrl.changeCategory}
+        handleDetailPage={ctrl.handleDetailPage}
+      />
     </>
   );
 }

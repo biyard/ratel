@@ -2,9 +2,13 @@
 use crate::{
     AppState, Error,
     controllers::v3::spaces::{SpacePath, SpacePathParam},
-    features::spaces::boards::models::{space_category::SpaceCategory, space_post::SpacePost},
+    features::spaces::{
+        boards::models::{space_category::SpaceCategory, space_post::SpacePost},
+        members::{SpaceInvitationMember, SpaceInvitationMemberQueryOption},
+    },
     models::{SpaceCommon, feed::Post, team::Team, user::User},
-    types::{EntityType, Partition, TeamGroupPermission, author::Author},
+    types::{EntityType, Partition, TeamGroupPermission, UserType, author::Author},
+    utils::aws::{DynamoClient, SesClient},
 };
 use aide::NoApi;
 use axum::extract::{Json, Path, State};
@@ -25,7 +29,7 @@ pub struct CreateSpacePostResponse {
 }
 
 pub async fn create_space_post_handler(
-    State(AppState { dynamo, .. }): State<AppState>,
+    State(AppState { dynamo, ses, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<CreateSpacePostRequest>,
@@ -34,7 +38,7 @@ pub async fn create_space_post_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    let (_, has_perm) = SpaceCommon::has_permission(
+    let (common, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
         Some(&user.pk),
@@ -64,11 +68,15 @@ pub async fn create_space_post_handler(
         req.html_contents.clone(),
         req.category_name.clone(),
         req.urls.clone(),
-        user,
+        user.clone(),
     );
     post.create(&dynamo.client).await?;
 
-    // TODO: alert message to user with email
+    let mut emails: Vec<String> = vec![];
+
+    // TODO: alert message to team user with email
+    let _ =
+        send_create_post_alerm(&dynamo, &ses, &common, req.title, req.html_contents, user).await?;
 
     let post_id = match post.sk {
         EntityType::SpacePost(v) => v.to_string(),
@@ -78,4 +86,50 @@ pub async fn create_space_post_handler(
     Ok(Json(CreateSpacePostResponse {
         space_post_pk: Partition::SpacePost(post_id),
     }))
+}
+
+async fn send_create_post_alerm(
+    dynamo: &DynamoClient,
+    ses: &SesClient,
+    space: &SpaceCommon,
+    title: String,
+    html_contents: String,
+    user: User,
+) -> Result<Json<()>, Error> {
+    let mut bookmark = None::<String>;
+    loop {
+        let (responses, new_bookmark) = SpaceInvitationMember::query(
+            &dynamo.client,
+            space.pk.clone(),
+            if let Some(b) = &bookmark {
+                SpaceInvitationMemberQueryOption::builder()
+                    .sk("SPACE_INVITATION_MEMBER#".into())
+                    .bookmark(b.clone())
+            } else {
+                SpaceInvitationMemberQueryOption::builder().sk("SPACE_INVITATION_MEMBER#".into())
+            },
+        )
+        .await?;
+
+        for response in responses {
+            let user_email = response.email;
+            let _ = SpacePost::send_email(
+                &dynamo,
+                &ses,
+                user_email,
+                space.clone(),
+                title.clone(),
+                html_contents.clone(),
+                user.clone(),
+            )
+            .await?;
+        }
+
+        match new_bookmark {
+            Some(b) => bookmark = Some(b),
+            None => break,
+        }
+    }
+
+    Ok(Json(()))
 }
