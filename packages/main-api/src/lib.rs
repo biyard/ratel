@@ -32,6 +32,7 @@ use by_axum::axum::{
 };
 use controllers::v3::*;
 use serde::{Deserialize, Serialize};
+use ssi::prelude::*;
 use tracing::{debug, error, info, warn};
 use types::AppState;
 use types::*;

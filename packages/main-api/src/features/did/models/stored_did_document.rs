@@ -9,7 +9,7 @@ use ssi::dids::Document;
 /// Stored DID Document in DynamoDB
 /// PK: DID#{did} (e.g., "DID#did:web:example.com")
 /// SK: "DidDocument"
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, DynamoEntity)]
 #[dynamo(table = "main", pk = "pk", sk = "sk")]
 pub struct StoredDidDocument {
     /// Partition key: DID#{did}

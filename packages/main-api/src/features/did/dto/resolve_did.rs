@@ -12,9 +12,9 @@ pub struct ResolveDidRequest {
 /// Response containing the resolved DID document
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, JsonSchema, OperationIo)]
 pub struct ResolveDidResponse {
-    /// The resolved DID document
+    /// The resolved DID document (as JSON value since ssi::Document doesn't implement JsonSchema)
     #[serde(rename = "didDocument")]
-    pub did_document: DidDocument,
+    pub did_document: serde_json::Value,
 
     /// Metadata about the resolution process
     #[serde(rename = "didResolutionMetadata")]

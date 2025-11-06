@@ -1,7 +1,7 @@
 use crate::*;
 use bdk::prelude::*;
 
-#[derive(Debug, Serialize, Deserialize, JsonSchema, OperationIo)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]
 pub struct SignedAttribute {
     pub key: String,
     pub value: serde_json::Value,

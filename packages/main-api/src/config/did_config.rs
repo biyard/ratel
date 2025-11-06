@@ -1,4 +1,5 @@
 use ssi::{
+    JWK,
     bbs::BBSplusSecretKey,
     crypto::{
         ed25519::SigningKey,
@@ -31,6 +32,7 @@ impl Default for DidConfig {
             Box::leak(Box::new(key))
         };
 
+        // JWK::generate_p256();
         let p256_key =
             ssi::crypto::p256::ecdsa::SigningKey::random(&mut ssi::crypto::rand::rngs::OsRng {});
         let p256_key: &'static ssi::crypto::p256::ecdsa::SigningKey = Box::leak(Box::new(p256_key));

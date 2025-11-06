@@ -19,7 +19,7 @@ pub async fn sign_attributes_handler(
     }): State<AppState>,
     NoApi(user): NoApi<User>,
     Json(req): Json<SignAttributesRequest>,
-) -> Result<Json<AttributeIssuanceResponse>> {
+) -> Result<Json<AttributeIssuanceResponseV2>> {
     tracing::debug!("Handling request: {:?}", req);
 
     match req {
@@ -34,7 +34,7 @@ async fn portone_sign_attributes_handler(
     _ddb: &aws_sdk_dynamodb::Client,
     user: &User,
     id: String,
-) -> Result<Json<AttributeIssuanceResponse>> {
+) -> Result<Json<AttributeIssuanceResponseV2>> {
     // Get identity verification data from PortOne
     let identity_result = portone.identify(&id).await?;
 
@@ -47,16 +47,15 @@ async fn portone_sign_attributes_handler(
     // Get configuration
     let config = crate::config::get();
     let domain = &config.domain;
+    let bbs_key = config.did.bbs_bls_key;
 
-    config.did.bbs_bls_key
-    // Get or create DID for the user
-    let user_did = get_did(&user.username)?;
+    // Get issuer DID (platform DID) and subject DID (user DID)
+    let issuer_did = ssi::dids::DIDBuf::from_string(format!("did:web:{}", domain))
+        .map_err(|e| Error::InternalServerError(format!("Invalid issuer DID: {}", e)))?;
+    let subject_did = get_did(&user.username)?;
 
-
-
-    // Create attribute signer
-    // TODO: In production, use a persistent signing key instead of generating a new one
-    let signer = AttributeSigner::new(domain.to_string(), user.username.to_string());
+    // Create attribute signer with BBS+ key for selective disclosure
+    let signer = AttributeSigner::new(issuer_did, subject_did, bbs_key);
 
     // Calculate age from birth_date
     let birth_date = &identity_result.verified_customer.birth_date;
@@ -65,19 +64,18 @@ async fn portone_sign_attributes_handler(
     // Get gender
     let gender = identity_result.verified_customer.gender.to_string();
 
-    // Sign attributes
+    // Sign attributes with BBS+ signatures
     let attributes = vec![
         ("age", serde_json::json!(age)),
         ("gender", serde_json::json!(gender)),
     ];
 
     let issuance_response = signer
-        .sign_attributes(attributes, &user_did, Some(365))
+        .sign_attributes(attributes, Some(365))
         .map_err(|e| Error::InternalServerError(format!("Failed to sign attributes: {}", e)))?;
 
     tracing::info!(
-        "Successfully signed {} attributes for user {}",
-        issuance_response.signed_attributes.len(),
+        "Successfully signed verifiable credential for user {}",
         user.username
     );
 
