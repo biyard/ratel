@@ -1,7 +1,7 @@
 import ProfileSection from '../../../../app/(social)/_components/profile-section';
 
 import { route } from '@/route';
-import { Post, Draft, Settings, Did } from '@/components/icons';
+import { Post, Draft, Settings, Did, UserGroup } from '@/components/icons';
 import { useLocation } from 'react-router';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { NavLink } from 'react-router';
@@ -49,6 +49,14 @@ export default function UserSidemenu() {
         >
           <Draft className="w-[24px] h-[24px]" />
           <span>{t.drafts}</span>
+        </NavLink>
+
+        <NavLink
+          to={route.mySpaces()}
+          className="sidemenu-link text-text-primary"
+        >
+          <UserGroup className="w-[24px] h-[24px]" />
+          <span>{t.my_spaces}</span>
         </NavLink>
 
         <NavLink
