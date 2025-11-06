@@ -10,7 +10,6 @@ pub mod error;
 pub mod features;
 pub(crate) mod macros;
 pub mod models;
-pub mod route;
 pub mod security;
 pub mod services;
 pub mod types;
@@ -28,10 +27,12 @@ use by_axum::axum::{
     http::StatusCode,
     http::request::Parts,
     middleware::{self, Next},
+    native_routing as nr,
     response::Response,
 };
 use controllers::v3::*;
 use serde::{Deserialize, Serialize};
+use ssi::prelude::*;
 use tracing::{debug, error, info, warn};
 use types::AppState;
 use types::*;

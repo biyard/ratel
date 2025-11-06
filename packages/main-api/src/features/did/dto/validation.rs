@@ -1,13 +1,13 @@
 use crate::aide::OperationIo;
-use crate::features::did::types::{DidDocument, VerificationMethod};
+use crate::features::did::types::DidDocument;
 use bdk::prelude::*;
 
 /// Request to validate a DID document
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, JsonSchema, OperationIo)]
 pub struct ValidateDidDocumentRequest {
-    /// The DID document to validate
+    /// The DID document to validate (as JSON value since ssi::Document doesn't implement JsonSchema)
     #[serde(rename = "didDocument")]
-    pub did_document: DidDocument,
+    pub did_document: serde_json::Value,
 }
 
 /// Response containing validation results
@@ -46,10 +46,10 @@ pub struct VerifySignatureResponse {
     /// Whether the signature is valid
     pub valid: bool,
 
-    /// The verification method that was used
+    /// The verification method that was used (as JSON value since ssi::VerificationMethod is a trait)
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "verificationMethod")]
-    pub verification_method: Option<VerificationMethod>,
+    pub verification_method: Option<serde_json::Value>,
 
     /// Error message if verification failed
     #[serde(skip_serializing_if = "Option::is_none")]
