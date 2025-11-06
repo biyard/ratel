@@ -30,7 +30,7 @@ pub async fn reply_space_comment_handler(
         return Err(crate::Error::NotFoundSpace);
     }
 
-    let (space_common, has_perm) = SpaceCommon::has_permission(
+    let (_space_common, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
         Some(&user.pk),
@@ -41,11 +41,11 @@ pub async fn reply_space_comment_handler(
         return Err(crate::Error::NoPermission);
     }
 
-    if space_common.status == Some(SpaceStatus::Started)
-        || space_common.status == Some(SpaceStatus::Finished)
-    {
-        return Err(crate::Error::FinishedSpace);
-    }
+    // if space_common.status == Some(SpaceStatus::Started)
+    //     || space_common.status == Some(SpaceStatus::Finished)
+    // {
+    //     return Err(crate::Error::FinishedSpace);
+    // }
 
     let comment = SpacePostComment::reply(
         &dynamo.client,
