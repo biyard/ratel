@@ -44,6 +44,9 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
     ctrl.poll.myResponse.length === 0 &&
     (!ctrl.space.anonymous_participation || ctrl.space.participated);
 
+  const canUpdate =
+    ctrl.user && ctrl.poll.myResponse.length > 0 && ctrl.poll.response_editable;
+
   return (
     <>
       <Col>
@@ -65,12 +68,8 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
               onSubmit={ctrl.handleSubmit}
               onLogin={ctrl.handleLogin}
               canSubmit={canSubmit}
-              disabled={!canSubmit}
-              canUpdate={
-                ctrl.user &&
-                ctrl.poll.myResponse.length > 0 &&
-                ctrl.poll.response_editable
-              }
+              disabled={!canSubmit && !canUpdate}
+              canUpdate={canUpdate}
               isLogin={!!ctrl.user}
             />
           </Col>
