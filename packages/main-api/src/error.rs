@@ -195,7 +195,8 @@ pub enum Error {
     AlreadyParticipateUser,
     #[error("already full panel")]
     AlreadyFullPanel,
-
+    #[error("invalid panel")]
+    InvalidPanel,
 
     // NFT Artwork space errors
     #[rest_error(code = 9000)]
