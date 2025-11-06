@@ -150,7 +150,6 @@ impl SpaceParticipant {
                 None => false,
             }
         };
-
         age_ok && gender_ok
     }
 

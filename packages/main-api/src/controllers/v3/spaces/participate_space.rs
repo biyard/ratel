@@ -30,9 +30,16 @@ pub async fn participate_space_handler(
         return Err(Error::InvalidPanel);
     }
 
-    let space = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
-        .await?
-        .ok_or(Error::SpaceNotFound)?;
+    let (space, has_perm) = SpaceCommon::has_permission(
+        &dynamo.client,
+        &space_pk,
+        Some(&user.pk),
+        TeamGroupPermission::SpaceRead,
+    )
+    .await?;
+    if !has_perm {
+        return Err(Error::NoPermission);
+    }
 
     let now = time::get_now_timestamp_millis();
 
