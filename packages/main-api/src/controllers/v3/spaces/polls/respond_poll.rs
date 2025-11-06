@@ -1,9 +1,10 @@
+use crate::features::spaces::panels::{SpacePanel, SpacePanelParticipant};
 use crate::models::space::SpaceCommon;
 
-use crate::features::spaces::polls::*;
+use crate::features::spaces::{SpaceParticipant, polls::*};
 use crate::models::user::User;
-use crate::types::SpaceStatus;
 use crate::types::{Answer, EntityType, Partition, TeamGroupPermission, validate_answers};
+use crate::types::{RespondentAttr, SpaceStatus};
 use crate::utils::time::get_now_timestamp_millis;
 use crate::{AppState, Error, transact_write};
 
@@ -71,12 +72,28 @@ pub async fn respond_poll_handler(
     )
     .await?;
 
+    let participant =
+        SpacePanelParticipant::get_participant_in_space(&dynamo.client, &space_pk, &user.pk).await;
+
+    let mut respondent: Option<RespondentAttr> = None;
+
+    if let Some(p) = participant {
+        let (pk, sk) = SpacePanel::keys(&space_pk, &p.pk);
+        if let Some(panel) = SpacePanel::get(&dynamo.client, pk, Some(sk)).await? {
+            let r = RespondentAttr::from_attributes(&panel.attributes);
+            if !r.is_empty() {
+                respondent = Some(r);
+            }
+        }
+    }
+
     if user_response.is_none() {
         let create_tx = PollUserAnswer::new(
             poll.pk.clone(),
             poll_pk.clone(),
             user.pk.clone(),
             req.answers,
+            respondent,
         )
         .create_transact_write_item();
 
