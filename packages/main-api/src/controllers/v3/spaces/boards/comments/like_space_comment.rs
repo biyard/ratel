@@ -42,7 +42,7 @@ pub async fn like_space_comment_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    let (space_common, has_perm) = SpaceCommon::has_permission(
+    let (_space_common, has_perm) = SpaceCommon::has_permission(
         &dynamo.client,
         &space_pk,
         Some(&user.pk),
@@ -53,11 +53,11 @@ pub async fn like_space_comment_handler(
         return Err(Error::NoPermission);
     }
 
-    if space_common.status == Some(SpaceStatus::Started)
-        || space_common.status == Some(SpaceStatus::Finished)
-    {
-        return Err(Error::FinishedSpace);
-    }
+    // if space_common.status == Some(SpaceStatus::Started)
+    //     || space_common.status == Some(SpaceStatus::Finished)
+    // {
+    //     return Err(Error::FinishedSpace);
+    // }
 
     if req.like {
         SpacePost::like_comment(cli, space_post_pk, space_post_comment_sk, user.pk).await?;
