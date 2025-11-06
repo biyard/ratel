@@ -1,4 +1,5 @@
 use bdk::prelude::*;
+use ssi::dids::InvalidDID;
 use thiserror::Error;
 
 #[derive(Debug, Error, RestError, aide::OperationIo)]
@@ -77,6 +78,8 @@ pub enum Error {
     HMacInitError(String),
     #[error("Telegram wallet error: {0}")]
     TelegramError(#[from] teloxide::RequestError),
+    #[error("Chrono parse error: {0}")]
+    TimeParseError(#[from] chrono::ParseError),
 
     // Authorization errors 400 ~
     #[error("No session found")]
@@ -226,6 +229,15 @@ pub enum Error {
     #[error("Invalid identification for payment")]
     #[rest_error(code = 10000)]
     InvalidIdentification,
+
+    // DID feature errors 11,000 ~
+    #[error("Invalid DID format")]
+    #[rest_error(code = 11000)]
+    InvalidDID(#[from] InvalidDID<String>),
+    #[error("VC Signature error: {0}")]
+    Signature(String),
+    #[error("invalide gender")]
+    InvalidGender,
 
     // web 1,000,000 ~
     #[error("Web error: {0}")]

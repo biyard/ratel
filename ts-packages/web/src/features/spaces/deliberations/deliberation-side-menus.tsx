@@ -38,6 +38,7 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
     to: (space) => {
       return route.spaceBoards(space.pk);
     },
+    visible: (space) => space.participated,
     label: 'menu_boards',
   },
   // {
@@ -52,6 +53,7 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
     to: (space) => {
       return route.spaceMembers(space.pk);
     },
+    visible: (space) => space.isAdmin(),
     label: 'menu_members',
   },
   {

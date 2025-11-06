@@ -77,6 +77,8 @@ askama = { version = "0.14.0", features = ["full"] }
 random-string = "1.1.0"
 ssi = { version = "0.12.0", features = ["bbs"] }
 names = "0.14.0"
+static-iref = "3.0.0"
+iref = "3.2.2"
 
 [[bin]]
 name = "main-api"
@@ -84,7 +86,6 @@ path = "src/main.rs"
 
 [dev-dependencies]
 rest-api = { workspace = true, features = ["test"] }
-ring = { version = "0.17.14" }
 reqwest.workspace = true
 url = "2.5.7"
 

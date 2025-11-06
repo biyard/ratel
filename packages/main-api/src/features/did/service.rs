@@ -287,6 +287,8 @@ mod tests {
             capability_invocation: None,
             capability_delegation: None,
             service: None,
+            created: None,
+            updated: None,
         };
 
         let response =
@@ -323,6 +325,8 @@ mod tests {
             capability_invocation: None,
             capability_delegation: None,
             service: None,
+            created: None,
+            updated: None,
         };
 
         let response =
