@@ -47,10 +47,10 @@ impl SpacePanelParticipant {
 
     pub async fn is_participant(
         cli: &aws_sdk_dynamodb::Client,
-        discussion_pk: &Partition,
+        panel_pk: &Partition,
         user_pk: &Partition,
     ) -> Result<bool, crate::Error> {
-        let (pk, sk) = Self::keys(discussion_pk, user_pk);
+        let (pk, sk) = Self::keys(panel_pk, user_pk);
         let participant = SpacePanelParticipant::get(&cli, pk, Some(sk)).await?;
 
         Ok(participant.is_some())

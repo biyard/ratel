@@ -1,4 +1,8 @@
+use crate::features::spaces::panels::{
+    SpacePanel, SpacePanelParticipant, SpacePanelQueryOption, SpacePanelResponse,
+};
 use crate::types::*;
+use crate::utils::aws::DynamoClient;
 use crate::*;
 
 use super::SpaceCommon;
@@ -48,6 +52,101 @@ impl SpaceParticipant {
             CompositePartition(space_pk, user_pk),
             EntityType::SpaceParticipant,
         )
+    }
+
+    pub async fn verify_credential(
+        dynamo: &DynamoClient,
+        space_pk: &Partition,
+        user: User,
+    ) -> bool {
+        // FIXME: fix to real credential info
+        let age = 26;
+        let gender = "male";
+        let gender = Self::parse_gender(gender);
+
+        let mut bookmark = None::<String>;
+
+        loop {
+            let opt = match &bookmark {
+                Some(b) => SpacePanelQueryOption::builder()
+                    .sk("SPACE_PANEL#".into())
+                    .bookmark(b.clone()),
+                None => SpacePanelQueryOption::builder().sk("SPACE_PANEL#".into()),
+            };
+
+            let (panels, next) =
+                match SpacePanel::query(&dynamo.client, space_pk.clone(), opt).await {
+                    Ok(v) => v,
+                    Err(_) => return false,
+                };
+
+            for p in panels {
+                if p.participants >= p.quotas {
+                    continue;
+                }
+                if Self::attributes_match(age, gender.clone(), &p.attributes) {
+                    let res: SpacePanelResponse = p.into();
+                    let participants = SpacePanelParticipant::new(res.clone().pk, user);
+                    let _ = match participants.create(&dynamo.client).await {
+                        Ok(v) => v,
+                        Err(_) => return false,
+                    };
+                    let (pk, sk) = SpacePanel::keys(&space_pk, &res.pk);
+                    let _ = match SpacePanel::updater(pk, sk)
+                        .increase_participants(1)
+                        .execute(&dynamo.client)
+                        .await
+                    {
+                        Ok(v) => v,
+                        Err(_) => return false,
+                    };
+
+                    return true;
+                }
+            }
+
+            if let Some(b) = next {
+                bookmark = Some(b);
+            } else {
+                break;
+            }
+        }
+        false
+    }
+
+    fn attributes_match(age: u8, gender: Option<Gender>, attrs: &[Attribute]) -> bool {
+        if attrs.is_empty() {
+            return true;
+        }
+
+        for attr in attrs {
+            let ok = match attr {
+                Attribute::Age(Age::Specific(a)) => age == *a,
+                Attribute::Age(Age::Range {
+                    inclusive_min,
+                    inclusive_max,
+                }) => age >= *inclusive_min && age <= *inclusive_max,
+                Attribute::Gender(g) => match (g, gender.clone()) {
+                    (Gender::Male, Some(Gender::Male)) => true,
+                    (Gender::Female, Some(Gender::Female)) => true,
+                    _ => false,
+                },
+            };
+
+            if !ok {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    fn parse_gender(s: &str) -> Option<Gender> {
+        match s {
+            "male" | "Male" => Some(Gender::Male),
+            "female" | "Female" => Some(Gender::Female),
+            _ => None,
+        }
     }
 }
 
