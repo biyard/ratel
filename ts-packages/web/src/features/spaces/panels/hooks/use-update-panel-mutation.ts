@@ -49,7 +49,7 @@ export function useUpdatePanelMutation() {
         });
 
         return new ListPanelResponse({
-          discussions: updatedList,
+          panels: updatedList,
           bookmark: old.bookmark,
         });
       });

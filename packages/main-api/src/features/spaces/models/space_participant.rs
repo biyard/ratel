@@ -120,26 +120,38 @@ impl SpaceParticipant {
             return true;
         }
 
-        for attr in attrs {
-            let ok = match attr {
-                Attribute::Age(Age::Specific(a)) => age == *a,
-                Attribute::Age(Age::Range {
-                    inclusive_min,
-                    inclusive_max,
-                }) => age >= *inclusive_min && age <= *inclusive_max,
-                Attribute::Gender(g) => match (g, gender.clone()) {
-                    (Gender::Male, Some(Gender::Male)) => true,
-                    (Gender::Female, Some(Gender::Female)) => true,
-                    _ => false,
-                },
-            };
+        let mut age_rules: Vec<&Age> = Vec::new();
+        let mut gender_rules: Vec<&Gender> = Vec::new();
 
-            if !ok {
-                return false;
+        for attr in attrs {
+            match attr {
+                Attribute::Age(a) => age_rules.push(a),
+                Attribute::Gender(g) => gender_rules.push(g),
             }
         }
 
-        true
+        let age_ok = if age_rules.is_empty() {
+            true
+        } else {
+            age_rules.iter().any(|rule| match rule {
+                Age::Specific(a) => age == *a,
+                Age::Range {
+                    inclusive_min,
+                    inclusive_max,
+                } => age >= *inclusive_min && age <= *inclusive_max,
+            })
+        };
+
+        let gender_ok = if gender_rules.is_empty() {
+            true
+        } else {
+            match gender {
+                Some(ref g) => gender_rules.iter().any(|rule| *rule == g),
+                None => false,
+            }
+        };
+
+        age_ok && gender_ok
     }
 
     fn parse_gender(s: &str) -> Option<Gender> {
