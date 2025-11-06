@@ -59,3 +59,15 @@ export async function signup(data: SignupRequest): Promise<User> {
 
   return user;
 }
+
+export interface ResetPasswordRequest {
+  email: string;
+  password: string;
+  code: string;
+}
+
+export async function resetPassword(data: ResetPasswordRequest): Promise<User> {
+  const user: User = await call('POST', '/v3/auth/reset', data);
+
+  return user;
+}
