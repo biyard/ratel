@@ -48,8 +48,10 @@ export async function getTeamByUsername(
     throw new Error(`Team with username '${username}' not found`);
   }
 
+  const res = await getTeam(team.id);
+
   // Now get full team details including groups using the team ID
-  return await getTeam(team.id);
+  return res;
 }
 
 export async function updateTeam(
