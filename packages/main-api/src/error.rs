@@ -1,4 +1,5 @@
 use bdk::prelude::*;
+use ssi::dids::InvalidDID;
 use thiserror::Error;
 
 #[derive(Debug, Error, RestError, aide::OperationIo)]
@@ -226,6 +227,11 @@ pub enum Error {
     #[error("Invalid identification for payment")]
     #[rest_error(code = 10000)]
     InvalidIdentification,
+
+    // DID feature errors 11,000 ~
+    #[error("Invalid DID format")]
+    #[rest_error(code = 11000)]
+    InvalidDID(#[from] InvalidDID<String>),
 
     // web 1,000,000 ~
     #[error("Web error: {0}")]

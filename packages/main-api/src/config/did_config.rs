@@ -3,6 +3,7 @@ use ssi::{
     crypto::{
         ed25519::SigningKey,
         p256::{self, NistP256},
+        signatures::bbs::bls_generate_blinded_g1_key,
     },
 };
 
@@ -25,7 +26,7 @@ impl Default for DidConfig {
             let mut rng = ssi::crypto::rand::rngs::OsRng {};
             let key = ssi::bbs::generate_secret_key(&mut rng);
             let encoded_key = key.encode();
-            tracing::info!("Generated BBS+ key: {}", encoded_key);
+            tracing::debug!("Generated BBS+ key: {}", encoded_key);
 
             Box::leak(Box::new(key))
         };
