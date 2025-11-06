@@ -87,14 +87,13 @@ pub async fn list_team_posts_handler(
     );
 
     // Fetch post likes for authenticated users
-    let likes = match (user, posts.is_empty()) {
+    let likes = match (&user, posts.is_empty()) {
         (Some(user), false) => {
-            let sk = EntityType::PostLike(user.pk.to_string());
             PostLike::batch_get(
                 &dynamo.client,
                 posts
                     .iter()
-                    .map(|post| (post.pk.clone(), sk.clone()))
+                    .map(|post| PostLike::keys(&post.pk, &user.pk))
                     .collect(),
             )
             .await?
@@ -106,7 +105,12 @@ pub async fn list_team_posts_handler(
     let items: Vec<PostResponse> = posts
         .into_iter()
         .map(|post| {
-            let liked = likes.iter().any(|like| like.pk == post.pk);
+            let post_like_pk = post
+                .pk
+                .clone()
+                .to_post_like_key()
+                .expect("to_post_like_key");
+            let liked = likes.iter().any(|like| like.pk == post_like_pk);
             PostResponse::from(post).with_like(liked)
         })
         .collect();
