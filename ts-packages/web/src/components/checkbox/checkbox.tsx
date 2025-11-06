@@ -25,7 +25,7 @@ export const Checkbox = ({
   };
 
   return (
-    <div className="flex flex-row items-start text-sm font-normal text-white cursor-pointer gap-2.25 select-none">
+    <div className="flex flex-row items-start text-sm font-normal text-white gap-2.25 select-none">
       <div className="flex relative flex-row justify-start items-center cursor-pointer gap-[6px]">
         <input
           id={id}
@@ -48,9 +48,9 @@ export const Checkbox = ({
         </label>
       </div>
 
-      <label htmlFor={id} className="cursor-pointer">
+      <div className="cursor-pointer" onClick={handleChange}>
         {children}
-      </label>
+      </div>
     </div>
   );
 };
