@@ -22,10 +22,12 @@ use bdk::prelude::*;
     aide::OperationIo,
 )]
 pub struct SpacePost {
+    #[dynamo(index = "gsi3", name = "find_by_space_ordered", pk)]
     pub pk: Partition,
     pub sk: EntityType,
 
     pub created_at: i64,
+    #[dynamo(index = "gsi3", sk)]
     #[dynamo(index = "gsi2", order = 2, sk)]
     #[dynamo(index = "gsi6", sk)]
     pub updated_at: i64,
