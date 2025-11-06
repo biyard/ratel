@@ -28,12 +28,19 @@ pub struct ListSpacePostQueryParams {
 
 pub async fn list_space_posts_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
+    NoApi(user): NoApi<Option<User>>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Query(ListSpacePostQueryParams { bookmark, category }): Query<ListSpacePostQueryParams>,
 ) -> Result<Json<ListSpacePostsResponse>, Error> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
+    }
+
+    if user.is_none() {
+        return Ok(Json(ListSpacePostsResponse {
+            posts: vec![],
+            bookmark: None,
+        }));
     }
 
     let mut query_options = SpacePostQueryOption::builder()

@@ -8,8 +8,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { CheckCircle2, Extra } from '@/components/icons';
 import { Button } from '@/components/ui/button';
+import { SpaceStatus } from '@/features/spaces/types/space-common';
 
 export interface InviteMemberTableProps {
+  status: SpaceStatus;
   isDraft: boolean;
   inviteMembers: InvitationMemberResponse[];
   t: TFunction<'SpaceMemberEditor', undefined>;
@@ -18,6 +20,7 @@ export interface InviteMemberTableProps {
 }
 
 export default function InviteMemberTable({
+  status,
   isDraft,
   inviteMembers,
   t,
@@ -52,7 +55,7 @@ export default function InviteMemberTable({
           </div>
 
           <div className="flex flex-row w-fit gap-3">
-            {!isDraft && (
+            {!isDraft && status !== SpaceStatus.Started && (
               <div>
                 {m.authorized ? (
                   <CheckCircle2 className="[&>path]:stroke-green-500 [&>circle]:stroke-green-500" />
@@ -69,7 +72,7 @@ export default function InviteMemberTable({
               </div>
             )}
 
-            {!m.authorized && (
+            {!m.authorized && status !== SpaceStatus.Started && (
               <ContextMenu
                 t={t}
                 handleDeleteMember={() => {

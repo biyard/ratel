@@ -6,11 +6,7 @@ use bdk::prelude::*;
 
 use crate::models::UserQueryOption;
 use crate::utils::password::hash_password;
-use by_axum::axum::{
-    Extension,
-    extract::{Json, State},
-};
-use tower_sessions::Session;
+use by_axum::axum::extract::{Json, State};
 
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, aide::OperationIo, schemars::JsonSchema,
@@ -23,7 +19,6 @@ pub struct ResetPasswordRequest {
 
 pub async fn reset_password_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    Extension(_session): Extension<Session>,
     Json(req): Json<ResetPasswordRequest>,
 ) -> Result<Json<User>, Error> {
     let email = req.email;

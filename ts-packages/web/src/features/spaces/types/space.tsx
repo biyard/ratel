@@ -91,4 +91,16 @@ export class Space {
   get isPublic() {
     return this.visibility.type === 'Public';
   }
+
+  get isStarted() {
+    return this.status === SpaceStatus.Started;
+  }
+
+  get isInProgress() {
+    return this.status === SpaceStatus.InProgress;
+  }
+
+  get isFinished() {
+    return this.status === SpaceStatus.Finished;
+  }
 }

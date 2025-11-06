@@ -40,6 +40,10 @@ import TelegramPage from './app/telegram/page';
 import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
 import SpacePanelPage from './app/spaces/[id]/panels/space-panel-page';
 
+// Auth
+import ForgotPasswordPage from './app/(auth)/forgot-password/page';
+import ResetPasswordPage from './app/(auth)/reset-password/page';
+
 import CreatePostPage from './features/posts/components/create-post-page';
 import SpacePollsPage from './app/spaces/[id]/polls/space-polls-page';
 import SpaceAnalyzesPage from './app/spaces/[id]/analyzes/space_analyzes-page';
@@ -332,6 +336,17 @@ export const routes = createBrowserRouter([
         id: 'telegram-page',
         path: 'telegram',
         Component: TelegramPage,
+      },
+      // Auth Routes
+      {
+        id: 'forgot-password-page',
+        path: 'forgot-password',
+        Component: ForgotPasswordPage,
+      },
+      {
+        id: 'reset-password-page',
+        path: 'reset-password',
+        Component: ResetPasswordPage,
       },
       // Test Report Page
       {

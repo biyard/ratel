@@ -79,7 +79,12 @@ export default function LoginForm({
           />
         </Col>
 
-        <Row className="justify-end items-center text-sm">
+        <Row className="justify-between items-center text-sm">
+          <NavLink to={route.forgotPassword()}>
+            <button className="text-primary/70 hover:text-primary text-sm">
+              Forgot password?
+            </button>
+          </NavLink>
           <Button
             variant="rounded_secondary"
             size="sm"
