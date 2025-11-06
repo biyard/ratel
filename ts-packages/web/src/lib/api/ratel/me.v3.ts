@@ -1,4 +1,5 @@
 import { ListPostResponse } from '@/features/posts/dto/list-post-response';
+import { DidDocument } from '@/features/did/types/did-document';
 import { call } from './call';
 import { UserDetailResponse } from './users.v3';
 
@@ -52,4 +53,8 @@ export async function updateUserProfile(
       },
     },
   });
+}
+
+export async function getDid(): Promise<DidDocument> {
+  return call('GET', '/v3/me/did');
 }

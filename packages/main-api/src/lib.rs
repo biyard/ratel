@@ -27,6 +27,7 @@ use by_axum::axum::{
     http::StatusCode,
     http::request::Parts,
     middleware::{self, Next},
+    native_routing as nr,
     response::Response,
 };
 use controllers::v3::*;

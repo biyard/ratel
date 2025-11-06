@@ -5774,7 +5774,6 @@ dependencies = [
  "regex",
  "reqwest 0.12.23",
  "rest-api",
- "ring 0.17.14",
  "rlp",
  "rmcp",
  "scraper",

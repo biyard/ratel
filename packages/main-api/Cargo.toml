@@ -84,7 +84,6 @@ path = "src/main.rs"
 
 [dev-dependencies]
 rest-api = { workspace = true, features = ["test"] }
-ring = { version = "0.17.14" }
 reqwest.workspace = true
 url = "2.5.7"
 

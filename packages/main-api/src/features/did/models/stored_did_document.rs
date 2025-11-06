@@ -1,7 +1,10 @@
-use crate::features::did::types::*;
+use crate::features::did::{generate_did_by_username, types::*};
+use crate::models::User;
 use crate::types::*;
-use crate::utils::time::get_now_timestamp;
-use bdk::prelude::*;
+use crate::utils::time::{get_now_timestamp, get_now_timestamp_millis};
+
+use crate::*;
+use ssi::dids::Document;
 
 /// Stored DID Document in DynamoDB
 /// PK: DID#{did} (e.g., "DID#did:web:example.com")
@@ -10,24 +13,23 @@ use bdk::prelude::*;
 #[dynamo(table = "main", pk = "pk", sk = "sk")]
 pub struct StoredDidDocument {
     /// Partition key: DID#{did}
-    pub pk: Partition,
+    pub pk: CompositePartition,
 
     /// Sort key: DidDocument
     pub sk: EntityType,
 
     /// The full DID string
+    #[dynamo(index = "gsi1", name = "find_by_did", pk)]
     pub did: String,
 
-    /// The DID method (web, key, plc, etc.)
-    pub method: DidMethod,
-
     /// The DID document content
-    pub document: DidDocument,
+    pub document: Option<Document>,
 
     /// User who owns/controls this DID
     pub owner_pk: Partition,
 
     /// Creation timestamp
+    #[dynamo(index = "gsi1", name = "find_by_did", sk)]
     pub created_at: i64,
 
     /// Last update timestamp
@@ -39,65 +41,25 @@ pub struct StoredDidDocument {
 
 impl StoredDidDocument {
     /// Create a new stored DID document
-    pub fn new(did: String, method: DidMethod, document: DidDocument, owner_pk: Partition) -> Self {
-        let now = get_now_timestamp();
-        let pk = Partition::Did(did.clone());
-        let sk = EntityType::DidDocument;
+    pub fn new(user_pk: Partition, username: String) -> Result<Self> {
+        if !matches!(user_pk, Partition::User(_)) {
+            panic!("user_pk must be of type Partition::User");
+        }
 
-        Self {
-            pk,
+        let now = get_now_timestamp_millis();
+        let sk = EntityType::DidDocument;
+        let document = generate_did_by_username(&username)?;
+        let did = format!("{}", document.id);
+
+        Ok(Self {
+            pk: CompositePartition(user_pk.clone(), Partition::Did),
             sk,
             did,
-            method,
-            document,
-            owner_pk,
+            document: Some(document),
+            owner_pk: user_pk,
             created_at: now,
             updated_at: now,
             is_active: true,
-        }
-    }
-
-    /// Get a DID document by DID string
-    pub async fn get_by_did(
-        cli: &aws_sdk_dynamodb::Client,
-        did: &str,
-    ) -> Result<Option<Self>, crate::Error> {
-        let pk = Partition::Did(did.to_string());
-        Self::get(cli, &pk, Some(&EntityType::DidDocument)).await
-    }
-
-    /// Update the DID document
-    pub async fn update_document(
-        &mut self,
-        cli: &aws_sdk_dynamodb::Client,
-        document: DidDocument,
-    ) -> Result<(), crate::Error> {
-        self.document = document;
-        self.updated_at = get_now_timestamp();
-
-        let updater = Self::updater(&self.pk, &self.sk)
-            .with_document(self.document.clone())
-            .with_updated_at(self.updated_at);
-
-        updater.execute(cli).await?;
-        Ok(())
-    }
-
-    /// Deactivate the DID
-    pub async fn deactivate(&mut self, cli: &aws_sdk_dynamodb::Client) -> Result<(), crate::Error> {
-        self.is_active = false;
-        self.updated_at = get_now_timestamp();
-
-        let updater = Self::updater(&self.pk, &self.sk)
-            .with_is_active(false)
-            .with_updated_at(self.updated_at);
-
-        updater.execute(cli).await?;
-        Ok(())
-    }
-
-    /// Check if user owns this DID
-    pub fn is_owned_by(&self, user_pk: &Partition) -> bool {
-        &self.owner_pk == user_pk
+        })
     }
 }

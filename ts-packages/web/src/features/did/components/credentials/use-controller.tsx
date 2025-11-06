@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { State } from '@/types/state';
 import { useSuspenseUserInfo } from '@/hooks/use-user-info';
+import { useSuspenseDidData } from '../../hooks/use-did-data';
 import { Age, Gender } from '@/components/icons';
 import { useCredentialsI18n } from './i18n';
 import { logger } from '@/lib/logger';
@@ -56,11 +57,12 @@ export class Controller {
 export function useController() {
   const state = useState([]);
   const { data: user } = useSuspenseUserInfo();
+  const { data: didDocument } = useSuspenseDidData();
   const t = useCredentialsI18n();
   const identify = useIdentityVerification();
 
-  // Generate DID from user PK (use actual DID when available)
-  const did = `did:web:ratel:${user.username}`;
+  // Use DID from API, fallback to generated DID if not available
+  const did = didDocument?.id ?? `did:web:ratel:${user.username}`;
 
   return new Controller(new State(state), did, t, identify);
 }

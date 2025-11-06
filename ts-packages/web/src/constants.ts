@@ -19,6 +19,7 @@ export const QK_GET_TEAM_BY_PK = 'get-team-by-pk-v3';
 export const QK_GET_REDEEM_CODE = 'get-redeem-code';
 export const QK_GET_USER_BADGE = 'get-user-badge';
 export const QK_GET_PROMOTION = 'get-promotion';
+export const QK_GET_DID = 'get-did';
 
 // // Quiz-related query keys
 
