@@ -2,7 +2,9 @@ use std::collections::HashMap;
 
 use crate::types::{Answer, Question};
 use bdk::prelude::*;
+use serde_with::{DisplayFromStr, serde_as};
 
+#[serde_as]
 #[derive(
     Debug,
     Clone,
@@ -17,31 +19,41 @@ use bdk::prelude::*;
 pub enum PollSummary {
     SingleChoice {
         total_count: i64,
-        answers: HashMap<i32, i64>, // (option_idx, count)
+        #[schemars(with = "std::collections::HashMap<String, i64>")]
+        #[serde_as(as = "HashMap<DisplayFromStr, _>")]
+        answers: HashMap<i32, i64>,
     },
     MultipleChoice {
         total_count: i64,
-        answers: HashMap<i32, i64>, // (option_idx, count)
+        #[schemars(with = "std::collections::HashMap<String, i64>")]
+        #[serde_as(as = "HashMap<DisplayFromStr, _>")]
+        answers: HashMap<i32, i64>,
     },
     ShortAnswer {
         total_count: i64,
-        answers: HashMap<String, i64>, // (answer, count)
+        answers: HashMap<String, i64>,
     },
     Subjective {
         total_count: i64,
-        answers: HashMap<String, i64>, // (answer, count)
+        answers: HashMap<String, i64>,
     },
     Checkbox {
         total_count: i64,
-        answers: HashMap<i32, i64>, // (option_idx, count)
+        #[schemars(with = "std::collections::HashMap<String, i64>")]
+        #[serde_as(as = "HashMap<DisplayFromStr, _>")]
+        answers: HashMap<i32, i64>,
     },
     Dropdown {
         total_count: i64,
-        answers: HashMap<i32, i64>, // (option_idx, count)
+        #[schemars(with = "std::collections::HashMap<String, i64>")]
+        #[serde_as(as = "HashMap<DisplayFromStr, _>")]
+        answers: HashMap<i32, i64>,
     },
     LinearScale {
         total_count: i64,
-        answers: HashMap<i32, i64>, // (scale_value, count)
+        #[schemars(with = "std::collections::HashMap<String, i64>")]
+        #[serde_as(as = "HashMap<DisplayFromStr, _>")]
+        answers: HashMap<i32, i64>,
     },
 }
 

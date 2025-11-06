@@ -24,9 +24,22 @@ pub async fn participate_space_handler(
     tracing::debug!("Handling request: {:?}", req);
     // TODO: Check verifiable_presentation and add user as SpaceParticipant
 
-    let space = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
-        .await?
-        .ok_or(Error::SpaceNotFound)?;
+    let is_verified = SpaceParticipant::verify_credential(&dynamo, &space_pk, user.clone()).await;
+
+    if !is_verified {
+        return Err(Error::InvalidPanel);
+    }
+
+    let (space, has_perm) = SpaceCommon::has_permission(
+        &dynamo.client,
+        &space_pk,
+        Some(&user.pk),
+        TeamGroupPermission::SpaceRead,
+    )
+    .await?;
+    if !has_perm {
+        return Err(Error::NoPermission);
+    }
 
     let now = time::get_now_timestamp_millis();
 

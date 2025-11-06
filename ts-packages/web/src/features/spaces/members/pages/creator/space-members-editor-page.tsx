@@ -2,7 +2,10 @@ import { SpacePathProps } from '@/features/space-path-props';
 import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import InviteMemberTable from '../../components/invite-member-table';
-import { SpacePublishState } from '@/features/spaces/types/space-common';
+import {
+  SpacePublishState,
+  SpaceStatus,
+} from '@/features/spaces/types/space-common';
 import { useSpaceMembersEditorController } from './use-space-members-editor-controller';
 
 export function SpaceMembersEditorPage({ spacePk }: SpacePathProps) {
@@ -21,16 +24,19 @@ export function SpaceMembersEditorPage({ spacePk }: SpacePathProps) {
           <div className="text-base font-semibold">{t('invited_members')}</div>
           <div className="text-xs text-neutral-400">{t('invite_info')}</div>
         </div>
-        <Button
-          variant="primary"
-          className="self-start sm:self-auto w-fit"
-          onClick={ctrl.openInviteMemberPopup}
-        >
-          {t('invite_space')}
-        </Button>
+        {ctrl.space.status !== SpaceStatus.Started && (
+          <Button
+            variant="primary"
+            className="self-start sm:self-auto w-fit"
+            onClick={ctrl.openInviteMemberPopup}
+          >
+            {t('invite_space')}
+          </Button>
+        )}
       </div>
 
       <InviteMemberTable
+        status={ctrl.space.status}
         isDraft={isDraft}
         inviteMembers={inviteMembers}
         t={t}
