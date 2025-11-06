@@ -63,7 +63,7 @@ pub struct SpaceCommon {
     pub created_at: i64,
     pub updated_at: i64,
 
-    pub status: Option<SpaceStatus>, // Waiting, InProgress, Finished
+    pub status: Option<SpaceStatus>, // Waiting, InProgress, Started, Finished
 
     #[dynamo(
         prefix = "SPACE_COMMON_VIS",
