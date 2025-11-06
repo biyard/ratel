@@ -9,6 +9,8 @@ import { useCommentReplySpacePostMutation } from '../../../hooks/use-space-post-
 import { SpacePostResponse } from '../../../types/space-post-response';
 import { State } from '@/types/state';
 import { route } from '@/route';
+import { useUserInfo } from '@/hooks/use-user-info';
+import { UserResponse } from '@/lib/api/ratel/users.v3';
 
 export class SpaceBoardsViewerDetailController {
   constructor(
@@ -27,6 +29,8 @@ export class SpaceBoardsViewerDetailController {
     >,
 
     public expandComment: State<boolean>,
+
+    public user: UserResponse | null,
   ) {}
 
   handleBack = async () => {
@@ -68,6 +72,8 @@ export function useSpaceBoardsViewerDetailController(
 ) {
   const { data: space } = useSpaceById(spacePk);
   const { data: post } = useSpacePost(spacePk, postPk);
+  const { data: user } = useUserInfo();
+
   const expandComment = useState(false);
 
   const navigate = useNavigate();
@@ -86,5 +92,7 @@ export function useSpaceBoardsViewerDetailController(
     commentLikeSpacePosts,
     commentReplySpacePosts,
     new State(expandComment),
+
+    user,
   );
 }

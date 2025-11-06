@@ -18,6 +18,7 @@ import { SpaceReplyList } from './space-reply-list';
 
 interface CommentProps {
   spacePk?: string;
+  isLoggedIn?: boolean;
   comment: PostComment;
   // TODO: Update to use v3 comment API with string IDs
   onComment?: (commentId: string, content: string) => Promise<void>;
@@ -31,6 +32,7 @@ export function Comment({
   onComment,
   onLike,
   t,
+  isLoggedIn = true,
 }: CommentProps) {
   const location = useLocation();
   const boards = /\/boards\/posts(\/|$)/.test(location.pathname);
@@ -114,47 +116,51 @@ export function Comment({
               )}
             </button>
             {/* Reply Button */}
-            <button
-              aria-label="Reply to Comment"
-              onClick={() => {
-                setExpand((prev) => !prev);
-                setShowReplies(true);
-              }}
-              className="flex gap-2 cursor-pointer justify-center items-center text-text-primary"
-            >
-              <BendArrowRight
-                width={24}
-                height={24}
-                className="[&>path]:stroke-text-primary"
-              />
-              {t('reply')}
-            </button>
+            {isLoggedIn && (
+              <button
+                aria-label="Reply to Comment"
+                onClick={() => {
+                  setExpand((prev) => !prev);
+                  setShowReplies(true);
+                }}
+                className="flex gap-2 cursor-pointer justify-center items-center text-text-primary"
+              >
+                <BendArrowRight
+                  width={24}
+                  height={24}
+                  className="[&>path]:stroke-text-primary"
+                />
+                {t('reply')}
+              </button>
+            )}
           </div>
           {/* Like Button */}
-          <button
-            aria-label="Like Comment"
-            className="flex flex-row gap-2 justify-center items-center"
-            onClick={() => {
-              if (onLike) {
-                onLike(comment.sk, !comment.liked);
-              } else {
-                throw new Error('onLike is not set');
-              }
-            }}
-          >
-            <ThumbUp
-              width={24}
-              height={24}
-              className={
-                comment.liked
-                  ? '[&>path]:fill-primary [&>path]:stroke-primary'
-                  : '[&>path]:stroke-comment-icon'
-              }
-            />
-            <div className="font-medium text-base/[24px] text-comment-icon-text ">
-              {comment.likes ?? 0}
-            </div>
-          </button>
+          {isLoggedIn && (
+            <button
+              aria-label="Like Comment"
+              className="flex flex-row gap-2 justify-center items-center"
+              onClick={() => {
+                if (onLike) {
+                  onLike(comment.sk, !comment.liked);
+                } else {
+                  throw new Error('onLike is not set');
+                }
+              }}
+            >
+              <ThumbUp
+                width={24}
+                height={24}
+                className={
+                  comment.liked
+                    ? '[&>path]:fill-primary [&>path]:stroke-primary'
+                    : '[&>path]:stroke-comment-icon'
+                }
+              />
+              <div className="font-medium text-base/[24px] text-comment-icon-text ">
+                {comment.likes ?? 0}
+              </div>
+            </button>
+          )}
         </div>
         {showReplies && comment.replies > 0 && boards && (
           <SpaceReplyList

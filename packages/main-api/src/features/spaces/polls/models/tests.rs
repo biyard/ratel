@@ -80,6 +80,7 @@ async fn test_poll_space_creation() {
                 answer: Some(vec![1]),
             },
         ],
+        None,
     )
     .create(&cli)
     .await

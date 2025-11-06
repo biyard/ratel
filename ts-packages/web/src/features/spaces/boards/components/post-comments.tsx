@@ -90,6 +90,7 @@ export default function PostComments({
         <Comment
           spacePk={spacePk}
           key={comment?.pk + ' ' + comment?.sk}
+          isLoggedIn={isLoggedIn}
           comment={toPostComment(comment)}
           onComment={handleReplyToComment}
           onLike={handleLikeComment}
