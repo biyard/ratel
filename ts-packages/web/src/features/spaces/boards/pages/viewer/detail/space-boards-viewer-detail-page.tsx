@@ -15,6 +15,13 @@ export function SpaceBoardsViewerDetailPage({
   );
   const ctrl = useSpaceBoardsViewerDetailController(spacePk, postPk);
   const { t } = useTranslation('SpaceBoardsEditorDetail');
+
+  const canActive =
+    ctrl.user &&
+    (!ctrl.space.anonymous_participation || ctrl.space.participated);
+
+  console.log('canActive: ', canActive);
+
   return (
     <>
       <div className="flex flex-col gap-6 w-full max-tablet:mr-[20px]">
@@ -32,7 +39,7 @@ export function SpaceBoardsViewerDetailPage({
           t={t}
           spacePk={ctrl.spacePk}
           post={ctrl.post}
-          isLoggedIn={true}
+          isLoggedIn={canActive}
           expandComment={ctrl.expandComment}
           handleComment={ctrl.handleComment}
           handleReplyToComment={ctrl.handleReplyToComment}

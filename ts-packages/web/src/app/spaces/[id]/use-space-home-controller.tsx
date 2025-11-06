@@ -29,6 +29,7 @@ import { useParticipateSpaceMutation } from '@/features/spaces/hooks/use-partici
 import { SpaceType } from '@/features/spaces/types/space-type';
 import SpaceStartModal from '@/features/spaces/modals/space-start-modal';
 import { useStartSpaceMutation } from '@/features/spaces/hooks/use-start-mutation';
+import { SpaceStatus } from '@/features/spaces/types/space-common';
 
 export class SpaceHomeController {
   public space: Space;
@@ -376,7 +377,8 @@ export class SpaceHomeController {
       return this.adminActions;
     } else if (
       this.space.shouldParticipateManually() &&
-      this.canParticipate()
+      this.canParticipate() &&
+      this.space.status != SpaceStatus.Started
       // check already joined
     ) {
       return this.viewerActions;

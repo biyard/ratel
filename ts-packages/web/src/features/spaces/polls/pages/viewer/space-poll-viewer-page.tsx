@@ -39,7 +39,10 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   //   );
   // }
 
-  const canSubmit = ctrl.user && ctrl.poll.myResponse.length === 0;
+  const canSubmit =
+    ctrl.user &&
+    ctrl.poll.myResponse.length === 0 &&
+    (!ctrl.space.anonymous_participation || ctrl.space.participated);
 
   return (
     <>

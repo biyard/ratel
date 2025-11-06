@@ -50,7 +50,7 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
 
         <Card>
           <Col>
-            {ctrl.space.isAdmin() && ctrl.space.isDraft && (
+            {ctrl.space.isAdmin() && ctrl.poll.user_response_count == 0 && (
               <Row className="gap-2 justify-end mb-4">
                 {ctrl.editing.get() ? (
                   <>
