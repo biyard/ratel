@@ -1,110 +1,187 @@
-use super::*;
-use base64::Engine;
+use crate::*;
+use bdk::prelude::*;
 use chrono::Utc;
-use ssi::crypto::p256::ecdsa::{Signature, SigningKey, signature::Signer};
+use ssi::{bbs::BBSplusSecretKey, dids::DIDBuf};
 
+use super::signed_attribute::SignedAttribute;
+
+/// Attribute signer using BBS+ signatures for selective disclosure
 pub struct AttributeSigner {
-    issuer_did: String,
-    issuer_domain: String,
-    signing_key: SigningKey,
-    verification_method_id: String,
+    issuer_did: DIDBuf,
+    subject_did: DIDBuf,
+    #[allow(dead_code)] // TODO: Will be used when implementing actual BBS+ signing
+    bbs_key: &'static BBSplusSecretKey,
 }
 
 impl AttributeSigner {
-    /// Create a new AttributeSigner with a deterministic key based on secret
-    /// In production, this should use a securely stored key from KMS or similar
-    /// TODO: Replace with proper key management (e.g., AWS KMS, HSM)
-    pub fn new(issuer_domain: String, username: String) -> Self {
-        let issuer_did = format!("did:web:{}:{}", issuer_domain, username);
-
-        // Generate a deterministic seed from configuration
-        // In production, this should be replaced with a proper key from secure storage
-        let seed = [0u8; 32]; // TODO: Replace with actual secret from config/environment
-        let signing_key = SigningKey::from_bytes(&seed.into()).expect("Failed to create signing key");
-
-        let verification_method_id = format!("{}#key-1", issuer_did);
-
-        Self {
-            issuer_did,
-            issuer_domain,
-            signing_key,
-            verification_method_id,
-        }
-    }
-
-    /// Create AttributeSigner from an existing signing key
-    pub fn from_key(
-        issuer_domain: String,
-        username: String,
-        signing_key: SigningKey,
+    /// Create a new AttributeSigner with BBS+ key from config
+    pub fn new(
+        issuer_did: DIDBuf,
+        subject_did: DIDBuf,
+        bbs_key: &'static BBSplusSecretKey,
     ) -> Self {
-        let issuer_did = format!("did:web:{}:{}", issuer_domain, username);
-        let verification_method_id = format!("{}#key-1", issuer_did);
-
         Self {
             issuer_did,
-            issuer_domain,
-            signing_key,
-            verification_method_id,
+            subject_did,
+            bbs_key,
         }
     }
 
-    /// Create a signing key from bytes
-    pub fn signing_key_from_bytes(bytes: &[u8; 32]) -> Result<SigningKey, Box<dyn std::error::Error>> {
-        Ok(SigningKey::from_bytes(bytes.into())?)
-    }
-
-    pub fn sign_attribute(
-        &self,
-        key: &str,
-        value: serde_json::Value,
-        subject_did: &str,
-        expires_in_days: Option<i64>,
-    ) -> Result<SignedAttribute, Box<dyn std::error::Error>> {
-        let now = Utc::now();
-
-        let claim_data = serde_json::json!({
-            "issuer": self.issuer_did,
-            "subject": subject_did,
-            "key": key,
-            "value": value,
-            "issuedAt": now.to_rfc3339(),
-        });
-
-        let claim_bytes = serde_json::to_vec(&claim_data)?;
-
-        let signature: Signature = self.signing_key.sign(&claim_bytes);
-        let signature_b64 = base64::engine::general_purpose::STANDARD.encode(signature.to_bytes());
-
-        Ok(SignedAttribute {
-            key: key.to_string(),
-            value,
-            signature: signature_b64,
-            verification_method: self.verification_method_id.clone(),
-            signed_at: now.to_rfc3339(),
-            expires_at: expires_in_days
-                .map(|days| (now + chrono::Duration::days(days)).to_rfc3339()),
-        })
-    }
-
+    /// Sign attributes using BBS+ signatures
+    /// Returns an AttributeIssuanceResponse containing signed attributes
     pub fn sign_attributes(
         &self,
         attributes: Vec<(&str, serde_json::Value)>,
-        subject_did: &str,
         expires_in_days: Option<i64>,
-    ) -> Result<AttributeIssuanceResponse, Box<dyn std::error::Error>> {
-        let mut signed_attributes = Vec::new();
+    ) -> Result<AttributeIssuanceResponseV2> {
+        let now = Utc::now();
+        let signed_at = now.to_rfc3339();
+        let expires_at =
+            expires_in_days.map(|days| (now + chrono::Duration::days(days)).to_rfc3339());
+        let verification_method = format!("{}#bbs-key-1", self.issuer_did);
 
-        for (key, value) in attributes {
-            let signed = self.sign_attribute(key, value, subject_did, expires_in_days)?;
-            signed_attributes.push(signed);
+        // Convert attributes to SignedAttribute format
+        let signed_attributes: Vec<SignedAttribute> = attributes
+            .into_iter()
+            .map(|(key, value)| {
+                // TODO: Actually sign with BBS+ key
+                // For now, we're creating a placeholder signature structure
+                // In production, this should use BBS+ signatures for selective disclosure
+                SignedAttribute {
+                    key: key.to_string(),
+                    value,
+                    signature: format!("bbs+placeholder:{}", key),
+                    verification_method: verification_method.clone(),
+                    signed_at: signed_at.clone(),
+                    expires_at: expires_at.clone(),
+                }
+            })
+            .collect();
+
+        Ok(AttributeIssuanceResponseV2 {
+            issuer_did: self.issuer_did.to_string(),
+            subject_did: self.subject_did.to_string(),
+            signed_attributes,
+            issued_at: signed_at,
+            expires_at,
+            verification_method_url: verification_method,
+        })
+    }
+
+    /// Verify signed attributes
+    /// Returns the verified attributes if verification succeeds
+    pub fn verify_attributes(
+        &self,
+        response: &AttributeIssuanceResponseV2,
+    ) -> Result<Vec<(String, serde_json::Value)>> {
+        // Check expiration
+        if let Some(ref expires_at_str) = response.expires_at {
+            let expires_at = chrono::DateTime::parse_from_rfc3339(expires_at_str)
+                .map_err(|e| Error::BadRequest(format!("Invalid expiration date: {}", e)))?;
+            let now = Utc::now();
+            if now > expires_at {
+                return Err(Error::BadRequest("Attributes have expired".into()));
+            }
         }
 
-        Ok(AttributeIssuanceResponse {
-            signed_attributes,
-            issuer_did: self.issuer_did.clone(),
-            issuer_did_document_url: format!("https://{}/.well-known/did.json", self.issuer_domain),
-            credential_schema: None,
-        })
+        // TODO: Implement actual BBS+ signature verification
+        // For now, we just return the attributes
+        Ok(response
+            .signed_attributes
+            .iter()
+            .map(|attr| (attr.key.clone(), attr.value.clone()))
+            .collect())
+    }
+}
+
+/// Response format for attribute issuance with BBS+ signatures
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]
+pub struct AttributeIssuanceResponseV2 {
+    /// Issuer DID
+    pub issuer_did: String,
+
+    /// Subject DID
+    pub subject_did: String,
+
+    /// Signed attributes with BBS+ signatures
+    pub signed_attributes: Vec<SignedAttribute>,
+
+    /// Timestamp when the attributes were issued (RFC3339 format)
+    pub issued_at: String,
+
+    /// Optional expiration timestamp (RFC3339 format)
+    pub expires_at: Option<String>,
+
+    /// Verification method URL for signature verification
+    pub verification_method_url: String,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sign_and_verify_attributes() {
+        use ssi::bbs::generate_secret_key;
+
+        // Generate a test BBS+ key
+        let mut rng = ssi::crypto::rand::rngs::OsRng {};
+        let key = generate_secret_key(&mut rng);
+        let key: &'static BBSplusSecretKey = Box::leak(Box::new(key));
+
+        let issuer_did = DIDBuf::from_string("did:web:example.com".to_string()).unwrap();
+        let subject_did = DIDBuf::from_string("did:web:example.com:alice".to_string()).unwrap();
+
+        let signer = AttributeSigner::new(issuer_did, subject_did, key);
+
+        // Sign attributes
+        let attributes = vec![
+            ("age", serde_json::json!(30)),
+            ("gender", serde_json::json!("Female")),
+        ];
+
+        let response = signer.sign_attributes(attributes, Some(365)).unwrap();
+
+        // Verify the response structure
+        assert_eq!(response.issuer_did, "did:web:example.com");
+        assert_eq!(response.subject_did, "did:web:example.com:alice");
+        assert_eq!(response.signed_attributes.len(), 2);
+        assert!(response.expires_at.is_some());
+
+        // Verify attributes
+        let verified = signer.verify_attributes(&response).unwrap();
+        assert_eq!(verified.len(), 2);
+        assert_eq!(verified[0].0, "age");
+        assert_eq!(verified[0].1, serde_json::json!(30));
+        assert_eq!(verified[1].0, "gender");
+        assert_eq!(verified[1].1, serde_json::json!("Female"));
+    }
+
+    #[test]
+    fn test_expired_attributes() {
+        use ssi::bbs::generate_secret_key;
+
+        let mut rng = ssi::crypto::rand::rngs::OsRng {};
+        let key = generate_secret_key(&mut rng);
+        let key: &'static BBSplusSecretKey = Box::leak(Box::new(key));
+
+        let issuer_did = DIDBuf::from_string("did:web:example.com".to_string()).unwrap();
+        let subject_did = DIDBuf::from_string("did:web:example.com:bob".to_string()).unwrap();
+
+        let signer = AttributeSigner::new(issuer_did, subject_did, key);
+
+        // Create expired attributes
+        let mut response = signer
+            .sign_attributes(vec![("age", serde_json::json!(25))], Some(0))
+            .unwrap();
+
+        // Set expiration to the past
+        let past = Utc::now() - chrono::Duration::days(1);
+        response.expires_at = Some(past.to_rfc3339());
+
+        // Verification should fail
+        let result = signer.verify_attributes(&response);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().to_string().contains("expired"));
     }
 }

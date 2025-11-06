@@ -15,7 +15,7 @@ pub fn generate_did_by_username(username: &str) -> Result<Document> {
     Ok(document)
 }
 
-pub fn get_did(username: &str) -> Result<DidBuf> {
+pub fn get_did(username: &str) -> Result<DIDBuf> {
     Ok(DIDBuf::from_string(format!(
         "did:web:{}:{}",
         crate::config::get().domain,

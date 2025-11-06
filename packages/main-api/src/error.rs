@@ -78,6 +78,8 @@ pub enum Error {
     HMacInitError(String),
     #[error("Telegram wallet error: {0}")]
     TelegramError(#[from] teloxide::RequestError),
+    #[error("Chrono parse error: {0}")]
+    TimeParseError(#[from] chrono::ParseError),
 
     // Authorization errors 400 ~
     #[error("No session found")]
@@ -232,6 +234,8 @@ pub enum Error {
     #[error("Invalid DID format")]
     #[rest_error(code = 11000)]
     InvalidDID(#[from] InvalidDID<String>),
+    #[error("VC Signature error: {0}")]
+    Signature(String),
 
     // web 1,000,000 ~
     #[error("Web error: {0}")]
