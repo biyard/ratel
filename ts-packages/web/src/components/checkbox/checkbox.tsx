@@ -18,13 +18,14 @@ export const Checkbox = ({
   children,
   disabled = false,
 }: CheckboxProps) => {
+  const handleChange = () => {
+    if (!disabled) {
+      onChange(!value);
+    }
+  };
+
   return (
-    <div
-      className="flex flex-row items-start text-sm font-normal text-white cursor-pointer gap-2.25"
-      onClick={() => {
-        onChange(!value);
-      }}
-    >
+    <div className="flex flex-row items-start text-sm font-normal text-white gap-2.25 select-none">
       <div className="flex relative flex-row justify-start items-center cursor-pointer gap-[6px]">
         <input
           id={id}
@@ -32,6 +33,7 @@ export const Checkbox = ({
           type="checkbox"
           className="hidden peer"
           checked={value}
+          onChange={handleChange}
         />
 
         <label
@@ -46,7 +48,9 @@ export const Checkbox = ({
         </label>
       </div>
 
-      {children}
+      <div className="cursor-pointer" onClick={handleChange}>
+        {children}
+      </div>
     </div>
   );
 };

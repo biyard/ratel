@@ -11,7 +11,6 @@ import { Loader2 } from 'lucide-react';
 import { SpaceTypeCarousel } from './space-type-carousel';
 import SpaceTypeItem from '@/features/spaces/components/space-type-item';
 import { PostFormFields } from '../post-form-fields';
-import { Row } from '@/components/ui/row';
 
 export default function CreatePostPage() {
   return (
@@ -79,12 +78,7 @@ function CreatePostPageContent() {
             value={ctrl.skipCreatingSpace.get()}
             onChange={(checked: boolean) => ctrl.skipCreatingSpace.set(checked)}
           >
-            <span
-              className="text-sm cursor-pointer text-text-primary"
-              onClick={() =>
-                ctrl.skipCreatingSpace.set(!ctrl.skipCreatingSpace.get())
-              }
-            >
+            <span className="text-sm text-text-primary">
               {ctrl.t.skip_creating_space}
             </span>
           </Checkbox>
