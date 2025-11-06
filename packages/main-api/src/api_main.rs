@@ -2,8 +2,8 @@ use std::env;
 
 use crate::{
     AppState, config,
+    controllers::route,
     controllers::web,
-    route::route,
     utils::{
         aws::{
             BedrockClient, DynamoClient, RekognitionClient, S3Client, SesClient, TextractClient,

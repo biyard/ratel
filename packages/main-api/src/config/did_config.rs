@@ -1,43 +1,42 @@
+use ssi::{
+    bbs::BBSplusSecretKey,
+    crypto::{
+        ed25519::SigningKey,
+        p256::{self, NistP256},
+    },
+};
+
 #[derive(Debug, Clone, Copy)]
 pub struct DidConfig {
-    pub bbs_bls_x: &'static str,
-    pub bbs_bls_y: &'static str,
-    pub bbs_bls_d: &'static str,
-    pub bbs_bls_crv: &'static str,
-    pub p256_x: &'static str,
-    pub p256_y: &'static str,
-    pub p256_d: &'static str,
-    pub p256_crv: &'static str,
+    pub bbs_bls_key: &'static BBSplusSecretKey,
+    pub p256_key: &'static ssi::crypto::p256::ecdsa::SigningKey,
 }
 
 impl Default for DidConfig {
     fn default() -> Self {
-        if option_env!("BBS_BLS_X").is_some() {
-            Self {
-                bbs_bls_x: option_env!("BBS_BLS_X").expect("You must set BBS_BLS_X"),
-                bbs_bls_y: option_env!("BBS_BLS_Y").expect("You must set BBS_BLS_Y"),
-                bbs_bls_d: option_env!("BBS_BLS_D").expect("You must set BBS_BLS_D"),
-                bbs_bls_crv: option_env!("BBS_BLS_CRV").expect("You must set BBS_BLS_CRV"),
-                p256_x: option_env!("P256_X").expect("You must set P256_X"),
-                p256_y: option_env!("P256_Y").expect("You must set P256_Y"),
-                p256_d: option_env!("P256_D").expect("You must set P256_D"),
-                p256_crv: option_env!("P256_CRV").expect("You must set P256_CRV"),
-            }
-        } else {
-            // FIXME: generate DIDs keys
-            // let rng = &mut rand::thread_rng();
-            // let keys = ssi::bbs::generate_secret_key(rng);
+        let bbs_bls_key: &'static BBSplusSecretKey = if let Some(encoded_key) =
+            option_env!("BBS_BLS_KEY")
+        {
+            let key_bytes = hex::decode(encoded_key).expect("Failed to decode BBS+ key");
+            let key = BBSplusSecretKey::from_bytes(key_bytes.as_ref()).expect("Invalid BBS+ key");
 
-            Self {
-                bbs_bls_x: option_env!("BBS_BLS_X").expect("You must set BBS_BLS_X"),
-                bbs_bls_y: option_env!("BBS_BLS_Y").expect("You must set BBS_BLS_Y"),
-                bbs_bls_d: option_env!("BBS_BLS_D").expect("You must set BBS_BLS_D"),
-                bbs_bls_crv: option_env!("BBS_BLS_CRV").expect("You must set BBS_BLS_CRV"),
-                p256_x: option_env!("P256_X").expect("You must set P256_X"),
-                p256_y: option_env!("P256_Y").expect("You must set P256_Y"),
-                p256_d: option_env!("P256_D").expect("You must set P256_D"),
-                p256_crv: option_env!("P256_CRV").expect("You must set P256_CRV"),
-            }
+            Box::leak(Box::new(key))
+        } else {
+            let mut rng = ssi::crypto::rand::rngs::OsRng {};
+            let key = ssi::bbs::generate_secret_key(&mut rng);
+            let encoded_key = key.encode();
+            tracing::info!("Generated BBS+ key: {}", encoded_key);
+
+            Box::leak(Box::new(key))
+        };
+
+        let p256_key =
+            ssi::crypto::p256::ecdsa::SigningKey::random(&mut ssi::crypto::rand::rngs::OsRng {});
+        let p256_key: &'static ssi::crypto::p256::ecdsa::SigningKey = Box::leak(Box::new(p256_key));
+
+        Self {
+            bbs_bls_key,
+            p256_key,
         }
     }
 }

@@ -10,7 +10,6 @@ pub mod error;
 pub mod features;
 pub(crate) mod macros;
 pub mod models;
-pub mod route;
 pub mod security;
 pub mod services;
 pub mod types;
