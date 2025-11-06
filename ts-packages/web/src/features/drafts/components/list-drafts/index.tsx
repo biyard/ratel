@@ -7,7 +7,7 @@ import PostResponse from '@/features/posts/dto/list-post-response';
 import { useCallback, useRef } from 'react';
 
 import { Edit1 } from '@/components/icons';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router';
 import { route } from '@/route';
@@ -104,7 +104,7 @@ export default function ListDrafts({
   );
 }
 
-export function CreatePostButton() {
+export function CreatePostButton({ teamPk }: { teamPk?: string | undefined }) {
   const { t } = useTranslation('ListDrafts');
 
   const baseClass = buttonVariants({
@@ -114,7 +114,7 @@ export function CreatePostButton() {
 
   return (
     <Link
-      to={route.newPost()}
+      to={route.newPost(undefined, teamPk)}
       aria-label="Create Post"
       className={cn(baseClass, 'justify-start w-full')}
     >
