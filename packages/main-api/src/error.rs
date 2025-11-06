@@ -236,6 +236,8 @@ pub enum Error {
     InvalidDID(#[from] InvalidDID<String>),
     #[error("VC Signature error: {0}")]
     Signature(String),
+    #[error("invalide gender")]
+    InvalidGender,
 
     // web 1,000,000 ~
     #[error("Web error: {0}")]

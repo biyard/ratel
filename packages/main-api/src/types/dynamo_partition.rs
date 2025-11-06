@@ -64,6 +64,7 @@ pub enum Partition {
 
     // DID
     Did,
+    Attributes,
 
     //Telegram Channel
     TelegramChannel,
