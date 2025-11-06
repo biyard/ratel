@@ -86,7 +86,8 @@ impl SpaceParticipant {
                 }
                 if Self::attributes_match(age, gender.clone(), &p.attributes) {
                     let res: SpacePanelResponse = p.into();
-                    let participants = SpacePanelParticipant::new(res.clone().pk, user);
+                    let participants =
+                        SpacePanelParticipant::new(space_pk.clone(), res.clone().pk, user);
                     let _ = match participants.create(&dynamo.client).await {
                         Ok(v) => v,
                         Err(_) => return false,

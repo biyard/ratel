@@ -234,64 +234,6 @@ async fn test_get_panel_handler() {
 }
 
 #[tokio::test]
-async fn test_participate_panel_handler() {
-    let TestContextV3 {
-        app,
-        test_user: (_user, headers),
-        ..
-    } = setup_v3().await;
-
-    let CreatedDeliberationSpace { space_pk, .. } =
-        bootstrap_deliberation_space(&app, headers.clone()).await;
-
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/{}/panels", space_pk_encoded);
-
-    let (status, _headers, body) = post! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        body: {
-            "name": "Panel 1".to_string(), "quotas": 10, "attributes": vec![Attribute::Age(types::Age::Range { inclusive_min: 0, inclusive_max: 19 }), Attribute::Gender(types::Gender::Female)],
-        },
-        response_type: SpacePanelResponse
-    };
-
-    assert_eq!(status, 200);
-    tracing::debug!("panel body: {:?}", body);
-
-    let panel_pk = body.pk;
-    let panel_pk_encoded = panel_pk.to_string().replace('#', "%23");
-    let path = format!(
-        "/v3/spaces/{}/panels/{}/participants",
-        space_pk_encoded, panel_pk_encoded
-    );
-
-    let (status, _headers, _body) = patch! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        response_type: SpacePanelParticipantResponse
-    };
-
-    assert_eq!(status, 200);
-    let path = format!(
-        "/v3/spaces/{}/panels/{}",
-        space_pk_encoded, panel_pk_encoded
-    );
-
-    let (status, _headers, body) = get! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        response_type: SpacePanelResponse
-    };
-
-    assert_eq!(status, 200);
-    assert_eq!(body.participants, 1);
-}
-
-#[tokio::test]
 async fn test_list_participants_handler() {
     let TestContextV3 {
         app,

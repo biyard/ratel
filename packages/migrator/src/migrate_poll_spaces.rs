@@ -196,6 +196,7 @@ pub async fn migrate_poll_spaces(pool: &sqlx::PgPool, cli: &aws_sdk_dynamodb::Cl
                     poll.sk.clone().try_into().unwrap(),
                     user_pk,
                     answers,
+                    None,
                 );
             }
         }
