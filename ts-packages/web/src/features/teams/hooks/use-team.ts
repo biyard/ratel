@@ -49,7 +49,8 @@ export function useTeamDetailByUsername(username: string) {
           'useTeamDetailByUsername: calling with username:',
           username,
         );
-        return await getTeamByUsername(username);
+        const team = await getTeamByUsername(username);
+        return team;
       } catch (error) {
         logger.error('Failed to get team by username:', error);
         throw error; // Let React Query handle the error instead of returning null

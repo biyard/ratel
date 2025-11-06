@@ -416,7 +416,7 @@ export function useCreatePostPageController() {
 
       // Create new post if no postPk provided
       try {
-        const result = await createPost({});
+        const result = await createPost({ teamPk: teamPkParam ?? null });
         controller.postPk.set(result.post_pk);
       } catch (error) {
         logger.error('Failed to initialize post:', error);

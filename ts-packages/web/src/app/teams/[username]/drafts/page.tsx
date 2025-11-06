@@ -1,58 +1,50 @@
+// TeamDraftPage.tsx
 import { FeedStatus } from '@/features/posts/types/post';
-
 import { useTeamDetailByUsername } from '@/features/teams/hooks/use-team';
 import { useDeletePostMutation } from '@/features/posts/hooks/use-delete-post-mutation';
 import useInfiniteTeamDrafts from '@/features/drafts/hooks/use-team-drafts';
-import { useCreatePostMutation } from '@/features/posts/hooks/use-create-post-mutation';
-import { useNavigate } from 'react-router';
 import ListDrafts, {
   CreatePostButton,
 } from '@/features/drafts/components/list-drafts';
-import { route } from '@/route';
+import { useParams } from 'react-router';
 
-export default function TeamDraftPage({ username }: { username: string }) {
+export default function TeamDraftPage() {
+  const { username } = useParams<{ username: string }>();
   const teamQuery = useTeamDetailByUsername(username);
-  const navigate = useNavigate();
-
   const team = teamQuery.data;
-  const teamPk = team?.id || '';
+  const teamPk = team?.id ?? '';
 
   const {
     data: drafts,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useInfiniteTeamDrafts(teamPk);
+  } = useInfiniteTeamDrafts(teamPk, FeedStatus.Draft);
 
-  const createDraft = useCreatePostMutation().mutateAsync;
-
-  const handleRemoveDraft = useDeletePostMutation(
-    username,
-    FeedStatus.Draft,
-  ).mutateAsync;
+  const deleteMutation = useDeletePostMutation(username, FeedStatus.Draft);
+  const handleRemoveDraft = deleteMutation.mutateAsync;
 
   if (teamQuery.isLoading) {
     return <div className="flex justify-center p-8">Loading drafts...</div>;
   }
-
-  if (teamQuery.error) {
+  if (teamQuery.isError) {
     return (
       <div className="flex justify-center p-8 text-red-500">
         Error loading team
       </div>
     );
   }
-
   if (!team) {
     return (
       <div className="flex justify-center p-8 text-red-500">Team not found</div>
     );
   }
 
-  const flattedDrafts = drafts?.pages.flatMap((page) => page.items) ?? [];
+  const flattedDrafts = drafts?.pages.flatMap((p) => p.items) ?? [];
+
   return (
-    <div className="flex relative flex-1">
-      <div className="flex flex-1 max-mobile:px-[10px]">
+    <div className="flex relative flex-1 flex-row w-full">
+      <div className="flex flex-1 flex-row max-mobile:px-[10px] w-full">
         <ListDrafts
           drafts={flattedDrafts}
           fetchNextPage={fetchNextPage}
@@ -63,10 +55,10 @@ export default function TeamDraftPage({ username }: { username: string }) {
       </div>
 
       <div
-        className={`h-fit max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 tablet:w-80 tablet:pl-4 tablet:static`}
-      ></div>
-
-      <CreatePostButton />
+        className={`h-fit w-fit max-tablet:fixed max-tablet:bottom-4 max-tablet:right-4 tablet:w-80 tablet:pl-4 tablet:static`}
+      >
+        <CreatePostButton teamPk={teamPk} />
+      </div>
     </div>
   );
 }

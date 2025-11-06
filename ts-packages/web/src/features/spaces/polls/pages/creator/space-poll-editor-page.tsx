@@ -28,7 +28,7 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
           className="justify-end"
         />
 
-        {ctrl.space.isAdmin() && ctrl.space.isDraft && (
+        {ctrl.space.isAdmin() && ctrl.poll.user_response_count == 0 && (
           <div className="flex flex-row items-center gap-3 mb-4">
             <CustomCheckbox
               checked={ctrl.poll.response_editable}
@@ -50,7 +50,7 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
 
         <Card>
           <Col>
-            {ctrl.space.isAdmin() && ctrl.space.isDraft && (
+            {ctrl.space.isAdmin() && ctrl.poll.user_response_count == 0 && (
               <Row className="gap-2 justify-end mb-4">
                 {ctrl.editing.get() ? (
                   <>
