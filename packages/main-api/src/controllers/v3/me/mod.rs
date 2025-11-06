@@ -4,6 +4,7 @@ pub mod update_user;
 mod did;
 pub mod list_my_drafts;
 pub mod list_my_posts;
+mod list_my_spaces;
 #[cfg(test)]
 pub mod tests;
 
@@ -19,5 +20,6 @@ pub fn route() -> Result<Router<AppState>> {
         .nest("/did", did::route()?)
         .route("/", get(get_info_handler).patch(update_user_handler))
         .route("/posts", get(list_my_posts_handler))
+        .route("/spaces", get(list_my_spaces::list_my_spaces_handler))
         .route("/drafts", get(list_my_drafts_handler)))
 }

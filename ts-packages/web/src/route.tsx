@@ -8,6 +8,7 @@ export const route = {
   settings: () => '/settings',
   credentials: () => '/credentials',
   myPosts: () => '/my-posts',
+  mySpaces: () => '/my-spaces',
   createPost: (postPk?: string) =>
     postPk ? `/posts/new?post-pk=${encodeURIComponent(postPk)}` : '/posts/new',
   createArtwork: (postPk?: string) =>

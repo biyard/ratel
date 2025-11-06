@@ -1,7 +1,13 @@
 import { ListPostResponse } from '@/features/posts/dto/list-post-response';
 import { DidDocument } from '@/features/did/types/did-document';
+import { SpaceCommon } from '@/features/spaces/types/space-common';
 import { call } from './call';
 import { UserDetailResponse } from './users.v3';
+
+export interface ListMySpacesResponse {
+  items: SpaceCommon[];
+  bookmark?: string;
+}
 
 export async function getUserInfo(): Promise<UserDetailResponse> {
   return call('GET', '/v3/me');
@@ -22,6 +28,17 @@ export async function listMyDrafts(
   bookmark?: string,
 ): Promise<ListPostResponse> {
   let path = '/v3/me/drafts';
+  if (bookmark) {
+    path += `?bookmark=${encodeURIComponent(bookmark)}`;
+  }
+
+  return call('GET', path);
+}
+
+export async function listMySpaces(
+  bookmark?: string,
+): Promise<ListMySpacesResponse> {
+  let path = '/v3/me/spaces';
   if (bookmark) {
     path += `?bookmark=${encodeURIComponent(bookmark)}`;
   }

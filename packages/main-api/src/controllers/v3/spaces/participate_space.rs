@@ -48,7 +48,6 @@ pub async fn participate_space_handler(
         .unwrap()
         .replace('-', " ");
 
-    // TODO: check duplicated name
     let sp = SpaceParticipant::new(space.pk.clone(), user.pk.clone(), display_name);
     let new_space = SpaceCommon::updater(&space.pk, &space.sk)
         .increase_participants(1)

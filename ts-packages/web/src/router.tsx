@@ -59,6 +59,7 @@ import { Terms } from './app/terms';
 import { Privacy } from './app/privacy';
 import { Refund } from './app/refund';
 import SpaceMemberPage from './app/spaces/[id]/members/space-member-page';
+import MySpacesPage from './app/(social)/my-spaces/page';
 
 export const routes = createBrowserRouter([
   {
@@ -109,6 +110,11 @@ export const routes = createBrowserRouter([
                 Component: MyDraftPage,
               },
             ],
+          },
+          {
+            id: 'my-spaces-page',
+            path: 'my-spaces',
+            Component: MySpacesPage,
           },
           {
             id: 'settings-layout',
