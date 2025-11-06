@@ -9,6 +9,7 @@ export enum SpacePublishState {
 export enum SpaceStatus {
   Waiting = 'WAITING',
   InProgress = 'IN_PROGRESS',
+  Started = 'STARTED',
   Finished = 'FINISHED',
 }
 

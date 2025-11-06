@@ -26,7 +26,9 @@ import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
 import { getPutObjectUrl } from '@/lib/api/ratel/assets.v3';
 import { spacePkToPostPk } from '@/features/spaces/utils/partition-key-utils';
 import { useParticipateSpaceMutation } from '@/features/spaces/hooks/use-participate-space-mutation';
-import { UserType } from '@/lib/api/ratel/users.v3';
+import { SpaceType } from '@/features/spaces/types/space-type';
+import SpaceStartModal from '@/features/spaces/modals/space-start-modal';
+import { useStartSpaceMutation } from '@/features/spaces/hooks/use-start-mutation';
 
 export class SpaceHomeController {
   public space: Space;
@@ -46,6 +48,7 @@ export class SpaceHomeController {
     public saveState: State<boolean>,
     public popup: ReturnType<typeof usePopup>,
     public publishSpace: ReturnType<typeof usePublishSpaceMutation>,
+    public startSpace: ReturnType<typeof useStartSpaceMutation>,
     public deleteSpace: ReturnType<typeof useDeleteSpaceMutation>,
     public image: State<string | null>,
     public updateDraftImage: ReturnType<
@@ -205,6 +208,23 @@ export class SpaceHomeController {
     }
   };
 
+  handleStart = async () => {
+    try {
+      this.startSpace.mutateAsync({
+        spacePk: this.space.pk,
+      });
+
+      showSuccessToast(this.t('success_start_space'));
+    } catch (err) {
+      logger.error('start space failed: ', err);
+      showErrorToast(this.t('failed_start_space'));
+    } finally {
+      this.popup.close();
+    }
+
+    this.popup.close();
+  };
+
   handleDelete = async () => {
     if (this.publishHook) {
       this.publishHook();
@@ -250,6 +270,22 @@ export class SpaceHomeController {
         />,
       )
       .withTitle(this.t('delete_space'))
+      .withoutBackdropClose();
+  };
+
+  handleActionStart = async () => {
+    logger.debug('Action start triggered');
+
+    this.popup
+      .open(
+        <SpaceStartModal
+          onStarted={this.handleStart}
+          onClose={() => {
+            this.popup.close();
+          }}
+        />,
+      )
+      .withTitle(this.t('start_space'))
       .withoutBackdropClose();
   };
 
@@ -368,6 +404,23 @@ export class SpaceHomeController {
       },
     ];
 
+    if (
+      this.space.isInProgress &&
+      this.space.spaceType === SpaceType.Deliberation
+    ) {
+      ret.unshift({
+        label: this.t('started'),
+        onClick: this.handleActionStart,
+      });
+    }
+
+    // if (this.space.isStarted) {
+    //   ret.unshift({
+    //     label: this.t('finished'),
+    //     onClick: this.handleActionFinished,
+    //   });
+    // }
+
     if (this.space.isDraft) {
       ret.unshift({
         label: this.t('publish'),
@@ -394,6 +447,7 @@ export function useSpaceHomeController(spacePk: string) {
   const updateSpaceTitle = useSpaceUpdateTitleMutation();
   const updateSpaceFiles = useSpaceUpdateFilesMutation();
   const publishSpace = usePublishSpaceMutation();
+  const startSpace = useStartSpaceMutation();
   const deleteSpace = useDeleteSpaceMutation();
   const { mutateAsync: updateDraftImage } = useUpdateDraftImageMutation();
   const participateSpace = useParticipateSpaceMutation();
@@ -426,6 +480,7 @@ export function useSpaceHomeController(spacePk: string) {
     new State(save),
     popup,
     publishSpace,
+    startSpace,
     deleteSpace,
     new State(image),
     updateDraftImage,
