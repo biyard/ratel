@@ -13,8 +13,8 @@ use crate::*;
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]
 #[serde(tag = "invitation_status", rename_all = "snake_case")]
 pub enum MySpace {
-    Pending { spaces: SpaceCommon },
-    Participating { spaces: SpaceCommon },
+    Pending(SpaceCommon),
+    Participating(SpaceCommon),
 }
 
 pub async fn list_my_spaces_handler(
@@ -36,7 +36,7 @@ pub async fn list_my_spaces_handler(
         items.extend(
             invited_spaces
                 .into_iter()
-                .map(|space| MySpace::Pending { spaces: space }),
+                .map(|space| MySpace::Pending(space)),
         );
         tracing::info!("Listed invited spaces, total items: {}", items.len());
 
@@ -54,12 +54,17 @@ pub async fn list_my_spaces_handler(
     }
 
     // NOTE: Continue listing participating spaces if we still have limit
-    let bookmark = if let Some(mut bm) = bookmark {
-        bm.truncate(3); // "SP-" -> ""
+    let bookmark = if let Some(bm) = bookmark {
+        let bm = bm.replacen("SP-", "", 1); // "SP-" -> ""
+        tracing::info!(
+            "Continuing listing participating spaces with bookmark: {:?}",
+            bm
+        );
         if bm.is_empty() { None } else { Some(bm) }
     } else {
         return Err(Error::InvalidBookmark);
     };
+    tracing::info!("Listing participating spaces with bookmark: {:?}", bookmark);
 
     let (participating_spaces, bookmark) = list_participating_spaces(
         &dynamo.client,
@@ -71,7 +76,7 @@ pub async fn list_my_spaces_handler(
     items.extend(
         participating_spaces
             .into_iter()
-            .map(|space| MySpace::Participating { spaces: space }),
+            .map(|space| MySpace::Participating(space)),
     );
 
     let bookmark = if let Some(b) = &bookmark {
