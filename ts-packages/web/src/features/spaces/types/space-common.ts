@@ -45,3 +45,7 @@ export interface SpaceCommon {
 
   anonymous_participation: boolean;
 }
+
+export type MySpace = SpaceCommon & {
+  invitation_status: 'pending' | 'participating';
+};

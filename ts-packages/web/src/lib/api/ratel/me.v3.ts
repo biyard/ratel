@@ -1,11 +1,11 @@
 import { ListPostResponse } from '@/features/posts/dto/list-post-response';
 import { DidDocument } from '@/features/did/types/did-document';
-import { SpaceCommon } from '@/features/spaces/types/space-common';
+import { MySpace } from '@/features/spaces/types/space-common';
 import { call } from './call';
 import { UserDetailResponse } from './users.v3';
 
 export interface ListMySpacesResponse {
-  items: SpaceCommon[];
+  items: MySpace[];
   bookmark?: string;
 }
 
