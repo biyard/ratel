@@ -1,5 +1,7 @@
 use names::{Generator, Name};
 
+use crate::features::spaces::members::{InvitationStatus, SpaceInvitationMember};
+
 use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, OperationIo, JsonSchema)]
@@ -52,11 +54,15 @@ pub async fn participate_space_handler(
     let new_space = SpaceCommon::updater(&space.pk, &space.sk)
         .increase_participants(1)
         .with_updated_at(now);
+    let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
+    let invitation =
+        SpaceInvitationMember::updater(&pk, &sk).with_status(InvitationStatus::Accepted);
 
     transact_write!(
         &dynamo.client,
         sp.create_transact_write_item(),
         new_space.transact_write_item(),
+        invitation.transact_write_item(),
     )?;
 
     Ok(Json(ParticipateSpaceResponse {

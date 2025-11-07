@@ -10,7 +10,8 @@ export function getOptions(username: string) {
     }: {
       pageParam?: string;
     }): Promise<ListMySpacesResponse> => listMySpaces(pageParam),
-    getNextPageParam: (last: ListMySpacesResponse) => last.bookmark ?? undefined,
+    getNextPageParam: (last: ListMySpacesResponse) =>
+      last.bookmark ?? undefined,
     initialPageParam: undefined as string | undefined,
     refetchOnWindowFocus: false,
   };

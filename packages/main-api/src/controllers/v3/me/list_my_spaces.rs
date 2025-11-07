@@ -1,7 +1,7 @@
 use crate::{
     features::spaces::{
         SpaceParticipant, SpaceParticipantQueryOption,
-        members::{SpaceInvitationMember, SpaceInvitationMemberQueryOption},
+        members::{InvitationStatus, SpaceInvitationMember, SpaceInvitationMemberQueryOption},
     },
     models::SpaceCommon,
 };
@@ -26,7 +26,9 @@ pub async fn list_my_spaces_handler(
     let mut limit = 10;
 
     if should_list_invited_spaces(&bookmark) {
-        let opt = SpaceInvitationMember::opt_with_bookmark(bookmark).limit(limit);
+        let opt = SpaceInvitationMember::opt_with_bookmark(bookmark)
+            .limit(limit)
+            .sk(InvitationStatus::Invited.to_string());
 
         let (invited_spaces, bm) = list_invited_spaces(&dynamo.client, &user.pk, opt).await?;
         items.extend(
@@ -106,16 +108,12 @@ pub async fn list_invited_spaces(
     user_pk: &Partition,
     opt: SpaceInvitationMemberQueryOption,
 ) -> Result<(Vec<SpaceCommon>, Option<String>)> {
-    let (si, mut bookmark) = SpaceInvitationMember::find_user_invitations_by_status(
-        cli,
-        user_pk,
-        SpaceInvitationMember::opt().limit(10),
-    )
-    .await?;
+    let (si, bookmark) =
+        SpaceInvitationMember::find_user_invitations_by_status(cli, user_pk, opt).await?;
 
     let keys = si
         .into_iter()
-        .map(|sp| (sp.space_pk, EntityType::SpaceCommon))
+        .map(|sp| (sp.pk, EntityType::SpaceCommon))
         .collect::<Vec<(Partition, EntityType)>>();
 
     Ok((SpaceCommon::batch_get(cli, keys).await?, bookmark))
