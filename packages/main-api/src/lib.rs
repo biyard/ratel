@@ -33,6 +33,7 @@ use by_axum::axum::{
     response::Response,
 };
 use controllers::v3::*;
+use schemars::JsonSchema_repr;
 use serde::{Deserialize, Serialize};
 use ssi::prelude::*;
 use tracing::{debug, error, info, warn};

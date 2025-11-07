@@ -79,6 +79,7 @@ ssi = { version = "0.12.0", features = ["bbs"] }
 names = "0.14.0"
 static-iref = "3.0.0"
 iref = "3.2.2"
+futures = "0.3.31"
 
 [[bin]]
 name = "main-api"
