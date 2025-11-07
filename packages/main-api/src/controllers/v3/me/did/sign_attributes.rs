@@ -11,6 +11,12 @@ pub enum SignAttributesRequest {
         #[schemars(description = "Identity Verifycation ID")]
         id: String,
     },
+
+    #[schemars(description = "Verify attributes by pre-issued code")]
+    Code {
+        #[schemars(description = "Code issued in advanced")]
+        code: String,
+    },
 }
 
 pub async fn sign_attributes_handler(
@@ -26,7 +32,44 @@ pub async fn sign_attributes_handler(
         SignAttributesRequest::PortOne { id } => {
             portone_sign_attributes_handler(&portone, &dynamo.client, &user, id).await
         }
+        SignAttributesRequest::Code { code } => {
+            add_attributes_by_code(&dynamo.client, &user, code).await
+        }
     }
+}
+
+async fn add_attributes_by_code(
+    ddb: &aws_sdk_dynamodb::Client,
+    user: &User,
+    code: String,
+) -> Result<Json<VerifiedAttributes>> {
+    let AttributeCode {
+        birth_date,
+        gender,
+        university,
+        ..
+    } = AttributeCode::get(ddb, Partition::AttributeCode(code), None::<String>)
+        .await?
+        .ok_or(Error::AttributeCodeNotFound)?;
+
+    let (pk, sk) = VerifiedAttributes::keys(&user.pk);
+    let mut u = VerifiedAttributes::updater(pk, sk);
+
+    if let Some(birth_date) = birth_date {
+        u = u.with_birth_date(birth_date);
+    }
+
+    if let Some(gender) = gender {
+        u = u.with_gender(gender);
+    }
+
+    if let Some(university) = university {
+        u = u.with_university(university);
+    }
+
+    let attrs = u.execute(ddb).await?;
+
+    Ok(Json(attrs))
 }
 
 async fn portone_sign_attributes_handler(
@@ -44,7 +87,8 @@ async fn portone_sign_attributes_handler(
         birth_date, gender, ..
     } = c;
 
-    let attrs: VerifiedAttributes = VerifiedAttributes::new(user.pk.clone())
+    let (pk, sk) = VerifiedAttributes::keys(&user.pk);
+    let attrs = VerifiedAttributes::updater(pk, sk)
         .with_birth_date(birth_date.replace("-", ""))
         .with_gender(match gender {
             VerifiedGender::Female => Gender::Female,
@@ -52,9 +96,9 @@ async fn portone_sign_attributes_handler(
             VerifiedGender::None => {
                 return Err(Error::InvalidGender);
             }
-        });
-
-    attrs.upsert(ddb).await?;
+        })
+        .execute(ddb)
+        .await?;
 
     Ok(Json(attrs))
 }

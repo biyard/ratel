@@ -71,6 +71,7 @@ import { SpaceSettings } from '@/app/spaces/[id]/settings/i18n';
 import { i18nSpaceBoardsCreate } from '@/features/spaces/boards/pages/creator/create/space-boards-create-i18n';
 import { i18nSpaceBoardsEditor } from '@/features/spaces/boards/pages/creator/space-boards-editor-i18n';
 import { i18nSpaceBoardsEditorDetail } from '@/features/spaces/boards/pages/creator/detail/space-boards-editor-detail-i18n';
+import { i18nAttributeCodes } from '@/app/admin/attribute-codes/attribute-codes-page-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -138,6 +139,7 @@ Object.entries({
   SpaceMemberViewer: i18nSpaceMemberViewerPage,
   Admin: i18nAdmin,
   Memberships: i18nMemberships,
+  AttributeCodes: i18nAttributeCodes,
   Nav: i18nHeader,
   ListDrafts: i18nListDrafts,
   CreatePostPage,

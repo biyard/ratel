@@ -238,6 +238,8 @@ pub enum Error {
     Signature(String),
     #[error("invalide gender")]
     InvalidGender,
+    #[error("attribute code not found")]
+    AttributeCodeNotFound,
 
     // web 1,000,000 ~
     #[error("Web error: {0}")]

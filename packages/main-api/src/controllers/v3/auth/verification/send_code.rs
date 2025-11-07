@@ -2,7 +2,7 @@ use crate::{
     AppState, Error,
     constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT},
     models::email::{EmailVerification, EmailVerificationQueryOption},
-    utils::time::get_now_timestamp,
+    utils::{generate_random_code, time::get_now_timestamp},
 };
 use bdk::prelude::*;
 use by_axum::axum::{Json, extract::State};
@@ -98,16 +98,4 @@ pub async fn send_code_handler(
     }
 
     Ok(Json(SendCodeResponse { expired_at }))
-}
-
-fn generate_random_code() -> String {
-    let charset = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let mut rng = rand::rng();
-    let code: String = (0..6)
-        .map(|_| {
-            let idx = rng.random_range(0..charset.len());
-            charset[idx] as char
-        })
-        .collect();
-    code
 }

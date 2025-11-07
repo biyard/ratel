@@ -143,6 +143,7 @@ pub enum EntityType {
     // DID
     DidDocument, // PK: DID#{did}, SK: DidDocument
     VerifiedAttributes,
+    AttributeCode,
 
     //Telegram Feature
     TelegramChannel(String), // Telegram Chat ID

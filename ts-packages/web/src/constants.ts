@@ -147,3 +147,4 @@ export const spaceKeys = {
 };
 
 export const QK_MEMBERSHIPS = 'memberships';
+export const QK_ATTRIBUTE_CODES = 'attribute-codes';
