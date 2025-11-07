@@ -60,6 +60,7 @@ pub enum EntityType {
     // SPACE_PK index is aligned by gsi2-index
     SpaceCommon,
     SpaceParticipant,
+    SpaceInvitation,
     SpaceEmailVerification(String), //email
 
     // Poll Feature entity types

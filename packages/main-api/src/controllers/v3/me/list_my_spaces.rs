@@ -1,4 +1,7 @@
-use crate::{features::spaces::SpaceParticipant, models::SpaceCommon};
+use crate::{
+    features::spaces::{SpaceParticipant, members::SpaceInvitationMember},
+    models::SpaceCommon,
+};
 
 use super::*;
 
@@ -7,12 +10,12 @@ pub async fn list_my_spaces_handler(
     NoApi(user): NoApi<User>,
     Query(Pagination { bookmark }): ListItemsQuery,
 ) -> Result<Json<ListItemsResponse<SpaceCommon>>> {
-    let mut opt = SpaceParticipant::opt().limit(10);
-
-    if let Some(bookmark) = bookmark {
-        opt = opt.bookmark(bookmark);
-    }
-    let (sps, bookmark) = SpaceParticipant::find_by_user(&dynamo.client, &user.pk, opt).await?;
+    let (sps, bookmark) = SpaceParticipant::find_by_user(
+        &dynamo.client,
+        &user.pk,
+        SpaceParticipant::opt_with_bookmark(bookmark).limit(10),
+    )
+    .await?;
 
     let keys = sps
         .into_iter()

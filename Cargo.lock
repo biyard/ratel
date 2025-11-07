@@ -5759,6 +5759,7 @@ dependencies = [
  "by-macros",
  "chrono",
  "ethers",
+ "futures",
  "glob",
  "hex",
  "hmac 0.12.1",
