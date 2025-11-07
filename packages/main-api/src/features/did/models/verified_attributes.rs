@@ -27,6 +27,13 @@ impl VerifiedAttributes {
         }
     }
 
+    pub fn keys(user_pk: &Partition) -> (CompositePartition, EntityType) {
+        (
+            CompositePartition(user_pk.clone(), Partition::Attributes),
+            EntityType::VerifiedAttributes,
+        )
+    }
+
     pub fn age(&self) -> Option<u32> {
         use chrono::{Datelike, Utc};
 

@@ -40,3 +40,4 @@ benchmark/**/*.csv
 /user.json
 user.json
 /ts-packages/web/admin.json
+.dir-locals.el
