@@ -27,7 +27,7 @@ export const i18nSpaceHome = {
     see_committee_list: 'See committee list',
     change_category: 'Change Category',
     delete: 'Delete',
-    started: 'Started',
+    started: 'Start',
     private: 'Private',
     public: 'Public',
     onboard: 'ONBOARD',
