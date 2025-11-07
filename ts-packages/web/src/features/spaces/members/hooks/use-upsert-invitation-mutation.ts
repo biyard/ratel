@@ -1,10 +1,11 @@
 import { spaceKeys } from '@/constants';
-import { upsertSpaceInvitation } from '@/lib/api/ratel/invitations.spaces.v3';
+import { call } from '@/lib/api/ratel/call';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 type Vars = {
   spacePk: string;
-  user_pks: string[];
+  new_user_pks: string[];
+  removed_user_pks: string[];
 };
 
 export function useUpsertInvitationMutation() {
@@ -13,8 +14,11 @@ export function useUpsertInvitationMutation() {
   return useMutation({
     mutationKey: ['upsert-invitation'],
     mutationFn: async (v: Vars) => {
-      const { spacePk, user_pks } = v;
-      await upsertSpaceInvitation(spacePk, user_pks);
+      const { spacePk, new_user_pks, removed_user_pks } = v;
+      await call('POST', `/v3/spaces/${encodeURIComponent(spacePk)}/members`, {
+        new_user_pks,
+        removed_user_pks,
+      });
       return v;
     },
     onSuccess: async (_, { spacePk }) => {

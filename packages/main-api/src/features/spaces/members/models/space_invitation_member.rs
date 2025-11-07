@@ -1,21 +1,46 @@
-use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMemberResponse};
+use futures::future::try_join_all;
+
+use super::*;
+use crate::features::spaces::members::{
+    InvitationStatus, SpaceEmailVerification, SpaceInvitationMemberResponse,
+};
+use crate::models::SpaceCommon;
 use crate::types::*;
-use crate::utils::aws::DynamoClient;
-use crate::{Error, User};
-use bdk::prelude::*;
+use crate::utils::aws::{DynamoClient, SesClient};
+use crate::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema, Default)]
 pub struct SpaceInvitationMember {
+    #[dynamo(
+        index = "gsi3",
+        name = "find_space_invitations_by_status",
+        prefix = "SIM",
+        pk
+    )]
     pub pk: Partition,
     #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
 
-    #[dynamo(prefix = "USER_PK", name = "find_by_user_pk", index = "gsi1", pk)]
+    #[dynamo(
+        prefix = "SPACE_INVITATION",
+        name = "find_by_user_pk",
+        index = "gsi1",
+        pk
+    )]
+    #[dynamo(
+        prefix = "SPACE_INVITATION",
+        name = "find_user_invitations_by_status",
+        index = "gsi2",
+        pk
+    )]
     pub user_pk: Partition,
     pub display_name: String,
     pub profile_url: String,
     pub username: String,
     pub email: String,
+    #[dynamo(index = "gsi2", sk)]
+    #[dynamo(index = "gsi3", sk)]
+    pub status: InvitationStatus,
 }
 
 impl SpaceInvitationMember {
@@ -39,13 +64,57 @@ impl SpaceInvitationMember {
             profile_url,
             username,
             email,
+            status: InvitationStatus::Pending,
         }
+    }
+
+    pub fn keys(space_pk: &Partition, user_pk: &Partition) -> (Partition, EntityType) {
+        (
+            space_pk.clone(),
+            EntityType::SpaceInvitationMember(user_pk.to_string()),
+        )
+    }
+
+    pub async fn send_email(
+        dynamo: &DynamoClient,
+        ses: &SesClient,
+        space: &SpaceCommon,
+        title: String,
+    ) -> Result<()> {
+        let (responses, _) = SpaceInvitationMember::find_space_invitations_by_status(
+            &dynamo.client,
+            space.pk.clone(),
+            SpaceInvitationMember::opt_all().sk(InvitationStatus::Pending.to_string()),
+        )
+        .await?;
+
+        let updates = responses.iter().map(|member| {
+            let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &member.user_pk);
+            SpaceInvitationMember::updater(pk, sk)
+                .with_status(InvitationStatus::Invited)
+                .execute(&dynamo.client)
+        });
+
+        let futs = responses.clone().into_iter().map(|member| {
+            SpaceEmailVerification::send_email(
+                &dynamo,
+                &ses,
+                member.email,
+                space.clone(),
+                title.clone(),
+            )
+        });
+
+        try_join_all(updates).await?;
+        try_join_all(futs).await?;
+
+        Ok(())
     }
 
     pub async fn list_invitation_members(
         dynamo: &DynamoClient,
         space_pk: &Partition,
-    ) -> Result<Vec<SpaceInvitationMemberResponse>, Error> {
+    ) -> Result<Vec<SpaceInvitationMemberResponse>> {
         let mut members: Vec<SpaceInvitationMemberResponse> = vec![];
         let mut bookmark = None::<String>;
 

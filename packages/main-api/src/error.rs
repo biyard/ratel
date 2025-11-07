@@ -132,6 +132,11 @@ pub enum Error {
     #[error("PK must be a Partition::Space")]
     InvalidSpacePartitionKey,
 
+    // members feature 3050 ~
+    #[rest_error(code = 3050)]
+    #[error("Member not found")]
+    NoInvitationFound,
+
     // /v3/spaces/deliberations endpoints 3100 ~
     #[rest_error(code = 3100)]
     #[error("Deliberation space not found")]
@@ -238,6 +243,8 @@ pub enum Error {
     Signature(String),
     #[error("invalide gender")]
     InvalidGender,
+    #[error("attribute code not found")]
+    AttributeCodeNotFound,
 
     // web 1,000,000 ~
     #[error("Web error: {0}")]

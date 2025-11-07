@@ -1663,6 +1663,16 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
                 #opt_ident::default()
             }
 
+            pub fn opt_with_bookmark(bookmark: Option<String>) -> #opt_ident {
+                let mut opt = #opt_ident::default();
+
+                if let Some(bookmark) = bookmark {
+                    opt.bookmark = Some(bookmark);
+                }
+
+                opt
+            }
+
             pub fn opt_one() -> #opt_ident {
                 #opt_ident {
                     limit: 1,

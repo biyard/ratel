@@ -13,7 +13,7 @@ export function getOption(spacePk: string) {
     queryFn: async () => {
       const discussion = await call(
         'GET',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/invitations`,
+        `/v3/spaces/${encodeURIComponent(spacePk)}/members`,
       );
       return new ListInvitationMemberResponse(discussion);
     },
