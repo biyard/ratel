@@ -9,8 +9,8 @@ use crate::*;
     serde_repr::Serialize_repr,
     serde_repr::Deserialize_repr,
     Default,
-    DynamoEnum,
     JsonSchema_repr,
+    DynamoEnum,
     OperationIo,
 )]
 #[repr(u8)]
