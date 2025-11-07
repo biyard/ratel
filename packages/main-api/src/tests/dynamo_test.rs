@@ -67,34 +67,6 @@ pub async fn create_test_user(cli: &aws_sdk_dynamodb::Client) -> User {
     return user;
 }
 
-pub fn mock_principal_token() -> String {
-    use ring::rand::SystemRandom;
-    use ring::signature::{ED25519, Ed25519KeyPair, KeyPair, Signature, UnparsedPublicKey};
-
-    let rng = SystemRandom::new();
-    let pkcs8 = Ed25519KeyPair::generate_pkcs8(&rng).expect("Failed to generate key pair");
-    let keypair = Ed25519KeyPair::from_pkcs8(pkcs8.as_ref()).expect("Failed to parse pkcs8");
-    let public_key = keypair.public_key().as_ref();
-
-    let timestamp = chrono::Utc::now().timestamp();
-
-    let message = format!("{}-{}", "dev.ratel.foundation", timestamp);
-    let message_bytes = message.as_bytes();
-
-    let signature: Signature = keypair.sign(message_bytes);
-
-    UnparsedPublicKey::new(&ED25519, public_key)
-        .verify(message_bytes, signature.as_ref())
-        .expect("Failed to verify signature");
-
-    let public_key_b64 = general_purpose::STANDARD.encode(public_key);
-    let signature_b64 = general_purpose::STANDARD.encode(signature.as_ref());
-
-    let token = format!("{}:eddsa:{}:{}", timestamp, public_key_b64, signature_b64);
-
-    token
-}
-
 pub fn create_user_name() -> String {
     let uuid = uuid::Uuid::new_v4();
     format!("user{}", uuid)
