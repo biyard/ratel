@@ -36,6 +36,7 @@ import DiscussionPage from './app/spaces/[id]/discussions/[discussion-id]/discus
 // Admin
 import AdminPage from './app/admin/page';
 import { MembershipsPage } from './app/admin/memberships/memberships-page';
+import AttributeCodesPage from './app/admin/attribute-codes/page';
 import TelegramPage from './app/telegram/page';
 import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
 import SpacePanelPage from './app/spaces/[id]/panels/space-panel-page';
@@ -377,6 +378,11 @@ export const routes = createBrowserRouter([
         id: 'admin-memberships-page',
         path: 'admin/memberships',
         Component: MembershipsPage,
+      },
+      {
+        id: 'admin-attribute-codes-page',
+        path: 'admin/attribute-codes',
+        Component: AttributeCodesPage,
       }, // End of Admin Routes
 
       {

@@ -2,7 +2,6 @@ import { Clear } from '@/components/icons';
 import SearchInput from '@/components/input/search-input';
 import clsx from 'clsx';
 import { useInviteMemberModalController } from './use-invite-member-modal-controller';
-import { InvitationMemberResponse } from '../../../types/invitation-member-response';
 import { TFunction } from 'i18next';
 
 export type InviteMemberPopupProps = {
@@ -12,17 +11,7 @@ export type InviteMemberPopupProps = {
 export default function InviteMemberPopup({ spacePk }: InviteMemberPopupProps) {
   const ctrl = useInviteMemberModalController(spacePk);
 
-  const setValue = async (
-    value: string,
-    isEnter: boolean,
-  ): Promise<InvitationMemberResponse[] | void> => {
-    const currentSelected = ctrl?.selectedUsers?.get?.() ?? [];
-    return await ctrl.handleSearchValue(currentSelected, value, isEnter);
-  };
-
-  const selectedUsers = ctrl?.selectedUsers?.get?.() ?? [];
   const errorList: boolean[] = ctrl?.isError?.get?.() ?? [];
-  const searchValue = ctrl?.searchValue?.get?.() ?? '';
 
   return (
     <div className="flex flex-col min-h-[300px] w-[900px] max-w-[900px] max-tablet:!w-full max-tablet:!max-w-full gap-5">
@@ -33,20 +22,16 @@ export default function InviteMemberPopup({ spacePk }: InviteMemberPopupProps) {
         <div className="flex flex-col w-full max-mobile:max-h-[350px] max-mobile:overflow-y-auto">
           <div className="mt-[10px]">
             <SearchInput
-              value={searchValue}
+              value={ctrl.searchValue.get()}
               placeholder={ctrl.t('email_hint')}
-              setValue={async (value) => {
-                await setValue(value, false);
-              }}
-              onenter={async () => {
-                await setValue(ctrl?.searchValue?.get?.() ?? '', true);
-              }}
+              setValue={(value) => ctrl.searchValue.set(value)}
+              onenter={ctrl.handleSearchValue}
             />
           </div>
 
           <div className="flex flex-col w-full gap-[10px] mt-[10px]">
             <div className="flex flex-wrap gap-1">
-              {selectedUsers.map((user, index) => {
+              {ctrl.members.map((user, index) => {
                 const isErr = Boolean(errorList[index]);
                 return (
                   <SelectedUserInfo
@@ -65,9 +50,7 @@ export default function InviteMemberPopup({ spacePk }: InviteMemberPopupProps) {
       <InviteMemberButton
         t={ctrl.t}
         isError={(ctrl?.errorCount?.get?.() ?? 0) !== 0}
-        onclick={async () => {
-          await ctrl.handleSend(selectedUsers);
-        }}
+        onclick={ctrl.handleSend}
       />
     </div>
   );
@@ -100,7 +83,7 @@ function InviteMemberButton({
       </div>
 
       {isError && (
-        <div className="font-semibold text-base text-red-400">
+        <div className="text-base font-semibold text-red-400">
           {t('invalid_user_error')}
         </div>
       )}

@@ -44,15 +44,11 @@ export class SpaceMembersEditorController {
   };
 
   handleDeleteMember = async (index: number) => {
-    const userPks: string[] = this.invitationMembers
-      .filter((_, i) => i !== index)
-      .map((u) => u.user_pk)
-      .filter((v): v is string => typeof v === 'string' && v.length > 0);
-
     try {
       await this.upsertInvitation.mutateAsync({
         spacePk: this.spacePk,
-        user_pks: userPks,
+        new_user_pks: [],
+        removed_user_pks: [this.invitationMembers[index].user_pk],
       });
 
       showSuccessToast(this.t('success_invitation_users'));

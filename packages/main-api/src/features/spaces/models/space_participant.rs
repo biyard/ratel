@@ -1,3 +1,5 @@
+use super::*;
+use crate::features::spaces::ParticipantStatus;
 use crate::features::spaces::panels::{
     SpacePanel, SpacePanelParticipant, SpacePanelQueryOption, SpacePanelResponse,
 };
@@ -37,6 +39,23 @@ impl SpaceParticipant {
         Self {
             pk: CompositePartition(space_pk.clone(), user_pk.clone()),
             sk: EntityType::SpaceParticipant,
+            created_at,
+            display_name,
+            username,
+            profile_url: "https://metadata.ratel.foundation/ratel/default-profile.png".to_string(),
+            user_type: UserType::AnonymousSpaceUser,
+            space_pk,
+            user_pk,
+        }
+    }
+
+    pub fn invite(space_pk: Partition, user_pk: Partition, display_name: String) -> Self {
+        let created_at = time::get_now_timestamp_millis();
+        let username = display_name.replace(' ', "-").to_lowercase();
+
+        Self {
+            pk: CompositePartition(space_pk.clone(), user_pk.clone()),
+            sk: EntityType::SpaceInvitation,
             created_at,
             display_name,
             username,

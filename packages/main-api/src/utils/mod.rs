@@ -32,4 +32,6 @@ pub mod dynamo_session_store;
 pub mod password;
 
 pub mod firebase;
+mod rand_utils;
 pub mod security;
+pub use rand_utils::*;

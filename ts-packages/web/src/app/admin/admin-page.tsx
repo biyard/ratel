@@ -22,6 +22,16 @@ export function AdminPage() {
           </p>
         </NavLink>
 
+        <NavLink
+          to={route.adminAttributeCodes()}
+          className="block p-6 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700"
+        >
+          <h2 className="text-xl font-semibold mb-2">{i18n.attributeCodes}</h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            {i18n.attributeCodesDesc}
+          </p>
+        </NavLink>
+
         {/* Add more admin sections here as needed */}
       </div>
     </div>

@@ -5,13 +5,24 @@ import useInfiniteMySpaces from './_hooks/use-my-spaces';
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
 import Card from '@/components/card';
-import { SpaceCommon } from '@/features/spaces/types/space-common';
+import { MySpace } from '@/features/spaces/types/space-common';
 
-function SpaceCard({ space }: { space: SpaceCommon }) {
+function SpaceCard({ space }: { space: MySpace }) {
   const navigate = useNavigate();
 
   const handleClick = () => {
     navigate(route.space(space.pk));
+  };
+
+  const getInvitationStatusStyle = (status: 'pending' | 'participating') => {
+    if (status === 'pending') {
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+    }
+    return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+  };
+
+  const getInvitationStatusLabel = (status: 'pending' | 'participating') => {
+    return status === 'pending' ? 'Pending' : 'Participating';
   };
 
   return (
@@ -39,6 +50,11 @@ function SpaceCard({ space }: { space: SpaceCommon }) {
         </div>
 
         <div className="flex items-center gap-2 text-sm text-text-secondary">
+          <span
+            className={`px-2 py-1 rounded font-medium ${getInvitationStatusStyle(space.invitation_status)}`}
+          >
+            {getInvitationStatusLabel(space.invitation_status)}
+          </span>
           <span className="px-2 py-1 bg-background-secondary rounded">
             {space.publish_state}
           </span>
