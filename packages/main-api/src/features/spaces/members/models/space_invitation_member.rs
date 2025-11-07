@@ -21,9 +21,14 @@ pub struct SpaceInvitationMember {
     #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
 
-    #[dynamo(prefix = "USER_PK", name = "find_by_user_pk", index = "gsi1", pk)]
     #[dynamo(
-        prefix = "USER_PK",
+        prefix = "SPACE_INVITATION",
+        name = "find_by_user_pk",
+        index = "gsi1",
+        pk
+    )]
+    #[dynamo(
+        prefix = "SPACE_INVITATION",
         name = "find_user_invitations_by_status",
         index = "gsi2",
         pk

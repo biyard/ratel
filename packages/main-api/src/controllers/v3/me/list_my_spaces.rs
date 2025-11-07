@@ -26,9 +26,11 @@ pub async fn list_my_spaces_handler(
     let mut limit = 10;
 
     if should_list_invited_spaces(&bookmark) {
+        let status = InvitationStatus::Invited.to_string();
+        tracing::info!("Listing invited spaces with status: {:?}", status);
         let opt = SpaceInvitationMember::opt_with_bookmark(bookmark)
             .limit(limit)
-            .sk(InvitationStatus::Invited.to_string());
+            .sk(status);
 
         let (invited_spaces, bm) = list_invited_spaces(&dynamo.client, &user.pk, opt).await?;
         items.extend(
@@ -36,6 +38,7 @@ pub async fn list_my_spaces_handler(
                 .into_iter()
                 .map(|space| MySpace::Pending { spaces: space }),
         );
+        tracing::info!("Listed invited spaces, total items: {}", items.len());
 
         if let Some(b) = &bm {
             bookmark = Some(b.clone());
