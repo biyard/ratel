@@ -71,6 +71,8 @@ export default function SurveyViewer({
 
   const canNext = () => {
     if (isAdmin) return true;
+    // Allow navigation in view-only mode (when disabled is false but can't submit/update)
+    if (disabled === false && !canSubmit && !canUpdate) return true;
     const ans = current.answer?.answer;
     if (current.question.is_required && !isValidAnswer(ans)) return false;
     return true;

@@ -47,6 +47,10 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   const canUpdate =
     ctrl.user && ctrl.poll.myResponse.length > 0 && ctrl.poll.response_editable;
 
+  // Users can view their submitted responses even if they can't edit them
+  const hasSubmittedResponse = ctrl.user && ctrl.poll.myResponse.length > 0;
+  const isViewOnly = hasSubmittedResponse && !canUpdate;
+
   return (
     <>
       <Col>
@@ -68,7 +72,7 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
               onSubmit={ctrl.handleSubmit}
               onLogin={ctrl.handleLogin}
               canSubmit={canSubmit}
-              disabled={!canSubmit && !canUpdate}
+              disabled={!canSubmit && !canUpdate && !isViewOnly}
               canUpdate={canUpdate}
               isLogin={!!ctrl.user}
             />
