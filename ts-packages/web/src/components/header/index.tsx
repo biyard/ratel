@@ -16,7 +16,7 @@ import { Membership, Us } from '../icons';
 import { Kr } from '@/assets/icons/flags';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { config, Env } from '@/config';
-import { Moon, Sun, SunMoon } from 'lucide-react';
+import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
 
 export interface HeaderProps {
@@ -37,7 +37,7 @@ export default function Header(props: HeaderProps) {
     i18n.changeLanguage(newLocale);
   };
 
-  const handleChangeTheme = (newTheme: 'system' | 'light' | 'dark') => {
+  const handleChangeTheme = (newTheme: 'light' | 'dark') => {
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.cookie = `theme=${newTheme}; path=/; max-age=31536000; samesite=lax`;
@@ -127,9 +127,8 @@ export default function Header(props: HeaderProps) {
     },
   ];
 
-  const seq: Array<'system' | 'light' | 'dark'> = ['system', 'light', 'dark'];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const nextTheme = seq[(seq.indexOf(theme as any) + 1) % seq.length];
+  const seq: Array<'light' | 'dark'> = ['light', 'dark'];
+  const nextTheme = seq[(seq.indexOf(theme) + 1) % seq.length];
 
   return (
     <header className="border-b border-divider px-2.5 py-2.5 flex items-center justify-center !bg-bg h-[var(--header-height)] z-999">
@@ -196,20 +195,14 @@ export default function Header(props: HeaderProps) {
             onClick={() => handleChangeTheme(nextTheme)}
           >
             <div className="flex flex-col justify-center items-center h-6 w-fit">
-              {theme === 'system' ? (
-                <SunMoon className="[&>path]:stroke-menu-text [&>rect]:stroke-menu-text [&>line]:stroke-menu-text" />
-              ) : theme === 'light' ? (
+              {theme === 'light' ? (
                 <Sun className="[&>path]:stroke-menu-text [&>circle]:stroke-menu-text" />
               ) : (
                 <Moon className="[&>path]:stroke-menu-text" />
               )}
             </div>
             <span className="font-medium whitespace-nowrap transition-all text-menu-text text-[15px] group-hover:text-menu-text/80">
-              {theme == 'system'
-                ? 'System'
-                : theme == 'light'
-                  ? 'Light'
-                  : 'Dark'}
+              {theme === 'light' ? 'Light' : 'Dark'}
             </span>
           </button>
 

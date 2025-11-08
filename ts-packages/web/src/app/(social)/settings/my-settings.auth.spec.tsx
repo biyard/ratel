@@ -62,11 +62,9 @@ test.describe.serial('[User Settings - My Settings] Authenticated User', () => {
 
     const darkOption = page.locator('[data-pw="theme-option-dark"]');
     const lightOption = page.locator('[data-pw="theme-option-light"]');
-    const systemOption = page.locator('[data-pw="theme-option-system"]');
 
     await expect(darkOption).toBeVisible({ timeout: 5000 });
     await expect(lightOption).toBeVisible({ timeout: 5000 });
-    await expect(systemOption).toBeVisible({ timeout: 5000 });
 
     const cancelButton = page.locator('[data-pw="theme-cancel-button"]');
     await cancelButton.click();
