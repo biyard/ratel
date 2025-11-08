@@ -11,6 +11,7 @@ use schemars::JsonSchema_repr;
     serde_repr::Deserialize_repr,
     JsonSchema_repr,
     Default,
+    EnumProp,
 )]
 #[repr(u8)]
 pub enum UserType {

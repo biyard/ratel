@@ -26,11 +26,33 @@ pub fn enum_prop_impl(input: TokenStream) -> TokenStream {
             &field.ident.to_string().to_case(Case::Kebab),
             field.ident.span(),
         );
+        let camel_case = syn::LitStr::new(
+            &field.ident.to_string().to_case(Case::Camel),
+            field.ident.span(),
+        );
+        let upcamel_case = syn::LitStr::new(
+            &field.ident.to_string().to_case(Case::UpperCamel),
+            field.ident.span(),
+        );
+
+        let upsnake_case = syn::LitStr::new(
+            &field.ident.to_string().to_case(Case::UpperSnake),
+            field.ident.span(),
+        );
+        let snake_case = syn::LitStr::new(
+            &field.ident.to_string().to_case(Case::Snake),
+            field.ident.span(),
+        );
+
         matches_for_display.push(quote! {
-           #name::#field_name => write!(f, #kebab_case),
+            #name::#field_name => write!(f, #kebab_case),
         });
         matches_for_from_str.push(quote! {
             #kebab_case => Ok(#name::#field_name),
+            #camel_case => Ok(#name::#field_name),
+            #upcamel_case => Ok(#name::#field_name),
+            #snake_case => Ok(#name::#field_name),
+            #upsnake_case => Ok(#name::#field_name),
         });
         matches_for_to_string.push(quote! {
             #name::#field_name => #kebab_case.to_string(),
