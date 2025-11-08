@@ -23,14 +23,10 @@ export default function ExperimentalSettingsPage() {
 
   const actionText = locale === 'ko' ? 'Korean' : 'English';
   const currentThemeLabel =
-    data?.theme === ThemeType.Light
-      ? 'Light'
-      : data?.theme === ThemeType.Dark
-        ? 'Dark'
-        : 'System';
+    data?.theme === ThemeType.Light ? 'Light' : 'Dark';
 
-  const changeTheme = async (theme: 'light' | 'dark' | 'system') => {
-    const value = theme === 'light' ? 1 : theme === 'dark' ? 2 : 3;
+  const changeTheme = async (theme: 'light' | 'dark') => {
+    const value = theme === 'light' ? 1 : 2;
     await post(ratelApi.themes.changeTheme(), ChangeThemeRequest(value));
   };
 
@@ -51,12 +47,8 @@ export default function ExperimentalSettingsPage() {
   };
 
   const handleChangeTheme = () => {
-    const initialTheme: 'light' | 'dark' | 'system' =
-      data?.theme === ThemeType.Light
-        ? 'light'
-        : data?.theme === ThemeType.Dark
-          ? 'dark'
-          : 'system';
+    const initialTheme: 'light' | 'dark' =
+      data?.theme === ThemeType.Light ? 'light' : 'dark';
     const prevTheme = initialTheme;
 
     popup
