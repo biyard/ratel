@@ -69,8 +69,8 @@ pub async fn api_main() -> Result<Router, crate::Error> {
 
     let app = app
         // .merge(mcp_router)
-        .merge(web)
         .merge(api_router)
+        .merge(web)
         // .layer(middleware::from_fn(authorization_middleware))
         .layer(session_layer);
 

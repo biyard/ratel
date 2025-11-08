@@ -26,8 +26,9 @@ pub fn enum_prop_impl(input: TokenStream) -> TokenStream {
             &field.ident.to_string().to_case(Case::Kebab),
             field.ident.span(),
         );
+
         matches_for_display.push(quote! {
-           #name::#field_name => write!(f, #kebab_case),
+            #name::#field_name => write!(f, #kebab_case),
         });
         matches_for_from_str.push(quote! {
             #kebab_case => Ok(#name::#field_name),

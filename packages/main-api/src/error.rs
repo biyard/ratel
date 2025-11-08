@@ -93,6 +93,12 @@ pub enum Error {
     NoPermission,
     #[error("Wallet error: {0}")]
     WalletError(String),
+    #[error("User is not an admin")]
+    #[rest_error(status = 403, code = 404)]
+    UserNotAdmin,
+    #[error("User is already an admin")]
+    #[rest_error(status = 400, code = 405)]
+    UserAlreadyAdmin,
 
     // /v3/auth endpoints 1000 ~
     #[error("Exceeded maximum attempt for email verification")]
