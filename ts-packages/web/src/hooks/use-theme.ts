@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export type Theme = 'light' | 'dark' | 'system';
+export type Theme = 'light' | 'dark';
 
 const THEME_STORAGE_KEY = 'user-theme';
 
@@ -13,17 +13,17 @@ function getSystemTheme(): 'light' | 'dark' {
 
 function applyTheme(theme: Theme) {
   if (typeof window === 'undefined') return;
-
-  const effectiveTheme = theme === 'system' ? getSystemTheme() : theme;
-  document.documentElement.setAttribute('data-theme', effectiveTheme);
+  document.documentElement.setAttribute('data-theme', theme);
 }
 
 export function useTheme() {
   const [theme, setThemeState] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
-      return (localStorage.getItem(THEME_STORAGE_KEY) as Theme) || 'system';
+      const storedTheme = localStorage.getItem(THEME_STORAGE_KEY) as Theme;
+      // If no stored theme, use system default
+      return storedTheme || getSystemTheme();
     }
-    return 'system';
+    return 'light';
   });
 
   const setTheme = (newTheme: Theme) => {
@@ -43,16 +43,6 @@ export function useTheme() {
     // Apply theme on mount
     applyTheme(theme);
 
-    // Listen for system theme changes when in system mode
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleSystemThemeChange = () => {
-      if (theme === 'system') {
-        applyTheme('system');
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleSystemThemeChange);
-
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === THEME_STORAGE_KEY && e.newValue) {
         const newTheme = e.newValue as Theme;
@@ -71,7 +61,6 @@ export function useTheme() {
     window.addEventListener('theme-change', handleThemeChange);
 
     return () => {
-      mediaQuery.removeEventListener('change', handleSystemThemeChange);
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('theme-change', handleThemeChange);
     };

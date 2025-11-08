@@ -110,6 +110,7 @@ export const route = {
   admin: () => '/admin',
   adminMemberships: () => '/admin/memberships',
   adminAttributeCodes: () => '/admin/attribute-codes',
+  adminUsers: () => '/admin/users',
   newPost: (postPk?: string, teamPk?: string) => {
     let to = '/posts/new';
     const params: string[] = [];

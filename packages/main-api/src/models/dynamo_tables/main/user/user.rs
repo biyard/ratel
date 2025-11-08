@@ -24,6 +24,7 @@ pub struct User {
     #[dynamo(prefix = "TS", index = "gsi2", sk)]
     #[dynamo(prefix = "TS", index = "gsi3", sk)]
     pub created_at: i64,
+    #[dynamo(prefix = "USER_TYPE", index = "gsi4", sk)]
     pub updated_at: i64,
 
     pub display_name: String,
@@ -43,6 +44,7 @@ pub struct User {
     pub term_agreed: bool,
     pub informed_agreed: bool,
 
+    #[dynamo(prefix = "USER_TYPE", name = "find_by_user_type", index = "gsi4", pk)]
     pub user_type: UserType,
 
     #[dynamo(index = "gsi6", sk)]

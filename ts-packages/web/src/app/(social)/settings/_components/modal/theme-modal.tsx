@@ -5,9 +5,9 @@ import CheckCircle from '@/assets/icons/check-circle.svg?react';
 
 export interface ThemeModalProps {
   onCancel: () => void;
-  onSave: (theme: 'dark' | 'light' | 'system') => void;
-  onPreview: (theme: 'dark' | 'light' | 'system') => void;
-  initialTheme?: 'dark' | 'light' | 'system';
+  onSave: (theme: 'dark' | 'light') => void;
+  onPreview: (theme: 'dark' | 'light') => void;
+  initialTheme?: 'dark' | 'light';
 }
 
 export default function ThemeModal({
@@ -16,14 +16,13 @@ export default function ThemeModal({
   onPreview,
   initialTheme = 'dark',
 }: ThemeModalProps) {
-  const [selectedTheme, setSelectedTheme] = useState<
-    'dark' | 'light' | 'system'
-  >(initialTheme);
+  const [selectedTheme, setSelectedTheme] = useState<'dark' | 'light'>(
+    initialTheme,
+  );
 
-  const options: { label: string; value: 'dark' | 'light' | 'system' }[] = [
+  const options: { label: string; value: 'dark' | 'light' }[] = [
     { label: 'Dark Theme', value: 'dark' },
     { label: 'Light Theme', value: 'light' },
-    { label: 'System Default', value: 'system' },
   ];
 
   return (
