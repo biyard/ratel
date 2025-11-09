@@ -49,7 +49,9 @@ export function MembershipForm({
         credits: membership.credits,
         duration_days: isInfinite ? 30 : membership.duration_days,
         display_order: membership.display_order,
-        max_credits_per_space: isUnlimited ? 1000 : membership.max_credits_per_space,
+        max_credits_per_space: isUnlimited
+          ? 1000
+          : membership.max_credits_per_space,
       });
       setIsActive(membership.is_active);
       setIsInfiniteDuration(isInfinite);
@@ -65,7 +67,9 @@ export function MembershipForm({
       const submitData = {
         ...formData,
         duration_days: isInfiniteDuration ? -1 : formData.duration_days,
-        max_credits_per_space: isUnlimitedCreditsPerSpace ? -1 : formData.max_credits_per_space,
+        max_credits_per_space: isUnlimitedCreditsPerSpace
+          ? -1
+          : formData.max_credits_per_space,
       };
 
       if (isEditing) {
@@ -172,7 +176,10 @@ export function MembershipForm({
                 onChange={(e) => setIsInfiniteDuration(e.target.checked)}
                 className="mr-2"
               />
-              <label htmlFor="infinite_duration" className="text-sm font-medium">
+              <label
+                htmlFor="infinite_duration"
+                className="text-sm font-medium"
+              >
                 {i18n.infiniteDuration}
               </label>
             </div>
@@ -205,10 +212,15 @@ export function MembershipForm({
                 type="checkbox"
                 id="unlimited_credits_per_space"
                 checked={isUnlimitedCreditsPerSpace}
-                onChange={(e) => setIsUnlimitedCreditsPerSpace(e.target.checked)}
+                onChange={(e) =>
+                  setIsUnlimitedCreditsPerSpace(e.target.checked)
+                }
                 className="mr-2"
               />
-              <label htmlFor="unlimited_credits_per_space" className="text-sm font-medium">
+              <label
+                htmlFor="unlimited_credits_per_space"
+                className="text-sm font-medium"
+              >
                 {i18n.unlimitedCreditsPerSpace}
               </label>
             </div>

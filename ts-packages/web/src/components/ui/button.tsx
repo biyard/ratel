@@ -18,7 +18,7 @@ const buttonVariants = cva(
         primary:
           'bg-primary text-black rounded-xl hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)]',
         outline:
-          'bg-transparent text-white rounded-lg border border-wg-70 hover:border-white hover:bg-background',
+          'bg-transparent text-btn-outline-text rounded-lg border border-btn-outline hover:border-btn-outline-hover hover:bg-background',
         text: 'px-10 text-base font-bold bg-transparent transition-colors hover:text-white min-w-[50px] py-[14.5px] text-neutral-400',
       },
       size: {
