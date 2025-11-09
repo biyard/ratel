@@ -51,8 +51,6 @@ pub async fn list_posts_handler(
         _ => vec![],
     };
 
-    info!("likes: {:?}", likes);
-
     tracing::debug!("list_posts_handler: returning {} items", posts.len());
     let items: Vec<PostResponse> = posts
         .into_iter()

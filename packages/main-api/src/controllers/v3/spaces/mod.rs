@@ -44,7 +44,7 @@ pub fn route() -> Result<Router<AppState>> {
         .nest(
             "/:space_pk",
             Router::new()
-                .nest("/invitations", members::route())
+                .nest("/members", members::route())
                 .nest("/files", files::route())
                 .nest("/panels", panels::route())
                 .nest("/recommendations", recommendations::route())
