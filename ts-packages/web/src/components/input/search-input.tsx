@@ -10,7 +10,7 @@ export default function SearchInput({
   onenter: () => void;
 }) {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' || e.key === ',' || e.key === ' ') {
       onenter();
     }
   };
@@ -22,7 +22,7 @@ export default function SearchInput({
       value={value}
       onChange={(e) => setValue(e.target.value)}
       onKeyDown={handleKeyDown}
-      className=" text-text-primary placeholder:text-neutral-500 border border-input-box-border bg-input-box-bg text-base outline-none w-full focus:border focus:border-primary p-[10px] rounded-sm"
+      className="w-full text-base rounded-sm border outline-none focus:border text-text-primary placeholder:text-neutral-500 border-input-box-border bg-input-box-bg p-[10px] focus:border-primary"
     />
   );
 }

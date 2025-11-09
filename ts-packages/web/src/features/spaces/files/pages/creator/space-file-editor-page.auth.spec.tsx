@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { CONFIGS } from '@tests/config';
-import { click, fill } from '@tests/utils';
+import { click } from '@tests/utils';
 // import { fileURLToPath } from 'url';
 
 test.describe.serial('[SpaceFileEditorPage] Authenticated Users ', () => {

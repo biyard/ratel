@@ -15,8 +15,6 @@ export function SpacePollsViewerPage({ spacePk }: SpacePathProps) {
           t={ctrl.t}
           polls={ctrl.polls.get()}
           bookmark={ctrl.bookmark.get()}
-          canEdit={false}
-          createPoll={() => {}}
           enterPoll={ctrl.enterPoll}
           loadMore={ctrl.loadMore}
         />

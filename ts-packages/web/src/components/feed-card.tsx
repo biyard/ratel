@@ -27,7 +27,6 @@ import PostResponse from '@/features/posts/dto/list-post-response';
 import { useLikePostMutation } from '@/features/posts/hooks/use-like-post-mutation';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { PostEditor } from '@/features/posts/components/post-editor';
-import { TiptapEditor } from './text-editor';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { LoginModal } from './popup/login-popup';
 
@@ -209,14 +208,14 @@ export function FeedContents({
   return (
     <div className="break-all text-desc-text">
       <PostEditor
-      editable={false}
-      showToolbar={false}
-      content={sanitized}
-      className="border-none"
-      minHeight="50px"
-      maxHeight="200px"
-      url={url}
-    />
+        editable={false}
+        showToolbar={false}
+        content={sanitized}
+        className="border-none"
+        minHeight="50px"
+        maxHeight="200px"
+        url={url}
+      />
       {/* <p
         className="px-5 font-normal align-middle feed-content text-[15px]/[24px] tracking-[0.5px] text-c-wg-30"
         dangerouslySetInnerHTML={{ __html: sanitized }}

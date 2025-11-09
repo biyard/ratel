@@ -9,7 +9,6 @@ import {
 } from '@/features/drafts/components/list-drafts';
 import { useCreatePostMutation } from '@/features/posts/hooks/use-create-post-mutation';
 import { useNavigate } from 'react-router';
-import { route } from '@/route';
 
 export default function MyPostsPage() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
