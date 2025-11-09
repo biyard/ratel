@@ -14,7 +14,7 @@ use bdk::prelude::*;
 )]
 #[repr(u8)]
 pub enum PostStatus {
-    #[default]
     Draft = 1,
+    #[default]
     Published = 2,
 }

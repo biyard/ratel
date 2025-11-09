@@ -34,11 +34,10 @@ use list_members::list_members_handler;
 use list_team_posts::list_team_posts_handler;
 use update_team::update_team_handler;
 
-use crate::*;
+use crate::{models::Team, *};
 
 pub fn route() -> Result<Router<AppState>> {
     Ok(Router::new()
-        .route("/", post(create_team_handler).get(find_team_handler))
         .nest(
             "/:team_pk",
             Router::new()
@@ -62,5 +61,40 @@ pub fn route() -> Result<Router<AppState>> {
                             ),
                     ),
                 ),
+        )
+        .layer(middleware::from_fn_with_state(
+            AppState::default(),
+            inject_team,
         ))
+        .route("/", post(create_team_handler).get(find_team_handler)))
+}
+
+pub async fn inject_team(
+    State(state): State<AppState>,
+    req: Request,
+    next: Next,
+) -> std::result::Result<Response<Body>, Error> {
+    tracing::debug!("Project authorization middleware");
+
+    // Extract request parts to access headers and URI
+    let (mut parts, body) = req.into_parts();
+
+    // Extract project_id from the URI path
+    let path = parts.uri.path();
+    let path_segments: Vec<&str> = path.split('/').collect();
+    let team_pk = path_segments[1].to_string();
+
+    tracing::debug!("Verifying project access for team_pk: {}", team_pk);
+
+    let team_pk: Partition = team_pk.parse()?;
+
+    let team = Team::get(&state.dynamo.client, team_pk, Some(EntityType::Team))
+        .await?
+        .ok_or(Error::TeamNotFound)?;
+
+    parts.extensions.insert(team);
+
+    // Reconstruct request and continue to the handler
+    let req = Request::from_parts(parts, body);
+    Ok(next.run(req).await)
 }

@@ -9,6 +9,7 @@ use crate::models::Post;
 use crate::models::user::User;
 use crate::types::{
     BoosterType, EntityType, SpacePublishState, SpaceStatus, SpaceVisibility, TeamGroupPermission,
+    TeamGroupPermissions,
 };
 use crate::types::{File, Partition};
 use crate::utils::aws::DynamoClient;
@@ -52,20 +53,22 @@ pub enum UpdateSpaceRequest {
 pub async fn update_space_handler(
     State(AppState { dynamo, ses, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
+    NoApi(permissions): NoApi<TeamGroupPermissions>,
     Extension(telegram_bot): Extension<Option<ArcTelegramBot>>,
+    Extension(space): Extension<SpaceCommon>,
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
     Json(req): Json<UpdateSpaceRequest>,
 ) -> Result<Json<SpaceCommonResponse>, Error> {
-    let (mut space, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::PostEdit,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.is_admin() {
+        tracing::error!(
+            "User {} does not have admin permissions {:?}",
+            user.pk,
+            permissions
+        );
         return Err(Error::NoPermission);
     }
+
+    let mut space = space.clone();
 
     let now = chrono::Utc::now().timestamp_millis();
     let mut su = SpaceCommon::updater(&space.pk, &space.sk).with_updated_at(now);
