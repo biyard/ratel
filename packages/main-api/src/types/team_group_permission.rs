@@ -1,4 +1,7 @@
-use bdk::prelude::*;
+use crate::{
+    models::{SpaceCommon, Team},
+    *,
+};
 
 #[derive(
     Debug,
@@ -40,7 +43,7 @@ pub enum TeamGroupPermission {
     ManageNews = 63,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TeamGroupPermissions(pub Vec<TeamGroupPermission>);
 
 impl TeamGroupPermissions {
@@ -146,5 +149,58 @@ impl Into<i64> for &TeamGroupPermissions {
             result |= 1 << *permission as i32;
         }
         result
+    }
+}
+
+impl FromRequestParts<AppState> for TeamGroupPermissions {
+    type Rejection = crate::Error;
+
+    async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self> {
+        tracing::debug!("extracting user from request parts");
+        if let Some(permissions) = parts.extensions.get::<Self>() {
+            return Ok(permissions.clone());
+        }
+
+        let user = parts.extensions.get::<User>();
+        tracing::warn!("User in TeamGroupPermissions: {:?}", user);
+
+        if user.is_none() {
+            return Ok(Self::empty());
+        }
+
+        let user = user.unwrap();
+
+        let permissions = if let Some(team) = parts.extensions.get::<Team>() {
+            tracing::debug!("Team in TeamGroupPermissions: {:?}", team);
+            let permissions =
+                Team::get_permissions_by_team_pk(&state.dynamo.client, &team.pk, &user.pk)
+                    .await
+                    .unwrap_or_else(|_| Self::empty());
+
+            permissions
+        } else if let Some(space) = parts.extensions.get::<SpaceCommon>() {
+            tracing::debug!("Space in TeamGroupPermissions: {:?}", space);
+            if matches!(space.user_pk, Partition::User(_)) && space.user_pk == user.pk {
+                TeamGroupPermissions::all()
+            } else if matches!(space.user_pk, Partition::Team(_)) {
+                let permissions = Team::get_permissions_by_team_pk(
+                    &state.dynamo.client,
+                    &space.user_pk,
+                    &user.pk,
+                )
+                .await
+                .unwrap_or_else(|_| Self::empty());
+
+                permissions
+            } else {
+                TeamGroupPermissions::empty()
+            }
+        } else {
+            TeamGroupPermissions::empty()
+        };
+
+        parts.extensions.insert(permissions.clone());
+
+        Ok(permissions)
     }
 }

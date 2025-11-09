@@ -1,7 +1,7 @@
 use crate::models::feed::{Post, PostLike, PostQueryOption};
 use crate::models::user::User;
 use crate::types::list_items_response::ListItemsResponse;
-use crate::types::{EntityType, Partition, PostStatus, Visibility};
+use crate::types::{EntityType, Partition, PostStatus, TeamGroupPermissions, Visibility};
 use crate::{AppState, Error};
 use aide::NoApi;
 use bdk::prelude::*;
@@ -14,17 +14,22 @@ use validator::Validate;
 
 use crate::controllers::v3::posts::post_response::PostResponse;
 
+use super::dto::{TeamPath, TeamPathParam};
+
 #[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema, Validate)]
 pub struct ListTeamPostsQueryParams {
     pub bookmark: Option<String>,
     /// Filter posts by status (draft, published, etc.)
-    pub status: Option<i64>,
+
+    #[serde(default)]
+    pub status: PostStatus,
 }
 
 pub async fn list_team_posts_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-    Path(team_pk): Path<String>,
+    NoApi(permission): NoApi<TeamGroupPermissions>,
+    Path(TeamPathParam { team_pk }): TeamPath,
     Query(ListTeamPostsQueryParams { bookmark, status }): Query<ListTeamPostsQueryParams>,
 ) -> Result<Json<ListItemsResponse<PostResponse>>, Error> {
     tracing::debug!(
@@ -35,50 +40,13 @@ pub async fn list_team_posts_handler(
         status
     );
 
-    // Parse team_pk to ensure it's valid
-    let team_partition: Partition = if team_pk.starts_with("TEAM#") {
-        Partition::Team(team_pk.strip_prefix("TEAM#").unwrap().to_string())
-    } else {
-        return Err(Error::BadRequest(format!(
-            "Invalid team_pk format: {}",
-            team_pk
-        )));
-    };
-
-    let mut query_options = PostQueryOption::builder().limit(10);
-
-    if let Some(bookmark) = bookmark {
-        query_options = query_options.bookmark(bookmark);
+    if status == PostStatus::Draft && !permission.is_admin() {
+        return Err(Error::NoPermission);
     }
 
-    // Query posts by team (author_pk)
-    let (mut posts, bookmark) = if let Some(status_val) = status {
-        let post_status = match status_val {
-            1 => PostStatus::Draft,
-            2 => PostStatus::Published,
-            _ => return Err(Error::BadRequest("Invalid status value".into())),
-        };
+    let opt = Post::opt_with_bookmark(bookmark).sk(status.to_string());
 
-        // Query all posts for the team
-        let (all_posts, bookmark) =
-            Post::find_by_user_pk(&dynamo.client, &team_partition, query_options).await?;
-
-        // Filter by status in memory
-        let filtered_posts: Vec<Post> = all_posts
-            .into_iter()
-            .filter(|post| post.status == post_status)
-            .collect();
-
-        (filtered_posts, bookmark)
-    } else {
-        // No status filter - return all team posts (public only if no auth)
-        Post::find_by_user_pk(&dynamo.client, &team_partition, query_options).await?
-    };
-
-    // If no status filter, only show public posts
-    if status.is_none() {
-        posts.retain(|post| post.visibility == Some(Visibility::Public));
-    }
+    let (posts, bookmark) = Post::find_by_user_and_status(&dynamo.client, &team_pk, opt).await?;
 
     tracing::debug!(
         "list_team_posts_handler: found {} posts, next bookmark = {:?}",
