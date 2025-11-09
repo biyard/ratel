@@ -103,24 +103,22 @@ pub struct SpaceCommon {
 }
 
 impl SpaceCommon {
-    pub fn new<A: Into<Author>>(post_pk: Partition, author: A) -> Self {
-        let uid = match post_pk {
-            Partition::Feed(ref id) => id.clone(),
-            _ => {
-                panic!("post_pk must be Partition::Feed");
-            }
-        };
-
-        let now = get_now_timestamp_millis();
-        let Author {
-            pk: user_pk,
-            display_name,
-            profile_url,
-            username,
+    pub fn new(
+        Post {
+            pk: post_pk,
+            user_pk,
+            author_display_name,
+            author_profile_url,
+            author_username,
             ..
-        } = author.into();
+        }: Post,
+    ) -> Self {
+        let now = get_now_timestamp_millis();
         Self {
-            pk: Partition::Space(uid),
+            pk: post_pk
+                .clone()
+                .to_space_pk()
+                .expect("post_pk must be Partition::Feed"),
             sk: EntityType::SpaceCommon,
             created_at: now,
             updated_at: now,
@@ -129,9 +127,9 @@ impl SpaceCommon {
             status: None,
             visibility: SpaceVisibility::Private,
             user_pk,
-            author_display_name: display_name,
-            author_profile_url: profile_url,
-            author_username: username,
+            author_display_name,
+            author_profile_url,
+            author_username,
             ..Default::default()
         }
     }
