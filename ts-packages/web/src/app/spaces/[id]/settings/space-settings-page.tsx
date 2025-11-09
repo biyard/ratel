@@ -2,12 +2,6 @@ import { useParams } from 'react-router';
 import { useSpaceSettingsController } from './use-space-settings-controller';
 import { Checkbox } from '@/components/checkbox/checkbox';
 import { useSettingsI18n } from './i18n';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Info } from '@/components/icons';
 
 export function SpaceSettingsPage() {
   const { spacePk } = useParams<{ spacePk: string }>();

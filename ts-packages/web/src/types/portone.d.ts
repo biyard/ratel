@@ -9,7 +9,7 @@ export interface IMP {
   init: (userCode: string) => void;
   certification: (
     params: CertificationParams,
-    callback?: (response: CertificationResponse) => void
+    callback?: (response: CertificationResponse) => void,
   ) => void;
 }
 

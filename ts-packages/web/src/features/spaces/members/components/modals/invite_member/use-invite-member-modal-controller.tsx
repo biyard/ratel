@@ -24,7 +24,6 @@ export class InviteMemberModalController {
     public popup: ReturnType<typeof usePopup>,
     public spacePk: string,
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     public members: InvitationMemberResponse[],
     public newMembers: State<InvitationMemberResponse[]>,
     public removedMembers: State<string[]>,

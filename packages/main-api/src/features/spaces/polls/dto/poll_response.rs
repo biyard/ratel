@@ -15,6 +15,7 @@ pub struct PollResponse {
     pub questions: Vec<Question>, // Questions in the survey
     pub my_response: Option<Vec<Answer>>, // User responses to the survey
     pub status: PollStatus,
+    pub default: bool,
 }
 
 impl From<Poll> for PollResponse {
@@ -29,6 +30,7 @@ impl From<Poll> for PollResponse {
         res.updated_at = poll.updated_at;
         res.questions = poll.clone().questions;
         res.status = poll.status();
+        res.default = poll.is_default_poll();
 
         res
     }

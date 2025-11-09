@@ -31,7 +31,7 @@ export default function RedeemPage() {
           ratelApi.redeems.useRedeemCode(metaId),
           redeemCodeRequest(code || ''),
         );
-        if (!!response) {
+        if (response) {
           navigate(`/spaces/${response.meta_id}`);
         }
       } catch (error) {

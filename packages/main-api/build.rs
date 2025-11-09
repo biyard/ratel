@@ -25,14 +25,13 @@ fn main() {
     let dist_dst = manifest_dir.join("dist");
     let assets_dir = dist_dst.join("assets");
 
-    let skip_web_build = env::var("CARGO_FEATURE_MODEL_ONLY").is_ok();
+    let web_build = env::var("WEB_BUILD").unwrap_or_default();
+    let skip_web_build = env::var("CARGO_FEATURE_MODEL_ONLY").is_ok() || web_build == "ignore";
     if skip_web_build {
         println!("cargo:warning=Skipping web build because feature `model-only` is enabled");
         return;
     }
-    if env::var("WEB_BUILD").unwrap_or_default() != "false"
-        || !fs::exists(&dist_dst).unwrap_or_default()
-    {
+    if web_build != "false" || !fs::exists(&dist_dst).unwrap_or_default() {
         println!("cargo:rerun-if-env-changed=ENV");
 
         let workspace_root = manifest_dir

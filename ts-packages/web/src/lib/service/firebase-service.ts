@@ -9,15 +9,10 @@ import {
   onAuthStateChanged,
   type User,
 } from 'firebase/auth';
-import { getFile, listFiles, uploadFile } from '../api/drive';
 import { Ed25519KeyIdentity } from '@dfinity/identity';
 import { toHex } from '@dfinity/agent';
 import { config } from '@/config';
 import { logger } from '../logger';
-import {
-  encodeEd25519PrivateKeyToPkcs8Base64,
-  restoreEd25519KeyPair,
-} from '../wallet/ed25519';
 
 // Firebase configuration validation
 const validateFirebaseConfig = (config: any): boolean => {

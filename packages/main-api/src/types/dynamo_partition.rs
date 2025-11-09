@@ -7,6 +7,8 @@ use std::str::FromStr;
 
 use crate::features::membership::MembershipTier;
 
+use super::EntityType;
+
 #[derive(
     Debug,
     Clone,
@@ -105,6 +107,15 @@ impl Partition {
 
     pub fn is_space_key(&self) -> bool {
         matches!(self, Partition::Space(_))
+    }
+
+    pub fn to_poll_sk(&self) -> crate::Result<EntityType> {
+        match self {
+            Partition::Space(pk) => Ok(EntityType::SpacePoll(pk.clone())),
+            _ => Err(crate::Error::InvalidPartitionKey(
+                "Poll key can be only extracted from Space key".to_string(),
+            )),
+        }
     }
 }
 
