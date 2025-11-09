@@ -6,7 +6,7 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { LoginFailurePopup } from './login-failure-popup';
 import UserSetupPopup, { type UserSetupPopupProps } from './user-setup-popup';
 import { logger } from '@/lib/logger';
-import { useAuth, useEd25519KeyPair } from '@/lib/contexts/auth-context';
+import { useAuth } from '@/lib/contexts/auth-context';
 import { AuthUserInfo } from '@/lib/service/firebase-service';
 import { send } from '@/lib/api/send';
 import { Col } from '../ui/col';
@@ -48,10 +48,9 @@ export const LoginModal = ({
   const { t: signupTranslate } = useTranslation('Signup');
   const popup = usePopup();
   const network = useNetwork();
-  const anonKeyPair = useEd25519KeyPair();
   const queryClient = getQueryClient();
 
-  const { login, ed25519KeyPair, telegramRaw } = useAuth();
+  const { login, telegramRaw } = useAuth();
   const [email, setEmail] = useState('');
   const [warning, setWarning] = useState('');
   const [password, setPassword] = useState('');
@@ -63,26 +62,6 @@ export const LoginModal = ({
   const updateTelegramId = async () => {
     if (telegramRaw) {
       logger.error('Updating Telegram ID is not implemented yet.');
-      // try {
-      //   const response = await fetch(
-      //     `${process.env.NEXT_PUBLIC_API_URL}${ratelApi.users.updateTelegramId()}`,
-      //     {
-      //       method: 'POST',
-      //       headers: {
-      //         'Content-Type': 'application/json',
-      //       },
-      //       credentials: 'include',
-      //       body: JSON.stringify({
-      //         telegram_raw: telegramRaw,
-      //       }),
-      //     },
-      //   );
-      //   if (!response.ok) {
-      //     logger.error('Failed to update Telegram ID:', response.status);
-      //   }
-      // } catch (error) {
-      //   logger.error('Error updating Telegram ID:', error);
-      // }
     }
   };
 
@@ -174,15 +153,8 @@ export const LoginModal = ({
     );
 
     try {
-      const user: AuthUserInfo = await login(anonKeyPair);
+      const user: AuthUserInfo = await login();
       logger.debug('Google login user info:', user);
-      // loader.close();
-      logger.debug('User principal:', user.principal);
-      logger.debug('User keypair:', user.keyPair?.getPrincipal().toText());
-      logger.debug(
-        'edkeypair principal:',
-        ed25519KeyPair?.getPrincipal().toText(),
-      );
       try {
         await ratelSdk.auth.loginWithOAuth(
           OAuthProvider.Google,
@@ -205,7 +177,7 @@ export const LoginModal = ({
           email: user.email ?? '',
           nickname: user.displayName ?? undefined,
           profileUrl: user.photoURL ?? undefined,
-          principal: user.principal ?? undefined,
+          principal: undefined,
           idToken: user.idToken,
           accessToken: user.accessToken,
           provider: OAuthProvider.Google,
@@ -228,7 +200,7 @@ export const LoginModal = ({
   };
 
   const handleTelegramSignIn = async () => {
-    const loader = popup.open(
+    const _loader = popup.open(
       <LoaderPopup
         title="Sign in"
         description={signupTranslate('signing_in')}
@@ -238,50 +210,6 @@ export const LoginModal = ({
         serviceName="Telegram"
       />,
     );
-
-    try {
-      const info = await send(anonKeyPair, '/api/login', '');
-      if (!info && telegramRaw) {
-        const params = new URLSearchParams(telegramRaw);
-        const userJson = params.get('user');
-        if (!userJson) {
-          throw new Error('Telegram user data not found');
-        }
-        const user: TelegramUser = JSON.parse(userJson);
-        openUserSetupPopup({
-          id: 'telegram_user_setup',
-          email: '',
-          nickname: user.username ?? '',
-          username: `${user.first_name} ${user.last_name ?? ''}`.trim(),
-          profileUrl: user.photo_url ?? '',
-          principal: anonKeyPair.getPrincipal().toText(),
-        });
-      } else {
-        refetchUserInfo(queryClient);
-        // TODO: Update to use v3 feed query keys without userId
-        await queryClient.invalidateQueries({
-          queryKey: feedKeys.list({
-            status: FeedStatus.Published,
-          }),
-        });
-
-        network.refetch();
-        loader.close();
-      }
-    } catch (err) {
-      popup.open(
-        <LoginFailurePopup
-          logo={<TelegramIcon width={24} height={24} />}
-          logoOrigin={<TelegramIcon width={24} height={24} />}
-          title={signupTranslate('login_failed')}
-          description={signupTranslate('telegram_login_failed_description')}
-          msg={signupTranslate('login_failed_msg')}
-          serviceName="Telegram"
-          onRetry={handleTelegramSignIn}
-        />,
-      );
-      logger.debug('failed to telegram sign in with error: ', err);
-    }
   };
 
   const handleSignUp = () => {
@@ -295,8 +223,8 @@ export const LoginModal = ({
       className="flex flex-col w-100 max-w-100 mx-1.25 max-mobile:!w-full max-mobile:!max-w-full gap-5"
     >
       <Col className="gap-4">
-        <Row className="justify-start items-center text-sm gap-1">
-          <label className="text-text-primary font-medium">
+        <Row className="gap-1 justify-start items-center text-sm">
+          <label className="font-medium text-text-primary">
             {t('new_user')}
           </label>
           <button
@@ -313,7 +241,7 @@ export const LoginModal = ({
             name="username"
             autoComplete="email"
             placeholder={t('email_address_hint')}
-            className="w-full bg-input-box-bg border border-input-box-border rounded-[10px] px-5 py-5.5 text-text-primary font-light"
+            className="px-5 w-full font-light border bg-input-box-bg border-input-box-border rounded-[10px] py-5.5 text-text-primary"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onKeyDown={(e) => {
@@ -324,7 +252,7 @@ export const LoginModal = ({
             }}
           />
           {warning !== '' && (
-            <div className="text-red-500 text-xs mt-1">{warning}</div>
+            <div className="mt-1 text-xs text-red-500">{warning}</div>
           )}
         </Col>
 
@@ -333,7 +261,7 @@ export const LoginModal = ({
           <Input
             type="password"
             placeholder={t('password_hint')}
-            className="w-full rounded-[10px] px-5 py-5.5 font-light"
+            className="px-5 w-full font-light rounded-[10px] py-5.5"
             value={password}
             onChange={(e) => handleChangePassword(e.target.value)}
             onKeyDown={(e) => {
@@ -344,17 +272,28 @@ export const LoginModal = ({
             }}
           />
           {passwordWarning !== '' && (
-            <div className="text-red-500 text-xs mt-1">{passwordWarning}</div>
+            <div className="mt-1 text-xs text-red-500">{passwordWarning}</div>
           )}
           {loginError !== '' && (
-            <div className="text-red-500 text-xs mt-1">{loginError}</div>
+            <div className="mt-1 text-xs text-red-500">{loginError}</div>
           )}
         </Col>
 
-        <Row className="justify-end items-center text-sm">
+        <Row className="justify-between items-center text-sm">
+          <a
+            href="/forgot-password"
+            className="text-primary/70 hover:text-primary text-sm"
+            onClick={(e) => {
+              e.preventDefault();
+              popup.close();
+              window.location.href = '/forgot-password';
+            }}
+          >
+            {t('forgot_password')}
+          </a>
           <Button
             variant={'rounded_secondary'}
-            className="text-xs py-1.5 px-4 light:bg-neutral-600"
+            className="py-1.5 px-4 text-xs light:bg-neutral-600"
             onClick={handleContinue}
           >
             {showPassword ? t('sign_in') : t('continue')}
@@ -364,7 +303,7 @@ export const LoginModal = ({
       {/* FIXME: In Telegram MiniApp, google login not working for now.  */}
       {!isWebView() ? (
         <>
-          <div className="rule-with-text align-center text-center font-light">
+          <div className="font-light text-center rule-with-text align-center">
             Or
           </div>
           <div className="flex flex-col gap-2.5">
@@ -397,11 +336,11 @@ export const LoginModal = ({
 export const LoginBox = ({ icon, label, onClick }: LoginBoxProps) => {
   return (
     <button
-      className="flex flex-row w-full rounded-[10px] bg-[#000203] px-5 py-5.5 gap-5 cursor-pointer items-center"
+      className="flex flex-row gap-5 items-center px-5 w-full cursor-pointer rounded-[10px] bg-[#000203] py-5.5"
       onClick={onClick}
     >
       {icon}
-      <div className="font-semibold text-white text-base">{label}</div>
+      <div className="text-base font-semibold text-white">{label}</div>
     </button>
   );
 };

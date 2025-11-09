@@ -39,6 +39,7 @@ async fn test_upsert_invitation_handler() {
 
     let (new_user, _headers) = create_user_session(app.clone(), &ddb).await;
     let (new_user_2, _headers) = create_user_session(app.clone(), &ddb).await;
+    let (new_user_3, _headers) = create_user_session(app.clone(), &ddb).await;
 
     let path = format!("/v3/spaces/{}/invitations", space_pk_encoded);
     let (status, _headers, _body) = post! {
@@ -46,7 +47,8 @@ async fn test_upsert_invitation_handler() {
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "user_pks": vec![new_user.clone().pk, new_user_2.clone().pk]
+            "new_user_pks": vec![new_user.clone().pk, new_user_2.clone().pk],
+            "removed_user_pks": Vec::<Partition>::new()
         },
         response_type: UpsertInvitationResponse
     };
@@ -58,7 +60,8 @@ async fn test_upsert_invitation_handler() {
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "user_pks": vec![new_user.pk]
+            "new_user_pks": vec![new_user_3.pk],
+            "removed_user_pks": vec![new_user.pk]
         },
         response_type: UpsertInvitationResponse
     };
@@ -92,7 +95,8 @@ async fn test_list_invitation_handler() {
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "user_pks": vec![new_user.clone().pk, new_user_2.clone().pk]
+            "new_user_pks": vec![new_user.clone().pk, new_user_2.clone().pk],
+            "removed_user_pks": Vec::<Partition>::new()
         },
         response_type: UpsertInvitationResponse
     };
@@ -133,7 +137,8 @@ async fn test_verification_space_code_handler() {
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "user_pks": vec![user.clone().pk]
+            "new_user_pks": vec![user.clone().pk],
+            "removed_user_pks": Vec::<Partition>::new()
         },
         response_type: UpsertInvitationResponse
     };
@@ -197,7 +202,8 @@ async fn test_prevent_upsert_invitations() {
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "user_pks": vec![user.clone().pk]
+            "new_user_pks": vec![user.clone().pk],
+            "removed_user_pks": Vec::<Partition>::new()
         },
         response_type: UpsertInvitationResponse
     };
@@ -233,7 +239,8 @@ async fn test_prevent_upsert_invitations() {
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "user_pks": vec![user.clone().pk]
+            "new_user_pks": vec![user.clone().pk],
+            "removed_user_pks": Vec::<Partition>::new()
         },
         response_type: UpsertInvitationResponse
     };
@@ -264,7 +271,8 @@ async fn test_prevent_verification_space_code_handler() {
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "user_pks": vec![user.clone().pk]
+            "new_user_pks": vec![user.clone().pk],
+            "removed_user_pks": Vec::<Partition>::new()
         },
         response_type: UpsertInvitationResponse
     };
@@ -338,7 +346,8 @@ async fn test_prevent_resent_code_handler() {
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "user_pks": vec![user.clone().pk]
+            "new_user_pks": vec![user.clone().pk],
+            "removed_user_pks": Vec::<Partition>::new()
         },
         response_type: UpsertInvitationResponse
     };

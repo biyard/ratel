@@ -36,9 +36,15 @@ import DiscussionPage from './app/spaces/[id]/discussions/[discussion-id]/discus
 // Admin
 import AdminPage from './app/admin/page';
 import { MembershipsPage } from './app/admin/memberships/memberships-page';
+import AttributeCodesPage from './app/admin/attribute-codes/page';
+import AdminUsersPage from './app/admin/users/page';
 import TelegramPage from './app/telegram/page';
 import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
 import SpacePanelPage from './app/spaces/[id]/panels/space-panel-page';
+
+// Auth
+import ForgotPasswordPage from './app/(auth)/forgot-password/page';
+import ResetPasswordPage from './app/(auth)/reset-password/page';
 
 import CreatePostPage from './features/posts/components/create-post-page';
 import SpacePollsPage from './app/spaces/[id]/polls/space-polls-page';
@@ -54,6 +60,8 @@ import { Credentials } from './features/did/components/credentials';
 import { Terms } from './app/terms';
 import { Privacy } from './app/privacy';
 import { Refund } from './app/refund';
+import SpaceMemberPage from './app/spaces/[id]/members/space-member-page';
+import MySpacesPage from './app/(social)/my-spaces/page';
 
 export const routes = createBrowserRouter([
   {
@@ -104,6 +112,11 @@ export const routes = createBrowserRouter([
                 Component: MyDraftPage,
               },
             ],
+          },
+          {
+            id: 'my-spaces-page',
+            path: 'my-spaces',
+            Component: MySpacesPage,
           },
           {
             id: 'settings-layout',
@@ -202,6 +215,11 @@ export const routes = createBrowserRouter([
             path: '',
             Component: SpaceHomePage,
           },
+          {
+            id: 'space-members',
+            path: 'members',
+            Component: SpaceMemberPage,
+          },
           // Space Boards Feature
           {
             id: 'space-boards',
@@ -219,16 +237,11 @@ export const routes = createBrowserRouter([
               },
               {
                 id: 'space-post-detail',
-                path: ':postPk',
+                path: 'posts/:postPk',
                 Component: SpaceBoardPage,
               },
             ],
           }, // End of Boards Feature
-          {
-            id: 'space-boards-page',
-            path: 'boards',
-            Component: SpaceBoardsPage,
-          },
           {
             id: 'space-settings-page',
             path: 'settings',
@@ -332,6 +345,17 @@ export const routes = createBrowserRouter([
         path: 'telegram',
         Component: TelegramPage,
       },
+      // Auth Routes
+      {
+        id: 'forgot-password-page',
+        path: 'forgot-password',
+        Component: ForgotPasswordPage,
+      },
+      {
+        id: 'reset-password-page',
+        path: 'reset-password',
+        Component: ResetPasswordPage,
+      },
       // Test Report Page
       {
         id: 'test-report-page',
@@ -352,9 +376,19 @@ export const routes = createBrowserRouter([
         Component: AdminPage,
       },
       {
+        id: 'admin-users-page',
+        path: 'admin/users',
+        Component: AdminUsersPage,
+      },
+      {
         id: 'admin-memberships-page',
         path: 'admin/memberships',
         Component: MembershipsPage,
+      },
+      {
+        id: 'admin-attribute-codes-page',
+        path: 'admin/attribute-codes',
+        Component: AttributeCodesPage,
       }, // End of Admin Routes
 
       {

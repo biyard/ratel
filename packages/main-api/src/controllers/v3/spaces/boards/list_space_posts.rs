@@ -28,7 +28,7 @@ pub struct ListSpacePostQueryParams {
 
 pub async fn list_space_posts_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
+    NoApi(user): NoApi<Option<User>>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Query(ListSpacePostQueryParams { bookmark, category }): Query<ListSpacePostQueryParams>,
 ) -> Result<Json<ListSpacePostsResponse>, Error> {
@@ -36,9 +36,16 @@ pub async fn list_space_posts_handler(
         return Err(Error::NotFoundSpace);
     }
 
+    if user.is_none() {
+        return Ok(Json(ListSpacePostsResponse {
+            posts: vec![],
+            bookmark: None,
+        }));
+    }
+
     let mut query_options = SpacePostQueryOption::builder()
-        .sk("SPACE_POST#".into())
-        .limit(50);
+        .limit(50)
+        .scan_index_forward(false);
 
     if let Some(bookmark) = bookmark {
         query_options = query_options.bookmark(bookmark);
@@ -46,12 +53,12 @@ pub async fn list_space_posts_handler(
 
     // FIXME: fix to enhance this logic
     let (responses, bookmark) = if category.is_none() {
-        SpacePost::query(&dynamo.client, space_pk.clone(), query_options).await?
+        SpacePost::find_by_space_ordered(&dynamo.client, space_pk.clone(), query_options).await?
     } else {
         let (posts, bookmark) = SpacePost::find_by_cagetory(
             &dynamo.client,
             category.clone().unwrap_or_default(),
-            SpacePostQueryOption::builder().limit(10),
+            SpacePostQueryOption::builder().limit(50),
         )
         .await?;
 

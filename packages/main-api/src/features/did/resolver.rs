@@ -138,6 +138,8 @@ impl DidResolver {
                     capability_invocation: None,
                     capability_delegation: None,
                     service: None,
+                    created: None,
+                    updated: None,
                 },
                 metadata: ResolutionMetadata {
                     content_type,

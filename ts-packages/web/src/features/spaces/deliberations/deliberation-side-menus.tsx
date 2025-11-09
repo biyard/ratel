@@ -9,7 +9,6 @@ import {
 import { SpaceType } from '../types/space-type';
 import { addSideMenusForSpaceType } from '../utils/side-menus-for-space-type';
 import { route } from '@/route';
-import { config } from '@/config';
 // import { SpaceStatus } from '../types/space-common';
 
 // const checkCircle2Colored = (props) => (
@@ -34,6 +33,14 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
     },
     label: 'menu_poll',
   },
+  {
+    Icon: Post,
+    to: (space) => {
+      return route.spaceBoards(space.pk);
+    },
+    visible: (space) => space.participated || space.isAdmin(),
+    label: 'menu_boards',
+  },
   // {
   //   Icon: Discuss,
   //   to: (space) => {
@@ -46,7 +53,7 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
     to: (space) => {
       return route.spaceMembers(space.pk);
     },
-    visible: () => config.experiment,
+    visible: (space) => space.isAdmin(),
     label: 'menu_members',
   },
   {
@@ -57,15 +64,7 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
     visible: (space) => space.isAdmin(),
     label: 'menu_panels',
   },
-  {
-    // FIXME: fix this icon
-    Icon: User,
-    to: (space) => {
-      return route.spaceBoards(space.pk);
-    },
-    visible: () => config.experiment,
-    label: 'menu_boards',
-  },
+
   // {
   //   Icon: checkCircle2Colored,
   //   to: (space) => {

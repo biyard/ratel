@@ -53,6 +53,7 @@ import { i18nSpacePollViewerPage } from '@/features/spaces/polls/pages/viewer/sp
 import { i18nSpaceFileEditor } from '@/features/spaces/files/pages/creator/space-file-editor-i18n';
 import { i18nSpaceRecommendationEditor } from '@/features/spaces/recommendations/pages/creator/space-recommendation-editor-i18n';
 import { i18nAdmin } from '@/app/admin/admin-page-i18n';
+import { i18nAdmins } from '@/app/admin/users/admins-page-i18n';
 import { i18nMemberships } from '@/features/membership/i18n';
 import { i18nHeader } from '@/components/header/i18n';
 import i18nListDrafts from '@/features/drafts/components/list-drafts/i18n';
@@ -68,6 +69,10 @@ import { Terms } from '@/app/terms/i18n';
 import { Privacy } from '@/app/privacy/i18n';
 import { Refund } from '@/app/refund/i18n';
 import { SpaceSettings } from '@/app/spaces/[id]/settings/i18n';
+import { i18nSpaceBoardsCreate } from '@/features/spaces/boards/pages/creator/create/space-boards-create-i18n';
+import { i18nSpaceBoardsEditor } from '@/features/spaces/boards/pages/creator/space-boards-editor-i18n';
+import { i18nSpaceBoardsEditorDetail } from '@/features/spaces/boards/pages/creator/detail/space-boards-editor-detail-i18n';
+import { i18nAttributeCodes } from '@/app/admin/attribute-codes/attribute-codes-page-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -125,13 +130,18 @@ Object.entries({
   TimeRangeSetting: i18nTimeRangeSetting,
   SpacePollViewer: i18nSpacePollViewerPage,
   SpaceFileEditor: i18nSpaceFileEditor,
+  SpaceBoardsCreate: i18nSpaceBoardsCreate,
+  SpaceBoardsEditor: i18nSpaceBoardsEditor,
+  SpaceBoardsEditorDetail: i18nSpaceBoardsEditorDetail,
   SpaceDiscussionEditor: i18nSpaceDiscussionEditorPage,
   SpacePanelEditor: i18nSpacePanelEditorPage,
   SpaceRecommendationEditor: i18nSpaceRecommendationEditor,
   SpaceMemberEditor: i18nSpaceMemberEditorPage,
   SpaceMemberViewer: i18nSpaceMemberViewerPage,
   Admin: i18nAdmin,
+  Admins: i18nAdmins,
   Memberships: i18nMemberships,
+  AttributeCodes: i18nAttributeCodes,
   Nav: i18nHeader,
   ListDrafts: i18nListDrafts,
   CreatePostPage,

@@ -3,46 +3,28 @@
 import { createContext, useContext } from 'react';
 import type { User } from 'firebase/auth';
 import type { AuthUserInfo } from '../service/firebase-service';
-import { Ed25519KeyIdentity } from '@dfinity/identity';
-import { NoEd25519KeyPair } from '@/errors';
-import { HDNodeWallet } from 'ethers';
 
 interface AuthContextType {
-  ed25519KeyPair: Ed25519KeyIdentity | null;
-  evmWallet?: HDNodeWallet;
   telegramRaw?: string;
   user?: User;
   authUser?: AuthUserInfo;
-  login: (keyPair: Ed25519KeyIdentity) => Promise<AuthUserInfo>;
+  login: () => Promise<AuthUserInfo>;
   logout: () => Promise<void>;
   setTelegramRaw: (raw: string) => void;
 }
 
 const dummyAuthUserInfo: AuthUserInfo = {
-  principal: '',
-  contents: '',
   email: '',
   displayName: '',
   photoURL: '',
-  event: null,
-  keyPair: null,
   idToken: '',
   accessToken: '',
 };
 
 export const AuthContext = createContext<AuthContextType>({
-  ed25519KeyPair: null,
   login: async () => dummyAuthUserInfo,
   logout: async () => {},
   setTelegramRaw: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
-
-export function useEd25519KeyPair(): Ed25519KeyIdentity {
-  const { ed25519KeyPair } = useAuth();
-
-  if (!ed25519KeyPair) throw NoEd25519KeyPair;
-
-  return ed25519KeyPair!;
-}

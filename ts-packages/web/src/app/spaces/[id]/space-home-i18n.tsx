@@ -1,10 +1,16 @@
 export const i18nSpaceHome = {
   en: {
     publish_space: 'Publish Space',
+    start_space: 'Start Space',
     delete_space: 'Delete Space',
     unsupported_space_type: 'Unsupported space type',
     no_authorized_user: 'No Authorized User',
     untitled_space: 'Untitled Space',
+    start_warning:
+      'This action cannot be undone. Starting a space will limit user participations.',
+    start_button: 'Start Space',
+    starting: 'Starting...',
+
     delete_title: 'Delete Space <name></name>',
     delete_warning:
       'This action cannot be undone. This will permanently delete the Space and all its contents.',
@@ -21,6 +27,7 @@ export const i18nSpaceHome = {
     see_committee_list: 'See committee list',
     change_category: 'Change Category',
     delete: 'Delete',
+    started: 'Start',
     private: 'Private',
     public: 'Public',
     onboard: 'ONBOARD',
@@ -59,6 +66,8 @@ export const i18nSpaceHome = {
     failed_publish_space: 'Failed to publish space. please try later.',
     success_delete_space: 'Success to delete space.',
     failed_delete_space: 'Failed to delete space. please try later.',
+    success_start_space: 'Success to start space.',
+    failed_start_space: 'Failed to start space. please try later.',
     success_participate_space: 'Successfully joined the space.',
     failed_participate_space: 'Failed to join the space. please try later.',
 
@@ -69,10 +78,16 @@ export const i18nSpaceHome = {
   },
   ko: {
     publish_space: '스페이스 게시',
+    start_space: '스페이스 시작',
     delete_space: '스페이스 삭제',
     unsupported_space_type: '지원되지 않는 스페이스 유형입니다.',
     no_authorized_user: '인증되지 않은 사용자입니다.',
     untitled_space: '제목 없는 스페이스',
+    start_warning:
+      '이 작업은 되돌릴 수 없습니다. 스페이스를 시작할 경우 유저 참여가 제한됩니다.',
+    start_button: '스페이스 시작하기',
+    starting: '시작 중....',
+
     delete_title: '스페이스 삭제 <name></name>',
     delete_warning:
       '이 작업은 되돌릴 수 없습니다. 스페이스와 그 안의 모든 콘텐츠가 영구적으로 삭제됩니다.',
@@ -89,6 +104,8 @@ export const i18nSpaceHome = {
     see_committee_list: '참여자 리스트 확인하기',
     change_category: '카테고리 변경하기',
     delete: '삭제하기',
+    started: '시작하기',
+    finished: '종료하기',
     private: '개인',
     public: '공개',
     onboard: '온보딩',
@@ -127,6 +144,9 @@ export const i18nSpaceHome = {
     success_delete_space: '스페이스를 성공적으로 삭제했습니다.',
     failed_delete_space:
       '스페이스 삭제에 실패했습니다. 잠시 후 다시 시도해보세요.',
+    success_start_space: '스페이스를 성공적으로 시작했습니다.',
+    failed_start_space:
+      '스페이스 시작에 실패했습니다. 잠시 후 다시 시도해보세요.',
     success_participate_space: '스페이스에 성공적으로 참여했습니다.',
     failed_participate_space:
       '스페이스 참여에 실패했습니다. 잠시 후 다시 시도해보세요.',

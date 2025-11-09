@@ -1,32 +1,152 @@
 name: Playwright Tests
 
 on:
-  workflow_run:
-    workflows: ["Dev deploy"]
-    types:
-      - completed
+  push:
     branches:
       - dev
 
 jobs:
-  test:
+  playwright-tests:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Cache builder
+        id: main-api-build-cache
+        uses: actions/cache@v4
+        with:
+          key: main-api-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            main-api-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            main-api-build-${{ runner.os }}-
+            main-api-build-
+          path: |
+            packages/main-api/target
+
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy, rustfmt
+          target: wasm32-unknown-unknown
+          toolchain: stable
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Install toml-cli
+        run: |
+          cargo binstall toml-cli --force
+
       - name: Setup pnpm
         run: |
           corepack enable
           corepack prepare pnpm@10.15.0 --activate
+
+      - name: Building APIs
+        env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+          ENV: dev
+          RUST_LOG: info
+          SERVICE: main-api
+          DOMAIN: dev.ratel.foundation
+          BUCKET_NAME: metadata.ratel.foundation
+          SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
+          SLACK_CHANNEL_ABUSING: ${{ secrets.DEV_SLACK }}
+
+          BINANCE_API_KEY: ${{ secrets.DEV_BINANCE_API_KEY }}
+          BINANCE_SECRET_KEY: ${{ secrets.DEV_BINANCE_SECRET_KEY }}
+          BINANCE_WEBHOOK: https://api.dev.ratel.foundation/v2/binances/webhooks
+          REDIRECT_DOMAIN: https://dev.ratel.foundation
+
+          KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
+          KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
+          KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
+          KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
+          KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
+
+          TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
+
+          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
+          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
+          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
+          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
+
+          P256_X: ${{ secrets.P256_X }}
+          P256_Y: ${{ secrets.P256_Y }}
+          P256_D: ${{ secrets.P256_D }}
+          P256_CRV: ${{ secrets.P256_CRV }}
+
+          DYNAMO_TABLE_PREFIX: ratel-dev
+          DYNAMO_ENDPOINT: none
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          RUST_FLAG: --features bypass
+          WEB_BUILD: true
+          PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
+          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
+          PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
+        run: |
+          make dist
+          make docker.build
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
       - name: Install dependencies
         run: pnpm i
+
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
-      - name: Run Playwright tests (Skip secret-dependent tests on PRs)
+
+      - name: Setup test environment
+        run: |
+          docker-compose --profile testing up -d
+
+      - name: Wait for services to be ready
+        run: |
+          # Check service health with retry loop and timeout
+          echo "Waiting for services to be ready..."
+
+          # Wait for Main API (180 second timeout for container startup)
+          echo "🔄 Checking Main API..."
+          timeout=180
+          interval=10
+          elapsed=0
+          while [ $elapsed -lt $timeout ]; do
+            if curl -f -s http://localhost:3000/version > /dev/null 2>&1; then
+              echo "✅ Main API is responding (took ${elapsed}s)"
+              break
+            fi
+            echo "⏳ Main API not ready yet... (${elapsed}/${timeout}s)"
+            sleep $interval
+            elapsed=$((elapsed + interval))
+          done
+
+          if [ $elapsed -ge $timeout ]; then
+            echo "❌ Main API failed to respond with 200 status within ${timeout}s"
+            echo "🔍 Checking Docker services status:"
+            docker-compose -f docker-compose.yaml ps
+            echo "🔍 Main API logs:"
+            docker-compose -f docker-compose.yaml logs main-api-testing --tail=50
+            exit 1
+          fi
+
+          echo "🎉 All services are ready!"
+
+      - name: Run Playwright Tests
         env:
-          WAIT_TIMEOUT: 5000
-          VISIBLE_TIMEOUT: 10000
-          URL_TIMEOUT: 15000
-          RATEL_TEST_PLAYWRIGHT_URL: https://dev.ratel.foundation
+          CI: true
+          RATEL_TEST_PLAYWRIGHT_URL: http://localhost:3000
         run: |
           cd ts-packages/web
           make test
@@ -44,7 +164,7 @@ jobs:
           retention-days: 30
 
   deploy-report:
-    if: always()
+    if: ${{ !cancelled() }}
     needs: test
     runs-on: ubuntu-latest
     permissions:

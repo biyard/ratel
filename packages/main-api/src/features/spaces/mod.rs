@@ -10,5 +10,7 @@ pub mod artworks;
 pub mod models;
 pub mod sprint_leagues;
 pub mod topics;
+mod types;
 
 pub use models::*;
+pub use types::*;
