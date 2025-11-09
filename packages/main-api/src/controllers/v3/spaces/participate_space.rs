@@ -1,5 +1,7 @@
 use names::{Generator, Name};
 
+use crate::features::spaces::members::{InvitationStatus, SpaceInvitationMember};
+
 use super::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, OperationIo, JsonSchema)]
@@ -24,9 +26,22 @@ pub async fn participate_space_handler(
     tracing::debug!("Handling request: {:?}", req);
     // TODO: Check verifiable_presentation and add user as SpaceParticipant
 
-    let space = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon))
-        .await?
-        .ok_or(Error::SpaceNotFound)?;
+    // let is_verified = SpaceParticipant::verify_credential(&dynamo, &space_pk, user.clone()).await;
+
+    // if !is_verified {
+    //     return Err(Error::InvalidPanel);
+    // }
+
+    let (space, _has_perm) = SpaceCommon::has_permission(
+        &dynamo.client,
+        &space_pk,
+        Some(&user.pk),
+        TeamGroupPermission::SpaceRead,
+    )
+    .await?;
+    // if !has_perm {
+    //     return Err(Error::NoPermission);
+    // }
 
     let now = time::get_now_timestamp_millis();
 
@@ -35,16 +50,19 @@ pub async fn participate_space_handler(
         .unwrap()
         .replace('-', " ");
 
-    // TODO: check duplicated name
     let sp = SpaceParticipant::new(space.pk.clone(), user.pk.clone(), display_name);
     let new_space = SpaceCommon::updater(&space.pk, &space.sk)
         .increase_participants(1)
         .with_updated_at(now);
+    let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
+    let invitation =
+        SpaceInvitationMember::updater(&pk, &sk).with_status(InvitationStatus::Accepted);
 
     transact_write!(
         &dynamo.client,
         sp.create_transact_write_item(),
         new_space.transact_write_item(),
+        invitation.transact_write_item(),
     )?;
 
     Ok(Json(ParticipateSpaceResponse {

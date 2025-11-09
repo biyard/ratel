@@ -115,30 +115,6 @@ services:
     profiles:
       - development
 
-  # Production web (pre-built image)
-  # web-testing:
-  #   image: web:${COMMIT}
-  #   restart: always
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     PORT: 8080
-  #     API_URL: "http://main-api-testing:3000"
-  #     NODE_ENV: test
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "curl -f http://localhost:8080/api/version || exit 1"]
-  #     interval: 30s
-  #     timeout: 10s
-  #     retries: 100
-  #   depends_on:
-  #     main-api-testing:
-  #       condition: service_healthy
-  #   networks:
-  #     - ratel-network
-  #   profiles:
-  #     - testing
-
-  # Development web (source code mounting)
   web:
     image: node:22.14
     restart: always

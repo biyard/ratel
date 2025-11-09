@@ -1,4 +1,5 @@
 use bdk::prelude::*;
+use ssi::dids::InvalidDID;
 use thiserror::Error;
 
 #[derive(Debug, Error, RestError, aide::OperationIo)]
@@ -77,6 +78,8 @@ pub enum Error {
     HMacInitError(String),
     #[error("Telegram wallet error: {0}")]
     TelegramError(#[from] teloxide::RequestError),
+    #[error("Chrono parse error: {0}")]
+    TimeParseError(#[from] chrono::ParseError),
 
     // Authorization errors 400 ~
     #[error("No session found")]
@@ -90,6 +93,12 @@ pub enum Error {
     NoPermission,
     #[error("Wallet error: {0}")]
     WalletError(String),
+    #[error("User is not an admin")]
+    #[rest_error(status = 403, code = 404)]
+    UserNotAdmin,
+    #[error("User is already an admin")]
+    #[rest_error(status = 400, code = 405)]
+    UserAlreadyAdmin,
 
     // /v3/auth endpoints 1000 ~
     #[error("Exceeded maximum attempt for email verification")]
@@ -128,6 +137,11 @@ pub enum Error {
     SpaceNotEditable,
     #[error("PK must be a Partition::Space")]
     InvalidSpacePartitionKey,
+
+    // members feature 3050 ~
+    #[rest_error(code = 3050)]
+    #[error("Member not found")]
+    NoInvitationFound,
 
     // /v3/spaces/deliberations endpoints 3100 ~
     #[rest_error(code = 3100)]
@@ -195,7 +209,8 @@ pub enum Error {
     AlreadyParticipateUser,
     #[error("already full panel")]
     AlreadyFullPanel,
-
+    #[error("invalid panel")]
+    InvalidPanel,
 
     // NFT Artwork space errors
     #[rest_error(code = 9000)]
@@ -225,6 +240,17 @@ pub enum Error {
     #[error("Invalid identification for payment")]
     #[rest_error(code = 10000)]
     InvalidIdentification,
+
+    // DID feature errors 11,000 ~
+    #[error("Invalid DID format")]
+    #[rest_error(code = 11000)]
+    InvalidDID(#[from] InvalidDID<String>),
+    #[error("VC Signature error: {0}")]
+    Signature(String),
+    #[error("invalide gender")]
+    InvalidGender,
+    #[error("attribute code not found")]
+    AttributeCodeNotFound,
 
     // web 1,000,000 ~
     #[error("Web error: {0}")]

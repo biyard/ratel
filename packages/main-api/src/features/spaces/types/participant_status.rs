@@ -1,3 +1,5 @@
+use crate::*;
+
 #[derive(
     Debug,
     Clone,
@@ -7,11 +9,13 @@
     serde_repr::Serialize_repr,
     serde_repr::Deserialize_repr,
     Default,
+    DynamoEnum,
+    JsonSchema_repr,
+    OperationIo,
 )]
 #[repr(u8)]
-pub enum InvitationStatus {
+pub enum ParticipantStatus {
     #[default]
-    Pending = 1,
-    Accepted = 2,
-    Declined = 3,
+    Invited = 1,
+    Participating = 2,
 }

@@ -3,7 +3,7 @@ use crate::{AppState, Error, models::user::User, types::*};
 use axum::extract::State;
 use bdk::prelude::*;
 
-pub mod did;
+// pub mod did;
 pub mod networks;
 mod payments;
 
@@ -12,12 +12,7 @@ pub mod promotions {
 }
 pub mod me;
 
-pub mod users {
-    pub mod find_user;
-
-    #[cfg(test)]
-    pub mod tests;
-}
+pub mod users;
 
 pub mod assets {
     pub mod complete_multipart_upload;
@@ -41,7 +36,6 @@ use crate::{
         create_space::create_space_handler, delete_space::delete_space_handler, get_space_handler,
         list_spaces_handler, update_space::update_space_handler,
     },
-    users::find_user::find_user_handler,
     utils::{
         aws::{DynamoClient, SesClient},
         telegram::ArcTelegramBot,
@@ -61,7 +55,7 @@ pub struct RouteDeps {
 pub fn route(bot: Option<ArcTelegramBot>) -> Result<Router> {
     Ok(Router::new()
         .nest("/payments", payments::route()?)
-        .nest("/did", did::route()?)
+        // .nest("/did", did::route()?)
         .nest(
             "/networks",
             Router::new().route(
@@ -71,7 +65,7 @@ pub fn route(bot: Option<ArcTelegramBot>) -> Result<Router> {
         )
         .route("/promotions/top", get(get_top_promotion_handler))
         .nest("/me", me::route()?)
-        .nest("/users", Router::new().route("/", get(find_user_handler)))
+        .nest("/users", users::route()?)
         .nest("/posts", posts::route()?)
         .nest("/auth", auth::route()?)
         .nest("/teams", teams::route()?)

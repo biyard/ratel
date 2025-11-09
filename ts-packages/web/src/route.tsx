@@ -8,6 +8,7 @@ export const route = {
   settings: () => '/settings',
   credentials: () => '/credentials',
   myPosts: () => '/my-posts',
+  mySpaces: () => '/my-spaces',
   createPost: (postPk?: string) =>
     postPk ? `/posts/new?post-pk=${encodeURIComponent(postPk)}` : '/posts/new',
   createArtwork: (postPk?: string) =>
@@ -19,6 +20,8 @@ export const route = {
 
   login: () => '/login',
   signup: () => '/signup',
+  forgotPassword: () => '/forgot-password',
+  resetPassword: () => '/reset-password',
   connect: () => `/connect`,
 
   myNetwork: () => '/my-network',
@@ -60,8 +63,20 @@ export const route = {
   },
   spaceBoards: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/boards`,
-  spaceCreatePost: (spaceId: string) =>
-    `/spaces/${encodeURIComponent(spaceId)}/boards/create`,
+  spaceCreatePost: (spaceId: string, postPk?: string) => {
+    let to = `/spaces/${encodeURIComponent(spaceId)}/boards/create`;
+    const params: string[] = [];
+
+    if (postPk) {
+      params.push(`post-pk=${encodeURIComponent(postPk)}`);
+    }
+
+    if (params.length > 0) {
+      to += `?${params.join('&')}`;
+    }
+
+    return to;
+  },
   spaceBoardPost: (spaceId: string, spacePostId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/boards/posts/${encodeURIComponent(spacePostId)}`,
   spacePolls: (spaceId: string) =>
@@ -94,6 +109,8 @@ export const route = {
   // Admin routes
   admin: () => '/admin',
   adminMemberships: () => '/admin/memberships',
+  adminAttributeCodes: () => '/admin/attribute-codes',
+  adminUsers: () => '/admin/users',
   newPost: (postPk?: string, teamPk?: string) => {
     let to = '/posts/new';
     const params: string[] = [];

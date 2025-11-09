@@ -1,7 +1,6 @@
 pub mod booster_type;
 pub mod dynamo_entity_type;
 pub mod dynamo_partition;
-pub mod invitation_status;
 pub mod oauth_provider;
 
 pub mod file_type;
@@ -39,7 +38,6 @@ pub use booster_type::*;
 pub use dynamo_entity_type::*;
 pub use dynamo_partition::*;
 pub use file::*;
-pub use invitation_status::*;
 pub use oauth_provider::*;
 
 pub use post_status::*;

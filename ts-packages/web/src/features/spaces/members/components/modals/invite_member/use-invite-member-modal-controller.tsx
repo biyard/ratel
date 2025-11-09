@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { State } from '@/types/state';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import useInvitationMember from '../../../hooks/use-invitation';
 import { InvitationMemberResponse } from '../../../types/invitation-member-response';
@@ -24,7 +24,10 @@ export class InviteMemberModalController {
     public popup: ReturnType<typeof usePopup>,
     public spacePk: string,
 
-    public selectedUsers: State<InvitationMemberResponse[]>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public members: InvitationMemberResponse[],
+    public newMembers: State<InvitationMemberResponse[]>,
+    public removedMembers: State<string[]>,
     public isError: State<boolean[]>,
     public searchValue: State<string>,
     public errorCount: State<number>,
@@ -33,90 +36,91 @@ export class InviteMemberModalController {
     public t: TFunction<'SpaceMemberEditor', undefined>,
   ) {}
 
-  handleSearchValue = async (
-    nextSelected: InvitationMemberResponse[],
-    value: string,
-    isEnter: boolean,
-  ) => {
-    let ns = nextSelected;
-    if (value.includes(',') || isEnter) {
-      const identifiers = value
-        .split(',')
-        .map((v) => v.trim())
-        .filter((v) => v !== '');
-      for (const input of identifiers) {
-        if (checkString(input)) continue;
-        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
-        const isPhone = /^\+?[0-9]\d{7,14}$/.test(input);
-        try {
-          let data: UserDetailResponse | null = null;
-          if (isEmail) {
-            data = await findUserByEmail(input);
-          } else if (isPhone) {
-            data = await findUserByUsername(input);
-          } else {
-            data = await findUserByPhoneNumber(input);
-          }
-          if (data) {
-            const exists = nextSelected.some((u) => u.user_pk === data.pk);
-            if (!exists) {
-              const user = {
-                user_pk: data.pk,
-                display_name: data.nickname,
-                profile_url: data.profile_url,
-                username: data.username,
-                email: data.email,
-
-                authorized: false,
-              };
-              ns = [...ns, user];
-            }
-          } else {
-            showErrorToast(this.t('invalid_user'));
-          }
-        } catch (err) {
-          logger.error('failed to search user with error: ', err);
-          showErrorToast(this.t('search_user_failed'));
+  handleSearchValue = async () => {
+    const identifiers = this.searchValue
+      .get()
+      .split(',')
+      .map((v) => v.trim())
+      .filter((v) => v !== '');
+    for (const input of identifiers) {
+      if (checkString(input)) continue;
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+      const isPhone = /^\+?[0-9]\d{7,14}$/.test(input);
+      try {
+        let data: UserDetailResponse | null = null;
+        if (isEmail) {
+          data = await findUserByEmail(input);
+        } else if (isPhone) {
+          data = await findUserByUsername(input);
+        } else {
+          data = await findUserByPhoneNumber(input);
         }
+
+        if (!data) {
+          showErrorToast(this.t('invalid_user'));
+          return;
+        }
+        const idx = this.removedMembers.get().indexOf(data.pk);
+        if (idx !== -1) {
+          this.removedMembers.set(
+            this.removedMembers.get().filter((pk) => pk !== data.pk),
+          );
+
+          return;
+        }
+
+        const exists = this.members.some((u) => u.user_pk === data.pk);
+
+        if (exists) {
+          // FIXME: error toast
+          showErrorToast(this.t('invalid_user'));
+        }
+
+        const user = {
+          user_pk: data.pk,
+          display_name: data.nickname,
+          profile_url: data.profile_url,
+          username: data.username,
+          email: data.email,
+
+          authorized: false,
+        };
+
+        this.newMembers.set([...this.newMembers.get(), user]);
+      } catch (err) {
+        logger.error('failed to search user with error: ', err);
+        showErrorToast(this.t('search_user_failed'));
       }
-      this.selectedUsers.set(ns);
-      this.searchValue.set('');
-      return ns;
-    } else {
-      this.searchValue.set(value);
     }
+
+    this.searchValue.set('');
   };
 
   handleRemoveMember = async (index: number) => {
-    {
-      const prevUsers = this.selectedUsers.get();
-      const newUsers = prevUsers.slice();
-      newUsers.splice(index, 1);
-      this.selectedUsers.set(newUsers);
-    }
-
-    {
-      const prevErrors = this.isError.get();
-      const newErrors = prevErrors.slice();
-      const removed = newErrors.splice(index, 1)[0];
-      logger.debug('value: ', removed);
-
-      const newErrorCount = newErrors.filter(Boolean).length;
-      this.errorCount.set(newErrorCount);
-
-      this.isError.set(newErrors);
-    }
+    const prevUsers = this.members[index];
+    this.removedMembers.set([
+      ...this.removedMembers.get(),
+      prevUsers.user_pk as string,
+    ]);
   };
 
-  handleSend = async (selected: InvitationMemberResponse[]) => {
-    const userPks: string[] = selected
+  handleSend = async () => {
+    if (this.searchValue.get() !== '') {
+      await this.handleSearchValue();
+    }
+
+    const newUserPks: string[] = this.newMembers
+      .get()
       .map((u) => u.user_pk)
       .filter((v): v is string => typeof v === 'string' && v.length > 0);
+
+    const removedUserPks = this.removedMembers.get();
 
     try {
       await this.upsertInvitation.mutateAsync({
         spacePk: this.spacePk,
-        user_pks: userPks,
+        new_user_pks: newUserPks,
+        removed_user_pks: removedUserPks,
       });
 
       showSuccessToast(this.t('success_invitation_users'));
@@ -139,14 +143,19 @@ export function useInviteMemberModalController(spacePk: string) {
   const popup = usePopup();
   const { t } = useTranslation('SpaceMemberEditor');
 
-  const members = useState(member.members || []);
+  const newMembers = useState([]);
+  const removedMembers = useState([]);
   const isError = useState([]);
   const searchValue = useState('');
   const errorCount = useState(0);
 
-  useEffect(() => {
-    members[1](member.members ?? []);
-  }, [member.members]);
+  const members = useMemo(() => {
+    const allMembers = [...member.members]
+      .filter((member) => removedMembers[0].indexOf(member.user_pk) === -1)
+      .concat(newMembers[0]);
+
+    return allMembers;
+  }, [member, newMembers, removedMembers]);
 
   const upsertInvitation = useUpsertInvitationMutation();
 
@@ -155,7 +164,9 @@ export function useInviteMemberModalController(spacePk: string) {
     popup,
     spacePk,
 
-    new State(members),
+    members,
+    new State(newMembers),
+    new State(removedMembers),
     new State(isError),
     new State(searchValue),
     new State(errorCount),

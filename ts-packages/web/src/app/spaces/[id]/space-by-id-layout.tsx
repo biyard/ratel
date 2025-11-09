@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { Outlet, useParams } from 'react-router';
+import { Outlet, useLocation, useParams } from 'react-router';
 import {
   SpaceHomeController,
   useSpaceHomeController,
@@ -23,32 +23,38 @@ export const Context = createContext<SpaceHomeController | undefined>(
 export default function SpaceByIdLayout() {
   const { spacePk } = useParams<{ spacePk: string }>();
   const ctrl = useSpaceHomeController(spacePk ?? '');
+  const location = useLocation();
+  const showInfo = !/\/boards\/posts(\/|$)/.test(location.pathname);
 
   return (
     <Context.Provider value={ctrl}>
       <Row className="my-5 mx-auto w-full max-w-desktop">
         <Col className="gap-4 w-full">
-          <TitleSection
-            canEdit={ctrl.isAdmin}
-            title={ctrl.space.title}
-            setTitle={ctrl.handleTitleChange}
-          />
-          <AuthorSection
-            type={ctrl.space.authorType}
-            profileImage={ctrl.space.authorProfileUrl}
-            name={ctrl.space.authorDisplayName}
-            isCertified={ctrl.space.certified}
-            createdAt={ctrl.space.createdAt}
-          />
+          {showInfo && (
+            <Col className="gap-4 w-full">
+              <TitleSection
+                canEdit={ctrl.isAdmin}
+                title={ctrl.space.title}
+                setTitle={ctrl.handleTitleChange}
+              />
+              <AuthorSection
+                type={ctrl.space.authorType}
+                profileImage={ctrl.space.authorProfileUrl}
+                name={ctrl.space.authorDisplayName}
+                isCertified={ctrl.space.certified}
+                createdAt={ctrl.space.createdAt}
+              />
 
-          <PostInfoSection
-            likes={ctrl.space.likes}
-            shares={ctrl.space.shares}
-            comments={ctrl.space.comments}
-            rewards={ctrl.space.rewards ?? 0}
-            isDraft={ctrl.space.isDraft}
-            isPublic={ctrl.space.isPublic}
-          />
+              <PostInfoSection
+                likes={ctrl.space.likes}
+                shares={ctrl.space.shares}
+                comments={ctrl.space.comments}
+                rewards={ctrl.space.rewards ?? 0}
+                isDraft={ctrl.space.isDraft}
+                isPublic={ctrl.space.isPublic}
+              />
+            </Col>
+          )}
 
           <Outlet />
         </Col>

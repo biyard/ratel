@@ -4,9 +4,11 @@ use crate::{
         space_category::SpaceCategory, space_post_comment::SpacePostComment,
         space_post_comment_like::SpacePostCommentLike,
     },
-    models::{PostCommentLike, team::Team, user::User},
+    models::{PostCommentLike, SpaceCommon, team::Team, user::User},
     types::{author::Author, *},
+    utils::aws::{DynamoClient, SesClient},
 };
+use bdk::prelude::axum::Json;
 use bdk::prelude::*;
 
 #[derive(
@@ -20,10 +22,12 @@ use bdk::prelude::*;
     aide::OperationIo,
 )]
 pub struct SpacePost {
+    #[dynamo(index = "gsi3", name = "find_by_space_ordered", pk)]
     pub pk: Partition,
     pub sk: EntityType,
 
     pub created_at: i64,
+    #[dynamo(index = "gsi3", sk)]
     #[dynamo(index = "gsi2", order = 2, sk)]
     #[dynamo(index = "gsi6", sk)]
     pub updated_at: i64,
@@ -92,6 +96,80 @@ impl SpacePost {
         };
 
         (space_pk.clone(), EntityType::SpacePost(space_post_id))
+    }
+
+    #[allow(unused_variables)]
+    pub async fn send_email(
+        dynamo: &DynamoClient,
+        ses: &SesClient,
+        user_email: String,
+        space: SpaceCommon,
+        title: String,
+        html_contents: String,
+        user: User,
+    ) -> Result<Json<()>, Error> {
+        #[cfg(any(test, feature = "no-secret"))]
+        {
+            let _ = ses;
+            tracing::warn!("sending email will be skipped for {}", user_email,);
+        }
+
+        #[cfg(all(not(test), not(feature = "no-secret")))]
+        {
+            use crate::utils::html::create_space_post_html;
+
+            let mut domain = crate::config::get().domain.to_string();
+            if domain.contains("localhost") {
+                domain = format!("http://{}", domain).to_string();
+            } else {
+                domain = format!("https://{}", domain).to_string();
+            }
+
+            let space_id = match space.pk.clone() {
+                Partition::Space(v) => v.to_string(),
+                _ => "".to_string(),
+            };
+
+            let profile = user.profile_url;
+            let username = user.username;
+            let display_name = user.display_name;
+
+            let html = create_space_post_html(
+                title.clone(),
+                html_contents,
+                profile,
+                display_name,
+                username,
+                format!("{}/spaces/SPACE%23{}/boards", domain, space_id),
+            );
+
+            let text = format!(
+                "You're invited to join {space}\n{user} is posting the post in the {space}.\nOpen: {url}",
+                space = title.clone(),
+                user = space.author_username,
+                url = format!("{}/spaces/SPACE%23{}/boards", domain, space_id),
+            );
+
+            let mut i = 0;
+            let subject = format!("[Ratel] Posting the post in the space");
+
+            while let Err(e) = ses
+                .send_mail_html(&user_email, &subject, &html, Some(&text))
+                .await
+            {
+                btracing::notify!(
+                    crate::config::get().slack_channel_monitor,
+                    &format!("Failed to send email: {:?}", e)
+                );
+                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                i += 1;
+                if i >= 3 {
+                    return Err(Error::AwsSesSendEmailException(e.to_string()));
+                }
+            }
+        }
+
+        Ok(Json(()))
     }
 
     pub async fn comment(

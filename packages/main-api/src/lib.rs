@@ -1,5 +1,6 @@
 #![allow(unused_imports)]
 pub type Result<T> = std::result::Result<T, crate::error::Error>;
+
 pub type Error = crate::error::Error;
 
 pub mod api_main;
@@ -10,12 +11,12 @@ pub mod error;
 pub mod features;
 pub(crate) mod macros;
 pub mod models;
-pub mod route;
 pub mod security;
 pub mod services;
 pub mod types;
 pub mod utils;
 
+use crate::error::*;
 use crate::models::User;
 use axum::extract::*;
 pub use bdk::prelude::*;
@@ -28,10 +29,13 @@ use by_axum::axum::{
     http::StatusCode,
     http::request::Parts,
     middleware::{self, Next},
+    native_routing as nr,
     response::Response,
 };
 use controllers::v3::*;
+use schemars::JsonSchema_repr;
 use serde::{Deserialize, Serialize};
+use ssi::prelude::*;
 use tracing::{debug, error, info, warn};
 use types::AppState;
 use types::*;

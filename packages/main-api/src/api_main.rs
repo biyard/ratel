@@ -2,8 +2,8 @@ use std::env;
 
 use crate::{
     AppState, config,
+    controllers::route,
     controllers::web,
-    route::route,
     utils::{
         aws::{
             BedrockClient, DynamoClient, RekognitionClient, S3Client, SesClient, TextractClient,
@@ -69,8 +69,8 @@ pub async fn api_main() -> Result<Router, crate::Error> {
 
     let app = app
         // .merge(mcp_router)
-        .merge(web)
         .merge(api_router)
+        .merge(web)
         // .layer(middleware::from_fn(authorization_middleware))
         .layer(session_layer);
 

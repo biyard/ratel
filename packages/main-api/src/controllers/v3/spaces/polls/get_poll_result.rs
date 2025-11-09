@@ -37,12 +37,16 @@ pub async fn get_poll_result(
     // This logic is extremely computationally intensive.
     // This needs to be changed to perform a summary at the end of the call or at specific intervals and store the results.
     // Currently, the summary is always recalculated from the response.
-    let summaries =
-        PollUserAnswer::summarize_responses(&dynamo.client, &space_pk, &poll_pk).await?;
+    let (summaries, summaries_by_gender, summaries_by_age, summaries_by_school) =
+        PollUserAnswer::summarize_responses_with_attribute(&dynamo.client, &space_pk, &poll_pk)
+            .await?;
 
     Ok(Json(PollResultResponse {
         created_at: get_now_timestamp_millis(),
         summaries,
+        summaries_by_age,
+        summaries_by_gender,
+        summaries_by_school,
     }))
 
     // let res = PollSpaceSurveyResult::get(

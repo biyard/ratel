@@ -13,8 +13,12 @@ import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { Button } from '../ui/button';
 import { TiptapEditor } from '../text-editor';
 import type { Editor } from '@tiptap/core';
+import { useLocation } from 'react-router';
+import { SpaceReplyList } from './space-reply-list';
 
 interface CommentProps {
+  spacePk?: string;
+  isLoggedIn?: boolean;
   comment: PostComment;
   // TODO: Update to use v3 comment API with string IDs
   onComment?: (commentId: string, content: string) => Promise<void>;
@@ -22,7 +26,16 @@ interface CommentProps {
   t: TFunction<'Thread', undefined>;
 }
 
-export function Comment({ comment, onComment, onLike, t }: CommentProps) {
+export function Comment({
+  spacePk,
+  comment,
+  onComment,
+  onLike,
+  t,
+  isLoggedIn = true,
+}: CommentProps) {
+  const location = useLocation();
+  const boards = /\/boards\/posts(\/|$)/.test(location.pathname);
   const [expand, setExpand] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
 
@@ -40,7 +53,7 @@ export function Comment({ comment, onComment, onLike, t }: CommentProps) {
             {comment.author_display_name}
           </div>
           <div className="font-semibold text-xs/[20px] text-time-text">
-            {getTimeAgo(comment.updated_at)}
+            {getTimeAgo(comment.updated_at * 1000)}
           </div>
         </div>
       </div>
@@ -103,49 +116,60 @@ export function Comment({ comment, onComment, onLike, t }: CommentProps) {
               )}
             </button>
             {/* Reply Button */}
-            <button
-              aria-label="Reply to Comment"
-              onClick={() => {
-                setExpand((prev) => !prev);
-                setShowReplies(true);
-              }}
-              className="flex gap-2 cursor-pointer justify-center items-center text-text-primary"
-            >
-              <BendArrowRight
-                width={24}
-                height={24}
-                className="[&>path]:stroke-text-primary"
-              />
-              {t('reply')}
-            </button>
+            {isLoggedIn && (
+              <button
+                aria-label="Reply to Comment"
+                onClick={() => {
+                  setExpand((prev) => !prev);
+                  setShowReplies(true);
+                }}
+                className="flex gap-2 cursor-pointer justify-center items-center text-text-primary"
+              >
+                <BendArrowRight
+                  width={24}
+                  height={24}
+                  className="[&>path]:stroke-text-primary"
+                />
+                {t('reply')}
+              </button>
+            )}
           </div>
           {/* Like Button */}
-          <button
-            aria-label="Like Comment"
-            className="flex flex-row gap-2 justify-center items-center"
-            onClick={() => {
-              if (onLike) {
-                onLike(comment.sk, !comment.liked);
-              } else {
-                throw new Error('onLike is not set');
-              }
-            }}
-          >
-            <ThumbUp
-              width={24}
-              height={24}
-              className={
-                comment.liked
-                  ? '[&>path]:fill-primary [&>path]:stroke-primary'
-                  : '[&>path]:stroke-comment-icon'
-              }
-            />
-            <div className="font-medium text-base/[24px] text-comment-icon-text ">
-              {comment.likes ?? 0}
-            </div>
-          </button>
+          {isLoggedIn && (
+            <button
+              aria-label="Like Comment"
+              className="flex flex-row gap-2 justify-center items-center"
+              onClick={() => {
+                if (onLike) {
+                  onLike(comment.sk, !comment.liked);
+                } else {
+                  throw new Error('onLike is not set');
+                }
+              }}
+            >
+              <ThumbUp
+                width={24}
+                height={24}
+                className={
+                  comment.liked
+                    ? '[&>path]:fill-primary [&>path]:stroke-primary'
+                    : '[&>path]:stroke-comment-icon'
+                }
+              />
+              <div className="font-medium text-base/[24px] text-comment-icon-text ">
+                {comment.likes ?? 0}
+              </div>
+            </button>
+          )}
         </div>
-        {showReplies && comment.replies > 0 && (
+        {showReplies && comment.replies > 0 && boards && (
+          <SpaceReplyList
+            spacePk={spacePk ?? ''}
+            postPk={comment.pk}
+            commentSk={comment.sk}
+          />
+        )}
+        {showReplies && comment.replies > 0 && !boards && (
           <ReplyList postPk={comment.pk} commentSk={comment.sk} />
         )}
         {expand && (

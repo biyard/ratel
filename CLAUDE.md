@@ -548,3 +548,5 @@ mod tests {
 }
 ```
 - Please make sure that your playwright code is alway success by executing `make test` yourself.
+- you should register i18n to i18n/config.tsx
+- you should add page route path to router.tsx

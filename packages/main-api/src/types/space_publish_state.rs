@@ -3,6 +3,7 @@ use bdk::prelude::*;
 #[derive(
     Debug,
     Clone,
+    Copy,
     serde_with::SerializeDisplay,
     serde_with::DeserializeFromStr,
     Default,

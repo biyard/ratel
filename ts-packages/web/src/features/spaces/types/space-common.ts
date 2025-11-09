@@ -9,6 +9,7 @@ export enum SpacePublishState {
 export enum SpaceStatus {
   Waiting = 'WAITING',
   InProgress = 'IN_PROGRESS',
+  Started = 'STARTED',
   Finished = 'FINISHED',
 }
 
@@ -44,3 +45,7 @@ export interface SpaceCommon {
 
   anonymous_participation: boolean;
 }
+
+export type MySpace = SpaceCommon & {
+  invitation_status: 'pending' | 'participating';
+};

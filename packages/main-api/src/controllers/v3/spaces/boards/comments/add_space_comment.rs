@@ -57,11 +57,11 @@ pub async fn add_space_comment_handler(
 
     tracing::debug!("space common status: {:?}", space_common.status);
 
-    if space_common.status == Some(SpaceStatus::Started)
-        || space_common.status == Some(SpaceStatus::Finished)
-    {
-        return Err(Error::FinishedSpace);
-    }
+    // if space_common.status == Some(SpaceStatus::Started)
+    //     || space_common.status == Some(SpaceStatus::Finished)
+    // {
+    //     return Err(Error::FinishedSpace);
+    // }
 
     let (pk, sk) = SpacePost::keys(&space_pk, &space_post_pk);
 

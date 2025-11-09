@@ -102,13 +102,7 @@ pub async fn update_space_handler(
                 && (space.publish_state == SpacePublishState::Draft && publish)
                 && visibility == SpaceVisibility::Public;
 
-            let _ = send_space_verification_code_handler(
-                &dynamo,
-                &ses,
-                &space.clone(),
-                post.title.clone(),
-            )
-            .await?;
+            SpaceInvitationMember::send_email(&dynamo, &ses, &space, post.title).await?;
 
             space.publish_state = SpacePublishState::Published;
             space.visibility = visibility;
@@ -210,46 +204,4 @@ pub async fn update_space_handler(
     }
 
     Ok(Json(SpaceCommonResponse::from(space)))
-}
-
-async fn send_space_verification_code_handler(
-    dynamo: &DynamoClient,
-    ses: &SesClient,
-    space: &SpaceCommon,
-    title: String,
-) -> Result<Json<()>, Error> {
-    let mut bookmark = None::<String>;
-    loop {
-        let (responses, new_bookmark) = SpaceInvitationMember::query(
-            &dynamo.client,
-            space.pk.clone(),
-            if let Some(b) = &bookmark {
-                SpaceInvitationMemberQueryOption::builder()
-                    .sk("SPACE_INVITATION_MEMBER#".into())
-                    .bookmark(b.clone())
-            } else {
-                SpaceInvitationMemberQueryOption::builder().sk("SPACE_INVITATION_MEMBER#".into())
-            },
-        )
-        .await?;
-
-        for response in responses {
-            let user_email = response.email;
-            let _ = SpaceEmailVerification::send_email(
-                &dynamo,
-                &ses,
-                user_email,
-                space.clone(),
-                title.clone(),
-            )
-            .await?;
-        }
-
-        match new_bookmark {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-    }
-
-    Ok(Json(()))
 }

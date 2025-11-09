@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Col } from '@/components/ui/col';
 import { Row } from '@/components/ui/row';
 import { useController } from './use-controller';
@@ -64,6 +65,147 @@ export function Credentials() {
           </Row>
         </Col>
       </Col>
+
+      {/* Verification Method Selection Modal */}
+      {ctrl.isMethodModalOpen && (
+        <VerificationMethodModal
+          onIdentityVerify={ctrl.handleIdentityVerify}
+          onCodeVerify={ctrl.handleCodeVerify}
+          onClose={ctrl.closeMethodModal}
+          t={t}
+        />
+      )}
+
+      {/* Code Input Modal */}
+      {ctrl.isCodeModalOpen && (
+        <CodeInputModal
+          onSubmit={ctrl.handleCodeSubmit}
+          onClose={ctrl.closeCodeModal}
+          isSubmitting={ctrl.codeVerify.isPending}
+          t={t}
+        />
+      )}
     </>
+  );
+}
+
+function VerificationMethodModal({
+  onIdentityVerify,
+  onCodeVerify,
+  onClose,
+  t,
+}: {
+  onIdentityVerify: () => void;
+  onCodeVerify: () => void;
+  onClose: () => void;
+  t: ReturnType<typeof useCredentialsI18n>;
+}) {
+  return (
+    <div className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">
+      <div className="p-6 w-full max-w-md bg-white rounded-lg shadow-lg dark:bg-gray-800">
+        <h2 className="mb-6 text-xl font-bold">{t.selectVerificationMethod}</h2>
+
+        <div className="flex flex-col gap-4">
+          {/* Identity Verification Option */}
+          <button
+            onClick={onIdentityVerify}
+            className="p-4 text-left rounded-lg border border-gray-300 transition-all hover:border-blue-500 hover:bg-blue-50 dark:border-gray-600 dark:hover:border-blue-500 dark:hover:bg-gray-700"
+          >
+            <h3 className="mb-1 text-lg font-semibold">
+              {t.identityVerification}
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {t.identityVerificationDesc}
+            </p>
+          </button>
+
+          {/* Code Verification Option */}
+          <button
+            onClick={onCodeVerify}
+            className="p-4 text-left rounded-lg border border-gray-300 transition-all hover:border-blue-500 hover:bg-blue-50 dark:border-gray-600 dark:hover:border-blue-500 dark:hover:bg-gray-700"
+          >
+            <h3 className="mb-1 text-lg font-semibold">{t.codeVerification}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {t.codeVerificationDesc}
+            </p>
+          </button>
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <Button variant="outline" onClick={onClose}>
+            {t.cancel}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CodeInputModal({
+  onSubmit,
+  onClose,
+  isSubmitting,
+  t,
+}: {
+  onSubmit: (code: string) => Promise<void>;
+  onClose: () => void;
+  isSubmitting: boolean;
+  t: ReturnType<typeof useCredentialsI18n>;
+}) {
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!code.trim()) {
+      setError(t.invalidCode);
+      return;
+    }
+
+    try {
+      await onSubmit(code.trim());
+    } catch (err) {
+      setError(t.verificationError);
+    }
+  };
+
+  return (
+    <div className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">
+      <div className="p-6 w-full max-w-md bg-white rounded-lg shadow-lg dark:bg-gray-800">
+        <h2 className="mb-4 text-xl font-bold">{t.enterCode}</h2>
+
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <input
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder={t.codePlaceholder}
+              className="px-3 py-2 w-full rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              disabled={isSubmitting}
+              autoFocus
+            />
+          </div>
+
+          {error && <div className="mb-4 text-sm text-red-500">{error}</div>}
+
+          <div className="flex gap-2 justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
+              {t.cancel}
+            </Button>
+            <Button type="submit" disabled={isSubmitting || !code.trim()}>
+              {isSubmitting ? t.submitting : t.submit}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
