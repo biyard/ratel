@@ -38,9 +38,12 @@ export class InviteMemberModalController {
   handleSearchValue = async () => {
     const identifiers = this.searchValue
       .get()
+      .split(' ')
+      .join(',')
       .split(',')
       .map((v) => v.trim())
       .filter((v) => v !== '');
+    const newMembers = this.newMembers.get();
     for (const input of identifiers) {
       if (checkString(input)) continue;
       const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
@@ -85,13 +88,14 @@ export class InviteMemberModalController {
           authorized: false,
         };
 
-        this.newMembers.set([...this.newMembers.get(), user]);
+        newMembers.push(user);
       } catch (err) {
         logger.error('failed to search user with error: ', err);
         showErrorToast(this.t('search_user_failed'));
       }
     }
 
+    this.newMembers.set(newMembers);
     this.searchValue.set('');
   };
 
