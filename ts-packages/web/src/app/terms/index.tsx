@@ -4,7 +4,6 @@ import { useTermsI18n } from './i18n';
 import { Col } from '@/components/ui/col';
 import Heading from '@/components/ui/heading';
 import { Paragraph } from '@/components/ui/paragraph';
-import { config } from '@/config';
 import { useTranslation } from 'react-i18next';
 
 export function Terms() {

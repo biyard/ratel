@@ -4,7 +4,9 @@ import { optimisticUpdate } from '@/lib/hook-utils';
 import { useMutation } from '@tanstack/react-query';
 import { Space } from '../types/space';
 
-export function useSpaceUpdateAnonymousParticipationMutation<T extends Space>() {
+export function useSpaceUpdateAnonymousParticipationMutation<
+  T extends Space,
+>() {
   const mutation = useMutation({
     mutationKey: ['update-anonymous-participation-space'],
     mutationFn: async ({

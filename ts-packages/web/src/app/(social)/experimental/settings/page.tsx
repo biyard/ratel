@@ -22,8 +22,7 @@ export default function ExperimentalSettingsPage() {
   const qc = useQueryClient();
 
   const actionText = locale === 'ko' ? 'Korean' : 'English';
-  const currentThemeLabel =
-    data?.theme === ThemeType.Light ? 'Light' : 'Dark';
+  const currentThemeLabel = data?.theme === ThemeType.Light ? 'Light' : 'Dark';
 
   const changeTheme = async (theme: 'light' | 'dark') => {
     const value = theme === 'light' ? 1 : 2;

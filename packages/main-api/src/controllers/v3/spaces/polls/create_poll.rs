@@ -16,12 +16,15 @@ use aide::NoApi;
 use serde::Deserialize;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema, Default)]
-pub struct CreatePollSpaceRequest {}
+pub struct CreatePollSpaceRequest {
+    default: bool,
+}
 
 pub async fn create_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
+    Json(req): Json<CreatePollSpaceRequest>,
 ) -> crate::Result<Json<PollResponse>> {
     //Request Validation
     if !matches!(space_pk, Partition::Space(_)) {
@@ -40,7 +43,13 @@ pub async fn create_poll_handler(
         return Err(Error::NoPermission);
     }
 
-    let poll = Poll::new(space_pk, None)?;
+    let sk = if req.default {
+        Some(space_pk.to_poll_sk()?)
+    } else {
+        None
+    };
+
+    let poll = Poll::new(space_pk, sk)?;
     poll.create(&dynamo.client).await?;
 
     let poll_response: PollResponse = PollResponse::from(poll);

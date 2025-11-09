@@ -25,9 +25,7 @@ export function useDidData(): UseQueryResult<DidDocument | null> {
   return query;
 }
 
-export function useSuspenseDidData(): UseSuspenseQueryResult<
-  DidDocument | null
-> {
+export function useSuspenseDidData(): UseSuspenseQueryResult<DidDocument | null> {
   const query = useSuspenseQuery({
     queryKey: [QK_GET_DID],
     queryFn: async () => {
