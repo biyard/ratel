@@ -1,20 +1,31 @@
+use std::collections::HashMap;
+
 use crate::{
     features::spaces::{
         SpaceParticipant, SpaceParticipantQueryOption,
         members::{InvitationStatus, SpaceInvitationMember, SpaceInvitationMemberQueryOption},
     },
-    models::SpaceCommon,
+    models::{Post, SpaceCommon},
 };
 
 use super::*;
 
 use crate::*;
 
+#[derive(
+    Debug, Clone, serde::Serialize, serde::Deserialize, aide::OperationIo, schemars::JsonSchema,
+)]
+pub struct GetSpaceResponse {
+    #[serde(flatten)]
+    pub space_common: SpaceCommon,
+    pub title: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]
 #[serde(tag = "invitation_status", rename_all = "snake_case")]
 pub enum MySpace {
-    Pending(SpaceCommon),
-    Participating(SpaceCommon),
+    Pending(GetSpaceResponse),
+    Participating(GetSpaceResponse),
 }
 
 pub async fn list_my_spaces_handler(
@@ -32,12 +43,28 @@ pub async fn list_my_spaces_handler(
             .limit(limit)
             .sk(status);
 
-        let (invited_spaces, bm) = list_invited_spaces(&dynamo.client, &user.pk, opt).await?;
-        items.extend(
-            invited_spaces
-                .into_iter()
-                .map(|space| MySpace::Pending(space)),
-        );
+        let (invited_spaces, posts, bm) =
+            list_invited_spaces(&dynamo.client, &user.pk, opt).await?;
+
+        let post_titles: HashMap<String, String> = posts
+            .iter()
+            .map(|p| (p.pk.to_string(), p.title.clone()))
+            .collect();
+
+        items.extend(invited_spaces.into_iter().map(|space| {
+            let title = space
+                .clone()
+                .pk
+                .to_post_key()
+                .ok()
+                .and_then(|post_pk| post_titles.get(&post_pk.to_string()).cloned())
+                .unwrap_or_default();
+
+            MySpace::Pending(GetSpaceResponse {
+                space_common: space,
+                title,
+            })
+        }));
         tracing::info!("Listed invited spaces, total items: {}", items.len());
 
         if let Some(b) = &bm {
@@ -66,18 +93,32 @@ pub async fn list_my_spaces_handler(
     };
     tracing::info!("Listing participating spaces with bookmark: {:?}", bookmark);
 
-    let (participating_spaces, bookmark) = list_participating_spaces(
+    let (participating_spaces, posts, bookmark) = list_participating_spaces(
         &dynamo.client,
         &user.pk,
         SpaceParticipant::opt_with_bookmark(bookmark).limit(limit),
     )
     .await?;
 
-    items.extend(
-        participating_spaces
-            .into_iter()
-            .map(|space| MySpace::Participating(space)),
-    );
+    let post_titles: HashMap<String, String> = posts
+        .iter()
+        .map(|p| (p.pk.to_string(), p.title.clone()))
+        .collect();
+
+    items.extend(participating_spaces.clone().into_iter().map(|space| {
+        let title = space
+            .clone()
+            .pk
+            .to_post_key()
+            .ok()
+            .and_then(|post_pk| post_titles.get(&post_pk.to_string()).cloned())
+            .unwrap_or_default();
+
+        MySpace::Participating(GetSpaceResponse {
+            space_common: space,
+            title,
+        })
+    }));
 
     let bookmark = if let Some(b) = &bookmark {
         Some(format!("SP-{}", b))
@@ -100,7 +141,7 @@ pub async fn list_participating_spaces(
     cli: &aws_sdk_dynamodb::Client,
     user_pk: &Partition,
     opt: SpaceParticipantQueryOption,
-) -> Result<(Vec<SpaceCommon>, Option<String>)> {
+) -> Result<(Vec<SpaceCommon>, Vec<Post>, Option<String>)> {
     let (sps, bookmark) = SpaceParticipant::find_by_user(cli, user_pk, opt).await?;
 
     let keys = sps
@@ -108,21 +149,49 @@ pub async fn list_participating_spaces(
         .map(|sp| (sp.space_pk, EntityType::SpaceCommon))
         .collect::<Vec<(Partition, EntityType)>>();
 
-    Ok((SpaceCommon::batch_get(cli, keys).await?, bookmark))
+    let spaces: Vec<SpaceCommon> = SpaceCommon::batch_get(cli, keys.clone()).await?;
+
+    let post_keys: Vec<(Partition, EntityType)> = keys
+        .iter()
+        .filter_map(|(raw_pk, _)| raw_pk.clone().to_post_key().ok())
+        .map(|pk| (pk, EntityType::Post))
+        .collect();
+
+    let posts: Vec<Post> = if post_keys.is_empty() {
+        Vec::new()
+    } else {
+        Post::batch_get(cli, post_keys).await?
+    };
+
+    Ok((spaces, posts, bookmark))
 }
 
 pub async fn list_invited_spaces(
     cli: &aws_sdk_dynamodb::Client,
     user_pk: &Partition,
     opt: SpaceInvitationMemberQueryOption,
-) -> Result<(Vec<SpaceCommon>, Option<String>)> {
+) -> Result<(Vec<SpaceCommon>, Vec<Post>, Option<String>)> {
     let (si, bookmark) =
         SpaceInvitationMember::find_user_invitations_by_status(cli, user_pk, opt).await?;
 
-    let keys = si
-        .into_iter()
-        .map(|sp| (sp.pk, EntityType::SpaceCommon))
-        .collect::<Vec<(Partition, EntityType)>>();
+    let space_keys: Vec<(Partition, EntityType)> = si
+        .iter()
+        .map(|sp| (sp.pk.clone(), EntityType::SpaceCommon))
+        .collect();
 
-    Ok((SpaceCommon::batch_get(cli, keys).await?, bookmark))
+    let spaces: Vec<SpaceCommon> = SpaceCommon::batch_get(cli, space_keys.clone()).await?;
+
+    let post_keys: Vec<(Partition, EntityType)> = space_keys
+        .iter()
+        .filter_map(|(raw_pk, _)| raw_pk.clone().to_post_key().ok())
+        .map(|pk| (pk, EntityType::Post))
+        .collect();
+
+    let posts: Vec<Post> = if post_keys.is_empty() {
+        Vec::new()
+    } else {
+        Post::batch_get(cli, post_keys).await?
+    };
+
+    Ok((spaces, posts, bookmark))
 }
