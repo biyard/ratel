@@ -40,6 +40,10 @@ export function usePollResponseMutation() {
       });
 
       queryClient.invalidateQueries({ queryKey: qk });
+      // Invalidate prerequisites query to allow access to space content
+      queryClient.invalidateQueries({
+        queryKey: spaceKeys.prerequisites(spacePk),
+      });
 
       window.location.reload();
     },

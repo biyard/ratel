@@ -7,20 +7,11 @@ use crate::models::space::SpaceCommon;
 
 use crate::models::Post;
 use crate::models::user::User;
-use crate::types::{
-    BoosterType, EntityType, SpacePublishState, SpaceStatus, SpaceVisibility, TeamGroupPermission,
-    TeamGroupPermissions,
-};
-use crate::types::{File, Partition};
 use crate::utils::aws::DynamoClient;
 use crate::utils::aws::SesClient;
 use crate::utils::telegram::ArcTelegramBot;
 use crate::utils::time::get_now_timestamp;
-use crate::{AppState, Error, transact_write};
-use aide::NoApi;
-use axum::extract::{Json, Path, State};
-use bdk::prelude::axum::Extension;
-use bdk::prelude::*;
+use crate::*;
 
 use serde::Deserialize;
 #[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
@@ -53,12 +44,12 @@ pub enum UpdateSpaceRequest {
 pub async fn update_space_handler(
     State(AppState { dynamo, ses, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
-    NoApi(permissions): NoApi<TeamGroupPermissions>,
+    NoApi(permissions): NoApi<Permissions>,
     Extension(telegram_bot): Extension<Option<ArcTelegramBot>>,
     Extension(space): Extension<SpaceCommon>,
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
     Json(req): Json<UpdateSpaceRequest>,
-) -> Result<Json<SpaceCommonResponse>, Error> {
+) -> Result<Json<SpaceCommonResponse>> {
     if !permissions.is_admin() {
         tracing::error!(
             "User {} does not have admin permissions {:?}",

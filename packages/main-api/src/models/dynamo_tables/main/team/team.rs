@@ -184,3 +184,51 @@ impl Team {
         Ok(team_pk)
     }
 }
+
+#[async_trait::async_trait]
+impl EntityPermissions for Team {
+    async fn get_permissions_for(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        requester: &Partition,
+    ) -> Permissions {
+        let owner = TeamOwner::get(cli, &self.pk, Some(EntityType::TeamOwner)).await;
+        if owner.is_err() {
+            return Permissions::empty();
+        }
+
+        let owner = owner.unwrap();
+        if let Some(owner) = owner {
+            if &owner.user_pk == requester {
+                return Permissions::all();
+            }
+        }
+
+        // NOTE: it only fetches up to 50 UserTeamGroup items.
+        let res = UserTeamGroup::find_by_team_pk(
+            cli,
+            self.pk.clone(),
+            UserTeamGroupQueryOption::builder()
+                .sk(requester.to_string())
+                .limit(50),
+        )
+        .await;
+
+        if res.is_err() {
+            return Permissions::empty();
+        }
+
+        let (groups, _bookmark) = res.unwrap();
+        let mut perms = 0i64;
+
+        for UserTeamGroup {
+            team_group_permissions,
+            ..
+        } in groups
+        {
+            perms |= team_group_permissions;
+        }
+
+        perms.into()
+    }
+}

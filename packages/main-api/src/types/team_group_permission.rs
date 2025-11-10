@@ -1,5 +1,7 @@
+use std::sync::Arc;
+
 use crate::{
-    models::{SpaceCommon, Team},
+    models::{SpaceCommon, Team, UserTeamGroup},
     *,
 };
 
@@ -41,6 +43,67 @@ pub enum TeamGroupPermission {
     // Admin
     ManagePromotions = 62,
     ManageNews = 63,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub struct Permissions(pub i64);
+
+impl Permissions {
+    pub fn is_admin(&self) -> bool {
+        (self.0 & (1 << TeamGroupPermission::TeamAdmin as i32)) != 0
+    }
+
+    pub fn all() -> Self {
+        Self(i64::MAX)
+    }
+
+    pub fn empty() -> Self {
+        Self(0)
+    }
+
+    pub fn contains(&self, permission: TeamGroupPermission) -> bool {
+        (self.0 & (1 << permission as i32)) != 0
+    }
+
+    pub fn read() -> Self {
+        let mut perms = 0;
+        for permission in [
+            TeamGroupPermission::PostRead,
+            TeamGroupPermission::SpaceRead,
+        ] {
+            perms |= 1 << permission as i32;
+        }
+
+        Self(perms)
+    }
+}
+
+impl From<i64> for Permissions {
+    fn from(permissions: i64) -> Self {
+        Self(permissions)
+    }
+}
+
+impl Into<i64> for Permissions {
+    fn into(self) -> i64 {
+        self.0
+    }
+}
+
+impl std::ops::BitOr for Permissions {
+    type Output = Self;
+
+    fn bitor(self, rhs: Self) -> Self::Output {
+        Self(self.0 | rhs.0)
+    }
+}
+
+impl std::ops::Add for Permissions {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self(self.0 | rhs.0)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -152,7 +215,40 @@ impl Into<i64> for &TeamGroupPermissions {
     }
 }
 
-impl FromRequestParts<AppState> for TeamGroupPermissions {
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ResourceOwnership {
+    User(Partition),
+    Team(Partition),
+}
+
+impl From<Partition> for ResourceOwnership {
+    fn from(partition: Partition) -> Self {
+        match partition {
+            Partition::User(_) => ResourceOwnership::User(partition),
+            Partition::Team(_) => ResourceOwnership::Team(partition),
+            _ => panic!("Invalid partition for ResourceOwnership"),
+        }
+    }
+}
+
+#[async_trait::async_trait]
+pub trait ResourcePermissions: Send + Sync {
+    fn viewer_permissions(&self) -> Permissions;
+    fn participant_permissions(&self) -> Permissions;
+    fn resource_owner(&self) -> ResourceOwnership;
+    async fn is_participant(&self, cli: &aws_sdk_dynamodb::Client, requester: &Partition) -> bool;
+}
+
+#[async_trait::async_trait]
+pub trait EntityPermissions: Send + Sync {
+    async fn get_permissions_for(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        requester: &Partition,
+    ) -> Permissions;
+}
+
+impl FromRequestParts<AppState> for Permissions {
     type Rejection = crate::Error;
 
     async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self> {
@@ -161,46 +257,61 @@ impl FromRequestParts<AppState> for TeamGroupPermissions {
             return Ok(permissions.clone());
         }
 
-        let user = parts.extensions.get::<User>();
-        tracing::warn!("User in TeamGroupPermissions: {:?}", user);
-
-        if user.is_none() {
-            return Ok(Self::empty());
-        }
-
-        let user = user.unwrap();
-
-        let permissions = if let Some(team) = parts.extensions.get::<Team>() {
-            tracing::debug!("Team in TeamGroupPermissions: {:?}", team);
-            let permissions =
-                Team::get_permissions_by_team_pk(&state.dynamo.client, &team.pk, &user.pk)
-                    .await
-                    .unwrap_or_else(|_| Self::empty());
-
-            permissions
-        } else if let Some(space) = parts.extensions.get::<SpaceCommon>() {
-            tracing::debug!("Space in TeamGroupPermissions: {:?}", space);
-            if matches!(space.user_pk, Partition::User(_)) && space.user_pk == user.pk {
-                TeamGroupPermissions::all()
-            } else if matches!(space.user_pk, Partition::Team(_)) {
-                let permissions = Team::get_permissions_by_team_pk(
-                    &state.dynamo.client,
-                    &space.user_pk,
-                    &user.pk,
-                )
-                .await
-                .unwrap_or_else(|_| Self::empty());
-
-                permissions
+        // Select Resource (Space, Post, ..)
+        let resource: Arc<dyn ResourcePermissions + Send + Sync> =
+            if let Some(space) = parts.extensions.get::<SpaceCommon>() {
+                Arc::new(space.clone())
             } else {
-                TeamGroupPermissions::empty()
+                return Err(Error::InvalidResource);
+            };
+
+        // Check Participant permission
+        let requester = parts.extensions.get::<User>();
+        let participant_permissions = match requester {
+            Some(user) => {
+                if resource
+                    .is_participant(&state.dynamo.client, &user.pk)
+                    .await
+                {
+                    resource.participant_permissions()
+                } else {
+                    Permissions::empty()
+                }
             }
-        } else {
-            TeamGroupPermissions::empty()
+            _ => Permissions::empty(),
         };
 
-        parts.extensions.insert(permissions.clone());
+        // Check if requester permissions for the owner entity
+        let owner_entity: Arc<dyn EntityPermissions + Send + Sync> = match resource.resource_owner()
+        {
+            // NOTE: now we don't get real owner data from database because we don't allow users to deligate their permission to others.
+            // Therefore, it just compare user.pk with owner_pk.
+            ResourceOwnership::User(owner_pk) => Arc::new(User::default().with_pk(owner_pk)),
 
-        Ok(permissions)
+            // If team resource, it must be injected beforehand
+            ResourceOwnership::Team(_team_pk) => match parts.extensions.get::<Team>() {
+                Some(team) => Arc::new(team.clone()),
+                _ => {
+                    return Err(Error::InternalServerError(
+                        "Team resource must have Team injected in request parts".to_string(),
+                    ));
+                }
+            },
+        };
+
+        let entity_permissions = match requester {
+            Some(user) => {
+                owner_entity
+                    .get_permissions_for(&state.dynamo.client, &user.pk)
+                    .await
+            }
+            _ => Permissions::empty(),
+        };
+
+        parts
+            .extensions
+            .insert(entity_permissions + participant_permissions + resource.viewer_permissions());
+
+        Ok(entity_permissions)
     }
 }

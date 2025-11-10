@@ -1,18 +1,8 @@
+use crate::controllers::v3::posts::post_response::PostResponse;
 use crate::models::feed::{Post, PostLike, PostQueryOption};
 use crate::models::user::User;
 use crate::types::list_items_response::ListItemsResponse;
-use crate::types::{EntityType, Partition, PostStatus, TeamGroupPermissions, Visibility};
-use crate::{AppState, Error};
-use aide::NoApi;
-use bdk::prelude::*;
-use by_axum::axum::{
-    Json,
-    extract::{Path, Query, State},
-};
-use serde::Deserialize;
-use validator::Validate;
-
-use crate::controllers::v3::posts::post_response::PostResponse;
+use crate::*;
 
 use super::dto::{TeamPath, TeamPathParam};
 
@@ -28,10 +18,10 @@ pub struct ListTeamPostsQueryParams {
 pub async fn list_team_posts_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
-    NoApi(permission): NoApi<TeamGroupPermissions>,
+    NoApi(permission): NoApi<Permissions>,
     Path(TeamPathParam { team_pk }): TeamPath,
     Query(ListTeamPostsQueryParams { bookmark, status }): Query<ListTeamPostsQueryParams>,
-) -> Result<Json<ListItemsResponse<PostResponse>>, Error> {
+) -> Result<Json<ListItemsResponse<PostResponse>>> {
     tracing::debug!(
         "list_team_posts_handler: user = {:?}, team_pk = {:?}, bookmark = {:?}, status = {:?}",
         user,
