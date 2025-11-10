@@ -9,13 +9,11 @@ export function upsertSpaceInvitation(
   });
 }
 
-export function verifySpaceCode(spacePk: string, code: string): Promise<void> {
+export function verifySpaceCode(spacePk: string): Promise<void> {
   return call(
     'POST',
     `/v3/spaces/${encodeURIComponent(spacePk)}/members/verifications`,
-    {
-      code: code,
-    },
+    {},
   );
 }
 

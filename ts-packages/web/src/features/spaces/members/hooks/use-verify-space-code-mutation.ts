@@ -6,7 +6,6 @@ import { ListInvitationMemberResponse } from '../types/list-invitation-member-re
 
 type Vars = {
   spacePk: string;
-  code: string;
 };
 
 export function useVerifySpaceCodeMutation<
@@ -16,9 +15,9 @@ export function useVerifySpaceCodeMutation<
   return useMutation({
     mutationKey: ['verify-space-code'],
     mutationFn: async (v: Vars) => {
-      const { spacePk, code } = v;
+      const { spacePk } = v;
 
-      await verifySpaceCode(spacePk, code);
+      await verifySpaceCode(spacePk);
       return v;
     },
 

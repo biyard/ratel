@@ -1,6 +1,8 @@
 use crate::NoApi;
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
-use crate::features::spaces::members::SpaceEmailVerification;
+use crate::features::spaces::members::{
+    InvitationStatus, SpaceEmailVerification, SpaceInvitationMember,
+};
 use crate::models::{SpaceCommon, User};
 use crate::types::{EntityType, SpaceStatus};
 use crate::{
@@ -14,10 +16,7 @@ use by_axum::axum::extract::{Json, Path, State};
 use serde::Deserialize;
 
 #[derive(Debug, Clone, serde::Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
-pub struct VerifySpaceCodeRequest {
-    #[schemars(description = "Verification code sent to user's email.")]
-    pub code: String,
-}
+pub struct VerifySpaceCodeRequest {}
 
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema,
@@ -37,7 +36,7 @@ pub async fn verify_space_code_handler(
         return Ok(Json(VerifySpaceCodeResponse { success: false }));
     }
 
-    let _user = user.unwrap_or_default();
+    let user = user.unwrap_or_default();
 
     let space = SpaceCommon::get(
         &dynamo.client,
@@ -50,6 +49,21 @@ pub async fn verify_space_code_handler(
     if space.status == Some(SpaceStatus::Started) || space.status == Some(SpaceStatus::Finished) {
         return Err(Error::FinishedSpace);
     }
+
+    let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
+    tracing::debug!("verification pk: {:?}, sk: {:?}", pk, sk);
+
+    let user = SpaceInvitationMember::get(&dynamo.client, pk.clone(), Some(sk.clone())).await?;
+
+    if user.is_none() {
+        return Ok(Json(VerifySpaceCodeResponse { success: true }));
+    }
+
+    let _ = SpaceInvitationMember::updater(pk, sk)
+        .with_status(InvitationStatus::Accepted)
+        .execute(&dynamo.client)
+        .await
+        .unwrap_or_default();
 
     // let now = get_now_timestamp();
     // let verification = SpaceEmailVerification::get(
