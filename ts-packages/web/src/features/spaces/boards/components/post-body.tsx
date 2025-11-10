@@ -26,6 +26,7 @@ function GeneralPost({ post }: { post: SpacePostResponse }) {
         editable={false}
         showToolbar={false}
         url={post?.urls.length > 0 ? post?.urls[0] : null}
+        files={post?.files.length > 0 ? post?.files : []}
       />
     </div>
   );

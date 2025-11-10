@@ -3,6 +3,7 @@ import { optimisticUpdate } from '@/lib/hook-utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { SpacePostResponse } from '../types/space-post-response';
+import FileModel from '../../files/types/file';
 
 export function updateSpacePost(
   spacePk: string,
@@ -11,6 +12,7 @@ export function updateSpacePost(
   htmlContents: string,
   categoryName: string,
   image: string | null,
+  files: FileModel[],
 ): Promise<void> {
   return call(
     'PATCH',
@@ -20,6 +22,7 @@ export function updateSpacePost(
       html_contents: htmlContents,
       category_name: categoryName,
       urls: image ? [image] : [],
+      files,
     },
   );
 }
@@ -36,6 +39,7 @@ export function useUpdateSpacePostMutation<T extends SpacePostResponse>() {
       htmlContents,
       categoryName,
       image,
+      files,
     }: {
       spacePk: string;
       postPk: string;
@@ -43,6 +47,7 @@ export function useUpdateSpacePostMutation<T extends SpacePostResponse>() {
       htmlContents: string;
       categoryName: string;
       image: string | null;
+      files: FileModel[];
     }) => {
       await updateSpacePost(
         spacePk,
@@ -51,6 +56,7 @@ export function useUpdateSpacePostMutation<T extends SpacePostResponse>() {
         htmlContents,
         categoryName,
         image,
+        files,
       );
     },
     onSuccess: async (_, { spacePk, postPk }) => {

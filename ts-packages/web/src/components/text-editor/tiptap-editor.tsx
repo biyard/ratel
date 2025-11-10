@@ -42,6 +42,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       maxImageSizeMB = 50,
       maxVideoSizeMB = 50,
       onImageUpload,
+      onUploadPDF,
       'data-pw': dataPw,
     },
     ref,
@@ -199,6 +200,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             className={toolbarClassName}
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
+            onUploadPDF={onUploadPDF}
           />
         )}
 
@@ -274,6 +276,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             className={toolbarClassName}
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
+            onUploadPDF={onUploadPDF}
           />
         )}
       </div>
