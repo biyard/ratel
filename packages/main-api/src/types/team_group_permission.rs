@@ -335,10 +335,11 @@ impl FromRequestParts<AppState> for Permissions {
             _ => Permissions::empty(),
         };
 
+        let combined_permissions = entity_permissions + participant_permissions + resource.viewer_permissions();
         parts
             .extensions
-            .insert(entity_permissions + participant_permissions + resource.viewer_permissions());
+            .insert(combined_permissions);
 
-        Ok(entity_permissions)
+        Ok(combined_permissions)
     }
 }

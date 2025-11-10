@@ -4,7 +4,7 @@ use crate::{
     AppState,
     features::spaces::sprint_leagues::SprintLeaguePlayer,
     models::{SpaceCommon, User},
-    types::{Partition, TeamGroupPermission},
+    types::{EntityType, Partition, TeamGroupPermission},
 };
 use aide::{NoApi, OperationIo};
 use axum::{
@@ -13,6 +13,7 @@ use axum::{
 };
 use bdk::prelude::*;
 use serde::Deserialize;
+use crate::types::Permissions;
 
 #[derive(Debug, Deserialize, Default, OperationIo, JsonSchema)]
 pub struct UpdateSprintLeaguePlayerRequest {
@@ -23,7 +24,8 @@ pub struct UpdateSprintLeaguePlayerRequest {
 
 pub async fn update_sprint_league_player_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
+    NoApi(permissions): NoApi<Permissions>,
+    NoApi(_user): NoApi<User>,
     Path(SprintLeaguePlayerPathParam {
         space_pk,
         player_sk,
@@ -34,17 +36,12 @@ pub async fn update_sprint_league_player_handler(
         return Err(Error::SpaceNotFound);
     }
 
-    let (space_common, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceWrite,
-    )
-    .await?;
-
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceWrite) {
         return Err(Error::NoPermission);
     }
+
+    let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon)).await?
+        .ok_or(Error::SpaceNotFound)?;
 
     let is_editable = space_common.validate_editable();
     if !is_editable {

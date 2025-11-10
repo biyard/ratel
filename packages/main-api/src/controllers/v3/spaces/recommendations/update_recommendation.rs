@@ -1,16 +1,14 @@
 use crate::controllers::v3::spaces::SpacePathParam;
 use crate::features::spaces::recommendations::{SpaceRecommendation, SpaceRecommendationResponse};
-use crate::models::space::SpaceCommon;
 
 use crate::types::{File, Partition, TeamGroupPermission};
-use crate::{AppState, Error};
+use crate::{AppState, Error, Permissions};
 
 use bdk::prelude::*;
 
 use by_axum::axum::extract::{Json, Path, State};
 
 use crate::controllers::v3::spaces::SpacePath;
-use crate::models::user::User;
 use aide::NoApi;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, JsonSchema)]
@@ -21,7 +19,7 @@ pub enum UpdateRecommendationRequest {
 
 pub async fn update_recommendation_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
+    NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<UpdateRecommendationRequest>,
 ) -> crate::Result<Json<SpaceRecommendationResponse>> {
@@ -29,14 +27,7 @@ pub async fn update_recommendation_handler(
         return Err(Error::NotFoundPoll);
     }
 
-    let (_, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        user.as_ref().map(|u| &u.pk),
-        TeamGroupPermission::SpaceEdit,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
         return Err(Error::NoPermission);
     }
 

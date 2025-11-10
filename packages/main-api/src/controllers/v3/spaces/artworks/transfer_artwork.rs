@@ -4,14 +4,14 @@ use bdk::prelude::axum::extract::{Json, Path, State};
 use ethers::providers::{Http, Provider};
 
 use crate::{
-    AppState, Error,
+    AppState, Error, Permissions,
     aide::NoApi,
     config,
     controllers::v3::spaces::{SpacePath, SpacePathParam},
     features::spaces::artworks::{
         SpaceArtwork, SpaceArtworkTrade, TransferSpaceArtworkRequest, TransferSpaceArtworkResponse,
     },
-    models::{SpaceCommon, User, UserEvmAddress},
+    models::{User, UserEvmAddress},
     transact_write,
     types::{EntityType, Partition, TeamGroupPermission},
     utils::{
@@ -25,7 +25,8 @@ const ART_TWIN_TOKEN_ID: u64 = 1;
 
 pub async fn transfer_space_artwork_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
+    NoApi(permissions): NoApi<Permissions>,
+    NoApi(_user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<TransferSpaceArtworkRequest>,
 ) -> Result<Json<TransferSpaceArtworkResponse>, Error> {
@@ -35,14 +36,7 @@ pub async fn transfer_space_artwork_handler(
     };
 
     // Check permission - user must have SpaceEdit permission
-    let (_space_common, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceEdit,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
         return Err(Error::NoPermission);
     }
 

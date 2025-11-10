@@ -1,6 +1,6 @@
 #![allow(warnings)]
 use crate::{
-    AppState, Error,
+    AppState, Error, Permissions,
     controllers::v3::spaces::{SpacePath, SpacePathParam},
     features::spaces::{
         boards::models::{space_category::SpaceCategory, space_post::SpacePost},
@@ -31,6 +31,7 @@ pub struct CreateSpacePostResponse {
 pub async fn create_space_post_handler(
     State(AppState { dynamo, ses, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
+    NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<CreateSpacePostRequest>,
 ) -> Result<Json<CreateSpacePostResponse>, Error> {
@@ -38,16 +39,13 @@ pub async fn create_space_post_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    let (common, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceEdit,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
         return Err(Error::NoPermission);
     }
+
+    let common = SpaceCommon::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceCommon))
+        .await?
+        .ok_or(Error::NotFoundSpace)?;
 
     let category_name = req.category_name.clone();
     let category = SpaceCategory::get(
