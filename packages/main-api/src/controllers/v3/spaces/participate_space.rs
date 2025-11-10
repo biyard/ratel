@@ -34,6 +34,25 @@ pub async fn participate_space_handler(
     //     return Err(Error::InvalidPanel);
     // }
 
+    let space = SpaceCommon::get(
+        &dynamo.client,
+        space_pk.clone(),
+        Some(EntityType::SpaceCommon),
+    )
+    .await?
+    .ok_or(Error::SpaceNotFound)?;
+
+    if space.visibility != SpaceVisibility::Public {
+        let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
+
+        let member =
+            SpaceInvitationMember::get(&dynamo.client, pk.clone(), Some(sk.clone())).await?;
+
+        if member.is_none() || member.unwrap().status != InvitationStatus::Accepted {
+            return Err(Error::NoPermission);
+        }
+    }
+
     if !permissions.contains(TeamGroupPermission::SpaceRead) {
         return Err(Error::NoPermission);
     }
