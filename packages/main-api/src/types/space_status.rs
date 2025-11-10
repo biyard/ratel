@@ -13,8 +13,8 @@ use bdk::prelude::*;
 )]
 pub enum SpaceStatus {
     #[default]
-    Waiting,
-    InProgress,
-    Started,
-    Finished,
+    Waiting, // Draft
+    InProgress, // Published
+    Started,    // Started
+    Finished,   // Finished
 }
