@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { test } from '@playwright/test';
 
 test.describe.serial('E2E test', () => {
   test.beforeEach(async ({ page }) => {
@@ -27,22 +27,5 @@ test.describe.serial('E2E test', () => {
 
     await page.getByText('Create', { exact: true }).click();
     await page.waitForTimeout(500);
-    // const testContent =
-    //   'This is an automated post content created by Playwright E2E. ' +
-    //   'The purpose of this is to verify that the post creation functionality ' +
-    //   'works correctly from end to end, including title input, content editing, ' +
-    //   'auto-save, and final publication. This content is intentionally long to ' +
-    //   'meet the minimum character requirements for post publishing.';
-
-    // const editorSelector = '[data-pw="post-content-editor"] .ProseMirror';
-    // await page.waitForSelector(editorSelector, {
-    //   timeout: CONFIGS.PAGE_WAIT_TIME,
-    // });
-    // await page.click(editorSelector);
-    // await page.fill(editorSelector, testContent);
-
-    // await page.click('#publish-post-button');
-
-    // await page.waitForURL(/\/threads\/.+/, { timeout: CONFIGS.PAGE_WAIT_TIME });
   });
 });
