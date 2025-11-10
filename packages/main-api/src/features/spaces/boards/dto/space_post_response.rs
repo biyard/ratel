@@ -1,3 +1,4 @@
+use crate::File;
 use crate::features::spaces::boards::dto::space_post_comment_response::SpacePostCommentResponse;
 use crate::features::spaces::boards::models::space_post::SpacePost;
 use crate::types::Attribute;
@@ -32,6 +33,7 @@ pub struct SpacePostResponse {
     pub author_username: String,
 
     pub urls: Vec<String>,
+    pub files: Vec<File>,
     pub comments: Vec<SpacePostCommentResponse>,
 }
 
@@ -55,6 +57,7 @@ impl From<SpacePost> for SpacePostResponse {
             author_username: post.author_username,
 
             urls: post.urls,
+            files: post.files.unwrap_or_default(),
             comments: vec![],
         }
     }

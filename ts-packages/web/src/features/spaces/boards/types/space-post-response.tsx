@@ -1,3 +1,4 @@
+import FileModel from '../../files/types/file';
 import { SpacePostCommentResponse } from './space-post-comment-response';
 
 export class SpacePostResponse {
@@ -16,6 +17,7 @@ export class SpacePostResponse {
   author_username: string;
 
   urls: string[];
+  files: FileModel[];
   comments: SpacePostCommentResponse[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,6 +39,7 @@ export class SpacePostResponse {
     this.author_username = json.author_username;
 
     this.urls = json.urls;
+    this.files = json.files;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     this.comments = rows.map((d: any) => new SpacePostCommentResponse(d));

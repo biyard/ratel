@@ -1,4 +1,5 @@
 #![allow(warnings)]
+use crate::File;
 use crate::{
     AppState, Error, Permissions,
     controllers::v3::spaces::{SpacePath, SpacePathParam, SpacePostPath, SpacePostPathParam},
@@ -20,6 +21,7 @@ pub struct UpdateSpacePostRequest {
     pub html_contents: String,
     pub category_name: String,
     pub urls: Vec<String>,
+    pub files: Vec<File>,
 }
 
 pub async fn update_space_post_handler(
@@ -60,6 +62,7 @@ pub async fn update_space_post_handler(
         .with_html_contents(req.html_contents.clone())
         .with_category_name(req.category_name.clone())
         .with_urls(req.urls.clone())
+        .with_files(req.files.clone())
         .execute(&dynamo.client)
         .await?;
 
