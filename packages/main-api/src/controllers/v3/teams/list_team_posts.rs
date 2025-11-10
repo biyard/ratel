@@ -10,9 +10,7 @@ use super::dto::{TeamPath, TeamPathParam};
 pub struct ListTeamPostsQueryParams {
     pub bookmark: Option<String>,
     /// Filter posts by status (draft, published, etc.)
-
-    #[serde(default)]
-    pub status: PostStatus,
+    pub status: Option<PostStatus>,
 }
 
 pub async fn list_team_posts_handler(
@@ -30,6 +28,8 @@ pub async fn list_team_posts_handler(
         status
     );
 
+    let status = status.unwrap_or(PostStatus::Published);
+
     let sk = match (status, permission.is_admin()) {
         (s, true) => s.to_string(),
         (PostStatus::Published, false) => {
@@ -44,6 +44,8 @@ pub async fn list_team_posts_handler(
             return Err(Error::NoPermission);
         }
     };
+
+    tracing::warn!("list_team_posts_handler: querying with sk = {}", sk);
 
     let opt = Post::opt_with_bookmark(bookmark).sk(sk);
 
