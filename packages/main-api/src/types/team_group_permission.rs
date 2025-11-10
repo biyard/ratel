@@ -237,6 +237,7 @@ pub trait ResourcePermissions: Send + Sync {
     fn participant_permissions(&self) -> Permissions;
     fn resource_owner(&self) -> ResourceOwnership;
     async fn is_participant(&self, cli: &aws_sdk_dynamodb::Client, requester: &Partition) -> bool;
+    async fn can_participate(&self, cli: &aws_sdk_dynamodb::Client, requester: &Partition) -> bool;
 }
 
 /// NoopPermissions will be used for accessing team pages.
@@ -258,6 +259,14 @@ impl ResourcePermissions for NoopPermissions {
     }
 
     async fn is_participant(
+        &self,
+        _cli: &aws_sdk_dynamodb::Client,
+        _requester: &Partition,
+    ) -> bool {
+        false
+    }
+
+    async fn can_participate(
         &self,
         _cli: &aws_sdk_dynamodb::Client,
         _requester: &Partition,
@@ -297,8 +306,11 @@ impl FromRequestParts<AppState> for Permissions {
         let participant_permissions = match requester {
             Some(user) => {
                 if resource
-                    .is_participant(&state.dynamo.client, &user.pk)
+                    .can_participate(&state.dynamo.client, &user.pk)
                     .await
+                    || resource
+                        .is_participant(&state.dynamo.client, &user.pk)
+                        .await
                 {
                     resource.participant_permissions()
                 } else {
@@ -335,10 +347,9 @@ impl FromRequestParts<AppState> for Permissions {
             _ => Permissions::empty(),
         };
 
-        let combined_permissions = entity_permissions + participant_permissions + resource.viewer_permissions();
-        parts
-            .extensions
-            .insert(combined_permissions);
+        let combined_permissions =
+            entity_permissions + participant_permissions + resource.viewer_permissions();
+        parts.extensions.insert(combined_permissions);
 
         Ok(combined_permissions)
     }
