@@ -229,7 +229,11 @@ async fn test_list_my_posts() {
 
     assert_eq!(status, 200);
     assert!(
-        body["items"].as_array().map(|a| a.len()).unwrap_or_default() > 0,
+        body["items"]
+            .as_array()
+            .map(|a| a.len())
+            .unwrap_or_default()
+            > 0,
         "No posts found"
     );
 }
@@ -252,16 +256,14 @@ async fn test_list_my_drafts() {
     assert_eq!(status, 200);
     assert!(create_body.post_pk.to_string().len() > 0);
 
-    tracing::info!("Create post response pk: {:?}", create_body.post_pk);
-
     let (status, _headers, body) = get! {
         app: app,
         path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
         headers: headers.clone(),
     };
-    tracing::info!("Get post response: {:?}", body);
     assert_eq!(status, 200);
     assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
+    assert_eq!(body["post"]["status"], 1);
 
     let post_pk = body["post"]["pk"].as_str().unwrap_or_default().to_string();
     let _images = vec!["https://example.com/image1.png".to_string()];
@@ -283,8 +285,21 @@ async fn test_list_my_drafts() {
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body["title"], title);
-    assert_eq!(body["html_contents"], content);
+    assert_eq!(body["title"], title, "feed: {}", create_body.post_pk);
+    assert_eq!(
+        body["html_contents"], content,
+        "feed: {}",
+        create_body.post_pk
+    );
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
+        headers: headers.clone(),
+    };
+    assert_eq!(status, 200);
+    assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
+    assert_eq!(body["post"]["status"], 1, "feed: {}", create_body.post_pk);
 
     // Info
     let (status, _headers, body) = patch! {
@@ -296,8 +311,21 @@ async fn test_list_my_drafts() {
         }
     };
 
+    assert_eq!(status, 200, "feed: {}", create_body.post_pk);
+    assert_eq!(
+        body["visibility"], "PUBLIC",
+        "feed: {}",
+        create_body.post_pk
+    );
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", create_body.post_pk.to_string()),
+        headers: headers.clone(),
+    };
     assert_eq!(status, 200);
-    assert_eq!(body["visibility"], "PUBLIC");
+    assert_eq!(body["post"]["pk"], create_body.post_pk.to_string());
+    assert_eq!(body["post"]["status"], 1, "feed: {}", create_body.post_pk);
 
     // List My Drafts
     let (status, _headers, body) = get! {
@@ -306,10 +334,19 @@ async fn test_list_my_drafts() {
         headers: headers.clone(),
     };
 
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "feed: {}", create_body.post_pk);
     assert!(
-        body["items"].as_array().map(|a| a.len()).unwrap_or_default() > 0,
-        "No posts found"
+        body["items"]
+            .as_array()
+            .map(|a| a.len())
+            .unwrap_or_default()
+            > 0,
+        "No posts found: {}",
+        create_body.post_pk
     );
-    assert_eq!(body["items"][0]["pk"], post_pk);
+    assert_eq!(
+        body["items"][0]["pk"], post_pk,
+        "feed: {}",
+        create_body.post_pk
+    );
 }
