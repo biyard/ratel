@@ -13,7 +13,7 @@ use crate::types::TeamGroupPermission;
 use crate::types::{EntityType, SpacePublishState};
 use crate::utils::aws::{DynamoClient, SesClient};
 use crate::{
-    AppState, Error,
+    AppState, Error, Permissions,
     constants::MAX_ATTEMPT_COUNT,
     models::email::{EmailVerification, EmailVerificationQueryOption},
     utils::time::get_now_timestamp,
@@ -42,7 +42,8 @@ pub struct UpsertInvitationResponse {
 
 pub async fn upsert_invitation_handler(
     State(AppState { dynamo, ses, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
+    NoApi(permissions): NoApi<Permissions>,
+    NoApi(_user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<UpsertInvitationRequest>,
 ) -> Result<Json<UpsertInvitationResponse>, Error> {
@@ -52,16 +53,13 @@ pub async fn upsert_invitation_handler(
     }
 
     // Check Permissions
-    let (space_common, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceEdit,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
         return Err(Error::NoPermission);
     }
+
+    let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceCommon))
+        .await?
+        .ok_or(Error::NotFoundSpace)?;
 
     if space_common.status == Some(SpaceStatus::Started)
         || space_common.status == Some(SpaceStatus::Finished)

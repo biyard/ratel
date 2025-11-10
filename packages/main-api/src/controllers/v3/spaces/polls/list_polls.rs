@@ -18,7 +18,6 @@ pub struct ListPollsResponse {
 
 pub async fn list_polls_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Query(ListPollQueryParams { bookmark }): Query<ListPollQueryParams>,

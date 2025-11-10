@@ -1,5 +1,4 @@
 use crate::features::spaces::panels::{SpacePanel, SpacePanelParticipant};
-use crate::models::space::SpaceCommon;
 
 use crate::features::spaces::{SpaceParticipant, polls::*};
 use crate::models::user::User;
@@ -8,7 +7,7 @@ use crate::types::{
 };
 use crate::types::{RespondentAttr, SpaceStatus};
 use crate::utils::time::get_now_timestamp_millis;
-use crate::{AppState, Error, transact_write};
+use crate::{AppState, Error, Permissions, transact_write};
 
 use aide::NoApi;
 
@@ -29,19 +28,13 @@ pub struct RespondPollSpaceResponse {
 pub async fn respond_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): aide::NoApi<User>,
+    NoApi(permissions): NoApi<Permissions>,
     Path(PollPathParam { space_pk, poll_sk }): PollPath,
     Json(req): Json<RespondPollSpaceRequest>,
 ) -> crate::Result<Json<RespondPollSpaceResponse>> {
     //Validate Request
 
-    let (_space_common, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceRead,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceRead) {
         return Err(Error::NoPermission);
     }
 

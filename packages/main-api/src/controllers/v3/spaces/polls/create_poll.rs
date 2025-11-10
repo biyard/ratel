@@ -15,7 +15,6 @@ pub struct CreatePollSpaceRequest {
 
 pub async fn create_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<CreatePollSpaceRequest>,
