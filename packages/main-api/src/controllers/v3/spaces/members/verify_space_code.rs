@@ -1,6 +1,8 @@
 use crate::NoApi;
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
-use crate::features::spaces::members::SpaceEmailVerification;
+use crate::features::spaces::members::{
+    InvitationStatus, SpaceEmailVerification, SpaceInvitationMember,
+};
 use crate::models::{SpaceCommon, User};
 use crate::types::{EntityType, SpaceStatus};
 use crate::{
@@ -14,10 +16,7 @@ use by_axum::axum::extract::{Json, Path, State};
 use serde::Deserialize;
 
 #[derive(Debug, Clone, serde::Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
-pub struct VerifySpaceCodeRequest {
-    #[schemars(description = "Verification code sent to user's email.")]
-    pub code: String,
-}
+pub struct VerifySpaceCodeRequest {}
 
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema,
@@ -31,7 +30,7 @@ pub async fn verify_space_code_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Path(SpacePathParam { space_pk }): SpacePath,
-    Json(req): Json<VerifySpaceCodeRequest>,
+    Json(_req): Json<VerifySpaceCodeRequest>,
 ) -> Result<Json<VerifySpaceCodeResponse>, Error> {
     if user.is_none() {
         return Ok(Json(VerifySpaceCodeResponse { success: false }));
@@ -51,46 +50,61 @@ pub async fn verify_space_code_handler(
         return Err(Error::FinishedSpace);
     }
 
-    let now = get_now_timestamp();
-    let verification = SpaceEmailVerification::get(
-        &dynamo.client,
-        &space_pk,
-        Some(EntityType::SpaceEmailVerification(user.email.clone())),
-    )
-    .await?;
+    let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
+    tracing::debug!("verification pk: {:?}, sk: {:?}", pk, sk);
 
-    if verification.is_none() {
-        return Err(Error::NotFoundVerificationCode);
+    let user = SpaceInvitationMember::get(&dynamo.client, pk.clone(), Some(sk.clone())).await?;
+
+    if user.is_none() {
+        return Ok(Json(VerifySpaceCodeResponse { success: true }));
     }
 
-    tracing::debug!("code {}", req.code);
+    let _ = SpaceInvitationMember::updater(pk, sk)
+        .with_status(InvitationStatus::Accepted)
+        .execute(&dynamo.client)
+        .await
+        .unwrap_or_default();
 
-    let email_verification = verification.unwrap_or_default();
+    // let now = get_now_timestamp();
+    // let verification = SpaceEmailVerification::get(
+    //     &dynamo.client,
+    //     &space_pk,
+    //     Some(EntityType::SpaceEmailVerification(user.email.clone())),
+    // )
+    // .await?;
 
-    if email_verification.authorized {
-        return Err(Error::ExceededAttemptEmailVerification);
-    }
+    // if verification.is_none() {
+    //     return Err(Error::NotFoundVerificationCode);
+    // }
 
-    if email_verification.attempt_count >= MAX_ATTEMPT_COUNT {
-        return Err(Error::ExceededAttemptEmailVerification);
-    }
+    // tracing::debug!("code {}", req.code);
 
-    if email_verification.expired_at < now {
-        return Err(Error::ExpiredVerification);
-    }
+    // let email_verification = verification.unwrap_or_default();
 
-    if email_verification.value != req.code {
-        SpaceEmailVerification::updater(email_verification.pk, email_verification.sk)
-            .increase_attempt_count(1)
-            .execute(&dynamo.client)
-            .await?;
-        return Err(Error::InvalidVerificationCode);
-    } else {
-        SpaceEmailVerification::updater(email_verification.pk, email_verification.sk)
-            .with_authorized(true)
-            .execute(&dynamo.client)
-            .await?;
-    }
+    // if email_verification.authorized {
+    //     return Err(Error::ExceededAttemptEmailVerification);
+    // }
+
+    // if email_verification.attempt_count >= MAX_ATTEMPT_COUNT {
+    //     return Err(Error::ExceededAttemptEmailVerification);
+    // }
+
+    // if email_verification.expired_at < now {
+    //     return Err(Error::ExpiredVerification);
+    // }
+
+    // if email_verification.value != req.code {
+    //     SpaceEmailVerification::updater(email_verification.pk, email_verification.sk)
+    //         .increase_attempt_count(1)
+    //         .execute(&dynamo.client)
+    //         .await?;
+    //     return Err(Error::InvalidVerificationCode);
+    // } else {
+    //     SpaceEmailVerification::updater(email_verification.pk, email_verification.sk)
+    //         .with_authorized(true)
+    //         .execute(&dynamo.client)
+    //         .await?;
+    // }
 
     Ok(Json(VerifySpaceCodeResponse { success: true }))
 }
