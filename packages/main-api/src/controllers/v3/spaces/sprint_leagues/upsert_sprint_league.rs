@@ -14,6 +14,7 @@ use axum::{
 };
 use bdk::prelude::*;
 use serde::Deserialize;
+use crate::types::Permissions;
 
 #[derive(Debug, Deserialize, Default, OperationIo, JsonSchema)]
 pub struct UpsertSprintLeaguePlayerRequest {
@@ -22,6 +23,7 @@ pub struct UpsertSprintLeaguePlayerRequest {
 
 pub async fn upsert_sprint_league_handler(
     State(AppState { dynamo, .. }): State<AppState>,
+    NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
     Json(req): Json<UpsertSprintLeaguePlayerRequest>,
@@ -34,17 +36,12 @@ pub async fn upsert_sprint_league_handler(
         return Err(Error::InvalidSprintLeaguePlayer);
     }
 
-    let (space_common, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceRead,
-    )
-    .await?;
-
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceRead) {
         return Err(Error::NoPermission);
     }
+
+    let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon)).await?
+        .ok_or(Error::SpaceNotFound)?;
 
     let is_editable = space_common.validate_editable();
     if !is_editable {

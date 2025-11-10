@@ -4,7 +4,7 @@ use crate::{
     features::spaces::sprint_leagues::{
         SprintLeagueMetadata, SprintLeagueResponse, SprintLeagueVote,
     },
-    models::{SpaceCommon, User},
+    models::User,
     types::{EntityType, Partition, TeamGroupPermission},
 };
 use aide::NoApi;
@@ -13,9 +13,11 @@ use by_axum::axum::{
     Json,
     extract::{Path, State},
 };
+use crate::types::Permissions;
 
 pub async fn get_sprint_league_handler(
     State(AppState { dynamo, .. }): State<AppState>,
+    NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<Option<User>>,
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
 ) -> crate::Result<Json<SprintLeagueResponse>> {
@@ -23,14 +25,7 @@ pub async fn get_sprint_league_handler(
         return Err(Error::SpaceNotFound);
     }
 
-    let (_, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        user.as_ref().map(|u| &u.pk),
-        TeamGroupPermission::SpaceRead,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceRead) {
         return Err(Error::NoPermission);
     }
 

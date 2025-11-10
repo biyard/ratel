@@ -1,8 +1,9 @@
 use crate::features::spaces::polls::*;
+use crate::models::space::SpaceCommon;
 use crate::types::{EntityType, SpacePublishState};
 use crate::{
-    AppState, Error,
-    models::{space::SpaceCommon, user::User},
+    AppState, Error, Permissions,
+    models::user::User,
     types::{Partition, TeamGroupPermission},
 };
 
@@ -17,6 +18,7 @@ use aide::NoApi;
 pub async fn get_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
+    NoApi(permissions): NoApi<Permissions>,
     Path(PollPathParam { space_pk, poll_sk }): PollPath,
 ) -> Result<Json<PollResponse>, Error> {
     // Request Validation
@@ -24,16 +26,13 @@ pub async fn get_poll_handler(
         return Err(Error::NotFoundPoll);
     }
 
-    let (sc, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        user.as_ref().map(|u| &u.pk),
-        TeamGroupPermission::SpaceRead,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceRead) {
         return Err(Error::NoPermission);
     }
+
+    let sc = SpaceCommon::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceCommon))
+        .await?
+        .ok_or(Error::NotFoundSpace)?;
 
     let poll_pk = match poll_sk.clone() {
         EntityType::SpacePoll(v) => Partition::Poll(v.to_string()),
