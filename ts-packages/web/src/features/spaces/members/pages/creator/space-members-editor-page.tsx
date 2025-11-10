@@ -22,7 +22,7 @@ export function SpaceMembersEditorPage({ spacePk }: SpacePathProps) {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col">
           <div className="text-base font-semibold">{t('invited_members')}</div>
-          <div className="text-xs text-neutral-400">{t('invite_info')}</div>
+          <div className="text-xs text-text-secondary">{t('invite_info')}</div>
         </div>
         {ctrl.space.status !== SpaceStatus.Started && (
           <Button
