@@ -643,14 +643,14 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: Cache builder
-        id: main-api-build-cache
+        id: playwright-tests-build-cache
         uses: actions/cache@v4
         with:
-          key: main-api-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          key: playwright-tests-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            main-api-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-            main-api-build-${{ runner.os }}-
-            main-api-build-
+            playwright-tests-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            playwright-tests-build-${{ runner.os }}-
+            playwright-tests-build-
           path: |
             packages/main-api/target
 
@@ -669,9 +669,20 @@ jobs:
           corepack enable
           corepack prepare pnpm@10.15.0 --activate
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Install dependencies
+        run: pnpm i
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
       - name: Building APIs
         env:
-          REGION: ap-northeast-2
+          AWS_REGION: us-east-1
           ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
@@ -706,11 +717,11 @@ jobs:
           P256_D: ${{ secrets.P256_D }}
           P256_CRV: ${{ secrets.P256_CRV }}
 
-          DYNAMO_TABLE_PREFIX: ratel-dev
-          DYNAMO_ENDPOINT: none
+          DYNAMO_TABLE_PREFIX: ratel-local
+          DYNAMO_ENDPOINT: http://localhost:4566
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          RUST_FLAG: --features bypass
-          WEB_BUILD: true
+          RUST_FLAG: "--features bypass,no-secret"
+          WEB_BUILD: false
           PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
           PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
           PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
@@ -718,20 +729,6 @@ jobs:
           cd packages/main-api
           make dist
           make docker.build
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
-
-      - name: Install dependencies
-        run: pnpm i
-
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Setup test environment
-        run: |
           docker-compose --profile testing up -d
 
       - name: Wait for services to be ready

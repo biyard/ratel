@@ -1,7 +1,7 @@
 use names::{Generator, Name};
 
-use crate::features::spaces::members::{InvitationStatus, SpaceInvitationMember};
 use crate::Permissions;
+use crate::features::spaces::members::{InvitationStatus, SpaceInvitationMember};
 
 use super::*;
 
