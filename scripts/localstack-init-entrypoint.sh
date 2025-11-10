@@ -4,21 +4,23 @@ echo "start"
 yum update
 yum install -y awscli
 
+local ENDPOINT=http://localstack:4566
+
 echo 'Waiting for LocalStack to be ready...'
-until aws dynamodb --endpoint-url=http://localstack:4566  list-tables >/dev/null 2>&1; do
+until aws dynamodb --endpoint-url=$ENDPOINT  list-tables >/dev/null 2>&1; do
     sleep 2
 done
 echo 'Creating ratel-local table with GSIs...'
-aws --endpoint-url=http://localstack:4566 dynamodb create-table --cli-input-json file:///scripts/dynamodb-schema.json
+aws --endpoint-url=$ENDPOINT dynamodb create-table --cli-input-json file:///scripts/dynamodb-schema.json
 echo 'ratel-local-main table and GSIs created successfully'
 
 echo 'Waiting for LocalStack to be ready...'
-until aws --endpoint-url=http://localstack:4566 sqs list-queues >/dev/null 2>&1; do
+until aws --endpoint-url=$ENDPOINT sqs list-queues >/dev/null 2>&1; do
     sleep 2
 done &&
 echo 'Creating SQS queues...'
-aws --endpoint-url=http://localstack:4566 sqs create-queue --queue-name watermark-queue
-aws --endpoint-url=http://localstack:4566 sqs create-queue --queue-name artwork-image-queue
+aws --endpoint-url=$ENDPOINT sqs create-queue --queue-name watermark-queue
+aws --endpoint-url=$ENDPOINT sqs create-queue --queue-name artwork-image-queue
 echo 'SQS queues created successfully'
 
 echo 'Creating admin user...'
@@ -26,7 +28,7 @@ ADMIN_UUID="00000000-0000-0000-0000-000000000001"
 ADMIN_PASSWORD_HASH="d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8"
 TIMESTAMP=$(date +%s%3N)
 
-aws --endpoint-url=http://localstack:4566 dynamodb put-item \
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
   --table-name ratel-local-main \
   --item '{
     "pk": {"S": "USER#'${ADMIN_UUID}'"},
@@ -55,7 +57,7 @@ aws --endpoint-url=http://localstack:4566 dynamodb put-item \
   }'
 
 for idx in {2..10}; do
-  aws --endpoint-url=http://localstack:4566 dynamodb put-item \
+  aws --endpoint-url=$ENDPOINT dynamodb put-item \
     --table-name ratel-local-main \
     --item '{
       "pk": {"S": "USER#00000000-0000-0000-0000-00000000000'${idx}'"},
@@ -85,7 +87,7 @@ for idx in {2..10}; do
 done
 
 # Create a Team (hiteam)
-aws --endpoint-url=http://localstack:4566 dynamodb put-item \
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
     --table-name ratel-local-main \
     --item '{
             "gsi6_pk": {"S": "TEAM"},
@@ -107,7 +109,7 @@ aws --endpoint-url=http://localstack:4566 dynamodb put-item \
         }'
 
 # Create a TEAM group (Admin)
-aws --endpoint-url=http://localstack:4566 dynamodb put-item \
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
     --table-name ratel-local-main \
     --item '{
             "permissions": {"N": "-4611686018420032497"},
@@ -122,7 +124,7 @@ aws --endpoint-url=http://localstack:4566 dynamodb put-item \
         }'
 
 # Setting Owner(hi+2@ratel.foundation)
-aws --endpoint-url=http://localstack:4566 dynamodb put-item \
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
     --table-name ratel-local-main \
     --item '{
             "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
@@ -137,7 +139,7 @@ aws --endpoint-url=http://localstack:4566 dynamodb put-item \
 
 # Add users to team (hi+2@ratel.foundation, hi+3@ratel.foundation)
 ## User team
-aws --endpoint-url=http://localstack:4566 dynamodb put-item \
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
     --table-name ratel-local-main \
     --item '{
             "last_used_at": {"N": "'${TIMESTAMP}'"},
@@ -150,7 +152,7 @@ aws --endpoint-url=http://localstack:4566 dynamodb put-item \
             "username": {"S": "hiteam"}
         }'
 ## User group
-aws --endpoint-url=http://localstack:4566 dynamodb put-item \
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
     --table-name ratel-local-main \
     --item '{
             "team_group_permissions": {"N": "-4611686018420032497"},
@@ -164,7 +166,7 @@ aws --endpoint-url=http://localstack:4566 dynamodb put-item \
         }'
 
 ## User team
-aws --endpoint-url=http://localstack:4566 dynamodb put-item \
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
     --table-name ratel-local-main \
     --item '{
             "last_used_at": {"N": "'${TIMESTAMP}'"},
@@ -177,7 +179,7 @@ aws --endpoint-url=http://localstack:4566 dynamodb put-item \
             "username": {"S": "hiteam"}
         }'
 ## User group
-aws --endpoint-url=http://localstack:4566 dynamodb put-item \
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
     --table-name ratel-local-main \
     --item '{
             "team_group_permissions": {"N": "-4611686018420032497"},
