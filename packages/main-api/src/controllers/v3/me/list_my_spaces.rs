@@ -27,7 +27,7 @@ pub async fn list_my_spaces_handler(
 
     if should_list_invited_spaces(&bookmark) {
         let status = InvitationStatus::Invited.to_string();
-        tracing::info!("Listing invited spaces with status: {:?}", status);
+        tracing::debug!("Listing invited spaces with status: {:?}", status);
         let opt = SpaceInvitationMember::opt_with_bookmark(bookmark)
             .limit(limit)
             .sk(status);
@@ -38,7 +38,7 @@ pub async fn list_my_spaces_handler(
                 .into_iter()
                 .map(|space| MySpace::Pending(space)),
         );
-        tracing::info!("Listed invited spaces, total items: {}", items.len());
+        tracing::debug!("Listed invited spaces, total items: {}", items.len());
 
         if let Some(b) = &bm {
             bookmark = Some(b.clone());
@@ -56,7 +56,7 @@ pub async fn list_my_spaces_handler(
     // NOTE: Continue listing participating spaces if we still have limit
     let bookmark = if let Some(bm) = bookmark {
         let bm = bm.replacen("SP-", "", 1); // "SP-" -> ""
-        tracing::info!(
+        tracing::debug!(
             "Continuing listing participating spaces with bookmark: {:?}",
             bm
         );
@@ -64,7 +64,7 @@ pub async fn list_my_spaces_handler(
     } else {
         return Err(Error::InvalidBookmark);
     };
-    tracing::info!("Listing participating spaces with bookmark: {:?}", bookmark);
+    tracing::debug!("Listing participating spaces with bookmark: {:?}", bookmark);
 
     let (participating_spaces, bookmark) = list_participating_spaces(
         &dynamo.client,

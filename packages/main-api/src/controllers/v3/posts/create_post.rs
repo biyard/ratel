@@ -27,7 +27,7 @@ pub async fn create_post_handler(
     tracing::debug!("create_post_handler {:?}", req);
     let cli = &dynamo.client;
     let author: Author = if let Some(Json(CreatePostRequest { team_pk })) = req {
-        tracing::warn!(
+        tracing::debug!(
             "Creating post under team: {:?} by user {:?}",
             team_pk,
             user.pk
