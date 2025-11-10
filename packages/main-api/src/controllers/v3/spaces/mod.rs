@@ -63,8 +63,8 @@ pub fn route() -> Result<Router<AppState>> {
         )
         // Above all, apply user participant instead of real user.
         // Real user will be passed only when space admin access is needed.
-        .layer(middleware::from_fn_with_state(app_state, inject_space))
         .route("/:space_pk/participate", post(participate_space_handler))
+        .layer(middleware::from_fn_with_state(app_state, inject_space))
         .route("/", post(create_space_handler).get(list_spaces_handler)))
 }
 

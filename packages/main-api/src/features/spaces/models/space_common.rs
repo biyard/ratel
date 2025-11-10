@@ -1,5 +1,6 @@
 use ssi::claims::ResourceProvider;
 
+use crate::features::spaces::members::{InvitationStatus, SpaceInvitationMember};
 use crate::*;
 use crate::{
     Error,
@@ -206,6 +207,21 @@ impl ResourcePermissions for SpaceCommon {
         SpaceParticipant::get(cli, &pk, Some(&sk))
             .await
             .map(|sp| sp.is_some())
+            .unwrap_or(false)
+    }
+
+    async fn can_participate(&self, cli: &aws_sdk_dynamodb::Client, requester: &Partition) -> bool {
+        let (pk, sk) = SpaceInvitationMember::keys(&self.pk, requester);
+        SpaceInvitationMember::get(cli, &pk, Some(&sk))
+            .await
+            .map(|sp: Option<SpaceInvitationMember>| {
+                if let Some(sp) = sp {
+                    sp.status == InvitationStatus::Invited
+                        || sp.status == InvitationStatus::Accepted
+                } else {
+                    false
+                }
+            })
             .unwrap_or(false)
     }
 }
