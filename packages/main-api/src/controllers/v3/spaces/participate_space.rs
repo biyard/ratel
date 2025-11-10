@@ -25,7 +25,7 @@ pub async fn participate_space_handler(
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
     Json(req): Json<ParticipateSpaceRequest>,
 ) -> Result<Json<ParticipateSpaceResponse>> {
-    tracing::warn!("Handling request: {:?}", req);
+    tracing::debug!("Handling request: {:?}", req);
     // TODO: Check verifiable_presentation and add user as SpaceParticipant
 
     // let is_verified = SpaceParticipant::verify_credential(&dynamo, &space_pk, user.clone()).await;

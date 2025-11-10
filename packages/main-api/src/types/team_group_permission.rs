@@ -301,11 +301,11 @@ impl FromRequestParts<AppState> for Permissions {
                 Arc::new(NoopPermissions {})
             };
 
-        tracing::warn!("resource found: {:?}", resource.resource_owner());
+        tracing::debug!("resource found: {:?}", resource.resource_owner());
 
         // Check Participant permission
         let requester = User::from_request_parts(parts, state).await.ok();
-        tracing::warn!("requester: {:?}", requester);
+        tracing::debug!("requester: {:?}", requester);
         let participant_permissions = match requester {
             Some(ref user) => {
                 if resource
@@ -323,7 +323,7 @@ impl FromRequestParts<AppState> for Permissions {
             _ => Permissions::empty(),
         };
 
-        tracing::warn!("participant_permissions: {:?}", participant_permissions);
+        tracing::debug!("participant_permissions: {:?}", participant_permissions);
 
         // Check if requester permissions for the owner entity
         let owner_entity: Arc<dyn EntityPermissions + Send + Sync> = match resource.resource_owner()

@@ -643,14 +643,14 @@ jobs:
           aws-region: ap-northeast-2
 
       - name: Cache builder
-        id: main-api-build-cache
+        id: playwright-tests-build-cache
         uses: actions/cache@v4
         with:
-          key: main-api-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
+          key: playwright-tests-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
-            main-api-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
-            main-api-build-${{ runner.os }}-
-            main-api-build-
+            playwright-tests-build-${{ runner.os }}-rust-${{ env.RUSTC_HASH }}-
+            playwright-tests-build-${{ runner.os }}-
+            playwright-tests-build-
           path: |
             packages/main-api/target
 
@@ -720,7 +720,7 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-local
           DYNAMO_ENDPOINT: http://localhost:4566
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          RUST_FLAG: --features bypass
+          RUST_FLAG: "--features bypass,no-secret"
           WEB_BUILD: false
           PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
           PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}

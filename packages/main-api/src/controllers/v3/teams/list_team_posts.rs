@@ -45,7 +45,7 @@ pub async fn list_team_posts_handler(
         }
     };
 
-    tracing::warn!("list_team_posts_handler: querying with sk = {}", sk);
+    tracing::debug!("list_team_posts_handler: querying with sk = {}", sk);
 
     let opt = Post::opt_with_bookmark(bookmark).sk(sk);
 
