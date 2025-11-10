@@ -1,4 +1,5 @@
 use crate::models::{TeamGroup, UserTeam};
+use crate::utils::time::get_now_timestamp_millis;
 use crate::*;
 use crate::{
     models::{
@@ -55,7 +56,7 @@ impl Team {
         let pk = Partition::Team(team_id);
         let sk = EntityType::Team;
 
-        let now = chrono::Utc::now().timestamp_micros();
+        let now = get_now_timestamp_millis();
 
         Self {
             pk,
