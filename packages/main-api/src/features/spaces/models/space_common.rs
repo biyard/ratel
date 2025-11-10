@@ -104,6 +104,9 @@ pub struct SpaceCommon {
     // participants is the number of participants. It is incremented when a user participates in the space.
     // It is only used for spaces enabling explicit participation such as anonymous participation.
     pub participants: i64,
+
+    // space pdf files
+    pub files: Vec<File>,
 }
 
 impl SpaceCommon {
