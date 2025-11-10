@@ -458,7 +458,7 @@ export class SpaceHomeController {
     } else if (
       this.space.shouldParticipateManually() &&
       this.canParticipate() &&
-      this.space.status != SpaceStatus.Started
+      this.space.status == SpaceStatus.InProgress
       // check already joined
     ) {
       return this.viewerActions;
