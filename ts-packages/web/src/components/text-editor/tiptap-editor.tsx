@@ -6,10 +6,12 @@ import Highlight from '@tiptap/extension-highlight';
 import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Image from '@tiptap/extension-image';
+import Link from '@tiptap/extension-link';
 import Table from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
+import Youtube from '@tiptap/extension-youtube';
 import Video from './extensions/video';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { Editor } from '@tiptap/core';
@@ -100,6 +102,23 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             HTMLAttributes: {
               class: 'rounded-lg max-w-full h-auto my-4 mx-auto block',
             },
+          }),
+          Link.configure({
+            autolink: true,
+            linkOnPaste: true,
+            openOnClick: false,
+            HTMLAttributes: {
+              rel: 'noopener noreferrer nofollow',
+              class:
+                'text-blue-500 underline underline-offset-2 decoration-blue-500 hover:text-blue-600',
+            },
+          }),
+          Youtube.configure({
+            controls: true,
+            nocookie: true,
+            allowFullscreen: true,
+            width: 640,
+            height: 360,
           }),
           Video,
           Table.configure({
@@ -219,6 +238,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
               '[&_.ProseMirror_.selectedCell]:border-2',
               '[&_.ProseMirror_.selectedCell]:outline',
               '[&_.ProseMirror_.selectedCell]:outline-2',
+              '[&_.ProseMirror_.youtube]:pt-[56.25%]',
               '[&_.ProseMirror_.selectedCell]:outline-primary/40',
               '[&_.ProseMirror_.selectedCell]:outline-offset-[-1px]',
               '[&_.ProseMirror_.column-resize-handle]:absolute [&_.ProseMirror_.column-resize-handle]:right-[-2px] [&_.ProseMirror_.column-resize-handle]:top-0 [&_.ProseMirror_.column-resize-handle]:bottom-0 [&_.ProseMirror_.column-resize-handle]:w-[4px] [&_.ProseMirror_.column-resize-handle]:bg-primary [&_.ProseMirror_.column-resize-handle]:pointer-events-none',
