@@ -239,6 +239,32 @@ pub trait ResourcePermissions: Send + Sync {
     async fn is_participant(&self, cli: &aws_sdk_dynamodb::Client, requester: &Partition) -> bool;
 }
 
+/// NoopPermissions will be used for accessing team pages.
+#[derive(Debug, Clone, Copy)]
+pub struct NoopPermissions;
+
+impl ResourcePermissions for NoopPermissions {
+    fn viewer_permissions(&self) -> Permissions {
+        Permissions::empty()
+    }
+
+    fn participant_permissions(&self) -> Permissions {
+        Permissions::empty()
+    }
+
+    fn resource_owner(&self) -> ResourceOwnership {
+        ResourceOwnership::Team(Partition::Team("noop".to_string()))
+    }
+
+    async fn is_participant(
+        &self,
+        _cli: &aws_sdk_dynamodb::Client,
+        _requester: &Partition,
+    ) -> bool {
+        false
+    }
+}
+
 #[async_trait::async_trait]
 pub trait EntityPermissions: Send + Sync {
     async fn get_permissions_for(
@@ -262,7 +288,7 @@ impl FromRequestParts<AppState> for Permissions {
             if let Some(space) = parts.extensions.get::<SpaceCommon>() {
                 Arc::new(space.clone())
             } else {
-                return Err(Error::InvalidResource);
+                Arc::new(NoopPermissions {})
             };
 
         // Check Participant permission
