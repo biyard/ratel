@@ -1,5 +1,5 @@
-import { createContext } from 'react';
-import { Outlet, useLocation, useParams } from 'react-router';
+import { createContext, useEffect } from 'react';
+import { Outlet, useLocation, useParams, useNavigate } from 'react-router';
 import {
   SpaceHomeController,
   useSpaceHomeController,
@@ -15,6 +15,8 @@ import {
 import TimelineMenu from '@/features/spaces/components/side-menu/timeline';
 import { SpaceActions } from '@/features/spaces/components/space-actions';
 import SpaceParticipantProfile from '@/features/spaces/components/space-participant-profile';
+import { useCheckPrerequisites } from '@/features/spaces/hooks/use-check-prerequisites';
+import { route } from '@/route';
 
 export const Context = createContext<SpaceHomeController | undefined>(
   undefined,
@@ -24,7 +26,40 @@ export default function SpaceByIdLayout() {
   const { spacePk } = useParams<{ spacePk: string }>();
   const ctrl = useSpaceHomeController(spacePk ?? '');
   const location = useLocation();
+  const navigate = useNavigate();
   const showInfo = !/\/boards\/posts(\/|$)/.test(location.pathname);
+
+  // Check if prerequisites are completed
+  const { data: prerequisites, isLoading: isLoadingPrerequisites } =
+    useCheckPrerequisites(spacePk ?? '');
+
+  // Redirect to poll if prerequisites are not completed
+  useEffect(() => {
+    if (
+      !isLoadingPrerequisites &&
+      prerequisites &&
+      !prerequisites.completed &&
+      prerequisites.poll_pk
+    ) {
+      // Only redirect if not already on the poll page
+      const pollPagePattern = new RegExp(
+        `/spaces/${encodeURIComponent(spacePk ?? '')}/polls/${encodeURIComponent(prerequisites.poll_pk)}`,
+      );
+      if (!pollPagePattern.test(location.pathname)) {
+        navigate(route.spacePollById(spacePk ?? '', prerequisites.poll_pk));
+      }
+    }
+  }, [
+    prerequisites,
+    isLoadingPrerequisites,
+    spacePk,
+    location.pathname,
+    navigate,
+  ]);
+
+  // Check if we should show side menu and content
+  const shouldShowSideMenu =
+    isLoadingPrerequisites || !prerequisites || prerequisites.completed;
 
   return (
     <Context.Provider value={ctrl}>
@@ -58,28 +93,30 @@ export default function SpaceByIdLayout() {
 
           <Outlet />
         </Col>
-        <Col className="gap-2.5 w-full max-w-[250px]">
-          {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
+        {shouldShowSideMenu && (
+          <Col className="gap-2.5 w-full max-w-[250px]">
+            {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
 
-          {ctrl.space.participated &&
-            ctrl.space.participantDisplayName &&
-            ctrl.space.participantProfileUrl &&
-            ctrl.space.participantUsername && (
-              <SpaceParticipantProfile
-                displayName={ctrl.space.participantDisplayName}
-                profileUrl={ctrl.space.participantProfileUrl}
-                username={ctrl.space.participantUsername}
-              />
-            )}
+            {ctrl.space.participated &&
+              ctrl.space.participantDisplayName &&
+              ctrl.space.participantProfileUrl &&
+              ctrl.space.participantUsername && (
+                <SpaceParticipantProfile
+                  displayName={ctrl.space.participantDisplayName}
+                  profileUrl={ctrl.space.participantProfileUrl}
+                  username={ctrl.space.participantUsername}
+                />
+              )}
 
-          <SpaceSideMenu menus={ctrl.menus} />
-          <TimelineMenu
-            isEditing={false}
-            handleSetting={() => {}}
-            items={ctrl.timelineItems}
-            titleLabel={ctrl.t('timeline_title')}
-          />
-        </Col>
+            <SpaceSideMenu menus={ctrl.menus} />
+            <TimelineMenu
+              isEditing={false}
+              handleSetting={() => {}}
+              items={ctrl.timelineItems}
+              titleLabel={ctrl.t('timeline_title')}
+            />
+          </Col>
+        )}
       </Row>
     </Context.Provider>
   );

@@ -1,3 +1,5 @@
+use ssi::claims::ResourceProvider;
+
 use crate::*;
 use crate::{
     Error,
@@ -6,6 +8,8 @@ use crate::{
     types::*,
     utils::time::get_now_timestamp_millis,
 };
+
+use super::SpaceParticipant;
 
 #[derive(
     Debug,
@@ -166,6 +170,66 @@ impl SpaceCommon {
         TeamGroupPermissions::empty()
     }
 
+    // pub async fn permissions(
+    //     &self,
+    //     cli: &aws_sdk_dynamodb::Client,
+    //     space_pk: &Partition,
+    //     user: Some<&User>,
+    // ) -> Result<TeamGroupPermissions> {
+    //     let permissions = self.permissions_for_guest();
+
+    //     if user_pk.is_some() {
+    //         let user_pk = user_pk.unwrap();
+    //         let user = User::get(&cli, user_pk, Some(EntityType::User)).await?;
+
+    //         if user.is_some() {
+    //             let user = user.unwrap_or_default();
+
+    //             let verification = SpaceEmailVerification::get(
+    //                 &cli,
+    //                 &space_pk,
+    //                 Some(EntityType::SpaceEmailVerification(user.email.clone())),
+    //             )
+    //             .await?;
+
+    //             if verification.is_some()
+    //                 && verification.unwrap_or_default().authorized
+    //                 && perm == TeamGroupPermission::SpaceRead
+    //                 && space.publish_state == SpacePublishState::Published
+    //             {
+    //                 return Ok((space, true));
+    //             }
+    //         }
+    //     }
+
+    //     let author_pk = &space.user_pk;
+
+    //     let user_pk = if let Some(user_pk) = user_pk {
+    //         user_pk
+    //     } else {
+    //         if space.visibility == SpaceVisibility::Public
+    //             && perm == TeamGroupPermission::SpaceRead
+    //             && space.publish_state == SpacePublishState::Published
+    //         {
+    //             return Ok((space, true));
+    //         } else {
+    //             return Ok((space, false));
+    //         }
+    //     };
+
+    //     match user_pk {
+    //         Partition::User(_) => {
+    //             let has_perm = user_pk == author_pk;
+    //             Ok((space, has_perm))
+    //         }
+    //         Partition::Team(_) => {
+    //             let has_perm = Team::has_permission(cli, author_pk, user_pk, perm).await?;
+    //             Ok((space, has_perm))
+    //         }
+    //         _ => Err(Error::InternalServerError("Invalid space author".into())),
+    //     }
+    // }
+
     pub async fn has_permission(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
@@ -176,11 +240,18 @@ impl SpaceCommon {
             .await?
             .ok_or(Error::SpaceNotFound)?;
 
+        // Check guest permissions first (Viewer)
         let permissions = space.permissions_for_guest();
 
         if permissions.contains(perm) {
             return Ok((space, true));
         }
+
+        if user_pk.is_none() {
+            return Ok((space, false));
+        }
+
+        // Check participant permissions (Participant)
 
         if user_pk.is_some() {
             let user_pk = user_pk.unwrap();
@@ -238,5 +309,35 @@ impl SpaceCommon {
         self.publish_state == SpacePublishState::Draft
             || (self.publish_state == SpacePublishState::Published
                 && (self.status == Some(SpaceStatus::Waiting) || self.status.is_none()))
+    }
+}
+
+#[async_trait::async_trait]
+impl ResourcePermissions for SpaceCommon {
+    fn viewer_permissions(&self) -> Permissions {
+        if self.visibility == SpaceVisibility::Public
+            && self.publish_state == SpacePublishState::Published
+        {
+            return Permissions::read();
+        }
+
+        Permissions::empty()
+    }
+
+    fn participant_permissions(&self) -> Permissions {
+        Permissions::read()
+    }
+
+    fn resource_owner(&self) -> ResourceOwnership {
+        self.user_pk.clone().into()
+    }
+
+    async fn is_participant(&self, cli: &aws_sdk_dynamodb::Client, requester: &Partition) -> bool {
+        let (pk, sk) = SpaceParticipant::keys(self.pk.clone(), requester.clone());
+
+        SpaceParticipant::get(cli, &pk, Some(&sk))
+            .await
+            .map(|sp| sp.is_some())
+            .unwrap_or(false)
     }
 }

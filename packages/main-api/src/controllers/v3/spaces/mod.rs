@@ -101,19 +101,22 @@ pub async fn inject_space(
             && !space.is_space_admin(&state.dynamo.client, &user).await
         {
             // Check if the user is a participant
-            if let Ok(Some(SpaceParticipant {
-                display_name,
-                profile_url,
-                username,
-                user_type,
-                ..
-            })) = SpaceParticipant::get(
+            if let Ok(Some(participant)) = SpaceParticipant::get(
                 &state.dynamo.client,
                 CompositePartition(space.pk.clone(), user.pk.clone()),
                 Some(EntityType::SpaceParticipant),
             )
             .await
             {
+                parts.extensions.insert(participant.clone());
+
+                let SpaceParticipant {
+                    display_name,
+                    profile_url,
+                    username,
+                    user_type,
+                    ..
+                } = participant;
                 // Participant mode
                 let user: &mut User = parts.extensions.get_mut().unwrap();
                 user.display_name = display_name;
