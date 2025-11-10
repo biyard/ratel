@@ -122,7 +122,7 @@ pub async fn update_space_handler(
         UpdateSpaceRequest::File { files } => {
             su = su.with_files(files.clone());
 
-            space.files = files;
+            space.files = Some(files);
         }
         UpdateSpaceRequest::Title { title } => {
             pu = pu.with_title(title.clone());
