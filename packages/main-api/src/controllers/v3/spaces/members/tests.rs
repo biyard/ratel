@@ -6,7 +6,9 @@ use crate::controllers::v3::spaces::files::update_files::UpdateSpaceFileResponse
 use crate::controllers::v3::spaces::members::{
     ResentInvitationCodeResponse, UpsertInvitationResponse, VerifySpaceCodeResponse,
 };
+use crate::features::did::AttributeCode;
 use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMemberResponse};
+use crate::features::spaces::panels::SpacePanelResponse;
 use crate::tests::create_user_session;
 use crate::tests::{
     create_app_state,
@@ -148,6 +150,19 @@ async fn test_verification_space_code_handler() {
 
     assert_eq!(status, 200);
 
+    let (status, _headers, body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "name": "Panel 1".to_string(), "quotas": 10, "attributes": vec![Attribute::Age(types::Age::Range { inclusive_min: 18, inclusive_max: 29 }), Attribute::Gender(types::Gender::Male)],
+        },
+        response_type: SpacePanelResponse
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.attributes.len(), 2);
+
     let (status, _, _res) = patch! {
         app: app,
         path: format!("/v3/spaces/{}", space_pk.to_string()),
@@ -155,6 +170,28 @@ async fn test_verification_space_code_handler() {
         body: {
             "publish": true,
             "visibility": "PRIVATE",
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    let mut attribute = AttributeCode::new();
+    attribute.gender = Some(Gender::Male);
+    attribute.birth_date = Some("19991231".to_string());
+    let _ = attribute.create(&ddb).await;
+
+    let code = match attribute.pk {
+        Partition::AttributeCode(v) => v.to_string(),
+        _ => "".to_string(),
+    };
+
+    let (status, _headers, _body) = put! {
+        app: app,
+        path: format!("/v3/me/did"),
+        headers: headers.clone(),
+        body: {
+            "type": "code",
+            "code": code
         }
     };
 
