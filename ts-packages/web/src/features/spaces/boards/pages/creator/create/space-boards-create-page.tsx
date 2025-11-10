@@ -178,13 +178,17 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
               {t('contents')}
             </label>
             <PostEditor
+              files={ctrl.files.get()}
               content={ctrl.htmlContents.get()}
               onUpdate={(nextContent) => ctrl.handleContent(nextContent)}
               editable
               showToolbar
               onImageUpload={ctrl.handleImageUpload}
+              onUploadPDF={ctrl.handlePdfUpload}
+              onRemovePdf={ctrl.handleRemovePdf}
               onRemoveImage={ctrl.handleRemoveImage}
               url={ctrl.image.get()}
+              disabledFileUpload={false}
               data-pw="space-recommendation-editor"
             />
           </div>

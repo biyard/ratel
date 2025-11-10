@@ -1,4 +1,5 @@
 #![allow(warnings)]
+use crate::File;
 use crate::{
     AppState, Error, Permissions,
     controllers::v3::spaces::{SpacePath, SpacePathParam},
@@ -21,6 +22,7 @@ pub struct CreateSpacePostRequest {
     pub html_contents: String,
     pub category_name: String,
     pub urls: Vec<String>,
+    pub files: Vec<File>,
 }
 
 #[derive(Debug, Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema)]
@@ -66,6 +68,7 @@ pub async fn create_space_post_handler(
         req.html_contents.clone(),
         req.category_name.clone(),
         req.urls.clone(),
+        Some(req.files.clone()),
         user.clone(),
     );
     post.create(&dynamo.client).await?;

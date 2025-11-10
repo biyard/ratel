@@ -50,7 +50,10 @@ pub struct SpacePost {
     pub author_profile_url: String,
     pub author_username: String,
 
+    // boards image urls
     pub urls: Vec<String>,
+    // boards pdf files
+    pub files: Option<Vec<File>>,
 }
 
 impl SpacePost {
@@ -60,6 +63,7 @@ impl SpacePost {
         html_contents: String,
         category_name: String,
         urls: Vec<String>,
+        files: Option<Vec<File>>,
         User {
             pk,
             display_name,
@@ -86,6 +90,7 @@ impl SpacePost {
             author_username: username,
 
             urls,
+            files,
         }
     }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { State } from '@/types/state';
 import { useSpaceHomeData } from './use-space-home-data';
 import { SideMenuProps } from '@/features/spaces/components/space-side-menu';
@@ -19,7 +19,10 @@ import SpaceDeleteModal from '@/features/spaces/modals/space-delete-modal';
 import { useDeleteSpaceMutation } from '@/features/spaces/hooks/use-delete-mutation';
 import { NavigateFunction, useNavigate } from 'react-router';
 import { UserDetailResponse } from '@/lib/api/ratel/users.v3';
-import FileModel from '@/features/spaces/files/types/file';
+import FileModel, {
+  FileExtension,
+  toFileExtension,
+} from '@/features/spaces/files/types/file';
 import { useSpaceUpdateFilesMutation } from '@/features/spaces/hooks/use-space-update-files-mutation';
 import { useUpdateDraftImageMutation } from '@/features/posts/hooks/use-update-draft-image-mutation';
 import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
@@ -52,6 +55,7 @@ export class SpaceHomeController {
     public startSpace: ReturnType<typeof useStartSpaceMutation>,
     public deleteSpace: ReturnType<typeof useDeleteSpaceMutation>,
     public image: State<string | null>,
+    public files: State<FileModel[]>,
     public updateDraftImage: ReturnType<
       typeof useUpdateDraftImageMutation
     >['mutateAsync'],
@@ -117,6 +121,78 @@ export class SpaceHomeController {
     ];
   }
 
+  handleRemovePdf = (index: number) => {
+    const prev = this.files?.get?.() ?? [];
+    if (index < 0 || index >= prev.length) return;
+
+    const removed = prev[index];
+    try {
+      if (removed?.url && removed.url.startsWith('blob:')) {
+        URL.revokeObjectURL(removed.url);
+      }
+    } catch (e) {
+      logger.error('remove pdf error: ', e);
+    }
+
+    const next = [...prev.slice(0, index), ...prev.slice(index + 1)];
+    this.files.set(next);
+  };
+
+  handlePdfUpload = async (fileList: FileList | File[]) => {
+    const maxSizeMB = 50;
+    const files = Array.from(fileList);
+
+    if (files.length === 0) return;
+
+    for (const f of files) {
+      if (f.type !== 'application/pdf') {
+        showErrorToast('only PDF files can uploaded');
+        return;
+      }
+      if (f.size > maxSizeMB * 1024 * 1024) {
+        showErrorToast(`Each file must be less than ${maxSizeMB}MB.`);
+        return;
+      }
+    }
+
+    try {
+      const presign = await getPutObjectUrl(
+        files.length,
+        parseFileType('application/pdf'),
+      );
+      const presigned = presign?.presigned_uris ?? [];
+      const uris = presign?.uris ?? [];
+
+      if (presigned.length !== files.length || uris.length !== files.length) {
+        showErrorToast('Failed to issue upload URL.');
+        return;
+      }
+
+      await Promise.all(
+        files.map((file, i) =>
+          fetch(presigned[i], {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/pdf' },
+            body: file,
+          }),
+        ),
+      );
+
+      const newModels: FileModel[] = files.map((file, i) => ({
+        name: file.name,
+        size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+        ext: FileExtension.PDF,
+        url: uris[i],
+      }));
+
+      this.files.set([...this.files.get(), ...newModels]);
+      showSuccessToast('Complete to PDF upload');
+    } catch (error) {
+      logger.error('PDF upload failed:', error);
+      showErrorToast('Failed to PDF upload');
+    }
+  };
+
   handleAddFile = async (file: FileModel) => {
     const files = this.space.files ?? [];
     files.push(file);
@@ -147,6 +223,10 @@ export class SpaceHomeController {
       await this.updateSpaceContent.mutateAsync({
         spacePk: this.space.pk,
         content: text,
+      });
+      await this.updateSpaceFiles.mutateAsync({
+        spacePk: this.space.pk,
+        files: this.files.get(),
       });
       showSuccessToast('Success to update space content');
     } catch (error) {
@@ -458,6 +538,8 @@ export function useSpaceHomeController(spacePk: string) {
   const save = useState(false);
   const popup = usePopup();
   const image = useState<string | null>(null);
+  const files = useState<FileModel[]>([]);
+  const filesInitializedRef = useRef(false);
 
   // Initialize image from space data
   useEffect(() => {
@@ -469,6 +551,26 @@ export function useSpaceHomeController(spacePk: string) {
       image[1](data.space.data.urls[0]);
     }
   }, [data.space.data, image]);
+
+  useEffect(() => {
+    const remote = data.space.data?.files ?? [];
+    if (!data.space.isSuccess) return;
+    if (filesInitializedRef.current) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const mapped: FileModel[] = remote.map((f: any) => ({
+      name: f.name ?? '',
+      size:
+        typeof f.size === 'string'
+          ? f.size
+          : `${Math.max(0, Number(f.size || 0) / 1024 / 1024).toFixed(2)} MB`,
+      ext: toFileExtension(f.ext),
+      url: f.url ?? null,
+    }));
+
+    files[1](mapped);
+    filesInitializedRef.current = true;
+  }, [data.space.isSuccess, data.space.data?.files]);
 
   return new SpaceHomeController(
     navigate,
@@ -485,6 +587,7 @@ export function useSpaceHomeController(spacePk: string) {
     startSpace,
     deleteSpace,
     new State(image),
+    new State(files),
     updateDraftImage,
     participateSpace,
   );
