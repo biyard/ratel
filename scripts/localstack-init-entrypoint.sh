@@ -4,7 +4,7 @@ echo "start"
 yum update
 yum install -y awscli
 
-local ENDPOINT=http://localstack:4566
+export ENDPOINT=http://localstack:4566
 
 echo 'Waiting for LocalStack to be ready...'
 until aws dynamodb --endpoint-url=$ENDPOINT  list-tables >/dev/null 2>&1; do
