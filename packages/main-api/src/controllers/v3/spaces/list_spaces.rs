@@ -17,7 +17,6 @@ pub struct ListSpacesResponse {
 
 pub async fn list_spaces_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(_user): NoApi<Option<User>>,
 ) -> Result<Json<ListItemsResponse<SpaceCommon>>, Error> {
     let cli = &dynamo.client;
 

@@ -1,9 +1,8 @@
 use crate::controllers::v3::spaces::{SpacePostCommentPath, SpacePostCommentPathParam};
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
-use crate::models::SpaceCommon;
 use crate::models::user::User;
 use crate::types::{Partition, SpaceStatus, TeamGroupPermission};
-use crate::{AppState, models::feed::PostComment};
+use crate::{AppState, models::feed::PostComment, Permissions};
 use aide::NoApi;
 use axum::extract::*;
 use bdk::prelude::*;
@@ -17,6 +16,7 @@ pub struct ReplySpaceCommentRequest {
 
 pub async fn reply_space_comment_handler(
     State(AppState { dynamo, .. }): State<AppState>,
+    NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
     Path(SpacePostCommentPathParam {
         space_pk,
@@ -30,14 +30,7 @@ pub async fn reply_space_comment_handler(
         return Err(crate::Error::NotFoundSpace);
     }
 
-    let (_space_common, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceRead,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceRead) {
         return Err(crate::Error::NoPermission);
     }
 

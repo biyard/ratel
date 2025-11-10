@@ -1,19 +1,12 @@
 use crate::models::space::SpaceCommon;
 
 use crate::features::spaces::polls::*;
+use crate::models::user::User;
 use crate::spaces::SpacePath;
 use crate::spaces::SpacePathParam;
 use crate::types::{EntityType, Partition, Question, TeamGroupPermission};
 use crate::utils::time::get_now_timestamp_millis;
-use crate::{AppState, Error, transact_write};
-
-use bdk::prelude::*;
-
-use by_axum::axum::extract::{Json, Path, State};
-
-use crate::models::user::User;
-use aide::NoApi;
-use serde::Deserialize;
+use crate::*;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema, Default)]
 pub struct CreatePollSpaceRequest {
@@ -22,7 +15,7 @@ pub struct CreatePollSpaceRequest {
 
 pub async fn create_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
+    NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<CreatePollSpaceRequest>,
 ) -> crate::Result<Json<PollResponse>> {
@@ -31,15 +24,7 @@ pub async fn create_poll_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    // Check Permissions
-    let (_space_common, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceEdit,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
         return Err(Error::NoPermission);
     }
 

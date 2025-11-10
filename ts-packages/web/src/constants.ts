@@ -98,6 +98,9 @@ export const spaceKeys = {
   details: () => [...spaceKeys.all, 'detail'] as const,
   detail: (spacePk: string) => [...spaceKeys.details(), spacePk] as const,
 
+  prerequisites: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'prerequisites'] as const,
+
   sprint_leagues: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'sprint_leagues'] as const,
 

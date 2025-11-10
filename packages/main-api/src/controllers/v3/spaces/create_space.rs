@@ -45,7 +45,7 @@ pub async fn create_space_handler(
         return Err(Error::NoPermission);
     }
 
-    let space = SpaceCommon::new(post_pk, user).with_space_type(space_type);
+    let space = SpaceCommon::new(post.clone()).with_space_type(space_type);
 
     let post_updater = Post::updater(&post.pk, &post.sk)
         .with_space_pk(space.pk.clone())

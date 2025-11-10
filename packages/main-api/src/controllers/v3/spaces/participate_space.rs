@@ -1,6 +1,7 @@
 use names::{Generator, Name};
 
 use crate::features::spaces::members::{InvitationStatus, SpaceInvitationMember};
+use crate::Permissions;
 
 use super::*;
 
@@ -19,6 +20,7 @@ pub struct ParticipateSpaceResponse {
 
 pub async fn participate_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
+    NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
     Json(req): Json<ParticipateSpaceRequest>,
@@ -32,16 +34,13 @@ pub async fn participate_space_handler(
     //     return Err(Error::InvalidPanel);
     // }
 
-    let (space, _has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceRead,
-    )
-    .await?;
-    // if !has_perm {
-    //     return Err(Error::NoPermission);
-    // }
+    if !permissions.contains(TeamGroupPermission::SpaceRead) {
+        return Err(Error::NoPermission);
+    }
+
+    let space = SpaceCommon::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceCommon))
+        .await?
+        .ok_or(Error::NotFoundSpace)?;
 
     let now = time::get_now_timestamp_millis();
 
