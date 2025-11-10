@@ -41,7 +41,7 @@ async fn test_upsert_invitation_handler() {
     let (new_user_2, _headers) = create_user_session(app.clone(), &ddb).await;
     let (new_user_3, _headers) = create_user_session(app.clone(), &ddb).await;
 
-    let path = format!("/v3/spaces/{}/invitations", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/members", space_pk_encoded);
     let (status, _headers, _body) = post! {
         app: app,
         path: path.clone(),
@@ -89,7 +89,7 @@ async fn test_list_invitation_handler() {
     let (new_user, _headers) = create_user_session(app.clone(), &ddb).await;
     let (new_user_2, _headers) = create_user_session(app.clone(), &ddb).await;
 
-    let path = format!("/v3/spaces/{}/invitations", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/members", space_pk_encoded);
     let (status, _headers, _body) = post! {
         app: app,
         path: path.clone(),
@@ -102,6 +102,9 @@ async fn test_list_invitation_handler() {
     };
 
     assert_eq!(status, 200);
+
+    // Wait for eventual consistency in localstack DynamoDB
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
     let (status, _headers, body) = get! {
         app: app,
@@ -131,7 +134,7 @@ async fn test_verification_space_code_handler() {
 
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
 
-    let path = format!("/v3/spaces/{}/invitations", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/members", space_pk_encoded);
     let (status, _headers, _body) = post! {
         app: app,
         path: path.clone(),
@@ -168,7 +171,7 @@ async fn test_verification_space_code_handler() {
 
     let (status, _, res) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/invitations/verifications", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/members/verifications", space_pk.to_string()),
         headers: headers.clone(),
         body: {
             "code": verification.value,
@@ -196,7 +199,7 @@ async fn test_prevent_upsert_invitations() {
 
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
 
-    let path = format!("/v3/spaces/{}/invitations", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/members", space_pk_encoded);
     let (status, _headers, _body) = post! {
         app: app,
         path: path.clone(),
@@ -233,7 +236,7 @@ async fn test_prevent_upsert_invitations() {
 
     assert_eq!(status, 200);
 
-    let path = format!("/v3/spaces/{}/invitations", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/members", space_pk_encoded);
     let (status, _headers, _body) = post! {
         app: app,
         path: path.clone(),
@@ -265,7 +268,7 @@ async fn test_prevent_verification_space_code_handler() {
 
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
 
-    let path = format!("/v3/spaces/{}/invitations", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/members", space_pk_encoded);
     let (status, _headers, _body) = post! {
         app: app,
         path: path.clone(),
@@ -313,7 +316,7 @@ async fn test_prevent_verification_space_code_handler() {
 
     let (status, _, _res) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/invitations/verifications", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/members/verifications", space_pk.to_string()),
         headers: headers.clone(),
         body: {
             "code": verification.value,
@@ -340,7 +343,7 @@ async fn test_prevent_resent_code_handler() {
 
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
 
-    let path = format!("/v3/spaces/{}/invitations", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/members", space_pk_encoded);
     let (status, _headers, _body) = post! {
         app: app,
         path: path.clone(),
@@ -379,12 +382,12 @@ async fn test_prevent_resent_code_handler() {
 
     tracing::debug!(
         "space url: {:?}",
-        format!("/v3/spaces/{}/invitations", space_pk.to_string())
+        format!("/v3/spaces/{}/members", space_pk.to_string())
     );
 
     let (status, _headers, _body) = patch! {
         app: app,
-        path: format!("/v3/spaces/{}/invitations", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/members", space_pk.to_string()),
         headers: headers.clone(),
         body: {
             "email": user.clone().email

@@ -1,8 +1,6 @@
-use crate::models::space::SpaceCommon;
-
 use crate::features::spaces::polls::*;
 use crate::types::{EntityType, Partition, TeamGroupPermission};
-use crate::{AppState, Error};
+use crate::{AppState, Error, Permissions};
 
 use bdk::prelude::*;
 
@@ -19,7 +17,8 @@ pub struct DeletePollSpaceResponse {
 
 pub async fn delete_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
+    NoApi(_user): NoApi<User>,
+    NoApi(permissions): NoApi<Permissions>,
     Path(PollPathParam { space_pk, poll_sk }): PollPath,
 ) -> crate::Result<Json<DeletePollSpaceResponse>> {
     //Request Validation
@@ -28,14 +27,7 @@ pub async fn delete_poll_handler(
     }
 
     // Check Permissions
-    let (_space_common, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceEdit,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
         return Err(Error::NoPermission);
     }
 

@@ -2,7 +2,6 @@ use bdk::prelude::*;
 
 use crate::error::Error;
 use crate::features::spaces::boards::models::space_post::SpacePost;
-use crate::models::SpaceCommon;
 use crate::spaces::SpacePostPath;
 use crate::spaces::SpacePostPathParam;
 use crate::types::SpaceStatus;
@@ -16,6 +15,7 @@ use crate::{
         user::User,
     },
     types::{EntityType, Partition, TeamGroupPermission},
+    Permissions,
 };
 use aide::NoApi;
 use by_axum::axum::extract::{Json, Path, State};
@@ -33,6 +33,7 @@ pub struct SpaceAddCommentResponse {
 
 pub async fn add_space_comment_handler(
     State(AppState { dynamo, .. }): State<AppState>,
+    NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
     Path(SpacePostPathParam {
         space_pk,
@@ -44,18 +45,9 @@ pub async fn add_space_comment_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    let (space_common, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceRead,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceRead) {
         return Err(Error::NoPermission);
     }
-
-    tracing::debug!("space common status: {:?}", space_common.status);
 
     // if space_common.status == Some(SpaceStatus::Started)
     //     || space_common.status == Some(SpaceStatus::Finished)
