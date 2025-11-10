@@ -31,7 +31,11 @@ pub use update_space::*;
 
 pub mod sprint_leagues;
 
-use crate::{features::spaces::SpaceParticipant, models::SpaceCommon, *};
+use crate::{
+    features::spaces::SpaceParticipant,
+    models::{SpaceCommon, Team},
+    *,
+};
 
 pub fn route() -> Result<Router<AppState>> {
     let app_state = AppState::default();
@@ -83,7 +87,7 @@ pub async fn inject_space(
 
     let space_pk: Partition = space_pk.parse()?;
 
-    let space = SpaceCommon::get(
+    let space: SpaceCommon = SpaceCommon::get(
         &state.dynamo.client,
         space_pk,
         Some(EntityType::SpaceCommon),
@@ -94,6 +98,22 @@ pub async fn inject_space(
         crate::Error::SpaceNotFound
     })?
     .ok_or(crate::Error::SpaceNotFound)?;
+
+    if matches!(space.user_pk, Partition::Team(_)) {
+        let team = Team::get(
+            &state.dynamo.client,
+            space.user_pk.clone(),
+            Some(EntityType::Team),
+        )
+        .await
+        .map_err(|e| {
+            tracing::error!("failed to get team from db: {:?}", e);
+            crate::Error::TeamNotFound
+        })?
+        .ok_or(crate::Error::TeamNotFound)?;
+
+        parts.extensions.insert(team);
+    }
 
     if let Ok(user) = User::from_request_parts(&mut parts, &state).await {
         if space.is_published()
