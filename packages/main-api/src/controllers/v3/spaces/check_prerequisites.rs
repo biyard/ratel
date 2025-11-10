@@ -1,15 +1,17 @@
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
 use crate::features::spaces::polls::{Poll, PollUserAnswer};
-use crate::models::user::User;
 use crate::models::SpaceCommon;
+use crate::models::user::User;
 use crate::types::{EntityType, Partition, SpaceType};
 use crate::{AppState, Error};
 use aide::NoApi;
-use axum::extract::{Path, State};
 use axum::Json;
+use axum::extract::{Path, State};
 use bdk::prelude::*;
 
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema, aide::OperationIo)]
+#[derive(
+    Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema, aide::OperationIo,
+)]
 pub struct CheckPrerequisitesResponse {
     /// Whether all pre-requisites are completed
     pub completed: bool,
@@ -96,12 +98,14 @@ async fn check_deliberation_prerequisites(
     let poll_pk = Partition::Poll(space_id.clone());
     let user_answer = PollUserAnswer::find_one(client, space_pk, &poll_pk, user_pk).await?;
 
+    let poll_sk = EntityType::SpacePoll(space_id.clone());
+
     if user_answer.is_some() {
         // User has completed the pre-poll survey
         Ok(Json(CheckPrerequisitesResponse {
             completed: true,
             prerequisite_type: Some("default_poll".to_string()),
-            poll_pk: Some(poll_pk.to_string()),
+            poll_pk: Some(poll_sk.to_string()),
             message: None,
         }))
     } else {
@@ -109,8 +113,10 @@ async fn check_deliberation_prerequisites(
         Ok(Json(CheckPrerequisitesResponse {
             completed: false,
             prerequisite_type: Some("default_poll".to_string()),
-            poll_pk: Some(poll_pk.to_string()),
-            message: Some("Please complete the pre-poll survey before accessing the space".to_string()),
+            poll_pk: Some(poll_sk.to_string()),
+            message: Some(
+                "Please complete the pre-poll survey before accessing the space".to_string(),
+            ),
         }))
     }
 }
