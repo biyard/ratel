@@ -28,7 +28,7 @@ import {
   ChevronRight2,
 } from '../icons';
 import { useRef, useState, useEffect } from 'react';
-import { Link2, Link2Off, Video } from 'lucide-react';
+import { Link2, Link2Off, Video, FileText } from 'lucide-react';
 
 export const TiptapToolbar = ({
   editor,
@@ -36,8 +36,10 @@ export const TiptapToolbar = ({
   className,
   openVideoPicker,
   onImageUpload,
+  onUploadPDF,
 }: TiptapToolbarProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -224,6 +226,14 @@ export const TiptapToolbar = ({
 
   const handleImageUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  const handlePdfUpload = () => pdfInputRef.current?.click();
+  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    onUploadPDF?.(files);
+    e.currentTarget.value = '';
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -496,6 +506,27 @@ export const TiptapToolbar = ({
                 type="file"
                 accept="image/*"
                 onChange={handleFileChange}
+                className="hidden"
+              />
+            </>
+          )}
+
+          {features.pdf && (
+            <>
+              <ToolbarButton
+                icon={<FileText />}
+                onClick={handlePdfUpload}
+                active={false}
+                disabled={!onUploadPDF}
+                tooltip="Upload PDF"
+                aria-label="Upload PDF"
+              />
+              <input
+                ref={pdfInputRef}
+                type="file"
+                accept="application/pdf"
+                multiple
+                onChange={handlePdfChange}
                 className="hidden"
               />
             </>
