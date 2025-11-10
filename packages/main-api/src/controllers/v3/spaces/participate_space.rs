@@ -1,7 +1,7 @@
 use names::{Generator, Name};
 
-use crate::features::spaces::members::{InvitationStatus, SpaceInvitationMember};
 use crate::Permissions;
+use crate::features::spaces::members::{InvitationStatus, SpaceInvitationMember};
 
 use super::*;
 
@@ -25,7 +25,7 @@ pub async fn participate_space_handler(
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
     Json(req): Json<ParticipateSpaceRequest>,
 ) -> Result<Json<ParticipateSpaceResponse>> {
-    tracing::debug!("Handling request: {:?}", req);
+    tracing::warn!("Handling request: {:?}", req);
     // TODO: Check verifiable_presentation and add user as SpaceParticipant
 
     // let is_verified = SpaceParticipant::verify_credential(&dynamo, &space_pk, user.clone()).await;

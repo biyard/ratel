@@ -301,10 +301,13 @@ impl FromRequestParts<AppState> for Permissions {
                 Arc::new(NoopPermissions {})
             };
 
+        tracing::warn!("resource found: {:?}", resource.resource_owner());
+
         // Check Participant permission
-        let requester = parts.extensions.get::<User>();
+        let requester = User::from_request_parts(parts, state).await.ok();
+        tracing::warn!("requester: {:?}", requester);
         let participant_permissions = match requester {
-            Some(user) => {
+            Some(ref user) => {
                 if resource
                     .can_participate(&state.dynamo.client, &user.pk)
                     .await
@@ -319,6 +322,8 @@ impl FromRequestParts<AppState> for Permissions {
             }
             _ => Permissions::empty(),
         };
+
+        tracing::warn!("participant_permissions: {:?}", participant_permissions);
 
         // Check if requester permissions for the owner entity
         let owner_entity: Arc<dyn EntityPermissions + Send + Sync> = match resource.resource_owner()
@@ -339,7 +344,7 @@ impl FromRequestParts<AppState> for Permissions {
         };
 
         let entity_permissions = match requester {
-            Some(user) => {
+            Some(ref user) => {
                 owner_entity
                     .get_permissions_for(&state.dynamo.client, &user.pk)
                     .await
