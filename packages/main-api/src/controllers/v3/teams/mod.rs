@@ -74,23 +74,44 @@ pub async fn inject_team(
     req: Request,
     next: Next,
 ) -> std::result::Result<Response<Body>, Error> {
-    tracing::debug!("Project authorization middleware");
+    tracing::debug!("Team authorization middleware");
 
     // Extract request parts to access headers and URI
     let (mut parts, body) = req.into_parts();
 
-    // Extract project_id from the URI path
+    // Extract team identifier from the URI path
+    // Note: Middleware sees the path relative to the nesting point
+    // Full path: /v3/teams/{team_identifier}/...
+    // Path seen by middleware: /{team_identifier}/... (after nesting at "/:team_pk")
+    // team_identifier can be either a Partition (TEAM#uuid) or a username (testteam123)
     let path = parts.uri.path();
     let path_segments: Vec<&str> = path.split('/').collect();
-    let team_pk = path_segments[1].to_string();
 
-    tracing::debug!("Verifying project access for team_pk: {}", team_pk);
+    // path_segments[0] = "" (from leading slash), [1] = team_identifier
+    if path_segments.len() < 2 {
+        return Err(Error::BadRequest("Invalid team path".into()));
+    }
 
-    let team_pk: Partition = team_pk.parse()?;
+    let team_identifier = path_segments[1].to_string();
 
-    let team = Team::get(&state.dynamo.client, team_pk, Some(EntityType::Team))
-        .await?
-        .ok_or(Error::TeamNotFound)?;
+    // Try to parse as Partition first (e.g., TEAM#uuid)
+    let team = if let Ok(team_pk) = team_identifier.parse::<Partition>() {
+        // Look up by PK
+        Team::get(&state.dynamo.client, team_pk, Some(EntityType::Team))
+            .await?
+            .ok_or(Error::TeamNotFound)?
+    } else {
+        // Look up by username
+        let team_results =
+            Team::find_by_username_prefix(&state.dynamo.client, team_identifier.clone(), Default::default())
+                .await?;
+
+        team_results
+            .0
+            .into_iter()
+            .find(|t| t.username == team_identifier)
+            .ok_or(Error::TeamNotFound)?
+    };
 
     parts.extensions.insert(team);
 
