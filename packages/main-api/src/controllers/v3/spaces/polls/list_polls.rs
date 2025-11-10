@@ -1,19 +1,9 @@
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
 use crate::features::spaces::polls::*;
+use crate::models::{space::SpaceCommon, user::User};
 use crate::types::SpacePublishState;
-use crate::{
-    AppState, Error,
-    models::{space::SpaceCommon, user::User},
-    types::{Partition, TeamGroupPermission},
-};
 
-use bdk::prelude::*;
-use by_axum::axum::{
-    Json,
-    extract::{Path, Query, State},
-};
-
-use aide::NoApi;
+use crate::*;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 pub struct ListPollQueryParams {
@@ -28,23 +18,16 @@ pub struct ListPollsResponse {
 
 pub async fn list_polls_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
+    NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Query(ListPollQueryParams { bookmark }): Query<ListPollQueryParams>,
-) -> Result<Json<ListPollsResponse>, Error> {
+) -> Result<Json<ListPollsResponse>> {
     // Request Validation
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundPoll);
     }
 
-    let (_sc, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        user.as_ref().map(|u| &u.pk),
-        TeamGroupPermission::SpaceRead,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceRead) {
         return Err(Error::NoPermission);
     }
 

@@ -3,7 +3,7 @@ use crate::models::space::SpaceCommon;
 use crate::features::spaces::polls::*;
 use crate::types::{EntityType, Partition, Question, TeamGroupPermission};
 use crate::utils::time::get_now_timestamp_millis;
-use crate::{AppState, Error, transact_write};
+use crate::{AppState, Error, Permissions, transact_write};
 
 use bdk::prelude::*;
 
@@ -28,7 +28,8 @@ pub struct UpdatePollSpaceResponse {
 
 pub async fn update_poll_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
+    NoApi(_user): NoApi<User>,
+    NoApi(permissions): NoApi<Permissions>,
     Path(PollPathParam { space_pk, poll_sk }): PollPath,
     Json(req): Json<UpdatePollSpaceRequest>,
 ) -> crate::Result<Json<UpdatePollSpaceResponse>> {
@@ -38,14 +39,7 @@ pub async fn update_poll_handler(
     }
 
     // Check Permissions
-    let (_space_common, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceEdit,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
         return Err(Error::NoPermission);
     }
 

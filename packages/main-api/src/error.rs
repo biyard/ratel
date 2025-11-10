@@ -99,6 +99,8 @@ pub enum Error {
     #[error("User is already an admin")]
     #[rest_error(status = 400, code = 405)]
     UserAlreadyAdmin,
+    #[error("Invalid resource")]
+    InvalidResource,
 
     // /v3/auth endpoints 1000 ~
     #[error("Exceeded maximum attempt for email verification")]

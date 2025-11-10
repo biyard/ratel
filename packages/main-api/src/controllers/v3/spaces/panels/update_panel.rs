@@ -4,16 +4,14 @@ use crate::controllers::v3::spaces::SpacePanelPathParam;
 use crate::features::spaces::panels::SpacePanel;
 use crate::features::spaces::panels::SpacePanelRequest;
 use crate::features::spaces::panels::SpacePanelResponse;
-use crate::models::SpaceCommon;
-use crate::models::User;
 use crate::types::Partition;
 use crate::types::TeamGroupPermission;
-use crate::{AppState, Error};
+use crate::{AppState, Error, Permissions};
 use bdk::prelude::axum::extract::{Json, Path, State};
 
 pub async fn update_panel_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
+    NoApi(permissions): NoApi<Permissions>,
     Path(SpacePanelPathParam { space_pk, panel_pk }): SpacePanelPath,
     Json(req): Json<SpacePanelRequest>,
 ) -> Result<Json<SpacePanelResponse>, Error> {
@@ -21,18 +19,11 @@ pub async fn update_panel_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    let (pk, sk) = SpacePanel::keys(&space_pk, &panel_pk);
-
-    let (_, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceEdit,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
         return Err(Error::NoPermission);
     }
+
+    let (pk, sk) = SpacePanel::keys(&space_pk, &panel_pk);
 
     let panel = SpacePanel::updater(&pk, sk)
         .with_name(req.name)

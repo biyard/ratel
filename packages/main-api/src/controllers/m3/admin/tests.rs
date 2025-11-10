@@ -15,7 +15,7 @@ async fn test_list_admins() {
         ..
     } = TestContextV3::setup().await;
 
-    let (status, _headers, body) = get! {
+    let (status, _headers, _body) = get! {
         app: app,
         path: "/m3/admin",
         headers: admin_user.1,
@@ -25,7 +25,7 @@ async fn test_list_admins() {
     assert_eq!(status, 200);
     // List endpoint returns empty for now (scan not implemented)
     // Note: May return items if database has existing data from previous tests
-    assert!(body.items.len() >= 0);
+    // items.len() is always >= 0, so we just verify it returns successfully
 }
 
 #[tokio::test]
@@ -107,7 +107,6 @@ async fn test_get_admin_not_found() {
 async fn test_get_non_admin_user() {
     let TestContextV3 {
         app,
-        ddb,
         admin_user,
         test_user,
         ..
@@ -201,7 +200,7 @@ async fn test_promote_to_admin_already_admin() {
     admin.user_type = UserType::Admin;
     admin.create(&ddb).await.unwrap();
 
-    let admin_id = match &admin.pk {
+    let _admin_id = match &admin.pk {
         Partition::User(id) => id.clone(),
         _ => panic!("Expected User partition"),
     };

@@ -13,12 +13,14 @@ pub mod recommendations;
 
 pub mod dto;
 
+pub mod check_prerequisites;
 pub mod get_space;
 #[cfg(test)]
 pub mod tests;
 
 pub mod artworks;
 pub mod participate_space;
+pub use check_prerequisites::*;
 pub use create_space::*;
 pub use delete_space::*;
 pub use dto::*;
@@ -29,7 +31,11 @@ pub use update_space::*;
 
 pub mod sprint_leagues;
 
-use crate::{features::spaces::SpaceParticipant, models::SpaceCommon, *};
+use crate::{
+    features::spaces::SpaceParticipant,
+    models::{SpaceCommon, Team},
+    *,
+};
 
 pub fn route() -> Result<Router<AppState>> {
     let app_state = AppState::default();
@@ -44,6 +50,7 @@ pub fn route() -> Result<Router<AppState>> {
         .nest(
             "/:space_pk",
             Router::new()
+                .route("/prerequisites", get(check_prerequisites_handler))
                 .nest("/members", members::route())
                 .nest("/files", files::route())
                 .nest("/panels", panels::route())
@@ -80,7 +87,7 @@ pub async fn inject_space(
 
     let space_pk: Partition = space_pk.parse()?;
 
-    let space = SpaceCommon::get(
+    let space: SpaceCommon = SpaceCommon::get(
         &state.dynamo.client,
         space_pk,
         Some(EntityType::SpaceCommon),
@@ -92,25 +99,44 @@ pub async fn inject_space(
     })?
     .ok_or(crate::Error::SpaceNotFound)?;
 
+    if matches!(space.user_pk, Partition::Team(_)) {
+        let team = Team::get(
+            &state.dynamo.client,
+            space.user_pk.clone(),
+            Some(EntityType::Team),
+        )
+        .await
+        .map_err(|e| {
+            tracing::error!("failed to get team from db: {:?}", e);
+            crate::Error::TeamNotFound
+        })?
+        .ok_or(crate::Error::TeamNotFound)?;
+
+        parts.extensions.insert(team);
+    }
+
     if let Ok(user) = User::from_request_parts(&mut parts, &state).await {
         if space.is_published()
             && space.should_explicit_participation()
             && !space.is_space_admin(&state.dynamo.client, &user).await
         {
             // Check if the user is a participant
-            if let Ok(Some(SpaceParticipant {
-                display_name,
-                profile_url,
-                username,
-                user_type,
-                ..
-            })) = SpaceParticipant::get(
+            if let Ok(Some(participant)) = SpaceParticipant::get(
                 &state.dynamo.client,
                 CompositePartition(space.pk.clone(), user.pk.clone()),
                 Some(EntityType::SpaceParticipant),
             )
             .await
             {
+                parts.extensions.insert(participant.clone());
+
+                let SpaceParticipant {
+                    display_name,
+                    profile_url,
+                    username,
+                    user_type,
+                    ..
+                } = participant;
                 // Participant mode
                 let user: &mut User = parts.extensions.get_mut().unwrap();
                 user.display_name = display_name;

@@ -5,14 +5,14 @@ use ethers::providers::{Http, Provider};
 use serde_json::json;
 
 use crate::{
-    AppState, Error,
+    AppState, Error, Permissions,
     aide::NoApi,
     config,
     controllers::v3::spaces::{SpacePath, SpacePathParam},
     features::spaces::artworks::{
         MintSpaceArtworkRequest, MintSpaceArtworkResponse, SpaceArtwork, SpaceArtworkTrade,
     },
-    models::{Post, PostArtwork, SpaceCommon, User, UserEvmAddress},
+    models::{Post, PostArtwork, User, UserEvmAddress},
     transact_write,
     types::{EntityType, Partition, TeamGroupPermission},
     utils::{
@@ -25,6 +25,7 @@ const ART_TWIN_TOKEN_ID: u64 = 1;
 
 pub async fn mint_space_artwork_handler(
     State(AppState { dynamo, s3, .. }): State<AppState>,
+    NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(_req): Json<MintSpaceArtworkRequest>,
@@ -35,14 +36,7 @@ pub async fn mint_space_artwork_handler(
     };
 
     // Check permission
-    let (_space_common, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceEdit,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
         return Err(Error::NoPermission);
     }
 

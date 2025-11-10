@@ -1,6 +1,6 @@
 #![allow(warnings)]
 use crate::{
-    AppState, Error,
+    AppState, Error, Permissions,
     controllers::v3::spaces::{SpacePath, SpacePathParam, SpacePostPath, SpacePostPathParam},
     features::spaces::boards::{
         dto::space_post_response::SpacePostResponse,
@@ -25,6 +25,7 @@ pub struct UpdateSpacePostRequest {
 pub async fn update_space_post_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
+    NoApi(permissions): NoApi<Permissions>,
     Path(SpacePostPathParam {
         space_pk,
         space_post_pk,
@@ -35,14 +36,7 @@ pub async fn update_space_post_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    let (_, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceEdit,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
         return Err(Error::NoPermission);
     }
 

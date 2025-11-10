@@ -1,11 +1,10 @@
 use crate::features::spaces::polls::{PollPathParam, PollResultResponse, PollUserAnswer};
-use crate::models::space::SpaceCommon;
 use crate::models::user::User;
 
 use crate::controllers::v3::spaces::dto::*;
 use crate::types::{EntityType, Partition, TeamGroupPermission};
 use crate::utils::time::get_now_timestamp_millis;
-use crate::{AppState, Error};
+use crate::{AppState, Error, Permissions};
 
 use crate::features::spaces::polls::PollPath;
 use bdk::prelude::*;
@@ -15,17 +14,11 @@ use aide::NoApi;
 
 pub async fn get_poll_result(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
+    NoApi(_user): NoApi<User>,
+    NoApi(permissions): NoApi<Permissions>,
     Path(PollPathParam { space_pk, poll_sk }): PollPath,
 ) -> Result<Json<PollResultResponse>, Error> {
-    let (_, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceRead,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceRead) {
         return Err(Error::NoPermission);
     }
 
