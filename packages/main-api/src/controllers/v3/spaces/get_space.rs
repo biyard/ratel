@@ -39,7 +39,7 @@ pub struct GetSpaceResponse {
     pub booster: BoosterType,
 
     pub verified: bool,
-    pub files: Vec<File>,
+    pub files: Option<Vec<File>>,
 
     pub anonymous_participation: bool,
     pub participated: bool,
