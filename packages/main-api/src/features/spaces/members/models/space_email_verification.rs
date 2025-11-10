@@ -198,20 +198,14 @@ impl SpaceEmailVerification {
                 display_name,
                 username,
                 space_desc,
-                format!(
-                    "{}/spaces/SPACE%23{}/members?code={}",
-                    domain, space_id, value
-                ),
+                format!("{}/spaces/SPACE%23{}?code={}", domain, space_id, value),
             );
 
             let text = format!(
                 "You're invited to join {space}\n{user} invited you to join {space}.\nOpen: {url}\nVerification code: {code}\nThis code expires in 30 minutes.\n",
                 space = title.clone(),
                 user = space.author_username,
-                url = format!(
-                    "{}/spaces/SPACE%23{}/members?code={}",
-                    domain, space_id, value
-                ),
+                url = format!("{}/spaces/SPACE%23{}?code={}", domain, space_id, value),
                 code = value,
             );
 
