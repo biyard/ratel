@@ -243,6 +243,7 @@ pub trait ResourcePermissions: Send + Sync {
 #[derive(Debug, Clone, Copy)]
 pub struct NoopPermissions;
 
+#[async_trait::async_trait]
 impl ResourcePermissions for NoopPermissions {
     fn viewer_permissions(&self) -> Permissions {
         Permissions::empty()
