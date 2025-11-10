@@ -229,7 +229,7 @@ async fn test_list_my_posts() {
 
     assert_eq!(status, 200);
     assert!(
-        body["items"].as_array().length().unwrap_or_default() > 0,
+        body["items"].as_array().map(|a| a.len()).unwrap_or_default() > 0,
         "No posts found"
     );
 }
@@ -308,7 +308,7 @@ async fn test_list_my_drafts() {
 
     assert_eq!(status, 200);
     assert!(
-        body["items"].as_array().length().unwrap_or_default() > 0,
+        body["items"].as_array().map(|a| a.len()).unwrap_or_default() > 0,
         "No posts found"
     );
     assert_eq!(body["items"][0]["pk"], post_pk);
