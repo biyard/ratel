@@ -358,7 +358,7 @@ async fn test_list_posts() {
     let items = body["items"].as_array().unwrap();
     let bookmark = body["bookmark"].as_str().unwrap_or_default().to_string();
     assert!(bookmark.len() > 0);
-    assert!(items.length().unwrap_or_default() >= 5);
+    assert!(items.len() >= 5);
 
     let first = items[0].as_object().unwrap();
     assert_eq!(first["title"], format!("Updated Title {} 10", now));
@@ -366,7 +366,7 @@ async fn test_list_posts() {
         first["html_contents"],
         format!("<p>Updated Content {} 10</p>", now)
     );
-    assert_eq!(items.length().unwrap_or_default(), 10);
+    assert_eq!(items.len(), 10);
 
     let (status, _headers, body) = get! {
         app: app,

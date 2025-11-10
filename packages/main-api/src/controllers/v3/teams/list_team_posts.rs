@@ -30,11 +30,22 @@ pub async fn list_team_posts_handler(
         status
     );
 
-    if status == PostStatus::Draft && !permission.is_admin() {
-        return Err(Error::NoPermission);
-    }
+    let sk = match (status, permission.is_admin()) {
+        (s, true) => s.to_string(),
+        (PostStatus::Published, false) => {
+            format!("{}#{}", PostStatus::Published, Visibility::Public)
+        }
+        _ => {
+            tracing::error!(
+                "list_team_posts_handler: user {:?} does not have permission to view posts with status {:?}",
+                user,
+                status
+            );
+            return Err(Error::NoPermission);
+        }
+    };
 
-    let opt = Post::opt_with_bookmark(bookmark).sk(status.to_string());
+    let opt = Post::opt_with_bookmark(bookmark).sk(sk);
 
     let (posts, bookmark) = Post::find_by_user_and_status(&dynamo.client, &team_pk, opt).await?;
 
