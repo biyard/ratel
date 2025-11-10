@@ -106,7 +106,7 @@ pub struct SpaceCommon {
     pub participants: i64,
 
     // space pdf files
-    pub files: Vec<File>,
+    pub files: Option<Vec<File>>,
 }
 
 impl SpaceCommon {
