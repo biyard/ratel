@@ -456,7 +456,7 @@ export class SpaceHomeController {
       return false;
     }
 
-    return true;
+    return this.space.canParticipate;
   }
 
   get actions() {
@@ -617,6 +617,22 @@ export function useSpaceHomeController(spacePk: string) {
       }
     })();
   }, [cleanedPath, spacePk]);
+
+  useEffect(() => {
+    if (data.space.data.canParticipate) {
+      (async () => {
+        try {
+          await participateSpace.mutateAsync({
+            spacePk,
+            verifiablePresentation: '',
+          });
+        } catch (err) {
+          logger.debug('verify error: ', err);
+          console.log('verify error: ', err);
+        }
+      })();
+    }
+  }, [data.space.data.canParticipate, spacePk, participateSpace]);
 
   return new SpaceHomeController(
     navigate,
