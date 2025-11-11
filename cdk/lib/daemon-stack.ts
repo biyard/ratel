@@ -36,7 +36,7 @@ export class DaemonStack extends Stack {
 
     const taskDefinition = new ecs.TaskDefinition(
       scope,
-      "DaemonTaskDefinitionV2",
+      "DaemonTaskDefinitionV3",
       {
         compatibility: ecs.Compatibility.FARGATE,
         cpu: "256",
@@ -65,7 +65,7 @@ export class DaemonStack extends Stack {
       protocol: ecs.Protocol.TCP,
     });
 
-    new ecs.FargateService(scope, "DaemonServiceV2", {
+    new ecs.FargateService(scope, "DaemonServiceV3", {
       cluster,
       taskDefinition,
       desiredCount: 1,
