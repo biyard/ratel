@@ -17,20 +17,16 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
-      - name: Download Web CDK .dist
+      - name: Download Main Api
         uses: actions/download-artifact@v4
         with:
-          name: ratel-web-${{ github.sha }}
-          path: ./
+          name: ratel-main-api-${{ github.sha }}
+          path: ./cdk/main-api
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-      # - name: Setup SSH session with tmate
-      #   uses: mxschmitt/action-tmate@v3
-      #   with:
-      #     limit-access-to-actor: true
       - name: Deploy
         env:
           ENV: prod
@@ -40,13 +36,9 @@ jobs:
           DOMAIN: ratel.foundation
           STACK: ratel-prod-stack
           DEPLOY_STORYBOOK: false
-          BUCKET: ${{ secrets.PROD_RATEL_BUCKET }}
+          DEPLOY_STATIC: false
         run: |
           npm i -g aws-cdk
-          tar xzvf dist.tar.gz
-          aws s3 sync  cdk/dist $BUCKET
-          # tar xzvf storybook.tar.gz
-          # make cdk/.build/image-worker/bootstrap
           make cdk-deploy-v2
 
   main-api:
@@ -135,6 +127,7 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-prod
           DYNAMO_ENDPOINT: none
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          RUST_FLAG: "--features lambda --release"
           WEB_BUILD: false
 
           # NOTE: Change PORTONE API
@@ -143,11 +136,19 @@ jobs:
           PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
         run: |
           tar xzvf dist.tar.gz
-          mv cdk/dist ./
+          ls dist
 
-          make docker.build
-          make docker.login
-          make docker.push
+          make build
+
+          mv target/release/main-api ../../bootstrap
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ratel-main-api-${{ github.sha }}
+          path: ${{ github.workspace }}/bootstrap
+          if-no-files-found: error
+          retention-days: 7
 
   ratel-web:
     runs-on: ubuntu-latest
@@ -190,72 +191,27 @@ jobs:
           VITE_TELEGRAM_BOTNAME: crypto_ratel_bot
         run: |
           make build
-          mv dist ../../cdk/
-          cd ../..
-          tar czvf dist.tar.gz cdk/dist
 
-      - name: Upload Next.js CDK .next
+      - name: Deploy to S3
+        env:
+          BUCKET: ${{ secrets.PROD_RATEL_BUCKET }}
+          CDN: ${{ secrets.PROD_RATEL_CDN }}
+        run: |
+          aws s3 sync dist $BUCKET
+          aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
+
+
+      - name: Prepare artifacts
+        run: |
+          tar czvf dist.tar.gz dist
+
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ratel-web-${{ github.sha }}
-          path: ${{ github.workspace }}/dist.tar.gz
+          path: ${{ github.workspace }}/ts-packages/web/dist.tar.gz
           if-no-files-found: error
           retention-days: 7
-
-  # NOTE: migrate to DynamoDB
-  # image-worker:
-  #   runs-on: ubuntu-22.04
-  #   defaults:
-  #     run:
-  #       working-directory: packages/image-worker
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #       with:
-  #         submodules: recursive
-  #         ssh-key: ${{ secrets.PULL_KEY_REPO }}
-  #     - uses: aws-actions/configure-aws-credentials@v2
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: ap-northeast-2
-  #     - uses: actions-rust-lang/setup-rust-toolchain@v1
-  #       with:
-  #         components: clippy, rustfmt
-  #         target: wasm32-unknown-unknown
-  #         toolchain: stable
-  #     - uses: cargo-bins/cargo-binstall@main
-  #     - name: Install toml-cli
-  #       run: |
-  #         cargo binstall toml-cli --force
-  #     - name: Cache builder
-  #       id: image-worker-build-cache
-  #       uses: actions/cache@v3
-  #       with:
-  #         key: image-worker-build-cache
-  #         path: |
-  #           packages/image-worker/target
-  #     - name: Deploy APIs
-  #       env:
-  #         REGION: ap-northeast-2
-  #         ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         ENV: dev
-  #         RUST_LOG: debug
-  #         SERVICE: image-worker
-  #         DATABASE_TYPE: postgres
-  #         DATABASE_URL: ${{ secrets.DATABASE_URL }}
-  #         MIGRATE: false
-  #         DYNAMO_TABLE_PREFIX: ratel-prod
-  #       run: |
-  #         make build
-
-  #     - name: Upload Artifacts
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: image-worker-${{ github.sha }}
-  #         path: ${{ github.workspace }}/.build/image-worker/bootstrap
-  #         if-no-files-found: error
-  #         retention-days: 7
 
   fetcher:
     runs-on: ubuntu-latest
