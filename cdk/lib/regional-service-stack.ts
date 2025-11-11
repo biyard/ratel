@@ -48,7 +48,7 @@ export class RegionalServiceStack extends Stack {
       handler: "bootstrap",
       environment: {
         REGION: this.region,
-        ENABLE_ANSI: "true",
+        DISABLE_ANSI: "true",
         NO_COLOR: "true",
       },
       memorySize: 128,

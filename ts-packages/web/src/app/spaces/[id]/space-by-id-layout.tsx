@@ -23,40 +23,9 @@ export const Context = createContext<SpaceHomeController | undefined>(
 export default function SpaceByIdLayout() {
   const { spacePk } = useParams<{ spacePk: string }>();
   const ctrl = useSpaceHomeController(spacePk ?? '');
+  // FIXME: use state to force re-render when hiding
   const location = useLocation();
   const showInfo = !/\/boards\/posts(\/|$)/.test(location.pathname);
-
-  // Check if prerequisites are completed
-  /* const { data: prerequisites, isLoading: isLoadingPrerequisites } =
-   *   useCheckPrerequisites(spacePk ?? ''); */
-
-  // Redirect to poll if prerequisites are not completed
-  /* useEffect(() => {
-   *   if (
-   *     !isLoadingPrerequisites &&
-   *     prerequisites &&
-   *     !prerequisites.completed &&
-   *     prerequisites.poll_pk
-   *   ) {
-   *     // Only redirect if not already on the poll page
-   *     const pollPagePattern = new RegExp(
-   *       `/spaces/${encodeURIComponent(spacePk ?? '')}/polls/${encodeURIComponent(prerequisites.poll_pk)}`,
-   *     );
-   *     if (!pollPagePattern.test(location.pathname)) {
-   *       navigate(route.spacePollById(spacePk ?? '', prerequisites.poll_pk));
-   *     }
-   *   }
-   * }, [
-   *   prerequisites,
-   *   isLoadingPrerequisites,
-   *   spacePk,
-   *   location.pathname,
-   *   navigate,
-   * ]); */
-
-  // Check if we should show side menu and content
-  /* const shouldShowSideMenu =
-   *   isLoadingPrerequisites || !prerequisites || prerequisites.completed; */
 
   return (
     <Context.Provider value={ctrl}>
@@ -104,7 +73,9 @@ export default function SpaceByIdLayout() {
               />
             )}
 
-          <SpaceSideMenu menus={ctrl.menus} />
+          {ctrl.space.requirements.length === 0 && (
+            <SpaceSideMenu menus={ctrl.menus} />
+          )}
           <TimelineMenu
             isEditing={false}
             handleSetting={() => {}}

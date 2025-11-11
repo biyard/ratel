@@ -22,10 +22,12 @@ pub async fn participate_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
-    Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
+    Extension(space): Extension<SpaceCommon>,
     Json(req): Json<ParticipateSpaceRequest>,
 ) -> Result<Json<ParticipateSpaceResponse>> {
     tracing::debug!("Handling request: {:?}", req);
+    permissions.permitted(TeamGroupPermission::SpaceRead)?;
+
     // TODO: Check verifiable_presentation and add user as SpaceParticipant
 
     // let is_verified = SpaceParticipant::verify_credential(&dynamo, &space_pk, user.clone()).await;
@@ -34,32 +36,26 @@ pub async fn participate_space_handler(
     //     return Err(Error::InvalidPanel);
     // }
 
-    let space = SpaceCommon::get(
-        &dynamo.client,
-        space_pk.clone(),
-        Some(EntityType::SpaceCommon),
-    )
-    .await?
-    .ok_or(Error::SpaceNotFound)?;
+    let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
 
     if space.visibility != SpaceVisibility::Public {
-        let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
-
         let member =
             SpaceInvitationMember::get(&dynamo.client, pk.clone(), Some(sk.clone())).await?;
 
-        if member.is_none() || member.unwrap().status != InvitationStatus::Accepted {
+        tracing::debug!("display_name generated: {:?}", member);
+
+        if member.is_none() {
             return Err(Error::NoPermission);
+        } else if let Some(member) = member {
+            match member.status {
+                InvitationStatus::Invited => {}
+                InvitationStatus::Pending => return Err(Error::NoPermission),
+                InvitationStatus::Accepted | InvitationStatus::Declined => {
+                    return Err(Error::AlreadyParticipating);
+                }
+            }
         }
     }
-
-    if !permissions.contains(TeamGroupPermission::SpaceRead) {
-        return Err(Error::NoPermission);
-    }
-
-    let space = SpaceCommon::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceCommon))
-        .await?
-        .ok_or(Error::NotFoundSpace)?;
 
     let now = time::get_now_timestamp_millis();
 
@@ -72,7 +68,7 @@ pub async fn participate_space_handler(
     let new_space = SpaceCommon::updater(&space.pk, &space.sk)
         .increase_participants(1)
         .with_updated_at(now);
-    let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
+
     let invitation =
         SpaceInvitationMember::updater(&pk, &sk).with_status(InvitationStatus::Accepted);
 

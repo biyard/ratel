@@ -144,6 +144,8 @@ pub enum Error {
     #[rest_error(code = 3050)]
     #[error("Member not found")]
     NoInvitationFound,
+    #[error("User is already participating in the space")]
+    AlreadyParticipating,
 
     // /v3/spaces/deliberations endpoints 3100 ~
     #[rest_error(code = 3100)]
