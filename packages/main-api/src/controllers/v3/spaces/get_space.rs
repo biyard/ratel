@@ -82,8 +82,17 @@ pub async fn get_space_handler(
 
     let (requirements, _bookmark) = SpaceRequirement::query(&dynamo.client, req_pk, opt).await?;
 
+    let can_participate = if let Some(user) = user {
+        let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
+        let invitation = SpaceInvitationMember::get(&dynamo.client, &pk, Some(&sk)).await?;
+        invitation.is_some() && user_participant.is_none()
+    } else {
+        false
+    };
+
     let mut res = GetSpaceResponse::from((space, post, permissions, user_participant));
     res.requirements = requirements;
+    res.can_participate = can_participate;
 
     Ok(Json(res))
 }

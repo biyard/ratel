@@ -62,6 +62,7 @@ export class SpaceHomeController {
       typeof useUpdateDraftImageMutation
     >['mutateAsync'],
     public participateSpace: ReturnType<typeof useParticipateSpaceMutation>,
+    public hiding: State<boolean>,
   ) {
     this.space = this.data.space.data;
     this.user = this.data.user.data;
@@ -548,6 +549,8 @@ export function useSpaceHomeController(spacePk: string) {
   const files = useState<FileModel[]>([]);
   const filesInitializedRef = useRef(false);
 
+  const hiding = useState(false);
+
   // Initialize image from space data
   useEffect(() => {
     if (
@@ -634,5 +637,6 @@ export function useSpaceHomeController(spacePk: string) {
     new State(files),
     updateDraftImage,
     participateSpace,
+    new State(hiding),
   );
 }

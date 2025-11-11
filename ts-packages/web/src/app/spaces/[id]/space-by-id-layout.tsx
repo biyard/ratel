@@ -1,4 +1,4 @@
-import { createContext } from 'react';
+import { createContext, useContext } from 'react';
 import { Outlet, useLocation, useParams, useNavigate } from 'react-router';
 import {
   SpaceHomeController,
@@ -15,6 +15,7 @@ import {
 import TimelineMenu from '@/features/spaces/components/side-menu/timeline';
 import { SpaceActions } from '@/features/spaces/components/space-actions';
 import SpaceParticipantProfile from '@/features/spaces/components/space-participant-profile';
+import { cn } from '@/lib/utils';
 
 export const Context = createContext<SpaceHomeController | undefined>(
   undefined,
@@ -59,7 +60,8 @@ export default function SpaceByIdLayout() {
 
           <Outlet />
         </Col>
-        <Col className="gap-2.5 w-full max-w-[250px]">
+
+        <Col className={cn('gap-2.5 w-full transition-all max-w-[250px]')}>
           {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
 
           {ctrl.space.participated &&
@@ -73,9 +75,7 @@ export default function SpaceByIdLayout() {
               />
             )}
 
-          {ctrl.space.requirements.length === 0 && (
-            <SpaceSideMenu menus={ctrl.menus} />
-          )}
+          <SpaceSideMenu menus={ctrl.menus} />
           <TimelineMenu
             isEditing={false}
             handleSetting={() => {}}
