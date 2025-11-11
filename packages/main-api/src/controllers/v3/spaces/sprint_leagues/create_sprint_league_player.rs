@@ -13,9 +13,11 @@ use axum::{
     extract::{Path, State},
 };
 use bdk::prelude::*;
+use crate::types::Permissions;
 
 pub async fn create_sprint_league_player_handler(
     State(AppState { dynamo, .. }): State<AppState>,
+    NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
     Json(req): Json<CreatePlayerRequest>,
@@ -24,17 +26,12 @@ pub async fn create_sprint_league_player_handler(
         return Err(Error::SpaceNotFound);
     }
 
-    let (space_common, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceRead,
-    )
-    .await?;
-
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceRead) {
         return Err(Error::NoPermission);
     }
+
+    let space_common = SpaceCommon::get(&dynamo.client, &space_pk, Some(EntityType::SpaceCommon)).await?
+        .ok_or(Error::SpaceNotFound)?;
 
     let is_editable = space_common.validate_editable();
     if !is_editable {

@@ -59,7 +59,8 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
             "title": "space boards title".to_string(),
             "html_contents": "<div>space boards desc</div>".to_string(),
             "category_name": "space_category".to_string(),
-            "urls": []
+            "urls": [],
+            "files": [],
         },
         response_type: CreateSpacePostResponse
     };

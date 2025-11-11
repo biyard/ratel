@@ -1,3 +1,6 @@
+use ssi::claims::ResourceProvider;
+
+use crate::features::spaces::members::{InvitationStatus, SpaceInvitationMember};
 use crate::*;
 use crate::{
     Error,
@@ -6,6 +9,8 @@ use crate::{
     types::*,
     utils::time::get_now_timestamp_millis,
 };
+
+use super::SpaceParticipant;
 
 #[derive(
     Debug,
@@ -100,27 +105,28 @@ pub struct SpaceCommon {
     // participants is the number of participants. It is incremented when a user participates in the space.
     // It is only used for spaces enabling explicit participation such as anonymous participation.
     pub participants: i64,
+
+    // space pdf files
+    pub files: Option<Vec<File>>,
 }
 
 impl SpaceCommon {
-    pub fn new<A: Into<Author>>(post_pk: Partition, author: A) -> Self {
-        let uid = match post_pk {
-            Partition::Feed(ref id) => id.clone(),
-            _ => {
-                panic!("post_pk must be Partition::Feed");
-            }
-        };
-
-        let now = get_now_timestamp_millis();
-        let Author {
-            pk: user_pk,
-            display_name,
-            profile_url,
-            username,
+    pub fn new(
+        Post {
+            pk: post_pk,
+            user_pk,
+            author_display_name,
+            author_profile_url,
+            author_username,
             ..
-        } = author.into();
+        }: Post,
+    ) -> Self {
+        let now = get_now_timestamp_millis();
         Self {
-            pk: Partition::Space(uid),
+            pk: post_pk
+                .clone()
+                .to_space_pk()
+                .expect("post_pk must be Partition::Feed"),
             sk: EntityType::SpaceCommon,
             created_at: now,
             updated_at: now,
@@ -129,9 +135,9 @@ impl SpaceCommon {
             status: None,
             visibility: SpaceVisibility::Private,
             user_pk,
-            author_display_name: display_name,
-            author_profile_url: profile_url,
-            author_username: username,
+            author_display_name,
+            author_profile_url,
+            author_username,
             ..Default::default()
         }
     }
@@ -168,77 +174,54 @@ impl SpaceCommon {
         TeamGroupPermissions::empty()
     }
 
-    pub async fn has_permission(
-        cli: &aws_sdk_dynamodb::Client,
-        space_pk: &Partition,
-        user_pk: Option<&Partition>,
-        perm: TeamGroupPermission,
-    ) -> Result<(Self, bool)> {
-        let space = SpaceCommon::get(cli, space_pk, Some(EntityType::SpaceCommon))
-            .await?
-            .ok_or(Error::SpaceNotFound)?;
-
-        let permissions = space.permissions_for_guest();
-
-        if permissions.contains(perm) {
-            return Ok((space, true));
-        }
-
-        if user_pk.is_some() {
-            let user_pk = user_pk.unwrap();
-            let user = User::get(&cli, user_pk, Some(EntityType::User)).await?;
-
-            if user.is_some() {
-                let user = user.unwrap_or_default();
-
-                let verification = SpaceEmailVerification::get(
-                    &cli,
-                    &space_pk,
-                    Some(EntityType::SpaceEmailVerification(user.email.clone())),
-                )
-                .await?;
-
-                if verification.is_some()
-                    && verification.unwrap_or_default().authorized
-                    && perm == TeamGroupPermission::SpaceRead
-                    && space.publish_state == SpacePublishState::Published
-                {
-                    return Ok((space, true));
-                }
-            }
-        }
-
-        let author_pk = &space.user_pk;
-
-        let user_pk = if let Some(user_pk) = user_pk {
-            user_pk
-        } else {
-            if space.visibility == SpaceVisibility::Public
-                && perm == TeamGroupPermission::SpaceRead
-                && space.publish_state == SpacePublishState::Published
-            {
-                return Ok((space, true));
-            } else {
-                return Ok((space, false));
-            }
-        };
-
-        match user_pk {
-            Partition::User(_) => {
-                let has_perm = user_pk == author_pk;
-                Ok((space, has_perm))
-            }
-            Partition::Team(_) => {
-                let has_perm = Team::has_permission(cli, author_pk, user_pk, perm).await?;
-                Ok((space, has_perm))
-            }
-            _ => Err(Error::InternalServerError("Invalid space author".into())),
-        }
-    }
-
     pub fn validate_editable(&self) -> bool {
         self.publish_state == SpacePublishState::Draft
             || (self.publish_state == SpacePublishState::Published
                 && (self.status == Some(SpaceStatus::Waiting) || self.status.is_none()))
+    }
+}
+
+#[async_trait::async_trait]
+impl ResourcePermissions for SpaceCommon {
+    fn viewer_permissions(&self) -> Permissions {
+        if self.visibility == SpaceVisibility::Public
+            && self.publish_state == SpacePublishState::Published
+        {
+            return Permissions::read();
+        }
+
+        Permissions::empty()
+    }
+
+    fn participant_permissions(&self) -> Permissions {
+        Permissions::read()
+    }
+
+    fn resource_owner(&self) -> ResourceOwnership {
+        self.user_pk.clone().into()
+    }
+
+    async fn is_participant(&self, cli: &aws_sdk_dynamodb::Client, requester: &Partition) -> bool {
+        let (pk, sk) = SpaceParticipant::keys(self.pk.clone(), requester.clone());
+
+        SpaceParticipant::get(cli, &pk, Some(&sk))
+            .await
+            .map(|sp| sp.is_some())
+            .unwrap_or(false)
+    }
+
+    async fn can_participate(&self, cli: &aws_sdk_dynamodb::Client, requester: &Partition) -> bool {
+        let (pk, sk) = SpaceInvitationMember::keys(&self.pk, requester);
+        SpaceInvitationMember::get(cli, &pk, Some(&sk))
+            .await
+            .map(|sp: Option<SpaceInvitationMember>| {
+                if let Some(sp) = sp {
+                    sp.status == InvitationStatus::Invited
+                        || sp.status == InvitationStatus::Accepted
+                } else {
+                    false
+                }
+            })
+            .unwrap_or(false)
     }
 }

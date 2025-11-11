@@ -18,9 +18,11 @@ export const i18nAdmins = {
     created_at: 'Created At',
     actions: 'Actions',
     promote_dialog_title: 'Promote User to Admin',
-    promote_dialog_description: 'Enter the email address of the user you want to promote to admin',
+    promote_dialog_description:
+      'Enter the email address of the user you want to promote to admin',
     demote_dialog_title: 'Demote Admin User',
-    demote_dialog_description: 'Are you sure you want to demote this user from admin?',
+    demote_dialog_description:
+      'Are you sure you want to demote this user from admin?',
     demote_warning: 'This will remove all admin privileges from this user.',
     email_placeholder: 'user@example.com',
     promote_success: 'User promoted to admin successfully',
@@ -44,7 +46,8 @@ export const i18nAdmins = {
     created_at: '생성일',
     actions: '작업',
     promote_dialog_title: '사용자를 관리자로 승격',
-    promote_dialog_description: '관리자로 승격할 사용자의 이메일 주소를 입력하세요',
+    promote_dialog_description:
+      '관리자로 승격할 사용자의 이메일 주소를 입력하세요',
     demote_dialog_title: '관리자 강등',
     demote_dialog_description: '이 사용자를 관리자에서 강등하시겠습니까?',
     demote_warning: '이 작업은 이 사용자의 모든 관리자 권한을 제거합니다.',

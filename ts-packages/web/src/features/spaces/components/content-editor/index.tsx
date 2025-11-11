@@ -9,6 +9,7 @@ import {
   getPutMultiObjectUrl,
   getPutObjectUrl,
 } from '@/lib/api/ratel/assets.v3';
+import FileModel from '../../files/types/file';
 // import { executeOnKeyStroke } from '@/utils/key-event-handle';
 
 async function uploadVideo(file: File) {
@@ -51,18 +52,26 @@ async function uploadVideo(file: File) {
 }
 
 export default function SpaceHTMLContentEditor({
+  files,
   htmlContent,
   url,
   canEdit,
+  disabledFileUpload = true,
   // enableEnterToSave = false,
   onContentChange,
   onImageUpload,
   onRemoveImage,
+  onUploadPDF,
+  onRemovePdf,
 }: {
+  files?: FileModel[] | null;
   htmlContent: string;
   url: string | null;
   canEdit: boolean;
   enableEnterToSave?: boolean;
+  disabledFileUpload?: boolean;
+  onUploadPDF?: (fileList: FileList | File[]) => void;
+  onRemovePdf?: (index: number) => void;
   onContentChange: (newContent: string) => void;
   onImageUpload?: (imageUrl: string) => Promise<void>;
   onRemoveImage?: () => Promise<void>;
@@ -104,6 +113,10 @@ export default function SpaceHTMLContentEditor({
         )}
 
         <PostEditor
+          files={files}
+          onUploadPDF={onUploadPDF}
+          onRemovePdf={onRemovePdf}
+          disabledFileUpload={disabledFileUpload}
           content={content}
           onUpdate={(nextContent) => {
             setContent(nextContent);

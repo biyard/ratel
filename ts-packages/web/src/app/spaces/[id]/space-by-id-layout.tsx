@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { Outlet, useLocation, useParams } from 'react-router';
+import { Outlet, useLocation, useParams, useNavigate } from 'react-router';
 import {
   SpaceHomeController,
   useSpaceHomeController,
@@ -25,6 +25,38 @@ export default function SpaceByIdLayout() {
   const ctrl = useSpaceHomeController(spacePk ?? '');
   const location = useLocation();
   const showInfo = !/\/boards\/posts(\/|$)/.test(location.pathname);
+
+  // Check if prerequisites are completed
+  /* const { data: prerequisites, isLoading: isLoadingPrerequisites } =
+   *   useCheckPrerequisites(spacePk ?? ''); */
+
+  // Redirect to poll if prerequisites are not completed
+  /* useEffect(() => {
+   *   if (
+   *     !isLoadingPrerequisites &&
+   *     prerequisites &&
+   *     !prerequisites.completed &&
+   *     prerequisites.poll_pk
+   *   ) {
+   *     // Only redirect if not already on the poll page
+   *     const pollPagePattern = new RegExp(
+   *       `/spaces/${encodeURIComponent(spacePk ?? '')}/polls/${encodeURIComponent(prerequisites.poll_pk)}`,
+   *     );
+   *     if (!pollPagePattern.test(location.pathname)) {
+   *       navigate(route.spacePollById(spacePk ?? '', prerequisites.poll_pk));
+   *     }
+   *   }
+   * }, [
+   *   prerequisites,
+   *   isLoadingPrerequisites,
+   *   spacePk,
+   *   location.pathname,
+   *   navigate,
+   * ]); */
+
+  // Check if we should show side menu and content
+  /* const shouldShowSideMenu =
+   *   isLoadingPrerequisites || !prerequisites || prerequisites.completed; */
 
   return (
     <Context.Provider value={ctrl}>

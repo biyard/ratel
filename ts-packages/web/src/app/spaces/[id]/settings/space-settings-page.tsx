@@ -2,12 +2,6 @@ import { useParams } from 'react-router';
 import { useSpaceSettingsController } from './use-space-settings-controller';
 import { Checkbox } from '@/components/checkbox/checkbox';
 import { useSettingsI18n } from './i18n';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { Info } from '@/components/icons';
 
 export function SpaceSettingsPage() {
   const { spacePk } = useParams<{ spacePk: string }>();
@@ -18,7 +12,7 @@ export function SpaceSettingsPage() {
   if (ctrl.data.space.isLoading) {
     return (
       <div className="flex justify-center items-center p-8">
-        <div className="text-white">{i18n.loading}</div>
+        <div className="text-text-primary">{i18n.loading}</div>
       </div>
     );
   }
@@ -33,10 +27,10 @@ export function SpaceSettingsPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      <div className="text-2xl font-bold text-white">{i18n.title}</div>
+      <div className="text-2xl font-bold text-text-primary">{i18n.title}</div>
 
       <div className="flex flex-col gap-4">
-        <div className="text-lg font-semibold text-white">
+        <div className="text-lg font-semibold text-text-primary">
           {i18n.participation_title}
         </div>
 
@@ -45,7 +39,7 @@ export function SpaceSettingsPage() {
           value={ctrl.anonymousParticipation}
           onChange={ctrl.handleAnonymousParticipationChange}
         >
-          <span className="font-medium text-white">
+          <span className="font-medium text-text-primary">
             {i18n.anonymous_participation_label}
           </span>
           {/* <Tooltip>

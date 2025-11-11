@@ -172,3 +172,18 @@ impl FromRequestParts<AppState> for User {
         Ok(user.unwrap())
     }
 }
+
+#[async_trait::async_trait]
+impl EntityPermissions for User {
+    async fn get_permissions_for(
+        &self,
+        _cli: &aws_sdk_dynamodb::Client,
+        requester: &Partition,
+    ) -> Permissions {
+        if &self.pk == requester {
+            Permissions::all()
+        } else {
+            Permissions::empty()
+        }
+    }
+}

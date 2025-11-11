@@ -90,7 +90,9 @@ export default function TimezoneDropdown({
                   key={tz}
                   onClick={() => handleSelect(tz)}
                   className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors ${
-                    tz === value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                    tz === value
+                      ? 'bg-blue-50 text-blue-700 font-medium'
+                      : 'text-gray-700'
                   }`}
                 >
                   {tz}

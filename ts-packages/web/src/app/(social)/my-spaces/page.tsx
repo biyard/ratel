@@ -49,6 +49,10 @@ function SpaceCard({ space }: { space: MySpace }) {
           </div>
         </div>
 
+        <div className="text-base font-medium text-text-primary">
+          {space.title}
+        </div>
+
         <div className="flex items-center gap-2 text-sm text-text-secondary">
           <span
             className={`px-2 py-1 rounded font-medium ${getInvitationStatusStyle(space.invitation_status)}`}

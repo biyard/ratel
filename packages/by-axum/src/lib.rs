@@ -1,6 +1,9 @@
 // pub mod auth;
 pub mod axum;
 
+#[cfg(feature = "lambda")]
+pub mod lambda_adapter;
+
 pub use tower_http::cors;
 use tower_http::cors::{AllowHeaders, AllowMethods, AllowOrigin, CorsLayer};
 
@@ -28,6 +31,11 @@ pub fn new() -> BiyardRouter {
         .with_line_number(true)
         .with_thread_ids(true)
         .with_target(false)
+        .with_ansi(
+            option_env!("ENABLE_ANSI")
+                .map(|e| e.to_lowercase() == "true")
+                .unwrap_or(false),
+        )
         .try_init();
 
     BiyardRouter::new()
@@ -64,7 +72,15 @@ pub async fn serve_wo_cors_layer(
         .finish_api(&mut api)
         .layer(Extension(Arc::new(api)));
 
+    #[cfg(not(feature = "lambda"))]
     axum::serve(_tcp_listener, app).await?;
+
+    #[cfg(feature = "lambda")]
+    {
+        lambda_runtime::run(lambda_adapter::LambdaAdapter::from(app.into_service()))
+            .await
+            .unwrap();
+    }
 
     Ok(())
 }

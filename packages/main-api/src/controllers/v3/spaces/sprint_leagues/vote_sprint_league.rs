@@ -3,7 +3,7 @@ use crate::{
     controllers::v3::spaces::dto::SpacePathParam,
     error::Error,
     features::spaces::sprint_leagues::models::SprintLeague,
-    models::{SpaceCommon, User},
+    models::User,
     types::{EntityType, TeamGroupPermission},
 };
 use aide::{NoApi, OperationIo};
@@ -13,6 +13,7 @@ use axum::{
 };
 use bdk::prelude::*;
 use serde::{Deserialize, Serialize};
+use crate::types::Permissions;
 
 #[derive(Debug, Deserialize, Default, OperationIo, JsonSchema)]
 pub struct VoteSprintLeagueRequest {
@@ -25,6 +26,7 @@ pub struct VoteSprintLeagueResponse {}
 
 pub async fn vote_sprint_league_handler(
     State(AppState { dynamo, .. }): State<AppState>,
+    NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
     Json(req): Json<VoteSprintLeagueRequest>,
@@ -32,14 +34,8 @@ pub async fn vote_sprint_league_handler(
     if !space_pk.is_space_key() {
         return Err(Error::InvalidSpacePartitionKey);
     }
-    let (_, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        Some(&user.pk),
-        TeamGroupPermission::SpaceRead,
-    )
-    .await?;
-    if !has_perm {
+
+    if !permissions.contains(TeamGroupPermission::SpaceRead) {
         return Err(Error::NoPermission);
     }
 

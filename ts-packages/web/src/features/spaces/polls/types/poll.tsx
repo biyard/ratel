@@ -14,6 +14,7 @@ export class Poll {
   public questions: PollQuestion[];
   public myResponse?: PollAnswer[];
   public status: PollStatus;
+  public default: boolean;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
@@ -29,5 +30,6 @@ export class Poll {
     this.questions = json.questions || [];
     this.myResponse = json.my_response || [];
     this.status = json.status || PollStatus.NotStarted;
+    this.default = json.default || false;
   }
 }

@@ -139,6 +139,10 @@ build-only:
 	mkdir -p $(WORKSPACE_ROOT)/.build/$(SERVICE)
 	cp $(CARGO_TARGET_DIR)/release/$(SERVICE) $(WORKSPACE_ROOT)/.build/$(SERVICE)/bootstrap
 
+build-lambda:
+	docker run -it --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) amazonlinux/2023 bash -c 'source ~/.cargo/env && $(BUILD_ENV) cargo build $(RUST_FLAG)'
+
+
 TEST_TARGET ?= controllers::v3 models::dynamo_tables features
 
 test:

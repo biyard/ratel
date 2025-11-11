@@ -26,9 +26,7 @@ export async function getAdmin(userId: string): Promise<AdminUser> {
  * Promote a user to admin by email
  * POST /m3/admin
  */
-export async function promoteToAdmin(
-  email: string,
-): Promise<AdminUser> {
+export async function promoteToAdmin(email: string): Promise<AdminUser> {
   const request: PromoteToAdminRequest = { email };
   return await call('POST', '/m3/admin', request);
 }

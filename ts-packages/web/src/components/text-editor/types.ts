@@ -19,6 +19,7 @@ export interface EnabledFeatures {
   image?: boolean;
   indent?: boolean;
   table?: boolean;
+  pdf?: boolean;
 }
 
 export type UploadResult = { url: string };
@@ -49,10 +50,12 @@ export interface TiptapEditorProps {
   onFocus?: () => void;
   onBlur?: () => void;
   onImageUpload?: (imageUrl: string) => Promise<void>;
+  onUploadPDF?: (files: FileList | File[]) => void;
   // Test identifier
 
   uploadAsset?: (file: File) => Promise<UploadResult>;
   uploadVideo?: (file: File) => Promise<UploadResult>;
+
   maxImageSizeMB?: number;
   maxVideoSizeMB?: number;
 
@@ -68,6 +71,7 @@ export interface TiptapToolbarProps {
   className?: string;
   openVideoPicker?: () => void;
   onImageUpload?: (imageUrl: string) => Promise<void>;
+  onUploadPDF?: (files: FileList | File[]) => void;
 }
 
 /**
@@ -119,4 +123,5 @@ export const DEFAULT_ENABLED_FEATURES: EnabledFeatures = {
   image: true, // Enabled
   indent: false, // Disabled for now
   table: true, // Enabled
+  pdf: true,
 };

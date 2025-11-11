@@ -11,6 +11,10 @@ export function SpaceHomePage() {
         canEdit={ctrl.isAdmin}
         onContentChange={ctrl.handleChange}
         url={ctrl.image.get()}
+        files={ctrl.files.get()}
+        disabledFileUpload={false}
+        onRemovePdf={ctrl.handleRemovePdf}
+        onUploadPDF={ctrl.handlePdfUpload}
         onImageUpload={ctrl.handleImageUpload}
         onRemoveImage={ctrl.handleRemoveImage}
       />

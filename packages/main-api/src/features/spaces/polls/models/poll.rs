@@ -40,13 +40,10 @@ impl Poll {
             ));
         }
 
-        let sk = match sk {
-            Some(EntityType::SpacePoll(s)) if !s.is_empty() => EntityType::SpacePoll(s),
-            _ => {
-                let uuid = uuid::Uuid::new_v4().to_string();
-                EntityType::SpacePoll(uuid)
-            }
-        };
+        let sk = sk.unwrap_or_else(|| {
+            let uuid = uuid::Uuid::new_v4().to_string();
+            EntityType::SpacePoll(uuid)
+        });
 
         let now = get_now_timestamp_millis();
 
@@ -65,6 +62,18 @@ impl Poll {
             description: String::new(),
             questions: Vec::new(),
         })
+    }
+
+    pub fn is_default_poll(&self) -> bool {
+        match &self.sk {
+            EntityType::SpacePoll(id) => {
+                if let Partition::Space(space_id) = &self.pk {
+                    return id == space_id;
+                }
+                false
+            }
+            _ => false,
+        }
     }
 
     pub async fn delete_one(

@@ -24,6 +24,7 @@ pub struct Post {
     #[dynamo(index = "gsi1", sk)]
     pub created_at: i64,
     #[dynamo(index = "gsi2", order = 2, sk)]
+    #[dynamo(index = "gsi5", order = 3, sk)]
     #[dynamo(index = "gsi6", sk)]
     pub updated_at: i64,
 
@@ -31,11 +32,12 @@ pub struct Post {
     pub html_contents: String,
     pub post_type: PostType,
 
-    #[dynamo(index = "gsi5", sk)]
+    #[dynamo(index = "gsi5", order = 1, sk)]
     pub status: PostStatus,
 
     #[dynamo(index = "gsi6", name = "find_by_visibility", pk)]
     #[dynamo(index = "gsi2", order = 1, sk)]
+    #[dynamo(index = "gsi5", order = 2, sk)]
     pub visibility: Option<Visibility>,
 
     pub shares: i64,
