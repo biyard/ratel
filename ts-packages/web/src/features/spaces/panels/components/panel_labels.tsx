@@ -11,12 +11,11 @@ const UNIVERSITY: PanelAttribute = {
   type: 'collective_attribute',
   value: 'university',
 };
-const AGE: PanelAttribute = { type: 'verifiable_attribute', value: 'age' };
 const GENDER: PanelAttribute = {
   type: 'verifiable_attribute',
   value: 'gender',
 };
-const ALL_OPTIONS: PanelAttribute[] = [UNIVERSITY, AGE, GENDER];
+const ALL_OPTIONS: PanelAttribute[] = [UNIVERSITY, GENDER];
 
 const labelOf = (
   p: PanelAttribute,
