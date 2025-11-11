@@ -35,7 +35,7 @@ export function Credentials() {
             className="gap-1"
           >
             <Heading variant="heading4">{t.vc}</Heading>
-            <p className="text-sm text-neutral-300">
+            <p className="text-sm text-neutral-300 dark:text-neutral-300 light:text-neutral-700">
               {t.id}: {ctrl.did}
             </p>
           </Col>
@@ -49,7 +49,10 @@ export function Credentials() {
             <VerifiedItem {...attr} />
           ))}
           {ctrl.attributes.length === 0 && (
-            <Card variant="outlined" className="flex items-center">
+            <Card
+              variant="outlined"
+              className="flex items-center text-text-primary"
+            >
               {t.no_data}
             </Card>
           )}
@@ -166,7 +169,7 @@ function CodeInputModal({
 
     try {
       await onSubmit(code.trim());
-    } catch (err) {
+    } catch {
       setError(t.verificationError);
     }
   };
