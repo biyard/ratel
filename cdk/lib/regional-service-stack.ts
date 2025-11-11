@@ -9,10 +9,11 @@ import {
   aws_route53_targets as targets,
   aws_iam as iam,
 } from "aws-cdk-lib";
-import { Repository } from "aws-cdk-lib/aws-ecr";
+import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as r53Targets from "aws-cdk-lib/aws-route53-targets";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
+import * as apigateway from "aws-cdk-lib/aws-apigateway";
 
 export interface RegionalServiceStackProps extends StackProps {
   // Domain parts, e.g. "dev2.ratel.foundation"
@@ -40,36 +41,16 @@ export class RegionalServiceStack extends Stack {
     const zone = route53.HostedZone.fromLookup(this, "RootZone", {
       domainName: baseDomain,
     });
-    const apiRepoName = props.apiRepoName ?? "ratel/main-api";
 
-    // Lambda execution role
-    const lambdaExecutionRole = new iam.Role(this, "LambdaExecutionRole", {
-      assumedBy: new iam.ServicePrincipal("lambda.amazonaws.com"),
-      managedPolicies: [
-        iam.ManagedPolicy.fromAwsManagedPolicyName(
-          "service-role/AWSLambdaBasicExecutionRole",
-        ),
-      ],
-    });
-
-    // --- API Lambda Function ---
-    const apiRepository = Repository.fromRepositoryName(
-      this,
-      "ApiRepository",
-      apiRepoName,
-    );
-
-    const apiLambda = new lambda.DockerImageFunction(this, "ApiLambda", {
-      code: lambda.DockerImageCode.fromEcr(apiRepository, {
-        tagOrDigest: props.commit,
-      }),
-      memorySize: 1024,
-      timeout: Duration.seconds(30),
-      role: lambdaExecutionRole,
+    const apiLambda = new lambda.Function(this, "Function", {
+      runtime: lambda.Runtime.PROVIDED_AL2023,
+      code: lambda.Code.fromAsset("main-api"),
+      handler: "bootstrap",
       environment: {
-        PGHOST: props.pghost,
-        REGION: this.region,
+        NO_COLOR: "true",
       },
+      memorySize: 128,
+      timeout: cdk.Duration.seconds(30),
     });
 
     // --- API Gateway HTTP API ---
