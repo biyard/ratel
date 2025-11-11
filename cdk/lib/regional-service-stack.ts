@@ -47,6 +47,8 @@ export class RegionalServiceStack extends Stack {
       code: lambda.Code.fromAsset("main-api"),
       handler: "bootstrap",
       environment: {
+        REGION: this.region,
+        ENABLE_ANSI: "true",
         NO_COLOR: "true",
       },
       memorySize: 128,
