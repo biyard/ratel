@@ -1,184 +1,143 @@
-// import { Plus } from 'lucide-react';
-// import { SpacePanelResponse } from '../types/space-panel-response';
-// import { PanelName } from './panel_name';
-// import { PanelQuotas } from './panel_quota';
-// import { PanelAge } from './panel_ages';
-// import { PanelGender } from './panel-genders';
-// import {
-//   DropdownMenu,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-//   DropdownMenuTrigger,
-// } from '@/components/ui/dropdown-menu';
-// import { Extra } from '@/components/icons';
-// import { TFunction } from 'i18next';
+import { useMemo, useState } from 'react';
+import { SpacePanelQuota } from '../types/space-panels-response';
+import { PanelAttribute } from '../types/panel-attribute';
+import { Input } from '@/components/ui/input';
+import { Trash2 } from 'lucide-react';
 
-// export type PanelTableProps = {
-//   panels: SpacePanelResponse[];
-//   t: TFunction<'SpacePanelEditor', undefined>;
-//   bookmark: string | null | undefined;
-//   canEdit: boolean;
-//   onadd: () => void;
-//   handleDeletePanel?: (index: number) => void;
-//   openAgePopup?: (index: number) => void;
-//   openGenderPopup?: (index: number) => void;
-//   handleUpdateName?: (index: number, name: string) => void;
-//   handleUpdateQuotas?: (index: number, quotas: number) => void;
-//   onloadmore: () => void;
-// };
+export type PanelTableProps = {
+  canEdit: boolean;
+  panel_quotas: SpacePanelQuota[];
+  onChangeQuota?: (row: number, next: number) => void;
+  onDelete?: (row: number) => void;
+};
 
-// export function PanelTable({
-//   panels,
-//   t,
-//   canEdit,
-//   bookmark,
-//   onadd,
-//   handleDeletePanel,
-//   openAgePopup,
-//   openGenderPopup,
-//   handleUpdateName,
-//   handleUpdateQuotas,
-//   onloadmore,
-// }: PanelTableProps) {
-//   const hasMore = !!bookmark;
-//   return (
-//     <div className="overflow-x-auto gap-2.5">
-//       <table className="w-full border-collapse">
-//         <colgroup>
-//           <col className="w-[20%]" />
-//           <col className="w-[40%]" />
-//           <col className="w-[20%]" />
-//           <col className="w-[15%]" />
-//           <col className="w-[5%]" />
-//         </colgroup>
-//         <thead>
-//           <tr className="bg-card-bg-secondary dark:bg-gray-800 dark:border-gray-700">
-//             <th className="p-3 font-semibold text-left">{t('panel_name')}</th>
-//             <th className="p-3 font-semibold text-left">{t('age')}</th>
-//             <th className="p-3 font-semibold text-left">{t('gender')}</th>
-//             <th className="p-3 font-semibold text-left">{t('quotas')}</th>
-//             <th className="p-3 font-semibold text-left">
-//               {canEdit && (
-//                 <div
-//                   id="add-panel-button"
-//                   className="cursor-pointer w-6 h-6 bg-neutral-300 rounded-md"
-//                   onClick={onadd}
-//                 >
-//                   <Plus className="w-fit h-fit [&>path]:stroke-gray-700" />
-//                 </div>
-//               )}
-//             </th>
-//           </tr>
-//         </thead>
+const groupLabel = (a: PanelAttribute) => {
+  if (a.type === 'collective_attribute') {
+    if (a.value === 'university') return 'University';
+    return 'Group';
+  }
+  if (a.type === 'verifiable_attribute') {
+    if (a.value === 'age') return 'Age';
+    if (a.value === 'gender') return 'Gender';
+    return 'Verifiable Attribute';
+  }
+  return 'None';
+};
 
-//         <tbody>
-//           {panels.map((panel, index) => (
-//             <tr
-//               key={panel.pk}
-//               className="bg-card-bg-secondary/80 border-t border-neutral-500 dark:border-gray-700"
-//             >
-//               <td className="p-3">
-//                 <PanelName
-//                   t={t}
-//                   canEdit={canEdit}
-//                   name={panel.name}
-//                   setName={(name: string) => {
-//                     handleUpdateName?.(index, name);
-//                   }}
-//                 />
-//               </td>
-//               <td
-//                 id="age-td"
-//                 className={`p-3 ${canEdit ? 'cursor-pointer' : ''}`}
-//                 onClick={() => {
-//                   if (canEdit) {
-//                     openAgePopup?.(index);
-//                   }
-//                 }}
-//               >
-//                 <PanelAge t={t} attributes={panel.attributes} />
-//               </td>
-//               <td
-//                 id="gender-td"
-//                 className={`p-3 ${canEdit ? 'cursor-pointer' : ''}`}
-//                 onClick={() => {
-//                   if (canEdit) {
-//                     openGenderPopup?.(index);
-//                   }
-//                 }}
-//               >
-//                 <PanelGender t={t} attributes={panel.attributes} />
-//               </td>
-//               <td id="quotas-td" className="p-3">
-//                 <PanelQuotas
-//                   quotas={panel.quotas}
-//                   canEdit={canEdit}
-//                   setQuotas={(quotas: number) => {
-//                     handleUpdateQuotas?.(index, quotas);
-//                   }}
-//                 />
-//               </td>
-//               <td className="p-3">
-//                 {canEdit && (
-//                   <ContextMenu
-//                     t={t}
-//                     handleDeletePanel={() => {
-//                       handleDeletePanel?.(index);
-//                     }}
-//                   />
-//                 )}
-//               </td>
-//             </tr>
-//           ))}
-//         </tbody>
-//       </table>
+const extractValueLabel = (sk: string): string => {
+  const match = sk.match(/#gender:(\w+)$/);
+  if (match) {
+    const val = match[1];
+    if (val === 'male') return 'Male';
+    if (val === 'female') return 'Female';
+    return val.charAt(0).toUpperCase() + val.slice(1);
+  }
+  const cityMatch = sk.match(/#collective_attribute:(\w+)#(\w+)/);
+  if (cityMatch) return cityMatch[2];
+  return '—';
+};
 
-//       {hasMore && (
-//         <button
-//           className="flex flex-row w-full justify-center items-center mt-2 px-4 py-2 rounded-md border border-divider hover:bg-white/5"
-//           onClick={onloadmore}
-//         >
-//           {t('more')}
-//         </button>
-//       )}
-//     </div>
-//   );
-// }
+export function PanelTable({
+  canEdit,
+  panel_quotas,
+  onChangeQuota,
+  onDelete,
+}: PanelTableProps) {
+  const [editing, setEditing] = useState<Record<number, string>>({});
 
-// export function ContextMenu({
-//   t,
-//   handleDeletePanel,
-// }: {
-//   t: TFunction<'SpacePanelEditor', undefined>;
-//   handleDeletePanel: () => void;
-// }) {
-//   return (
-//     <div>
-//       <DropdownMenu modal={false}>
-//         <DropdownMenuTrigger asChild>
-//           <button
-//             className="p-1 hover:bg-hover rounded-full focus:outline-none transition-colors"
-//             aria-haspopup="true"
-//             aria-label="Post options for desktop"
-//           >
-//             <Extra id="menu-option" className="size-6 text-gray-400" />
-//           </button>
-//         </DropdownMenuTrigger>
-//         <DropdownMenuContent
-//           align="end"
-//           className="w-40 border-gray-700 transition ease-out duration-100"
-//         >
-//           <DropdownMenuItem>
-//             <button
-//               aria-label="Delete Panel"
-//               onClick={handleDeletePanel}
-//               className="flex items-center w-full px-4 max-tablet:justify-start max-tablet:gap-1 max-tablet:hover:bg-transparent max-tablet:px-0 py-2 text-sm text-neutral-700 hover:bg-gray-700 hover:text-white cursor-pointer"
-//             >
-//               {t('delete')}
-//             </button>
-//           </DropdownMenuItem>
-//         </DropdownMenuContent>
-//       </DropdownMenu>
-//     </div>
-//   );
-// }
+  const total = useMemo(
+    () => panel_quotas.reduce((sum, r) => sum + (r.quotas ?? 0), 0),
+    [panel_quotas],
+  );
+
+  const pct = (n: number) =>
+    total > 0 ? Math.round((n / total) * 1000) / 10 : 0;
+
+  const hasDirty = (idx: number) =>
+    Object.prototype.hasOwnProperty.call(editing, idx);
+
+  const commit = (idx: number, fallback: number) => {
+    if (!hasDirty(idx)) return;
+
+    const raw = (editing[idx] ?? '').trim();
+    const parsed = raw === '' ? fallback : Number(raw);
+    const val = Number.isFinite(parsed) ? parsed : fallback;
+
+    onChangeQuota?.(idx, val);
+
+    setEditing((m) => {
+      const { [idx]: _, ...rest } = m;
+      return rest;
+    });
+  };
+
+  return (
+    <table className="w-full border border-input-box-border rounded-xl overflow-hidden text-sm">
+      <thead className="bg-muted text-text-secondary">
+        <tr>
+          <th className="py-3 px-4 text-left">Attribute Group</th>
+          <th className="py-3 px-4 text-left">Attribute</th>
+          <th className="py-3 px-4 text-right">Ratio (%)</th>
+          <th className="py-3 px-4 text-center">Total Quota</th>
+          <th className="py-3 px-4 text-right">Delete</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {panel_quotas.map((row, idx) => {
+          const q = row.quotas ?? 0;
+          const show = editing[idx] ?? String(q);
+
+          return (
+            <tr key={idx} className="border-t border-input-box-border">
+              <td className="px-4 py-3">
+                {groupLabel(row.attributes as PanelAttribute)}
+              </td>
+
+              <td className="px-4 py-3">
+                <span className="inline-flex items-center rounded-md bg-neutral-700 light:bg-neutral-500 text-white px-2 py-1 text-xs dark:bg-neutral-200 dark:text-neutral-900">
+                  {extractValueLabel(row.sk)}
+                </span>
+              </td>
+
+              <td className="px-4 py-3 text-right">{pct(q).toFixed(1)}</td>
+
+              <td className="px-4 py-3 text-right ">
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={show}
+                  disabled={!canEdit}
+                  onChange={(e) =>
+                    setEditing((m) => ({
+                      ...m,
+                      [idx]: e.target.value.replace(/\D+/g, ''),
+                    }))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') commit(idx, q);
+                    if (e.key === 'Escape')
+                      setEditing((m) => ({ ...m, [idx]: String(q) }));
+                  }}
+                  onBlur={() => commit(idx, q)}
+                  className="h-8 text-left"
+                />
+              </td>
+
+              <td className="px-4 py-3 text-right">
+                <button
+                  type="button"
+                  disabled={!canEdit}
+                  onClick={() => onDelete?.(idx)}
+                >
+                  <Trash2 className="[&>path]:stroke-neutral-500 [&>line]:stroke-neutral-500" />
+                </button>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
