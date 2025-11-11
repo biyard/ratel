@@ -5,7 +5,7 @@ use crate::features::spaces::members::{
     InvitationStatus, SpaceEmailVerification, SpaceInvitationMember,
 };
 use crate::features::spaces::panels::{
-    SpacePanel, SpacePanelParticipant, SpacePanelQueryOption, SpacePanelResponse,
+    PanelAttribute, SpacePanelParticipant, SpacePanelQuota, SpacePanels,
 };
 use crate::models::{SpaceCommon, User};
 use crate::types::{
@@ -102,94 +102,115 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
     let age: Option<u8> = res.age().and_then(|v| u8::try_from(v).ok());
     let gender = res.gender;
 
-    let mut bookmark = None::<String>;
+    let pk = space_pk;
+    let sk = EntityType::SpacePanels;
+    let panel = SpacePanels::get(&dynamo.client, pk.clone(), Some(sk.clone()))
+        .await
+        .unwrap_or_default()
+        .unwrap_or_default();
 
-    loop {
-        let opt = match &bookmark {
-            Some(b) => SpacePanelQueryOption::builder()
-                .sk("SPACE_PANEL#".into())
-                .bookmark(b.clone()),
-            None => SpacePanelQueryOption::builder().sk("SPACE_PANEL#".into()),
-        };
+    let panel_quota = SpacePanelQuota::query(
+        &dynamo.client,
+        CompositePartition(pk.clone(), Partition::PanelAttribute),
+        SpacePanelQuota::opt_all().sk("SPACE_PANEL_ATTRIBUTE#".to_string()),
+    )
+    .await
+    .unwrap_or_default()
+    .0;
 
-        let (panels, next) = match SpacePanel::query(&dynamo.client, space_pk.clone(), opt).await {
-            Ok(v) => v,
-            Err(_) => return false,
-        };
+    if panel.remains == 0 {
+        return false;
+    }
 
-        for p in panels {
-            if p.participants >= p.quotas {
-                continue;
-            }
-            if attributes_match(age.clone(), gender.clone(), &p.attributes) {
-                let res: SpacePanelResponse = p.into();
-                let participants =
-                    SpacePanelParticipant::new(space_pk.clone(), res.clone().pk, user);
-                let _ = match participants.create(&dynamo.client).await {
-                    Ok(v) => v,
-                    Err(_) => return false,
-                };
-                let (pk, sk) = SpacePanel::keys(&space_pk, &res.pk);
-                let _ = match SpacePanel::updater(pk, sk)
-                    .increase_participants(1)
-                    .execute(&dynamo.client)
-                    .await
-                {
-                    Ok(v) => v,
-                    Err(_) => return false,
-                };
-
-                return true;
-            }
+    for p in panel_quota {
+        if p.remains == 0 {
+            continue;
         }
 
-        if let Some(b) = next {
-            bookmark = Some(b);
-        } else {
-            break;
+        if match_by_sk(age.clone(), gender.clone(), &p.sk) {
+            let participants = SpacePanelParticipant::new(space_pk.clone(), user);
+            let _ = match participants.create(&dynamo.client).await {
+                Ok(v) => v,
+                Err(_) => return false,
+            };
+            let pk = p.pk;
+            let sk = p.sk;
+
+            let _ = match SpacePanels::updater(space_pk, EntityType::SpacePanels)
+                .decrease_remains(1)
+                .execute(&dynamo.client)
+                .await
+            {
+                Ok(_) => {}
+                Err(_) => return false,
+            };
+
+            let _ = match SpacePanelQuota::updater(pk, sk)
+                .decrease_remains(1)
+                .execute(&dynamo.client)
+                .await
+            {
+                Ok(v) => v,
+                Err(_) => return false,
+            };
+
+            return true;
         }
     }
 
     return false;
 }
 
-fn attributes_match(age: Option<u8>, gender: Option<Gender>, attrs: &[Attribute]) -> bool {
-    if attrs.is_empty() {
-        return true;
+pub fn match_by_sk(age: Option<u8>, gender: Option<Gender>, sk: &EntityType) -> bool {
+    let (label, value) = match sk {
+        EntityType::SpacePanelAttribute(label, value) => (label.as_str(), value.as_str()),
+        _ => return true,
+    };
+
+    match label {
+        "verifiable_attribute" => match value {
+            v if v.starts_with("age") => match_age_rule(age, v),
+            v if v.starts_with("gender") => match_gender_rule(gender, v),
+            _ => true,
+        },
+        "collective_attribute" => true,
+
+        "none" | _ => true,
+    }
+}
+
+fn match_age_rule(age: Option<u8>, v: &str) -> bool {
+    if v == "age" {
+        return age.is_some();
     }
 
-    let mut age_rules: Vec<&Age> = Vec::new();
-    let mut gender_rules: Vec<&Gender> = Vec::new();
-
-    for attr in attrs {
-        match attr {
-            Attribute::Age(a) => age_rules.push(a),
-            Attribute::Gender(g) => gender_rules.push(g),
+    if let Some(rest) = v.strip_prefix("age:") {
+        if let Some((min_s, max_s)) = rest.split_once('-') {
+            if let (Ok(min), Ok(max)) = (min_s.trim().parse::<u8>(), max_s.trim().parse::<u8>()) {
+                return age.map(|a| a >= min && a <= max).unwrap_or(false);
+            }
+        } else if let Ok(specific) = rest.trim().parse::<u8>() {
+            return age.map(|a| a == specific).unwrap_or(false);
         }
     }
 
-    let age_ok = if age_rules.is_empty() {
-        true
-    } else if let Some(a) = age {
-        age_rules.iter().any(|rule| match rule {
-            Age::Specific(s) => a == *s,
-            Age::Range {
-                inclusive_min,
-                inclusive_max,
-            } => a >= *inclusive_min && a <= *inclusive_max,
-        })
-    } else {
-        true
-    };
+    true
+}
 
-    let gender_ok = if gender_rules.is_empty() {
-        true
-    } else {
-        match gender {
-            Some(ref g) => gender_rules.iter().any(|rule| *rule == g),
-            None => true,
-        }
-    };
+fn match_gender_rule(gender: Option<Gender>, v: &str) -> bool {
+    if v == "gender" {
+        return gender.is_some();
+    }
 
-    age_ok && gender_ok
+    // "gender:male" | "gender:female"
+    if let Some(rest) = v.strip_prefix("gender:") {
+        let want = rest.trim().to_ascii_lowercase();
+        return match (want.as_str(), gender) {
+            ("male", Some(Gender::Male)) => true,
+            ("female", Some(Gender::Female)) => true,
+            _ => false,
+        };
+    }
+
+    true
 }

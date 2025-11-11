@@ -1,6 +1,8 @@
 use crate::controllers::v3::spaces::CreateSpaceResponse;
+use crate::controllers::v3::spaces::panels::{CreatePanelQuotaResponse, UpdatePanelQuotaResponse};
 use crate::features::spaces::panels::{
-    ListPanelResponse, ListParticipantResponse, SpacePanelParticipantResponse, SpacePanelResponse,
+    ListParticipantResponse, PanelAttribute, SpacePanelParticipantResponse, SpacePanelsResponse,
+    VerifiableAttribute,
 };
 use crate::types::{Attribute, Partition, SpaceType};
 use crate::*;
@@ -15,7 +17,7 @@ struct CreatedDeliberationSpace {
 }
 
 #[tokio::test]
-async fn test_create_panel_handler() {
+async fn test_create_panel_quota_handler() {
     let TestContextV3 {
         app,
         test_user: (_user, headers),
@@ -26,65 +28,16 @@ async fn test_create_panel_handler() {
         bootstrap_deliberation_space(&app, headers.clone()).await;
 
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/{}/panels", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/panels/quotas", space_pk_encoded);
 
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "name": "Panel 1".to_string(), "quotas": 10, "attributes": vec![Attribute::Age(types::Age::Range { inclusive_min: 0, inclusive_max: 19 }), Attribute::Gender(types::Gender::Female)],
+            "quotas": vec![30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)], "values": vec![Attribute::Gender(Gender::Male)]
         },
-        response_type: SpacePanelResponse
-    };
-
-    assert_eq!(status, 200);
-    assert_eq!(body.attributes.len(), 2);
-}
-
-#[tokio::test]
-async fn test_update_panel_handler() {
-    let TestContextV3 {
-        app,
-        test_user: (_user, headers),
-        ..
-    } = setup_v3().await;
-
-    let CreatedDeliberationSpace { space_pk, .. } =
-        bootstrap_deliberation_space(&app, headers.clone()).await;
-
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/{}/panels", space_pk_encoded);
-
-    let (status, _headers, body) = post! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        body: {
-            "name": "Panel 1".to_string(), "quotas": 10, "attributes": vec![Attribute::Age(types::Age::Range { inclusive_min: 0, inclusive_max: 19 }), Attribute::Gender(types::Gender::Female)],
-        },
-        response_type: SpacePanelResponse
-    };
-
-    assert_eq!(status, 200);
-    assert_eq!(body.attributes.len(), 2);
-
-    let panel_pk = body.pk;
-    let panel_pk_encoded = panel_pk.to_string().replace('#', "%23");
-
-    let path = format!(
-        "/v3/spaces/{}/panels/{}",
-        space_pk_encoded, panel_pk_encoded
-    );
-
-    let (status, _headers, body) = patch! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        body: {
-            "name": "Panel 1".to_string(), "quotas": 10, "attributes": vec![Attribute::Age(types::Age::Range { inclusive_min: 0, inclusive_max: 19 })],
-        },
-        response_type: SpacePanelResponse
+        response_type: CreatePanelQuotaResponse
     };
 
     assert_eq!(status, 200);
@@ -92,7 +45,7 @@ async fn test_update_panel_handler() {
 }
 
 #[tokio::test]
-async fn test_delete_panel_handler() {
+async fn test_delete_panel_quota_handler() {
     let TestContextV3 {
         app,
         test_user: (_user, headers),
@@ -103,86 +56,30 @@ async fn test_delete_panel_handler() {
         bootstrap_deliberation_space(&app, headers.clone()).await;
 
     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/{}/panels", space_pk_encoded);
+    let path = format!("/v3/spaces/{}/panels/quotas", space_pk_encoded);
 
     let (status, _headers, body) = post! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "name": "Panel 1".to_string(), "quotas": 10, "attributes": vec![Attribute::Age(types::Age::Range { inclusive_min: 0, inclusive_max: 19 }), Attribute::Gender(types::Gender::Female)],
+            "quotas": vec![30, 30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender), PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age)], "values": vec![Attribute::Gender(Gender::Male), Attribute::Age(Age::Range { inclusive_min: 0, inclusive_max: 18 })]
         },
-        response_type: SpacePanelResponse
+        response_type: CreatePanelQuotaResponse
     };
 
     assert_eq!(status, 200);
     assert_eq!(body.attributes.len(), 2);
 
-    let panel_pk = body.pk;
-    let panel_pk_encoded = panel_pk.to_string().replace('#', "%23");
-
-    let path = format!(
-        "/v3/spaces/{}/panels/{}",
-        space_pk_encoded, panel_pk_encoded
-    );
-
     let (status, _headers, _body) = delete! {
         app: app,
         path: path.clone(),
         headers: headers.clone(),
-        body: {},
+        body: {
+            "attribute": PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age), "value": Attribute::Age(Age::Range { inclusive_min: 0, inclusive_max: 18 })
+        },
         response_type: Partition
     };
-
-    assert_eq!(status, 200);
-}
-
-#[tokio::test]
-async fn test_list_panels_handler() {
-    let TestContextV3 {
-        app,
-        test_user: (_user, headers),
-        ..
-    } = setup_v3().await;
-
-    let CreatedDeliberationSpace { space_pk, .. } =
-        bootstrap_deliberation_space(&app, headers.clone()).await;
-
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/{}/panels", space_pk_encoded);
-
-    let (status, _headers, _body) = post! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        body: {
-            "name": "Panel 1".to_string(), "quotas": 10, "attributes": vec![Attribute::Age(types::Age::Range { inclusive_min: 0, inclusive_max: 19 }), Attribute::Gender(types::Gender::Female)],
-        },
-        response_type: SpacePanelResponse
-    };
-
-    assert_eq!(status, 200);
-
-    let (status, _headers, _body) = post! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        body: {
-            "name": "Panel 2".to_string(), "quotas": 10, "attributes": vec![Attribute::Age(types::Age::Range { inclusive_min: 0, inclusive_max: 19 }), Attribute::Gender(types::Gender::Female)],
-        },
-        response_type: SpacePanelResponse
-    };
-
-    assert_eq!(status, 200);
-
-    let (status, _headers, body) = get! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        response_type: ListPanelResponse
-    };
-
-    tracing::debug!("list panels body: {:?}", body);
 
     assert_eq!(status, 200);
 }
@@ -198,94 +95,102 @@ async fn test_get_panel_handler() {
     let CreatedDeliberationSpace { space_pk, .. } =
         bootstrap_deliberation_space(&app, headers.clone()).await;
 
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/{}/panels", space_pk_encoded);
-
     let (status, _headers, body) = post! {
         app: app,
-        path: path.clone(),
+        path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
         headers: headers.clone(),
         body: {
-            "name": "Panel 1".to_string(), "quotas": 10, "attributes": vec![Attribute::Age(types::Age::Range { inclusive_min: 0, inclusive_max: 19 }), Attribute::Gender(types::Gender::Female)],
+            "quotas": vec![30, 30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender), PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age)], "values": vec![Attribute::Gender(Gender::Male), Attribute::Age(Age::Range { inclusive_min: 0, inclusive_max: 18 })]
         },
-        response_type: SpacePanelResponse
+        response_type: CreatePanelQuotaResponse
     };
 
     assert_eq!(status, 200);
-    tracing::debug!("panel body: {:?}", body);
-
-    let panel_pk = body.pk;
-    let panel_pk_encoded = panel_pk.to_string().replace('#', "%23");
-    let path = format!(
-        "/v3/spaces/{}/panels/{}",
-        space_pk_encoded, panel_pk_encoded
-    );
+    assert_eq!(body.attributes.len(), 2);
 
     let (status, _headers, body) = get! {
         app: app,
-        path: path.clone(),
+        path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
         headers: headers.clone(),
-        response_type: SpacePanelResponse
+        response_type: SpacePanelsResponse
     };
 
-    tracing::debug!("get panel body: {:?}", body);
-
     assert_eq!(status, 200);
+    assert_eq!(body.panel_quotas.len(), 2);
 }
 
-// #[tokio::test]
-// async fn test_list_participants_handler() {
-//     let TestContextV3 {
-//         app,
-//         test_user: (_user, headers),
-//         ..
-//     } = setup_v3().await;
+#[tokio::test]
+async fn test_update_panel_quota_handler() {
+    let TestContextV3 {
+        app,
+        test_user: (_user, headers),
+        ..
+    } = setup_v3().await;
 
-//     let CreatedDeliberationSpace { space_pk, .. } =
-//         bootstrap_deliberation_space(&app, headers.clone()).await;
+    let CreatedDeliberationSpace { space_pk, .. } =
+        bootstrap_deliberation_space(&app, headers.clone()).await;
 
-//     let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-//     let path = format!("/v3/spaces/{}/panels", space_pk_encoded);
+    let (status, _headers, body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "quotas": vec![30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)], "values": vec![Attribute::Gender(Gender::Male)]
+        },
+        response_type: CreatePanelQuotaResponse
+    };
 
-//     let (status, _headers, body) = post! {
-//         app: app,
-//         path: path.clone(),
-//         headers: headers.clone(),
-//         body: {
-//             "name": "Panel 1".to_string(), "quotas": 10, "attributes": vec![Attribute::Age(types::Age::Range { inclusive_min: 0, inclusive_max: 19 }), Attribute::Gender(types::Gender::Female)],
-//         },
-//         response_type: SpacePanelResponse
-//     };
+    assert_eq!(status, 200);
+    assert_eq!(body.attributes.len(), 1);
 
-//     assert_eq!(status, 200);
-//     tracing::debug!("panel body: {:?}", body);
+    let (status, _headers, _body) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "quotas": 50, "attribute": PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender), "value": Attribute::Gender(Gender::Male)
+        },
+        response_type: UpdatePanelQuotaResponse
+    };
 
-//     let panel_pk = body.pk;
-//     let panel_pk_encoded = panel_pk.to_string().replace('#', "%23");
-//     let path = format!(
-//         "/v3/spaces/{}/panels/{}/participants",
-//         space_pk_encoded, panel_pk_encoded
-//     );
+    assert_eq!(status, 200);
 
-//     let (status, _headers, _body) = patch! {
-//         app: app,
-//         path: path.clone(),
-//         headers: headers.clone(),
-//         response_type: SpacePanelParticipantResponse
-//     };
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
+        headers: headers.clone(),
+        response_type: SpacePanelsResponse
+    };
 
-//     assert_eq!(status, 200);
+    assert_eq!(status, 200);
+    assert_eq!(body.panel_quotas.len(), 1);
+    assert_eq!(body.panel_quotas[0].quotas, 50);
+}
 
-//     let (status, _headers, body) = get! {
-//         app: app,
-//         path: path.clone(),
-//         headers: headers.clone(),
-//         response_type: ListParticipantResponse
-//     };
+#[tokio::test]
+async fn test_update_panel_handler() {
+    let TestContextV3 {
+        app,
+        test_user: (_user, headers),
+        ..
+    } = setup_v3().await;
 
-//     assert_eq!(status, 200);
-//     assert_eq!(body.participants.len(), 1);
-// }
+    let CreatedDeliberationSpace { space_pk, .. } =
+        bootstrap_deliberation_space(&app, headers.clone()).await;
+
+    let (status, _headers, body) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)]
+        },
+        response_type: SpacePanelsResponse
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.quotas, 50);
+}
 
 async fn bootstrap_deliberation_space(
     app: &AxumRouter,
