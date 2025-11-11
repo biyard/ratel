@@ -9,6 +9,7 @@ import { SpaceType } from './space-type';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
 import { BoosterType } from './booster-type';
 import FileModel from '../files/types/file';
+import { SpaceRequirement } from './space-requirement';
 
 export class Space {
   readonly permissions: TeamGroupPermissions;
@@ -34,13 +35,13 @@ export class Space {
   public visibility: SpaceVisibility;
   public publishState: SpacePublishState;
   public booster: BoosterType | undefined;
-  public verified: boolean;
   public files: FileModel[] | undefined;
   public anonymous_participation: boolean;
   public participated: boolean;
   public participantDisplayName: string | null;
   public participantProfileUrl: string | null;
   public participantUsername: string | null;
+  public requirements: string[] | [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
@@ -67,13 +68,16 @@ export class Space {
     this.visibility = json.visibility;
     this.publishState = json.publish_state;
     this.booster = json.booster;
-    this.verified = json.verified;
     this.files = json.files;
     this.anonymous_participation = json.anonymous_participation;
     this.participated = json.participated;
     this.participantDisplayName = json.participant_display_name || null;
     this.participantProfileUrl = json.participant_profile_url || null;
     this.participantUsername = json.participant_username || null;
+    this.requirements =
+      json.requirements
+        .map((e) => new SpaceRequirement(e))
+        .sort((a, b) => a.order - b.order) || [];
   }
 
   shouldParticipateManually() {

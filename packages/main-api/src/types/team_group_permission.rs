@@ -69,6 +69,14 @@ impl Permissions {
         (self.0 & (1 << permission as i32)) != 0
     }
 
+    pub fn permitted(&self, permission: TeamGroupPermission) -> Result<()> {
+        if !self.contains(permission) {
+            Err(Error::NoPermission)
+        } else {
+            Ok(())
+        }
+    }
+
     pub fn read() -> Self {
         let mut perms = 0;
         for permission in [

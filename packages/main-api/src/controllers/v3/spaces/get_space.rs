@@ -1,5 +1,6 @@
 use super::*;
-use crate::features::spaces::members::SpaceEmailVerification;
+use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMember};
+use crate::features::spaces::{SpaceRequirement, SpaceRequirementQueryOption};
 use crate::models::user::User;
 use crate::models::{Post, SpaceCommon};
 use crate::types::*;
@@ -38,45 +39,32 @@ pub struct GetSpaceResponse {
     pub publish_state: SpacePublishState,
     pub booster: BoosterType,
 
-    pub verified: bool,
     pub files: Option<Vec<File>>,
 
     pub anonymous_participation: bool,
+
+    pub can_participate: bool,
     pub participated: bool,
     pub participant_display_name: Option<String>,
     pub participant_profile_url: Option<String>,
     pub participant_username: Option<String>,
+
+    pub requirements: Vec<SpaceRequirement>,
 }
 
 pub async fn get_space_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
+    NoApi(perms): NoApi<Permissions>,
     Extension(space): Extension<SpaceCommon>,
     Path(SpacePathParam { space_pk }): SpacePath,
 ) -> Result<Json<GetSpaceResponse>> {
+    perms.permitted(TeamGroupPermission::SpaceRead)?;
+
     let post_pk = space_pk.clone().to_post_key()?;
     let post = Post::get(&dynamo.client, &post_pk, Some(&EntityType::Post)).await?;
 
     let post = post.ok_or(Error::PostNotFound)?;
-
-    let verified = if user.clone().is_some() {
-        let user = user.clone().unwrap_or_default();
-
-        let verification = SpaceEmailVerification::get(
-            &dynamo.client,
-            &space_pk,
-            Some(EntityType::SpaceEmailVerification(user.email.clone())),
-        )
-        .await?;
-
-        if verification.is_some() && verification.unwrap_or_default().authorized {
-            true
-        } else {
-            false
-        }
-    } else {
-        false
-    };
 
     let permissions = post.get_permissions(&dynamo.client, user.clone()).await?;
 
@@ -87,13 +75,17 @@ pub async fn get_space_handler(
         None
     };
 
-    Ok(Json(GetSpaceResponse::from((
-        space,
-        post,
-        permissions,
-        verified,
-        user_participant,
-    ))))
+    let (req_pk, sk) = SpaceRequirement::keys(&space_pk, None);
+    // NOTE: Currently, space requirement will be just one or zero.
+    // If it is extended to lots of requirements, we need to implement pagination.
+    let opt = SpaceRequirement::opt_all().sk(sk.to_string());
+
+    let (requirements, _bookmark) = SpaceRequirement::query(&dynamo.client, req_pk, opt).await?;
+
+    let mut res = GetSpaceResponse::from((space, post, permissions, user_participant));
+    res.requirements = requirements;
+
+    Ok(Json(res))
 }
 
 impl
@@ -101,16 +93,14 @@ impl
         SpaceCommon,
         Post,
         TeamGroupPermissions,
-        bool,
         Option<SpaceParticipant>,
     )> for GetSpaceResponse
 {
     fn from(
-        (space, post, permissions, verified, user_participant): (
+        (space, post, permissions, user_participant): (
             SpaceCommon,
             Post,
             TeamGroupPermissions,
-            bool,
             Option<SpaceParticipant>,
         ),
     ) -> Self {
@@ -156,12 +146,13 @@ impl
             publish_state: space.publish_state,
             booster: space.booster,
             files: space.files,
-            verified,
             anonymous_participation: space.anonymous_participation,
+            can_participate: false,
             participated,
             participant_display_name,
             participant_profile_url,
             participant_username,
+            requirements: vec![],
         }
     }
 }
