@@ -17,18 +17,20 @@ import { SpaceActions } from '@/features/spaces/components/space-actions';
 import SpaceParticipantProfile from '@/features/spaces/components/space-participant-profile';
 import { cn } from '@/lib/utils';
 import { useSpaceLayoutContext } from './use-space-layout-context';
+import { Requirements } from '@/features/spaces/components/requirements';
+import { SafeArea } from '@/components/ui/safe-area';
 
 export const Context = createContext<SpaceHomeController | undefined>(
   undefined,
 );
 
-function ParticipantLayout() {
+function GeneralLayout() {
   const ctrl = useSpaceLayoutContext();
   const location = useLocation();
   const showInfo = !/\/boards\/posts(\/|$)/.test(location.pathname);
 
   return (
-    <Row className="my-5 mx-auto w-full max-w-desktop">
+    <Row>
       <Col className="gap-4 w-full">
         {showInfo && (
           <Col className="gap-4 w-full">
@@ -88,11 +90,13 @@ function ParticipantLayout() {
 export default function SpaceByIdLayout() {
   const { spacePk } = useParams<{ spacePk: string }>();
   const ctrl = useSpaceHomeController(spacePk ?? '');
-  // FIXME: use state to force re-render when hiding
 
+  // NOTE: Must authorize permission for viewer/participant/admin before
   return (
     <Context.Provider value={ctrl}>
-      <ParticipantLayout />
+      <SafeArea>
+        {ctrl.space.havePreTasks() ? <Requirements /> : <GeneralLayout />}
+      </SafeArea>
     </Context.Provider>
   );
 }
