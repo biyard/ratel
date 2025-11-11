@@ -53,10 +53,18 @@ export function PanelTable({
         </colgroup>
         <thead>
           <tr className="bg-card-bg-secondary dark:bg-gray-800 dark:border-gray-700">
-            <th className="p-3 font-semibold text-left">{t('panel_name')}</th>
-            <th className="p-3 font-semibold text-left">{t('age')}</th>
-            <th className="p-3 font-semibold text-left">{t('gender')}</th>
-            <th className="p-3 font-semibold text-left">{t('quotas')}</th>
+            <th className="p-3 font-semibold text-left text-white">
+              {t('panel_name')}
+            </th>
+            <th className="p-3 font-semibold text-left text-white">
+              {t('age')}
+            </th>
+            <th className="p-3 font-semibold text-left text-white">
+              {t('gender')}
+            </th>
+            <th className="p-3 font-semibold text-left text-white">
+              {t('quotas')}
+            </th>
             <th className="p-3 font-semibold text-left">
               {canEdit && (
                 <div
