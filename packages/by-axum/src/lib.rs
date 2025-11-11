@@ -31,6 +31,11 @@ pub fn new() -> BiyardRouter {
         .with_line_number(true)
         .with_thread_ids(true)
         .with_target(false)
+        .with_ansi(
+            option_env!("ENABLE_ANSI")
+                .map(|e| e.to_lowercase() == "true")
+                .unwrap_or(false),
+        )
         .try_init();
 
     BiyardRouter::new()
