@@ -115,7 +115,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
             }
             className="w-full px-2 py-1.5 hover:bg-hover rounded-md text-sm text-text-primary-muted cursor-pointer focus-visible:outline-none"
           >
-            <span>{t('create_team')}</span>
+            <span id="create_team">{t('create_team')}</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem

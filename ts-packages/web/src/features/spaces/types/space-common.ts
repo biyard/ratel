@@ -47,5 +47,6 @@ export interface SpaceCommon {
 }
 
 export type MySpace = SpaceCommon & {
+  title: string;
   invitation_status: 'pending' | 'participating';
 };
