@@ -38,10 +38,10 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
               data-pw="response-editable-checkbox"
             />
             <div className="flex flex-col gap-1">
-              <label className="text-sm font-medium text-white cursor-pointer">
+              <label className="text-sm font-medium text-text-primary cursor-pointer">
                 {t('response_editable_label')}
               </label>
-              <p className="text-xs text-neutral-400">
+              <p className="text-xs text-text-secondary">
                 {t('response_editable_description')}
               </p>
             </div>
