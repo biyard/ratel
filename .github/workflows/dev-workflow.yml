@@ -11,7 +11,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    needs: [main-api, fetcher, ratel-web, ratel-storybook]
+    needs: [main-api, fetcher, ratel-web]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -22,16 +22,6 @@ jobs:
         with:
           name: ratel-web-${{ github.sha }}
           path: ./
-      - name: Download Storybook CDK storybook-static
-        uses: actions/download-artifact@v4
-        with:
-          name: ratel-storybook-${{ github.sha }}
-          path: ./
-      # - name: Download image worker
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: image-worker-${{ github.sha }}
-      #     path: ${{ github.workspace }}/.build/image-worker
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -49,14 +39,12 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           DOMAIN: dev.ratel.foundation
           STACK: ratel-dev-stack
-          DEPLOY_STORYBOOK: true
+          DEPLOY_STORYBOOK: false
           BUCKET: ${{ secrets.DEV_RATEL_BUCKET }}
         run: |
           npm i -g aws-cdk
           tar xzvf dist.tar.gz
           aws s3 sync cdk/dist $BUCKET
-          tar xzvf storybook.tar.gz
-          # make cdk/.build/image-worker/bootstrap
           make cdk-deploy-v2
 
   main-api:
@@ -114,14 +102,6 @@ jobs:
           RUST_LOG: info
           SERVICE: main-api
           DOMAIN: dev.ratel.foundation
-          # AUTH_DOMAIN: dev.ratel.foundation
-          # DATABASE_TYPE: postgres
-          # DATABASE_URL: ${{ secrets.RO_DATABASE_URL }}
-          # OPENAPI_KEY: ${{ secrets.OPENAPI_KEY }}
-          # AUTH_SECRET_KEY: ${{ secrets.DEV_AUTH_SECRET_KEY }}
-          # JWT_SECRET_KEY: ${{ secrets.DEV_JWT_SECRET_KEY }}
-
-          # MIGRATE: false
           BUCKET_NAME: metadata.ratel.foundation
           SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
           SLACK_CHANNEL_ABUSING: ${{ secrets.DEV_SLACK }}
@@ -152,7 +132,7 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-dev
           DYNAMO_ENDPOINT: none
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          RUST_FLAG: --features bypass
+          RUST_FLAG: "--features bypass,lambda --release"
           WEB_BUILD: false
           PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
           PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
@@ -161,9 +141,18 @@ jobs:
           tar xzvf dist.tar.gz
           mv cdk/dist ./
 
-          make docker.build
-          make docker.login
-          make docker.push
+          make build
+
+          mv target/release/main-api ../../bootstrap
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ratel-web-${{ github.sha }}
+          path: ${{ github.workspace }}/dist.tar.gz
+          if-no-files-found: error
+          retention-days: 7
+
 
   # NOTE: migrate to DynamoDB
   # image-worker:
@@ -320,7 +309,7 @@ jobs:
           cd ../..
           tar czvf dist.tar.gz cdk/dist
 
-      - name: Upload Next.js CDK .next
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ratel-web-${{ github.sha }}
@@ -363,21 +352,18 @@ jobs:
           VITE_API_URL: https://dev.ratel.foundation
           VITE_EXPERIMENT: true
           VITE_TELEGRAM_BOTNAME: crypto_ratel_dev_bot
-
         run: |
           pnpm i
           npx storybook build
-          mv storybook-static ../../cdk/
-          cd ../..
-          tar czvf storybook.tar.gz cdk/storybook-static
 
-      - name: Upload Next.js CDK .next
-        uses: actions/upload-artifact@v4
-        with:
-          name: ratel-storybook-${{ github.sha }}
-          path: ${{ github.workspace }}/storybook.tar.gz
-          if-no-files-found: error
-          retention-days: 7
+      - name: Deploy
+        env:
+          BUCKET_NAME: ${{ secrets.RATEL_STORYBOOK_BUCKET }}
+          CDN: ${{ secrets.RATEL_STORYBOOK_CDN }}
+        run: |
+          aws s3 storybook-static s3://$BUCKET_NAME
+          aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
+
 
   android-apk:
     runs-on: ubuntu-latest
