@@ -1,33 +1,42 @@
 use crate::EntityType;
 use crate::aide::NoApi;
-use crate::controllers::v3::spaces::SpacePanelPath;
-use crate::controllers::v3::spaces::SpacePanelPathParam;
 use crate::controllers::v3::spaces::SpacePath;
 use crate::controllers::v3::spaces::SpacePathParam;
 use crate::features::spaces::panels::PanelAttribute;
+use crate::features::spaces::panels::SpacePanelQuota;
 use crate::features::spaces::panels::SpacePanelRequest;
-use crate::features::spaces::panels::SpacePanels;
 use crate::features::spaces::panels::SpacePanelsResponse;
+use crate::transact_write_items;
+use crate::types::Attribute;
+use crate::types::CompositePartition;
 use crate::types::Partition;
 use crate::types::TeamGroupPermission;
 use crate::{AppState, Error, Permissions};
 use bdk::prelude::axum::extract::{Json, Path, State};
 use bdk::prelude::*;
 
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, aide::OperationIo, JsonSchema)]
+pub struct UpdatePanelQuotaRequest {
+    pub quotas: i64,
+    pub attribute: PanelAttribute,
+    pub value: Attribute,
+}
+
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema,
 )]
-pub struct UpdatePanelRequest {
+pub struct UpdatePanelQuotaResponse {
     pub quotas: i64,
-    pub attributes: Vec<PanelAttribute>,
+    pub attribute: PanelAttribute,
+    pub value: Attribute,
 }
 
-pub async fn update_panel_handler(
+pub async fn update_panel_quota_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
-    Json(req): Json<UpdatePanelRequest>,
-) -> Result<Json<SpacePanelsResponse>, Error> {
+    Json(req): Json<UpdatePanelQuotaRequest>,
+) -> Result<Json<UpdatePanelQuotaResponse>, Error> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
     }
@@ -36,24 +45,27 @@ pub async fn update_panel_handler(
         return Err(Error::NoPermission);
     }
 
-    let panel = SpacePanels::get(
-        &dynamo.client,
-        space_pk.clone(),
-        Some(EntityType::SpacePanels),
-    )
-    .await?
-    .unwrap_or_default();
+    let pk = CompositePartition(space_pk, Partition::PanelAttribute);
+    let sk = EntityType::SpacePanelAttribute(req.attribute.to_string(), req.value.to_string());
 
+    let panel = SpacePanelQuota::get(&dynamo.client, pk.clone(), Some(sk.clone())).await?;
+
+    if panel.is_none() {
+        return Err(Error::NotFoundPanel);
+    }
+
+    let panel = panel.unwrap_or_default();
     let remains = panel.remains + (req.quotas - panel.quotas);
 
-    let panel = SpacePanels::updater(&space_pk, EntityType::SpacePanels)
+    let _ = SpacePanelQuota::updater(&pk, sk)
         .with_quotas(req.quotas)
         .with_remains(remains)
-        .with_attributes(req.attributes)
         .execute(&dynamo.client)
         .await?;
 
-    let panel = panel.into();
-
-    Ok(Json(panel))
+    Ok(Json(UpdatePanelQuotaResponse {
+        quotas: req.quotas.clone(),
+        attribute: req.attribute,
+        value: req.value,
+    }))
 }

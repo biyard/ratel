@@ -1,5 +1,5 @@
 use crate::features::did::VerifiedAttributes;
-use crate::features::spaces::panels::{SpacePanel, SpacePanelParticipant};
+use crate::features::spaces::panels::SpacePanelParticipant;
 
 use crate::features::spaces::{SpaceParticipant, polls::*};
 use crate::models::user::User;

@@ -2,10 +2,7 @@ use crate::File;
 use crate::features::spaces::boards::dto::space_post_comment_response::SpacePostCommentResponse;
 use crate::features::spaces::boards::models::space_post::SpacePost;
 use crate::types::Attribute;
-use crate::{
-    features::spaces::panels::SpacePanel,
-    types::{EntityType, Partition},
-};
+use crate::types::{EntityType, Partition};
 use bdk::prelude::*;
 
 #[derive(
