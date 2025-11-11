@@ -47,7 +47,7 @@ where
 
         // Extract raw path and query string from API Gateway event before decoding
         let (raw_path, raw_query_string, stage) = match &req.payload {
-            lambda_http::request::LambdaRequest::ApiGatewayV2(ref apigw_req) => {
+            lambda_http::request::LambdaRequest::ApiGatewayV2(apigw_req) => {
                 // V2 provides raw_path and raw_query_string which are percent-encoded
                 (
                     apigw_req.raw_path.clone(),
@@ -55,18 +55,18 @@ where
                     None,
                 )
             }
-            lambda_http::request::LambdaRequest::ApiGatewayV1(ref apigw_req) => {
+            lambda_http::request::LambdaRequest::ApiGatewayV1(apigw_req) => {
                 // V1 only provides decoded path, we'll use it as-is
                 // Note: V1 doesn't provide raw query string, only decoded parameters
                 (
-                    Some(apigw_req.path.clone()),
+                    apigw_req.path.clone(),
                     None,
                     apigw_req.request_context.stage.clone(),
                 )
             }
-            lambda_http::request::LambdaRequest::Alb(ref alb_req) => {
+            lambda_http::request::LambdaRequest::Alb(alb_req) => {
                 // ALB only provides decoded path
-                (Some(alb_req.path.clone()), None, None)
+                (alb_req.path.clone(), None, None)
             }
             _ => (None, None, None),
         };
