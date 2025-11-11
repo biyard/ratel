@@ -19,6 +19,8 @@ const baseDomain = "ratel.foundation";
 const deployStorybook =
   (process.env.DEPLOY_STORYBOOK && process.env.DEPLOY_STORYBOOK === "true") ||
   false;
+const deployStatic =
+  (process.env.DEPLOY_STATIC && process.env.DEPLOY_STATIC === "true") || false;
 
 // new ImageWorkerStack(app, `ratel-${env}-image-worker`, {
 //   env: {
@@ -39,13 +41,6 @@ if (deployStorybook) {
     baseDomain,
   });
 }
-
-new GlobalTableStack(app, `ratel-${env}-dynamodb`, {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: "ap-northeast-2",
-  },
-});
 
 new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
   env: {
@@ -95,16 +90,25 @@ new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
   apiDomain,
 });
 
-new GlobalAccelStack(app, "GlobalAccel", {
-  stackName,
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: "us-east-1",
-  },
-  stage: env,
-  commit: process.env.COMMIT!,
+if (deployStatic) {
+  new GlobalAccelStack(app, "GlobalAccel", {
+    stackName,
+    env: {
+      account: process.env.CDK_DEFAULT_ACCOUNT,
+      region: "us-east-1",
+    },
+    stage: env,
+    commit: process.env.COMMIT!,
 
-  webDomain,
-  apiDomain,
-  baseDomain,
-});
+    webDomain,
+    apiDomain,
+    baseDomain,
+  });
+
+  new GlobalTableStack(app, `ratel-${env}-dynamodb`, {
+    env: {
+      account: process.env.CDK_DEFAULT_ACCOUNT,
+      region: "ap-northeast-2",
+    },
+  });
+}
