@@ -304,9 +304,6 @@ jobs:
           VITE_STORYBOOK_URL: https://storybook.dev.ratel.foundation
         run: |
           make build
-          mv dist ../../cdk/
-          cd ../..
-          tar czvf dist.tar.gz cdk/dist
 
       - name: Deploy to S3
         env:
@@ -315,6 +312,13 @@ jobs:
         run: |
           aws s3 sync dist $BUCKET
           aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
+
+
+      - name: Prepare artifacts
+        run: |
+          mv dist ../../cdk/
+          cd ../..
+          tar czvf dist.tar.gz cdk/dist
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
