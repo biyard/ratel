@@ -1,9 +1,11 @@
+use crate::features::did::VerifiedAttributes;
 use crate::features::spaces::panels::{SpacePanel, SpacePanelParticipant};
 
 use crate::features::spaces::{SpaceParticipant, polls::*};
 use crate::models::user::User;
 use crate::types::{
-    Age, Answer, EntityType, Gender, Partition, TeamGroupPermission, validate_answers,
+    Age, Answer, CompositePartition, EntityType, Gender, Partition, TeamGroupPermission,
+    validate_answers,
 };
 use crate::types::{RespondentAttr, SpaceStatus};
 use crate::utils::time::get_now_timestamp_millis;
@@ -70,17 +72,60 @@ pub async fn respond_poll_handler(
     let participant =
         SpacePanelParticipant::get_participant_in_space(&dynamo.client, &space_pk, &user.pk).await;
 
-    // FIXME: fix to real credential info
     let mut respondent: Option<RespondentAttr> = None;
 
     if let Some(_p) = participant {
+        let res = VerifiedAttributes::get(
+            &dynamo.client,
+            CompositePartition(user.pk.clone(), Partition::Attributes),
+            None::<String>,
+        )
+        .await
+        .unwrap_or_default()
+        .unwrap_or(VerifiedAttributes::default());
+
+        let age = if res.age().is_none() {
+            None
+        } else {
+            match res.age().unwrap_or_default() {
+                0..=17 => Some(Age::Range {
+                    inclusive_max: 17,
+                    inclusive_min: 0,
+                }),
+                18..=29 => Some(Age::Range {
+                    inclusive_max: 29,
+                    inclusive_min: 18,
+                }),
+                30..=39 => Some(Age::Range {
+                    inclusive_max: 39,
+                    inclusive_min: 30,
+                }),
+                40..=49 => Some(Age::Range {
+                    inclusive_max: 49,
+                    inclusive_min: 40,
+                }),
+                50..=59 => Some(Age::Range {
+                    inclusive_max: 59,
+                    inclusive_min: 50,
+                }),
+                60..=69 => Some(Age::Range {
+                    inclusive_max: 69,
+                    inclusive_min: 60,
+                }),
+                _ => Some(Age::Range {
+                    inclusive_max: 100,
+                    inclusive_min: 70,
+                }),
+            }
+        };
+
+        let gender = res.gender;
+        let school = res.university;
+
         respondent = Some(RespondentAttr {
-            age: Some(Age::Range {
-                inclusive_max: 29,
-                inclusive_min: 18,
-            }),
-            gender: Some(Gender::Male),
-            school: None,
+            age,
+            gender,
+            school,
         });
     }
 

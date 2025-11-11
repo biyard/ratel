@@ -3,6 +3,7 @@ use crate::controllers::v3::spaces::create_space::CreateSpaceResponse;
 use crate::controllers::v3::spaces::polls::{
     DeletePollSpaceResponse, RespondPollSpaceResponse, UpdatePollSpaceResponse,
 };
+use crate::features::did::AttributeCode;
 use crate::features::spaces::SpaceParticipant;
 use crate::features::spaces::panels::{SpacePanel, SpacePanelParticipant, SpacePanelResponse};
 use crate::features::spaces::polls::{Poll, PollResponse, PollResultResponse};
@@ -467,6 +468,28 @@ async fn test_get_poll_results_with_panel_responses() {
         ddb,
         ..
     } = ctx;
+
+    let mut attribute = AttributeCode::new();
+    attribute.gender = Some(Gender::Male);
+    attribute.birth_date = Some("19991231".to_string());
+    let _ = attribute.create(&ddb).await;
+
+    let code = match attribute.pk {
+        Partition::AttributeCode(v) => v.to_string(),
+        _ => "".to_string(),
+    };
+
+    let (status, _headers, _body) = put! {
+        app: app,
+        path: format!("/v3/me/did"),
+        headers: test_user.1.clone(),
+        body: {
+            "type": "code",
+            "code": code
+        }
+    };
+
+    assert_eq!(status, 200);
 
     // Submit responses from multiple users
     let answers1 = vec![
