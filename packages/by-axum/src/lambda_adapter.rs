@@ -44,26 +44,63 @@ where
         req: lambda_http::LambdaEvent<lambda_http::request::LambdaRequest>,
     ) -> Self::Future {
         // tracing::debug!("Incoming request: {:?}", req);
-        let stage = match req.payload {
-            lambda_http::request::LambdaRequest::ApiGatewayV1(ref req) => {
-                req.request_context.stage.clone()
+
+        // Extract raw path and query string from API Gateway event before decoding
+        let (raw_path, raw_query_string, stage) = match &req.payload {
+            lambda_http::request::LambdaRequest::ApiGatewayV2(ref apigw_req) => {
+                // V2 provides raw_path and raw_query_string which are percent-encoded
+                (
+                    apigw_req.raw_path.clone(),
+                    apigw_req.raw_query_string.clone(),
+                    None,
+                )
             }
-            _ => None,
+            lambda_http::request::LambdaRequest::ApiGatewayV1(ref apigw_req) => {
+                // V1 only provides decoded path, we'll use it as-is
+                // Note: V1 doesn't provide raw query string, only decoded parameters
+                (
+                    Some(apigw_req.path.clone()),
+                    None,
+                    apigw_req.request_context.stage.clone(),
+                )
+            }
+            lambda_http::request::LambdaRequest::Alb(ref alb_req) => {
+                // ALB only provides decoded path
+                (Some(alb_req.path.clone()), None, None)
+            }
+            _ => (None, None, None),
         };
 
         let mut event: lambda_http::Request = req.payload.into();
-        // let method = event.method().to_string();
-        // tracing::debug!("Parsed incoming event: {:?}", event);
-        let path_and_query = event.uri().path_and_query().expect("path_and_query");
-        *event.uri_mut() = http::Uri::from(path_and_query.clone());
 
-        if let Some(stage) = stage {
-            let uri = event.uri().to_string().clone();
-            let stage = format!("/{}", stage);
-            *event.uri_mut() = (&uri).replacen(&stage, "", 1).parse().unwrap();
+        // Construct raw URI from raw path and query without decoding
+        if let Some(path) = raw_path {
+            // Build the raw URI with percent-encoded path and query
+            let raw_uri = if let Some(query) = raw_query_string {
+                if query.is_empty() {
+                    path
+                } else {
+                    format!("{}?{}", path, query)
+                }
+            } else {
+                path
+            };
+
+            // Remove stage prefix if present (for API Gateway V1)
+            let final_uri = if let Some(stage) = stage {
+                let stage_prefix = format!("/{}", stage);
+                raw_uri.replacen(&stage_prefix, "", 1)
+            } else {
+                raw_uri
+            };
+
+            // Set the raw, percent-encoded URI directly
+            *event.uri_mut() = final_uri.parse().unwrap_or_else(|e| {
+                tracing::warn!("Failed to parse raw URI '{}': {}", final_uri, e);
+                event.uri().clone()
+            });
         }
 
-        // let uri = event.uri().to_string().clone();
         // tracing::debug!("manipulated event requests: {:?}", event);
 
         let call = self
