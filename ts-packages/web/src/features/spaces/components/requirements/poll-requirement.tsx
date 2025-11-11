@@ -1,6 +1,5 @@
 import { useTranslation } from 'react-i18next';
 import SurveyViewer from '../survey/viewer';
-import usePoll from '../../polls/hooks/use-poll';
 import usePollSpace from '../../polls/hooks/use-poll-space';
 import { SurveyAnswer } from '../../polls/types/poll-question';
 import { logger } from '@/lib/logger';
@@ -19,7 +18,9 @@ export default function PollRequirement({
 }: PollRequirementProps) {
   const { t } = useTranslation('SpaceSurvey');
   const { data: poll } = usePollSpace(spacePk, pollSk);
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // TODO: Submit answers
+
     onNext();
   };
   const [answers, setAnswers] = useState<Record<number, SurveyAnswer>>(

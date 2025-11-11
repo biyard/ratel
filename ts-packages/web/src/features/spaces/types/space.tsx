@@ -42,7 +42,7 @@ export class Space {
   public participantDisplayName: string | null;
   public participantProfileUrl: string | null;
   public participantUsername: string | null;
-  public requirements: SpaceRequirement[] | [];
+  public requirements: SpaceRequirement[];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
@@ -84,6 +84,10 @@ export class Space {
 
   shouldParticipateManually() {
     return this.anonymous_participation;
+  }
+
+  havePreTasks() {
+    return this.requirements.filter((e) => !e.responded).length > 0;
   }
 
   isAdmin() {

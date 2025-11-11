@@ -10,39 +10,43 @@ import { logger } from '@/lib/logger';
 
 export class Controller {
   constructor(
-    public state: State<boolean>,
+    public current: State<number>,
     public layout: ReturnType<typeof useSpaceLayoutContext>,
-    public component: State<React.ReactNode>,
-    _handleNext: () => void,
-  ) {
-    _handleNext = this.handleNext.bind(this);
-  }
+  ) {}
 
   get requirements() {
     return this.layout.space.requirements;
   }
 
+  get component() {
+    return getComponent(
+      this.layout.space.requirements[this.current.get()],
+      this.handleNext,
+    );
+  }
+
   handleNext = () => {
     logger.debug('Controller handleNext called');
+
+    const currentIdx = this.current.get();
+
+    if (currentIdx >= this.requirements.length - 1) {
+      this.current.set(this.current.get() + 1);
+    } else {
+      // Navigate
+    }
   };
 }
 
 export function useController() {
-  const state = useState(false);
   const layoutCtrl = useSpaceLayoutContext();
-  const handleNext = () => {};
-  const component = useState(
-    getComponent(layoutCtrl.space.requirements[0], handleNext),
+  const [idx, setIdx] = useState(
+    layoutCtrl.space.requirements.findIndex((el) => !el.responded),
   );
 
   layoutCtrl.hiding.set(true);
 
-  return new Controller(
-    new State(state),
-    layoutCtrl,
-    new State(component),
-    handleNext,
-  );
+  return new Controller(new State([idx, setIdx]), layoutCtrl);
 }
 
 function getComponent(req: SpaceRequirement, onNext: () => void) {
