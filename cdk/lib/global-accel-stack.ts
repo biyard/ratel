@@ -35,7 +35,7 @@ export class GlobalAccelStack extends Stack {
       validation: acm.CertificateValidation.fromDns(zone),
     });
 
-    // ALB Domain
+    // API Gateway Custom Domain Origin
     const origin = new origins.HttpOrigin(apiDomain, {
       protocolPolicy: cloudfront.OriginProtocolPolicy.HTTPS_ONLY,
       originSslProtocols: [cloudfront.OriginSslPolicy.TLS_V1_2],
@@ -69,7 +69,10 @@ export class GlobalAccelStack extends Stack {
       defaultBehavior: {
         origin,
         cachePolicy: cloudfront.CachePolicy.CACHING_DISABLED,
-        originRequestPolicy: cloudfront.OriginRequestPolicy.ALL_VIEWER,
+        // Use ALL_VIEWER_EXCEPT_HOST_HEADER for API Gateway
+        // CloudFront will automatically set Host header to the origin domain (api.dev.ratel.foundation)
+        originRequestPolicy:
+          cloudfront.OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
         allowedMethods: cloudfront.AllowedMethods.ALLOW_ALL,
         viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
       },
@@ -116,11 +119,11 @@ export class GlobalAccelStack extends Stack {
       ),
     });
 
-    new s3deploy.BucketDeployment(this, `RatelWebBucketDeployment-${stage}`, {
-      destinationBucket: staticBucket,
-      distribution: distribution,
-      distributionPaths: ["/*"],
-      sources: [s3deploy.Source.asset("dist")],
-    });
+    // new s3deploy.BucketDeployment(this, `RatelWebBucketDeployment-${stage}`, {
+    //   destinationBucket: staticBucket,
+    //   distribution: distribution,
+    //   distributionPaths: ["/*"],
+    //   sources: [s3deploy.Source.asset("dist")],
+    // });
   }
 }
