@@ -84,17 +84,16 @@ export function PanelQuotas({ quotas, canEdit, setQuotas }: PanelQuotasProps) {
           placeholder="0"
         />
       ) : (
-        <div
-          role="button"
-          tabIndex={0}
-          className="flex w-full items-center min-h-[30px] cursor-text"
+        <Input
+          ref={inputRef}
+          type="none"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          className="w-full border-transparent focus:!border-transparent focus:rounded-md font-bold text-text-primary text-[14px]/[30px] placeholder:text-neutral-300 placeholder:font-medium rounded-none"
+          placeholder="0"
           onClick={() => setEditMode(true)}
           onKeyDown={(e) => e.key === 'Enter' && setEditMode(true)}
-        >
-          <div className="font-bold text-text-primary text-[14px]/[30px]">
-            {quotas ?? 0}
-          </div>
-        </div>
+        />
       )}
     </div>
   );

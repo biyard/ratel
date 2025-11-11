@@ -5,7 +5,7 @@ use std::fmt::Display;
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, OperationIo, Default,
 )]
-#[serde(tag = "type", rename_all = "snake_case")]
+#[serde(tag = "type", content = "value", rename_all = "snake_case")]
 pub enum PanelAttribute {
     #[default]
     None,
@@ -16,6 +16,7 @@ pub enum PanelAttribute {
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, OperationIo, Default,
 )]
+#[serde(rename_all = "snake_case")]
 pub enum CollectiveAttribute {
     #[default]
     None,
@@ -26,6 +27,7 @@ pub enum CollectiveAttribute {
 #[derive(
     Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, OperationIo, Default,
 )]
+#[serde(rename_all = "snake_case")]
 pub enum VerifiableAttribute {
     #[default]
     None,

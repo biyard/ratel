@@ -2,18 +2,43 @@ import { logger } from '@/lib/logger';
 import { SpacePathProps } from '@/features/space-path-props';
 import { useSpacePanelEditorController } from './use-space-panel-editor-controller';
 import { Col } from '@/components/ui/col';
-import { PanelTable } from '../../components/panel_table';
+import { Row } from '@/components/ui/row';
+import { PanelQuotas } from '../../components/panel_quota';
+import { PanelLabels } from '../../components/panel_labels';
+import { PanelAttribute } from '../../types/panel-attribute';
 
 export function SpacePanelEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpacePanelEditorPage: spacePk=${spacePk}`);
   const ctrl = useSpacePanelEditorController(spacePk);
-  const panels = ctrl.panels.get();
 
   return (
     <>
       <Col>
         <Col className="gap-2 mb-4">
-          <PanelTable
+          <Row className="gap-5">
+            <div className="flex flex-row w-fit gap-5 items-center">
+              <div>Total Quotas</div>
+              <PanelQuotas
+                quotas={ctrl.panel.quotas}
+                canEdit={true}
+                setQuotas={async (quota: number) => {
+                  await ctrl.handleUpdateQuota(quota);
+                }}
+              />
+            </div>
+            <div className="flex flex-row w-full gap-5 items-center">
+              <div>Attribute Groups</div>
+              <PanelLabels
+                canEdit={true}
+                values={ctrl.panel.attributes}
+                setValues={async (v: PanelAttribute[]) => {
+                  await ctrl.handleUpdateValues(v);
+                }}
+                placeholder="Attribute Groups"
+              />
+            </div>
+          </Row>
+          {/* <PanelTable
             panels={panels}
             t={ctrl.t}
             canEdit={true}
@@ -25,7 +50,7 @@ export function SpacePanelEditorPage({ spacePk }: SpacePathProps) {
             openAgePopup={ctrl.openAgePopup}
             bookmark={ctrl.bookmark.get()}
             onloadmore={ctrl.loadMore}
-          />
+          /> */}
         </Col>
       </Col>
     </>
