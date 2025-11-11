@@ -96,6 +96,8 @@ where
                 raw_uri
             };
 
+            let final_uri = final_uri.replace("#", "%23");
+
             tracing::warn!("final uri: {final_uri}");
 
             // Set the raw, percent-encoded URI directly
