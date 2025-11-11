@@ -71,6 +71,8 @@ where
             _ => (None, None, None),
         };
 
+        tracing::warn!("lambda call: {raw_path:?} {raw_query_string:?} {stage:?}");
+
         let mut event: lambda_http::Request = req.payload.into();
 
         // Construct raw URI from raw path and query without decoding
@@ -93,6 +95,8 @@ where
             } else {
                 raw_uri
             };
+
+            tracing::warn!("final uri: {final_uri}")
 
             // Set the raw, percent-encoded URI directly
             *event.uri_mut() = final_uri.parse().unwrap_or_else(|e| {
