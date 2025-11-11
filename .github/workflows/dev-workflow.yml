@@ -722,6 +722,7 @@ jobs:
           PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
           PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
           PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
+          COMMIT: ${{ github.sha }}
         run: |
           cd packages/main-api
           make dist
