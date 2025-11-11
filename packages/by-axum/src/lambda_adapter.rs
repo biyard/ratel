@@ -96,7 +96,7 @@ where
                 raw_uri
             };
 
-            tracing::warn!("final uri: {final_uri}")
+            tracing::warn!("final uri: {final_uri}");
 
             // Set the raw, percent-encoded URI directly
             *event.uri_mut() = final_uri.parse().unwrap_or_else(|e| {
