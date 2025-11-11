@@ -1,4 +1,5 @@
 use crate::features::spaces::SpaceRequirementType;
+use crate::features::spaces::polls::PollUserAnswer;
 use crate::types::*;
 use crate::*;
 
@@ -47,5 +48,17 @@ impl SpaceRequirement {
             CompositePartition(space_pk.clone(), Partition::Requirement),
             EntityType::SpaceRequirement(typ.map_or("".to_string(), |t| t.to_string())),
         )
+    }
+
+    pub fn get_respondent_keys(&self, user_pk: &Partition) -> Result<(Partition, EntityType)> {
+        Ok(match self.typ {
+            SpaceRequirementType::PrePoll => {
+                let poll_pk = self.related_sk.clone().try_into()?;
+                PollUserAnswer::keys(user_pk, &poll_pk, &self.space_pk)
+            }
+            SpaceRequirementType::None => {
+                return Err(crate::Error::SpaceInvalidRequirements);
+            }
+        })
     }
 }

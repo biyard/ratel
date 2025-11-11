@@ -1,6 +1,10 @@
 use convert_case::Casing;
 
 pub fn write_file(model_name: String, key: &str, output: String) {
+    if option_env!("NO_OUTPUT").is_some() {
+        return;
+    }
+
     let dir_path = match option_env!("API_MODEL_ARTIFACT_DIR") {
         Some(dir) => format!("{}/{}", dir, key),
         None => {

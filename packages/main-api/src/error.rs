@@ -139,6 +139,8 @@ pub enum Error {
     SpaceNotEditable,
     #[error("PK must be a Partition::Space")]
     InvalidSpacePartitionKey,
+    #[error("Space requirements are invalid")]
+    SpaceInvalidRequirements,
 
     // members feature 3050 ~
     #[rest_error(code = 3050)]
