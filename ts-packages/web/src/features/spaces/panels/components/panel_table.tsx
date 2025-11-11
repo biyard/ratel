@@ -3,33 +3,41 @@ import { SpacePanelQuota } from '../types/space-panels-response';
 import { PanelAttribute } from '../types/panel-attribute';
 import { Input } from '@/components/ui/input';
 import { Trash2 } from 'lucide-react';
+import { TFunction } from 'i18next';
 
 export type PanelTableProps = {
+  t: TFunction<'SpacePanelEditor', undefined>;
   canEdit: boolean;
   panel_quotas: SpacePanelQuota[];
   onChangeQuota?: (row: number, next: number) => void;
   onDelete?: (row: number) => void;
 };
 
-const groupLabel = (a: PanelAttribute) => {
+const groupLabel = (
+  a: PanelAttribute,
+  t: TFunction<'SpacePanelEditor', undefined>,
+) => {
   if (a.type === 'collective_attribute') {
-    if (a.value === 'university') return 'University';
+    if (a.value === 'university') return t('university');
     return 'Group';
   }
   if (a.type === 'verifiable_attribute') {
-    if (a.value === 'age') return 'Age';
-    if (a.value === 'gender') return 'Gender';
+    if (a.value === 'age') return t('age');
+    if (a.value === 'gender') return t('gender');
     return 'Verifiable Attribute';
   }
   return 'None';
 };
 
-const extractValueLabel = (sk: string): string => {
+const extractValueLabel = (
+  sk: string,
+  t: TFunction<'SpacePanelEditor', undefined>,
+): string => {
   const match = sk.match(/#gender:(\w+)$/);
   if (match) {
     const val = match[1];
-    if (val === 'male') return 'Male';
-    if (val === 'female') return 'Female';
+    if (val === 'male') return t('male');
+    if (val === 'female') return t('female');
     return val.charAt(0).toUpperCase() + val.slice(1);
   }
   const cityMatch = sk.match(/#collective_attribute:(\w+)#(\w+)/);
@@ -38,6 +46,7 @@ const extractValueLabel = (sk: string): string => {
 };
 
 export function PanelTable({
+  t,
   canEdit,
   panel_quotas,
   onChangeQuota,
@@ -75,11 +84,11 @@ export function PanelTable({
     <table className="w-full border border-input-box-border rounded-xl overflow-hidden text-sm">
       <thead className="bg-muted text-text-secondary">
         <tr>
-          <th className="py-3 px-4 text-left">Attribute Group</th>
-          <th className="py-3 px-4 text-left">Attribute</th>
-          <th className="py-3 px-4 text-right">Ratio (%)</th>
-          <th className="py-3 px-4 text-center">Total Quota</th>
-          <th className="py-3 px-4 text-right">Delete</th>
+          <th className="py-3 px-4 text-left">{t('attribute_groups')}</th>
+          <th className="py-3 px-4 text-left">{t('attributes')}</th>
+          <th className="py-3 px-4 text-right">{t('ratio')}</th>
+          <th className="py-3 px-4 text-center">{t('total_quotas')}</th>
+          <th className="py-3 px-4 text-right">{t('delete')}</th>
         </tr>
       </thead>
 
@@ -91,12 +100,12 @@ export function PanelTable({
           return (
             <tr key={idx} className="border-t border-input-box-border">
               <td className="px-4 py-3">
-                {groupLabel(row.attributes as PanelAttribute)}
+                {groupLabel(row.attributes as PanelAttribute, t)}
               </td>
 
               <td className="px-4 py-3">
                 <span className="inline-flex items-center rounded-md bg-neutral-700 light:bg-neutral-500 text-white px-2 py-1 text-xs dark:bg-neutral-200 dark:text-neutral-900">
-                  {extractValueLabel(row.sk)}
+                  {extractValueLabel(row.sk, t)}
                 </span>
               </td>
 

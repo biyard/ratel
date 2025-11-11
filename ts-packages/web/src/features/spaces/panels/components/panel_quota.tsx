@@ -82,7 +82,7 @@ export function PanelQuotas({ quotas, canEdit, setQuotas }: PanelQuotasProps) {
         <div
           role="button"
           tabIndex={0}
-          className="w-[80px] h-9 inline-flex items-center justify-center rounded-md border border-transparent font-medium text-sm text-text-primary cursor-text"
+          className="cursor-pointer w-[80px] h-9 inline-flex items-center justify-center rounded-md border border-transparent font-medium text-sm text-text-primary"
           onClick={() => {
             if (!canEdit) return;
             setInternalQuota(String(quotas ?? 0));

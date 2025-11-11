@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanelAttribute } from '../types/panel-attribute';
 import { Clear } from '@/components/icons';
+import { TFunction } from 'i18next';
 
 const getValue = (p: PanelAttribute) => (p.type === 'none' ? 'none' : p.value);
 const eq = (a: PanelAttribute, b: PanelAttribute) =>
@@ -17,13 +18,20 @@ const GENDER: PanelAttribute = {
 };
 const ALL_OPTIONS: PanelAttribute[] = [UNIVERSITY, AGE, GENDER];
 
-const labelOf = (p: PanelAttribute) => {
-  if (p.type === 'collective_attribute' && p.value === 'university')
-    return 'University';
-  if (p.type === 'verifiable_attribute' && p.value === 'age') return 'Age';
-  if (p.type === 'verifiable_attribute' && p.value === 'gender')
-    return 'Gender';
-  return 'None';
+const labelOf = (
+  p: PanelAttribute,
+  t: TFunction<'SpacePanelEditor', undefined>,
+) => {
+  if (p.type === 'collective_attribute') {
+    if (p.value === 'university') return t('university');
+    return t('attribute_groups');
+  }
+  if (p.type === 'verifiable_attribute') {
+    if (p.value === 'age') return t('age');
+    if (p.value === 'gender') return t('gender');
+    return t('attribute_groups');
+  }
+  return '—';
 };
 
 type PanelLabelsProps = {
@@ -31,6 +39,7 @@ type PanelLabelsProps = {
   values: PanelAttribute[];
   setValues: (v: PanelAttribute[]) => void;
   placeholder?: string;
+  t: TFunction<'SpacePanelEditor', undefined>;
 };
 
 export function PanelLabels({
@@ -38,6 +47,7 @@ export function PanelLabels({
   values,
   setValues,
   placeholder = 'Attribute Groups',
+  t,
 }: PanelLabelsProps) {
   const [open, setOpen] = useState(false);
   const [anchorW, setAnchorW] = useState<number>();
@@ -92,7 +102,7 @@ export function PanelLabels({
         onKeyDown={(e) =>
           e.key === 'Enter' && canEdit && available.length > 0 && setOpen(true)
         }
-        className="relative flex w-full items-center justify-between min-h-[44px] rounded-lg px-4 py-2 bg-card-bg text-text-primary"
+        className="relative cursor-pointer flex w-full items-center justify-between min-h-[44px] rounded-lg px-4 py-2 bg-card-bg text-text-primary"
       >
         <div className="flex flex-wrap gap-2">
           {values.length === 0 ? (
@@ -109,7 +119,7 @@ export function PanelLabels({
                   setOpen(false);
                 }}
               >
-                {labelOf(v)}
+                {labelOf(v, t)}
                 <span className="opacity-70">
                   <Clear />
                 </span>
@@ -150,7 +160,7 @@ export function PanelLabels({
                     }}
                     className="flex w-full items-center justify-between px-4 py-2 text-left text-sm hover:bg-neutral-200/60 dark:hover:bg-neutral-800"
                   >
-                    <span>{labelOf(opt)}</span>
+                    <span>{labelOf(opt, t)}</span>
                   </button>
                 </li>
               ))}

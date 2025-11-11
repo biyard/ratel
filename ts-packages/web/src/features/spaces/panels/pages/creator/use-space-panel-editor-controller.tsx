@@ -10,6 +10,7 @@ import { useCreatePanelQuotaMutation } from '../../hooks/use-create-panel-quota-
 import { useDeletePanelQuotaMutation } from '../../hooks/use-delete-panel-quota-mutation';
 import { useUpdatePanelQuotaMutation } from '../../hooks/use-update-panel-quota-mutation copy';
 import { SpacePanelResponse } from '../../types/space-panels-response';
+import { showErrorToast } from '@/lib/toast';
 
 export class SpacePanelEditorController {
   constructor(
@@ -28,6 +29,21 @@ export class SpacePanelEditorController {
   handleUpdateAttributeQuota = async (row: number, next: number) => {
     const q = this.panel.panel_quotas?.[row];
     if (!q) return;
+
+    const total_quotas = Number(this.panel.quotas ?? 0);
+    const panel_quotas = this.panel.panel_quotas ?? [];
+
+    const sumExceptRow = panel_quotas.reduce(
+      (acc, r, i) => acc + (i === row ? 0 : Number(r.quotas ?? 0)),
+      0,
+    );
+    const newSum = sumExceptRow + Number(next ?? 0);
+
+    if (newSum < total_quotas) {
+      const msg = `The total of all quotas cannot exceed the overall quota.`;
+      showErrorToast(msg);
+      return;
+    }
 
     const attribute = q.attributes as PanelAttribute;
     const sk = (q as unknown as { sk?: string }).sk ?? '';
