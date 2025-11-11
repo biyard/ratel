@@ -35,7 +35,7 @@ export class DaemonStack extends Stack {
     const fetcherRepoName = "ratel/fetcher";
 
     const taskDefinition = new ecs.TaskDefinition(
-      scope,
+      this,
       "DaemonTaskDefinitionV3",
       {
         compatibility: ecs.Compatibility.FARGATE,
@@ -46,7 +46,7 @@ export class DaemonStack extends Stack {
     );
 
     const fetcherRepository = Repository.fromRepositoryName(
-      scope,
+      this,
       "fetcherRepository",
       fetcherRepoName,
     );
@@ -65,7 +65,7 @@ export class DaemonStack extends Stack {
       protocol: ecs.Protocol.TCP,
     });
 
-    new ecs.FargateService(scope, "DaemonServiceV3", {
+    new ecs.FargateService(this, "DaemonServiceV3", {
       cluster,
       taskDefinition,
       desiredCount: 1,
