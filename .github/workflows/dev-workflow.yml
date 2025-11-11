@@ -28,10 +28,10 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
-      - name: Setup SSH session with tmate
-        uses: mxschmitt/action-tmate@v3
-        with:
-          limit-access-to-actor: true
+      # - name: Setup SSH session with tmate
+      #   uses: mxschmitt/action-tmate@v3
+      #   with:
+      #     limit-access-to-actor: true
       - name: Deploy
         env:
           ENV: dev
@@ -138,7 +138,7 @@ jobs:
           PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
         run: |
           tar xzvf dist.tar.gz
-          mv cdk/dist ./
+          ls dist
 
           make build
 
@@ -316,15 +316,13 @@ jobs:
 
       - name: Prepare artifacts
         run: |
-          mv dist ../../cdk/
-          cd ../..
-          tar czvf dist.tar.gz cdk/dist
+          tar czvf dist.tar.gz dist
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ratel-web-${{ github.sha }}
-          path: ${{ github.workspace }}/dist.tar.gz
+          path: ${{ github.workspace }}/ts-packages/web/dist.tar.gz
           if-no-files-found: error
           retention-days: 7
 
