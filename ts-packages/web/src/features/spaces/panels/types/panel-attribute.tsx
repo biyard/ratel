@@ -3,6 +3,15 @@ export type PanelAttribute =
   | { type: 'collective_attribute'; value: 'none' | 'university' }
   | { type: 'verifiable_attribute'; value: 'none' | 'age' | 'gender' };
 
+export type Attribute =
+  | { answer_type: 'age'; specific: number }
+  | {
+      answer_type: 'age';
+      range: { inclusive_min: number; inclusive_max: number };
+    }
+  | { answer_type: 'gender'; male: Record<string, never> }
+  | { answer_type: 'gender'; female: Record<string, never> };
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function parsePanelAttribute(input: any): PanelAttribute | null {
   if (!input) return null;

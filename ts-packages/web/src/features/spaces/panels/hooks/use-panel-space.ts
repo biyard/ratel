@@ -5,7 +5,7 @@ import {
 
 import { spaceKeys } from '@/constants';
 import { call } from '@/lib/api/ratel/call';
-import { SpacePanelResponse } from '../types/space-panel-response';
+import { SpacePanelResponse } from '../types/space-panels-response';
 
 export function getOption(spacePk: string) {
   return {

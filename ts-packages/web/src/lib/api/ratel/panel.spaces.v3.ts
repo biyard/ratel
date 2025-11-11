@@ -15,6 +15,58 @@ export function createSpacePanel(
   });
 }
 
+export function createSpacePanelQuotas(
+  spacePk: string,
+
+  quotas: number[],
+  attributes: PanelAttribute[],
+  values: Attribute[],
+): Promise<void> {
+  return call(
+    'POST',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/panels/quotas`,
+    {
+      quotas,
+      attributes,
+      values,
+    },
+  );
+}
+
+export function updateSpacePanelQuotas(
+  spacePk: string,
+
+  quotas: number,
+  attribute: PanelAttribute,
+  value: Attribute,
+): Promise<void> {
+  return call(
+    'PATCH',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/panels/quotas`,
+    {
+      quotas,
+      attribute,
+      value,
+    },
+  );
+}
+
+export function deleteSpacePanelQuotas(
+  spacePk: string,
+
+  attribute: PanelAttribute,
+  value: Attribute,
+): Promise<void> {
+  return call(
+    'DELETE',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/panels/quotas`,
+    {
+      attribute,
+      value,
+    },
+  );
+}
+
 export function updateSpacePanel(
   spacePk: string,
 

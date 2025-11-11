@@ -6,6 +6,7 @@ import { Row } from '@/components/ui/row';
 import { PanelQuotas } from '../../components/panel_quota';
 import { PanelLabels } from '../../components/panel_labels';
 import { PanelAttribute } from '../../types/panel-attribute';
+import { PanelTable } from '../../components/panel_table';
 
 export function SpacePanelEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpacePanelEditorPage: spacePk=${spacePk}`);
@@ -17,7 +18,7 @@ export function SpacePanelEditorPage({ spacePk }: SpacePathProps) {
         <Col className="gap-2 mb-4">
           <Row className="gap-5">
             <div className="flex flex-row w-fit gap-5 items-center">
-              <div>Total Quotas</div>
+              <div className="text-sm font-medium">Total Quotas</div>
               <PanelQuotas
                 quotas={ctrl.panel.quotas}
                 canEdit={true}
@@ -27,7 +28,7 @@ export function SpacePanelEditorPage({ spacePk }: SpacePathProps) {
               />
             </div>
             <div className="flex flex-row w-full gap-5 items-center">
-              <div>Attribute Groups</div>
+              <div className="text-sm font-medium">Attribute Groups</div>
               <PanelLabels
                 canEdit={true}
                 values={ctrl.panel.attributes}
@@ -38,6 +39,13 @@ export function SpacePanelEditorPage({ spacePk }: SpacePathProps) {
               />
             </div>
           </Row>
+
+          <PanelTable
+            canEdit={true}
+            panel_quotas={ctrl.panel.panel_quotas}
+            onChangeQuota={ctrl.handleUpdateAttributeQuota}
+            onDelete={ctrl.handleDeleteAttributeQuota}
+          />
           {/* <PanelTable
             panels={panels}
             t={ctrl.t}
