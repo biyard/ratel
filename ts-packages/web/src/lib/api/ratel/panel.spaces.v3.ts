@@ -1,10 +1,10 @@
 import { Attribute } from '@/features/spaces/panels/types/answer-type';
 import { call } from './call';
+import { PanelAttribute } from '@/features/spaces/panels/types/panel-attribute';
 
 export function createSpacePanel(
   spacePk: string,
 
-  name: string,
   quotas: number,
   attributes: Attribute[],
 ): Promise<void> {
@@ -17,21 +17,14 @@ export function createSpacePanel(
 
 export function updateSpacePanel(
   spacePk: string,
-  panelPk: string,
 
-  name: string,
   quotas: number,
-  attributes: Attribute[],
+  attributes: PanelAttribute[],
 ): Promise<void> {
-  return call(
-    'PATCH',
-    `/v3/spaces/${encodeURIComponent(spacePk)}/panels/${encodeURIComponent(panelPk)}`,
-    {
-      name,
-      quotas,
-      attributes,
-    },
-  );
+  return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}/panels`, {
+    quotas,
+    attributes,
+  });
 }
 
 export function deleteSpacePanel(
