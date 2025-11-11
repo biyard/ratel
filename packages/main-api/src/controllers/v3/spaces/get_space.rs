@@ -1,6 +1,8 @@
 use super::*;
 use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMember};
-use crate::features::spaces::{SpaceRequirement, SpaceRequirementQueryOption};
+use crate::features::spaces::{
+    SpaceRequirement, SpaceRequirementDto, SpaceRequirementQueryOption, SpaceRequirementResponse,
+};
 use crate::models::user::User;
 use crate::models::{Post, SpaceCommon};
 use crate::types::*;
@@ -49,7 +51,7 @@ pub struct GetSpaceResponse {
     pub participant_profile_url: Option<String>,
     pub participant_username: Option<String>,
 
-    pub requirements: Vec<SpaceRequirement>,
+    pub requirements: Vec<SpaceRequirementDto>,
 }
 
 pub async fn get_space_handler(
@@ -80,9 +82,10 @@ pub async fn get_space_handler(
     // If it is extended to lots of requirements, we need to implement pagination.
     let opt = SpaceRequirement::opt_all().sk(sk.to_string());
 
-    let (requirements, _bookmark) = SpaceRequirement::query(&dynamo.client, req_pk, opt).await?;
+    let (mut requirements, _bookmark) =
+        SpaceRequirement::query(&dynamo.client, req_pk, opt).await?;
 
-    let can_participate = if let Some(user) = user {
+    let can_participate = if let Some(ref user) = user {
         let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
         let invitation = SpaceInvitationMember::get(&dynamo.client, &pk, Some(&sk)).await?;
         invitation.is_some() && user_participant.is_none()
@@ -91,7 +94,26 @@ pub async fn get_space_handler(
     };
 
     let mut res = GetSpaceResponse::from((space, post, permissions, user_participant));
-    res.requirements = requirements;
+    requirements.sort_by(|a, b| a.order.cmp(&b.order));
+
+    let keys = if let Some(ref user) = user {
+        requirements
+            .iter()
+            .map(|e| {
+                e.get_respondent_keys(&user.pk)
+                    .expect("failed to get respondent key")
+            })
+            .collect()
+    } else {
+        vec![]
+    };
+
+    let resp = SpaceRequirementResponse::batch_get(&dynamo.client, keys).await?;
+
+    res.requirements = requirements
+        .into_iter()
+        .map(|r| SpaceRequirementDto::new(r, &user, &resp))
+        .collect();
     res.can_participate = can_participate;
 
     Ok(Json(res))

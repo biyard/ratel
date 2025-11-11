@@ -618,8 +618,18 @@ export function useSpaceHomeController(spacePk: string) {
     })();
   }, [cleanedPath, spacePk]);
 
+  const participationAttemptedRef = useRef(false);
   useEffect(() => {
-    if (data.space.data.canParticipate) {
+    if (participationAttemptedRef.current || participateSpace.isPending) {
+      return;
+    }
+
+    if (
+      data.space.data.shouldParticipateManually() &&
+      data.space.data.canParticipate
+    ) {
+      participationAttemptedRef.current = true;
+
       (async () => {
         try {
           await participateSpace.mutateAsync({
@@ -629,10 +639,12 @@ export function useSpaceHomeController(spacePk: string) {
         } catch (err) {
           logger.debug('verify error: ', err);
           console.log('verify error: ', err);
+
+          participationAttemptedRef.current = false;
         }
       })();
     }
-  }, [data.space.data.canParticipate, spacePk, participateSpace]);
+  }, [data.space.data, spacePk, participateSpace]);
 
   return new SpaceHomeController(
     navigate,
