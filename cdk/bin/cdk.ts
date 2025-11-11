@@ -90,25 +90,23 @@ new RegionalServiceStack(app, `ratel-${env}-svc-us-east-1`, {
   apiDomain,
 });
 
-if (deployStatic) {
-  new GlobalAccelStack(app, "GlobalAccel", {
-    stackName,
-    env: {
-      account: process.env.CDK_DEFAULT_ACCOUNT,
-      region: "us-east-1",
-    },
-    stage: env,
-    commit: process.env.COMMIT!,
+new GlobalAccelStack(app, "GlobalAccel", {
+  stackName,
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: "us-east-1",
+  },
+  stage: env,
+  commit: process.env.COMMIT!,
 
-    webDomain,
-    apiDomain,
-    baseDomain,
-  });
+  webDomain,
+  apiDomain,
+  baseDomain,
+});
 
-  new GlobalTableStack(app, `ratel-${env}-dynamodb`, {
-    env: {
-      account: process.env.CDK_DEFAULT_ACCOUNT,
-      region: "ap-northeast-2",
-    },
-  });
-}
+new GlobalTableStack(app, `ratel-${env}-dynamodb`, {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: "ap-northeast-2",
+  },
+});
