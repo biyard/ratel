@@ -37,11 +37,12 @@ export class Space {
   public booster: BoosterType | undefined;
   public files: FileModel[] | undefined;
   public anonymous_participation: boolean;
+  public canParticipate: boolean;
   public participated: boolean;
   public participantDisplayName: string | null;
   public participantProfileUrl: string | null;
   public participantUsername: string | null;
-  public requirements: string[] | [];
+  public requirements: SpaceRequirement[] | [];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
@@ -70,6 +71,7 @@ export class Space {
     this.booster = json.booster;
     this.files = json.files;
     this.anonymous_participation = json.anonymous_participation;
+    this.canParticipate = json.can_participate;
     this.participated = json.participated;
     this.participantDisplayName = json.participant_display_name || null;
     this.participantProfileUrl = json.participant_profile_url || null;

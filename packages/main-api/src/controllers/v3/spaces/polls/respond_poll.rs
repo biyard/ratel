@@ -35,10 +35,7 @@ pub async fn respond_poll_handler(
     Json(req): Json<RespondPollSpaceRequest>,
 ) -> crate::Result<Json<RespondPollSpaceResponse>> {
     //Validate Request
-
-    if !permissions.contains(TeamGroupPermission::SpaceRead) {
-        return Err(Error::NoPermission);
-    }
+    permissions.permitted(TeamGroupPermission::SpaceRead)?;
 
     // if space_common.status == Some(SpaceStatus::Started)
     //     || space_common.status == Some(SpaceStatus::Finished)
