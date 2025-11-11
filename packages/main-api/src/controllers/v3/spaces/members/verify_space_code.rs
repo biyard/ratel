@@ -99,7 +99,7 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
     .unwrap_or_default()
     .unwrap_or(VerifiedAttributes::default());
 
-    let age = res.age().unwrap_or_default() as u8;
+    let age: Option<u8> = res.age().and_then(|v| u8::try_from(v).ok());
     let gender = res.gender;
 
     let mut bookmark = None::<String>;
@@ -121,7 +121,7 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
             if p.participants >= p.quotas {
                 continue;
             }
-            if attributes_match(age, gender.clone(), &p.attributes) {
+            if attributes_match(age.clone(), gender.clone(), &p.attributes) {
                 let res: SpacePanelResponse = p.into();
                 let participants =
                     SpacePanelParticipant::new(space_pk.clone(), res.clone().pk, user);
@@ -153,7 +153,7 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
     return false;
 }
 
-fn attributes_match(age: u8, gender: Option<Gender>, attrs: &[Attribute]) -> bool {
+fn attributes_match(age: Option<u8>, gender: Option<Gender>, attrs: &[Attribute]) -> bool {
     if attrs.is_empty() {
         return true;
     }
@@ -170,14 +170,16 @@ fn attributes_match(age: u8, gender: Option<Gender>, attrs: &[Attribute]) -> boo
 
     let age_ok = if age_rules.is_empty() {
         true
-    } else {
+    } else if let Some(a) = age {
         age_rules.iter().any(|rule| match rule {
-            Age::Specific(a) => age == *a,
+            Age::Specific(s) => a == *s,
             Age::Range {
                 inclusive_min,
                 inclusive_max,
-            } => age >= *inclusive_min && age <= *inclusive_max,
+            } => a >= *inclusive_min && a <= *inclusive_max,
         })
+    } else {
+        true
     };
 
     let gender_ok = if gender_rules.is_empty() {
@@ -185,8 +187,9 @@ fn attributes_match(age: u8, gender: Option<Gender>, attrs: &[Attribute]) -> boo
     } else {
         match gender {
             Some(ref g) => gender_rules.iter().any(|rule| *rule == g),
-            None => false,
+            None => true,
         }
     };
+
     age_ok && gender_ok
 }
