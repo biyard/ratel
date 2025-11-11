@@ -4,6 +4,7 @@ import { GlobalAccelStack } from "../lib/global-accel-stack";
 import { GlobalTableStack } from "../lib/dynamodb-stack";
 import { ImageWorkerStack } from "../lib/image-worker-stack";
 import { StorybookStack } from "../lib/storybook-stack";
+import { DaemonStack } from "../lib/daemon-stack";
 
 const app = new App();
 
@@ -44,6 +45,14 @@ new GlobalTableStack(app, `ratel-${env}-dynamodb`, {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: "ap-northeast-2",
   },
+});
+
+new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: "ap-northeast-2",
+  },
+  commit: process.env.COMMIT!,
 });
 
 new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {

@@ -3,21 +3,34 @@ import {
   aws_ecs as ecs,
   aws_elasticloadbalancingv2 as elbv2,
   aws_iam as iam,
+  Stack,
+  StackProps,
 } from "aws-cdk-lib";
 import { Repository } from "aws-cdk-lib/aws-ecr";
-import { RegionalServiceStack } from "./regional-service-stack";
+import { Construct } from "constructs";
 
-export interface DaemonStackProps {
+export interface DaemonStackProps extends StackProps {
   commit: string;
-  vpc: ec2.IVpc;
-  cluster: ecs.ICluster;
-  listener: elbv2.ApplicationListener;
-  taskExecutionRole: iam.IRole;
 }
 
-export class DaemonStack {
-  constructor(scope: RegionalServiceStack, props: DaemonStackProps) {
-    const { cluster, taskExecutionRole } = props;
+export class DaemonStack extends Stack {
+  constructor(scope: Construct, id: string, props: DaemonStackProps) {
+    super(scope, id, { ...props, crossRegionReferences: true });
+
+    const vpc = ec2.Vpc.fromLookup(this, "Vpc", { isDefault: true });
+    const cluster = new ecs.Cluster(this, "Cluster", { vpc });
+
+    // 4) Task execution role
+    const taskExecutionRole = new iam.Role(this, "TaskExecutionRole", {
+      assumedBy: new iam.ServicePrincipal("ecs-tasks.amazonaws.com"),
+    });
+
+    taskExecutionRole.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName(
+        "service-role/AmazonECSTaskExecutionRolePolicy",
+      ),
+    );
+
     const fetcherContainerName = "FetcherContainer";
     const fetcherRepoName = "ratel/fetcher";
 
@@ -52,7 +65,7 @@ export class DaemonStack {
       protocol: ecs.Protocol.TCP,
     });
 
-    const fargate = new ecs.FargateService(scope, "DaemonServiceV2", {
+    new ecs.FargateService(scope, "DaemonServiceV2", {
       cluster,
       taskDefinition,
       desiredCount: 1,
