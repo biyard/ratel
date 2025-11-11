@@ -85,7 +85,7 @@ pub async fn migrate_poll_spaces(pool: &sqlx::PgPool, cli: &aws_sdk_dynamodb::Cl
             _ => unimplemented!(),
         };
 
-        let mut space = SpaceCommon::new(post_pk, user)
+        let mut space = SpaceCommon::new(post.clone())
             .with_space_type(main_api::types::SpaceType::Poll)
             .with_created_at(created_at * 1000)
             .with_updated_at(updated_at * 1000)

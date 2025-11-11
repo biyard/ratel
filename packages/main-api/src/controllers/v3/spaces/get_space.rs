@@ -39,6 +39,7 @@ pub struct GetSpaceResponse {
     pub booster: BoosterType,
 
     pub verified: bool,
+    pub files: Option<Vec<File>>,
 
     pub anonymous_participation: bool,
     pub participated: bool,
@@ -95,8 +96,14 @@ pub async fn get_space_handler(
     ))))
 }
 
-impl From<(SpaceCommon, Post, TeamGroupPermissions, bool, Option<SpaceParticipant>)>
-    for GetSpaceResponse
+impl
+    From<(
+        SpaceCommon,
+        Post,
+        TeamGroupPermissions,
+        bool,
+        Option<SpaceParticipant>,
+    )> for GetSpaceResponse
 {
     fn from(
         (space, post, permissions, verified, user_participant): (
@@ -148,6 +155,7 @@ impl From<(SpaceCommon, Post, TeamGroupPermissions, bool, Option<SpaceParticipan
             visibility: space.visibility,
             publish_state: space.publish_state,
             booster: space.booster,
+            files: space.files,
             verified,
             anonymous_participation: space.anonymous_participation,
             participated,

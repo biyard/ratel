@@ -1,4 +1,4 @@
-use crate::{models::team::Team, types::*};
+use crate::{models::team::Team, types::*, utils::time::get_now_timestamp_millis};
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
@@ -27,7 +27,7 @@ impl UserTeam {
             ..
         }: Team,
     ) -> Self {
-        let last_used_at = chrono::Utc::now().timestamp_micros();
+        let last_used_at = get_now_timestamp_millis();
 
         Self {
             pk,

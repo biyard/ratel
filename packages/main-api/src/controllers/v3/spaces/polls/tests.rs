@@ -1,6 +1,8 @@
 use crate::controllers::v3::posts::CreatePostResponse;
 use crate::controllers::v3::spaces::create_space::CreateSpaceResponse;
-use crate::controllers::v3::spaces::polls::{RespondPollSpaceResponse, UpdatePollSpaceResponse};
+use crate::controllers::v3::spaces::polls::{
+    DeletePollSpaceResponse, RespondPollSpaceResponse, UpdatePollSpaceResponse,
+};
 use crate::features::spaces::SpaceParticipant;
 use crate::features::spaces::panels::{SpacePanel, SpacePanelParticipant, SpacePanelResponse};
 use crate::features::spaces::polls::{Poll, PollResponse, PollResultResponse};
@@ -56,6 +58,9 @@ pub async fn setup_poll_space() -> (TestContextV3, Partition, EntityType) {
         app: app,
         path: format!("/v3/spaces/{}/polls", space_pk.to_string()),
         headers: test_user.1.clone(),
+        body: {
+            "default": false
+        },
         response_type: PollResponse
     };
     assert_eq!(status, 200);
@@ -948,4 +953,112 @@ async fn test_respond_poll_increments_response_count() {
         .unwrap()
         .unwrap();
     assert_eq!(updated_poll.user_response_count, initial_count + 1);
+}
+
+// ============================================================================
+// DELETE /:poll_sk - delete_poll_handler tests
+// ============================================================================
+
+#[tokio::test]
+async fn test_delete_poll_successfully() {
+    let (ctx, space_pk, poll_sk) = setup_poll_space().await;
+    let TestContextV3 {
+        app,
+        test_user,
+        ddb,
+        ..
+    } = ctx;
+
+    // Verify poll exists before deletion
+    let poll_before = Poll::get(&ddb, &space_pk, Some(&poll_sk)).await.unwrap();
+    assert!(poll_before.is_some(), "Poll should exist before deletion");
+
+    let (status, _headers, body) = delete! {
+        app: app,
+        path: format!("/v3/spaces/{}/polls/{}", space_pk.to_string(), poll_sk.to_string()),
+        headers: test_user.1.clone(),
+        response_type: DeletePollSpaceResponse
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.status, "success");
+
+    // Verify poll is deleted
+    let poll_after = Poll::get(&ddb, &space_pk, Some(&poll_sk)).await.unwrap();
+    assert!(poll_after.is_none(), "Poll should be deleted");
+}
+
+#[tokio::test]
+async fn test_delete_poll_without_permission() {
+    let (ctx, space_pk, poll_sk) = setup_poll_space().await;
+    let TestContextV3 { app, user2, .. } = ctx;
+
+    let (status, _headers, _body) = delete! {
+        app: app,
+        path: format!("/v3/spaces/{}/polls/{}", space_pk.to_string(), poll_sk.to_string()),
+        headers: user2.1.clone()
+    };
+
+    assert_eq!(status, 401); // No permission returns 401
+}
+
+#[tokio::test]
+async fn test_delete_poll_not_found() {
+    let (ctx, space_pk, _) = setup_poll_space().await;
+    let TestContextV3 { app, test_user, .. } = ctx;
+
+    let fake_poll_sk = EntityType::SpacePoll("nonexistent".to_string());
+
+    let (status, _headers, _body) = delete! {
+        app: app,
+        path: format!("/v3/spaces/{}/polls/{}", space_pk.to_string(), fake_poll_sk.to_string()),
+        headers: test_user.1.clone()
+    };
+
+    assert_eq!(status, 400); // NotFoundPoll returns 400
+}
+
+#[tokio::test]
+async fn test_delete_poll_with_invalid_space_pk() {
+    let (ctx, _, poll_sk) = setup_poll_space().await;
+    let TestContextV3 { app, test_user, .. } = ctx;
+
+    let invalid_pk = Partition::Feed("invalid".to_string());
+
+    let (status, _headers, _body) = delete! {
+        app: app,
+        path: format!("/v3/spaces/{}/polls/{}", invalid_pk.to_string(), poll_sk.to_string()),
+        headers: test_user.1.clone()
+    };
+
+    assert_eq!(status, 400); // Invalid partition returns 400
+}
+
+#[tokio::test]
+async fn test_delete_poll_with_invalid_poll_sk() {
+    let (ctx, space_pk, _) = setup_poll_space().await;
+    let TestContextV3 { app, test_user, .. } = ctx;
+
+    let invalid_sk = EntityType::Post; // Use a different entity type
+
+    let (status, _headers, _body) = delete! {
+        app: app,
+        path: format!("/v3/spaces/{}/polls/{}", space_pk.to_string(), invalid_sk.to_string()),
+        headers: test_user.1.clone()
+    };
+
+    assert_eq!(status, 400); // Invalid entity type returns 400
+}
+
+#[tokio::test]
+async fn test_delete_poll_when_not_authenticated() {
+    let (ctx, space_pk, poll_sk) = setup_poll_space().await;
+    let TestContextV3 { app, .. } = ctx;
+
+    let (status, _headers, _body) = delete! {
+        app: app,
+        path: format!("/v3/spaces/{}/polls/{}", space_pk.to_string(), poll_sk.to_string())
+    };
+
+    assert_eq!(status, 401); // Not authenticated returns 401
 }

@@ -3,6 +3,7 @@ import { optimisticUpdate } from '@/lib/hook-utils';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { SpacePostResponse } from '../types/space-post-response';
+import FileModel from '../../files/types/file';
 
 export function createSpacePost(
   spacePk: string,
@@ -10,12 +11,14 @@ export function createSpacePost(
   htmlContents: string,
   categoryName: string,
   image: string | null,
+  files: FileModel[],
 ): Promise<void> {
   return call('POST', `/v3/spaces/${encodeURIComponent(spacePk)}/boards`, {
     title,
     html_contents: htmlContents,
     category_name: categoryName,
     urls: image ? [image] : [],
+    files,
   });
 }
 
@@ -30,14 +33,23 @@ export function useCreateSpacePostMutation<T extends SpacePostResponse>() {
       htmlContents,
       categoryName,
       image,
+      files,
     }: {
       spacePk: string;
       title: string;
       htmlContents: string;
       categoryName: string;
       image: string | null;
+      files: FileModel[];
     }) => {
-      await createSpacePost(spacePk, title, htmlContents, categoryName, image);
+      await createSpacePost(
+        spacePk,
+        title,
+        htmlContents,
+        categoryName,
+        image,
+        files,
+      );
     },
     onSuccess: async (_, { spacePk }) => {
       const spaceQK = spaceKeys.boards_posts(spacePk);

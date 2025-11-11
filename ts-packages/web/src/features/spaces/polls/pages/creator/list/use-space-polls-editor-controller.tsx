@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Poll } from '../../../types/poll';
 import { State } from '@/types/state';
 import { useCreatePollSpaceMutation } from '../../../hooks/use-create-poll-mutation';
+import { useDeletePollSpaceMutation } from '../../../hooks/use-delete-poll-mutation';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { NavigateFunction, useNavigate } from 'react-router';
 import { route } from '@/route';
@@ -23,14 +24,17 @@ export class SpacePollsEditorController {
     public poll: ListPollResponse,
     public polls: State<Poll[]>,
     public bookmark: State<string | null>,
+    public showSelector: State<boolean>,
 
     public createPoll: ReturnType<typeof useCreatePollSpaceMutation>,
+    public deletePoll: ReturnType<typeof useDeletePollSpaceMutation>,
   ) {}
 
-  handleCreatePoll = async () => {
+  handleCreatePoll = async (isPrePoll: boolean) => {
     try {
       const v = await this.createPoll.mutateAsync({
         spacePk: this.spacePk,
+        default: isPrePoll,
       });
 
       showSuccessToast('Poll created successfully');
@@ -43,6 +47,24 @@ export class SpacePollsEditorController {
 
   enterPoll = (pollPk: string) => {
     this.navigate(route.spacePollById(this.spacePk, pollPk));
+  };
+
+  handleDeletePoll = async (pollSk: string) => {
+    try {
+      await this.deletePoll.mutateAsync({
+        spacePk: this.spacePk,
+        pollSk,
+      });
+
+      showSuccessToast('Poll deleted successfully');
+
+      // Remove the deleted poll from the local state
+      const currentPolls = this.polls.get();
+      this.polls.set(currentPolls.filter((p) => p.sk !== pollSk));
+    } catch (err) {
+      logger.error('Failed to delete poll', err);
+      showErrorToast('Failed to delete poll');
+    }
   };
 
   loadMore = async () => {
@@ -61,6 +83,13 @@ export class SpacePollsEditorController {
     this.polls.set([...prev, ...page.polls]);
     this.bookmark.set(page.bookmark ?? null);
   };
+
+  shouldShowPrePoll = (): boolean => {
+    return (
+      this.polls.get().length === 0 ||
+      !this.polls.get().some((poll) => poll.default)
+    );
+  };
 }
 
 export function useSpacePollsEditorController(spacePk: string) {
@@ -70,8 +99,10 @@ export function useSpacePollsEditorController(spacePk: string) {
   const { t } = useTranslation('SpacePollsEditor');
   const polls = useState<Poll[]>(poll.polls || []);
   const bookmark = useState<string | null>(poll.bookmark ?? null);
+  const showSelector = useState<boolean>(false);
 
   const createPoll = useCreatePollSpaceMutation();
+  const deletePoll = useDeletePollSpaceMutation();
 
   useEffect(() => {
     polls[1](poll?.polls ?? []);
@@ -86,7 +117,9 @@ export function useSpacePollsEditorController(spacePk: string) {
     poll,
     new State(polls),
     new State(bookmark),
+    new State(showSelector),
 
     createPoll,
+    deletePoll,
   );
 }

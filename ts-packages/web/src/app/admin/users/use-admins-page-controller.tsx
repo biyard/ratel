@@ -41,7 +41,9 @@ export function useAdminsPageController() {
       await refetch();
       closePromoteDialog();
     } catch (err) {
-      setActionError((err as Error).message || 'Failed to promote user to admin');
+      setActionError(
+        (err as Error).message || 'Failed to promote user to admin',
+      );
       throw err;
     } finally {
       setIsSubmitting(false);

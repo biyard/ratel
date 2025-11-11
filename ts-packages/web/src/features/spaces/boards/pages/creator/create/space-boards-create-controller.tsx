@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { useUpdateSpacePostMutation } from '../../../hooks/use-update-space-post-mutation';
 import { getSpacePost } from '../../../hooks/use-space-post';
+import FileModel, { FileExtension } from '@/features/spaces/files/types/file';
 
 export class SpaceBoardsCreateController {
   constructor(
@@ -26,6 +27,7 @@ export class SpaceBoardsCreateController {
     public htmlContents: State<string>,
     public categoryName: State<string>,
     public image: State<string | null>,
+    public files: State<FileModel[]>,
     public postPk: State<string | null>,
     public t: TFunction<'SpaceBoardsCreate', undefined>,
 
@@ -64,6 +66,7 @@ export class SpaceBoardsCreateController {
           htmlContents,
           categoryName,
           image,
+          files: this.files.get() ?? [],
         });
 
         showSuccessToast('Success to update posts');
@@ -79,6 +82,7 @@ export class SpaceBoardsCreateController {
           htmlContents,
           categoryName,
           image,
+          files: this.files.get() ?? [],
         });
 
         showSuccessToast('Success to update posts');
@@ -86,6 +90,78 @@ export class SpaceBoardsCreateController {
       } catch {
         showErrorToast('Failed to update posts.');
       }
+    }
+  };
+
+  handleRemovePdf = (index: number) => {
+    const prev = this.files?.get?.() ?? [];
+    if (index < 0 || index >= prev.length) return;
+
+    const removed = prev[index];
+    try {
+      if (removed?.url && removed.url.startsWith('blob:')) {
+        URL.revokeObjectURL(removed.url);
+      }
+    } catch (e) {
+      logger.error('remove pdf error: ', e);
+    }
+
+    const next = [...prev.slice(0, index), ...prev.slice(index + 1)];
+    this.files.set(next);
+  };
+
+  handlePdfUpload = async (fileList: FileList | File[]) => {
+    const maxSizeMB = 50;
+    const files = Array.from(fileList);
+
+    if (files.length === 0) return;
+
+    for (const f of files) {
+      if (f.type !== 'application/pdf') {
+        showErrorToast('only PDF files can uploaded');
+        return;
+      }
+      if (f.size > maxSizeMB * 1024 * 1024) {
+        showErrorToast(`Each file must be less than ${maxSizeMB}MB.`);
+        return;
+      }
+    }
+
+    try {
+      const presign = await getPutObjectUrl(
+        files.length,
+        parseFileType('application/pdf'),
+      );
+      const presigned = presign?.presigned_uris ?? [];
+      const uris = presign?.uris ?? [];
+
+      if (presigned.length !== files.length || uris.length !== files.length) {
+        showErrorToast('Failed to issue upload URL.');
+        return;
+      }
+
+      await Promise.all(
+        files.map((file, i) =>
+          fetch(presigned[i], {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/pdf' },
+            body: file,
+          }),
+        ),
+      );
+
+      const newModels: FileModel[] = files.map((file, i) => ({
+        name: file.name,
+        size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+        ext: FileExtension.PDF,
+        url: uris[i],
+      }));
+
+      this.files.set([...this.files.get(), ...newModels]);
+      showSuccessToast('Complete to PDF upload');
+    } catch (error) {
+      logger.error('PDF upload failed:', error);
+      showErrorToast('Failed to PDF upload');
     }
   };
 
@@ -132,6 +208,7 @@ export function useSpaceBoardsCreateController(spacePk: string) {
   const htmlContents = useState('');
   const categoryName = useState('');
   const image = useState<string | null>(null);
+  const files = useState<FileModel[]>([]);
   const postPk = useState<string | null>(postPkParam);
 
   const createSpacePosts = useCreateSpacePostMutation();
@@ -149,6 +226,7 @@ export function useSpaceBoardsCreateController(spacePk: string) {
     new State(htmlContents),
     new State(categoryName),
     new State(image),
+    new State(files),
     new State(postPk),
     t,
 
@@ -171,6 +249,7 @@ export function useSpaceBoardsCreateController(spacePk: string) {
           controller.htmlContents.set(post.html_contents);
           controller.categoryName.set(post.category_name);
           controller.image.set(post.urls.length == 0 ? '' : post.urls[0]);
+          controller.files.set(post.files.length == 0 ? [] : post.files);
         } catch (error) {
           logger.error('Failed to fetch post data:', error);
           showErrorToast('Failed to fetch post data');
@@ -181,19 +260,5 @@ export function useSpaceBoardsCreateController(spacePk: string) {
     initializePost();
   }, []);
 
-  return new SpaceBoardsCreateController(
-    spacePk,
-    space,
-    category,
-    navigate,
-    new State(title),
-    new State(htmlContents),
-    new State(categoryName),
-    new State(image),
-    new State(postPk),
-    t,
-
-    createSpacePosts,
-    updateSpacePosts,
-  );
+  return controller;
 }

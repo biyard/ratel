@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { click, fill } from '@tests/utils';
+import { fill } from '@tests/utils';
 import { CONFIGS } from '@tests/config';
 
 test.describe('Create Post Page - Authenticated User', () => {

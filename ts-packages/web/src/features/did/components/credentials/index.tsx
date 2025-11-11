@@ -49,7 +49,10 @@ export function Credentials() {
             <VerifiedItem {...attr} />
           ))}
           {ctrl.attributes.length === 0 && (
-            <Card variant="outlined" className="flex items-center">
+            <Card
+              variant="outlined"
+              className="flex items-center text-text-primary"
+            >
               {t.no_data}
             </Card>
           )}
@@ -166,7 +169,7 @@ function CodeInputModal({
 
     try {
       await onSubmit(code.trim());
-    } catch (err) {
+    } catch {
       setError(t.verificationError);
     }
   };

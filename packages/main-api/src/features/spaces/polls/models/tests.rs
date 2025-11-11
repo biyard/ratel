@@ -21,7 +21,7 @@ async fn test_poll_space_creation() {
         user.clone(),
     );
 
-    let common = SpaceCommon::new(post.pk, user.clone());
+    let common = SpaceCommon::new(post.clone());
 
     common
         .create(&cli)

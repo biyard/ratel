@@ -1,5 +1,4 @@
-use crate::types::*;
-use bdk::prelude::*;
+use crate::{utils::time::get_now_timestamp_millis, *};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct TeamGroup {
@@ -30,7 +29,7 @@ impl TeamGroup {
         description: String,
         permissions: TeamGroupPermissions,
     ) -> Self {
-        let now = chrono::Utc::now().timestamp_micros();
+        let now = get_now_timestamp_millis();
 
         Self {
             pk,
@@ -39,7 +38,7 @@ impl TeamGroup {
             description,
             created_at: now,
             permissions: permissions.into(),
-            members: 0,
+            members: 1,
         }
     }
 }

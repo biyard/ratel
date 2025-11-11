@@ -15,8 +15,8 @@ export class SpaceMembersViewerController {
     public verifySpaceCode: ReturnType<typeof useVerifySpaceCodeMutation>,
   ) {}
 
-  handleVerify = async (code: string) => {
-    await this.verifySpaceCode.mutateAsync({ spacePk: this.spacePk, code });
+  handleVerify = async () => {
+    await this.verifySpaceCode.mutateAsync({ spacePk: this.spacePk });
     showSuccessToast(this.t('success_verify_user'));
   };
 }
@@ -59,7 +59,7 @@ export function useSpaceMembersViewerController(spacePk: string) {
 
     (async () => {
       try {
-        await ctrl.handleVerify(code);
+        await ctrl.handleVerify();
       } catch {
         showErrorToast(t('failed_verify_user'));
       } finally {

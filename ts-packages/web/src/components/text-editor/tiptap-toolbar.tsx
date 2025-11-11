@@ -28,7 +28,7 @@ import {
   ChevronRight2,
 } from '../icons';
 import { useRef, useState, useEffect } from 'react';
-import { Video } from 'lucide-react';
+import { Link2, Link2Off, Video, FileText } from 'lucide-react';
 
 export const TiptapToolbar = ({
   editor,
@@ -36,8 +36,10 @@ export const TiptapToolbar = ({
   className,
   openVideoPicker,
   onImageUpload,
+  onUploadPDF,
 }: TiptapToolbarProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -65,6 +67,110 @@ export const TiptapToolbar = ({
       editor.off('update', updateTableState);
     };
   }, [editor]);
+
+  const isYouTubeUrl = (s: string) =>
+    /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)/i.test(s);
+
+  const normalizeUrl = (raw: string) => {
+    const s = raw.trim();
+    if (!s) return '';
+    if (/^https?:\/\//i.test(s)) return s;
+    if (/^[\w.+-]+@[\w.-]+\.[a-z]{2,}$/i.test(s)) return `mailto:${s}`;
+    if (/^\+?\d[\d\s()-]{5,}$/.test(s)) return `tel:${s}`;
+    return `https://${s}`;
+  };
+
+  const removeLink = () => {
+    editor.chain().focus().extendMarkRange('link').unsetMark('link').run();
+  };
+
+  const promptAndApplyLink = () => {
+    const { from, to, empty } = editor.state.selection;
+
+    const current = editor.getAttributes('link')?.href ?? '';
+    const input = window.prompt('Input Link URL', current || 'https://');
+    if (input === null) return;
+
+    const href = normalizeUrl(input);
+
+    const chain = editor
+      .chain()
+      .focus()
+      .setTextSelection({ from, to })
+      .extendMarkRange('link');
+
+    if (!href) {
+      chain.unsetMark('link').run();
+      return;
+    }
+
+    if (isYouTubeUrl(href)) {
+      if (empty) {
+        chain
+          .insertContent([
+            {
+              type: 'text',
+              text: href,
+              marks: [
+                {
+                  type: 'link',
+                  attrs: {
+                    href,
+                    target: '_blank',
+                    rel: 'noopener noreferrer nofollow',
+                  },
+                },
+              ],
+            },
+            { type: 'hardBreak' },
+          ])
+          .setTextSelection(editor.state.selection.to + href.length + 1)
+          .setYoutubeVideo({ src: href })
+          .run();
+      } else {
+        chain
+          .setMark('link', {
+            href,
+            target: '_blank',
+            rel: 'noopener noreferrer nofollow',
+          })
+          .setTextSelection(to)
+          .insertContent([{ type: 'hardBreak' }])
+          .setYoutubeVideo({ src: href })
+          .run();
+      }
+      return;
+    }
+
+    if (empty) {
+      chain
+        .insertContent([
+          {
+            type: 'text',
+            text: href,
+            marks: [
+              {
+                type: 'link',
+                attrs: {
+                  href,
+                  target: '_blank',
+                  rel: 'noopener noreferrer nofollow',
+                },
+              },
+            ],
+          },
+        ])
+        .run();
+    } else {
+      chain
+        .setMark('link', {
+          href,
+          target: '_blank',
+          rel: 'noopener noreferrer nofollow',
+        })
+        .run();
+    }
+  };
 
   // Check scroll position and update button states
   const checkScroll = () => {
@@ -120,6 +226,14 @@ export const TiptapToolbar = ({
 
   const handleImageUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  const handlePdfUpload = () => pdfInputRef.current?.click();
+  const handlePdfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    onUploadPDF?.(files);
+    e.currentTarget.value = '';
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -397,6 +511,27 @@ export const TiptapToolbar = ({
             </>
           )}
 
+          {features.pdf && (
+            <>
+              <ToolbarButton
+                icon={<FileText />}
+                onClick={handlePdfUpload}
+                active={false}
+                disabled={!onUploadPDF}
+                tooltip="Upload PDF"
+                aria-label="Upload PDF"
+              />
+              <input
+                ref={pdfInputRef}
+                type="file"
+                accept="application/pdf"
+                multiple
+                onChange={handlePdfChange}
+                className="hidden"
+              />
+            </>
+          )}
+
           {/* Insert Table button - shown only when NOT in a table */}
           {!isInTable && features.table && (
             <ToolbarButton
@@ -413,6 +548,22 @@ export const TiptapToolbar = ({
               aria-label="Insert Table"
             />
           )}
+
+          <ToolbarButton
+            icon={<Link2 />}
+            onClick={promptAndApplyLink}
+            active={editor.isActive('link')}
+            tooltip="Link"
+            aria-label="Link"
+          />
+
+          <ToolbarButton
+            icon={<Link2Off />}
+            onClick={removeLink}
+            disabled={!editor.isActive('link')}
+            tooltip="Remove Link"
+            aria-label="Remove Link"
+          />
 
           <ToolbarButton
             icon={<Video />}

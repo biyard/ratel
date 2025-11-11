@@ -214,6 +214,10 @@
   --color-submit-button-text: #1d1d1d;
   --color-space-side-label: #737373;
   --color-c-wg-70: var(--ui-gray-70);
+
+  --color-btn-outline: var(--ui-gray-70);
+  --color-btn-outline-hover: var(--color-white);
+  --color-btn-outline-text: var(--color-white);
 }
 
 /* ----------------------------
@@ -353,6 +357,12 @@
   --color-submit-button-bg: #fcb300;
   --color-submit-button-text: #1d1d1d;
   --color-space-side-label: #262626;
+
+  /* Buttons */
+  --color-btn-outline: var(--color-gray-700);
+  --color-btn-outline-hover: var(--color-gray-900);
+  --color-btn-outline-text: var(--color-gray-700);
+
 }
 
 /* Light theme scrollbar overrides */
@@ -386,16 +396,16 @@
 /* ----------------------------
    LEGACY ALIASES (Avoid using in new code)
    ---------------------------- */
-@theme static {
-  --color-custom-white: var(--foreground);
-  --color-neutral-900: var(--background);
-  --color-neutral-80: var(--gray-80);
-  --color-neutral-400: var(--gray-400);
-  --color-neutral-500: var(--gray-500);
-  --color-neutral-600: var(--gray-600);
-  --color-neutral-700: var(--gray-700);
-  --color-neutral-800: var(--gray-800);
-}
+/* @theme static { */
+/*   --color-custom-white: var(--foreground); */
+/*   --color-neutral-900: var(--background); */
+/*   --color-neutral-80: var(--gray-80); */
+/*   --color-neutral-400: var(--gray-400); */
+/*   --color-neutral-500: var(--gray-500); */
+/*   --color-neutral-600: var(--gray-600); */
+/*   --color-neutral-700: var(--gray-700); */
+/*   --color-neutral-800: var(--gray-800); */
+/* } */
 
 /* ==========================================================================
    GLOBAL STYLES

@@ -5,25 +5,48 @@ import {
   TiptapEditorProps,
 } from '@/components/text-editor/types';
 import { Editor } from '@tiptap/react';
+import FileModel from '@/features/spaces/files/types/file';
+import EditableFile from '@/features/spaces/files/components/space-file-editor/editable-file';
+import SpaceFile from '@/features/spaces/files/components/space-file-viewer/space-file';
+import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 
 export interface PostEditorProps extends TiptapEditorProps {
   url: string | null;
+  files?: FileModel[] | null;
+  disabledFileUpload?: boolean;
   disabledImageUpload?: boolean;
+  onUploadPDF?: (fileList: FileList | File[]) => void;
+  onRemovePdf?: (index: number) => void;
   onRemoveImage?: () => void;
 }
 export const PostEditor = forwardRef<Editor | null, PostEditorProps>(
   (props, ref) => {
     const {
+      files,
       url,
       onRemoveImage,
+      onRemovePdf,
       editable,
+      disabledFileUpload = true,
       disabledImageUpload = false,
       ...editorProps
     } = props;
     let features = DEFAULT_ENABLED_FEATURES;
+    if (disabledFileUpload) {
+      features = { ...features, pdf: false };
+    }
+
     if (disabledImageUpload) {
       features = { ...features, image: false };
     }
+
+    const handlePdfDownload = async (file: FileModel) => {
+      await downloadPdfFromUrl({
+        url: file.url ?? '',
+        fileName: file.name,
+      });
+    };
+
     return (
       <div className="flex flex-col w-full">
         <TiptapEditor
@@ -64,6 +87,30 @@ export const PostEditor = forwardRef<Editor | null, PostEditorProps>(
                 </button>
               )}
             </div>
+          </div>
+        )}
+
+        {files && files.length > 0 && (
+          <div className="px-2 mt-3 space-y-2">
+            {files.map((f, i) => {
+              return editable ? (
+                <EditableFile
+                  key={i}
+                  file={f}
+                  onclick={() => {
+                    onRemovePdf(i);
+                  }}
+                />
+              ) : (
+                <SpaceFile
+                  key={i}
+                  file={f}
+                  onclick={async () => {
+                    await handlePdfDownload(f);
+                  }}
+                />
+              );
+            })}
           </div>
         )}
       </div>

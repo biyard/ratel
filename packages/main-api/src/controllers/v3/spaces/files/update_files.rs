@@ -1,9 +1,7 @@
 use crate::controllers::v3::spaces::dto::*;
-use crate::models::space::SpaceCommon;
 
-use crate::models::user::User;
 use crate::types::{Partition, TeamGroupPermission};
-use crate::{AppState, Error};
+use crate::{AppState, Error, Permissions};
 
 use aide::NoApi;
 
@@ -26,7 +24,7 @@ pub struct UpdateSpaceFileResponse {
 //FIXME: implement with dynamodb upsert method
 pub async fn update_files_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
+    NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<UpdateSpaceFileRequest>,
 ) -> Result<Json<UpdateSpaceFileResponse>, Error> {
@@ -34,14 +32,7 @@ pub async fn update_files_handler(
         return Err(Error::NotFoundDeliberationSpace);
     }
 
-    let (_, has_perm) = SpaceCommon::has_permission(
-        &dynamo.client,
-        &space_pk,
-        user.as_ref().map(|u| &u.pk),
-        TeamGroupPermission::SpaceEdit,
-    )
-    .await?;
-    if !has_perm {
+    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
         return Err(Error::NoPermission);
     }
 
