@@ -722,6 +722,8 @@ jobs:
           cd packages/main-api
           make dist
           make docker.build
+
+          cd ../..
           docker-compose --profile testing up -d
 
       - name: Wait for services to be ready
