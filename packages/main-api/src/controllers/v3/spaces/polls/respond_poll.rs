@@ -80,9 +80,9 @@ pub async fn respond_poll_handler(
         let create_tx = PollUserAnswer::new(
             poll.pk.clone(),
             poll_pk.clone(),
-            user.pk.clone(),
             req.answers,
             respondent,
+            user,
         )
         .create_transact_write_item();
 

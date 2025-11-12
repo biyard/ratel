@@ -86,6 +86,15 @@ export function updateSpaceAnonymousParticipation(
   });
 }
 
+export function updateSpaceChangeVisibility(
+  spacePk: string,
+  changeVisibility: boolean,
+): Promise<void> {
+  return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
+    change_visibility: changeVisibility,
+  });
+}
+
 export type ParticipateSpaceRequest = {
   verifiable_presentation: string;
 };
