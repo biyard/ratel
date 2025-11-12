@@ -95,7 +95,11 @@ export default function SpaceByIdLayout() {
   return (
     <Context.Provider value={ctrl}>
       <SafeArea>
-        {ctrl.space.havePreTasks() ? <Requirements /> : <GeneralLayout />}
+        {ctrl.space.havePreTasks() && !ctrl.space.isAdmin() ? (
+          <Requirements />
+        ) : (
+          <GeneralLayout />
+        )}
       </SafeArea>
     </Context.Provider>
   );
