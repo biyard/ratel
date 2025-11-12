@@ -30,9 +30,7 @@ pub async fn update_panel_quota_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    permissions
-        .permitted(TeamGroupPermission::SpaceEdit)
-        .require()?;
+    permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
     let pk = CompositePartition(space_pk, Partition::PanelAttribute);
     let sk = EntityType::SpacePanelAttribute(req.attribute.to_string(), req.value.to_string());

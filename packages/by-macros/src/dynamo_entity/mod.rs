@@ -1522,6 +1522,34 @@ fn generate_enum_impl(ident: Ident, _ds: &DataEnum, s_cfg: StructCfg) -> proc_ma
         quote! {}
     };
 
+    let batch_get_param = if s_cfg.sk_name.is_some() {
+        quote! { (impl std::fmt::Display, impl std::fmt::Display) }
+    } else {
+        quote! {impl std::fmt::Display}
+    };
+
+    let batch_get_key = if let Some(ref sk_name) = s_cfg.sk_name {
+        let sk_name = syn::LitStr::new(sk_name, proc_macro2::Span::call_site());
+
+        quote! {
+            (
+                #pk_field_name.to_string(),
+                aws_sdk_dynamodb::types::AttributeValue::S(key.0.to_string()),
+            ),
+            (
+                #sk_name.to_string(),
+                aws_sdk_dynamodb::types::AttributeValue::S(key.1.to_string()),
+            ),
+        }
+    } else {
+        quote! {
+            (
+                #pk_field_name.to_string(),
+                aws_sdk_dynamodb::types::AttributeValue::S(key.to_string()),
+            ),
+        }
+    };
+
     let idx_fn = generate_index_fn_for_enum(&s_cfg);
 
     quote! {
@@ -1560,6 +1588,52 @@ fn generate_enum_impl(ident: Ident, _ds: &DataEnum, s_cfg: StructCfg) -> proc_ma
                     .collect::<std::result::Result<Vec<#ident>, _>>()?;
                 Ok(items)
             }
+
+            pub async fn batch_get(
+                cli: &aws_sdk_dynamodb::Client,
+                keys: Vec<#batch_get_param>,
+            ) -> std::result::Result<Vec<Self>, #err_ctor> {
+                if keys.is_empty() {
+                    return Ok(vec![]);
+                }
+
+                let keys = keys
+                    .iter()
+                    .map(|key| {
+                        std::collections::HashMap::from([
+                            #batch_get_key
+                        ])
+                    })
+                    .collect::<Vec<_>>();
+
+                let keys_and_attributes = aws_sdk_dynamodb::types::KeysAndAttributes::builder()
+                    .set_keys(Some(keys))
+                    .consistent_read(false)
+                    .build()
+                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                let table_name = Self::table_name();
+
+                let response = cli
+                    .batch_get_item()
+                    .request_items(table_name, keys_and_attributes)
+                    .send()
+                    .await
+                    .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+                let items = if let Some(responses) = response.responses() {
+                    if let Some(items) = responses.get(table_name) {
+                        serde_dynamo::from_items(items.to_vec())?
+                    } else {
+                        vec![]
+                    }
+                } else {
+                    vec![]
+                };
+
+                Ok(items)
+            }
+
 
             #sk_fn
 

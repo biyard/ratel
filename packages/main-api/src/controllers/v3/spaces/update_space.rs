@@ -41,6 +41,8 @@ pub enum UpdateSpaceRequest {
     },
     Start {
         start: bool,
+        #[serde(default)]
+        block_participate: bool,
     },
     Finish {
         finished: bool,
@@ -130,7 +132,10 @@ pub async fn update_space_handler(
         UpdateSpaceRequest::Title { title } => {
             pu = pu.with_title(title.clone());
         }
-        UpdateSpaceRequest::Start { start } => {
+        UpdateSpaceRequest::Start {
+            start,
+            block_participate,
+        } => {
             if space.status != Some(SpaceStatus::InProgress) {
                 return Err(Error::NotSupported(
                     "Start is not available for the current status.".into(),
@@ -141,9 +146,12 @@ pub async fn update_space_handler(
                 return Err(Error::NotSupported("it does not support start now".into()));
             }
 
-            su = su.with_status(SpaceStatus::Started);
+            su = su
+                .with_status(SpaceStatus::Started)
+                .with_block_participate(block_participate);
 
             space.status = Some(SpaceStatus::Started);
+            space.block_participate = block_participate;
             let _ = SpaceEmailVerification::expire_verifications(&dynamo, space_pk.clone()).await?;
         }
         UpdateSpaceRequest::Finish { finished } => {

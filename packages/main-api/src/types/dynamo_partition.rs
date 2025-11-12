@@ -35,6 +35,7 @@ pub enum Partition {
     // Spaces
     Space(String),
     SurveySpace(String),
+    Requirement,
 
     SpacePost(String),
     SpacePostLike(String),

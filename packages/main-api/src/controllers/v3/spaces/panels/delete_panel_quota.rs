@@ -20,9 +20,7 @@ pub async fn delete_panel_quota_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    permissions
-        .permitted(TeamGroupPermission::SpaceDelete)
-        .require()?;
+    permissions.permitted(TeamGroupPermission::SpaceDelete)?;
 
     let pk = CompositePartition(space_pk.clone(), Partition::PanelAttribute);
     let sk = EntityType::SpacePanelAttribute(req.attribute.to_string(), req.value.to_string());
