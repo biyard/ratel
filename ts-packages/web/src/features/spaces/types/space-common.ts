@@ -44,6 +44,7 @@ export interface SpaceCommon {
   files?: FileModel[];
 
   anonymous_participation: boolean;
+  block_participate?: boolean;
 }
 
 export type MySpace = SpaceCommon & {

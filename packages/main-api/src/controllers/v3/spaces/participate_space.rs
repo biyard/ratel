@@ -28,6 +28,10 @@ pub async fn participate_space_handler(
     tracing::debug!("Handling request: {:?}", req);
     permissions.permitted(TeamGroupPermission::SpaceRead)?;
 
+    if space.block_participate {
+        return Err(Error::ParticipationBlocked);
+    }
+
     // TODO: Check verifiable_presentation and add user as SpaceParticipant
 
     // let is_verified = SpaceParticipant::verify_credential(&dynamo, &space_pk, user.clone()).await;
