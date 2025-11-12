@@ -91,7 +91,9 @@ export class Space {
   }
 
   get isPublic() {
-    return this.visibility.type === 'Public';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const visibility = this.visibility as any;
+    return visibility === 'PUBLIC';
   }
 
   get isStarted() {
