@@ -74,6 +74,7 @@ import { i18nSpaceBoardsEditor } from '@/features/spaces/boards/pages/creator/sp
 import { i18nSpaceBoardsEditorDetail } from '@/features/spaces/boards/pages/creator/detail/space-boards-editor-detail-i18n';
 import { i18nAttributeCodes } from '@/app/admin/attribute-codes/attribute-codes-page-i18n';
 import { Errors } from '@/features/errors/i18n';
+import { MySpaces } from '@/app/(social)/my-spaces/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -157,6 +158,7 @@ Object.entries({
   Refund,
   SpaceSettings,
   Errors,
+  MySpaces,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;

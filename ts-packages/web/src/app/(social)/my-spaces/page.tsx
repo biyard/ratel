@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Col } from '@/components/ui/col';
 import { useObserver } from '@/hooks/use-observer';
 import useInfiniteMySpaces from './_hooks/use-my-spaces';
@@ -7,11 +7,25 @@ import { route } from '@/route';
 import Card from '@/components/card';
 import { MySpace } from '@/features/spaces/types/space-common';
 import { Row } from '@/components/ui/row';
+import { useMySpacesI18n } from './i18n';
 
 function SpaceCard({ space }: { space: MySpace }) {
   const navigate = useNavigate();
+  const isBlocked =
+    (space.invitation_status === 'pending' && space.block_participate) ?? false;
+  const t = useMySpacesI18n();
+  const status = useMemo(() => {
+    if (isBlocked) {
+      return 'blocked';
+    }
+
+    return space.invitation_status;
+  }, [isBlocked, space.invitation_status]);
 
   const handleClick = () => {
+    if (isBlocked) {
+      return; // Don't navigate if participation is blocked
+    }
     navigate(route.space(space.pk));
   };
 
@@ -22,31 +36,27 @@ function SpaceCard({ space }: { space: MySpace }) {
     return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
   };
 
-  const getInvitationStatusLabel = (status: 'pending' | 'participating') => {
-    return status === 'pending' ? 'Pending' : 'Participating';
-  };
-
   return (
     <Card
       onClick={handleClick}
-      className="transition-colors cursor-pointer hover:bg-card-bg-hover"
+      className={`transition-colors ${
+        isBlocked
+          ? 'cursor-not-allowed opacity-60 bg-gray-50 dark:bg-gray-800'
+          : 'cursor-pointer hover:bg-card-bg-hover'
+      }`}
     >
       <div className="flex flex-col gap-2">
         <div className="flex gap-3 items-center">
-          {space.author_profile_url && (
-            <img
-              src={space.author_profile_url}
-              alt={space.author_display_name}
-              className="w-10 h-10 rounded-full"
-            />
-          )}
           <div className="flex flex-col">
             <h3 className="text-base font-semibold text-text-primary">
               {space.title}
             </h3>
             <Row>
               {space.author_profile_url && (
-                <img className="w-5" src={space.author_profile_url} />
+                <img
+                  className="w-5 rounded-full"
+                  src={space.author_profile_url}
+                />
               )}
               <p className="text-sm text-text-secondary">
                 {space.author_display_name}
@@ -59,21 +69,8 @@ function SpaceCard({ space }: { space: MySpace }) {
           <span
             className={`px-2 py-1 rounded font-medium ${getInvitationStatusStyle(space.invitation_status)}`}
           >
-            {getInvitationStatusLabel(space.invitation_status)}
+            {t.status[status]}
           </span>
-          <span className="py-1 px-2 rounded bg-background-secondary">
-            {space.publish_state}
-          </span>
-          {space.status && (
-            <span className="py-1 px-2 rounded bg-background-secondary">
-              {space.status}
-            </span>
-          )}
-          {space.visibility.type && (
-            <span className="py-1 px-2 rounded bg-background-secondary">
-              {space.visibility.type}
-            </span>
-          )}
         </div>
       </div>
     </Card>
@@ -110,7 +107,23 @@ export default function MySpacesPage() {
     threshold: 1,
   });
 
-  const flattedSpaces = data?.pages.flatMap((page) => page.items) ?? [];
+  const flattedSpaces = useMemo(() => {
+    const spaces = data?.pages.flatMap((page) => page.items) ?? [];
+
+    // Sort spaces: pending (non-blocked) -> participating -> blocked
+    return spaces.sort((a, b) => {
+      const getPriority = (space: MySpace) => {
+        const isBlocked =
+          space.invitation_status === 'pending' && space.block_participate;
+
+        if (isBlocked) return 2; // Blocked spaces last
+        if (space.invitation_status === 'pending') return 0; // Pending first
+        return 1; // Participating second
+      };
+
+      return getPriority(a) - getPriority(b);
+    });
+  }, [data?.pages]);
 
   if (flattedSpaces.length === 0) {
     return <EmptyState />;

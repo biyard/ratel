@@ -141,6 +141,8 @@ pub enum Error {
     InvalidSpacePartitionKey,
     #[error("Space requirements are invalid")]
     SpaceInvalidRequirements,
+    #[error("User participation is blocked for this space")]
+    ParticipationBlocked,
 
     // members feature 3050 ~
     #[rest_error(code = 3050)]

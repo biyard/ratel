@@ -73,6 +73,9 @@ pub struct SpaceCommon {
 
     // space pdf files
     pub files: Option<Vec<File>>,
+
+    #[serde(default)]
+    pub block_participate: bool,
 }
 
 impl SpaceCommon {
