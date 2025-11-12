@@ -17,9 +17,7 @@ pub async fn list_participants_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    permissions
-        .permitted(TeamGroupPermission::SpaceEdit)
-        .require()?;
+    permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
     let mut query_options = SpacePanelParticipantQueryOption::builder()
         .sk("SPACE_PANEL_PARTICIPANT#".into())

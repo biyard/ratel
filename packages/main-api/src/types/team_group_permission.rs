@@ -156,42 +156,6 @@ impl TeamGroupPermissions {
     }
 }
 
-pub struct PermCheck<'a> {
-    perms: &'a Permissions,
-    perm: TeamGroupPermission,
-}
-
-impl<'a> PermCheck<'a> {
-    #[inline]
-    pub fn require(self) -> Result<()> {
-        if self.perms.contains(self.perm) {
-            Ok(())
-        } else {
-            Err(Error::NoPermission)
-        }
-    }
-}
-
-impl<'a> std::ops::Not for PermCheck<'a> {
-    type Output = Result<()>;
-
-    #[inline]
-    fn not(self) -> Self::Output {
-        if !self.perms.contains(self.perm) {
-            Ok(())
-        } else {
-            Err(Error::NoPermission)
-        }
-    }
-}
-
-impl<'a> From<PermCheck<'a>> for Result<()> {
-    #[inline]
-    fn from(p: PermCheck<'a>) -> Self {
-        p.require()
-    }
-}
-
 impl Default for TeamGroupPermissions {
     fn default() -> Self {
         Self(vec![
