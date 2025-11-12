@@ -14,6 +14,8 @@ import { route } from '@/route';
 import { NavigateFunction, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
+import usePanelSpace from '@/features/spaces/panels/hooks/use-panel-space';
+import { PanelAttribute } from '@/features/spaces/panels/types/panel-attribute';
 
 export class SpacePollAnalyzeController {
   constructor(
@@ -23,6 +25,7 @@ export class SpacePollAnalyzeController {
     public space: Space,
     public poll: Poll,
     public summary: PollSurveySummariesResponse,
+    public attributes: PanelAttribute[],
 
     public t: TFunction<'SpacePollAnalyze', undefined>,
   ) {}
@@ -60,6 +63,14 @@ export class SpacePollAnalyzeController {
   handleDownloadExcel = () => {
     const questions = this.poll?.questions ?? [];
     const qCount = questions.length;
+
+    const needGender = (this.attributes ?? []).some(
+      (a) => a?.type === 'verifiable_attribute' && a?.value === 'gender',
+    );
+
+    const needUniversity = (this.attributes ?? []).some(
+      (a) => a?.type === 'collective_attribute' && a?.value === 'university',
+    );
 
     const userKeyFromPk = (pk: string | undefined) => {
       if (!pk) return '';
@@ -128,6 +139,7 @@ export class SpacePollAnalyzeController {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     for (const f of final_answers as any[])
       finalByUser.set(userKeyFromPk(f?.pk), f);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const sampleByUser = new Map<string, any>();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -139,27 +151,47 @@ export class SpacePollAnalyzeController {
     for (const k of sampleByUser.keys())
       if (!finalByUser.has(k)) userOrder.push(k);
 
-    const header1 = new Array(5 + qCount).fill('');
-    header1[0] = this.t('id');
-    header1[1] = this.t('attribute');
-    header1[3] = this.t('category');
-    header1[4] = this.t('type');
-    if (qCount > 0) header1[5] = this.t('questionnaire');
+    let col = 0;
+    const COL_ID = col++;
+    const COL_ATTR_START = col;
+    const COL_GENDER = needGender ? col++ : -1;
+    const COL_UNIV = needUniversity ? col++ : -1;
+    const attrCols = (needGender ? 1 : 0) + (needUniversity ? 1 : 0);
+    const COL_CATEGORY = col++;
+    const COL_TYPE = col++;
+    const COL_Q_START = col;
+    const totalCols = COL_Q_START + qCount;
 
-    const header2 = new Array(5 + qCount).fill('');
-    header2[1] = this.t('gender');
-    header2[2] = this.t('university');
+    const header1 = new Array(totalCols).fill('');
+    header1[COL_ID] = this.t('id');
+    if (attrCols > 0) header1[COL_ATTR_START] = this.t('attribute');
+    header1[COL_CATEGORY] = this.t('category');
+    header1[COL_TYPE] = this.t('type');
+    if (qCount > 0) header1[COL_Q_START] = this.t('questionnaire');
+
+    const header2 = new Array(totalCols).fill('');
+    if (COL_GENDER >= 0) header2[COL_GENDER] = this.t('gender');
+    if (COL_UNIV >= 0) header2[COL_UNIV] = this.t('university');
 
     const rows: (string | number)[][] = [header1, header2];
 
     const merges: XLSX.Range[] = [
-      { s: { r: 0, c: 1 }, e: { r: 0, c: 2 } },
-      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
-      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
-      { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+      { s: { r: 0, c: COL_ID }, e: { r: 1, c: COL_ID } },
+      { s: { r: 0, c: COL_CATEGORY }, e: { r: 1, c: COL_CATEGORY } },
+      { s: { r: 0, c: COL_TYPE }, e: { r: 1, c: COL_TYPE } },
     ];
-    if (qCount > 0)
-      merges.push({ s: { r: 0, c: 5 }, e: { r: 1, c: 5 + qCount - 1 } });
+    if (attrCols > 0) {
+      merges.push({
+        s: { r: 0, c: COL_ATTR_START },
+        e: { r: 0, c: COL_ATTR_START + attrCols - 1 },
+      });
+    }
+    if (qCount > 0) {
+      merges.push({
+        s: { r: 0, c: COL_Q_START },
+        e: { r: 1, c: COL_Q_START + qCount - 1 },
+      });
+    }
 
     const pushBlock = (
       roundLabel: '사전조사' | '사후조사',
@@ -168,24 +200,21 @@ export class SpacePollAnalyzeController {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       answers: any[],
     ) => {
-      const r1 = new Array(5 + qCount).fill('');
-      r1[3] =
+      const r1 = new Array(totalCols).fill('');
+      r1[COL_CATEGORY] =
         roundLabel === '사전조사'
           ? this.t('sample_survey')
           : this.t('final_survey');
-      r1[4] = this.t('question');
+      r1[COL_TYPE] = this.t('question');
       for (let i = 0; i < qCount; i++)
-        r1[5 + i] = this.poll?.questions?.[i]?.title ?? `Q${i + 1}`;
+        r1[COL_Q_START + i] = this.poll?.questions?.[i]?.title ?? `Q${i + 1}`;
 
-      const r2 = new Array(5 + qCount).fill('');
-      r2[3] =
-        roundLabel === '사전조사'
-          ? this.t('sample_survey')
-          : this.t('final_survey');
-      r2[4] = this.t('answer');
+      const r2 = new Array(totalCols).fill('');
+      r2[COL_CATEGORY] = r1[COL_CATEGORY];
+      r2[COL_TYPE] = this.t('answer');
       for (let i = 0; i < qCount; i++) {
         const ans = answers?.[i];
-        r2[5 + i] = toAnswerDisplay(
+        r2[COL_Q_START + i] = toAnswerDisplay(
           this.poll?.questions?.[i] as PollQuestion,
           ans,
         );
@@ -193,7 +222,10 @@ export class SpacePollAnalyzeController {
 
       const start = rows.length;
       rows.push(r1, r2);
-      merges.push({ s: { r: start, c: 3 }, e: { r: start + 1, c: 3 } });
+      merges.push({
+        s: { r: start, c: COL_CATEGORY },
+        e: { r: start + 1, c: COL_CATEGORY },
+      });
       return { start, end: start + 1 };
     };
 
@@ -212,13 +244,24 @@ export class SpacePollAnalyzeController {
       if (f) pushBlock('사후조사', meta, f.answers || []);
       const endIdx = rows.length - 1;
 
-      merges.push({ s: { r: startIdx, c: 0 }, e: { r: endIdx, c: 0 } });
-      merges.push({ s: { r: startIdx, c: 1 }, e: { r: endIdx, c: 1 } });
-      merges.push({ s: { r: startIdx, c: 2 }, e: { r: endIdx, c: 2 } });
+      merges.push({
+        s: { r: startIdx, c: COL_ID },
+        e: { r: endIdx, c: COL_ID },
+      });
+      if (COL_GENDER >= 0)
+        merges.push({
+          s: { r: startIdx, c: COL_GENDER },
+          e: { r: endIdx, c: COL_GENDER },
+        });
+      if (COL_UNIV >= 0)
+        merges.push({
+          s: { r: startIdx, c: COL_UNIV },
+          e: { r: endIdx, c: COL_UNIV },
+        });
 
-      rows[startIdx][0] = name;
-      rows[startIdx][1] = gender;
-      rows[startIdx][2] = school;
+      rows[startIdx][COL_ID] = name;
+      if (COL_GENDER >= 0) rows[startIdx][COL_GENDER] = gender;
+      if (COL_UNIV >= 0) rows[startIdx][COL_UNIV] = school;
     }
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
@@ -226,17 +269,17 @@ export class SpacePollAnalyzeController {
     (ws as any)['!merges'] = merges;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (ws as any)['!cols'] = Array.from({ length: 5 + qCount }, (_, idx) => {
+    (ws as any)['!cols'] = Array.from({ length: totalCols }, (_, idx) => {
       const base =
-        idx === 0
+        idx === COL_ID
           ? 18
-          : idx === 1
+          : idx === COL_GENDER
             ? 10
-            : idx === 2
+            : idx === COL_UNIV
               ? 16
-              : idx === 3
+              : idx === COL_CATEGORY
                 ? 12
-                : idx === 4
+                : idx === COL_TYPE
                   ? 10
                   : 14;
       let maxLen = 0;
@@ -256,6 +299,8 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
   const { data: summary } = usePollSpaceSummaries(spacePk, pollPk);
+  const { data: panel } = usePanelSpace(spacePk);
+  const attribute = panel.attributes;
   const { t } = useTranslation('SpacePollAnalyze');
 
   const navigator = useNavigate();
@@ -267,6 +312,7 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
     space,
     poll,
     summary,
+    attribute,
 
     t,
   );
