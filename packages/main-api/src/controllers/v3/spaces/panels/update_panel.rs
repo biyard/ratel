@@ -33,7 +33,12 @@ pub async fn update_panel_handler(
     .await?
     .unwrap_or_default();
 
+    // NOTE: If panel quotas is changed after publishing.
     let remains = panel.remains + (req.quotas - panel.quotas);
+
+    if remains < 0 {
+        return Err(Error::InvalidPanelQuota);
+    }
 
     let panel = SpacePanels::updater(&space_pk, EntityType::SpacePanels)
         .with_quotas(req.quotas)

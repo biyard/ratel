@@ -31,14 +31,9 @@ pub async fn participate_space_handler(
     if space.block_participate {
         return Err(Error::ParticipationBlocked);
     }
-
-    // TODO: Check verifiable_presentation and add user as SpaceParticipant
-
-    // let is_verified = SpaceParticipant::verify_credential(&dynamo, &space_pk, user.clone()).await;
-
-    // if !is_verified {
-    //     return Err(Error::InvalidPanel);
-    // }
+    space
+        .check_if_satisfying_panel_attribute(&dynamo.client, &user)
+        .await?;
 
     let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
 
