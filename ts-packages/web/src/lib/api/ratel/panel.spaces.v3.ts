@@ -1,10 +1,10 @@
 import { Attribute } from '@/features/spaces/panels/types/answer-type';
 import { call } from './call';
+import { PanelAttribute } from '@/features/spaces/panels/types/panel-attribute';
 
 export function createSpacePanel(
   spacePk: string,
 
-  name: string,
   quotas: number,
   attributes: Attribute[],
 ): Promise<void> {
@@ -15,23 +15,68 @@ export function createSpacePanel(
   });
 }
 
-export function updateSpacePanel(
+export function createSpacePanelQuotas(
   spacePk: string,
-  panelPk: string,
 
-  name: string,
+  quotas: number[],
+  attributes: PanelAttribute[],
+  values: Attribute[],
+): Promise<void> {
+  return call(
+    'POST',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/panels/quotas`,
+    {
+      quotas,
+      attributes,
+      values,
+    },
+  );
+}
+
+export function updateSpacePanelQuotas(
+  spacePk: string,
+
   quotas: number,
-  attributes: Attribute[],
+  attribute: PanelAttribute,
+  value: Attribute,
 ): Promise<void> {
   return call(
     'PATCH',
-    `/v3/spaces/${encodeURIComponent(spacePk)}/panels/${encodeURIComponent(panelPk)}`,
+    `/v3/spaces/${encodeURIComponent(spacePk)}/panels/quotas`,
     {
-      name,
       quotas,
-      attributes,
+      attribute,
+      value,
     },
   );
+}
+
+export function deleteSpacePanelQuotas(
+  spacePk: string,
+
+  attribute: PanelAttribute,
+  value: Attribute,
+): Promise<void> {
+  return call(
+    'DELETE',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/panels/quotas`,
+    {
+      attribute,
+      value,
+    },
+  );
+}
+
+export function updateSpacePanel(
+  spacePk: string,
+
+  quotas: number,
+  attributes: PanelAttribute[],
+): Promise<void> {
+  return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}/panels`, {
+    quotas,
+    attributes,
+  });
 }
 
 export function deleteSpacePanel(

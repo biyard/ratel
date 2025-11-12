@@ -1,26 +1,25 @@
-use crate::aide::NoApi;
-use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
-use crate::features::spaces::panels::SpacePanelResponse;
-use crate::features::spaces::panels::{ListPanelQueryParams, ListParticipantResponse};
-use crate::features::spaces::panels::{ListPanelResponse, SpacePanelParticipant};
-use crate::features::spaces::panels::{SpacePanel, SpacePanelParticipantQueryOption};
-use crate::features::spaces::panels::{SpacePanelParticipantResponse, SpacePanelQueryOption};
-use crate::models::User;
-use crate::spaces::SpacePanelPath;
-use crate::spaces::SpacePanelPathParam;
-use crate::types::Partition;
-use crate::{AppState, Error};
-use bdk::prelude::axum::extract::{Json, Path, Query, State};
+use crate::features::spaces::panels::ListPanelQueryParams;
+use crate::features::spaces::panels::ListParticipantResponse;
+use crate::features::spaces::panels::SpacePanelParticipant;
+use crate::features::spaces::panels::SpacePanelParticipantQueryOption;
+use crate::features::spaces::panels::SpacePanelParticipantResponse;
+use crate::spaces::SpacePath;
+use crate::spaces::SpacePathParam;
+use crate::*;
 
 pub async fn list_participants_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(_user): NoApi<Option<User>>,
-    Path(SpacePanelPathParam { space_pk, panel_pk }): SpacePanelPath,
+    NoApi(permissions): NoApi<Permissions>,
+    Path(SpacePathParam { space_pk }): SpacePath,
     Query(ListPanelQueryParams { bookmark }): Query<ListPanelQueryParams>,
-) -> Result<Json<ListParticipantResponse>, Error> {
+) -> Result<Json<ListParticipantResponse>> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
     }
+
+    permissions
+        .permitted(TeamGroupPermission::SpaceEdit)
+        .require()?;
 
     let mut query_options = SpacePanelParticipantQueryOption::builder()
         .sk("SPACE_PANEL_PARTICIPANT#".into())
@@ -31,7 +30,7 @@ pub async fn list_participants_handler(
     }
 
     let (responses, bookmark) =
-        SpacePanelParticipant::query(&dynamo.client, panel_pk.clone(), query_options).await?;
+        SpacePanelParticipant::query(&dynamo.client, space_pk.clone(), query_options).await?;
 
     let mut participants = vec![];
 

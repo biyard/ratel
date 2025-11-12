@@ -6,9 +6,10 @@ use crate::controllers::v3::spaces::files::update_files::UpdateSpaceFileResponse
 use crate::controllers::v3::spaces::members::{
     ResentInvitationCodeResponse, UpsertInvitationResponse, VerifySpaceCodeResponse,
 };
+use crate::controllers::v3::spaces::panels::CreatePanelQuotaResponse;
 use crate::features::did::AttributeCode;
 use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMemberResponse};
-use crate::features::spaces::panels::SpacePanelResponse;
+use crate::features::spaces::panels::{PanelAttribute, SpacePanelsResponse, VerifiableAttribute};
 use crate::tests::create_user_session;
 use crate::tests::{
     create_app_state,
@@ -150,14 +151,26 @@ async fn test_verification_space_code_handler() {
 
     assert_eq!(status, 200);
 
-    let (status, _headers, body) = post! {
+    let (status, _headers, _body) = patch! {
         app: app,
         path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
         headers: headers.clone(),
         body: {
-            "name": "Panel 1".to_string(), "quotas": 10, "attributes": vec![Attribute::Age(types::Age::Range { inclusive_min: 18, inclusive_max: 29 }), Attribute::Gender(types::Gender::Male)],
+            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)]
         },
-        response_type: SpacePanelResponse
+        response_type: SpacePanelsResponse
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "quotas": vec![20, 30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender), PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)], "values": vec![Attribute::Gender(Gender::Male), Attribute::Gender(Gender::Female)]
+        },
+        response_type: CreatePanelQuotaResponse
     };
 
     assert_eq!(status, 200);

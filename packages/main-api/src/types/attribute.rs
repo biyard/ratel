@@ -1,4 +1,5 @@
 use bdk::prelude::*;
+use std::fmt;
 
 #[derive(
     Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
@@ -7,6 +8,21 @@ use bdk::prelude::*;
 pub enum Attribute {
     Age(Age),
     Gender(Gender),
+}
+
+impl Default for Attribute {
+    fn default() -> Self {
+        Attribute::Age(Age::Specific(0))
+    }
+}
+
+impl fmt::Display for Attribute {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Attribute::Age(a) => write!(f, "age:{}", a),
+            Attribute::Gender(g) => write!(f, "gender:{}", g),
+        }
+    }
 }
 
 #[derive(
@@ -21,13 +37,43 @@ pub enum Age {
     },
 }
 
+impl fmt::Display for Age {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            Age::Specific(a) => write!(f, "{a}"),
+            Age::Range {
+                inclusive_min,
+                inclusive_max,
+            } => write!(f, "{}-{}", inclusive_min, inclusive_max),
+        }
+    }
+}
+
 #[derive(
-    Debug, Clone, Eq, PartialEq, Hash, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
+    Debug,
+    Clone,
+    Eq,
+    PartialEq,
+    Hash,
+    Default,
+    serde::Serialize,
+    serde::Deserialize,
+    schemars::JsonSchema,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum Gender {
+    #[default]
     Male = 1,
     Female = 2,
+}
+
+impl fmt::Display for Gender {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match *self {
+            Gender::Male => write!(f, "male"),
+            Gender::Female => write!(f, "female"),
+        }
+    }
 }
 
 #[derive(

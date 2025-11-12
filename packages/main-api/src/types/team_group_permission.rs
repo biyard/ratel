@@ -61,6 +61,10 @@ impl Permissions {
         Self(0)
     }
 
+    pub fn permitted(&self, perm: TeamGroupPermission) -> PermCheck<'_> {
+        PermCheck { perms: self, perm }
+    }
+
     pub fn contains(&self, permission: TeamGroupPermission) -> bool {
         (self.0 & (1 << permission as i32)) != 0
     }
@@ -145,6 +149,42 @@ impl TeamGroupPermissions {
 
     pub fn contains(&self, permission: TeamGroupPermission) -> bool {
         self.0.contains(&permission)
+    }
+}
+
+pub struct PermCheck<'a> {
+    perms: &'a Permissions,
+    perm: TeamGroupPermission,
+}
+
+impl<'a> PermCheck<'a> {
+    #[inline]
+    pub fn require(self) -> Result<()> {
+        if self.perms.contains(self.perm) {
+            Ok(())
+        } else {
+            Err(Error::NoPermission)
+        }
+    }
+}
+
+impl<'a> std::ops::Not for PermCheck<'a> {
+    type Output = Result<()>;
+
+    #[inline]
+    fn not(self) -> Self::Output {
+        if !self.perms.contains(self.perm) {
+            Ok(())
+        } else {
+            Err(Error::NoPermission)
+        }
+    }
+}
+
+impl<'a> From<PermCheck<'a>> for Result<()> {
+    #[inline]
+    fn from(p: PermCheck<'a>) -> Self {
+        p.require()
     }
 }
 
