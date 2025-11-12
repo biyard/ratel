@@ -5,7 +5,7 @@ import {
 
 import { spaceKeys } from '@/constants';
 import { call } from '@/lib/api/ratel/call';
-import { ListPanelResponse } from '../types/list-panel-response';
+import { SpacePanelResponse } from '../types/space-panels-response';
 
 export function getOption(spacePk: string) {
   return {
@@ -15,7 +15,7 @@ export function getOption(spacePk: string) {
         'GET',
         `/v3/spaces/${encodeURIComponent(spacePk)}/panels`,
       );
-      return new ListPanelResponse(panel);
+      return new SpacePanelResponse(panel);
     },
     refetchOnWindowFocus: false,
   };
@@ -23,7 +23,7 @@ export function getOption(spacePk: string) {
 
 export default function usePanelSpace(
   spacePk: string,
-): UseSuspenseQueryResult<ListPanelResponse> {
+): UseSuspenseQueryResult<SpacePanelResponse> {
   const query = useSuspenseQuery(getOption(spacePk));
   return query;
 }

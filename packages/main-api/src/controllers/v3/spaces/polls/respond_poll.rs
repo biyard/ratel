@@ -1,9 +1,11 @@
-use crate::features::spaces::panels::{SpacePanel, SpacePanelParticipant};
+use crate::features::did::VerifiedAttributes;
+use crate::features::spaces::panels::SpacePanelParticipant;
 
 use crate::features::spaces::{SpaceParticipant, polls::*};
 use crate::models::user::User;
 use crate::types::{
-    Age, Answer, EntityType, Gender, Partition, TeamGroupPermission, validate_answers,
+    Age, Answer, CompositePartition, EntityType, Gender, Partition, TeamGroupPermission,
+    validate_answers,
 };
 use crate::types::{RespondentAttr, SpaceStatus};
 use crate::utils::time::get_now_timestamp_millis;
@@ -70,18 +72,11 @@ pub async fn respond_poll_handler(
     let participant =
         SpacePanelParticipant::get_participant_in_space(&dynamo.client, &space_pk, &user.pk).await;
 
-    // FIXME: fix to real credential info
     let mut respondent: Option<RespondentAttr> = None;
 
     if let Some(_p) = participant {
-        respondent = Some(RespondentAttr {
-            age: Some(Age::Range {
-                inclusive_max: 29,
-                inclusive_min: 18,
-            }),
-            gender: Some(Gender::Male),
-            school: None,
-        });
+        let attribute = VerifiedAttributes::get_attributes(&dynamo, user.pk.clone()).await?;
+        respondent = attribute;
     }
 
     if user_response.is_none() {

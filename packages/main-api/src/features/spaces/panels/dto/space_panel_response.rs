@@ -1,8 +1,8 @@
+use crate::features::spaces::panels::PanelAttribute;
+use crate::features::spaces::panels::SpacePanelQuota;
+use crate::features::spaces::panels::SpacePanels;
 use crate::types::Attribute;
-use crate::{
-    features::spaces::panels::SpacePanel,
-    types::{EntityType, Partition},
-};
+use crate::types::{EntityType, Partition};
 use bdk::prelude::*;
 
 #[derive(
@@ -14,26 +14,22 @@ use bdk::prelude::*;
     schemars::JsonSchema,
     aide::OperationIo,
 )]
-pub struct SpacePanelResponse {
+pub struct SpacePanelsResponse {
     pub pk: Partition,
 
-    pub name: String,
     pub quotas: i64,
-    pub participants: i64,
-    pub attributes: Vec<Attribute>,
+    pub attributes: Vec<PanelAttribute>,
+
+    pub panel_quotas: Vec<SpacePanelQuota>,
 }
 
-impl From<SpacePanel> for SpacePanelResponse {
-    fn from(panel: SpacePanel) -> Self {
+impl From<SpacePanels> for SpacePanelsResponse {
+    fn from(panel: SpacePanels) -> Self {
         Self {
-            pk: match panel.sk {
-                EntityType::SpacePanel(v) => Partition::Panel(v.to_string()),
-                _ => Partition::Panel("".to_string()),
-            },
-            name: panel.name,
+            pk: panel.pk,
             quotas: panel.quotas,
-            participants: panel.participants,
             attributes: panel.attributes,
+            panel_quotas: vec![],
         }
     }
 }

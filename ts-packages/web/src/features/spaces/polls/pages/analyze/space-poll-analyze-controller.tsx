@@ -124,6 +124,8 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
   const { data: summary } = usePollSpaceSummaries(spacePk, pollPk);
+
+  console.log('poll summary: ', summary);
   const navigator = useNavigate();
 
   return new SpacePollAnalyzeController(
