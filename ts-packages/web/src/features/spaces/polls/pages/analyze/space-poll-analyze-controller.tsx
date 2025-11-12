@@ -12,6 +12,8 @@ import {
 import * as XLSX from 'xlsx';
 import { route } from '@/route';
 import { NavigateFunction, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
 
 export class SpacePollAnalyzeController {
   constructor(
@@ -21,6 +23,8 @@ export class SpacePollAnalyzeController {
     public space: Space,
     public poll: Poll,
     public summary: PollSurveySummariesResponse,
+
+    public t: TFunction<'SpacePollAnalyze', undefined>,
   ) {}
 
   handleBack = () => {
@@ -65,28 +69,44 @@ export class SpacePollAnalyzeController {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const toAnswerDisplay = (q: PollQuestion, ans: any): string => {
-      const t = String(q.answer_type);
-      if (t === 'single_choice') {
-        const idx =
-          typeof ans?.answer === 'number' ? ans.answer : Number(ans?.answer);
-        if (Number.isFinite(idx)) return this.keyToLabel(q, String(idx));
-        return typeof ans?.answer !== 'undefined' ? String(ans.answer) : '';
+      const kind = String(q?.answer_type ?? '');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const opts: string[] | undefined = Array.isArray((q as any)?.options)
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (q as any).options
+        : undefined;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const labelOf = (v: any) => {
+        const idx = typeof v === 'number' ? v : Number(v);
+        if (Number.isFinite(idx) && opts && idx >= 0 && idx < opts.length) {
+          return String(opts[idx] ?? `${idx}`);
+        }
+        return typeof v === 'string' || typeof v === 'number' ? String(v) : '';
+      };
+
+      if (['single_choice', 'dropdown', 'select', 'radio'].includes(kind)) {
+        return labelOf(ans?.answer);
       }
-      if (t === 'multiple_choice') {
+
+      if (['multiple_choice', 'checkbox', 'multi_select'].includes(kind)) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const arr: any[] = Array.isArray(ans?.answer)
-          ? ans.answer
-          : Array.isArray(ans)
-            ? ans
-            : [];
-        return arr
-          .map((v) =>
-            this.keyToLabel(q, String(typeof v === 'number' ? v : Number(v))),
-          )
-          .join(', ');
+        let arr: any[] = [];
+        if (Array.isArray(ans?.answer)) arr = ans.answer;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        else if (Array.isArray(ans)) arr = ans as any[];
+        else if (typeof ans?.answer === 'string')
+          arr = String(ans.answer)
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
+        return arr.map(labelOf).join(', ');
       }
-      if (t === 'linear_scale')
+
+      if (kind === 'linear_scale') {
         return typeof ans?.answer !== 'undefined' ? String(ans.answer) : '';
+      }
+
       return typeof ans?.answer !== 'undefined' ? String(ans.answer) : '';
     };
 
@@ -120,15 +140,15 @@ export class SpacePollAnalyzeController {
       if (!finalByUser.has(k)) userOrder.push(k);
 
     const header1 = new Array(5 + qCount).fill('');
-    header1[0] = 'ID';
-    header1[1] = '속성';
-    header1[3] = '조사구분';
-    header1[4] = '유형';
-    if (qCount > 0) header1[5] = '질문지';
+    header1[0] = this.t('id');
+    header1[1] = this.t('attribute');
+    header1[3] = this.t('category');
+    header1[4] = this.t('type');
+    if (qCount > 0) header1[5] = this.t('questionnaire');
 
     const header2 = new Array(5 + qCount).fill('');
-    header2[1] = '성별';
-    header2[2] = '학교';
+    header2[1] = this.t('gender');
+    header2[2] = this.t('university');
 
     const rows: (string | number)[][] = [header1, header2];
 
@@ -138,13 +158,8 @@ export class SpacePollAnalyzeController {
       { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
       { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
     ];
-
-    if (qCount > 0) {
-      merges.push({
-        s: { r: 0, c: 5 },
-        e: { r: 1, c: 5 + qCount - 1 },
-      });
-    }
+    if (qCount > 0)
+      merges.push({ s: { r: 0, c: 5 }, e: { r: 1, c: 5 + qCount - 1 } });
 
     const pushBlock = (
       roundLabel: '사전조사' | '사후조사',
@@ -154,14 +169,20 @@ export class SpacePollAnalyzeController {
       answers: any[],
     ) => {
       const r1 = new Array(5 + qCount).fill('');
-      r1[3] = roundLabel;
-      r1[4] = '질문';
+      r1[3] =
+        roundLabel === '사전조사'
+          ? this.t('sample_survey')
+          : this.t('final_survey');
+      r1[4] = this.t('question');
       for (let i = 0; i < qCount; i++)
         r1[5 + i] = this.poll?.questions?.[i]?.title ?? `Q${i + 1}`;
 
       const r2 = new Array(5 + qCount).fill('');
-      r2[3] = roundLabel;
-      r2[4] = '답변';
+      r2[3] =
+        roundLabel === '사전조사'
+          ? this.t('sample_survey')
+          : this.t('final_survey');
+      r2[4] = this.t('answer');
       for (let i = 0; i < qCount; i++) {
         const ans = answers?.[i];
         r2[5 + i] = toAnswerDisplay(
@@ -235,8 +256,8 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
   const { data: summary } = usePollSpaceSummaries(spacePk, pollPk);
+  const { t } = useTranslation('SpacePollAnalyze');
 
-  console.log('poll summary: ', summary);
   const navigator = useNavigate();
 
   return new SpacePollAnalyzeController(
@@ -246,5 +267,7 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
     space,
     poll,
     summary,
+
+    t,
   );
 }
