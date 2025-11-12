@@ -356,6 +356,20 @@ export class SpaceHomeController {
       .withoutBackdropClose();
   };
 
+  handleActionPrivate = async () => {
+    this.publishSpace.mutateAsync({
+      spacePk: this.space.pk,
+      visibility: { type: 'PRIVATE' },
+    });
+  };
+
+  handleActionPublic = async () => {
+    this.publishSpace.mutateAsync({
+      spacePk: this.space.pk,
+      visibility: { type: 'PUBLIC' },
+    });
+  };
+
   handleActionStart = async () => {
     logger.debug('Action start triggered');
 
@@ -491,6 +505,28 @@ export class SpaceHomeController {
         onClick: this.handleActionDelete,
       },
     ];
+
+    if (
+      this.space.isInProgress &&
+      this.space.isPublic &&
+      this.space.change_visibility
+    ) {
+      ret.unshift({
+        label: this.t('change_private'),
+        onClick: this.handleActionPrivate,
+      });
+    }
+
+    if (
+      this.space.isInProgress &&
+      !this.space.isPublic &&
+      this.space.change_visibility
+    ) {
+      ret.unshift({
+        label: this.t('change_public'),
+        onClick: this.handleActionPublic,
+      });
+    }
 
     if (
       this.space.isInProgress &&
