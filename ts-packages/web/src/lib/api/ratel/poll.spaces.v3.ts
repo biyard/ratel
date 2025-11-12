@@ -33,7 +33,11 @@ export function updatePollSpace(
 export interface PollSurveySummariesResponse {
   created_at: number;
   summaries: SurveySummary[];
+  summaries_by_gender: SurveySummary[];
+  summaries_by_age: SurveySummary[];
+  summaries_by_school: SurveySummary[];
 }
+
 export function getPollSurveySummaries(
   spacePk: string,
   pollPk: string,
