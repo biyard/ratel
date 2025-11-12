@@ -43,6 +43,7 @@ export class Space {
   public participantProfileUrl: string | null;
   public participantUsername: string | null;
   public requirements: SpaceRequirement[];
+  public blockParticipate: boolean;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
@@ -81,6 +82,7 @@ export class Space {
           .map((e) => new SpaceRequirement(e))
           .sort((a, b) => a.order - b.order)
       : [];
+    this.blockParticipate = json.block_participate || false;
   }
 
   shouldParticipateManually() {

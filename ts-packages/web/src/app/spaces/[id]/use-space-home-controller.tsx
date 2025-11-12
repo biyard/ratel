@@ -296,6 +296,7 @@ export class SpaceHomeController {
     try {
       this.startSpace.mutateAsync({
         spacePk: this.space.pk,
+        block: true,
       });
 
       showSuccessToast(this.t('success_start_space'));
