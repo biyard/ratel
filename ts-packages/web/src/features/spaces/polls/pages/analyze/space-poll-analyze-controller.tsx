@@ -147,9 +147,11 @@ export class SpacePollAnalyzeController {
         'Total Responses',
         ...Array.from({ length: maxRespCols }, (_, i) => `Answer ${i + 1}`),
       ];
+
       const rows: (string | number)[][] = [header];
 
-      Object.entries(groupMap).forEach(([groupName, arr]) => {
+      const groups = Object.entries(groupMap);
+      groups.forEach(([groupName, arr], gi) => {
         questions.forEach((q, i) => {
           const s = arr?.[i];
           const total = s?.total_count ?? 0;
@@ -160,14 +162,23 @@ export class SpacePollAnalyzeController {
           ];
           rows.push([groupName, i + 1, q.title, total, ...padded]);
         });
+
+        if (gi < groups.length - 1) {
+          rows.push(new Array(4 + maxRespCols).fill(''));
+        }
       });
 
       const ws = XLSX.utils.aoa_to_sheet(rows);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (ws as any)['!cols'] = autoCols(
-        rows as unknown as (string | number)[],
-        header,
-      );
+      ws['!cols'] = header.map((h, idx) => {
+        const maxLen = rows.reduce(
+          (m, r) => Math.max(m, String(r[idx] ?? '').length),
+          h.length,
+        );
+        const base =
+          idx === 0 ? 10 : idx === 1 ? 6 : idx === 2 ? 40 : idx === 3 ? 16 : 24;
+        return { wch: Math.max(base, Math.min(maxLen + 2, 80)) };
+      });
+
       return ws;
     };
 

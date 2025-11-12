@@ -23,6 +23,12 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
         totalResponses={ctrl.poll.user_response_count}
         questions={ctrl.poll.questions}
         summaries={ctrl.summary.summaries}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        summariesByGender={ctrl.summary.summaries_by_gender as any}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        summariesByAge={ctrl.summary.summaries_by_age as any}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        summariesBySchool={ctrl.summary.summaries_by_school as any}
         handleDownloadExcel={ctrl.handleDownloadExcel}
       />
 
