@@ -32,9 +32,9 @@ pub async fn update_panel_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
-        return Err(Error::NoPermission);
-    }
+    permissions
+        .permitted(TeamGroupPermission::SpaceEdit)
+        .require()?;
 
     let panel = SpacePanels::get(
         &dynamo.client,
