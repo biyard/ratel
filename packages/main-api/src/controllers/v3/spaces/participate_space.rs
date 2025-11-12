@@ -43,16 +43,14 @@ pub async fn participate_space_handler(
             SpaceInvitationMember::get(&dynamo.client, pk.clone(), Some(sk.clone())).await?;
 
         tracing::debug!("display_name generated: {:?}", member);
-
-        if member.is_none() {
+        let Some(member) = member else {
             return Err(Error::NoPermission);
-        } else if let Some(member) = member {
-            match member.status {
-                InvitationStatus::Invited => {}
-                InvitationStatus::Pending => return Err(Error::NoPermission),
-                InvitationStatus::Accepted | InvitationStatus::Declined => {
-                    return Err(Error::AlreadyParticipating);
-                }
+        };
+        match member.status {
+            InvitationStatus::Invited => {}
+            InvitationStatus::Pending => return Err(Error::NoPermission),
+            InvitationStatus::Accepted | InvitationStatus::Declined => {
+                return Err(Error::AlreadyParticipating);
             }
         }
     }
