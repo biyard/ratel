@@ -9,7 +9,6 @@ import {
   SurveyAnswerType,
   SurveySummary,
 } from '../../types/poll-question';
-import { logger } from '@/lib/logger';
 import * as XLSX from 'xlsx';
 import { route } from '@/route';
 import { NavigateFunction, useNavigate } from 'react-router';
@@ -56,66 +55,139 @@ export class SpacePollAnalyzeController {
 
   handleDownloadExcel = () => {
     const questions = this.poll.questions;
-    const summaries = this.summary.summaries;
-    logger.debug(
-      'Download Excel clicked with summaries: ',
-      questions,
+    const {
       summaries,
-    );
+      summaries_by_gender,
+      summaries_by_age,
+      summaries_by_school,
+    } = this.summary;
 
-    const perQuestionResponses: string[][] = [];
-    let maxRespCols = 0;
-
-    questions.forEach((q, i) => {
-      const s = summaries[i];
+    const entriesToParts = (q: PollQuestion, s?: SurveySummary) => {
       const entries = this.normalizeAnswerEntries(s);
-
       entries.sort(([a], [b]) => {
         const ia = Number(a);
         const ib = Number(b);
-        return Number.isFinite(ia) && Number.isFinite(ib) ? ia - ib : 0;
+        return Number.isFinite(ia) && Number.isFinite(ib)
+          ? ia - ib
+          : a > b
+            ? 1
+            : -1;
       });
-
-      const parts = entries.map(([key, cnt]) => {
+      return entries.map(([key, cnt]) => {
         const label = this.isSubjective(q.answer_type)
           ? key
           : this.keyToLabel(q, key);
         return `${label} (${cnt})`;
       });
+    };
 
-      perQuestionResponses.push(parts);
-      maxRespCols = Math.max(maxRespCols, parts.length);
-    });
+    const autoCols = (rows: (string | number)[], header: string[]) =>
+      header.map((h, idx) => {
+        const maxLen = (rows as unknown as (string | number)[][]).reduce(
+          (m, r) => Math.max(m, String(r[idx] ?? '').length),
+          h.length,
+        );
+        const base =
+          idx === 0 ? 10 : idx === 1 ? 6 : idx === 2 ? 40 : idx === 3 ? 16 : 24;
+        return { wch: Math.max(base, Math.min(maxLen + 2, 80)) };
+      });
 
-    const header = [
-      'Index',
-      'Question',
-      'Total Responses',
-      ...Array.from({ length: maxRespCols }, (_, i) => `Answer ${i + 1}`),
-    ];
+    const buildOverviewSheet = () => {
+      const perQParts: string[][] = [];
+      let maxRespCols = 0;
+      questions.forEach((q, i) => {
+        const parts = entriesToParts(q, summaries[i]);
+        perQParts.push(parts);
+        maxRespCols = Math.max(maxRespCols, parts.length);
+      });
 
-    const rows: (string | number)[][] = [header];
-    questions.forEach((q, i) => {
-      const total = summaries[i]?.total_count ?? 0;
-      const parts = perQuestionResponses[i] ?? [];
-      const padded = [...parts, ...Array(maxRespCols - parts.length).fill('')];
-      rows.push([i + 1, q.title, total, ...padded]);
-    });
+      const header = [
+        'Index',
+        'Question',
+        'Total Responses',
+        ...Array.from({ length: maxRespCols }, (_, i) => `Answer ${i + 1}`),
+      ];
+      const rows: (string | number)[][] = [header];
 
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    const colInfos: XLSX.ColInfo[] = header.map((h, idx) => {
-      const maxLen = rows.reduce(
-        (m, r) => Math.max(m, String(r[idx] ?? '').length),
-        h.length,
+      questions.forEach((q, i) => {
+        const total = summaries[i]?.total_count ?? 0;
+        const parts = perQParts[i] ?? [];
+        const padded = [
+          ...parts,
+          ...Array(maxRespCols - parts.length).fill(''),
+        ];
+        rows.push([i + 1, q.title, total, ...padded]);
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (ws as any)['!cols'] = autoCols(
+        rows as unknown as (string | number)[],
+        header,
       );
-      const base = idx === 0 ? 6 : idx === 1 ? 40 : idx === 2 ? 16 : 24;
-      return { wch: Math.max(base, Math.min(maxLen + 2, 60)) };
-    });
-    ws['!cols'] = colInfos;
+      return ws;
+    };
+
+    type GroupMap = Record<string, SurveySummary[]>;
+    const buildGroupedSheet = (sheetTitle: string, groupMap?: GroupMap) => {
+      if (!groupMap || Object.keys(groupMap).length === 0) return null;
+
+      let maxRespCols = 0;
+      Object.values(groupMap).forEach((arr) => {
+        questions.forEach((q, i) => {
+          const parts = entriesToParts(q, arr?.[i]);
+          maxRespCols = Math.max(maxRespCols, parts.length);
+        });
+      });
+
+      const header = [
+        'Group',
+        'Index',
+        'Question',
+        'Total Responses',
+        ...Array.from({ length: maxRespCols }, (_, i) => `Answer ${i + 1}`),
+      ];
+      const rows: (string | number)[][] = [header];
+
+      Object.entries(groupMap).forEach(([groupName, arr]) => {
+        questions.forEach((q, i) => {
+          const s = arr?.[i];
+          const total = s?.total_count ?? 0;
+          const parts = entriesToParts(q, s);
+          const padded = [
+            ...parts,
+            ...Array(maxRespCols - parts.length).fill(''),
+          ];
+          rows.push([groupName, i + 1, q.title, total, ...padded]);
+        });
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (ws as any)['!cols'] = autoCols(
+        rows as unknown as (string | number)[],
+        header,
+      );
+      return ws;
+    };
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Overview');
-    XLSX.writeFile(wb, `${this.pollPk}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, buildOverviewSheet(), 'Overview');
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const wsGender = buildGroupedSheet('Gender', summaries_by_gender as any);
+    if (wsGender) XLSX.utils.book_append_sheet(wb, wsGender, 'Gender');
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const wsAge = buildGroupedSheet('Age', summaries_by_age as any);
+    if (wsAge) XLSX.utils.book_append_sheet(wb, wsAge, 'Age');
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const wsSchool = buildGroupedSheet('School', summaries_by_school as any);
+    if (wsSchool) XLSX.utils.book_append_sheet(wb, wsSchool, 'School');
+
+    const filename = `${this.pollPk}.xlsx`;
+    XLSX.writeFile(wb, filename);
   };
 }
 
