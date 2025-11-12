@@ -1,23 +1,18 @@
-use crate::TeamGroupPermission;
-use crate::aide::NoApi;
-use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
+use crate::features::spaces::panels::ListPanelQueryParams;
+use crate::features::spaces::panels::ListParticipantResponse;
 use crate::features::spaces::panels::SpacePanelParticipant;
 use crate::features::spaces::panels::SpacePanelParticipantQueryOption;
 use crate::features::spaces::panels::SpacePanelParticipantResponse;
-use crate::features::spaces::panels::{ListPanelQueryParams, ListParticipantResponse};
-use crate::models::User;
-use crate::spaces::SpacePanelPath;
-use crate::spaces::SpacePanelPathParam;
-use crate::types::{Partition, Permissions};
-use crate::{AppState, Error};
-use bdk::prelude::axum::extract::{Json, Path, Query, State};
+use crate::spaces::SpacePath;
+use crate::spaces::SpacePathParam;
+use crate::*;
 
 pub async fn list_participants_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Query(ListPanelQueryParams { bookmark }): Query<ListPanelQueryParams>,
-) -> Result<Json<ListParticipantResponse>, Error> {
+) -> Result<Json<ListParticipantResponse>> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
     }

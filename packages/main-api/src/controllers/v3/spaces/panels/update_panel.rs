@@ -1,18 +1,9 @@
-use crate::EntityType;
-use crate::aide::NoApi;
-use crate::controllers::v3::spaces::SpacePanelPath;
-use crate::controllers::v3::spaces::SpacePanelPathParam;
-use crate::controllers::v3::spaces::SpacePath;
-use crate::controllers::v3::spaces::SpacePathParam;
 use crate::features::spaces::panels::PanelAttribute;
-use crate::features::spaces::panels::SpacePanelRequest;
 use crate::features::spaces::panels::SpacePanels;
 use crate::features::spaces::panels::SpacePanelsResponse;
-use crate::types::Partition;
-use crate::types::TeamGroupPermission;
-use crate::{AppState, Error, Permissions};
-use bdk::prelude::axum::extract::{Json, Path, State};
-use bdk::prelude::*;
+use crate::spaces::SpacePath;
+use crate::spaces::SpacePathParam;
+use crate::*;
 
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema,
@@ -27,7 +18,7 @@ pub async fn update_panel_handler(
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<UpdatePanelRequest>,
-) -> Result<Json<SpacePanelsResponse>, Error> {
+) -> Result<Json<SpacePanelsResponse>> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
     }

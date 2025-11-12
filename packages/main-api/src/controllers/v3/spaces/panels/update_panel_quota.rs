@@ -1,19 +1,8 @@
-use crate::EntityType;
-use crate::aide::NoApi;
-use crate::controllers::v3::spaces::SpacePath;
-use crate::controllers::v3::spaces::SpacePathParam;
 use crate::features::spaces::panels::PanelAttribute;
 use crate::features::spaces::panels::SpacePanelQuota;
-use crate::features::spaces::panels::SpacePanelRequest;
-use crate::features::spaces::panels::SpacePanelsResponse;
-use crate::transact_write_items;
-use crate::types::Attribute;
-use crate::types::CompositePartition;
-use crate::types::Partition;
-use crate::types::TeamGroupPermission;
-use crate::{AppState, Error, Permissions};
-use bdk::prelude::axum::extract::{Json, Path, State};
-use bdk::prelude::*;
+use crate::spaces::SpacePath;
+use crate::spaces::SpacePathParam;
+use crate::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, aide::OperationIo, JsonSchema)]
 pub struct UpdatePanelQuotaRequest {
@@ -36,7 +25,7 @@ pub async fn update_panel_quota_handler(
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<UpdatePanelQuotaRequest>,
-) -> Result<Json<UpdatePanelQuotaResponse>, Error> {
+) -> Result<Json<UpdatePanelQuotaResponse>> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
     }
