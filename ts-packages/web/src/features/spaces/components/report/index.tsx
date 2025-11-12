@@ -18,6 +18,7 @@ export interface ReportProps {
   startedAt: number;
   endedAt: number;
   totalResponses: number;
+  editable: boolean;
   questions: PollQuestion[];
   summaries: SurveySummary[];
   summariesByGender?: Record<string, SurveySummary[]>;
@@ -30,6 +31,7 @@ export default function Report({
   startedAt,
   endedAt,
   totalResponses,
+  editable,
   questions,
   summaries,
   summariesByGender,
@@ -61,11 +63,13 @@ export default function Report({
 
   return (
     <div className="flex flex-col w-full">
-      <div className="flex justify-end mb-5">
-        <Button variant="rounded_primary" onClick={handleDownloadExcel}>
-          {t('download_excel_button_label')}
-        </Button>
-      </div>
+      {!editable && (
+        <div className="flex justify-end mb-5">
+          <Button variant="rounded_primary" onClick={handleDownloadExcel}>
+            {t('download_excel_button_label')}
+          </Button>
+        </div>
+      )}
 
       {totalResponses > 0 && (
         <SummaryReport
