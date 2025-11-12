@@ -76,10 +76,11 @@ export class Space {
     this.participantDisplayName = json.participant_display_name || null;
     this.participantProfileUrl = json.participant_profile_url || null;
     this.participantUsername = json.participant_username || null;
-    this.requirements =
-      json.requirements
-        .map((e) => new SpaceRequirement(e))
-        .sort((a, b) => a.order - b.order) || [];
+    this.requirements = json.requirements
+      ? json.requirements
+          .map((e) => new SpaceRequirement(e))
+          .sort((a, b) => a.order - b.order)
+      : [];
   }
 
   shouldParticipateManually() {
