@@ -54,151 +54,179 @@ export class SpacePollAnalyzeController {
   };
 
   handleDownloadExcel = () => {
-    const questions = this.poll.questions;
-    const {
-      summaries,
-      summaries_by_gender,
-      summaries_by_age,
-      summaries_by_school,
-    } = this.summary;
+    const questions = this.poll?.questions ?? [];
+    const qCount = questions.length;
 
-    const entriesToParts = (q: PollQuestion, s?: SurveySummary) => {
-      const entries = this.normalizeAnswerEntries(s);
-      entries.sort(([a], [b]) => {
-        const ia = Number(a);
-        const ib = Number(b);
-        return Number.isFinite(ia) && Number.isFinite(ib)
-          ? ia - ib
-          : a > b
-            ? 1
-            : -1;
-      });
-      return entries.map(([key, cnt]) => {
-        const label = this.isSubjective(q.answer_type)
-          ? key
-          : this.keyToLabel(q, key);
-        return `${label} (${cnt})`;
-      });
+    const userKeyFromPk = (pk: string | undefined) => {
+      if (!pk) return '';
+      const i = pk.indexOf('#USER#');
+      return i >= 0 ? pk.slice(i + '#USER#'.length) : pk;
     };
 
-    const autoCols = (rows: (string | number)[], header: string[]) =>
-      header.map((h, idx) => {
-        const maxLen = (rows as unknown as (string | number)[][]).reduce(
-          (m, r) => Math.max(m, String(r[idx] ?? '').length),
-          h.length,
-        );
-        const base =
-          idx === 0 ? 10 : idx === 1 ? 6 : idx === 2 ? 40 : idx === 3 ? 16 : 24;
-        return { wch: Math.max(base, Math.min(maxLen + 2, 80)) };
-      });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const toAnswerDisplay = (q: PollQuestion, ans: any): string => {
+      const t = String(q.answer_type);
+      if (t === 'single_choice') {
+        const idx =
+          typeof ans?.answer === 'number' ? ans.answer : Number(ans?.answer);
+        if (Number.isFinite(idx)) return this.keyToLabel(q, String(idx));
+        return typeof ans?.answer !== 'undefined' ? String(ans.answer) : '';
+      }
+      if (t === 'multiple_choice') {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const arr: any[] = Array.isArray(ans?.answer)
+          ? ans.answer
+          : Array.isArray(ans)
+            ? ans
+            : [];
+        return arr
+          .map((v) =>
+            this.keyToLabel(q, String(typeof v === 'number' ? v : Number(v))),
+          )
+          .join(', ');
+      }
+      if (t === 'linear_scale')
+        return typeof ans?.answer !== 'undefined' ? String(ans.answer) : '';
+      return typeof ans?.answer !== 'undefined' ? String(ans.answer) : '';
+    };
 
-    const buildOverviewSheet = () => {
-      const perQParts: string[][] = [];
-      let maxRespCols = 0;
-      questions.forEach((q, i) => {
-        const parts = entriesToParts(q, summaries[i]);
-        perQParts.push(parts);
-        maxRespCols = Math.max(maxRespCols, parts.length);
-      });
+    const getGenderDisp = (g?: string) =>
+      !g
+        ? ''
+        : g.toLowerCase() === 'male'
+          ? 'Male'
+          : g.toLowerCase() === 'female'
+            ? 'Female'
+            : g;
 
-      const header = [
-        'Index',
-        'Question',
-        'Total Responses',
-        ...Array.from({ length: maxRespCols }, (_, i) => `Answer ${i + 1}`),
-      ];
-      const rows: (string | number)[][] = [header];
-
-      questions.forEach((q, i) => {
-        const total = summaries[i]?.total_count ?? 0;
-        const parts = perQParts[i] ?? [];
-        const padded = [
-          ...parts,
-          ...Array(maxRespCols - parts.length).fill(''),
-        ];
-        rows.push([i + 1, q.title, total, ...padded]);
-      });
-
-      const ws = XLSX.utils.aoa_to_sheet(rows);
+    const { sample_answers = [], final_answers = [] } = (this.summary ||
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (ws as any)['!cols'] = autoCols(
-        rows as unknown as (string | number)[],
-        header,
-      );
-      return ws;
-    };
+      {}) as any;
 
-    type GroupMap = Record<string, SurveySummary[]>;
-    const buildGroupedSheet = (sheetTitle: string, groupMap?: GroupMap) => {
-      if (!groupMap || Object.keys(groupMap).length === 0) return null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const finalByUser = new Map<string, any>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const f of final_answers as any[])
+      finalByUser.set(userKeyFromPk(f?.pk), f);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sampleByUser = new Map<string, any>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const s of sample_answers as any[])
+      sampleByUser.set(userKeyFromPk(s?.pk), s);
 
-      let maxRespCols = 0;
-      Object.values(groupMap).forEach((arr) => {
-        questions.forEach((q, i) => {
-          const parts = entriesToParts(q, arr?.[i]);
-          maxRespCols = Math.max(maxRespCols, parts.length);
-        });
+    const userOrder: string[] = [];
+    for (const k of finalByUser.keys()) userOrder.push(k);
+    for (const k of sampleByUser.keys())
+      if (!finalByUser.has(k)) userOrder.push(k);
+
+    const header1 = new Array(5 + qCount).fill('');
+    header1[0] = 'ID';
+    header1[1] = '속성';
+    header1[3] = '조사구분';
+    header1[4] = '유형';
+    if (qCount > 0) header1[5] = '질문지';
+
+    const header2 = new Array(5 + qCount).fill('');
+    header2[1] = '성별';
+    header2[2] = '학교';
+
+    const rows: (string | number)[][] = [header1, header2];
+
+    const merges: XLSX.Range[] = [
+      { s: { r: 0, c: 1 }, e: { r: 0, c: 2 } },
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } },
+      { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } },
+    ];
+
+    if (qCount > 0) {
+      merges.push({
+        s: { r: 0, c: 5 },
+        e: { r: 1, c: 5 + qCount - 1 },
       });
+    }
 
-      const header = [
-        'Group',
-        'Index',
-        'Question',
-        'Total Responses',
-        ...Array.from({ length: maxRespCols }, (_, i) => `Answer ${i + 1}`),
-      ];
+    const pushBlock = (
+      roundLabel: '사전조사' | '사후조사',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      meta: any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      answers: any[],
+    ) => {
+      const r1 = new Array(5 + qCount).fill('');
+      r1[3] = roundLabel;
+      r1[4] = '질문';
+      for (let i = 0; i < qCount; i++)
+        r1[5 + i] = this.poll?.questions?.[i]?.title ?? `Q${i + 1}`;
 
-      const rows: (string | number)[][] = [header];
-
-      const groups = Object.entries(groupMap);
-      groups.forEach(([groupName, arr], gi) => {
-        questions.forEach((q, i) => {
-          const s = arr?.[i];
-          const total = s?.total_count ?? 0;
-          const parts = entriesToParts(q, s);
-          const padded = [
-            ...parts,
-            ...Array(maxRespCols - parts.length).fill(''),
-          ];
-          rows.push([groupName, i + 1, q.title, total, ...padded]);
-        });
-
-        if (gi < groups.length - 1) {
-          rows.push(new Array(4 + maxRespCols).fill(''));
-        }
-      });
-
-      const ws = XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols'] = header.map((h, idx) => {
-        const maxLen = rows.reduce(
-          (m, r) => Math.max(m, String(r[idx] ?? '').length),
-          h.length,
+      const r2 = new Array(5 + qCount).fill('');
+      r2[3] = roundLabel;
+      r2[4] = '답변';
+      for (let i = 0; i < qCount; i++) {
+        const ans = answers?.[i];
+        r2[5 + i] = toAnswerDisplay(
+          this.poll?.questions?.[i] as PollQuestion,
+          ans,
         );
-        const base =
-          idx === 0 ? 10 : idx === 1 ? 6 : idx === 2 ? 40 : idx === 3 ? 16 : 24;
-        return { wch: Math.max(base, Math.min(maxLen + 2, 80)) };
-      });
+      }
 
-      return ws;
+      const start = rows.length;
+      rows.push(r1, r2);
+      merges.push({ s: { r: start, c: 3 }, e: { r: start + 1, c: 3 } });
+      return { start, end: start + 1 };
     };
+
+    for (const userKey of userOrder) {
+      const f = finalByUser.get(userKey);
+      const s = sampleByUser.get(userKey);
+      const meta = f || s;
+      if (!meta) continue;
+
+      const name = meta.display_name || meta.username || userKey;
+      const gender = getGenderDisp(meta?.respondent?.gender);
+      const school = meta?.respondent?.school || '';
+
+      const startIdx = rows.length;
+      if (s) pushBlock('사전조사', meta, s.answers || []);
+      if (f) pushBlock('사후조사', meta, f.answers || []);
+      const endIdx = rows.length - 1;
+
+      merges.push({ s: { r: startIdx, c: 0 }, e: { r: endIdx, c: 0 } });
+      merges.push({ s: { r: startIdx, c: 1 }, e: { r: endIdx, c: 1 } });
+      merges.push({ s: { r: startIdx, c: 2 }, e: { r: endIdx, c: 2 } });
+
+      rows[startIdx][0] = name;
+      rows[startIdx][1] = gender;
+      rows[startIdx][2] = school;
+    }
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ws as any)['!merges'] = merges;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ws as any)['!cols'] = Array.from({ length: 5 + qCount }, (_, idx) => {
+      const base =
+        idx === 0
+          ? 18
+          : idx === 1
+            ? 10
+            : idx === 2
+              ? 16
+              : idx === 3
+                ? 12
+                : idx === 4
+                  ? 10
+                  : 14;
+      let maxLen = 0;
+      for (const r of rows)
+        maxLen = Math.max(maxLen, String(r[idx] ?? '').length);
+      return { wch: Math.max(base, Math.min(maxLen + 2, 60)) };
+    });
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, buildOverviewSheet(), 'Overview');
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const wsGender = buildGroupedSheet('Gender', summaries_by_gender as any);
-    if (wsGender) XLSX.utils.book_append_sheet(wb, wsGender, 'Gender');
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const wsAge = buildGroupedSheet('Age', summaries_by_age as any);
-    if (wsAge) XLSX.utils.book_append_sheet(wb, wsAge, 'Age');
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const wsSchool = buildGroupedSheet('School', summaries_by_school as any);
-    if (wsSchool) XLSX.utils.book_append_sheet(wb, wsSchool, 'School');
-
-    const filename = `${this.pollPk}.xlsx`;
-    XLSX.writeFile(wb, filename);
+    XLSX.utils.book_append_sheet(wb, ws, 'Responses');
+    XLSX.writeFile(wb, `${this.pollPk}.xlsx`);
   };
 }
 

@@ -6,6 +6,7 @@ import {
 import { call } from './call';
 import { TimeRange } from '@/types/time-range';
 import { SpaceCommon } from '@/features/spaces/types/space-common';
+import { PollUserAnswer } from '@/features/spaces/polls/types/poll-user-answer';
 
 export function getPollSpace(spacePk: string): Promise<PollSpaceResponse> {
   return call('GET', `/v3/spaces/${encodeURIComponent(spacePk)}/polls`);
@@ -36,6 +37,9 @@ export interface PollSurveySummariesResponse {
   summaries_by_gender: SurveySummary[];
   summaries_by_age: SurveySummary[];
   summaries_by_school: SurveySummary[];
+
+  sample_answers: PollUserAnswer[];
+  final_answers: PollUserAnswer[];
 }
 
 export function getPollSurveySummaries(
