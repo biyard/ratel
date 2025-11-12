@@ -61,10 +61,6 @@ impl Permissions {
         Self(0)
     }
 
-    pub fn permitted(&self, perm: TeamGroupPermission) -> PermCheck<'_> {
-        PermCheck { perms: self, perm }
-    }
-
     pub fn contains(&self, permission: TeamGroupPermission) -> bool {
         (self.0 & (1 << permission as i32)) != 0
     }
