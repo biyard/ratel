@@ -42,6 +42,7 @@ pub struct GetSpaceResponse {
     pub files: Option<Vec<File>>,
 
     pub anonymous_participation: bool,
+    pub change_visibility: bool,
     pub participated: bool,
     pub participant_display_name: Option<String>,
     pub participant_profile_url: Option<String>,
@@ -158,6 +159,7 @@ impl
             files: space.files,
             verified,
             anonymous_participation: space.anonymous_participation,
+            change_visibility: space.change_visibility,
             participated,
             participant_display_name,
             participant_profile_url,

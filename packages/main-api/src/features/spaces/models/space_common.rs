@@ -102,6 +102,8 @@ pub struct SpaceCommon {
     #[serde(default)]
     pub anonymous_participation: bool,
     #[serde(default)]
+    pub change_visibility: bool,
+    #[serde(default)]
     // participants is the number of participants. It is incremented when a user participates in the space.
     // It is only used for spaces enabling explicit participation such as anonymous participation.
     pub participants: i64,
