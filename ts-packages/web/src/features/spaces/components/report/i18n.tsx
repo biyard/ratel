@@ -1,4 +1,8 @@
 const en = {
+  overall: 'Total',
+  gender: 'Gender',
+  age: 'Age',
+  school: 'University',
   download_excel_button_label: 'Download Excel',
   total_response_count_unit: 'responses',
   total_participants_label: 'Participant',
@@ -7,6 +11,10 @@ const en = {
 };
 
 const ko = {
+  overall: '전체',
+  gender: '성별',
+  age: '나이',
+  school: '대학교',
   download_excel_button_label: '엑셀 다운로드',
   total_response_count_unit: '명 응답',
   total_participants_label: '참여자',

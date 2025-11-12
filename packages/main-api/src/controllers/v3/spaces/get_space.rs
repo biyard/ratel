@@ -46,6 +46,7 @@ pub struct GetSpaceResponse {
     pub anonymous_participation: bool,
 
     pub can_participate: bool,
+    pub change_visibility: bool,
     pub participated: bool,
     pub participant_display_name: Option<String>,
     pub participant_profile_url: Option<String>,
@@ -179,6 +180,7 @@ impl
             files: space.files,
             anonymous_participation: space.anonymous_participation,
             can_participate: false,
+            change_visibility: space.change_visibility,
             participated,
             participant_display_name,
             participant_profile_url,

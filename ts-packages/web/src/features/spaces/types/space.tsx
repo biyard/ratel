@@ -38,6 +38,7 @@ export class Space {
   public files: FileModel[] | undefined;
   public anonymous_participation: boolean;
   public canParticipate: boolean;
+  public change_visibility: boolean;
   public participated: boolean;
   public participantDisplayName: string | null;
   public participantProfileUrl: string | null;
@@ -73,6 +74,7 @@ export class Space {
     this.files = json.files;
     this.anonymous_participation = json.anonymous_participation;
     this.canParticipate = json.can_participate;
+    this.change_visibility = json.change_visibility;
     this.participated = json.participated;
     this.participantDisplayName = json.participant_display_name || null;
     this.participantProfileUrl = json.participant_profile_url || null;
@@ -102,7 +104,9 @@ export class Space {
   }
 
   get isPublic() {
-    return this.visibility.type === 'Public';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const visibility = this.visibility as any;
+    return visibility === 'PUBLIC';
   }
 
   get isStarted() {
