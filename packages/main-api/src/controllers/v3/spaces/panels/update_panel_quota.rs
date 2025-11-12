@@ -33,13 +33,15 @@ pub async fn update_panel_quota_handler(
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
     let pk = CompositePartition(space_pk, Partition::PanelAttribute);
-    let sk = EntityType::SpacePanelAttribute(req.attribute.to_string(), req.value.to_string());
+    let sk = EntityType::SpacePanelAttribute(req.attribute.to_key(), req.value.to_string());
 
     let panel = SpacePanelQuota::get(&dynamo.client, pk.clone(), Some(sk.clone())).await?;
 
     if panel.is_none() {
         return Err(Error::NotFoundPanel);
     }
+
+    // TODO: update verifiable attribute on space panels.
 
     let panel = panel.unwrap_or_default();
     let remains = panel.remains + (req.quotas - panel.quotas);

@@ -1,6 +1,9 @@
 export type PanelAttribute =
   | { type: 'none' }
-  | { type: 'collective_attribute'; value: 'none' | 'university' }
+  | {
+      type: 'collective_attribute';
+      value: 'none' | 'university' | 'age' | 'gender';
+    }
   | { type: 'verifiable_attribute'; value: 'none' | 'age' | 'gender' };
 
 export type Attribute =

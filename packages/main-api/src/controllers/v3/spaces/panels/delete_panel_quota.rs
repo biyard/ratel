@@ -10,6 +10,7 @@ pub struct DeletePanelQuotaRequest {
     pub value: Attribute,
 }
 
+// FIXME: request with quota pk or id
 pub async fn delete_panel_quota_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
@@ -23,7 +24,7 @@ pub async fn delete_panel_quota_handler(
     permissions.permitted(TeamGroupPermission::SpaceDelete)?;
 
     let pk = CompositePartition(space_pk.clone(), Partition::PanelAttribute);
-    let sk = EntityType::SpacePanelAttribute(req.attribute.to_string(), req.value.to_string());
+    let sk = EntityType::SpacePanelAttribute(req.attribute.to_key(), req.value.to_string());
 
     let panel = SpacePanelQuota::get(&dynamo.client, pk.clone(), Some(sk.clone())).await?;
 

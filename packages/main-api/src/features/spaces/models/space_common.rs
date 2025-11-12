@@ -1,6 +1,7 @@
 use ssi::claims::ResourceProvider;
 
 use crate::features::spaces::members::{InvitationStatus, SpaceInvitationMember};
+use crate::features::spaces::panels::SpacePanels;
 use crate::*;
 use crate::{
     Error,
@@ -148,6 +149,24 @@ impl SpaceCommon {
         self.publish_state == SpacePublishState::Draft
             || (self.publish_state == SpacePublishState::Published
                 && (self.status == Some(SpaceStatus::Waiting) || self.status.is_none()))
+    }
+
+    pub async fn check_if_satisfying_panel_attribute(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        user: &User,
+    ) -> Result<()> {
+        let space_panels =
+            SpacePanels::get(cli, self.pk.to_string(), Some(EntityType::SpacePanels))
+                .await?
+                .unwrap_or_default();
+        let user_attributes = user.get_attributes(cli).await?;
+
+        if space_panels == user_attributes {
+            return Ok(());
+        }
+
+        Err(Error::LackOfVerifiedAttributes)
     }
 }
 

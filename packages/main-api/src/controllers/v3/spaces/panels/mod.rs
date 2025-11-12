@@ -14,10 +14,7 @@ pub use update_panel_quota::*;
 #[cfg(test)]
 pub mod tests;
 
-use crate::AppState;
-use bdk::prelude::*;
-use by_axum::aide::axum::routing::*;
-use by_axum::axum::*;
+use crate::*;
 
 pub fn route() -> Router<AppState> {
     Router::new()

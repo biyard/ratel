@@ -1,7 +1,4 @@
-use crate::{
-    features::spaces::panels::{PanelAttribute, VerifiableAttribute},
-    types::*,
-};
+use crate::{features::spaces::panels::PanelAttribute, types::*};
 use bdk::prelude::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema, Default)]

@@ -43,7 +43,7 @@ pub async fn create_panel_quota_handler(
 
         let panel = SpacePanelQuota::new(
             space_pk.clone(),
-            attribute.to_string(),
+            attribute.to_key(),
             value.to_string(),
             quota,
             attribute.clone(),
