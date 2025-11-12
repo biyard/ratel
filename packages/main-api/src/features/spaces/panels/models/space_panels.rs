@@ -58,8 +58,8 @@ impl PartialEq<VerifiedAttributes> for SpacePanels {
                     inclusive_max,
                     inclusive_min,
                 })) => {
-                    let age = other.age().unwrap_or_default();
-                    if age < inclusive_min || age > inclusive_max {
+                    let age = other.age().unwrap_or_default() as u8;
+                    if age < *inclusive_min || age > *inclusive_max {
                         return false;
                     }
                 }
