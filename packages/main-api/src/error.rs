@@ -139,11 +139,15 @@ pub enum Error {
     SpaceNotEditable,
     #[error("PK must be a Partition::Space")]
     InvalidSpacePartitionKey,
+    #[error("Space requirements are invalid")]
+    SpaceInvalidRequirements,
 
     // members feature 3050 ~
     #[rest_error(code = 3050)]
     #[error("Member not found")]
     NoInvitationFound,
+    #[error("User is already participating in the space")]
+    AlreadyParticipating,
 
     // /v3/spaces/deliberations endpoints 3100 ~
     #[rest_error(code = 3100)]

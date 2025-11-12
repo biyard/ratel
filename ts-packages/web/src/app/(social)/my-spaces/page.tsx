@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router';
 import { route } from '@/route';
 import Card from '@/components/card';
 import { MySpace } from '@/features/spaces/types/space-common';
+import { Row } from '@/components/ui/row';
 
 function SpaceCard({ space }: { space: MySpace }) {
   const navigate = useNavigate();
@@ -28,10 +29,10 @@ function SpaceCard({ space }: { space: MySpace }) {
   return (
     <Card
       onClick={handleClick}
-      className="cursor-pointer hover:bg-card-bg-hover transition-colors"
+      className="transition-colors cursor-pointer hover:bg-card-bg-hover"
     >
       <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3">
+        <div className="flex gap-3 items-center">
           {space.author_profile_url && (
             <img
               src={space.author_profile_url}
@@ -41,34 +42,35 @@ function SpaceCard({ space }: { space: MySpace }) {
           )}
           <div className="flex flex-col">
             <h3 className="text-base font-semibold text-text-primary">
-              {space.author_display_name}
+              {space.title}
             </h3>
-            <p className="text-sm text-text-secondary">
-              @{space.author_username}
-            </p>
+            <Row>
+              {space.author_profile_url && (
+                <img className="w-5" src={space.author_profile_url} />
+              )}
+              <p className="text-sm text-text-secondary">
+                {space.author_display_name}
+              </p>
+            </Row>
           </div>
         </div>
 
-        <div className="text-base font-medium text-text-primary">
-          {space.title}
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-text-secondary">
+        <div className="flex gap-2 items-center text-sm text-text-secondary">
           <span
             className={`px-2 py-1 rounded font-medium ${getInvitationStatusStyle(space.invitation_status)}`}
           >
             {getInvitationStatusLabel(space.invitation_status)}
           </span>
-          <span className="px-2 py-1 bg-background-secondary rounded">
+          <span className="py-1 px-2 rounded bg-background-secondary">
             {space.publish_state}
           </span>
           {space.status && (
-            <span className="px-2 py-1 bg-background-secondary rounded">
+            <span className="py-1 px-2 rounded bg-background-secondary">
               {space.status}
             </span>
           )}
           {space.visibility.type && (
-            <span className="px-2 py-1 bg-background-secondary rounded">
+            <span className="py-1 px-2 rounded bg-background-secondary">
               {space.visibility.type}
             </span>
           )}

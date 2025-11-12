@@ -32,9 +32,7 @@ pub async fn create_panel_quota_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    permissions
-        .permitted(TeamGroupPermission::SpaceEdit)
-        .require()?;
+    permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
     let mut tx = vec![];
 
