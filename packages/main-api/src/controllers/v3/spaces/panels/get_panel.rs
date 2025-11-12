@@ -1,23 +1,15 @@
-use crate::controllers::v3::spaces::SpacePanelPath;
-use crate::controllers::v3::spaces::SpacePanelPathParam;
-use crate::controllers::v3::spaces::SpacePath;
-use crate::controllers::v3::spaces::SpacePathParam;
 use crate::features::spaces::panels::SpacePanelQuota;
 use crate::features::spaces::panels::SpacePanels;
 use crate::features::spaces::panels::SpacePanelsResponse;
-use crate::types::CompositePartition;
-use crate::types::EntityType;
-use crate::types::Partition;
-use crate::{AppState, Error, models::user::User};
-use aide::NoApi;
-use bdk::prelude::axum::extract::{Json, Path, State};
-use bdk::prelude::*;
+use crate::spaces::SpacePath;
+use crate::spaces::SpacePathParam;
+use crate::*;
 
 pub async fn get_panel_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(_user): NoApi<Option<User>>,
     Path(SpacePathParam { space_pk }): SpacePath,
-) -> Result<Json<SpacePanelsResponse>, Error> {
+) -> Result<Json<SpacePanelsResponse>> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
     }

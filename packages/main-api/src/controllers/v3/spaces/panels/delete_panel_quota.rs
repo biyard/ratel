@@ -1,18 +1,8 @@
-use crate::Attribute;
-use crate::aide::NoApi;
-use crate::controllers::v3::spaces::SpacePanelPath;
-use crate::controllers::v3::spaces::SpacePanelPathParam;
-use crate::controllers::v3::spaces::SpacePath;
 use crate::features::spaces::panels::PanelAttribute;
 use crate::features::spaces::panels::SpacePanelQuota;
+use crate::spaces::SpacePath;
 use crate::spaces::SpacePathParam;
-use crate::types::CompositePartition;
-use crate::types::EntityType;
-use crate::types::Partition;
-use crate::types::TeamGroupPermission;
-use crate::{AppState, Error, Permissions};
-use bdk::prelude::axum::extract::{Json, Path, State};
-use bdk::prelude::*;
+use crate::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, aide::OperationIo, JsonSchema)]
 pub struct DeletePanelQuotaRequest {
@@ -25,7 +15,7 @@ pub async fn delete_panel_quota_handler(
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<DeletePanelQuotaRequest>,
-) -> Result<Json<Partition>, Error> {
+) -> Result<Json<Partition>> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
     }
