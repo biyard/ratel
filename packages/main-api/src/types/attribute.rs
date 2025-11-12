@@ -26,7 +26,7 @@ impl fmt::Display for Attribute {
 }
 
 #[derive(
-    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
+    Debug, Clone, Copy, Eq, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
 )]
 #[serde(rename_all = "snake_case", tag = "age_type", content = "value")]
 pub enum Age {

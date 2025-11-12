@@ -46,12 +46,24 @@ impl PartialEq<VerifiedAttributes> for SpacePanels {
                 }
                 PanelAttribute::CollectiveAttribute(CollectiveAttribute::None) => {}
 
-                PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(age)) => {
+                PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(Age::Specific(
+                    age,
+                ))) => {
                     let age = age.clone() as u32;
                     if other.age().unwrap_or_default() != age {
                         return false;
                     }
                 }
+                PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(Age::Range {
+                    inclusive_max,
+                    inclusive_min,
+                })) => {
+                    let age = other.age().unwrap_or_default();
+                    if age < inclusive_min || age > inclusive_max {
+                        return false;
+                    }
+                }
+
                 PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(_gender)) => {
                     let Some(gender) = other.gender else {
                         return false;
