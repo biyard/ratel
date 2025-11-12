@@ -41,9 +41,9 @@ pub async fn create_panel_quota_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
-        return Err(Error::NoPermission);
-    }
+    permissions
+        .permitted(TeamGroupPermission::SpaceEdit)
+        .require()?;
 
     let mut tx = vec![];
 
