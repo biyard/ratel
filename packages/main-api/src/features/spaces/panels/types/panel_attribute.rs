@@ -52,14 +52,32 @@ impl PanelAttribute {
 
     pub fn to_value(&self) -> Option<String> {
         match self {
-            PanelAttribute::None
-            | PanelAttribute::VerifiableAttribute(VerifiableAttribute::None) => None,
-
-            PanelAttribute::CollectiveAttribute(_) => None,
-            PanelAttribute::VerifiableAttribute(_v) => {
-                // TODO: implement it
-                todo!()
-            }
+            PanelAttribute::None | PanelAttribute::CollectiveAttribute(_) => None,
+            PanelAttribute::VerifiableAttribute(v) => match v {
+                VerifiableAttribute::Age(Age::Specific(age)) => {
+                    return Some(age.to_string());
+                }
+                VerifiableAttribute::Age(Age::Range {
+                    inclusive_min,
+                    inclusive_max,
+                }) => {
+                    return Some(format!("{}-{}", inclusive_min, inclusive_max));
+                }
+                VerifiableAttribute::Gender(g) => {
+                    return Some(g.to_string());
+                }
+                VerifiableAttribute::Generation(g) => {
+                    return Some(g.to_string());
+                }
+                VerifiableAttribute::IsAdult(is_adult) => {
+                    if *is_adult {
+                        return Some(format!("ADULT"));
+                    } else {
+                        return Some(format!("MINOR"));
+                    }
+                }
+                VerifiableAttribute::None => None,
+            },
         }
     }
 }
