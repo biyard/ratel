@@ -75,58 +75,8 @@ pub async fn respond_poll_handler(
     let mut respondent: Option<RespondentAttr> = None;
 
     if let Some(_p) = participant {
-        let res = VerifiedAttributes::get(
-            &dynamo.client,
-            CompositePartition(user.pk.clone(), Partition::Attributes),
-            None::<String>,
-        )
-        .await
-        .unwrap_or_default()
-        .unwrap_or(VerifiedAttributes::default());
-
-        let age = if res.age().is_none() {
-            None
-        } else {
-            match res.age().unwrap_or_default() {
-                0..=17 => Some(Age::Range {
-                    inclusive_max: 17,
-                    inclusive_min: 0,
-                }),
-                18..=29 => Some(Age::Range {
-                    inclusive_max: 29,
-                    inclusive_min: 18,
-                }),
-                30..=39 => Some(Age::Range {
-                    inclusive_max: 39,
-                    inclusive_min: 30,
-                }),
-                40..=49 => Some(Age::Range {
-                    inclusive_max: 49,
-                    inclusive_min: 40,
-                }),
-                50..=59 => Some(Age::Range {
-                    inclusive_max: 59,
-                    inclusive_min: 50,
-                }),
-                60..=69 => Some(Age::Range {
-                    inclusive_max: 69,
-                    inclusive_min: 60,
-                }),
-                _ => Some(Age::Range {
-                    inclusive_max: 100,
-                    inclusive_min: 70,
-                }),
-            }
-        };
-
-        let gender = res.gender;
-        let school = res.university;
-
-        respondent = Some(RespondentAttr {
-            age,
-            gender,
-            school,
-        });
+        let attribute = VerifiedAttributes::get_attributes(&dynamo, user.pk.clone()).await?;
+        respondent = attribute;
     }
 
     if user_response.is_none() {
