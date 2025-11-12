@@ -27,9 +27,7 @@ pub async fn list_polls_handler(
         return Err(Error::NotFoundPoll);
     }
 
-    permissions
-        .permitted(TeamGroupPermission::SpaceRead)
-        .require()?;
+    permissions.permitted(TeamGroupPermission::SpaceRead)?;
 
     let mut query_options = PollQueryOption::builder()
         .sk("SPACE_POLL#".into())

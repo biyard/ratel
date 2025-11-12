@@ -76,18 +76,22 @@ export class SpacePollViewerController {
     });
 
     if (this.poll.response_editable) {
-      try {
-        this.submitPollResponse.mutate({
+      this.submitPollResponse.mutate(
+        {
           spacePk: this.space.pk,
           pollSk: this.poll.sk,
           answers: payload,
-        });
-
-        showSuccessToast(this.t('success_submit_answer'));
-      } catch (err) {
-        logger.error('submit answer failed: ', err);
-        showErrorToast(this.t('failed_submit_answer'));
-      }
+        },
+        {
+          onSuccess: () => {
+            showSuccessToast(this.t('success_submit_answer'));
+          },
+          onError: (err) => {
+            logger.error('submit answer failed: ', err);
+            showErrorToast(this.t('failed_submit_answer'));
+          },
+        },
+      );
     } else {
       this.popup
         .open(

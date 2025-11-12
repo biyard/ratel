@@ -41,12 +41,6 @@ export function deleteSpace(spacePk: string): Promise<void> {
   return call('DELETE', `/v3/spaces/${encodeURIComponent(spacePk)}`);
 }
 
-export function startSpace(spacePk: string): Promise<void> {
-  return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
-    start: true,
-  });
-}
-
 export function updateSpaceVisibility(
   spacePk: string,
   visibility: SpaceVisibility,

@@ -57,11 +57,8 @@ pub async fn create_space_handler(
         post_updater.transact_write_item(),
     ];
 
-    if space.space_type == SpaceType::Poll {
-        let poll: Poll = space.pk.clone().try_into()?;
-
-        tx.push(poll.create_transact_write_item());
-    }
+    let type_specific_txs = space.space_type.create_hook(&space.pk)?;
+    tx.extend(type_specific_txs);
 
     if space.space_type == SpaceType::Deliberation {
         let panel = SpacePanels::new(space.pk.clone(), 0, vec![]);

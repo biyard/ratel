@@ -101,3 +101,11 @@ lambda = ["by-axum/lambda"]
 
 [build-dependencies]
 glob = "0.3.3"
+
+[profile.dev]
+opt-level = 0
+debug = 2
+debug-assertions = true
+lto = false
+incremental = true
+codegen-units = 256

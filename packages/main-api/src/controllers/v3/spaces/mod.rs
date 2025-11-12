@@ -13,14 +13,12 @@ pub mod recommendations;
 
 pub mod dto;
 
-pub mod check_prerequisites;
 pub mod get_space;
 #[cfg(test)]
 pub mod tests;
 
 pub mod artworks;
 pub mod participate_space;
-pub use check_prerequisites::*;
 pub use create_space::*;
 pub use delete_space::*;
 pub use dto::*;
@@ -50,7 +48,6 @@ pub fn route() -> Result<Router<AppState>> {
         .nest(
             "/:space_pk",
             Router::new()
-                .route("/prerequisites", get(check_prerequisites_handler))
                 .nest("/members", members::route())
                 .nest("/files", files::route())
                 .nest("/panels", panels::route())
