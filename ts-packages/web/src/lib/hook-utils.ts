@@ -39,7 +39,7 @@ export async function optimisticUpdate<T>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rollbackData: any = queryClient.getQueriesData<T>({ queryKey });
 
-  queryClient.setQueriesData<T>({ queryKey }, updater);
+  queryClient.setQueriesData<T>({ queryKey, exact: true }, updater);
 
   if (rollbackData) {
     rollbackData!.rollback = () => {

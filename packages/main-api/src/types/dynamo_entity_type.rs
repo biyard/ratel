@@ -1,4 +1,4 @@
-use bdk::prelude::*;
+use crate::*;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 use super::Partition;
@@ -62,6 +62,7 @@ pub enum EntityType {
     SpaceParticipant,
     SpaceInvitation,
     SpaceEmailVerification(String), //email
+    SpaceRequirement(String),       // use SpaceRequirementType
 
     // Poll Feature entity types
     SpacePoll(String), // SpacePoll#{uuid or space_id}
@@ -157,12 +158,10 @@ pub enum EntityType {
     UserPurchase(String),
 }
 
-use crate::Error;
-
 impl TryInto<Partition> for EntityType {
     type Error = Error;
 
-    fn try_into(self) -> Result<Partition, Self::Error> {
+    fn try_into(self) -> Result<Partition> {
         Ok(match self {
             EntityType::SpacePoll(v) => Partition::Poll(v),
             _ => Err(crate::Error::NotSupported(

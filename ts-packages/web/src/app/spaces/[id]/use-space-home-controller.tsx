@@ -62,6 +62,7 @@ export class SpaceHomeController {
       typeof useUpdateDraftImageMutation
     >['mutateAsync'],
     public participateSpace: ReturnType<typeof useParticipateSpaceMutation>,
+    public hiding: State<boolean>,
   ) {
     this.space = this.data.space.data;
     this.user = this.data.user.data;
@@ -455,7 +456,7 @@ export class SpaceHomeController {
       return false;
     }
 
-    return true;
+    return this.space.canParticipate;
   }
 
   get actions() {
@@ -548,6 +549,8 @@ export function useSpaceHomeController(spacePk: string) {
   const files = useState<FileModel[]>([]);
   const filesInitializedRef = useRef(false);
 
+  const hiding = useState(false);
+
   // Initialize image from space data
   useEffect(() => {
     if (
@@ -615,6 +618,34 @@ export function useSpaceHomeController(spacePk: string) {
     })();
   }, [cleanedPath, spacePk]);
 
+  const participationAttemptedRef = useRef(false);
+  useEffect(() => {
+    if (participationAttemptedRef.current || participateSpace.isPending) {
+      return;
+    }
+
+    if (
+      data.space.data.shouldParticipateManually() &&
+      data.space.data.canParticipate
+    ) {
+      participationAttemptedRef.current = true;
+
+      (async () => {
+        try {
+          await participateSpace.mutateAsync({
+            spacePk,
+            verifiablePresentation: '',
+          });
+        } catch (err) {
+          logger.debug('verify error: ', err);
+          console.log('verify error: ', err);
+
+          participationAttemptedRef.current = false;
+        }
+      })();
+    }
+  }, [data.space.data, spacePk, participateSpace]);
+
   return new SpaceHomeController(
     navigate,
     data,
@@ -634,5 +665,6 @@ export function useSpaceHomeController(spacePk: string) {
     new State(files),
     updateDraftImage,
     participateSpace,
+    new State(hiding),
   );
 }

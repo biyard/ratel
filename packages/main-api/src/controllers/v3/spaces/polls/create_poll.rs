@@ -1,3 +1,4 @@
+use crate::features::spaces::SpaceRequirement;
 use crate::models::space::SpaceCommon;
 
 use crate::features::spaces::polls::*;
@@ -34,10 +35,18 @@ pub async fn create_poll_handler(
         None
     };
 
-    let poll = Poll::new(space_pk, sk)?;
-    poll.create(&dynamo.client).await?;
+    let poll = Poll::new(space_pk.clone(), sk)?;
+    let requirement = SpaceRequirement::new(
+        space_pk,
+        features::spaces::SpaceRequirementType::PrePoll,
+        (poll.pk.to_string(), poll.sk.clone()),
+    );
 
-    let poll_response: PollResponse = PollResponse::from(poll);
+    transact_write!(
+        &dynamo.client,
+        poll.create_transact_write_item(),
+        requirement.create_transact_write_item()
+    )?;
 
-    Ok(Json(poll_response))
+    Ok(Json(poll.into()))
 }
