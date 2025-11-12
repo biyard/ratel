@@ -1,10 +1,12 @@
 import { spaceKeys } from '@/constants';
 import { updateSpaceChangeVisibility } from '@/lib/api/ratel/spaces.v3';
 import { optimisticUpdate } from '@/lib/hook-utils';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Space } from '../types/space';
 
 export function useSpaceUpdateChangeVisibilityMutation<T extends Space>() {
+  const qc = useQueryClient();
+
   const mutation = useMutation({
     mutationKey: ['update-change-visibility-space'],
     mutationFn: async ({
@@ -22,6 +24,7 @@ export function useSpaceUpdateChangeVisibilityMutation<T extends Space>() {
         space.change_visibility = changeVisibility;
         return space;
       });
+      await qc.invalidateQueries({ queryKey: spaceQK });
     },
   });
 
