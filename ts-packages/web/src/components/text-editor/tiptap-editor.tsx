@@ -13,12 +13,15 @@ import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import Youtube from '@tiptap/extension-youtube';
 import Video from './extensions/video';
+import { ThemeAwareColor } from './extensions/theme-aware-color';
+import { ThemeAwareHighlight } from './extensions/theme-aware-highlight';
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { Editor } from '@tiptap/core';
 import { cn } from '@/lib/utils';
 import { TiptapEditorProps, DEFAULT_ENABLED_FEATURES } from './types';
 import { TiptapToolbar } from './tiptap-toolbar';
 import { showErrorToast } from '@/lib/toast';
+import './theme-aware-colors.css';
 
 export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
   (
@@ -92,6 +95,8 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           TextStyle,
           Color,
           Highlight.configure({ multicolor: true }),
+          ThemeAwareColor,
+          ThemeAwareHighlight.configure({ multicolor: true }),
           TextAlign.configure({
             types: ['heading', 'paragraph'],
             alignments: ['left', 'center', 'right'],
