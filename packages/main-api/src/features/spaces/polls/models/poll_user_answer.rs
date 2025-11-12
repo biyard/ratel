@@ -103,11 +103,11 @@ impl PollUserAnswer {
         let mut sample_pk = poll_pk.clone();
 
         for poll in polls.0 {
-            let id = match poll.sk {
+            let id = match poll.clone().sk {
                 EntityType::SpacePoll(id) => id,
                 _ => "".to_string(),
             };
-            if poll.response_editable {
+            if poll.clone().is_default_poll() {
                 sample_pk = Partition::Poll(id.clone());
                 break;
             }

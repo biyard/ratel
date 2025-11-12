@@ -21,14 +21,13 @@ export const SpaceSettings = {
     error: '스페이스 설정을 불러오는데 실패했습니다',
     participation_title: '참여 설정',
     anonymous_participation_label: '익명 참여 허용',
-    change_visibility_label: 'Visibility 변경 허용',
+    change_visibility_label: '게시 상태 변경 허용',
     anonymous_participation_description:
       '활성화하면 사용자가 신원을 밝히지 않고 이 스페이스에 참여할 수 있습니다',
     success_update: '익명 참여 설정이 성공적으로 업데이트되었습니다',
     error_update: '익명 참여 설정 업데이트에 실패했습니다',
-    success_visibility_update:
-      'Visibility 설정이 성공적으로 업데이트되었습니다',
-    error_visibility_update: 'Visibility 설정 업데이트에 실패했습니다',
+    success_visibility_update: '게시 상태 설정이 성공적으로 업데이트되었습니다',
+    error_visibility_update: '게시 상태 설정 업데이트에 실패했습니다',
   },
 };
 
