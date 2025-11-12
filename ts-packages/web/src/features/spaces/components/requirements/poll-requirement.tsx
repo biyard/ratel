@@ -4,6 +4,9 @@ import usePollSpace from '../../polls/hooks/use-poll-space';
 import { SurveyAnswer } from '../../polls/types/poll-question';
 import { logger } from '@/lib/logger';
 import { useState } from 'react';
+import { usePollResponseMutation } from '../../polls/hooks/use-poll-response-mutation';
+import { useErrorZone } from '@/features/errors/hooks/use-error-zone';
+import { ErrorSpacePollRequiredField } from '@/features/errors/types/errors';
 
 export type PollRequirementProps = React.HTMLAttributes<HTMLDivElement> & {
   spacePk: string;
@@ -18,20 +21,41 @@ export default function PollRequirement({
 }: PollRequirementProps) {
   const { t } = useTranslation('SpaceSurvey');
   const { data: poll } = usePollSpace(spacePk, pollSk);
-  const handleSubmit = async () => {
-    // TODO: Submit answers
+  const defaultAnswers: Record<number, SurveyAnswer | null> = {};
+  const { setError, removeError, ErrorZone } = useErrorZone();
 
-    onNext();
-  };
-  const [answers, setAnswers] = useState<Record<number, SurveyAnswer>>(
-    poll?.myResponse.reduce(
-      (acc, answer, idx) => {
-        acc[idx] = answer;
-        return acc;
+  poll.questions.forEach((q, idx) => {
+    logger.debug(`Question ${idx}`, q);
+    defaultAnswers[idx] = null;
+  });
+
+  const [answers, setAnswers] =
+    useState<Record<number, SurveyAnswer | null>>(defaultAnswers);
+
+  const respondPoll = usePollResponseMutation();
+  const handleSubmit = async () => {
+    logger.debug('Submitting poll answers', answers);
+    // Clear any previous errors
+    removeError();
+
+    respondPoll.mutate(
+      {
+        spacePk,
+        pollSk,
+        answers: Object.values(answers),
       },
-      {} as Record<number, SurveyAnswer>,
-    ) || {},
-  );
+      {
+        onSuccess: () => {
+          logger.debug('Poll response submitted successfully');
+          onNext?.();
+        },
+        onError: (error) => {
+          logger.error('Failed to submit poll response:', error);
+          setError(ErrorSpacePollRequiredField);
+        },
+      },
+    );
+  };
 
   const handleUpdateAnswer = (questionIdx: number, answer: SurveyAnswer) => {
     logger.debug(
@@ -45,16 +69,18 @@ export default function PollRequirement({
 
   return (
     <>
+      <ErrorZone />
       <SurveyViewer
         t={t}
         questions={poll.questions}
         status={poll.status}
         onUpdateAnswer={handleUpdateAnswer}
         selectedAnswers={answers}
+        onValidateError={() => setError(ErrorSpacePollRequiredField)}
         onSubmit={handleSubmit}
         onLogin={() => {}}
         canSubmit={true}
-        disabled={false}
+        disabled={respondPoll.isPending}
         canUpdate={false}
         isLogin={true}
       />

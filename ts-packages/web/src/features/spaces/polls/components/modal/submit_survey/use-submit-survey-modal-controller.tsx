@@ -18,7 +18,7 @@ export class SubmitSurveyModalController {
 
   handleSubmit = async () => {
     try {
-      this.submitPollResponse.mutateAsync({
+      await this.submitPollResponse.mutateAsync({
         spacePk: this.spacePk,
         pollSk: this.pollSk,
         answers: this.answers,
@@ -29,7 +29,7 @@ export class SubmitSurveyModalController {
     } catch (err) {
       logger.error('submit answer failed: ', err);
       showErrorToast(this.t('failed_submit_answer'));
-      this.popup.close();
+      // Don't close popup on error so user can retry
     }
   };
 
