@@ -35,14 +35,45 @@ export default function PollRequirement({
   const respondPoll = usePollResponseMutation();
   const handleSubmit = async () => {
     logger.debug('Submitting poll answers', answers);
-    // Clear any previous errors
     removeError();
+
+    if (!poll) return;
+
+    const defaultAnswerByType = (
+      answer_type: SurveyAnswer['answer_type'],
+    ): SurveyAnswer => {
+      switch (answer_type) {
+        case 'single_choice':
+        case 'dropdown':
+        case 'linear_scale':
+        case 'short_answer':
+        case 'subjective':
+          return { answer_type, answer: null };
+        case 'multiple_choice':
+        case 'checkbox':
+          return { answer_type, answer: [] };
+        default:
+          return { answer_type, answer: null };
+      }
+    };
+
+    const total = poll.questions.length;
+
+    const payload: SurveyAnswer[] = Array.from({ length: total }, (_, i) => {
+      const existing = answers[i];
+      if (existing !== undefined && existing !== null) {
+        return existing;
+      }
+
+      const q = poll.questions[i];
+      return defaultAnswerByType(q.answer_type as SurveyAnswer['answer_type']);
+    });
 
     respondPoll.mutate(
       {
         spacePk,
         pollSk,
-        answers: Object.values(answers),
+        answers: payload,
       },
       {
         onSuccess: () => {
