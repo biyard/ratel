@@ -1,4 +1,5 @@
-import { PanelAttribute, parsePanelAttribute } from './panel-attribute';
+import { PanelAttribute } from './panel-attribute';
+import { parsePanelAttribute } from './answer-type';
 
 export type SpacePanelQuota = {
   pk: string;

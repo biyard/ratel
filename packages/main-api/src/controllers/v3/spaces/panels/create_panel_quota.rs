@@ -1,4 +1,5 @@
 use crate::features::spaces::panels::PanelAttribute;
+use crate::features::spaces::panels::PanelAttributeWithQuota;
 use crate::features::spaces::panels::SpacePanelQuota;
 use crate::spaces::SpacePath;
 use crate::spaces::SpacePathParam;
@@ -8,18 +9,7 @@ use crate::*;
     Debug, Clone, serde::Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema,
 )]
 pub struct CreatePanelQuotaRequest {
-    pub quotas: Vec<i64>,
-    pub attributes: Vec<PanelAttribute>,
-    pub values: Vec<Attribute>,
-}
-
-#[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema,
-)]
-pub struct CreatePanelQuotaResponse {
-    pub quotas: Vec<i64>,
-    pub attributes: Vec<PanelAttribute>,
-    pub values: Vec<Attribute>,
+    pub attributes: Vec<PanelAttributeWithQuota>,
 }
 
 pub async fn create_panel_quota_handler(
@@ -27,36 +17,30 @@ pub async fn create_panel_quota_handler(
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<CreatePanelQuotaRequest>,
-) -> Result<Json<CreatePanelQuotaResponse>> {
+) -> Result<Json<Vec<SpacePanelQuota>>> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
     }
 
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
-    let mut tx = vec![];
+    let panels: Vec<SpacePanelQuota> = req
+        .attributes
+        .into_iter()
+        .map(|e| {
+            let panel: SpacePanelQuota = (space_pk.clone(), e).into();
 
-    for (i, _) in req.attributes.iter().enumerate() {
-        let quota = req.quotas[i];
-        let attribute = req.attributes[i];
-        let value = req.values[i].clone();
+            panel
+        })
+        .collect();
 
-        let panel = SpacePanelQuota::new(
-            space_pk.clone(),
-            attribute.to_string(),
-            value.to_string(),
-            quota,
-            attribute.clone(),
-        );
-
-        tx.push(panel.create_transact_write_item());
-    }
+    let tx = panels
+        .clone()
+        .into_iter()
+        .map(|e| e.create_transact_write_item())
+        .collect();
 
     transact_write_items!(dynamo.client, tx)?;
 
-    Ok(Json(CreatePanelQuotaResponse {
-        quotas: req.quotas.clone(),
-        attributes: req.attributes.clone(),
-        values: req.values.clone(),
-    }))
+    Ok(Json(panels))
 }

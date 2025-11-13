@@ -45,6 +45,8 @@ export class Space {
   public participantUsername: string | null;
   public requirements: SpaceRequirement[];
   public blockParticipate: boolean;
+  public quota: number;
+  public remains: number;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
@@ -85,6 +87,8 @@ export class Space {
           .sort((a, b) => a.order - b.order)
       : [];
     this.blockParticipate = json.block_participate || false;
+    this.quota = json.quota;
+    this.remains = json.remains;
   }
 
   shouldParticipateManually() {
