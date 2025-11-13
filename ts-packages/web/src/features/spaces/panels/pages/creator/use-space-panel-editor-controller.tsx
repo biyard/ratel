@@ -11,7 +11,6 @@ import {
 import { useCreatePanelQuotaMutation } from '../../hooks/use-create-panel-quota-mutation';
 import { useDeletePanelQuotaMutation } from '../../hooks/use-delete-panel-quota-mutation';
 import { useUpdatePanelQuotaMutation } from '../../hooks/use-update-panel-quota-mutation';
-import { showErrorToast } from '@/lib/toast';
 import {
   convertOptionsToPanelAttributes,
   getAllPanelAttributeOptions,
@@ -38,33 +37,10 @@ export class SpacePanelEditorController {
     public panels: ReturnType<typeof useListPanels>['data'],
   ) {}
 
-  handleUpdateAttributeQuota = async (row: number, next: number) => {
-    const q = this.panel.panel_quotas?.[row];
-    if (!q) return;
-
-    const total_quotas = Number(this.panel.quotas ?? 0);
-    const panel_quotas = this.panel.panel_quotas ?? [];
-
-    const sumExceptRow = panel_quotas.reduce(
-      (acc, r, i) => acc + (i === row ? 0 : Number(r.quotas ?? 0)),
-      0,
-    );
-    const newSum = sumExceptRow + Number(next ?? 0);
-
-    if (newSum > total_quotas) {
-      const msg = `The total of all quotas cannot exceed the overall quota.`;
-      showErrorToast(msg);
-      return;
-    }
-
-    const attribute = q.attributes as PanelAttribute;
-
-    // The backend now derives the value from the attribute itself using to_value()
-    // So we just pass the attribute directly
+  handleUpdateAttributeQuota = async (sk: string, quota: number) => {
     await this.updatePanelQuota.mutateAsync({
-      spacePk: this.spacePk,
-      quotas: next,
-      attribute,
+      sk,
+      quota,
     });
   };
 
@@ -137,7 +113,7 @@ export function useSpacePanelEditorController(spacePk: string) {
   const updatePanel = useUpdatePanelMutation();
   const createPanelQuota = useCreatePanelQuotaMutation(spacePk);
   const deletePanelQuota = useDeletePanelQuotaMutation(spacePk);
-  const updatePanelQuota = useUpdatePanelQuotaMutation();
+  const updatePanelQuota = useUpdatePanelQuotaMutation(spacePk);
   const panels = useListPanels(spacePk);
 
   const selectedAttribute = useMemo(() => {
