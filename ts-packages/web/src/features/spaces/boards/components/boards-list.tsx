@@ -100,8 +100,18 @@ export default function BoardsList({
                   <h3 className="text-base font-semibold text-text-primary px-5">
                     {p.title}
                   </h3>
+
+                  <span
+                    className="
+                  inline-flex items-center rounded-md border border-neutral-700 bg-neutral-800 light:bg-neutral-500 light:border-0 px-2 py-0.5 text-xs text-neutral-200
+                "
+                  >
+                    <span className="i-lucide-message-circle text-[13px]" />
+                    {p.number_of_comments} {t('response')}
+                  </span>
+
                   {p.category_name && (
-                    <span className="inline-flex items-center rounded-md border border-neutral-700 bg-neutral-800 light:bg-neutral-500 light:border-0 px-2 py-0.5 text-xs text-neutral-200">
+                    <span className="ml-2 inline-flex items-center rounded-md border border-neutral-700 bg-neutral-800 light:bg-neutral-500 light:border-0 px-2 py-0.5 text-xs text-neutral-200">
                       {p.category_name}
                     </span>
                   )}
