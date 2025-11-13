@@ -75,6 +75,7 @@ import { i18nSpaceBoardsEditorDetail } from '@/features/spaces/boards/pages/crea
 import { i18nAttributeCodes } from '@/app/admin/attribute-codes/attribute-codes-page-i18n';
 import { Errors } from '@/features/errors/i18n';
 import { MySpaces } from '@/app/(social)/my-spaces/i18n';
+import { i18nCompleteSurveyModal } from '@/features/spaces/polls/components/modal/complete_survey/complete-survey-modal-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -125,6 +126,7 @@ Object.entries({
   SpaceTypeSelectModal: i18nSpaceTypeSelectModal,
   Space: i18nSpaceHome,
   SpacePollSubmitSurvey: i18nSubmitSurveyModal,
+  SpaceCompleteSurvey: i18nCompleteSurveyModal,
   SpacePollAnalyze: i18nSpacePollAnalyze,
   SpacePollEditor: i18nSpacePollEditor,
   SpacePollsEditor: i18nSpacePollsEditor,
