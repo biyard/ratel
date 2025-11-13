@@ -15,6 +15,7 @@ import { TiptapEditor } from '../text-editor';
 import type { Editor } from '@tiptap/core';
 import { useLocation } from 'react-router';
 import { SpaceReplyList } from './space-reply-list';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 
 interface CommentProps {
   spacePk?: string;
@@ -34,6 +35,7 @@ export function Comment({
   t,
   isLoggedIn = true,
 }: CommentProps) {
+  const user = useSuspenseUserInfo();
   const location = useLocation();
   const boards = /\/boards\/posts(\/|$)/.test(location.pathname);
   const [expand, setExpand] = useState(false);
@@ -89,6 +91,7 @@ export function Comment({
 
         {/* Content */}
         <TiptapEditor
+          isMe={user.data.pk === comment.author_pk}
           content={comment.content}
           editable={false}
           showToolbar={false}

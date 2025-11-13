@@ -23,6 +23,7 @@ import { showErrorToast } from '@/lib/toast';
 export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
   (
     {
+      isMe = false,
       content = '',
       onUpdate,
       editable = true,
@@ -188,6 +189,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
         className={cn(
           'flex flex-col w-full rounded-lg border transition-colors p-1',
           'bg-card text-foreground border-transparent',
+          isMe && 'bg-neutral-700 light:bg-neutral-200',
           'focus-within:border-primary',
           className,
         )}
