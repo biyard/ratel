@@ -95,7 +95,7 @@ jobs:
           ENV: prod
           RUST_LOG: info
           SERVICE: main-api
-          DOMAIN: api.ratel.foundation
+          DOMAIN: ratel.foundation
 
           BUCKET_NAME: metadata.ratel.foundation
           SLACK_CHANNEL_SPONSOR: ${{ secrets.SLACK_CHANNEL_SPONSOR }}
@@ -199,7 +199,6 @@ jobs:
         run: |
           aws s3 sync dist $BUCKET
           aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
-
 
       - name: Prepare artifacts
         run: |

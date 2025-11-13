@@ -1,8 +1,8 @@
 const en = {
-  total_quotas: 'Total Quotas',
+  total_quotas: 'Maximum People',
   attribute_groups: 'Attribute Groups',
   attributes: 'Attributes',
-  ratio: 'Ratio (%)',
+  ratio: 'Maximum Ratio (%)',
 
   panel_name: 'Panel Name',
   age: 'Age',
@@ -26,10 +26,10 @@ const en = {
 };
 
 const ko = {
-  total_quotas: '총 인원',
+  total_quotas: '최대 인원',
   attribute_groups: '속성 그룹',
   attributes: '속성',
-  ratio: '비율 (%)',
+  ratio: '최대 비율 (%)',
 
   panel_name: '패널 이름',
   age: '나이',

@@ -23,6 +23,8 @@ pub struct CreateSpacePostRequest {
     pub category_name: String,
     pub urls: Vec<String>,
     pub files: Vec<File>,
+    pub started_at: i64,
+    pub ended_at: i64,
 }
 
 #[derive(Debug, Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema)]
@@ -69,6 +71,8 @@ pub async fn create_space_post_handler(
         req.category_name.clone(),
         req.urls.clone(),
         Some(req.files.clone()),
+        req.started_at,
+        req.ended_at,
         user.clone(),
     );
     post.create(&dynamo.client).await?;
