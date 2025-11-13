@@ -14,8 +14,8 @@ import { route } from '@/route';
 import { NavigateFunction, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
-import usePanelSpace from '@/features/spaces/panels/hooks/use-panel-space';
 import { PanelAttribute } from '@/features/spaces/panels/types/panel-attribute';
+import { useListPanels } from '@/features/spaces/panels/hooks/use-list-panels';
 
 export class SpacePollAnalyzeController {
   constructor(
@@ -314,8 +314,8 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
   const { data: summary } = usePollSpaceSummaries(spacePk, pollPk);
-  const { data: panel } = usePanelSpace(spacePk);
-  const attribute = panel.attributes;
+  const { data: panels } = useListPanels(spacePk);
+  const attribute = panels?.map((p) => p.attributes).flat() ?? [];
   const { t } = useTranslation('SpacePollAnalyze');
 
   const navigator = useNavigate();
