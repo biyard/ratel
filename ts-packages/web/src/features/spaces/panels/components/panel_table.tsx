@@ -67,10 +67,6 @@ export function PanelTable({
         {filteredQuotas.map((quota) => {
           const attributeGroup = quota.toPanelOption().toString().toLowerCase();
           const attributeValue = quota.toPanelValue().toLowerCase();
-          const isDirty = Object.prototype.hasOwnProperty.call(editing, quota.sk);
-          const displayQuota = isDirty
-            ? editing[quota.sk] ?? ''
-            : String(quota.quotas ?? 0);
 
           return (
             <tr
@@ -89,7 +85,7 @@ export function PanelTable({
                   <input
                     type="text"
                     className="py-1 px-2 w-20 text-center rounded border border-input-box-border"
-                    value={displayQuota}
+                    value={String(quota.quotas)}
                     onChange={(e) =>
                       setEditing((m) => ({ ...m, [quota.sk]: e.target.value }))
                     }
