@@ -7,6 +7,8 @@ import { useState } from 'react';
 import { usePollResponseMutation } from '../../polls/hooks/use-poll-response-mutation';
 import { useErrorZone } from '@/features/errors/hooks/use-error-zone';
 import { ErrorSpacePollRequiredField } from '@/features/errors/types/errors';
+import { usePopup } from '@/lib/contexts/popup-service';
+import CompleteSurveyPopup from '../../polls/components/modal/complete_survey';
 
 export type PollRequirementProps = React.HTMLAttributes<HTMLDivElement> & {
   spacePk: string;
@@ -20,7 +22,9 @@ export default function PollRequirement({
   onNext,
 }: PollRequirementProps) {
   const { t } = useTranslation('SpaceSurvey');
+  const { t: modalT } = useTranslation('SpaceCompleteSurvey');
   const { data: poll } = usePollSpace(spacePk, pollSk);
+  const popup = usePopup();
   const defaultAnswers: Record<number, SurveyAnswer | null> = {};
   const { setError, removeError, ErrorZone } = useErrorZone();
 
@@ -77,8 +81,19 @@ export default function PollRequirement({
       },
       {
         onSuccess: () => {
+          popup
+            .open(
+              <CompleteSurveyPopup
+                onConfirm={() => {
+                  onNext?.();
+                  popup.close();
+                }}
+              />,
+            )
+            .withTitle(modalT('modal_title'))
+            .withoutClose();
+
           logger.debug('Poll response submitted successfully');
-          onNext?.();
         },
         onError: (error) => {
           logger.error('Failed to submit poll response:', error);
