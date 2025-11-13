@@ -1,3 +1,4 @@
+import React, { useRef } from 'react';
 import {
   LinearScaleQuestionType,
   ObjectiveQuestionUnion,
@@ -22,23 +23,51 @@ export default function ObjectiveQuestionEditor({
   question,
   onUpdate,
 }: ObjectiveQuestionEditorProps) {
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
   const handleUpdateOption = (idx: number, value: string) => {
     const newOptions = [...question.options];
     newOptions[idx] = value;
     onUpdate({ ...question, options: newOptions });
   };
 
-  const handleAddOption = () => {
+  const handleAddOption = (focusAfterAdd = false) => {
     const newOptions = [...question.options, ''];
     onUpdate({ ...question, options: newOptions });
+
+    if (focusAfterAdd) {
+      const nextIndex = newOptions.length - 1;
+      setTimeout(() => {
+        inputRefs.current[nextIndex]?.focus();
+      }, 0);
+    }
   };
 
   const handleRemoveOption = (idx: number) => {
     if (question.options.length <= 1) {
       return;
     }
+
     const newOptions = question.options.filter((_, index) => index !== idx);
     onUpdate({ ...question, options: newOptions });
+
+    setTimeout(() => {
+      const lastIndex = newOptions.length - 1;
+      inputRefs.current[lastIndex]?.focus();
+    }, 0);
+  };
+
+  const handleOptionKeyDown = (
+    idx: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (e.key === 'Tab' && !e.shiftKey) {
+      const isLast = idx === question.options.length - 1;
+      if (isLast) {
+        e.preventDefault();
+        handleAddOption(true);
+      }
+    }
   };
 
   return (
@@ -57,6 +86,10 @@ export default function ObjectiveQuestionEditor({
             placeholder={t('option_input_placeholder')}
             value={opt}
             onChange={(e) => handleUpdateOption(idx, e.target.value)}
+            onKeyDown={(e) => handleOptionKeyDown(idx, e)}
+            ref={(el) => {
+              inputRefs.current[idx] = el;
+            }}
           />
           <Remove
             className="w-5 h-5 cursor-pointer stroke-neutral-400 text-neutral-400"
@@ -65,7 +98,7 @@ export default function ObjectiveQuestionEditor({
         </div>
       ))}
       <button
-        onClick={handleAddOption}
+        onClick={() => handleAddOption(true)}
         className="mt-2 text-sm font-semibold text-left cursor-pointer text-neutral-500"
       >
         + {t('add_option_button_label')}

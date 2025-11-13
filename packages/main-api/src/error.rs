@@ -139,11 +139,19 @@ pub enum Error {
     SpaceNotEditable,
     #[error("PK must be a Partition::Space")]
     InvalidSpacePartitionKey,
+    #[error("Space requirements are invalid")]
+    SpaceInvalidRequirements,
+    #[error("User participation is blocked for this space")]
+    ParticipationBlocked,
+    #[error("User lacks verified attributes required for participation")]
+    LackOfVerifiedAttributes,
 
     // members feature 3050 ~
     #[rest_error(code = 3050)]
     #[error("Member not found")]
     NoInvitationFound,
+    #[error("User is already participating in the space")]
+    AlreadyParticipating,
 
     // /v3/spaces/deliberations endpoints 3100 ~
     #[rest_error(code = 3100)]
@@ -213,6 +221,8 @@ pub enum Error {
     AlreadyFullPanel,
     #[error("invalid panel")]
     InvalidPanel,
+    #[error("invalid panel quota")]
+    InvalidPanelQuota,
 
     // NFT Artwork space errors
     #[rest_error(code = 9000)]

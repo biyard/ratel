@@ -1,9 +1,11 @@
-use crate::features::spaces::panels::{SpacePanel, SpacePanelParticipant};
+use crate::features::did::VerifiedAttributes;
+use crate::features::spaces::panels::SpacePanelParticipant;
 
 use crate::features::spaces::{SpaceParticipant, polls::*};
 use crate::models::user::User;
 use crate::types::{
-    Age, Answer, EntityType, Gender, Partition, TeamGroupPermission, validate_answers,
+    Age, Answer, CompositePartition, EntityType, Gender, Partition, TeamGroupPermission,
+    validate_answers,
 };
 use crate::types::{RespondentAttr, SpaceStatus};
 use crate::utils::time::get_now_timestamp_millis;
@@ -33,10 +35,7 @@ pub async fn respond_poll_handler(
     Json(req): Json<RespondPollSpaceRequest>,
 ) -> crate::Result<Json<RespondPollSpaceResponse>> {
     //Validate Request
-
-    if !permissions.contains(TeamGroupPermission::SpaceRead) {
-        return Err(Error::NoPermission);
-    }
+    permissions.permitted(TeamGroupPermission::SpaceRead)?;
 
     // if space_common.status == Some(SpaceStatus::Started)
     //     || space_common.status == Some(SpaceStatus::Finished)
@@ -70,27 +69,20 @@ pub async fn respond_poll_handler(
     let participant =
         SpacePanelParticipant::get_participant_in_space(&dynamo.client, &space_pk, &user.pk).await;
 
-    // FIXME: fix to real credential info
     let mut respondent: Option<RespondentAttr> = None;
 
     if let Some(_p) = participant {
-        respondent = Some(RespondentAttr {
-            age: Some(Age::Range {
-                inclusive_max: 29,
-                inclusive_min: 18,
-            }),
-            gender: Some(Gender::Male),
-            school: None,
-        });
+        let attribute = VerifiedAttributes::get_attributes(&dynamo, user.pk.clone()).await?;
+        respondent = attribute;
     }
 
     if user_response.is_none() {
         let create_tx = PollUserAnswer::new(
             poll.pk.clone(),
             poll_pk.clone(),
-            user.pk.clone(),
             req.answers,
             respondent,
+            user,
         )
         .create_transact_write_item();
 

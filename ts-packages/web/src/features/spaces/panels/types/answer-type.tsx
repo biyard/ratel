@@ -1,3 +1,5 @@
+import { PanelAttribute, PanelAttributeType } from './panel-attribute';
+
 export type Attribute =
   | { answer_type: 'age'; specific: number }
   | {
@@ -51,39 +53,53 @@ export function formatAgeLabel(a: Attribute): string | null {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseAttribute(raw: any): Attribute | null {
-  if (!raw || typeof raw !== 'object') return null;
+export function parsePanelAttribute(raw: any): PanelAttribute | null {
+  if (raw == null) return null;
 
-  if (raw.answer_type === 'age') {
-    if (typeof raw.specific === 'number') {
-      return { answer_type: 'age', specific: raw.specific };
-    }
-    if (
-      raw.range &&
-      typeof raw.range.inclusive_min === 'number' &&
-      typeof raw.range.inclusive_max === 'number'
-    ) {
+  if (typeof raw === 'object' && typeof raw.type === 'string') {
+    const t = raw.type as string;
+    const v =
+      raw.value ??
+      raw.verifiable_attribute ??
+      raw.collective_attribute ??
+      raw.VerifiableAttribute ??
+      raw.CollectiveAttribute ??
+      null;
+
+    if (t === 'collective_attribute')
       return {
-        answer_type: 'age',
-        range: {
-          inclusive_min: raw.range.inclusive_min,
-          inclusive_max: raw.range.inclusive_max,
-        },
+        type: PanelAttributeType.CollectiveAttribute,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        value: String(v ?? 'none').toLowerCase() as any,
       };
-    }
-    return null;
+    if (t === 'verifiable_attribute')
+      return {
+        type: PanelAttributeType.VerifiableAttribute,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        value: v as any,
+      };
   }
 
-  if (raw.answer_type === 'gender') {
-    if ('male' in raw) return { answer_type: 'gender', male: {} };
-    if ('female' in raw) return { answer_type: 'gender', female: {} };
-    return null;
+  if (typeof raw === 'string') {
+    const [t, val = 'none'] = raw.split(':', 2);
+    if (t === 'collective_attribute')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return {
+        type: PanelAttributeType.CollectiveAttribute,
+        value: val.toLowerCase() as any,
+      };
+    if (t === 'verifiable_attribute')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return {
+        type: PanelAttributeType.VerifiableAttribute,
+        value: val as any,
+      };
   }
 
   return null;
 }
 
-export const parseAttributes = (arr: unknown[]): Attribute[] =>
+export const parsePanelAttributes = (arr: unknown[]): PanelAttribute[] =>
   Array.isArray(arr)
-    ? (arr.map(parseAttribute).filter(Boolean) as Attribute[])
+    ? (arr.map(parsePanelAttribute).filter(Boolean) as PanelAttribute[])
     : [];

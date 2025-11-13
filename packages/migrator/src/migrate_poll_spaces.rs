@@ -181,6 +181,11 @@ pub async fn migrate_poll_spaces(pool: &sqlx::PgPool, cli: &aws_sdk_dynamodb::Cl
 
             for response in responses {
                 let user_pk = Partition::User(response.user_id.to_string());
+
+                let user = User::get(&cli, user_pk, Some(EntityType::User))
+                    .await
+                    .unwrap_or_default()
+                    .unwrap_or_default();
                 let answers = response
                     .answers
                     .into_iter()
@@ -194,9 +199,9 @@ pub async fn migrate_poll_spaces(pool: &sqlx::PgPool, cli: &aws_sdk_dynamodb::Cl
                 let create_tx = PollUserAnswer::new(
                     poll.pk.clone(),
                     poll.sk.clone().try_into().unwrap(),
-                    user_pk,
                     answers,
                     None,
+                    user,
                 );
             }
         }

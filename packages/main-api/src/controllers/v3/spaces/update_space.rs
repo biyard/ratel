@@ -36,11 +36,19 @@ pub enum UpdateSpaceRequest {
     Anonymous {
         anonymous_participation: bool,
     },
+    ChangeVisibility {
+        change_visibility: bool,
+    },
     Start {
         start: bool,
+        #[serde(default)]
+        block_participate: bool,
     },
     Finish {
         finished: bool,
+    },
+    Quota {
+        quotas: i64,
     },
 }
 
@@ -127,7 +135,10 @@ pub async fn update_space_handler(
         UpdateSpaceRequest::Title { title } => {
             pu = pu.with_title(title.clone());
         }
-        UpdateSpaceRequest::Start { start } => {
+        UpdateSpaceRequest::Start {
+            start,
+            block_participate,
+        } => {
             if space.status != Some(SpaceStatus::InProgress) {
                 return Err(Error::NotSupported(
                     "Start is not available for the current status.".into(),
@@ -138,9 +149,12 @@ pub async fn update_space_handler(
                 return Err(Error::NotSupported("it does not support start now".into()));
             }
 
-            su = su.with_status(SpaceStatus::Started);
+            su = su
+                .with_status(SpaceStatus::Started)
+                .with_block_participate(block_participate);
 
             space.status = Some(SpaceStatus::Started);
+            space.block_participate = block_participate;
             let _ = SpaceEmailVerification::expire_verifications(&dynamo, space_pk.clone()).await?;
         }
         UpdateSpaceRequest::Finish { finished } => {
@@ -164,6 +178,23 @@ pub async fn update_space_handler(
             su = su.with_anonymous_participation(anonymous_participation);
 
             space.anonymous_participation = anonymous_participation;
+        }
+        UpdateSpaceRequest::ChangeVisibility { change_visibility } => {
+            su = su.with_change_visibility(change_visibility);
+
+            space.change_visibility = change_visibility;
+        }
+        UpdateSpaceRequest::Quota { quotas } => {
+            let remains = space.remains + (quotas - space.quota);
+
+            if remains < 0 {
+                return Err(Error::InvalidPanelQuota);
+            }
+
+            su = su.with_quota(quotas).with_remains(remains);
+
+            space.quota = quotas;
+            space.remains = remains;
         }
     }
 
