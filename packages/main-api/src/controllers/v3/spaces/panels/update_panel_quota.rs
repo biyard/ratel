@@ -3,7 +3,7 @@ use crate::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, aide::OperationIo, JsonSchema)]
 pub struct UpdatePanelQuotaRequest {
-    pub quotas: i64,
+    pub quota: i64,
 }
 
 pub async fn update_panel_quota_handler(
@@ -23,7 +23,7 @@ pub async fn update_panel_quota_handler(
 
     // NOTE: we don't consider to update after publishing.
     let space_panel = SpacePanelQuota::updater(&pk, sk)
-        .with_quotas(req.quotas)
+        .with_quotas(req.quota)
         .execute(&dynamo.client)
         .await?;
 
