@@ -26,9 +26,9 @@ impl fmt::Display for Attribute {
 }
 
 #[derive(
-    Debug, Clone, Eq, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
+    Debug, Clone, Copy, Eq, PartialEq, serde::Serialize, serde::Deserialize, schemars::JsonSchema,
 )]
-#[serde(rename_all = "snake_case")]
+#[serde(rename_all = "snake_case", tag = "age_type", content = "value")]
 pub enum Age {
     Specific(u8),
     Range {
@@ -52,6 +52,7 @@ impl fmt::Display for Age {
 #[derive(
     Debug,
     Clone,
+    Copy,
     Eq,
     PartialEq,
     Hash,
@@ -63,8 +64,8 @@ impl fmt::Display for Age {
 #[serde(rename_all = "snake_case")]
 pub enum Gender {
     #[default]
-    Male = 1,
-    Female = 2,
+    Male,
+    Female,
 }
 
 impl fmt::Display for Gender {

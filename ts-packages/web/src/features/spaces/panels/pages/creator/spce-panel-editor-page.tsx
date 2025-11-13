@@ -4,9 +4,8 @@ import { useSpacePanelEditorController } from './use-space-panel-editor-controll
 import { Col } from '@/components/ui/col';
 import { Row } from '@/components/ui/row';
 import { PanelQuotas } from '../../components/panel_quota';
-import { PanelLabels } from '../../components/panel_labels';
-import { PanelAttribute } from '../../types/panel-attribute';
 import { PanelTable } from '../../components/panel_table';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 export function SpacePanelEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpacePanelEditorPage: spacePk=${spacePk}`);
@@ -18,29 +17,27 @@ export function SpacePanelEditorPage({ spacePk }: SpacePathProps) {
       <Col>
         <Col className="gap-2 mb-4">
           <Row className="gap-5">
-            <div className="flex flex-row w-fit gap-5 items-center">
-              <div className="text-sm font-medium whitespace-nowrap flex-shrink-0">
+            <div className="flex flex-row gap-5 items-center w-fit">
+              <div className="flex-shrink-0 text-sm font-medium whitespace-nowrap">
                 {t('total_quotas')}
               </div>
               <PanelQuotas
-                quotas={ctrl.panel.quotas}
+                quotas={ctrl.space.quota}
                 canEdit={true}
                 setQuotas={async (quota: number) => {
                   await ctrl.handleUpdateQuota(quota);
                 }}
               />
             </div>
-            <div className="flex flex-row w-full gap-5 items-center">
-              <div className="text-sm font-medium whitespace-nowrap flex-shrink-0">
+            <div className="flex flex-row gap-5 items-center grow">
+              <div className="flex-shrink-0 text-sm font-medium whitespace-nowrap">
                 {t('attribute_groups')}
               </div>
-              <PanelLabels
-                t={t}
-                canEdit={true}
-                values={ctrl.panel.attributes}
-                setValues={async (v: PanelAttribute[]) => {
-                  await ctrl.handleUpdateValues(v);
-                }}
+              <MultiSelect
+                className="grow"
+                options={ctrl.allOptions}
+                value={ctrl.selectedAttribute}
+                onChange={ctrl.handleChangeSelectedAttributes}
                 placeholder={t('attribute_groups')}
               />
             </div>
@@ -49,7 +46,7 @@ export function SpacePanelEditorPage({ spacePk }: SpacePathProps) {
           <PanelTable
             t={t}
             canEdit={true}
-            panel_quotas={ctrl.panel.panel_quotas}
+            panels={ctrl.panels}
             onChangeQuota={ctrl.handleUpdateAttributeQuota}
             onDelete={ctrl.handleDeleteAttributeQuota}
           />

@@ -1,4 +1,4 @@
-import { PanelAttribute } from './panel-attribute';
+import { PanelAttribute, PanelAttributeType } from './panel-attribute';
 
 export type Attribute =
   | { answer_type: 'age'; specific: number }
@@ -57,7 +57,7 @@ export function parsePanelAttribute(raw: any): PanelAttribute | null {
   if (raw == null) return null;
 
   if (typeof raw === 'object' && typeof raw.type === 'string') {
-    const t = raw.type as PanelAttribute['type'];
+    const t = raw.type as string;
     const v =
       raw.value ??
       raw.verifiable_attribute ??
@@ -66,30 +66,34 @@ export function parsePanelAttribute(raw: any): PanelAttribute | null {
       raw.CollectiveAttribute ??
       null;
 
-    if (t === 'none') return { type: 'none' };
     if (t === 'collective_attribute')
       return {
-        type: 'collective_attribute',
+        type: PanelAttributeType.CollectiveAttribute,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         value: String(v ?? 'none').toLowerCase() as any,
       };
     if (t === 'verifiable_attribute')
       return {
-        type: 'verifiable_attribute',
+        type: PanelAttributeType.VerifiableAttribute,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        value: String(v ?? 'none').toLowerCase() as any,
+        value: v as any,
       };
   }
 
   if (typeof raw === 'string') {
-    if (raw === 'none') return { type: 'none' };
     const [t, val = 'none'] = raw.split(':', 2);
     if (t === 'collective_attribute')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return { type: 'collective_attribute', value: val.toLowerCase() as any };
+      return {
+        type: PanelAttributeType.CollectiveAttribute,
+        value: val.toLowerCase() as any,
+      };
     if (t === 'verifiable_attribute')
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return { type: 'verifiable_attribute', value: val.toLowerCase() as any };
+      return {
+        type: PanelAttributeType.VerifiableAttribute,
+        value: val as any,
+      };
   }
 
   return null;
