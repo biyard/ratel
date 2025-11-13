@@ -35,7 +35,7 @@ export function Credentials() {
             className="gap-1"
           >
             <Heading variant="heading4">{t.vc}</Heading>
-            <p className="text-sm text-neutral-300">
+            <p className="text-sm text-neutral-300 dark:text-neutral-300 light:text-neutral-700">
               {t.id}: {ctrl.did}
             </p>
           </Col>

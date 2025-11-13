@@ -11,6 +11,7 @@ import { TimeRangeSetting } from '../../components/time-range-setting';
 import Card from '@/components/card';
 import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { SpaceType } from '@/features/spaces/types/space-type';
+import { ArrowLeft } from 'lucide-react';
 
 export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollEditorPage: spacePk=${spacePk}, pollPk=${pollPk}`);
@@ -20,6 +21,14 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
   return (
     <>
       <Col>
+        {ctrl.space.spaceType == SpaceType.Deliberation && (
+          <div className="flex flex-row w-full justify-start">
+            <ArrowLeft
+              className="flex flex-row w-5 h-5 cursor-pointer"
+              onClick={ctrl.handleBack}
+            />
+          </div>
+        )}
         <TimeRangeSetting
           canEdit={ctrl.space.isAdmin()}
           onChange={ctrl.onChangeTimeRange}
@@ -83,14 +92,6 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
             )}
           </Col>
         </Card>
-
-        {ctrl.space.spaceType == SpaceType.Deliberation && (
-          <div className="flex flex-row w-full justify-end">
-            <Button className="w-fit" onClick={ctrl.handleBack}>
-              {t('btn_back')}
-            </Button>
-          </div>
-        )}
       </Col>
     </>
   );

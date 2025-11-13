@@ -2,10 +2,7 @@ use crate::File;
 use crate::features::spaces::boards::dto::space_post_comment_response::SpacePostCommentResponse;
 use crate::features::spaces::boards::models::space_post::SpacePost;
 use crate::types::Attribute;
-use crate::{
-    features::spaces::panels::SpacePanel,
-    types::{EntityType, Partition},
-};
+use crate::types::{EntityType, Partition};
 use bdk::prelude::*;
 
 #[derive(
@@ -22,6 +19,8 @@ pub struct SpacePostResponse {
 
     pub created_at: i64,
     pub updated_at: i64,
+    pub started_at: i64,
+    pub ended_at: i64,
     pub title: String,
     pub html_contents: String,
     pub category_name: String,
@@ -46,6 +45,8 @@ impl From<SpacePost> for SpacePostResponse {
             },
             created_at: post.created_at,
             updated_at: post.updated_at,
+            started_at: post.started_at,
+            ended_at: post.ended_at,
             title: post.title,
             html_contents: post.html_contents,
             category_name: post.category_name,

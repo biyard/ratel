@@ -56,9 +56,16 @@ export class SpacePollEditorController {
 
   handleUpdateQuestion = (index: number, newOne: PollQuestion) => {
     logger.debug(`handleUpdateQuestion called for index ${index}`, newOne);
+
     const questions = this.questions.get();
+    const isAnswerTypeChange =
+      newOne.answer_type !== questions[index].answer_type;
+    const title = questions[index].title;
     questions[index] = newOne;
 
+    if (isAnswerTypeChange) {
+      questions[index].title = title;
+    }
     this.questions.set([...questions]);
   };
 

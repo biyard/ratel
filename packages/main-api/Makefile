@@ -124,7 +124,7 @@ dist:
 
 WATCH_TARGET = -w src -w $(PWD)/.. 
 # if web build is true, then also watch web files
-ifeq ($(WEB_BUILD),"false")
+ifeq ($(WEB_BUILD),"true")
 	WATCH_TARGET += -w $(PWD)/../../ts-packages/web
 endif
 
@@ -132,6 +132,9 @@ run:
 	$(BUILD_ENV) cargo watch -x "run $(RUST_FLAG)" $(WATCH_TARGET)
 
 build:
+	$(eval WEB_INDEX_JS=$(shell basename $(shell ls dist/assets/index-*.js)))
+	$(eval WEB_INDEX_CSS=$(shell basename $(shell ls dist/assets/index-*.css)))
+
 	$(BUILD_ENV) cargo build $(RUST_FLAG)
 
 build-only:

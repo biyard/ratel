@@ -1,6 +1,7 @@
 use ssi::claims::ResourceProvider;
 
 use crate::features::spaces::members::{InvitationStatus, SpaceInvitationMember};
+use crate::features::spaces::panels::SpacePanels;
 use crate::*;
 use crate::{
     Error,
@@ -23,41 +24,6 @@ use super::SpaceParticipant;
     aide::OperationIo,
 )]
 
-/*
-PUBLISH_STATE: 유저의 게시물 상태
-    Draft: 작성중
-    Published: 게시됨
-
-STATUS: Space 의 진행 상태(Only time limited space use this field based on started_at and ended_at)
-    None: for Draft or Time Unlimited space
-    Waiting: for Published but not started yet
-    InProgress: User Can respond or doing some actions for space
-    Finished: User
-
-VISIBILITY: 유저가 글을 볼 수 있는 범위
-    Private: only author can read
-    Public: anyone can read
-    Team(team_pk): only team members can read
-
----
-PERMISSION RULES:
-
-READ: Based on VISIBILITY
-    Private: only author can read
-    Public: anyone can read
-    Team(team_pk): only team members can read
-
-EDIT(UPDATE): Based on PUBLISH_STATE and STATUS
-    Only Draft publish_state or Waiting status can be edited
-    Once Published, cannot revert to Draft
-    Once InProgress, cannot revert to Waiting
-    Once Finished, cannot revert to InProgress
-
-ACTION(e.g., Respond to Poll): Based on STATUS
-    Only InProgress status can perform actions
-    Cannot perform actions in Waiting or Finished status
-
-*/
 pub struct SpaceCommon {
     pub pk: Partition,
     pub sk: EntityType,
@@ -102,12 +68,26 @@ pub struct SpaceCommon {
     #[serde(default)]
     pub anonymous_participation: bool,
     #[serde(default)]
+    pub change_visibility: bool,
+    #[serde(default)]
     // participants is the number of participants. It is incremented when a user participates in the space.
     // It is only used for spaces enabling explicit participation such as anonymous participation.
     pub participants: i64,
 
     // space pdf files
     pub files: Option<Vec<File>>,
+
+    #[serde(default)]
+    pub block_participate: bool,
+
+    #[serde(default = "max_quota")]
+    pub quota: i64,
+    #[serde(default = "max_quota")]
+    pub remains: i64,
+}
+
+fn max_quota() -> i64 {
+    1_000_000
 }
 
 impl SpaceCommon {
@@ -178,6 +158,24 @@ impl SpaceCommon {
         self.publish_state == SpacePublishState::Draft
             || (self.publish_state == SpacePublishState::Published
                 && (self.status == Some(SpaceStatus::Waiting) || self.status.is_none()))
+    }
+
+    pub async fn check_if_satisfying_panel_attribute(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        user: &User,
+    ) -> Result<()> {
+        let space_panels =
+            SpacePanels::get(cli, self.pk.to_string(), Some(EntityType::SpacePanels))
+                .await?
+                .unwrap_or_default();
+        let user_attributes = user.get_attributes(cli).await?;
+
+        if space_panels == user_attributes {
+            return Ok(());
+        }
+
+        Err(Error::LackOfVerifiedAttributes)
     }
 }
 

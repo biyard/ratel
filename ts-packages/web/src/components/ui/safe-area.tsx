@@ -5,7 +5,7 @@ import { Slot } from '@radix-ui/react-slot';
 import { cva, VariantProps } from 'class-variance-authority';
 
 export const safeAreaVariants = cva(
-  'mx-auto max-w-desktop py-10 max-desktop:px-2.5',
+  'mx-auto max-w-desktop py-1 max-desktop:px-2.5',
   {
     variants: {
       variant: {

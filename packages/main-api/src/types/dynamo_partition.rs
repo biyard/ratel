@@ -35,6 +35,7 @@ pub enum Partition {
     // Spaces
     Space(String),
     SurveySpace(String),
+    Requirement,
 
     SpacePost(String),
     SpacePostLike(String),
@@ -42,6 +43,9 @@ pub enum Partition {
     Discussion(String),
     DiscussionUser(String),
 
+    PanelAttribute,
+    PanelParticipant,
+    Panels(String),
     Panel(String),
     // Survey(String),
     // SurveyResponse(String),

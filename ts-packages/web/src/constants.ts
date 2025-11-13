@@ -97,6 +97,8 @@ export const spaceKeys = {
 
   details: () => [...spaceKeys.all, 'detail'] as const,
   detail: (spacePk: string) => [...spaceKeys.details(), spacePk] as const,
+  panels: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'panels'] as const,
 
   prerequisites: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'prerequisites'] as const,
@@ -127,8 +129,6 @@ export const spaceKeys = {
   invitations: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'invitations'] as const,
 
-  panels: (spacePk: string) =>
-    [...spaceKeys.detail(spacePk), 'panels'] as const,
   panel: (spacePk: string, panelPk: string) =>
     [...spaceKeys.panels(spacePk), panelPk] as const,
 
