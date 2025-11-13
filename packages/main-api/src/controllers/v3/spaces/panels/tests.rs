@@ -2,8 +2,8 @@ use crate::controllers::v3::spaces::CreateSpaceResponse;
 use crate::controllers::v3::spaces::panels::{CreatePanelQuotaResponse, UpdatePanelQuotaResponse};
 use crate::features::spaces::panels::{
     ListParticipantResponse, PanelAttribute, SpacePanelParticipantResponse, SpacePanelsResponse,
-    VerifiableAttribute,
 };
+use crate::features::did::VerifiableAttribute;
 use crate::types::{Attribute, Partition, SpaceType};
 use crate::*;
 use crate::{
@@ -35,7 +35,7 @@ async fn test_create_panel_quota_handler() {
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "quotas": vec![30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)], "values": vec![Attribute::Gender(Gender::Male)]
+            "quotas": vec![30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male))]
         },
         response_type: CreatePanelQuotaResponse
     };
@@ -63,7 +63,7 @@ async fn test_delete_panel_quota_handler() {
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "quotas": vec![30, 30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender), PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age)], "values": vec![Attribute::Gender(Gender::Male), Attribute::Age(Age::Range { inclusive_min: 0, inclusive_max: 18 })]
+            "quotas": vec![30, 30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male)), PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(Age::Range { inclusive_min: 0, inclusive_max: 18 }))]
         },
         response_type: CreatePanelQuotaResponse
     };
@@ -76,7 +76,7 @@ async fn test_delete_panel_quota_handler() {
         path: path.clone(),
         headers: headers.clone(),
         body: {
-            "attribute": PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age), "value": Attribute::Age(Age::Range { inclusive_min: 0, inclusive_max: 18 })
+            "attribute": PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(Age::Range { inclusive_min: 0, inclusive_max: 18 }))
         },
         response_type: Partition
     };
@@ -100,7 +100,7 @@ async fn test_get_panel_handler() {
         path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
         headers: headers.clone(),
         body: {
-            "quotas": vec![30, 30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender), PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age)], "values": vec![Attribute::Gender(Gender::Male), Attribute::Age(Age::Range { inclusive_min: 0, inclusive_max: 18 })]
+            "quotas": vec![30, 30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male)), PanelAttribute::VerifiableAttribute(VerifiableAttribute::Age(Age::Range { inclusive_min: 0, inclusive_max: 18 }))]
         },
         response_type: CreatePanelQuotaResponse
     };
@@ -135,7 +135,7 @@ async fn test_update_panel_quota_handler() {
         path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
         headers: headers.clone(),
         body: {
-            "quotas": vec![30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)], "values": vec![Attribute::Gender(Gender::Male)]
+            "quotas": vec![30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male))]
         },
         response_type: CreatePanelQuotaResponse
     };
@@ -148,7 +148,7 @@ async fn test_update_panel_quota_handler() {
         path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
         headers: headers.clone(),
         body: {
-            "quotas": 50, "attribute": PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender), "value": Attribute::Gender(Gender::Male)
+            "quotas": 50, "attribute": PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male))
         },
         response_type: UpdatePanelQuotaResponse
     };
@@ -183,7 +183,7 @@ async fn test_update_panel_handler() {
         path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
         headers: headers.clone(),
         body: {
-            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)]
+            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male))]
         },
         response_type: SpacePanelsResponse
     };

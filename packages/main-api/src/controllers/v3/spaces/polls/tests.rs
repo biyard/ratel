@@ -7,8 +7,9 @@ use crate::controllers::v3::spaces::polls::{
 use crate::features::did::AttributeCode;
 use crate::features::spaces::SpaceParticipant;
 use crate::features::spaces::panels::{
-    PanelAttribute, SpacePanelParticipant, SpacePanelsResponse, VerifiableAttribute,
+    PanelAttribute, SpacePanelParticipant, SpacePanelsResponse,
 };
+use crate::features::did::VerifiableAttribute;
 use crate::features::spaces::polls::{Poll, PollResponse, PollResultResponse};
 use crate::tests::v3_setup::TestContextV3;
 use crate::types::{Answer, ChoiceQuestion, EntityType, Partition, Question};
@@ -507,7 +508,7 @@ async fn test_get_poll_results_with_panel_responses() {
         path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)]
+            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male))]
         },
         response_type: SpacePanelsResponse
     };
@@ -519,7 +520,7 @@ async fn test_get_poll_results_with_panel_responses() {
         path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "quotas": vec![20, 30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender), PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)], "values": vec![Attribute::Gender(Gender::Male), Attribute::Gender(Gender::Female)]
+            "quotas": vec![20, 30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male)), PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Female))]
         },
         response_type: CreatePanelQuotaResponse
     };

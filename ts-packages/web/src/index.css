@@ -218,6 +218,8 @@
   --color-btn-outline: var(--ui-gray-70);
   --color-btn-outline-hover: var(--color-white);
   --color-btn-outline-text: var(--color-white);
+
+  --color-icon-primary: #aeaaab;
 }
 
 /* ----------------------------

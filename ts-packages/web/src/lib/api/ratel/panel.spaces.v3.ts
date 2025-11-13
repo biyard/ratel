@@ -20,7 +20,6 @@ export function createSpacePanelQuotas(
 
   quotas: number[],
   attributes: PanelAttribute[],
-  values: Attribute[],
 ): Promise<void> {
   return call(
     'POST',
@@ -28,7 +27,6 @@ export function createSpacePanelQuotas(
     {
       quotas,
       attributes,
-      values,
     },
   );
 }
@@ -38,7 +36,6 @@ export function updateSpacePanelQuotas(
 
   quotas: number,
   attribute: PanelAttribute,
-  value: Attribute,
 ): Promise<void> {
   return call(
     'PATCH',
@@ -46,7 +43,6 @@ export function updateSpacePanelQuotas(
     {
       quotas,
       attribute,
-      value,
     },
   );
 }
@@ -55,14 +51,12 @@ export function deleteSpacePanelQuotas(
   spacePk: string,
 
   attribute: PanelAttribute,
-  value: Attribute,
 ): Promise<void> {
   return call(
     'DELETE',
     `/v3/spaces/${encodeURIComponent(spacePk)}/panels/quotas`,
     {
       attribute,
-      value,
     },
   );
 }

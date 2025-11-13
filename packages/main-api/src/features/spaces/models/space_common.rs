@@ -79,6 +79,15 @@ pub struct SpaceCommon {
 
     #[serde(default)]
     pub block_participate: bool,
+
+    #[serde(default = "max_quota")]
+    pub quota: i64,
+    #[serde(default = "max_quota")]
+    pub remains: i64,
+}
+
+fn max_quota() -> i64 {
+    1_000_000
 }
 
 impl SpaceCommon {

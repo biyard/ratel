@@ -60,7 +60,6 @@ impl fmt::Display for Age {
     serde::Serialize,
     serde::Deserialize,
     schemars::JsonSchema,
-    EnumProp,
 )]
 #[serde(rename_all = "snake_case")]
 pub enum Gender {

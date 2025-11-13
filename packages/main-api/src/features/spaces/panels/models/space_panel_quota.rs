@@ -1,7 +1,19 @@
-use crate::{features::spaces::panels::PanelAttribute, types::*};
-use bdk::prelude::*;
+use crate::*;
+use crate::{
+    features::spaces::panels::{PanelAttribute, PanelAttributeWithQuota},
+    types::*,
+};
 
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema, Default)]
+#[derive(
+    Debug,
+    Clone,
+    serde::Serialize,
+    serde::Deserialize,
+    DynamoEntity,
+    JsonSchema,
+    Default,
+    OperationIo,
+)]
 pub struct SpacePanelQuota {
     pub pk: CompositePartition,
     pub sk: EntityType,
@@ -40,5 +52,15 @@ impl SpacePanelQuota {
         };
 
         (space_pk.clone(), EntityType::SpacePanel(panel_id))
+    }
+}
+
+impl From<(Partition, PanelAttributeWithQuota)> for SpacePanelQuota {
+    fn from((space_pk, attr_with_quota): (Partition, PanelAttributeWithQuota)) -> Self {
+        let quota = attr_with_quota.quota();
+        let attr: PanelAttribute = attr_with_quota.into();
+        let value = attr.to_value().unwrap_or_default();
+
+        Self::new(space_pk, attr.to_key(), value, quota, attr)
     }
 }
