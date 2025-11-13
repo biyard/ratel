@@ -1,4 +1,4 @@
-use crate::features::did::VerifiableAttribute;
+use crate::features::did::{VerifiableAttribute, VerifiableAttributeWithQuota};
 use crate::*;
 
 #[derive(
@@ -10,6 +10,41 @@ pub enum PanelAttribute {
     None,
     CollectiveAttribute(CollectiveAttribute),
     VerifiableAttribute(VerifiableAttribute),
+}
+
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, JsonSchema, OperationIo, Default,
+)]
+#[serde(tag = "type", content = "value", rename_all = "snake_case")]
+pub enum PanelAttributeWithQuota {
+    #[default]
+    None,
+    CollectiveAttribute(CollectiveAttribute),
+    VerifiableAttribute(VerifiableAttributeWithQuota),
+}
+
+impl PanelAttributeWithQuota {
+    pub fn quota(&self) -> i64 {
+        match self {
+            PanelAttributeWithQuota::None => 1_000_000_000,
+            PanelAttributeWithQuota::CollectiveAttribute(_) => 1_000_000_000,
+            PanelAttributeWithQuota::VerifiableAttribute(attr_with_quota) => attr_with_quota.quota,
+        }
+    }
+}
+
+impl Into<PanelAttribute> for PanelAttributeWithQuota {
+    fn into(self) -> PanelAttribute {
+        match self {
+            PanelAttributeWithQuota::None => PanelAttribute::None,
+            PanelAttributeWithQuota::CollectiveAttribute(attr) => {
+                PanelAttribute::CollectiveAttribute(attr)
+            }
+            PanelAttributeWithQuota::VerifiableAttribute(attr_with_quota) => {
+                PanelAttribute::VerifiableAttribute(attr_with_quota.attribute)
+            }
+        }
+    }
 }
 
 #[derive(

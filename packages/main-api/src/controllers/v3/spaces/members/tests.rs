@@ -9,7 +9,8 @@ use crate::controllers::v3::spaces::members::{
 use crate::controllers::v3::spaces::panels::CreatePanelQuotaResponse;
 use crate::features::did::AttributeCode;
 use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMemberResponse};
-use crate::features::spaces::panels::{PanelAttribute, SpacePanelsResponse, VerifiableAttribute};
+use crate::features::spaces::panels::{PanelAttribute, SpacePanelsResponse};
+use crate::features::did::VerifiableAttribute;
 use crate::tests::create_user_session;
 use crate::tests::{
     create_app_state,
@@ -156,7 +157,7 @@ async fn test_verification_space_code_handler() {
         path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
         headers: headers.clone(),
         body: {
-            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)]
+            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male))]
         },
         response_type: SpacePanelsResponse
     };
@@ -168,7 +169,7 @@ async fn test_verification_space_code_handler() {
         path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
         headers: headers.clone(),
         body: {
-            "quotas": vec![20, 30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender), PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)], "values": vec![Attribute::Gender(Gender::Male), Attribute::Gender(Gender::Female)]
+            "quotas": vec![20, 30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male)), PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Female))]
         },
         response_type: CreatePanelQuotaResponse
     };

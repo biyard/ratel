@@ -15,6 +15,16 @@ pub enum VerifiableAttribute {
 }
 
 #[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema, OperationIo,
+)]
+#[serde(rename_all = "snake_case")]
+pub struct VerifiableAttributeWithQuota {
+    #[serde(flatten)]
+    pub attribute: VerifiableAttribute,
+    pub quota: i64,
+}
+
+#[derive(
     Debug,
     Clone,
     Copy,

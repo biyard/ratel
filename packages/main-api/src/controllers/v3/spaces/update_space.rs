@@ -47,6 +47,9 @@ pub enum UpdateSpaceRequest {
     Finish {
         finished: bool,
     },
+    Quota {
+        quotas: i64,
+    },
 }
 
 pub async fn update_space_handler(
@@ -180,6 +183,18 @@ pub async fn update_space_handler(
             su = su.with_change_visibility(change_visibility);
 
             space.change_visibility = change_visibility;
+        }
+        UpdateSpaceRequest::Quota { quotas } => {
+            let remains = space.remains + (quotas - space.quota);
+
+            if remains < 0 {
+                return Err(Error::InvalidPanelQuota);
+            }
+
+            su = su.with_quota(quotas).with_remains(remains);
+
+            space.quota = quotas;
+            space.remains = remains;
         }
     }
 
