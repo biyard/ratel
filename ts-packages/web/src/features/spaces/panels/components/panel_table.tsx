@@ -19,7 +19,7 @@ export function PanelTable({
   onChangeQuota,
   onDelete,
 }: PanelTableProps) {
-  const [editing, setEditing] = useState<Record<number, string>>({});
+  const [editing, setEditing] = useState<Record<string, string>>({});
 
   // Filter to show only VerifiableAttribute entries
   const filteredQuotas = useMemo(
@@ -35,6 +35,22 @@ export function PanelTable({
     [filteredQuotas],
   );
 
+  const pct = (n: number) =>
+    total > 0 ? Math.round((n / total) * 1000) / 10 : 0;
+
+  const commit = (sk: string, fallback: number) => {
+    const raw = (editing[sk] ?? '').trim();
+    const parsed = raw === '' ? fallback : Number(raw);
+    const val = Number.isFinite(parsed) ? parsed : fallback;
+
+    onChangeQuota?.(sk, val);
+
+    setEditing((m) => {
+      const { [sk]: _, ...rest } = m;
+      return rest;
+    });
+  };
+
   return (
     <table className="overflow-hidden w-full text-sm rounded-xl border border-input-box-border">
       <thead className="bg-muted text-text-secondary">
@@ -48,9 +64,13 @@ export function PanelTable({
       </thead>
 
       <tbody>
-        {filteredQuotas.map((quota, idx) => {
+        {filteredQuotas.map((quota) => {
           const attributeGroup = quota.toPanelOption().toString().toLowerCase();
           const attributeValue = quota.toPanelValue().toLowerCase();
+          const isDirty = Object.prototype.hasOwnProperty.call(editing, quota.sk);
+          const displayQuota = isDirty
+            ? editing[quota.sk] ?? ''
+            : String(quota.quotas ?? 0);
 
           return (
             <tr
@@ -62,20 +82,26 @@ export function PanelTable({
               </td>
               <td className="py-3 px-4 text-left">{t(attributeValue)}</td>
               <td className="py-3 px-4 text-right text-text-secondary">
-                {quota.quotas}%
+                {pct(quota.quotas ?? 0)}%
               </td>
               <td className="py-3 px-4 text-center">
                 {canEdit ? (
                   <input
                     type="text"
                     className="py-1 px-2 w-20 text-center rounded border border-input-box-border"
-                    value={quota.quotas}
+                    value={displayQuota}
                     onChange={(e) =>
-                      onChangeQuota?.(quota.sk, Number(e.target.value))
+                      setEditing((m) => ({ ...m, [quota.sk]: e.target.value }))
                     }
+                    onBlur={() => commit(quota.sk, quota.quotas ?? 0)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === 'Tab') {
-                        onChangeQuota?.(quota.sk, Number(e.target.value));
+                      if (e.key === 'Enter') {
+                        commit(quota.sk, quota.quotas ?? 0);
+                      } else if (e.key === 'Escape') {
+                        setEditing((m) => {
+                          const { [quota.sk]: _, ...rest } = m;
+                          return rest;
+                        });
                       }
                     }}
                   />
