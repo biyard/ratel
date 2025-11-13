@@ -1,9 +1,6 @@
-use crate::{
-    AppState, constants::SESSION_KEY_USER_ID, types::*, utils::time::get_now_timestamp_millis,
-};
-use axum::extract::FromRequestParts;
-use axum::http::request::Parts;
-use bdk::prelude::*;
+use crate::features::did::VerifiedAttributes;
+use crate::utils::time::get_now_timestamp_millis;
+use crate::*;
 use tower_sessions::Session;
 
 #[derive(
@@ -98,15 +95,23 @@ impl User {
     pub fn is_admin(&self) -> bool {
         self.user_type == UserType::Admin
     }
+
+    pub async fn get_attributes(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+    ) -> Result<VerifiedAttributes> {
+        let (pk, sk) = VerifiedAttributes::keys(&self.pk);
+
+        Ok(VerifiedAttributes::get(cli, pk, Some(sk))
+            .await?
+            .unwrap_or_default())
+    }
 }
 
 impl FromRequestParts<AppState> for Option<User> {
     type Rejection = crate::Error;
 
-    async fn from_request_parts(
-        parts: &mut Parts,
-        state: &AppState,
-    ) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(parts: &mut Parts, state: &AppState) -> Result<Self> {
         tracing::debug!("extracting optional user from request parts");
 
         Ok(User::from_request_parts(parts, state).await.ok())
@@ -117,10 +122,7 @@ impl FromRequestParts<AppState> for Option<User> {
 impl FromRequestParts<AppState> for User {
     type Rejection = crate::Error;
 
-    async fn from_request_parts(
-        parts: &mut Parts,
-        _state: &AppState,
-    ) -> Result<Self, Self::Rejection> {
+    async fn from_request_parts(parts: &mut Parts, _state: &AppState) -> Result<Self> {
         tracing::debug!("extracting user from request parts");
 
         if let Some(user) = parts.extensions.get::<User>() {

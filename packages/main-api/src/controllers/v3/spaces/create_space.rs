@@ -1,3 +1,4 @@
+use crate::features::spaces::panels::SpacePanels;
 use crate::features::spaces::polls::Poll;
 use crate::models::feed::Post;
 use crate::models::space::SpaceCommon;
@@ -56,11 +57,8 @@ pub async fn create_space_handler(
         post_updater.transact_write_item(),
     ];
 
-    if space.space_type == SpaceType::Poll {
-        let poll: Poll = space.pk.clone().try_into()?;
-
-        tx.push(poll.create_transact_write_item());
-    }
+    let type_specific_txs = space.space_type.create_hook(&space.pk)?;
+    tx.extend(type_specific_txs);
 
     transact_write_items!(dynamo.client, tx)?;
 

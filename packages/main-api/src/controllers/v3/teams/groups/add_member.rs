@@ -38,7 +38,7 @@ pub struct AddMemberResponse {
 }
 
 pub async fn add_member_handler(
-    State(AppState { dynamo, .. }): State<AppState>,
+    State(AppState { dynamo, ses, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
     Path(params): Path<AddMemberPathParams>,
     Json(req): Json<AddMemberRequest>,
@@ -89,6 +89,8 @@ pub async fn add_member_handler(
             UserTeam::new(user.pk.clone(), team.clone())
                 .create(&dynamo.client)
                 .await?;
+
+            let _ = UserTeam::send_email(&ses, team.clone(), user.email.clone()).await?;
         }
 
         // Always create UserTeamGroup (user joining a new group)

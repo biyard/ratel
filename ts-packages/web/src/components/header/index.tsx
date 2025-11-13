@@ -4,7 +4,7 @@ import UserGroupIcon from '@/assets/icons/user-group.svg?react';
 import InternetIcon from '@/assets/icons/internet.svg?react';
 import Hamburger from '@/assets/icons/hamburger.svg?react';
 import CloseIcon from '@/assets/icons/remove.svg?react';
-import { NavLink } from 'react-router';
+import { NavLink, useLocation } from 'react-router';
 import Profile from '../profile';
 import { LoginModal } from '../popup/login-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
@@ -18,6 +18,8 @@ import { useUserInfo } from '@/hooks/use-user-info';
 import { config, Env } from '@/config';
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/hooks/use-theme';
+import { useContext, useMemo } from 'react';
+import { TeamContext } from '@/lib/contexts/team-context';
 
 export interface HeaderProps {
   mobileExtends: boolean;
@@ -31,6 +33,28 @@ export default function Header(props: HeaderProps) {
   const { data: user } = useUserInfo();
   const loggedIn = user !== null;
   const { theme, setTheme } = useTheme();
+  const location = useLocation();
+  const { teams } = useContext(TeamContext);
+
+  // Determine current profile image based on page context
+  const teamMatch = location.pathname.match(/^\/teams\/([^/]+)/);
+  const currentTeamUsername = teamMatch?.[1];
+  const currentProfile = useMemo(() => {
+    if (currentTeamUsername) {
+      // Find the team by username from the URL
+      const team = teams.find((t) => t.username === currentTeamUsername);
+      if (team) {
+        return {
+          url: team.profile_url,
+          name: team.nickname,
+        };
+      }
+    }
+    return {
+      url: user?.profile_url || '',
+      name: user?.nickname || '',
+    };
+  }, [currentTeamUsername, teams, user]);
 
   const handleChangeLanguage = (newLocale: string) => {
     document.cookie = `locale=${newLocale}; path=/; max-age=31536000; samesite=lax`;
@@ -232,6 +256,20 @@ export default function Header(props: HeaderProps) {
         >
           {props.mobileExtends ? (
             <CloseIcon className="transition-all" />
+          ) : user && loggedIn ? (
+            <div className="relative">
+              <img
+                src={currentProfile.url}
+                alt={currentProfile.name}
+                className="w-10 h-10 rounded-full object-cover border-2 light:border-neutral-900 dark:border-neutral-100"
+                onError={(e) => {
+                  const img = e.target as HTMLImageElement;
+                  img.style.display = 'none';
+                  img.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div className="hidden w-10 h-10 rounded-full bg-neutral-500 border-2 light:border-neutral-900 dark:border-neutral-100" />
+            </div>
           ) : (
             <Hamburger className="transition-all light:[&>path]:stroke-text-primary" />
           )}

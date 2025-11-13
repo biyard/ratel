@@ -21,6 +21,7 @@ export interface SurveyViewerProps {
   selectedAnswers: Record<number, SurveyAnswer>;
   onUpdateAnswer: (questionIdx: number, answer: SurveyAnswer) => void;
   onSubmit?: () => void;
+  onValidateError?: () => void;
   onLogin?: () => void;
   status: PollStatus;
   isAdmin?: boolean;
@@ -38,6 +39,7 @@ export default function SurveyViewer({
   status,
   selectedAnswers,
   onUpdateAnswer,
+  onValidateError,
   onSubmit,
   onLogin,
   canSubmit,
@@ -107,7 +109,7 @@ export default function SurveyViewer({
           }
           setIdx((v) => Math.min(total - 1, v + 1));
         }}
-        disabled={(!canNext() && !isAdmin) || disabled}
+        disabled={!canNext() && !isAdmin}
       >
         {t('btn_next')}
       </Button>
@@ -117,9 +119,13 @@ export default function SurveyViewer({
       <Button
         onClick={() => {
           if (!validateAllRequiredAnswers()) {
-            showErrorToast(
-              'Please answer all required questions before submitting.',
-            );
+            if (onValidateError) {
+              onValidateError();
+            } else {
+              showErrorToast(
+                'Please answer all required questions before submitting.',
+              );
+            }
             return;
           }
           onSubmit?.();
@@ -157,8 +163,8 @@ export default function SurveyViewer({
       {total > 0 && (
         <>
           <Card key={`survey-question-${idx}`}>
-            <div className="flex items-center justify-between">
-              <div className="text-sm/[22.5px] text-white font-medium">
+            <div className="flex justify-between items-center">
+              <div className="font-medium text-white text-sm/[22.5px]">
                 {idx + 1} / {total}
               </div>
             </div>
@@ -194,7 +200,7 @@ export default function SurveyViewer({
             />
           </Card>
 
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex gap-2 justify-between items-center">
             {idx != 0 ? (
               <Button
                 onClick={() => setIdx((v) => Math.max(0, v - 1))}

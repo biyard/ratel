@@ -32,6 +32,11 @@ pub struct SpacePost {
     #[dynamo(index = "gsi6", sk)]
     pub updated_at: i64,
 
+    #[serde(default)]
+    pub started_at: i64,
+    #[serde(default)]
+    pub ended_at: i64,
+
     pub title: String,
     pub html_contents: String,
     #[dynamo(index = "gsi6", name = "find_by_cagetory", pk)]
@@ -64,6 +69,8 @@ impl SpacePost {
         category_name: String,
         urls: Vec<String>,
         files: Option<Vec<File>>,
+        started_at: i64,
+        ended_at: i64,
         User {
             pk,
             display_name,
@@ -79,6 +86,8 @@ impl SpacePost {
             sk: EntityType::SpacePost(uuid),
             created_at: now,
             updated_at: now,
+            started_at,
+            ended_at,
 
             title,
             html_contents,

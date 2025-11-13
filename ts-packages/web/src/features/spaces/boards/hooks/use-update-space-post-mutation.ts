@@ -13,6 +13,9 @@ export function updateSpacePost(
   categoryName: string,
   image: string | null,
   files: FileModel[],
+
+  startedAt: number,
+  endedAt: number,
 ): Promise<void> {
   return call(
     'PATCH',
@@ -23,6 +26,9 @@ export function updateSpacePost(
       category_name: categoryName,
       urls: image ? [image] : [],
       files,
+
+      started_at: startedAt,
+      ended_at: endedAt,
     },
   );
 }
@@ -40,6 +46,9 @@ export function useUpdateSpacePostMutation<T extends SpacePostResponse>() {
       categoryName,
       image,
       files,
+
+      startedAt,
+      endedAt,
     }: {
       spacePk: string;
       postPk: string;
@@ -48,6 +57,9 @@ export function useUpdateSpacePostMutation<T extends SpacePostResponse>() {
       categoryName: string;
       image: string | null;
       files: FileModel[];
+
+      startedAt: number;
+      endedAt: number;
     }) => {
       await updateSpacePost(
         spacePk,
@@ -57,6 +69,9 @@ export function useUpdateSpacePostMutation<T extends SpacePostResponse>() {
         categoryName,
         image,
         files,
+
+        startedAt,
+        endedAt,
       );
     },
     onSuccess: async (_, { spacePk, postPk }) => {

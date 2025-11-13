@@ -1,5 +1,6 @@
 import { TiptapEditor } from '../text-editor';
 import { useSpaceReplies } from '@/features/spaces/boards/hooks/use-space-replies';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 
 export type SpaceReplyListProp = {
   spacePk: string;
@@ -12,6 +13,7 @@ export function SpaceReplyList({
   postPk,
   commentSk,
 }: SpaceReplyListProp) {
+  const { data: user } = useSuspenseUserInfo();
   const { data } = useSpaceReplies(spacePk, postPk, commentSk);
 
   const replies = data.pages.flatMap((p) => p.items);
@@ -39,6 +41,7 @@ export function SpaceReplyList({
             </div>
           </div>
           <TiptapEditor
+            isMe={user.pk === reply.author_pk}
             content={reply.content}
             editable={false}
             showToolbar={false}
