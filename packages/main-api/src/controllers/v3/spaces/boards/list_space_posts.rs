@@ -13,7 +13,7 @@ use crate::{
         },
     },
     models::{SpaceCommon, feed::Post, team::Team, user::User},
-    types::{EntityType, Partition, TeamGroupPermission, author::Author},
+    types::{EntityType, Partition, Permissions, TeamGroupPermission, author::Author},
 };
 use aide::NoApi;
 use axum::extract::{Json, Path, Query, State};
@@ -29,9 +29,13 @@ pub struct ListSpacePostQueryParams {
 pub async fn list_space_posts_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(user): NoApi<Option<User>>,
+    NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Query(ListSpacePostQueryParams { bookmark, category }): Query<ListSpacePostQueryParams>,
 ) -> Result<Json<ListSpacePostsResponse>, Error> {
+    let now = chrono::Utc::now().timestamp() * 1000;
+    let is_owner = permissions.contains(TeamGroupPermission::SpaceEdit);
+
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
     }
@@ -75,7 +79,10 @@ pub async fn list_space_posts_handler(
 
     for response in responses {
         let post: SpacePostResponse = response.clone().into();
-        posts.push(post);
+
+        if is_owner || (post.started_at <= now && now <= post.ended_at) {
+            posts.push(post);
+        }
     }
 
     Ok(Json(ListSpacePostsResponse { posts, bookmark }))

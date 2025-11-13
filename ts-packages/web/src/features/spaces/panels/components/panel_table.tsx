@@ -130,7 +130,7 @@ export function PanelTable({
                       setEditing((m) => ({ ...m, [idx]: String(q) }));
                   }}
                   onBlur={() => commit(idx, q)}
-                  className="h-8 text-left"
+                  className="h-8 text-left hover:border-primary"
                 />
               </td>
 
