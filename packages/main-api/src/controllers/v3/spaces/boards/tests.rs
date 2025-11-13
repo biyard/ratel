@@ -27,8 +27,8 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
         path: format!("/v3/posts/{}", post_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "title": "Poll Post",
-            "content": "<p>This is a poll post</p>",
+            "title": "Deliberation Post",
+            "content": "<p>This is a deliberation post</p>",
             "publish": true
         }
     };
@@ -39,7 +39,7 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
         path: "/v3/spaces",
         headers: test_user.1.clone(),
         body: {
-            "space_type": 1,
+            "space_type": SpaceType::Deliberation,
             "post_pk": post_pk,
         },
         response_type: CreateSpaceResponse
@@ -48,6 +48,7 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
 
     let space_pk = create_space_res.space_pk;
 
+    // Create a space board post
     let (status, _headers, create_space_post_res) = post! {
         app: app,
         path: format!("/v3/spaces/{}/boards", space_pk.to_string()),
@@ -60,6 +61,17 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
             "files": []
         },
         response_type: CreateSpacePostResponse
+    };
+    assert_eq!(status, 200);
+
+    let (status, _headers, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "publish": true,
+            "visibility": "PUBLIC",
+        }
     };
     assert_eq!(status, 200);
 
