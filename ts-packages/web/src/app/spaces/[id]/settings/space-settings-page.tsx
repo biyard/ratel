@@ -51,6 +51,24 @@ export function SpaceSettingsPage() {
             </TooltipContent>
           </Tooltip> */}
         </Checkbox>
+
+        <Checkbox
+          id="visibility"
+          value={ctrl.changeVisibility}
+          onChange={ctrl.handleChangeVisibilityChange}
+        >
+          <span className="font-medium text-text-primary">
+            {i18n.change_visibility_label}
+          </span>
+          {/* <Tooltip>
+            <TooltipTrigger asChild>
+              <Info />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Add to library</p>
+            </TooltipContent>
+          </Tooltip> */}
+        </Checkbox>
       </div>
     </div>
   );

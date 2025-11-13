@@ -73,7 +73,6 @@ async fn test_poll_space_creation() {
     PollUserAnswer::new(
         poll.pk.clone(),
         poll_pk.clone(),
-        user.pk.clone(),
         vec![
             Answer::SingleChoice { answer: Some(0) },
             Answer::MultipleChoice {
@@ -81,6 +80,7 @@ async fn test_poll_space_creation() {
             },
         ],
         None,
+        user.clone(),
     )
     .create(&cli)
     .await

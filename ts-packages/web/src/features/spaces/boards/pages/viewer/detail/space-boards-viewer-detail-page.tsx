@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import PostHeader from '../../../components/post-header';
 import PostBody from '../../../components/post-body';
 import PostComments from '../../../components/post-comments';
+import { TimeRangeSetting } from '@/features/spaces/polls/components/time-range-setting';
 
 export function SpaceBoardsViewerDetailPage({
   spacePk,
@@ -20,8 +21,6 @@ export function SpaceBoardsViewerDetailPage({
     ctrl.user &&
     (!ctrl.space.anonymous_participation || ctrl.space.participated);
 
-  console.log('canActive: ', canActive);
-
   return (
     <>
       <div className="flex flex-col gap-6 w-full max-tablet:mr-[20px]">
@@ -34,6 +33,15 @@ export function SpaceBoardsViewerDetailPage({
           canDelete={false}
           canEdit={false}
         />
+        <TimeRangeSetting
+          canEdit={false}
+          onChange={() => {}}
+          startTimestampMillis={ctrl.post?.started_at ?? 0}
+          endTimestampMillis={ctrl.post?.ended_at ?? 0}
+          alwaysEdit={false}
+          className="justify-end"
+        />
+
         <PostBody post={ctrl.post} />
         <PostComments
           t={t}

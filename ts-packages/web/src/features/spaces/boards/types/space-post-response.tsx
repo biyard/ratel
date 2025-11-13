@@ -6,6 +6,8 @@ export class SpacePostResponse {
 
   created_at: number;
   updated_at: number;
+  started_at?: number;
+  ended_at?: number;
   title: string;
   html_contents: string;
   category_name: string;
@@ -32,6 +34,8 @@ export class SpacePostResponse {
     this.html_contents = json.html_contents;
     this.category_name = json.category_name;
     this.number_of_comments = json.number_of_comments;
+    this.started_at = json.started_at ?? 0;
+    this.ended_at = json.ended_at ?? 0;
 
     this.user_pk = json.user_pk;
     this.author_display_name = json.author_display_name;

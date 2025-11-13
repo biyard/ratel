@@ -80,6 +80,9 @@ pub struct SpaceCommonResponse {
     pub booster: BoosterType,
     pub custom_booster: Option<i64>,
     pub rewards: Option<i64>,
+
+    pub quota: i64,
+    pub remains: i64,
 }
 
 impl From<SpaceCommon> for SpaceCommonResponse {
@@ -103,6 +106,8 @@ impl From<SpaceCommon> for SpaceCommonResponse {
             custom_booster: value.custom_booster,
             rewards: value.rewards,
             content: value.content,
+            quota: value.quota,
+            remains: value.remains,
         }
     }
 }
