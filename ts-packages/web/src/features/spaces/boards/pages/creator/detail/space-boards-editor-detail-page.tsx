@@ -5,6 +5,8 @@ import PostHeader from '../../../components/post-header';
 import { useTranslation } from 'react-i18next';
 import PostBody from '../../../components/post-body';
 import PostComments from '../../../components/post-comments';
+import { TimeRangeSetting } from '@/features/spaces/polls/components/time-range-setting';
+// import { TimeRangeSetting } from '@/features/spaces/polls/components/time-range-setting';
 
 export function SpaceBoardsEditorDetailPage({
   spacePk,
@@ -27,6 +29,14 @@ export function SpaceBoardsEditorDetailPage({
           goBack={ctrl.handleBack}
           canDelete={true}
           canEdit={true}
+        />
+        <TimeRangeSetting
+          canEdit={false}
+          onChange={() => {}}
+          startTimestampMillis={ctrl.post?.started_at ?? 0}
+          endTimestampMillis={ctrl.post?.ended_at ?? 0}
+          alwaysEdit={false}
+          className="justify-end"
         />
         <PostBody post={ctrl.post} />
         <PostComments

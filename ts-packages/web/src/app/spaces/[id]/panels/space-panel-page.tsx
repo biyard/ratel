@@ -1,15 +1,11 @@
 import { useParams } from 'react-router';
 import '@/features/spaces/deliberations/deliberation-side-menus';
-import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import { SpacePanelEditorPage } from '@/features/spaces/panels/pages/creator/spce-panel-editor-page';
+import { useRedirectUser } from '@/features/spaces/hooks/use-redirect-user';
 
 export default function SpacePanelPage() {
   const { spacePk } = useParams<{ spacePk: string }>();
-  const { data: space } = useSpaceById(spacePk);
-
-  if (!space) {
-    throw new Error('Space not found');
-  }
+  useRedirectUser();
 
   return <SpacePanelEditorPage spacePk={spacePk} />;
 }

@@ -12,6 +12,9 @@ export function createSpacePost(
   categoryName: string,
   image: string | null,
   files: FileModel[],
+
+  startedAt: number,
+  endedAt: number,
 ): Promise<void> {
   return call('POST', `/v3/spaces/${encodeURIComponent(spacePk)}/boards`, {
     title,
@@ -19,6 +22,9 @@ export function createSpacePost(
     category_name: categoryName,
     urls: image ? [image] : [],
     files,
+
+    started_at: startedAt,
+    ended_at: endedAt,
   });
 }
 
@@ -34,6 +40,9 @@ export function useCreateSpacePostMutation<T extends SpacePostResponse>() {
       categoryName,
       image,
       files,
+
+      startedAt,
+      endedAt,
     }: {
       spacePk: string;
       title: string;
@@ -41,6 +50,9 @@ export function useCreateSpacePostMutation<T extends SpacePostResponse>() {
       categoryName: string;
       image: string | null;
       files: FileModel[];
+
+      startedAt: number;
+      endedAt: number;
     }) => {
       await createSpacePost(
         spacePk,
@@ -49,6 +61,9 @@ export function useCreateSpacePostMutation<T extends SpacePostResponse>() {
         categoryName,
         image,
         files,
+
+        startedAt,
+        endedAt,
       );
     },
     onSuccess: async (_, { spacePk }) => {

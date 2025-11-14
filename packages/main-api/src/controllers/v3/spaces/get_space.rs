@@ -53,6 +53,8 @@ pub struct GetSpaceResponse {
     pub participant_username: Option<String>,
 
     pub requirements: Vec<SpaceRequirementDto>,
+    pub remains: i64,
+    pub quota: i64,
 }
 
 pub async fn get_space_handler(
@@ -186,6 +188,8 @@ impl
             participant_profile_url,
             participant_username,
             requirements: vec![],
+            remains: space.remains,
+            quota: space.quota,
         }
     }
 }

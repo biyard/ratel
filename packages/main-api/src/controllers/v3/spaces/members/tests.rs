@@ -6,16 +6,16 @@ use crate::controllers::v3::spaces::files::update_files::UpdateSpaceFileResponse
 use crate::controllers::v3::spaces::members::{
     ResentInvitationCodeResponse, UpsertInvitationResponse, VerifySpaceCodeResponse,
 };
-use crate::controllers::v3::spaces::panels::CreatePanelQuotaResponse;
 use crate::features::did::AttributeCode;
 use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMemberResponse};
-use crate::features::spaces::panels::{PanelAttribute, SpacePanelsResponse, VerifiableAttribute};
+use crate::features::spaces::panels::{PanelAttribute, PanelAttributeWithQuota, SpacePanelQuota, SpacePanelsResponse};
+use crate::features::did::{VerifiableAttribute, VerifiableAttributeWithQuota};
 use crate::tests::create_user_session;
 use crate::tests::{
     create_app_state,
     v3_setup::{TestContextV3, setup_v3},
 };
-use crate::types::{EntityType, File, Partition, SpaceType};
+use crate::types::{EntityType, File, Gender, Partition, SpaceType};
 use crate::*;
 use axum::AxumRouter;
 
@@ -156,7 +156,7 @@ async fn test_verification_space_code_handler() {
         path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
         headers: headers.clone(),
         body: {
-            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)]
+            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male))]
         },
         response_type: SpacePanelsResponse
     };
@@ -168,13 +168,26 @@ async fn test_verification_space_code_handler() {
         path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
         headers: headers.clone(),
         body: {
-            "quotas": vec![20, 30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender), PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)], "values": vec![Attribute::Gender(Gender::Male), Attribute::Gender(Gender::Female)]
+            "attributes": vec![
+                PanelAttributeWithQuota::VerifiableAttribute(
+                    VerifiableAttributeWithQuota {
+                        attribute: VerifiableAttribute::Gender(Gender::Male),
+                        quota: 20
+                    }
+                ),
+                PanelAttributeWithQuota::VerifiableAttribute(
+                    VerifiableAttributeWithQuota {
+                        attribute: VerifiableAttribute::Gender(Gender::Female),
+                        quota: 30
+                    }
+                )
+            ]
         },
-        response_type: CreatePanelQuotaResponse
+        response_type: Vec<SpacePanelQuota>
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body.attributes.len(), 2);
+    assert_eq!(body.len(), 2);
 
     let (status, _, _res) = patch! {
         app: app,
