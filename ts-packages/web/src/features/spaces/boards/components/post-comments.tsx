@@ -11,11 +11,17 @@ export type PostCommentsProps = {
   t: TFunction<'Thread', undefined>;
   spacePk: string;
   post: SpacePostResponse;
+  comments: SpacePostCommentResponse[];
   isLoggedIn: boolean;
   expandComment: State<boolean>;
   handleComment: (content: string) => Promise<void>;
   handleReplyToComment: (commentSk: string, content: string) => Promise<void>;
   handleLikeComment: (commentId: string, like: boolean) => Promise<void>;
+
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  onPrevPage: () => void;
+  onNextPage: () => void;
 };
 
 export default function PostComments({
@@ -27,6 +33,12 @@ export default function PostComments({
   handleComment,
   handleReplyToComment,
   handleLikeComment,
+  comments,
+
+  hasPrevPage,
+  hasNextPage,
+  onPrevPage,
+  onNextPage,
 }: PostCommentsProps) {
   const toPostComment = (c: SpacePostCommentResponse): PostComment => {
     return {
@@ -86,7 +98,7 @@ export default function PostComments({
           </>
         )}
       </div>
-      {post?.comments.map((comment) => (
+      {comments.map((comment) => (
         <Comment
           spacePk={spacePk}
           key={comment?.pk + ' ' + comment?.sk}
@@ -97,6 +109,27 @@ export default function PostComments({
           t={t}
         />
       ))}
+
+      <div className="flex justify-center gap-3 mt-4">
+        {hasPrevPage && (
+          <button
+            type="button"
+            onClick={onPrevPage}
+            className="px-3 py-1.5 text-sm rounded-md border border-border-subtle hover:bg-bg-elevated"
+          >
+            {t('prev_comment')}
+          </button>
+        )}
+        {hasNextPage && (
+          <button
+            type="button"
+            onClick={onNextPage}
+            className="px-3 py-1.5 text-sm rounded-md border border-border-subtle hover:bg-bg-elevated"
+          >
+            {t('next_comment')}
+          </button>
+        )}
+      </div>
     </>
   );
 }
