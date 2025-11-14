@@ -151,3 +151,5 @@ export const spaceKeys = {
 
 export const QK_MEMBERSHIPS = 'memberships';
 export const QK_ATTRIBUTE_CODES = 'attribute-codes';
+
+export const PANEL_NAME_AUTO_SAVE_DELAY_MS = 500;
