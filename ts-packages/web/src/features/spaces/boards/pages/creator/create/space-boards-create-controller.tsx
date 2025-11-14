@@ -28,6 +28,8 @@ export class SpaceBoardsCreateController {
     public categoryName: State<string>,
     public image: State<string | null>,
     public files: State<FileModel[]>,
+    public startedAt: State<number>,
+    public endedAt: State<number>,
     public postPk: State<string | null>,
     public t: TFunction<'SpaceBoardsCreate', undefined>,
 
@@ -67,6 +69,9 @@ export class SpaceBoardsCreateController {
           categoryName,
           image,
           files: this.files.get() ?? [],
+
+          startedAt: this.startedAt.get(),
+          endedAt: this.endedAt.get(),
         });
 
         showSuccessToast('Success to update posts');
@@ -83,6 +88,9 @@ export class SpaceBoardsCreateController {
           categoryName,
           image,
           files: this.files.get() ?? [],
+
+          startedAt: this.startedAt.get(),
+          endedAt: this.endedAt.get(),
         });
 
         showSuccessToast('Success to update posts');
@@ -192,6 +200,20 @@ export class SpaceBoardsCreateController {
     }
   };
 
+  handleTimeRange = async (started_at: number, ended_at: number) => {
+    logger.debug(
+      `onChangeTimeRange called: start=${started_at}, end=${ended_at}`,
+    );
+    // validate time range
+    if (started_at >= ended_at) {
+      showErrorToast(this.t('invalid_time'));
+      return;
+    }
+
+    this.startedAt.set(started_at);
+    this.endedAt.set(ended_at);
+  };
+
   handleRemoveImage = async () => {
     this.image.set(null);
   };
@@ -203,10 +225,13 @@ export function useSpaceBoardsCreateController(spacePk: string) {
   const { t } = useTranslation('SpaceBoardsCreate');
   const [searchParams] = useSearchParams();
   const postPkParam = searchParams.get('post-pk');
+  const now = new Date().getTime();
 
   const title = useState('');
   const htmlContents = useState('');
   const categoryName = useState('');
+  const startedAt = useState(now);
+  const endedAt = useState(now);
   const image = useState<string | null>(null);
   const files = useState<FileModel[]>([]);
   const postPk = useState<string | null>(postPkParam);
@@ -227,6 +252,8 @@ export function useSpaceBoardsCreateController(spacePk: string) {
     new State(categoryName),
     new State(image),
     new State(files),
+    new State(startedAt),
+    new State(endedAt),
     new State(postPk),
     t,
 
@@ -250,6 +277,8 @@ export function useSpaceBoardsCreateController(spacePk: string) {
           controller.categoryName.set(post.category_name);
           controller.image.set(post.urls.length == 0 ? '' : post.urls[0]);
           controller.files.set(post.files.length == 0 ? [] : post.files);
+          controller.startedAt.set(post.started_at ?? now);
+          controller.endedAt.set(post.ended_at ?? now);
         } catch (error) {
           logger.error('Failed to fetch post data:', error);
           showErrorToast('Failed to fetch post data');

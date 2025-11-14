@@ -7,6 +7,8 @@ import { useState } from 'react';
 import { usePollResponseMutation } from '../../polls/hooks/use-poll-response-mutation';
 import { useErrorZone } from '@/features/errors/hooks/use-error-zone';
 import { ErrorSpacePollRequiredField } from '@/features/errors/types/errors';
+import { usePopup } from '@/lib/contexts/popup-service';
+import CompleteSurveyPopup from '../../polls/components/modal/complete_survey';
 
 export type PollRequirementProps = React.HTMLAttributes<HTMLDivElement> & {
   spacePk: string;
@@ -20,7 +22,9 @@ export default function PollRequirement({
   onNext,
 }: PollRequirementProps) {
   const { t } = useTranslation('SpaceSurvey');
+  const { t: modalT } = useTranslation('SpaceCompleteSurvey');
   const { data: poll } = usePollSpace(spacePk, pollSk);
+  const popup = usePopup();
   const defaultAnswers: Record<number, SurveyAnswer | null> = {};
   const { setError, removeError, ErrorZone } = useErrorZone();
 
@@ -35,19 +39,61 @@ export default function PollRequirement({
   const respondPoll = usePollResponseMutation();
   const handleSubmit = async () => {
     logger.debug('Submitting poll answers', answers);
-    // Clear any previous errors
     removeError();
+
+    if (!poll) return;
+
+    const defaultAnswerByType = (
+      answer_type: SurveyAnswer['answer_type'],
+    ): SurveyAnswer => {
+      switch (answer_type) {
+        case 'single_choice':
+        case 'dropdown':
+        case 'linear_scale':
+        case 'short_answer':
+        case 'subjective':
+          return { answer_type, answer: null };
+        case 'multiple_choice':
+        case 'checkbox':
+          return { answer_type, answer: [] };
+        default:
+          return { answer_type, answer: null };
+      }
+    };
+
+    const total = poll.questions.length;
+
+    const payload: SurveyAnswer[] = Array.from({ length: total }, (_, i) => {
+      const existing = answers[i];
+      if (existing !== undefined && existing !== null) {
+        return existing;
+      }
+
+      const q = poll.questions[i];
+      return defaultAnswerByType(q.answer_type as SurveyAnswer['answer_type']);
+    });
 
     respondPoll.mutate(
       {
         spacePk,
         pollSk,
-        answers: Object.values(answers),
+        answers: payload,
       },
       {
         onSuccess: () => {
+          popup
+            .open(
+              <CompleteSurveyPopup
+                onConfirm={() => {
+                  onNext?.();
+                  popup.close();
+                }}
+              />,
+            )
+            .withTitle(modalT('modal_title'))
+            .withoutClose();
+
           logger.debug('Poll response submitted successfully');
-          onNext?.();
         },
         onError: (error) => {
           logger.error('Failed to submit poll response:', error);

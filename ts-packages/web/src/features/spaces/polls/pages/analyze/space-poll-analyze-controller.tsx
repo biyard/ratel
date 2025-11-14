@@ -14,8 +14,8 @@ import { route } from '@/route';
 import { NavigateFunction, useNavigate } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
-import usePanelSpace from '@/features/spaces/panels/hooks/use-panel-space';
 import { PanelAttribute } from '@/features/spaces/panels/types/panel-attribute';
+import { useListPanels } from '@/features/spaces/panels/hooks/use-list-panels';
 
 export class SpacePollAnalyzeController {
   constructor(
@@ -88,6 +88,19 @@ export class SpacePollAnalyzeController {
         : undefined;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const raw: any =
+        ans && typeof ans === 'object' && 'answer' in ans ? ans.answer : ans;
+
+      if (
+        raw === null ||
+        typeof raw === 'undefined' ||
+        (Array.isArray(raw) && raw.length === 0) ||
+        (typeof raw === 'string' && raw.trim().length === 0)
+      ) {
+        return '';
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const labelOf = (v: any) => {
         const idx = typeof v === 'number' ? v : Number(v);
         if (Number.isFinite(idx) && opts && idx >= 0 && idx < opts.length) {
@@ -97,28 +110,30 @@ export class SpacePollAnalyzeController {
       };
 
       if (['single_choice', 'dropdown', 'select', 'radio'].includes(kind)) {
-        return labelOf(ans?.answer);
+        return labelOf(raw);
       }
 
       if (['multiple_choice', 'checkbox', 'multi_select'].includes(kind)) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let arr: any[] = [];
-        if (Array.isArray(ans?.answer)) arr = ans.answer;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        else if (Array.isArray(ans)) arr = ans as any[];
-        else if (typeof ans?.answer === 'string')
-          arr = String(ans.answer)
+        if (Array.isArray(raw)) {
+          arr = raw;
+        } else if (typeof raw === 'string') {
+          arr = raw
             .split(',')
             .map((s) => s.trim())
             .filter((s) => s.length > 0);
+        }
+
+        if (arr.length === 0) return '';
         return arr.map(labelOf).join(', ');
       }
 
       if (kind === 'linear_scale') {
-        return typeof ans?.answer !== 'undefined' ? String(ans.answer) : '';
+        return String(raw);
       }
 
-      return typeof ans?.answer !== 'undefined' ? String(ans.answer) : '';
+      return String(raw);
     };
 
     const getGenderDisp = (g?: string) =>
@@ -299,8 +314,8 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
   const { data: summary } = usePollSpaceSummaries(spacePk, pollPk);
-  const { data: panel } = usePanelSpace(spacePk);
-  const attribute = panel.attributes;
+  const { data: panels } = useListPanels(spacePk);
+  const attribute = panels?.map((p) => p.attributes).flat() ?? [];
   const { t } = useTranslation('SpacePollAnalyze');
 
   const navigator = useNavigate();

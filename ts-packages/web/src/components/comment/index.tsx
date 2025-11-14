@@ -4,7 +4,7 @@ import { BendArrowRight, CommentIcon, ThumbUp } from '@/components/icons';
 
 import { validateString } from '@/lib/string-filter-utils';
 import { ChevronDoubleDownIcon } from '@heroicons/react/20/solid';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { logger } from '@/lib/logger';
 import { ReplyList } from './reply-list';
 import { TFunction } from 'i18next';
@@ -15,6 +15,7 @@ import { TiptapEditor } from '../text-editor';
 import type { Editor } from '@tiptap/core';
 import { useLocation } from 'react-router';
 import { SpaceReplyList } from './space-reply-list';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 
 interface CommentProps {
   spacePk?: string;
@@ -34,13 +35,25 @@ export function Comment({
   t,
   isLoggedIn = true,
 }: CommentProps) {
+  const user = useSuspenseUserInfo();
   const location = useLocation();
   const boards = /\/boards\/posts(\/|$)/.test(location.pathname);
   const [expand, setExpand] = useState(false);
   const [showReplies, setShowReplies] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToRoot = () => {
+    rootRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    });
+  };
 
   return (
-    <div className="flex flex-col gap-3 pb-4 border-b border-b-divider">
+    <div
+      ref={rootRef}
+      className="flex flex-col gap-3 pb-4 border-b border-b-divider"
+    >
       <div className="flex flex-row gap-2 items-center">
         <img
           alt={comment.author_display_name}
@@ -89,6 +102,7 @@ export function Comment({
 
         {/* Content */}
         <TiptapEditor
+          isMe={user.data.pk === comment.author_pk}
           content={comment.content}
           editable={false}
           showToolbar={false}
@@ -103,7 +117,13 @@ export function Comment({
               className="gap-2 text-primary flex flex-row justify-center items-center disabled:cursor-not-allowed"
               disabled={comment.replies === 0}
               onClick={() => {
-                setShowReplies(!showReplies);
+                setShowReplies((prev) => {
+                  const next = !prev;
+                  if (!prev) {
+                    scrollToRoot();
+                  }
+                  return next;
+                });
               }}
             >
               {`${comment.replies ?? 0} ${comment.replies <= 1 ? t('reply') : t('replies')}`}
@@ -121,7 +141,7 @@ export function Comment({
                 aria-label="Reply to Comment"
                 onClick={() => {
                   setExpand((prev) => !prev);
-                  setShowReplies(true);
+                  // setShowReplies(true);
                 }}
                 className="flex gap-2 cursor-pointer justify-center items-center text-text-primary"
               >
@@ -190,7 +210,7 @@ export function Comment({
 }
 
 export function NewComment({
-  // className = '',
+  // className,
   onClose,
   onSubmit,
   t,
@@ -202,27 +222,13 @@ export function NewComment({
 }) {
   const [loading, setLoading] = useState(false);
   const [content, setContent] = useState('');
-  const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor | null>(null);
 
-  useEffect(() => {
-    containerRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
-    // Auto-focus the editor when component mounts
-    setTimeout(() => {
-      editorRef.current?.commands.focus();
-    }, 100);
-  }, []);
-
   const handleEditorContainerClick = () => {
-    // Focus the editor when clicking anywhere in the editor container
     editorRef.current?.commands.focus();
   };
 
   const handleSubmit = async () => {
-    // const content = editorRef.current?.getContent() || '';
     if (
       onSubmit &&
       !loading &&
@@ -242,12 +248,9 @@ export function NewComment({
       }
     }
   };
+
   return (
-    <div
-      ref={containerRef}
-      className="flex flex-col w-full bg-comment-box-bg border rounded-lg border-primary max-w-desktop"
-    >
-      {/* Header with close button */}
+    <div className="flex flex-col w-full bg-comment-box-bg border rounded-lg border-primary max-w-desktop">
       <div className="px-3 pt-3 flex flex-row justify-between items-center">
         <span className="text-sm font-medium text-text-primary">
           {t('write_comment')}
@@ -265,7 +268,6 @@ export function NewComment({
         </button>
       </div>
 
-      {/* Editor - clickable container */}
       <div
         className="flex-1 w-full cursor-text hover:bg-foreground/5 transition-colors rounded-md"
         onClick={handleEditorContainerClick}
@@ -288,7 +290,6 @@ export function NewComment({
         />
       </div>
 
-      {/* Footer with submit button */}
       <div className="px-3 pb-3 flex flex-row justify-end items-center gap-2 border-t border-divider pt-3">
         <Button
           id="publish-comment-button"

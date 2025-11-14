@@ -1,17 +1,17 @@
 use crate::controllers::v3::posts::CreatePostResponse;
 use crate::controllers::v3::spaces::create_space::CreateSpaceResponse;
-use crate::controllers::v3::spaces::panels::CreatePanelQuotaResponse;
 use crate::controllers::v3::spaces::polls::{
     DeletePollSpaceResponse, RespondPollSpaceResponse, UpdatePollSpaceResponse,
 };
 use crate::features::did::AttributeCode;
 use crate::features::spaces::SpaceParticipant;
 use crate::features::spaces::panels::{
-    PanelAttribute, SpacePanelParticipant, SpacePanelsResponse, VerifiableAttribute,
+    PanelAttribute, PanelAttributeWithQuota, SpacePanelParticipant, SpacePanelQuota, SpacePanelsResponse,
 };
+use crate::features::did::{VerifiableAttribute, VerifiableAttributeWithQuota};
 use crate::features::spaces::polls::{Poll, PollResponse, PollResultResponse};
 use crate::tests::v3_setup::TestContextV3;
-use crate::types::{Answer, ChoiceQuestion, EntityType, Partition, Question};
+use crate::types::{Answer, ChoiceQuestion, EntityType, Gender, Partition, Question};
 use crate::utils::time::get_now_timestamp_millis;
 use crate::*;
 
@@ -507,7 +507,7 @@ async fn test_get_poll_results_with_panel_responses() {
         path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)]
+            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male))]
         },
         response_type: SpacePanelsResponse
     };
@@ -519,13 +519,26 @@ async fn test_get_poll_results_with_panel_responses() {
         path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "quotas": vec![20, 30], "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender), PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender)], "values": vec![Attribute::Gender(Gender::Male), Attribute::Gender(Gender::Female)]
+            "attributes": vec![
+                PanelAttributeWithQuota::VerifiableAttribute(
+                    VerifiableAttributeWithQuota {
+                        attribute: VerifiableAttribute::Gender(Gender::Male),
+                        quota: 20
+                    }
+                ),
+                PanelAttributeWithQuota::VerifiableAttribute(
+                    VerifiableAttributeWithQuota {
+                        attribute: VerifiableAttribute::Gender(Gender::Female),
+                        quota: 30
+                    }
+                )
+            ]
         },
-        response_type: CreatePanelQuotaResponse
+        response_type: Vec<SpacePanelQuota>
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body.attributes.len(), 2);
+    assert_eq!(body.len(), 2);
 
     let participant = SpacePanelParticipant::new(space_pk.clone(), test_user.0.clone());
     let _ = participant.create(&ddb).await;

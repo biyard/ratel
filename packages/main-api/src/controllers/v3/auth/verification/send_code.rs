@@ -76,13 +76,30 @@ pub async fn send_code_handler(
 
     #[cfg(all(not(test), not(feature = "no-secret")))]
     {
+        use crate::utils::html::signup_html;
+
+        let user_email = req.email.clone();
+        let subject = String::from("[Ratel] Your security code");
+
+        let html = signup_html(&user_email, &value);
+
+        let text = format!(
+            "Hi {name}\n\
+         Please verify your security code to activate your account.\n\
+         Your security code is: {code}\n\
+         This code expires in 30 minutes.\n\
+         If you didn’t request this, you can safely ignore this email.\n",
+            name = if user_email.is_empty() {
+                ""
+            } else {
+                &user_email
+            },
+            code = value
+        );
+
         let mut i = 0;
         while let Err(e) = ses
-            .send_mail(
-                &req.email,
-                "Please finish to sign up within 30 minutes with your verification code",
-                format!("Verification code: {:?}", value).as_ref(),
-            )
+            .send_mail_html(&user_email, &subject, &html, Some(&text))
             .await
         {
             btracing::notify!(

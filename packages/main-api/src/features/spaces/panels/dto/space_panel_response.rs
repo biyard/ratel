@@ -15,21 +15,6 @@ use bdk::prelude::*;
     aide::OperationIo,
 )]
 pub struct SpacePanelsResponse {
-    pub pk: Partition,
-
     pub quotas: i64,
-    pub attributes: Vec<PanelAttribute>,
-
-    pub panel_quotas: Vec<SpacePanelQuota>,
-}
-
-impl From<SpacePanels> for SpacePanelsResponse {
-    fn from(panel: SpacePanels) -> Self {
-        Self {
-            pk: panel.pk,
-            quotas: panel.quotas,
-            attributes: panel.attributes,
-            panel_quotas: vec![],
-        }
-    }
+    pub remains: i64,
 }

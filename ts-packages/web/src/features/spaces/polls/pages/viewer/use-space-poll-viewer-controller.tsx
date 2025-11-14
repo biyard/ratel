@@ -13,10 +13,11 @@ import { LoginModal } from '@/components/popup/login-popup';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { UserResponse } from '@/lib/api/ratel/users.v3';
 import { usePollResponseMutation } from '../../hooks/use-poll-response-mutation';
-import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import { showErrorToast } from '@/lib/toast';
 import { route } from '@/route';
 import { NavigateFunction, useNavigate } from 'react-router';
 import SubmitSurveyPopup from '../../components/modal/submit_survey';
+import CompleteSurveyPopup from '../../components/modal/complete_survey';
 
 export class SpacePollViewerController {
   constructor(
@@ -24,6 +25,7 @@ export class SpacePollViewerController {
     public poll: Poll,
     public navigate: NavigateFunction,
     public t: TFunction<'SpaceSurvey', undefined>,
+    public modalT: TFunction<'SpaceCompleteSurvey', undefined>,
     public answers: State<Record<number, SurveyAnswer>>,
     public user: UserResponse | null,
     public popup: ReturnType<typeof usePopup>,
@@ -84,7 +86,17 @@ export class SpacePollViewerController {
         },
         {
           onSuccess: () => {
-            showSuccessToast(this.t('success_submit_answer'));
+            this.popup
+              .open(
+                <CompleteSurveyPopup
+                  onConfirm={() => {
+                    window.location.reload();
+                    this.popup.close();
+                  }}
+                />,
+              )
+              .withTitle(this.modalT('modal_title'))
+              .withoutClose();
           },
           onError: (err) => {
             logger.error('submit answer failed: ', err);
@@ -124,6 +136,7 @@ export function useSpacePollViewerController(spacePk, pollPk) {
   const usePollResponse = usePollResponseMutation();
 
   const { t } = useTranslation('SpaceSurvey');
+  const { t: modalT } = useTranslation('SpaceCompleteSurvey');
   const popup = usePopup();
   const answers = useState<Record<number, SurveyAnswer>>(
     poll?.myResponse.reduce(
@@ -152,6 +165,7 @@ export function useSpacePollViewerController(spacePk, pollPk) {
     poll,
     navigator,
     t,
+    modalT,
     new State(answers),
     user,
     popup,

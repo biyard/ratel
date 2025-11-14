@@ -1,4 +1,7 @@
-use crate::{features::spaces::polls::Poll, *};
+use crate::{
+    features::spaces::{panels::SpacePanels, polls::Poll},
+    *,
+};
 use aws_sdk_dynamodb::types::TransactWriteItem;
 
 #[derive(
@@ -32,6 +35,11 @@ impl SpaceType {
                 let poll: Poll = space_pk.clone().try_into()?;
 
                 vec![poll.create_transact_write_item()]
+            }
+            SpaceType::Deliberation => {
+                let panel = SpacePanels::new(space_pk.clone(), 0, vec![]);
+
+                vec![panel.create_transact_write_item()]
             }
             _ => {
                 vec![]
