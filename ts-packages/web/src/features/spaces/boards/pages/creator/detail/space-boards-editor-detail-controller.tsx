@@ -6,11 +6,17 @@ import { NavigateFunction, useNavigate } from 'react-router';
 import { route } from '@/route';
 import { useDeleteSpacePostMutation } from '../../../hooks/use-delete-space-post-mutation';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { State } from '@/types/state';
 import { useCommentSpacePostMutation } from '../../../hooks/use-create-space-post-comment-mutation';
 import { useCommentLikeSpacePostMutation } from '../../../hooks/use-space-post-comment-like-mutation';
 import { useCommentReplySpacePostMutation } from '../../../hooks/use-space-post-comment-reply-mutation';
+import useSpaceComments, {
+  getSpaceComments,
+} from '../../../hooks/use-space-comments';
+import { SpacePostCommentResponse } from '../../../types/space-post-comment-response';
+import { useDeleteSpaceCommentMutation } from '../../../hooks/use-delete-space-comment-mutation';
+import { useUpdateSpaceCommentMutation } from '../../../hooks/use-update-space-comment-mutation';
 
 export class SpaceBoardsEditorDetailController {
   constructor(
@@ -18,8 +24,9 @@ export class SpaceBoardsEditorDetailController {
     public postPk: string,
     public space: Space,
     public post: SpacePostResponse,
-
     public navigate: NavigateFunction,
+    public deleteComment: ReturnType<typeof useDeleteSpaceCommentMutation>,
+    public updateComment: ReturnType<typeof useUpdateSpaceCommentMutation>,
     public deleteSpacePosts: ReturnType<typeof useDeleteSpacePostMutation>,
     public commentSpacePosts: ReturnType<typeof useCommentSpacePostMutation>,
     public commentLikeSpacePosts: ReturnType<
@@ -28,8 +35,11 @@ export class SpaceBoardsEditorDetailController {
     public commentReplySpacePosts: ReturnType<
       typeof useCommentReplySpacePostMutation
     >,
-
     public expandComment: State<boolean>,
+    public comments: State<SpacePostCommentResponse[]>,
+    public bookmark: State<string | null | undefined>,
+    public pages: State<SpacePostCommentResponse[][]>,
+    public pageIndex: State<number>,
   ) {}
 
   handleEditPost = async () => {
@@ -53,7 +63,7 @@ export class SpaceBoardsEditorDetailController {
     await this.commentReplySpacePosts.mutateAsync({
       spacePk: this.spacePk,
       postPk: this.postPk,
-      commentSk: commentSk,
+      commentSk,
       content,
     });
     this.expandComment.set(false);
@@ -68,18 +78,84 @@ export class SpaceBoardsEditorDetailController {
     });
   };
 
+  handleDeleteComment = async (commentSk: string) => {
+    await this.deleteComment.mutateAsync({
+      spacePk: this.spacePk,
+      postPk: this.postPk,
+      commentSk,
+    });
+  };
+
+  handleUpdateComment = async (commentSk: string, content: string) => {
+    await this.updateComment.mutateAsync({
+      spacePk: this.spacePk,
+      postPk: this.postPk,
+      commentSk,
+      content,
+    });
+  };
+
   handleDeletePost = async () => {
     try {
       await this.deleteSpacePosts.mutateAsync({
         spacePk: this.spacePk,
         postPk: this.postPk,
       });
-
       showSuccessToast('Success to delete posts');
       this.navigate(route.spaceBoards(this.spacePk));
     } catch {
       showErrorToast('Failed to delete posts.');
     }
+  };
+
+  hasPrevPage = () => {
+    return this.pageIndex.get() > 0;
+  };
+
+  hasNextPage = () => {
+    const idx = this.pageIndex.get();
+    const pages = this.pages.get();
+    return idx + 1 < pages.length || this.bookmark.get() != null;
+  };
+
+  handleNextCommentsPage = async () => {
+    const idx = this.pageIndex.get();
+    const pages = this.pages.get();
+
+    if (idx + 1 < pages.length) {
+      const nextIdx = idx + 1;
+      this.pageIndex.set(nextIdx);
+      const nextItems = pages[nextIdx] ?? [];
+      this.comments.set(nextItems);
+      return;
+    }
+
+    const bookmark = this.bookmark.get();
+    if (!bookmark) return;
+
+    const resp = await getSpaceComments(this.spacePk, this.postPk, bookmark);
+    const items = resp.items ?? [];
+
+    const newPages = [...pages, items];
+    const nextIdx = pages.length;
+
+    this.pages.set(newPages);
+    this.pageIndex.set(nextIdx);
+    this.bookmark.set(resp.bookmark ?? null);
+
+    this.comments.set(items);
+  };
+
+  handlePrevCommentsPage = () => {
+    const idx = this.pageIndex.get();
+    if (idx === 0) return;
+
+    const pages = this.pages.get();
+    const prevIdx = idx - 1;
+
+    this.pageIndex.set(prevIdx);
+    const prevItems = pages[prevIdx] ?? [];
+    this.comments.set(prevItems);
   };
 }
 
@@ -89,6 +165,7 @@ export function useSpaceBoardsEditorDetailController(
 ) {
   const { data: space } = useSpaceById(spacePk);
   const { data: post } = useSpacePost(spacePk, postPk);
+  const { data: comment } = useSpaceComments(spacePk, postPk);
   const expandComment = useState(false);
 
   const navigate = useNavigate();
@@ -96,6 +173,25 @@ export function useSpaceBoardsEditorDetailController(
   const commentSpacePosts = useCommentSpacePostMutation();
   const commentLikeSpacePosts = useCommentLikeSpacePostMutation();
   const commentReplySpacePosts = useCommentReplySpacePostMutation();
+  const deleteComment = useDeleteSpaceCommentMutation();
+  const updateComment = useUpdateSpaceCommentMutation();
+
+  const commentsState = new State(useState<SpacePostCommentResponse[]>([]));
+  const bookmarkState = new State(useState<string | null>(null));
+  const pagesState = new State(useState<SpacePostCommentResponse[][]>([]));
+  const pageIndexState = new State(useState(0));
+
+  useEffect(() => {
+    if (!comment) return;
+
+    const items = comment.items ?? [];
+    const bookmark = comment.bookmark ?? null;
+
+    commentsState.set(items);
+    pagesState.set([items]);
+    bookmarkState.set(bookmark);
+    pageIndexState.set(0);
+  }, [comment]);
 
   return new SpaceBoardsEditorDetailController(
     spacePk,
@@ -103,11 +199,16 @@ export function useSpaceBoardsEditorDetailController(
     space,
     post,
     navigate,
-
+    deleteComment,
+    updateComment,
     deleteSpacePosts,
     commentSpacePosts,
     commentLikeSpacePosts,
     commentReplySpacePosts,
     new State(expandComment),
+    commentsState,
+    bookmarkState,
+    pagesState,
+    pageIndexState,
   );
 }

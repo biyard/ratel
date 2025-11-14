@@ -5,6 +5,7 @@ use crate::controllers::v3::spaces::boards::{
     CreateSpacePostResponse, DeleteSpacePostResponse, SpaceLikeSpaceCommentResponse,
 };
 use crate::features::spaces::boards::dto::list_space_posts_response::ListSpacePostsResponse;
+use crate::features::spaces::boards::dto::space_post_comment_response::SpacePostCommentResponse;
 use crate::features::spaces::boards::dto::space_post_response::SpacePostResponse;
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
 use crate::tests::v3_setup::TestContextV3;
@@ -89,13 +90,13 @@ async fn test_like_space_comment() {
 
     let (status, _headers, body) = get! {
         app: app,
-        path: format!("/v3/spaces/{}/boards/{}", space_pk.to_string(), space_post_pk.to_string()),
+        path: format!("/v3/spaces/{}/boards/{}/comments", space_pk.to_string(), space_post_pk.to_string()),
         headers: test_user.1.clone(),
-        response_type: SpacePostResponse
+        response_type: ListItemsResponse<SpacePostCommentResponse>
     };
     assert_eq!(status, 200);
-    assert_eq!(body.comments.len(), 2);
-    assert!(body.comments[1].liked == true || body.comments[0].liked == true);
+    assert_eq!(body.items.len(), 2);
+    assert!(body.items[1].liked == true || body.items[0].liked == true);
 }
 
 #[tokio::test]

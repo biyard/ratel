@@ -109,6 +109,8 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
         .unwrap_or_default()
         .unwrap_or_default();
 
+    tracing::debug!("panel: {:?}", panel.clone());
+
     let panel_quota = SpacePanelQuota::query(
         &dynamo.client,
         CompositePartition(pk.clone(), Partition::PanelAttribute),
@@ -117,6 +119,8 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
     .await
     .unwrap_or_default()
     .0;
+
+    tracing::debug!("panel quota: {:?}", panel_quota.clone());
 
     if panel.remains == 0 {
         return false;

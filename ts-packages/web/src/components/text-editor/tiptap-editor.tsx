@@ -15,7 +15,13 @@ import Youtube from '@tiptap/extension-youtube';
 import Video from './extensions/video';
 import { ThemeAwareColor } from './extensions/theme-aware-color';
 import { ThemeAwareHighlight } from './extensions/theme-aware-highlight';
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react';
 import { Editor } from '@tiptap/core';
 import { cn } from '@/lib/utils';
 import { TiptapEditorProps, DEFAULT_ENABLED_FEATURES } from './types';
@@ -38,7 +44,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       toolbarClassName,
       editorClassName,
       minHeight = '200px',
-      maxHeight,
+      isFoldable = false,
       onFocus,
       onBlur,
       uploadAsset,
@@ -52,6 +58,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
     ref,
   ) => {
     const videoInputRef = useRef<HTMLInputElement | null>(null);
+    const [isFolded, setIsFolded] = useState<boolean>(false);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [showFoldToggle, setShowFoldToggle] = useState(false);
 
     const insertImage = (ed: Editor, src: string, alt?: string) =>
       ed.chain().focus().setImage({ src, alt }).run();
@@ -171,6 +180,27 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       [editable, uploadAsset, uploadVideo, maxImageSizeMB, maxVideoSizeMB],
     ) as Editor | null;
 
+    useEffect(() => {
+      if (!isFoldable) {
+        setShowFoldToggle(false);
+        setIsFolded(false);
+        return;
+      }
+
+      const FOLD_HEIGHT = 240;
+
+      const id = window.requestAnimationFrame(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        const hasOverflow = el.scrollHeight > FOLD_HEIGHT + 2;
+        setShowFoldToggle(hasOverflow);
+        setIsFolded(hasOverflow);
+      });
+
+      return () => cancelAnimationFrame(id);
+    }, [isFoldable, content]);
+
     useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [
       editor,
     ]);
@@ -215,45 +245,65 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           className={cn('flex-1 overflow-y-auto', 'px-5 py-3', editorClassName)}
           style={{
             minHeight: showToolbar ? `calc(${minHeight} - 48px)` : minHeight,
-            maxHeight,
+            overflowY: isFoldable && isFolded ? 'hidden' : 'auto',
           }}
         >
-          <EditorContent
-            editor={editor}
-            className={cn(
-              'tiptap-editor',
-              'text-foreground text-[15px]',
-              '[&_.ProseMirror]:outline-none',
-              '[&_.ProseMirror]:min-h-full',
-              '[&_.ProseMirror]:h-full',
-              '[&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]',
-              '[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-foreground-muted',
-              '[&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left',
-              '[&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none',
-              '[&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0',
-              '[&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:mt-6 [&_.ProseMirror_h1]:mb-4',
-              '[&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:mt-5 [&_.ProseMirror_h2]:mb-3',
-              '[&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:mt-4 [&_.ProseMirror_h3]:mb-2',
-              '[&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-6 [&_.ProseMirror_ul]:my-2',
-              '[&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-6 [&_.ProseMirror_ol]:my-2',
-              '[&_.ProseMirror_li]:my-1',
-              '[&_.ProseMirror_p]:my-2',
-              '[&_.ProseMirror_mark]:bg-yellow-200 [&_.ProseMirror_mark]:px-0.5',
-              '[&_.ProseMirror_table]:border-collapse [&_.ProseMirror_table]:table-auto [&_.ProseMirror_table]:w-full [&_.ProseMirror_table]:my-4',
-              '[&_.ProseMirror_td]:border [&_.ProseMirror_td]:border-border [&_.ProseMirror_td]:p-2 [&_.ProseMirror_td]:min-w-[100px] [&_.ProseMirror_td]:relative',
-              '[&_.ProseMirror_th]:border [&_.ProseMirror_th]:border-border [&_.ProseMirror_th]:p-2 [&_.ProseMirror_th]:min-w-[100px] [&_.ProseMirror_th]:bg-muted [&_.ProseMirror_th]:font-semibold [&_.ProseMirror_th]:relative',
-              '[&_.ProseMirror_.selectedCell]:bg-primary/20',
-              '[&_.ProseMirror_.selectedCell]:border-primary',
-              '[&_.ProseMirror_.selectedCell]:border-2',
-              '[&_.ProseMirror_.selectedCell]:outline',
-              '[&_.ProseMirror_.selectedCell]:outline-2',
-              '[&_.ProseMirror_.youtube]:pt-[56.25%]',
-              '[&_.ProseMirror_.selectedCell]:outline-primary/40',
-              '[&_.ProseMirror_.selectedCell]:outline-offset-[-1px]',
-              '[&_.ProseMirror_.column-resize-handle]:absolute [&_.ProseMirror_.column-resize-handle]:right-[-2px] [&_.ProseMirror_.column-resize-handle]:top-0 [&_.ProseMirror_.column-resize-handle]:bottom-0 [&_.ProseMirror_.column-resize-handle]:w-[4px] [&_.ProseMirror_.column-resize-handle]:bg-primary [&_.ProseMirror_.column-resize-handle]:pointer-events-none',
-            )}
-            data-placeholder={placeholder}
-          />
+          <div
+            ref={containerRef}
+            style={{
+              maxHeight: isFoldable && isFolded ? '240px' : 'none',
+              overflowY: isFoldable && isFolded ? 'hidden' : 'visible',
+            }}
+          >
+            <EditorContent
+              editor={editor}
+              className={cn(
+                'tiptap-editor',
+                'text-foreground text-[15px]',
+                '[&_.ProseMirror]:outline-none',
+                '[&_.ProseMirror]:min-h-full',
+                '[&_.ProseMirror]:h-full',
+                '[&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]',
+                '[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-foreground-muted',
+                '[&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left',
+                '[&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none',
+                '[&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0',
+                '[&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-bold [&_.ProseMirror_h1]:mt-6 [&_.ProseMirror_h1]:mb-4',
+                '[&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-bold [&_.ProseMirror_h2]:mt-5 [&_.ProseMirror_h2]:mb-3',
+                '[&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-semibold [&_.ProseMirror_h3]:mt-4 [&_.ProseMirror_h3]:mb-2',
+                '[&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ul]:pl-6 [&_.ProseMirror_ul]:my-2',
+                '[&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_ol]:pl-6 [&_.ProseMirror_ol]:my-2',
+                '[&_.ProseMirror_li]:my-1',
+                '[&_.ProseMirror_p]:my-2',
+                '[&_.ProseMirror_mark]:bg-yellow-200 [&_.ProseMirror_mark]:px-0.5',
+                '[&_.ProseMirror_table]:border-collapse [&_.ProseMirror_table]:table-auto [&_.ProseMirror_table]:w-full [&_.ProseMirror_table]:my-4',
+                '[&_.ProseMirror_td]:border [&_.ProseMirror_td]:border-border [&_.ProseMirror_td]:p-2 [&_.ProseMirror_td]:min-w-[100px] [&_.ProseMirror_td]:relative',
+                '[&_.ProseMirror_th]:border [&_.ProseMirror_th]:border-border [&_.ProseMirror_th]:p-2 [&_.ProseMirror_th]:min-w-[100px] [&_.ProseMirror_th]:bg-muted [&_.ProseMirror_th]:font-semibold [&_.ProseMirror_th]:relative',
+                '[&_.ProseMirror_.selectedCell]:bg-primary/20',
+                '[&_.ProseMirror_.selectedCell]:border-primary',
+                '[&_.ProseMirror_.selectedCell]:border-2',
+                '[&_.ProseMirror_.selectedCell]:outline',
+                '[&_.ProseMirror_.selectedCell]:outline-2',
+                '[&_.ProseMirror_.youtube]:pt-[56.25%]',
+                '[&_.ProseMirror_.selectedCell]:outline-primary/40',
+                '[&_.ProseMirror_.selectedCell]:outline-offset-[-1px]',
+                '[&_.ProseMirror_.column-resize-handle]:absolute [&_.ProseMirror_.column-resize-handle]:right-[-2px] [&_.ProseMirror_.column-resize-handle]:top-0 [&_.ProseMirror_.column-resize-handle]:bottom-0 [&_.ProseMirror_.column-resize-handle]:w-[4px] [&_.ProseMirror_.column-resize-handle]:bg-primary [&_.ProseMirror_.column-resize-handle]:pointer-events-none',
+              )}
+              data-placeholder={placeholder}
+            />
+          </div>
+
+          {isFoldable && showFoldToggle && (
+            <div className="mt-2 flex justify-center">
+              <button
+                type="button"
+                className="text-xs text-primary hover:underline"
+                onClick={() => setIsFolded((prev) => !prev)}
+              >
+                {isFolded ? 'More' : 'Close'}
+              </button>
+            </div>
+          )}
           <input
             ref={videoInputRef}
             type="file"
