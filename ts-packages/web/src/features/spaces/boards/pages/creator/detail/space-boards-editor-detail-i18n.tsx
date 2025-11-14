@@ -5,6 +5,8 @@ export const i18nSpaceBoardsEditorDetail = {
 
     reply: 'Reply',
     replies: 'Replies',
+    next_comment: 'Next Comment',
+    prev_comment: 'Prev Comment',
     share_your_thoughts: 'Share your thoughts...',
     contents_hint: 'Type here, Use Markdown, BB code, or HTML to format.',
 
@@ -21,6 +23,8 @@ export const i18nSpaceBoardsEditorDetail = {
 
     reply: '응답',
     replies: '응답',
+    next_comment: '다음 댓글',
+    prev_comment: '이전 댓글',
     share_your_thoughts: '당신의 생각을 공유해주세요...',
     contents_hint: '여기에 마크다운 형태를 활용하여 설명을 입력해주세요.',
 
