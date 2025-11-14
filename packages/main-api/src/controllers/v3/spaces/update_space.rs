@@ -74,8 +74,7 @@ pub async fn update_space_handler(
 
     let now = chrono::Utc::now().timestamp_millis();
     let mut su = SpaceCommon::updater(&space.pk, &space.sk).with_updated_at(now);
-    let mut pu =
-        Post::updater(space.pk.clone().to_post_key()?, EntityType::Post).with_updated_at(now);
+    let mut pu: Option<_> = None;
     let mut should_notify_space = false;
     match req {
         UpdateSpaceRequest::Publish {
@@ -98,10 +97,14 @@ pub async fn update_space_handler(
                 .with_status(SpaceStatus::InProgress)
                 .with_visibility(visibility.clone());
 
-            pu = pu
+            let mut post_updater = Post::updater(post_pk, EntityType::Post).with_updated_at(now);
+
+            post_updater = post_updater
                 .with_space_visibility(visibility.clone())
                 .with_visibility(visibility.clone().into())
                 .with_status(crate::types::PostStatus::Published);
+
+            pu = Some(post_updater);
 
             should_notify_space = space.booster != BoosterType::NoBoost
                 && (space.publish_state == SpacePublishState::Draft && publish)
@@ -133,7 +136,11 @@ pub async fn update_space_handler(
             space.files = Some(files);
         }
         UpdateSpaceRequest::Title { title } => {
-            pu = pu.with_title(title.clone());
+            let post_pk = space_pk.clone().to_post_key()?;
+            let mut post_updater = Post::updater(post_pk, EntityType::Post).with_updated_at(now);
+
+            post_updater = post_updater.with_title(title.clone());
+            pu = Some(post_updater);
         }
         UpdateSpaceRequest::Start {
             start,
@@ -198,11 +205,15 @@ pub async fn update_space_handler(
         }
     }
 
-    transact_write!(
-        dynamo.client,
-        su.transact_write_item(),
-        pu.transact_write_item()
-    )?;
+    if let Some(pu) = pu {
+        transact_write!(
+            dynamo.client,
+            su.transact_write_item(),
+            pu.transact_write_item()
+        )?;
+    } else {
+        transact_write!(dynamo.client, su.transact_write_item())?;
+    }
 
     if should_notify_space {
         if let Some(bot) = telegram_bot {
