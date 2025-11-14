@@ -762,3 +762,83 @@ async fn test_get_post_guest_no_like_data() {
     let post = body.post.unwrap();
     assert_eq!(post.likes, 1);
 }
+
+#[tokio::test]
+async fn test_get_post_with_200_comments() {
+    let TestContextV3 {
+        app,
+        test_user,
+        now,
+        ..
+    } = TestContextV3::setup().await;
+
+    // Create and publish a post
+    let (status, _headers, create_body) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: test_user.1.clone(),
+        response_type: CreatePostResponse
+    };
+    assert_eq!(status, 200);
+
+    let post_pk = create_body.post_pk.to_string();
+
+    let (status, _headers, _body) = patch! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        headers: test_user.1.clone(),
+        body: {
+            "title": "Post with 200 Comments",
+            "content": "<p>This post will have 200 comments</p>",
+            "visibility": "PUBLIC",
+            "publish": true
+        }
+    };
+    assert_eq!(status, 200);
+
+    // Create 200 comments
+    println!("Creating 200 comments...");
+    for i in 0..200 {
+        let comment_content = format!("<p>Test comment {} - {}</p>", i, now);
+        let (status, _headers, _body) = post! {
+            app: app,
+            path: format!("/v3/posts/{}/comments", post_pk),
+            headers: test_user.1.clone(),
+            body: {
+                "content": &comment_content
+            }
+        };
+        assert_eq!(status, 200, "Failed to create comment {}", i);
+
+        // Add small delay every 50 comments to avoid overwhelming the system
+        if i % 50 == 0 && i > 0 {
+            println!("Created {} comments...", i);
+            sleep(std::time::Duration::from_millis(100)).await;
+        }
+    }
+    println!("Finished creating 200 comments");
+
+    // Get the post with all comments
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        headers: test_user.1.clone(),
+        response_type: PostDetailResponse
+    };
+
+    assert_eq!(status, 200, "Failed to get post with 200 comments");
+    assert!(body.post.is_some(), "Post should exist");
+
+    let comments_count = body.comments.len();
+    println!("Retrieved {} comments", comments_count);
+
+    // Verify we can retrieve comments (may be paginated)
+    assert!(comments_count > 0, "Should retrieve at least some comments");
+
+    // If pagination is implemented, this will be less than 200
+    // If not paginated, this should be 200
+    println!(
+        "Post with 200 comments test completed. Retrieved {} comments",
+        comments_count
+    );
+}
