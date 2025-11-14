@@ -26,6 +26,8 @@ pub struct SpacePostComment {
     #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
 
+    #[serde(default)]
+    pub created_at: i64,
     pub updated_at: i64,
     pub content: String,
 
@@ -75,6 +77,7 @@ impl SpacePostComment {
         Self {
             pk,
             sk: EntityType::SpacePostComment(uuid.to_string()),
+            created_at: now,
             updated_at: now,
             content,
             author_pk,

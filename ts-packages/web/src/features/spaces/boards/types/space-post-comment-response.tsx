@@ -2,6 +2,7 @@ export class SpacePostCommentResponse {
   pk: string;
   sk: string;
 
+  created_at: number;
   updated_at: number;
 
   content: string;
@@ -23,6 +24,7 @@ export class SpacePostCommentResponse {
     this.pk = json.pk;
     this.sk = json.sk;
 
+    this.created_at = json.created_at ?? 0;
     this.updated_at = json.updated_at;
 
     this.content = json.content;

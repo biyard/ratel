@@ -46,6 +46,8 @@ export function SpaceBoardsEditorDetailPage({
           comments={ctrl.comments.get()}
           isLoggedIn={true}
           expandComment={ctrl.expandComment}
+          handleCommentDelete={ctrl.handleDeleteComment}
+          handleCommentUpdate={ctrl.handleUpdateComment}
           handleComment={ctrl.handleComment}
           handleReplyToComment={ctrl.handleReplyToComment}
           handleLikeComment={ctrl.handleLikeComment}

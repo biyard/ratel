@@ -6,6 +6,7 @@ import { State } from '@/types/state';
 import { SpacePostResponse } from '../types/space-post-response';
 import { SpacePostCommentResponse } from '../types/space-post-comment-response';
 import PostComment from '@/features/posts/types/post-comment';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 
 export type PostCommentsProps = {
   t: TFunction<'Thread', undefined>;
@@ -14,6 +15,8 @@ export type PostCommentsProps = {
   comments: SpacePostCommentResponse[];
   isLoggedIn: boolean;
   expandComment: State<boolean>;
+  handleCommentDelete: (commentSk: string) => Promise<void>;
+  handleCommentUpdate: (commentSk: string, contents: string) => Promise<void>;
   handleComment: (content: string) => Promise<void>;
   handleReplyToComment: (commentSk: string, content: string) => Promise<void>;
   handleLikeComment: (commentId: string, like: boolean) => Promise<void>;
@@ -30,6 +33,8 @@ export default function PostComments({
   post,
   isLoggedIn,
   expandComment,
+  handleCommentDelete,
+  handleCommentUpdate,
   handleComment,
   handleReplyToComment,
   handleLikeComment,
@@ -40,11 +45,13 @@ export default function PostComments({
   onPrevPage,
   onNextPage,
 }: PostCommentsProps) {
+  const { data: user } = useSuspenseUserInfo();
   const toPostComment = (c: SpacePostCommentResponse): PostComment => {
     return {
       pk: c.pk,
       sk: c.sk,
       updated_at: c.updated_at,
+      created_at: c.created_at,
       content: c.content,
       author_pk: c.author_pk,
       author_display_name: c.author_display_name,
@@ -106,7 +113,11 @@ export default function PostComments({
           comment={toPostComment(comment)}
           onComment={handleReplyToComment}
           onLike={handleLikeComment}
+          onDelete={handleCommentDelete}
+          onUpdate={handleCommentUpdate}
           t={t}
+          canDelete={comment?.author_pk === user?.pk}
+          canEdit={comment?.author_pk === user?.pk}
         />
       ))}
 

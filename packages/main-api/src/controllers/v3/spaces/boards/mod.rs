@@ -48,6 +48,9 @@ pub fn route() -> Router<AppState> {
         )
         .route(
             "/:space_post_pk/comments/:space_post_comment_sk",
-            post(reply_space_comment_handler).get(list_space_reply_comments_handler),
+            post(reply_space_comment_handler)
+                .get(list_space_reply_comments_handler)
+                .delete(delete_space_comment_handler)
+                .patch(update_space_comment_handler),
         )
 }
