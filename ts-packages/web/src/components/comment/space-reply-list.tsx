@@ -1,17 +1,24 @@
 import { TiptapEditor } from '../text-editor';
 import { useSpaceReplies } from '@/features/spaces/boards/hooks/use-space-replies';
 import { useSuspenseUserInfo } from '@/hooks/use-user-info';
+import { ThumbUp } from '../icons';
 
 export type SpaceReplyListProp = {
   spacePk: string;
   postPk: string;
   commentSk: string;
+  isLoggedIn: boolean;
+
+  onLike?: (commentId: string, like: boolean) => Promise<void>;
 };
 
 export function SpaceReplyList({
   spacePk,
   postPk,
   commentSk,
+  isLoggedIn,
+
+  onLike,
 }: SpaceReplyListProp) {
   const { data: user } = useSuspenseUserInfo();
   const { data } = useSpaceReplies(spacePk, postPk, commentSk);
@@ -46,6 +53,34 @@ export function SpaceReplyList({
             editable={false}
             showToolbar={false}
           />
+          <div className="flex flex-row w-full justify-end">
+            {isLoggedIn && (
+              <button
+                aria-label="Like Comment"
+                className="flex flex-row gap-2 justify-center items-center"
+                onClick={() => {
+                  if (onLike) {
+                    onLike(reply.sk, !reply.liked);
+                  } else {
+                    throw new Error('onLike is not set');
+                  }
+                }}
+              >
+                <ThumbUp
+                  width={24}
+                  height={24}
+                  className={
+                    reply.liked
+                      ? '[&>path]:fill-primary [&>path]:stroke-primary'
+                      : '[&>path]:stroke-comment-icon'
+                  }
+                />
+                <div className="font-medium text-base/[24px] text-comment-icon-text ">
+                  {reply.likes ?? 0}
+                </div>
+              </button>
+            )}
+          </div>
         </div>
       ))}
     </div>
