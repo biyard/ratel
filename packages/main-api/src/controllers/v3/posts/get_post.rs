@@ -47,10 +47,18 @@ pub async fn get_post_handler(
 
     let (is_liked, comment_likes) = if let Some(user) = &user {
         let is_liked = post.is_liked(cli, &user.pk);
-        let comment_likes = PostCommentLike::batch_get(cli, comment_keys);
-        let ret = tokio::try_join!(is_liked, comment_likes)?;
 
-        ret
+        // DynamoDB batch_get_item has a limit of 100 items per request
+        // Split comment_keys into chunks of 100 and process them
+        let mut all_comment_likes = vec![];
+        for chunk in comment_keys.chunks(100) {
+            let chunk_likes = PostCommentLike::batch_get(cli, chunk.to_vec()).await?;
+            all_comment_likes.extend(chunk_likes);
+        }
+
+        let is_liked = is_liked.await?;
+
+        (is_liked, all_comment_likes)
     } else {
         (false, vec![])
     };
