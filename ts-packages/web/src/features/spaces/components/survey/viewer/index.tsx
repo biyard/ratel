@@ -109,7 +109,7 @@ export default function SurveyViewer({
           }
           setIdx((v) => Math.min(total - 1, v + 1));
         }}
-        disabled={(!canNext() && !isAdmin) || disabled}
+        disabled={!canNext() && !isAdmin}
       >
         {t('btn_next')}
       </Button>

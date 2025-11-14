@@ -50,6 +50,7 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
     assert_eq!(status, 200);
 
     let space_pk = create_space_res.space_pk;
+    let now = chrono::Utc::now().timestamp();
 
     let (status, _headers, create_space_post_res) = post! {
         app: app,
@@ -61,6 +62,8 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
             "category_name": "space_category".to_string(),
             "urls": [],
             "files": [],
+            "started_at": now,
+            "ended_at": now
         },
         response_type: CreateSpacePostResponse
     };

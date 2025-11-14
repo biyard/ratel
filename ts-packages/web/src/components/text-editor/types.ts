@@ -29,6 +29,7 @@ export type UploadResult = { url: string };
  */
 export interface TiptapEditorProps {
   // Basic editor props
+  isMe?: boolean;
   content?: string;
   onUpdate?: (content: string) => void;
   editable?: boolean;

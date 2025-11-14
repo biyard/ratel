@@ -48,9 +48,14 @@ pub fn route() -> Result<Router<AppState>> {
         .nest(
             "/:space_pk",
             Router::new()
+                .nest("/panels", panels::route())
+                // NOTE: Above are TeamAdmin-only routes
+                .layer(middleware::from_fn_with_state(
+                    app_state.clone(),
+                    authorize_team_admin,
+                ))
                 .nest("/members", members::route())
                 .nest("/files", files::route())
-                .nest("/panels", panels::route())
                 .nest("/recommendations", recommendations::route())
                 .nest("/discussions", discussions::route())
                 .nest("/artworks", artworks::route())
@@ -58,11 +63,27 @@ pub fn route() -> Result<Router<AppState>> {
                 .nest("/polls", polls::route())
                 .nest("/sprint-leagues", sprint_leagues::route()),
         )
-        // Above all, apply user participant instead of real user.
+        // NOTE: Above all, apply user participant instead of real user.
         // Real user will be passed only when space admin access is needed.
         .route("/:space_pk/participate", post(participate_space_handler))
         .layer(middleware::from_fn_with_state(app_state, inject_space))
         .route("/", post(create_space_handler).get(list_spaces_handler)))
+}
+
+pub async fn authorize_team_admin(
+    State(state): State<AppState>,
+    req: Request,
+    next: Next,
+) -> Result<Response<Body>> {
+    debug!("Project authorization middleware");
+    let (mut parts, body) = req.into_parts();
+
+    let permissions = Permissions::from_request_parts(&mut parts, &state).await?;
+    permissions.permitted(TeamGroupPermission::TeamAdmin)?;
+
+    // Reconstruct request and continue to the handler
+    let req = Request::from_parts(parts, body);
+    Ok(next.run(req).await)
 }
 
 pub async fn inject_space(
@@ -70,7 +91,7 @@ pub async fn inject_space(
     req: Request,
     next: Next,
 ) -> std::result::Result<Response<Body>, Error> {
-    tracing::debug!("Project authorization middleware");
+    debug!("Project authorization middleware");
 
     // Extract request parts to access headers and URI
     let (mut parts, body) = req.into_parts();
@@ -80,7 +101,7 @@ pub async fn inject_space(
     let path_segments: Vec<&str> = path.split('/').collect();
     let space_pk = path_segments[1].to_string();
 
-    tracing::debug!("Verifying project access for space_id: {}", space_pk,);
+    debug!("Verifying project access for space_id: {}", space_pk,);
 
     let space_pk: Partition = space_pk.parse()?;
 
@@ -91,7 +112,7 @@ pub async fn inject_space(
     )
     .await
     .map_err(|e| {
-        tracing::error!("failed to get space common from db: {:?}", e);
+        error!("failed to get space common from db: {:?}", e);
         crate::Error::SpaceNotFound
     })?
     .ok_or(crate::Error::SpaceNotFound)?;
@@ -104,7 +125,7 @@ pub async fn inject_space(
         )
         .await
         .map_err(|e| {
-            tracing::error!("failed to get team from db: {:?}", e);
+            error!("failed to get team from db: {:?}", e);
             crate::Error::TeamNotFound
         })?
         .ok_or(crate::Error::TeamNotFound)?;

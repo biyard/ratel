@@ -1,14 +1,16 @@
 import { usePopup } from '@/lib/contexts/popup-service';
 import { SurveyAnswer } from '../../../types/poll-question';
 import { usePollResponseMutation } from '../../../hooks/use-poll-response-mutation';
-import { showErrorToast, showSuccessToast } from '@/lib/toast';
+import { showErrorToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
+import CompleteSurveyPopup from '../complete_survey';
 
 export class SubmitSurveyModalController {
   constructor(
     public t: TFunction<'SpacePollSubmitSurvey', undefined>,
+    public modalT: TFunction<'SpaceCompleteSurvey', undefined>,
     public popup: ReturnType<typeof usePopup>,
     public submitPollResponse: ReturnType<typeof usePollResponseMutation>,
     public spacePk: string,
@@ -24,8 +26,17 @@ export class SubmitSurveyModalController {
         answers: this.answers,
       });
 
-      showSuccessToast(this.t('success_submit_answer'));
-      this.popup.close();
+      this.popup
+        .open(
+          <CompleteSurveyPopup
+            onConfirm={() => {
+              window.location.reload();
+              this.popup.close();
+            }}
+          />,
+        )
+        .withTitle(this.modalT('modal_title'))
+        .withoutClose();
     } catch (err) {
       logger.error('submit answer failed: ', err);
       showErrorToast(this.t('failed_submit_answer'));
@@ -44,10 +55,12 @@ export function useSubmitSurveyModalController(
   answers: SurveyAnswer[],
 ) {
   const { t } = useTranslation('SpacePollSubmitSurvey');
+  const { t: modalT } = useTranslation('SpaceCompleteSurvey');
   const popup = usePopup();
   const usePollResponse = usePollResponseMutation();
   return new SubmitSurveyModalController(
     t,
+    modalT,
     popup,
     usePollResponse,
     spacePk,

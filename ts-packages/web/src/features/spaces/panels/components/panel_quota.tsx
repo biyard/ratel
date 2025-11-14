@@ -61,14 +61,19 @@ export function PanelQuotas({ quotas, canEdit, setQuotas }: PanelQuotasProps) {
   const sanitize = (s: string) => s.replace(/\D+/g, '');
 
   return (
-    <div>
+    <div className="inline-flex items-center">
       {editMode && canEdit ? (
         <Input
           ref={inputRef}
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
-          className="w-[80px] text-center font-bold"
+          className="
+            w-[80px] h-9 text-center font-semibold text-sm
+            rounded-md
+            bg-neutral-900
+            placeholder:text-neutral-500
+          "
           value={internalQuota}
           onKeyDown={(e) => {
             onBeforeKeyDown(e);
@@ -82,7 +87,16 @@ export function PanelQuotas({ quotas, canEdit, setQuotas }: PanelQuotasProps) {
         <div
           role="button"
           tabIndex={0}
-          className="cursor-pointer w-[80px] h-9 inline-flex items-center justify-center rounded-md border border-transparent font-medium text-sm text-text-primary"
+          className={`
+            w-[80px] h-9 inline-flex items-center justify-center
+            rounded-md
+            text-text-primary
+            border
+            border-input-box-border
+            bg-input-box-bg
+            text-sm font-semibold
+            ${canEdit ? 'cursor-pointer hover:border-primary' : 'cursor-default'}
+          `}
           onClick={() => {
             if (!canEdit) return;
             setInternalQuota(String(quotas ?? 0));
