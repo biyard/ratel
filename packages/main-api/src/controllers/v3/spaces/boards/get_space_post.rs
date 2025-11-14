@@ -44,39 +44,5 @@ pub async fn get_space_post_handler(
         .await?
         .ok_or(Error::PostNotFound)?;
 
-    let mut bookmark = None::<String>;
-    let mut comments = vec![];
-    // FIXME: 여기서 모든 Comment 를 한번에 읽어올 필요가 없음. Pagenation 을 넣고, 별도 API 로 Comment 추가 로드 코드 분리
-    loop {
-        let mut option = SpacePostCommentQueryOption::builder()
-            .sk(EntityType::SpacePostComment(String::default()).to_string())
-            .limit(100);
-        if let Some(b) = &bookmark {
-            option = option.bookmark(b.clone());
-        }
-        let (responses, next_bookmark) =
-            SpacePostComment::query(&dynamo.client, space_post_pk.clone(), option).await?;
-
-        let comment_keys = responses
-            .iter()
-            .map(|r| r.like_keys(&user.pk))
-            .collect::<Vec<_>>();
-        let comment_likes = SpacePostCommentLike::batch_get(&dynamo.client, comment_keys).await?;
-        for response in responses {
-            let liked = comment_likes.iter().any(|like| like == &response);
-            let mut c: SpacePostCommentResponse = response.into();
-            c.liked = liked;
-            comments.push(c.into());
-        }
-
-        match next_bookmark {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-    }
-
-    let mut post: SpacePostResponse = post.into();
-    post.comments = comments;
-
-    Ok(Json(post))
+    Ok(Json(post.into()))
 }

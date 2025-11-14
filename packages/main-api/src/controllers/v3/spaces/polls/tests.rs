@@ -4,11 +4,12 @@ use crate::controllers::v3::spaces::polls::{
     DeletePollSpaceResponse, RespondPollSpaceResponse, UpdatePollSpaceResponse,
 };
 use crate::features::did::AttributeCode;
+use crate::features::did::{VerifiableAttribute, VerifiableAttributeWithQuota};
 use crate::features::spaces::SpaceParticipant;
 use crate::features::spaces::panels::{
-    PanelAttribute, PanelAttributeWithQuota, SpacePanelParticipant, SpacePanelQuota, SpacePanelsResponse,
+    PanelAttribute, PanelAttributeWithQuota, SpacePanelParticipant, SpacePanelQuota,
+    SpacePanelsResponse,
 };
-use crate::features::did::{VerifiableAttribute, VerifiableAttributeWithQuota};
 use crate::features::spaces::polls::{Poll, PollResponse, PollResultResponse};
 use crate::tests::v3_setup::TestContextV3;
 use crate::types::{Answer, ChoiceQuestion, EntityType, Gender, Partition, Question};
@@ -502,18 +503,6 @@ async fn test_get_poll_results_with_panel_responses() {
         },
     ];
 
-    let (status, _headers, _body) = patch! {
-        app: app,
-        path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
-        headers: test_user.1.clone(),
-        body: {
-            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male))]
-        },
-        response_type: SpacePanelsResponse
-    };
-
-    assert_eq!(status, 200);
-
     let (status, _headers, body) = post! {
         app: app,
         path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
@@ -523,12 +512,12 @@ async fn test_get_poll_results_with_panel_responses() {
                 PanelAttributeWithQuota::VerifiableAttribute(
                     VerifiableAttributeWithQuota {
                         attribute: VerifiableAttribute::Gender(Gender::Male),
-                        quota: 20
+                        quota: 30
                     }
                 ),
                 PanelAttributeWithQuota::VerifiableAttribute(
                     VerifiableAttributeWithQuota {
-                        attribute: VerifiableAttribute::Gender(Gender::Female),
+                        attribute: VerifiableAttribute::Age(Age::Range { inclusive_min: 0, inclusive_max: 18 }),
                         quota: 30
                     }
                 )

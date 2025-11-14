@@ -140,6 +140,8 @@ export const spaceKeys = {
     [...spaceKeys.detail(spacePk), postPk] as const,
   boards_replies: (spacePk: string, postPk: string, commentSk: string) =>
     [...spaceKeys.detail(spacePk), postPk, commentSk] as const,
+  boards_comments: (spacePk: string, postPk: string) =>
+    [...spaceKeys.detail(spacePk), postPk, 'comments'] as const,
 
   art_nfts: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'art_nfts'] as const,

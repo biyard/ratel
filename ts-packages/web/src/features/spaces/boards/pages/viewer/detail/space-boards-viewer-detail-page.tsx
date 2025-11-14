@@ -47,11 +47,18 @@ export function SpaceBoardsViewerDetailPage({
           t={t}
           spacePk={ctrl.spacePk}
           post={ctrl.post}
+          comments={ctrl.comments.get()}
           isLoggedIn={canActive}
           expandComment={ctrl.expandComment}
+          handleCommentDelete={ctrl.handleDeleteComment}
+          handleCommentUpdate={ctrl.handleUpdateComment}
           handleComment={ctrl.handleComment}
           handleReplyToComment={ctrl.handleReplyToComment}
           handleLikeComment={ctrl.handleLikeComment}
+          hasPrevPage={ctrl.hasPrevPage()}
+          hasNextPage={ctrl.hasNextPage()}
+          onPrevPage={ctrl.handlePrevCommentsPage}
+          onNextPage={ctrl.handleNextCommentsPage}
         />
       </div>
     </>
