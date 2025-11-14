@@ -11,6 +11,7 @@ import unknown from '@/assets/images/unknown.png';
 import { Input } from '@/components/ui/input';
 import PlayerSelectModal from '../select-player-modal';
 import { Row } from '@/components/ui/row';
+import CharacterPreview from '../character-preview';
 
 export interface SprintLeagueEditorProps {
   players?: SprintLeaguePlayer[];
@@ -153,8 +154,7 @@ function PlayerSelector({
       </Button>
       <div className="aspect-square size-75 rounded-lg overflow-hidden">
         {spriteSheet ? (
-          // <Character spriteSheet={spriteSheet} />
-          <div> Character Here </div>
+          <CharacterPreview spriteSheet={spriteSheet} />
         ) : (
           <img src={unknown} alt="Unknown Player" />
         )}
