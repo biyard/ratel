@@ -165,7 +165,7 @@ async fn test_verification_space_code_handler() {
 
     let (status, _headers, body) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
         headers: headers.clone(),
         body: {
             "attributes": vec![
