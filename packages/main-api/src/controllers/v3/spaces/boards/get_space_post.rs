@@ -44,42 +44,33 @@ pub async fn get_space_post_handler(
         .await?
         .ok_or(Error::PostNotFound)?;
 
-    let mut bookmark = None::<String>;
-    let mut comment_keys = vec![];
-    let mut comments: Vec<SpacePostComment> = vec![];
+    //FIXME: remove this logic
+    let (comments, _bookmark) = SpacePostComment::find_by_post_order_by_likes(
+        &dynamo.client,
+        space_post_pk.clone(),
+        SpacePostComment::opt_all().scan_index_forward(false),
+    )
+    .await?;
 
-    loop {
-        let (responses, new_bookmark) = SpacePostComment::query(
-            &dynamo.client,
-            space_post_pk.clone(),
-            if let Some(b) = &bookmark {
-                SpacePostCommentQueryOption::builder()
-                    .sk("SPACE_POST_COMMENT#".into())
-                    .bookmark(b.clone())
-            } else {
-                SpacePostCommentQueryOption::builder().sk("SPACE_POST_COMMENT#".into())
-            },
-        )
-        .await?;
+    tracing::debug!("comments (sorted by likes desc): {:?}", comments);
 
-        tracing::debug!("comments response: {:?}", responses.clone());
+    let comments: Vec<_> = comments
+        .into_iter()
+        .filter(|c| matches!(c.sk, EntityType::SpacePostComment(_)))
+        .collect();
 
-        for response in responses {
-            comment_keys.push(response.like_keys(&user.pk));
-            comments.push(response.into());
-        }
-
-        match new_bookmark {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
+    let mut comment_keys = Vec::with_capacity(comments.len());
+    for c in &comments {
+        comment_keys.push(c.like_keys(&user.pk));
     }
 
     let comment_likes = SpacePostCommentLike::batch_get(&dynamo.client, comment_keys).await?;
-    let mut comment_res = vec![];
+
+    let mut comment_res = Vec::with_capacity(comments.len());
 
     for comment in comments {
-        let liked = comment_likes.iter().any(|like| like == comment);
+        let liked = comment_likes.iter().any(|like| like == &comment);
+
         let mut c: SpacePostCommentResponse = comment.into();
         c.liked = liked;
 

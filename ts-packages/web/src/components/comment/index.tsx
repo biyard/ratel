@@ -187,6 +187,8 @@ export function Comment({
             spacePk={spacePk ?? ''}
             postPk={comment.pk}
             commentSk={comment.sk}
+            isLoggedIn={isLoggedIn}
+            onLike={onLike}
           />
         )}
         {showReplies && comment.replies > 0 && !boards && (
