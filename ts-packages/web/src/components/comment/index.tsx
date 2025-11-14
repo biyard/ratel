@@ -184,6 +184,7 @@ export function Comment({
         </div>
         {showReplies && comment.replies > 0 && boards && (
           <SpaceReplyList
+            t={t}
             spacePk={spacePk ?? ''}
             postPk={comment.pk}
             commentSk={comment.sk}

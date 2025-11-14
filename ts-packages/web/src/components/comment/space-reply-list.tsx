@@ -2,14 +2,15 @@ import { TiptapEditor } from '../text-editor';
 import { useSpaceReplies } from '@/features/spaces/boards/hooks/use-space-replies';
 import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { ThumbUp } from '../icons';
+import { TFunction } from 'i18next';
 
 export type SpaceReplyListProp = {
   spacePk: string;
   postPk: string;
   commentSk: string;
   isLoggedIn: boolean;
-
   onLike?: (commentId: string, like: boolean) => Promise<void>;
+  t: TFunction<'Thread', undefined>;
 };
 
 export function SpaceReplyList({
@@ -17,13 +18,12 @@ export function SpaceReplyList({
   postPk,
   commentSk,
   isLoggedIn,
-
   onLike,
+  t,
 }: SpaceReplyListProp) {
   const { data: user } = useSuspenseUserInfo();
-  const { data } = useSpaceReplies(spacePk, postPk, commentSk);
-
-  const replies = data.pages.flatMap((p) => p.items);
+  const { replies, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useSpaceReplies(spacePk, postPk, commentSk);
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -40,19 +40,20 @@ export function SpaceReplyList({
               height={40}
               className="rounded-full object-cover object-top"
             />
-
             <div className="flex flex-col gap-[2px]">
               <div className="font-semibold text-title-text text-[15px]/[15px]">
                 {reply.author_display_name ?? ''}
               </div>
             </div>
           </div>
+
           <TiptapEditor
             isMe={user.pk === reply.author_pk}
             content={reply.content}
             editable={false}
             showToolbar={false}
           />
+
           <div className="flex flex-row w-full justify-end">
             {isLoggedIn && (
               <button
@@ -83,6 +84,19 @@ export function SpaceReplyList({
           </div>
         </div>
       ))}
+
+      {hasNextPage && (
+        <div className="flex justify-center mt-1 w-full">
+          <button
+            type="button"
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+            className="px-2 py-1 text-xs rounded-md border border-border-subtle hover:bg-bg-elevated disabled:opacity-60"
+          >
+            {t('reply_more')}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
