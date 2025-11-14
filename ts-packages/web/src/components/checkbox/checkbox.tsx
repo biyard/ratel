@@ -41,7 +41,7 @@ export const Checkbox = ({
           className={cn(
             'border border-c-wg-50',
             'peer-checked:bg-primary peer-checked:border-primary',
-            'peer-checked:[&_svg_path]:!stroke-bg',
+            'peer-checked:[&_svg_path]:stroke-bg',
             'flex items-center justify-center',
             'w-4.25 h-4.25 cursor-pointer',
             isRounded ? 'rounded-full' : 'rounded-[4px]',
@@ -51,7 +51,7 @@ export const Checkbox = ({
           <CheckboxIcon
             width={13}
             height={9}
-            className="[&_path]:!stroke-transparent"
+            className="[&_path]:stroke-transparent"
           />
         </label>
       </div>
