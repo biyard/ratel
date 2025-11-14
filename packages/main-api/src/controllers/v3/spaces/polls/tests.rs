@@ -516,7 +516,7 @@ async fn test_get_poll_results_with_panel_responses() {
 
     let (status, _headers, body) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
             "attributes": vec![

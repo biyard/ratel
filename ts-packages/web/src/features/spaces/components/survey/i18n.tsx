@@ -33,6 +33,10 @@ const en = {
   success_submit_answer: 'Success to submit answer.',
   failed_submit_answer: 'Failed to submit answer. please try later.',
 
+  no_questions_error: 'Please add at least one question before saving.',
+  invalid_question_error:
+    'Please ensure all questions have valid titles and options.',
+
   save: 'Save',
   cancel: 'Cancel',
   modal_title: 'Submit final survey',
@@ -76,6 +80,10 @@ const ko = {
     '설문 저장에 실패했습니다. 잠시 후 다시 시도해주세요.',
   success_submit_answer: '성공적으로 응답을 저장했습니다.',
   failed_submit_answer: '응답 저장에 실패했습니다. 잠시 후 다시 시도해주세요.',
+
+  no_questions_error: '저장하기 전에 질문을 하나 이상 추가해주세요.',
+  invalid_question_error:
+    '모든 질문에 유효한 제목과 옵션이 있는지 확인해주세요.',
 
   save: '저장',
   cancel: '취소',
