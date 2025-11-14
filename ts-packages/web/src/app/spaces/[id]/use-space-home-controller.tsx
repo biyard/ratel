@@ -34,6 +34,7 @@ import SpaceStartModal from '@/features/spaces/modals/space-start-modal';
 import { useStartSpaceMutation } from '@/features/spaces/hooks/use-start-mutation';
 import { SpaceStatus } from '@/features/spaces/types/space-common';
 import { useVerifySpaceCodeMutation } from '@/features/spaces/members/hooks/use-verify-space-code-mutation';
+import useFileSpace from '@/features/spaces/files/hooks/use-file-space';
 
 export class SpaceHomeController {
   public space: Space;
@@ -57,6 +58,7 @@ export class SpaceHomeController {
     public deleteSpace: ReturnType<typeof useDeleteSpaceMutation>,
     public verifySpaceCode: ReturnType<typeof useVerifySpaceCodeMutation>,
     public image: State<string | null>,
+    public hasFiles: boolean,
     public files: State<FileModel[]>,
     public updateDraftImage: ReturnType<
       typeof useUpdateDraftImageMutation
@@ -87,8 +89,14 @@ export class SpaceHomeController {
       },
     ];
 
+    const hasFiles = this.hasFiles;
+
     sideMenusForSpaceType[this.space.spaceType]?.forEach((menu) => {
       let visible = !menu.visible;
+
+      if (menu.label === 'menu_files') {
+        visible = visible && (hasFiles || this.space.isAdmin());
+      }
 
       if (typeof menu.visible === 'function') {
         visible = menu.visible(this.space);
@@ -569,6 +577,7 @@ export function useSpaceHomeController(spacePk: string) {
   const state = useState(false);
   const { t } = useTranslation('Space');
   const navigate = useNavigate();
+  const fileData = useFileSpace(spacePk);
   const updateSpaceContent = useSpaceUpdateContentMutation();
   const updateSpaceTitle = useSpaceUpdateTitleMutation();
   const updateSpaceFiles = useSpaceUpdateFilesMutation();
@@ -578,6 +587,8 @@ export function useSpaceHomeController(spacePk: string) {
   const { mutateAsync: updateDraftImage } = useUpdateDraftImageMutation();
   const participateSpace = useParticipateSpaceMutation();
   const verifySpaceCode = useVerifySpaceCodeMutation();
+
+  const hasFiles = fileData.data.files.length !== 0;
 
   const edit = useState(false);
   const save = useState(false);
@@ -699,6 +710,7 @@ export function useSpaceHomeController(spacePk: string) {
     deleteSpace,
     verifySpaceCode,
     new State(image),
+    hasFiles,
     new State(files),
     updateDraftImage,
     participateSpace,

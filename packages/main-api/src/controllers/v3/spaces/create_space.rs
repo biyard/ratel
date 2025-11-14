@@ -60,12 +60,6 @@ pub async fn create_space_handler(
     let type_specific_txs = space.space_type.create_hook(&space.pk)?;
     tx.extend(type_specific_txs);
 
-    if space.space_type == SpaceType::Deliberation {
-        let panel = SpacePanels::new(space.pk.clone(), 0, vec![]);
-
-        tx.push(panel.create_transact_write_item());
-    }
-
     transact_write_items!(dynamo.client, tx)?;
 
     Ok(Json(CreateSpaceResponse { space_pk: space.pk }))

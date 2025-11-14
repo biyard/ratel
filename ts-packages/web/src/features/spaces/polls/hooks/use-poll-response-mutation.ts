@@ -66,8 +66,6 @@ export function usePollResponseMutation() {
       // queryClient.invalidateQueries({
       //   queryKey: spaceKeys.prerequisites(spacePk),
       // });
-
-      window.location.reload();
     },
 
     onError: (error) => {

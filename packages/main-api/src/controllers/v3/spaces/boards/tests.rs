@@ -47,6 +47,7 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
     assert_eq!(status, 200);
 
     let space_pk = create_space_res.space_pk;
+    let now = chrono::Utc::now().timestamp();
 
     // Create a space board post
     let (status, _headers, create_space_post_res) = post! {
@@ -58,7 +59,9 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
             "html_contents": "<div>space boards desc</div>".to_string(),
             "category_name": "space_category".to_string(),
             "urls": [],
-            "files": []
+            "files": [],
+            "started_at": now,
+            "ended_at": now
         },
         response_type: CreateSpacePostResponse
     };
@@ -180,6 +183,7 @@ async fn test_list_space_posts() {
 async fn test_update_space_posts() {
     let (ctx, space_pk, space_post_pk) = setup_deliberation_space().await;
     let TestContextV3 { app, test_user, .. } = ctx;
+    let now = chrono::Utc::now().timestamp();
 
     let (status, _headers, update_space_post_res) = patch! {
         app: app,
@@ -190,7 +194,9 @@ async fn test_update_space_posts() {
             "html_contents": "<div>update space boards desc</div>".to_string(),
             "category_name": "space_category".to_string(),
             "urls": [],
-            "files": []
+            "files": [],
+            "started_at": now,
+            "ended_at": now
         },
         response_type: SpacePostResponse
     };

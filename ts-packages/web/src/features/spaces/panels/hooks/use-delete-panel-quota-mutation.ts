@@ -1,25 +1,44 @@
 import { spaceKeys } from '@/constants';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Attribute, PanelAttribute } from '../types/panel-attribute';
-import { deleteSpacePanelQuotas } from '@/lib/api/ratel/panel.spaces.v3';
+import { useMutation } from '@tanstack/react-query';
+import { call } from '@/lib/api/ratel/call';
+import { optimisticUpdate } from '@/lib/hook-utils';
+import { SpacePanel } from '../types/space-panel';
 
 type Vars = {
-  spacePk: string;
-  attribute: PanelAttribute;
-  value: Attribute;
+  keys: { pk: string; sk: string }[];
 };
 
-export function useDeletePanelQuotaMutation() {
-  const qc = useQueryClient();
-
+export function useDeletePanelQuotaMutation(spacePk: string) {
   return useMutation({
     mutationKey: ['delete-panel-quotas'],
-    mutationFn: async ({ spacePk, attribute, value }: Vars) => {
-      await deleteSpacePanelQuotas(spacePk, attribute, value);
+    mutationFn: async ({ keys }: Vars) => {
+      call('DELETE', `/v3/spaces/${encodeURIComponent(spacePk)}/panels`, {
+        keys,
+      });
     },
-    onSuccess: async (_data, { spacePk }) => {
-      const qk = spaceKeys.panels(spacePk);
-      await qc.invalidateQueries({ queryKey: qk });
+    onMutate: async ({ keys }) => {
+      const queryKey = spaceKeys.panels(spacePk);
+
+      const rollback = await optimisticUpdate<SpacePanel[]>(
+        { queryKey },
+        (old) => {
+          if (!old) return old;
+
+          const news = old.filter(
+            (p) => !keys.some((k) => k.pk === p.pk && k.sk === p.sk),
+          );
+
+          return news;
+        },
+      );
+
+      return { rollback };
     },
+    onError: async (_err, _vars, _context) => {
+      if (_context?.rollback) {
+        _context.rollback.rollback();
+      }
+    },
+    onSuccess: async (_data, _vars, _ctx) => {},
   });
 }

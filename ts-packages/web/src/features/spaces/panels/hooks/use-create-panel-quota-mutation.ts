@@ -1,26 +1,33 @@
 import { spaceKeys } from '@/constants';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Attribute, PanelAttribute } from '../types/panel-attribute';
-import { createSpacePanelQuotas } from '@/lib/api/ratel/panel.spaces.v3';
+import { PanelAttributeWithQuota } from '../types/panel-attribute';
+import { call } from '@/lib/api/ratel/call';
+import { SpacePanel } from '../types/space-panel';
 
 type Vars = {
-  spacePk: string;
-  quotas: number[];
-  attributes: PanelAttribute[];
-  values: Attribute[];
+  attributes: PanelAttributeWithQuota[];
 };
 
-export function useCreatePanelQuotaMutation() {
+export function useCreatePanelQuotaMutation(spacePk: string) {
   const qc = useQueryClient();
 
   return useMutation({
     mutationKey: ['create-panel-quotas'],
-    mutationFn: async ({ spacePk, quotas, attributes, values }: Vars) => {
-      await createSpacePanelQuotas(spacePk, quotas, attributes, values);
+    mutationFn: async ({ attributes }: Vars) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const res: any = await call(
+        'POST',
+        `/v3/spaces/${encodeURIComponent(spacePk)}/panels`,
+        {
+          attributes,
+        },
+      );
+
+      return { panels: res.map((e) => new SpacePanel(e)) };
     },
-    onSuccess: async (_data, { spacePk }) => {
-      const qk = spaceKeys.panels(spacePk);
-      await qc.invalidateQueries({ queryKey: qk });
+    onSuccess: async (_data, _vars, _ctx) => {
+      const queryKey = spaceKeys.panels(spacePk);
+      qc.invalidateQueries({ queryKey });
     },
   });
 }

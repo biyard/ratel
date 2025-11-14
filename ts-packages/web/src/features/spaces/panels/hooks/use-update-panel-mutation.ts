@@ -1,31 +1,43 @@
 import { spaceKeys } from '@/constants';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { updateSpacePanel } from '@/lib/api/ratel/panel.spaces.v3';
-import { PanelAttribute } from '../types/panel-attribute';
+import { useMutation } from '@tanstack/react-query';
+import { call } from '@/lib/api/ratel/call';
+import { optimisticUpdate } from '@/lib/hook-utils';
+import { Space } from '../../types/space';
 
 type Vars = {
   spacePk: string;
-  quotas: number;
-  attributes: PanelAttribute[];
+  quota: number;
 };
 
 export function useUpdatePanelMutation() {
-  const qc = useQueryClient();
-
   return useMutation({
     mutationKey: ['update-panel'],
     mutationFn: async (v: Vars) => {
-      const { spacePk, quotas, attributes } = v;
+      const { spacePk, quota: quotas } = v;
 
-      await updateSpacePanel(spacePk, quotas, attributes);
+      await call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
+        quotas,
+      });
 
       return v;
     },
+    onMutate: async ({ spacePk, quota }) => {
+      const queryKey = spaceKeys.detail(spacePk);
 
-    onSuccess: async (_, { spacePk }) => {
-      // Invalidate space details to refetch with updated participant status
-      const panelQk = spaceKeys.panels(spacePk);
-      await qc.invalidateQueries({ queryKey: panelQk });
+      const rollback = await optimisticUpdate<Space>({ queryKey }, (old) => {
+        if (!old) return old;
+        old.quota = quota;
+
+        return old;
+      });
+
+      return { rollback };
+    },
+
+    onError: async (_err, _vars, { rollback }) => {
+      if (rollback) {
+        rollback.rollback();
+      }
     },
   });
 }
