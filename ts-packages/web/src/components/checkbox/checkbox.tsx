@@ -41,7 +41,7 @@ export const Checkbox = ({
           className={cn(
             'border border-c-wg-50',
             'peer-checked:bg-primary peer-checked:border-primary',
-            'peer-checked:[&_svg_path]:stroke-create-space-bg',
+            'peer-checked:[&_svg_path]:!stroke-bg',
             'flex items-center justify-center',
             'w-4.25 h-4.25 cursor-pointer',
             isRounded ? 'rounded-full' : 'rounded-[4px]',
