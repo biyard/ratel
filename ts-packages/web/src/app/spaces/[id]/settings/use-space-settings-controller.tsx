@@ -5,6 +5,7 @@ import { useSpaceUpdateAnonymousParticipationMutation } from '@/features/spaces/
 import { logger } from '@/lib/logger';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useSettingsI18n } from './i18n';
+import { useSpaceUpdateChangeVisibilityMutation } from '@/features/spaces/hooks/use-space-update-change-visibility-mutation';
 
 export class SpaceSettingsController {
   constructor(
@@ -12,6 +13,9 @@ export class SpaceSettingsController {
     public state: State<boolean>,
     public updateAnonymousParticipation: ReturnType<
       typeof useSpaceUpdateAnonymousParticipationMutation
+    >,
+    public updateChangeVisibility: ReturnType<
+      typeof useSpaceUpdateChangeVisibilityMutation
     >,
     public spacePk: string,
     public i18n: ReturnType<typeof useSettingsI18n>,
@@ -30,8 +34,25 @@ export class SpaceSettingsController {
     }
   };
 
+  handleChangeVisibilityChange = async (value: boolean) => {
+    try {
+      await this.updateChangeVisibility.mutateAsync({
+        spacePk: this.spacePk,
+        changeVisibility: value,
+      });
+      showSuccessToast(this.i18n.success_visibility_update);
+    } catch (error) {
+      logger.error('Failed to update change visibility', error);
+      showErrorToast(this.i18n.error_visibility_update);
+    }
+  };
+
   get anonymousParticipation() {
     return this.data.space.data?.anonymous_participation ?? false;
+  }
+
+  get changeVisibility() {
+    return this.data.space.data?.change_visibility ?? false;
   }
 }
 
@@ -40,12 +61,14 @@ export function useSpaceSettingsController(spacePk: string) {
   const state = useState(false);
   const updateAnonymousParticipation =
     useSpaceUpdateAnonymousParticipationMutation();
+  const updateChangeVisibility = useSpaceUpdateChangeVisibilityMutation();
   const i18n = useSettingsI18n();
 
   return new SpaceSettingsController(
     data,
     new State(state),
     updateAnonymousParticipation,
+    updateChangeVisibility,
     spacePk,
     i18n,
   );

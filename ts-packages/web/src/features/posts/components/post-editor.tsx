@@ -1,5 +1,5 @@
 import { TiptapEditor } from '@/components/text-editor';
-import { forwardRef } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 import {
   DEFAULT_ENABLED_FEATURES,
   TiptapEditorProps,
@@ -19,6 +19,7 @@ export interface PostEditorProps extends TiptapEditorProps {
   onRemovePdf?: (index: number) => void;
   onRemoveImage?: () => void;
 }
+
 export const PostEditor = forwardRef<Editor | null, PostEditorProps>(
   (props, ref) => {
     const {
@@ -31,14 +32,18 @@ export const PostEditor = forwardRef<Editor | null, PostEditorProps>(
       disabledImageUpload = false,
       ...editorProps
     } = props;
+
     let features = DEFAULT_ENABLED_FEATURES;
     if (disabledFileUpload) {
       features = { ...features, pdf: false };
     }
-
     if (disabledImageUpload) {
       features = { ...features, image: false };
     }
+
+    const [previewUrl, setPreviewUrl] = useState<string | null>(
+      () => files?.[0]?.url ?? null,
+    );
 
     const handlePdfDownload = async (file: FileModel) => {
       await downloadPdfFromUrl({
@@ -46,6 +51,20 @@ export const PostEditor = forwardRef<Editor | null, PostEditorProps>(
         fileName: file.name,
       });
     };
+
+    useEffect(() => {
+      if (!files || files.length === 0) {
+        setPreviewUrl(null);
+        return;
+      }
+
+      setPreviewUrl((prev) => {
+        if (prev && files.some((f) => f.url === prev)) {
+          return prev;
+        }
+        return files[0]?.url ?? null;
+      });
+    }, [files]);
 
     return (
       <div className="flex flex-col w-full">
@@ -55,6 +74,7 @@ export const PostEditor = forwardRef<Editor | null, PostEditorProps>(
           enabledFeatures={features}
           {...editorProps}
         />
+
         {url && (
           <div className="px-2 relative">
             <div className="aspect-video relative">
@@ -92,13 +112,13 @@ export const PostEditor = forwardRef<Editor | null, PostEditorProps>(
 
         {files && files.length > 0 && (
           <div className="px-2 mt-3 space-y-2">
-            {files.map((f, i) => {
-              return editable ? (
+            {files.map((f, i) =>
+              editable ? (
                 <EditableFile
                   key={i}
                   file={f}
                   onclick={() => {
-                    onRemovePdf(i);
+                    onRemovePdf?.(i);
                   }}
                 />
               ) : (
@@ -106,11 +126,22 @@ export const PostEditor = forwardRef<Editor | null, PostEditorProps>(
                   key={i}
                   file={f}
                   onclick={async () => {
+                    setPreviewUrl(f.url ?? null);
                     await handlePdfDownload(f);
                   }}
                 />
-              );
-            })}
+              ),
+            )}
+
+            {previewUrl && !editable && (
+              <div className="mt-4">
+                <iframe
+                  src={`${previewUrl}#toolbar=0`}
+                  className="w-full h-[600px] rounded-lg"
+                  title="PDF preview"
+                />
+              </div>
+            )}
           </div>
         )}
       </div>

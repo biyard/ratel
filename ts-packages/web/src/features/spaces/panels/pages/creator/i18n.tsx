@@ -1,7 +1,13 @@
 const en = {
+  total_quotas: 'Maximum People',
+  attribute_groups: 'Attribute Groups',
+  attributes: 'Attributes',
+  ratio: 'Maximum Ratio (%)',
+
   panel_name: 'Panel Name',
   age: 'Age',
   gender: 'Gender',
+  university: 'University',
   quotas: 'Quotas',
   panel_name_hint: 'Enter panel name',
   delete: 'Delete',
@@ -20,9 +26,15 @@ const en = {
 };
 
 const ko = {
+  total_quotas: '최대 인원',
+  attribute_groups: '속성 그룹',
+  attributes: '속성',
+  ratio: '최대 비율 (%)',
+
   panel_name: '패널 이름',
   age: '나이',
   gender: '성별',
+  university: '대학교',
   quotas: '총 인원',
   panel_name_hint: '패널 이름을 입력하세요.',
   delete: '삭제',

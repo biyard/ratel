@@ -28,7 +28,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
   const { t } = useTranslation('Home');
   const popup = usePopup();
   const { logout } = useAuth();
-  const { teams, selectedIndex, setSelectedTeam } = useContext(TeamContext);
+  const { teams, setSelectedTeam } = useContext(TeamContext);
   const userInfo = useUserInfo();
   const { isLoading } = userInfo;
 
@@ -53,7 +53,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
           data-pw="team-selector-trigger"
         >
           <span className="font-bold text-[18px] text-text-primary truncate">
-            {teams[selectedIndex].nickname}
+            {team.nickname}
           </span>
           <ChevronDown size={16} className="text-text-primary" />
         </button>

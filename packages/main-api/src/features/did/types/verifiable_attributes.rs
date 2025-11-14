@@ -1,17 +1,43 @@
 use crate::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, JsonSchema, OperationIo)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema, OperationIo,
+)]
+#[serde(tag = "type", content = "value", rename_all = "snake_case")]
 pub enum VerifiableAttribute {
     #[default]
     None,
 
-    Age(i8),
+    Age(Age),
     Gender(Gender),
     Generation(AgeGeneration),
-    IsAdult,
+    IsAdult(bool),
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, JsonSchema, OperationIo)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default, JsonSchema, OperationIo,
+)]
+#[serde(rename_all = "snake_case")]
+pub struct VerifiableAttributeWithQuota {
+    #[serde(flatten)]
+    pub attribute: VerifiableAttribute,
+    pub quota: i64,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    Default,
+    JsonSchema,
+    OperationIo,
+    EnumProp,
+)]
+#[serde(rename_all = "snake_case")]
 pub enum AgeGeneration {
     #[default]
     Teen,

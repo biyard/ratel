@@ -10,6 +10,7 @@ export const i18nHeader = {
     signIn: 'Sign In',
     logout: 'Logout',
     join_the_movement: 'Join the Movement',
+    settings: 'Settings',
   },
   ko: {
     home: '홈',
@@ -22,5 +23,6 @@ export const i18nHeader = {
     signIn: '로그인',
     logout: '로그아웃',
     join_the_movement: '참여하기',
+    settings: '설정',
   },
 };

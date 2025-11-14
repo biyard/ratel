@@ -6,16 +6,25 @@ import { State } from '@/types/state';
 import { SpacePostResponse } from '../types/space-post-response';
 import { SpacePostCommentResponse } from '../types/space-post-comment-response';
 import PostComment from '@/features/posts/types/post-comment';
+import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 
 export type PostCommentsProps = {
   t: TFunction<'Thread', undefined>;
   spacePk: string;
   post: SpacePostResponse;
+  comments: SpacePostCommentResponse[];
   isLoggedIn: boolean;
   expandComment: State<boolean>;
+  handleCommentDelete: (commentSk: string) => Promise<void>;
+  handleCommentUpdate: (commentSk: string, contents: string) => Promise<void>;
   handleComment: (content: string) => Promise<void>;
   handleReplyToComment: (commentSk: string, content: string) => Promise<void>;
   handleLikeComment: (commentId: string, like: boolean) => Promise<void>;
+
+  hasPrevPage: boolean;
+  hasNextPage: boolean;
+  onPrevPage: () => void;
+  onNextPage: () => void;
 };
 
 export default function PostComments({
@@ -24,15 +33,25 @@ export default function PostComments({
   post,
   isLoggedIn,
   expandComment,
+  handleCommentDelete,
+  handleCommentUpdate,
   handleComment,
   handleReplyToComment,
   handleLikeComment,
+  comments,
+
+  hasPrevPage,
+  hasNextPage,
+  onPrevPage,
+  onNextPage,
 }: PostCommentsProps) {
+  const { data: user } = useSuspenseUserInfo();
   const toPostComment = (c: SpacePostCommentResponse): PostComment => {
     return {
       pk: c.pk,
       sk: c.sk,
       updated_at: c.updated_at,
+      created_at: c.created_at,
       content: c.content,
       author_pk: c.author_pk,
       author_display_name: c.author_display_name,
@@ -86,7 +105,7 @@ export default function PostComments({
           </>
         )}
       </div>
-      {post?.comments.map((comment) => (
+      {comments.map((comment) => (
         <Comment
           spacePk={spacePk}
           key={comment?.pk + ' ' + comment?.sk}
@@ -94,9 +113,34 @@ export default function PostComments({
           comment={toPostComment(comment)}
           onComment={handleReplyToComment}
           onLike={handleLikeComment}
+          onDelete={handleCommentDelete}
+          onUpdate={handleCommentUpdate}
           t={t}
+          canDelete={comment?.author_pk === user?.pk}
+          canEdit={comment?.author_pk === user?.pk}
         />
       ))}
+
+      <div className="flex justify-center gap-3 mt-4">
+        {hasPrevPage && (
+          <button
+            type="button"
+            onClick={onPrevPage}
+            className="px-3 py-1.5 text-sm rounded-md border border-border-subtle hover:bg-bg-elevated"
+          >
+            {t('prev_comment')}
+          </button>
+        )}
+        {hasNextPage && (
+          <button
+            type="button"
+            onClick={onNextPage}
+            className="px-3 py-1.5 text-sm rounded-md border border-border-subtle hover:bg-bg-elevated"
+          >
+            {t('next_comment')}
+          </button>
+        )}
+      </div>
     </>
   );
 }

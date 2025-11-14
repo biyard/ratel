@@ -32,6 +32,11 @@ pub struct SpacePost {
     #[dynamo(index = "gsi6", sk)]
     pub updated_at: i64,
 
+    #[serde(default)]
+    pub started_at: i64,
+    #[serde(default)]
+    pub ended_at: i64,
+
     pub title: String,
     pub html_contents: String,
     #[dynamo(index = "gsi6", name = "find_by_cagetory", pk)]
@@ -64,6 +69,8 @@ impl SpacePost {
         category_name: String,
         urls: Vec<String>,
         files: Option<Vec<File>>,
+        started_at: i64,
+        ended_at: i64,
         User {
             pk,
             display_name,
@@ -79,6 +86,8 @@ impl SpacePost {
             sk: EntityType::SpacePost(uuid),
             created_at: now,
             updated_at: now,
+            started_at,
+            ended_at,
 
             title,
             html_contents,
@@ -209,9 +218,18 @@ impl SpacePost {
         comment_pk: EntityType,
         user_pk: Partition,
     ) -> Result<(), crate::Error> {
+        let comment = SpacePostComment::get(cli, space_post_pk.clone(), Some(comment_pk.clone()))
+            .await?
+            .ok_or(crate::Error::PostCommentError)?;
+
+        let new_likes = comment.likes.saturating_add(1);
+        let new_likes_align = format!("{:020}", new_likes);
+
         let comment_tx = SpacePostComment::updater(&space_post_pk, &comment_pk)
-            .increase_likes(1)
+            .with_likes(new_likes)
+            .with_likes_align(new_likes_align)
             .transact_write_item();
+
         let pl_tx = SpacePostCommentLike::new(space_post_pk, comment_pk, user_pk)
             .create_transact_write_item();
 
@@ -223,6 +241,7 @@ impl SpacePost {
                 tracing::error!("Failed to like comment: {}", e);
                 crate::Error::PostLikeError
             })?;
+
         Ok(())
     }
 
@@ -232,9 +251,18 @@ impl SpacePost {
         comment_pk: EntityType,
         user_pk: Partition,
     ) -> Result<(), crate::Error> {
+        let comment = SpacePostComment::get(cli, space_post_pk.clone(), Some(comment_pk.clone()))
+            .await?
+            .ok_or(crate::Error::PostCommentError)?;
+
+        let new_likes = comment.likes.saturating_sub(1);
+        let new_likes_align = format!("{:020}", new_likes);
+
         let comment_tx = SpacePostComment::updater(&space_post_pk, &comment_pk)
-            .decrease_likes(1)
+            .with_likes(new_likes)
+            .with_likes_align(new_likes_align)
             .transact_write_item();
+
         let pcl = SpacePostCommentLike::new(space_post_pk, comment_pk, user_pk);
         let pl_tx = SpacePostCommentLike::delete_transact_write_item(&pcl.pk, &pcl.sk);
 
@@ -246,6 +274,7 @@ impl SpacePost {
                 tracing::error!("Failed to unlike comment: {}", e);
                 crate::Error::PostLikeError
             })?;
+
         Ok(())
     }
 }

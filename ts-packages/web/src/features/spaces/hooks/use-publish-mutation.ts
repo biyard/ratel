@@ -5,10 +5,12 @@ import {
   SpacePublishState,
   SpaceVisibility,
 } from '@/features/spaces/types/space-common';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Space } from '../types/space';
 
 export function usePublishSpaceMutation() {
+  const qc = useQueryClient();
+
   const mutation = useMutation({
     mutationKey: ['publish-space'],
     mutationFn: async ({
@@ -32,6 +34,10 @@ export function usePublishSpaceMutation() {
       );
 
       return { rollback };
+    },
+    onSuccess: async (_, { spacePk }) => {
+      const spaceQK = spaceKeys.detail(spacePk);
+      await qc.invalidateQueries({ queryKey: spaceQK });
     },
     onError: async (_, __, context) => {
       context.rollback?.rollback();

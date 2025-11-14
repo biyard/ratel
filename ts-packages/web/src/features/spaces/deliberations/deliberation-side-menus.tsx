@@ -18,6 +18,13 @@ import { route } from '@/route';
 //   />
 // );
 
+const pieChartColored = (props) => (
+  <PieChart1
+    {...props}
+    className="[&>path]:stroke-neutral-500 [&>circle]:stroke-neutral-500 w-5 h-5"
+  />
+);
+
 addSideMenusForSpaceType(SpaceType.Deliberation, [
   {
     Icon: Post,
@@ -73,7 +80,7 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
   //   label: 'menu_recommendations',
   // },
   {
-    Icon: PieChart1,
+    Icon: pieChartColored,
     to: (space) => {
       return route.spaceAnalyzePolls(space.pk);
     },

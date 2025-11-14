@@ -34,12 +34,15 @@ export async function optimisticUpdate<T>(
   updater: (oldData: T | undefined) => T | undefined,
 ): Promise<Rollbackable<[readonly unknown[], T | undefined][]>> {
   const queryClient = getQueryClient();
-  await queryClient.cancelQueries({ queryKey });
+  await queryClient.cancelQueries({ queryKey, exact: true });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rollbackData: any = queryClient.getQueriesData<T>({ queryKey });
+  const rollbackData: any = queryClient.getQueriesData<T>({
+    queryKey,
+    exact: true,
+  });
 
-  queryClient.setQueriesData<T>({ queryKey }, updater);
+  queryClient.setQueriesData<T>({ queryKey, exact: true }, updater);
 
   if (rollbackData) {
     rollbackData!.rollback = () => {
@@ -60,20 +63,24 @@ export async function optimisticListUpdate<T>(
   Rollbackable<readonly [readonly unknown[], InfiniteData<T[]> | undefined][]>
 > {
   const queryClient = getQueryClient();
-  await queryClient.cancelQueries({ queryKey });
+  await queryClient.cancelQueries({ queryKey, exact: true });
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rollbackData: any = queryClient.getQueriesData<InfiniteData<T[]>>({
     queryKey,
+    exact: true,
   });
 
-  queryClient.setQueriesData<InfiniteData<T>>({ queryKey }, (oldData) => {
-    if (!oldData) return oldData;
-    const newPages = oldData.pages
-      .map(updater)
-      .filter((page): page is T => page !== undefined);
-    return { ...oldData, pages: newPages };
-  });
+  queryClient.setQueriesData<InfiniteData<T>>(
+    { queryKey, exact: true },
+    (oldData) => {
+      if (!oldData) return oldData;
+      const newPages = oldData.pages
+        .map(updater)
+        .filter((page): page is T => page !== undefined);
+      return { ...oldData, pages: newPages };
+    },
+  );
 
   if (rollbackData) {
     rollbackData.rollback = () => {

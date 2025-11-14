@@ -32,9 +32,9 @@ pub fn new() -> BiyardRouter {
         .with_thread_ids(true)
         .with_target(false)
         .with_ansi(
-            option_env!("ENABLE_ANSI")
+            option_env!("DISABLE_ANSI")
                 .map(|e| e.to_lowercase() == "true")
-                .unwrap_or(false),
+                .unwrap_or(true),
         )
         .try_init();
 

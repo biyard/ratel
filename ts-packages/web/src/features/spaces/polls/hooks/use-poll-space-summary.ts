@@ -13,8 +13,8 @@ export function getOption(spacePk: string, pollSk: string) {
   return {
     queryKey: spaceKeys.poll_summary(spacePk, pollSk),
     queryFn: async () => {
-      const post = await getPollSurveySummaries(spacePk, pollSk);
-      return post;
+      const survey = await getPollSurveySummaries(spacePk, pollSk);
+      return survey;
     },
     refetchOnWindowFocus: false,
   };

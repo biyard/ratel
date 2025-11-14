@@ -3,11 +3,16 @@ use crate::controllers::v3::spaces::create_space::CreateSpaceResponse;
 use crate::controllers::v3::spaces::polls::{
     DeletePollSpaceResponse, RespondPollSpaceResponse, UpdatePollSpaceResponse,
 };
+use crate::features::did::AttributeCode;
+use crate::features::did::{VerifiableAttribute, VerifiableAttributeWithQuota};
 use crate::features::spaces::SpaceParticipant;
-use crate::features::spaces::panels::{SpacePanel, SpacePanelParticipant, SpacePanelResponse};
+use crate::features::spaces::panels::{
+    PanelAttribute, PanelAttributeWithQuota, SpacePanelParticipant, SpacePanelQuota,
+    SpacePanelsResponse,
+};
 use crate::features::spaces::polls::{Poll, PollResponse, PollResultResponse};
 use crate::tests::v3_setup::TestContextV3;
-use crate::types::{Answer, ChoiceQuestion, EntityType, Partition, Question};
+use crate::types::{Answer, ChoiceQuestion, EntityType, Gender, Partition, Question};
 use crate::utils::time::get_now_timestamp_millis;
 use crate::*;
 
@@ -468,6 +473,28 @@ async fn test_get_poll_results_with_panel_responses() {
         ..
     } = ctx;
 
+    let mut attribute = AttributeCode::new();
+    attribute.gender = Some(Gender::Male);
+    attribute.birth_date = Some("19991231".to_string());
+    let _ = attribute.create(&ddb).await;
+
+    let code = match attribute.pk {
+        Partition::AttributeCode(v) => v.to_string(),
+        _ => "".to_string(),
+    };
+
+    let (status, _headers, _body) = put! {
+        app: app,
+        path: format!("/v3/me/did"),
+        headers: test_user.1.clone(),
+        body: {
+            "type": "code",
+            "code": code
+        }
+    };
+
+    assert_eq!(status, 200);
+
     // Submit responses from multiple users
     let answers1 = vec![
         Answer::SingleChoice { answer: Some(1) },
@@ -476,23 +503,33 @@ async fn test_get_poll_results_with_panel_responses() {
         },
     ];
 
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-    let path = format!("/v3/spaces/{}/panels", space_pk_encoded);
-
-    let (_status, _headers, body) = post! {
+    let (status, _headers, body) = post! {
         app: app,
-        path: path.clone(),
+        path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "name": "Panel 1".to_string(), "quotas": 10, "attributes": vec![Attribute::Age(types::Age::Range { inclusive_min: 0, inclusive_max: 19 }), Attribute::Gender(types::Gender::Female)],
+            "attributes": vec![
+                PanelAttributeWithQuota::VerifiableAttribute(
+                    VerifiableAttributeWithQuota {
+                        attribute: VerifiableAttribute::Gender(Gender::Male),
+                        quota: 30
+                    }
+                ),
+                PanelAttributeWithQuota::VerifiableAttribute(
+                    VerifiableAttributeWithQuota {
+                        attribute: VerifiableAttribute::Age(Age::Range { inclusive_min: 0, inclusive_max: 18 }),
+                        quota: 30
+                    }
+                )
+            ]
         },
-        response_type: SpacePanelResponse
+        response_type: Vec<SpacePanelQuota>
     };
 
-    let panel_pk = body.pk;
+    assert_eq!(status, 200);
+    assert_eq!(body.len(), 2);
 
-    let participant =
-        SpacePanelParticipant::new(space_pk.clone(), panel_pk.clone(), test_user.0.clone());
+    let participant = SpacePanelParticipant::new(space_pk.clone(), test_user.0.clone());
     let _ = participant.create(&ddb).await;
 
     let (status, _headers, _res) = post! {

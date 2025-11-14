@@ -22,6 +22,8 @@ pub struct UpdateSpacePostRequest {
     pub category_name: String,
     pub urls: Vec<String>,
     pub files: Vec<File>,
+    pub started_at: i64,
+    pub ended_at: i64,
 }
 
 pub async fn update_space_post_handler(
@@ -63,6 +65,8 @@ pub async fn update_space_post_handler(
         .with_category_name(req.category_name.clone())
         .with_urls(req.urls.clone())
         .with_files(req.files.clone())
+        .with_started_at(req.started_at.clone())
+        .with_ended_at(req.ended_at.clone())
         .execute(&dynamo.client)
         .await?;
 

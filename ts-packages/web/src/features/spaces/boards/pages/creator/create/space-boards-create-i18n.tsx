@@ -10,6 +10,8 @@ export const i18nSpaceBoardsCreate = {
     cancel: 'Cancel',
     write: 'Write',
     update: 'Update',
+
+    invalid_time: 'Invalid Time Setting',
   },
   ko: {
     create_new_post: '새 게시글 작성',
@@ -22,5 +24,7 @@ export const i18nSpaceBoardsCreate = {
     cancel: '취소',
     write: '작성하기',
     update: '수정하기',
+
+    invalid_time: '시간 설정을 다시 확인해주세요.',
   },
 };

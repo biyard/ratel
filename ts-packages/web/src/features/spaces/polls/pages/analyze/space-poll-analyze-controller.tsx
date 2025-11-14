@@ -9,10 +9,13 @@ import {
   SurveyAnswerType,
   SurveySummary,
 } from '../../types/poll-question';
-import { logger } from '@/lib/logger';
 import * as XLSX from 'xlsx';
 import { route } from '@/route';
 import { NavigateFunction, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
+import { TFunction } from 'i18next';
+import { PanelAttribute } from '@/features/spaces/panels/types/panel-attribute';
+import { useListPanels } from '@/features/spaces/panels/hooks/use-list-panels';
 
 export class SpacePollAnalyzeController {
   constructor(
@@ -22,6 +25,9 @@ export class SpacePollAnalyzeController {
     public space: Space,
     public poll: Poll,
     public summary: PollSurveySummariesResponse,
+    public attributes: PanelAttribute[],
+
+    public t: TFunction<'SpacePollAnalyze', undefined>,
   ) {}
 
   handleBack = () => {
@@ -55,66 +61,250 @@ export class SpacePollAnalyzeController {
   };
 
   handleDownloadExcel = () => {
-    const questions = this.poll.questions;
-    const summaries = this.summary.summaries;
-    logger.debug(
-      'Download Excel clicked with summaries: ',
-      questions,
-      summaries,
+    const questions = this.poll?.questions ?? [];
+    const qCount = questions.length;
+
+    const needGender = (this.attributes ?? []).some(
+      (a) => a?.type === 'verifiable_attribute' && a?.value === 'gender',
     );
 
-    const perQuestionResponses: string[][] = [];
-    let maxRespCols = 0;
+    const needUniversity = (this.attributes ?? []).some(
+      (a) => a?.type === 'collective_attribute' && a?.value === 'university',
+    );
 
-    questions.forEach((q, i) => {
-      const s = summaries[i];
-      const entries = this.normalizeAnswerEntries(s);
+    const userKeyFromPk = (pk: string | undefined) => {
+      if (!pk) return '';
+      const i = pk.indexOf('#USER#');
+      return i >= 0 ? pk.slice(i + '#USER#'.length) : pk;
+    };
 
-      entries.sort(([a], [b]) => {
-        const ia = Number(a);
-        const ib = Number(b);
-        return Number.isFinite(ia) && Number.isFinite(ib) ? ia - ib : 0;
-      });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const toAnswerDisplay = (q: PollQuestion, ans: any): string => {
+      const kind = String(q?.answer_type ?? '');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const opts: string[] | undefined = Array.isArray((q as any)?.options)
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (q as any).options
+        : undefined;
 
-      const parts = entries.map(([key, cnt]) => {
-        const label = this.isSubjective(q.answer_type)
-          ? key
-          : this.keyToLabel(q, key);
-        return `${label} (${cnt})`;
-      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const raw: any =
+        ans && typeof ans === 'object' && 'answer' in ans ? ans.answer : ans;
 
-      perQuestionResponses.push(parts);
-      maxRespCols = Math.max(maxRespCols, parts.length);
-    });
+      if (
+        raw === null ||
+        typeof raw === 'undefined' ||
+        (Array.isArray(raw) && raw.length === 0) ||
+        (typeof raw === 'string' && raw.trim().length === 0)
+      ) {
+        return '';
+      }
 
-    const header = [
-      'Index',
-      'Question',
-      'Total Responses',
-      ...Array.from({ length: maxRespCols }, (_, i) => `Answer ${i + 1}`),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const labelOf = (v: any) => {
+        const idx = typeof v === 'number' ? v : Number(v);
+        if (Number.isFinite(idx) && opts && idx >= 0 && idx < opts.length) {
+          return String(opts[idx] ?? `${idx}`);
+        }
+        return typeof v === 'string' || typeof v === 'number' ? String(v) : '';
+      };
+
+      if (['single_choice', 'dropdown', 'select', 'radio'].includes(kind)) {
+        return labelOf(raw);
+      }
+
+      if (['multiple_choice', 'checkbox', 'multi_select'].includes(kind)) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let arr: any[] = [];
+        if (Array.isArray(raw)) {
+          arr = raw;
+        } else if (typeof raw === 'string') {
+          arr = raw
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
+        }
+
+        if (arr.length === 0) return '';
+        return arr.map(labelOf).join(', ');
+      }
+
+      if (kind === 'linear_scale') {
+        return String(raw);
+      }
+
+      return String(raw);
+    };
+
+    const getGenderDisp = (g?: string) =>
+      !g
+        ? ''
+        : g.toLowerCase() === 'male'
+          ? 'Male'
+          : g.toLowerCase() === 'female'
+            ? 'Female'
+            : g;
+
+    const { sample_answers = [], final_answers = [] } = (this.summary ||
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      {}) as any;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const finalByUser = new Map<string, any>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const f of final_answers as any[])
+      finalByUser.set(userKeyFromPk(f?.pk), f);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sampleByUser = new Map<string, any>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for (const s of sample_answers as any[])
+      sampleByUser.set(userKeyFromPk(s?.pk), s);
+
+    const userOrder: string[] = [];
+    for (const k of finalByUser.keys()) userOrder.push(k);
+    for (const k of sampleByUser.keys())
+      if (!finalByUser.has(k)) userOrder.push(k);
+
+    let col = 0;
+    const COL_ID = col++;
+    const COL_ATTR_START = col;
+    const COL_GENDER = needGender ? col++ : -1;
+    const COL_UNIV = needUniversity ? col++ : -1;
+    const attrCols = (needGender ? 1 : 0) + (needUniversity ? 1 : 0);
+    const COL_CATEGORY = col++;
+    const COL_TYPE = col++;
+    const COL_Q_START = col;
+    const totalCols = COL_Q_START + qCount;
+
+    const header1 = new Array(totalCols).fill('');
+    header1[COL_ID] = this.t('id');
+    if (attrCols > 0) header1[COL_ATTR_START] = this.t('attribute');
+    header1[COL_CATEGORY] = this.t('category');
+    header1[COL_TYPE] = this.t('type');
+    if (qCount > 0) header1[COL_Q_START] = this.t('questionnaire');
+
+    const header2 = new Array(totalCols).fill('');
+    if (COL_GENDER >= 0) header2[COL_GENDER] = this.t('gender');
+    if (COL_UNIV >= 0) header2[COL_UNIV] = this.t('university');
+
+    const rows: (string | number)[][] = [header1, header2];
+
+    const merges: XLSX.Range[] = [
+      { s: { r: 0, c: COL_ID }, e: { r: 1, c: COL_ID } },
+      { s: { r: 0, c: COL_CATEGORY }, e: { r: 1, c: COL_CATEGORY } },
+      { s: { r: 0, c: COL_TYPE }, e: { r: 1, c: COL_TYPE } },
     ];
+    if (attrCols > 0) {
+      merges.push({
+        s: { r: 0, c: COL_ATTR_START },
+        e: { r: 0, c: COL_ATTR_START + attrCols - 1 },
+      });
+    }
+    if (qCount > 0) {
+      merges.push({
+        s: { r: 0, c: COL_Q_START },
+        e: { r: 1, c: COL_Q_START + qCount - 1 },
+      });
+    }
 
-    const rows: (string | number)[][] = [header];
-    questions.forEach((q, i) => {
-      const total = summaries[i]?.total_count ?? 0;
-      const parts = perQuestionResponses[i] ?? [];
-      const padded = [...parts, ...Array(maxRespCols - parts.length).fill('')];
-      rows.push([i + 1, q.title, total, ...padded]);
-    });
+    const pushBlock = (
+      roundLabel: '사전조사' | '사후조사',
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      meta: any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      answers: any[],
+    ) => {
+      const r1 = new Array(totalCols).fill('');
+      r1[COL_CATEGORY] =
+        roundLabel === '사전조사'
+          ? this.t('sample_survey')
+          : this.t('final_survey');
+      r1[COL_TYPE] = this.t('question');
+      for (let i = 0; i < qCount; i++)
+        r1[COL_Q_START + i] = this.poll?.questions?.[i]?.title ?? `Q${i + 1}`;
+
+      const r2 = new Array(totalCols).fill('');
+      r2[COL_CATEGORY] = r1[COL_CATEGORY];
+      r2[COL_TYPE] = this.t('answer');
+      for (let i = 0; i < qCount; i++) {
+        const ans = answers?.[i];
+        r2[COL_Q_START + i] = toAnswerDisplay(
+          this.poll?.questions?.[i] as PollQuestion,
+          ans,
+        );
+      }
+
+      const start = rows.length;
+      rows.push(r1, r2);
+      merges.push({
+        s: { r: start, c: COL_CATEGORY },
+        e: { r: start + 1, c: COL_CATEGORY },
+      });
+      return { start, end: start + 1 };
+    };
+
+    for (const userKey of userOrder) {
+      const f = finalByUser.get(userKey);
+      const s = sampleByUser.get(userKey);
+      const meta = f || s;
+      if (!meta) continue;
+
+      const name = meta.display_name || meta.username || userKey;
+      const gender = getGenderDisp(meta?.respondent?.gender);
+      const school = meta?.respondent?.school || '';
+
+      const startIdx = rows.length;
+      if (s) pushBlock('사전조사', meta, s.answers || []);
+      if (f) pushBlock('사후조사', meta, f.answers || []);
+      const endIdx = rows.length - 1;
+
+      merges.push({
+        s: { r: startIdx, c: COL_ID },
+        e: { r: endIdx, c: COL_ID },
+      });
+      if (COL_GENDER >= 0)
+        merges.push({
+          s: { r: startIdx, c: COL_GENDER },
+          e: { r: endIdx, c: COL_GENDER },
+        });
+      if (COL_UNIV >= 0)
+        merges.push({
+          s: { r: startIdx, c: COL_UNIV },
+          e: { r: endIdx, c: COL_UNIV },
+        });
+
+      rows[startIdx][COL_ID] = name;
+      if (COL_GENDER >= 0) rows[startIdx][COL_GENDER] = gender;
+      if (COL_UNIV >= 0) rows[startIdx][COL_UNIV] = school;
+    }
 
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    const colInfos: XLSX.ColInfo[] = header.map((h, idx) => {
-      const maxLen = rows.reduce(
-        (m, r) => Math.max(m, String(r[idx] ?? '').length),
-        h.length,
-      );
-      const base = idx === 0 ? 6 : idx === 1 ? 40 : idx === 2 ? 16 : 24;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ws as any)['!merges'] = merges;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ws as any)['!cols'] = Array.from({ length: totalCols }, (_, idx) => {
+      const base =
+        idx === COL_ID
+          ? 18
+          : idx === COL_GENDER
+            ? 10
+            : idx === COL_UNIV
+              ? 16
+              : idx === COL_CATEGORY
+                ? 12
+                : idx === COL_TYPE
+                  ? 10
+                  : 14;
+      let maxLen = 0;
+      for (const r of rows)
+        maxLen = Math.max(maxLen, String(r[idx] ?? '').length);
       return { wch: Math.max(base, Math.min(maxLen + 2, 60)) };
     });
-    ws['!cols'] = colInfos;
 
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Overview');
+    XLSX.utils.book_append_sheet(wb, ws, 'Responses');
     XLSX.writeFile(wb, `${this.pollPk}.xlsx`);
   };
 }
@@ -124,6 +314,10 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
   const { data: summary } = usePollSpaceSummaries(spacePk, pollPk);
+  const { data: panels } = useListPanels(spacePk);
+  const attribute = panels?.map((p) => p.attributes).flat() ?? [];
+  const { t } = useTranslation('SpacePollAnalyze');
+
   const navigator = useNavigate();
 
   return new SpacePollAnalyzeController(
@@ -133,5 +327,8 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
     space,
     poll,
     summary,
+    attribute,
+
+    t,
   );
 }

@@ -21,6 +21,9 @@ import { useUserInfo } from '@/hooks/use-user-info';
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
 
+const defaultProfile =
+  'https://metadata.ratel.foundation/ratel/default-profile.png';
+
 export default function TeamCreationPopup() {
   const { t } = useTranslation('Home');
   const popup = usePopup();
@@ -52,7 +55,7 @@ export default function TeamCreationPopup() {
       await teamsV3Api.createTeam({
         username,
         nickname,
-        profile_url: profileUrl,
+        profile_url: profileUrl || defaultProfile,
         description: htmlContents,
       });
 
@@ -100,17 +103,17 @@ export default function TeamCreationPopup() {
   return (
     <div className="w-100 max-tablet:w-full flex flex-col gap-10 items-center">
       <FileUploader onUploadSuccess={setProfileUrl}>
-        {profileUrl ? (
+        <div className="group relative flex items-center justify-center size-40 max-mobile:size-20 mx-auto">
           <img
-            src={profileUrl}
-            alt="Team Logo"
-            className="w-40 h-40 rounded-full object-cover cursor-pointer"
+            src={profileUrl || defaultProfile}
+            alt="logo"
+            className="w-40 h-40 rounded-full object-cover cursor-pointer relative group max-mobile:size-20"
           />
-        ) : (
-          <button className="w-40 h-40 rounded-full bg-c-wg-80 text-sm font-semibold flex items-center justify-center text-c-wg-50">
+
+          <div className="absolute w-40 h-40 inset-0 bg-component-bg/50 flex items-center justify-center text-center rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-white font-semibold">
             {t('upload_logo')}
-          </button>
-        )}
+          </div>
+        </div>
       </FileUploader>
 
       <Col className="w-full gap-2.5">

@@ -1,3 +1,6 @@
+use aws_sdk_dynamodb::types::TransactWriteItem;
+
+use crate::features::spaces::SpaceRequirement;
 use crate::models::space::SpaceCommon;
 
 use crate::features::spaces::polls::*;
@@ -34,10 +37,26 @@ pub async fn create_poll_handler(
         None
     };
 
-    let poll = Poll::new(space_pk, sk)?;
-    poll.create(&dynamo.client).await?;
+    let poll = Poll::new(space_pk.clone(), sk)?;
+    let mut items: Vec<TransactWriteItem> = Vec::with_capacity(2);
+    items.push(poll.create_transact_write_item());
 
-    let poll_response: PollResponse = PollResponse::from(poll);
+    if poll.is_default_poll() {
+        let requirement = SpaceRequirement::new(
+            space_pk,
+            features::spaces::SpaceRequirementType::PrePoll,
+            (poll.pk.to_string(), poll.sk.clone()),
+        );
+        items.push(requirement.create_transact_write_item());
+    }
 
-    Ok(Json(poll_response))
+    dynamo
+        .client
+        .transact_write_items()
+        .set_transact_items(Some(items))
+        .send()
+        .await
+        .expect("failed to create poll");
+
+    Ok(Json(poll.into()))
 }

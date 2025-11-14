@@ -6,6 +6,7 @@ import Card from '@/components/card';
 import { Input } from '@/components/ui/input';
 import { PostEditor } from '@/features/posts/components/post-editor';
 import { Button } from '@/components/ui/button';
+import { TimeRangeSetting } from '@/features/spaces/polls/components/time-range-setting';
 
 export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceBoardsCreatePage: spacePk=${spacePk}`);
@@ -48,7 +49,15 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
   }, []);
 
   return (
-    <div className="w-full mt-6">
+    <div className="flex flex-col w-full mt-6 gap-2">
+      <TimeRangeSetting
+        canEdit={false}
+        onChange={ctrl.handleTimeRange}
+        startTimestampMillis={ctrl.startedAt.get()}
+        endTimestampMillis={ctrl.endedAt.get()}
+        alwaysEdit={true}
+        className="justify-end"
+      />
       <Card className="w-full">
         <div className="grid gap-5 w-full">
           <div className="grid gap-2 w-full">
