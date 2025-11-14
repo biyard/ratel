@@ -1,5 +1,5 @@
-import { createContext, useContext } from 'react';
-import { Outlet, useLocation, useParams, useNavigate } from 'react-router';
+import { createContext, useState } from 'react';
+import { Outlet, useLocation, useParams } from 'react-router';
 import {
   SpaceHomeController,
   useSpaceHomeController,
@@ -19,6 +19,10 @@ import { cn } from '@/lib/utils';
 import { useSpaceLayoutContext } from './use-space-layout-context';
 import { Requirements } from '@/features/spaces/components/requirements';
 import { SafeArea } from '@/components/ui/safe-area';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Bullet1 } from '@/components/icons';
 
 export const Context = createContext<SpaceHomeController | undefined>(
   undefined,
@@ -28,6 +32,20 @@ function GeneralLayout() {
   const ctrl = useSpaceLayoutContext();
   const location = useLocation();
   const showInfo = !/\/boards\/posts(\/|$)/.test(location.pathname);
+  const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const participantProfileProps =
+    ctrl.space.participated &&
+    ctrl.space.participantDisplayName &&
+    ctrl.space.participantProfileUrl &&
+    ctrl.space.participantUsername
+      ? {
+          displayName: ctrl.space.participantDisplayName,
+          profileUrl: ctrl.space.participantProfileUrl,
+          username: ctrl.space.participantUsername,
+        }
+      : null;
 
   return (
     <Row>
@@ -61,27 +79,75 @@ function GeneralLayout() {
         <Outlet />
       </Col>
 
-      <Col className={cn('gap-2.5 w-full transition-all max-w-[250px]')}>
-        {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
+      <Col
+        className={cn(
+          'gap-2.5 transition-all',
+          isMobile ? 'w-auto items-center' : 'w-full max-w-[250px]',
+        )}
+      >
+        {/* Mobile expand button */}
+        {isMobile && (
+          <Button
+            onClick={() => setSheetOpen(true)}
+            variant="default"
+            className="size-12"
+            aria-label="Expand space menu"
+          >
+            <Bullet1 className="size-4" />
+          </Button>
+        )}
 
-        {ctrl.space.participated &&
-          ctrl.space.participantDisplayName &&
-          ctrl.space.participantProfileUrl &&
-          ctrl.space.participantUsername && (
-            <SpaceParticipantProfile
-              displayName={ctrl.space.participantDisplayName}
-              profileUrl={ctrl.space.participantProfileUrl}
-              username={ctrl.space.participantUsername}
-            />
-          )}
+        {/* Desktop actions (hidden on mobile) */}
+        {!isMobile && ctrl.actions.length > 0 && (
+          <SpaceActions actions={ctrl.actions} />
+        )}
 
-        <SpaceSideMenu menus={ctrl.menus} />
-        <TimelineMenu
-          isEditing={false}
-          handleSetting={() => {}}
-          items={ctrl.timelineItems}
-          titleLabel={ctrl.t('timeline_title')}
-        />
+        {/* Participant profile - icon only on mobile */}
+        {participantProfileProps && (
+          <SpaceParticipantProfile
+            {...participantProfileProps}
+            iconOnly={isMobile}
+          />
+        )}
+
+        {/* Side menu - icon only on mobile */}
+        <SpaceSideMenu menus={ctrl.menus} iconOnly={isMobile} />
+
+        {/* Timeline - desktop only */}
+        {!isMobile && (
+          <TimelineMenu
+            isEditing={false}
+            handleSetting={() => {}}
+            items={ctrl.timelineItems}
+            titleLabel={ctrl.t('timeline_title')}
+          />
+        )}
+
+        {/* Mobile sheet with full content */}
+        {isMobile && (
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetContent side="right" className="w-full overflow-y-auto p-5">
+              <Col className="gap-4 mt-4" onClick={() => setSheetOpen(false)}>
+                {ctrl.actions.length > 0 && (
+                  <SpaceActions actions={ctrl.actions} />
+                )}
+
+                {participantProfileProps && (
+                  <SpaceParticipantProfile {...participantProfileProps} />
+                )}
+
+                <SpaceSideMenu menus={ctrl.menus} />
+
+                <TimelineMenu
+                  isEditing={false}
+                  handleSetting={() => {}}
+                  items={ctrl.timelineItems}
+                  titleLabel={ctrl.t('timeline_title')}
+                />
+              </Col>
+            </SheetContent>
+          </Sheet>
+        )}
       </Col>
     </Row>
   );
