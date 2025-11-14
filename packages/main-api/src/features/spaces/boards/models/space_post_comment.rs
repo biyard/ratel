@@ -24,7 +24,6 @@ pub struct SpacePostComment {
     pub pk: Partition,
 
     #[dynamo(index = "gsi1", sk)]
-    #[dynamo(index = "gsi2", sk, order = 1)]
     pub sk: EntityType,
 
     pub updated_at: i64,
@@ -37,6 +36,11 @@ pub struct SpacePostComment {
     #[dynamo(index = "gsi2", sk, order = 0)]
     #[dynamo(index = "gsi3", sk, order = 0)]
     pub likes_align: String,
+
+    #[serde(default)]
+    #[dynamo(index = "gsi2", sk, order = 1)]
+    #[dynamo(index = "gsi3", sk, order = 1)]
+    pub updated_at_align: String,
 
     #[serde(default)]
     #[dynamo(index = "gsi3", pk, name = "find_replies_by_likes")]
@@ -79,6 +83,7 @@ impl SpacePostComment {
             author_profile_url,
             likes: 0,
             likes_align: format!("{:020}", 0),
+            updated_at_align: format!("{:020}", now),
             parent_id_for_likes: "ROOT".to_string(),
             replies: 0,
             parent_comment_sk: None,
@@ -87,8 +92,8 @@ impl SpacePostComment {
 
     pub async fn list_by_comment(
         cli: &aws_sdk_dynamodb::Client,
-        _space_post_pk: Partition,
         comment_sk: EntityType,
+        opt: SpacePostCommentQueryOption,
     ) -> Result<(Vec<Self>, Option<String>), crate::Error> {
         let parent_comment_id = match comment_sk {
             EntityType::SpacePostComment(id) => id,
@@ -98,14 +103,7 @@ impl SpacePostComment {
             }
         };
 
-        SpacePostComment::find_replies_by_likes(
-            cli,
-            parent_comment_id,
-            SpacePostCommentQueryOption::builder()
-                .limit(10)
-                .scan_index_forward(false),
-        )
-        .await
+        SpacePostComment::find_replies_by_likes(cli, parent_comment_id, opt).await
     }
 
     pub async fn reply(

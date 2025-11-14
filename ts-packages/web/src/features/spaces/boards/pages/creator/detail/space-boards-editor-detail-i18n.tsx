@@ -13,6 +13,7 @@ export const i18nSpaceBoardsEditorDetail = {
     write_comment: 'Write a Comment',
     publish: 'Publish',
     publishing: 'Publishing...',
+    reply_more: 'More Replies',
 
     success_create_comment: 'Success to Create Comment',
     failed_create_comment: 'Failed to Create Comment. Please try again.',
@@ -31,6 +32,7 @@ export const i18nSpaceBoardsEditorDetail = {
     write_comment: '댓글 작성',
     publish: '게시',
     publishing: '게시 중...',
+    reply_more: '대댓글 더보기',
 
     success_create_comment: '댓글을 성공적으로 게시했습니다.',
     failed_create_comment:

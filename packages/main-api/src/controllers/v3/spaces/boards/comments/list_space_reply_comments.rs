@@ -15,8 +15,9 @@ pub async fn list_space_reply_comments_handler(
         space_post_pk,
         space_post_comment_sk,
     }): SpacePostCommentPath,
-    Query(_query): ListItemsQuery,
+    Query(query): ListItemsQuery,
 ) -> Result<Json<ListItemsResponse<SpacePostCommentResponse>>> {
+    let _space_post_pk = space_post_pk;
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(crate::Error::NotFoundSpace);
     }
@@ -25,9 +26,16 @@ pub async fn list_space_reply_comments_handler(
         return Err(crate::Error::NoPermission);
     }
 
+    let mut opt = SpacePostCommentQueryOption::builder()
+        .limit(10)
+        .scan_index_forward(false);
+
+    if let Some(bookmark) = query.bookmark {
+        opt = opt.bookmark(bookmark);
+    }
+
     let (comments, bookmark) =
-        SpacePostComment::list_by_comment(&dynamo.client, space_post_pk, space_post_comment_sk)
-            .await?;
+        SpacePostComment::list_by_comment(&dynamo.client, space_post_comment_sk, opt).await?;
 
     let mut like_keys = Vec::with_capacity(comments.len());
     for c in &comments {
