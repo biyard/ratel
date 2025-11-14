@@ -119,6 +119,7 @@ export function SpaceReplyList({
                 content={reply.content}
                 editable={false}
                 showToolbar={false}
+                isFoldable={true}
               />
             )}
 
