@@ -44,41 +44,5 @@ pub async fn get_space_post_handler(
         .await?
         .ok_or(Error::PostNotFound)?;
 
-    //FIXME: remove this logic
-    let (comments, _bookmark) = SpacePostComment::find_by_post_order_by_likes(
-        &dynamo.client,
-        space_post_pk.clone(),
-        SpacePostComment::opt_all().scan_index_forward(false),
-    )
-    .await?;
-
-    tracing::debug!("comments (sorted by likes desc): {:?}", comments);
-
-    let comments: Vec<_> = comments
-        .into_iter()
-        .filter(|c| matches!(c.sk, EntityType::SpacePostComment(_)))
-        .collect();
-
-    let mut comment_keys = Vec::with_capacity(comments.len());
-    for c in &comments {
-        comment_keys.push(c.like_keys(&user.pk));
-    }
-
-    let comment_likes = SpacePostCommentLike::batch_get(&dynamo.client, comment_keys).await?;
-
-    let mut comment_res = Vec::with_capacity(comments.len());
-
-    for comment in comments {
-        let liked = comment_likes.iter().any(|like| like == &comment);
-
-        let mut c: SpacePostCommentResponse = comment.into();
-        c.liked = liked;
-
-        comment_res.push(c);
-    }
-
-    let mut post: SpacePostResponse = post.into();
-    post.comments = comment_res;
-
-    Ok(Json(post))
+    Ok(Json(post.into()))
 }

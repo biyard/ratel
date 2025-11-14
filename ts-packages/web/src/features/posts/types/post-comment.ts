@@ -2,6 +2,7 @@ interface PostComment {
   pk: string;
   sk: string;
   updated_at: number;
+  created_at?: number;
   content: string;
   author_pk: string;
   author_display_name: string;

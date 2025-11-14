@@ -50,6 +50,8 @@ export function SpaceBoardsViewerDetailPage({
           comments={ctrl.comments.get()}
           isLoggedIn={canActive}
           expandComment={ctrl.expandComment}
+          handleCommentDelete={ctrl.handleDeleteComment}
+          handleCommentUpdate={ctrl.handleUpdateComment}
           handleComment={ctrl.handleComment}
           handleReplyToComment={ctrl.handleReplyToComment}
           handleLikeComment={ctrl.handleLikeComment}

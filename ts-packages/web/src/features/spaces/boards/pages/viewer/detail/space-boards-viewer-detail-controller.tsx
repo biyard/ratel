@@ -15,6 +15,8 @@ import useSpaceComments, {
   getSpaceComments,
 } from '../../../hooks/use-space-comments';
 import { SpacePostCommentResponse } from '../../../types/space-post-comment-response';
+import { useDeleteSpaceCommentMutation } from '../../../hooks/use-delete-space-comment-mutation';
+import { useUpdateSpaceCommentMutation } from '../../../hooks/use-update-space-comment-mutation';
 
 export class SpaceBoardsViewerDetailController {
   constructor(
@@ -23,6 +25,8 @@ export class SpaceBoardsViewerDetailController {
     public space: Space,
     public post: SpacePostResponse,
     public navigate: NavigateFunction,
+    public deleteComment: ReturnType<typeof useDeleteSpaceCommentMutation>,
+    public updateComment: ReturnType<typeof useUpdateSpaceCommentMutation>,
     public commentSpacePosts: ReturnType<typeof useCommentSpacePostMutation>,
     public commentLikeSpacePosts: ReturnType<
       typeof useCommentLikeSpacePostMutation
@@ -67,6 +71,23 @@ export class SpaceBoardsViewerDetailController {
       postPk: this.postPk,
       commentSk: commentId,
       like,
+    });
+  };
+
+  handleDeleteComment = async (commentSk: string) => {
+    await this.deleteComment.mutateAsync({
+      spacePk: this.spacePk,
+      postPk: this.postPk,
+      commentSk,
+    });
+  };
+
+  handleUpdateComment = async (commentSk: string, content: string) => {
+    await this.updateComment.mutateAsync({
+      spacePk: this.spacePk,
+      postPk: this.postPk,
+      commentSk,
+      content,
     });
   };
 
@@ -136,6 +157,8 @@ export function useSpaceBoardsViewerDetailController(
   const commentSpacePosts = useCommentSpacePostMutation();
   const commentLikeSpacePosts = useCommentLikeSpacePostMutation();
   const commentReplySpacePosts = useCommentReplySpacePostMutation();
+  const deleteComment = useDeleteSpaceCommentMutation();
+  const updateComment = useUpdateSpaceCommentMutation();
 
   const commentsState = new State(useState<SpacePostCommentResponse[]>([]));
   const bookmarkState = new State(useState<string | null>(null));
@@ -160,6 +183,8 @@ export function useSpaceBoardsViewerDetailController(
     space,
     post,
     navigate,
+    deleteComment,
+    updateComment,
     commentSpacePosts,
     commentLikeSpacePosts,
     commentReplySpacePosts,

@@ -2,6 +2,7 @@ export const i18nSpaceBoardsEditorDetail = {
   en: {
     edit: 'Edit',
     delete: 'Delete',
+    update: '(Updated)',
 
     reply: 'Reply',
     replies: 'Replies',
@@ -21,6 +22,7 @@ export const i18nSpaceBoardsEditorDetail = {
   ko: {
     edit: '편집하기',
     delete: '삭제하기',
+    update: '(수정)',
 
     reply: '응답',
     replies: '응답',
