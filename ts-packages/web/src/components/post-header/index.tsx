@@ -111,12 +111,12 @@ export function PostInfoSection({
 }: PostInfoSectionProps) {
   const { t } = useTranslation('SprintSpace');
   return (
-    <div className="flex flex-row justify-between items-center w-full max-mobile:flex-col">
+    <div className="flex flex-row items-center w-full max-mobile:flex-col">
       {/* <div className="flex flex-row gap-2.5 items-center max-tablet:hidden"> */}
       {/* <SpaceType /> */}
       {/* {!isDraft ? <Onboard /> : <></>} */}
       {/* </div> */}
-      <div className="flex flex-row gap-5 [&>*>svg>*]:stroke-neutral-500 [&>*>svg]:size-5">
+      <div className="flex flex-row gap-x-5 flex-wrap [&>*>svg>*]:stroke-neutral-500 [&>*>svg]:size-5">
         <div className="flex flex-row gap-1">
           <ThumbsUp className="[&>path]:stroke-neutral-500" />
           <div className="font-medium text-[15px] text-text-primary">
