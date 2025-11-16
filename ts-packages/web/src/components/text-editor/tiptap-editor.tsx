@@ -12,6 +12,7 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import Youtube from '@tiptap/extension-youtube';
+import Placeholder from '@tiptap/extension-placeholder';
 import Video from './extensions/video';
 import { ThemeAwareColor } from './extensions/theme-aware-color';
 import { ThemeAwareHighlight } from './extensions/theme-aware-highlight';
@@ -101,6 +102,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             heading: { levels: [1, 2, 3] },
             bulletList: { HTMLAttributes: { class: 'list-disc pl-4' } },
             orderedList: { HTMLAttributes: { class: 'list-decimal pl-4' } },
+          }),
+          Placeholder.configure({
+            placeholder,
           }),
           TextStyle,
           Color,
