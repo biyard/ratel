@@ -29,6 +29,8 @@ import { TiptapToolbar } from './tiptap-toolbar';
 import { showErrorToast } from '@/lib/toast';
 import './theme-aware-colors.css';
 
+const FOLD_HEIGHT = 240;
+
 export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
   (
     {
@@ -188,19 +190,17 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
         return;
       }
 
-      const FOLD_HEIGHT = 240;
-
       const id = window.requestAnimationFrame(() => {
         const el = containerRef.current;
         if (!el) return;
 
-        const hasOverflow = el.scrollHeight > FOLD_HEIGHT + 2;
+        const hasOverflow = el.scrollHeight >= FOLD_HEIGHT;
         setShowFoldToggle(hasOverflow);
         setIsFolded(hasOverflow);
       });
 
       return () => cancelAnimationFrame(id);
-    }, [isFoldable, content]);
+    }, [isFoldable, content, minHeight]);
 
     useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [
       editor,
@@ -252,7 +252,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           <div
             ref={containerRef}
             style={{
-              maxHeight: isFoldable && isFolded ? '240px' : 'none',
+              maxHeight: isFoldable && isFolded ? `${FOLD_HEIGHT}px` : 'none',
               overflowY: isFoldable && isFolded ? 'hidden' : 'visible',
             }}
           >
@@ -264,6 +264,8 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
                 '[&_.ProseMirror]:outline-none',
                 '[&_.ProseMirror]:min-h-full',
                 '[&_.ProseMirror]:h-full',
+                '[&_.ProseMirror]:wrap-break-word',
+                '[&_.ProseMirror]:max-w-full',
                 '[&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]',
                 '[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-foreground-muted',
                 '[&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left',
