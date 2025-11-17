@@ -344,8 +344,6 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   const attribute = panels?.map((p) => p.attributes).flat() ?? [];
   const { t } = useTranslation('SpacePollAnalyze');
 
-  console.log('poll analyze summary: ', summary);
-
   const navigator = useNavigate();
 
   return new SpacePollAnalyzeController(
