@@ -84,7 +84,7 @@ export class SpacePanelEditorController {
     }
   };
 
-  handleUpdateValues = async (v: PanelAttribute[]) => {
+  handleUpdateValues = async (_v: PanelAttribute[]) => {
     // TODO
   };
 

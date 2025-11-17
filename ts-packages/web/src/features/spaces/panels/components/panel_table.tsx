@@ -85,7 +85,11 @@ export function PanelTable({
                   <input
                     type="text"
                     className="py-1 px-2 w-20 text-center rounded border border-input-box-border"
-                    value={String(quota.quotas)}
+                    value={
+                      editing[quota.sk] !== undefined
+                        ? editing[quota.sk]
+                        : String(quota.quotas ?? 0)
+                    }
                     onChange={(e) =>
                       setEditing((m) => ({ ...m, [quota.sk]: e.target.value }))
                     }

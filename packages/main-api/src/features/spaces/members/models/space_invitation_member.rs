@@ -95,18 +95,23 @@ impl SpaceInvitationMember {
                 .execute(&dynamo.client)
         });
 
-        let futs = responses.clone().into_iter().map(|member| {
-            SpaceEmailVerification::send_email(
-                &dynamo,
-                &ses,
-                member.email,
+        let emails: Vec<String> = responses
+            .iter()
+            .map(|member| member.email.clone())
+            .collect();
+
+        try_join_all(updates).await?;
+
+        if !emails.is_empty() {
+            let _ = SpaceEmailVerification::send_email(
+                dynamo,
+                ses,
+                emails,
                 space.clone(),
                 title.clone(),
             )
-        });
-
-        try_join_all(updates).await?;
-        try_join_all(futs).await?;
+            .await?;
+        }
 
         Ok(())
     }

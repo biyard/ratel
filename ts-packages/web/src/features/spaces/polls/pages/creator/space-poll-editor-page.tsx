@@ -85,6 +85,7 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
                 isAdmin={true}
                 isLogin={!!ctrl.user}
                 canSubmit={false}
+                canParticipate={true}
                 questions={ctrl.poll.questions}
                 onUpdateAnswer={ctrl.handleUpdateAnswer}
                 selectedAnswers={ctrl.answers.get()}
