@@ -44,50 +44,5 @@ pub async fn get_space_post_handler(
         .await?
         .ok_or(Error::PostNotFound)?;
 
-    let mut bookmark = None::<String>;
-    let mut comment_keys = vec![];
-    let mut comments: Vec<SpacePostComment> = vec![];
-
-    loop {
-        let (responses, new_bookmark) = SpacePostComment::query(
-            &dynamo.client,
-            space_post_pk.clone(),
-            if let Some(b) = &bookmark {
-                SpacePostCommentQueryOption::builder()
-                    .sk("SPACE_POST_COMMENT#".into())
-                    .bookmark(b.clone())
-            } else {
-                SpacePostCommentQueryOption::builder().sk("SPACE_POST_COMMENT#".into())
-            },
-        )
-        .await?;
-
-        tracing::debug!("comments response: {:?}", responses.clone());
-
-        for response in responses {
-            comment_keys.push(response.like_keys(&user.pk));
-            comments.push(response.into());
-        }
-
-        match new_bookmark {
-            Some(b) => bookmark = Some(b),
-            None => break,
-        }
-    }
-
-    let comment_likes = SpacePostCommentLike::batch_get(&dynamo.client, comment_keys).await?;
-    let mut comment_res = vec![];
-
-    for comment in comments {
-        let liked = comment_likes.iter().any(|like| like == comment);
-        let mut c: SpacePostCommentResponse = comment.into();
-        c.liked = liked;
-
-        comment_res.push(c);
-    }
-
-    let mut post: SpacePostResponse = post.into();
-    post.comments = comment_res;
-
-    Ok(Json(post))
+    Ok(Json(post.into()))
 }

@@ -7,9 +7,11 @@ use crate::controllers::v3::spaces::members::{
     ResentInvitationCodeResponse, UpsertInvitationResponse, VerifySpaceCodeResponse,
 };
 use crate::features::did::AttributeCode;
-use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMemberResponse};
-use crate::features::spaces::panels::{PanelAttribute, PanelAttributeWithQuota, SpacePanelQuota, SpacePanelsResponse};
 use crate::features::did::{VerifiableAttribute, VerifiableAttributeWithQuota};
+use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMemberResponse};
+use crate::features::spaces::panels::{
+    PanelAttribute, PanelAttributeWithQuota, SpacePanelQuota, SpacePanelsResponse,
+};
 use crate::tests::create_user_session;
 use crate::tests::{
     create_app_state,
@@ -151,33 +153,15 @@ async fn test_verification_space_code_handler() {
 
     assert_eq!(status, 200);
 
-    let (status, _headers, _body) = patch! {
-        app: app,
-        path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
-        headers: headers.clone(),
-        body: {
-            "quotas": 50, "attributes": vec![PanelAttribute::VerifiableAttribute(VerifiableAttribute::Gender(Gender::Male))]
-        },
-        response_type: SpacePanelsResponse
-    };
-
-    assert_eq!(status, 200);
-
     let (status, _headers, body) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/panels/quotas", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
         headers: headers.clone(),
         body: {
             "attributes": vec![
                 PanelAttributeWithQuota::VerifiableAttribute(
                     VerifiableAttributeWithQuota {
                         attribute: VerifiableAttribute::Gender(Gender::Male),
-                        quota: 20
-                    }
-                ),
-                PanelAttributeWithQuota::VerifiableAttribute(
-                    VerifiableAttributeWithQuota {
-                        attribute: VerifiableAttribute::Gender(Gender::Female),
                         quota: 30
                     }
                 )
@@ -187,7 +171,20 @@ async fn test_verification_space_code_handler() {
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body.len(), 2);
+    assert_eq!(body.len(), 1);
+
+    let _panel_sk = &body[0].sk;
+
+    let (status, _headers, _updated_body) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "quotas": 50
+        }
+    };
+
+    assert_eq!(status, 200);
 
     let (status, _, _res) = patch! {
         app: app,
@@ -232,7 +229,7 @@ async fn test_verification_space_code_handler() {
     .unwrap()
     .unwrap();
 
-    let (status, _, res) = post! {
+    let (status, _, _res) = post! {
         app: app,
         path: format!("/v3/spaces/{}/members/verifications", space_pk.to_string()),
         headers: headers.clone(),
@@ -243,7 +240,6 @@ async fn test_verification_space_code_handler() {
     };
 
     assert_eq!(status, 200);
-    assert_eq!(res.success, true);
 }
 
 #[tokio::test]

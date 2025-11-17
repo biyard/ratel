@@ -33,12 +33,15 @@ impl SpacePostCommentLike {
     ) -> (Partition, EntityType) {
         let pk = match space_post_pk {
             Partition::SpacePost(s) if !s.is_empty() => Partition::SpacePostLike(s),
-            _ => panic!("post_pk must be Partition::Post with non-empty inner value"),
+            _ => panic!("post_pk must be Partition::SpacePost with non-empty inner value"),
         };
 
         let comment_id = match &comment_sk {
-            EntityType::SpacePostComment(id) => id.to_string(),
-            _ => panic!("comment_sk must be EntityType::PostComment"),
+            EntityType::SpacePostComment(id) => id.clone(),
+            EntityType::SpacePostCommentReply(parent_id, reply_id) => {
+                format!("{}#{}", parent_id, reply_id)
+            }
+            _ => panic!("comment_sk must be SpacePostComment or SpacePostCommentReply"),
         };
 
         let user_id = match user_pk {
@@ -47,7 +50,6 @@ impl SpacePostCommentLike {
         };
 
         let sk = EntityType::SpacePostCommentLike(user_id, comment_id);
-
         (pk, sk)
     }
 }
@@ -55,19 +57,22 @@ impl SpacePostCommentLike {
 impl PartialEq<SpacePostComment> for SpacePostCommentLike {
     fn eq(&self, post: &SpacePostComment) -> bool {
         let cid = match &post.sk {
-            EntityType::SpacePostComment(id) => id,
+            EntityType::SpacePostComment(id) => id.clone(),
+            EntityType::SpacePostCommentReply(parent_id, reply_id) => {
+                format!("{}#{}", parent_id, reply_id)
+            }
             _ => return false,
         };
 
         match &self.sk {
-            EntityType::SpacePostCommentLike(_, comment_id) if comment_id == cid => {}
+            EntityType::SpacePostCommentLike(_, comment_id) if comment_id == &cid => {}
             _ => return false,
         }
+
         let post_id = match &self.pk {
             Partition::SpacePostLike(id) => id,
             _ => return false,
         };
-
         let op_post_id = match &post.pk {
             Partition::SpacePost(id) => id,
             _ => return false,
