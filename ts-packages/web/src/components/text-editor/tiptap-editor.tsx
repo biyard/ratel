@@ -133,8 +133,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             controls: true,
             nocookie: true,
             allowFullscreen: true,
-            width: 640,
-            height: 360,
+            HTMLAttributes: {
+              class: 'w-full max-w-[640px] aspect-video mx-auto',
+            },
           }),
           Video,
           Table.configure({
@@ -288,6 +289,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
                 '[&_.ProseMirror_.selectedCell]:outline-primary/40',
                 '[&_.ProseMirror_.selectedCell]:outline-offset-[-1px]',
                 '[&_.ProseMirror_.column-resize-handle]:absolute [&_.ProseMirror_.column-resize-handle]:right-[-2px] [&_.ProseMirror_.column-resize-handle]:top-0 [&_.ProseMirror_.column-resize-handle]:bottom-0 [&_.ProseMirror_.column-resize-handle]:w-[4px] [&_.ProseMirror_.column-resize-handle]:bg-primary [&_.ProseMirror_.column-resize-handle]:pointer-events-none',
+                '[&_.ProseMirror_iframe]:w-full [&_.ProseMirror_iframe]:max-w-full',
               )}
               data-placeholder={placeholder}
             />
