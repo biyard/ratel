@@ -17,7 +17,7 @@ export default function SpaceBoardPage() {
 
   if (space.isAdmin()) {
     // Edit Mode
-    return <SpaceBoardsViewerDetailPage spacePk={spacePk} postPk={postPk} />;
+    return <SpaceBoardsEditorDetailPage spacePk={spacePk} postPk={postPk} />;
   }
 
   return <SpaceBoardsViewerDetailPage spacePk={spacePk} postPk={postPk} />;
