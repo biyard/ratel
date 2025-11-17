@@ -115,7 +115,12 @@ pub async fn check_panel(dynamo: &DynamoClient, space: &SpaceCommon, user: User)
     .unwrap_or_default()
     .0;
 
-    tracing::debug!("panel quota: {:?}", panel_quota.clone());
+    tracing::debug!(
+        "panel quota: {:?} {:?} {:?}",
+        panel_quota.clone(),
+        age.clone().unwrap_or_default(),
+        gender.clone().unwrap_or_default()
+    );
 
     if space.remains == 0 {
         return false;
@@ -126,7 +131,20 @@ pub async fn check_panel(dynamo: &DynamoClient, space: &SpaceCommon, user: User)
             continue;
         }
 
+        if let EntityType::SpacePanelAttribute(label, _) = &p.sk {
+            if label.eq_ignore_ascii_case("university") {
+                continue;
+            }
+        }
+
         if match_by_sk(age.clone(), gender.clone(), &p.sk) {
+            tracing::debug!(
+                "panel info: {:?} {:?} {:?} {:?}",
+                age.clone(),
+                gender.clone(),
+                p.sk.clone(),
+                p.remains
+            );
             let participants = SpacePanelParticipant::new(space_pk.clone(), user);
             let _ = match participants.create(&dynamo.client).await {
                 Ok(v) => v,
@@ -161,20 +179,32 @@ pub async fn check_panel(dynamo: &DynamoClient, space: &SpaceCommon, user: User)
 }
 
 pub fn match_by_sk(age: Option<u8>, gender: Option<Gender>, sk: &EntityType) -> bool {
-    let (label, value) = match sk {
+    if age.is_none() && gender.is_none() {
+        return false;
+    }
+
+    let (label_raw, value_raw) = match sk {
         EntityType::SpacePanelAttribute(label, value) => (label.as_str(), value.as_str()),
-        _ => return true,
+        _ => return false,
     };
 
-    match label {
-        "verifiable_attribute" => match value {
+    let label = label_raw.to_ascii_lowercase();
+    let value = value_raw.to_ascii_lowercase();
+
+    match label.as_str() {
+        "verifiable_attribute" => match value.as_str() {
             v if v.starts_with("age") => match_age_rule(age, v),
             v if v.starts_with("gender") => match_gender_rule(gender, v),
-            _ => true,
+            _ => false,
         },
         "collective_attribute" => true,
+        "gender" => {
+            let encoded = format!("gender:{}", value);
+            match_gender_rule(gender, &encoded)
+        }
+        "university" => true,
 
-        "none" | _ => true,
+        _ => false,
     }
 }
 
