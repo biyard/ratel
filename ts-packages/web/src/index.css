@@ -211,9 +211,22 @@
   /* Post creation colors */
   --color-post-input-bg: #101010;
   --color-post-input-border: #404040;
+  --color-post-input-placeholder: #525252;
   --color-post-required-marker: #ef4444;
   --color-post-save-button-disabled-bg: #262626;
   --color-post-save-button-disabled-text: #737373;
+
+  /* Dropdown/Select colors - dark mode */
+  --color-dropdown-bg: #1d1d1d;
+  --color-dropdown-item-bg: #101010;
+  --color-dropdown-item-hover-bg: rgba(0, 0, 0, 0.2);
+  --color-dropdown-border: #fcb300;
+  --color-dropdown-text: #ffffff;
+  --color-dropdown-text-placeholder: #525252;
+  --color-dropdown-text-caption: #8c8c8c;
+  --color-dropdown-chevron: #ffffff;
+  --color-dropdown-indicator: #fcb300;
+  --color-dropdown-focus-bg: #171717;
 
   --color-cancel-button-bg: #1a1a1a;
   --color-cancel-button-text: #a1a1a1;
@@ -364,6 +377,19 @@
   /* Post creation colors - light mode */
   --color-post-input-bg: #a3a3a3;
   --color-post-input-border: #a3a3a3;
+  --color-post-input-placeholder: #737373;
+
+  /* Dropdown/Select colors - light mode */
+  --color-dropdown-bg: #f1f1f1;
+  --color-dropdown-item-bg: #e5e5e5;
+  --color-dropdown-item-hover-bg: rgba(0, 0, 0, 0.1);
+  --color-dropdown-border: #fcb300;
+  --color-dropdown-text: #171717;
+  --color-dropdown-text-placeholder: #a3a3a3;
+  --color-dropdown-text-caption: #8c8c8c;
+  --color-dropdown-chevron: #171717;
+  --color-dropdown-indicator: #fcb300;
+  --color-dropdown-focus-bg: #ffffff;
 
   --color-cancel-button-bg: #ffffff;
   --color-cancel-button-text: #a3a3a3;

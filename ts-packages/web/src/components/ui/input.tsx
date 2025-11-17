@@ -22,6 +22,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       type,
       variant = 'default',
       showRequiredMarker = false,
+      placeholder,
       ...props
     },
     ref,
@@ -29,7 +30,16 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const variantClasses = {
       default:
         'border-input-box-border bg-input-box-bg dark:bg-input/30 placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50',
-      post: '!bg-post-input-bg !border-post-input-border placeholder:text-gray-600 focus-visible:border-post-input-border focus-visible:ring-post-input-border/30',
+      post: '!bg-post-input-bg !border-post-input-border placeholder:text-[var(--color-post-input-placeholder)] focus-visible:border-post-input-border focus-visible:ring-post-input-border/30',
+    };
+
+    // Calculate approximate position based on placeholder length
+    const getMarkerPosition = () => {
+      if (!placeholder || !showRequiredMarker) return '2.7rem';
+      // Approximate: 0.8rem base + 0.45rem per character
+      const baseOffset = 0.8;
+      const charWidth = 0.45;
+      return `${baseOffset + placeholder.length * charWidth}rem`;
     };
 
     return (
@@ -38,6 +48,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={type}
           ref={ref}
           data-slot="input"
+          placeholder={placeholder}
           className={cn(
             'flex h-9 w-full min-w-0 rounded-md px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none',
             'text-text-primary file:text-text-primary',
@@ -55,7 +66,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         />
         {showRequiredMarker && (
           <span
-            className="pointer-events-none absolute left-[2.7rem] top-1/2 -translate-y-1/2 text-post-required-marker"
+            className="pointer-events-none absolute top-1/2 -translate-y-1/2 text-post-required-marker"
+            style={{ left: getMarkerPosition() }}
             aria-hidden="true"
           >
             *

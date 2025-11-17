@@ -38,6 +38,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       onUpdate,
       editable = true,
       placeholder = 'Type your script',
+      variant = 'default',
       showToolbar = true,
       toolbarPosition = 'top',
       enabledFeatures = DEFAULT_ENABLED_FEATURES,
@@ -223,12 +224,18 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
 
     if (!editor) return <></>;
 
+    const variantClasses = {
+      default: 'bg-card border-transparent',
+      post: 'bg-[var(--color-post-input-bg)] border-[var(--color-post-input-border)]',
+    };
+
     return (
       <div
         className={cn(
           'flex flex-col w-full rounded-lg border transition-colors p-1',
-          'bg-card text-foreground border-transparent',
+          'text-foreground',
           isMe && 'bg-neutral-700 light:bg-neutral-200',
+          !isMe && variantClasses[variant],
           'focus-within:border-primary',
           className,
         )}
@@ -238,6 +245,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           <TiptapToolbar
             editor={editor}
             enabledFeatures={enabledFeatures}
+            variant={variant}
             className={toolbarClassName}
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
@@ -268,7 +276,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
                 '[&_.ProseMirror]:min-h-full',
                 '[&_.ProseMirror]:h-full',
                 '[&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]',
-                '[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-foreground-muted',
+                '[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-[var(--color-post-input-placeholder)]',
                 '[&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left',
                 '[&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none',
                 '[&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0',
@@ -334,6 +342,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           <TiptapToolbar
             editor={editor}
             enabledFeatures={enabledFeatures}
+            variant={variant}
             className={toolbarClassName}
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}

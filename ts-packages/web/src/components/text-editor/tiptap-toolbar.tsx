@@ -34,6 +34,7 @@ export const TiptapToolbar = ({
   editor,
   enabledFeatures = DEFAULT_ENABLED_FEATURES,
   className,
+  variant = 'default',
   openVideoPicker,
   onImageUpload,
   onUploadPDF,
@@ -284,8 +285,24 @@ export const TiptapToolbar = ({
 
   if (!editor) return null;
 
+  const variantClasses = {
+    default: 'bg-card',
+    post: 'bg-[var(--color-post-input-bg)]',
+  };
+
+  const scrollGradientClasses = {
+    default: 'from-card to-transparent hover:from-card/95',
+    post: 'from-[var(--color-post-input-bg)] to-transparent hover:from-[var(--color-post-input-bg)]/95',
+  };
+
   return (
-    <div className={cn('relative border-b border-border bg-card', className)}>
+    <div
+      className={cn(
+        'relative border-b border-border',
+        variantClasses[variant],
+        className,
+      )}
+    >
       {/* Left scroll button */}
       {canScrollLeft && (
         <button
@@ -294,8 +311,8 @@ export const TiptapToolbar = ({
           className={cn(
             'absolute left-0 top-0 bottom-0 z-10',
             'flex items-center justify-center',
-            'w-8 bg-gradient-to-r from-card to-transparent',
-            'hover:from-card/95',
+            'w-8 bg-gradient-to-r',
+            scrollGradientClasses[variant],
             'transition-colors',
           )}
           aria-label="Scroll left"
@@ -593,8 +610,8 @@ export const TiptapToolbar = ({
           className={cn(
             'absolute right-0 top-0 bottom-0 z-10',
             'flex items-center justify-center',
-            'w-8 bg-gradient-to-l from-card to-transparent',
-            'hover:from-card/95',
+            'w-8 bg-gradient-to-l',
+            scrollGradientClasses[variant],
             'transition-colors',
           )}
           aria-label="Scroll right"
