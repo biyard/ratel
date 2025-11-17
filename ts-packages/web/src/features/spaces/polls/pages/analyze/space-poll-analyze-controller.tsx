@@ -91,6 +91,16 @@ export class SpacePollAnalyzeController {
       const raw: any =
         ans && typeof ans === 'object' && 'answer' in ans ? ans.answer : ans;
 
+      const otherText =
+        ans &&
+        typeof ans === 'object' &&
+        'other' in ans &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        typeof (ans as any).other === 'string'
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ((ans as any).other as string).trim()
+          : '';
+
       if (
         raw === null ||
         typeof raw === 'undefined' ||
@@ -108,6 +118,22 @@ export class SpacePollAnalyzeController {
         }
         return typeof v === 'string' || typeof v === 'number' ? String(v) : '';
       };
+
+      const OTHER_LABEL = 'Others';
+
+      if (kind === 'single_choice') {
+        if (
+          typeof raw === 'number' &&
+          opts &&
+          raw >= 0 &&
+          raw < opts.length &&
+          otherText.length > 0 &&
+          opts[raw] === OTHER_LABEL
+        ) {
+          return otherText;
+        }
+        return labelOf(raw);
+      }
 
       if (['single_choice', 'dropdown', 'select', 'radio'].includes(kind)) {
         return labelOf(raw);
@@ -317,6 +343,8 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   const { data: panels } = useListPanels(spacePk);
   const attribute = panels?.map((p) => p.attributes).flat() ?? [];
   const { t } = useTranslation('SpacePollAnalyze');
+
+  console.log('poll analyze summary: ', summary);
 
   const navigator = useNavigate();
 
