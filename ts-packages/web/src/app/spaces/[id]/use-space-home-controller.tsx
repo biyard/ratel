@@ -672,27 +672,33 @@ export function useSpaceHomeController(spacePk: string) {
       return;
     }
 
-    if (
-      data.space.data.shouldParticipateManually() &&
-      data.space.data.canParticipate
-    ) {
-      participationAttemptedRef.current = true;
+    const space = data.space.data;
+    if (!space) return;
 
-      (async () => {
-        try {
-          await participateSpace.mutateAsync({
-            spacePk,
-            verifiablePresentation: '',
-          });
-        } catch (err) {
-          logger.debug('verify error: ', err);
-          console.log('verify error: ', err);
+    const shouldAutoParticipate =
+      space.shouldParticipateManually() && space.canParticipate;
 
-          participationAttemptedRef.current = false;
-        }
-      })();
-    }
-  }, [data.space.data, spacePk, participateSpace]);
+    if (!shouldAutoParticipate) return;
+
+    participationAttemptedRef.current = true;
+
+    (async () => {
+      try {
+        await participateSpace.mutateAsync({
+          spacePk,
+          verifiablePresentation: '',
+        });
+      } catch (err) {
+        logger.debug('auto participate failed: ', err);
+        console.log('auto participate failed: ', err);
+      }
+    })();
+  }, [
+    spacePk,
+    data.space.data?.pk,
+    data.space.data?.canParticipate,
+    data.space.data?.status,
+  ]);
 
   return new SpaceHomeController(
     navigate,

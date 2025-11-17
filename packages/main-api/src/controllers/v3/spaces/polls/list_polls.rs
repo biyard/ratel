@@ -3,6 +3,7 @@ use crate::features::spaces::polls::*;
 use crate::models::{space::SpaceCommon, user::User};
 use crate::types::SpacePublishState;
 
+use crate::utils::time::get_now_timestamp_millis;
 use crate::*;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
@@ -27,6 +28,8 @@ pub async fn list_polls_handler(
         return Err(Error::NotFoundPoll);
     }
 
+    let is_owner = permissions.contains(TeamGroupPermission::SpaceEdit);
+    let now = get_now_timestamp_millis();
     permissions.permitted(TeamGroupPermission::SpaceRead)?;
 
     let mut query_options = PollQueryOption::builder()
@@ -45,7 +48,9 @@ pub async fn list_polls_handler(
     for response in responses {
         let poll: PollResponse = response.clone().into();
 
-        polls.push(poll);
+        if is_owner || (poll.started_at <= now && now <= poll.ended_at) {
+            polls.push(poll);
+        }
     }
 
     Ok(Json(ListPollsResponse { polls, bookmark }))

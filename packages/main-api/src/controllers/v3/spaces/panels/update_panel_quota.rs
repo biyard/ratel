@@ -27,5 +27,7 @@ pub async fn update_panel_quota_handler(
         .execute(&dynamo.client)
         .await?;
 
+    tracing::debug!("panels: {:?}", space_panel.clone());
+
     Ok(Json(space_panel))
 }
