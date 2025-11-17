@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import PostHeader from '../../../components/post-header';
 import PostBody from '../../../components/post-body';
 import PostComments from '../../../components/post-comments';
-import { TimeRangeSetting } from '@/features/spaces/polls/components/time-range-setting';
+import { TimeRangeDisplay } from '../../../components/time-range-display';
 
 export function SpaceBoardsViewerDetailPage({
   spacePk,
@@ -23,7 +23,7 @@ export function SpaceBoardsViewerDetailPage({
 
   return (
     <>
-      <div className="flex flex-col gap-6 w-full max-tablet:mr-[20px]">
+      <div className="flex flex-col gap-6 w-full max-tablet:mr-5">
         <PostHeader
           t={t}
           post={ctrl.post}
@@ -33,13 +33,9 @@ export function SpaceBoardsViewerDetailPage({
           canDelete={false}
           canEdit={false}
         />
-        <TimeRangeSetting
-          canEdit={false}
-          onChange={() => {}}
+        <TimeRangeDisplay
           startTimestampMillis={ctrl.post?.started_at ?? 0}
           endTimestampMillis={ctrl.post?.ended_at ?? 0}
-          alwaysEdit={false}
-          className="justify-end"
         />
 
         <PostBody post={ctrl.post} />
