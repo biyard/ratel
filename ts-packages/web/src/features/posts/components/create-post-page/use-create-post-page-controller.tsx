@@ -70,9 +70,13 @@ export class CreatePostPageController {
   }
 
   get isPublishDisabled(): boolean {
+    const content = this.content.get()?.trim() || '';
+    // Strip HTML tags to get text length
+    const textContent = content.replace(/<[^>]*>/g, '').trim();
+
     return (
       !this.title.get().trim() ||
-      !this.content.get()?.trim() ||
+      textContent.length < 10 ||
       this.status.get() !== EditorStatus.Idle
     );
   }
@@ -82,7 +86,7 @@ export class CreatePostPageController {
       return this.t.btn_next;
     }
 
-    return this.t.publish;
+    return this.t.save;
   }
 
   detectChanged = () => {
