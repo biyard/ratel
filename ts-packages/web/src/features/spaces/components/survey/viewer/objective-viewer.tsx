@@ -47,7 +47,7 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
                   disabled={disabled}
                 />
               </div>
-              <div className="font-normal text-neutral-300 light:text-text-primary text-[15px]/[22.5px]">
+              <div className="font-normal text-neutral-300 light:text-text-primary text-[15px]/[22.5px] break-all">
                 {option}
               </div>
             </div>
