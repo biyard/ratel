@@ -192,6 +192,63 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
             "gsi1_sk": {"S": "-4611686018420032497"}
         }'
 
+# Create Attribute Codes
+echo 'Creating attribute codes...'
+
+# Attribute Code 1 - 건국대 여자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "ATTRIBUTE_CODE#wKFegq"},
+    "sk": {"S": "ATTRIBUTE_CODE"},
+    "created_at": {"N": "'${TIMESTAMP}'"},
+    "university": {"S": "Konkuk"},
+    "gender": {"S": "female"},
+    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
+    "gsi1_sk": {"S": "AC#'${TIMESTAMP}'"}
+  }'
+
+# Attribute Code 2 - 건국대 남자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "ATTRIBUTE_CODE#bVn0Vq"},
+    "sk": {"S": "ATTRIBUTE_CODE"},
+    "created_at": {"N": "'$((TIMESTAMP + 1000))'"},
+    "university": {"S": "Konkuk"},
+    "gender": {"S": "male"},
+    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
+    "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 1000))'"}
+  }'
+
+# Attribute Code 3 - 서강대 여자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "ATTRIBUTE_CODE#bIFviB"},
+    "sk": {"S": "ATTRIBUTE_CODE"},
+    "created_at": {"N": "'$((TIMESTAMP + 2000))'"},
+    "university": {"S": "Sogang"},
+    "gender": {"S": "female"},
+    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
+    "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 2000))'"}
+  }'
+
+# Attribute Code 4 - 서강대 남자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "ATTRIBUTE_CODE#j94EA1"},
+    "sk": {"S": "ATTRIBUTE_CODE"},
+    "created_at": {"N": "'$((TIMESTAMP + 3000))'"},
+    "university": {"S": "Sogang"},
+    "gender": {"S": "male"},
+    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
+    "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 3000))'"}
+  }'
+
+echo 'Attribute codes created successfully'
+
 echo 'Admin user created successfully'
 echo 'Login credentials:'
 echo '  Email: admin@ratel.foundation'
