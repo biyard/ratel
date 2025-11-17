@@ -41,6 +41,7 @@ async fn test_poll_space_creation() {
             image_url: None,
             options: vec!["Red".to_string(), "Blue".to_string(), "Green".to_string()],
             is_required: Some(true),
+            allow_other: None,
         }),
         Question::MultipleChoice(ChoiceQuestion {
             title: "What is your favorite color?".to_string(),
@@ -48,6 +49,7 @@ async fn test_poll_space_creation() {
             image_url: None,
             options: vec!["Red".to_string(), "Blue".to_string(), "Green".to_string()],
             is_required: Some(true),
+            allow_other: None,
         }),
     ];
     let sk = EntityType::SpacePoll(space_id);
@@ -74,7 +76,10 @@ async fn test_poll_space_creation() {
         poll.pk.clone(),
         poll_pk.clone(),
         vec![
-            Answer::SingleChoice { answer: Some(0) },
+            Answer::SingleChoice {
+                answer: Some(0),
+                other: None,
+            },
             Answer::MultipleChoice {
                 answer: Some(vec![1]),
             },

@@ -1,6 +1,7 @@
 export const i18nSpacePollViewerPage = {
   en: {
     btn_submit: 'Submit',
+    btn_not_enable: 'You do not have permission to participate.',
     btn_prev: 'Prev',
     btn_next: 'Next',
     btn_back: 'Back',
@@ -9,6 +10,7 @@ export const i18nSpacePollViewerPage = {
   },
   ko: {
     btn_submit: '제출',
+    btn_not_enable: '참가 권한이 없습니다.',
     btn_prev: '이전',
     btn_next: '다음',
     btn_back: '뒤로가기',
