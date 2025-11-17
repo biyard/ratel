@@ -245,7 +245,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
         <div
           className={cn('flex-1 overflow-y-auto', 'px-5 py-3', editorClassName)}
           style={{
-            minHeight: showToolbar ? `calc(${minHeight} - 48px)` : minHeight,
+            minHeight: !editable ? minHeight : 'auto',
             overflowY: isFoldable && isFolded ? 'hidden' : 'auto',
           }}
         >
