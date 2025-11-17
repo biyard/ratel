@@ -61,6 +61,7 @@ pub enum EntityType {
     SpaceCommon,
     SpaceParticipant,
     SpaceInvitation,
+    SpaceTemplate(String),          // template name
     SpaceEmailVerification(String), //email
     SpaceRequirement(String),       // use SpaceRequirementType
 

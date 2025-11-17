@@ -1,7 +1,8 @@
 use ssi::claims::ResourceProvider;
 
+use crate::controllers::v3::spaces::members::match_by_sk;
 use crate::features::spaces::members::{InvitationStatus, SpaceInvitationMember};
-use crate::features::spaces::panels::SpacePanels;
+use crate::features::spaces::panels::{SpacePanelQuota, SpacePanels};
 use crate::*;
 use crate::{
     Error,
@@ -165,17 +166,48 @@ impl SpaceCommon {
         cli: &aws_sdk_dynamodb::Client,
         user: &User,
     ) -> Result<()> {
-        let space_panels =
-            SpacePanels::get(cli, self.pk.to_string(), Some(EntityType::SpacePanels))
-                .await?
-                .unwrap_or_default();
-        let user_attributes = user.get_attributes(cli).await?;
+        let panel_quota = SpacePanelQuota::query(
+            cli,
+            CompositePartition(self.pk.clone(), Partition::PanelAttribute),
+            SpacePanelQuota::opt_all().sk("SPACE_PANEL_ATTRIBUTE#".to_string()),
+        )
+        .await
+        .unwrap_or_default()
+        .0;
 
-        if space_panels == user_attributes {
+        if panel_quota.is_empty() {
             return Ok(());
         }
 
-        Err(Error::LackOfVerifiedAttributes)
+        let user_attributes = user.get_attributes(cli).await?;
+        let age: Option<u8> = user_attributes.age().and_then(|v| u8::try_from(v).ok());
+        let gender = user_attributes.gender;
+
+        tracing::debug!(
+            "space panels comparing user attributes: {:?} {:?}",
+            panel_quota,
+            user_attributes
+        );
+
+        let ok = panel_quota.iter().any(|q| {
+            if q.remains <= 0 {
+                return false;
+            }
+
+            if let EntityType::SpacePanelAttribute(label, _) = &q.sk {
+                if label.eq_ignore_ascii_case("university") {
+                    return false;
+                }
+            }
+
+            match_by_sk(age, gender.clone(), &q.sk)
+        });
+
+        if ok {
+            Ok(())
+        } else {
+            Err(Error::LackOfVerifiedAttributes)
+        }
     }
 }
 
