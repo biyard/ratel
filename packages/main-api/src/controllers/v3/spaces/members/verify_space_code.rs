@@ -58,7 +58,7 @@ pub async fn verify_space_code_handler(
         return Err(Error::FinishedSpace);
     }
 
-    let panel = check_panel(&dynamo, &space_pk, user.clone()).await;
+    let panel = check_panel(&dynamo, &space, user.clone()).await;
 
     if !panel {
         return Ok(Json(VerifySpaceCodeResponse { success: false }));
@@ -89,7 +89,8 @@ pub async fn verify_space_code_handler(
     Ok(Json(VerifySpaceCodeResponse { success: true }))
 }
 
-pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User) -> bool {
+pub async fn check_panel(dynamo: &DynamoClient, space: &SpaceCommon, user: User) -> bool {
+    let space_pk = space.pk.clone();
     let res = VerifiedAttributes::get(
         &dynamo.client,
         CompositePartition(user.pk.clone(), Partition::Attributes),
@@ -102,14 +103,8 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
     let age: Option<u8> = res.age().and_then(|v| u8::try_from(v).ok());
     let gender = res.gender;
 
-    let pk = space_pk;
-    let sk = EntityType::SpacePanels;
-    let panel = SpacePanels::get(&dynamo.client, pk.clone(), Some(sk.clone()))
-        .await
-        .unwrap_or_default()
-        .unwrap_or_default();
-
-    tracing::debug!("panel: {:?}", panel.clone());
+    let pk = space_pk.clone();
+    // let sk = EntityType::SpacePanels;
 
     let panel_quota = SpacePanelQuota::query(
         &dynamo.client,
@@ -122,7 +117,7 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
 
     tracing::debug!("panel quota: {:?}", panel_quota.clone());
 
-    if panel.remains == 0 {
+    if space.remains == 0 {
         return false;
     }
 
@@ -140,7 +135,7 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
             let pk = p.pk;
             let sk = p.sk;
 
-            let _ = match SpacePanels::updater(space_pk, EntityType::SpacePanels)
+            let _ = match SpaceCommon::updater(space_pk, EntityType::SpaceCommon)
                 .decrease_remains(1)
                 .execute(&dynamo.client)
                 .await
