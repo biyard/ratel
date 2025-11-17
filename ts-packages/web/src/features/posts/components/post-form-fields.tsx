@@ -1,5 +1,5 @@
 import { Loader2, Check, Clock } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { ThemedInput } from '@/components/ui/themed-input';
 import { Row } from '@/components/ui/row';
 import { Col } from '@/components/ui/col';
 import { PostEditor } from './post-editor';
@@ -58,20 +58,16 @@ export function PostFormFields(props: PostFormFieldsProps) {
       <Col>
         {/* Title Input */}
         <div className="relative">
-          <Input
+          <ThemedInput
             id="post-title-input"
             type="text"
             placeholder={t.title_placeholder}
             value={title}
             onChange={onTitleChange}
-            className="w-full text-text-primary bg-input-box-bg border-input-box-border dark:bg-[#101010] placeholder:text-gray-600"
+            variant="post"
+            showRequiredMarker={!title}
+            className="w-full text-text-primary"
           />
-          {/* Red asterisk overlay on placeholder */}
-          {!title && (
-            <span className="absolute left-[2.7rem] top-1/2 -translate-y-1/2 text-[#EF4444] pointer-events-none">
-              *
-            </span>
-          )}
           <div className="absolute right-3 top-1/2 text-sm -translate-y-1/2 text-neutral-400">
             {title.length}/{titleMaxLength}
           </div>
@@ -91,8 +87,8 @@ export function PostFormFields(props: PostFormFieldsProps) {
             url={imageUrl}
             onImageUpload={onImageUpload}
             onRemoveImage={onRemoveImage}
-            className="dark:!bg-[#101010] [&_.tiptap-editor_.ProseMirror_p.is-editor-empty:first-child::before]:!text-gray-600"
-            toolbarClassName="dark:!bg-[#101010] !border-b-0"
+            className="!bg-post-input-bg [&_.tiptap-editor_.ProseMirror_p.is-editor-empty:first-child::before]:!text-gray-600 !border-post-input-border !rounded-md focus-within:!border-ring focus-within:!ring-ring/50 focus-within:!ring-[1px]"
+            toolbarClassName="!bg-post-input-bg !border-b-0"
           />
 
           {/* Saving Status Indicator - positioned at bottom right of editor */}

@@ -208,6 +208,13 @@
   --color-disabled-button-bg: #404040;
   --color-disabled-button-text: #737373;
 
+  /* Post creation colors */
+  --color-post-input-bg: #101010;
+  --color-post-input-border: #404040;
+  --color-post-required-marker: #ef4444;
+  --color-post-save-button-disabled-bg: #262626;
+  --color-post-save-button-disabled-text: #737373;
+
   --color-cancel-button-bg: #1a1a1a;
   --color-cancel-button-text: #a1a1a1;
   --color-submit-button-bg: #fcb300;
@@ -353,6 +360,10 @@
   --color-comment-box-bg: #ffffff;
   --color-disabled-button-bg: #d9d9d9;
   --color-disabled-button-text: var(--gray-600);
+
+  /* Post creation colors - light mode */
+  --color-post-input-bg: #a3a3a3;
+  --color-post-input-border: #a3a3a3;
 
   --color-cancel-button-bg: #ffffff;
   --color-cancel-button-text: #a3a3a3;
