@@ -27,6 +27,7 @@ export interface SurveyViewerProps {
   onLogin?: () => void;
   status: PollStatus;
   isAdmin?: boolean;
+  canParticipate?: boolean;
   canSubmit?: boolean;
   canUpdate?: boolean;
   isLogin?: boolean;
@@ -45,6 +46,7 @@ export default function SurveyViewer({
   onSubmit,
   onLogin,
   canSubmit,
+  canParticipate,
   canUpdate,
   isLogin,
   isAdmin = false,
@@ -120,6 +122,10 @@ export default function SurveyViewer({
     button = (
       <Button
         onClick={() => {
+          if (!canParticipate) {
+            return;
+          }
+
           if (!validateAllRequiredAnswers()) {
             if (onValidateError) {
               onValidateError();
@@ -132,14 +138,19 @@ export default function SurveyViewer({
           }
           onSubmit?.();
         }}
+        disabled={!canParticipate}
       >
-        {t('btn_submit')}
+        {canParticipate ? t('btn_submit') : t('btn_not_enable')}
       </Button>
     );
   } else if (canUpdate && !isAdmin) {
     button = (
       <Button
         onClick={() => {
+          if (!canParticipate) {
+            return;
+          }
+
           if (!validateAllRequiredAnswers()) {
             showErrorToast(
               'Please answer all required questions before updating.',
@@ -149,7 +160,7 @@ export default function SurveyViewer({
           onSubmit?.();
         }}
       >
-        {t('btn_update')}
+        {canParticipate ? t('btn_update') : t('btn_not_enable')}
       </Button>
     );
   }

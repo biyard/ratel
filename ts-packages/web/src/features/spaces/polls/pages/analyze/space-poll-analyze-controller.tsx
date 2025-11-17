@@ -64,9 +64,25 @@ export class SpacePollAnalyzeController {
     const questions = this.poll?.questions ?? [];
     const qCount = questions.length;
 
-    const needGender = (this.attributes ?? []).some(
-      (a) => a?.type === 'verifiable_attribute' && a?.value === 'gender',
-    );
+    const needGender = (this.attributes ?? []).some((a) => {
+      if (!a) return false;
+
+      if (a.type === 'verifiable_attribute') {
+        if (typeof a.value === 'string') {
+          return (
+            a.value === 'gender' || a.value.toLowerCase().startsWith('gender')
+          );
+        }
+
+        return a.value.type === 'gender';
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const anyA = a as any;
+      if (anyA.key === 'gender') return true;
+
+      return false;
+    });
 
     const needUniversity = (this.attributes ?? []).some(
       (a) => a?.type === 'collective_attribute' && a?.value === 'university',
