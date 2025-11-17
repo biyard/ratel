@@ -1,13 +1,15 @@
 use crate::Error;
+// #[cfg(all(not(test), not(feature = "no-secret")))]
+// use crate::features::spaces::templates::SpaceTemplate;
+use crate::utils::aws::DynamoClient;
+
 use crate::{
     models::team::Team,
     types::*,
-    utils::{
-        aws::{DynamoClient, SesClient},
-        time::get_now_timestamp_millis,
-    },
+    utils::{aws::SesClient, time::get_now_timestamp_millis},
 };
 use bdk::prelude::*;
+use serde_json::json;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct UserTeam {
@@ -15,7 +17,6 @@ pub struct UserTeam {
     #[dynamo(prefix = "TEAM_PK", index = "gsi1", name = "find_by_team", pk)]
     pub sk: EntityType,
 
-    // NOTE: Sort teams for a user by last_used_at in descending order.
     #[dynamo(index = "gsi1", sk)]
     pub last_used_at: i64,
 
@@ -47,45 +48,91 @@ impl UserTeam {
         }
     }
 
+    // #[cfg(all(not(test), not(feature = "no-secret")))]
+    // async fn ensure_team_invite_template_exists(
+    //     dynamo: &DynamoClient,
+    //     ses: &SesClient,
+    //     template_name: &str,
+    // ) -> Result<(), Error> {
+    //     use crate::utils::templates::{INVITE_TEAM_TEMPLATE_HTML, INVITE_TEAM_TEMPLATE_SUBJECT};
+
+    //     let template = SpaceTemplate::get(
+    //         &dynamo.client,
+    //         Partition::SpaceTemplate,
+    //         Some(EntityType::SpaceTemplate(template_name.to_string())),
+    //     )
+    //     .await?;
+
+    //     if template.is_none() {
+    //         ses.create_template(
+    //             template_name,
+    //             INVITE_TEAM_TEMPLATE_SUBJECT,
+    //             INVITE_TEAM_TEMPLATE_HTML,
+    //         )
+    //         .await
+    //         .map_err(|e| Error::AwsSesSendEmailException(e.to_string()))?;
+
+    //         let temp = SpaceTemplate::new(template_name.to_string());
+    //         temp.create(&dynamo.client).await?;
+    //     }
+
+    //     Ok(())
+    // }
+
     #[allow(unused_variables)]
-    pub async fn send_email(ses: &SesClient, team: Team, user_email: String) -> Result<(), Error> {
+    pub async fn send_email(
+        dynamo: &DynamoClient,
+        ses: &SesClient,
+        team: Team,
+        user_emails: Vec<String>,
+    ) -> Result<(), Error> {
         #[cfg(any(test, feature = "no-secret"))]
         {
             let _ = ses;
-            tracing::warn!("sending email will be skipped for {}", user_email,);
+            for email in &user_emails {
+                tracing::warn!("sending email will be skipped for {}", email);
+            }
         }
 
         #[cfg(all(not(test), not(feature = "no-secret")))]
         {
-            use crate::utils::html::invite_team_html;
-            let mut domain = crate::config::get().domain.to_string();
-            if domain.contains("localhost") {
-                domain = format!("http://{}", domain).to_string();
-            } else {
-                domain = format!("https://{}", domain).to_string();
+            if user_emails.is_empty() {
+                return Ok(());
             }
 
-            let url = format!("{}/teams/{}/home", domain, team.clone().username);
-            tracing::debug!("team url: {:?}", url.clone());
+            let template_name = "team_invite".to_string();
+            // Self::ensure_team_invite_template_exists(dynamo, ses, &template_name).await?;
 
-            let html = invite_team_html(team.clone(), url.clone());
+            let mut domain = crate::config::get().domain.to_string();
+            if domain.contains("localhost") {
+                domain = format!("http://{}", domain);
+            } else {
+                domain = format!("https://{}", domain);
+            }
 
-            let text = format!(
-                "You're invited to join {team}\nOpen: {url}\n",
-                team = team.username,
-                url = url
-            );
+            let url = format!("{}/teams/{}/home", domain, team.username);
+            tracing::debug!("team url: {:?}", url);
+
+            let template_data = json!({
+                "team_name": team.username,
+                "team_profile": team.profile_url,
+                "team_display_name": team.display_name,
+                "url": url,
+            });
+
+            let recipients: Vec<(String, Option<serde_json::Value>)> = user_emails
+                .into_iter()
+                .map(|email| (email, Some(template_data.clone())))
+                .collect();
 
             let mut i = 0;
-            let subject = format!("[Ratel] Participate your team.");
-
             while let Err(e) = ses
-                .send_mail_html(&user_email, &subject, &html, Some(&text))
+                .send_bulk_with_template(&template_name, &recipients)
                 .await
             {
                 btracing::notify!(
                     crate::config::get().slack_channel_monitor,
-                    &format!("Failed to send email: {:?}", e)
+                    &format!("Failed to send team invite email: {:?}", e)
                 );
                 tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                 i += 1;

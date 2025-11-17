@@ -70,7 +70,7 @@ pub async fn resent_invitation_code_handler(
     let _ = SpaceEmailVerification::send_email(
         &dynamo,
         &ses,
-        user_email.clone(),
+        vec![user_email.clone()],
         space_common.clone(),
         post.title,
     )
