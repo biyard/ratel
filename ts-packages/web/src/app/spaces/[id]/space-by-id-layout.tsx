@@ -1,4 +1,4 @@
-import { createContext, useState } from 'react';
+import { createContext, useMemo, useState } from 'react';
 import { Outlet, useLocation, useParams } from 'react-router';
 import {
   SpaceHomeController,
@@ -15,14 +15,12 @@ import {
 import TimelineMenu from '@/features/spaces/components/side-menu/timeline';
 import { SpaceActions } from '@/features/spaces/components/space-actions';
 import SpaceParticipantProfile from '@/features/spaces/components/space-participant-profile';
-import { cn } from '@/lib/utils';
 import { useSpaceLayoutContext } from './use-space-layout-context';
 import { Requirements } from '@/features/spaces/components/requirements';
 import { SafeArea } from '@/components/ui/safe-area';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Bullet1 } from '@/components/icons';
+import SpaceMobileHeader from '@/features/spaces/components/space-mobile-header';
 
 export const Context = createContext<SpaceHomeController | undefined>(
   undefined,
@@ -47,9 +45,33 @@ function GeneralLayout() {
         }
       : null;
 
+  const currentTab = useMemo(() => {
+    const ret = ctrl.menus
+      ?.filter((menu) => menu.label !== 'Overview')
+      .find((menu) => {
+        return location.pathname.startsWith(menu.to);
+      });
+
+    // If no match found, return Overview menu
+    if (!ret) {
+      return ctrl.menus?.find((menu) => menu.label === 'Overview');
+    }
+
+    return ret;
+  }, [ctrl.menus, location.pathname]);
+
   return (
-    <Row>
+    <Row className="max-mobile:gap-1">
       <Col className="gap-4 w-full">
+        {/* Mobile Header */}
+        {isMobile && (
+          <SpaceMobileHeader
+            participantProfile={participantProfileProps ?? undefined}
+            currentTab={currentTab}
+            onMenuClick={() => setSheetOpen(true)}
+          />
+        )}
+
         {showInfo && (
           <Col className="gap-4 w-full">
             <TitleSection
@@ -79,76 +101,51 @@ function GeneralLayout() {
         <Outlet />
       </Col>
 
-      <Col
-        className={cn(
-          'gap-2.5 transition-all',
-          isMobile ? 'w-auto items-center' : 'w-full max-w-[250px]',
-        )}
-      >
-        {/* Mobile expand button */}
-        {isMobile && (
-          <Button
-            onClick={() => setSheetOpen(true)}
-            variant="default"
-            className="size-12"
-            aria-label="Expand space menu"
-          >
-            <Bullet1 className="size-4" />
-          </Button>
-        )}
+      {/* Desktop Side Menu */}
+      {!isMobile && (
+        <Col className="gap-2.5 w-full max-w-[250px]">
+          {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
 
-        {/* Desktop actions (hidden on mobile) */}
-        {!isMobile && ctrl.actions.length > 0 && (
-          <SpaceActions actions={ctrl.actions} />
-        )}
+          {participantProfileProps && (
+            <SpaceParticipantProfile {...participantProfileProps} />
+          )}
 
-        {/* Participant profile - icon only on mobile */}
-        {participantProfileProps && (
-          <SpaceParticipantProfile
-            {...participantProfileProps}
-            iconOnly={isMobile}
-          />
-        )}
+          <SpaceSideMenu menus={ctrl.menus} />
 
-        {/* Side menu - icon only on mobile */}
-        <SpaceSideMenu menus={ctrl.menus} iconOnly={isMobile} />
-
-        {/* Timeline - desktop only */}
-        {!isMobile && (
           <TimelineMenu
             isEditing={false}
             handleSetting={() => {}}
             items={ctrl.timelineItems}
             titleLabel={ctrl.t('timeline_title')}
           />
-        )}
+        </Col>
+      )}
 
-        {/* Mobile sheet with full content */}
-        {isMobile && (
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetContent side="right" className="w-full overflow-y-auto p-5">
-              <Col className="gap-4 mt-4" onClick={() => setSheetOpen(false)}>
-                {ctrl.actions.length > 0 && (
-                  <SpaceActions actions={ctrl.actions} />
-                )}
+      {/* Mobile sheet with full content */}
+      {isMobile && (
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetContent side="right" className="w-full overflow-y-auto p-5">
+            <Col className="gap-4 mt-4" onClick={() => setSheetOpen(false)}>
+              {ctrl.actions.length > 0 && (
+                <SpaceActions actions={ctrl.actions} />
+              )}
 
-                {participantProfileProps && (
-                  <SpaceParticipantProfile {...participantProfileProps} />
-                )}
+              {participantProfileProps && (
+                <SpaceParticipantProfile {...participantProfileProps} />
+              )}
 
-                <SpaceSideMenu menus={ctrl.menus} />
+              <SpaceSideMenu menus={ctrl.menus} />
 
-                <TimelineMenu
-                  isEditing={false}
-                  handleSetting={() => {}}
-                  items={ctrl.timelineItems}
-                  titleLabel={ctrl.t('timeline_title')}
-                />
-              </Col>
-            </SheetContent>
-          </Sheet>
-        )}
-      </Col>
+              <TimelineMenu
+                isEditing={false}
+                handleSetting={() => {}}
+                items={ctrl.timelineItems}
+                titleLabel={ctrl.t('timeline_title')}
+              />
+            </Col>
+          </SheetContent>
+        </Sheet>
+      )}
     </Row>
   );
 }
