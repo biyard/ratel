@@ -60,24 +60,21 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
       />
       <Card className="w-full">
         <div className="grid gap-5 w-full">
-          <div className="grid gap-2 w-full">
-            <label className="text-sm font-medium text-text-primary">
-              {t('title')}
-            </label>
+          <div className="w-full">
             <Input
+              variant="post"
               placeholder={t('title_hint')}
+              showRequiredMarker
               value={ctrl.title.get()}
               onChange={(e) => ctrl.handleTitle(e.target.value)}
             />
           </div>
 
-          <div className="grid gap-2">
-            <label className="text-sm font-medium text-text-primary">
-              {t('category')}
-            </label>
-
+          <div>
             <div ref={rootRef} className="relative">
               <Input
+                variant="post"
+                showRequiredMarker
                 ref={inputRef}
                 value={ctrl.categoryName.get()}
                 onChange={(e) => {
@@ -149,7 +146,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
               {open && filtered?.length > 0 && (
                 <div
                   id="category-popover"
-                  className="absolute z-20 mt-2 w-full rounded-xl border border-input-box-border bg-input-box-bg shadow-xl overflow-hidden"
+                  className="absolute z-20 mt-2 w-full rounded-xl border border-[var(--color-dropdown-border)] bg-[var(--color-dropdown-bg)] shadow-xl overflow-hidden"
                 >
                   {filtered.map((c, idx) => {
                     const active = c.trim() === ctrl.categoryName.get().trim();
@@ -167,10 +164,12 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
                         }}
                         className={[
                           'w-full text-left px-4 py-2 text-sm',
-                          hovered ? 'bg-neutral-800 light:bg-neutral-300' : '',
+                          hovered
+                            ? 'bg-[var(--color-dropdown-item-hover-bg)]'
+                            : '',
                           active
-                            ? 'text-neutral-100 light:text-text-primary'
-                            : 'text-neutral-100 light:text-text-primary',
+                            ? 'text-[var(--color-dropdown-text)]'
+                            : 'text-[var(--color-dropdown-text)]',
                         ].join(' ')}
                       >
                         {c}
@@ -183,10 +182,9 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
           </div>
 
           <div>
-            <label className="text-sm font-medium text-text-primary">
-              {t('contents')}
-            </label>
             <PostEditor
+              variant="post"
+              placeholder={t('contents_hint')}
               files={ctrl.files.get()}
               content={ctrl.htmlContents.get()}
               onUpdate={(nextContent) => ctrl.handleContent(nextContent)}
