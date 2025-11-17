@@ -9,6 +9,8 @@ import { useErrorZone } from '@/features/errors/hooks/use-error-zone';
 import { ErrorSpacePollRequiredField } from '@/features/errors/types/errors';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CompleteSurveyPopup from '../../polls/components/modal/complete_survey';
+import { useSpaceById } from '../../hooks/use-space-by-id';
+import { SpaceType } from '../../types/space-type';
 
 export type PollRequirementProps = React.HTMLAttributes<HTMLDivElement> & {
   spacePk: string;
@@ -23,6 +25,7 @@ export default function PollRequirement({
 }: PollRequirementProps) {
   const { t } = useTranslation('SpaceSurvey');
   const { t: modalT } = useTranslation('SpaceCompleteSurvey');
+  const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollSk);
   const popup = usePopup();
   const defaultAnswers: Record<number, SurveyAnswer | null> = {};
@@ -125,6 +128,11 @@ export default function PollRequirement({
         onValidateError={() => setError(ErrorSpacePollRequiredField)}
         onSubmit={handleSubmit}
         onLogin={() => {}}
+        canParticipate={
+          space.isAdmin() ||
+          space.spaceType !== SpaceType.Deliberation ||
+          space.participated
+        }
         canSubmit={true}
         disabled={respondPoll.isPending}
         canUpdate={false}

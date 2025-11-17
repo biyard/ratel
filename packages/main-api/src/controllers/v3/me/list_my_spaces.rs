@@ -142,7 +142,13 @@ pub async fn list_participating_spaces(
     user_pk: &Partition,
     opt: SpaceParticipantQueryOption,
 ) -> Result<(Vec<SpaceCommon>, Vec<Post>, Option<String>)> {
-    let (sps, bookmark) = SpaceParticipant::find_by_user(cli, user_pk, opt).await?;
+    let (sps, bookmark) = match SpaceParticipant::find_by_user(cli, user_pk, opt).await {
+        Ok(v) => (v.0, v.1),
+        Err(e) => {
+            tracing::error!("not exists error: {:?}", e);
+            (vec![], None)
+        }
+    };
 
     let keys = sps
         .into_iter()

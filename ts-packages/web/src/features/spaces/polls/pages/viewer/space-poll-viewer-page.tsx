@@ -67,6 +67,11 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
               selectedAnswers={ctrl.answers.get()}
               onSubmit={ctrl.handleSubmit}
               onLogin={ctrl.handleLogin}
+              canParticipate={
+                ctrl.space.isAdmin() ||
+                ctrl.space.spaceType !== SpaceType.Deliberation ||
+                ctrl.space.participated
+              }
               canSubmit={canSubmit}
               disabled={!canSubmit && !canUpdate}
               canUpdate={canUpdate}

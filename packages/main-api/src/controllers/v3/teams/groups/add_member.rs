@@ -71,8 +71,11 @@ pub async fn add_member_handler(
 
     let team = team.ok_or(Error::NotFound("Team not found".into()))?;
     let team_group = team_group.ok_or(Error::NotFound("Team group not found".into()))?;
+
     let mut success_count = 0;
     let mut failed_pks = vec![];
+    let mut invite_emails: Vec<String> = Vec::new();
+
     for member in &req.user_pks {
         let user = User::get(&dynamo.client, member, Some(EntityType::User)).await?;
         if user.is_none() {
@@ -85,12 +88,13 @@ pub async fn add_member_handler(
         let user_team_sk = EntityType::UserTeam(team.pk.to_string());
         let existing_user_team =
             UserTeam::get(&dynamo.client, &user.pk, Some(&user_team_sk)).await?;
+
         if existing_user_team.is_none() {
             UserTeam::new(user.pk.clone(), team.clone())
                 .create(&dynamo.client)
                 .await?;
 
-            let _ = UserTeam::send_email(&ses, team.clone(), user.email.clone()).await?;
+            invite_emails.push(user.email.clone());
         }
 
         // Always create UserTeamGroup (user joining a new group)
@@ -99,10 +103,17 @@ pub async fn add_member_handler(
             .await?;
         success_count += 1;
     }
+
+    // Bulk send team invite emails (only for newly-linked users)
+    if !invite_emails.is_empty() {
+        let _ = UserTeam::send_email(&dynamo, &ses, team.clone(), invite_emails).await?;
+    }
+
     TeamGroup::updater(team_group.pk, team_group.sk)
         .increase_members(success_count)
         .execute(&dynamo.client)
         .await?;
+
     Ok(Json(AddMemberResponse {
         total_added: success_count,
         failed_pks,
