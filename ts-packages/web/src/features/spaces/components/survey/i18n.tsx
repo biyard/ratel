@@ -2,6 +2,7 @@ const en = {
   btn_prev: 'Prev',
   btn_next: 'Next',
   btn_submit: 'Submit',
+  btn_not_enable: 'You do not have permission to participate.',
   btn_update: 'Update',
   btn_login: 'Log in to Submit',
 
@@ -23,6 +24,7 @@ const en = {
   subjective_input_placeholder: 'Please share your opinion.',
   option_input_placeholder: 'Enter an option',
   add_option_button_label: 'Add Option',
+  allowed_other_option: 'Allow Other Option',
 
   no_questions: 'No questions available.',
 
@@ -48,6 +50,7 @@ const ko = {
   btn_prev: '이전',
   btn_next: '다음',
   btn_submit: '제출',
+  btn_not_enable: '참가 권한이 없습니다.',
   btn_update: '수정',
   btn_login: '로그인 후 제출',
 
@@ -70,6 +73,7 @@ const ko = {
   option_input_placeholder: '옵션을 입력하세요',
 
   add_option_button_label: '옵션 추가하기',
+  allowed_other_option: '기타 옵션 허용',
 
   no_questions: '질문이 없습니다.',
 
