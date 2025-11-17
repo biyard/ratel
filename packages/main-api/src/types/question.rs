@@ -122,4 +122,5 @@ pub struct ChoiceQuestion {
     pub image_url: Option<String>,
     pub options: Vec<String>,
     pub is_required: Option<bool>,
+    pub allow_other: Option<bool>,
 }

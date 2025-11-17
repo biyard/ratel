@@ -94,6 +94,7 @@ pub async fn setup_published_poll_space() -> (TestContextV3, Partition, EntityTy
                 "Yellow".to_string(),
             ],
             is_required: Some(true),
+            allow_other: None,
         }),
         Question::MultipleChoice(ChoiceQuestion {
             title: "What languages do you speak?".to_string(),
@@ -106,6 +107,7 @@ pub async fn setup_published_poll_space() -> (TestContextV3, Partition, EntityTy
                 "German".to_string(),
             ],
             is_required: Some(false),
+            allow_other: None,
         }),
     ];
 
@@ -193,7 +195,10 @@ async fn test_get_poll_with_my_response() {
     let TestContextV3 { app, test_user, .. } = ctx;
 
     let answers = vec![
-        Answer::SingleChoice { answer: Some(1) },
+        Answer::SingleChoice {
+            answer: Some(1),
+            other: None,
+        },
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
         },
@@ -326,6 +331,7 @@ async fn test_update_poll_questions() {
         image_url: None,
         options: vec!["Option 1".to_string(), "Option 2".to_string()],
         is_required: Some(true),
+        allow_other: None,
     })];
 
     let (status, _headers, body) = put! {
@@ -497,7 +503,10 @@ async fn test_get_poll_results_with_panel_responses() {
 
     // Submit responses from multiple users
     let answers1 = vec![
-        Answer::SingleChoice { answer: Some(1) },
+        Answer::SingleChoice {
+            answer: Some(1),
+            other: None,
+        },
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
         },
@@ -544,7 +553,10 @@ async fn test_get_poll_results_with_panel_responses() {
     assert_eq!(status, 200);
 
     let answers2 = vec![
-        Answer::SingleChoice { answer: Some(2) },
+        Answer::SingleChoice {
+            answer: Some(2),
+            other: None,
+        },
         Answer::MultipleChoice {
             answer: Some(vec![1, 3]),
         },
@@ -597,7 +609,10 @@ async fn test_get_poll_results_with_responses() {
 
     // Submit responses from multiple users
     let answers1 = vec![
-        Answer::SingleChoice { answer: Some(1) },
+        Answer::SingleChoice {
+            answer: Some(1),
+            other: None,
+        },
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
         },
@@ -615,7 +630,10 @@ async fn test_get_poll_results_with_responses() {
     assert_eq!(status, 200);
 
     let answers2 = vec![
-        Answer::SingleChoice { answer: Some(2) },
+        Answer::SingleChoice {
+            answer: Some(2),
+            other: None,
+        },
         Answer::MultipleChoice {
             answer: Some(vec![1, 3]),
         },
@@ -685,7 +703,10 @@ async fn test_respond_poll_successfully() {
     let TestContextV3 { app, test_user, .. } = ctx;
 
     let answers = vec![
-        Answer::SingleChoice { answer: Some(1) },
+        Answer::SingleChoice {
+            answer: Some(1),
+            other: None,
+        },
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
         },
@@ -727,7 +748,10 @@ async fn test_respond_poll_without_permission() {
     };
 
     let answers = vec![
-        Answer::SingleChoice { answer: Some(1) },
+        Answer::SingleChoice {
+            answer: Some(1),
+            other: None,
+        },
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
         },
@@ -757,6 +781,7 @@ async fn test_respond_poll_when_not_started() {
         image_url: None,
         options: vec!["Option 1".to_string(), "Option 2".to_string()],
         is_required: Some(true),
+        allow_other: None,
     })];
 
     // Update poll with questions
@@ -793,7 +818,10 @@ async fn test_respond_poll_when_not_started() {
         }
     };
 
-    let answers = vec![Answer::SingleChoice { answer: Some(1) }];
+    let answers = vec![Answer::SingleChoice {
+        answer: Some(1),
+        other: None,
+    }];
 
     let (status, _headers, _body) = post! {
         app: app,
@@ -819,6 +847,7 @@ async fn test_respond_poll_when_already_ended() {
         image_url: None,
         options: vec!["Option 1".to_string(), "Option 2".to_string()],
         is_required: Some(true),
+        allow_other: None,
     })];
 
     // Update poll with questions
@@ -855,7 +884,10 @@ async fn test_respond_poll_when_already_ended() {
         }
     };
 
-    let answers = vec![Answer::SingleChoice { answer: Some(1) }];
+    let answers = vec![Answer::SingleChoice {
+        answer: Some(1),
+        other: None,
+    }];
 
     let (status, _headers, _body) = post! {
         app: app,
@@ -875,7 +907,10 @@ async fn test_respond_poll_with_mismatched_answers() {
     let TestContextV3 { app, test_user, .. } = ctx;
 
     // Only provide 1 answer when 2 questions exist
-    let answers = vec![Answer::SingleChoice { answer: Some(1) }];
+    let answers = vec![Answer::SingleChoice {
+        answer: Some(1),
+        other: None,
+    }];
 
     let (status, _headers, _body) = post! {
         app: app,
@@ -896,7 +931,10 @@ async fn test_respond_poll_with_invalid_answer_option() {
 
     // Provide invalid option index (out of bounds)
     let answers = vec![
-        Answer::SingleChoice { answer: Some(10) }, // Invalid: only 4 options (0-3)
+        Answer::SingleChoice {
+            answer: Some(10),
+            other: None,
+        }, // Invalid: only 4 options (0-3)
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
         },
@@ -967,7 +1005,10 @@ async fn test_respond_poll_increments_response_count() {
     let initial_count = initial_poll.user_response_count;
 
     let answers = vec![
-        Answer::SingleChoice { answer: Some(1) },
+        Answer::SingleChoice {
+            answer: Some(1),
+            other: None,
+        },
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
         },

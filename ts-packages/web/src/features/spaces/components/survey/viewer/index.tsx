@@ -15,6 +15,8 @@ import { Button } from '@/components/ui/button';
 import { showErrorToast } from '@/lib/toast';
 import { PollStatus } from '@/features/spaces/polls/types/poll-status';
 
+const OTHER_LABEL = 'Others';
+
 export interface SurveyViewerProps {
   t: I18nFunction;
   questions: SurveyQuestion[];
@@ -177,8 +179,23 @@ export default function SurveyViewer({
 
                 if (!isAdmin) {
                   const type = current.question.answer_type;
+
+                  const selectedIndex =
+                    type === SurveyAnswerType.SingleChoice &&
+                    typeof answer?.answer === 'number'
+                      ? (answer.answer as number)
+                      : undefined;
+
+                  const isOtherSelected =
+                    type === SurveyAnswerType.SingleChoice &&
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (current.question as any).allow_other &&
+                    selectedIndex !== undefined &&
+                    current.question.options[selectedIndex] === OTHER_LABEL;
+
                   const isAutoNext =
-                    type === SurveyAnswerType.SingleChoice ||
+                    (type === SurveyAnswerType.SingleChoice &&
+                      !isOtherSelected) ||
                     type === SurveyAnswerType.Dropdown ||
                     type === SurveyAnswerType.LinearScale ||
                     (type === SurveyAnswerType.Checkbox &&
@@ -235,6 +252,10 @@ function QuestionViewer({
     case SurveyAnswerType.SingleChoice: {
       const { question, answer } = questionAnswer;
       const prev = answer?.answer !== undefined ? [answer.answer] : [];
+      const otherIndex =
+        question.allow_other && question.options?.includes(OTHER_LABEL)
+          ? question.options.indexOf(OTHER_LABEL)
+          : -1;
       return (
         <ObjectiveViewer
           t={t}
@@ -242,12 +263,39 @@ function QuestionViewer({
           answer_type={question.answer_type}
           disabled={disabled}
           selectedIndexes={prev}
+          allow_other={question.allow_other ?? false}
+          otherValue={
+            answer?.answer_type === SurveyAnswerType.SingleChoice
+              ? answer.other
+              : undefined
+          }
           onSelect={(i) => {
             if (disabled) return;
-            let next = i;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if (prev.includes(i)) next = undefined as any;
-            updateAnswer({ answer_type: question.answer_type, answer: next });
+
+            const isOther =
+              question.allow_other &&
+              i === otherIndex &&
+              question.options[i] === OTHER_LABEL;
+
+            let next: number | undefined = i;
+            if (prev.includes(i)) {
+              next = undefined;
+            }
+
+            updateAnswer({
+              answer_type: question.answer_type,
+              answer: next,
+              ...(isOther ? { other: answer?.other } : { other: undefined }),
+            });
+          }}
+          onChangeOther={(value) => {
+            if (disabled) return;
+
+            updateAnswer({
+              answer_type: question.answer_type,
+              answer: otherIndex,
+              other: value,
+            });
           }}
         />
       );
