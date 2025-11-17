@@ -9,6 +9,15 @@ const meta = {
   },
   tags: ['autodocs'],
   argTypes: {
+    variant: {
+      control: 'select',
+      options: ['default', 'post'],
+      description: 'Visual variant of the input',
+    },
+    showRequiredMarker: {
+      control: 'boolean',
+      description: 'Show a red asterisk for required fields',
+    },
     type: {
       control: 'select',
       options: [
@@ -51,6 +60,26 @@ export const Default: Story = {
   args: {
     placeholder: 'Enter text...',
     type: 'text',
+    variant: 'default',
+  },
+};
+
+// Post variant input
+export const PostVariant: Story = {
+  args: {
+    placeholder: 'Enter post title...',
+    type: 'text',
+    variant: 'post',
+  },
+};
+
+// Post variant with required marker
+export const PostWithRequiredMarker: Story = {
+  args: {
+    placeholder: 'Title',
+    type: 'text',
+    variant: 'post',
+    showRequiredMarker: true,
   },
 };
 

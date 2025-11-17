@@ -1,5 +1,5 @@
 import { Loader2, Check, Clock } from 'lucide-react';
-import { ThemedInput } from '@/components/ui/themed-input';
+import { Input } from '@/components/ui/input';
 import { Row } from '@/components/ui/row';
 import { Col } from '@/components/ui/col';
 import { PostEditor } from './post-editor';
@@ -58,7 +58,7 @@ export function PostFormFields(props: PostFormFieldsProps) {
       <Col>
         {/* Title Input */}
         <div className="relative">
-          <ThemedInput
+          <Input
             id="post-title-input"
             type="text"
             placeholder={t.title_placeholder}
