@@ -1,3 +1,5 @@
+// #[cfg(all(not(test), not(feature = "no-secret")))]
+// use crate::features::spaces::templates::SpaceTemplate;
 use crate::{
     Error,
     features::spaces::boards::models::{
@@ -10,6 +12,7 @@ use crate::{
 };
 use bdk::prelude::axum::Json;
 use bdk::prelude::*;
+use serde_json::json;
 
 #[derive(
     Debug,
@@ -55,9 +58,7 @@ pub struct SpacePost {
     pub author_profile_url: String,
     pub author_username: String,
 
-    // boards image urls
     pub urls: Vec<String>,
-    // boards pdf files
     pub files: Option<Vec<File>>,
 }
 
@@ -112,11 +113,44 @@ impl SpacePost {
         (space_pk.clone(), EntityType::SpacePost(space_post_id))
     }
 
+    // #[cfg(all(not(test), not(feature = "no-secret")))]
+    // async fn ensure_space_post_template_exists(
+    //     dynamo: &DynamoClient,
+    //     ses: &SesClient,
+    //     template_name: &str,
+    // ) -> Result<(), Error> {
+    //     use crate::utils::templates::{
+    //         CREATE_SPACE_POST_TEMPLATE_HTML, CREATE_SPACE_POST_TEMPLATE_SUBJECT,
+    //     };
+
+    //     let template = SpaceTemplate::get(
+    //         &dynamo.client,
+    //         Partition::SpaceTemplate,
+    //         Some(EntityType::SpaceTemplate(template_name.to_string())),
+    //     )
+    //     .await?;
+
+    //     if template.is_none() {
+    //         ses.create_template(
+    //             template_name,
+    //             CREATE_SPACE_POST_TEMPLATE_SUBJECT,
+    //             CREATE_SPACE_POST_TEMPLATE_HTML,
+    //         )
+    //         .await
+    //         .map_err(|e| Error::AwsSesSendEmailException(e.to_string()))?;
+
+    //         let temp = SpaceTemplate::new(template_name.to_string());
+    //         temp.create(&dynamo.client).await?;
+    //     }
+
+    //     Ok(())
+    // }
+
     #[allow(unused_variables)]
     pub async fn send_email(
         dynamo: &DynamoClient,
         ses: &SesClient,
-        user_email: String,
+        user_emails: Vec<String>,
         space: SpaceCommon,
         title: String,
         html_contents: String,
@@ -125,18 +159,25 @@ impl SpacePost {
         #[cfg(any(test, feature = "no-secret"))]
         {
             let _ = ses;
-            tracing::warn!("sending email will be skipped for {}", user_email,);
+            for email in &user_emails {
+                tracing::warn!("sending space post email will be skipped for {}", email);
+            }
         }
 
         #[cfg(all(not(test), not(feature = "no-secret")))]
         {
-            use crate::utils::html::create_space_post_html;
+            if user_emails.is_empty() {
+                return Ok(Json(()));
+            }
+
+            let template_name = "space_post_notification".to_string();
+            // Self::ensure_space_post_template_exists(dynamo, ses, &template_name).await?;
 
             let mut domain = crate::config::get().domain.to_string();
             if domain.contains("localhost") {
-                domain = format!("http://{}", domain).to_string();
+                domain = format!("http://{}", domain);
             } else {
-                domain = format!("https://{}", domain).to_string();
+                domain = format!("https://{}", domain);
             }
 
             let space_id = match space.pk.clone() {
@@ -144,36 +185,31 @@ impl SpacePost {
                 _ => "".to_string(),
             };
 
-            let profile = user.profile_url;
-            let username = user.username;
-            let display_name = user.display_name;
+            let connect_link = format!("{}/spaces/SPACE%23{}/boards", domain, space_id);
+            tracing::debug!("space post url: {:?}", connect_link);
 
-            let html = create_space_post_html(
-                title.clone(),
-                html_contents,
-                profile,
-                display_name,
-                username,
-                format!("{}/spaces/SPACE%23{}/boards", domain, space_id),
-            );
+            let template_data = json!({
+                "author_profile": user.profile_url,
+                "author_display_name": user.display_name,
+                "author_username": user.username,
+                "post_title": title,
+                "post_desc": html_contents,
+                "connect_link": connect_link,
+            });
 
-            let text = format!(
-                "You're invited to join {space}\n{user} is posting the post in the {space}.\nOpen: {url}",
-                space = title.clone(),
-                user = space.author_username,
-                url = format!("{}/spaces/SPACE%23{}/boards", domain, space_id),
-            );
+            let recipients: Vec<(String, Option<serde_json::Value>)> = user_emails
+                .into_iter()
+                .map(|email| (email, Some(template_data.clone())))
+                .collect();
 
             let mut i = 0;
-            let subject = format!("[Ratel] Posting the post in the space");
-
             while let Err(e) = ses
-                .send_mail_html(&user_email, &subject, &html, Some(&text))
+                .send_bulk_with_template(&template_name, &recipients)
                 .await
             {
                 btracing::notify!(
                     crate::config::get().slack_channel_monitor,
-                    &format!("Failed to send email: {:?}", e)
+                    &format!("Failed to send space post email: {:?}", e)
                 );
                 tokio::time::sleep(std::time::Duration::from_secs(1)).await;
                 i += 1;

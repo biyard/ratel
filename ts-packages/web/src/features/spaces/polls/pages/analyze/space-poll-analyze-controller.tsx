@@ -64,9 +64,25 @@ export class SpacePollAnalyzeController {
     const questions = this.poll?.questions ?? [];
     const qCount = questions.length;
 
-    const needGender = (this.attributes ?? []).some(
-      (a) => a?.type === 'verifiable_attribute' && a?.value === 'gender',
-    );
+    const needGender = (this.attributes ?? []).some((a) => {
+      if (!a) return false;
+
+      if (a.type === 'verifiable_attribute') {
+        if (typeof a.value === 'string') {
+          return (
+            a.value === 'gender' || a.value.toLowerCase().startsWith('gender')
+          );
+        }
+
+        return a.value.type === 'gender';
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const anyA = a as any;
+      if (anyA.key === 'gender') return true;
+
+      return false;
+    });
 
     const needUniversity = (this.attributes ?? []).some(
       (a) => a?.type === 'collective_attribute' && a?.value === 'university',
@@ -91,6 +107,16 @@ export class SpacePollAnalyzeController {
       const raw: any =
         ans && typeof ans === 'object' && 'answer' in ans ? ans.answer : ans;
 
+      const otherText =
+        ans &&
+        typeof ans === 'object' &&
+        'other' in ans &&
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        typeof (ans as any).other === 'string'
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ((ans as any).other as string).trim()
+          : '';
+
       if (
         raw === null ||
         typeof raw === 'undefined' ||
@@ -108,6 +134,22 @@ export class SpacePollAnalyzeController {
         }
         return typeof v === 'string' || typeof v === 'number' ? String(v) : '';
       };
+
+      const OTHER_LABEL = 'Others';
+
+      if (kind === 'single_choice') {
+        if (
+          typeof raw === 'number' &&
+          opts &&
+          raw >= 0 &&
+          raw < opts.length &&
+          otherText.length > 0 &&
+          opts[raw] === OTHER_LABEL
+        ) {
+          return otherText;
+        }
+        return labelOf(raw);
+      }
 
       if (['single_choice', 'dropdown', 'select', 'radio'].includes(kind)) {
         return labelOf(raw);

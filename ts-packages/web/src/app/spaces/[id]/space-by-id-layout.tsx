@@ -64,7 +64,8 @@ function GeneralLayout() {
       <Col className={cn('gap-2.5 w-full transition-all max-w-[250px]')}>
         {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
 
-        {ctrl.space.participated &&
+        {!ctrl.space.isAdmin() &&
+          ctrl.space.participated &&
           ctrl.space.participantDisplayName &&
           ctrl.space.participantProfileUrl &&
           ctrl.space.participantUsername && (
