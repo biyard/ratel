@@ -1,8 +1,16 @@
 use crate::{
     AppState, Error,
     constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT},
-    models::email::{EmailVerification, EmailVerificationQueryOption},
-    utils::{generate_random_code, time::get_now_timestamp},
+    models::{
+        email::{EmailVerification, EmailVerificationQueryOption},
+        email_template::email_template::EmailTemplate,
+    },
+    types::email_operation::EmailOperation,
+    utils::{
+        aws::{DynamoClient, SesClient},
+        generate_random_code,
+        time::get_now_timestamp,
+    },
 };
 use bdk::prelude::*;
 use by_axum::axum::{Json, extract::State};
@@ -68,51 +76,32 @@ pub async fn send_code_handler(
             email_verification
         }
     };
-    #[cfg(any(test, feature = "no-secret"))]
-    {
-        let _ = ses;
-        tracing::warn!("sending email will be skipped for {}: {}", req.email, value);
-    }
 
-    #[cfg(all(not(test), not(feature = "no-secret")))]
-    {
-        use crate::utils::html::signup_html;
+    let user_email = req.email.clone();
+    let display_name = user_email.clone();
 
-        let user_email = req.email.clone();
-        let subject = String::from("[Ratel] Your security code");
+    let mut chars = value.chars();
+    let code_1 = chars.next().map(|c| c.to_string()).unwrap_or_default();
+    let code_2 = chars.next().map(|c| c.to_string()).unwrap_or_default();
+    let code_3 = chars.next().map(|c| c.to_string()).unwrap_or_default();
+    let code_4 = chars.next().map(|c| c.to_string()).unwrap_or_default();
+    let code_5 = chars.next().map(|c| c.to_string()).unwrap_or_default();
+    let code_6 = chars.next().map(|c| c.to_string()).unwrap_or_default();
 
-        let html = signup_html(&user_email, &value);
+    let email = EmailTemplate {
+        targets: vec![user_email.clone()],
+        operation: EmailOperation::SignupSecurityCode {
+            display_name,
+            code_1,
+            code_2,
+            code_3,
+            code_4,
+            code_5,
+            code_6,
+        },
+    };
 
-        let text = format!(
-            "Hi {name}\n\
-         Please verify your security code to activate your account.\n\
-         Your security code is: {code}\n\
-         This code expires in 30 minutes.\n\
-         If you didn’t request this, you can safely ignore this email.\n",
-            name = if user_email.is_empty() {
-                ""
-            } else {
-                &user_email
-            },
-            code = value
-        );
-
-        let mut i = 0;
-        while let Err(e) = ses
-            .send_mail_html(&user_email, &subject, &html, Some(&text))
-            .await
-        {
-            btracing::notify!(
-                crate::config::get().slack_channel_monitor,
-                &format!("Failed to send email: {:?}", e)
-            );
-            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-            i += 1;
-            if i >= 3 {
-                return Err(Error::AwsSesSendEmailException(e.to_string()));
-            }
-        }
-    }
+    email.send_email(&dynamo, &ses).await?;
 
     Ok(Json(SendCodeResponse { expired_at }))
 }
