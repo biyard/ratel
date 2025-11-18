@@ -3,7 +3,7 @@ use crate::features::notification::Notification;
 use crate::notification_status::NotificationStatus;
 use crate::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, aide::OperationIo, JsonSchema)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
 pub struct NotificationResponse {
     pub pk: Partition,
     pub sk: EntityType,

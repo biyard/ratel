@@ -21,7 +21,6 @@ pub mod assets {
 }
 
 pub mod auth;
-pub mod notifications;
 pub mod posts;
 pub mod spaces;
 pub mod teams;
@@ -68,7 +67,6 @@ pub fn route(bot: Option<ArcTelegramBot>) -> Result<Router> {
         .nest("/me", me::route()?)
         .nest("/users", users::route()?)
         .nest("/posts", posts::route()?)
-        .nest("/notifications", notifications::route()?)
         .nest("/auth", auth::route()?)
         .nest("/teams", teams::route()?)
         .nest("/spaces", spaces::route()?)
