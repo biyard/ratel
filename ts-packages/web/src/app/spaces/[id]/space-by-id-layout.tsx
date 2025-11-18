@@ -34,6 +34,7 @@ function GeneralLayout() {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   const participantProfileProps =
+    !ctrl.space.isAdmin() &&
     ctrl.space.participated &&
     ctrl.space.participantDisplayName &&
     ctrl.space.participantProfileUrl &&

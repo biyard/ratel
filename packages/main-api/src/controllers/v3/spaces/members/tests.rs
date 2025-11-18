@@ -229,7 +229,7 @@ async fn test_verification_space_code_handler() {
     .unwrap()
     .unwrap();
 
-    let (status, _, _res) = post! {
+    let (status, _, res) = post! {
         app: app,
         path: format!("/v3/spaces/{}/members/verifications", space_pk.to_string()),
         headers: headers.clone(),
@@ -240,6 +240,7 @@ async fn test_verification_space_code_handler() {
     };
 
     assert_eq!(status, 200);
+    assert_eq!(res.success, true);
 }
 
 #[tokio::test]

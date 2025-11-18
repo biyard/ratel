@@ -5,6 +5,7 @@ pub mod members;
 pub mod panels;
 pub mod polls;
 pub mod recommendations;
+pub mod templates;
 
 pub mod artworks;
 pub mod models;

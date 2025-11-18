@@ -1,3 +1,4 @@
+use crate::features::spaces::SpaceParticipant;
 use crate::features::spaces::panels::SpacePanels;
 use crate::features::spaces::polls::Poll;
 use crate::models::feed::Post;
@@ -47,6 +48,16 @@ pub async fn create_space_handler(
     }
 
     let space = SpaceCommon::new(post.clone()).with_space_type(space_type);
+    let participant = SpaceParticipant::new(
+        space.clone().pk,
+        post.user_pk.clone(),
+        post.author_display_name,
+    );
+    tracing::debug!(
+        "post participants: {:?} {:?}",
+        post.user_pk,
+        post.title.clone()
+    );
 
     let post_updater = Post::updater(&post.pk, &post.sk)
         .with_space_pk(space.pk.clone())
@@ -54,6 +65,7 @@ pub async fn create_space_handler(
 
     let mut tx = vec![
         space.create_transact_write_item(),
+        participant.create_transact_write_item(),
         post_updater.transact_write_item(),
     ];
 
