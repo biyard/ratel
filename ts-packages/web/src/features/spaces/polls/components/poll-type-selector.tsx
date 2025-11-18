@@ -18,6 +18,7 @@ export function PollTypeSelector({
       {showPrePoll && (
         <Card
           className="transition-colors cursor-pointer hover:bg-card-bg-secondary/80"
+          data-testid="create-pre-poll-survey"
           onClick={() => onSelectType(true)}
         >
           <div className="flex flex-col gap-2">
@@ -37,6 +38,7 @@ export function PollTypeSelector({
       {/* Final Survey Card */}
       <Card
         className="transition-colors cursor-pointer hover:bg-card-bg-secondary/80"
+        data-testid="create-final-survey"
         onClick={() => onSelectType(false)}
       >
         <div className="flex flex-col gap-2">

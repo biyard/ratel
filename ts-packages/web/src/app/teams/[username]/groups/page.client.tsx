@@ -79,7 +79,7 @@ export default function TeamGroups({ username }: { username: string }) {
 
   return (
     <div className="flex flex-col w-full gap-2.5">
-      <div className="flex flex-row w-full justify-end items-end gap-[10px]">
+      <div className="flex flex-row w-full justify-end items-end gap-2.5">
         <InviteMemberButton
           data-pw="invite-member-button"
           onClick={() => {
@@ -251,6 +251,7 @@ function InviteMemberButton({
   return (
     <div
       data-pw={dataPw}
+      data-testid={dataPw}
       className="cursor-pointer flex flex-row w-fit justify-start items-center px-4 py-3 bg-white border border-foreground rounded-[100px] gap-1"
       onClick={onClick}
     >
