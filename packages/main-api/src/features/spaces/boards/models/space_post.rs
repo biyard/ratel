@@ -6,7 +6,12 @@ use crate::{
         space_category::SpaceCategory, space_post_comment::SpacePostComment,
         space_post_comment_like::SpacePostCommentLike,
     },
-    models::{PostCommentLike, SpaceCommon, team::Team, user::User},
+    models::{
+        PostCommentLike, SpaceCommon,
+        email_template::email_template::{EmailOperation, EmailTemplate},
+        team::Team,
+        user::User,
+    },
     types::{author::Author, *},
     utils::aws::{DynamoClient, SesClient},
 };
@@ -156,68 +161,33 @@ impl SpacePost {
         html_contents: String,
         user: User,
     ) -> Result<Json<()>, Error> {
-        #[cfg(any(test, feature = "no-secret"))]
-        {
-            let _ = ses;
-            for email in &user_emails {
-                tracing::warn!("sending space post email will be skipped for {}", email);
-            }
+        let mut domain = crate::config::get().domain.to_string();
+        if domain.contains("localhost") {
+            domain = format!("http://{}", domain);
+        } else {
+            domain = format!("https://{}", domain);
         }
 
-        #[cfg(all(not(test), not(feature = "no-secret")))]
-        {
-            if user_emails.is_empty() {
-                return Ok(Json(()));
-            }
+        let space_id = match space.pk.clone() {
+            Partition::Space(v) => v.to_string(),
+            _ => "".to_string(),
+        };
 
-            let template_name = "space_post_notification".to_string();
-            // Self::ensure_space_post_template_exists(dynamo, ses, &template_name).await?;
+        let connect_link = format!("{}/spaces/SPACE%23{}/boards", domain, space_id);
 
-            let mut domain = crate::config::get().domain.to_string();
-            if domain.contains("localhost") {
-                domain = format!("http://{}", domain);
-            } else {
-                domain = format!("https://{}", domain);
-            }
+        let email = EmailTemplate {
+            targets: user_emails.clone(),
+            operation: EmailOperation::SpacePostNotification {
+                author_profile: user.profile_url,
+                author_display_name: user.display_name,
+                author_username: user.username,
+                post_title: title,
+                post_desc: html_contents,
+                connect_link,
+            },
+        };
 
-            let space_id = match space.pk.clone() {
-                Partition::Space(v) => v.to_string(),
-                _ => "".to_string(),
-            };
-
-            let connect_link = format!("{}/spaces/SPACE%23{}/boards", domain, space_id);
-            tracing::debug!("space post url: {:?}", connect_link);
-
-            let template_data = json!({
-                "author_profile": user.profile_url,
-                "author_display_name": user.display_name,
-                "author_username": user.username,
-                "post_title": title,
-                "post_desc": html_contents,
-                "connect_link": connect_link,
-            });
-
-            let recipients: Vec<(String, Option<serde_json::Value>)> = user_emails
-                .into_iter()
-                .map(|email| (email, Some(template_data.clone())))
-                .collect();
-
-            let mut i = 0;
-            while let Err(e) = ses
-                .send_bulk_with_template(&template_name, &recipients)
-                .await
-            {
-                btracing::notify!(
-                    crate::config::get().slack_channel_monitor,
-                    &format!("Failed to send space post email: {:?}", e)
-                );
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-                i += 1;
-                if i >= 3 {
-                    return Err(Error::AwsSesSendEmailException(e.to_string()));
-                }
-            }
-        }
+        email.send_email(ses).await?;
 
         Ok(Json(()))
     }

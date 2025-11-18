@@ -1,13 +1,62 @@
 use crate::utils::aws::SesClient;
 use crate::*;
+use serde::{Deserialize, Serialize};
+use serde_json::{Value as JsonValue, json};
 
-// FIXME: fix to redefine template model
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum EmailOperation {
+    SpacePostNotification {
+        author_profile: String,
+        author_display_name: String,
+        author_username: String,
+        post_title: String,
+        post_desc: String,
+        connect_link: String,
+    },
+    TeamInvite {
+        team_name: String,
+        team_profile: String,
+        team_display_name: String,
+        url: String,
+    },
+    SpaceInviteVerification {
+        space_title: String,
+        space_desc: String,
+        author_profile: String,
+        author_display_name: String,
+        author_username: String,
+        cta_url: String,
+    },
+}
+
+impl Default for EmailOperation {
+    fn default() -> Self {
+        EmailOperation::SpacePostNotification {
+            author_profile: String::new(),
+            author_display_name: String::new(),
+            author_username: String::new(),
+            post_title: String::new(),
+            post_desc: String::new(),
+            connect_link: String::new(),
+        }
+    }
+}
+
+impl EmailOperation {
+    pub fn template_name(&self) -> &'static str {
+        match self {
+            EmailOperation::SpacePostNotification { .. } => "space_post_notification",
+            EmailOperation::TeamInvite { .. } => "team_invite",
+            EmailOperation::SpaceInviteVerification { .. } => "email_verification",
+        }
+    }
+}
+
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct EmailTemplate {
-    pub email: String,
-    pub title: String,
-    pub html_contents: String,
-    pub fallback_contents: String,
+    pub targets: Vec<String>,
+    pub operation: EmailOperation,
 }
 
 impl EmailTemplate {
@@ -15,35 +64,35 @@ impl EmailTemplate {
         #[cfg(any(test, feature = "no-secret"))]
         {
             let _ = ses;
-            tracing::warn!("sending email will be skipped for {}", self.email,);
+            for email in &self.targets {
+                tracing::warn!("sending email will be skipped for {}", email);
+            }
+            return Ok(());
         }
 
         #[cfg(all(not(test), not(feature = "no-secret")))]
         {
-            use crate::utils::html::signup_html;
-
-            let mut i = 0;
-            while let Err(e) = ses
-                .send_mail_html(
-                    &self.email,
-                    &self.title,
-                    &self.html_contents,
-                    Some(&self.fallback_contents),
-                )
-                .await
-            {
-                btracing::notify!(
-                    crate::config::get().slack_channel_monitor,
-                    &format!("Failed to send email: {:?}", e)
-                );
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-                i += 1;
-                if i >= 3 {
-                    return Err(Error::AwsSesSendEmailException(e.to_string()));
-                }
+            if self.targets.is_empty() {
+                return Ok(());
             }
-        }
 
-        Ok(())
+            let template_name = self.operation.template_name();
+            let data: JsonValue = serde_json::to_value(&self.operation).map_err(|_| {
+                Error::InternalServerError("Failed to serialize email template data".into())
+            })?;
+
+            let recipients: Vec<(String, Option<JsonValue>)> = self
+                .targets
+                .iter()
+                .cloned()
+                .map(|email| (email, Some(data.clone())))
+                .collect();
+
+            ses.send_bulk_with_template(template_name, &recipients)
+                .await
+                .map_err(|e| Error::AwsSesSendEmailException(e.to_string()))?;
+
+            Ok(())
+        }
     }
 }

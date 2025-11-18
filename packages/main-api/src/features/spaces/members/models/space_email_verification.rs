@@ -1,5 +1,6 @@
 use crate::Error;
 use crate::models::SpaceCommon;
+use crate::models::email_template::email_template::{EmailOperation, EmailTemplate};
 use crate::{
     constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT},
     types::*,
@@ -206,71 +207,33 @@ impl SpaceEmailVerification {
             verifications.push((email.clone(), v.value.clone()));
         }
 
-        #[cfg(any(test, feature = "no-secret"))]
-        {
-            let _ = ses;
-            for (email, code) in &verifications {
-                tracing::warn!("sending email will be skipped for {}: {}", email, code);
-            }
+        let mut domain = crate::config::get().domain.to_string();
+        if domain.contains("localhost") {
+            domain = format!("http://{}", domain);
+        } else {
+            domain = format!("https://{}", domain);
         }
 
-        #[cfg(all(not(test), not(feature = "no-secret")))]
-        {
-            let template_name = "email_verification".to_string();
-            // Self::ensure_invite_template_exists(dynamo, ses, &template_name).await?;
+        let space_id = match space.pk.clone() {
+            Partition::Space(v) => v.to_string(),
+            _ => "".to_string(),
+        };
 
-            let mut domain = crate::config::get().domain.to_string();
-            if domain.contains("localhost") {
-                domain = format!("http://{}", domain);
-            } else {
-                domain = format!("https://{}", domain);
-            }
+        let cta_url = format!("{}/spaces/SPACE%23{}", domain, space_id);
 
-            let space_id = match space.pk.clone() {
-                Partition::Space(v) => v.to_string(),
-                _ => "".to_string(),
-            };
+        let email = EmailTemplate {
+            targets: user_emails.clone(),
+            operation: EmailOperation::SpaceInviteVerification {
+                space_title: title.clone(),
+                space_desc: Self::html_excerpt_ellipsis(&space.content, 160),
+                author_profile: space.author_profile_url,
+                author_display_name: space.author_username.clone(),
+                author_username: space.author_display_name,
+                cta_url,
+            },
+        };
 
-            let space_desc = Self::html_excerpt_ellipsis(&space.content, 160);
-            let profile = space.author_profile_url;
-            let username = space.author_username.clone();
-            let display_name = space.author_display_name;
-
-            let authorize_url = format!("{}/spaces/SPACE%23{}", domain, space_id);
-            tracing::debug!("authorize url: {:?}", authorize_url);
-
-            let mut recipients = Vec::with_capacity(verifications.len());
-
-            for (email, code) in verifications {
-                let template_data = json!({
-                    "space_title": title,
-                    "space_desc": space_desc,
-                    "author_profile": profile,
-                    "author_display_name": display_name,
-                    "author_username": username,
-                    "cta_url": authorize_url,
-                    "code": code,
-                });
-
-                recipients.push((email, Some(template_data)));
-            }
-
-            let mut i = 0;
-            while let Err(e) = ses
-                .send_bulk_with_template(&template_name, &recipients)
-                .await
-            {
-                btracing::notify!(
-                    crate::config::get().slack_channel_monitor,
-                    &format!("Failed to send email: {:?}", e)
-                );
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-                i += 1;
-                if i >= 3 {
-                    return Err(Error::AwsSesSendEmailException(e.to_string()));
-                }
-            }
-        }
+        email.send_email(&ses).await?;
 
         Ok(Json(()))
     }

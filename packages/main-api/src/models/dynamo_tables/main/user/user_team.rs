@@ -1,4 +1,5 @@
 use crate::Error;
+use crate::models::email_template::email_template::{EmailOperation, EmailTemplate};
 // #[cfg(all(not(test), not(feature = "no-secret")))]
 // use crate::features::spaces::templates::SpaceTemplate;
 use crate::utils::aws::DynamoClient;
@@ -86,61 +87,26 @@ impl UserTeam {
         team: Team,
         user_emails: Vec<String>,
     ) -> Result<(), Error> {
-        #[cfg(any(test, feature = "no-secret"))]
-        {
-            let _ = ses;
-            for email in &user_emails {
-                tracing::warn!("sending email will be skipped for {}", email);
-            }
+        let mut domain = crate::config::get().domain.to_string();
+        if domain.contains("localhost") {
+            domain = format!("http://{}", domain);
+        } else {
+            domain = format!("https://{}", domain);
         }
 
-        #[cfg(all(not(test), not(feature = "no-secret")))]
-        {
-            if user_emails.is_empty() {
-                return Ok(());
-            }
+        let url = format!("{}/teams/{}/home", domain, team.username);
 
-            let template_name = "team_invite".to_string();
-            // Self::ensure_team_invite_template_exists(dynamo, ses, &template_name).await?;
+        let email = EmailTemplate {
+            targets: user_emails.clone(),
+            operation: EmailOperation::TeamInvite {
+                team_name: team.username.clone(),
+                team_profile: team.profile_url.clone(),
+                team_display_name: team.display_name.clone(),
+                url,
+            },
+        };
 
-            let mut domain = crate::config::get().domain.to_string();
-            if domain.contains("localhost") {
-                domain = format!("http://{}", domain);
-            } else {
-                domain = format!("https://{}", domain);
-            }
-
-            let url = format!("{}/teams/{}/home", domain, team.username);
-            tracing::debug!("team url: {:?}", url);
-
-            let template_data = json!({
-                "team_name": team.username,
-                "team_profile": team.profile_url,
-                "team_display_name": team.display_name,
-                "url": url,
-            });
-
-            let recipients: Vec<(String, Option<serde_json::Value>)> = user_emails
-                .into_iter()
-                .map(|email| (email, Some(template_data.clone())))
-                .collect();
-
-            let mut i = 0;
-            while let Err(e) = ses
-                .send_bulk_with_template(&template_name, &recipients)
-                .await
-            {
-                btracing::notify!(
-                    crate::config::get().slack_channel_monitor,
-                    &format!("Failed to send team invite email: {:?}", e)
-                );
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-                i += 1;
-                if i >= 3 {
-                    return Err(Error::AwsSesSendEmailException(e.to_string()));
-                }
-            }
-        }
+        email.send_email(&ses).await?;
 
         Ok(())
     }
