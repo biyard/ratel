@@ -3,7 +3,7 @@ use crate::{
     types::*,
     utils::time::get_now_timestamp_millis,
 };
-use aws_sdk_sts::Client as StsClient;
+// use aws_sdk_sts::Client as StsClient;
 use bdk::prelude::*;
 
 use crate::features::spaces::polls::PollStatus;

@@ -20,6 +20,7 @@ pub enum EntityType {
 
     Session,
 
+    Notification(String), // notification id
     // Common
     Created(String), // CREATED#${timestamp}
 

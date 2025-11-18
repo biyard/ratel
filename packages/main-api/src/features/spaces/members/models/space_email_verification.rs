@@ -1,6 +1,7 @@
 use crate::Error;
+use crate::email_operation::EmailOperation;
 use crate::models::SpaceCommon;
-use crate::models::email_template::email_template::{EmailOperation, EmailTemplate};
+use crate::models::email_template::email_template::EmailTemplate;
 use crate::{
     constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT},
     types::*,

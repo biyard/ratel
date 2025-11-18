@@ -1,3 +1,4 @@
+use crate::email_operation::EmailOperation;
 use crate::utils::aws::SesClient;
 use crate::*;
 use serde::{Deserialize, Serialize};
