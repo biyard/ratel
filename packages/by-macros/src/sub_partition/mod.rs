@@ -94,6 +94,18 @@ fn generate_enum_impl(ident: Ident, ds: &DataEnum) -> proc_macro2::TokenStream {
                             }
                         }
                     }
+
+                    impl From<String> for #struct_name {
+                        fn from(s: String) -> Self {
+                            let s = if s.starts_with(#prefix) {
+                                s.replace(#prefix, "").to_string()
+                            } else {
+                                s.to_string()
+                            };
+
+                            #struct_name(s)
+                        }
+                    }
                 };
 
                 struct_defs.push(struct_def);
