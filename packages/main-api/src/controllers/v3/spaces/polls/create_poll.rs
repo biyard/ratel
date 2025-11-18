@@ -56,7 +56,10 @@ pub async fn create_poll_handler(
         .set_transact_items(Some(items))
         .send()
         .await
-        .expect("failed to create poll");
+        .map_err(|e| {
+            tracing::debug!("Failed to create poll: {:?}", e);
+            Error::InternalServerError(e.to_string())
+        })?;
 
     Ok(Json(poll.into()))
 }
