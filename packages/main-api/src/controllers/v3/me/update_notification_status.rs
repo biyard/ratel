@@ -48,7 +48,6 @@ pub async fn update_my_notifications_status_handler(
         }
 
         UpdateMyNotificationsStatusRequest::NotificationTime { time } => {
-            const MAX_UPDATE_PER_CALL: usize = 200;
             const PAGE_SIZE: i32 = 25;
 
             let mut updated_count = 0usize;
@@ -84,13 +83,6 @@ pub async fn update_my_notifications_status_handler(
                         .await?;
 
                     updated_count += 1;
-                    if updated_count >= MAX_UPDATE_PER_CALL {
-                        break;
-                    }
-                }
-
-                if updated_count >= MAX_UPDATE_PER_CALL {
-                    break;
                 }
 
                 if let Some(bm) = next_bookmark {
