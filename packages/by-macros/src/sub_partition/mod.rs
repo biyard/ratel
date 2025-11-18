@@ -1,3 +1,4 @@
+use convert_case::Casing;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Data, DataEnum, DeriveInput, Ident};
@@ -35,6 +36,16 @@ fn generate_enum_impl(ident: Ident, ds: &DataEnum) -> proc_macro2::TokenStream {
                 let struct_name =
                     syn::Ident::new(&format!("{}{}", variant_name, ident), variant_name.span());
 
+                let prefix = syn::LitStr::new(
+                    &format!(
+                        "{}#",
+                        variant_name
+                            .to_string()
+                            .to_case(convert_case::Case::UpperSnake)
+                    ),
+                    variant_name.span(),
+                );
+
                 let struct_def = quote! {
                     #[derive(
                         Debug,
@@ -59,7 +70,13 @@ fn generate_enum_impl(ident: Ident, ds: &DataEnum) -> proc_macro2::TokenStream {
                         type Err = crate::Error;
 
                         fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-                            Ok(#struct_name(s.to_string()))
+                            let s = if s.starts_with(#prefix) {
+                                s.replace(#prefix, "").to_string()
+                            } else {
+                                s.to_string()
+                            };
+
+                            Ok(#struct_name(s))
                         }
                     }
 
