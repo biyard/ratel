@@ -55,6 +55,46 @@ export class RegionalServiceStack extends Stack {
       timeout: cdk.Duration.seconds(30),
     });
 
+    const pollEventSchedulerRole = new iam.Role(
+      this,
+      "PollEventSchedulerRole",
+      {
+        assumedBy: new iam.ServicePrincipal("scheduler.amazonaws.com"),
+      }
+    );
+
+    pollEventSchedulerRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ["lambda:InvokeFunction"],
+        resources: [apiLambda.functionArn],
+      })
+    );
+
+    apiLambda.addEnvironment("POLL_EVENT_LAMBDA_ARN", apiLambda.functionArn);
+    apiLambda.addEnvironment(
+      "POLL_EVENT_ROLE_ARN",
+      pollEventSchedulerRole.roleArn
+    );
+
+    apiLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          "scheduler:CreateSchedule",
+          "scheduler:UpdateSchedule",
+          "scheduler:DeleteSchedule",
+          "scheduler:GetSchedule",
+        ],
+        resources: ["*"],
+      })
+    );
+
+    apiLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ["iam:PassRole"],
+        resources: [pollEventSchedulerRole.roleArn],
+      })
+    );
+
     // --- API Gateway HTTP API ---
     const httpApi = new apigw.HttpApi(this, "HttpApi", {
       apiName: `ratel-api-${this.stackName}`,
@@ -64,7 +104,7 @@ export class RegionalServiceStack extends Stack {
     // Lambda integration
     const lambdaIntegration = new HttpLambdaIntegration(
       "LambdaIntegration",
-      apiLambda,
+      apiLambda
     );
 
     // Add route for all methods and paths
@@ -138,8 +178,8 @@ export class RegionalServiceStack extends Stack {
       target: route53.RecordTarget.fromAlias(
         new r53Targets.ApiGatewayv2DomainProperties(
           domainName.regionalDomainName,
-          domainName.regionalHostedZoneId,
-        ),
+          domainName.regionalHostedZoneId
+        )
       ),
     });
     new route53.AaaaRecord(this, "RegionalAliasV6", {
@@ -148,8 +188,8 @@ export class RegionalServiceStack extends Stack {
       target: route53.RecordTarget.fromAlias(
         new r53Targets.ApiGatewayv2DomainProperties(
           domainName.regionalDomainName,
-          domainName.regionalHostedZoneId,
-        ),
+          domainName.regionalHostedZoneId
+        )
       ),
     });
   }
