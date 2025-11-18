@@ -133,26 +133,28 @@ impl From<MembershipTier> for Partition {
     }
 }
 
-pub fn path_param_string_to_partition<'de, D>(deserializer: D) -> Result<Partition, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s = String::deserialize(deserializer)?;
-
-    let url_decoded = percent_encoding::percent_decode_str(&s)
-        .decode_utf8()
-        .map_err(|e| de::Error::custom(format!("Invalid percent-encoding: {}", e)))?;
-    let url_decoded = url_decoded.into_owned();
-
-    Ok(Partition::from_str(&url_decoded)
-        .map_err(|e| de::Error::custom(format!("Invalid Partition: {}", e)))?)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use serde::de::IntoDeserializer;
     use serde::de::value::{Error as ValueError, StringDeserializer};
+
+    pub fn path_param_string_to_partition<'de, D>(
+        deserializer: D,
+    ) -> std::result::Result<Partition, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+
+        let url_decoded = percent_encoding::percent_decode_str(&s)
+            .decode_utf8()
+            .map_err(|e| de::Error::custom(format!("Invalid percent-encoding: {}", e)))?;
+        let url_decoded = url_decoded.into_owned();
+
+        Ok(Partition::from_str(&url_decoded)
+            .map_err(|e| de::Error::custom(format!("Invalid Partition: {}", e)))?)
+    }
 
     #[test]
     fn test_path_param_valid_poll_space() {
@@ -289,5 +291,62 @@ mod tests {
         let user_partition = UserPartition("debug_test".to_string());
         let debug_output = format!("{:?}", user_partition);
         assert!(debug_output.contains("debug_test"));
+    }
+
+    #[test]
+    fn test_sub_partition_json_object() {
+        use serde_json::json;
+
+        // Test serialization within a JSON object
+        let user_partition = UserPartition("obj_test".to_string());
+        let obj = json!({
+            "user_partition": user_partition,
+            "some_field": "value"
+        });
+
+        let json_str = serde_json::to_string(&obj).unwrap();
+        assert!(json_str.contains(r#""user_partition":"obj_test""#));
+        assert!(json_str.contains(r#""some_field":"value""#));
+
+        // Test deserialization from JSON object
+        let deserialized: serde_json::Value = serde_json::from_str(&json_str).unwrap();
+        let user_partition_value = deserialized.get("user_partition").unwrap();
+        let user_partition_str = user_partition_value.as_str().unwrap();
+        assert_eq!(user_partition_str, "obj_test");
+    }
+
+    #[test]
+    fn test_sub_partition_multiple_types() {
+        // Test that different partition types can coexist
+        let user = UserPartition("user_123".to_string());
+        let space = SpacePartition("space_456".to_string());
+        let session = SessionPartition("session_789".to_string());
+
+        // Convert to Partition enum
+        let user_partition: Partition = user.into();
+        let space_partition: Partition = space.into();
+        let session_partition: Partition = session.into();
+
+        // Verify they have different formats
+        assert_eq!(user_partition.to_string(), "USER#user_123");
+        assert_eq!(space_partition.to_string(), "SPACE#space_456");
+        assert_eq!(session_partition.to_string(), "SESSION#session_789");
+    }
+
+    #[test]
+    fn test_sub_partition_default() {
+        let default_user = UserPartition::default();
+        assert_eq!(default_user.0, "");
+        assert_eq!(default_user.to_string(), "");
+    }
+
+    #[test]
+    fn test_sub_partition_equality() {
+        let user1 = UserPartition("same_id".to_string());
+        let user2 = UserPartition("same_id".to_string());
+        let user3 = UserPartition("different_id".to_string());
+
+        assert_eq!(user1, user2);
+        assert_ne!(user1, user3);
     }
 }
