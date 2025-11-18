@@ -4,10 +4,13 @@ pub mod dynamo_partition;
 pub mod oauth_provider;
 
 pub mod file_type;
+pub mod notification_status;
 pub mod post_status;
 pub mod post_type;
 pub mod space_file_feature_type;
 pub mod visibility;
+
+pub mod email_operation;
 
 pub mod attendee_info;
 pub mod author;
