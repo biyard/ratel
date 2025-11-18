@@ -15,8 +15,12 @@ pub struct EmailTemplate {
 }
 
 impl EmailTemplate {
+    fn should_create_notification(&self) -> bool {
+        !matches!(self.operation, EmailOperation::SignupSecurityCode { .. })
+    }
+
     async fn create_notifications(&self, dynamo: &DynamoClient) -> Result<()> {
-        if self.targets.is_empty() {
+        if self.targets.is_empty() || !self.should_create_notification() {
             return Ok(());
         }
 

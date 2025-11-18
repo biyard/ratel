@@ -26,8 +26,13 @@ pub enum EmailOperation {
         cta_url: String,
     },
     SignupSecurityCode {
-        email: String,
-        code: String,
+        display_name: String,
+        code_1: String,
+        code_2: String,
+        code_3: String,
+        code_4: String,
+        code_5: String,
+        code_6: String,
     },
     StartSurvey {
         space_title: String,
