@@ -23,14 +23,15 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       variant = 'default',
       showRequiredMarker = false,
       placeholder,
+      value,
       ...props
     },
     ref,
   ) => {
     const variantClasses = {
       default:
-        'border-input-box-border bg-input-box-bg dark:bg-input/30 placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50',
-      post: '!bg-post-input-bg !border-post-input-border placeholder:text-[var(--color-post-input-placeholder)] focus-visible:border-post-input-border focus-visible:ring-post-input-border/30',
+        'border-input-box-border bg-input-box-bg dark:bg-input/30 placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 h-9',
+      post: '!bg-post-input-bg !border-post-input-border placeholder:text-[var(--color-post-input-placeholder)] focus-visible:border-post-input-border focus-visible:ring-post-input-border/30 h-12',
     };
 
     // Calculate approximate position based on placeholder length
@@ -42,6 +43,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       return `${baseOffset + placeholder.length * charWidth}rem`;
     };
 
+    // Only show asterisk when field is empty
+    const shouldShowMarker = showRequiredMarker && !value;
+
     return (
       <div className="relative w-full">
         <input
@@ -49,8 +53,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           data-slot="input"
           placeholder={placeholder}
+          value={value}
           className={cn(
-            'flex h-9 w-full min-w-0 rounded-md px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none',
+            'flex w-full min-w-0 rounded-md px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none',
             'text-text-primary file:text-text-primary',
             'file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium',
             'selection:bg-primary selection:text-primary-foreground',
@@ -64,7 +69,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           )}
           {...props}
         />
-        {showRequiredMarker && (
+        {shouldShowMarker && (
           <span
             className="pointer-events-none absolute top-1/2 -translate-y-1/2 text-post-required-marker"
             style={{ left: getMarkerPosition() }}

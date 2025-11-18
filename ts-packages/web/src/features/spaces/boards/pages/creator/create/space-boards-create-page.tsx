@@ -2,7 +2,6 @@ import { useMemo, useState, useRef, useEffect } from 'react';
 import { SpacePathProps } from '@/features/space-path-props';
 import { logger } from '@/lib/logger';
 import { useSpaceBoardsCreateController } from './space-boards-create-controller';
-import Card from '@/components/card';
 import { Input } from '@/components/ui/input';
 import { PostEditor } from '@/features/posts/components/post-editor';
 import { Button } from '@/components/ui/button';
@@ -58,7 +57,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
         alwaysEdit={true}
         className="justify-end"
       />
-      <Card className="w-full">
+      <div className="w-full">
         <div className="grid gap-5 w-full">
           <div className="w-full">
             <Input
@@ -66,8 +65,17 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
               placeholder={t('title_hint')}
               showRequiredMarker
               value={ctrl.title.get()}
-              onChange={(e) => ctrl.handleTitle(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value.length <= 80) {
+                  ctrl.handleTitle(value);
+                }
+              }}
+              maxLength={80}
             />
+            <div className="flex justify-end mt-1 text-sm text-[var(--color-post-input-counter)]">
+              {ctrl.title.get().length}/80
+            </div>
           </div>
 
           <div>
@@ -75,6 +83,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
               <Input
                 variant="post"
                 showRequiredMarker
+                className="rounded-[100px]"
                 ref={inputRef}
                 value={ctrl.categoryName.get()}
                 onChange={(e) => {
@@ -216,7 +225,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
             </Button>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

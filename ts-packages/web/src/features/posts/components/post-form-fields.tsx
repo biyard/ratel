@@ -87,7 +87,7 @@ export function PostFormFields(props: PostFormFieldsProps) {
             url={imageUrl}
             onImageUpload={onImageUpload}
             onRemoveImage={onRemoveImage}
-            className="!bg-post-input-bg [&_.tiptap-editor_.ProseMirror_p.is-editor-empty:first-child::before]:!text-gray-600 !border-post-input-border !rounded-md focus-within:!border-ring focus-within:!ring-ring/50 focus-within:!ring-[1px]"
+            className="!bg-post-input-bg [&_.tiptap-editor_.ProseMirror_p.is-editor-empty:first-child::before]:!text-[var(--color-post-input-placeholder)] !border-post-input-border !rounded-md focus-within:!border-ring focus-within:!ring-ring/50 focus-within:!ring-[1px]"
             toolbarClassName="!bg-post-input-bg !border-b-0"
           />
 

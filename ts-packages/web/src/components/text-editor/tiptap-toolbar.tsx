@@ -295,10 +295,16 @@ export const TiptapToolbar = ({
     post: 'from-[var(--color-post-input-bg)] to-transparent hover:from-[var(--color-post-input-bg)]/95',
   };
 
+  const borderClasses = {
+    default: 'border-b border-border',
+    post: 'after:content-[""] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-[95%] after:h-[1px] after:bg-[var(--color-post-input-border)]/30',
+  };
+
   return (
     <div
       className={cn(
-        'relative border-b border-border',
+        'relative',
+        borderClasses[variant],
         variantClasses[variant],
         className,
       )}
