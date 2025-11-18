@@ -46,7 +46,7 @@ pub async fn delete_poll_handler(
         txs.push(SpaceRequirement::delete_transact_write_item(&pk, &sk));
     }
     let cli = &dynamo.client;
-    transact_write_items!(cli, txs);
+    transact_write_items!(cli, txs)?;
 
     Ok(Json(DeletePollSpaceResponse {
         status: "success".to_string(),
