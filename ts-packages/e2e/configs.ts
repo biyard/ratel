@@ -19,35 +19,43 @@ export const ADMIN_ACCOUNTS = {
 
 export const USER_ACCOUNTS = {
   USER1: {
-    email: process.env.RATEL_TEST_USER1_EMAIL || "hi+user1@biyard.co",
+    email: "hi+user1@biyard.co",
+    username: "user1",
     password: process.env.RATEL_TEST_USER_PASSWORD || "",
   },
   USER2: {
-    email: process.env.RATEL_TEST_USER2_EMAIL || "hi+user2@biyard.co",
+    email: "hi+user2@biyard.co",
+    username: "user2",
     password: process.env.RATEL_TEST_USER_PASSWORD || "",
   },
   USER3: {
-    email: process.env.RATEL_TEST_USER3_EMAIL || "hi+user3@biyard.co",
+    email: "hi+user3@biyard.co",
+    username: "user3",
     password: process.env.RATEL_TEST_USER_PASSWORD || "",
   },
   USER4: {
-    email: process.env.RATEL_TEST_USER4_EMAIL || "hi+user4@biyard.co",
+    email: "hi+user4@biyard.co",
+    username: "user4",
     password: process.env.RATEL_TEST_USER_PASSWORD || "",
   },
   USER5: {
-    email: process.env.RATEL_TEST_USER5_EMAIL || "hi+user5@biyard.co",
+    email: "hi+user5@biyard.co",
+    username: "user5",
     password: process.env.RATEL_TEST_USER_PASSWORD || "",
   },
   USER6: {
-    email: process.env.RATEL_TEST_USER6_EMAIL || "hi+user6@biyard.co",
+    email: "hi+user6@biyard.co",
+    username: "user6",
     password: process.env.RATEL_TEST_USER_PASSWORD || "",
   },
   USER7: {
-    email: process.env.RATEL_TEST_USER7_EMAIL || "hi+user7@biyard.co",
+    email: "hi+user7@biyard.co",
+    username: "user7",
     password: process.env.RATEL_TEST_USER_PASSWORD || "",
   },
   USER8: {
-    email: process.env.RATEL_TEST_USER8_EMAIL || "hi+user8@biyard.co",
+    email: "hi+user8@biyard.co",
+    username: "user8",
     password: process.env.RATEL_TEST_USER_PASSWORD || "",
   },
 };

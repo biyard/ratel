@@ -56,6 +56,63 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
   }'
 
+# Create Attribute Codes
+echo 'Creating attribute codes...'
+
+# Attribute Code 1 - 건국대 여자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "ATTRIBUTE_CODE#wKFegq"},
+    "sk": {"S": "ATTRIBUTE_CODE"},
+    "created_at": {"N": "'${TIMESTAMP}'"},
+    "university": {"S": "Konkuk"},
+    "gender": {"S": "female"},
+    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
+    "gsi1_sk": {"S": "AC#'${TIMESTAMP}'"}
+  }'
+
+# Attribute Code 2 - 건국대 남자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "ATTRIBUTE_CODE#bVn0Vq"},
+    "sk": {"S": "ATTRIBUTE_CODE"},
+    "created_at": {"N": "'$((TIMESTAMP + 1000))'"},
+    "university": {"S": "Konkuk"},
+    "gender": {"S": "male"},
+    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
+    "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 1000))'"}
+  }'
+
+# Attribute Code 3 - 서강대 여자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "ATTRIBUTE_CODE#bIFviB"},
+    "sk": {"S": "ATTRIBUTE_CODE"},
+    "created_at": {"N": "'$((TIMESTAMP + 2000))'"},
+    "university": {"S": "Sogang"},
+    "gender": {"S": "female"},
+    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
+    "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 2000))'"}
+  }'
+
+# Attribute Code 4 - 서강대 남자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "ATTRIBUTE_CODE#j94EA1"},
+    "sk": {"S": "ATTRIBUTE_CODE"},
+    "created_at": {"N": "'$((TIMESTAMP + 3000))'"},
+    "university": {"S": "Sogang"},
+    "gender": {"S": "male"},
+    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
+    "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 3000))'"}
+  }'
+
+echo 'Attribute codes created successfully'
+
 # Test Users for Public Deliberation
 echo 'Creating test users...'
 
@@ -80,13 +137,22 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "followers_count": {"N": "0"},
     "followings_count": {"N": "0"},
     "description": {"S": "서강대 남자"},
-    "attribute_code": {"S": "j94EA1"},
     "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user1@biyard.co"},
     "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
     "gsi2_pk": {"S": "USERNAME#user1"},
     "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
     "gsi3_pk": {"S": "EMAIL#hi+user1@biyard.co"},
     "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
+  }'
+
+# VerifiedAttributes for user1 - 서강대 남자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "USER#00000000-0000-0000-0000-000000000011##ATTRIBUTES"},
+    "sk": {"S": "VERIFIED_ATTRIBUTES"},
+    "gender": {"S": "male"},
+    "university": {"S": "Sogang"}
   }'
 
 # user2 - 서강대 남자 (j94EA1)
@@ -110,13 +176,22 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "followers_count": {"N": "0"},
     "followings_count": {"N": "0"},
     "description": {"S": "서강대 남자"},
-    "attribute_code": {"S": "j94EA1"},
     "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user2@biyard.co"},
     "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
     "gsi2_pk": {"S": "USERNAME#user2"},
     "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
     "gsi3_pk": {"S": "EMAIL#hi+user2@biyard.co"},
     "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
+  }'
+
+# VerifiedAttributes for user2 - 서강대 남자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "USER#00000000-0000-0000-0000-000000000012##ATTRIBUTES"},
+    "sk": {"S": "VERIFIED_ATTRIBUTES"},
+    "gender": {"S": "male"},
+    "university": {"S": "Sogang"}
   }'
 
 # user3 - 서강대 여자 (bIFviB)
@@ -140,13 +215,22 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "followers_count": {"N": "0"},
     "followings_count": {"N": "0"},
     "description": {"S": "서강대 여자"},
-    "attribute_code": {"S": "bIFviB"},
     "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user3@biyard.co"},
     "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
     "gsi2_pk": {"S": "USERNAME#user3"},
     "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
     "gsi3_pk": {"S": "EMAIL#hi+user3@biyard.co"},
     "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
+  }'
+
+# VerifiedAttributes for user3 - 서강대 여자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "USER#00000000-0000-0000-0000-000000000013##ATTRIBUTES"},
+    "sk": {"S": "VERIFIED_ATTRIBUTES"},
+    "gender": {"S": "female"},
+    "university": {"S": "Sogang"}
   }'
 
 # user4 - 서강대 여자 (bIFviB)
@@ -170,13 +254,22 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "followers_count": {"N": "0"},
     "followings_count": {"N": "0"},
     "description": {"S": "서강대 여자"},
-    "attribute_code": {"S": "bIFviB"},
     "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user4@biyard.co"},
     "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
     "gsi2_pk": {"S": "USERNAME#user4"},
     "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
     "gsi3_pk": {"S": "EMAIL#hi+user4@biyard.co"},
     "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
+  }'
+
+# VerifiedAttributes for user4 - 서강대 여자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "USER#00000000-0000-0000-0000-000000000014##ATTRIBUTES"},
+    "sk": {"S": "VERIFIED_ATTRIBUTES"},
+    "gender": {"S": "female"},
+    "university": {"S": "Sogang"}
   }'
 
 # user5 - 건국대 남자 (bVn0Vq)
@@ -200,13 +293,22 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "followers_count": {"N": "0"},
     "followings_count": {"N": "0"},
     "description": {"S": "건국대 남자"},
-    "attribute_code": {"S": "bVn0Vq"},
     "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user5@biyard.co"},
     "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
     "gsi2_pk": {"S": "USERNAME#user5"},
     "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
     "gsi3_pk": {"S": "EMAIL#hi+user5@biyard.co"},
     "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
+  }'
+
+# VerifiedAttributes for user5 - 건국대 남자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "USER#00000000-0000-0000-0000-000000000015##ATTRIBUTES"},
+    "sk": {"S": "VERIFIED_ATTRIBUTES"},
+    "gender": {"S": "male"},
+    "university": {"S": "Konkuk"}
   }'
 
 # user6 - 건국대 남자 (bVn0Vq)
@@ -230,13 +332,22 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "followers_count": {"N": "0"},
     "followings_count": {"N": "0"},
     "description": {"S": "건국대 남자"},
-    "attribute_code": {"S": "bVn0Vq"},
     "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user6@biyard.co"},
     "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
     "gsi2_pk": {"S": "USERNAME#user6"},
     "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
     "gsi3_pk": {"S": "EMAIL#hi+user6@biyard.co"},
     "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
+  }'
+
+# VerifiedAttributes for user6 - 건국대 남자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "USER#00000000-0000-0000-0000-000000000016##ATTRIBUTES"},
+    "sk": {"S": "VERIFIED_ATTRIBUTES"},
+    "gender": {"S": "male"},
+    "university": {"S": "Konkuk"}
   }'
 
 # user7 - 건국대 여자 (wKFegq)
@@ -260,13 +371,22 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "followers_count": {"N": "0"},
     "followings_count": {"N": "0"},
     "description": {"S": "건국대 여자"},
-    "attribute_code": {"S": "wKFegq"},
     "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user7@biyard.co"},
     "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
     "gsi2_pk": {"S": "USERNAME#user7"},
     "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
     "gsi3_pk": {"S": "EMAIL#hi+user7@biyard.co"},
     "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
+  }'
+
+# VerifiedAttributes for user7 - 건국대 여자
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "USER#00000000-0000-0000-0000-000000000017##ATTRIBUTES"},
+    "sk": {"S": "VERIFIED_ATTRIBUTES"},
+    "gender": {"S": "female"},
+    "university": {"S": "Konkuk"}
   }'
 
 # user8 - 속성검증 미수행
@@ -319,13 +439,21 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "followers_count": {"N": "0"},
     "followings_count": {"N": "0"},
     "description": {"S": "건국대 여자"},
-    "attribute_code": {"S": "wKFegq"},
     "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+anon1@biyard.co"},
     "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
     "gsi2_pk": {"S": "USERNAME#anon1"},
     "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
     "gsi3_pk": {"S": "EMAIL#hi+anon1@biyard.co"},
     "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
+  }'
+
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "USER#00000000-0000-0000-0000-000000000019##ATTRIBUTES"},
+    "sk": {"S": "VERIFIED_ATTRIBUTES"},
+    "gender": {"S": "female"},
+    "university": {"S": "Konkuk"}
   }'
 
 # admin1 - 공론조사 관리자1
@@ -494,79 +622,23 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
             "gsi1_sk": {"S": "-4611686018420032497"}
         }'
 
-# Create Attribute Codes
-echo 'Creating attribute codes...'
-
-# Attribute Code 1 - 건국대 여자
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "ATTRIBUTE_CODE#wKFegq"},
-    "sk": {"S": "ATTRIBUTE_CODE"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "university": {"S": "Konkuk"},
-    "gender": {"S": "female"},
-    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
-    "gsi1_sk": {"S": "AC#'${TIMESTAMP}'"}
-  }'
-
-# Attribute Code 2 - 건국대 남자
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "ATTRIBUTE_CODE#bVn0Vq"},
-    "sk": {"S": "ATTRIBUTE_CODE"},
-    "created_at": {"N": "'$((TIMESTAMP + 1000))'"},
-    "university": {"S": "Konkuk"},
-    "gender": {"S": "male"},
-    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
-    "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 1000))'"}
-  }'
-
-# Attribute Code 3 - 서강대 여자
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "ATTRIBUTE_CODE#bIFviB"},
-    "sk": {"S": "ATTRIBUTE_CODE"},
-    "created_at": {"N": "'$((TIMESTAMP + 2000))'"},
-    "university": {"S": "Sogang"},
-    "gender": {"S": "female"},
-    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
-    "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 2000))'"}
-  }'
-
-# Attribute Code 4 - 서강대 남자
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "ATTRIBUTE_CODE#j94EA1"},
-    "sk": {"S": "ATTRIBUTE_CODE"},
-    "created_at": {"N": "'$((TIMESTAMP + 3000))'"},
-    "university": {"S": "Sogang"},
-    "gender": {"S": "male"},
-    "gsi1_pk": {"S": "AC#ATTRIBUTE_CODE"},
-    "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 3000))'"}
-  }'
-
-echo 'Attribute codes created successfully'
 
 echo '======================================'
 echo 'LocalStack initialization completed!'
 echo '======================================'
 echo ''
 echo 'Test Users Created:'
-echo '  user1: hi+user1@biyard.co / user!234 (서강대 남자 - j94EA1)'
-echo '  user2: hi+user2@biyard.co / user!234 (서강대 남자 - j94EA1)'
-echo '  user3: hi+user3@biyard.co / user!234 (서강대 여자 - bIFviB)'
-echo '  user4: hi+user4@biyard.co / user!234 (서강대 여자 - bIFviB)'
-echo '  user5: hi+user5@biyard.co / user!234 (건국대 남자 - bVn0Vq)'
-echo '  user6: hi+user6@biyard.co / user!234 (건국대 남자 - bVn0Vq)'
-echo '  user7: hi+user7@biyard.co / user!234 (건국대 여자 - wKFegq)'
-echo '  user8: hi+user8@biyard.co / user!234 (속성검증 미수행)'
-echo '  anon1: hi+anon1@biyard.co / user!234 (비참여자 - wKFegq)'
-echo '  admin1: hi+admin1@biyard.co / user!234 (공론조사 관리자)'
-echo '  admin2: hi+admin2@biyard.co / user!234 (공론조사 관리자)'
+echo '  user1: hi+user1@biyard.co / admin!234 (서강대 남자 - j94EA1)'
+echo '  user2: hi+user2@biyard.co / admin!234 (서강대 남자 - j94EA1)'
+echo '  user3: hi+user3@biyard.co / admin!234 (서강대 여자 - bIFviB)'
+echo '  user4: hi+user4@biyard.co / admin!234 (서강대 여자 - bIFviB)'
+echo '  user5: hi+user5@biyard.co / admin!234 (건국대 남자 - bVn0Vq)'
+echo '  user6: hi+user6@biyard.co / admin!234 (건국대 남자 - bVn0Vq)'
+echo '  user7: hi+user7@biyard.co / admin!234 (건국대 여자 - wKFegq)'
+echo '  user8: hi+user8@biyard.co / admin!234 (속성검증 미수행)'
+echo '  anon1: hi+anon1@biyard.co / admin!234 (비참여자 - wKFegq)'
+echo '  admin1: hi+admin1@biyard.co / admin!234 (공론조사 관리자)'
+echo '  admin2: hi+admin2@biyard.co / admin!234 (공론조사 관리자)'
 echo ''
 echo 'System Admin:'
 echo '  Email: admin@ratel.foundation'
