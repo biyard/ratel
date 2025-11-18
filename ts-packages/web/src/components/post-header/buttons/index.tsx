@@ -78,7 +78,7 @@ function SaveButton({
 function PublishSpaceButton({ onClick }: { onClick: () => void }) {
   const { t } = useTranslation('SprintSpace');
   return (
-    <ButtonWithIcon onClick={onClick}>
+    <ButtonWithIcon onClick={onClick} data-testid="publish-space-button">
       <ArrowUp className="stroke-neutral-500 [&>path]:stroke-2 " />
       <div>{t('publish')}</div>
     </ButtonWithIcon>

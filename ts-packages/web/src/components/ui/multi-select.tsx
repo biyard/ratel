@@ -69,6 +69,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
           role="combobox"
           aria-expanded={open}
           disabled={disabled}
+          data-testid="multi-select-trigger"
           className={cn(
             'justify-between gap-2',
             !selectedOptions.length && 'text-muted-foreground',
@@ -122,6 +123,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
                     <CommandItem
                       key={opt.value}
                       onSelect={() => toggleValue(opt.value)}
+                      data-testid={`multi-select-option-${opt.value}`}
                       className="flex gap-2 justify-between items-center"
                     >
                       <span>{opt.label}</span>

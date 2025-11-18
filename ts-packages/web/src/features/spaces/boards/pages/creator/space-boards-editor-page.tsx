@@ -13,9 +13,13 @@ export function SpaceBoardsEditorPage({ spacePk }: SpacePathProps) {
   return (
     <div className="w-full">
       <div className="flex flex-row w-full items-end justify-end mb-6">
-        <Button variant="primary" onClick={ctrl.handleCreatePage}>
+        <Button
+          variant="primary"
+          onClick={ctrl.handleCreatePage}
+          data-testid="board-btn-create-board"
+        >
           <div className="flex flex-row w-fit gap-2">
-            <Add className="w-4 h-4 [&>path]:stroke-2 mt-[2px]" />
+            <Add className="w-4 h-4 [&>path]:stroke-2 mt-0.5" />
             {t('create_post')}
           </div>
         </Button>
