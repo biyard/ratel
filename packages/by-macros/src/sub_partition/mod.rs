@@ -31,7 +31,80 @@ fn generate_enum_impl(ident: Ident, ds: &DataEnum) -> proc_macro2::TokenStream {
         let variant_name = &variant.ident;
 
         // Only process variants with exactly one String field
-        if let syn::Fields::Unnamed(fields) = &variant.fields {
+        if let syn::Fields::Unit = &variant.fields {
+            let struct_name =
+                syn::Ident::new(&format!("{}{}", variant_name, ident), variant_name.span());
+
+            let prefix = syn::LitStr::new(
+                &format!(
+                    "{}",
+                    variant_name
+                        .to_string()
+                        .to_case(convert_case::Case::UpperSnake)
+                ),
+                variant_name.span(),
+            );
+
+            let struct_def = quote! {
+                #[derive(
+                    Debug,
+                    Clone,
+                    serde_with::SerializeDisplay,
+                    serde_with::DeserializeFromStr,
+                    Default,
+                    schemars::JsonSchema,
+                    PartialEq,
+                    Eq,
+                    aide::OperationIo,
+                )]
+                pub struct #struct_name;
+
+                impl std::fmt::Display for #struct_name {
+                    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        write!(f, "{}", #prefix)
+                    }
+                }
+
+                impl std::str::FromStr for #struct_name {
+                    type Err = crate::Error;
+
+                    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
+                        if s == #prefix {
+                            Ok(#struct_name)
+                        } else {
+                            Err(Self::Err::InvalidPartitionKey(format!("{} must be {}", stringify!(#struct_name), #prefix)))
+                        }
+                    }
+                }
+
+                impl Into<#ident> for #struct_name {
+                    fn into(self) -> #ident {
+                        #ident::#variant_name
+                    }
+                }
+
+                impl From<#ident> for #struct_name {
+                    fn from(partition: #ident) -> Self {
+                        match partition {
+                            #ident::#variant_name => Self,
+                            _ => Self,
+                        }
+                    }
+                }
+
+                impl From<String> for #struct_name {
+                    fn from(s: String) -> Self {
+                        if &s == #prefix {
+                            #struct_name
+                        } else {
+                            panic!("{}", format!("{} must be {}", stringify!(#struct_name), #prefix))
+                        }
+                    }
+                }
+            };
+
+            struct_defs.push(struct_def);
+        } else if let syn::Fields::Unnamed(fields) = &variant.fields {
             if fields.unnamed.len() == 1 {
                 let struct_name =
                     syn::Ident::new(&format!("{}{}", variant_name, ident), variant_name.span());
