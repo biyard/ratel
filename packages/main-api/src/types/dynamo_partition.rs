@@ -16,6 +16,7 @@ use super::EntityType;
     DeserializeFromStr,
     Default,
     DynamoEnum,
+    SubPartition,
     JsonSchema,
     PartialEq,
     Eq,
@@ -166,5 +167,32 @@ mod tests {
             String::from("FEED%ZZ").into_deserializer();
         let result = path_param_string_to_partition(deserializer);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_sub_partition_user() {
+        let user_partition = UserPartition("123".to_string());
+        assert_eq!(user_partition.to_string(), "USER#123");
+
+        let partition: Partition = user_partition.into();
+        assert_eq!(partition, Partition::User("123".to_string()));
+        assert_eq!(partition.to_string(), "USER#123");
+    }
+
+    #[test]
+    fn test_sub_partition_space() {
+        let space_partition = SpacePartition("space456".to_string());
+        assert_eq!(space_partition.to_string(), "SPACE#space456");
+
+        let partition: Partition = space_partition.into();
+        assert_eq!(partition, Partition::Space("space456".to_string()));
+        assert_eq!(partition.to_string(), "SPACE#space456");
+    }
+
+    #[test]
+    fn test_sub_partition_from_str() {
+        let user_partition = UserPartition::from_str("test123").unwrap();
+        assert_eq!(user_partition.0, "test123");
+        assert_eq!(user_partition.to_string(), "USER#test123");
     }
 }
