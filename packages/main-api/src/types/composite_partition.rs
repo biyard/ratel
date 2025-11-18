@@ -17,6 +17,12 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 )]
 pub struct CompositePartition<T = Partition, S = Partition>(pub T, pub S);
 
+impl CompositePartition {
+    pub fn user_payment_pk(user_pk: Partition) -> Self {
+        CompositePartition(user_pk, Partition::Payment)
+    }
+}
+
 impl<T, S> Display for CompositePartition<T, S>
 where
     T: Display,
