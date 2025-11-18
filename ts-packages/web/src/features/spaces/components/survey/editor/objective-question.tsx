@@ -135,8 +135,9 @@ export default function ObjectiveQuestionEditor({
           )}
 
           <Input
-            className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 light:text-text-primary rounded-none"
+            className="border-b border-transparent border-b-white! focus:border-transparent! focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 light:text-text-primary rounded-none"
             type="text"
+            data-testid="question-option-input"
             placeholder={t('option_input_placeholder')}
             value={opt}
             onChange={(e) => handleUpdateOption(idx, e.target.value)}
@@ -168,6 +169,7 @@ export default function ObjectiveQuestionEditor({
 
       <button
         onClick={() => handleAddOption(true)}
+        data-testid="poll-answer-btn-add-option"
         className="mt-2 text-sm font-semibold text-left cursor-pointer text-neutral-500"
       >
         + {t('add_option_button_label')}

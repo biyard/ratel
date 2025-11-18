@@ -84,6 +84,7 @@ export default function MobileSideMenu({
         to={route.mySpaces()}
         onClick={onClose}
         className="w-full px-3 py-2.5 hover:bg-hover rounded-md text-base text-text-primary-muted"
+        data-testid="my-spaces-link"
       >
         {userSidemenuT.my_spaces}
       </NavLink>

@@ -51,7 +51,8 @@ export const PopupZone = () => {
       >
         {closable && (
           <button
-            className="group absolute top-[25px] right-[25px] rounded-[4px] cursor-pointer bg-transparent hover:bg-secondary"
+            data-testid="popup-close-button"
+            className="group absolute top-[25px] right-[25px] rounded-sm cursor-pointer bg-transparent hover:bg-secondary"
             onClick={() => popup.close()}
           >
             <RemoveIcon className="[&>path]:stroke-neutral-80 group-hover:[&>path]:stroke-text-primary" />

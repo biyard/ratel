@@ -86,6 +86,7 @@ export default function LoginForm({
             </button>
           </NavLink>
           <Button
+            data-testid="login-button"
             variant="rounded_secondary"
             size="sm"
             onClick={async () => {

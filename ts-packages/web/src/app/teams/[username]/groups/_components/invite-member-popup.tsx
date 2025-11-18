@@ -199,8 +199,9 @@ export default function InviteMemberPopup({
         <div className="font-bold text-[15px]/[28px] text-modal-label-text">
           {t('email_label')}
         </div>
-        <div className="mt-[10px]">
+        <div className="mt-2.5">
           <SearchInput
+            data-testid="invite-member-search-input"
             value={searchValue}
             placeholder={t('email_hint')}
             setValue={(value) => {
@@ -259,6 +260,7 @@ function InviteMemberButton({
   return (
     <div className="flex flex-col w-full">
       <div
+        data-testid="send-invite-button"
         className={containerClass}
         onClick={() => {
           if (!disabled) {

@@ -55,6 +55,12 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
             <div
               key={`${answer_type}-${optionIdx}`}
               className="flex flex-row gap-3 justify-start items-center w-full h-fit"
+              onClick={(evt) => {
+                if (!disabled) {
+                  evt.stopPropagation();
+                  onSelect(optionIdx);
+                }
+              }}
             >
               <div className="w-4.5 h-4.5">
                 <CustomCheckbox
@@ -66,7 +72,7 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
 
               {isOther ? (
                 <Input
-                  className="border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 light:text-text-primary rounded-none"
+                  className="border-b border-transparent border-b-white! focus:border-transparent! focus:rounded-md font-normal text-base/[24px] placeholder:text-neutral-600 text-neutral-300 light:text-text-primary rounded-none"
                   type="text"
                   placeholder={'Input the option.'}
                   value={otherValue ?? ''}

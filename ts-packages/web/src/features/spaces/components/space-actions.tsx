@@ -75,6 +75,7 @@ export function SpaceActionDropdown({
             <div className="w-full">
               <Button
                 aria-role={firstAction.label}
+                data-testid="space-action-button"
                 variant="rounded_secondary"
                 className="w-full rounded-r-none !important text-[#262626]"
                 onPointerDown={(e) => {
