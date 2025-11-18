@@ -1,5 +1,5 @@
-import { createContext, useContext } from 'react';
-import { Outlet, useLocation, useParams, useNavigate } from 'react-router';
+import { createContext, useMemo, useState } from 'react';
+import { Outlet, useLocation, useParams } from 'react-router';
 import {
   SpaceHomeController,
   useSpaceHomeController,
@@ -15,10 +15,12 @@ import {
 import TimelineMenu from '@/features/spaces/components/side-menu/timeline';
 import { SpaceActions } from '@/features/spaces/components/space-actions';
 import SpaceParticipantProfile from '@/features/spaces/components/space-participant-profile';
-import { cn } from '@/lib/utils';
 import { useSpaceLayoutContext } from './use-space-layout-context';
 import { Requirements } from '@/features/spaces/components/requirements';
 import { SafeArea } from '@/components/ui/safe-area';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
+import SpaceMobileHeader from '@/features/spaces/components/space-mobile-header';
 
 export const Context = createContext<SpaceHomeController | undefined>(
   undefined,
@@ -28,10 +30,49 @@ function GeneralLayout() {
   const ctrl = useSpaceLayoutContext();
   const location = useLocation();
   const showInfo = !/\/boards\/posts(\/|$)/.test(location.pathname);
+  const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
+
+  const participantProfileProps =
+    !ctrl.space.isAdmin() &&
+    ctrl.space.participated &&
+    ctrl.space.participantDisplayName &&
+    ctrl.space.participantProfileUrl &&
+    ctrl.space.participantUsername
+      ? {
+          displayName: ctrl.space.participantDisplayName,
+          profileUrl: ctrl.space.participantProfileUrl,
+          username: ctrl.space.participantUsername,
+        }
+      : null;
+
+  const currentTab = useMemo(() => {
+    const ret = ctrl.menus
+      ?.filter((menu) => menu.label !== 'Overview')
+      .find((menu) => {
+        return location.pathname.startsWith(menu.to);
+      });
+
+    // If no match found, return Overview menu
+    if (!ret) {
+      return ctrl.menus?.find((menu) => menu.label === 'Overview');
+    }
+
+    return ret;
+  }, [ctrl.menus, location.pathname]);
 
   return (
-    <Row>
+    <Row className="max-mobile:gap-1">
       <Col className="gap-4 w-full">
+        {/* Mobile Header */}
+        {isMobile && (
+          <SpaceMobileHeader
+            participantProfile={participantProfileProps ?? undefined}
+            currentTab={currentTab}
+            onMenuClick={() => setSheetOpen(true)}
+          />
+        )}
+
         {showInfo && (
           <Col className="gap-4 w-full">
             <TitleSection
@@ -61,29 +102,51 @@ function GeneralLayout() {
         <Outlet />
       </Col>
 
-      <Col className={cn('gap-2.5 w-full transition-all max-w-[250px]')}>
-        {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
+      {/* Desktop Side Menu */}
+      {!isMobile && (
+        <Col className="gap-2.5 w-full max-w-[250px]">
+          {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
 
-        {!ctrl.space.isAdmin() &&
-          ctrl.space.participated &&
-          ctrl.space.participantDisplayName &&
-          ctrl.space.participantProfileUrl &&
-          ctrl.space.participantUsername && (
-            <SpaceParticipantProfile
-              displayName={ctrl.space.participantDisplayName}
-              profileUrl={ctrl.space.participantProfileUrl}
-              username={ctrl.space.participantUsername}
-            />
+          {participantProfileProps && (
+            <SpaceParticipantProfile {...participantProfileProps} />
           )}
 
-        <SpaceSideMenu menus={ctrl.menus} />
-        <TimelineMenu
-          isEditing={false}
-          handleSetting={() => {}}
-          items={ctrl.timelineItems}
-          titleLabel={ctrl.t('timeline_title')}
-        />
-      </Col>
+          <SpaceSideMenu menus={ctrl.menus} />
+
+          <TimelineMenu
+            isEditing={false}
+            handleSetting={() => {}}
+            items={ctrl.timelineItems}
+            titleLabel={ctrl.t('timeline_title')}
+          />
+        </Col>
+      )}
+
+      {/* Mobile sheet with full content */}
+      {isMobile && (
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetContent side="right" className="w-full overflow-y-auto p-5">
+            <Col className="gap-4 mt-4" onClick={() => setSheetOpen(false)}>
+              {ctrl.actions.length > 0 && (
+                <SpaceActions actions={ctrl.actions} />
+              )}
+
+              {participantProfileProps && (
+                <SpaceParticipantProfile {...participantProfileProps} />
+              )}
+
+              <SpaceSideMenu menus={ctrl.menus} />
+
+              <TimelineMenu
+                isEditing={false}
+                handleSetting={() => {}}
+                items={ctrl.timelineItems}
+                titleLabel={ctrl.t('timeline_title')}
+              />
+            </Col>
+          </SheetContent>
+        </Sheet>
+      )}
     </Row>
   );
 }
