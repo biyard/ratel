@@ -1,6 +1,10 @@
-use crate::email_operation::EmailOperation;
 use crate::utils::aws::SesClient;
 use crate::*;
+use crate::{
+    email_operation::EmailOperation, features::notification::Notification, models::user::User,
+    utils::aws::DynamoClient,
+};
+use aws_sdk_dynamodb::types::TransactWriteItem;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value as JsonValue, json};
 
@@ -11,7 +15,8 @@ pub struct EmailTemplate {
 }
 
 impl EmailTemplate {
-    pub async fn send_email(&self, ses: &SesClient) -> Result<()> {
+    #[allow(unused_variables)]
+    pub async fn send_email(&self, dynamo: &DynamoClient, ses: &SesClient) -> Result<()> {
         #[cfg(any(test, feature = "no-secret"))]
         {
             let _ = ses;
@@ -42,6 +47,39 @@ impl EmailTemplate {
             ses.send_bulk_with_template(template_name, &recipients)
                 .await
                 .map_err(|e| Error::AwsSesSendEmailException(e.to_string()))?;
+
+            let mut tx_items: Vec<TransactWriteItem> = Vec::new();
+
+            for email in &self.targets {
+                let opt = User::opt_one();
+                let (users, _) =
+                    User::find_by_email(&dynamo.client, email.to_string(), opt).await?;
+
+                if let Some(user) = users.into_iter().next() {
+                    let noti = Notification::new(self.operation.clone(), user);
+                    let tx = noti.create_transact_write_item();
+                    tx_items.push(tx);
+                } else {
+                    tracing::warn!(
+                        "no user found for email={}, skip notification creation",
+                        email
+                    );
+                }
+            }
+
+            if tx_items.is_empty() {
+                return Ok(());
+            }
+
+            for chunk in tx_items.chunks(25) {
+                dynamo
+                    .client
+                    .transact_write_items()
+                    .set_transact_items(Some(chunk.to_vec()))
+                    .send()
+                    .await
+                    .map_err(|e| Error::DynamoDbError(e.into()))?;
+            }
 
             Ok(())
         }
