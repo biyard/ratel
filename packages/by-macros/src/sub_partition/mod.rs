@@ -36,6 +36,17 @@ fn generate_enum_impl(ident: Ident, ds: &DataEnum) -> proc_macro2::TokenStream {
                     syn::Ident::new(&format!("{}{}", variant_name, ident), variant_name.span());
 
                 let struct_def = quote! {
+                    #[derive(
+                        Debug,
+                        Clone,
+                        serde_with::SerializeDisplay,
+                        serde_with::DeserializeFromStr,
+                        Default,
+                        schemars::JsonSchema,
+                        PartialEq,
+                        Eq,
+                        aide::OperationIo,
+                    )]
                     pub struct #struct_name(pub String);
 
                     impl std::fmt::Display for #struct_name {
