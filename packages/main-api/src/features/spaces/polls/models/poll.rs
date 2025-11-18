@@ -1,10 +1,17 @@
 use crate::{
+    Error,
     config::{self, Config},
-    types::*,
-    utils::time::get_now_timestamp_millis,
+    models::{SpaceCommon, email_template::email_template::EmailTemplate},
+    types::{email_operation::EmailOperation, *},
+    utils::{
+        aws::{DynamoClient, SesClient},
+        html::start_survey_html,
+        time::get_now_timestamp_millis,
+    },
 };
 // use aws_sdk_sts::Client as StsClient;
 use bdk::prelude::*;
+use by_axum::axum::Json;
 
 use crate::features::spaces::polls::PollStatus;
 #[derive(
@@ -38,6 +45,50 @@ pub struct Poll {
 }
 
 impl Poll {
+    pub async fn send_email(
+        dynamo: &DynamoClient,
+        ses: &SesClient,
+        space: SpaceCommon,
+        title: String,
+        user_emails: Vec<String>,
+        is_default: bool,
+    ) -> Result<Json<()>, Error> {
+        let mut domain = crate::config::get().domain.to_string();
+        if domain.contains("localhost") {
+            domain = format!("http://{}", domain).to_string();
+        } else {
+            domain = format!("https://{}", domain).to_string();
+        }
+
+        let space_id = match space.pk.clone() {
+            Partition::Space(v) => v.to_string(),
+            _ => "".to_string(),
+        };
+
+        let url = format!("{}/spaces/SPACE%23{}", domain, space_id);
+        let survey_title = if is_default {
+            "Pre Poll Survey"
+        } else {
+            "Final Survey"
+        };
+
+        let email = EmailTemplate {
+            targets: user_emails.clone(),
+            operation: EmailOperation::StartSurvey {
+                space_title: title,
+                survey_title: survey_title.to_string(),
+                author_profile: space.author_profile_url,
+                author_display_name: space.author_display_name,
+                author_username: space.author_username,
+                connect_link: url,
+            },
+        };
+
+        email.send_email(&dynamo, &ses).await?;
+
+        Ok(Json(()))
+    }
+
     pub fn new(pk: Partition, sk: Option<EntityType>) -> crate::Result<Self> {
         if !matches!(pk, Partition::Space(_)) {
             return Err(crate::Error::InvalidPartitionKey(

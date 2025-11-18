@@ -27,8 +27,15 @@ pub enum EmailOperation {
     },
     SignupSecurityCode {
         email: String,
-        username: String,
         code: String,
+    },
+    StartSurvey {
+        space_title: String,
+        survey_title: String,
+        author_profile: String,
+        author_display_name: String,
+        author_username: String,
+        connect_link: String,
     },
 }
 
@@ -52,6 +59,7 @@ impl EmailOperation {
             EmailOperation::TeamInvite { .. } => "team_invite",
             EmailOperation::SpaceInviteVerification { .. } => "email_verification",
             EmailOperation::SignupSecurityCode { .. } => "signup_code",
+            EmailOperation::StartSurvey { .. } => "start_survey",
         }
     }
 }
