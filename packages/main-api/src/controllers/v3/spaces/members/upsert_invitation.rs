@@ -47,12 +47,10 @@ pub async fn upsert_invitation_handler(
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<UpsertInvitationRequest>,
 ) -> Result<Json<UpsertInvitationResponse>, Error> {
-    //Request Validation
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
     }
 
-    // Check Permissions
     if !permissions.contains(TeamGroupPermission::SpaceEdit) {
         return Err(Error::NoPermission);
     }
@@ -67,7 +65,6 @@ pub async fn upsert_invitation_handler(
         return Err(Error::FinishedSpace);
     }
 
-    // Remove users
     let mut txs: Vec<TransactWriteItem> = req
         .removed_user_pks
         .iter()
@@ -107,28 +104,28 @@ pub async fn upsert_invitation_handler(
     transact_write_items!(&dynamo.client, txs)?;
 
     if space_common.publish_state == SpacePublishState::Published {
-        // NOTE: Sending email immediately.
         let post_pk = space_pk.clone().to_post_key()?;
         let post = Post::get(&dynamo.client, &post_pk, Some(&EntityType::Post))
             .await?
             .unwrap_or_default();
 
-        let futs = users.into_iter().map(|member| {
-            SpaceEmailVerification::send_email(
+        let emails: Vec<String> = users.iter().map(|member| member.email.clone()).collect();
+
+        if !emails.is_empty() {
+            let _ = SpaceEmailVerification::send_email(
                 &dynamo,
                 &ses,
-                member.email,
+                emails,
                 space_common.clone(),
                 post.title.clone(),
             )
-        });
-
-        try_join_all(futs).await?;
+            .await?;
+        }
     }
 
-    return Ok(Json(UpsertInvitationResponse {
+    Ok(Json(UpsertInvitationResponse {
         space_pk,
         new_user_pks: req.new_user_pks,
         removed_user_pks: req.removed_user_pks,
-    }));
+    }))
 }

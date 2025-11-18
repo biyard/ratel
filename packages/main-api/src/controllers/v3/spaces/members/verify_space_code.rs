@@ -58,7 +58,7 @@ pub async fn verify_space_code_handler(
         return Err(Error::FinishedSpace);
     }
 
-    let panel = check_panel(&dynamo, &space_pk, user.clone()).await;
+    let panel = check_panel(&dynamo, &space, user.clone()).await;
 
     if !panel {
         return Ok(Json(VerifySpaceCodeResponse { success: false }));
@@ -89,7 +89,8 @@ pub async fn verify_space_code_handler(
     Ok(Json(VerifySpaceCodeResponse { success: true }))
 }
 
-pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User) -> bool {
+pub async fn check_panel(dynamo: &DynamoClient, space: &SpaceCommon, user: User) -> bool {
+    let space_pk = space.pk.clone();
     let res = VerifiedAttributes::get(
         &dynamo.client,
         CompositePartition(user.pk.clone(), Partition::Attributes),
@@ -102,14 +103,8 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
     let age: Option<u8> = res.age().and_then(|v| u8::try_from(v).ok());
     let gender = res.gender;
 
-    let pk = space_pk;
-    let sk = EntityType::SpacePanels;
-    let panel = SpacePanels::get(&dynamo.client, pk.clone(), Some(sk.clone()))
-        .await
-        .unwrap_or_default()
-        .unwrap_or_default();
-
-    tracing::debug!("panel: {:?}", panel.clone());
+    let pk = space_pk.clone();
+    // let sk = EntityType::SpacePanels;
 
     let panel_quota = SpacePanelQuota::query(
         &dynamo.client,
@@ -120,9 +115,14 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
     .unwrap_or_default()
     .0;
 
-    tracing::debug!("panel quota: {:?}", panel_quota.clone());
+    tracing::debug!(
+        "panel quota: {:?} {:?} {:?}",
+        panel_quota.clone(),
+        age.clone().unwrap_or_default(),
+        gender.clone().unwrap_or_default()
+    );
 
-    if panel.remains == 0 {
+    if space.remains == 0 {
         return false;
     }
 
@@ -131,7 +131,20 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
             continue;
         }
 
+        if let EntityType::SpacePanelAttribute(label, _) = &p.sk {
+            if label.eq_ignore_ascii_case("university") {
+                continue;
+            }
+        }
+
         if match_by_sk(age.clone(), gender.clone(), &p.sk) {
+            tracing::debug!(
+                "panel info: {:?} {:?} {:?} {:?}",
+                age.clone(),
+                gender.clone(),
+                p.sk.clone(),
+                p.remains
+            );
             let participants = SpacePanelParticipant::new(space_pk.clone(), user);
             let _ = match participants.create(&dynamo.client).await {
                 Ok(v) => v,
@@ -140,7 +153,7 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
             let pk = p.pk;
             let sk = p.sk;
 
-            let _ = match SpacePanels::updater(space_pk, EntityType::SpacePanels)
+            let _ = match SpaceCommon::updater(space_pk, EntityType::SpaceCommon)
                 .decrease_remains(1)
                 .execute(&dynamo.client)
                 .await
@@ -166,20 +179,32 @@ pub async fn check_panel(dynamo: &DynamoClient, space_pk: &Partition, user: User
 }
 
 pub fn match_by_sk(age: Option<u8>, gender: Option<Gender>, sk: &EntityType) -> bool {
-    let (label, value) = match sk {
+    if age.is_none() && gender.is_none() {
+        return false;
+    }
+
+    let (label_raw, value_raw) = match sk {
         EntityType::SpacePanelAttribute(label, value) => (label.as_str(), value.as_str()),
-        _ => return true,
+        _ => return false,
     };
 
-    match label {
-        "verifiable_attribute" => match value {
+    let label = label_raw.to_ascii_lowercase();
+    let value = value_raw.to_ascii_lowercase();
+
+    match label.as_str() {
+        "verifiable_attribute" => match value.as_str() {
             v if v.starts_with("age") => match_age_rule(age, v),
             v if v.starts_with("gender") => match_gender_rule(gender, v),
-            _ => true,
+            _ => false,
         },
         "collective_attribute" => true,
+        "gender" => {
+            let encoded = format!("gender:{}", value);
+            match_gender_rule(gender, &encoded)
+        }
+        "university" => true,
 
-        "none" | _ => true,
+        _ => false,
     }
 }
 
