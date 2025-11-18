@@ -45,6 +45,7 @@ function CardItem({
   const disabled = data.disabled || (data.experiment && !config.experiment);
   return (
     <div
+      data-testid={`selectable-card-${data.value}`}
       className={`flex flex-row gap-2.5 justify-center items-center w-full p-5 border rounded-[10px] ${selected ? 'border-primary light:bg-primary/10' : 'border-neutral-800 light:border-[#d4d4d4] light:bg-[#fafafa]'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}} `}
       onClick={() => {
         if (!disabled) {

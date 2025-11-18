@@ -27,6 +27,7 @@ export default function SpaceSideMenu({ menus }: SpaceSideMenuProps) {
           <Link
             key={`side-menu-item-${item.label}`}
             type="button"
+            data-testid={`space-sidemenu-${item.label}`.toLowerCase()}
             to={item.to}
             data-active={selected === i}
             className={cn(

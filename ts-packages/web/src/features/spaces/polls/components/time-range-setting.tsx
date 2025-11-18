@@ -108,6 +108,7 @@ export function TimeRangeSetting({
                 canEdit={isEdit}
                 value={start}
                 onChange={handleStart}
+                data-testid="calendar-start-date-dropdown"
               />
             </div>
             <div className="w-full sm:w-auto">
@@ -115,6 +116,7 @@ export function TimeRangeSetting({
                 canEdit={isEdit}
                 value={start}
                 onChange={handleStart}
+                data-testid="time-start-dropdown"
               />
             </div>
           </div>
@@ -127,10 +129,16 @@ export function TimeRangeSetting({
                 canEdit={isEdit}
                 value={end}
                 onChange={handleEnd}
+                data-testid="calendar-end-date-dropdown"
               />
             </div>
             <div className="w-full sm:w-auto">
-              <TimeDropdown canEdit={isEdit} value={end} onChange={handleEnd} />
+              <TimeDropdown
+                canEdit={isEdit}
+                value={end}
+                onChange={handleEnd}
+                data-testid="time-end-dropdown"
+              />
             </div>
           </div>
 
