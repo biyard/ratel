@@ -9,6 +9,7 @@ export const ToolbarButton = ({
   tooltip,
   className,
   'aria-label': ariaLabel,
+  ...props
 }: ToolbarButtonProps) => {
   const handleMouseDown = (e: React.MouseEvent) => {
     // Prevent losing text selection when clicking toolbar buttons
@@ -47,6 +48,7 @@ export const ToolbarButton = ({
         // Custom className
         className,
       )}
+      {...props}
     >
       {icon}
     </button>

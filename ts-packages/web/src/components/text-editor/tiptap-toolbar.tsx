@@ -565,6 +565,7 @@ export const TiptapToolbar = ({
             active={editor.isActive('link')}
             tooltip="Link"
             aria-label="Link"
+            data-testid="tiptap-toolbar-link"
           />
 
           <ToolbarButton

@@ -44,7 +44,7 @@ export const Checkbox = ({
             'peer-checked:[&_svg_path]:stroke-bg',
             'flex items-center justify-center',
             'w-4.25 h-4.25 cursor-pointer',
-            isRounded ? 'rounded-full' : 'rounded-[4px]',
+            isRounded ? 'rounded-full' : 'rounded-sm',
           )}
           htmlFor={id}
         >
@@ -56,7 +56,11 @@ export const Checkbox = ({
         </label>
       </div>
 
-      <div className="cursor-pointer" onClick={handleChange}>
+      <div
+        className="cursor-pointer"
+        onClick={handleChange}
+        data-testid={id ? `${id}-label` : undefined}
+      >
         {children}
       </div>
     </div>

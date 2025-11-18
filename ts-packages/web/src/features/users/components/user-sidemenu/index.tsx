@@ -38,40 +38,45 @@ export default function UserSidemenu() {
         <NavLink
           to={route.myPosts()}
           className="sidemenu-link text-text-primary"
+          data-testid="sidemenu-my-posts"
         >
-          <Post className="w-[24px] h-[24px]" />
+          <Post className="w-6 h-6" />
           <span>{t.my_posts}</span>
         </NavLink>
 
         <NavLink
           to={route.drafts()}
           className="sidemenu-link text-text-primary"
+          data-testid="sidemenu-drafts"
         >
-          <Draft className="w-[24px] h-[24px]" />
+          <Draft className="w-6 h-6" />
           <span>{t.drafts}</span>
         </NavLink>
 
         <NavLink
           to={route.mySpaces()}
           className="sidemenu-link text-text-primary"
+          data-testid="sidemenu-my-spaces"
         >
-          <UserGroup className="w-[24px] h-[24px]" />
+          <UserGroup className="w-6 h-6" />
           <span>{t.my_spaces}</span>
         </NavLink>
 
         <NavLink
           to={route.credentials()}
           className="sidemenu-link text-text-primary"
+          data-testid="sidemenu-credentials"
         >
-          <Did className="w-[24px] h-[24px]" />
+          <Did className="w-6 h-6" />
           <span>{t.credentials}</span>
         </NavLink>
 
         <NavLink
           to={route.settings()}
           className="sidemenu-link text-text-primary"
+          data-testid="sidemenu-settings"
         >
-          <Settings className="w-[24px] h-[24px]" />
+          <Settings className="w-6 h-6" />
           <span>{t.settings}</span>
         </NavLink>
       </nav>
