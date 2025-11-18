@@ -1,6 +1,7 @@
 use aws_sdk_dynamodb::types::TransactWriteItem;
 
 use crate::features::spaces::SpaceRequirement;
+use crate::models::Post;
 use crate::models::space::SpaceCommon;
 
 use crate::features::spaces::polls::*;
@@ -43,7 +44,7 @@ pub async fn create_poll_handler(
 
     if poll.is_default_poll() {
         let requirement = SpaceRequirement::new(
-            space_pk,
+            space_pk.clone(),
             features::spaces::SpaceRequirementType::PrePoll,
             (poll.pk.to_string(), poll.sk.clone()),
         );
