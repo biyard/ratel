@@ -1624,7 +1624,7 @@ dependencies = [
 
 [[package]]
 name = "by-macros"
-version = "0.6.13"
+version = "0.6.14"
 dependencies = [
  "Inflector",
  "bigdecimal",
