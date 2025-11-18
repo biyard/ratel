@@ -1,11 +1,13 @@
 pub mod email;
 pub mod feed;
+pub mod notification;
 pub mod session;
 pub mod team;
 pub mod user;
 
 pub use email::*;
 pub use feed::*;
+pub use notification::*;
 pub use team::*;
 pub use user::*;
 
