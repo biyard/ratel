@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema)]
 #[serde(untagged)]
 pub enum EmailOperation {
     SpacePostNotification {

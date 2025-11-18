@@ -1,5 +1,6 @@
 // #[cfg(all(not(test), not(feature = "no-secret")))]
 // use crate::features::spaces::templates::SpaceTemplate;
+use crate::email_operation::EmailOperation;
 use crate::{
     Error,
     features::spaces::boards::models::{
@@ -7,9 +8,7 @@ use crate::{
         space_post_comment_like::SpacePostCommentLike,
     },
     models::{
-        PostCommentLike, SpaceCommon,
-        email_template::email_template::{EmailOperation, EmailTemplate},
-        team::Team,
+        PostCommentLike, SpaceCommon, email_template::email_template::EmailTemplate, team::Team,
         user::User,
     },
     types::{author::Author, *},
