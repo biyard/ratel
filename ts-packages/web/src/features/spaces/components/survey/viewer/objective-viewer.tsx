@@ -56,7 +56,7 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
               key={`${answer_type}-${optionIdx}`}
               className="flex flex-row gap-3 justify-start items-center w-full h-fit"
               onClick={(evt) => {
-                if (!disabled) {
+                if (!disabled && !isOther) {
                   evt.stopPropagation();
                   onSelect(optionIdx);
                 }
