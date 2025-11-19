@@ -116,6 +116,7 @@ export function CreatePostButton({ teamPk }: { teamPk?: string | undefined }) {
     <Link
       to={route.newPost(undefined, teamPk)}
       aria-label="Create Post"
+      data-testid="create-post-button"
       className={cn(baseClass, 'justify-start w-full')}
     >
       <Edit1 className="w-4 h-4 [&>path]:stroke-text-third" />

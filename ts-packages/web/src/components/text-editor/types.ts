@@ -29,6 +29,8 @@ export type UploadResult = { url: string };
  */
 export interface TiptapEditorProps {
   // Basic editor props
+  isMe?: boolean;
+  isFoldable?: boolean;
   content?: string;
   onUpdate?: (content: string) => void;
   editable?: boolean;
@@ -77,7 +79,8 @@ export interface TiptapToolbarProps {
 /**
  * Props for the ToolbarButton component
  */
-export interface ToolbarButtonProps {
+export interface ToolbarButtonProps
+  extends React.HTMLAttributes<HTMLButtonElement> {
   icon: React.ReactNode;
   onClick: () => void;
   active?: boolean;

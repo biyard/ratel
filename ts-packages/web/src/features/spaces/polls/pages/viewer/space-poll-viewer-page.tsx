@@ -3,11 +3,11 @@ import { useSpacePollViewerController } from './use-space-poll-viewer-controller
 import { SpacePollPathProps } from '../space-poll-path-props';
 import { Col } from '@/components/ui/col';
 import SurveyViewer from '@/features/spaces/components/survey/viewer';
-import { TimeRangeSetting } from '../../components/time-range-setting';
 import Card from '@/components/card';
 import { Row } from '@/components/ui/row';
 import { Button } from '@/components/ui/button';
 import { SpaceType } from '@/features/spaces/types/space-type';
+import { TimeRangeDisplay } from '@/features/spaces/boards/components/time-range-display';
 
 export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollViewerPage: spacePk=${spacePk}, pollPk=${pollPk}`);
@@ -50,11 +50,9 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   return (
     <>
       <Col>
-        <TimeRangeSetting
-          canEdit={false}
+        <TimeRangeDisplay
           startTimestampMillis={ctrl.poll.started_at}
           endTimestampMillis={ctrl.poll.ended_at}
-          className="justify-end"
         />
 
         <Card>
@@ -67,6 +65,11 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
               selectedAnswers={ctrl.answers.get()}
               onSubmit={ctrl.handleSubmit}
               onLogin={ctrl.handleLogin}
+              canParticipate={
+                ctrl.space.isAdmin() ||
+                ctrl.space.spaceType !== SpaceType.Deliberation ||
+                ctrl.space.participated
+              }
               canSubmit={canSubmit}
               disabled={!canSubmit && !canUpdate}
               canUpdate={canUpdate}

@@ -1,6 +1,7 @@
 use crate::Error;
+use crate::email_operation::EmailOperation;
 use crate::models::SpaceCommon;
-use crate::utils::html::invite_space_html;
+use crate::models::email_template::email_template::EmailTemplate;
 use crate::{
     constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT},
     types::*,
@@ -13,6 +14,7 @@ use bdk::prelude::axum::Json;
 use bdk::prelude::*;
 use rand::Rng;
 use regex::Regex;
+use serde_json::json;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema, Default)]
 pub struct SpaceEmailVerification {
@@ -42,7 +44,6 @@ impl SpaceEmailVerification {
             value,
             expired_at,
             attempt_count: 0,
-
             authorized: false,
         }
     }
@@ -116,117 +117,124 @@ impl SpaceEmailVerification {
         Ok(())
     }
 
-    #[allow(unused_variables)]
-    pub async fn send_email(
+    async fn upsert_verification(
         dynamo: &DynamoClient,
-        ses: &SesClient,
+        space_pk: Partition,
         user_email: String,
-        space: SpaceCommon,
-        title: String,
-    ) -> Result<Json<()>, Error> {
-        let verification = SpaceEmailVerification::get(
+    ) -> Result<SpaceEmailVerification, Error> {
+        let existing = SpaceEmailVerification::get(
             &dynamo.client,
-            &space.pk,
+            &space_pk,
             Some(EntityType::SpaceEmailVerification(user_email.clone())),
         )
         .await?;
 
-        let SpaceEmailVerification { value, .. } = if !verification.is_none()
-            && verification.clone().unwrap().expired_at > get_now_timestamp()
-            && verification.clone().unwrap().attempt_count < MAX_ATTEMPT_COUNT
-        {
-            verification.clone().unwrap_or_default()
-        } else {
-            let code = Self::generate_random_code();
-            let expired_at = get_now_timestamp() + EXPIRATION_TIME as i64;
+        let now = get_now_timestamp();
 
-            if verification.is_some() {
-                let mut v = verification.unwrap_or_default();
+        let verification = match existing {
+            Some(v) if v.expired_at > now && v.attempt_count < MAX_ATTEMPT_COUNT => v,
+            Some(mut v) => {
+                let code = Self::generate_random_code();
+                let expired_at = now + EXPIRATION_TIME as i64;
+
                 SpaceEmailVerification::updater(v.pk.clone(), v.sk.clone())
                     .with_attempt_count(0)
                     .with_value(code.clone())
                     .with_expired_at(expired_at)
                     .execute(&dynamo.client)
                     .await?;
+
                 v.value = code;
                 v.expired_at = expired_at;
                 v
-            } else {
-                let email_verification = SpaceEmailVerification::new(
-                    space.pk.clone(),
-                    user_email.clone(),
-                    code,
-                    expired_at,
-                );
-                email_verification.create(&dynamo.client).await?;
-                email_verification
+            }
+            None => {
+                let code = Self::generate_random_code();
+                let expired_at = now + EXPIRATION_TIME as i64;
+
+                let v = SpaceEmailVerification::new(space_pk.clone(), user_email, code, expired_at);
+                v.create(&dynamo.client).await?;
+                v
             }
         };
 
-        #[cfg(any(test, feature = "no-secret"))]
-        {
-            let _ = ses;
-            tracing::warn!(
-                "sending email will be skipped for {}: {}",
-                user_email,
-                value
-            );
+        Ok(verification)
+    }
+
+    // #[cfg(all(not(test), not(feature = "no-secret")))]
+    // async fn ensure_invite_template_exists(
+    //     dynamo: &DynamoClient,
+    //     ses: &SesClient,
+    //     template_name: &str,
+    // ) -> Result<(), Error> {
+    //     use crate::features::spaces::templates::SpaceTemplate;
+    //     use crate::utils::templates::{INVITE_SPACE_TEMPLATE_HTML, INVITE_SPACE_TEMPLATE_SUBJECT};
+
+    //     let template = SpaceTemplate::get(
+    //         &dynamo.client,
+    //         Partition::SpaceTemplate,
+    //         Some(EntityType::SpaceTemplate(template_name.to_string())),
+    //     )
+    //     .await?;
+
+    //     if template.is_none() {
+    //         ses.create_template(
+    //             template_name,
+    //             INVITE_SPACE_TEMPLATE_SUBJECT,
+    //             INVITE_SPACE_TEMPLATE_HTML,
+    //         )
+    //         .await
+    //         .map_err(|e| Error::AwsSesSendEmailException(e.to_string()))?;
+
+    //         let temp = SpaceTemplate::new(template_name.to_string());
+    //         temp.create(&dynamo.client).await?;
+    //     }
+
+    //     Ok(())
+    // }
+
+    #[allow(unused_variables)]
+    pub async fn send_email(
+        dynamo: &DynamoClient,
+        ses: &SesClient,
+        user_emails: Vec<String>,
+        space: SpaceCommon,
+        title: String,
+    ) -> Result<Json<()>, Error> {
+        let mut verifications = Vec::with_capacity(user_emails.len());
+
+        for email in &user_emails {
+            let v = Self::upsert_verification(dynamo, space.pk.clone(), email.clone()).await?;
+            verifications.push((email.clone(), v.value.clone()));
         }
 
-        #[cfg(all(not(test), not(feature = "no-secret")))]
-        {
-            let mut domain = crate::config::get().domain.to_string();
-            if domain.contains("localhost") {
-                domain = format!("http://{}", domain).to_string();
-            } else {
-                domain = format!("https://{}", domain).to_string();
-            }
-
-            let space_id = match space.pk.clone() {
-                Partition::Space(v) => v.to_string(),
-                _ => "".to_string(),
-            };
-
-            let space_desc = Self::html_excerpt_ellipsis(&space.content, 160);
-            let profile = space.author_profile_url;
-            let username = space.author_username.clone();
-            let display_name = space.author_display_name;
-
-            let html = invite_space_html(
-                title.clone(),
-                profile,
-                display_name,
-                username,
-                space_desc,
-                format!("{}/spaces/SPACE%23{}?code={}", domain, space_id, value),
-            );
-
-            let text = format!(
-                "You're invited to join {space}\n{user} invited you to join {space}.\nOpen: {url}\nVerification code: {code}\nThis code expires in 30 minutes.\n",
-                space = title.clone(),
-                user = space.author_username,
-                url = format!("{}/spaces/SPACE%23{}?code={}", domain, space_id, value),
-                code = value,
-            );
-
-            let mut i = 0;
-            let subject = format!("[Ratel] Complete your invite within 30 minutes");
-
-            while let Err(e) = ses
-                .send_mail_html(&user_email, &subject, &html, Some(&text))
-                .await
-            {
-                btracing::notify!(
-                    crate::config::get().slack_channel_monitor,
-                    &format!("Failed to send email: {:?}", e)
-                );
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-                i += 1;
-                if i >= 3 {
-                    return Err(Error::AwsSesSendEmailException(e.to_string()));
-                }
-            }
+        let mut domain = crate::config::get().domain.to_string();
+        if domain.contains("localhost") {
+            domain = format!("http://{}", domain);
+        } else {
+            domain = format!("https://{}", domain);
         }
+
+        let space_id = match space.pk.clone() {
+            Partition::Space(v) => v.to_string(),
+            _ => "".to_string(),
+        };
+
+        let cta_url = format!("{}/spaces/SPACE%23{}", domain, space_id);
+
+        let email = EmailTemplate {
+            targets: user_emails.clone(),
+            operation: EmailOperation::SpaceInviteVerification {
+                space_title: title.clone(),
+                space_desc: Self::html_excerpt_ellipsis(&space.content, 160),
+                author_profile: space.author_profile_url,
+                author_display_name: space.author_username.clone(),
+                author_username: space.author_display_name,
+                cta_url,
+            },
+        };
+
+        email.send_email(&dynamo, &ses).await?;
 
         Ok(Json(()))
     }
@@ -250,12 +258,11 @@ impl SpaceEmailVerification {
     fn generate_random_code() -> String {
         let charset = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         let mut rng = rand::rng();
-        let code: String = (0..6)
+        (0..6)
             .map(|_| {
                 let idx = rng.random_range(0..charset.len());
                 charset[idx] as char
             })
-            .collect();
-        code
+            .collect()
     }
 }

@@ -6,6 +6,7 @@ import Card from '@/components/card';
 import { Input } from '@/components/ui/input';
 import { PostEditor } from '@/features/posts/components/post-editor';
 import { Button } from '@/components/ui/button';
+import { TimeRangeSetting } from '@/features/spaces/polls/components/time-range-setting';
 
 export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceBoardsCreatePage: spacePk=${spacePk}`);
@@ -48,7 +49,15 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
   }, []);
 
   return (
-    <div className="w-full mt-6">
+    <div className="flex flex-col w-full mt-6 gap-2">
+      <TimeRangeSetting
+        canEdit={false}
+        onChange={ctrl.handleTimeRange}
+        startTimestampMillis={ctrl.startedAt.get()}
+        endTimestampMillis={ctrl.endedAt.get()}
+        alwaysEdit={true}
+        className="justify-end"
+      />
       <Card className="w-full">
         <div className="grid gap-5 w-full">
           <div className="grid gap-2 w-full">
@@ -56,6 +65,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
               {t('title')}
             </label>
             <Input
+              data-testid="board-title-input"
               placeholder={t('title_hint')}
               value={ctrl.title.get()}
               onChange={(e) => ctrl.handleTitle(e.target.value)}
@@ -69,6 +79,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
 
             <div ref={rootRef} className="relative">
               <Input
+                data-testid="board-category-input"
                 ref={inputRef}
                 value={ctrl.categoryName.get()}
                 onChange={(e) => {
@@ -189,7 +200,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
               onRemoveImage={ctrl.handleRemoveImage}
               url={ctrl.image.get()}
               disabledFileUpload={false}
-              data-pw="space-recommendation-editor"
+              data-pw="space-board-content-editor"
             />
           </div>
 
@@ -204,6 +215,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
                 if (!isValid) return;
                 await ctrl.handleSubmit();
               }}
+              data-testid="board-btn-submit"
             >
               {ctrl.postPk.get() ? t('update') : t('write')}
             </Button>

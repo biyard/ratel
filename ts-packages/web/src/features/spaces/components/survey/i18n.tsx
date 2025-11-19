@@ -2,6 +2,7 @@ const en = {
   btn_prev: 'Prev',
   btn_next: 'Next',
   btn_submit: 'Submit',
+  btn_not_enable: 'You do not have permission to participate.',
   btn_update: 'Update',
   btn_login: 'Log in to Submit',
 
@@ -23,6 +24,7 @@ const en = {
   subjective_input_placeholder: 'Please share your opinion.',
   option_input_placeholder: 'Enter an option',
   add_option_button_label: 'Add Option',
+  allowed_other_option: 'Allow Other Option',
 
   no_questions: 'No questions available.',
 
@@ -32,6 +34,10 @@ const en = {
   failed_change_response: 'Failed to save poll. please try later.',
   success_submit_answer: 'Success to submit answer.',
   failed_submit_answer: 'Failed to submit answer. please try later.',
+
+  no_questions_error: 'Please add at least one question before saving.',
+  invalid_question_error:
+    'Please ensure all questions have valid titles and options.',
 
   save: 'Save',
   cancel: 'Cancel',
@@ -44,6 +50,7 @@ const ko = {
   btn_prev: '이전',
   btn_next: '다음',
   btn_submit: '제출',
+  btn_not_enable: '참가 권한이 없습니다.',
   btn_update: '수정',
   btn_login: '로그인 후 제출',
 
@@ -66,6 +73,7 @@ const ko = {
   option_input_placeholder: '옵션을 입력하세요',
 
   add_option_button_label: '옵션 추가하기',
+  allowed_other_option: '기타 옵션 허용',
 
   no_questions: '질문이 없습니다.',
 
@@ -76,6 +84,10 @@ const ko = {
     '설문 저장에 실패했습니다. 잠시 후 다시 시도해주세요.',
   success_submit_answer: '성공적으로 응답을 저장했습니다.',
   failed_submit_answer: '응답 저장에 실패했습니다. 잠시 후 다시 시도해주세요.',
+
+  no_questions_error: '저장하기 전에 질문을 하나 이상 추가해주세요.',
+  invalid_question_error:
+    '모든 질문에 유효한 제목과 옵션이 있는지 확인해주세요.',
 
   save: '저장',
   cancel: '취소',

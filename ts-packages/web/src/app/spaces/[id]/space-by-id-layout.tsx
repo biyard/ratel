@@ -1,5 +1,5 @@
-import { createContext } from 'react';
-import { Outlet, useLocation, useParams, useNavigate } from 'react-router';
+import { createContext, useMemo, useState } from 'react';
+import { Outlet, useLocation, useParams } from 'react-router';
 import {
   SpaceHomeController,
   useSpaceHomeController,
@@ -15,96 +15,104 @@ import {
 import TimelineMenu from '@/features/spaces/components/side-menu/timeline';
 import { SpaceActions } from '@/features/spaces/components/space-actions';
 import SpaceParticipantProfile from '@/features/spaces/components/space-participant-profile';
+import { useSpaceLayoutContext } from './use-space-layout-context';
+import { Requirements } from '@/features/spaces/components/requirements';
+import { SafeArea } from '@/components/ui/safe-area';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
+import SpaceMobileHeader from '@/features/spaces/components/space-mobile-header';
 
 export const Context = createContext<SpaceHomeController | undefined>(
   undefined,
 );
 
-export default function SpaceByIdLayout() {
-  const { spacePk } = useParams<{ spacePk: string }>();
-  const ctrl = useSpaceHomeController(spacePk ?? '');
+function GeneralLayout() {
+  const ctrl = useSpaceLayoutContext();
   const location = useLocation();
   const showInfo = !/\/boards\/posts(\/|$)/.test(location.pathname);
+  const isMobile = useIsMobile();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
-  // Check if prerequisites are completed
-  /* const { data: prerequisites, isLoading: isLoadingPrerequisites } =
-   *   useCheckPrerequisites(spacePk ?? ''); */
+  const participantProfileProps =
+    !ctrl.space.isAdmin() &&
+    ctrl.space.participated &&
+    ctrl.space.participantDisplayName &&
+    ctrl.space.participantProfileUrl &&
+    ctrl.space.participantUsername
+      ? {
+          displayName: ctrl.space.participantDisplayName,
+          profileUrl: ctrl.space.participantProfileUrl,
+          username: ctrl.space.participantUsername,
+        }
+      : null;
 
-  // Redirect to poll if prerequisites are not completed
-  /* useEffect(() => {
-   *   if (
-   *     !isLoadingPrerequisites &&
-   *     prerequisites &&
-   *     !prerequisites.completed &&
-   *     prerequisites.poll_pk
-   *   ) {
-   *     // Only redirect if not already on the poll page
-   *     const pollPagePattern = new RegExp(
-   *       `/spaces/${encodeURIComponent(spacePk ?? '')}/polls/${encodeURIComponent(prerequisites.poll_pk)}`,
-   *     );
-   *     if (!pollPagePattern.test(location.pathname)) {
-   *       navigate(route.spacePollById(spacePk ?? '', prerequisites.poll_pk));
-   *     }
-   *   }
-   * }, [
-   *   prerequisites,
-   *   isLoadingPrerequisites,
-   *   spacePk,
-   *   location.pathname,
-   *   navigate,
-   * ]); */
+  const currentTab = useMemo(() => {
+    const ret = ctrl.menus
+      ?.filter((menu) => menu.label !== 'Overview')
+      .find((menu) => {
+        return location.pathname.startsWith(menu.to);
+      });
 
-  // Check if we should show side menu and content
-  /* const shouldShowSideMenu =
-   *   isLoadingPrerequisites || !prerequisites || prerequisites.completed; */
+    // If no match found, return Overview menu
+    if (!ret) {
+      return ctrl.menus?.find((menu) => menu.label === 'Overview');
+    }
+
+    return ret;
+  }, [ctrl.menus, location.pathname]);
 
   return (
-    <Context.Provider value={ctrl}>
-      <Row className="my-5 mx-auto w-full max-w-desktop">
-        <Col className="gap-4 w-full">
-          {showInfo && (
-            <Col className="gap-4 w-full">
-              <TitleSection
-                canEdit={ctrl.isAdmin}
-                title={ctrl.space.title}
-                setTitle={ctrl.handleTitleChange}
-              />
-              <AuthorSection
-                type={ctrl.space.authorType}
-                profileImage={ctrl.space.authorProfileUrl}
-                name={ctrl.space.authorDisplayName}
-                isCertified={ctrl.space.certified}
-                createdAt={ctrl.space.createdAt}
-              />
+    <Row className="max-mobile:gap-1">
+      <Col className="gap-4 w-full">
+        {/* Mobile Header */}
+        {isMobile && (
+          <SpaceMobileHeader
+            participantProfile={participantProfileProps ?? undefined}
+            currentTab={currentTab}
+            onMenuClick={() => setSheetOpen(true)}
+          />
+        )}
 
-              <PostInfoSection
-                likes={ctrl.space.likes}
-                shares={ctrl.space.shares}
-                comments={ctrl.space.comments}
-                rewards={ctrl.space.rewards ?? 0}
-                isDraft={ctrl.space.isDraft}
-                isPublic={ctrl.space.isPublic}
-              />
-            </Col>
-          )}
+        {showInfo && (
+          <Col className="gap-4 w-full">
+            <TitleSection
+              canEdit={ctrl.isAdmin}
+              title={ctrl.space.title}
+              setTitle={ctrl.handleTitleChange}
+            />
+            <AuthorSection
+              type={ctrl.space.authorType}
+              profileImage={ctrl.space.authorProfileUrl}
+              name={ctrl.space.authorDisplayName}
+              isCertified={ctrl.space.certified}
+              createdAt={ctrl.space.createdAt}
+            />
 
-          <Outlet />
-        </Col>
+            <PostInfoSection
+              likes={ctrl.space.likes}
+              shares={ctrl.space.shares}
+              comments={ctrl.space.comments}
+              rewards={ctrl.space.rewards ?? 0}
+              isDraft={ctrl.space.isDraft}
+              isPublic={ctrl.space.isPublic}
+            />
+          </Col>
+        )}
+
+        <Outlet />
+      </Col>
+
+      {/* Desktop Side Menu */}
+      {!isMobile && (
         <Col className="gap-2.5 w-full max-w-[250px]">
           {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
 
-          {ctrl.space.participated &&
-            ctrl.space.participantDisplayName &&
-            ctrl.space.participantProfileUrl &&
-            ctrl.space.participantUsername && (
-              <SpaceParticipantProfile
-                displayName={ctrl.space.participantDisplayName}
-                profileUrl={ctrl.space.participantProfileUrl}
-                username={ctrl.space.participantUsername}
-              />
-            )}
+          {participantProfileProps && (
+            <SpaceParticipantProfile {...participantProfileProps} />
+          )}
 
           <SpaceSideMenu menus={ctrl.menus} />
+
           <TimelineMenu
             isEditing={false}
             handleSetting={() => {}}
@@ -112,7 +120,51 @@ export default function SpaceByIdLayout() {
             titleLabel={ctrl.t('timeline_title')}
           />
         </Col>
-      </Row>
+      )}
+
+      {/* Mobile sheet with full content */}
+      {isMobile && (
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetContent side="right" className="w-full overflow-y-auto p-5">
+            <Col className="gap-4 mt-4" onClick={() => setSheetOpen(false)}>
+              {ctrl.actions.length > 0 && (
+                <SpaceActions actions={ctrl.actions} />
+              )}
+
+              {participantProfileProps && (
+                <SpaceParticipantProfile {...participantProfileProps} />
+              )}
+
+              <SpaceSideMenu menus={ctrl.menus} />
+
+              <TimelineMenu
+                isEditing={false}
+                handleSetting={() => {}}
+                items={ctrl.timelineItems}
+                titleLabel={ctrl.t('timeline_title')}
+              />
+            </Col>
+          </SheetContent>
+        </Sheet>
+      )}
+    </Row>
+  );
+}
+
+export default function SpaceByIdLayout() {
+  const { spacePk } = useParams<{ spacePk: string }>();
+  const ctrl = useSpaceHomeController(spacePk ?? '');
+
+  // NOTE: Must authorize permission for viewer/participant/admin before
+  return (
+    <Context.Provider value={ctrl}>
+      <SafeArea>
+        {ctrl.space.havePreTasks() && !ctrl.space.isAdmin() ? (
+          <Requirements />
+        ) : (
+          <GeneralLayout />
+        )}
+      </SafeArea>
     </Context.Provider>
   );
 }

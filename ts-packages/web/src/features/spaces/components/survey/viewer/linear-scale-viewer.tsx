@@ -1,8 +1,5 @@
-import RadioButton from '@/components/radio-button';
 import Title, { type TitleProps } from './title';
-import { logger } from '@/lib/logger';
 import { LinearScaleQuestion } from '@/features/spaces/polls/types/poll-question';
-import React from 'react';
 
 interface LinearScaleViewerProps extends LinearScaleQuestion, TitleProps {
   disabled?: boolean;
@@ -20,92 +17,46 @@ export default function LinearScaleViewer(props: LinearScaleViewerProps) {
     onSelect,
   } = props;
 
-  const wrapRef = React.useRef<HTMLDivElement | null>(null);
-  const pos = React.useRef({ isDown: false, startX: 0, scrollLeft: 0 });
-
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    const el = wrapRef.current;
-    if (!el) return;
-
-    const target = e.target as Element;
-    if (
-      target.closest('[data-stop-drag],button,[role="button"],input,label,svg')
-    ) {
-      return;
-    }
-
-    if (e.pointerType !== 'mouse') return;
-
-    el.setPointerCapture(e.pointerId);
-    pos.current.isDown = true;
-    pos.current.startX = e.clientX;
-    pos.current.scrollLeft = el.scrollLeft;
-  };
-
-  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const el = wrapRef.current;
-    if (!el || !pos.current.isDown) return;
-    const dx = e.clientX - pos.current.startX;
-    el.scrollLeft = pos.current.scrollLeft - dx;
-  };
-
-  const onPointerEnd = (e: React.PointerEvent<HTMLDivElement>) => {
-    const el = wrapRef.current;
-    if (!el) return;
-    pos.current.isDown = false;
-    try {
-      el.releasePointerCapture(e.pointerId);
-    } catch (e) {
-      logger.error('Failed to release pointer capture', e);
-    }
-  };
-
   return (
     <div className="flex flex-col gap-4 w-full">
       <Title {...props} />
 
-      <div
-        ref={wrapRef}
-        className="w-full select-none overflow-x-auto no-scrollbar touch-pan-x md:cursor-grab"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerEnd}
-        onPointerCancel={onPointerEnd}
-        onPointerLeave={onPointerEnd}
-      >
-        <div className="flex flex-row gap-5 justify-start items-center px-2 w-fit">
-          <div className="text-sm font-medium text-center break-words text-neutral-400 shrink-0">
-            {min_label ?? ''}
-          </div>
+      <div className="flex justify-between gap-4 text-xs md:text-sm text-neutral-400 px-2">
+        <div className="text-left wrap-break-word">{min_label ?? ''}</div>
+        <div className="text-right wrap-break-word">{max_label ?? ''}</div>
+      </div>
 
-          {Array.from(
-            { length: (max_value ?? 0) - (min_value ?? 0) + 1 },
-            (_, i) => {
-              const val = (min_value ?? 0) + i;
+      <div className="flex flex-wrap gap-2 justify-center px-2">
+        {Array.from(
+          { length: (max_value ?? 0) - (min_value ?? 0) + 1 },
+          (_, i) => {
+            const val = (min_value ?? 0) + i;
+            const isSelected = selectedValue === val;
 
-              return (
-                <div
-                  key={`scale-${val}`}
-                  className="flex flex-col gap-1 items-center w-8 shrink-0"
-                >
-                  <div className="text-sm font-medium text-neutral-400">
-                    {val}
-                  </div>
-                  <div data-stop-drag>
-                    <RadioButton
-                      selected={selectedValue === val}
-                      onClick={() => onSelect(val)}
-                    />
-                  </div>
-                </div>
-              );
-            },
-          )}
-
-          <div className="text-sm font-medium text-center break-words text-neutral-400 shrink-0">
-            {max_label ?? ''}
-          </div>
-        </div>
+            return (
+              <button
+                key={`scale-${val}`}
+                type="button"
+                onClick={() => onSelect(val)}
+                className={`
+                  flex items-center justify-center
+                  min-w-11 h-11
+                  px-3 py-2
+                  rounded-lg
+                  text-sm font-medium
+                  transition-all duration-200
+                  ${
+                    isSelected
+                      ? 'bg-primary text-black shadow-lg scale-105'
+                      : 'bg-neutral-800 light:bg-neutral-200 text-neutral-200 light:text-neutral-800 hover:bg-neutral-700 light:hover:bg-neutral-300'
+                  }
+                `}
+              >
+                {val}
+              </button>
+            );
+          },
+        )}
       </div>
     </div>
   );

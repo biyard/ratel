@@ -95,18 +95,23 @@ impl SpaceInvitationMember {
                 .execute(&dynamo.client)
         });
 
-        let futs = responses.clone().into_iter().map(|member| {
-            SpaceEmailVerification::send_email(
-                &dynamo,
-                &ses,
-                member.email,
+        let emails: Vec<String> = responses
+            .iter()
+            .map(|member| member.email.clone())
+            .collect();
+
+        try_join_all(updates).await?;
+
+        if !emails.is_empty() {
+            let _ = SpaceEmailVerification::send_email(
+                dynamo,
+                ses,
+                emails,
                 space.clone(),
                 title.clone(),
             )
-        });
-
-        try_join_all(updates).await?;
-        try_join_all(futs).await?;
+            .await?;
+        }
 
         Ok(())
     }
@@ -119,7 +124,6 @@ impl SpaceInvitationMember {
         let mut bookmark = None::<String>;
 
         loop {
-            tracing::debug!("1111");
             let (responses, new_bookmark) = SpaceInvitationMember::query(
                 &dynamo.client,
                 space_pk.clone(),
@@ -133,12 +137,9 @@ impl SpaceInvitationMember {
                 },
             )
             .await?;
-            tracing::debug!("11112");
 
             for response in responses {
-                tracing::debug!("111123");
                 let mut member: SpaceInvitationMemberResponse = response.into();
-                tracing::debug!("1111234");
 
                 let verification = SpaceEmailVerification::get(
                     &dynamo.client,
@@ -146,14 +147,12 @@ impl SpaceInvitationMember {
                     Some(EntityType::SpaceEmailVerification(member.email.clone())),
                 )
                 .await?;
-                tracing::debug!("11112345");
 
                 if verification.is_some() && verification.unwrap_or_default().authorized {
                     member.authorized = true;
                 } else {
                     member.authorized = false;
                 }
-                tracing::debug!("111123456");
 
                 members.push(member);
             }

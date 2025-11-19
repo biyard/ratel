@@ -7,14 +7,17 @@ use crate::controllers::v3::spaces::members::{
     ResentInvitationCodeResponse, UpsertInvitationResponse, VerifySpaceCodeResponse,
 };
 use crate::features::did::AttributeCode;
+use crate::features::did::{VerifiableAttribute, VerifiableAttributeWithQuota};
 use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMemberResponse};
-use crate::features::spaces::panels::SpacePanelResponse;
+use crate::features::spaces::panels::{
+    PanelAttribute, PanelAttributeWithQuota, SpacePanelQuota, SpacePanelsResponse,
+};
 use crate::tests::create_user_session;
 use crate::tests::{
     create_app_state,
     v3_setup::{TestContextV3, setup_v3},
 };
-use crate::types::{EntityType, File, Partition, SpaceType};
+use crate::types::{EntityType, File, Gender, Partition, SpaceType};
 use crate::*;
 use axum::AxumRouter;
 
@@ -155,13 +158,33 @@ async fn test_verification_space_code_handler() {
         path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
         headers: headers.clone(),
         body: {
-            "name": "Panel 1".to_string(), "quotas": 10, "attributes": vec![Attribute::Age(types::Age::Range { inclusive_min: 18, inclusive_max: 29 }), Attribute::Gender(types::Gender::Male)],
+            "attributes": vec![
+                PanelAttributeWithQuota::VerifiableAttribute(
+                    VerifiableAttributeWithQuota {
+                        attribute: VerifiableAttribute::Gender(Gender::Male),
+                        quota: 30
+                    }
+                )
+            ]
         },
-        response_type: SpacePanelResponse
+        response_type: Vec<SpacePanelQuota>
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body.attributes.len(), 2);
+    assert_eq!(body.len(), 1);
+
+    let _panel_sk = &body[0].sk;
+
+    let (status, _headers, _updated_body) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "quotas": 50
+        }
+    };
+
+    assert_eq!(status, 200);
 
     let (status, _, _res) = patch! {
         app: app,

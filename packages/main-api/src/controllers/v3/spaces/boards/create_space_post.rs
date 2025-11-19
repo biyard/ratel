@@ -1,5 +1,7 @@
 #![allow(warnings)]
 use crate::File;
+use crate::models::email_template::email_template::EmailTemplate;
+use crate::utils::html::create_space_post_html;
 use crate::{
     AppState, Error, Permissions,
     controllers::v3::spaces::{SpacePath, SpacePathParam},
@@ -23,6 +25,8 @@ pub struct CreateSpacePostRequest {
     pub category_name: String,
     pub urls: Vec<String>,
     pub files: Vec<File>,
+    pub started_at: i64,
+    pub ended_at: i64,
 }
 
 #[derive(Debug, Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema)]
@@ -69,13 +73,12 @@ pub async fn create_space_post_handler(
         req.category_name.clone(),
         req.urls.clone(),
         Some(req.files.clone()),
+        req.started_at,
+        req.ended_at,
         user.clone(),
     );
     post.create(&dynamo.client).await?;
 
-    let mut emails: Vec<String> = vec![];
-
-    // TODO: alert message to team user with email
     let _ =
         send_create_post_alerm(&dynamo, &ses, &common, req.title, req.html_contents, user).await?;
 
@@ -98,6 +101,8 @@ async fn send_create_post_alerm(
     user: User,
 ) -> Result<Json<()>, Error> {
     let mut bookmark = None::<String>;
+    let mut emails: Vec<String> = Vec::new();
+
     loop {
         let (responses, new_bookmark) = SpaceInvitationMember::query(
             &dynamo.client,
@@ -113,17 +118,7 @@ async fn send_create_post_alerm(
         .await?;
 
         for response in responses {
-            let user_email = response.email;
-            let _ = SpacePost::send_email(
-                &dynamo,
-                &ses,
-                user_email,
-                space.clone(),
-                title.clone(),
-                html_contents.clone(),
-                user.clone(),
-            )
-            .await?;
+            emails.push(response.email);
         }
 
         match new_bookmark {
@@ -132,5 +127,18 @@ async fn send_create_post_alerm(
         }
     }
 
-    Ok(Json(()))
+    if emails.is_empty() {
+        return Ok(Json(()));
+    }
+
+    SpacePost::send_email(
+        dynamo,
+        ses,
+        emails,
+        space.clone(),
+        title,
+        html_contents,
+        user,
+    )
+    .await
 }

@@ -20,16 +20,34 @@ use bdk::prelude::*;
     aide::OperationIo,
 )]
 pub struct SpacePostComment {
+    #[dynamo(index = "gsi2", pk, name = "find_by_post_order_by_likes")]
     pub pk: Partition,
+
     #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
 
+    #[serde(default)]
+    pub created_at: i64,
     pub updated_at: i64,
-
     pub content: String,
 
     #[serde(default)]
     pub likes: u64,
+
+    #[serde(default)]
+    #[dynamo(index = "gsi2", sk, order = 0)]
+    #[dynamo(index = "gsi3", sk, order = 0)]
+    pub likes_align: String,
+
+    #[serde(default)]
+    #[dynamo(index = "gsi2", sk, order = 1)]
+    #[dynamo(index = "gsi3", sk, order = 1)]
+    pub updated_at_align: String,
+
+    #[serde(default)]
+    #[dynamo(index = "gsi3", pk, name = "find_replies_by_likes")]
+    pub parent_id_for_likes: String,
+
     #[serde(default)]
     pub replies: u64,
 
@@ -41,7 +59,6 @@ pub struct SpacePostComment {
     pub author_username: String,
     pub author_profile_url: String,
 }
-
 impl SpacePostComment {
     pub fn new(
         pk: Partition,
@@ -60,6 +77,7 @@ impl SpacePostComment {
         Self {
             pk,
             sk: EntityType::SpacePostComment(uuid.to_string()),
+            created_at: now,
             updated_at: now,
             content,
             author_pk,
@@ -67,6 +85,9 @@ impl SpacePostComment {
             author_username,
             author_profile_url,
             likes: 0,
+            likes_align: format!("{:020}", 0),
+            updated_at_align: format!("{:020}", now),
+            parent_id_for_likes: "ROOT".to_string(),
             replies: 0,
             parent_comment_sk: None,
         }
@@ -74,25 +95,18 @@ impl SpacePostComment {
 
     pub async fn list_by_comment(
         cli: &aws_sdk_dynamodb::Client,
-        space_post_pk: Partition,
         comment_sk: EntityType,
+        opt: SpacePostCommentQueryOption,
     ) -> Result<(Vec<Self>, Option<String>), crate::Error> {
         let parent_comment_id = match comment_sk {
             EntityType::SpacePostComment(id) => id,
-            _ => "".to_string(),
+            _ => {
+                tracing::error!("Invalid parent comment sk: {:?}", comment_sk);
+                return Err(crate::Error::PostReplyError);
+            }
         };
 
-        SpacePostComment::query(
-            cli,
-            space_post_pk,
-            SpacePostCommentQueryOption::builder()
-                .limit(10)
-                .sk(
-                    EntityType::SpacePostCommentReply(parent_comment_id, "".to_string())
-                        .to_string(),
-                ),
-        )
-        .await
+        SpacePostComment::find_replies_by_likes(cli, parent_comment_id, opt).await
     }
 
     pub async fn reply(
@@ -125,7 +139,8 @@ impl SpacePostComment {
             .with_parent_comment_sk(parent_comment_sk.clone());
 
         let uuid = uuid::Uuid::new_v4().to_string();
-        comment.sk = EntityType::SpacePostCommentReply(parent_comment_id, uuid);
+        comment.sk = EntityType::SpacePostCommentReply(parent_comment_id.clone(), uuid);
+        comment.parent_id_for_likes = parent_comment_id;
 
         let comment_tx = comment.create_transact_write_item();
 

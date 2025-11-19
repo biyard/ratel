@@ -7,6 +7,7 @@ export interface ChoiceQuestion {
   image_url?: string;
   options: string[]; // Vec<String> maps to string[]
   is_required?: boolean; // Option<bool> maps to optional boolean
+  allow_other?: boolean;
 }
 
 /**
@@ -108,7 +109,11 @@ export type SurveyAnswer = PollAnswer;
 export type PollQuestion = ObjectiveQuestionUnion | SubjectiveQuestionUnion;
 
 export type PollAnswer =
-  | { answer_type: SurveyAnswerType.SingleChoice; answer?: number }
+  | {
+      answer_type: SurveyAnswerType.SingleChoice;
+      answer?: number;
+      other?: string;
+    }
   | { answer_type: SurveyAnswerType.MultipleChoice; answer?: number[] }
   | { answer_type: SurveyAnswerType.ShortAnswer; answer?: string }
   | { answer_type: SurveyAnswerType.Subjective; answer?: string }

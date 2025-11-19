@@ -22,7 +22,6 @@ pub struct SpacePanelParticipant {
 impl SpacePanelParticipant {
     pub fn new(
         space_pk: Partition,
-        panel_pk: Partition,
         User {
             pk,
             display_name,
@@ -31,10 +30,10 @@ impl SpacePanelParticipant {
             ..
         }: User,
     ) -> Self {
-        let (panel_pk, sk) = Self::keys(&panel_pk, &pk);
+        let (space_pk, sk) = Self::keys(&space_pk, &pk);
 
         Self {
-            pk: panel_pk,
+            pk: space_pk.clone(),
             sk,
             space_pk,
             user_pk: pk,
@@ -44,10 +43,10 @@ impl SpacePanelParticipant {
         }
     }
 
-    pub fn keys(panel_pk: &Partition, user_pk: &Partition) -> (Partition, EntityType) {
+    pub fn keys(space_pk: &Partition, user_pk: &Partition) -> (Partition, EntityType) {
         (
-            panel_pk.clone(),
-            EntityType::SpacePanelParticipant(panel_pk.to_string(), user_pk.to_string()),
+            space_pk.clone(),
+            EntityType::SpacePanelParticipant(user_pk.to_string()),
         )
     }
 
@@ -71,16 +70,5 @@ impl SpacePanelParticipant {
         } else {
             Some(items[0].clone())
         }
-    }
-
-    pub async fn is_participant(
-        cli: &aws_sdk_dynamodb::Client,
-        panel_pk: &Partition,
-        user_pk: &Partition,
-    ) -> Result<bool, crate::Error> {
-        let (pk, sk) = Self::keys(panel_pk, user_pk);
-        let participant = SpacePanelParticipant::get(&cli, pk, Some(sk)).await?;
-
-        Ok(participant.is_some())
     }
 }

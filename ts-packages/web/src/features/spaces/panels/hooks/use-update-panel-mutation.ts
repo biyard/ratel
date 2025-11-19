@@ -1,69 +1,43 @@
 import { spaceKeys } from '@/constants';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Attribute } from '../types/answer-type';
-import { updateSpacePanel } from '@/lib/api/ratel/panel.spaces.v3';
-import { ListPanelResponse } from '../types/list-panel-response';
-import { SpacePanelResponse } from '../types/space-panel-response';
+import { useMutation } from '@tanstack/react-query';
+import { call } from '@/lib/api/ratel/call';
+import { optimisticUpdate } from '@/lib/hook-utils';
+import { Space } from '../../types/space';
 
 type Vars = {
   spacePk: string;
-  panelPk: string;
-  name: string;
-  quotas: number;
-  attributes: Attribute[];
+  quota: number;
 };
 
 export function useUpdatePanelMutation() {
-  const qc = useQueryClient();
-
   return useMutation({
     mutationKey: ['update-panel'],
     mutationFn: async (v: Vars) => {
-      const { spacePk, panelPk, name, quotas, attributes } = v;
+      const { spacePk, quota: quotas } = v;
 
-      await updateSpacePanel(spacePk, panelPk, name, quotas, attributes);
+      await call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
+        quotas,
+      });
 
       return v;
     },
+    onMutate: async ({ spacePk, quota }) => {
+      const queryKey = spaceKeys.detail(spacePk);
 
-    onMutate: async (vars) => {
-      const { spacePk, panelPk, ...patch } = vars;
-
-      const qk = spaceKeys.panels(spacePk);
-      await qc.cancelQueries({ queryKey: qk });
-
-      const prev = qc.getQueryData<ListPanelResponse>(qk);
-
-      qc.setQueryData<ListPanelResponse>(qk, (old) => {
+      const rollback = await optimisticUpdate<Space>({ queryKey }, (old) => {
         if (!old) return old;
+        old.quota = quota;
 
-        const updatedList = old.panels.map((d): SpacePanelResponse => {
-          if (d.pk !== panelPk) return d;
-
-          return {
-            ...d,
-            name: patch.name,
-            quotas: patch.quotas,
-            attributes: patch.attributes,
-          } as SpacePanelResponse;
-        });
-
-        return new ListPanelResponse({
-          panels: updatedList,
-          bookmark: old.bookmark,
-        });
+        return old;
       });
 
-      return { qk, prev };
+      return { rollback };
     },
 
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.qk) qc.setQueryData(ctx.qk, ctx.prev);
-    },
-
-    onSettled: async (_data, _error, { spacePk }) => {
-      const qk = spaceKeys.panels(spacePk);
-      await qc.invalidateQueries({ queryKey: qk });
+    onError: async (_err, _vars, { rollback }) => {
+      if (rollback) {
+        rollback.rollback();
+      }
     },
   });
 }

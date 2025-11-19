@@ -9,6 +9,7 @@ import { SpaceType } from './space-type';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
 import { BoosterType } from './booster-type';
 import FileModel from '../files/types/file';
+import { SpaceRequirement } from './space-requirement';
 
 export class Space {
   readonly permissions: TeamGroupPermissions;
@@ -34,13 +35,18 @@ export class Space {
   public visibility: SpaceVisibility;
   public publishState: SpacePublishState;
   public booster: BoosterType | undefined;
-  public verified: boolean;
   public files: FileModel[] | undefined;
   public anonymous_participation: boolean;
+  public canParticipate: boolean;
+  public change_visibility: boolean;
   public participated: boolean;
   public participantDisplayName: string | null;
   public participantProfileUrl: string | null;
   public participantUsername: string | null;
+  public requirements: SpaceRequirement[];
+  public blockParticipate: boolean;
+  public quota: number;
+  public remains: number;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
@@ -67,17 +73,30 @@ export class Space {
     this.visibility = json.visibility;
     this.publishState = json.publish_state;
     this.booster = json.booster;
-    this.verified = json.verified;
     this.files = json.files;
     this.anonymous_participation = json.anonymous_participation;
+    this.canParticipate = json.can_participate;
+    this.change_visibility = json.change_visibility;
     this.participated = json.participated;
     this.participantDisplayName = json.participant_display_name || null;
     this.participantProfileUrl = json.participant_profile_url || null;
     this.participantUsername = json.participant_username || null;
+    this.requirements = json.requirements
+      ? json.requirements
+          .map((e) => new SpaceRequirement(e))
+          .sort((a, b) => a.order - b.order)
+      : [];
+    this.blockParticipate = json.block_participate || false;
+    this.quota = json.quota;
+    this.remains = json.remains;
   }
 
   shouldParticipateManually() {
     return this.anonymous_participation;
+  }
+
+  havePreTasks() {
+    return this.requirements.filter((e) => !e.responded).length > 0;
   }
 
   isAdmin() {
@@ -89,7 +108,9 @@ export class Space {
   }
 
   get isPublic() {
-    return this.visibility.type === 'Public';
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const visibility = this.visibility as any;
+    return visibility === 'PUBLIC';
   }
 
   get isStarted() {

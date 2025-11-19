@@ -7,7 +7,8 @@ import { Calendar } from 'lucide-react';
 import CalendarDayPicker from '../calendar-day-picker';
 import * as Popover from '@radix-ui/react-popover';
 
-interface CalendarDropdownProps {
+interface CalendarDropdownProps
+  extends Omit<React.HTMLAttributes<HTMLButtonElement>, 'onChange'> {
   value: number;
   onChange: (date: number) => void;
   canEdit?: boolean;
@@ -17,6 +18,7 @@ export default function CalendarDropdown({
   value,
   onChange,
   canEdit,
+  ...restProps
 }: CalendarDropdownProps) {
   const [calendarOpen, setCalendarOpen] = useState<boolean>(false);
   const selectedDate = value ? new Date(value) : null;
@@ -28,7 +30,11 @@ export default function CalendarDropdown({
       onOpenChange={setCalendarOpen}
     >
       <Popover.Trigger asChild>
-        <button className="flex flex-row justify-between items-center font-medium rounded-lg border shadow-sm focus:outline-none w-[150px] max-tablet:w-full px-[20px] py-[10.5px] text-[15px]/[22.5px] text-neutral-600 bg-select-date-bg border-select-date-border gap-[10px]">
+        <button
+          data-testid="calendar-dropdown-trigger"
+          className="flex flex-row justify-between items-center font-medium rounded-lg border shadow-sm focus:outline-none w-[150px] max-tablet:w-full px-5 py-[10.5px] text-[15px]/[22.5px] text-neutral-600 bg-select-date-bg border-select-date-border gap-2.5"
+          {...restProps}
+        >
           {selectedDate ? format(selectedDate, 'yyyy/MM/dd') : 'Selected Date'}
           <Calendar className="w-5 h-5 stroke-neutral-500" />
         </button>

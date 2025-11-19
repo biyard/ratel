@@ -11,6 +11,7 @@ pub struct SpacePostCommentResponse {
     pub sk: EntityType,
 
     pub updated_at: i64,
+    pub created_at: i64,
 
     pub content: String,
 
@@ -32,6 +33,7 @@ impl From<(SpacePostComment, bool)> for SpacePostCommentResponse {
         Self {
             pk: comment.pk,
             sk: comment.sk,
+            created_at: comment.created_at,
             updated_at: comment.updated_at,
             content: comment.content,
             likes: comment.likes,
@@ -51,6 +53,7 @@ impl From<SpacePostComment> for SpacePostCommentResponse {
         Self {
             pk: comment.pk,
             sk: comment.sk,
+            created_at: comment.created_at,
             updated_at: comment.updated_at,
             content: comment.content,
             likes: comment.likes,

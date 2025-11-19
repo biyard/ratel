@@ -10,18 +10,37 @@ use crate::types::{
 )]
 #[serde(rename_all = "snake_case", tag = "answer_type")]
 pub enum Answer {
-    SingleChoice { answer: Option<i32> },
-    MultipleChoice { answer: Option<Vec<i32>> },
-    ShortAnswer { answer: Option<String> },
-    Subjective { answer: Option<String> },
-    Checkbox { answer: Option<Vec<i32>> },
-    Dropdown { answer: Option<i32> },
-    LinearScale { answer: Option<i32> },
+    SingleChoice {
+        answer: Option<i32>,
+        #[serde(default)]
+        other: Option<String>,
+    },
+    MultipleChoice {
+        answer: Option<Vec<i32>>,
+    },
+    ShortAnswer {
+        answer: Option<String>,
+    },
+    Subjective {
+        answer: Option<String>,
+    },
+    Checkbox {
+        answer: Option<Vec<i32>>,
+    },
+    Dropdown {
+        answer: Option<i32>,
+    },
+    LinearScale {
+        answer: Option<i32>,
+    },
 }
 
 impl Default for Answer {
     fn default() -> Self {
-        Self::SingleChoice { answer: None }
+        Self::SingleChoice {
+            answer: None,
+            other: None,
+        }
     }
 }
 
@@ -37,8 +56,9 @@ pub fn validate_answers(questions: Vec<Question>, answers: Vec<Answer>) -> bool 
                     options,
                     ..
                 }),
-                Answer::SingleChoice { answer },
+                Answer::SingleChoice { answer, other },
             ) => {
+                let _other = other;
                 // If required, answer must be present
                 if is_required.unwrap_or_default() && answer.is_none() {
                     return false;
@@ -175,11 +195,18 @@ fn test_validate_answers() {
             "Yellow".to_string(),
         ],
         is_required: Some(false),
+        allow_other: None,
     })];
-    let answers = vec![Answer::SingleChoice { answer: Some(1) }];
+    let answers = vec![Answer::SingleChoice {
+        answer: Some(1),
+        other: None,
+    }];
     assert!(validate_answers(questions.clone(), answers));
 
-    let invalid_answers = vec![Answer::SingleChoice { answer: Some(5) }];
+    let invalid_answers = vec![Answer::SingleChoice {
+        answer: Some(5),
+        other: None,
+    }];
     assert!(!validate_answers(questions.clone(), invalid_answers));
 
     let required_questions = vec![Question::SingleChoice(ChoiceQuestion {
@@ -193,8 +220,12 @@ fn test_validate_answers() {
             "Yellow".to_string(),
         ],
         is_required: Some(true),
+        allow_other: None,
     })];
-    let missing_answers = vec![Answer::SingleChoice { answer: None }];
+    let missing_answers = vec![Answer::SingleChoice {
+        answer: None,
+        other: None,
+    }];
 
     assert!(!validate_answers(required_questions, missing_answers));
 }

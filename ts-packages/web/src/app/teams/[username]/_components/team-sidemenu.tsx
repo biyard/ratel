@@ -65,7 +65,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
   }
 
   return (
-    <div className="w-64 flex flex-col max-mobile:!hidden gap-2.5">
+    <div className="w-64 flex flex-col max-mobile:hidden! gap-2.5">
       {team && <TeamProfile team={team} />}
 
       <nav className="py-5 px-3 w-full rounded-[10px] bg-card-bg border border-card-border">
@@ -81,6 +81,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           <Link
             to={route.teamDrafts(displayTeam.username)}
             className="sidemenu-link text-text-primary"
+            data-testid="sidemenu-team-drafts"
             data-pw="team-nav-drafts"
           >
             <EditContent className="w-6 h-6 [&>path]:stroke-[#737373]" />
@@ -94,6 +95,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           <Link
             to={route.teamGroups(displayTeam.username)}
             className="sidemenu-link text-text-primary "
+            data-testid="sidemenu-team-groups"
             data-pw="team-nav-groups"
           >
             <Folder className="w-6 h-6 [&>path]:stroke-[#737373]" />
@@ -105,6 +107,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           <Link
             to={route.teamMembers(displayTeam.username)}
             className="sidemenu-link text-text-primary"
+            data-testid="sidemenu-team-members"
             data-pw="team-nav-members"
           >
             <UserGroup className="w-6 h-6 [&>path]:stroke-[#737373]" />
@@ -116,6 +119,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           <Link
             to={route.teamSettings(displayTeam.username)}
             className="sidemenu-link text-text-primary"
+            data-testid="sidemenu-team-settings"
             data-pw="team-nav-settings"
           >
             <Settings className="w-6 h-6" />

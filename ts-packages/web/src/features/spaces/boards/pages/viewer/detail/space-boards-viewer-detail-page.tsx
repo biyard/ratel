@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import PostHeader from '../../../components/post-header';
 import PostBody from '../../../components/post-body';
 import PostComments from '../../../components/post-comments';
+import { TimeRangeDisplay } from '../../../components/time-range-display';
 
 export function SpaceBoardsViewerDetailPage({
   spacePk,
@@ -20,11 +21,9 @@ export function SpaceBoardsViewerDetailPage({
     ctrl.user &&
     (!ctrl.space.anonymous_participation || ctrl.space.participated);
 
-  console.log('canActive: ', canActive);
-
   return (
     <>
-      <div className="flex flex-col gap-6 w-full max-tablet:mr-[20px]">
+      <div className="flex flex-col gap-6 w-full max-tablet:mr-5">
         <PostHeader
           t={t}
           post={ctrl.post}
@@ -34,16 +33,28 @@ export function SpaceBoardsViewerDetailPage({
           canDelete={false}
           canEdit={false}
         />
+        <TimeRangeDisplay
+          startTimestampMillis={ctrl.post?.started_at ?? 0}
+          endTimestampMillis={ctrl.post?.ended_at ?? 0}
+        />
+
         <PostBody post={ctrl.post} />
         <PostComments
           t={t}
           spacePk={ctrl.spacePk}
           post={ctrl.post}
+          comments={ctrl.comments.get()}
           isLoggedIn={canActive}
           expandComment={ctrl.expandComment}
+          handleCommentDelete={ctrl.handleDeleteComment}
+          handleCommentUpdate={ctrl.handleUpdateComment}
           handleComment={ctrl.handleComment}
           handleReplyToComment={ctrl.handleReplyToComment}
           handleLikeComment={ctrl.handleLikeComment}
+          hasPrevPage={ctrl.hasPrevPage()}
+          hasNextPage={ctrl.hasNextPage()}
+          onPrevPage={ctrl.handlePrevCommentsPage}
+          onNextPage={ctrl.handleNextCommentsPage}
         />
       </div>
     </>
