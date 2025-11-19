@@ -1,15 +1,22 @@
+// #[cfg(all(not(test), not(feature = "no-secret")))]
+// use crate::features::spaces::templates::SpaceTemplate;
+use crate::email_operation::EmailOperation;
 use crate::{
     Error,
     features::spaces::boards::models::{
         space_category::SpaceCategory, space_post_comment::SpacePostComment,
         space_post_comment_like::SpacePostCommentLike,
     },
-    models::{PostCommentLike, SpaceCommon, team::Team, user::User},
+    models::{
+        PostCommentLike, SpaceCommon, email_template::email_template::EmailTemplate, team::Team,
+        user::User,
+    },
     types::{author::Author, *},
     utils::aws::{DynamoClient, SesClient},
 };
 use bdk::prelude::axum::Json;
 use bdk::prelude::*;
+use serde_json::json;
 
 #[derive(
     Debug,
@@ -32,6 +39,11 @@ pub struct SpacePost {
     #[dynamo(index = "gsi6", sk)]
     pub updated_at: i64,
 
+    #[serde(default)]
+    pub started_at: i64,
+    #[serde(default)]
+    pub ended_at: i64,
+
     pub title: String,
     pub html_contents: String,
     #[dynamo(index = "gsi6", name = "find_by_cagetory", pk)]
@@ -50,9 +62,7 @@ pub struct SpacePost {
     pub author_profile_url: String,
     pub author_username: String,
 
-    // boards image urls
     pub urls: Vec<String>,
-    // boards pdf files
     pub files: Option<Vec<File>>,
 }
 
@@ -64,6 +74,8 @@ impl SpacePost {
         category_name: String,
         urls: Vec<String>,
         files: Option<Vec<File>>,
+        started_at: i64,
+        ended_at: i64,
         User {
             pk,
             display_name,
@@ -79,6 +91,8 @@ impl SpacePost {
             sk: EntityType::SpacePost(uuid),
             created_at: now,
             updated_at: now,
+            started_at,
+            ended_at,
 
             title,
             html_contents,
@@ -103,76 +117,76 @@ impl SpacePost {
         (space_pk.clone(), EntityType::SpacePost(space_post_id))
     }
 
+    // #[cfg(all(not(test), not(feature = "no-secret")))]
+    // async fn ensure_space_post_template_exists(
+    //     dynamo: &DynamoClient,
+    //     ses: &SesClient,
+    //     template_name: &str,
+    // ) -> Result<(), Error> {
+    //     use crate::utils::templates::{
+    //         CREATE_SPACE_POST_TEMPLATE_HTML, CREATE_SPACE_POST_TEMPLATE_SUBJECT,
+    //     };
+
+    //     let template = SpaceTemplate::get(
+    //         &dynamo.client,
+    //         Partition::SpaceTemplate,
+    //         Some(EntityType::SpaceTemplate(template_name.to_string())),
+    //     )
+    //     .await?;
+
+    //     if template.is_none() {
+    //         ses.create_template(
+    //             template_name,
+    //             CREATE_SPACE_POST_TEMPLATE_SUBJECT,
+    //             CREATE_SPACE_POST_TEMPLATE_HTML,
+    //         )
+    //         .await
+    //         .map_err(|e| Error::AwsSesSendEmailException(e.to_string()))?;
+
+    //         let temp = SpaceTemplate::new(template_name.to_string());
+    //         temp.create(&dynamo.client).await?;
+    //     }
+
+    //     Ok(())
+    // }
+
     #[allow(unused_variables)]
     pub async fn send_email(
         dynamo: &DynamoClient,
         ses: &SesClient,
-        user_email: String,
+        user_emails: Vec<String>,
         space: SpaceCommon,
         title: String,
         html_contents: String,
         user: User,
     ) -> Result<Json<()>, Error> {
-        #[cfg(any(test, feature = "no-secret"))]
-        {
-            let _ = ses;
-            tracing::warn!("sending email will be skipped for {}", user_email,);
+        let mut domain = crate::config::get().domain.to_string();
+        if domain.contains("localhost") {
+            domain = format!("http://{}", domain);
+        } else {
+            domain = format!("https://{}", domain);
         }
 
-        #[cfg(all(not(test), not(feature = "no-secret")))]
-        {
-            use crate::utils::html::create_space_post_html;
+        let space_id = match space.pk.clone() {
+            Partition::Space(v) => v.to_string(),
+            _ => "".to_string(),
+        };
 
-            let mut domain = crate::config::get().domain.to_string();
-            if domain.contains("localhost") {
-                domain = format!("http://{}", domain).to_string();
-            } else {
-                domain = format!("https://{}", domain).to_string();
-            }
+        let connect_link = format!("{}/spaces/SPACE%23{}/boards", domain, space_id);
 
-            let space_id = match space.pk.clone() {
-                Partition::Space(v) => v.to_string(),
-                _ => "".to_string(),
-            };
+        let email = EmailTemplate {
+            targets: user_emails.clone(),
+            operation: EmailOperation::SpacePostNotification {
+                author_profile: user.profile_url,
+                author_display_name: user.display_name,
+                author_username: user.username,
+                post_title: title,
+                post_desc: html_contents,
+                connect_link,
+            },
+        };
 
-            let profile = user.profile_url;
-            let username = user.username;
-            let display_name = user.display_name;
-
-            let html = create_space_post_html(
-                title.clone(),
-                html_contents,
-                profile,
-                display_name,
-                username,
-                format!("{}/spaces/SPACE%23{}/boards", domain, space_id),
-            );
-
-            let text = format!(
-                "You're invited to join {space}\n{user} is posting the post in the {space}.\nOpen: {url}",
-                space = title.clone(),
-                user = space.author_username,
-                url = format!("{}/spaces/SPACE%23{}/boards", domain, space_id),
-            );
-
-            let mut i = 0;
-            let subject = format!("[Ratel] Posting the post in the space");
-
-            while let Err(e) = ses
-                .send_mail_html(&user_email, &subject, &html, Some(&text))
-                .await
-            {
-                btracing::notify!(
-                    crate::config::get().slack_channel_monitor,
-                    &format!("Failed to send email: {:?}", e)
-                );
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-                i += 1;
-                if i >= 3 {
-                    return Err(Error::AwsSesSendEmailException(e.to_string()));
-                }
-            }
-        }
+        email.send_email(&dynamo, &ses).await?;
 
         Ok(Json(()))
     }
@@ -209,9 +223,18 @@ impl SpacePost {
         comment_pk: EntityType,
         user_pk: Partition,
     ) -> Result<(), crate::Error> {
+        let comment = SpacePostComment::get(cli, space_post_pk.clone(), Some(comment_pk.clone()))
+            .await?
+            .ok_or(crate::Error::PostCommentError)?;
+
+        let new_likes = comment.likes.saturating_add(1);
+        let new_likes_align = format!("{:020}", new_likes);
+
         let comment_tx = SpacePostComment::updater(&space_post_pk, &comment_pk)
-            .increase_likes(1)
+            .with_likes(new_likes)
+            .with_likes_align(new_likes_align)
             .transact_write_item();
+
         let pl_tx = SpacePostCommentLike::new(space_post_pk, comment_pk, user_pk)
             .create_transact_write_item();
 
@@ -223,6 +246,7 @@ impl SpacePost {
                 tracing::error!("Failed to like comment: {}", e);
                 crate::Error::PostLikeError
             })?;
+
         Ok(())
     }
 
@@ -232,9 +256,18 @@ impl SpacePost {
         comment_pk: EntityType,
         user_pk: Partition,
     ) -> Result<(), crate::Error> {
+        let comment = SpacePostComment::get(cli, space_post_pk.clone(), Some(comment_pk.clone()))
+            .await?
+            .ok_or(crate::Error::PostCommentError)?;
+
+        let new_likes = comment.likes.saturating_sub(1);
+        let new_likes_align = format!("{:020}", new_likes);
+
         let comment_tx = SpacePostComment::updater(&space_post_pk, &comment_pk)
-            .decrease_likes(1)
+            .with_likes(new_likes)
+            .with_likes_align(new_likes_align)
             .transact_write_item();
+
         let pcl = SpacePostCommentLike::new(space_post_pk, comment_pk, user_pk);
         let pl_tx = SpacePostCommentLike::delete_transact_write_item(&pcl.pk, &pcl.sk);
 
@@ -246,6 +279,7 @@ impl SpacePost {
                 tracing::error!("Failed to unlike comment: {}", e);
                 crate::Error::PostLikeError
             })?;
+
         Ok(())
     }
 }

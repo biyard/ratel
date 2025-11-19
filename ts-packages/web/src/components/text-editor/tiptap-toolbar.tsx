@@ -217,11 +217,21 @@ export const TiptapToolbar = ({
   }, []);
 
   const handleTextColor = (color: string) => {
-    editor.chain().focus().setColor(color).run();
+    // Try to use theme-aware color if available, fallback to standard color
+    if (editor.commands.setThemeAwareColor) {
+      editor.chain().focus().setThemeAwareColor(color).run();
+    } else {
+      editor.chain().focus().setColor(color).run();
+    }
   };
 
   const handleHighlight = (color: string) => {
-    editor.chain().focus().setHighlight({ color }).run();
+    // Try to use theme-aware highlight if available, fallback to standard highlight
+    if (editor.commands.setThemeAwareHighlight) {
+      editor.chain().focus().setThemeAwareHighlight({ color }).run();
+    } else {
+      editor.chain().focus().setHighlight({ color }).run();
+    }
   };
 
   const handleImageUpload = () => {
@@ -555,6 +565,7 @@ export const TiptapToolbar = ({
             active={editor.isActive('link')}
             tooltip="Link"
             aria-label="Link"
+            data-testid="tiptap-toolbar-link"
           />
 
           <ToolbarButton

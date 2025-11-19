@@ -15,15 +15,19 @@ import { Button } from '@/components/ui/button';
 import { showErrorToast } from '@/lib/toast';
 import { PollStatus } from '@/features/spaces/polls/types/poll-status';
 
+const OTHER_LABEL = 'Others';
+
 export interface SurveyViewerProps {
   t: I18nFunction;
   questions: SurveyQuestion[];
   selectedAnswers: Record<number, SurveyAnswer>;
   onUpdateAnswer: (questionIdx: number, answer: SurveyAnswer) => void;
   onSubmit?: () => void;
+  onValidateError?: () => void;
   onLogin?: () => void;
   status: PollStatus;
   isAdmin?: boolean;
+  canParticipate?: boolean;
   canSubmit?: boolean;
   canUpdate?: boolean;
   isLogin?: boolean;
@@ -38,9 +42,11 @@ export default function SurveyViewer({
   status,
   selectedAnswers,
   onUpdateAnswer,
+  onValidateError,
   onSubmit,
   onLogin,
   canSubmit,
+  canParticipate,
   canUpdate,
   isLogin,
   isAdmin = false,
@@ -107,7 +113,8 @@ export default function SurveyViewer({
           }
           setIdx((v) => Math.min(total - 1, v + 1));
         }}
-        disabled={(!canNext() && !isAdmin) || disabled}
+        data-testid="survey-btn-next"
+        disabled={!canNext() && !isAdmin}
       >
         {t('btn_next')}
       </Button>
@@ -116,22 +123,36 @@ export default function SurveyViewer({
     button = (
       <Button
         onClick={() => {
+          if (!canParticipate) {
+            return;
+          }
+
           if (!validateAllRequiredAnswers()) {
-            showErrorToast(
-              'Please answer all required questions before submitting.',
-            );
+            if (onValidateError) {
+              onValidateError();
+            } else {
+              showErrorToast(
+                'Please answer all required questions before submitting.',
+              );
+            }
             return;
           }
           onSubmit?.();
         }}
+        disabled={!canParticipate}
+        data-testid="survey-btn-submit"
       >
-        {t('btn_submit')}
+        {canParticipate ? t('btn_submit') : t('btn_not_enable')}
       </Button>
     );
   } else if (canUpdate && !isAdmin) {
     button = (
       <Button
         onClick={() => {
+          if (!canParticipate) {
+            return;
+          }
+
           if (!validateAllRequiredAnswers()) {
             showErrorToast(
               'Please answer all required questions before updating.',
@@ -141,7 +162,7 @@ export default function SurveyViewer({
           onSubmit?.();
         }}
       >
-        {t('btn_update')}
+        {canParticipate ? t('btn_update') : t('btn_not_enable')}
       </Button>
     );
   }
@@ -157,8 +178,8 @@ export default function SurveyViewer({
       {total > 0 && (
         <>
           <Card key={`survey-question-${idx}`}>
-            <div className="flex items-center justify-between">
-              <div className="text-sm/[22.5px] text-white font-medium">
+            <div className="flex justify-between items-center">
+              <div className="font-medium text-white text-sm/[22.5px]">
                 {idx + 1} / {total}
               </div>
             </div>
@@ -171,8 +192,23 @@ export default function SurveyViewer({
 
                 if (!isAdmin) {
                   const type = current.question.answer_type;
+
+                  const selectedIndex =
+                    type === SurveyAnswerType.SingleChoice &&
+                    typeof answer?.answer === 'number'
+                      ? (answer.answer as number)
+                      : undefined;
+
+                  const isOtherSelected =
+                    type === SurveyAnswerType.SingleChoice &&
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    (current.question as any).allow_other &&
+                    selectedIndex !== undefined &&
+                    current.question.options[selectedIndex] === OTHER_LABEL;
+
                   const isAutoNext =
-                    type === SurveyAnswerType.SingleChoice ||
+                    (type === SurveyAnswerType.SingleChoice &&
+                      !isOtherSelected) ||
                     type === SurveyAnswerType.Dropdown ||
                     type === SurveyAnswerType.LinearScale ||
                     (type === SurveyAnswerType.Checkbox &&
@@ -194,11 +230,12 @@ export default function SurveyViewer({
             />
           </Card>
 
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex gap-2 justify-between items-center">
             {idx != 0 ? (
               <Button
                 onClick={() => setIdx((v) => Math.max(0, v - 1))}
                 disabled={idx === 0}
+                data-testid="survey-btn-prev"
               >
                 {t('btn_prev')}
               </Button>
@@ -229,6 +266,10 @@ function QuestionViewer({
     case SurveyAnswerType.SingleChoice: {
       const { question, answer } = questionAnswer;
       const prev = answer?.answer !== undefined ? [answer.answer] : [];
+      const otherIndex =
+        question.allow_other && question.options?.includes(OTHER_LABEL)
+          ? question.options.indexOf(OTHER_LABEL)
+          : -1;
       return (
         <ObjectiveViewer
           t={t}
@@ -236,12 +277,39 @@ function QuestionViewer({
           answer_type={question.answer_type}
           disabled={disabled}
           selectedIndexes={prev}
+          allow_other={question.allow_other ?? false}
+          otherValue={
+            answer?.answer_type === SurveyAnswerType.SingleChoice
+              ? answer.other
+              : undefined
+          }
           onSelect={(i) => {
             if (disabled) return;
-            let next = i;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            if (prev.includes(i)) next = undefined as any;
-            updateAnswer({ answer_type: question.answer_type, answer: next });
+
+            const isOther =
+              question.allow_other &&
+              i === otherIndex &&
+              question.options[i] === OTHER_LABEL;
+
+            let next: number | undefined = i;
+            if (prev.includes(i)) {
+              next = undefined;
+            }
+
+            updateAnswer({
+              answer_type: question.answer_type,
+              answer: next,
+              ...(isOther ? { other: answer?.other } : { other: undefined }),
+            });
+          }}
+          onChangeOther={(value) => {
+            if (disabled) return;
+
+            updateAnswer({
+              answer_type: question.answer_type,
+              answer: otherIndex,
+              other: value,
+            });
           }}
         />
       );

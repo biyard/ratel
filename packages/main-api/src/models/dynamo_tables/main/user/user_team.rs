@@ -1,5 +1,17 @@
-use crate::{models::team::Team, types::*, utils::time::get_now_timestamp_millis};
+use crate::Error;
+use crate::models::email_template::email_template::EmailTemplate;
+// #[cfg(all(not(test), not(feature = "no-secret")))]
+// use crate::features::spaces::templates::SpaceTemplate;
+use crate::email_operation::EmailOperation;
+use crate::utils::aws::DynamoClient;
+
+use crate::{
+    models::team::Team,
+    types::*,
+    utils::{aws::SesClient, time::get_now_timestamp_millis},
+};
 use bdk::prelude::*;
+use serde_json::json;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct UserTeam {
@@ -7,7 +19,6 @@ pub struct UserTeam {
     #[dynamo(prefix = "TEAM_PK", index = "gsi1", name = "find_by_team", pk)]
     pub sk: EntityType,
 
-    // NOTE: Sort teams for a user by last_used_at in descending order.
     #[dynamo(index = "gsi1", sk)]
     pub last_used_at: i64,
 
@@ -37,6 +48,68 @@ impl UserTeam {
             profile_url,
             username,
         }
+    }
+
+    // #[cfg(all(not(test), not(feature = "no-secret")))]
+    // async fn ensure_team_invite_template_exists(
+    //     dynamo: &DynamoClient,
+    //     ses: &SesClient,
+    //     template_name: &str,
+    // ) -> Result<(), Error> {
+    //     use crate::utils::templates::{INVITE_TEAM_TEMPLATE_HTML, INVITE_TEAM_TEMPLATE_SUBJECT};
+
+    //     let template = SpaceTemplate::get(
+    //         &dynamo.client,
+    //         Partition::SpaceTemplate,
+    //         Some(EntityType::SpaceTemplate(template_name.to_string())),
+    //     )
+    //     .await?;
+
+    //     if template.is_none() {
+    //         ses.create_template(
+    //             template_name,
+    //             INVITE_TEAM_TEMPLATE_SUBJECT,
+    //             INVITE_TEAM_TEMPLATE_HTML,
+    //         )
+    //         .await
+    //         .map_err(|e| Error::AwsSesSendEmailException(e.to_string()))?;
+
+    //         let temp = SpaceTemplate::new(template_name.to_string());
+    //         temp.create(&dynamo.client).await?;
+    //     }
+
+    //     Ok(())
+    // }
+
+    #[allow(unused_variables)]
+    pub async fn send_email(
+        dynamo: &DynamoClient,
+        ses: &SesClient,
+        team: Team,
+        user_emails: Vec<String>,
+    ) -> Result<(), Error> {
+        let mut domain = crate::config::get().domain.to_string();
+        if domain.contains("localhost") {
+            domain = format!("http://{}", domain);
+        } else {
+            domain = format!("https://{}", domain);
+        }
+
+        let url = format!("{}/teams/{}/home", domain, team.username);
+
+        let email = EmailTemplate {
+            targets: user_emails.clone(),
+            operation: EmailOperation::TeamInvite {
+                team_name: team.username.clone(),
+                team_profile: team.profile_url.clone(),
+                team_display_name: team.display_name.clone(),
+                url,
+            },
+        };
+
+        email.send_email(&dynamo, &ses).await?;
+
+        Ok(())
     }
 }
 

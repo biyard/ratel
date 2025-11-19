@@ -218,7 +218,7 @@ export const LoginModal = ({
   return (
     <div
       id={id}
-      className="flex flex-col w-100 max-w-100 mx-1.25 max-mobile:!w-full max-mobile:!max-w-full gap-5"
+      className="flex flex-col w-100 max-w-100 mx-1.25 max-mobile:w-full! max-mobile:max-w-full! gap-5"
     >
       <Col className="gap-4">
         <Row className="gap-1 justify-start items-center text-sm">
@@ -235,6 +235,7 @@ export const LoginModal = ({
         <Col>
           <label className="text-sm">{t('email_address')} </label>
           <Input
+            data-testid="email-input"
             type="email"
             name="username"
             autoComplete="email"
@@ -257,6 +258,7 @@ export const LoginModal = ({
         <Col aria-hidden={!showPassword} className="aria-hidden:hidden">
           <label className="text-sm">{t('password')}</label>
           <Input
+            data-testid="password-input"
             type="password"
             placeholder={t('password_hint')}
             className="px-5 w-full font-light rounded-[10px] py-5.5"
@@ -290,6 +292,7 @@ export const LoginModal = ({
             {t('forgot_password')}
           </a>
           <Button
+            data-testid="continue-button"
             variant={'rounded_secondary'}
             className="py-1.5 px-4 text-xs light:bg-neutral-600"
             onClick={handleContinue}

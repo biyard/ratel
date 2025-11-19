@@ -27,8 +27,8 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
         path: format!("/v3/posts/{}", post_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "title": "Poll Post",
-            "content": "<p>This is a poll post</p>",
+            "title": "Deliberation Post",
+            "content": "<p>This is a deliberation post</p>",
             "publish": true
         }
     };
@@ -39,7 +39,7 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
         path: "/v3/spaces",
         headers: test_user.1.clone(),
         body: {
-            "space_type": 1,
+            "space_type": SpaceType::Deliberation,
             "post_pk": post_pk,
         },
         response_type: CreateSpaceResponse
@@ -47,7 +47,9 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
     assert_eq!(status, 200);
 
     let space_pk = create_space_res.space_pk;
+    let now = chrono::Utc::now().timestamp();
 
+    // Create a space board post
     let (status, _headers, create_space_post_res) = post! {
         app: app,
         path: format!("/v3/spaces/{}/boards", space_pk.to_string()),
@@ -57,9 +59,22 @@ pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition)
             "html_contents": "<div>space boards desc</div>".to_string(),
             "category_name": "space_category".to_string(),
             "urls": [],
-            "files": []
+            "files": [],
+            "started_at": now,
+            "ended_at": now
         },
         response_type: CreateSpacePostResponse
+    };
+    assert_eq!(status, 200);
+
+    let (status, _headers, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "publish": true,
+            "visibility": "PUBLIC",
+        }
     };
     assert_eq!(status, 200);
 
@@ -168,6 +183,7 @@ async fn test_list_space_posts() {
 async fn test_update_space_posts() {
     let (ctx, space_pk, space_post_pk) = setup_deliberation_space().await;
     let TestContextV3 { app, test_user, .. } = ctx;
+    let now = chrono::Utc::now().timestamp();
 
     let (status, _headers, update_space_post_res) = patch! {
         app: app,
@@ -178,7 +194,9 @@ async fn test_update_space_posts() {
             "html_contents": "<div>update space boards desc</div>".to_string(),
             "category_name": "space_category".to_string(),
             "urls": [],
-            "files": []
+            "files": [],
+            "started_at": now,
+            "ended_at": now
         },
         response_type: SpacePostResponse
     };

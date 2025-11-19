@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Col } from '@/components/ui/col';
 import { useObserver } from '@/hooks/use-observer';
 import useInfiniteMySpaces from './_hooks/use-my-spaces';
@@ -6,11 +6,26 @@ import { useNavigate } from 'react-router';
 import { route } from '@/route';
 import Card from '@/components/card';
 import { MySpace } from '@/features/spaces/types/space-common';
+import { Row } from '@/components/ui/row';
+import { useMySpacesI18n } from './i18n';
 
 function SpaceCard({ space }: { space: MySpace }) {
   const navigate = useNavigate();
+  const isBlocked =
+    (space.invitation_status === 'pending' && space.block_participate) ?? false;
+  const t = useMySpacesI18n();
+  const status = useMemo(() => {
+    if (isBlocked) {
+      return 'blocked';
+    }
+
+    return space.invitation_status;
+  }, [isBlocked, space.invitation_status]);
 
   const handleClick = () => {
+    if (isBlocked) {
+      return; // Don't navigate if participation is blocked
+    }
     navigate(route.space(space.pk));
   };
 
@@ -21,57 +36,42 @@ function SpaceCard({ space }: { space: MySpace }) {
     return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
   };
 
-  const getInvitationStatusLabel = (status: 'pending' | 'participating') => {
-    return status === 'pending' ? 'Pending' : 'Participating';
-  };
-
   return (
     <Card
       onClick={handleClick}
-      className="cursor-pointer hover:bg-card-bg-hover transition-colors"
+      className={`transition-colors ${
+        isBlocked
+          ? 'cursor-not-allowed opacity-60 bg-gray-50 dark:bg-gray-800'
+          : 'cursor-pointer hover:bg-card-bg-hover'
+      }`}
+      data-testid="space-card"
     >
       <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3">
-          {space.author_profile_url && (
-            <img
-              src={space.author_profile_url}
-              alt={space.author_display_name}
-              className="w-10 h-10 rounded-full"
-            />
-          )}
+        <div className="flex gap-3 items-center">
           <div className="flex flex-col">
             <h3 className="text-base font-semibold text-text-primary">
-              {space.author_display_name}
+              {space.title}
             </h3>
-            <p className="text-sm text-text-secondary">
-              @{space.author_username}
-            </p>
+            <Row>
+              {space.author_profile_url && (
+                <img
+                  className="w-5 rounded-full"
+                  src={space.author_profile_url}
+                />
+              )}
+              <p className="text-sm text-text-secondary">
+                {space.author_display_name}
+              </p>
+            </Row>
           </div>
         </div>
 
-        <div className="text-base font-medium text-text-primary">
-          {space.title}
-        </div>
-
-        <div className="flex items-center gap-2 text-sm text-text-secondary">
+        <div className="flex gap-2 items-center text-sm text-text-secondary">
           <span
             className={`px-2 py-1 rounded font-medium ${getInvitationStatusStyle(space.invitation_status)}`}
           >
-            {getInvitationStatusLabel(space.invitation_status)}
+            {t.status[status]}
           </span>
-          <span className="px-2 py-1 bg-background-secondary rounded">
-            {space.publish_state}
-          </span>
-          {space.status && (
-            <span className="px-2 py-1 bg-background-secondary rounded">
-              {space.status}
-            </span>
-          )}
-          {space.visibility.type && (
-            <span className="px-2 py-1 bg-background-secondary rounded">
-              {space.visibility.type}
-            </span>
-          )}
         </div>
       </div>
     </Card>
@@ -108,7 +108,23 @@ export default function MySpacesPage() {
     threshold: 1,
   });
 
-  const flattedSpaces = data?.pages.flatMap((page) => page.items) ?? [];
+  const flattedSpaces = useMemo(() => {
+    const spaces = data?.pages.flatMap((page) => page.items) ?? [];
+
+    // Sort spaces: pending (non-blocked) -> participating -> blocked
+    return spaces.sort((a, b) => {
+      const getPriority = (space: MySpace) => {
+        const isBlocked =
+          space.invitation_status === 'pending' && space.block_participate;
+
+        if (isBlocked) return 2; // Blocked spaces last
+        if (space.invitation_status === 'pending') return 0; // Pending first
+        return 1; // Participating second
+      };
+
+      return getPriority(a) - getPriority(b);
+    });
+  }, [data?.pages]);
 
   if (flattedSpaces.length === 0) {
     return <EmptyState />;
@@ -116,7 +132,7 @@ export default function MySpacesPage() {
 
   return (
     <div className="flex relative flex-1">
-      <Col className="flex flex-1 max-mobile:px-[10px]">
+      <Col className="flex flex-1 max-mobile:px-2.5">
         <Col className="flex-1 gap-4">
           {flattedSpaces.map((space) => (
             <SpaceCard key={`space-${space.pk}`} space={space} />

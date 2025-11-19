@@ -34,6 +34,7 @@ import SpaceStartModal from '@/features/spaces/modals/space-start-modal';
 import { useStartSpaceMutation } from '@/features/spaces/hooks/use-start-mutation';
 import { SpaceStatus } from '@/features/spaces/types/space-common';
 import { useVerifySpaceCodeMutation } from '@/features/spaces/members/hooks/use-verify-space-code-mutation';
+import useFileSpace from '@/features/spaces/files/hooks/use-file-space';
 
 export class SpaceHomeController {
   public space: Space;
@@ -57,11 +58,13 @@ export class SpaceHomeController {
     public deleteSpace: ReturnType<typeof useDeleteSpaceMutation>,
     public verifySpaceCode: ReturnType<typeof useVerifySpaceCodeMutation>,
     public image: State<string | null>,
+    public hasFiles: boolean,
     public files: State<FileModel[]>,
     public updateDraftImage: ReturnType<
       typeof useUpdateDraftImageMutation
     >['mutateAsync'],
     public participateSpace: ReturnType<typeof useParticipateSpaceMutation>,
+    public hiding: State<boolean>,
   ) {
     this.space = this.data.space.data;
     this.user = this.data.user.data;
@@ -86,8 +89,14 @@ export class SpaceHomeController {
       },
     ];
 
+    const hasFiles = this.hasFiles;
+
     sideMenusForSpaceType[this.space.spaceType]?.forEach((menu) => {
       let visible = !menu.visible;
+
+      if (menu.label === 'menu_files') {
+        visible = visible && (hasFiles || this.space.isAdmin());
+      }
 
       if (typeof menu.visible === 'function') {
         visible = menu.visible(this.space);
@@ -295,6 +304,7 @@ export class SpaceHomeController {
     try {
       this.startSpace.mutateAsync({
         spacePk: this.space.pk,
+        block: true,
       });
 
       showSuccessToast(this.t('success_start_space'));
@@ -354,6 +364,20 @@ export class SpaceHomeController {
       )
       .withTitle(this.t('delete_space'))
       .withoutBackdropClose();
+  };
+
+  handleActionPrivate = async () => {
+    this.publishSpace.mutateAsync({
+      spacePk: this.space.pk,
+      visibility: { type: 'PRIVATE' },
+    });
+  };
+
+  handleActionPublic = async () => {
+    this.publishSpace.mutateAsync({
+      spacePk: this.space.pk,
+      visibility: { type: 'PUBLIC' },
+    });
   };
 
   handleActionStart = async () => {
@@ -455,7 +479,7 @@ export class SpaceHomeController {
       return false;
     }
 
-    return true;
+    return this.space.canParticipate;
   }
 
   get actions() {
@@ -491,6 +515,28 @@ export class SpaceHomeController {
         onClick: this.handleActionDelete,
       },
     ];
+
+    if (
+      this.space.isInProgress &&
+      this.space.isPublic &&
+      this.space.change_visibility
+    ) {
+      ret.unshift({
+        label: this.t('change_private'),
+        onClick: this.handleActionPrivate,
+      });
+    }
+
+    if (
+      this.space.isInProgress &&
+      !this.space.isPublic &&
+      this.space.change_visibility
+    ) {
+      ret.unshift({
+        label: this.t('change_public'),
+        onClick: this.handleActionPublic,
+      });
+    }
 
     if (
       this.space.isInProgress &&
@@ -531,6 +577,7 @@ export function useSpaceHomeController(spacePk: string) {
   const state = useState(false);
   const { t } = useTranslation('Space');
   const navigate = useNavigate();
+  const fileData = useFileSpace(spacePk);
   const updateSpaceContent = useSpaceUpdateContentMutation();
   const updateSpaceTitle = useSpaceUpdateTitleMutation();
   const updateSpaceFiles = useSpaceUpdateFilesMutation();
@@ -541,12 +588,16 @@ export function useSpaceHomeController(spacePk: string) {
   const participateSpace = useParticipateSpaceMutation();
   const verifySpaceCode = useVerifySpaceCodeMutation();
 
+  const hasFiles = fileData.data.files.length !== 0;
+
   const edit = useState(false);
   const save = useState(false);
   const popup = usePopup();
   const image = useState<string | null>(null);
   const files = useState<FileModel[]>([]);
   const filesInitializedRef = useRef(false);
+
+  const hiding = useState(false);
 
   // Initialize image from space data
   useEffect(() => {
@@ -615,6 +666,40 @@ export function useSpaceHomeController(spacePk: string) {
     })();
   }, [cleanedPath, spacePk]);
 
+  const participationAttemptedRef = useRef(false);
+  useEffect(() => {
+    if (participationAttemptedRef.current || participateSpace.isPending) {
+      return;
+    }
+
+    const space = data.space.data;
+    if (!space) return;
+
+    const shouldAutoParticipate =
+      space.shouldParticipateManually() && space.canParticipate;
+
+    if (!shouldAutoParticipate) return;
+
+    participationAttemptedRef.current = true;
+
+    (async () => {
+      try {
+        await participateSpace.mutateAsync({
+          spacePk,
+          verifiablePresentation: '',
+        });
+      } catch (err) {
+        logger.debug('auto participate failed: ', err);
+        console.log('auto participate failed: ', err);
+      }
+    })();
+  }, [
+    spacePk,
+    data.space.data?.pk,
+    data.space.data?.canParticipate,
+    data.space.data?.status,
+  ]);
+
   return new SpaceHomeController(
     navigate,
     data,
@@ -631,8 +716,10 @@ export function useSpaceHomeController(spacePk: string) {
     deleteSpace,
     verifySpaceCode,
     new State(image),
+    hasFiles,
     new State(files),
     updateDraftImage,
     participateSpace,
+    new State(hiding),
   );
 }

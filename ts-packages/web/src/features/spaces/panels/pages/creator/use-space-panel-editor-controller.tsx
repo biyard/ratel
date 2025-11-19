@@ -1,185 +1,140 @@
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import { Space } from '@/features/spaces/types/space';
-import usePanelSpace from '../../hooks/use-panel-space';
-import { ListPanelResponse } from '../../types/list-panel-response';
-import { useCreatePanelMutation } from '../../hooks/use-create-panel-mutation';
-import { useEffect, useState } from 'react';
-import { State } from '@/types/state';
-import { SpacePanelResponse } from '../../types/space-panel-response';
-import { useUpdatePanelMutation } from '../../hooks/use-update-panel-mutation';
 import { usePopup } from '@/lib/contexts/popup-service';
-import AgePopup from '../../components/modals/age_popup';
-import { Attribute } from '../../types/answer-type';
-import GenderPopup from '../../components/modals/gender_popup';
-import { useDeletePanelMutation } from '../../hooks/use-delete-panel-mutation';
 import { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { call } from '@/lib/api/ratel/call';
+import { useUpdatePanelMutation } from '../../hooks/use-update-panel-mutation';
+import {
+  PanelAttribute,
+  PanelAttributeWithQuota,
+} from '../../types/panel-attribute';
+import { useCreatePanelQuotaMutation } from '../../hooks/use-create-panel-quota-mutation';
+import { useDeletePanelQuotaMutation } from '../../hooks/use-delete-panel-quota-mutation';
+import { useUpdatePanelQuotaMutation } from '../../hooks/use-update-panel-quota-mutation';
+import {
+  convertOptionsToPanelAttributes,
+  getAllPanelAttributeOptions,
+  getAttributeWithDefaultQuotas,
+  PanelAttributeOptions,
+} from './panel-attribute-options';
+import { useMemo, useState } from 'react';
+import { State } from '@/types/state';
+import { useListPanels } from '../../hooks/use-list-panels';
 
 export class SpacePanelEditorController {
   constructor(
     public spacePk: string,
     public space: Space,
-    public panel: ListPanelResponse,
-    public bookmark: State<string | null | undefined>,
-    public panels: State<SpacePanelResponse[]>,
     public popup: ReturnType<typeof usePopup>,
     public t: TFunction<'SpacePanelEditor', undefined>,
-    public createPanel: ReturnType<typeof useCreatePanelMutation>,
+
     public updatePanel: ReturnType<typeof useUpdatePanelMutation>,
-    public deletePanel: ReturnType<typeof useDeletePanelMutation>,
+    public createPanelQuota: ReturnType<typeof useCreatePanelQuotaMutation>,
+    public deletePanelQuota: ReturnType<typeof useDeletePanelQuotaMutation>,
+    public updatePanelQuota: ReturnType<typeof useUpdatePanelQuotaMutation>,
+    public selectedAttribute: PanelAttributeOptions[],
+    public attributes: State<PanelAttributeWithQuota[]>,
+    public panels: ReturnType<typeof useListPanels>['data'],
   ) {}
 
-  handleAddPanel = async () => {
-    await this.createPanel.mutateAsync({
-      spacePk: this.spacePk,
-      name: '',
-      quotas: 0,
-      attributes: [],
+  handleUpdateAttributeQuota = async (sk: string, quota: number) => {
+    await this.updatePanelQuota.mutateAsync({
+      sk,
+      quota,
     });
   };
 
-  handleUpdateName = async (index: number, name: string) => {
-    const panel = this.panels.get()[index];
-    panel.name = name;
-    const panelPk = panel.pk;
+  handleDeleteAttributeQuota = async (pk: string, sk: string) => {
+    this.deletePanelQuota.mutate({
+      keys: [
+        {
+          pk,
+          sk,
+        },
+      ],
+    });
+  };
 
+  handleChangeSelectedAttributes = (attrs: PanelAttributeOptions[]) => {
+    const removed = this.selectedAttribute.filter((e) => !attrs.includes(e));
+    const added = attrs.filter((e) => !this.selectedAttribute.includes(e));
+
+    if (removed.length > 0) {
+      const panels = this.panels.filter((p) => {
+        return removed.some((r) => p.isOption(r));
+      });
+
+      this.deletePanelQuota.mutateAsync({
+        keys: panels.map((attr) => {
+          return {
+            pk: attr.pk,
+            sk: attr.sk,
+          };
+        }),
+      });
+    } else if (added.length > 0) {
+      const defaultAttrs = convertOptionsToPanelAttributes(added);
+
+      const attributes = getAttributeWithDefaultQuotas(
+        this.space.quota,
+        defaultAttrs,
+      );
+
+      this.createPanelQuota.mutateAsync({ attributes });
+    }
+  };
+
+  handleUpdateValues = async (_v: PanelAttribute[]) => {
+    // TODO
+  };
+
+  handleUpdateQuota = async (quotas: number) => {
     await this.updatePanel.mutateAsync({
       spacePk: this.spacePk,
-      panelPk,
-      name,
-      quotas: panel.quotas,
-      attributes: panel.attributes,
+      quota: quotas,
     });
   };
 
-  handleUpdateQuotas = async (index: number, quotas: number) => {
-    const panel = this.panels.get()[index];
-    panel.quotas = quotas;
-    const panelPk = panel.pk;
-
-    await this.updatePanel.mutateAsync({
-      spacePk: this.spacePk,
-      panelPk,
-      name: panel.name,
-      quotas,
-      attributes: panel.attributes,
+  get allOptions() {
+    return getAllPanelAttributeOptions().map((e) => {
+      return {
+        label: this.t(e),
+        value: e,
+      };
     });
-  };
-
-  openGenderPopup = (index: number) => {
-    const panel = this.panels.get()[index];
-    this.popup
-      .open(
-        <GenderPopup
-          t={this.t}
-          attributes={panel.attributes}
-          onSave={async (attributes: Attribute[]) => {
-            const panel = this.panels.get()[index];
-            panel.attributes = attributes;
-            const panelPk = panel.pk;
-
-            await this.updatePanel.mutateAsync({
-              spacePk: this.spacePk,
-              panelPk,
-              name: panel.name,
-              quotas: panel.quotas,
-              attributes,
-            });
-            this.popup.close();
-          }}
-          onClose={() => {
-            this.popup.close();
-          }}
-        />,
-      )
-      .withTitle(this.t('gender_modal_title'));
-  };
-
-  openAgePopup = (index: number) => {
-    const panel = this.panels.get()[index];
-    this.popup
-      .open(
-        <AgePopup
-          attributes={panel.attributes}
-          t={this.t}
-          onSave={async (attributes: Attribute[]) => {
-            const panel = this.panels.get()[index];
-            panel.attributes = attributes;
-            const panelPk = panel.pk;
-
-            await this.updatePanel.mutateAsync({
-              spacePk: this.spacePk,
-              panelPk,
-              name: panel.name,
-              quotas: panel.quotas,
-              attributes,
-            });
-            this.popup.close();
-          }}
-          onClose={() => {
-            this.popup.close();
-          }}
-        />,
-      )
-      .withTitle(this.t('age_modal_title'));
-  };
-
-  loadMore = async () => {
-    const bm = this.bookmark.get();
-    if (!bm) return;
-
-    const next = await call(
-      'GET',
-      `/v3/spaces/${encodeURIComponent(this.spacePk)}/panels?bookmark=${encodeURIComponent(
-        bm,
-      )}`,
-    );
-
-    const page = new ListPanelResponse(next);
-    const prev = this.panels.get() ?? [];
-    this.panels.set([...prev, ...page.panels]);
-    this.bookmark.set(page.bookmark ?? null);
-  };
-
-  handleDeletePanel = async (index: number) => {
-    const panel = this.panels.get()[index];
-    const panelPk = panel.pk;
-
-    await this.deletePanel.mutateAsync({
-      spacePk: this.spacePk,
-      panelPk,
-    });
-  };
+  }
 }
 
 export function useSpacePanelEditorController(spacePk: string) {
   const popup = usePopup();
   const { t } = useTranslation('SpacePanelEditor');
   const { data: space } = useSpaceById(spacePk);
-  const { data: panel } = usePanelSpace(spacePk);
-  const panels = useState(panel.panels || []);
-  const bookmark = useState<string | null>(panel.bookmark ?? null);
 
-  useEffect(() => {
-    bookmark[1](panel.bookmark ?? null);
-    panels[1](panel.panels || []);
-  }, [panel.panels, panel.bookmark]);
-
-  const createPanel = useCreatePanelMutation();
   const updatePanel = useUpdatePanelMutation();
-  const deletePanel = useDeletePanelMutation();
+  const createPanelQuota = useCreatePanelQuotaMutation(spacePk);
+  const deletePanelQuota = useDeletePanelQuotaMutation(spacePk);
+  const updatePanelQuota = useUpdatePanelQuotaMutation(spacePk);
+  const panels = useListPanels(spacePk);
+
+  const selectedAttribute = useMemo(() => {
+    return Array.from(
+      new Set(panels.data.map((e) => e.toPanelOption()).flatMap((e) => e)),
+    );
+  }, [panels]);
+
+  const attributes = useState([]);
 
   return new SpacePanelEditorController(
     spacePk,
     space,
-    panel,
-    new State(bookmark),
-    new State(panels),
     popup,
     t,
-    createPanel,
     updatePanel,
-    deletePanel,
+    createPanelQuota,
+    deletePanelQuota,
+    updatePanelQuota,
+    selectedAttribute,
+    new State(attributes),
+    panels.data,
   );
 }

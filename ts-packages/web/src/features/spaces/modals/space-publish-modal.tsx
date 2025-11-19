@@ -75,6 +75,7 @@ export default function PublishSpaceModal({
         onSelect={(value) => setSelectedType(value as PublishType)}
       />
       <Button
+        data-testid="publish-space-modal-btn"
         variant="default"
         className="h-12 bg-primary"
         disabled={!selectedType || isLoading}

@@ -1,192 +1,137 @@
-import { Plus } from 'lucide-react';
-import { SpacePanelResponse } from '../types/space-panel-response';
-import { PanelName } from './panel_name';
-import { PanelQuotas } from './panel_quota';
-import { PanelAge } from './panel_ages';
-import { PanelGender } from './panel-genders';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Extra } from '@/components/icons';
+import { useMemo, useState } from 'react';
+import { PanelAttributeType } from '../types/panel-attribute';
 import { TFunction } from 'i18next';
+import { Trash2 } from 'lucide-react';
+import { SpacePanel } from '../types/space-panel';
 
 export type PanelTableProps = {
-  panels: SpacePanelResponse[];
   t: TFunction<'SpacePanelEditor', undefined>;
-  bookmark: string | null | undefined;
   canEdit: boolean;
-  onadd: () => void;
-  handleDeletePanel?: (index: number) => void;
-  openAgePopup?: (index: number) => void;
-  openGenderPopup?: (index: number) => void;
-  handleUpdateName?: (index: number, name: string) => void;
-  handleUpdateQuotas?: (index: number, quotas: number) => void;
-  onloadmore: () => void;
+  panels: SpacePanel[];
+  onChangeQuota?: (sk: string, quota: number) => void;
+  onDelete?: (pk: string, sk: string) => void;
 };
 
 export function PanelTable({
-  panels,
   t,
   canEdit,
-  bookmark,
-  onadd,
-  handleDeletePanel,
-  openAgePopup,
-  openGenderPopup,
-  handleUpdateName,
-  handleUpdateQuotas,
-  onloadmore,
+  panels,
+  onChangeQuota,
+  onDelete,
 }: PanelTableProps) {
-  const hasMore = !!bookmark;
-  return (
-    <div className="overflow-x-auto gap-2.5">
-      <table className="w-full border-collapse">
-        <colgroup>
-          <col className="w-[20%]" />
-          <col className="w-[40%]" />
-          <col className="w-[20%]" />
-          <col className="w-[15%]" />
-          <col className="w-[5%]" />
-        </colgroup>
-        <thead>
-          <tr className="bg-card-bg-secondary dark:bg-gray-800 dark:border-gray-700">
-            <th className="p-3 font-semibold text-left text-white">
-              {t('panel_name')}
-            </th>
-            <th className="p-3 font-semibold text-left text-white">
-              {t('age')}
-            </th>
-            <th className="p-3 font-semibold text-left text-white">
-              {t('gender')}
-            </th>
-            <th className="p-3 font-semibold text-left text-white">
-              {t('quotas')}
-            </th>
-            <th className="p-3 font-semibold text-left">
-              {canEdit && (
-                <div
-                  id="add-panel-button"
-                  className="cursor-pointer w-6 h-6 bg-neutral-300 rounded-md"
-                  onClick={onadd}
-                >
-                  <Plus className="w-fit h-fit [&>path]:stroke-gray-700" />
-                </div>
-              )}
-            </th>
-          </tr>
-        </thead>
+  const [editing, setEditing] = useState<Record<string, string>>({});
 
-        <tbody>
-          {panels.map((panel, index) => (
+  // Filter to show only VerifiableAttribute entries
+  const filteredQuotas = useMemo(
+    () =>
+      panels.filter(
+        (q) => q.attributes.type === PanelAttributeType.VerifiableAttribute,
+      ),
+    [panels],
+  );
+
+  const total = useMemo(
+    () => filteredQuotas.reduce((sum, r) => sum + (r.quotas ?? 0), 0),
+    [filteredQuotas],
+  );
+
+  const pct = (n: number) =>
+    total > 0 ? Math.round((n / total) * 1000) / 10 : 0;
+
+  const commit = (sk: string, fallback: number) => {
+    const raw = (editing[sk] ?? '').trim();
+    const parsed = raw === '' ? fallback : Number(raw);
+    const val = Number.isFinite(parsed) ? parsed : fallback;
+
+    onChangeQuota?.(sk, val);
+
+    setEditing((m) => {
+      const { [sk]: _, ...rest } = m;
+      return rest;
+    });
+  };
+
+  return (
+    <table className="overflow-hidden w-full text-sm rounded-xl border border-input-box-border">
+      <thead className="bg-muted text-text-secondary">
+        <tr>
+          <th className="py-3 px-4 text-left">{t('attribute_groups')}</th>
+          <th className="py-3 px-4 text-left">{t('attributes')}</th>
+          <th className="py-3 px-4 text-right">{t('ratio')}</th>
+          <th className="py-3 px-4 text-center">{t('total_quotas')}</th>
+          <th className="py-3 px-4 text-right">{t('delete')}</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {filteredQuotas.map((quota) => {
+          const attributeGroup = quota.toPanelOption().toString().toLowerCase();
+          const attributeValue = quota.toPanelValue().toLowerCase();
+
+          return (
             <tr
-              key={panel.pk}
-              className="bg-card-bg-secondary/80 border-t border-neutral-500 dark:border-gray-700"
+              key={`${quota.pk}-${quota.sk}`}
+              className="border-t border-input-box-border hover:bg-muted/50"
             >
-              <td className="p-3">
-                <PanelName
-                  t={t}
-                  canEdit={canEdit}
-                  name={panel.name}
-                  setName={(name: string) => {
-                    handleUpdateName?.(index, name);
-                  }}
-                />
+              <td className="py-3 px-4 font-medium text-left">
+                {t(attributeGroup)}
               </td>
-              <td
-                id="age-td"
-                className={`p-3 ${canEdit ? 'cursor-pointer' : ''}`}
-                onClick={() => {
-                  if (canEdit) {
-                    openAgePopup?.(index);
-                  }
-                }}
-              >
-                <PanelAge t={t} attributes={panel.attributes} />
+              <td className="py-3 px-4 text-left">{t(attributeValue)}</td>
+              <td className="py-3 px-4 text-right text-text-secondary">
+                {pct(quota.quotas ?? 0)}%
               </td>
-              <td
-                id="gender-td"
-                className={`p-3 ${canEdit ? 'cursor-pointer' : ''}`}
-                onClick={() => {
-                  if (canEdit) {
-                    openGenderPopup?.(index);
-                  }
-                }}
-              >
-                <PanelGender t={t} attributes={panel.attributes} />
-              </td>
-              <td id="quotas-td" className="p-3">
-                <PanelQuotas
-                  quotas={panel.quotas}
-                  canEdit={canEdit}
-                  setQuotas={(quotas: number) => {
-                    handleUpdateQuotas?.(index, quotas);
-                  }}
-                />
-              </td>
-              <td className="p-3">
-                {canEdit && (
-                  <ContextMenu
-                    t={t}
-                    handleDeletePanel={() => {
-                      handleDeletePanel?.(index);
+              <td className="py-3 px-4 text-center">
+                {canEdit ? (
+                  <input
+                    type="text"
+                    className="py-1 px-2 w-20 text-center rounded border border-input-box-border"
+                    value={
+                      editing[quota.sk] !== undefined
+                        ? editing[quota.sk]
+                        : String(quota.quotas ?? 0)
+                    }
+                    onChange={(e) =>
+                      setEditing((m) => ({ ...m, [quota.sk]: e.target.value }))
+                    }
+                    onBlur={() => commit(quota.sk, quota.quotas ?? 0)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        commit(quota.sk, quota.quotas ?? 0);
+                      } else if (e.key === 'Escape') {
+                        setEditing((m) => {
+                          const { [quota.sk]: _, ...rest } = m;
+                          return rest;
+                        });
+                      }
                     }}
                   />
+                ) : (
+                  <span>{quota.quotas ?? 0}</span>
+                )}
+              </td>
+              <td className="py-3 px-4 text-right">
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={() => onDelete?.(quota.pk, quota.sk)}
+                    className="p-1 text-red-600 rounded transition-colors hover:text-red-700 hover:bg-red-50"
+                    aria-label="Delete attribute"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 )}
               </td>
             </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {hasMore && (
-        <button
-          className="flex flex-row w-full justify-center items-center mt-2 px-4 py-2 rounded-md border border-divider hover:bg-white/5"
-          onClick={onloadmore}
-        >
-          {t('more')}
-        </button>
-      )}
-    </div>
-  );
-}
-
-export function ContextMenu({
-  t,
-  handleDeletePanel,
-}: {
-  t: TFunction<'SpacePanelEditor', undefined>;
-  handleDeletePanel: () => void;
-}) {
-  return (
-    <div>
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <button
-            className="p-1 hover:bg-hover rounded-full focus:outline-none transition-colors"
-            aria-haspopup="true"
-            aria-label="Post options for desktop"
-          >
-            <Extra id="menu-option" className="size-6 text-gray-400" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="end"
-          className="w-40 border-gray-700 transition ease-out duration-100"
-        >
-          <DropdownMenuItem>
-            <button
-              aria-label="Delete Panel"
-              onClick={handleDeletePanel}
-              className="flex items-center w-full px-4 max-tablet:justify-start max-tablet:gap-1 max-tablet:hover:bg-transparent max-tablet:px-0 py-2 text-sm text-neutral-700 hover:bg-gray-700 hover:text-white cursor-pointer"
-            >
-              {t('delete')}
-            </button>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+          );
+        })}
+        {filteredQuotas.length === 0 && (
+          <tr>
+            <td colSpan={5} className="py-8 text-center text-text-secondary">
+              {t('no_attributes')}
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
   );
 }

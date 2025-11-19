@@ -1,8 +1,16 @@
 use crate::{
     AppState, Error,
     constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT},
-    models::email::{EmailVerification, EmailVerificationQueryOption},
-    utils::{generate_random_code, time::get_now_timestamp},
+    models::{
+        email::{EmailVerification, EmailVerificationQueryOption},
+        email_template::email_template::EmailTemplate,
+    },
+    types::email_operation::EmailOperation,
+    utils::{
+        aws::{DynamoClient, SesClient},
+        generate_random_code,
+        time::get_now_timestamp,
+    },
 };
 use bdk::prelude::*;
 use by_axum::axum::{Json, extract::State};
@@ -68,34 +76,32 @@ pub async fn send_code_handler(
             email_verification
         }
     };
-    #[cfg(any(test, feature = "no-secret"))]
-    {
-        let _ = ses;
-        tracing::warn!("sending email will be skipped for {}: {}", req.email, value);
-    }
 
-    #[cfg(all(not(test), not(feature = "no-secret")))]
-    {
-        let mut i = 0;
-        while let Err(e) = ses
-            .send_mail(
-                &req.email,
-                "Please finish to sign up within 30 minutes with your verification code",
-                format!("Verification code: {:?}", value).as_ref(),
-            )
-            .await
-        {
-            btracing::notify!(
-                crate::config::get().slack_channel_monitor,
-                &format!("Failed to send email: {:?}", e)
-            );
-            tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-            i += 1;
-            if i >= 3 {
-                return Err(Error::AwsSesSendEmailException(e.to_string()));
-            }
-        }
-    }
+    let user_email = req.email.clone();
+    let display_name = user_email.clone();
+
+    let mut chars = value.chars();
+    let code_1 = chars.next().map(|c| c.to_string()).unwrap_or_default();
+    let code_2 = chars.next().map(|c| c.to_string()).unwrap_or_default();
+    let code_3 = chars.next().map(|c| c.to_string()).unwrap_or_default();
+    let code_4 = chars.next().map(|c| c.to_string()).unwrap_or_default();
+    let code_5 = chars.next().map(|c| c.to_string()).unwrap_or_default();
+    let code_6 = chars.next().map(|c| c.to_string()).unwrap_or_default();
+
+    let email = EmailTemplate {
+        targets: vec![user_email.clone()],
+        operation: EmailOperation::SignupSecurityCode {
+            display_name,
+            code_1,
+            code_2,
+            code_3,
+            code_4,
+            code_5,
+            code_6,
+        },
+    };
+
+    email.send_email(&dynamo, &ses).await?;
 
     Ok(Json(SendCodeResponse { expired_at }))
 }

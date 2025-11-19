@@ -6,7 +6,15 @@ import { Poll } from '../../types/poll';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import { Space } from '@/features/spaces/types/space';
 import { logger } from '@/lib/logger';
-import { createDefaultQuestion, PollQuestion } from '../../types/poll-question';
+import {
+  createDefaultQuestion,
+  PollQuestion,
+  SingleChoiceQuestionType,
+  MultipleChoiceQuestionType,
+  CheckboxQuestionType,
+  DropdownQuestionType,
+  LinearScaleQuestionType,
+} from '../../types/poll-question';
 import {
   SurveyAnswer,
   SurveyAnswerType,
@@ -48,9 +56,16 @@ export class SpacePollEditorController {
 
   handleUpdateQuestion = (index: number, newOne: PollQuestion) => {
     logger.debug(`handleUpdateQuestion called for index ${index}`, newOne);
+
     const questions = this.questions.get();
+    const isAnswerTypeChange =
+      newOne.answer_type !== questions[index].answer_type;
+    const title = questions[index].title;
     questions[index] = newOne;
 
+    if (isAnswerTypeChange) {
+      questions[index].title = title;
+    }
     this.questions.set([...questions]);
   };
 
@@ -68,6 +83,49 @@ export class SpacePollEditorController {
   };
 
   handleSave = () => {
+    // Validate that there is at least one question
+    const questions = this.questions.get();
+    if (questions.length === 0) {
+      showErrorToast(this.t('no_questions_error'));
+      return;
+    }
+
+    // Validate that all questions are properly filled
+    const hasInvalidQuestion = questions.some((q) => {
+      if (!q.title || q.title.trim() === '') {
+        return true;
+      }
+
+      // For question types that have options, validate them
+      if ('options' in q) {
+        const optionsQuestion = q as
+          | SingleChoiceQuestionType
+          | MultipleChoiceQuestionType
+          | CheckboxQuestionType
+          | DropdownQuestionType;
+
+        if (!optionsQuestion.options || optionsQuestion.options.length === 0) {
+          return true;
+        }
+
+        return optionsQuestion.options.some((opt) => !opt || opt.trim() === '');
+      }
+
+      if (q.answer_type === SurveyAnswerType.LinearScale) {
+        const scaleQuestion = q as LinearScaleQuestionType;
+        if (scaleQuestion.min_value >= scaleQuestion.max_value) {
+          return true;
+        }
+      }
+
+      return false;
+    });
+
+    if (hasInvalidQuestion) {
+      showErrorToast(this.t('invalid_question_error'));
+      return;
+    }
+
     this.editing.set(false);
 
     try {

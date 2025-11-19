@@ -97,6 +97,8 @@ export const spaceKeys = {
 
   details: () => [...spaceKeys.all, 'detail'] as const,
   detail: (spacePk: string) => [...spaceKeys.details(), spacePk] as const,
+  panels: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'panels'] as const,
 
   prerequisites: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'prerequisites'] as const,
@@ -127,8 +129,6 @@ export const spaceKeys = {
   invitations: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'invitations'] as const,
 
-  panels: (spacePk: string) =>
-    [...spaceKeys.detail(spacePk), 'panels'] as const,
   panel: (spacePk: string, panelPk: string) =>
     [...spaceKeys.panels(spacePk), panelPk] as const,
 
@@ -140,6 +140,8 @@ export const spaceKeys = {
     [...spaceKeys.detail(spacePk), postPk] as const,
   boards_replies: (spacePk: string, postPk: string, commentSk: string) =>
     [...spaceKeys.detail(spacePk), postPk, commentSk] as const,
+  boards_comments: (spacePk: string, postPk: string) =>
+    [...spaceKeys.detail(spacePk), postPk, 'comments'] as const,
 
   art_nfts: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'art_nfts'] as const,
@@ -151,3 +153,5 @@ export const spaceKeys = {
 
 export const QK_MEMBERSHIPS = 'memberships';
 export const QK_ATTRIBUTE_CODES = 'attribute-codes';
+
+export const PANEL_NAME_AUTO_SAVE_DELAY_MS = 500;

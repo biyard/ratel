@@ -11,6 +11,7 @@ import { TimeRangeSetting } from '../../components/time-range-setting';
 import Card from '@/components/card';
 import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { SpaceType } from '@/features/spaces/types/space-type';
+import { ArrowLeft } from 'lucide-react';
 
 export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollEditorPage: spacePk=${spacePk}, pollPk=${pollPk}`);
@@ -20,6 +21,14 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
   return (
     <>
       <Col>
+        {ctrl.space.spaceType == SpaceType.Deliberation && (
+          <div className="flex flex-row w-full justify-start">
+            <ArrowLeft
+              className="flex flex-row w-5 h-5 cursor-pointer"
+              onClick={ctrl.handleBack}
+            />
+          </div>
+        )}
         <TimeRangeSetting
           canEdit={ctrl.space.isAdmin()}
           onChange={ctrl.onChangeTimeRange}
@@ -54,15 +63,24 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
               <Row className="gap-2 justify-end mb-4">
                 {ctrl.editing.get() ? (
                   <>
-                    <Button variant="primary" onClick={ctrl.handleSave}>
+                    <Button
+                      variant="primary"
+                      onClick={ctrl.handleSave}
+                      data-testid="poll-btn-save"
+                    >
                       {t('btn_save')}
                     </Button>
-                    <Button onClick={ctrl.handleDiscard}>
+                    <Button
+                      onClick={ctrl.handleDiscard}
+                      data-testid="poll-btn-discard"
+                    >
                       {t('btn_discard')}
                     </Button>
                   </>
                 ) : (
-                  <Button onClick={ctrl.handleEdit}>{t('btn_edit')}</Button>
+                  <Button onClick={ctrl.handleEdit} data-testid="poll-btn-edit">
+                    {t('btn_edit')}
+                  </Button>
                 )}
               </Row>
             )}
@@ -76,6 +94,7 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
                 isAdmin={true}
                 isLogin={!!ctrl.user}
                 canSubmit={false}
+                canParticipate={true}
                 questions={ctrl.poll.questions}
                 onUpdateAnswer={ctrl.handleUpdateAnswer}
                 selectedAnswers={ctrl.answers.get()}
@@ -83,14 +102,6 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
             )}
           </Col>
         </Card>
-
-        {ctrl.space.spaceType == SpaceType.Deliberation && (
-          <div className="flex flex-row w-full justify-end">
-            <Button className="w-fit" onClick={ctrl.handleBack}>
-              {t('btn_back')}
-            </Button>
-          </div>
-        )}
       </Col>
     </>
   );

@@ -1,5 +1,4 @@
 import { Input } from '@/components/ui/input';
-import { executeOnKeyStroke } from '@/utils/key-event-handle';
 import { useEffect, useRef, useState } from 'react';
 
 export type PanelQuotasProps = {
@@ -10,7 +9,7 @@ export type PanelQuotasProps = {
 
 export function PanelQuotas({ quotas, canEdit, setQuotas }: PanelQuotasProps) {
   const [editMode, setEditMode] = useState(false);
-  const [internalQuota, setInternalQuota] = useState(String(quotas ?? 0));
+  const [internalQuota, setInternalQuota] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -22,8 +21,7 @@ export function PanelQuotas({ quotas, canEdit, setQuotas }: PanelQuotasProps) {
   }, [editMode]);
 
   const commit = () => {
-    const v = internalQuota.trim();
-    const n = v === '' ? 0 : Number(v);
+    const n = internalQuota.trim() === '' ? 0 : Number(internalQuota.trim());
     setQuotas(Number.isFinite(n) ? n : 0);
     setEditMode(false);
   };
@@ -34,7 +32,14 @@ export function PanelQuotas({ quotas, canEdit, setQuotas }: PanelQuotasProps) {
   };
 
   const onKeyDown = (e: React.KeyboardEvent) => {
-    executeOnKeyStroke(e, commit, cancel);
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      commit();
+    }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      cancel();
+    }
   };
 
   const onBeforeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -49,37 +54,32 @@ export function PanelQuotas({ quotas, canEdit, setQuotas }: PanelQuotasProps) {
       'Enter',
     ];
     const isDigit = e.key >= '0' && e.key <= '9';
-    if (allowed.includes(e.key) || isDigit) return;
-    if (e.metaKey || e.ctrlKey) return;
+    if (allowed.includes(e.key) || isDigit || e.metaKey || e.ctrlKey) return;
     e.preventDefault();
   };
 
   const sanitize = (s: string) => s.replace(/\D+/g, '');
 
   return (
-    <div>
+    <div className="inline-flex items-center" data-testid="panel-quota-input">
       {editMode && canEdit ? (
         <Input
           ref={inputRef}
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
-          className="w-full border-b border-transparent !border-b-white focus:!border-transparent focus:rounded-md font-bold text-text-primary text-[14px]/[30px] placeholder:text-neutral-300 placeholder:font-medium rounded-none"
+          className="
+            w-20 h-9 text-center font-semibold text-sm
+            rounded-md
+            bg-neutral-900
+            placeholder:text-neutral-500
+          "
           value={internalQuota}
           onKeyDown={(e) => {
             onBeforeKeyDown(e);
             onKeyDown(e);
           }}
           onChange={(e) => setInternalQuota(sanitize(e.target.value))}
-          onPaste={(e) => {
-            e.preventDefault();
-            const text =
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (e.clipboardData || (window as any).clipboardData).getData(
-                'text',
-              );
-            setInternalQuota(sanitize(text));
-          }}
           onBlur={commit}
           placeholder="0"
         />
@@ -87,13 +87,29 @@ export function PanelQuotas({ quotas, canEdit, setQuotas }: PanelQuotasProps) {
         <div
           role="button"
           tabIndex={0}
-          className="flex w-full items-center min-h-[30px] cursor-text"
-          onClick={() => setEditMode(true)}
-          onKeyDown={(e) => e.key === 'Enter' && setEditMode(true)}
+          className={`
+            w-20 h-9 inline-flex items-center justify-center
+            rounded-md
+            text-text-primary
+            border
+            border-input-box-border
+            bg-input-box-bg
+            text-sm font-semibold
+            ${canEdit ? 'cursor-pointer hover:border-primary' : 'cursor-default'}
+          `}
+          onClick={() => {
+            if (!canEdit) return;
+            setInternalQuota(String(quotas ?? 0));
+            setEditMode(true);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && canEdit) {
+              setInternalQuota(String(quotas ?? 0));
+              setEditMode(true);
+            }
+          }}
         >
-          <div className="font-bold text-text-primary text-[14px]/[30px]">
-            {quotas ?? 0}
-          </div>
+          {quotas ?? 0}
         </div>
       )}
     </div>

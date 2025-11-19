@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use crate::features::spaces::polls::PollUserAnswer;
 use crate::features::spaces::polls::{PollResult, PollSummary};
 
 use bdk::prelude::*;
@@ -18,6 +19,9 @@ pub struct PollResultResponse {
     pub summaries_by_gender: HashMap<String, Vec<PollSummary>>, // "male"/"female"
     pub summaries_by_age: HashMap<String, Vec<PollSummary>>,    // "0-17"/"18-29"/"30-39"/.../
     pub summaries_by_school: HashMap<String, Vec<PollSummary>>, //
+
+    pub sample_answers: Vec<PollUserAnswer>,
+    pub final_answers: Vec<PollUserAnswer>,
 }
 
 impl From<PollResult> for PollResultResponse {
@@ -28,6 +32,9 @@ impl From<PollResult> for PollResultResponse {
             summaries_by_gender: poll_result.summaries_by_gender,
             summaries_by_age: poll_result.summaries_by_age,
             summaries_by_school: poll_result.summaries_by_school,
+
+            sample_answers: poll_result.sample_answers,
+            final_answers: poll_result.final_answers,
         }
     }
 }

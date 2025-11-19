@@ -36,11 +36,19 @@ pub enum UpdateSpaceRequest {
     Anonymous {
         anonymous_participation: bool,
     },
+    ChangeVisibility {
+        change_visibility: bool,
+    },
     Start {
         start: bool,
+        #[serde(default)]
+        block_participate: bool,
     },
     Finish {
         finished: bool,
+    },
+    Quota {
+        quotas: i64,
     },
 }
 
@@ -66,8 +74,7 @@ pub async fn update_space_handler(
 
     let now = chrono::Utc::now().timestamp_millis();
     let mut su = SpaceCommon::updater(&space.pk, &space.sk).with_updated_at(now);
-    let mut pu =
-        Post::updater(space.pk.clone().to_post_key()?, EntityType::Post).with_updated_at(now);
+    let mut pu: Option<_> = None;
     let mut should_notify_space = false;
     match req {
         UpdateSpaceRequest::Publish {
@@ -90,10 +97,14 @@ pub async fn update_space_handler(
                 .with_status(SpaceStatus::InProgress)
                 .with_visibility(visibility.clone());
 
-            pu = pu
+            let mut post_updater = Post::updater(post_pk, EntityType::Post).with_updated_at(now);
+
+            post_updater = post_updater
                 .with_space_visibility(visibility.clone())
                 .with_visibility(visibility.clone().into())
                 .with_status(crate::types::PostStatus::Published);
+
+            pu = Some(post_updater);
 
             should_notify_space = space.booster != BoosterType::NoBoost
                 && (space.publish_state == SpacePublishState::Draft && publish)
@@ -125,9 +136,16 @@ pub async fn update_space_handler(
             space.files = Some(files);
         }
         UpdateSpaceRequest::Title { title } => {
-            pu = pu.with_title(title.clone());
+            let post_pk = space_pk.clone().to_post_key()?;
+            let mut post_updater = Post::updater(post_pk, EntityType::Post).with_updated_at(now);
+
+            post_updater = post_updater.with_title(title.clone());
+            pu = Some(post_updater);
         }
-        UpdateSpaceRequest::Start { start } => {
+        UpdateSpaceRequest::Start {
+            start,
+            block_participate,
+        } => {
             if space.status != Some(SpaceStatus::InProgress) {
                 return Err(Error::NotSupported(
                     "Start is not available for the current status.".into(),
@@ -138,9 +156,12 @@ pub async fn update_space_handler(
                 return Err(Error::NotSupported("it does not support start now".into()));
             }
 
-            su = su.with_status(SpaceStatus::Started);
+            su = su
+                .with_status(SpaceStatus::Started)
+                .with_block_participate(block_participate);
 
             space.status = Some(SpaceStatus::Started);
+            space.block_participate = block_participate;
             let _ = SpaceEmailVerification::expire_verifications(&dynamo, space_pk.clone()).await?;
         }
         UpdateSpaceRequest::Finish { finished } => {
@@ -165,13 +186,34 @@ pub async fn update_space_handler(
 
             space.anonymous_participation = anonymous_participation;
         }
+        UpdateSpaceRequest::ChangeVisibility { change_visibility } => {
+            su = su.with_change_visibility(change_visibility);
+
+            space.change_visibility = change_visibility;
+        }
+        UpdateSpaceRequest::Quota { quotas } => {
+            let remains = space.remains + (quotas - space.quota);
+
+            if remains < 0 {
+                return Err(Error::InvalidPanelQuota);
+            }
+
+            su = su.with_quota(quotas).with_remains(remains);
+
+            space.quota = quotas;
+            space.remains = remains;
+        }
     }
 
-    transact_write!(
-        dynamo.client,
-        su.transact_write_item(),
-        pu.transact_write_item()
-    )?;
+    if let Some(pu) = pu {
+        transact_write!(
+            dynamo.client,
+            su.transact_write_item(),
+            pu.transact_write_item()
+        )?;
+    } else {
+        transact_write!(dynamo.client, su.transact_write_item())?;
+    }
 
     if should_notify_space {
         if let Some(bot) = telegram_bot {

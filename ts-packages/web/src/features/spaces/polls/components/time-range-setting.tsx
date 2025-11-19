@@ -3,7 +3,7 @@ import TimeDropdown from '@/components/time-dropdown';
 import TimezoneDropdown from '@/components/timezone-dropdown';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export type TimeRangeSettingProps = {
@@ -11,6 +11,7 @@ export type TimeRangeSettingProps = {
   endTimestampMillis: number;
   onChange?: (startedAt: number, endedAt: number) => void;
   canEdit?: boolean;
+  alwaysEdit?: boolean;
   className?: string;
 };
 
@@ -30,6 +31,7 @@ export function TimeRangeSetting({
   startTimestampMillis,
   endTimestampMillis,
   className,
+  alwaysEdit = false,
   canEdit,
 }: TimeRangeSettingProps) {
   const [start, setStart] = useState(startTimestampMillis);
@@ -40,14 +42,28 @@ export function TimeRangeSetting({
   const { t } = useTranslation('TimeRangeSetting');
   const [editing, setEditing] = useState(false);
 
+  useEffect(() => {
+    setStart(startTimestampMillis);
+    setEnd(endTimestampMillis);
+    setDelta(endTimestampMillis - startTimestampMillis);
+  }, [startTimestampMillis, endTimestampMillis]);
+
   const handleStart = (ts: number) => {
     setStart(ts);
     setEnd(ts + delta);
+
+    if (alwaysEdit) {
+      onChange(ts, ts + delta);
+    }
   };
 
   const handleEnd = (ts: number) => {
     setEnd(ts);
     setDelta(ts - start);
+
+    if (alwaysEdit) {
+      onChange(start, ts);
+    }
   };
 
   let button = <></>;
@@ -75,6 +91,8 @@ export function TimeRangeSetting({
     );
   }
 
+  const isEdit = alwaysEdit || (canEdit && editing);
+
   return (
     <>
       <div
@@ -87,16 +105,18 @@ export function TimeRangeSetting({
           <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:w-auto">
             <div className="w-full max-tablet:w-auto">
               <CalendarDropdown
-                canEdit={canEdit && editing}
+                canEdit={isEdit}
                 value={start}
                 onChange={handleStart}
+                data-testid="calendar-start-date-dropdown"
               />
             </div>
             <div className="w-full sm:w-auto">
               <TimeDropdown
-                canEdit={canEdit && editing}
+                canEdit={isEdit}
                 value={start}
                 onChange={handleStart}
+                data-testid="time-start-dropdown"
               />
             </div>
           </div>
@@ -106,16 +126,18 @@ export function TimeRangeSetting({
           <div className="flex flex-col gap-2 w-full sm:flex-row sm:items-center sm:w-auto max-tablet:mt-2.5">
             <div className="w-full sm:w-auto">
               <CalendarDropdown
-                canEdit={canEdit && editing}
+                canEdit={isEdit}
                 value={end}
                 onChange={handleEnd}
+                data-testid="calendar-end-date-dropdown"
               />
             </div>
             <div className="w-full sm:w-auto">
               <TimeDropdown
-                canEdit={canEdit && editing}
+                canEdit={isEdit}
                 value={end}
                 onChange={handleEnd}
+                data-testid="time-end-dropdown"
               />
             </div>
           </div>
@@ -123,7 +145,7 @@ export function TimeRangeSetting({
           <TimezoneDropdown
             value={timezone}
             onChange={setTimezone}
-            canEdit={canEdit && editing}
+            canEdit={isEdit}
           />
         </div>
 

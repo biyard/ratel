@@ -1,5 +1,7 @@
 export const i18nSpaceHome = {
   en: {
+    change_private: 'Convert Private',
+    change_public: 'Convert Public',
     publish_space: 'Publish Space',
     start_space: 'Start Space',
     delete_space: 'Delete Space',
@@ -77,6 +79,8 @@ export const i18nSpaceHome = {
       'Videos can be uploaded up to a maximum size of 50MB.',
   },
   ko: {
+    change_private: '비공개 전환',
+    change_public: '공개 전환',
     publish_space: '스페이스 게시',
     start_space: '스페이스 시작',
     delete_space: '스페이스 삭제',

@@ -8,6 +8,8 @@ import {
   aws_certificatemanager as acm,
   aws_route53_targets as targets,
   aws_iam as iam,
+  aws_events as events,
+  aws_events_targets as eventsTargets,
 } from "aws-cdk-lib";
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
@@ -18,6 +20,7 @@ import * as apigateway from "aws-cdk-lib/aws-apigateway";
 export interface RegionalServiceStackProps extends StackProps {
   // Domain parts, e.g. "dev2.ratel.foundation"
   fullDomainName: string;
+  stage: string;
   // Health check path for ALB target group
   healthCheckPath?: string;
   commit: string;
@@ -48,11 +51,42 @@ export class RegionalServiceStack extends Stack {
       handler: "bootstrap",
       environment: {
         REGION: this.region,
-        ENABLE_ANSI: "true",
+        DISABLE_ANSI: "true",
         NO_COLOR: "true",
       },
       memorySize: 128,
       timeout: cdk.Duration.seconds(30),
+    });
+
+    const startSurveyLambda = new lambda.Function(
+      this,
+      "StartSurveyEventLambda",
+      {
+        runtime: lambda.Runtime.PROVIDED_AL2023,
+        code: lambda.Code.fromAsset("survey-worker"),
+        handler: "bootstrap",
+        environment: {
+          REGION: this.region,
+          DISABLE_ANSI: "true",
+          NO_COLOR: "true",
+        },
+        memorySize: 256,
+        timeout: Duration.seconds(30),
+      }
+    );
+
+    const eventBus = new events.EventBus(this, "RatelEventBus", {
+      eventBusName: `ratel-${props.stage}-bus`,
+    });
+
+    new events.Rule(this, "SurveyFetcherRule", {
+      eventBus,
+      description: "Route Survey Fetcher events to survey fetcher Lambda",
+      eventPattern: {
+        source: ["ratel.spaces"],
+        detailType: ["SurveyFetcher"],
+      },
+      targets: [new eventsTargets.LambdaFunction(startSurveyLambda)],
     });
 
     // --- API Gateway HTTP API ---
@@ -64,7 +98,7 @@ export class RegionalServiceStack extends Stack {
     // Lambda integration
     const lambdaIntegration = new HttpLambdaIntegration(
       "LambdaIntegration",
-      apiLambda,
+      apiLambda
     );
 
     // Add route for all methods and paths
@@ -138,8 +172,8 @@ export class RegionalServiceStack extends Stack {
       target: route53.RecordTarget.fromAlias(
         new r53Targets.ApiGatewayv2DomainProperties(
           domainName.regionalDomainName,
-          domainName.regionalHostedZoneId,
-        ),
+          domainName.regionalHostedZoneId
+        )
       ),
     });
     new route53.AaaaRecord(this, "RegionalAliasV6", {
@@ -148,8 +182,8 @@ export class RegionalServiceStack extends Stack {
       target: route53.RecordTarget.fromAlias(
         new r53Targets.ApiGatewayv2DomainProperties(
           domainName.regionalDomainName,
-          domainName.regionalHostedZoneId,
-        ),
+          domainName.regionalHostedZoneId
+        )
       ),
     });
   }
