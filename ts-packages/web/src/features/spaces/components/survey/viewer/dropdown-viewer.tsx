@@ -29,11 +29,18 @@ export default function DropdownViewer(props: DropdownViewerProps) {
         }}
       >
         <SelectTrigger className="w-full max-w-70">
-          <SelectValue placeholder={t('dropdown_select_placeholder')} />
+          <SelectValue
+            placeholder={t('dropdown_select_placeholder')}
+            className="truncate block max-w-full"
+          />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="max-w-[calc(100vw-2rem)] md:max-w-none">
           {options.map((option, optIndex) => (
-            <SelectItem key={`dropdown-${optIndex}`} value={option}>
+            <SelectItem
+              key={`dropdown-${optIndex}`}
+              value={option}
+              className="whitespace-normal wrap-break-word py-2"
+            >
               {option}
             </SelectItem>
           ))}

@@ -19,7 +19,10 @@ export default function TypeSelect({
 }) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="border-input-box-border bg-card-bg focus:border-primary px-5 py-[10.5px] w-[260px] max-mobile:!w-full font-medium text-[15px]/[22.5px] text-neutral-600 rounded-lg focus:ring-primary !h-full">
+      <SelectTrigger
+        data-testid="poll-question-type-selector"
+        className="border-input-box-border bg-card-bg focus:border-primary px-5 py-[10.5px] w-[260px] max-mobile:!w-full font-medium text-[15px]/[22.5px] text-neutral-600 rounded-lg focus:ring-primary !h-full"
+      >
         <SelectValue placeholder="Select an answer type" />
       </SelectTrigger>
       <SelectContent>

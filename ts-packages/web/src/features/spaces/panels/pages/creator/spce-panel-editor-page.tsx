@@ -18,7 +18,7 @@ export function SpacePanelEditorPage({ spacePk }: SpacePathProps) {
         <Col className="gap-2 mb-4">
           <Row className="gap-5">
             <div className="flex flex-row gap-5 items-center w-fit">
-              <div className="flex-shrink-0 text-sm font-medium whitespace-nowrap">
+              <div className="shrink-0 text-sm font-medium whitespace-nowrap">
                 {t('total_quotas')}
               </div>
               <PanelQuotas
@@ -30,7 +30,7 @@ export function SpacePanelEditorPage({ spacePk }: SpacePathProps) {
               />
             </div>
             <div className="flex flex-row gap-5 items-center grow">
-              <div className="flex-shrink-0 text-sm font-medium whitespace-nowrap">
+              <div className="shrink-0 text-sm font-medium whitespace-nowrap">
                 {t('attribute_groups')}
               </div>
               <MultiSelect

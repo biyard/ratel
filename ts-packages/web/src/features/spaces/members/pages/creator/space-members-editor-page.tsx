@@ -27,6 +27,7 @@ export function SpaceMembersEditorPage({ spacePk }: SpacePathProps) {
         {ctrl.space.status !== SpaceStatus.Started && (
           <Button
             variant="primary"
+            data-testid="invite-space-btn"
             className="self-start sm:self-auto w-fit"
             onClick={ctrl.openInviteMemberPopup}
           >

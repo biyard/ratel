@@ -96,14 +96,14 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
                 if l == 1 {
                     arms.push(quote! {
                         s if s.eq(#prefix_wo_sharp) || s.eq(#camel_pws) || s.eq(#up_camel_pws) || s.eq(#kebab_pws) || s.eq(#snake_pws) => {
-                            #name::#variant_name("".to_string())
+                            #name::#variant_name(Default::default())
                         },
                         s if s.starts_with(#prefix) || s.starts_with(#camel_p) || s.starts_with(#up_camel_p) || s.starts_with(#kebab_p) || s.starts_with(#snake_p) => {
                             let parts: Vec<&str> = s.splitn(2, '#').collect();
                             if parts.len() == 2 {
-                                #name::#variant_name(parts[1].to_string())
+                                #name::#variant_name(parts[1].parse().expect(&format!("Failed to parse {} value", stringify!(#variant_name))))
                             } else {
-                                #name::#variant_name("".to_string())
+                                #name::#variant_name(Default::default())
                             }
                         } ,
                     });
@@ -117,16 +117,16 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
                 } else if l == 2 {
                     arms.push(quote! {
                         s if s.eq(#prefix_wo_sharp) || s.eq(#camel_pws) || s.eq(#up_camel_pws) || s.eq(#kebab_pws) || s.eq(#snake_pws) => {
-                            #name::#variant_name("".to_string(), "".to_string())
+                            #name::#variant_name(Default::default(), Default::default())
                         },
                         s if s.starts_with(#prefix) || s.starts_with(#camel_p) || s.starts_with(#up_camel_p) || s.starts_with(#kebab_p) || s.starts_with(#snake_p) => {
                             let parts: Vec<&str> = s.splitn(3, '#').collect();
                             if parts.len() == 3 {
-                                #name::#variant_name(parts[1].to_string(), parts[2].to_string())
+                                #name::#variant_name(parts[1].parse().expect(&format!("Failed to parse {} value", stringify!(#variant_name))), parts[2].parse().expect(&format!("Failed to parse {} value", stringify!(#variant_name))))
                             } else if parts.len() == 2 {
-                                #name::#variant_name(parts[1].to_string(), "".to_string())
+                                #name::#variant_name(parts[1].parse().expect(&format!("Failed to parse {} value", stringify!(#variant_name))), Default::default())
                             } else {
-                                #name::#variant_name("".to_string(), "".to_string())
+                                #name::#variant_name(Default::default(), Default::default())
                             }
                         } ,
                     });
@@ -144,7 +144,7 @@ pub fn dynamo_enum_impl(input: TokenStream) -> TokenStream {
                     inner_arms.push(quote! {
                         Self::#variant_name(v1, v2) => {
                             if v2.is_empty() {
-                                Ok(v1.clone())
+                                Ok(v1.to_string())
                             } else {
                                 Ok(format!("{}#{}", v1, v2))
                             }

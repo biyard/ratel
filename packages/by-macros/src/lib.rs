@@ -13,6 +13,7 @@ mod query_display;
 mod rest_error;
 #[cfg(feature = "server")]
 mod sql_model;
+mod sub_partition;
 mod write_file;
 
 use api_model::api_model_impl;
@@ -23,6 +24,7 @@ use proc_macro::TokenStream;
 use query_display::query_display_impl;
 use quote::{quote, ToTokens};
 use rest_error::rest_error_impl;
+use sub_partition::sub_partition_impl;
 use syn::{parse_macro_input, Data, DataEnum, DeriveInput, Fields};
 
 #[proc_macro_derive(QueryDisplay)]
@@ -71,6 +73,18 @@ pub fn dynamo_entity_derive(input: TokenStream) -> TokenStream {
         .with_target(false)
         .try_init();
     dynamo_entity_impl(input)
+}
+
+#[proc_macro_derive(SubPartition)]
+pub fn sub_partition_derive(input: TokenStream) -> TokenStream {
+    let _ = tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_file(true)
+        .with_line_number(true)
+        .with_thread_ids(true)
+        .with_target(false)
+        .try_init();
+    sub_partition_impl(input)
 }
 
 #[proc_macro_derive(DynamoEnum, attributes(dynamo_enum))]
