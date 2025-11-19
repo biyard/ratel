@@ -71,11 +71,11 @@ macro_rules! notify {
     ($($arg:tt)*) => {
         let text = format!($($arg)*);
         let client = reqwest::Client::new();
-        let payload = btracing::SlackMessage { text };
+        let payload = btracing::SlackMessage { text: &text };
 
         for i in 0..3 {
             if let Ok(_) = client
-                .post(option_env!("SLACK_HOOK"))
+                .post(option_env!("SLACK_HOOK").unwrap_or_default())
                 .json(&payload)
                 .send()
                 .await
