@@ -112,6 +112,8 @@ export default function PollRequirement({
   useEffect(() => {
     if (!canParticipate) {
       setError(new Error('space.poll.cannot_participate'));
+    } else {
+      removeError();
     }
   }, [canParticipate, setError]);
   const handleUpdateAnswer = (questionIdx: number, answer: SurveyAnswer) => {
