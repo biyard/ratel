@@ -1,0 +1,24 @@
+[package]
+name = "start-survey"
+version = "0.1.0"
+authors.workspace = true
+description.workspace = true
+edition.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+lambda_runtime = "1"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt"] }
+aws-config = "1"
+aws-sdk-dynamodb = "1"
+bdk = { workspace = true, features = ["be"] }
+main-api = { path = "../main-api", features = ["model-only"] }
+
+[features]
+default = []
+local-run = []
