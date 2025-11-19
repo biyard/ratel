@@ -3,7 +3,7 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
-COPY ./survey-fetcher ./bootstrap
+COPY ./survey-worker ./bootstrap
 
 EXPOSE 3000
 

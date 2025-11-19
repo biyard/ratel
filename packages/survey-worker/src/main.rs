@@ -78,7 +78,7 @@ fn init_tracing() {
 async fn handler(event: LambdaEvent<StartSurveyEvent>, state: AppState) -> Result<(), LambdaError> {
     let (payload, ctx) = event.into_parts();
     info!(
-        "survey-fetcher invoked: request_id={}, space_id={}, survey_id={}",
+        "survey-worker invoked: request_id={}, space_id={}, survey_id={}",
         ctx.request_id, payload.space_id, payload.survey_id
     );
 
