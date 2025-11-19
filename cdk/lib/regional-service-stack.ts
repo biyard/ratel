@@ -8,6 +8,8 @@ import {
   aws_certificatemanager as acm,
   aws_route53_targets as targets,
   aws_iam as iam,
+  aws_events as events,
+  aws_events_targets as eventsTargets,
 } from "aws-cdk-lib";
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
@@ -18,6 +20,7 @@ import * as apigateway from "aws-cdk-lib/aws-apigateway";
 export interface RegionalServiceStackProps extends StackProps {
   // Domain parts, e.g. "dev2.ratel.foundation"
   fullDomainName: string;
+  stage: string;
   // Health check path for ALB target group
   healthCheckPath?: string;
   commit: string;
@@ -55,45 +58,36 @@ export class RegionalServiceStack extends Stack {
       timeout: cdk.Duration.seconds(30),
     });
 
-    // const pollEventSchedulerRole = new iam.Role(
-    //   this,
-    //   "PollEventSchedulerRole",
-    //   {
-    //     assumedBy: new iam.ServicePrincipal("scheduler.amazonaws.com"),
-    //   }
-    // );
+    const startSurveyLambda = new lambda.Function(
+      this,
+      "StartSurveyEventLambda",
+      {
+        runtime: lambda.Runtime.PROVIDED_AL2023,
+        code: lambda.Code.fromAsset("survey-worker"),
+        handler: "bootstrap",
+        environment: {
+          REGION: this.region,
+          DISABLE_ANSI: "true",
+          NO_COLOR: "true",
+        },
+        memorySize: 256,
+        timeout: Duration.seconds(30),
+      }
+    );
 
-    // pollEventSchedulerRole.addToPolicy(
-    //   new iam.PolicyStatement({
-    //     actions: ["lambda:InvokeFunction"],
-    //     resources: [apiLambda.functionArn],
-    //   })
-    // );
+    const eventBus = new events.EventBus(this, "RatelEventBus", {
+      eventBusName: `ratel-${props.stage}-bus`,
+    });
 
-    // apiLambda.addEnvironment("POLL_EVENT_LAMBDA_ARN", apiLambda.functionArn);
-    // apiLambda.addEnvironment(
-    //   "POLL_EVENT_ROLE_ARN",
-    //   pollEventSchedulerRole.roleArn
-    // );
-
-    // apiLambda.addToRolePolicy(
-    //   new iam.PolicyStatement({
-    //     actions: [
-    //       "scheduler:CreateSchedule",
-    //       "scheduler:UpdateSchedule",
-    //       "scheduler:DeleteSchedule",
-    //       "scheduler:GetSchedule",
-    //     ],
-    //     resources: ["*"],
-    //   })
-    // );
-
-    // apiLambda.addToRolePolicy(
-    //   new iam.PolicyStatement({
-    //     actions: ["iam:PassRole"],
-    //     resources: [pollEventSchedulerRole.roleArn],
-    //   })
-    // );
+    new events.Rule(this, "SurveyFetcherRule", {
+      eventBus,
+      description: "Route Survey Fetcher events to survey fetcher Lambda",
+      eventPattern: {
+        source: ["ratel.spaces"],
+        detailType: ["SurveyFetcher"],
+      },
+      targets: [new eventsTargets.LambdaFunction(startSurveyLambda)],
+    });
 
     // --- API Gateway HTTP API ---
     const httpApi = new apigw.HttpApi(this, "HttpApi", {
