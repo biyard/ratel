@@ -18,7 +18,6 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct DeleteSpacePathParams {
     #[schemars(description = "Space PK to be deleted")]
-    #[serde(deserialize_with = "crate::types::path_param_string_to_partition")]
     pub space_pk: Partition,
 }
 
