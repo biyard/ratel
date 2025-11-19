@@ -62,6 +62,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
           <div className="w-full">
             <Input
               variant="post"
+              data-testid="board-title-input"
               placeholder={t('title_hint')}
               showRequiredMarker
               value={ctrl.title.get()}
@@ -84,6 +85,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
                 variant="post"
                 showRequiredMarker
                 className="rounded-[100px]"
+                data-testid="board-category-input"
                 ref={inputRef}
                 value={ctrl.categoryName.get()}
                 onChange={(e) => {
@@ -205,7 +207,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
               onRemoveImage={ctrl.handleRemoveImage}
               url={ctrl.image.get()}
               disabledFileUpload={false}
-              data-pw="space-recommendation-editor"
+              data-pw="space-board-content-editor"
             />
           </div>
 
@@ -220,6 +222,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
                 if (!isValid) return;
                 await ctrl.handleSubmit();
               }}
+              data-testid="board-btn-submit"
             >
               {ctrl.postPk.get() ? t('update') : t('write')}
             </Button>

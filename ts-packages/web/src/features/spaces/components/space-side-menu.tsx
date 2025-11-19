@@ -1,4 +1,5 @@
 import Card from '@/components/card';
+import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
@@ -21,14 +22,18 @@ export default function SpaceSideMenu({ menus }: SpaceSideMenuProps) {
 
   return (
     <>
-      <Card className="flex flex-col gap-2.5 w-full max-w-[250px]">
+      <Card className={cn('flex flex-col gap-2.5 w-full')}>
         {menus.map((item, i) => (
           <Link
             key={`side-menu-item-${item.label}`}
             type="button"
+            data-testid={`space-sidemenu-${item.label}`.toLowerCase()}
             to={item.to}
             data-active={selected === i}
-            className="w-full cursor-pointer flex flex-row gap-3 items-center px-1 py-2 rounded-sm data-[active=true]:bg-neutral-800 light:data-[active=true]:bg-neutral-300"
+            className={cn(
+              'w-full cursor-pointer flex items-center rounded-sm data-[active=true]:bg-neutral-800 light:data-[active=true]:bg-neutral-300',
+              'flex-row gap-3 px-1 py-2',
+            )}
             onClick={() => {
               setSelected(i);
             }}

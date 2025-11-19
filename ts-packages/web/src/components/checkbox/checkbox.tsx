@@ -1,5 +1,6 @@
 'use client';
 import CheckboxIcon from '@/assets/icons/checkbox-icon.svg?react';
+import { cn } from '@/lib/utils';
 
 interface CheckboxProps {
   isRounded?: boolean;
@@ -37,18 +38,29 @@ export const Checkbox = ({
         />
 
         <label
-          className={
-            isRounded
-              ? 'border border-c-wg-50 rounded-full peer-checked:bg-primary peer-checked:border-primary flex items-center justify-center w-4.25 h-4.25 cursor-pointer'
-              : 'border border-c-wg-50 rounded-[4px] peer-checked:bg-primary peer-checked:border-primary flex items-center justify-center w-4.25 h-4.25 cursor-pointer'
-          }
+          className={cn(
+            'border border-c-wg-50',
+            'peer-checked:bg-primary peer-checked:border-primary',
+            'peer-checked:[&_svg_path]:stroke-bg',
+            'flex items-center justify-center',
+            'w-4.25 h-4.25 cursor-pointer',
+            isRounded ? 'rounded-full' : 'rounded-sm',
+          )}
           htmlFor={id}
         >
-          {<CheckboxIcon width={13} height={9} />}
+          <CheckboxIcon
+            width={13}
+            height={9}
+            className="[&_path]:stroke-transparent"
+          />
         </label>
       </div>
 
-      <div className="cursor-pointer" onClick={handleChange}>
+      <div
+        className="cursor-pointer"
+        onClick={handleChange}
+        data-testid={id ? `${id}-label` : undefined}
+      >
         {children}
       </div>
     </div>
