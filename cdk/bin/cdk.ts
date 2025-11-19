@@ -55,6 +55,7 @@ new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: "ap-northeast-2",
   },
+  stage: env,
   fullDomainName: host,
   healthCheckPath: "/version",
   commit: process.env.COMMIT!,
