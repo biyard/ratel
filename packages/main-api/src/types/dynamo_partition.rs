@@ -32,6 +32,8 @@ pub enum Partition {
     PostLike(String),
     Session(String),
 
+    Notification(String), // user_pk
+
     // Spaces
     Space(String),
     SurveySpace(String),

@@ -47,6 +47,7 @@ export default function SurveyEditor({ ctrl }: SurveyEditorProps) {
         />
 
         <div
+          data-testid="poll-btn-add-question"
           className="flex z-10 justify-center items-center rounded-full border cursor-pointer bg-background w-fit h-fit p-[13px] border-neutral-500"
           onClick={ctrl.handleAddQuestion}
         >
@@ -129,6 +130,7 @@ export function SurveyEditorItem({
           <Input
             className="bg-input-box-bg border border-input-box-border rounded-lg w-full px-4 !py-5.5 font-medium text-[15px]/[22.5px] text-text-primary placeholder:text-neutral-600 "
             type="text"
+            data-testid="poll-question-title-input"
             placeholder={t('question_title_placeholder')}
             value={question.title}
             onChange={(e) => handleTitleChange(e.target.value)}
@@ -226,7 +228,11 @@ function LabelSwitchButton({
   onChange: (val: boolean) => void;
 }) {
   return (
-    <label className="flex gap-2 items-center cursor-pointer select-none">
+    <label
+      data-testid="poll-question-required"
+      className="flex gap-2 items-center cursor-pointer select-none"
+      onClick={() => onChange(!value)}
+    >
       <span
         className={`font-medium text-[15px]/[24px] ${value ? textColor : 'text-gray-400'}`}
       >

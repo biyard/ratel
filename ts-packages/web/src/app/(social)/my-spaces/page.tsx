@@ -44,6 +44,7 @@ function SpaceCard({ space }: { space: MySpace }) {
           ? 'cursor-not-allowed opacity-60 bg-gray-50 dark:bg-gray-800'
           : 'cursor-pointer hover:bg-card-bg-hover'
       }`}
+      data-testid="space-card"
     >
       <div className="flex flex-col gap-2">
         <div className="flex gap-3 items-center">
@@ -131,7 +132,7 @@ export default function MySpacesPage() {
 
   return (
     <div className="flex relative flex-1">
-      <Col className="flex flex-1 max-mobile:px-[10px]">
+      <Col className="flex flex-1 max-mobile:px-2.5">
         <Col className="flex-1 gap-4">
           {flattedSpaces.map((space) => (
             <SpaceCard key={`space-${space.pk}`} space={space} />

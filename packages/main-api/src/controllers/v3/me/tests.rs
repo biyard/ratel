@@ -1,7 +1,12 @@
+use crate::controllers::v3::me::update_notification_status::UpdateMyNotificationsStatusResponse;
 use crate::controllers::v3::me::update_user::{UpdateUserRequest, update_user_handler};
 use crate::controllers::v3::posts::create_post::CreatePostResponse;
+use crate::controllers::v3::spaces::CreateSpaceResponse;
+use crate::controllers::v3::spaces::members::UpsertInvitationResponse;
+use crate::features::notification::NotificationResponse;
 use crate::tests::v3_setup::{TestContextV3, setup_v3};
-use crate::tests::{create_nick_name, create_user_name};
+use crate::tests::{create_nick_name, create_user_name, create_user_session};
+use crate::types::notification_status::NotificationStatus;
 use crate::{
     tests::{create_app_state, create_test_user},
     types::Theme,
@@ -238,6 +243,231 @@ async fn test_list_my_posts() {
     );
 }
 
+#[tokio::test]
+async fn test_list_my_notifications() {
+    let TestContextV3 {
+        ddb,
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    let (_status, _headers, post) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse
+    };
+
+    let feed_pk = post.post_pk.clone();
+
+    let (_status, _headers, space) = post! {
+        app: app,
+        path: "/v3/spaces",
+        headers: headers.clone(),
+        body: {
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
+        },
+        response_type: CreateSpaceResponse
+    };
+
+    let space_pk = space.space_pk.clone();
+
+    let (new_user, _headers) = create_user_session(app.clone(), &ddb).await;
+    let (new_user_2, _headers) = create_user_session(app.clone(), &ddb).await;
+    let (new_user_3, _headers) = create_user_session(app.clone(), &ddb).await;
+
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/members", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "new_user_pks": vec![user.clone().pk, new_user.clone().pk, new_user_2.clone().pk, new_user_3.clone().pk],
+            "removed_user_pks": Vec::<Partition>::new()
+        },
+        response_type: UpsertInvitationResponse
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "publish": true,
+            "visibility": "PRIVATE",
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: "/v3/me/notifications",
+        headers: headers.clone(),
+        response_type: ListItemsResponse<NotificationResponse>
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.items.len(), 1);
+
+    let created_at = body.items[0].created_at;
+
+    let (status, _headers, body_status_unread) = get! {
+        app: app,
+        path: "/v3/me/notifications?status=Unread",
+        headers: headers.clone(),
+        response_type: ListItemsResponse<NotificationResponse>
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body_status_unread.items.len(), 1);
+
+    let (status, _headers, body_status_read) = get! {
+        app: app,
+        path: "/v3/me/notifications?status=Read",
+        headers: headers.clone(),
+        response_type: ListItemsResponse<NotificationResponse>
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body_status_read.items.len(), 0);
+
+    let since_before = created_at - 1;
+    let (status, _headers, body_since_before) = get! {
+        app: app,
+        path: format!("/v3/me/notifications?since={}", since_before),
+        headers: headers.clone(),
+        response_type: ListItemsResponse<NotificationResponse>
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body_since_before.items.len(), 1);
+
+    let since_after = created_at + 1;
+    let (status, _headers, body_since_after) = get! {
+        app: app,
+        path: format!("/v3/me/notifications?since={}", since_after),
+        headers: headers.clone(),
+        response_type: ListItemsResponse<NotificationResponse>
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body_since_after.items.len(), 0);
+}
+
+#[tokio::test]
+async fn test_update_notification_status() {
+    let TestContextV3 {
+        ddb,
+        app,
+        test_user: (user, headers),
+        ..
+    } = setup_v3().await;
+
+    let (_status, _headers, post) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: headers.clone(),
+        response_type: CreatePostResponse
+    };
+
+    let feed_pk = post.post_pk.clone();
+
+    let (_status, _headers, space) = post! {
+        app: app,
+        path: "/v3/spaces",
+        headers: headers.clone(),
+        body: {
+            "space_type": SpaceType::Deliberation,
+            "post_pk": feed_pk
+        },
+        response_type: CreateSpaceResponse
+    };
+
+    let space_pk = space.space_pk.clone();
+
+    let (new_user, _h1) = create_user_session(app.clone(), &ddb).await;
+    let (new_user_2, _h2) = create_user_session(app.clone(), &ddb).await;
+    let (new_user_3, _h3) = create_user_session(app.clone(), &ddb).await;
+
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/members", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "new_user_pks": vec![
+                user.clone().pk,
+                new_user.clone().pk,
+                new_user_2.clone().pk,
+                new_user_3.clone().pk,
+            ],
+            "removed_user_pks": Vec::<Partition>::new()
+        },
+        response_type: UpsertInvitationResponse
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: headers.clone(),
+        body: {
+            "publish": true,
+            "visibility": "PRIVATE",
+        }
+    };
+
+    assert_eq!(status, 200);
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: "/v3/me/notifications",
+        headers: headers.clone(),
+        response_type: ListItemsResponse<NotificationResponse>
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.items.len(), 1);
+
+    let noti = &body.items[0];
+    assert_eq!(noti.status, NotificationStatus::Unread);
+    let created_at = noti.created_at;
+
+    let (status, _headers, update_res) = patch! {
+        app: app,
+        path: "/v3/me/notifications",
+        headers: headers.clone(),
+        body: {
+            "notification": "notification_time",
+            "time": created_at
+        },
+        response_type: UpdateMyNotificationsStatusResponse
+    };
+
+    assert_eq!(status, 200, "failed to update notification status");
+    assert_eq!(
+        update_res.updated, 1,
+        "expected 1 notification to be updated, got {}",
+        update_res.updated
+    );
+
+    let (status, _headers, body_after) = get! {
+        app: app,
+        path: "/v3/me/notifications",
+        headers: headers.clone(),
+        response_type: ListItemsResponse<NotificationResponse>
+    };
+
+    assert_eq!(status, 200, "failed to list my notifications after update");
+    assert_eq!(body_after.items.len(), 1);
+
+    let noti_after = &body_after.items[0];
+    assert_eq!(noti_after.status, NotificationStatus::Read);
+}
 #[tokio::test]
 async fn test_list_my_drafts() {
     let TestContextV3 {

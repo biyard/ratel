@@ -253,11 +253,12 @@ export default function Header(props: HeaderProps) {
         <div
           className="hidden cursor-pointer max-tablet:block"
           onClick={() => props.setMobileExtends(!props.mobileExtends)}
+          data-testid="mobile-menu-toggle"
         >
           {props.mobileExtends ? (
             <CloseIcon className="transition-all" />
           ) : user && loggedIn ? (
-            <div className="relative">
+            <div className="relative" data-testid="mobile-profile-icon">
               <img
                 src={currentProfile.url}
                 alt={currentProfile.name}

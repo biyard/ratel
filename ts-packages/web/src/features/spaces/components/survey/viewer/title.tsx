@@ -27,18 +27,21 @@ export default function Title({
 
   return (
     <div>
-      <div className="flex flex-row gap-1 w-full font-semibold mt-1.75 mb-3.75 text-base/[22.5px] text-text-primary">
-        <div className={is_required ? 'text-[#ff6467]' : 'text-blue-500'}>
+      <div className="flex flex-row flex-wrap gap-1 w-full font-semibold mt-1.75 mb-3.75 text-base/[22.5px] text-text-primary">
+        <span
+          className={`whitespace-nowrap ${is_required ? 'text-[#ff6467]' : 'text-blue-500'}`}
+        >
           [
           {is_required
             ? t('is_required_true_label')
             : t('is_required_false_label')}
           ]
-        </div>
+        </span>
 
-        {label && <div className="text-blue-500">[{label}]</div>}
-
-        <div>{title}</div>
+        {label && (
+          <span className="whitespace-nowrap text-blue-500">[{label}]</span>
+        )}
+        <span className="wrap-anywhere">{title}</span>
       </div>
     </div>
   );

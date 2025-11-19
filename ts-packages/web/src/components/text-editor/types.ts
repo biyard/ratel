@@ -83,7 +83,8 @@ export interface TiptapToolbarProps {
 /**
  * Props for the ToolbarButton component
  */
-export interface ToolbarButtonProps {
+export interface ToolbarButtonProps
+  extends React.HTMLAttributes<HTMLButtonElement> {
   icon: React.ReactNode;
   onClick: () => void;
   active?: boolean;

@@ -44,7 +44,7 @@ export default function TeamDraftPage() {
 
   return (
     <div className="flex relative flex-1 flex-row w-full">
-      <div className="flex flex-1 flex-row max-mobile:px-[10px] w-full">
+      <div className="flex flex-1 flex-row max-mobile:px-2.5 w-full">
         <ListDrafts
           drafts={flattedDrafts}
           fetchNextPage={fetchNextPage}

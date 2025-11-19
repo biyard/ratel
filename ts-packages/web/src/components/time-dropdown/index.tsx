@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Clock } from 'lucide-react';
 import * as Popover from '@radix-ui/react-popover';
 
-interface TimeDropdownProps {
+interface TimeDropdownProps
+  extends Omit<React.HTMLAttributes<HTMLButtonElement>, 'onChange'> {
   value: number;
   onChange: (newTimestamp: number) => void;
   canEdit?: boolean;
@@ -28,6 +29,7 @@ export default function TimeDropdown({
   value,
   onChange,
   canEdit,
+  ...restProps
 }: TimeDropdownProps) {
   const [open, setOpen] = useState(false);
   const selectedTime = value ? formatAMPM(value) : null;
@@ -78,6 +80,7 @@ export default function TimeDropdown({
         <button
           ref={triggerRef}
           className="flex justify-between items-center font-medium text-left rounded-lg border shadow-sm focus:outline-none w-[150px] max-tablet:w-full border-c-wg-70 px-[20px] py-[10.5px] text-neutral-600 border-select-date-border bg-select-date-bg text-[15px]/[22.5px] gap-[10px]"
+          {...restProps}
         >
           {selectedTime || 'Select'}
           <Clock className="w-5 h-5 stroke-neutral-500" />

@@ -77,6 +77,7 @@ function CreatePostPageContent() {
             id="skip-space"
             value={ctrl.skipCreatingSpace.get()}
             onChange={(checked: boolean) => ctrl.skipCreatingSpace.set(checked)}
+            data-testid="skip-creating-space-checkbox"
           >
             <span className="text-sm text-text-primary">
               {ctrl.t.skip_creating_space}
@@ -86,6 +87,7 @@ function CreatePostPageContent() {
 
         <Button
           id="publish-post-button"
+          data-testid="publish-post-button"
           variant="rounded_primary"
           size="default"
           onClick={ctrl.handleSubmit}

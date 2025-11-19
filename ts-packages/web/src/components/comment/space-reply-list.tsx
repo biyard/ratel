@@ -118,6 +118,7 @@ export function SpaceReplyList({
                 isMe={user?.pk === reply.author_pk}
                 content={reply.content}
                 editable={false}
+                minHeight="80px"
                 showToolbar={false}
                 isFoldable={true}
               />
