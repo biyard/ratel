@@ -139,7 +139,7 @@ async fn start_survey(state: &AppState, evt: &StartSurveyEvent) -> Result<(), La
         }
     }
 
-    let _ = Poll::send_email(
+    if let Err(e) = Poll::send_email(
         &state.dynamo,
         &state.ses,
         space,
@@ -147,7 +147,10 @@ async fn start_survey(state: &AppState, evt: &StartSurveyEvent) -> Result<(), La
         emails,
         poll.is_default_poll(),
     )
-    .await?;
+    .await
+    {
+        error!("failed to send survey email: {e:?}");
+    }
 
     info!("survey status updated to Started");
 

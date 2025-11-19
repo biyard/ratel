@@ -6,7 +6,11 @@ services:
     ports:
       - "3000:3000"
     healthcheck:
-      test: ["CMD-SHELL", "apt update && apt install curl -y && curl -f http://localhost:3000/version || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "apt update && apt install curl -y && curl -f http://localhost:3000/version || exit 1",
+        ]
       interval: 10s
       timeout: 10s
       retries: 100
@@ -110,6 +114,66 @@ services:
       interval: 30s
       timeout: 10s
       retries: 100
+    networks:
+      - ratel-network
+    profiles:
+      - development
+
+  start-survey:
+    image: rust
+    restart: always
+    working_dir: /app
+    ports:
+      - "3002:3002"
+    volumes:
+      - .:/app
+      - ./.build/start-survey/target:/app/packages/start-survey/target
+    environment:
+      ENV: dev
+      PORT: 3000
+      WEB_BUILD: "false"
+      RUST_LOG: ${RUST_LOG:-info}
+      RUSTFLAGS: ${RUSTFLAGS:--A warnings}
+      RUST_FLAG: ${RUST_FLAG:---features bypass}
+      DYNAMO_ENDPOINT: ${DYNAMO_ENDPOINT:-http://localstack:4566}
+      MIGRATE: ${MIGRATE:-true}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      TELEGRAM_TOKEN: ${TELEGRAM_TOKEN}
+      DYNAMO_TABLE_PREFIX: ${DYNAMO_TABLE_PREFIX:-ratel-local}
+      BINANCE_API_KEY: ${BINANCE_API_KEY:-dummy}
+      BINANCE_SECRET_KEY: ${BINANCE_SECRET_KEY:-dummy}
+      BINANCE_WEBHOOK: ${BINANCE_WEBHOOK:-dummy}
+      REDIRECT_DOMAIN: ${REDIRECT_DOMAIN:-http://localhost:3000}
+
+      VITE_API_URL: "http://localhost:3000"
+      VITE_LOG_LEVEL: ${VITE_LOG_LEVEL:-debug}
+      VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-dummy}
+      VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-dummy}
+      VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-dummy}
+      VITE_FIREBASE_STORAGE_BUCKET: ${VITE_FIREBASE_STORAGE_BUCKET:-dummy}
+      VITE_FIREBASE_MESSAGING_SENDER_ID: ${VITE_FIREBASE_MESSAGING_SENDER_ID:-dummy}
+      VITE_FIREBASE_APP_ID: ${VITE_FIREBASE_APP_ID:-dummy}
+      VITE_FIREBASE_MEASUREMENT_ID: ${VITE_FIREBASE_MEASUREMENT_ID:-dummy}
+
+      VITE_PORTONE_STORE_ID: ${PORTONE_STORE_ID}
+      VITE_PORTONE_INICIS_CHANNEL_KEY: ${PORTONE_INICIS_CHANNEL_KEY}
+      VITE_PORTONE_KPN_CHANNEL_KEY: ${PORTONE_KPN_CHANNEL_KEY}
+
+      NODE_ENV: production
+
+    command: ["bash", "scripts/start-survey-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "test -x /usr/src/app/bootstrap || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      localstack:
+        condition: service_healthy
+      localstack-init:
+        condition: service_completed_successfully
     networks:
       - ratel-network
     profiles:
