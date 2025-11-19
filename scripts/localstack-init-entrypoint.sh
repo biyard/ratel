@@ -24,7 +24,7 @@ aws --endpoint-url=$ENDPOINT sqs create-queue --queue-name artwork-image-queue
 echo 'SQS queues created successfully'
 
 echo 'Creating admin user...'
-ADMIN_UUID="00000000-0000-0000-0000-000000000001"
+ADMIN_UUID="10000000-0000-0000-0000-000000000001"
 ADMIN_PASSWORD_HASH="d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8"
 TIMESTAMP=$(date +%s%3N)
 
@@ -59,7 +59,7 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
 # Create Attribute Codes
 echo 'Creating attribute codes...'
 
-# Attribute Code 1 - 건국대 여자
+# Attribute Code 1 - Konkuk female
 aws --endpoint-url=$ENDPOINT dynamodb put-item \
   --table-name ratel-local-main \
   --item '{
@@ -72,7 +72,7 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "gsi1_sk": {"S": "AC#'${TIMESTAMP}'"}
   }'
 
-# Attribute Code 2 - 건국대 남자
+# Attribute Code 2 - Konkuk male
 aws --endpoint-url=$ENDPOINT dynamodb put-item \
   --table-name ratel-local-main \
   --item '{
@@ -85,7 +85,7 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 1000))'"}
   }'
 
-# Attribute Code 3 - 서강대 여자
+# Attribute Code 3 - Sogang female
 aws --endpoint-url=$ENDPOINT dynamodb put-item \
   --table-name ratel-local-main \
   --item '{
@@ -98,7 +98,7 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "gsi1_sk": {"S": "AC#'$((TIMESTAMP + 2000))'"}
   }'
 
-# Attribute Code 4 - 서강대 남자
+# Attribute Code 4 - Sogang male
 aws --endpoint-url=$ENDPOINT dynamodb put-item \
   --table-name ratel-local-main \
   --item '{
@@ -116,309 +116,43 @@ echo 'Attribute codes created successfully'
 # Test Users for Public Deliberation
 echo 'Creating test users...'
 
-# user1 - 서강대 남자 (j94EA1)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000011"},
-    "sk": {"S": "USER"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "display_name": {"S": "참여자1"},
-    "email": {"S": "hi+user1@biyard.co"},
-    "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-    "username": {"S": "user1"},
-    "term_agreed": {"BOOL": true},
-    "informed_agreed": {"BOOL": true},
-    "user_type": {"N": "1"},
-    "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "theme": {"N": "3"},
-    "points": {"N": "0"},
-    "followers_count": {"N": "0"},
-    "followings_count": {"N": "0"},
-    "description": {"S": "서강대 남자"},
-    "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user1@biyard.co"},
-    "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "gsi2_pk": {"S": "USERNAME#user1"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "EMAIL#hi+user1@biyard.co"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
+i=1
 
-# VerifiedAttributes for user1 - 서강대 남자
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000011##ATTRIBUTES"},
-    "sk": {"S": "VERIFIED_ATTRIBUTES"},
-    "gender": {"S": "male"},
-    "university": {"S": "Sogang"}
-  }'
+## loop 10
+while [ $i -le 8 ]
+do
+    echo "Creating test user $i"
+    aws --endpoint-url=$ENDPOINT dynamodb put-item \
+        --table-name ratel-local-main \
+        --item '{
+        "pk": {"S": "USER#00000000-0000-0000-0000-00000000000'${i}'"},
+        "sk": {"S": "USER"},
+        "created_at": {"N": "'${TIMESTAMP}'"},
+        "updated_at": {"N": "'${TIMESTAMP}'"},
+        "display_name": {"S": "User'${i}'"},
+        "email": {"S": "hi+user'${i}'@biyard.co"},
+        "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
+        "username": {"S": "user'${i}'"},
+        "term_agreed": {"BOOL": true},
+        "informed_agreed": {"BOOL": true},
+        "user_type": {"N": "1"},
+        "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
+        "theme": {"N": "3"},
+        "points": {"N": "0"},
+        "followers_count": {"N": "0"},
+        "followings_count": {"N": "0"},
+        "description": {"S": ""},
+        "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user'${i}'@biyard.co"},
+        "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
+        "gsi2_pk": {"S": "USERNAME#user'${i}'"},
+        "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
+        "gsi3_pk": {"S": "EMAIL#hi+user'${i}'@biyard.co"},
+        "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
+    }'
 
-# user2 - 서강대 남자 (j94EA1)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000012"},
-    "sk": {"S": "USER"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "display_name": {"S": "참여자2"},
-    "email": {"S": "hi+user2@biyard.co"},
-    "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-    "username": {"S": "user2"},
-    "term_agreed": {"BOOL": true},
-    "informed_agreed": {"BOOL": true},
-    "user_type": {"N": "1"},
-    "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "theme": {"N": "3"},
-    "points": {"N": "0"},
-    "followers_count": {"N": "0"},
-    "followings_count": {"N": "0"},
-    "description": {"S": "서강대 남자"},
-    "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user2@biyard.co"},
-    "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "gsi2_pk": {"S": "USERNAME#user2"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "EMAIL#hi+user2@biyard.co"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
+    i=$((i + 1))
+done
 
-# VerifiedAttributes for user2 - 서강대 남자
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000012##ATTRIBUTES"},
-    "sk": {"S": "VERIFIED_ATTRIBUTES"},
-    "gender": {"S": "male"},
-    "university": {"S": "Sogang"}
-  }'
-
-# user3 - 서강대 여자 (bIFviB)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000013"},
-    "sk": {"S": "USER"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "display_name": {"S": "참여자3"},
-    "email": {"S": "hi+user3@biyard.co"},
-    "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-    "username": {"S": "user3"},
-    "term_agreed": {"BOOL": true},
-    "informed_agreed": {"BOOL": true},
-    "user_type": {"N": "1"},
-    "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "theme": {"N": "3"},
-    "points": {"N": "0"},
-    "followers_count": {"N": "0"},
-    "followings_count": {"N": "0"},
-    "description": {"S": "서강대 여자"},
-    "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user3@biyard.co"},
-    "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "gsi2_pk": {"S": "USERNAME#user3"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "EMAIL#hi+user3@biyard.co"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
-
-# VerifiedAttributes for user3 - 서강대 여자
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000013##ATTRIBUTES"},
-    "sk": {"S": "VERIFIED_ATTRIBUTES"},
-    "gender": {"S": "female"},
-    "university": {"S": "Sogang"}
-  }'
-
-# user4 - 서강대 여자 (bIFviB)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000014"},
-    "sk": {"S": "USER"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "display_name": {"S": "참여자4"},
-    "email": {"S": "hi+user4@biyard.co"},
-    "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-    "username": {"S": "user4"},
-    "term_agreed": {"BOOL": true},
-    "informed_agreed": {"BOOL": true},
-    "user_type": {"N": "1"},
-    "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "theme": {"N": "3"},
-    "points": {"N": "0"},
-    "followers_count": {"N": "0"},
-    "followings_count": {"N": "0"},
-    "description": {"S": "서강대 여자"},
-    "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user4@biyard.co"},
-    "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "gsi2_pk": {"S": "USERNAME#user4"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "EMAIL#hi+user4@biyard.co"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
-
-# VerifiedAttributes for user4 - 서강대 여자
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000014##ATTRIBUTES"},
-    "sk": {"S": "VERIFIED_ATTRIBUTES"},
-    "gender": {"S": "female"},
-    "university": {"S": "Sogang"}
-  }'
-
-# user5 - 건국대 남자 (bVn0Vq)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000015"},
-    "sk": {"S": "USER"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "display_name": {"S": "참여자5"},
-    "email": {"S": "hi+user5@biyard.co"},
-    "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-    "username": {"S": "user5"},
-    "term_agreed": {"BOOL": true},
-    "informed_agreed": {"BOOL": true},
-    "user_type": {"N": "1"},
-    "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "theme": {"N": "3"},
-    "points": {"N": "0"},
-    "followers_count": {"N": "0"},
-    "followings_count": {"N": "0"},
-    "description": {"S": "건국대 남자"},
-    "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user5@biyard.co"},
-    "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "gsi2_pk": {"S": "USERNAME#user5"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "EMAIL#hi+user5@biyard.co"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
-
-# VerifiedAttributes for user5 - 건국대 남자
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000015##ATTRIBUTES"},
-    "sk": {"S": "VERIFIED_ATTRIBUTES"},
-    "gender": {"S": "male"},
-    "university": {"S": "Konkuk"}
-  }'
-
-# user6 - 건국대 남자 (bVn0Vq)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000016"},
-    "sk": {"S": "USER"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "display_name": {"S": "참여자6"},
-    "email": {"S": "hi+user6@biyard.co"},
-    "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-    "username": {"S": "user6"},
-    "term_agreed": {"BOOL": true},
-    "informed_agreed": {"BOOL": true},
-    "user_type": {"N": "1"},
-    "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "theme": {"N": "3"},
-    "points": {"N": "0"},
-    "followers_count": {"N": "0"},
-    "followings_count": {"N": "0"},
-    "description": {"S": "건국대 남자"},
-    "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user6@biyard.co"},
-    "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "gsi2_pk": {"S": "USERNAME#user6"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "EMAIL#hi+user6@biyard.co"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
-
-# VerifiedAttributes for user6 - 건국대 남자
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000016##ATTRIBUTES"},
-    "sk": {"S": "VERIFIED_ATTRIBUTES"},
-    "gender": {"S": "male"},
-    "university": {"S": "Konkuk"}
-  }'
-
-# user7 - 건국대 여자 (wKFegq)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000017"},
-    "sk": {"S": "USER"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "display_name": {"S": "참여자7"},
-    "email": {"S": "hi+user7@biyard.co"},
-    "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-    "username": {"S": "user7"},
-    "term_agreed": {"BOOL": true},
-    "informed_agreed": {"BOOL": true},
-    "user_type": {"N": "1"},
-    "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "theme": {"N": "3"},
-    "points": {"N": "0"},
-    "followers_count": {"N": "0"},
-    "followings_count": {"N": "0"},
-    "description": {"S": "건국대 여자"},
-    "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user7@biyard.co"},
-    "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "gsi2_pk": {"S": "USERNAME#user7"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "EMAIL#hi+user7@biyard.co"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
-
-# VerifiedAttributes for user7 - 건국대 여자
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000017##ATTRIBUTES"},
-    "sk": {"S": "VERIFIED_ATTRIBUTES"},
-    "gender": {"S": "female"},
-    "university": {"S": "Konkuk"}
-  }'
-
-# user8 - 속성검증 미수행
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000018"},
-    "sk": {"S": "USER"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "display_name": {"S": "참여자8"},
-    "email": {"S": "hi+user8@biyard.co"},
-    "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-    "username": {"S": "user8"},
-    "term_agreed": {"BOOL": true},
-    "informed_agreed": {"BOOL": true},
-    "user_type": {"N": "1"},
-    "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "theme": {"N": "3"},
-    "points": {"N": "0"},
-    "followers_count": {"N": "0"},
-    "followings_count": {"N": "0"},
-    "description": {"S": "속성검증 미수행"},
-    "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+user8@biyard.co"},
-    "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "gsi2_pk": {"S": "USERNAME#user8"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "EMAIL#hi+user8@biyard.co"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
-
-# anon1 - 비참여 사용자1 - 건국대 여자 (wKFegq)
 aws --endpoint-url=$ENDPOINT dynamodb put-item \
   --table-name ratel-local-main \
   --item '{
@@ -426,7 +160,7 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "sk": {"S": "USER"},
     "created_at": {"N": "'${TIMESTAMP}'"},
     "updated_at": {"N": "'${TIMESTAMP}'"},
-    "display_name": {"S": "비참여자1"},
+    "display_name": {"S": "Guest1"},
     "email": {"S": "hi+anon1@biyard.co"},
     "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
     "username": {"S": "anon1"},
@@ -447,72 +181,40 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
   }'
 
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000019##ATTRIBUTES"},
-    "sk": {"S": "VERIFIED_ATTRIBUTES"},
-    "gender": {"S": "female"},
-    "university": {"S": "Konkuk"}
-  }'
 
-# admin1 - 공론조사 관리자1
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000020"},
-    "sk": {"S": "USER"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "display_name": {"S": "관리자1"},
-    "email": {"S": "hi+admin1@biyard.co"},
-    "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-    "username": {"S": "admin1"},
-    "term_agreed": {"BOOL": true},
-    "informed_agreed": {"BOOL": true},
-    "user_type": {"N": "98"},
-    "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "theme": {"N": "3"},
-    "points": {"N": "0"},
-    "followers_count": {"N": "0"},
-    "followings_count": {"N": "0"},
-    "description": {"S": "공론조사 관리자"},
-    "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+admin1@biyard.co"},
-    "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "gsi2_pk": {"S": "USERNAME#admin1"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "EMAIL#hi+admin1@biyard.co"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
+i=1
 
-# admin2 - 공론조사 관리자2
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000021"},
-    "sk": {"S": "USER"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "display_name": {"S": "관리자2"},
-    "email": {"S": "hi+admin2@biyard.co"},
-    "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
-    "username": {"S": "admin2"},
-    "term_agreed": {"BOOL": true},
-    "informed_agreed": {"BOOL": true},
-    "user_type": {"N": "98"},
-    "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "theme": {"N": "3"},
-    "points": {"N": "0"},
-    "followers_count": {"N": "0"},
-    "followings_count": {"N": "0"},
-    "description": {"S": "공론조사 관리자"},
-    "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+admin2@biyard.co"},
-    "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
-    "gsi2_pk": {"S": "USERNAME#admin2"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "EMAIL#hi+admin2@biyard.co"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
+while [ $i -le 2 ]
+do
+    aws --endpoint-url=$ENDPOINT dynamodb put-item \
+    --table-name ratel-local-main \
+    --item '{
+        "pk": {"S": "USER#00000000-0000-0000-0000-00000000002'${i}'"},
+        "sk": {"S": "USER"},
+        "created_at": {"N": "'${TIMESTAMP}'"},
+        "updated_at": {"N": "'${TIMESTAMP}'"},
+        "display_name": {"S": "Creator'${i}'"},
+        "email": {"S": "hi+admin'${i}'@biyard.co"},
+        "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
+        "username": {"S": "admin'${i}'"},
+        "term_agreed": {"BOOL": true},
+        "informed_agreed": {"BOOL": true},
+        "user_type": {"N": "1"},
+        "password": {"S": "'${ADMIN_PASSWORD_HASH}'"},
+        "theme": {"N": "3"},
+        "points": {"N": "0"},
+        "followers_count": {"N": "0"},
+        "followings_count": {"N": "0"},
+        "description": {"S": "공론조사 관리자"},
+        "gsi1_pk": {"S": "EMAIL#PASSWORD#hi+admin'${i}'@biyard.co"},
+        "gsi1_sk": {"S": "'${ADMIN_PASSWORD_HASH}'"},
+        "gsi2_pk": {"S": "USERNAME#admin'${i}'"},
+        "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
+        "gsi3_pk": {"S": "EMAIL#hi+admin'${i}'@biyard.co"},
+        "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
+    }'
+    i=$((i + 1))
+done
 
 echo 'Test users created successfully'
 
@@ -628,17 +330,17 @@ echo 'LocalStack initialization completed!'
 echo '======================================'
 echo ''
 echo 'Test Users Created:'
-echo '  user1: hi+user1@biyard.co / admin!234 (서강대 남자 - j94EA1)'
-echo '  user2: hi+user2@biyard.co / admin!234 (서강대 남자 - j94EA1)'
-echo '  user3: hi+user3@biyard.co / admin!234 (서강대 여자 - bIFviB)'
-echo '  user4: hi+user4@biyard.co / admin!234 (서강대 여자 - bIFviB)'
-echo '  user5: hi+user5@biyard.co / admin!234 (건국대 남자 - bVn0Vq)'
-echo '  user6: hi+user6@biyard.co / admin!234 (건국대 남자 - bVn0Vq)'
-echo '  user7: hi+user7@biyard.co / admin!234 (건국대 여자 - wKFegq)'
-echo '  user8: hi+user8@biyard.co / admin!234 (속성검증 미수행)'
-echo '  anon1: hi+anon1@biyard.co / admin!234 (비참여자 - wKFegq)'
-echo '  admin1: hi+admin1@biyard.co / admin!234 (공론조사 관리자)'
-echo '  admin2: hi+admin2@biyard.co / admin!234 (공론조사 관리자)'
+echo '  user1: hi+user1@biyard.co / admin!234'
+echo '  user2: hi+user2@biyard.co / admin!234'
+echo '  user3: hi+user3@biyard.co / admin!234'
+echo '  user4: hi+user4@biyard.co / admin!234'
+echo '  user5: hi+user5@biyard.co / admin!234'
+echo '  user6: hi+user6@biyard.co / admin!234'
+echo '  user7: hi+user7@biyard.co / admin!234'
+echo '  user8: hi+user8@biyard.co / admin!234'
+echo '  anon1: hi+anon1@biyard.co / admin!234'
+echo '  admin1: hi+admin1@biyard.co / admin!234'
+echo '  admin2: hi+admin2@biyard.co / admin!234'
 echo ''
 echo 'System Admin:'
 echo '  Email: admin@ratel.foundation'
@@ -646,8 +348,8 @@ echo '  Password: admin!234'
 echo '  Username: admin'
 echo ''
 echo 'Attribute Codes:'
-echo '  j94EA1 - 서강대 남자'
-echo '  bIFviB - 서강대 여자'
-echo '  bVn0Vq - 건국대 남자'
-echo '  wKFegq - 건국대 여자'
+echo '  j94EA1 - Sogang Male'
+echo '  bIFviB - Sogang Female'
+echo '  bVn0Vq - Konkuk Male'
+echo '  wKFegq - Konkuk Female'
 echo '======================================'
