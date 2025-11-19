@@ -119,7 +119,7 @@ services:
     profiles:
       - development
 
-  start-survey:
+  survey-fetcher:
     image: rust
     restart: always
     working_dir: /app
@@ -127,7 +127,7 @@ services:
       - "3002:3002"
     volumes:
       - .:/app
-      - ./.build/start-survey/target:/app/packages/start-survey/target
+      - ./.build/survey-fetcher/target:/app/packages/survey-fetcher/target
     environment:
       ENV: dev
       PORT: 3000
@@ -163,7 +163,7 @@ services:
 
       NODE_ENV: production
 
-    command: ["bash", "scripts/start-survey-entrypoint.sh"]
+    command: ["bash", "scripts/survey-fetcher-entrypoint.sh"]
     healthcheck:
       test: ["CMD-SHELL", "test -x /usr/src/app/bootstrap || exit 1"]
       interval: 30s

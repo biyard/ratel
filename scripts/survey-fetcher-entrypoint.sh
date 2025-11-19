@@ -44,7 +44,7 @@ export P256_Y=dummy
 export P256_D=dummy
 export P256_CRV=P-256
 
-cd packages/start-survey
+cd packages/survey-fetcher
 cargo install cargo-binstall
 cargo binstall --no-confirm cargo-watch
 
