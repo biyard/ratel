@@ -55,4 +55,19 @@ test.describe("User - Deliberation E2E Tests", () => {
 
     await page.getByTestId("complete-survey-modal-btn-confirm").click();
   });
+  test("[USER-002] User cannot participate in survey", async ({ page }) => {
+    await login(page, USER_ACCOUNTS.USER8.email, USER_ACCOUNTS.USER8.password);
+
+    const mySpaceButton = page.getByTestId("sidemenu-my-spaces");
+    await mySpaceButton.waitFor({ state: "visible", timeout: TIMEOUT });
+    await mySpaceButton.click();
+    await page.waitForLoadState("networkidle");
+
+    await page.getByTestId("space-card").last().click();
+    await page.waitForLoadState("networkidle");
+
+    await page
+      .getByTestId("error-zone")
+      .waitFor({ state: "visible", timeout: TIMEOUT });
+  });
 });

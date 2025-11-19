@@ -14,7 +14,10 @@ export default function ErrorZone({ error }: ErrorZoneProps) {
 
   return (
     <>
-      <div className="p-4 mb-4 text-red-800 bg-red-50 rounded-lg border border-red-200">
+      <div
+        className="p-4 mb-4 text-red-800 bg-red-50 rounded-lg border border-red-200"
+        data-testid="error-zone"
+      >
         <p className="font-semibold">{t(error.title)}</p>
         <p className="mt-1 text-sm">{t(error.message)}</p>
       </div>

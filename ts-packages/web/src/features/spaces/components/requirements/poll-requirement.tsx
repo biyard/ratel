@@ -3,15 +3,15 @@ import SurveyViewer from '../survey/viewer';
 import usePollSpace from '../../polls/hooks/use-poll-space';
 import { SurveyAnswer } from '../../polls/types/poll-question';
 import { logger } from '@/lib/logger';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePollResponseMutation } from '../../polls/hooks/use-poll-response-mutation';
 import { useErrorZone } from '@/features/errors/hooks/use-error-zone';
 import { ErrorSpacePollRequiredField } from '@/features/errors/types/errors';
+import { Error } from '@/features/errors/types/errors';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CompleteSurveyPopup from '../../polls/components/modal/complete_survey';
 import { useSpaceById } from '../../hooks/use-space-by-id';
 import { SpaceType } from '../../types/space-type';
-
 export type PollRequirementProps = React.HTMLAttributes<HTMLDivElement> & {
   spacePk: string;
   pollSk: string;
@@ -105,7 +105,15 @@ export default function PollRequirement({
       },
     );
   };
-
+  const canParticipate =
+    space.isAdmin() ||
+    space.spaceType !== SpaceType.Deliberation ||
+    space.participated;
+  useEffect(() => {
+    if (!canParticipate) {
+      setError(new Error('space.poll.cannot_participate'));
+    }
+  }, [canParticipate, setError]);
   const handleUpdateAnswer = (questionIdx: number, answer: SurveyAnswer) => {
     logger.debug(
       `handleUpdateAnswer called for questionIdx ${questionIdx}`,
@@ -128,13 +136,9 @@ export default function PollRequirement({
         onValidateError={() => setError(ErrorSpacePollRequiredField)}
         onSubmit={handleSubmit}
         onLogin={() => {}}
-        canParticipate={
-          space.isAdmin() ||
-          space.spaceType !== SpaceType.Deliberation ||
-          space.participated
-        }
+        canParticipate={canParticipate}
         canSubmit={true}
-        disabled={respondPoll.isPending}
+        disabled={respondPoll.isPending || !canParticipate}
         canUpdate={false}
         isLogin={true}
       />
