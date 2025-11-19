@@ -1,5 +1,5 @@
 [package]
-name = "start-survey"
+name = "survey-fetcher"
 version = "0.1.0"
 authors.workspace = true
 description.workspace = true

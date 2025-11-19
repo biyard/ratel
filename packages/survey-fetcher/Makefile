@@ -1,5 +1,5 @@
 PROJECT ?= ratel
-SERVICE ?= main-api
+SERVICE ?= survey-fetcher
 ENV ?= local
 REDIRECT_DOMAIN ?= https://dev.ratel.foundation
 AUTH_DOMAIN ?= dev.ratel.foundation
