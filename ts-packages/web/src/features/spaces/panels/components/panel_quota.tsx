@@ -61,7 +61,7 @@ export function PanelQuotas({ quotas, canEdit, setQuotas }: PanelQuotasProps) {
   const sanitize = (s: string) => s.replace(/\D+/g, '');
 
   return (
-    <div className="inline-flex items-center">
+    <div className="inline-flex items-center" data-testid="panel-quota-input">
       {editMode && canEdit ? (
         <Input
           ref={inputRef}
@@ -69,7 +69,7 @@ export function PanelQuotas({ quotas, canEdit, setQuotas }: PanelQuotasProps) {
           inputMode="numeric"
           pattern="[0-9]*"
           className="
-            w-[80px] h-9 text-center font-semibold text-sm
+            w-20 h-9 text-center font-semibold text-sm
             rounded-md
             bg-neutral-900
             placeholder:text-neutral-500
@@ -88,7 +88,7 @@ export function PanelQuotas({ quotas, canEdit, setQuotas }: PanelQuotasProps) {
           role="button"
           tabIndex={0}
           className={`
-            w-[80px] h-9 inline-flex items-center justify-center
+            w-20 h-9 inline-flex items-center justify-center
             rounded-md
             text-text-primary
             border

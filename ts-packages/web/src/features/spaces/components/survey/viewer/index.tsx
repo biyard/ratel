@@ -113,6 +113,7 @@ export default function SurveyViewer({
           }
           setIdx((v) => Math.min(total - 1, v + 1));
         }}
+        data-testid="survey-btn-next"
         disabled={!canNext() && !isAdmin}
       >
         {t('btn_next')}
@@ -139,6 +140,7 @@ export default function SurveyViewer({
           onSubmit?.();
         }}
         disabled={!canParticipate}
+        data-testid="survey-btn-submit"
       >
         {canParticipate ? t('btn_submit') : t('btn_not_enable')}
       </Button>
@@ -233,6 +235,7 @@ export default function SurveyViewer({
               <Button
                 onClick={() => setIdx((v) => Math.max(0, v - 1))}
                 disabled={idx === 0}
+                data-testid="survey-btn-prev"
               >
                 {t('btn_prev')}
               </Button>

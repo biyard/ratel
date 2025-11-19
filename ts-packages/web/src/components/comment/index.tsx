@@ -137,6 +137,7 @@ export function Comment({
             content={comment.content}
             editable={false}
             showToolbar={false}
+            minHeight="80px"
             isFoldable={true}
           />
         )}

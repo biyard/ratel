@@ -20,16 +20,17 @@ export default function InviteMemberPopup({ spacePk }: InviteMemberPopupProps) {
           {ctrl.t('email_label')}
         </div>
         <div className="flex flex-col w-full max-mobile:max-h-[350px] max-mobile:overflow-y-auto">
-          <div className="mt-[10px]">
+          <div className="mt-2.5">
             <SearchInput
               value={ctrl.searchValue.get()}
               placeholder={ctrl.t('email_hint')}
               setValue={(value) => ctrl.searchValue.set(value)}
               onenter={ctrl.handleSearchValue}
+              data-testid="member-email-input"
             />
           </div>
 
-          <div className="flex flex-col w-full gap-[10px] mt-[10px]">
+          <div className="flex flex-col w-full gap-2.5 mt-2.5">
             <div className="flex flex-wrap gap-1">
               {ctrl.members.map((user, index) => {
                 const isErr = Boolean(errorList[index]);
@@ -74,6 +75,7 @@ function InviteMemberButton({
   return (
     <div className="flex flex-col w-full">
       <div
+        data-testid="invite-member-send-btn"
         className={containerClass}
         onClick={() => {
           if (!isError) void onclick();
