@@ -63,7 +63,7 @@ export class RegionalServiceStack extends Stack {
       "StartSurveyEventLambda",
       {
         runtime: lambda.Runtime.PROVIDED_AL2023,
-        code: lambda.Code.fromAsset("survey-fetcher"),
+        code: lambda.Code.fromAsset("survey-worker"),
         handler: "bootstrap",
         environment: {
           REGION: this.region,

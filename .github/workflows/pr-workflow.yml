@@ -127,12 +127,12 @@ jobs:
           make dist
           make test
 
-  survey-fetcher-lambda:
+  survey-worker-lambda:
     runs-on: ubuntu-22.04
 
     defaults:
       run:
-        working-directory: packages/survey-fetcher
+        working-directory: packages/survey-worker
 
     steps:
       - uses: actions/checkout@v4
@@ -146,16 +146,16 @@ jobs:
           toolchain: stable
 
       - name: Cache builder
-        id: survey-fetcher-build-cache
+        id: survey-worker-build-cache
         uses: actions/cache@v4
         with:
-          key: survey-fetcher-build-${{ hashFiles('Cargo.lock') }}
+          key: survey-worker-build-${{ hashFiles('Cargo.lock') }}
           restore-keys: |
-            survey-fetcher-build-
+            survey-worker-build-
           path: |
-            packages/survey-fetcher/target
+            packages/survey-worker/target
 
-      - name: Build survey-fetcher Lambda
+      - name: Build survey-worker Lambda
         env:
           ENV: test
           AWS_ACCESS_KEY_ID: test
