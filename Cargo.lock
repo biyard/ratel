@@ -1558,7 +1558,7 @@ dependencies = [
 
 [[package]]
 name = "btracing"
-version = "0.1.2"
+version = "0.1.6"
 dependencies = [
  "serde",
  "tracing",
@@ -1624,7 +1624,7 @@ dependencies = [
 
 [[package]]
 name = "by-macros"
-version = "0.6.13"
+version = "0.6.15"
 dependencies = [
  "Inflector",
  "bigdecimal",
