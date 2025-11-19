@@ -279,6 +279,14 @@ export class SpaceHomeController {
 
   handlePublish = async (publishType) => {
     logger.debug('Publishing space with type:', publishType);
+    if (
+      this.space.spaceType === SpaceType.Deliberation &&
+      !this.space.anonymous_participation
+    ) {
+      showErrorToast(this.t('enable_anonymous_option_failed'));
+      return;
+    }
+
     if (this.publishHook) {
       this.publishHook();
     }
