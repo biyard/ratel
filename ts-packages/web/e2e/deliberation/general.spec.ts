@@ -274,34 +274,30 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
     await page.getByTestId('space-card').first().click();
     await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(300);
 
-    await page.getByTestId('custom-checkbox').first().click();
-    await page.waitForTimeout(200);
+    await page.getByTestId('objective-viewer-option').first().click();
+    await page.waitForTimeout(100);
 
-    await page.getByTestId('custom-checkbox').nth(0).click();
-    await page.waitForTimeout(200);
+    await page.getByTestId('objective-viewer-option').nth(0).click();
+    await page.waitForTimeout(100);
 
-    await page.getByTestId('custom-checkbox').nth(0).click();
-    await page.waitForTimeout(200);
-
-    await page.getByTestId('custom-checkbox').nth(1).click();
-    await page.waitForTimeout(200);
-
+    await page.getByTestId('objective-viewer-option').nth(0).click();
+    await page.getByTestId('objective-viewer-option').nth(1).click();
     await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(100);
 
     await page
       .getByPlaceholder('Please share your opinion.', { exact: true })
       .fill('Part 1 is important');
     await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(100);
 
     await page
       .getByPlaceholder('Please share your opinion.', { exact: true })
       .fill("I don't have any idea");
     await page.getByTestId('survey-btn-submit').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(100);
 
     await page.getByTestId('complete-survey-modal-btn-confirm').click();
     await expect(page.getByTestId('space-participant-profile')).toBeVisible();
@@ -315,34 +311,30 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
     await page.getByTestId('space-card').first().click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(1000);
 
-    await page.getByTestId('custom-checkbox').nth(1).click();
-    await page.waitForTimeout(200);
+    await page.getByTestId('objective-viewer-option').nth(1).click();
+    await page.waitForTimeout(100);
 
-    await page.getByTestId('custom-checkbox').nth(1).click();
-    await page.waitForTimeout(200);
+    await page.getByTestId('objective-viewer-option').nth(1).click();
+    await page.waitForTimeout(100);
 
-    await page.getByTestId('custom-checkbox').nth(2).click();
-    await page.waitForTimeout(200);
-
-    await page.getByTestId('custom-checkbox').nth(1).click();
-    await page.waitForTimeout(200);
-
+    await page.getByTestId('objective-viewer-option').nth(2).click();
+    await page.getByTestId('objective-viewer-option').nth(1).click();
     await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(100);
 
     await page
       .getByPlaceholder('Please share your opinion.', { exact: true })
       .fill('Part 2 is important');
     await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(100);
 
     await page
       .getByPlaceholder('Please share your opinion.', { exact: true })
       .fill('Go Option 2');
     await page.getByTestId('survey-btn-submit').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(100);
 
     await page.getByTestId('complete-survey-modal-btn-confirm').click();
     await expect(page.getByTestId('space-participant-profile')).toBeVisible();
@@ -356,34 +348,32 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
     await page.getByTestId('space-card').first().click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(1000);
 
-    await page.getByTestId('custom-checkbox').nth(0).click();
-    await page.waitForTimeout(200);
+    await page.getByTestId('objective-viewer-option').nth(0).click();
+    await page.waitForTimeout(100);
 
-    await page.getByTestId('custom-checkbox').nth(1).click();
-    await page.waitForTimeout(200);
+    await page.getByTestId('objective-viewer-option').nth(1).click();
+    await page.waitForTimeout(100);
 
-    await page.getByTestId('custom-checkbox').nth(1).click();
-    await page.waitForTimeout(200);
-
-    await page.getByTestId('custom-checkbox').nth(0).click();
-    await page.waitForTimeout(200);
+    await page.getByTestId('objective-viewer-option').nth(1).click();
+    await page.getByTestId('objective-viewer-option').nth(0).click();
+    await page.waitForTimeout(100);
 
     await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(100);
 
     await page
       .getByPlaceholder('Please share your opinion.', { exact: true })
       .fill('Part 3 is important');
     await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(100);
 
     await page
       .getByPlaceholder('Please share your opinion.', { exact: true })
       .fill('Go Option 3');
     await page.getByTestId('survey-btn-submit').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(100);
 
     await page.getByTestId('complete-survey-modal-btn-confirm').click();
     await expect(page.getByTestId('space-participant-profile')).toBeVisible();
@@ -397,34 +387,30 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
     await page.getByTestId('space-card').first().click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(1000);
 
-    await page.getByTestId('custom-checkbox').nth(0).click();
-    await page.waitForTimeout(200);
+    await page.getByTestId('objective-viewer-option').nth(0).click();
+    await page.waitForTimeout(100);
 
-    await page.getByTestId('custom-checkbox').nth(0).click();
-    await page.waitForTimeout(200);
+    await page.getByTestId('objective-viewer-option').nth(0).click();
+    await page.waitForTimeout(100);
 
-    await page.getByTestId('custom-checkbox').nth(3).click();
-    await page.waitForTimeout(200);
-
-    await page.getByTestId('custom-checkbox').nth(1).click();
-    await page.waitForTimeout(200);
-
+    await page.getByTestId('objective-viewer-option').nth(3).click();
+    await page.getByTestId('objective-viewer-option').nth(1).click();
     await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(100);
 
     await page
       .getByPlaceholder('Please share your opinion.', { exact: true })
       .fill('Part 3 is important');
     await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(100);
 
     await page
       .getByPlaceholder('Please share your opinion.', { exact: true })
       .fill('Go Option 3');
     await page.getByTestId('survey-btn-submit').click();
-    await page.waitForTimeout(200);
+    await page.waitForTimeout(100);
 
     await page.getByTestId('complete-survey-modal-btn-confirm').click();
     await expect(page.getByTestId('space-participant-profile')).toBeVisible();
