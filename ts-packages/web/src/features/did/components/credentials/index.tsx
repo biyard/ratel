@@ -60,7 +60,7 @@ export function Credentials() {
           <Row mainAxisAlignment="center" className="">
             <Button
               variant="text"
-              className="text-primary"
+              className="text-primary hover:text-primary/60"
               onClick={ctrl.handleVerify}
             >
               {t.verify}
@@ -106,7 +106,9 @@ function VerificationMethodModal({
   return (
     <div className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">
       <div className="p-6 w-full max-w-md bg-white rounded-lg shadow-lg dark:bg-gray-800">
-        <h2 className="mb-6 text-xl font-bold">{t.selectVerificationMethod}</h2>
+        <h2 className="mb-6 text-xl font-bold text-modal-label-text">
+          {t.selectVerificationMethod}
+        </h2>
 
         <div className="flex flex-col gap-4">
           {/* Identity Verification Option */}
@@ -114,7 +116,7 @@ function VerificationMethodModal({
             onClick={onIdentityVerify}
             className="p-4 text-left rounded-lg border border-gray-300 transition-all hover:border-blue-500 hover:bg-blue-50 dark:border-gray-600 dark:hover:border-blue-500 dark:hover:bg-gray-700"
           >
-            <h3 className="mb-1 text-lg font-semibold">
+            <h3 className="mb-1 text-lg font-semibold text-gray-700 dark:text-gray-500">
               {t.identityVerification}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -127,7 +129,9 @@ function VerificationMethodModal({
             onClick={onCodeVerify}
             className="p-4 text-left rounded-lg border border-gray-300 transition-all hover:border-blue-500 hover:bg-blue-50 dark:border-gray-600 dark:hover:border-blue-500 dark:hover:bg-gray-700"
           >
-            <h3 className="mb-1 text-lg font-semibold">{t.codeVerification}</h3>
+            <h3 className="mb-1 text-lg font-semibold text-gray-700 dark:text-gray-500">
+              {t.codeVerification}
+            </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {t.codeVerificationDesc}
             </p>
@@ -135,7 +139,10 @@ function VerificationMethodModal({
         </div>
 
         <div className="flex justify-end mt-6">
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            className="text-neutral-500 hover:text-white"
+            onClick={onClose}
+          >
             {t.cancel}
           </Button>
         </div>
@@ -177,7 +184,9 @@ function CodeInputModal({
   return (
     <div className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">
       <div className="p-6 w-full max-w-md bg-white rounded-lg shadow-lg dark:bg-gray-800">
-        <h2 className="mb-4 text-xl font-bold">{t.enterCode}</h2>
+        <h2 className="mb-4 text-xl font-bold text-modal-label-text">
+          {t.enterCode}
+        </h2>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -186,7 +195,7 @@ function CodeInputModal({
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder={t.codePlaceholder}
-              className="px-3 py-2 w-full rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="px-3 py-2 w-full rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-neutral-500"
               disabled={isSubmitting}
               autoFocus
             />
@@ -196,14 +205,18 @@ function CodeInputModal({
 
           <div className="flex gap-2 justify-end">
             <Button
+              className="text-neutral-500 hover:text-white"
               type="button"
-              variant="outline"
               onClick={onClose}
               disabled={isSubmitting}
             >
               {t.cancel}
             </Button>
-            <Button type="submit" disabled={isSubmitting || !code.trim()}>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={isSubmitting || !code.trim()}
+            >
               {isSubmitting ? t.submitting : t.submit}
             </Button>
           </div>
