@@ -250,6 +250,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // This test would require panel attribute restrictions to properly reject unverified users
   test(`DS-${i()} [Unverified Participant] Check can access space - PANEL RESTRICTIONS DISABLED`, async () => {
     // Try to participate (will succeed since no panel restrictions)
+    // TODO: Check unverified participant showing modal to redirect credential page.
     await participateInSpace(page, POST_TITLE);
 
     // Verify user can see the space content (not rejected)
