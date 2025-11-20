@@ -8,6 +8,7 @@ import { Row } from '@/components/ui/row';
 import { Button } from '@/components/ui/button';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { TimeRangeDisplay } from '@/features/spaces/boards/components/time-range-display';
+import { SpaceStatus } from '@/features/spaces/types/space-common';
 
 export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollViewerPage: spacePk=${spacePk}, pollPk=${pollPk}`);
@@ -66,9 +67,10 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
               onSubmit={ctrl.handleSubmit}
               onLogin={ctrl.handleLogin}
               canParticipate={
-                ctrl.space.isAdmin() ||
-                ctrl.space.spaceType !== SpaceType.Deliberation ||
-                ctrl.space.participated
+                (ctrl.space.isAdmin() ||
+                  ctrl.space.spaceType !== SpaceType.Deliberation ||
+                  ctrl.space.participated) &&
+                ctrl.space.status !== SpaceStatus.Started
               }
               canSubmit={canSubmit}
               disabled={!canSubmit && !canUpdate}

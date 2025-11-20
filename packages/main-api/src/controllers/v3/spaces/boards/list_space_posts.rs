@@ -18,6 +18,7 @@ use crate::{
 use aide::NoApi;
 use axum::extract::{Json, Path, Query, State};
 use bdk::prelude::*;
+use by_axum::axum::Extension;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
@@ -31,6 +32,7 @@ pub async fn list_space_posts_handler(
     NoApi(user): NoApi<Option<User>>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
+    Extension(space): Extension<SpaceCommon>,
     Query(ListSpacePostQueryParams { bookmark, category }): Query<ListSpacePostQueryParams>,
 ) -> Result<Json<ListSpacePostsResponse>, Error> {
     let now = chrono::Utc::now().timestamp() * 1000;
@@ -38,6 +40,13 @@ pub async fn list_space_posts_handler(
 
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
+    }
+
+    if !is_owner && space.status != Some(crate::types::SpaceStatus::InProgress) {
+        return Ok(Json(ListSpacePostsResponse {
+            posts: vec![],
+            bookmark: None,
+        }));
     }
 
     if user.is_none() {
