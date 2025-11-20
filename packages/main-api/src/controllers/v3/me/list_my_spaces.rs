@@ -69,6 +69,8 @@ pub async fn list_my_spaces_handler(
 
         if let Some(b) = &bm {
             bookmark = Some(b.clone());
+
+            return Ok(Json(ListItemsResponse { items, bookmark }));
         } else if bm.is_none() && items.len() == 10 {
             bookmark = Some("SP-".to_string());
 
