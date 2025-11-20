@@ -112,58 +112,40 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // Verification: Participant
   // =====================================
-  test(`DS-${i()} [Participant] Sign in with Participant1`, async () => {
+  test(`DS-${i()} [Participant 1] Verifying credential with code1`, async () => {
     await login(page, participant1);
-  });
-
-  test(`DS-${i()} [Participant] Verifying credential with code1`, async () => {
     await verifyCredential(page, ATTRIBUTE_CODES.KONKUK_MALE);
   });
 
-  test(`DS-${i()} [Participant] Sign in with Participant2`, async () => {
+  test(`DS-${i()} [Participant 2] Verifying credential with code2`, async () => {
     await login(page, participant2);
-  });
-
-  test(`DS-${i()} [Participant] Verifying credential with code2`, async () => {
     await verifyCredential(page, ATTRIBUTE_CODES.KONKUK_FEMALE);
   });
 
-  test(`DS-${i()} [Participant] Sign in with Participant3`, async () => {
+  test(`DS-${i()} [Participant 3] Verifying credential with code3`, async () => {
     await login(page, participant3);
-  });
-
-  test(`DS-${i()} [Participant] Verifying credential with code3`, async () => {
     await verifyCredential(page, ATTRIBUTE_CODES.SOGANG_MALE);
   });
 
-  test(`DS-${i()} [Participant] Sign in with Participant4`, async () => {
+  test(`DS-${i()} [Participant 4] Verifying credential with code4`, async () => {
     await login(page, participant4);
-  });
-
-  test(`DS-${i()} [Participant] Verifying credential with code4`, async () => {
     await verifyCredential(page, ATTRIBUTE_CODES.SOGANG_FEMALE);
   });
 
-  test(`DS-${i()} [Participant] Sign in with Participant5`, async () => {
+  test(`DS-${i()} [Participant 5] Verifying credential with code5`, async () => {
     await login(page, participant5);
-  });
-
-  test(`DS-${i()} [Participant] Verifying credential with code5`, async () => {
     await verifyCredential(page, ATTRIBUTE_CODES.KONKUK_MALE);
   });
 
   // =====================================
   // Design and Publish: Creator
   // =====================================
-  test(`DS-${i()} [Creator] Sign in with Creator1`, async () => {
+  test(`DS-${i()} [Creator 1] Create a team`, async () => {
     await login(page, creator1);
-  });
-
-  test(`DS-${i()} [Creator] Create a team`, async () => {
     await createTeam(page, TEAM_NAME, teamId, TEAM_DESCRIPTION);
   });
 
-  test(`DS-${i()} [Creator] Invite a member(Creator2) to team`, async () => {
+  test(`DS-${i()} [Creator 1] Invite a member(Creator2) to team`, async () => {
     await clickTeamSidebarMenu(page, 'groups');
 
     const inviteButton = page.locator('[data-pw="invite-member-button"]');
@@ -186,15 +168,12 @@ test.describe.serial('[Deliberation] General Spec', () => {
     }
   });
 
-  test(`DS-${i()} [Creator] Create a draft with a deliberation space`, async () => {
+  test(`DS-${i()} [Creator 1] Create a draft with a deliberation space`, async () => {
     await createDeliberationPost(page, POST_TITLE, POST_CONTENT, YOUTUBE_LINK);
   });
 
-  test(`DS-${i()} [Creator] Sign in with Creator2`, async () => {
+  test(`DS-${i()} [Creator 2] Check a team draft page`, async () => {
     await login(page, creator2);
-  });
-
-  test(`DS-${i()} [Creator] Check a team draft page`, async () => {
     await page.goto(`/teams/${teamId}/drafts`);
     await page.waitForLoadState('networkidle');
 
@@ -215,7 +194,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test(`DS-${i()} [Creator] Modifying Overview`, async () => {
+  test(`DS-${i()} [Creator 2] Modifying Overview`, async () => {
     await page.getByTestId('space-sidemenu-overview').click();
     await page.waitForLoadState('networkidle');
 
@@ -223,15 +202,15 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await expect(page.getByText(POST_TITLE)).toBeVisible();
   });
 
-  test(`DS-${i()} [Creator] Creating a Pre-Survey poll`, async () => {
+  test(`DS-${i()} [Creator 2] Creating a Pre-Survey poll`, async () => {
     await createPrePollSurvey(page, SURVEY_QUESTIONS);
   });
 
-  test(`DS-${i()} [Creator] Creating a board`, async () => {
+  test(`DS-${i()} [Creator 2] Creating a board`, async () => {
     await createBoardPosts(page, BOARD_POSTS);
   });
 
-  test(`DS-${i()} [Creator] Inviting members`, async () => {
+  test(`DS-${i()} [Creator 2] Inviting members`, async () => {
     const emails = [
       participant1.email,
       participant2.email,
@@ -243,31 +222,23 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await inviteMembers(page, emails);
   });
 
-  // FIXME: Skipping panel setup as it creates attribute requirements that block participation
-  // The panel quota update seems to create default SpacePanelQuota entries
-  // which then require users to match those attributes
-  test(`DS-${i()} [Creator] Setting up panels - SKIPPED`, async () => {
-    // await setupPanels(page, '60');
-    // Skip panel setup - deliberation should work without explicit panel quotas
-    // since check_if_satisfying_panel_attribute allows participation when panel_quota.is_empty()
+  test(`DS-${i()} [Creator 2] Setting up panels`, async () => {
+    await setupPanels(page, '60');
   });
 
-  test(`DS-${i()} [Creator] Configure anonymous`, async () => {
+  test(`DS-${i()} [Creator 2] Configure anonymous`, async () => {
     await enableAnonymousParticipation(page);
   });
 
-  test(`DS-${i()} [Creator] Publish privately`, async () => {
+  test(`DS-${i()} [Creator 2] Publish privately`, async () => {
     await publishSpacePrivately(page);
   });
 
   // =====================================
   // Rejection: Unverified Participant
   // =====================================
-  test(`DS-${i()} [Unverified Participant] Sign in with Unverified participant`, async () => {
-    await login(page, unverifiedParticipant1);
-  });
-
   test(`DS-${i()} [Unverified Participant] Check invitation in My Spaces`, async () => {
+    await login(page, unverifiedParticipant1);
     await goToMySpaces(page);
 
     // Verify the space is visible in invitations
@@ -291,6 +262,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   test(`DS-${i()} [Guest] Sign in with Guest`, async () => {
     await login(page, guest1);
+    // TODO: Check rejection
   });
 
   // =====================================
@@ -330,6 +302,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
       .fill("I don't have any idea");
     await page.getByTestId('survey-btn-submit').click();
     await page.waitForTimeout(200);
+
+    await expect(page.getByTestId('space-participant-profile')).toBeVisible();
   });
 
   // =====================================
@@ -368,6 +342,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
       .fill('Go Option 2');
     await page.getByTestId('survey-btn-submit').click();
     await page.waitForTimeout(200);
+
+    await expect(page.getByTestId('space-participant-profile')).toBeVisible();
   });
 
   // =====================================
@@ -406,6 +382,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
       .fill('Go Option 3');
     await page.getByTestId('survey-btn-submit').click();
     await page.waitForTimeout(200);
+
+    await expect(page.getByTestId('space-participant-profile')).toBeVisible();
   });
 
   // =====================================
@@ -444,16 +422,16 @@ test.describe.serial('[Deliberation] General Spec', () => {
       .fill('Go Option 3');
     await page.getByTestId('survey-btn-submit').click();
     await page.waitForTimeout(200);
+
+    await expect(page.getByTestId('space-participant-profile')).toBeVisible();
   });
 
   // =====================================
   // Start Deliberation: Creator
   // =====================================
-  test(`DS-${i()} [Creator] Sign in with Creator1 to start deliberation`, async () => {
+  test(`DS-${i()} [Creator 1] Start Deliberation`, async () => {
     await login(page, creator1);
-  });
 
-  test(`DS-${i()} [Creator] Start Deliberation`, async () => {
     // Navigate to the published space via the team's home page
     // The post was already published in DS-23, so it's visible on team home
     await page.goto(`/teams/${teamId}/home`);
@@ -471,11 +449,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // Blocking: Participant 5 (late joiner)
   // =====================================
-  test(`DS-${i()} [Participant] Sign in with Participant5`, async () => {
+  test(`DS-${i()} [Participant 5] Check if blocked joining the space`, async () => {
     await login(page, participant5);
-  });
-
-  test(`DS-${i()} [Participant] Check if blocked joining the space`, async () => {
     await goToMySpaces(page);
 
     // Try to participate after deliberation started
@@ -497,11 +472,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // Discussion: Participant and Creator
   // =====================================
-  test(`DS-${i()} [Participant] Sign in with Participant1 for discussion`, async () => {
+  test(`DS-${i()} [Participant 1] Reply to a post on a board (P1)`, async () => {
     await login(page, participant1);
-  });
-
-  test(`DS-${i()} [Participant] Reply to a post on a board (P1)`, async () => {
     await goToMySpaces(page);
     await participateInSpace(page, POST_TITLE);
     await replyToPost(
@@ -510,11 +482,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
     );
   });
 
-  test(`DS-${i()} [Participant] Sign in with Participant2 for discussion`, async () => {
+  test(`DS-${i()} [Participant 2] Reply to a post on a board (P2)`, async () => {
     await login(page, participant2);
-  });
-
-  test(`DS-${i()} [Participant] Reply to a post on a board (P2)`, async () => {
     await goToMySpaces(page);
     await participateInSpace(page, POST_TITLE);
     await replyToPost(
@@ -523,11 +492,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
     );
   });
 
-  test(`DS-${i()} [Creator] Sign in with Creator1 for discussion`, async () => {
+  test(`DS-${i()} [Creator 1] Write a new post on the board`, async () => {
     await login(page, creator1);
-  });
-
-  test(`DS-${i()} [Creator] Write a new post on the board`, async () => {
     await page.goto(`/teams/${teamId}/drafts`);
     await page.waitForLoadState('networkidle');
     await page.getByText(POST_TITLE).click();
@@ -541,11 +507,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
     );
   });
 
-  test(`DS-${i()} [Participant] Sign in with Participant3 for discussion`, async () => {
+  test(`DS-${i()} [Participant 3] Reply to the new post`, async () => {
     await login(page, participant3);
-  });
-
-  test(`DS-${i()} [Participant] Reply to the new post`, async () => {
     await goToMySpaces(page);
     await participateInSpace(page, POST_TITLE);
     await replyToPost(
@@ -557,11 +520,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // Final Survey
   // =====================================
-  test(`DS-${i()} [Creator] Sign in with Creator2 for final survey`, async () => {
+  test(`DS-${i()} [Creator 2] Write the final survey`, async () => {
     await login(page, creator2);
-  });
-
-  test(`DS-${i()} [Creator] Write the final survey`, async () => {
     await page.goto(`/teams/${teamId}/drafts`);
     await page.waitForLoadState('networkidle');
     await page.getByText(POST_TITLE).click();
@@ -604,51 +564,36 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test(`DS-${i()} [Participant] Sign in with Participant1 for final survey`, async () => {
+  test(`DS-${i()} [Participant 1] Conduct the final survey (P1)`, async () => {
     await login(page, participant1);
-  });
-
-  test(`DS-${i()} [Participant] Conduct the final survey (P1)`, async () => {
     await goToMySpaces(page);
     await participateInSpace(page, POST_TITLE);
     await conductFinalSurvey(page);
   });
 
-  test(`DS-${i()} [Participant] Sign in with Participant2 for final survey`, async () => {
+  test(`DS-${i()} [Participant 2] Conduct the final survey (P2)`, async () => {
     await login(page, participant2);
-  });
-
-  test(`DS-${i()} [Participant] Conduct the final survey (P2)`, async () => {
     await goToMySpaces(page);
     await participateInSpace(page, POST_TITLE);
     await conductFinalSurvey(page);
   });
 
-  test(`DS-${i()} [Participant] Sign in with Participant3 for final survey`, async () => {
+  test(`DS-${i()} [Participant 3] Conduct the final survey (P3)`, async () => {
     await login(page, participant3);
-  });
-
-  test(`DS-${i()} [Participant] Conduct the final survey (P3)`, async () => {
     await goToMySpaces(page);
     await participateInSpace(page, POST_TITLE);
     await conductFinalSurvey(page);
   });
 
-  test(`DS-${i()} [Participant] Sign in with Participant4 for final survey`, async () => {
+  test(`DS-${i()} [Participant 4] Conduct the final survey (P4)`, async () => {
     await login(page, participant4);
-  });
-
-  test(`DS-${i()} [Participant] Conduct the final survey (P4)`, async () => {
     await goToMySpaces(page);
     await participateInSpace(page, POST_TITLE);
     await conductFinalSurvey(page);
   });
 
-  test(`DS-${i()} [Creator] Sign in with Creator1 for analysis`, async () => {
+  test(`DS-${i()} [Creator 1] See analysis`, async () => {
     await login(page, creator1);
-  });
-
-  test(`DS-${i()} [Creator] See analysis`, async () => {
     await page.goto(`/teams/${teamId}/drafts`);
     await page.waitForLoadState('networkidle');
     await page.getByText(POST_TITLE).click();
