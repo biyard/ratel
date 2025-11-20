@@ -301,18 +301,19 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
     await page.getByTestId('space-card').first().click();
-    await page.waitForLoadState();
-
-    await page.getByTestId('custom-checkbox').all()[0].click();
+    await page.waitForLoadState('networkidle');
     await page.waitForTimeout(200);
 
-    await page.getByTestId('custom-checkbox').all()[0].click();
+    await page.getByTestId('custom-checkbox').first().click();
     await page.waitForTimeout(200);
 
-    await page.getByTestId('custom-checkbox').all()[0].click();
+    await page.getByTestId('custom-checkbox').nth(0).click();
     await page.waitForTimeout(200);
 
-    await page.getByTestId('custom-checkbox').all()[1].click();
+    await page.getByTestId('custom-checkbox').nth(0).click();
+    await page.waitForTimeout(200);
+
+    await page.getByTestId('custom-checkbox').nth(1).click();
     await page.waitForTimeout(200);
 
     await page.getByTestId('survey-btn-next').click();
@@ -339,18 +340,18 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
     await page.getByTestId('space-card').first().click();
-    await page.waitForLoadState();
-
-    await page.getByTestId('custom-checkbox').all()[1].click();
     await page.waitForTimeout(200);
 
-    await page.getByTestId('custom-checkbox').all()[1].click();
+    await page.getByTestId('custom-checkbox').nth(1).click();
     await page.waitForTimeout(200);
 
-    await page.getByTestId('custom-checkbox').all()[2].click();
+    await page.getByTestId('custom-checkbox').nth(1).click();
     await page.waitForTimeout(200);
 
-    await page.getByTestId('custom-checkbox').all()[1].click();
+    await page.getByTestId('custom-checkbox').nth(2).click();
+    await page.waitForTimeout(200);
+
+    await page.getByTestId('custom-checkbox').nth(1).click();
     await page.waitForTimeout(200);
 
     await page.getByTestId('survey-btn-next').click();
@@ -377,18 +378,18 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
     await page.getByTestId('space-card').first().click();
-    await page.waitForLoadState();
-
-    await page.getByTestId('custom-checkbox').all()[0].click();
     await page.waitForTimeout(200);
 
-    await page.getByTestId('custom-checkbox').all()[1].click();
+    await page.getByTestId('custom-checkbox').nth(0).click();
     await page.waitForTimeout(200);
 
-    await page.getByTestId('custom-checkbox').all()[1].click();
+    await page.getByTestId('custom-checkbox').nth(1).click();
     await page.waitForTimeout(200);
 
-    await page.getByTestId('custom-checkbox').all()[0].click();
+    await page.getByTestId('custom-checkbox').nth(1).click();
+    await page.waitForTimeout(200);
+
+    await page.getByTestId('custom-checkbox').nth(0).click();
     await page.waitForTimeout(200);
 
     await page.getByTestId('survey-btn-next').click();
@@ -415,18 +416,18 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
     await page.getByTestId('space-card').first().click();
-    await page.waitForLoadState();
-
-    await page.getByTestId('custom-checkbox').all()[0].click();
     await page.waitForTimeout(200);
 
-    await page.getByTestId('custom-checkbox').all()[0].click();
+    await page.getByTestId('custom-checkbox').nth(0).click();
     await page.waitForTimeout(200);
 
-    await page.getByTestId('custom-checkbox').all()[3].click();
+    await page.getByTestId('custom-checkbox').nth(0).click();
     await page.waitForTimeout(200);
 
-    await page.getByTestId('custom-checkbox').all()[1].click();
+    await page.getByTestId('custom-checkbox').nth(3).click();
+    await page.waitForTimeout(200);
+
+    await page.getByTestId('custom-checkbox').nth(1).click();
     await page.waitForTimeout(200);
 
     await page.getByTestId('survey-btn-next').click();
