@@ -58,12 +58,6 @@ pub async fn verify_space_code_handler(
         return Err(Error::FinishedSpace);
     }
 
-    let panel = check_panel(&dynamo, &space, user.clone()).await;
-
-    if !panel {
-        return Ok(Json(VerifySpaceCodeResponse { success: false }));
-    }
-
     if space.visibility != SpaceVisibility::Public {
         let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
         tracing::debug!("verification pk: {:?}, sk: {:?}", pk, sk);
@@ -72,7 +66,7 @@ pub async fn verify_space_code_handler(
             SpaceInvitationMember::get(&dynamo.client, pk.clone(), Some(sk.clone())).await?;
 
         if member.is_none() {
-            return Ok(Json(VerifySpaceCodeResponse { success: false }));
+            return Err(Error::Forbidden);
         }
 
         let _ = SpaceInvitationMember::updater(pk, sk)
@@ -84,6 +78,12 @@ pub async fn verify_space_code_handler(
         if space.publish_state != SpacePublishState::Published {
             return Ok(Json(VerifySpaceCodeResponse { success: false }));
         }
+    }
+
+    let panel = check_panel(&dynamo, &space, user.clone()).await;
+
+    if !panel {
+        return Ok(Json(VerifySpaceCodeResponse { success: false }));
     }
 
     Ok(Json(VerifySpaceCodeResponse { success: true }))
