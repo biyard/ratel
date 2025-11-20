@@ -48,14 +48,18 @@ function GeneralLayout() {
 
   const currentTab = useMemo(() => {
     const ret = ctrl.menus
-      ?.filter((menu) => menu.label !== 'Overview')
+      ?.filter((menu) => {
+        return menu.label !== 'Overview' && menu.label !== '개요';
+      })
       .find((menu) => {
         return location.pathname.startsWith(menu.to);
       });
 
     // If no match found, return Overview menu
     if (!ret) {
-      return ctrl.menus?.find((menu) => menu.label === 'Overview');
+      return ctrl.menus?.find((menu) => {
+        return menu.label === 'Overview' || menu.label === '개요';
+      });
     }
 
     return ret;
@@ -155,16 +159,19 @@ export default function SpaceByIdLayout() {
   const { spacePk } = useParams<{ spacePk: string }>();
   const ctrl = useSpaceHomeController(spacePk ?? '');
 
+  const content =
+    !ctrl.space.havePreTasks() || ctrl.space.isAdmin() ? (
+      <GeneralLayout />
+    ) : ctrl.space.participated ? (
+      <Requirements />
+    ) : (
+      <></>
+    );
+
   // NOTE: Must authorize permission for viewer/participant/admin before
   return (
     <Context.Provider value={ctrl}>
-      <SafeArea>
-        {ctrl.space.havePreTasks() && !ctrl.space.isAdmin() ? (
-          <Requirements />
-        ) : (
-          <GeneralLayout />
-        )}
-      </SafeArea>
+      <SafeArea>{content}</SafeArea>
     </Context.Provider>
   );
 }

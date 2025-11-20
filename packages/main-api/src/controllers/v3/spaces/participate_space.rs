@@ -25,17 +25,19 @@ pub async fn participate_space_handler(
     Extension(space): Extension<SpaceCommon>,
     Json(req): Json<ParticipateSpaceRequest>,
 ) -> Result<Json<ParticipateSpaceResponse>> {
+    let now = time::get_now_timestamp_millis();
+
     tracing::debug!("Handling request: {:?}", req);
     permissions.permitted(TeamGroupPermission::SpaceRead)?;
 
     if space.block_participate {
         return Err(Error::ParticipationBlocked);
     }
+
+    let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
     space
         .check_if_satisfying_panel_attribute(&dynamo.client, &user)
         .await?;
-
-    let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
 
     if space.visibility != SpaceVisibility::Public {
         let member =
@@ -49,12 +51,36 @@ pub async fn participate_space_handler(
             InvitationStatus::Invited => {}
             InvitationStatus::Pending => return Err(Error::NoPermission),
             InvitationStatus::Accepted | InvitationStatus::Declined => {
-                return Err(Error::AlreadyParticipating);
+                let (pk, sk) = SpaceParticipant::keys(space.pk.clone(), user.pk.clone());
+
+                let participant = SpaceParticipant::get(&dynamo.client, pk, Some(sk)).await?;
+                if participant.is_none() {
+                    let display_name = Generator::with_naming(Name::Numbered)
+                        .next()
+                        .unwrap()
+                        .replace('-', " ");
+                    let sp = SpaceParticipant::new(space.pk.clone(), user.pk.clone(), display_name);
+                    let new_space = SpaceCommon::updater(&space.pk, &space.sk)
+                        .increase_participants(1)
+                        .with_updated_at(now);
+
+                    transact_write!(
+                        &dynamo.client,
+                        sp.create_transact_write_item(),
+                        new_space.transact_write_item(),
+                    )?;
+
+                    return Ok(Json(ParticipateSpaceResponse {
+                        username: sp.username,
+                        display_name: sp.display_name,
+                        profile_url: sp.profile_url,
+                    }));
+                } else {
+                    return Err(Error::AlreadyParticipating);
+                }
             }
         }
     }
-
-    let now = time::get_now_timestamp_millis();
 
     let display_name = Generator::with_naming(Name::Numbered)
         .next()

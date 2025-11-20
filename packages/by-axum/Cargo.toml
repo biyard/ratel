@@ -1,6 +1,6 @@
 [package]
 name = "by-axum"
-version = "0.2.15"
+version = "0.2.16"
 edition.workspace = true
 description = "Library satisfying Biyard API convention"
 license.workspace = true

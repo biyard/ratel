@@ -27,6 +27,7 @@ pub enum FileType {
     // Video
     MP4,
     MOV,
+    MKV,
 
     // Etc
     PPTX,

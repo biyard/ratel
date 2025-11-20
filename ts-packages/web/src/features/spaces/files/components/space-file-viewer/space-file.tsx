@@ -1,6 +1,7 @@
 import {
   Excel,
   Jpg,
+  Mkv,
   MOV,
   MP4,
   Pdf,
@@ -40,6 +41,8 @@ export default function SpaceFile({ file, onclick }: SpaceFileProps) {
           <MP4 />
         ) : file.ext.toLowerCase() === FileExtension.MOV.toLowerCase() ? (
           <MOV />
+        ) : file.ext.toLowerCase() === FileExtension.MKV.toLowerCase() ? (
+          <Mkv />
         ) : (
           <Excel />
         )}

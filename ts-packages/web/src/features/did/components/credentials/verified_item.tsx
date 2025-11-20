@@ -23,7 +23,9 @@ export default function VerifiedItem({
         >
           <Icon className="w-6 [&>path]:stroke-icon" />
           <Col className="gap-1">
-            <p className="text-base font-medium">{attribute_value}</p>
+            <p className="text-base font-medium text-neutral-500">
+              {attribute_value}
+            </p>
             <p className="text-sm text-neutral-400">{attribute_name}</p>
           </Col>
         </Row>
