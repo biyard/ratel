@@ -3,6 +3,7 @@
 
 // Root Icons (97)
 export { default as Add } from '@/assets/icons/add.svg?react';
+export { default as Mkv } from '@/assets/icons/mkv.svg?react';
 export { default as Age } from '@/assets/icons/did/attributes/age.svg?react';
 export { default as AlertCircle } from '@/assets/icons/alert-circle.svg?react';
 export { default as ArrowLeft } from '@/assets/icons/arrow-left.svg?react';

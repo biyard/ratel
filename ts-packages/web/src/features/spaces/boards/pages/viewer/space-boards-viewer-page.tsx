@@ -16,6 +16,8 @@ export function SpaceBoardsViewerPage({ spacePk }: SpacePathProps) {
         posts={ctrl.posts.get() ?? []}
         changeCategory={ctrl.changeCategory}
         handleDetailPage={ctrl.handleDetailPage}
+        bookmark={ctrl.bookmark.get()}
+        onLoadMore={ctrl.loadMore}
       />
     </>
   );
