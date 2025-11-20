@@ -32,6 +32,8 @@ export function SpaceBoardsEditorPage({ spacePk }: SpacePathProps) {
         posts={ctrl.posts.get() ?? []}
         changeCategory={ctrl.changeCategory}
         handleDetailPage={ctrl.handleDetailPage}
+        bookmark={ctrl.bookmark.get()}
+        onLoadMore={ctrl.loadMore}
       />
     </div>
   );

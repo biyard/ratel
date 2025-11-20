@@ -1,5 +1,5 @@
 import { PostEditor } from '@/features/posts/components/post-editor';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { getTimeAgo } from '@/lib/time-utils';
 import { SpacePostResponse } from '../types/space-post-response';
@@ -17,6 +17,9 @@ export type BoardsListProps = {
   posts: SpacePostResponse[];
   changeCategory: (categoryName: string) => void;
   handleDetailPage: (postPk: string) => void;
+
+  bookmark: string | null | undefined;
+  onLoadMore: (categoryName: string) => Promise<void> | void;
 };
 
 export default function BoardsList({
@@ -25,28 +28,30 @@ export default function BoardsList({
   posts,
   changeCategory,
   handleDetailPage,
+  bookmark,
+  onLoadMore,
 }: BoardsListProps) {
   const [selected, setSelected] = useState<string | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const bottomRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     changeCategory(selected ?? '');
   }, [selected]);
 
-  const sortedPosts = useMemo(() => {
-    const list = (posts ?? []).slice();
-    list.sort((a, b) => {
-      const A =
-        typeof a.created_at === 'number'
-          ? a.created_at
-          : new Date(a.created_at ?? 0).getTime();
-      const B =
-        typeof b.created_at === 'number'
-          ? b.created_at
-          : new Date(b.created_at ?? 0).getTime();
-      return B - A;
-    });
-    return list;
-  }, [posts]);
+  const handleLoadMore = async () => {
+    if (!bookmark || loadingMore) return;
+
+    setLoadingMore(true);
+    try {
+      await onLoadMore(selected ?? '');
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      });
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   return (
     <div className="flex flex-col w-full">
@@ -86,7 +91,7 @@ export default function BoardsList({
       </div>
 
       <Col className="grid gap-4">
-        {sortedPosts.map((p) => (
+        {posts.map((p) => (
           <div
             key={p.pk}
             className="cursor-pointer w-full bg-card-bg-secondary border-card-enable-border rounded-[10px] py-[20px]"
@@ -152,11 +157,30 @@ export default function BoardsList({
           </div>
         ))}
 
-        {!sortedPosts.length && (
+        {!posts.length && (
           <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-10 text-center text-neutral-400">
             {t('no_post')}
           </div>
         )}
+
+        {posts.length > 0 && (
+          <div className="flex justify-center py-6">
+            {bookmark ? (
+              <Button
+                variant="text"
+                disabled={loadingMore}
+                onClick={handleLoadMore}
+                className="px-6 py-2 rounded-lg light:hover:text-neutral-300"
+              >
+                {loadingMore ? 'Loading...' : 'More'}
+              </Button>
+            ) : (
+              <></>
+            )}
+          </div>
+        )}
+
+        <div ref={bottomRef} />
       </Col>
     </div>
   );
