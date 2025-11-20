@@ -303,24 +303,16 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.getByTestId('space-card').first().click();
     await page.waitForLoadState();
 
-    await page
-      .getByText(SURVEY_QUESTIONS[0].options![0], { exact: true })
-      .click();
+    await page.getByTestId('custom-checkbox').all()[0].click();
     await page.waitForTimeout(200);
 
-    await page
-      .getByText(SURVEY_QUESTIONS[1].options![0], { exact: true })
-      .click();
+    await page.getByTestId('custom-checkbox').all()[0].click();
     await page.waitForTimeout(200);
 
-    await page
-      .getByText(SURVEY_QUESTIONS[2].options![0], { exact: true })
-      .click();
+    await page.getByTestId('custom-checkbox').all()[0].click();
     await page.waitForTimeout(200);
 
-    await page
-      .getByText(SURVEY_QUESTIONS[2].options![1], { exact: true })
-      .click();
+    await page.getByTestId('custom-checkbox').all()[1].click();
     await page.waitForTimeout(200);
 
     await page.getByTestId('survey-btn-next').click();
@@ -349,24 +341,16 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.getByTestId('space-card').first().click();
     await page.waitForLoadState();
 
-    await page
-      .getByText(SURVEY_QUESTIONS[0].options![1], { exact: true })
-      .click();
+    await page.getByTestId('custom-checkbox').all()[1].click();
     await page.waitForTimeout(200);
 
-    await page
-      .getByText(SURVEY_QUESTIONS[1].options![1], { exact: true })
-      .click();
+    await page.getByTestId('custom-checkbox').all()[1].click();
     await page.waitForTimeout(200);
 
-    await page
-      .getByText(SURVEY_QUESTIONS[2].options![2], { exact: true })
-      .click();
+    await page.getByTestId('custom-checkbox').all()[2].click();
     await page.waitForTimeout(200);
 
-    await page
-      .getByText(SURVEY_QUESTIONS[2].options![1], { exact: true })
-      .click();
+    await page.getByTestId('custom-checkbox').all()[1].click();
     await page.waitForTimeout(200);
 
     await page.getByTestId('survey-btn-next').click();
@@ -395,24 +379,16 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.getByTestId('space-card').first().click();
     await page.waitForLoadState();
 
-    await page
-      .getByText(SURVEY_QUESTIONS[0].options![0], { exact: true })
-      .click();
+    await page.getByTestId('custom-checkbox').all()[0].click();
     await page.waitForTimeout(200);
 
-    await page
-      .getByText(SURVEY_QUESTIONS[1].options![1], { exact: true })
-      .click();
+    await page.getByTestId('custom-checkbox').all()[1].click();
     await page.waitForTimeout(200);
 
-    await page
-      .getByText(SURVEY_QUESTIONS[2].options![1], { exact: true })
-      .click();
+    await page.getByTestId('custom-checkbox').all()[1].click();
     await page.waitForTimeout(200);
 
-    await page
-      .getByText(SURVEY_QUESTIONS[2].options![0], { exact: true })
-      .click();
+    await page.getByTestId('custom-checkbox').all()[0].click();
     await page.waitForTimeout(200);
 
     await page.getByTestId('survey-btn-next').click();
