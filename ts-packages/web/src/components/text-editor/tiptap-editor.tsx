@@ -311,7 +311,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           <input
             ref={videoInputRef}
             type="file"
-            accept="video/*"
+            accept="video/*,.mkv"
             className="hidden"
             onChange={async (e) => {
               const file = e.target.files?.[0];
