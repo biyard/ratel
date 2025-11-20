@@ -554,8 +554,8 @@ export async function startDeliberation(page: Page) {
 
 export async function replyToPost(page: Page, replyContent: string) {
   await page.getByTestId('space-sidemenu-boards').click();
+  await page.waitForURL(/.*\/boards$/, { timeout: TIMEOUT });
   await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(500);
 
   // Click on first board post
   const firstPost = page.getByTestId('board-post-item').first();
