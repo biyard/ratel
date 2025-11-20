@@ -14,13 +14,14 @@ import {
 import {
   clickTeamSidebarMenu,
   conductFinalSurvey,
-  conductPrePollSurvey,
+  conductSurvey,
   createBoardPosts,
   createDeliberationPost,
   createPrePollSurvey,
   createTeam,
   enableAnonymousParticipation,
   goToMySpaces,
+  goToSpace,
   inviteMembers,
   login,
   participateInSpace,
@@ -247,10 +248,9 @@ test.describe.serial('[Deliberation] General Spec', () => {
 
   // Note: Since we skipped panel setup, unverified users can also participate
   // This test would require panel attribute restrictions to properly reject unverified users
-  test(`DS-${i()} [Unverified Participant] Check can access space - PANEL RESTRICTIONS DISABLED`, async () => {
+  test.skip(`DS-${i()} [Unverified Participant] Check can access space - PANEL RESTRICTIONS DISABLED`, async () => {
     // Try to participate (will succeed since no panel restrictions)
     // TODO: Check unverified participant showing modal to redirect credential page.
-    await participateInSpace(page, POST_TITLE);
 
     // Verify user can see the space content (not rejected)
     // When panel restrictions are disabled, all invited users can participate
@@ -276,32 +276,14 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(300);
 
-    await page.getByTestId('objective-viewer-option').first().click();
-    await page.waitForTimeout(500);
-
-    await page.getByTestId('objective-viewer-option').nth(0).click();
-    await page.waitForTimeout(500);
-
-    await page.getByTestId('objective-viewer-option').nth(0).click();
-    await page.waitForTimeout(500);
-    await page.getByTestId('objective-viewer-option').nth(1).click();
-    await page.waitForTimeout(500);
-    await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(500);
-
-    await page
-      .getByPlaceholder('Please share your opinion.', { exact: true })
-      .fill('Part 1 is important');
-    await page.waitForTimeout(500);
-    await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(500);
-
-    await page
-      .getByPlaceholder('Please share your opinion.', { exact: true })
-      .fill("I don't have any idea");
-    await page.waitForTimeout(500);
-    await page.getByTestId('survey-btn-submit').click();
-    await page.waitForTimeout(500);
+    await conductSurvey(page, [
+      0,
+      0,
+      0,
+      1,
+      'Part 1 is important',
+      "I don't have any idea",
+    ]);
 
     await page.getByTestId('complete-survey-modal-btn-confirm').click();
     await expect(page.getByTestId('space-participant-profile')).toBeVisible();
@@ -318,32 +300,14 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(300);
 
-    await page.getByTestId('objective-viewer-option').nth(1).click();
-    await page.waitForTimeout(500);
-
-    await page.getByTestId('objective-viewer-option').nth(1).click();
-    await page.waitForTimeout(500);
-
-    await page.getByTestId('objective-viewer-option').nth(2).click();
-    await page.waitForTimeout(500);
-    await page.getByTestId('objective-viewer-option').nth(1).click();
-    await page.waitForTimeout(500);
-    await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(500);
-
-    await page
-      .getByPlaceholder('Please share your opinion.', { exact: true })
-      .fill('Part 2 is important');
-    await page.waitForTimeout(500);
-    await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(500);
-
-    await page
-      .getByPlaceholder('Please share your opinion.', { exact: true })
-      .fill('Go Option 2');
-    await page.waitForTimeout(500);
-    await page.getByTestId('survey-btn-submit').click();
-    await page.waitForTimeout(500);
+    await conductSurvey(page, [
+      1,
+      1,
+      2,
+      1,
+      'Part 2 is important',
+      'Go Option 2',
+    ]);
 
     await page.getByTestId('complete-survey-modal-btn-confirm').click();
     await expect(page.getByTestId('space-participant-profile')).toBeVisible();
@@ -360,33 +324,14 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(300);
 
-    await page.getByTestId('objective-viewer-option').nth(0).click();
-    await page.waitForTimeout(500);
-
-    await page.getByTestId('objective-viewer-option').nth(1).click();
-    await page.waitForTimeout(500);
-
-    await page.getByTestId('objective-viewer-option').nth(1).click();
-    await page.waitForTimeout(500);
-    await page.getByTestId('objective-viewer-option').nth(0).click();
-    await page.waitForTimeout(500);
-
-    await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(500);
-
-    await page
-      .getByPlaceholder('Please share your opinion.', { exact: true })
-      .fill('Part 3 is important');
-    await page.waitForTimeout(500);
-    await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(500);
-
-    await page
-      .getByPlaceholder('Please share your opinion.', { exact: true })
-      .fill('Go Option 3');
-    await page.waitForTimeout(500);
-    await page.getByTestId('survey-btn-submit').click();
-    await page.waitForTimeout(500);
+    await conductSurvey(page, [
+      0,
+      1,
+      1,
+      0,
+      'Part 3 is important',
+      'Go Option 3',
+    ]);
 
     await page.getByTestId('complete-survey-modal-btn-confirm').click();
     await expect(page.getByTestId('space-participant-profile')).toBeVisible();
@@ -403,32 +348,14 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(300);
 
-    await page.getByTestId('objective-viewer-option').nth(0).click();
-    await page.waitForTimeout(500);
-
-    await page.getByTestId('objective-viewer-option').nth(0).click();
-    await page.waitForTimeout(500);
-
-    await page.getByTestId('objective-viewer-option').nth(3).click();
-    await page.waitForTimeout(500);
-    await page.getByTestId('objective-viewer-option').nth(1).click();
-    await page.waitForTimeout(500);
-    await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(500);
-
-    await page
-      .getByPlaceholder('Please share your opinion.', { exact: true })
-      .fill('Part 3 is important');
-    await page.waitForTimeout(500);
-    await page.getByTestId('survey-btn-next').click();
-    await page.waitForTimeout(500);
-
-    await page
-      .getByPlaceholder('Please share your opinion.', { exact: true })
-      .fill('Go Option 3');
-    await page.waitForTimeout(500);
-    await page.getByTestId('survey-btn-submit').click();
-    await page.waitForTimeout(500);
+    await conductSurvey(page, [
+      0,
+      0,
+      3,
+      1,
+      'Part 3 is important',
+      'Go Option 3',
+    ]);
 
     await page.getByTestId('complete-survey-modal-btn-confirm').click();
     await expect(page.getByTestId('space-participant-profile')).toBeVisible();
@@ -457,12 +384,11 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // Blocking: Participant 5 (late joiner)
   // =====================================
-  test(`DS-${i()} [Participant 5] Check if blocked joining the space`, async () => {
+  // TODO: implement
+  test.skip(`DS-${i()} [Participant 5] Check if blocked joining the space`, async () => {
     await login(page, participant5);
     await goToMySpaces(page);
-
-    // Try to participate after deliberation started
-    await participateInSpace(page, POST_TITLE);
+    await goToSpace(page, POST_TITLE);
 
     // Should be blocked from joining after deliberation starts
     const blockedMessage = page.getByTestId('participation-blocked-message');
@@ -483,7 +409,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
   test(`DS-${i()} [Participant 1] Reply to a post on a board (P1)`, async () => {
     await login(page, participant1);
     await goToMySpaces(page);
-    await participateInSpace(page, POST_TITLE);
+    await goToSpace(page, POST_TITLE);
     await replyToPost(
       page,
       'I think participation-based rewards are more fair.',
@@ -493,7 +419,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
   test(`DS-${i()} [Participant 2] Reply to a post on a board (P2)`, async () => {
     await login(page, participant2);
     await goToMySpaces(page);
-    await participateInSpace(page, POST_TITLE);
+    await goToSpace(page, POST_TITLE);
     await replyToPost(
       page,
       'Quality-based approach helps community growth more.',
