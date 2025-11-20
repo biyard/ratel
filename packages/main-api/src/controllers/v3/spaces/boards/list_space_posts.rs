@@ -18,6 +18,7 @@ use crate::{
 use aide::NoApi;
 use axum::extract::{Json, Path, Query, State};
 use bdk::prelude::*;
+use by_axum::axum::Extension;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
@@ -31,6 +32,7 @@ pub async fn list_space_posts_handler(
     NoApi(user): NoApi<Option<User>>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
+    Extension(space): Extension<SpaceCommon>,
     Query(ListSpacePostQueryParams { bookmark, category }): Query<ListSpacePostQueryParams>,
 ) -> Result<Json<ListSpacePostsResponse>, Error> {
     let now = chrono::Utc::now().timestamp() * 1000;
@@ -38,6 +40,13 @@ pub async fn list_space_posts_handler(
 
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
+    }
+
+    if !is_owner && space.status != Some(crate::types::SpaceStatus::InProgress) {
+        return Ok(Json(ListSpacePostsResponse {
+            posts: vec![],
+            bookmark: None,
+        }));
     }
 
     if user.is_none() {
@@ -48,10 +57,10 @@ pub async fn list_space_posts_handler(
     }
 
     let mut query_options = SpacePostQueryOption::builder()
-        .limit(50)
+        .limit(10)
         .scan_index_forward(false);
 
-    if let Some(bookmark) = bookmark {
+    if let Some(bookmark) = bookmark.clone() {
         query_options = query_options.bookmark(bookmark);
     }
 
@@ -59,10 +68,18 @@ pub async fn list_space_posts_handler(
     let (responses, bookmark) = if category.is_none() {
         SpacePost::find_by_space_ordered(&dynamo.client, space_pk.clone(), query_options).await?
     } else {
+        let mut cat_opt = SpacePostQueryOption::builder()
+            .limit(10)
+            .scan_index_forward(false);
+
+        if let Some(bm) = bookmark.clone() {
+            cat_opt = cat_opt.bookmark(bm);
+        }
+
         let (posts, bookmark) = SpacePost::find_by_cagetory(
             &dynamo.client,
             category.clone().unwrap_or_default(),
-            SpacePostQueryOption::builder().limit(50),
+            cat_opt,
         )
         .await?;
 

@@ -34,6 +34,8 @@ export const i18nSpaceHome = {
     public: 'Public',
     onboard: 'ONBOARD',
     input_title: 'Input title.',
+    enable_anonymous_option_failed:
+      'You should enable anonymous option before deliberation space publish.',
     make_public_title: 'You’re About to Go Public',
     make_public_desc_line1:
       'Once made public, this Space will be visible to everyone',
@@ -64,6 +66,11 @@ export const i18nSpaceHome = {
     // Actions
     action_participate: 'Participate',
 
+    authorize_title: 'Failed to authorize attribute.',
+    authorize_desc_1: 'The space lacks the required attributes.',
+    authorize_desc_2:
+      'Go to the credentials page, verify your credentials, and try accessing again.',
+    go_credentials: 'Go to the credentials page',
     success_publish_space: 'Success to publish space.',
     failed_publish_space: 'Failed to publish space. please try later.',
     success_delete_space: 'Success to delete space.',
@@ -114,6 +121,8 @@ export const i18nSpaceHome = {
     public: '공개',
     onboard: '온보딩',
     input_title: '제목을 입력하세요.',
+    enable_anonymous_option_failed:
+      'Deliberation 스페이스를 게시하기 전에 익명 속성을 활성화해야합니다.',
     make_public_title: '스페이스는 곧 공개될 예정입니다.',
     make_public_desc_line1: '공개로 전환하면 이 스페이스는 모두에게 보입니다',
     make_public_desc_line2: '그리고 <b>다시 비공개로 되돌릴 수 없습니다.</b>',
@@ -142,6 +151,10 @@ export const i18nSpaceHome = {
     // Actions
     action_participate: '참여하기',
 
+    authorize_title: '속성 검증 실패',
+    authorize_desc_1: '스페이스가 요구하는 속성이 부족합니다.',
+    authorize_desc_2: '자격 증명 페이지로 가서 검증 후 다시 접속해보세요.',
+    go_credentials: '자격 증명 페이지로 이동하기',
     success_publish_space: '스페이스를 성공적으로 게시했습니다.',
     failed_publish_space:
       '스페이스 게시에 실패했습니다. 잠시 후 다시 시도해보세요.',

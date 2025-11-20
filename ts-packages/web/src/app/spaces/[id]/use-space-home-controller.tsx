@@ -35,6 +35,7 @@ import { useStartSpaceMutation } from '@/features/spaces/hooks/use-start-mutatio
 import { SpaceStatus } from '@/features/spaces/types/space-common';
 import { useVerifySpaceCodeMutation } from '@/features/spaces/members/hooks/use-verify-space-code-mutation';
 import useFileSpace from '@/features/spaces/files/hooks/use-file-space';
+import SpaceAuthorizePopup from './space-authorize-popup';
 
 export class SpaceHomeController {
   public space: Space;
@@ -279,6 +280,14 @@ export class SpaceHomeController {
 
   handlePublish = async (publishType) => {
     logger.debug('Publishing space with type:', publishType);
+    if (
+      this.space.spaceType === SpaceType.Deliberation &&
+      !this.space.anonymous_participation
+    ) {
+      showErrorToast(this.t('enable_anonymous_option_failed'));
+      return;
+    }
+
     if (this.publishHook) {
       this.publishHook();
     }
@@ -673,6 +682,7 @@ export function useSpaceHomeController(spacePk: string) {
     }
 
     const space = data.space.data;
+
     if (!space) return;
 
     const shouldAutoParticipate =
@@ -691,6 +701,8 @@ export function useSpaceHomeController(spacePk: string) {
       } catch (err) {
         logger.debug('auto participate failed: ', err);
         console.log('auto participate failed: ', err);
+
+        popup.open(<SpaceAuthorizePopup />).withTitle(t('authorize_title'));
       }
     })();
   }, [

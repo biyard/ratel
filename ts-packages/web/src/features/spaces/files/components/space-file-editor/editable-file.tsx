@@ -6,6 +6,7 @@ import {
   MP4,
   Pdf,
   Png,
+  Mkv,
   Pptx,
   Word,
   Zip,
@@ -50,6 +51,8 @@ export default function EditableFile({ file, onclick }: EditableFileProps) {
           <MP4 />
         ) : file.ext.toLowerCase() === FileExtension.MOV.toLowerCase() ? (
           <MOV />
+        ) : file.ext.toLowerCase() === FileExtension.MKV.toLowerCase() ? (
+          <Mkv />
         ) : (
           <Excel />
         )}
