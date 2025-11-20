@@ -39,7 +39,7 @@ export const Checkbox = ({
 
         <label
           className={cn(
-            'border border-c-wg-50',
+            'border border-c-wg-50 light:border-modal-card-border',
             'peer-checked:bg-primary peer-checked:border-primary',
             'peer-checked:[&_svg_path]:stroke-bg',
             'flex items-center justify-center',
