@@ -91,7 +91,9 @@ pub async fn get_space_handler(
     let can_participate = if let Some(ref user) = user {
         let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
         let invitation = SpaceInvitationMember::get(&dynamo.client, &pk, Some(&sk)).await?;
-        invitation.is_some() && user_participant.is_none()
+        invitation.is_some()
+            && user_participant.is_none()
+            && space.status == Some(SpaceStatus::InProgress)
     } else {
         false
     };
