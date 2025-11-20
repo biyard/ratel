@@ -87,6 +87,7 @@ export interface I18nCreatePostPage {
   // Error messages
   error_init: string;
   error_save: string;
+  error_overflow_title: string;
   error_upload: string;
   error_publish: string;
   error_empty_fields: string;
