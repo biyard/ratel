@@ -406,25 +406,25 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // Discussion: Participant and Creator
   // =====================================
-  // test(`DS-${i()} [Participant 1] Reply to a post on a board (P1)`, async () => {
-  //   await login(page, participant1);
-  //   await goToMySpaces(page);
-  //   await goToSpace(page, POST_TITLE);
-  //   await replyToPost(
-  //     page,
-  //     'I think participation-based rewards are more fair.',
-  //   );
-  // });
+  test(`DS-${i()} [Participant 1] Reply to a post on a board (P1)`, async () => {
+    await login(page, participant1);
+    await goToMySpaces(page);
+    await goToSpace(page, POST_TITLE);
+    await replyToPost(
+      page,
+      'I think participation-based rewards are more fair.',
+    );
+  });
 
-  // test(`DS-${i()} [Participant 2] Reply to a post on a board (P2)`, async () => {
-  //   await login(page, participant2);
-  //   await goToMySpaces(page);
-  //   await goToSpace(page, POST_TITLE);
-  //   await replyToPost(
-  //     page,
-  //     'Quality-based approach helps community growth more.',
-  //   );
-  // });
+  test(`DS-${i()} [Participant 2] Reply to a post on a board (P2)`, async () => {
+    await login(page, participant2);
+    await goToMySpaces(page);
+    await goToSpace(page, POST_TITLE);
+    await replyToPost(
+      page,
+      'Quality-based approach helps community growth more.',
+    );
+  });
 
   // test(`DS-${i()} [Creator 1] Write a new post on the board`, async () => {
   //   await login(page, creator1);
