@@ -667,7 +667,6 @@ export function useSpaceHomeController(spacePk: string) {
       } catch (err) {
         logger.debug('verify error: ', err);
         console.log('verify error: ', err);
-        popup.open(<SpaceAuthorizePopup />).withTitle(t('authorize_title'));
       } finally {
         sessionStorage.removeItem(key);
         navigate(cleanedPath, { replace: true });
@@ -702,6 +701,7 @@ export function useSpaceHomeController(spacePk: string) {
       } catch (err) {
         logger.debug('auto participate failed: ', err);
         console.log('auto participate failed: ', err);
+
         popup.open(<SpaceAuthorizePopup />).withTitle(t('authorize_title'));
       }
     })();
