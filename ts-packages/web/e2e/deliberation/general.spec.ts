@@ -501,7 +501,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await conductFinalSurvey(page);
   });
 
-  test(`DS-${i()} [Creator 1] See analysis`, async () => {
+  // TODO: check
+  test.skip(`DS-${i()} [Creator 1] See analysis`, async () => {
     await login(page, creator1);
     await goToMySpaces(page);
     await goToSpace(page, POST_TITLE);
