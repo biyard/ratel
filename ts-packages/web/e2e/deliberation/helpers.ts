@@ -555,11 +555,13 @@ export async function startDeliberation(page: Page) {
 export async function replyToPost(page: Page, replyContent: string) {
   await page.getByTestId('space-sidemenu-boards').click();
   await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(500);
 
   // Click on first board post
   const firstPost = page.getByTestId('board-post-item').first();
   await firstPost.click();
   await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(500);
 
   // Write reply
   page.getByTestId('open-new-comment-box-button').click();
