@@ -557,11 +557,11 @@ export async function replyToPost(page: Page, replyContent: string) {
   await page.waitForURL(/.*\/boards$/, { timeout: TIMEOUT });
   await page.waitForLoadState('networkidle');
 
-  // Click on first board post
+  // Wait for board posts to load and click on first post
   const firstPost = page.getByTestId('board-post-item').first();
+  await expect(firstPost).toBeVisible();
   await firstPost.click();
   await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(500);
 
   // Write reply
   page.getByTestId('open-new-comment-box-button').click();
