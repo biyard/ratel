@@ -92,12 +92,12 @@ export function Comment({
       ref={rootRef}
       className="flex flex-col gap-3 pb-4 border-b border-b-divider"
     >
-      <div className="flex flex-row w-full justify-between items-start">
+      <div className="flex flex-row justify-between items-start w-full">
         <div className="flex flex-row gap-2 items-center">
           <img
             alt={comment.author_display_name}
             src={comment.author_profile_url}
-            className="w-10 h-10 rounded-full object-cover object-top"
+            className="object-cover object-top w-10 h-10 rounded-full"
           />
 
           <div className="flex flex-col gap-[2px]">
@@ -130,7 +130,7 @@ export function Comment({
         />
       </div>
 
-      <div className="flex flex-col ml-12 gap-3">
+      <div className="flex flex-col gap-3 ml-12">
         {!isEditing && (
           <TiptapEditor
             isMe={user.data.pk === comment.author_pk}
@@ -145,7 +145,7 @@ export function Comment({
         {isEditing && (
           <>
             <div
-              className="flex-1 w-full cursor-text hover:bg-foreground/5 transition-colors rounded-md bg-comment-box-bg border border-primary"
+              className="flex-1 w-full rounded-md border transition-colors cursor-text bg-comment-box-bg border-primary hover:bg-foreground/5"
               onClick={handleEditContainerClick}
               role="button"
               tabIndex={-1}
@@ -164,7 +164,7 @@ export function Comment({
                 className="border-none"
               />
             </div>
-            <div className="flex flex-row justify-end items-center gap-2 pt-2">
+            <div className="flex flex-row gap-2 justify-end items-center pt-2">
               <Button
                 type="button"
                 variant="outline"
@@ -191,11 +191,11 @@ export function Comment({
 
         {!isEditing && (
           <>
-            <div className="flex flex-row w-full justify-between items-center gap-2">
+            <div className="flex flex-row gap-2 justify-between items-center w-full">
               <div className="flex flex-row gap-5">
                 <button
                   aria-label="Expand Replies"
-                  className="gap-2 text-primary flex flex-row justify-center items-center disabled:cursor-not-allowed"
+                  className="flex flex-row gap-2 justify-center items-center disabled:cursor-not-allowed text-primary"
                   disabled={comment.replies === 0}
                   onClick={() => {
                     setShowReplies((prev) => {
@@ -224,7 +224,7 @@ export function Comment({
                     onClick={() => {
                       setExpand((prev) => !prev);
                     }}
-                    className="flex gap-2 cursor-pointer justify-center items-center text-text-primary"
+                    className="flex gap-2 justify-center items-center cursor-pointer text-text-primary"
                   >
                     <BendArrowRight
                       width={24}
@@ -256,7 +256,7 @@ export function Comment({
                         : '[&>path]:stroke-comment-icon'
                     }
                   />
-                  <div className="font-medium text-base/[24px] text-comment-icon-text ">
+                  <div className="font-medium text-base/[24px] text-comment-icon-text">
                     {comment.likes ?? 0}
                   </div>
                 </button>
@@ -342,13 +342,13 @@ export function NewComment({
         className ?? ''
       }`}
     >
-      <div className="px-3 pt-3 flex flex-row justify-between items-center">
+      <div className="flex flex-row justify-between items-center px-3 pt-3">
         <span className="text-sm font-medium text-text-primary">
           {t('write_comment')}
         </span>
         <button
           aria-label="Close"
-          className="p-1 hover:bg-foreground/10 rounded transition-colors"
+          className="p-1 rounded transition-colors hover:bg-foreground/10"
           onClick={onClose}
         >
           <ChevronDoubleDownIcon
@@ -360,7 +360,7 @@ export function NewComment({
       </div>
 
       <div
-        className="flex-1 w-full cursor-text hover:bg-foreground/5 transition-colors rounded-md"
+        className="flex-1 w-full rounded-md transition-colors cursor-text hover:bg-foreground/5"
         onClick={handleEditorContainerClick}
         role="button"
         tabIndex={-1}
@@ -381,7 +381,7 @@ export function NewComment({
         />
       </div>
 
-      <div className="px-3 pb-3 flex flex-row justify-end items-center gap-2 border-t border-divider pt-3">
+      <div className="flex flex-row gap-2 justify-end items-center px-3 pt-3 pb-3 border-t border-divider">
         <Button
           id="publish-comment-button"
           aria-label="Publish"

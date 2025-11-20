@@ -293,15 +293,16 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
                 '[&_.ProseMirror_.column-resize-handle]:absolute [&_.ProseMirror_.column-resize-handle]:right-[-2px] [&_.ProseMirror_.column-resize-handle]:top-0 [&_.ProseMirror_.column-resize-handle]:bottom-0 [&_.ProseMirror_.column-resize-handle]:w-[4px] [&_.ProseMirror_.column-resize-handle]:bg-primary [&_.ProseMirror_.column-resize-handle]:pointer-events-none',
                 '[&_.ProseMirror_iframe]:w-full [&_.ProseMirror_iframe]:max-w-full',
               )}
+              data-testid="tiptap-editor-content"
               data-placeholder={placeholder}
             />
           </div>
 
           {isFoldable && showFoldToggle && (
-            <div className="mt-2 flex justify-center">
+            <div className="flex justify-center mt-2">
               <button
                 type="button"
-                className="text-xs text-primary hover:underline"
+                className="text-xs hover:underline text-primary"
                 onClick={() => setIsFolded((prev) => !prev)}
               >
                 {isFolded ? 'More' : 'Close'}
