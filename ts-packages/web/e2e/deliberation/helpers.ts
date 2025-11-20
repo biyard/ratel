@@ -289,20 +289,27 @@ export async function setupPanels(page: Page, quota: string) {
   await page.getByTestId('space-sidemenu-panels').click();
   await page.waitForURL(/.*\/panels$/, { timeout: TIMEOUT });
   await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(100);
 
   const quotaInput = page.getByTestId('panel-quota-input');
   await quotaInput.click();
-  const textbox = quotaInput.getByRole('textbox');
+  const textbox = quotaInput.locator('[data-slot="input"]');
   await textbox.waitFor({ state: 'visible', timeout: TIMEOUT });
   await textbox.fill(quota);
 
   // Press Enter to commit the quota value
   await page.keyboard.press('Enter');
   await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(100);
 
-  // Note: Without selecting attributes, all invited users can participate
-  // without credential requirements.
+  await page.getByTestId('multi-select-trigger').click();
+  await page.locator('[data-value="University"]').click();
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(100);
+
+  await page.locator('[data-value="Gender"]').click();
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(100);
 }
 
 export async function enableAnonymousParticipation(page: Page) {
