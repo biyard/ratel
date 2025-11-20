@@ -94,9 +94,13 @@ export class CreatePostPageController {
 
   handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    if (value.length <= TITLE_MAX_LENGTH) {
-      this.title.set(value);
-      this.isModified.set(true);
+    const truncated = value.slice(0, TITLE_MAX_LENGTH);
+
+    this.title.set(truncated);
+    this.isModified.set(true);
+
+    if (value.length > TITLE_MAX_LENGTH) {
+      showErrorToast(this.t.error_overflow_title);
     }
   };
 
