@@ -1,7 +1,7 @@
 interface CustomCheckboxProps {
   isRounded?: boolean;
   checked: boolean;
-  onChange: () => void;
+  onChange?: () => void;
   disabled?: boolean;
   'data-pw'?: string;
 }
@@ -9,7 +9,7 @@ interface CustomCheckboxProps {
 export default function CustomCheckbox({
   isRounded = false,
   checked,
-  onChange,
+  onChange = () => {},
   disabled = false,
   'data-pw': dataPw,
 }: CustomCheckboxProps) {
@@ -19,7 +19,7 @@ export default function CustomCheckbox({
       onClick={onChange}
       aria-pressed={checked}
       data-pw={dataPw}
-      className={`w-6 h-6 flex items-center justify-center border
+      className={`w-6 h-6 flex items-center justify-center border shrink-0
         ${disabled ? 'bg-neutral-500 border-transparent light:bg-primary' : checked ? 'bg-yellow-500 border-transparent' : 'bg-transparent border-neutral-500'}
         ${isRounded ? 'rounded-full' : 'rounded-sm'}
         transition-colors duration-150 `}
