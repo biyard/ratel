@@ -101,7 +101,13 @@ test.describe.serial('[Deliberation] General Spec', () => {
 
   test.beforeAll(async ({ browser }, testInfo) => {
     const contextOptions = testInfo.project.use;
-    context = await browser.newContext(contextOptions);
+    context = await browser.newContext({
+      ...contextOptions,
+
+      recordVideo: {
+        dir: testInfo.outputDir + '/videos/',
+      },
+    });
     page = await context.newPage();
     teamId = TEAM_ID(Date.now());
   });
