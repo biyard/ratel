@@ -303,6 +303,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.getByTestId('survey-btn-submit').click();
     await page.waitForTimeout(200);
 
+    await page.getByTestId('complete-survey-modal-btn-confirm').click();
     await expect(page.getByTestId('space-participant-profile')).toBeVisible();
   });
 
@@ -343,6 +344,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.getByTestId('survey-btn-submit').click();
     await page.waitForTimeout(200);
 
+    await page.getByTestId('complete-survey-modal-btn-confirm').click();
     await expect(page.getByTestId('space-participant-profile')).toBeVisible();
   });
 
@@ -383,6 +385,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.getByTestId('survey-btn-submit').click();
     await page.waitForTimeout(200);
 
+    await page.getByTestId('complete-survey-modal-btn-confirm').click();
     await expect(page.getByTestId('space-participant-profile')).toBeVisible();
   });
 
@@ -423,6 +426,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.getByTestId('survey-btn-submit').click();
     await page.waitForTimeout(200);
 
+    await page.getByTestId('complete-survey-modal-btn-confirm').click();
     await expect(page.getByTestId('space-participant-profile')).toBeVisible();
   });
 
