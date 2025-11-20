@@ -174,8 +174,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
 
   test(`DS-${i()} [Creator 2] Check a team draft page`, async () => {
     await login(page, creator2);
-    await page.goto(`/teams/${teamId}/drafts`);
-    await page.waitForLoadState('networkidle');
+    await page.goto(`/teams/${teamId}/drafts`, { waitUntil: 'networkidle' });
 
     // Verify the draft post is visible
     await expect(page.getByText(POST_TITLE)).toBeVisible();

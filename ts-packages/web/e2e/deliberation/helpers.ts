@@ -36,6 +36,7 @@ export async function login(
   await page.waitForLoadState('networkidle');
   await page.waitForURL('/');
   await expect(page.getByText('My Spaces', { exact: true })).toBeVisible();
+  await page.waitForTimeout(100);
 }
 
 export async function logout(page: Page) {
