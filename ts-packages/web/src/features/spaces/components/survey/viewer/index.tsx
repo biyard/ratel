@@ -94,6 +94,8 @@ export default function SurveyViewer({
     return true;
   };
 
+  console.log('participate: ', canParticipate);
+
   if (!isLogin) {
     button = <Button onClick={onLogin}>{t('btn_login')}</Button>;
   } else if (idx < total - 1) {
@@ -161,6 +163,7 @@ export default function SurveyViewer({
           }
           onSubmit?.();
         }}
+        disabled={!canParticipate}
       >
         {canParticipate ? t('btn_update') : t('btn_not_enable')}
       </Button>

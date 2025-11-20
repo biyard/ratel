@@ -58,4 +58,8 @@ pub enum FileExtension {
     #[serde(alias = "mov", alias = "MOV")]
     #[translate(ko = "MOV", en = "MOV")]
     MOV = 9,
+
+    #[serde(alias = "mkv", alias = "MKV")]
+    #[translate(ko = "MKV", en = "MKV")]
+    MKV = 10,
 }

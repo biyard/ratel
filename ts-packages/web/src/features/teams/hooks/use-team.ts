@@ -56,6 +56,7 @@ export function useTeamDetailByUsername(username: string) {
         throw error; // Let React Query handle the error instead of returning null
       }
     },
+    enabled: !!username,
     retry: 1, // Only retry once
     refetchOnWindowFocus: false,
   });

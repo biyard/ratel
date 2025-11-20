@@ -13,8 +13,10 @@ use crate::{AppState, Error, Permissions, transact_write};
 
 use aide::NoApi;
 
+use crate::models::SpaceCommon;
 use axum::extract::{Json, Path, State};
 use bdk::prelude::*;
+use by_axum::axum::Extension;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Default, aide::OperationIo, JsonSchema)]
@@ -32,6 +34,7 @@ pub async fn respond_poll_handler(
     NoApi(user): aide::NoApi<User>,
     NoApi(permissions): NoApi<Permissions>,
     Path(PollPathParam { space_pk, poll_sk }): PollPath,
+    Extension(space): Extension<SpaceCommon>,
     Json(req): Json<RespondPollSpaceRequest>,
 ) -> crate::Result<Json<RespondPollSpaceResponse>> {
     //Validate Request
@@ -50,6 +53,9 @@ pub async fn respond_poll_handler(
         .ok_or(Error::NotFoundPoll)?;
 
     // Space Status Check
+    if space.status != Some(SpaceStatus::InProgress) {
+        return Err(Error::PollNotInProgress);
+    }
     if poll.status() != PollStatus::InProgress {
         return Err(Error::PollNotInProgress);
     }
