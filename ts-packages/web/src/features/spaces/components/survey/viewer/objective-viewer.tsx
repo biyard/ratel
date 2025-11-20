@@ -65,7 +65,9 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
               <div className="w-4.5 h-4.5">
                 <CustomCheckbox
                   checked={checked}
-                  onChange={() => onSelect(optionIdx)}
+                  onChange={() => {
+                    onSelect(optionIdx);
+                  }}
                   disabled={disabled}
                 />
               </div>
@@ -80,7 +82,7 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
                   disabled={disabled || !checked}
                 />
               ) : (
-                <div className="font-normal text-neutral-300 light:text-text-primary text-[15px]/[22.5px] break-all">
+                <div className="cursor-pointer font-normal text-neutral-300 light:text-text-primary text-[15px]/[22.5px] break-all">
                   {option}
                 </div>
               )}
