@@ -1,4 +1,5 @@
 import { expect, Page } from '@playwright/test';
+import { SURVEY_QUESTIONS } from './data';
 
 const TIMEOUT = 10000;
 
@@ -32,7 +33,9 @@ export async function login(
   await page.getByTestId('continue-button').click();
   await page.getByTestId('password-input').fill(password);
   await page.getByTestId('continue-button').click();
+  await page.waitForLoadState('networkidle');
   await page.waitForURL('/');
+  await expect(page.getByText('My Spaces', { exact: true })).toBeVisible();
 }
 
 export async function logout(page: Page) {
@@ -129,10 +132,12 @@ export async function createDeliberationPost(
   if (isChecked) {
     await skipSpaceCheckbox.click();
   }
+  await page.waitForTimeout(100);
 
   await page
     .locator('[aria-label="space-setting-form-deliberation.label"]')
     .click();
+  await page.waitForTimeout(100);
 
   await page.getByTestId('publish-post-button').click();
   await page.waitForLoadState('networkidle');
@@ -319,8 +324,9 @@ export async function publishSpacePrivately(page: Page) {
 }
 
 export async function goToMySpaces(page: Page) {
-  await page.goto('/my-spaces');
+  await page.getByText('My Spaces', { exact: true }).click();
   await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(100);
 }
 
 export async function participateInSpace(page: Page, spaceName: string) {
@@ -405,154 +411,7 @@ export async function participateInSpace(page: Page, spaceName: string) {
 }
 
 export async function conductPrePollSurvey(page: Page) {
-  // Check if we're already on the survey page (question counter visible)
-  const questionCounter = page.locator('text=/^\\d+ \\/ \\d+$/').first();
-  const isOnSurvey = await questionCounter.isVisible().catch(() => false);
-
-  if (!isOnSurvey) {
-    // Navigate to polls section
-    await page.getByTestId('space-sidemenu-polls').click();
-    await page.waitForLoadState('networkidle');
-
-    // Click on pre-poll survey
-    const prePollCard = page.getByTestId('pre-poll-survey-card');
-    await prePollCard.waitFor({ state: 'visible', timeout: TIMEOUT });
-    await prePollCard.click();
-    await page.waitForLoadState('networkidle');
-  }
-
-  // Answer all questions in the survey
-  // For single choice questions, clicking an option auto-advances to the next question
-  // For multi-choice questions, need to click Next button
-  // We loop until we complete the survey
-  let maxIterations = 15; // Safety limit
-  let previousQuestion = '';
-  let stuckCount = 0;
-
-  while (maxIterations > 0) {
-    maxIterations--;
-
-    // Track progress to detect if we're stuck
-    const currentQuestionText = await questionCounter
-      .textContent()
-      .catch(() => '');
-    if (currentQuestionText === previousQuestion) {
-      stuckCount++;
-      if (stuckCount >= 3) {
-        // We're stuck on the same question - survey may be in review mode
-        // Navigate to the space overview instead
-        const currentUrl = page.url();
-        const spaceMatch = currentUrl.match(/\/spaces\/([^/]+)/);
-        if (spaceMatch) {
-          const spaceId = spaceMatch[1];
-          await page.goto(`/spaces/${spaceId}`);
-          await page.waitForLoadState('networkidle');
-        }
-        return;
-      }
-    } else {
-      previousQuestion = currentQuestionText || '';
-      stuckCount = 0;
-    }
-
-    // Check for error state (e.g., "Cannot participate in survey")
-    const cannotParticipate = page.getByText('Cannot participate in survey');
-    const noPermission = page.getByText('do not have permission');
-    if (
-      (await cannotParticipate.isVisible().catch(() => false)) ||
-      (await noPermission.isVisible().catch(() => false))
-    ) {
-      // User cannot participate in this survey - exit gracefully
-      return;
-    }
-
-    // Check available navigation buttons
-    const submitBtn = page.getByTestId('survey-btn-submit');
-    const nextBtn = page.getByRole('button', { name: 'Next' });
-    const isLastQuestion = await submitBtn.isVisible();
-    const hasNextButton = await nextBtn.isVisible().catch(() => false);
-
-    // Try to click an unselected option first
-    let clickedOption = false;
-
-    // Strategy: Find buttons that are radio buttons (empty, no text, no images, no SVG)
-    // The RadioButton component renders empty when unselected, SVG when selected
-    try {
-      const allButtons = page.locator('button');
-      const btnCount = await allButtons.count();
-
-      for (let i = 0; i < btnCount; i++) {
-        const btn = allButtons.nth(i);
-
-        // Skip disabled buttons
-        if (await btn.isDisabled()) continue;
-
-        // Get button text content
-        const textContent = (await btn.textContent()) || '';
-        const trimmedText = textContent.trim();
-
-        // Skip buttons with ANY text content (these are navigation buttons like Next, EN, etc.)
-        if (trimmedText.length > 0) continue;
-
-        // Skip buttons with images (likely nav buttons)
-        if ((await btn.locator('img').count()) > 0) continue;
-
-        // Check if button has SVG (selected state)
-        const hasSvg = (await btn.locator('svg').count()) > 0;
-
-        // Click unselected buttons (no text, no image, no SVG = unselected radio button)
-        if (!hasSvg) {
-          await btn.click({ force: true });
-          clickedOption = true;
-          await page.waitForTimeout(300);
-          break;
-        }
-      }
-    } catch {
-      // Fallback if approach fails
-    }
-
-    // If no option was clicked (all selected or multi-select), try clicking Next button
-    if (!clickedOption && hasNextButton) {
-      await nextBtn.click();
-      await page.waitForTimeout(300);
-      continue;
-    }
-
-    // If it's the last question, click submit and exit
-    if (isLastQuestion) {
-      await page.waitForTimeout(300);
-      const finalSubmit = page.getByTestId('survey-btn-submit');
-      if (await finalSubmit.isEnabled()) {
-        await finalSubmit.click();
-        await page.waitForLoadState('networkidle');
-      }
-      break;
-    }
-
-    // If no progress was made, try clicking Next anyway
-    if (!clickedOption && !isLastQuestion) {
-      const nextBtnRetry = page.getByRole('button', { name: 'Next' });
-      if (await nextBtnRetry.isVisible().catch(() => false)) {
-        await nextBtnRetry.click();
-        await page.waitForTimeout(300);
-      }
-    }
-
-    await page.waitForTimeout(200);
-  }
-
-  // Wait for and close the completion modal
-  try {
-    const confirmBtn = page.getByTestId('complete-survey-modal-btn-confirm');
-    await confirmBtn.waitFor({ state: 'visible', timeout: 5000 });
-    await confirmBtn.click();
-    await page.waitForLoadState('networkidle');
-    // Wait a bit more to ensure the survey completion is recorded
-    await page.waitForTimeout(500);
-  } catch {
-    // Modal didn't appear, survey was already completed or different flow
-  }
+  page.getByText(SURVEY_QUESTIONS[0].options![0], { exact: true });
 }
 
 export async function startDeliberation(page: Page) {

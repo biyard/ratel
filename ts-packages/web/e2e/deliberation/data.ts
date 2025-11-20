@@ -14,8 +14,7 @@ export const ATTRIBUTE_CODES = {
 // Password for all test users
 export const TEST_PASSWORD = 'admin!234';
 
-export const POST_TITLE =
-  'RewardSpace Reward System: Should it be based on participation or quality?';
+export const POST_TITLE = 'Discussion on Reward Space';
 export const POST_CONTENT = `1. Background
 Ratel provides a RewardSpace feature that rewards user participation.
 Currently, most spaces distribute points based on activity count (participation).
@@ -50,7 +49,8 @@ export const SURVEY_QUESTIONS = [
     type: 'single_choice',
     displayName: 'Single Choice',
     required: true,
-    title: 'What do you think is the most important factor when participating in deliberative polling?',
+    title:
+      'What do you think is the most important factor when participating in deliberative polling?',
     options: [
       'A structure where diverse opinions are fairly reflected',
       'Public interest of the discussion topic',
@@ -100,7 +100,8 @@ export const BOARD_POSTS = [
   {
     category: 'Fairness and Efficiency of Reward Criteria',
     title: 'Quality-based rewards make the community more mature',
-    content: 'What matters more than quantitative participation is the depth of contribution.',
+    content:
+      'What matters more than quantitative participation is the depth of contribution.',
   },
   {
     category: 'Balance between AI Evaluation and User Autonomy',
