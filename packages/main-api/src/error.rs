@@ -264,6 +264,10 @@ pub enum Error {
     #[error("attribute code not found")]
     AttributeCodeNotFound,
 
+    #[error("No permission to access this resource")]
+    #[rest_error(status = 401, code = 11001)]
+    Forbidden,
+
     // web 1,000,000 ~
     #[error("Web error: {0}")]
     #[rest_error(code = 1_000_000)]

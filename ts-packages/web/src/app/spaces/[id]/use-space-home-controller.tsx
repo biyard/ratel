@@ -35,6 +35,7 @@ import { useStartSpaceMutation } from '@/features/spaces/hooks/use-start-mutatio
 import { SpaceStatus } from '@/features/spaces/types/space-common';
 import { useVerifySpaceCodeMutation } from '@/features/spaces/members/hooks/use-verify-space-code-mutation';
 import useFileSpace from '@/features/spaces/files/hooks/use-file-space';
+import SpaceAuthorizePopup from './space-authorize-popup';
 
 export class SpaceHomeController {
   public space: Space;
@@ -666,6 +667,7 @@ export function useSpaceHomeController(spacePk: string) {
       } catch (err) {
         logger.debug('verify error: ', err);
         console.log('verify error: ', err);
+        popup.open(<SpaceAuthorizePopup />).withTitle(t('authorize_title'));
       } finally {
         sessionStorage.removeItem(key);
         navigate(cleanedPath, { replace: true });
@@ -681,6 +683,7 @@ export function useSpaceHomeController(spacePk: string) {
     }
 
     const space = data.space.data;
+
     if (!space) return;
 
     const shouldAutoParticipate =
@@ -699,6 +702,7 @@ export function useSpaceHomeController(spacePk: string) {
       } catch (err) {
         logger.debug('auto participate failed: ', err);
         console.log('auto participate failed: ', err);
+        popup.open(<SpaceAuthorizePopup />).withTitle(t('authorize_title'));
       }
     })();
   }, [

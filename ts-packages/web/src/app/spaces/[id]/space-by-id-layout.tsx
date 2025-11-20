@@ -159,16 +159,19 @@ export default function SpaceByIdLayout() {
   const { spacePk } = useParams<{ spacePk: string }>();
   const ctrl = useSpaceHomeController(spacePk ?? '');
 
+  const content =
+    !ctrl.space.havePreTasks() || ctrl.space.isAdmin() ? (
+      <GeneralLayout />
+    ) : ctrl.space.participated ? (
+      <Requirements />
+    ) : (
+      <></>
+    );
+
   // NOTE: Must authorize permission for viewer/participant/admin before
   return (
     <Context.Provider value={ctrl}>
-      <SafeArea>
-        {ctrl.space.havePreTasks() && !ctrl.space.isAdmin() ? (
-          <Requirements />
-        ) : (
-          <GeneralLayout />
-        )}
-      </SafeArea>
+      <SafeArea>{content}</SafeArea>
     </Context.Provider>
   );
 }

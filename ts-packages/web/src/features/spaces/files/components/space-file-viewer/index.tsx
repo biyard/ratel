@@ -37,7 +37,6 @@ export default function SpaceFileViewer({ files }: SpaceFilesProps) {
 
   const videoFiles = files.filter((f) => {
     const name = f.name.toLowerCase();
-    console.log('file: ', f.ext, f.name);
     return isVideo(f.ext) || VIDEO_EXTS.some((ext) => name.includes(`.${ext}`));
   });
 
@@ -63,8 +62,6 @@ export default function SpaceFileViewer({ files }: SpaceFilesProps) {
       return pdfFiles[0]?.url ?? null;
     });
   }, [pdfFiles]);
-
-  console.log('video files: ', videoFiles);
 
   return (
     <Card>
