@@ -105,17 +105,18 @@ export default function PollRequirement({
       },
     );
   };
-  const canParticipate =
-    space.isAdmin() ||
-    space.spaceType !== SpaceType.Deliberation ||
-    space.participated;
+  const canParticipate = space
+    ? space.isAdmin() ||
+      space.spaceType !== SpaceType.Deliberation ||
+      space.participated
+    : undefined;
   useEffect(() => {
-    if (!canParticipate) {
+    if (canParticipate === false) {
       setError(new Error('space.poll.cannot_participate'));
-    } else {
+    } else if (canParticipate === true) {
       removeError();
     }
-  }, [canParticipate, setError]);
+  }, [canParticipate, setError, removeError]);
   const handleUpdateAnswer = (questionIdx: number, answer: SurveyAnswer) => {
     logger.debug(
       `handleUpdateAnswer called for questionIdx ${questionIdx}`,
@@ -138,9 +139,9 @@ export default function PollRequirement({
         onValidateError={() => setError(ErrorSpacePollRequiredField)}
         onSubmit={handleSubmit}
         onLogin={() => {}}
-        canParticipate={canParticipate}
+        canParticipate={!!canParticipate}
         canSubmit={true}
-        disabled={respondPoll.isPending || !canParticipate}
+        disabled={respondPoll.isPending || canParticipate === false}
         canUpdate={false}
         isLogin={true}
       />

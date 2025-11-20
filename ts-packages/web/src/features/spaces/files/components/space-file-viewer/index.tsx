@@ -5,6 +5,10 @@ import SpaceFile from './space-file';
 import FileModel from '../../types/file';
 import { useEffect, useState } from 'react';
 
+const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+const VIDEO_EXTS = ['mp4', 'mov', 'webm', 'mkv'];
+const PDF_EXTS = ['pdf'];
+
 export interface SpaceFilesProps {
   files: FileModel[];
 }
@@ -26,9 +30,21 @@ export default function SpaceFileViewer({ files }: SpaceFilesProps) {
 
   const isPdf = (ext?: string) => !!ext && ['pdf'].includes(ext.toLowerCase());
 
-  const imageFiles = files.filter((f) => isImage(f.ext));
-  const videoFiles = files.filter((f) => isVideo(f.ext));
-  const pdfFiles = files.filter((f) => isPdf(f.ext));
+  const imageFiles = files.filter((f) => {
+    const name = f.name.toLowerCase();
+    return isImage(f.ext) || IMAGE_EXTS.some((ext) => name.includes(`.${ext}`));
+  });
+
+  const videoFiles = files.filter((f) => {
+    const name = f.name.toLowerCase();
+    console.log('file: ', f.ext, f.name);
+    return isVideo(f.ext) || VIDEO_EXTS.some((ext) => name.includes(`.${ext}`));
+  });
+
+  const pdfFiles = files.filter((f) => {
+    const name = f.name.toLowerCase();
+    return isPdf(f.ext) || PDF_EXTS.some((ext) => name.includes(`.${ext}`));
+  });
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     () => pdfFiles?.[0]?.url ?? null,
@@ -47,6 +63,8 @@ export default function SpaceFileViewer({ files }: SpaceFilesProps) {
       return pdfFiles[0]?.url ?? null;
     });
   }, [pdfFiles]);
+
+  console.log('video files: ', videoFiles);
 
   return (
     <Card>

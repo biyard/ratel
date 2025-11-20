@@ -9,7 +9,7 @@ import {
   getPutMultiObjectUrl,
   getPutObjectUrl,
 } from '@/lib/api/ratel/assets.v3';
-import FileModel from '../types/file';
+import FileModel, { FileExtension } from '../types/file';
 
 export type FileUploaderHandle = {
   uploadFile: (file: File) => Promise<void>;
@@ -74,8 +74,14 @@ const FileUploaderMetadata = forwardRef<
 
     const uploadFile = async (file: File) => {
       if (!validateFile(file)) return;
-      const fileTypeKey = getFileType(file);
+      let fileTypeKey = getFileType(file);
+
+      console.log('file type key: ', fileTypeKey);
       onUploadingChange?.(true);
+
+      if (fileTypeKey === 'none') {
+        fileTypeKey = FileExtension.MKV;
+      }
 
       const partSize = 5 * 1024 * 1024;
       const totalParts = Math.ceil(file.size / partSize);
