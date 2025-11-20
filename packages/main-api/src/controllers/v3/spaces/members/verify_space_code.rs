@@ -69,6 +69,12 @@ pub async fn verify_space_code_handler(
             return Err(Error::Forbidden);
         }
 
+        let panel = check_panel(&dynamo, &space, user.clone()).await;
+
+        if !panel {
+            return Ok(Json(VerifySpaceCodeResponse { success: false }));
+        }
+
         let _ = SpaceInvitationMember::updater(pk, sk)
             .with_status(InvitationStatus::Accepted)
             .execute(&dynamo.client)
@@ -78,12 +84,12 @@ pub async fn verify_space_code_handler(
         if space.publish_state != SpacePublishState::Published {
             return Ok(Json(VerifySpaceCodeResponse { success: false }));
         }
-    }
+    } else {
+        let panel = check_panel(&dynamo, &space, user.clone()).await;
 
-    let panel = check_panel(&dynamo, &space, user.clone()).await;
-
-    if !panel {
-        return Ok(Json(VerifySpaceCodeResponse { success: false }));
+        if !panel {
+            return Ok(Json(VerifySpaceCodeResponse { success: false }));
+        }
     }
 
     Ok(Json(VerifySpaceCodeResponse { success: true }))
