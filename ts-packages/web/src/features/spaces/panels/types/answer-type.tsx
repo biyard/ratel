@@ -83,13 +83,11 @@ export function parsePanelAttribute(raw: any): PanelAttribute | null {
   if (typeof raw === 'string') {
     const [t, val = 'none'] = raw.split(':', 2);
     if (t === 'collective_attribute')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return {
         type: PanelAttributeType.CollectiveAttribute,
         value: val.toLowerCase() as any,
       };
     if (t === 'verifiable_attribute')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return {
         type: PanelAttributeType.VerifiableAttribute,
         value: val as any,
