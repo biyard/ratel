@@ -62,13 +62,11 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
                 }
               }}
             >
-              <div className="w-4.5 h-4.5">
-                <CustomCheckbox
-                  checked={checked}
-                  onChange={() => onSelect(optionIdx)}
-                  disabled={disabled}
-                />
-              </div>
+              <CustomCheckbox
+                checked={checked}
+                disabled={disabled}
+                onChange={() => {}}
+              />
 
               {isOther ? (
                 <Input
