@@ -15,6 +15,7 @@ export default function CustomCheckbox({
 }: CustomCheckboxProps) {
   return (
     <button
+      data-testid="custom-checkbox"
       type="button"
       onClick={onChange}
       aria-pressed={checked}

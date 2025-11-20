@@ -3,11 +3,11 @@ import {
   ATTRIBUTE_CODES,
   BOARD_POSTS,
   POST_CONTENT,
-  POST_TITLE,
+  POST_TITLE as PT,
   SURVEY_QUESTIONS,
   TEAM_DESCRIPTION,
   TEAM_ID,
-  TEAM_NAME,
+  TEAM_NAME as TN,
   TEST_PASSWORD,
   YOUTUBE_LINK,
 } from './data';
@@ -33,6 +33,9 @@ import {
   viewAnalysis,
   writeNewPost,
 } from './helpers';
+
+const POST_TITLE = `${Date.now()} ${PT}`;
+const TEAM_NAME = `${Date.now()} ${TN}`;
 
 test.describe.serial('[Deliberation] General Spec', () => {
   // Disable retries for serial tests - shared state can't be restored after retry
@@ -293,158 +296,177 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // PrePoll: Participant 1
   // =====================================
-  test(`DS-${i()} [Participant] Sign in with Participant1 for PrePoll`, async () => {
+  test(`DS-${i()} [Participant 1] Conduct PrePoll`, async () => {
     await login(page, participant1);
-  });
-
-  test(`DS-${i()} [Participant] Check invitation in My Spaces (P1)`, async () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
-  });
+    await page.getByTestId('space-card').first().click();
+    await page.waitForLoadState();
 
-  test(`DS-${i()} [Participant] Participate the space (P1)`, async () => {
-    await participateInSpace(page, POST_TITLE);
-  });
+    await page
+      .getByText(SURVEY_QUESTIONS[0].options![0], { exact: true })
+      .click();
+    await page.waitForTimeout(200);
 
-  test(`DS-${i()} [Participant] Navigate to polls (P1)`, async () => {
-    // User should be able to navigate to polls section
-    const sideMenuPolls = page.getByTestId('space-sidemenu-polls');
-    if (await sideMenuPolls.isVisible()) {
-      await sideMenuPolls.click();
-      await page.waitForLoadState('networkidle');
-    } else {
-      // If side menu not visible, user might already be on survey page
-      // Just wait for page to settle
-      await page.waitForLoadState('networkidle');
-    }
-  });
+    await page
+      .getByText(SURVEY_QUESTIONS[1].options![0], { exact: true })
+      .click();
+    await page.waitForTimeout(200);
 
-  test(`DS-${i()} [Participant] Can see Pre-Poll Survey (P1)`, async () => {
-    // Check if we're on the pre-poll survey page or need to click on it
-    const prePollCard = page.getByTestId('pre-poll-survey-card');
-    if (await prePollCard.isVisible()) {
-      await prePollCard.click();
-      await page.waitForLoadState('networkidle');
-    }
-    // Otherwise, assume we're already on the survey page
-  });
+    await page
+      .getByText(SURVEY_QUESTIONS[2].options![0], { exact: true })
+      .click();
+    await page.waitForTimeout(200);
 
-  test(`DS-${i()} [Participant] Conduct Pre-Poll Survey (P1)`, async () => {
-    await conductPrePollSurvey(page);
+    await page
+      .getByText(SURVEY_QUESTIONS[2].options![1], { exact: true })
+      .click();
+    await page.waitForTimeout(200);
+
+    await page.getByTestId('survey-btn-next').click();
+    await page.waitForTimeout(200);
+
+    await page
+      .getByPlaceholder('Please share your opinion.', { exact: true })
+      .fill('Part 1 is important');
+    await page.getByTestId('survey-btn-next').click();
+    await page.waitForTimeout(200);
+
+    await page
+      .getByPlaceholder('Please share your opinion.', { exact: true })
+      .fill("I don't have any idea");
+    await page.getByTestId('survey-btn-submit').click();
+    await page.waitForTimeout(200);
   });
 
   // =====================================
   // PrePoll: Participant 2
   // =====================================
-  test(`DS-${i()} [Participant] Sign in with Participant2 for PrePoll`, async () => {
+  test(`DS-${i()} [Participant 2] Conduct PrePoll`, async () => {
     await login(page, participant2);
-  });
-
-  test(`DS-${i()} [Participant] Check invitation in My Spaces (P2)`, async () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
-  });
+    await page.getByTestId('space-card').first().click();
+    await page.waitForLoadState();
 
-  test(`DS-${i()} [Participant] Participate the space (P2)`, async () => {
-    await participateInSpace(page, POST_TITLE);
-  });
+    await page
+      .getByText(SURVEY_QUESTIONS[0].options![1], { exact: true })
+      .click();
+    await page.waitForTimeout(200);
 
-  test(`DS-${i()} [Participant] Navigate to polls (P2)`, async () => {
-    const sideMenuPolls = page.getByTestId('space-sidemenu-polls');
-    if (await sideMenuPolls.isVisible()) {
-      await sideMenuPolls.click();
-      await page.waitForLoadState('networkidle');
-    } else {
-      await page.waitForLoadState('networkidle');
-    }
-  });
+    await page
+      .getByText(SURVEY_QUESTIONS[1].options![1], { exact: true })
+      .click();
+    await page.waitForTimeout(200);
 
-  test(`DS-${i()} [Participant] Can see Pre-Poll Survey (P2)`, async () => {
-    const prePollCard = page.getByTestId('pre-poll-survey-card');
-    if (await prePollCard.isVisible()) {
-      await prePollCard.click();
-      await page.waitForLoadState('networkidle');
-    }
-  });
+    await page
+      .getByText(SURVEY_QUESTIONS[2].options![2], { exact: true })
+      .click();
+    await page.waitForTimeout(200);
 
-  test(`DS-${i()} [Participant] Conduct Pre-Poll Survey (P2)`, async () => {
-    await conductPrePollSurvey(page);
+    await page
+      .getByText(SURVEY_QUESTIONS[2].options![1], { exact: true })
+      .click();
+    await page.waitForTimeout(200);
+
+    await page.getByTestId('survey-btn-next').click();
+    await page.waitForTimeout(200);
+
+    await page
+      .getByPlaceholder('Please share your opinion.', { exact: true })
+      .fill('Part 2 is important');
+    await page.getByTestId('survey-btn-next').click();
+    await page.waitForTimeout(200);
+
+    await page
+      .getByPlaceholder('Please share your opinion.', { exact: true })
+      .fill('Go Option 2');
+    await page.getByTestId('survey-btn-submit').click();
+    await page.waitForTimeout(200);
   });
 
   // =====================================
   // PrePoll: Participant 3
   // =====================================
-  test(`DS-${i()} [Participant] Sign in with Participant3 for PrePoll`, async () => {
+  test(`DS-${i()} [Participant 3] Conduct PrePoll`, async () => {
     await login(page, participant3);
-  });
-
-  test(`DS-${i()} [Participant] Check invitation in My Spaces (P3)`, async () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
-  });
+    await page.getByTestId('space-card').first().click();
+    await page.waitForLoadState();
 
-  test(`DS-${i()} [Participant] Participate the space (P3)`, async () => {
-    await participateInSpace(page, POST_TITLE);
-  });
+    await page
+      .getByText(SURVEY_QUESTIONS[0].options![0], { exact: true })
+      .click();
+    await page.waitForTimeout(200);
 
-  test(`DS-${i()} [Participant] Navigate to polls (P3)`, async () => {
-    const sideMenuPolls = page.getByTestId('space-sidemenu-polls');
-    if (await sideMenuPolls.isVisible()) {
-      await sideMenuPolls.click();
-      await page.waitForLoadState('networkidle');
-    } else {
-      await page.waitForLoadState('networkidle');
-    }
-  });
+    await page
+      .getByText(SURVEY_QUESTIONS[1].options![1], { exact: true })
+      .click();
+    await page.waitForTimeout(200);
 
-  test(`DS-${i()} [Participant] Can see Pre-Poll Survey (P3)`, async () => {
-    const prePollCard = page.getByTestId('pre-poll-survey-card');
-    if (await prePollCard.isVisible()) {
-      await prePollCard.click();
-      await page.waitForLoadState('networkidle');
-    }
-  });
+    await page
+      .getByText(SURVEY_QUESTIONS[2].options![1], { exact: true })
+      .click();
+    await page.waitForTimeout(200);
 
-  test(`DS-${i()} [Participant] Conduct Pre-Poll Survey (P3)`, async () => {
-    await conductPrePollSurvey(page);
+    await page
+      .getByText(SURVEY_QUESTIONS[2].options![0], { exact: true })
+      .click();
+    await page.waitForTimeout(200);
+
+    await page.getByTestId('survey-btn-next').click();
+    await page.waitForTimeout(200);
+
+    await page
+      .getByPlaceholder('Please share your opinion.', { exact: true })
+      .fill('Part 3 is important');
+    await page.getByTestId('survey-btn-next').click();
+    await page.waitForTimeout(200);
+
+    await page
+      .getByPlaceholder('Please share your opinion.', { exact: true })
+      .fill('Go Option 3');
+    await page.getByTestId('survey-btn-submit').click();
+    await page.waitForTimeout(200);
   });
 
   // =====================================
   // PrePoll: Participant 4
   // =====================================
-  test(`DS-${i()} [Participant] Sign in with Participant4 for PrePoll`, async () => {
+  test(`DS-${i()} [Participant 4] Conduct PrePoll`, async () => {
     await login(page, participant4);
-  });
-
-  test(`DS-${i()} [Participant] Check invitation in My Spaces (P4)`, async () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
-  });
+    await page.getByTestId('space-card').first().click();
+    await page.waitForLoadState();
 
-  test(`DS-${i()} [Participant] Participate the space (P4)`, async () => {
-    await participateInSpace(page, POST_TITLE);
-  });
+    await page.getByTestId('custom-checkbox').all()[0].click();
+    await page.waitForTimeout(200);
 
-  test(`DS-${i()} [Participant] Navigate to polls (P4)`, async () => {
-    const sideMenuPolls = page.getByTestId('space-sidemenu-polls');
-    if (await sideMenuPolls.isVisible()) {
-      await sideMenuPolls.click();
-      await page.waitForLoadState('networkidle');
-    } else {
-      await page.waitForLoadState('networkidle');
-    }
-  });
+    await page.getByTestId('custom-checkbox').all()[0].click();
+    await page.waitForTimeout(200);
 
-  test(`DS-${i()} [Participant] Can see Pre-Poll Survey (P4)`, async () => {
-    const prePollCard = page.getByTestId('pre-poll-survey-card');
-    if (await prePollCard.isVisible()) {
-      await prePollCard.click();
-      await page.waitForLoadState('networkidle');
-    }
-  });
+    await page.getByTestId('custom-checkbox').all()[3].click();
+    await page.waitForTimeout(200);
 
-  test(`DS-${i()} [Participant] Conduct Pre-Poll Survey (P4)`, async () => {
-    await conductPrePollSurvey(page);
+    await page.getByTestId('custom-checkbox').all()[1].click();
+    await page.waitForTimeout(200);
+
+    await page.getByTestId('survey-btn-next').click();
+    await page.waitForTimeout(200);
+
+    await page
+      .getByPlaceholder('Please share your opinion.', { exact: true })
+      .fill('Part 3 is important');
+    await page.getByTestId('survey-btn-next').click();
+    await page.waitForTimeout(200);
+
+    await page
+      .getByPlaceholder('Please share your opinion.', { exact: true })
+      .fill('Go Option 3');
+    await page.getByTestId('survey-btn-submit').click();
+    await page.waitForTimeout(200);
   });
 
   // =====================================
@@ -505,7 +527,10 @@ test.describe.serial('[Deliberation] General Spec', () => {
   test(`DS-${i()} [Participant] Reply to a post on a board (P1)`, async () => {
     await goToMySpaces(page);
     await participateInSpace(page, POST_TITLE);
-    await replyToPost(page, '참여도 중심 보상이 더 공정하다고 생각합니다.');
+    await replyToPost(
+      page,
+      'I think participation-based rewards are more fair.',
+    );
   });
 
   test(`DS-${i()} [Participant] Sign in with Participant2 for discussion`, async () => {
@@ -515,7 +540,10 @@ test.describe.serial('[Deliberation] General Spec', () => {
   test(`DS-${i()} [Participant] Reply to a post on a board (P2)`, async () => {
     await goToMySpaces(page);
     await participateInSpace(page, POST_TITLE);
-    await replyToPost(page, '품질 중심이 커뮤니티 성장에 더 도움이 됩니다.');
+    await replyToPost(
+      page,
+      'Quality-based approach helps community growth more.',
+    );
   });
 
   test(`DS-${i()} [Creator] Sign in with Creator1 for discussion`, async () => {
@@ -530,9 +558,9 @@ test.describe.serial('[Deliberation] General Spec', () => {
 
     await writeNewPost(
       page,
-      '추가 논의: 하이브리드 방식은 어떨까요?',
-      '참여도와 품질을 동시에 고려하는 하이브리드 방식을 제안합니다.',
-      '보상 기준의 공정성과 효율성',
+      'Additional discussion: How about a hybrid approach?',
+      'I propose a hybrid approach that considers both participation and quality.',
+      'Fairness and Efficiency of Reward Criteria',
     );
   });
 
@@ -543,7 +571,10 @@ test.describe.serial('[Deliberation] General Spec', () => {
   test(`DS-${i()} [Participant] Reply to the new post`, async () => {
     await goToMySpaces(page);
     await participateInSpace(page, POST_TITLE);
-    await replyToPost(page, '하이브리드 방식이 좋은 절충안이 될 것 같습니다.');
+    await replyToPost(
+      page,
+      'I think a hybrid approach would be a good compromise.',
+    );
   });
 
   // =====================================
@@ -578,14 +609,19 @@ test.describe.serial('[Deliberation] General Spec', () => {
     const questionTitleInput = page
       .getByTestId('poll-question-title-input')
       .last();
-    await questionTitleInput.fill('토론을 통해 당신의 의견이 변화했습니까?');
+    await questionTitleInput.fill(
+      'Has your opinion changed through the discussion?',
+    );
 
     const optionInput = page.getByTestId('question-option-input').last();
-    await optionInput.fill('크게 변화함');
+    await optionInput.fill('Changed significantly');
     await page.getByTestId('poll-answer-btn-add-option').last().click();
-    await page.getByTestId('question-option-input').last().fill('조금 변화함');
+    await page
+      .getByTestId('question-option-input')
+      .last()
+      .fill('Changed slightly');
     await page.getByTestId('poll-answer-btn-add-option').last().click();
-    await page.getByTestId('question-option-input').last().fill('변화 없음');
+    await page.getByTestId('question-option-input').last().fill('No change');
 
     await page.getByTestId('poll-btn-save').click();
     await page.waitForLoadState('networkidle');
