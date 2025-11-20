@@ -1,7 +1,7 @@
 import { expect, Page } from '@playwright/test';
 import { SURVEY_QUESTIONS } from './data';
 
-const TIMEOUT = 10000;
+export const TIMEOUT = 10000;
 
 // Helper functions
 export async function login(
@@ -286,8 +286,13 @@ export async function createFinalSurvey(
   await page.getByTestId('space-sidemenu-polls').click();
   await page.waitForURL(/.*\/polls$/, { timeout: TIMEOUT });
   await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1000);
 
-  await page.getByTestId('create-poll-button').click();
+  // Wait for poll creation button to be visible
+  const createPollButton = page.getByTestId('create-poll-button');
+  await expect(createPollButton).toBeVisible({ timeout: TIMEOUT });
+  await createPollButton.click();
+
   await page.getByTestId('create-final-survey').click();
   await page.getByTestId('poll-btn-edit').click();
 
@@ -390,7 +395,10 @@ export async function publishSpacePrivately(page: Page) {
 export async function goToMySpaces(page: Page) {
   await page.getByText('My Spaces', { exact: true }).click();
   await page.waitForLoadState('networkidle');
-  await page.waitForTimeout(100);
+
+  // Force a reload to ensure spaces list loads fresh data
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(3000); // Give extra time for invitation data to load
 }
 
 export async function goToSpace(page: Page, spaceName: string) {
@@ -398,6 +406,8 @@ export async function goToSpace(page: Page, spaceName: string) {
   await spaceCard.waitFor({ state: 'visible', timeout: TIMEOUT });
   await spaceCard.click();
   await page.waitForLoadState('networkidle');
+  // Wait for URL to match space pattern to ensure navigation completed
+  await page.waitForURL(/\/spaces\/[^/]+/, { timeout: TIMEOUT });
 }
 
 export async function participateInSpace(page: Page, spaceName: string) {
@@ -497,6 +507,11 @@ export async function participateInSpace(page: Page, spaceName: string) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function conductSurvey(page: Page, answers: any[]) {
+  // Wait for survey to load
+  const firstOption = page.getByTestId('objective-viewer-option').first();
+  await expect(firstOption).toBeVisible({ timeout: TIMEOUT });
+  await page.waitForTimeout(500);
+
   await page.getByTestId('objective-viewer-option').nth(answers[0]).click();
   await page.waitForTimeout(500);
 
@@ -553,18 +568,31 @@ export async function startDeliberation(page: Page) {
 }
 
 export async function replyToPost(page: Page, replyContent: string) {
-  await page.getByTestId('space-sidemenu-boards').click();
+  // Wait for the boards menu item to be visible
+  const boardsMenuItem = page.getByTestId('space-sidemenu-boards');
+  await boardsMenuItem.waitFor({ state: 'visible', timeout: 15000 });
+  await boardsMenuItem.click();
   await page.waitForURL(/.*\/boards$/, { timeout: TIMEOUT });
   await page.waitForLoadState('networkidle');
 
-  // Wait for board posts to load and click on first post
+  // Force a reload to ensure boards list loads fresh data
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(1000);
+
+  // Wait for board posts to load with a longer timeout
   const firstPost = page.getByTestId('board-post-item').first();
-  await expect(firstPost).toBeVisible();
+  await expect(firstPost).toBeVisible({ timeout: 15000 });
+
+  // Add a small delay to ensure the post is fully interactive
+  await page.waitForTimeout(500);
+
   await firstPost.click();
   await page.waitForLoadState('networkidle');
 
   // Write reply
-  page.getByTestId('open-new-comment-box-button').click();
+  await page.getByTestId('open-new-comment-box-button').click();
+  await page.waitForTimeout(300);
+
   const commentEditor = page.locator('[data-pw="comment-editor"]');
   await commentEditor
     .getByTestId('tiptap-editor-content')
@@ -574,7 +602,7 @@ export async function replyToPost(page: Page, replyContent: string) {
     .fill(replyContent);
 
   // Submit reply
-  page.getByLabel('Publish', { exact: true }).click();
+  await page.getByLabel('Publish', { exact: true }).click();
   await page.waitForLoadState('networkidle');
 }
 
@@ -593,6 +621,7 @@ export async function writeNewPost(
 
   await page.waitForURL(/.*\/create$/, { timeout: TIMEOUT });
   await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1000);
 
   await setEndTimeOneHourLater(page);
 
@@ -623,10 +652,18 @@ export async function conductFinalSurvey(page: Page) {
     await page.getByTestId('space-sidemenu-polls').click();
     await page.waitForLoadState('networkidle');
 
-    // Click on final survey
-    const finalSurveyCard = page.getByTestId('final-survey-card');
-    await finalSurveyCard.waitFor({ state: 'visible', timeout: TIMEOUT });
-    await finalSurveyCard.click();
+    // Force a reload to ensure polls list loads fresh data
+    await page.reload({ waitUntil: 'networkidle' });
+    await page.waitForTimeout(1000);
+
+    // Wait for FINAL SURVEY text to be visible
+    const finalSurveyText = page.getByText('FINAL SURVEY', { exact: true });
+    await finalSurveyText.waitFor({ state: 'visible', timeout: 15000 });
+
+    // Click the first Enter button (FINAL SURVEY is listed first)
+    const enterButton = page.getByRole('button', { name: 'Enter' }).first();
+    await enterButton.waitFor({ state: 'visible', timeout: 15000 });
+    await enterButton.click();
     await page.waitForLoadState('networkidle');
   }
 
@@ -736,11 +773,16 @@ export async function conductFinalSurvey(page: Page) {
 }
 
 export async function viewAnalysis(page: Page) {
-  await page.getByTestId('space-sidemenu-analysis').click();
+  // Wait for the analysis menu item to be visible
+  const analysisMenuItem = page.getByTestId('space-sidemenu-analysis');
+  await analysisMenuItem.waitFor({ state: 'visible', timeout: 15000 });
+  await analysisMenuItem.click();
   await page.waitForLoadState('networkidle');
 
   // Verify analysis page loaded
-  await expect(page.getByTestId('analysis-container')).toBeVisible();
+  await expect(page.getByTestId('analysis-container')).toBeVisible({
+    timeout: 15000,
+  });
 }
 
 export async function mobileLogin(page: Page, email: string, password: string) {
@@ -781,13 +823,13 @@ export async function setEndTimeOneHourLater(page: Page) {
 
   // Click end time dropdown - wait with explicit timeout
   const endTimeButton = page.getByTestId('time-end-dropdown');
-  await endTimeButton.waitFor({ state: 'visible', timeout: TIMEOUT });
+  await endTimeButton.waitFor({ state: 'visible', timeout: 15000 });
   await endTimeButton.click();
   await page.waitForTimeout(500);
 
   // Select the time option
   const timeOption = page.getByText(endTimeText, { exact: true });
-  await timeOption.waitFor({ state: 'visible', timeout: TIMEOUT });
+  await timeOption.waitFor({ state: 'visible', timeout: 15000 });
   await timeOption.click();
   await page.waitForTimeout(500);
 

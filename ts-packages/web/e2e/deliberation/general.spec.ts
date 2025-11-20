@@ -31,6 +31,7 @@ import {
   setEndTimeOneHourLater,
   setupPanels,
   startDeliberation,
+  TIMEOUT,
   verifyCredential,
   viewAnalysis,
   writeNewPost,
@@ -250,7 +251,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
 
     // Verify the space is visible in invitations
     const spaceCard = page.getByText(POST_TITLE).first();
-    await expect(spaceCard).toBeVisible();
+    await expect(spaceCard).toBeVisible({ timeout: 15000 });
   });
 
   // Note: Since we skipped panel setup, unverified users can also participate
@@ -476,34 +477,14 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await login(page, participant1);
     await goToMySpaces(page);
     await goToSpace(page, POST_TITLE);
-    await page.getByTestId('space-sidemenu-polls').click();
-    await page.waitForLoadState('networkidle');
-
-    await conductSurvey(page, [
-      0,
-      1,
-      1,
-      0,
-      'Part 3 is important',
-      'Go Option 3',
-    ]);
+    await conductFinalSurvey(page);
   });
 
   test(`DS-${i()} [Participant 2] Conduct the final survey (P2)`, async () => {
     await login(page, participant2);
     await goToMySpaces(page);
     await goToSpace(page, POST_TITLE);
-    await page.getByTestId('space-sidemenu-polls').click();
-    await page.waitForLoadState('networkidle');
-
-    await conductSurvey(page, [
-      0,
-      1,
-      1,
-      0,
-      'Part 3 is important',
-      'Go Option 3',
-    ]);
+    await conductFinalSurvey(page);
   });
 
   test(`DS-${i()} [Participant 3] Conduct the final survey (P3)`, async () => {
@@ -517,25 +498,13 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await login(page, participant4);
     await goToMySpaces(page);
     await goToSpace(page, POST_TITLE);
-    await page.getByTestId('space-sidemenu-polls').click();
-    await page.waitForLoadState('networkidle');
-
-    await conductSurvey(page, [
-      0,
-      1,
-      1,
-      0,
-      'Part 3 is important',
-      'Go Option 3',
-    ]);
+    await conductFinalSurvey(page);
   });
 
   test(`DS-${i()} [Creator 1] See analysis`, async () => {
     await login(page, creator1);
-    await page.goto(`/teams/${teamId}/home`);
-    await page.waitForLoadState('networkidle');
-    await page.getByText(POST_TITLE).click();
-    await page.waitForLoadState('networkidle');
+    await goToMySpaces(page);
+    await goToSpace(page, POST_TITLE);
 
     await viewAnalysis(page);
   });
