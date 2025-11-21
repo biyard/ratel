@@ -547,11 +547,13 @@ export async function goToFinalSurvey(page: Page) {
   await page.getByTestId('space-sidemenu-polls').click();
 
   // Wait for FINAL SURVEY text to be visible
-  const finalSurveyText = page.getByText('FINAL SURVEY', { exact: true });
-  await expect(finalSurveyText).toBeVisible();
+  const finalSurveyCard = page.getByTestId('FINAL SURVEY');
+  await expect(finalSurveyCard).toBeVisible();
 
   // Click the first Enter button (FINAL SURVEY is listed first)
-  const enterButton = page.getByRole('button', { name: 'Enter' }).first();
+  const enterButton = finalSurveyCard
+    .getByRole('button', { name: 'Enter' })
+    .first();
   await expect(enterButton).toBeVisible();
   await enterButton.click();
   await expect(
