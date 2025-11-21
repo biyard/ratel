@@ -12,6 +12,7 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import Youtube from '@tiptap/extension-youtube';
+import Placeholder from '@tiptap/extension-placeholder';
 import Video from './extensions/video';
 import { ThemeAwareColor } from './extensions/theme-aware-color';
 import { ThemeAwareHighlight } from './extensions/theme-aware-highlight';
@@ -39,6 +40,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       onUpdate,
       editable = true,
       placeholder = 'Type your script',
+      variant = 'default',
       showToolbar = true,
       toolbarPosition = 'top',
       enabledFeatures = DEFAULT_ENABLED_FEATURES,
@@ -103,6 +105,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             heading: { levels: [1, 2, 3] },
             bulletList: { HTMLAttributes: { class: 'list-disc pl-4' } },
             orderedList: { HTMLAttributes: { class: 'list-decimal pl-4' } },
+          }),
+          Placeholder.configure({
+            placeholder,
           }),
           TextStyle,
           Color,
@@ -220,12 +225,18 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
 
     if (!editor) return <></>;
 
+    const variantClasses = {
+      default: 'bg-card border-transparent',
+      post: 'bg-[var(--color-post-input-bg)] border-[var(--color-post-input-border)]',
+    };
+
     return (
       <div
         className={cn(
           'flex flex-col w-full rounded-lg border transition-colors p-1',
-          'bg-card text-foreground border-transparent',
+          'text-foreground',
           isMe && 'bg-neutral-700 light:bg-neutral-200',
+          !isMe && variantClasses[variant],
           'focus-within:border-primary',
           className,
         )}
@@ -235,6 +246,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           <TiptapToolbar
             editor={editor}
             enabledFeatures={enabledFeatures}
+            variant={variant}
             className={toolbarClassName}
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
@@ -267,7 +279,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
                 '[&_.ProseMirror]:wrap-break-word',
                 '[&_.ProseMirror]:max-w-full',
                 '[&_.ProseMirror_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]',
-                '[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-foreground-muted',
+                '[&_.ProseMirror_p.is-editor-empty:first-child::before]:text-[var(--color-post-input-placeholder)]',
                 '[&_.ProseMirror_p.is-editor-empty:first-child::before]:float-left',
                 '[&_.ProseMirror_p.is-editor-empty:first-child::before]:pointer-events-none',
                 '[&_.ProseMirror_p.is-editor-empty:first-child::before]:h-0',
@@ -293,15 +305,16 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
                 '[&_.ProseMirror_.column-resize-handle]:absolute [&_.ProseMirror_.column-resize-handle]:right-[-2px] [&_.ProseMirror_.column-resize-handle]:top-0 [&_.ProseMirror_.column-resize-handle]:bottom-0 [&_.ProseMirror_.column-resize-handle]:w-[4px] [&_.ProseMirror_.column-resize-handle]:bg-primary [&_.ProseMirror_.column-resize-handle]:pointer-events-none',
                 '[&_.ProseMirror_iframe]:w-full [&_.ProseMirror_iframe]:max-w-full',
               )}
+              data-testid="tiptap-editor-content"
               data-placeholder={placeholder}
             />
           </div>
 
           {isFoldable && showFoldToggle && (
-            <div className="mt-2 flex justify-center">
+            <div className="flex justify-center mt-2">
               <button
                 type="button"
-                className="text-xs text-primary hover:underline"
+                className="text-xs hover:underline text-primary"
                 onClick={() => setIsFolded((prev) => !prev)}
               >
                 {isFolded ? 'More' : 'Close'}
@@ -311,7 +324,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           <input
             ref={videoInputRef}
             type="file"
-            accept="video/*"
+            accept="video/*,.mkv"
             className="hidden"
             onChange={async (e) => {
               const file = e.target.files?.[0];
@@ -334,6 +347,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           <TiptapToolbar
             editor={editor}
             enabledFeatures={enabledFeatures}
+            variant={variant}
             className={toolbarClassName}
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}

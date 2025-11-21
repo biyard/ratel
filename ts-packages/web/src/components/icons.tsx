@@ -3,6 +3,7 @@
 
 // Root Icons (97)
 export { default as Add } from '@/assets/icons/add.svg?react';
+export { default as Mkv } from '@/assets/icons/mkv.svg?react';
 export { default as Age } from '@/assets/icons/did/attributes/age.svg?react';
 export { default as AlertCircle } from '@/assets/icons/alert-circle.svg?react';
 export { default as ArrowLeft } from '@/assets/icons/arrow-left.svg?react';
@@ -302,6 +303,7 @@ export { default as EditCrop } from '@/assets/icons/edit/crop.svg?react';
 export { default as EditDelete1 } from '@/assets/icons/edit/delete-1.svg?react';
 export { default as EditDelete2 } from '@/assets/icons/edit/delete-2.svg?react';
 export { default as EditDelete3 } from '@/assets/icons/edit/delete-3.svg?react';
+export { default as EditDeletePanel } from '@/assets/icons/edit/delete_panel.svg?react';
 export { default as EditDelete } from '@/assets/icons/edit/delete.svg?react';
 export { default as EditEdit1 } from '@/assets/icons/edit/edit-1.svg?react';
 export { default as EditEdit2 } from '@/assets/icons/edit/edit-2.svg?react';

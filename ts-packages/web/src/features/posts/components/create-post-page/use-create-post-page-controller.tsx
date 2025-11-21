@@ -70,9 +70,13 @@ export class CreatePostPageController {
   }
 
   get isPublishDisabled(): boolean {
+    const content = this.content.get()?.trim() || '';
+    // Strip HTML tags to get text length
+    const textContent = content.replace(/<[^>]*>/g, '').trim();
+
     return (
       !this.title.get().trim() ||
-      !this.content.get()?.trim() ||
+      textContent.length < 10 ||
       this.status.get() !== EditorStatus.Idle
     );
   }
@@ -82,7 +86,7 @@ export class CreatePostPageController {
       return this.t.btn_next;
     }
 
-    return this.t.publish;
+    return this.t.save;
   }
 
   detectChanged = () => {
@@ -94,9 +98,13 @@ export class CreatePostPageController {
 
   handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    if (value.length <= TITLE_MAX_LENGTH) {
-      this.title.set(value);
-      this.isModified.set(true);
+    const truncated = value.slice(0, TITLE_MAX_LENGTH);
+
+    this.title.set(truncated);
+    this.isModified.set(true);
+
+    if (value.length > TITLE_MAX_LENGTH) {
+      showErrorToast(this.t.error_overflow_title);
     }
   };
 
