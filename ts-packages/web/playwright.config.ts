@@ -93,8 +93,8 @@ export default defineConfig({
     },
 
     {
-      name: 'light',
-      testMatch: ['e2e/**/*.spec.ts', 'e2e/**/*.spec.tsx'],
+      name: 'e2e-web',
+      testMatch: ['e2e/**/*.web.spec.ts', 'e2e/**/*.web.spec.tsx'],
       use: {
         trace: 'on',
         video: 'on',

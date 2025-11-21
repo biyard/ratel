@@ -1,5 +1,5 @@
 import { expect, Page } from '@playwright/test';
-import { SURVEY_QUESTIONS, TEAM_ID } from './data';
+import { TEAM_ID } from './data';
 
 export const TIMEOUT = 10000;
 

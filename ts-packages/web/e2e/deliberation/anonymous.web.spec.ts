@@ -1,4 +1,4 @@
-import { test, expect, Page, BrowserContext } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import {
   ATTRIBUTE_CODES,
   BOARD_POSTS,
@@ -29,10 +29,8 @@ import {
   participateInSpace,
   publishSpacePrivately,
   replyToPost,
-  setEndTimeOneHourLater,
   setupPanels,
   startDeliberation,
-  TIMEOUT,
   verifyCredential,
   viewAnalysis,
   writeNewPost,
