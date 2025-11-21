@@ -13,7 +13,6 @@ import {
 } from './data';
 import {
   clickTeamSidebarMenu,
-  conductFinalSurvey,
   conductSurvey,
   createBoardPosts,
   createDeliberationPost,
@@ -21,12 +20,12 @@ import {
   createPrePollSurvey,
   createTeam,
   enableAnonymousParticipation,
+  goToFinalSurvey,
   goToMySpaces,
   goToSpace,
   goToTeam,
   inviteMembers,
   login,
-  participateInSpace,
   publishSpacePrivately,
   replyToPost,
   setupPanels,
@@ -505,7 +504,15 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await login(page, participant1);
     await goToMySpaces(page);
     await goToSpace(page, POST_TITLE);
-    await conductFinalSurvey(page);
+    await goToFinalSurvey(page);
+    await conductSurvey(page, [
+      0,
+      0,
+      0,
+      1,
+      'Part 1 is important',
+      "I don't have any idea",
+    ]);
   });
 
   test(`DS-${i()} [Participant 2] Conduct the final survey (P2)`, async ({
@@ -514,7 +521,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await login(page, participant2);
     await goToMySpaces(page);
     await goToSpace(page, POST_TITLE);
-    await conductFinalSurvey(page);
+    await goToFinalSurvey(page);
+    await conductSurvey(page, [1, 1, 2, 1, 'Part 1 is important', 'Good']);
   });
 
   test(`DS-${i()} [Participant 3] Conduct the final survey (P3)`, async ({
@@ -522,8 +530,16 @@ test.describe.serial('[Deliberation] General Spec', () => {
   }) => {
     await login(page, participant3);
     await goToMySpaces(page);
-    await participateInSpace(page, POST_TITLE);
-    await conductFinalSurvey(page);
+    await goToSpace(page, POST_TITLE);
+    await goToFinalSurvey(page);
+    await conductSurvey(page, [
+      1,
+      0,
+      0,
+      2,
+      'Part 2 is important',
+      "I don't have any idea",
+    ]);
   });
 
   test(`DS-${i()} [Participant 4] Conduct the final survey (P4)`, async ({
@@ -532,7 +548,15 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await login(page, participant4);
     await goToMySpaces(page);
     await goToSpace(page, POST_TITLE);
-    await conductFinalSurvey(page);
+    await goToFinalSurvey(page);
+    await conductSurvey(page, [
+      1,
+      0,
+      0,
+      2,
+      'Part 2 is important',
+      "I don't have any idea",
+    ]);
   });
 
   // TODO: check
