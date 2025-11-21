@@ -356,7 +356,9 @@ async fn test_delete_notification_without_permission() {
         headers: headers2.clone()
     };
 
-    assert_eq!(status, 401, "Should deny access to other user's notification");
+    // Returns 404 because notifications are partitioned by user - this is secure
+    // as it doesn't leak information about whether the notification exists
+    assert_eq!(status, 404, "Should return not found for other user's notification");
 }
 
 #[tokio::test]

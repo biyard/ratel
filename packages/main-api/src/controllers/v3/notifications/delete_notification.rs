@@ -20,17 +20,12 @@ pub async fn delete_notification_handler(
     let pk = Partition::Notification(user_pk.to_string());
     let sk = EntityType::Notification(notification_id);
 
-    // Verify the notification belongs to the user
-    let notification = Notification::get(&dynamo.client, pk.to_string(), Some(sk.to_string()))
+    // Verify the notification exists and belongs to the user
+    // Note: Because we use the user's PK in the query, we can only find notifications
+    // that belong to this user. This provides implicit authorization.
+    let _notification = Notification::get(&dynamo.client, pk.to_string(), Some(sk.to_string()))
         .await?
         .ok_or(Error::NotFound("Notification not found".to_string()))?;
-
-    // Verify ownership
-    if notification.user_pk != *user_pk {
-        return Err(Error::Unauthorized(
-            "You don't have permission to delete this notification".to_string(),
-        ));
-    }
 
     // Delete the notification
     Notification::delete(&dynamo.client, pk.to_string(), Some(sk.to_string())).await?;
