@@ -7,6 +7,7 @@ use crate::{
         aws::{DynamoClient, SesClient},
         html::start_survey_html,
         time::get_now_timestamp_millis,
+        uuid::sorted_uuid,
     },
 };
 // use aws_sdk_sts::Client as StsClient;
@@ -97,7 +98,7 @@ impl Poll {
         }
 
         let sk = sk.unwrap_or_else(|| {
-            let uuid = uuid::Uuid::new_v4().to_string();
+            let uuid = sorted_uuid();
             EntityType::SpacePoll(uuid)
         });
 

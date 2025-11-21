@@ -35,4 +35,5 @@ pub mod password;
 pub mod firebase;
 mod rand_utils;
 pub mod security;
+pub mod uuid;
 pub use rand_utils::*;

@@ -23,3 +23,18 @@ macro_rules! transact_write_items {
             .map_err(Into::<aws_sdk_dynamodb::Error>::into)
     }};
 }
+
+#[macro_export]
+macro_rules! transact_write_all_items {
+    ($cli:expr, $tx:expr $(,)? ) => {{
+        let mut iter = $tx.chunks(100);
+
+        while let Some(txs) = iter.next() {
+            $cli.transact_write_items()
+                .set_transact_items(Some(txs.to_vec()))
+                .send()
+                .await
+                .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+        }
+    }};
+}

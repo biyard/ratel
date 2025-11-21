@@ -142,6 +142,17 @@ impl SpaceCommon {
             false
         }
     }
+
+    pub fn can_participate(&self) -> bool {
+        if self.status.is_none() {
+            return false;
+        }
+
+        match self.status.as_ref().unwrap() {
+            SpaceStatus::InProgress | SpaceStatus::Started => true,
+            _ => false,
+        }
+    }
 }
 
 impl SpaceCommon {

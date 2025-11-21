@@ -53,10 +53,7 @@ pub async fn respond_poll_handler(
         .ok_or(Error::NotFoundPoll)?;
 
     // Space Status Check
-    if space.status != Some(SpaceStatus::InProgress) {
-        return Err(Error::PollNotInProgress);
-    }
-    if poll.status() != PollStatus::InProgress {
+    if !space.can_participate() || poll.status() != PollStatus::InProgress {
         return Err(Error::PollNotInProgress);
     }
 
