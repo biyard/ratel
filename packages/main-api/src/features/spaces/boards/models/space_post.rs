@@ -1,6 +1,8 @@
 // #[cfg(all(not(test), not(feature = "no-secret")))]
 // use crate::features::spaces::templates::SpaceTemplate;
 use crate::email_operation::EmailOperation;
+use crate::features::migration::*;
+use crate::transact_write_all_items;
 use crate::{
     Error,
     features::spaces::boards::models::{
@@ -14,6 +16,7 @@ use crate::{
     types::{author::Author, *},
     utils::aws::{DynamoClient, SesClient},
 };
+use aws_sdk_dynamodb::types::TransactWriteItem;
 use bdk::prelude::axum::Json;
 use bdk::prelude::*;
 use serde_json::json;
@@ -274,5 +277,32 @@ impl SpacePost {
             })?;
 
         Ok(())
+    }
+}
+
+#[async_trait::async_trait]
+impl TrickyMigrator for SpacePost {
+    fn version() -> i32 {
+        1
+    }
+
+    fn doc_type(pk: String) -> MigrationDataType {
+        MigrationDataType::SpacePost(pk)
+    }
+
+    async fn migrate(cli: &aws_sdk_dynamodb::Client, pk: String) -> crate::Result<usize> {
+        let opt = SpacePost::opt_all();
+
+        let (items, _bookmark) = SpacePost::find_by_space_ordered(cli, pk, opt).await?;
+
+        let affected = items.len();
+        let txs: Vec<TransactWriteItem> = items
+            .into_iter()
+            .map(|post| post.upsert_transact_write_item())
+            .collect();
+
+        transact_write_all_items!(cli, txs);
+
+        Ok(affected)
     }
 }

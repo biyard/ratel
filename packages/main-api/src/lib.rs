@@ -34,6 +34,7 @@ use by_axum::axum::{
 };
 use constants::*;
 use controllers::v3::*;
+use features::migration::*;
 use schemars::JsonSchema_repr;
 use serde::{Deserialize, Serialize};
 use ssi::prelude::*;
