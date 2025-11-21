@@ -10,6 +10,7 @@ export const CreatePostPage = {
     space_description_placeholder: 'Description',
     skip_creating_space: 'Skip creating a space',
     publish: 'Publish',
+    save: 'Save',
     btn_next: 'Next',
     publishing: 'Publishing...',
     saving: 'Saving...',
@@ -40,6 +41,7 @@ export const CreatePostPage = {
     space_description_placeholder: '설명',
     skip_creating_space: '스페이스 만들기 건너뛰기',
     publish: '게시',
+    save: '저장',
     btn_next: '다음',
     publishing: '게시 중...',
     saving: '저장 중...',
@@ -72,6 +74,7 @@ export interface I18nCreatePostPage {
   space_description_placeholder: string;
   skip_creating_space: string;
   publish: string;
+  save: string;
   btn_next: string;
   publishing: string;
   saving: string;
@@ -107,6 +110,7 @@ export function useCreatePostPageI18n() {
     ),
     skip_creating_space: t('CreatePostPage:skip_creating_space'),
     publish: t('CreatePostPage:publish'),
+    save: t('CreatePostPage:save'),
     btn_next: t('CreatePostPage:btn_next'),
     publishing: t('CreatePostPage:publishing'),
     saving: t('CreatePostPage:saving'),

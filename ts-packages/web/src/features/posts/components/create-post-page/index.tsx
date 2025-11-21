@@ -93,8 +93,10 @@ function CreatePostPageContent() {
           onClick={ctrl.handleSubmit}
           disabled={ctrl.isPublishDisabled}
           className={cn(
-            'min-w-[150px]',
-            ctrl.isPublishDisabled && 'opacity-50',
+            'min-w-[150px] text-base',
+            ctrl.isPublishDisabled
+              ? 'dark:!bg-post-save-button-disabled-bg dark:!text-post-save-button-disabled-text opacity-100'
+              : '',
           )}
         >
           {ctrl.status.get() === EditorStatus.Publishing ? (
