@@ -513,6 +513,12 @@ test.describe.serial('[Deliberation] General Spec', () => {
       'Part 1 is important',
       "I don't have any idea",
     ]);
+
+    await page.getByTestId('btn-confirm').click();
+    await expect(
+      page.getByTestId('complete-survey-modal-btn-confirm'),
+    ).toBeVisible();
+    await page.getByTestId('complete-survey-modal-btn-confirm').click();
   });
 
   test(`DS-${i()} [Participant 2] Conduct the final survey (P2)`, async ({
@@ -523,6 +529,11 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await goToSpace(page, POST_TITLE);
     await goToFinalSurvey(page);
     await conductSurvey(page, [1, 1, 2, 1, 'Part 1 is important', 'Good']);
+    await page.getByTestId('btn-confirm').click();
+    await expect(
+      page.getByTestId('complete-survey-modal-btn-confirm'),
+    ).toBeVisible();
+    await page.getByTestId('complete-survey-modal-btn-confirm').click();
   });
 
   test(`DS-${i()} [Participant 3] Conduct the final survey (P3)`, async ({
@@ -540,6 +551,11 @@ test.describe.serial('[Deliberation] General Spec', () => {
       'Part 2 is important',
       "I don't have any idea",
     ]);
+    await page.getByTestId('btn-confirm').click();
+    await expect(
+      page.getByTestId('complete-survey-modal-btn-confirm'),
+    ).toBeVisible();
+    await page.getByTestId('complete-survey-modal-btn-confirm').click();
   });
 
   test(`DS-${i()} [Participant 4] Conduct the final survey (P4)`, async ({
@@ -557,6 +573,11 @@ test.describe.serial('[Deliberation] General Spec', () => {
       'Part 2 is important',
       "I don't have any idea",
     ]);
+    await page.getByTestId('btn-confirm').click();
+    await expect(
+      page.getByTestId('complete-survey-modal-btn-confirm'),
+    ).toBeVisible();
+    await page.getByTestId('complete-survey-modal-btn-confirm').click();
   });
 
   // TODO: check
