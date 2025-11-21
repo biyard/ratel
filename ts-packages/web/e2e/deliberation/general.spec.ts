@@ -296,7 +296,9 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
     await page.getByTestId('space-card').first().click();
-    await expect(page.getByTestId('objective-viewer-option')).toBeVisible();
+    await expect(
+      page.getByTestId('objective-viewer-option').first(),
+    ).toBeVisible();
 
     await conductSurvey(page, [
       0,
@@ -319,8 +321,9 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
     await page.getByTestId('space-card').first().click();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(300);
+    await expect(
+      page.getByTestId('objective-viewer-option').first(),
+    ).toBeVisible();
 
     await conductSurvey(page, [
       1,
@@ -343,8 +346,9 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
     await page.getByTestId('space-card').first().click();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(300);
+    await expect(
+      page.getByTestId('objective-viewer-option').first(),
+    ).toBeVisible();
 
     await conductSurvey(page, [
       0,
@@ -367,8 +371,9 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
     await page.getByTestId('space-card').first().click();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(300);
+    await expect(
+      page.getByTestId('objective-viewer-option').first(),
+    ).toBeVisible();
 
     await conductSurvey(page, [
       0,
