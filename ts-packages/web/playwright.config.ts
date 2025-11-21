@@ -35,6 +35,7 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on',
     video: 'on',
+    screenshot: 'on',
   },
 
   /* Configure projects for major browsers */
@@ -42,7 +43,7 @@ export default defineConfig({
     // Anonymous tests (no setup required)
     {
       name: 'anonymous',
-      testMatch: ['**/*.anon.spec.ts', '**/*.anon.spec.tsx'],
+      testMatch: ['src/**/*.anon.spec.ts', 'src/**/*.anon.spec.tsx'],
       use: {
         ...devices['Desktop Chrome'],
         viewport: {
@@ -59,7 +60,7 @@ export default defineConfig({
     },
     {
       name: 'authenticated',
-      testMatch: ['**/*.auth.spec.ts', '**/*.auth.spec.tsx'],
+      testMatch: ['src/**/*.auth.spec.ts', 'src/**/*.auth.spec.tsx'],
       dependencies: ['auth-setup'],
       use: {
         ...devices['Desktop Chrome'],
@@ -78,7 +79,7 @@ export default defineConfig({
     },
     {
       name: 'admin',
-      testMatch: ['**/*.admin.spec.ts', '**/*.admin.spec.tsx'],
+      testMatch: ['src/**/*.admin.spec.ts', 'src/**/*.admin.spec.tsx'],
       dependencies: ['admin-setup'],
       use: {
         ...devices['Desktop Chrome'],
@@ -88,6 +89,39 @@ export default defineConfig({
         },
         // This will be loaded in the beforeEach of authenticated tests
         storageState: 'admin.json',
+      },
+    },
+
+    {
+      name: 'light',
+      testMatch: ['e2e/**/*.spec.ts', 'e2e/**/*.spec.tsx'],
+      use: {
+        trace: 'on',
+        video: 'on',
+        screenshot: 'on',
+
+        ...devices['Desktop Chrome'],
+        colorScheme: 'light',
+        viewport: {
+          width: 1440,
+          height: 950,
+        },
+      },
+    },
+    {
+      name: 'dark',
+      testMatch: ['e2e/**/*.spec.ts', 'e2e/**/*.spec.tsx'],
+      use: {
+        trace: 'on',
+        video: 'on',
+        screenshot: 'on',
+
+        ...devices['Desktop Chrome'],
+        colorScheme: 'dark',
+        viewport: {
+          width: 1440,
+          height: 950,
+        },
       },
     },
   ],

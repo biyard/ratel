@@ -44,7 +44,10 @@ export default function PollRequirement({
     logger.debug('Submitting poll answers', answers);
     removeError();
 
-    if (!poll) return;
+    if (!poll) {
+      logger.error('Poll data is not available');
+      return;
+    }
 
     const defaultAnswerByType = (
       answer_type: SurveyAnswer['answer_type'],
@@ -125,6 +128,8 @@ export default function PollRequirement({
 
     answers[questionIdx] = answer;
     setAnswers({ ...answers });
+
+    logger.debug('Updated answers state:', answers);
   };
 
   return (
@@ -136,7 +141,10 @@ export default function PollRequirement({
         status={poll.status}
         onUpdateAnswer={handleUpdateAnswer}
         selectedAnswers={answers}
-        onValidateError={() => setError(ErrorSpacePollRequiredField)}
+        onValidateError={() => {
+          logger.error('Validation error in poll response', answers);
+          setError(ErrorSpacePollRequiredField);
+        }}
         onSubmit={handleSubmit}
         onLogin={() => {}}
         canParticipate={!!canParticipate}
