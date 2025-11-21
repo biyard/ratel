@@ -30,7 +30,7 @@ use serde_json::json;
 )]
 pub struct SpacePost {
     #[dynamo(index = "gsi3", name = "find_by_space_ordered", pk)]
-    #[dynamo(index = "gsi6", name = "find_by_cagetory", order = 1, pk)]
+    #[dynamo(index = "gsi6", name = "find_by_category", order = 1, pk)]
     pub pk: Partition,
     pub sk: EntityType,
 
@@ -46,7 +46,7 @@ pub struct SpacePost {
 
     pub title: String,
     pub html_contents: String,
-    #[dynamo(index = "gsi6", name = "find_by_cagetory", order=2 pk)]
+    #[dynamo(index = "gsi6", name = "find_by_category", order = 2, pk)]
     pub category_name: String,
     pub comments: i64,
 

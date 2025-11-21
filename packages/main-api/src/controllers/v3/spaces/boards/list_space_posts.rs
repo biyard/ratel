@@ -55,7 +55,7 @@ pub async fn list_space_posts_handler(
         .scan_index_forward(false);
 
     let (responses, bookmark) = if let Some(category) = category {
-        SpacePost::find_by_cagetory(&dynamo.client, format!("{}#{}", space_pk, category), opt)
+        SpacePost::find_by_category(&dynamo.client, format!("{}#{}", space_pk, category), opt)
             .await?
     } else {
         SpacePost::find_by_space_ordered(&dynamo.client, space_pk.clone(), opt).await?
