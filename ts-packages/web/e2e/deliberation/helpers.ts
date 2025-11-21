@@ -1,5 +1,5 @@
 import { expect, Page } from '@playwright/test';
-import { TEAM_ID } from './data';
+import { POST_TITLE, TEAM_ID } from './data';
 
 export const TIMEOUT = 10000;
 
@@ -405,6 +405,9 @@ export async function goToMySpaces(page: Page) {
   await page.getByText('My Spaces', { exact: true }).click();
   await page.waitForLoadState('networkidle');
   await expect(page.getByTestId('space-card').first()).toBeVisible();
+  await expect(page.getByTestId('space-card').first()).toContainText(
+    POST_TITLE,
+  );
 }
 
 export async function goToSpace(page: Page, spaceName: string) {
