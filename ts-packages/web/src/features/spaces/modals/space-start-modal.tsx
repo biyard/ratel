@@ -23,19 +23,20 @@ export default function SpaceStartModal({
   };
 
   return (
-    <div className="w-[500px] max-tablet:w-full flex flex-col mt-6">
-      <div className="text-center font-medium text-desc-text text-base mb-6">
+    <div className="flex flex-col mt-6 w-[500px] max-tablet:w-full">
+      <div className="mb-6 text-base font-medium text-center text-desc-text">
         {t('start_warning')}
       </div>
 
-      <div className="flex flex-row justify-end gap-4 mt-4">
+      <div className="flex flex-row gap-4 justify-end mt-4">
         <button
           onClick={onClose}
-          className="min-w-30 px-10 py-[14.5px] bg-cancel-button-bg font-bold text-base text-cancel-button-text hover:text-white light:hover:text-hover transition-colors"
+          className="px-10 text-base font-bold transition-colors hover:text-white min-w-30 py-[14.5px] bg-cancel-button-bg text-cancel-button-text light:hover:text-hover"
         >
           {t('cancel')}
         </button>
         <button
+          data-testid="start-space-button"
           onClick={handleStart}
           disabled={isStarting}
           className={`w-full py-[14.5px] font-bold text-base rounded-[10px] ${

@@ -38,9 +38,13 @@ pub struct SpaceInvitationMember {
     pub profile_url: String,
     pub username: String,
     pub email: String,
-    #[dynamo(index = "gsi2", sk)]
+    #[dynamo(index = "gsi2", order = 1, sk)]
     #[dynamo(index = "gsi3", sk)]
     pub status: InvitationStatus,
+
+    #[serde(default)]
+    #[dynamo(index = "gsi2", order = 2, sk)]
+    pub created_at: i64,
 }
 
 impl SpaceInvitationMember {
@@ -65,6 +69,7 @@ impl SpaceInvitationMember {
             username,
             email,
             status: InvitationStatus::Pending,
+            created_at: now(),
         }
     }
 

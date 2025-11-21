@@ -18,3 +18,7 @@ pub fn get_now_timestamp() -> i64 {
 pub fn get_now_timestamp_millis() -> i64 {
     chrono::Utc::now().timestamp_millis()
 }
+
+pub fn now() -> i64 {
+    get_now_timestamp_millis()
+}
