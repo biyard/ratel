@@ -3,6 +3,8 @@ const en = {
   attribute_groups: 'Attribute Groups',
   attributes: 'Attributes',
   ratio: 'Maximum Ratio (%)',
+  panels: 'Panels',
+  no_attributes: 'No Attributes',
 
   panel_name: 'Panel Name',
   age: 'Age',
@@ -30,6 +32,8 @@ const ko = {
   attribute_groups: '속성 그룹',
   attributes: '속성',
   ratio: '최대 비율 (%)',
+  panels: '패널',
+  no_attributes: '속성 없음',
 
   panel_name: '패널 이름',
   age: '나이',

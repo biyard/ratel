@@ -64,7 +64,9 @@ export function PostFormFields(props: PostFormFieldsProps) {
             placeholder={t.title_placeholder}
             value={title}
             onChange={onTitleChange}
-            className="w-full text-text-primary bg-input-box-bg border-input-box-border"
+            variant="post"
+            showRequiredMarker={!title}
+            className="w-full text-text-primary"
           />
           <div className="absolute right-3 top-1/2 text-sm -translate-y-1/2 text-neutral-400">
             {title.length}/{titleMaxLength}
@@ -85,6 +87,8 @@ export function PostFormFields(props: PostFormFieldsProps) {
             url={imageUrl}
             onImageUpload={onImageUpload}
             onRemoveImage={onRemoveImage}
+            className="!bg-post-input-bg [&_.tiptap-editor_.ProseMirror_p.is-editor-empty:first-child::before]:!text-[var(--color-post-input-placeholder)] !border-post-input-border !rounded-md focus-within:!border-ring focus-within:!ring-ring/50 focus-within:!ring-[1px]"
+            toolbarClassName="!bg-post-input-bg !border-b-0"
           />
 
           {/* Saving Status Indicator - positioned at bottom right of editor */}
