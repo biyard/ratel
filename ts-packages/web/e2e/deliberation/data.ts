@@ -1,5 +1,7 @@
-export const TEAM_NAME = 'Legislative Research Pilot Team';
-export const TEAM_ID = (timestamp: number) => `iitp-poc-1-${timestamp}`;
+import { CONFIGS } from '../../tests/config';
+
+export const TEAM_NAME = `Legislative Research Pilot Team ${CONFIGS.PLAYWRIGHT.ID}`;
+export const TEAM_ID = `iitp-poc-1-${CONFIGS.PLAYWRIGHT.ID}`;
 export const TEAM_DESCRIPTION =
   'A team preparing deliberative polling in collaboration with the National Assembly Research Service.';
 
@@ -14,7 +16,7 @@ export const ATTRIBUTE_CODES = {
 // Password for all test users
 export const TEST_PASSWORD = 'admin!234';
 
-export const POST_TITLE = 'Discussion on Reward Space';
+export const POST_TITLE = `${CONFIGS.PLAYWRIGHT.ID} Discussion on Reward Space`;
 export const POST_CONTENT = `1. Background
 Ratel provides a RewardSpace feature that rewards user participation.
 Currently, most spaces distribute points based on activity count (participation).

@@ -1,5 +1,5 @@
 import { expect, Page } from '@playwright/test';
-import { SURVEY_QUESTIONS } from './data';
+import { SURVEY_QUESTIONS, TEAM_ID } from './data';
 
 export const TIMEOUT = 10000;
 
@@ -77,6 +77,14 @@ export async function verifyCredential(page: Page, code: string) {
   // Wait for verification to complete
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(500);
+}
+
+export async function goToTeam(page: Page) {
+  await page.goto(`/teams/${TEAM_ID}/home`, { waitUntil: 'networkidle' });
+}
+
+export async function goToTeamSpace(page: Page) {
+  await page.goto(`/teams/${TEAM_ID}/draft`, { waitUntil: 'networkidle' });
 }
 
 export async function createTeam(

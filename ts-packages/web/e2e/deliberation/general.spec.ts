@@ -3,11 +3,11 @@ import {
   ATTRIBUTE_CODES,
   BOARD_POSTS,
   POST_CONTENT,
-  POST_TITLE as PT,
+  POST_TITLE,
   SURVEY_QUESTIONS,
   TEAM_DESCRIPTION,
   TEAM_ID,
-  TEAM_NAME as TN,
+  TEAM_NAME,
   TEST_PASSWORD,
   YOUTUBE_LINK,
 } from './data';
@@ -23,6 +23,7 @@ import {
   enableAnonymousParticipation,
   goToMySpaces,
   goToSpace,
+  goToTeam,
   inviteMembers,
   login,
   participateInSpace,
@@ -37,18 +38,12 @@ import {
   writeNewPost,
 } from './helpers';
 
-const POST_TITLE = `${Date.now()} ${PT}`;
-const TEAM_NAME = `${Date.now()} ${TN}`;
-
 test.describe.serial('[Deliberation] General Spec', () => {
   // Disable retries for serial tests - shared state can't be restored after retry
   // Increase timeout for serial tests that include complex operations (60 seconds)
   test.describe.configure({ retries: 0, timeout: 60000 });
 
   let no = 0;
-  let page: Page;
-  let context: BrowserContext;
-  let teamId: string;
 
   const i = () => {
     no += 1;
@@ -99,49 +94,57 @@ test.describe.serial('[Deliberation] General Spec', () => {
     email: 'hi+anon1@biyard.co',
     password: TEST_PASSWORD,
   };
+  const teamId = TEAM_ID;
 
-  test.beforeAll(async ({ browser }, testInfo) => {
-    const contextOptions = testInfo.project.use;
-    context = await browser.newContext({
-      ...contextOptions,
+  // State backup for serial test execution
+  let savedCookies: any[] = [];
+  let savedUrl: string = '/';
 
-      recordVideo: {
-        dir: testInfo.outputDir + '/videos/',
-      },
-    });
-    page = await context.newPage();
-    teamId = TEAM_ID(Date.now());
+  test.beforeEach(async ({ page }) => {
+    // Backup current cookies and URL before each test
+    page.context().addCookies(savedCookies);
+    await page.goto(savedUrl, { waitUntil: 'networkidle' });
   });
 
-  test.afterAll(async () => {
-    await page.close();
-    await context.close();
+  test.afterEach(async ({ page }) => {
+    savedUrl = page.url();
+    savedCookies = await page.context().cookies();
   });
 
   // =====================================
   // Verification: Participant
   // =====================================
-  test(`DS-${i()} [Participant 1] Verifying credential with code1`, async () => {
+  test(`DS-${i()} [Participant 1] Verifying credential with code1`, async ({
+    page,
+  }) => {
     await login(page, participant1);
     await verifyCredential(page, ATTRIBUTE_CODES.KONKUK_MALE);
   });
 
-  test(`DS-${i()} [Participant 2] Verifying credential with code2`, async () => {
+  test(`DS-${i()} [Participant 2] Verifying credential with code2`, async ({
+    page,
+  }) => {
     await login(page, participant2);
     await verifyCredential(page, ATTRIBUTE_CODES.KONKUK_FEMALE);
   });
 
-  test(`DS-${i()} [Participant 3] Verifying credential with code3`, async () => {
+  test(`DS-${i()} [Participant 3] Verifying credential with code3`, async ({
+    page,
+  }) => {
     await login(page, participant3);
     await verifyCredential(page, ATTRIBUTE_CODES.SOGANG_MALE);
   });
 
-  test(`DS-${i()} [Participant 4] Verifying credential with code4`, async () => {
+  test(`DS-${i()} [Participant 4] Verifying credential with code4`, async ({
+    page,
+  }) => {
     await login(page, participant4);
     await verifyCredential(page, ATTRIBUTE_CODES.SOGANG_FEMALE);
   });
 
-  test(`DS-${i()} [Participant 5] Verifying credential with code5`, async () => {
+  test(`DS-${i()} [Participant 5] Verifying credential with code5`, async ({
+    page,
+  }) => {
     await login(page, participant5);
     await verifyCredential(page, ATTRIBUTE_CODES.KONKUK_MALE);
   });
@@ -149,12 +152,16 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // Design and Publish: Creator
   // =====================================
-  test(`DS-${i()} [Creator 1] Create a team`, async () => {
+  test(`DS-${i()} [Creator 1] Create a team`, async ({ page }) => {
     await login(page, creator1);
     await createTeam(page, TEAM_NAME, teamId, TEAM_DESCRIPTION);
   });
 
-  test(`DS-${i()} [Creator 1] Invite a member(Creator2) to team`, async () => {
+  test(`DS-${i()} [Creator 1] Invite a member(Creator2) to team`, async ({
+    page,
+  }) => {
+    await login(page, creator1);
+    await goToTeam(page);
     await clickTeamSidebarMenu(page, 'groups');
 
     const inviteButton = page.locator('[data-pw="invite-member-button"]');
@@ -177,11 +184,15 @@ test.describe.serial('[Deliberation] General Spec', () => {
     }
   });
 
-  test(`DS-${i()} [Creator 1] Create a draft with a deliberation space`, async () => {
+  test(`DS-${i()} [Creator 1] Create a draft with a deliberation space`, async ({
+    page,
+  }) => {
+    await login(page, creator1);
+    await goToTeam(page);
     await createDeliberationPost(page, POST_TITLE, POST_CONTENT, YOUTUBE_LINK);
   });
 
-  test(`DS-${i()} [Creator 2] Check a team draft page`, async () => {
+  test(`DS-${i()} [Creator 2] Check a team draft page`, async ({ page }) => {
     await login(page, creator2);
     await page.goto(`/teams/${teamId}/drafts`, { waitUntil: 'networkidle' });
 
@@ -202,7 +213,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await page.waitForLoadState('networkidle');
   });
 
-  test(`DS-${i()} [Creator 2] Modifying Overview`, async () => {
+  test(`DS-${i()} [Creator 2] Modifying Overview`, async ({ page }) => {
     await page.getByTestId('space-sidemenu-overview').click();
     await page.waitForLoadState('networkidle');
 
@@ -210,15 +221,15 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await expect(page.getByText(POST_TITLE)).toBeVisible();
   });
 
-  test(`DS-${i()} [Creator 2] Creating a Pre-Survey poll`, async () => {
+  test(`DS-${i()} [Creator 2] Creating a Pre-Survey poll`, async ({ page }) => {
     await createPrePollSurvey(page, SURVEY_QUESTIONS);
   });
 
-  test(`DS-${i()} [Creator 2] Creating a board`, async () => {
+  test(`DS-${i()} [Creator 2] Creating a board`, async ({ page }) => {
     await createBoardPosts(page, BOARD_POSTS);
   });
 
-  test(`DS-${i()} [Creator 2] Inviting members`, async () => {
+  test(`DS-${i()} [Creator 2] Inviting members`, async ({ page }) => {
     const emails = [
       participant1.email,
       participant2.email,
@@ -230,22 +241,24 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await inviteMembers(page, emails);
   });
 
-  test(`DS-${i()} [Creator 2] Setting up panels`, async () => {
+  test(`DS-${i()} [Creator 2] Setting up panels`, async ({ page }) => {
     await setupPanels(page, '60');
   });
 
-  test(`DS-${i()} [Creator 2] Configure anonymous`, async () => {
+  test(`DS-${i()} [Creator 2] Configure anonymous`, async ({ page }) => {
     await enableAnonymousParticipation(page);
   });
 
-  test(`DS-${i()} [Creator 2] Publish privately`, async () => {
+  test(`DS-${i()} [Creator 2] Publish privately`, async ({ page }) => {
     await publishSpacePrivately(page);
   });
 
   // =====================================
   // Rejection: Unverified Participant
   // =====================================
-  test(`DS-${i()} [Unverified Participant] Check invitation in My Spaces`, async () => {
+  test(`DS-${i()} [Unverified Participant] Check invitation in My Spaces`, async ({
+    page,
+  }) => {
     await login(page, unverifiedParticipant1);
     await goToMySpaces(page);
 
@@ -256,7 +269,9 @@ test.describe.serial('[Deliberation] General Spec', () => {
 
   // Note: Since we skipped panel setup, unverified users can also participate
   // This test would require panel attribute restrictions to properly reject unverified users
-  test.skip(`DS-${i()} [Unverified Participant] Check can access space - PANEL RESTRICTIONS DISABLED`, async () => {
+  test.skip(`DS-${i()} [Unverified Participant] Check can access space - PANEL RESTRICTIONS DISABLED`, async ({
+    page,
+  }) => {
     // Try to participate (will succeed since no panel restrictions)
     // TODO: Check unverified participant showing modal to redirect credential page.
 
@@ -268,7 +283,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // Rejection: Guest
   // =====================================
-  test(`DS-${i()} [Guest] Sign in with Guest`, async () => {
+  test(`DS-${i()} [Guest] Sign in with Guest`, async ({ page }) => {
     await login(page, guest1);
     // TODO: Check rejection
   });
@@ -276,7 +291,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // PrePoll: Participant 1
   // =====================================
-  test(`DS-${i()} [Participant 1] Conduct PrePoll`, async () => {
+  test(`DS-${i()} [Participant 1] Conduct PrePoll`, async ({ page }) => {
     await login(page, participant1);
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
@@ -300,7 +315,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // PrePoll: Participant 2
   // =====================================
-  test(`DS-${i()} [Participant 2] Conduct PrePoll`, async () => {
+  test(`DS-${i()} [Participant 2] Conduct PrePoll`, async ({ page }) => {
     await login(page, participant2);
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
@@ -324,7 +339,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // PrePoll: Participant 3
   // =====================================
-  test(`DS-${i()} [Participant 3] Conduct PrePoll`, async () => {
+  test(`DS-${i()} [Participant 3] Conduct PrePoll`, async ({ page }) => {
     await login(page, participant3);
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
@@ -348,7 +363,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // PrePoll: Participant 4
   // =====================================
-  test(`DS-${i()} [Participant 4] Conduct PrePoll`, async () => {
+  test(`DS-${i()} [Participant 4] Conduct PrePoll`, async ({ page }) => {
     await login(page, participant4);
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
@@ -372,7 +387,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // Start Deliberation: Creator
   // =====================================
-  test(`DS-${i()} [Creator 1] Start Deliberation`, async () => {
+  test(`DS-${i()} [Creator 1] Start Deliberation`, async ({ page }) => {
     await login(page, creator1);
 
     // Navigate to the published space via the team's home page
@@ -393,7 +408,9 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // Blocking: Participant 5 (late joiner)
   // =====================================
   // TODO: implement
-  test.skip(`DS-${i()} [Participant 5] Check if blocked joining the space`, async () => {
+  test.skip(`DS-${i()} [Participant 5] Check if blocked joining the space`, async ({
+    page,
+  }) => {
     await login(page, participant5);
     await goToMySpaces(page);
     await goToSpace(page, POST_TITLE);
@@ -414,99 +431,113 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // Discussion: Participant and Creator
   // =====================================
-  // test(`DS-${i()} [Participant 1] Reply to a post on a board (P1)`, async () => {
-  //   await login(page, participant1);
-  //   await goToMySpaces(page);
-  //   await goToSpace(page, POST_TITLE);
-  //   await replyToPost(
-  //     page,
-  //     'I think participation-based rewards are more fair.',
-  //   );
-  // });
+  test(`DS-${i()} [Participant 1] Reply to a post on a board (P1)`, async ({
+    page,
+  }) => {
+    await login(page, participant1);
+    await goToMySpaces(page);
+    await goToSpace(page, POST_TITLE);
+    await replyToPost(
+      page,
+      'I think participation-based rewards are more fair.',
+    );
+  });
 
-  // test(`DS-${i()} [Participant 2] Reply to a post on a board (P2)`, async () => {
-  //   await login(page, participant2);
-  //   await goToMySpaces(page);
-  //   await goToSpace(page, POST_TITLE);
-  //   await replyToPost(
-  //     page,
-  //     'Quality-based approach helps community growth more.',
-  //   );
-  // });
+  test(`DS-${i()} [Participant 2] Reply to a post on a board (P2)`, async ({
+    page,
+  }) => {
+    await login(page, participant2);
+    await goToMySpaces(page);
+    await goToSpace(page, POST_TITLE);
+    await replyToPost(
+      page,
+      'Quality-based approach helps community growth more.',
+    );
+  });
 
-  // test(`DS-${i()} [Creator 1] Write a new post on the board`, async () => {
-  //   await login(page, creator1);
-  //   await page.goto(`/teams/${teamId}/home`);
-  //   await page.waitForLoadState('networkidle');
-  //   await page.getByText(POST_TITLE).click();
-  //   await page.waitForLoadState('networkidle');
+  test(`DS-${i()} [Creator 1] Write a new post on the board`, async ({
+    page,
+  }) => {
+    await login(page, creator1);
+    await page.goto(`/teams/${teamId}/home`);
+    await page.waitForLoadState('networkidle');
+    await page.getByText(POST_TITLE).click();
+    await page.waitForLoadState('networkidle');
 
-  //   await writeNewPost(
-  //     page,
-  //     'Additional discussion: How about a hybrid approach?',
-  //     'I propose a hybrid approach that considers both participation and quality.',
-  //     'Fairness and Efficiency of Reward Criteria',
-  //   );
-  // });
+    await writeNewPost(
+      page,
+      'Additional discussion: How about a hybrid approach?',
+      'I propose a hybrid approach that considers both participation and quality.',
+      'Fairness and Efficiency of Reward Criteria',
+    );
+  });
 
-  // test(`DS-${i()} [Participant 3] Reply to the new post`, async () => {
-  //   await login(page, participant3);
-  //   await goToMySpaces(page);
-  //   await goToSpace(page, POST_TITLE);
-  //   await replyToPost(
-  //     page,
-  //     'I think a hybrid approach would be a good compromise.',
-  //   );
-  // });
+  test(`DS-${i()} [Participant 3] Reply to the new post`, async ({ page }) => {
+    await login(page, participant3);
+    await goToMySpaces(page);
+    await goToSpace(page, POST_TITLE);
+    await replyToPost(
+      page,
+      'I think a hybrid approach would be a good compromise.',
+    );
+  });
 
-  // // =====================================
-  // // Final Survey
-  // // =====================================
-  // test(`DS-${i()} [Creator 2] Write the final survey`, async () => {
-  //   await login(page, creator2);
-  //   await page.goto(`/teams/${teamId}/home`);
-  //   await page.waitForLoadState('networkidle');
-  //   await page.getByText(POST_TITLE).click();
-  //   await page.waitForLoadState('networkidle');
+  // =====================================
+  // Final Survey
+  // =====================================
+  test(`DS-${i()} [Creator 2] Write the final survey`, async ({ page }) => {
+    await login(page, creator2);
+    await page.goto(`/teams/${teamId}/home`);
+    await page.waitForLoadState('networkidle');
+    await page.getByText(POST_TITLE).click();
+    await page.waitForLoadState('networkidle');
 
-  //   // Navigate to polls and create final survey
-  //   await createFinalSurvey(page, SURVEY_QUESTIONS);
-  // });
+    // Navigate to polls and create final survey
+    await createFinalSurvey(page, SURVEY_QUESTIONS);
+  });
 
-  // test(`DS-${i()} [Participant 1] Conduct the final survey (P1)`, async () => {
-  //   await login(page, participant1);
-  //   await goToMySpaces(page);
-  //   await goToSpace(page, POST_TITLE);
-  //   await conductFinalSurvey(page);
-  // });
+  test(`DS-${i()} [Participant 1] Conduct the final survey (P1)`, async ({
+    page,
+  }) => {
+    await login(page, participant1);
+    await goToMySpaces(page);
+    await goToSpace(page, POST_TITLE);
+    await conductFinalSurvey(page);
+  });
 
-  // test(`DS-${i()} [Participant 2] Conduct the final survey (P2)`, async () => {
-  //   await login(page, participant2);
-  //   await goToMySpaces(page);
-  //   await goToSpace(page, POST_TITLE);
-  //   await conductFinalSurvey(page);
-  // });
+  test(`DS-${i()} [Participant 2] Conduct the final survey (P2)`, async ({
+    page,
+  }) => {
+    await login(page, participant2);
+    await goToMySpaces(page);
+    await goToSpace(page, POST_TITLE);
+    await conductFinalSurvey(page);
+  });
 
-  // test(`DS-${i()} [Participant 3] Conduct the final survey (P3)`, async () => {
-  //   await login(page, participant3);
-  //   await goToMySpaces(page);
-  //   await participateInSpace(page, POST_TITLE);
-  //   await conductFinalSurvey(page);
-  // });
+  test(`DS-${i()} [Participant 3] Conduct the final survey (P3)`, async ({
+    page,
+  }) => {
+    await login(page, participant3);
+    await goToMySpaces(page);
+    await participateInSpace(page, POST_TITLE);
+    await conductFinalSurvey(page);
+  });
 
-  // test(`DS-${i()} [Participant 4] Conduct the final survey (P4)`, async () => {
-  //   await login(page, participant4);
-  //   await goToMySpaces(page);
-  //   await goToSpace(page, POST_TITLE);
-  //   await conductFinalSurvey(page);
-  // });
+  test(`DS-${i()} [Participant 4] Conduct the final survey (P4)`, async ({
+    page,
+  }) => {
+    await login(page, participant4);
+    await goToMySpaces(page);
+    await goToSpace(page, POST_TITLE);
+    await conductFinalSurvey(page);
+  });
 
-  // // TODO: check
-  // test.skip(`DS-${i()} [Creator 1] See analysis`, async () => {
-  //   await login(page, creator1);
-  //   await goToMySpaces(page);
-  //   await goToSpace(page, POST_TITLE);
+  // TODO: check
+  test.skip(`DS-${i()} [Creator 1] See analysis`, async ({ page }) => {
+    await login(page, creator1);
+    await goToMySpaces(page);
+    await goToSpace(page, POST_TITLE);
 
-  //   await viewAnalysis(page);
-  // });
+    await viewAnalysis(page);
+  });
 });
