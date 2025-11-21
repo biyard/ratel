@@ -30,6 +30,7 @@ export enum FileExtension {
   // Video
   MP4 = 'mp4',
   MOV = 'mov',
+  MKV = 'mkv',
 
   // Etc
   PPTX = 'pptx',
@@ -59,6 +60,7 @@ export function toFileExtension(
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
     'text/csv': 'csv',
     'video/mp4': 'mp4',
+    'video/mkv': 'mkv',
     'video/quicktime': 'mov',
   };
 
@@ -96,6 +98,8 @@ export function toFileExtension(
       return FileExtension.EXCEL;
     case 'mp4':
       return FileExtension.MP4;
+    case 'mkv':
+      return FileExtension.MKV;
     case 'mov':
       return FileExtension.MOV;
     default:

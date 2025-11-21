@@ -12,6 +12,7 @@ import Card from '@/components/card';
 import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { ArrowLeft } from 'lucide-react';
+import { SpaceStatus } from '@/features/spaces/types/space-common';
 
 export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollEditorPage: spacePk=${spacePk}, pollPk=${pollPk}`);
@@ -94,7 +95,7 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
                 isAdmin={true}
                 isLogin={!!ctrl.user}
                 canSubmit={false}
-                canParticipate={true}
+                canParticipate={!(ctrl.space.status != SpaceStatus.Started)}
                 questions={ctrl.poll.questions}
                 onUpdateAnswer={ctrl.handleUpdateAnswer}
                 selectedAnswers={ctrl.answers.get()}

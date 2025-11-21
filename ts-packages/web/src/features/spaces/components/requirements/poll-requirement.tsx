@@ -44,7 +44,10 @@ export default function PollRequirement({
     logger.debug('Submitting poll answers', answers);
     removeError();
 
-    if (!poll) return;
+    if (!poll) {
+      logger.error('Poll data is not available');
+      return;
+    }
 
     const defaultAnswerByType = (
       answer_type: SurveyAnswer['answer_type'],
@@ -105,15 +108,18 @@ export default function PollRequirement({
       },
     );
   };
-  const canParticipate =
-    space.isAdmin() ||
-    space.spaceType !== SpaceType.Deliberation ||
-    space.participated;
+  const canParticipate = space
+    ? space.isAdmin() ||
+      space.spaceType !== SpaceType.Deliberation ||
+      space.participated
+    : undefined;
   useEffect(() => {
-    if (!canParticipate) {
+    if (canParticipate === false) {
       setError(new Error('space.poll.cannot_participate'));
+    } else if (canParticipate === true) {
+      removeError();
     }
-  }, [canParticipate, setError]);
+  }, [canParticipate, setError, removeError]);
   const handleUpdateAnswer = (questionIdx: number, answer: SurveyAnswer) => {
     logger.debug(
       `handleUpdateAnswer called for questionIdx ${questionIdx}`,
@@ -122,6 +128,8 @@ export default function PollRequirement({
 
     answers[questionIdx] = answer;
     setAnswers({ ...answers });
+
+    logger.debug('Updated answers state:', answers);
   };
 
   return (
@@ -133,12 +141,15 @@ export default function PollRequirement({
         status={poll.status}
         onUpdateAnswer={handleUpdateAnswer}
         selectedAnswers={answers}
-        onValidateError={() => setError(ErrorSpacePollRequiredField)}
+        onValidateError={() => {
+          logger.error('Validation error in poll response', answers);
+          setError(ErrorSpacePollRequiredField);
+        }}
         onSubmit={handleSubmit}
         onLogin={() => {}}
-        canParticipate={canParticipate}
+        canParticipate={!!canParticipate}
         canSubmit={true}
-        disabled={respondPoll.isPending || !canParticipate}
+        disabled={respondPoll.isPending || canParticipate === false}
         canUpdate={false}
         isLogin={true}
       />

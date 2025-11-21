@@ -18,6 +18,7 @@ export function SpacePollsEditorPage({ spacePk }: SpacePathProps) {
           <Button
             variant="primary"
             className="w-[120px]"
+            data-testid="create-poll-button"
             onClick={() => {
               logger.debug('Show poll type selector');
               ctrl.showSelector.set(true);

@@ -27,6 +27,23 @@ export class SpaceBoardsViewerController {
     this.navigate(route.spaceBoardPost(this.spacePk, postPk));
   };
 
+  loadMore = async (categoryName: string) => {
+    const bm = this.bookmark.get();
+    if (!bm) return;
+
+    const base =
+      categoryName === ''
+        ? `/v3/spaces/${encodeURIComponent(this.spacePk)}/boards?bookmark=${encodeURIComponent(bm)}`
+        : `/v3/spaces/${encodeURIComponent(this.spacePk)}/boards?category=${encodeURIComponent(categoryName)}&bookmark=${encodeURIComponent(bm)}`;
+
+    const next = await call('GET', `${base}`);
+
+    const p = new ListSpacePostsResponse(next);
+
+    this.posts.set([...(this.posts.get() ?? []), ...(p.posts ?? [])]);
+    this.bookmark.set(p.bookmark ?? null);
+  };
+
   changeCategory = async (categoryName: string) => {
     if (categoryName == '') {
       const next = await call(

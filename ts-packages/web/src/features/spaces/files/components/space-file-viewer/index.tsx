@@ -3,6 +3,11 @@ import { checkString } from '@/lib/string-filter-utils';
 import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 import SpaceFile from './space-file';
 import FileModel from '../../types/file';
+import { useEffect, useState } from 'react';
+
+const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+const VIDEO_EXTS = ['mp4', 'mov', 'webm', 'mkv'];
+const PDF_EXTS = ['pdf'];
 
 export interface SpaceFilesProps {
   files: FileModel[];
@@ -23,8 +28,40 @@ export default function SpaceFileViewer({ files }: SpaceFilesProps) {
   const isVideo = (ext?: string) =>
     !!ext && ['mp4', 'mov', 'avi', 'mkv', 'webm'].includes(ext.toLowerCase());
 
-  const imageFiles = files.filter((f) => isImage(f.ext));
-  const videoFiles = files.filter((f) => isVideo(f.ext));
+  const isPdf = (ext?: string) => !!ext && ['pdf'].includes(ext.toLowerCase());
+
+  const imageFiles = files.filter((f) => {
+    const name = f.name.toLowerCase();
+    return isImage(f.ext) || IMAGE_EXTS.some((ext) => name.includes(`.${ext}`));
+  });
+
+  const videoFiles = files.filter((f) => {
+    const name = f.name.toLowerCase();
+    return isVideo(f.ext) || VIDEO_EXTS.some((ext) => name.includes(`.${ext}`));
+  });
+
+  const pdfFiles = files.filter((f) => {
+    const name = f.name.toLowerCase();
+    return isPdf(f.ext) || PDF_EXTS.some((ext) => name.includes(`.${ext}`));
+  });
+
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    () => pdfFiles?.[0]?.url ?? null,
+  );
+
+  useEffect(() => {
+    if (!files || files.length === 0) {
+      setPreviewUrl(null);
+      return;
+    }
+
+    setPreviewUrl((prev) => {
+      if (prev && pdfFiles.some((f) => f.url === prev)) {
+        return prev;
+      }
+      return pdfFiles[0]?.url ?? null;
+    });
+  }, [pdfFiles]);
 
   return (
     <Card>
@@ -36,10 +73,25 @@ export default function SpaceFileViewer({ files }: SpaceFilesProps) {
               <SpaceFile
                 file={file}
                 key={'file ' + index}
-                onclick={() => handlePdfDownload(file)}
+                onclick={() => {
+                  if (isPdf(file.ext)) {
+                    handlePdfDownload(file);
+                    setPreviewUrl(file.url);
+                  }
+                }}
               />
             ))}
         </div>
+
+        {previewUrl && (
+          <div className="mt-4">
+            <iframe
+              src={`${previewUrl}`}
+              className="w-full h-[600px] rounded-lg"
+              title="PDF preview"
+            />
+          </div>
+        )}
 
         {(videoFiles.length > 0 || imageFiles.length > 0) && (
           <div className="flex flex-col gap-6 mt-4 border-t border-neutral-700 pt-4">

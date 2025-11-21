@@ -35,7 +35,7 @@ export function Credentials() {
             className="gap-1"
           >
             <Heading variant="heading4">{t.vc}</Heading>
-            <p className="text-sm text-neutral-300 dark:text-neutral-300 light:text-neutral-700">
+            <p className="text-sm text-neutral-300 light:text-neutral-700 dark:text-neutral-300">
               {t.id}: {ctrl.did}
             </p>
           </Col>
@@ -60,8 +60,9 @@ export function Credentials() {
           <Row mainAxisAlignment="center" className="">
             <Button
               variant="text"
-              className="text-primary"
+              className="text-primary hover:text-primary/60"
               onClick={ctrl.handleVerify}
+              data-testid="credential-verify-button"
             >
               {t.verify}
             </Button>
@@ -104,17 +105,20 @@ function VerificationMethodModal({
   t: ReturnType<typeof useCredentialsI18n>;
 }) {
   return (
-    <div className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">
+    <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50">
       <div className="p-6 w-full max-w-md bg-white rounded-lg shadow-lg dark:bg-gray-800">
-        <h2 className="mb-6 text-xl font-bold">{t.selectVerificationMethod}</h2>
+        <h2 className="mb-6 text-xl font-bold text-modal-label-text">
+          {t.selectVerificationMethod}
+        </h2>
 
         <div className="flex flex-col gap-4">
           {/* Identity Verification Option */}
           <button
             onClick={onIdentityVerify}
-            className="p-4 text-left rounded-lg border border-gray-300 transition-all hover:border-blue-500 hover:bg-blue-50 dark:border-gray-600 dark:hover:border-blue-500 dark:hover:bg-gray-700"
+            className="p-4 text-left rounded-lg border border-gray-300 transition-all dark:border-gray-600 hover:bg-blue-50 hover:border-blue-500 dark:hover:border-blue-500 dark:hover:bg-gray-700"
+            data-testid="identity-verification-option"
           >
-            <h3 className="mb-1 text-lg font-semibold">
+            <h3 className="mb-1 text-lg font-semibold text-gray-700 dark:text-gray-500">
               {t.identityVerification}
             </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -125,9 +129,12 @@ function VerificationMethodModal({
           {/* Code Verification Option */}
           <button
             onClick={onCodeVerify}
-            className="p-4 text-left rounded-lg border border-gray-300 transition-all hover:border-blue-500 hover:bg-blue-50 dark:border-gray-600 dark:hover:border-blue-500 dark:hover:bg-gray-700"
+            className="p-4 text-left rounded-lg border border-gray-300 transition-all dark:border-gray-600 hover:bg-blue-50 hover:border-blue-500 dark:hover:border-blue-500 dark:hover:bg-gray-700"
+            data-testid="code-verification-option"
           >
-            <h3 className="mb-1 text-lg font-semibold">{t.codeVerification}</h3>
+            <h3 className="mb-1 text-lg font-semibold text-gray-700 dark:text-gray-500">
+              {t.codeVerification}
+            </h3>
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {t.codeVerificationDesc}
             </p>
@@ -135,7 +142,10 @@ function VerificationMethodModal({
         </div>
 
         <div className="flex justify-end mt-6">
-          <Button variant="outline" onClick={onClose}>
+          <Button
+            className="hover:text-white text-neutral-500"
+            onClick={onClose}
+          >
             {t.cancel}
           </Button>
         </div>
@@ -175,9 +185,11 @@ function CodeInputModal({
   };
 
   return (
-    <div className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">
+    <div className="flex fixed inset-0 z-50 justify-center items-center bg-black bg-opacity-50">
       <div className="p-6 w-full max-w-md bg-white rounded-lg shadow-lg dark:bg-gray-800">
-        <h2 className="mb-4 text-xl font-bold">{t.enterCode}</h2>
+        <h2 className="mb-4 text-xl font-bold text-modal-label-text">
+          {t.enterCode}
+        </h2>
 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
@@ -186,9 +198,10 @@ function CodeInputModal({
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder={t.codePlaceholder}
-              className="px-3 py-2 w-full rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="py-2 px-3 w-full rounded border border-gray-300 dark:bg-gray-700 dark:border-gray-600 text-neutral-500"
               disabled={isSubmitting}
               autoFocus
+              data-testid="credential-code-input"
             />
           </div>
 
@@ -196,14 +209,19 @@ function CodeInputModal({
 
           <div className="flex gap-2 justify-end">
             <Button
+              className="hover:text-white text-neutral-500"
               type="button"
-              variant="outline"
               onClick={onClose}
               disabled={isSubmitting}
             >
               {t.cancel}
             </Button>
-            <Button type="submit" disabled={isSubmitting || !code.trim()}>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={isSubmitting || !code.trim()}
+              data-testid="credential-code-submit"
+            >
               {isSubmitting ? t.submitting : t.submit}
             </Button>
           </div>

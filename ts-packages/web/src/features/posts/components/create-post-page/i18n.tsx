@@ -10,6 +10,7 @@ export const CreatePostPage = {
     space_description_placeholder: 'Description',
     skip_creating_space: 'Skip creating a space',
     publish: 'Publish',
+    save: 'Save',
     btn_next: 'Next',
     publishing: 'Publishing...',
     saving: 'Saving...',
@@ -25,6 +26,8 @@ export const CreatePostPage = {
     // Error messages
     error_init: 'Failed to initialize post',
     error_save: 'Auto-save failed',
+    error_overflow_title:
+      'The title can be up to 50 characters long. Please double-check your title.',
     error_upload: 'Failed to upload image',
     error_publish: 'Failed to publish post',
     error_empty_fields: 'Please fill in both title and content',
@@ -38,6 +41,7 @@ export const CreatePostPage = {
     space_description_placeholder: '설명',
     skip_creating_space: '스페이스 만들기 건너뛰기',
     publish: '게시',
+    save: '저장',
     btn_next: '다음',
     publishing: '게시 중...',
     saving: '저장 중...',
@@ -53,6 +57,8 @@ export const CreatePostPage = {
     // Error messages
     error_init: '게시물 초기화에 실패했습니다',
     error_save: '자동 저장에 실패했습니다',
+    error_overflow_title:
+      '제목은 최대 50자까지 입력할 수 있습니다. 제목을 다시 확인해주세요.',
     error_upload: '이미지 업로드에 실패했습니다',
     error_publish: '게시물 게시에 실패했습니다',
     error_empty_fields: '제목과 내용을 모두 입력해주세요',
@@ -68,6 +74,7 @@ export interface I18nCreatePostPage {
   space_description_placeholder: string;
   skip_creating_space: string;
   publish: string;
+  save: string;
   btn_next: string;
   publishing: string;
   saving: string;
@@ -83,6 +90,7 @@ export interface I18nCreatePostPage {
   // Error messages
   error_init: string;
   error_save: string;
+  error_overflow_title: string;
   error_upload: string;
   error_publish: string;
   error_empty_fields: string;
@@ -102,6 +110,7 @@ export function useCreatePostPageI18n() {
     ),
     skip_creating_space: t('CreatePostPage:skip_creating_space'),
     publish: t('CreatePostPage:publish'),
+    save: t('CreatePostPage:save'),
     btn_next: t('CreatePostPage:btn_next'),
     publishing: t('CreatePostPage:publishing'),
     saving: t('CreatePostPage:saving'),
@@ -117,6 +126,7 @@ export function useCreatePostPageI18n() {
     // Error messages
     error_init: t('CreatePostPage:error_init'),
     error_save: t('CreatePostPage:error_save'),
+    error_overflow_title: t('CreatePostPage:error_overflow_title'),
     error_upload: t('CreatePostPage:error_upload'),
     error_publish: t('CreatePostPage:error_publish'),
     error_empty_fields: t('CreatePostPage:error_empty_fields'),
