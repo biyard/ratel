@@ -108,21 +108,5 @@ export default defineConfig({
         },
       },
     },
-    {
-      name: 'dark',
-      testMatch: ['e2e/**/*.spec.ts', 'e2e/**/*.spec.tsx'],
-      use: {
-        trace: 'on',
-        video: 'on',
-        screenshot: 'on',
-
-        ...devices['Desktop Chrome'],
-        colorScheme: 'dark',
-        viewport: {
-          width: 1440,
-          height: 950,
-        },
-      },
-    },
   ],
 });
