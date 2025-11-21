@@ -296,8 +296,7 @@ test.describe.serial('[Deliberation] General Spec', () => {
     await goToMySpaces(page);
     await expect(page.getByText(POST_TITLE).first()).toBeVisible();
     await page.getByTestId('space-card').first().click();
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(300);
+    await expect(page.getByTestId('objective-viewer-option')).toBeVisible();
 
     await conductSurvey(page, [
       0,
@@ -394,12 +393,13 @@ test.describe.serial('[Deliberation] General Spec', () => {
     // The post was already published in DS-23, so it's visible on team home
     await page.goto(`/teams/${teamId}/home`);
     await page.waitForLoadState('networkidle');
+    const p = page.getByText(POST_TITLE);
+    await expect(p).toBeVisible();
 
     // Click on the published post to enter the space
-    const postLink = page.getByText(POST_TITLE).first();
-    await postLink.waitFor({ state: 'visible', timeout: 10000 });
+    const postLink = p.first();
+    await expect(postLink).toBeVisible();
     await postLink.click();
-    await page.waitForLoadState('networkidle');
 
     await startDeliberation(page);
   });

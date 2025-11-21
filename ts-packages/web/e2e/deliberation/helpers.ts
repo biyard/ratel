@@ -398,15 +398,13 @@ export async function publishSpacePrivately(page: Page) {
   await page.getByTestId('selectable-card-private').click();
   await page.getByTestId('publish-space-modal-btn').click();
   await page.waitForLoadState('networkidle');
+  await expect(page.getByTestId('space-action-button')).toHaveText('Start');
 }
 
 export async function goToMySpaces(page: Page) {
   await page.getByText('My Spaces', { exact: true }).click();
   await page.waitForLoadState('networkidle');
-
-  // Force a reload to ensure spaces list loads fresh data
-  await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForTimeout(3000); // Give extra time for invitation data to load
+  await expect(page.getByTestId('space-card').first()).toBeVisible();
 }
 
 export async function goToSpace(page: Page, spaceName: string) {
@@ -550,29 +548,15 @@ export async function conductSurvey(page: Page, answers: any[]) {
 
 export async function startDeliberation(page: Page) {
   // Try clicking the space action button which might open a dropdown
-  const actionButton = page.getByTestId('space-action-button');
-  if (await actionButton.isVisible()) {
-    await actionButton.click();
-    await page.waitForTimeout(300);
 
-    // Try to find start deliberation button in dropdown
-    const startBtn = page.getByTestId('start-deliberation-btn');
-    if (await startBtn.isVisible()) {
-      await startBtn.click();
-    } else {
-      // Fallback: click the Start button directly by text
-      const startByText = page.getByRole('button', { name: 'Start' });
-      if (await startByText.isVisible()) {
-        await startByText.click();
-      }
-    }
-  } else {
-    // Fallback: click the Start button directly by text
-    const startByText = page.getByRole('button', { name: 'Start' });
-    await startByText.waitFor({ state: 'visible', timeout: 5000 });
-    await startByText.click();
-  }
-  await page.waitForLoadState('networkidle');
+  const actionButton = page.getByTestId('space-action-button');
+  await expect(actionButton).toHaveText('Start');
+  await actionButton.click();
+
+  const startSpaceButton = page.getByTestId('start-space-button');
+  await expect(startSpaceButton).toBeVisible();
+  await startSpaceButton.click();
+  await expect(page.getByText('Success to start space.')).toBeVisible();
 }
 
 export async function replyToPost(page: Page, replyContent: string) {
