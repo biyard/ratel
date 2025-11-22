@@ -62,6 +62,7 @@ import { Privacy } from './app/privacy';
 import { Refund } from './app/refund';
 import SpaceMemberPage from './app/spaces/[id]/members/space-member-page';
 import MySpacesPage from './app/(social)/my-spaces/page';
+import NotificationsPage from './app/notifications/page';
 
 export const routes = createBrowserRouter([
   {
@@ -164,6 +165,11 @@ export const routes = createBrowserRouter([
             id: 'my-credential-page',
             path: 'credentials',
             Component: Credentials,
+          },
+          {
+            id: 'notifications-page',
+            path: 'notifications',
+            Component: NotificationsPage,
           },
         ],
       }, // End of Social Layout
