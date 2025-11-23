@@ -121,14 +121,10 @@ export default function SurveyViewer({
         {t('btn_next')}
       </Button>
     );
-  } else if (canSubmit && !isAdmin && status == PollStatus.InProgress) {
+  } else if (canSubmit && status == PollStatus.InProgress) {
     button = (
       <Button
         onClick={() => {
-          if (!canParticipate) {
-            return;
-          }
-
           if (!validateAllRequiredAnswers()) {
             if (onValidateError) {
               onValidateError();
@@ -141,10 +137,9 @@ export default function SurveyViewer({
           }
           onSubmit?.();
         }}
-        disabled={!canParticipate}
         data-testid="survey-btn-submit"
       >
-        {canParticipate ? t('btn_submit') : t('btn_not_enable')}
+        {t('btn_submit')}
       </Button>
     );
   } else if (canUpdate && !isAdmin) {

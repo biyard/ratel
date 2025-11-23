@@ -1,5 +1,5 @@
 import { expect, Page } from '@playwright/test';
-import { SURVEY_QUESTIONS } from './data';
+import { POST_TITLE, TEAM_ID } from './data';
 
 export const TIMEOUT = 10000;
 
@@ -77,6 +77,14 @@ export async function verifyCredential(page: Page, code: string) {
   // Wait for verification to complete
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(500);
+}
+
+export async function goToTeam(page: Page) {
+  await page.goto(`/teams/${TEAM_ID}/home`, { waitUntil: 'networkidle' });
+}
+
+export async function goToTeamSpace(page: Page) {
+  await page.goto(`/teams/${TEAM_ID}/draft`, { waitUntil: 'networkidle' });
 }
 
 export async function createTeam(
@@ -390,15 +398,16 @@ export async function publishSpacePrivately(page: Page) {
   await page.getByTestId('selectable-card-private').click();
   await page.getByTestId('publish-space-modal-btn').click();
   await page.waitForLoadState('networkidle');
+  await expect(page.getByTestId('space-action-button')).toHaveText('Start');
 }
 
 export async function goToMySpaces(page: Page) {
   await page.getByText('My Spaces', { exact: true }).click();
   await page.waitForLoadState('networkidle');
-
-  // Force a reload to ensure spaces list loads fresh data
-  await page.reload({ waitUntil: 'networkidle' });
-  await page.waitForTimeout(3000); // Give extra time for invitation data to load
+  await expect(page.getByTestId('space-card').first()).toBeVisible();
+  await expect(page.getByTestId('space-card').first()).toContainText(
+    POST_TITLE,
+  );
 }
 
 export async function goToSpace(page: Page, spaceName: string) {
@@ -408,101 +417,6 @@ export async function goToSpace(page: Page, spaceName: string) {
   await page.waitForLoadState('networkidle');
   // Wait for URL to match space pattern to ensure navigation completed
   await page.waitForURL(/\/spaces\/[^/]+/, { timeout: TIMEOUT });
-}
-
-export async function participateInSpace(page: Page, spaceName: string) {
-  await goToMySpaces(page);
-
-  // Find and click on the space
-  const spaceCard = page.getByText(spaceName).first();
-  await spaceCard.waitFor({ state: 'visible', timeout: TIMEOUT });
-  await spaceCard.click();
-  await page.waitForLoadState('networkidle');
-
-  // Check URL to determine where we are
-  let currentUrl = page.url();
-  let spaceMatch = currentUrl.match(/\/spaces\/([^/]+)/);
-
-  if (!spaceMatch) {
-    // Not on a space page, nothing to do
-    return;
-  }
-
-  const spaceId = spaceMatch[1];
-
-  // First, try to navigate to boards directly
-  // If we can access it, we're already a participant
-  await page.goto(`/spaces/${spaceId}/boards`);
-  await page.waitForLoadState('networkidle');
-
-  // Check if we actually got to boards (sidemenu-boards exists)
-  const sideMenuBoards = page.getByTestId('space-sidemenu-boards');
-  const onBoardsPage = (await sideMenuBoards.count()) > 0;
-
-  if (onBoardsPage) {
-    // We're on the boards page, we're already a participant
-    return;
-  }
-
-  // Check if we landed on a survey page (has Next button or question counter)
-  const nextButton = page.getByRole('button', { name: 'Next' });
-  const hasSurveyContent = await nextButton
-    .isVisible({ timeout: 1000 })
-    .catch(() => false);
-
-  if (hasSurveyContent) {
-    // We're on a survey page - need to complete it
-    await conductSurvey(page, [
-      0,
-      0,
-      0,
-      0,
-      'short answer',
-      'This is my opinion',
-    ]);
-    return;
-  }
-
-  // If we're not on boards or survey, we might be on overview
-  // Go to overview to click participate button
-  await page.goto(`/spaces/${spaceId}`);
-  await page.waitForLoadState('networkidle');
-
-  // Check if participate button exists
-  const participateBtn = page.getByTestId('participate-space-btn');
-  const buttonCount = await participateBtn.count();
-
-  if (buttonCount > 0) {
-    // First-time participant - click to join
-    await participateBtn.click();
-    await page.waitForLoadState('networkidle');
-
-    // Wait for auto-participation to complete and reload
-    await page.waitForTimeout(1000);
-    await page.reload();
-    await page.waitForLoadState('networkidle');
-
-    // Update URL after reload
-    currentUrl = page.url();
-
-    // Check if we need to complete a survey
-    const isOnPollPage = currentUrl.includes('/poll');
-    const surveyNextBtn = page.getByRole('button', { name: 'Next' });
-    const onSurveyPage = await surveyNextBtn
-      .isVisible({ timeout: 1000 })
-      .catch(() => false);
-
-    if (isOnPollPage || onSurveyPage) {
-      await conductSurvey(page, [
-        0,
-        0,
-        0,
-        0,
-        'short answer',
-        'This is my opinion',
-      ]);
-    }
-  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -542,29 +456,15 @@ export async function conductSurvey(page: Page, answers: any[]) {
 
 export async function startDeliberation(page: Page) {
   // Try clicking the space action button which might open a dropdown
-  const actionButton = page.getByTestId('space-action-button');
-  if (await actionButton.isVisible()) {
-    await actionButton.click();
-    await page.waitForTimeout(300);
 
-    // Try to find start deliberation button in dropdown
-    const startBtn = page.getByTestId('start-deliberation-btn');
-    if (await startBtn.isVisible()) {
-      await startBtn.click();
-    } else {
-      // Fallback: click the Start button directly by text
-      const startByText = page.getByRole('button', { name: 'Start' });
-      if (await startByText.isVisible()) {
-        await startByText.click();
-      }
-    }
-  } else {
-    // Fallback: click the Start button directly by text
-    const startByText = page.getByRole('button', { name: 'Start' });
-    await startByText.waitFor({ state: 'visible', timeout: 5000 });
-    await startByText.click();
-  }
-  await page.waitForLoadState('networkidle');
+  const actionButton = page.getByTestId('space-action-button');
+  await expect(actionButton).toHaveText('Start');
+  await actionButton.click();
+
+  const startSpaceButton = page.getByTestId('start-space-button');
+  await expect(startSpaceButton).toBeVisible();
+  await startSpaceButton.click();
+  await expect(page.getByText('Success to start space.')).toBeVisible();
 }
 
 export async function replyToPost(page: Page, replyContent: string) {
@@ -643,133 +543,22 @@ export async function writeNewPost(
   await page.waitForURL(/.*\/boards$/, { timeout: TIMEOUT });
 }
 
-export async function conductFinalSurvey(page: Page) {
-  // Check if we're already on the survey page (question counter visible)
-  const questionCounter = page.locator('text=/\\d+ \\/ \\d+/');
-  const isOnSurvey = await questionCounter.isVisible().catch(() => false);
+export async function goToFinalSurvey(page: Page) {
+  await page.getByTestId('space-sidemenu-polls').click();
 
-  if (!isOnSurvey) {
-    await page.getByTestId('space-sidemenu-polls').click();
-    await page.waitForLoadState('networkidle');
+  // Wait for FINAL SURVEY text to be visible
+  const finalSurveyCard = page.getByTestId('FINAL SURVEY');
+  await expect(finalSurveyCard).toBeVisible();
 
-    // Force a reload to ensure polls list loads fresh data
-    await page.reload({ waitUntil: 'networkidle' });
-    await page.waitForTimeout(1000);
-
-    // Wait for FINAL SURVEY text to be visible
-    const finalSurveyText = page.getByText('FINAL SURVEY', { exact: true });
-    await finalSurveyText.waitFor({ state: 'visible', timeout: 15000 });
-
-    // Click the first Enter button (FINAL SURVEY is listed first)
-    const enterButton = page.getByRole('button', { name: 'Enter' }).first();
-    await enterButton.waitFor({ state: 'visible', timeout: 15000 });
-    await enterButton.click();
-    await page.waitForLoadState('networkidle');
-  }
-
-  // Answer all questions in the survey
-  // Similar to pre-poll survey
-  let maxIterations = 15;
-  while (maxIterations > 0) {
-    maxIterations--;
-
-    // Check for error state (e.g., "Cannot participate in survey")
-    const cannotParticipate = page.getByText('Cannot participate in survey');
-    const noPermission = page.getByText('do not have permission');
-    if (
-      (await cannotParticipate.isVisible().catch(() => false)) ||
-      (await noPermission.isVisible().catch(() => false))
-    ) {
-      // User cannot participate in this survey - exit gracefully
-      return;
-    }
-
-    // Check available navigation buttons
-    const submitBtn = page.getByTestId('survey-btn-submit');
-    const nextBtn = page.getByRole('button', { name: 'Next' });
-    const isLastQuestion = await submitBtn.isVisible();
-    const hasNextButton = await nextBtn.isVisible().catch(() => false);
-
-    // Try to click an unselected option first
-    let clickedOption = false;
-
-    // Find all buttons that might be survey options
-    const allButtons = await page.locator('button').all();
-    for (const btn of allButtons) {
-      try {
-        const ariaPressed = await btn.getAttribute('aria-pressed');
-        // Also check the 'pressed' attribute as some buttons use this directly
-        const pressed = await btn.getAttribute('pressed');
-        // Check if button is pressed using either attribute
-        // Note: ariaPressed could be 'true', 'false', or null (not set)
-        const isPressed = ariaPressed === 'true' || pressed !== null;
-
-        if (!isPressed) {
-          const text = await btn.textContent();
-          const isNavButton =
-            text &&
-            /(Next|Prev|EN|Light|Home|Network|Membership|Report|Storybook|Log out|Create a team)/i.test(
-              text,
-            );
-
-          if (!isNavButton) {
-            // Survey option buttons have no text content
-            const isEmpty = !text || text.trim() === '';
-
-            if (isEmpty) {
-              await btn.click();
-              clickedOption = true;
-              await page.waitForTimeout(500);
-              break;
-            }
-          }
-        }
-      } catch {
-        // Button may have been removed, continue
-      }
-    }
-
-    // If no option was clicked, try clicking Next button
-    if (!clickedOption && hasNextButton) {
-      await nextBtn.click();
-      await page.waitForTimeout(300);
-      continue;
-    }
-
-    // If it's the last question, click submit and exit
-    if (isLastQuestion) {
-      await page.waitForTimeout(300);
-      const finalSubmit = page.getByTestId('survey-btn-submit');
-      if (await finalSubmit.isEnabled()) {
-        await finalSubmit.click();
-        await page.waitForLoadState('networkidle');
-      }
-      break;
-    }
-
-    // If no progress was made, try clicking Next anyway
-    if (!clickedOption && !isLastQuestion) {
-      const nextBtnRetry = page.getByRole('button', { name: 'Next' });
-      if (await nextBtnRetry.isVisible().catch(() => false)) {
-        await nextBtnRetry.click();
-        await page.waitForTimeout(300);
-      }
-    }
-
-    await page.waitForTimeout(200);
-  }
-
-  // Wait for and close the completion modal
-  try {
-    const confirmBtn = page.getByTestId('complete-survey-modal-btn-confirm');
-    await confirmBtn.waitFor({ state: 'visible', timeout: 5000 });
-    await confirmBtn.click();
-    await page.waitForLoadState('networkidle');
-    // Wait a bit more to ensure the survey completion is recorded
-    await page.waitForTimeout(500);
-  } catch {
-    // Modal didn't appear, survey was already completed or different flow
-  }
+  // Click the first Enter button (FINAL SURVEY is listed first)
+  const enterButton = finalSurveyCard
+    .getByRole('button', { name: 'Enter' })
+    .first();
+  await expect(enterButton).toBeVisible();
+  await enterButton.click();
+  await expect(
+    page.getByTestId('objective-viewer-option').first(),
+  ).toBeVisible();
 }
 
 export async function viewAnalysis(page: Page) {

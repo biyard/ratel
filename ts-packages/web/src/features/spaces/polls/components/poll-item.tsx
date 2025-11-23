@@ -22,6 +22,7 @@ export function PollItem({
   return (
     <Card
       key={poll.sk}
+      data-testid={name}
       className="flex flex-row justify-between items-center w-full"
     >
       <div className="flex flex-col gap-1 w-full">
