@@ -27,6 +27,22 @@ VITE_API_URL ?= http://localhost:3000
 VITE_EXPERIMENT ?= false
 VITE_TELEGRAM_BOTNAME ?= dummy
 
+ENV ?= dev
+
+STACK ?= ratel-$(ENV)-stack
+
+WEB_CDN_ID=$(shell aws cloudformation describe-stacks \
+  --region us-east-1 \
+  --stack-name $(STACK) \
+  --query "Stacks[0].Outputs[?OutputKey=='BucketName'].OutputValue" \
+  --output text)
+
+WEB_BUCKET=$(shell aws cloudformation describe-stacks \
+  --region us-east-1 \
+  --stack-name $(STACK) \
+  --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" \
+  --output text)
+
 BUILD_ENV ?= VERSION=$(VERSION) \
 							VITE_ENV=$(VITE_ENV) \
 							VITE_LOG_LEVEL=$(VITE_LOG_LEVEL) \
@@ -72,6 +88,12 @@ run: node_module
 
 build: node_module
 	$(BUILD_ENV) pnpm build
+
+dist: build
+
+sync: dist
+	aws s3 sync ./dist s3://$(WEB_BUCKET)
+	aws cloudfront create-invalidation --distribution-id $(WEB_CDN_ID) --paths "/*"
 
 test: node_modules
 	$(PLAYWRIGHT_ENV) npx playwright test $(PLAYWRIGHT_ARGS)
