@@ -49,22 +49,40 @@ export type EmailOperation =
       };
     };
 
+// Since Rust uses #[serde(untagged)], the data comes as a flat object
+// We need to detect the type based on which fields are present
 export function getNotificationType(operation: EmailOperation): string {
-  if ('SpacePostNotification' in operation) return 'SpacePostNotification';
-  if ('TeamInvite' in operation) return 'TeamInvite';
-  if ('SpaceInviteVerification' in operation) return 'SpaceInviteVerification';
-  if ('SignupSecurityCode' in operation) return 'SignupSecurityCode';
-  if ('StartSurvey' in operation) return 'StartSurvey';
+  const op = operation as Record<string, unknown>;
+
+  // Check for SpacePostNotification (has post_title)
+  if ('post_title' in op && 'post_desc' in op) {
+    return 'SpacePostNotification';
+  }
+
+  // Check for TeamInvite (has team_name)
+  if ('team_name' in op && 'team_display_name' in op) {
+    return 'TeamInvite';
+  }
+
+  // Check for StartSurvey (has survey_title)
+  if ('survey_title' in op && 'space_title' in op) {
+    return 'StartSurvey';
+  }
+
+  // Check for SpaceInviteVerification (has space_desc and cta_url)
+  if ('space_desc' in op && 'cta_url' in op) {
+    return 'SpaceInviteVerification';
+  }
+
+  // Check for SignupSecurityCode (has code_1)
+  if ('code_1' in op && 'display_name' in op) {
+    return 'SignupSecurityCode';
+  }
+
   return 'Unknown';
 }
 
 export function getNotificationData(operation: EmailOperation): unknown {
-  if ('SpacePostNotification' in operation)
-    return operation.SpacePostNotification;
-  if ('TeamInvite' in operation) return operation.TeamInvite;
-  if ('SpaceInviteVerification' in operation)
-    return operation.SpaceInviteVerification;
-  if ('SignupSecurityCode' in operation) return operation.SignupSecurityCode;
-  if ('StartSurvey' in operation) return operation.StartSurvey;
-  return null;
+  // Since the data is untagged, the operation object IS the data
+  return operation as Record<string, unknown>;
 }
