@@ -54,7 +54,8 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
           return (
             <div
               key={`${answer_type}-${optionIdx}`}
-              className="flex flex-row gap-3 justify-start items-center w-full h-fit cursor-pointer"
+              className="flex flex-row gap-3 justify-start items-center w-full cursor-pointer h-fit"
+              data-testid="objective-viewer-option"
               onClick={() => {
                 if (!disabled) {
                   onSelect(optionIdx);
@@ -69,7 +70,9 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
                   type="text"
                   placeholder={'Input the option.'}
                   value={otherValue ?? ''}
-                  onChange={(e) => onChangeOther?.(e.target.value)}
+                  onChange={(e) => {
+                    onChangeOther?.(e.target.value);
+                  }}
                   onFocus={() => {
                     if (!disabled && !checked) {
                       onSelect(optionIdx);
@@ -79,7 +82,7 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
                   disabled={disabled}
                 />
               ) : (
-                <div className="font-normal text-neutral-300 light:text-text-primary text-[15px]/[22.5px] break-all">
+                <div className="font-normal break-all text-neutral-300 light:text-text-primary text-[15px]/[22.5px]">
                   {option}
                 </div>
               )}

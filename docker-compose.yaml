@@ -31,14 +31,12 @@ services:
     ports:
       - "3000:3000"
     environment:
-      ENV: dev
+      ENV: local
       PORT: 3000
-      WEB_BUILD: "false"
+      WEB_BUILD: "ignore"
       RUST_LOG: ${RUST_LOG:-info}
-      RUSTFLAGS: ${RUSTFLAGS:--A warnings}
-      RUST_FLAG: ${RUST_FLAG:---features bypass}
-      DYNAMO_ENDPOINT: ${DYNAMO_ENDPOINT:-http://localstack:4566}
-      MIGRATE: ${MIGRATE:-true}
+      RUST_FLAG: ${RUST_FLAG:---features bypass,no-secret}
+      DYNAMO_ENDPOINT: http://localstack:4566
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
       AWS_REGION: ${AWS_REGION:-us-east-1}

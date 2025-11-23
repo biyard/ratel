@@ -73,13 +73,13 @@ export function DesktopContextMenus({
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="w-40 border-gray-700 transition ease-out duration-100"
+          className="w-40 transition ease-out duration-100"
         >
           <DropdownMenuItem>
             <button
               aria-label="Delete Post"
               onClick={handleDeletePost}
-              className="flex items-center w-full px-4 max-tablet:justify-start max-tablet:gap-1 max-tablet:hover:bg-transparent max-tablet:px-0 py-2 text-sm text-red-400 hover:bg-gray-700 cursor-pointer"
+              className="flex items-center w-full px-4 max-tablet:justify-start max-tablet:gap-1 max-tablet:hover:bg-transparent max-tablet:px-0 py-2 text-sm text-red-400 cursor-pointer"
             >
               <Trash2 className="w-4 h-4" />
               {t('delete')}
@@ -113,14 +113,14 @@ export function MobileContextMenus({
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
-          className="w-40 border-gray-700 transition ease-out duration-100"
+          className="w-40 transition ease-out duration-100"
         >
           {canEdit && (
             <>
               <DropdownMenuItem>
                 <button
                   onClick={handleEditPost}
-                  className="flex items-center max-tablet:justify-start gap-1 max-tablet:hover:bg-transparent w-full py-2 text-sm text-text-primary hover:bg-gray-700 cursor-pointer"
+                  className="flex items-center max-tablet:justify-start gap-1 max-tablet:hover:bg-transparent w-full py-2 text-sm text-text-primary cursor-pointer"
                 >
                   <Edit className="w-4 h-4 [&>path]:stroke-text-primary" />
                   {t('edit')}
@@ -134,7 +134,7 @@ export function MobileContextMenus({
               <DropdownMenuItem>
                 <button
                   onClick={handleDeletePost}
-                  className="flex items-center w-full px-4 max-tablet:justify-start max-tablet:gap-1 max-tablet:hover:bg-transparent max-tablet:px-0 py-2 text-sm text-red-400 hover:bg-gray-700 cursor-pointer"
+                  className="flex items-center w-full px-4 max-tablet:justify-start max-tablet:gap-1 max-tablet:hover:bg-transparent max-tablet:px-0 py-2 text-sm text-red-400 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4" />
                   {t('delete')}

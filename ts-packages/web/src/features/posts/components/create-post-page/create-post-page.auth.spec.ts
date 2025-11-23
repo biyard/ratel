@@ -29,9 +29,9 @@ test.describe('Create Post Page - Authenticated User', () => {
       await expect(toolbar).toBeVisible();
     }
 
-    // Verify publish/next button
+    // Verify save/next button
     const actionButton = page.getByRole('button', {
-      name: /publish|next/i,
+      name: /save|next/i,
     });
     await expect(actionButton).toBeVisible();
   });
@@ -58,18 +58,18 @@ test.describe('Create Post Page - Authenticated User', () => {
     // Wait for auto-save to complete (5 second delay + processing time)
     await page.waitForTimeout(6000);
 
-    // Check skip creating space to go straight to publish
+    // Check skip creating space to go straight to save
     const skipCheckbox = page.getByText('Skip creating a space');
     if (await skipCheckbox.isVisible()) {
       await skipCheckbox.click();
       await page.waitForTimeout(500); // Wait for button text to update
     }
 
-    // Click publish button (either "Publish" or "Next")
-    const publishButton = page.getByRole('button', { name: /Publish|Next/i });
-    await publishButton.waitFor({ state: 'visible', timeout: 5000 });
-    await expect(publishButton).toBeEnabled();
-    await publishButton.click();
+    // Click save button (either "Save" or "Next")
+    const actionButton = page.getByRole('button', { name: /Save|Next/i });
+    await actionButton.waitFor({ state: 'visible', timeout: 5000 });
+    await expect(actionButton).toBeEnabled();
+    await actionButton.click();
 
     // Should redirect to thread page
     await page.waitForURL(/\/spaces\/.+/, { timeout: CONFIGS.PAGE_WAIT_TIME });
@@ -215,12 +215,12 @@ test.describe('Create Post Page - Authenticated User', () => {
     // Find and click skip checkbox
     const skipCheckbox = page.getByText('Skip creating a space');
     if (await skipCheckbox.isVisible()) {
-      // Button text should change to "Publish"
-      const publishButton = page.getByRole('button', {
-        name: 'Publish',
+      // Button text should change to "Save"
+      const saveButton = page.getByRole('button', {
+        name: 'Save',
         exact: true,
       });
-      await expect(publishButton).toBeVisible();
+      await expect(saveButton).toBeVisible();
     }
   });
 
@@ -258,7 +258,7 @@ test.describe('Create Post Page - Authenticated User', () => {
       await expect(spaceTypeSelector).toBeVisible();
     }
 
-    // Button should show "Next" instead of "Publish"
+    // Button should show "Next" instead of "Save"
     const nextButton = page.getByRole('button', { name: 'Next' });
     const isNextVisible = await nextButton.isVisible().catch(() => false);
 
@@ -270,13 +270,13 @@ test.describe('Create Post Page - Authenticated User', () => {
   test('[CP-AUTH-010] should disable publish when fields are empty', async ({
     page,
   }) => {
-    // Publish button should be disabled when form is empty
-    const publishButton = page.getByRole('button', { name: /publish|next/i });
-    await expect(publishButton).toBeDisabled();
+    // Save/Next button should be disabled when form is empty
+    const actionButton = page.getByRole('button', { name: /save|next/i });
+    await expect(actionButton).toBeDisabled();
 
     // Fill only title
     await fill(page, { placeholder: 'Title' }, 'Test Title');
-    await expect(publishButton).toBeDisabled();
+    await expect(actionButton).toBeDisabled();
 
     // Fill content
     const editor = page.locator(
@@ -290,7 +290,7 @@ test.describe('Create Post Page - Authenticated User', () => {
     await page.waitForTimeout(6000);
 
     // Button should be enabled
-    const isEnabled = await publishButton.isEnabled().catch(() => false);
+    const isEnabled = await actionButton.isEnabled().catch(() => false);
     expect(isEnabled).toBeTruthy();
   });
 
@@ -310,8 +310,8 @@ test.describe('Create Post Page - Authenticated User', () => {
     await editor1.click();
     await editor1.fill(createContent);
 
-    const publishButton = page.getByRole('button', { name: 'Publish' });
-    await publishButton.click();
+    const saveButton = page.getByRole('button', { name: 'Save' });
+    await saveButton.click();
     await page.waitForURL(/\/threads\/.+/, {
       timeout: CONFIGS.PAGE_WAIT_TIME,
     });
@@ -365,8 +365,8 @@ test.describe('Create Post Page - Authenticated User', () => {
     await editor1.click();
     await editor1.fill(createContent);
 
-    const publishButton = page.getByRole('button', { name: 'Publish' });
-    await publishButton.click();
+    const saveButton = page.getByRole('button', { name: 'Save' });
+    await saveButton.click();
     await page.waitForURL(/\/threads\/.+/, {
       timeout: CONFIGS.PAGE_WAIT_TIME,
     });
@@ -395,9 +395,9 @@ test.describe('Create Post Page - Authenticated User', () => {
       await editor.clear();
       await editor.fill(updatedContent);
 
-      // Publish the updated post
-      const publishButton2 = page.getByRole('button', { name: 'Publish' });
-      await publishButton2.click();
+      // Save the updated post
+      const saveButton2 = page.getByRole('button', { name: 'Save' });
+      await saveButton2.click();
       await page.waitForURL(/\/threads\/.+/, {
         timeout: CONFIGS.PAGE_WAIT_TIME,
       });
@@ -421,7 +421,7 @@ test.describe('Create Post Page - Authenticated User', () => {
     await expect(page.locator('[data-pw="post-content-editor"]')).toBeVisible();
 
     // Action button should be visible
-    const actionButton = page.getByRole('button', { name: /publish|next/i });
+    const actionButton = page.getByRole('button', { name: /save|next/i });
     await expect(actionButton).toBeVisible();
 
     // Reset viewport

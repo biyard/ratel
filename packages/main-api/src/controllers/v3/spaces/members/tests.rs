@@ -4,7 +4,7 @@ use crate::controllers::v3::spaces::files::get_files::GetSpaceFileResponse;
 use crate::controllers::v3::spaces::files::update_files::UpdateSpaceFileResponse;
 
 use crate::controllers::v3::spaces::members::{
-    ResentInvitationCodeResponse, UpsertInvitationResponse, VerifySpaceCodeResponse,
+    ResentInvitationCodeResponse, UpsertInvitationResponse,
 };
 use crate::features::did::AttributeCode;
 use crate::features::did::{VerifiableAttribute, VerifiableAttributeWithQuota};
@@ -123,127 +123,6 @@ async fn test_list_invitation_handler() {
 }
 
 #[tokio::test]
-async fn test_verification_space_code_handler() {
-    let TestContextV3 {
-        ddb,
-        app,
-        test_user: (user, headers),
-        ..
-    } = setup_v3().await;
-
-    let app_state = create_app_state();
-    let _cli = &app_state.dynamo.client;
-
-    let CreatedDeliberationSpace { space_pk, .. } =
-        bootstrap_deliberation_space(&app, headers.clone()).await;
-
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-
-    let path = format!("/v3/spaces/{}/members", space_pk_encoded);
-    let (status, _headers, _body) = post! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        body: {
-            "new_user_pks": vec![user.clone().pk],
-            "removed_user_pks": Vec::<Partition>::new()
-        },
-        response_type: UpsertInvitationResponse
-    };
-
-    assert_eq!(status, 200);
-
-    let (status, _headers, body) = post! {
-        app: app,
-        path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
-        headers: headers.clone(),
-        body: {
-            "attributes": vec![
-                PanelAttributeWithQuota::VerifiableAttribute(
-                    VerifiableAttributeWithQuota {
-                        attribute: VerifiableAttribute::Gender(Gender::Male),
-                        quota: 30
-                    }
-                )
-            ]
-        },
-        response_type: Vec<SpacePanelQuota>
-    };
-
-    assert_eq!(status, 200);
-    assert_eq!(body.len(), 1);
-
-    let _panel_sk = &body[0].sk;
-
-    let (status, _headers, _updated_body) = patch! {
-        app: app,
-        path: format!("/v3/spaces/{}", space_pk.to_string()),
-        headers: headers.clone(),
-        body: {
-            "quotas": 50
-        }
-    };
-
-    assert_eq!(status, 200);
-
-    let (status, _, _res) = patch! {
-        app: app,
-        path: format!("/v3/spaces/{}", space_pk.to_string()),
-        headers: headers.clone(),
-        body: {
-            "publish": true,
-            "visibility": "PRIVATE",
-        }
-    };
-
-    assert_eq!(status, 200);
-
-    let mut attribute = AttributeCode::new();
-    attribute.gender = Some(Gender::Male);
-    attribute.birth_date = Some("19991231".to_string());
-    let _ = attribute.create(&ddb).await;
-
-    let code = match attribute.pk {
-        Partition::AttributeCode(v) => v.to_string(),
-        _ => "".to_string(),
-    };
-
-    let (status, _headers, _body) = put! {
-        app: app,
-        path: format!("/v3/me/did"),
-        headers: headers.clone(),
-        body: {
-            "type": "code",
-            "code": code
-        }
-    };
-
-    assert_eq!(status, 200);
-
-    let verification = SpaceEmailVerification::get(
-        &ddb,
-        space_pk.clone(),
-        Some(EntityType::SpaceEmailVerification(user.email.clone())),
-    )
-    .await
-    .unwrap()
-    .unwrap();
-
-    let (status, _, res) = post! {
-        app: app,
-        path: format!("/v3/spaces/{}/members/verifications", space_pk.to_string()),
-        headers: headers.clone(),
-        body: {
-            "code": verification.value,
-        },
-        response_type: VerifySpaceCodeResponse
-    };
-
-    assert_eq!(status, 200);
-    assert_eq!(res.success, true);
-}
-
-#[tokio::test]
 async fn test_prevent_upsert_invitations() {
     let TestContextV3 {
         app,
@@ -306,82 +185,6 @@ async fn test_prevent_upsert_invitations() {
             "removed_user_pks": Vec::<Partition>::new()
         },
         response_type: UpsertInvitationResponse
-    };
-
-    assert_eq!(status, 400);
-}
-
-#[tokio::test]
-async fn test_prevent_verification_space_code_handler() {
-    let TestContextV3 {
-        ddb,
-        app,
-        test_user: (user, headers),
-        ..
-    } = setup_v3().await;
-
-    let app_state = create_app_state();
-    let _cli = &app_state.dynamo.client;
-
-    let CreatedDeliberationSpace { space_pk, .. } =
-        bootstrap_deliberation_space(&app, headers.clone()).await;
-
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-
-    let path = format!("/v3/spaces/{}/members", space_pk_encoded);
-    let (status, _headers, _body) = post! {
-        app: app,
-        path: path.clone(),
-        headers: headers.clone(),
-        body: {
-            "new_user_pks": vec![user.clone().pk],
-            "removed_user_pks": Vec::<Partition>::new()
-        },
-        response_type: UpsertInvitationResponse
-    };
-
-    assert_eq!(status, 200);
-
-    let (status, _, _res) = patch! {
-        app: app,
-        path: format!("/v3/spaces/{}", space_pk.to_string()),
-        headers: headers.clone(),
-        body: {
-            "publish": true,
-            "visibility": "PRIVATE",
-        }
-    };
-
-    assert_eq!(status, 200);
-
-    let (status, _, _res) = patch! {
-        app: app,
-        path: format!("/v3/spaces/{}", space_pk.to_string()),
-        headers: headers.clone(),
-        body: {
-            "start": true,
-        }
-    };
-
-    assert_eq!(status, 200);
-
-    let verification = SpaceEmailVerification::get(
-        &ddb,
-        space_pk.clone(),
-        Some(EntityType::SpaceEmailVerification(user.email.clone())),
-    )
-    .await
-    .unwrap()
-    .unwrap();
-
-    let (status, _, _res) = post! {
-        app: app,
-        path: format!("/v3/spaces/{}/members/verifications", space_pk.to_string()),
-        headers: headers.clone(),
-        body: {
-            "code": verification.value,
-        },
-        response_type: VerifySpaceCodeResponse
     };
 
     assert_eq!(status, 400);

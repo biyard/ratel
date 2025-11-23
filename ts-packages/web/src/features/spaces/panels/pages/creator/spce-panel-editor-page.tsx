@@ -43,13 +43,18 @@ export function SpacePanelEditorPage({ spacePk }: SpacePathProps) {
             </div>
           </Row>
 
-          <PanelTable
-            t={t}
-            canEdit={true}
-            panels={ctrl.panels}
-            onChangeQuota={ctrl.handleUpdateAttributeQuota}
-            onDelete={ctrl.handleDeleteAttributeQuota}
-          />
+          <div className="bg-[var(--color-panel-container-bg)] rounded-xl p-6">
+            <h2 className="text-lg font-semibold mb-4 text-[var(--color-panel-title)]">
+              {t('panels')}
+            </h2>
+            <PanelTable
+              t={t}
+              canEdit={true}
+              panels={ctrl.panels}
+              onChangeQuota={ctrl.handleUpdateAttributeQuota}
+              onDelete={ctrl.handleDeleteAttributeQuota}
+            />
+          </div>
         </Col>
       </Col>
     </>
