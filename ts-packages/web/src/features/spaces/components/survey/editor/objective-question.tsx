@@ -155,7 +155,8 @@ export default function ObjectiveQuestionEditor({
           )}
         </div>
       ))}
-      {question.answer_type === SurveyAnswerType.SingleChoice && (
+      {(question.answer_type === SurveyAnswerType.SingleChoice ||
+        question.answer_type === SurveyAnswerType.MultipleChoice) && (
         <Checkbox
           id={`allow-other-${checkboxId}`}
           value={allowOtherChecked}

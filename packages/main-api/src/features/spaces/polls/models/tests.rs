@@ -82,6 +82,7 @@ async fn test_poll_space_creation() {
             },
             Answer::MultipleChoice {
                 answer: Some(vec![1]),
+                other: None,
             },
         ],
         None,

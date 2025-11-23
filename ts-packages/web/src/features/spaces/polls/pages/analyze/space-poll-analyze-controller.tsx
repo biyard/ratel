@@ -168,7 +168,32 @@ export class SpacePollAnalyzeController {
         }
 
         if (arr.length === 0) return '';
-        return arr.map(labelOf).join(', ');
+
+        arr = arr
+          .map((v) => (typeof v === 'number' ? v : Number(v)))
+          .filter((n) => Number.isFinite(n))
+          .sort((a, b) => a - b);
+
+        const otherIdx =
+          opts && opts.includes(OTHER_LABEL) ? opts.indexOf(OTHER_LABEL) : -1;
+
+        return arr
+          .map((v) => {
+            const idx = typeof v === 'number' ? v : Number(v);
+
+            if (
+              otherText.length > 0 &&
+              otherIdx >= 0 &&
+              Number.isFinite(idx) &&
+              idx === otherIdx &&
+              opts?.[idx] === OTHER_LABEL
+            ) {
+              return otherText;
+            }
+
+            return labelOf(v);
+          })
+          .join(', ');
       }
 
       if (kind === 'linear_scale') {
