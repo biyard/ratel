@@ -201,6 +201,7 @@ async fn test_get_poll_with_my_response() {
         },
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
+            other: None,
         },
     ];
 
@@ -509,6 +510,7 @@ async fn test_get_poll_results_with_panel_responses() {
         },
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
+            other: None,
         },
     ];
 
@@ -559,6 +561,7 @@ async fn test_get_poll_results_with_panel_responses() {
         },
         Answer::MultipleChoice {
             answer: Some(vec![1, 3]),
+            other: None,
         },
     ];
 
@@ -615,6 +618,7 @@ async fn test_get_poll_results_with_responses() {
         },
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
+            other: None,
         },
     ];
 
@@ -636,6 +640,7 @@ async fn test_get_poll_results_with_responses() {
         },
         Answer::MultipleChoice {
             answer: Some(vec![1, 3]),
+            other: None,
         },
     ];
 
@@ -709,6 +714,7 @@ async fn test_respond_poll_successfully() {
         },
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
+            other: None,
         },
     ];
 
@@ -754,6 +760,7 @@ async fn test_respond_poll_without_permission() {
         },
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
+            other: None,
         },
     ];
 
@@ -937,6 +944,7 @@ async fn test_respond_poll_with_invalid_answer_option() {
         }, // Invalid: only 4 options (0-3)
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
+            other: None,
         },
     ];
 
@@ -1011,6 +1019,7 @@ async fn test_respond_poll_increments_response_count() {
         },
         Answer::MultipleChoice {
             answer: Some(vec![0, 2]),
+            other: None,
         },
     ];
 

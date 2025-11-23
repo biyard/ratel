@@ -67,13 +67,13 @@ export default function PostComments({
   return (
     <>
       <div className="flex flex-col gap-2.5">
-        <div className="flex flex-row text-text-primary gap-2 ">
+        <div className="flex flex-row gap-2 text-text-primary">
           <CommentIcon
             width={24}
             height={24}
             className="[&>path]:stroke-text-primary [&>line]:stroke-text-primary"
           />
-          <span className="text-base/6 font-medium">
+          <span className="font-medium text-base/6">
             {(post?.number_of_comments ?? 0).toLocaleString()}{' '}
             {(post?.number_of_comments ?? 0) > 1 ? t('replies') : t('reply')}
           </span>
@@ -83,14 +83,15 @@ export default function PostComments({
             {!expandComment.get() && (
               <button
                 onClick={() => expandComment.set(true)}
-                className="flex flex-row w-full px-3.5 py-3 gap-2 bg-write-comment-box-bg border border-write-comment-box-border items-center rounded-lg hover:bg-write-comment-box-bg/80 hover:border-primary/50 transition-all duration-200 cursor-pointer group"
+                data-testid="open-new-comment-box-button"
+                className="flex flex-row gap-2 items-center py-3 px-3.5 w-full rounded-lg border transition-all duration-200 cursor-pointer bg-write-comment-box-bg border-write-comment-box-border group hover:bg-write-comment-box-bg/80 hover:border-primary/50"
               >
                 <CommentIcon
                   width={24}
                   height={24}
                   className="[&>path]:stroke-write-comment-box-icon group-hover:[&>path]:stroke-primary transition-colors"
                 />
-                <span className="text-write-comment-box-text text-[15px]/[24px] font-medium group-hover:text-primary transition-colors">
+                <span className="font-medium transition-colors text-write-comment-box-text text-[15px]/[24px] group-hover:text-primary">
                   {t('share_your_thoughts')}
                 </span>
               </button>
@@ -121,12 +122,12 @@ export default function PostComments({
         />
       ))}
 
-      <div className="flex justify-center gap-3 mt-4">
+      <div className="flex gap-3 justify-center mt-4">
         {hasPrevPage && (
           <button
             type="button"
             onClick={onPrevPage}
-            className="px-3 py-1.5 text-sm rounded-md border border-border-subtle hover:bg-bg-elevated"
+            className="py-1.5 px-3 text-sm rounded-md border border-border-subtle hover:bg-bg-elevated"
           >
             {t('prev_comment')}
           </button>
@@ -135,7 +136,7 @@ export default function PostComments({
           <button
             type="button"
             onClick={onNextPage}
-            className="px-3 py-1.5 text-sm rounded-md border border-border-subtle hover:bg-bg-elevated"
+            className="py-1.5 px-3 text-sm rounded-md border border-border-subtle hover:bg-bg-elevated"
           >
             {t('next_comment')}
           </button>

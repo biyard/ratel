@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { TimeRangeDisplay } from '@/features/spaces/boards/components/time-range-display';
 import { SpaceStatus } from '@/features/spaces/types/space-common';
+import { useMemo } from 'react';
 
 export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(`SpacePollViewerPage: spacePk=${spacePk}, pollPk=${pollPk}`);
@@ -40,10 +41,13 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
   //   );
   // }
 
-  const canSubmit =
-    ctrl.user &&
-    ctrl.poll.myResponse.length === 0 &&
-    (!ctrl.space.anonymous_participation || ctrl.space.participated);
+  const canSubmit = useMemo(() => {
+    return (
+      ctrl.user &&
+      ctrl.poll.myResponse.length === 0 &&
+      (!ctrl.space.anonymous_participation || ctrl.space.participated)
+    );
+  }, [ctrl]);
 
   const canUpdate =
     ctrl.user && ctrl.poll.myResponse.length > 0 && ctrl.poll.response_editable;

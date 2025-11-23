@@ -13,11 +13,11 @@ export default function CompleteSurveyPopup({
   return (
     <div className="flex flex-col w-[450px] max-w-[450px] max-tablet:w-full! max-tablet:max-w-full! gap-5">
       <div className="flex flex-col py-2.5 gap-[5px]">
-        <label className="text-[15px]/[28px] font-semibold text-modal-label-text whitespace-pre-line">
+        <label className="font-semibold whitespace-pre-line text-[15px]/[28px] text-modal-label-text">
           {ctrl.t('modal_desc')}
         </label>
 
-        <div className="flex flex-row w-full justify-end gap-3 mt-10">
+        <div className="flex flex-row gap-3 justify-end mt-10 w-full">
           <Button
             variant="primary"
             onClick={onConfirm}
