@@ -119,11 +119,9 @@ export class GlobalAccelStack extends Stack {
       ),
     });
 
-    // new s3deploy.BucketDeployment(this, `RatelWebBucketDeployment-${stage}`, {
-    //   destinationBucket: staticBucket,
-    //   distribution: distribution,
-    //   distributionPaths: ["/*"],
-    //   sources: [s3deploy.Source.asset("dist")],
-    // });
+    new cdk.CfnOutput(this, "BucketName", { value: staticBucket.bucketName });
+    new cdk.CfnOutput(this, "DistributionId", {
+      value: distribution.distributionId,
+    });
   }
 }

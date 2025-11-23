@@ -93,8 +93,8 @@ export default defineConfig({
     },
 
     {
-      name: 'light',
-      testMatch: ['e2e/**/*.spec.ts', 'e2e/**/*.spec.tsx'],
+      name: 'e2e-web',
+      testMatch: ['e2e/**/*.web.spec.ts', 'e2e/**/*.web.spec.tsx'],
       use: {
         trace: 'on',
         video: 'on',
@@ -102,22 +102,6 @@ export default defineConfig({
 
         ...devices['Desktop Chrome'],
         colorScheme: 'light',
-        viewport: {
-          width: 1440,
-          height: 950,
-        },
-      },
-    },
-    {
-      name: 'dark',
-      testMatch: ['e2e/**/*.spec.ts', 'e2e/**/*.spec.tsx'],
-      use: {
-        trace: 'on',
-        video: 'on',
-        screenshot: 'on',
-
-        ...devices['Desktop Chrome'],
-        colorScheme: 'dark',
         viewport: {
           width: 1440,
           height: 950,
