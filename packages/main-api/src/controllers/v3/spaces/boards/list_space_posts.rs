@@ -36,17 +36,11 @@ pub async fn list_space_posts_handler(
     Query(ListSpacePostQueryParams { bookmark, category }): Query<ListSpacePostQueryParams>,
 ) -> Result<Json<ListSpacePostsResponse>, Error> {
     let now = chrono::Utc::now().timestamp() * 1000;
+
     let is_owner = permissions.contains(TeamGroupPermission::SpaceEdit);
 
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
-    }
-
-    if !is_owner && space.status != Some(crate::types::SpaceStatus::InProgress) {
-        return Ok(Json(ListSpacePostsResponse {
-            posts: vec![],
-            bookmark: None,
-        }));
     }
 
     if user.is_none() {
@@ -56,51 +50,19 @@ pub async fn list_space_posts_handler(
         }));
     }
 
-    let mut query_options = SpacePostQueryOption::builder()
+    let mut opt = SpacePost::opt_with_bookmark(bookmark)
         .limit(10)
         .scan_index_forward(false);
 
-    if let Some(bookmark) = bookmark.clone() {
-        query_options = query_options.bookmark(bookmark);
-    }
-
-    // FIXME: fix to enhance this logic
-    let (responses, bookmark) = if category.is_none() {
-        SpacePost::find_by_space_ordered(&dynamo.client, space_pk.clone(), query_options).await?
+    let (responses, bookmark) = if let Some(category) = category {
+        SpacePost::find_by_category(&dynamo.client, format!("{}#{}", space_pk, category), opt)
+            .await?
     } else {
-        let mut cat_opt = SpacePostQueryOption::builder()
-            .limit(10)
-            .scan_index_forward(false);
-
-        if let Some(bm) = bookmark.clone() {
-            cat_opt = cat_opt.bookmark(bm);
-        }
-
-        let (posts, bookmark) = SpacePost::find_by_cagetory(
-            &dynamo.client,
-            category.clone().unwrap_or_default(),
-            cat_opt,
-        )
-        .await?;
-
-        let mut posts = posts
-            .iter()
-            .filter(|v| v.pk == space_pk.clone())
-            .map(|v| v.clone())
-            .collect();
-
-        (posts, bookmark)
+        SpacePost::find_by_space_ordered(&dynamo.client, space_pk.clone(), opt).await?
     };
 
-    let mut posts = vec![];
-
-    for response in responses {
-        let post: SpacePostResponse = response.clone().into();
-
-        if is_owner || (post.started_at <= now && now <= post.ended_at) {
-            posts.push(post);
-        }
-    }
-
-    Ok(Json(ListSpacePostsResponse { posts, bookmark }))
+    Ok(Json(ListSpacePostsResponse {
+        posts: responses.into_iter().map(|p| p.into()).collect(),
+        bookmark,
+    }))
 }

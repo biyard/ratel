@@ -472,7 +472,7 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
-          cache: true
+          cache: false
       - name: Flutter pub get
         run: flutter pub get
       - name: Prepare Android signing (real or placeholder)
@@ -553,7 +553,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          cache: true
+          cache: false
 
       - name: Setup Ruby (bundler)
         uses: ruby/setup-ruby@v1

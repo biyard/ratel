@@ -139,8 +139,8 @@ async fn test_list_categories() {
     tracing::debug!("list categories body: {:?}", body);
 
     assert_eq!(status, 200);
-    assert_eq!(body.len(), 1);
-    assert_eq!(body[0], "space_category".to_string());
+    assert_eq!(body.len(), 1, "{:?}", body);
+    assert_eq!(body[0], "space_category".to_string(), "{:?}", body[0]);
 }
 
 #[tokio::test]
@@ -155,10 +155,8 @@ async fn test_list_space_posts_by_category() {
         response_type: ListSpacePostsResponse
     };
 
-    tracing::debug!("list space posts body: {:?}", body);
-
     assert_eq!(status, 200);
-    assert_eq!(body.posts.len(), 1);
+    assert_eq!(body.posts.len(), 1, "{:?}", body);
 }
 
 #[tokio::test]

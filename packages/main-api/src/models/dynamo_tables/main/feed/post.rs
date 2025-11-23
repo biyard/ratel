@@ -85,7 +85,7 @@ impl Post {
         post_type: PostType,
         author: A,
     ) -> Self {
-        let uid = uuid::Uuid::new_v4().to_string();
+        let uid = crate::sorted_uuid();
         let now = chrono::Utc::now().timestamp_millis();
         let Author {
             pk,
