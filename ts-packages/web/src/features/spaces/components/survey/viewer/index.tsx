@@ -121,14 +121,10 @@ export default function SurveyViewer({
         {t('btn_next')}
       </Button>
     );
-  } else if (canSubmit && !isAdmin && status == PollStatus.InProgress) {
+  } else if (canSubmit && status == PollStatus.InProgress) {
     button = (
       <Button
         onClick={() => {
-          if (!canParticipate) {
-            return;
-          }
-
           if (!validateAllRequiredAnswers()) {
             if (onValidateError) {
               onValidateError();
@@ -141,10 +137,9 @@ export default function SurveyViewer({
           }
           onSubmit?.();
         }}
-        disabled={!canParticipate}
         data-testid="survey-btn-submit"
       >
-        {canParticipate ? t('btn_submit') : t('btn_not_enable')}
+        {t('btn_submit')}
       </Button>
     );
   } else if (canUpdate && !isAdmin) {
@@ -203,7 +198,8 @@ export default function SurveyViewer({
                       : undefined;
 
                   const isOtherSelected =
-                    type === SurveyAnswerType.SingleChoice &&
+                    (type === SurveyAnswerType.SingleChoice ||
+                      type === SurveyAnswerType.MultipleChoice) &&
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     (current.question as any).allow_other &&
                     selectedIndex !== undefined &&
@@ -321,6 +317,12 @@ function QuestionViewer({
     case SurveyAnswerType.MultipleChoice: {
       const { question, answer } = questionAnswer;
       const prev = answer?.answer ?? [];
+      const otherIndex =
+        'allow_other' in question &&
+        question.allow_other &&
+        question.options?.includes(OTHER_LABEL)
+          ? question.options.indexOf(OTHER_LABEL)
+          : -1;
       return (
         <ObjectiveViewer
           t={t}
@@ -328,12 +330,52 @@ function QuestionViewer({
           answer_type={question.answer_type}
           disabled={disabled}
           selectedIndexes={prev}
+          allow_other={'allow_other' in question ? true : false}
+          otherValue={
+            answer?.answer_type === SurveyAnswerType.MultipleChoice
+              ? answer.other
+              : undefined
+          }
           onSelect={(i) => {
             if (disabled) return;
+
             const next = prev.includes(i)
               ? prev.filter((n: number) => n !== i)
               : [...prev, i];
-            updateAnswer({ answer_type: question.answer_type, answer: next });
+
+            const keepOther = otherIndex >= 0 && next.includes(otherIndex);
+
+            if (question.answer_type === SurveyAnswerType.MultipleChoice) {
+              const otherVal =
+                answer?.answer_type === SurveyAnswerType.MultipleChoice
+                  ? answer.other
+                  : undefined;
+
+              updateAnswer({
+                answer_type: SurveyAnswerType.MultipleChoice,
+                answer: next,
+                other: keepOther ? otherVal : undefined,
+              });
+            } else {
+              updateAnswer({
+                answer_type: question.answer_type,
+                answer: next,
+              });
+            }
+          }}
+          onChangeOther={(value) => {
+            if (disabled) return;
+            if (otherIndex < 0) return;
+
+            const next = prev.includes(otherIndex)
+              ? prev
+              : [...prev, otherIndex];
+
+            updateAnswer({
+              answer_type: question.answer_type,
+              answer: next,
+              other: value,
+            });
           }}
         />
       );

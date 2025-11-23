@@ -36,6 +36,9 @@ export interface TiptapEditorProps {
   editable?: boolean;
   placeholder?: string;
 
+  // Styling variant
+  variant?: 'default' | 'post';
+
   // Toolbar customization
   showToolbar?: boolean;
   toolbarPosition?: 'top' | 'bottom';
@@ -71,6 +74,7 @@ export interface TiptapToolbarProps {
   editor: Editor | null;
   enabledFeatures?: EnabledFeatures;
   className?: string;
+  variant?: 'default' | 'post';
   openVideoPicker?: () => void;
   onImageUpload?: (imageUrl: string) => Promise<void>;
   onUploadPDF?: (files: FileList | File[]) => void;

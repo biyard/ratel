@@ -18,13 +18,19 @@ export default function SubmitSurveyPopup({
   return (
     <div className="flex flex-col w-[450px] max-w-[450px] max-tablet:!w-full max-tablet:!max-w-full gap-5">
       <div className="flex flex-col py-2.5 gap-[5px]">
-        <label className="text-[15px]/[28px] font-semibold text-modal-label-text whitespace-pre-line">
+        <label className="font-semibold whitespace-pre-line text-[15px]/[28px] text-modal-label-text">
           {ctrl.t('modal_desc')}
         </label>
 
-        <div className="flex flex-row w-full justify-end gap-3 mt-10">
-          <Button onClick={ctrl.handleClose}>{ctrl.t('cancel')}</Button>
-          <Button variant="primary" onClick={ctrl.handleSubmit}>
+        <div className="flex flex-row gap-3 justify-end mt-10 w-full">
+          <Button data-testid="btn-cancel" onClick={ctrl.handleClose}>
+            {ctrl.t('cancel')}
+          </Button>
+          <Button
+            data-testid="btn-confirm"
+            variant="primary"
+            onClick={ctrl.handleSubmit}
+          >
             {ctrl.t('save')}
           </Button>
         </div>
