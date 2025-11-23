@@ -94,29 +94,26 @@ export default function BoardsList({
         {posts.map((p) => (
           <div
             key={p.pk}
-            className="cursor-pointer w-full bg-card-bg-secondary border-card-enable-border rounded-[10px] py-[20px]"
+            className="w-full cursor-pointer bg-card-bg-secondary border-card-enable-border rounded-[10px] py-[20px]"
+            data-testid="board-post-item"
             onClick={() => {
               handleDetailPage(p.pk);
             }}
           >
-            <div className="flex flex-col w-full gap-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center flex-wrap">
-                  <h3 className="text-base font-semibold text-text-primary px-5">
+            <div className="flex flex-col gap-3 w-full">
+              <div className="flex gap-3 justify-between items-start">
+                <div className="flex flex-wrap items-center">
+                  <h3 className="px-5 text-base font-semibold text-text-primary">
                     {p.title}
                   </h3>
 
-                  <span
-                    className="
-                  inline-flex items-center rounded-md border border-neutral-700 bg-neutral-800 light:bg-neutral-500 light:border-0 px-2 py-0.5 text-xs text-neutral-200
-                "
-                  >
+                  <span className="inline-flex items-center py-0.5 px-2 text-xs rounded-md border border-neutral-700 bg-neutral-800 light:bg-neutral-500 light:border-0 text-neutral-200">
                     <span className="i-lucide-message-circle text-[13px]" />
                     {p.number_of_comments} {t('response')}
                   </span>
 
                   {p.category_name && (
-                    <span className="ml-2 inline-flex items-center rounded-md border border-neutral-700 bg-neutral-800 light:bg-neutral-500 light:border-0 px-2 py-0.5 text-xs text-neutral-200">
+                    <span className="inline-flex items-center py-0.5 px-2 ml-2 text-xs rounded-md border border-neutral-700 bg-neutral-800 light:bg-neutral-500 light:border-0 text-neutral-200">
                       {p.category_name}
                     </span>
                   )}
@@ -136,14 +133,14 @@ export default function BoardsList({
                 </div>
               )}
 
-              <div className="flex items-center gap-3 text-xs text-neutral-400 px-5">
+              <div className="flex gap-3 items-center px-5 text-xs text-neutral-400">
                 <UserBadge
                   profile_url={p.author_profile_url}
                   name={p.author_username}
                   author_type={UserType.Individual}
                 />
                 {p.created_at && (
-                  <span className="inline-flex items-center gap-1 mt-1">
+                  <span className="inline-flex gap-1 items-center mt-1">
                     <span className="i-lucide-calendar text-[14px]" />
                     {getTimeAgo(
                       (typeof p.created_at === 'number'
@@ -158,7 +155,7 @@ export default function BoardsList({
         ))}
 
         {!posts.length && (
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-900 p-10 text-center text-neutral-400">
+          <div className="p-10 text-center rounded-2xl border border-neutral-800 bg-neutral-900 text-neutral-400">
             {t('no_post')}
           </div>
         )}
@@ -170,7 +167,7 @@ export default function BoardsList({
                 variant="text"
                 disabled={loadingMore}
                 onClick={handleLoadMore}
-                className="px-6 py-2 rounded-lg light:hover:text-neutral-300"
+                className="py-2 px-6 rounded-lg light:hover:text-neutral-300"
               >
                 {loadingMore ? 'Loading...' : 'More'}
               </Button>

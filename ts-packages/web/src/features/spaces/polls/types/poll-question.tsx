@@ -114,7 +114,11 @@ export type PollAnswer =
       answer?: number;
       other?: string;
     }
-  | { answer_type: SurveyAnswerType.MultipleChoice; answer?: number[] }
+  | {
+      answer_type: SurveyAnswerType.MultipleChoice;
+      answer?: number[];
+      other?: string;
+    }
   | { answer_type: SurveyAnswerType.ShortAnswer; answer?: string }
   | { answer_type: SurveyAnswerType.Subjective; answer?: string }
   | { answer_type: SurveyAnswerType.Checkbox; answer?: number[] }

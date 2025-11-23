@@ -33,7 +33,6 @@ import { SpaceType } from '@/features/spaces/types/space-type';
 import SpaceStartModal from '@/features/spaces/modals/space-start-modal';
 import { useStartSpaceMutation } from '@/features/spaces/hooks/use-start-mutation';
 import { SpaceStatus } from '@/features/spaces/types/space-common';
-import { useVerifySpaceCodeMutation } from '@/features/spaces/members/hooks/use-verify-space-code-mutation';
 import useFileSpace from '@/features/spaces/files/hooks/use-file-space';
 import SpaceAuthorizePopup from './space-authorize-popup';
 
@@ -57,7 +56,6 @@ export class SpaceHomeController {
     public publishSpace: ReturnType<typeof usePublishSpaceMutation>,
     public startSpace: ReturnType<typeof useStartSpaceMutation>,
     public deleteSpace: ReturnType<typeof useDeleteSpaceMutation>,
-    public verifySpaceCode: ReturnType<typeof useVerifySpaceCodeMutation>,
     public image: State<string | null>,
     public hasFiles: boolean,
     public files: State<FileModel[]>,
@@ -452,10 +450,6 @@ export class SpaceHomeController {
     this.image.set(null);
   };
 
-  handleVerify = async () => {
-    await this.verifySpaceCode.mutateAsync({ spacePk: this.space.pk });
-  };
-
   handleParticipate = async () => {
     logger.debug('handleParticipate is called');
 
@@ -595,7 +589,6 @@ export function useSpaceHomeController(spacePk: string) {
   const deleteSpace = useDeleteSpaceMutation();
   const { mutateAsync: updateDraftImage } = useUpdateDraftImageMutation();
   const participateSpace = useParticipateSpaceMutation();
-  const verifySpaceCode = useVerifySpaceCodeMutation();
 
   const hasFiles = fileData.data.files.length !== 0;
 
@@ -638,42 +631,6 @@ export function useSpaceHomeController(spacePk: string) {
     files[1](mapped);
     filesInitializedRef.current = true;
   }, [data.space.isSuccess, data.space.data?.files]);
-
-  const { cleanedPath } = useMemo(() => {
-    const sp = new URLSearchParams(location.search);
-    const c = (sp.get('code') || '').trim();
-    sp.delete('code');
-    const clean =
-      location.pathname + (sp.toString() ? `?${sp.toString()}` : '');
-    return { code: c, cleanedPath: clean };
-  }, [location.pathname, location.search]);
-
-  const inFlightRef = useRef(false);
-
-  useEffect(() => {
-    const key = `redeem:${spacePk}`;
-    if (sessionStorage.getItem(key)) {
-      navigate(cleanedPath, { replace: true });
-      return;
-    }
-    if (inFlightRef.current || verifySpaceCode.isPending) return;
-
-    inFlightRef.current = true;
-    sessionStorage.setItem(key, '1');
-
-    (async () => {
-      try {
-        await verifySpaceCode.mutateAsync({ spacePk });
-      } catch (err) {
-        logger.debug('verify error: ', err);
-        console.log('verify error: ', err);
-      } finally {
-        sessionStorage.removeItem(key);
-        navigate(cleanedPath, { replace: true });
-        inFlightRef.current = false;
-      }
-    })();
-  }, [cleanedPath, spacePk]);
 
   const participationAttemptedRef = useRef(false);
   useEffect(() => {
@@ -726,7 +683,6 @@ export function useSpaceHomeController(spacePk: string) {
     publishSpace,
     startSpace,
     deleteSpace,
-    verifySpaceCode,
     new State(image),
     hasFiles,
     new State(files),

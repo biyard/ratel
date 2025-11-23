@@ -30,6 +30,8 @@ pub enum PollSummary {
         #[schemars(with = "std::collections::HashMap<String, i64>")]
         #[serde_as(as = "HashMap<DisplayFromStr, _>")]
         answers: HashMap<i32, i64>,
+        #[serde(default)]
+        other_answers: HashMap<String, i64>,
     },
     ShortAnswer {
         total_count: i64,
@@ -89,13 +91,27 @@ impl PollSummary {
             }
             PollSummary::MultipleChoice {
                 answers,
+                other_answers,
                 total_count,
             } => {
-                if let Answer::MultipleChoice { answer } = answer {
+                if let Answer::MultipleChoice { answer, other } = answer {
+                    let mut has_any = false;
+
                     if let Some(idxs) = answer {
                         for idx in idxs {
                             *answers.entry(idx).or_insert(0) += 1;
                         }
+                        has_any = true;
+                    }
+
+                    if let Some(other_text) = other {
+                        if !other_text.is_empty() {
+                            *other_answers.entry(other_text).or_insert(0) += 1;
+                            has_any = true;
+                        }
+                    }
+
+                    if has_any {
                         *total_count += 1;
                     }
                 }
@@ -171,6 +187,7 @@ impl From<Question> for PollSummary {
             },
             Question::MultipleChoice(_) => PollSummary::MultipleChoice {
                 answers: HashMap::new(),
+                other_answers: HashMap::new(),
                 total_count: 0,
             },
             Question::ShortAnswer(_) => PollSummary::ShortAnswer {
