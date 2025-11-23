@@ -46,8 +46,6 @@ jobs:
           SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           DOMAIN: dev.ratel.foundation
           STACK: ratel-dev-stack
-          DEPLOY_STORYBOOK: false
-          DEPLOY_STATIC: false
         run: |
           npm i -g aws-cdk
           make cdk-deploy-v2
@@ -390,11 +388,9 @@ jobs:
 
       - name: Deploy to S3
         env:
-          BUCKET: ${{ secrets.DEV_RATEL_BUCKET }}
-          CDN: ${{ secrets.DEV_RATEL_CDN }}
+          ENV: dev
         run: |
-          aws s3 sync dist $BUCKET
-          aws cloudfront create-invalidation --distribution-id $CDN --paths "/*"
+          make sync
 
       - name: Prepare artifacts
         run: |
