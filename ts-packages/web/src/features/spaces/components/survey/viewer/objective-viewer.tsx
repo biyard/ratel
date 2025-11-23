@@ -70,7 +70,9 @@ export default function ObjectiveViewer(props: ObjectiveViewerProps) {
                   type="text"
                   placeholder={'Input the option.'}
                   value={otherValue ?? ''}
-                  onChange={(e) => onChangeOther?.(e.target.value)}
+                  onChange={(e) => {
+                    onChangeOther?.(e.target.value);
+                  }}
                   onFocus={() => {
                     if (!disabled && !checked) {
                       onSelect(optionIdx);

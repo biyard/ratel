@@ -17,6 +17,8 @@ pub enum Answer {
     },
     MultipleChoice {
         answer: Option<Vec<i32>>,
+        #[serde(default)]
+        other: Option<String>,
     },
     ShortAnswer {
         answer: Option<String>,
@@ -76,8 +78,9 @@ pub fn validate_answers(questions: Vec<Question>, answers: Vec<Answer>) -> bool 
                     options,
                     ..
                 }),
-                Answer::MultipleChoice { answer },
+                Answer::MultipleChoice { answer, other },
             ) => {
+                let _other = other;
                 let answers = answer.unwrap_or_default();
                 // If required, answer must be present
                 if is_required.unwrap_or_default() && answers.is_empty() {
