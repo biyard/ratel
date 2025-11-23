@@ -10,21 +10,17 @@ import * as origins from "aws-cdk-lib/aws-cloudfront-origins";
 import * as cdk from "aws-cdk-lib";
 import * as targets from "aws-cdk-lib/aws-route53-targets";
 import * as s3 from "aws-cdk-lib/aws-s3";
-import * as s3deploy from "aws-cdk-lib/aws-s3-deployment";
 
 export interface StorybookStackProps extends StackProps {
-  stage: string;
-  commit: string;
-
   webDomain: string;
   baseDomain: string;
 }
 
-export class StorybookStack extends Stack {
+export class StaticStack extends Stack {
   constructor(scope: Construct, id: string, props: StorybookStackProps) {
     super(scope, id, { ...props, crossRegionReferences: true });
 
-    const { commit, webDomain, baseDomain, stage } = props;
+    const { webDomain, baseDomain } = props;
     const zone = route53.HostedZone.fromLookup(this, "RootZone", {
       domainName: baseDomain,
     });
@@ -93,15 +89,9 @@ export class StorybookStack extends Stack {
       ),
     });
 
-    new s3deploy.BucketDeployment(
-      this,
-      `RatelStoryBookBucketDeployment-${stage}`,
-      {
-        destinationBucket: staticBucket,
-        distribution: distribution,
-        distributionPaths: ["/*"],
-        sources: [s3deploy.Source.asset("storybook-static")],
-      },
-    );
+    new cdk.CfnOutput(this, "BucketName", { value: staticBucket.bucketName });
+    new cdk.CfnOutput(this, "DistributionId", {
+      value: distribution.distributionId,
+    });
   }
 }
