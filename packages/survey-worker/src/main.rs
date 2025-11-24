@@ -39,7 +39,7 @@ async fn main() -> Result<(), LambdaError> {
 
     let cfg = config::get();
     let is_local = cfg.env == "local" || cfg.env == "test";
-    let aws_config = get_aws_config();
+    let aws_config = aws_config::load_from_env().await;
     let dynamo = DynamoClient::new(Some(aws_config.clone()));
     let ses = SesClient::new(aws_config, is_local);
 
