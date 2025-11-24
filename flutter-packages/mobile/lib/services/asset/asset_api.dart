@@ -21,10 +21,9 @@ class AssetApi extends GetConnect {
     int totalCount = 1,
   }) async {
     final uri = Uri.parse(apiEndpoint)
-        .resolve('/v1/assets')
+        .resolve('/v3/assets')
         .replace(
           queryParameters: {
-            'action': 'get-presigned-uris',
             'file_type': fileType.value,
             'total_count': '$totalCount',
           },

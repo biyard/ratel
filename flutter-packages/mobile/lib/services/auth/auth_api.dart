@@ -117,22 +117,22 @@ class AuthApi extends GetConnect {
   }
 
   Future<dynamic> sendVerificationCode(String email) async {
-    final uri = Uri.parse(apiEndpoint).resolve('/v1/users/verifications');
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v3/auth/verification/send-verification-code');
     final headers = <String, String>{'Content-Type': 'application/json'};
-    final body = {
-      'send_verification_code': {'email': email},
-    };
+    final body = {'email': email};
     final res = await post(uri.toString(), body, headers: headers);
     if (!res.isOk) return null;
     return res.isOk;
   }
 
   Future<dynamic> verifyCode(String email, String value) async {
-    final uri = Uri.parse(apiEndpoint).resolve('/v1/users/verifications');
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v3/auth/verification/verify-code');
     final headers = <String, String>{'Content-Type': 'application/json'};
-    final body = {
-      'verify': {'email': email, 'value': value},
-    };
+    final body = {'code': value, 'email': email};
     final res = await post(uri.toString(), body, headers: headers);
     if (!res.isOk) return null;
     return res.body;
@@ -188,6 +188,7 @@ class AuthApi extends GetConnect {
   }
 
   Future<dynamic> signup(
+    String code,
     String email,
     String password,
     String displayName,
@@ -197,28 +198,19 @@ class AuthApi extends GetConnect {
   ) async {
     await ensureLoggedOut();
     final hashed = '0x${sha256Hex(password)}';
-    final uri = Uri.parse(apiEndpoint)
-        .resolve('/v1/users')
-        .replace(queryParameters: <String, String>{'action': 'signup'});
-    final kp = await cg.Ed25519().newKeyPair();
-    final authHeader = await _buildUserSigHeader(kp);
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/auth/signup');
     final body = {
-      'email_signup': {
-        'nickname': displayName,
-        'email': email,
-        'profile_url': profileUrl,
-        'term_agreed': agree,
-        'informed_agreed': false,
-        'username': userName,
-        'password': hashed,
-        'telegram_raw': '',
-      },
+      'code': code,
+      'description': '',
+      'display_name': displayName,
+      'email': email,
+      'informed_agreed': false,
+      'profile_url': profileUrl,
+      'password': hashed,
+      'term_agreed': agree,
+      'username': userName,
     };
-    final res = await post(
-      uri.toString(),
-      body,
-      headers: _noCookieJson(auth: authHeader),
-    );
+    final res = await post(uri.toString(), body, headers: _noCookieJson());
     if (!res.isOk) return null;
     final loginRes = await loginWithPassword(email, password);
     return loginRes;
@@ -257,21 +249,9 @@ class AuthApi extends GetConnect {
   Future<dynamic> loginWithPassword(String email, String password) async {
     await ensureLoggedOut();
     final hashed = '0x${sha256Hex(password)}';
-    final uri = Uri.parse(apiEndpoint)
-        .resolve('/v1/users')
-        .replace(
-          queryParameters: <String, String>{
-            'action': 'login-by-password',
-            'email': email,
-            'password': hashed,
-          },
-        );
-    final kp = await cg.Ed25519().newKeyPair();
-    final authHeader = await _buildUserSigHeader(kp);
-    final res = await get(
-      uri.toString(),
-      headers: _noCookieJson(auth: authHeader),
-    );
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/auth/login');
+    final body = {'email': email, 'password': hashed};
+    final res = await post(uri.toString(), body, headers: _noCookieJson());
     if (!res.isOk) return null;
     final cookies = _extractCookies(res.headers ?? {});
     final sidName = _sidKeyStorage;
@@ -285,6 +265,7 @@ class AuthApi extends GetConnect {
       await _secure.write(key: authName, value: cookies[authName]!);
     }
     await AuthDb.save(email, cookies[sidName], cookies[authName]);
+    logger.d("login results: ${res.body}");
     return LoginResult(
       body: res.body,
       sid: cookies[sidName],

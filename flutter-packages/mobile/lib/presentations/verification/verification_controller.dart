@@ -63,6 +63,7 @@ class VerificationController extends BaseController {
       if (res != null) {
         logger.d("verification response: ${res}");
         authService.neededSignup = false;
+        signupService.code(pin);
         Get.rootDelegate.offNamed(AppRoutes.setupProfileScreen);
       } else {
         Biyard.error(

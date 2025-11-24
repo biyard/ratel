@@ -5,6 +5,7 @@ class SignupService extends GetxService {
     Get.put<SignupService>(SignupService());
   }
 
+  Rx<String> code = "".obs;
   Rx<String> email = "".obs;
   Rx<String> password = "".obs;
   Rx<String> displayName = "".obs;

@@ -9,6 +9,7 @@ class SetupProfileController extends BaseController {
   final termsAccepted = false.obs;
   final formValid = false.obs;
 
+  Rx<String> get code => signupService.code;
   Rx<String> get displayName => signupService.displayName;
   Rx<String> get username => signupService.username;
   Rx<String> get email => signupService.email;
@@ -84,6 +85,7 @@ class SetupProfileController extends BaseController {
       // general signup
       try {
         final res = await auth.signup(
+          code.value,
           email.value,
           password.value,
           displayName.value,
