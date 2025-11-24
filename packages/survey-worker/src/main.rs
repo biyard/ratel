@@ -1,5 +1,6 @@
 mod config;
 
+use aws_config::BehaviorVersion;
 use bdk::prelude::*;
 use lambda_runtime::{Error as LambdaError, LambdaEvent};
 use main_api::{
@@ -7,7 +8,7 @@ use main_api::{
     features::spaces::polls::Poll,
     models::{Post, SpaceCommon},
     types::{EntityType, Partition},
-    utils::aws::{DynamoClient, SesClient, get_aws_config},
+    utils::aws::{DynamoClient, SesClient},
 };
 use serde::Deserialize;
 use tracing::{error, info};
@@ -39,7 +40,7 @@ async fn main() -> Result<(), LambdaError> {
 
     let cfg = config::get();
     let is_local = cfg.env == "local" || cfg.env == "test";
-    let aws_config = get_aws_config();
+    let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
     let dynamo = DynamoClient::new(Some(aws_config.clone()));
     let ses = SesClient::new(aws_config, is_local);
 
