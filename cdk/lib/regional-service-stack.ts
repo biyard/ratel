@@ -79,6 +79,13 @@ export class RegionalServiceStack extends Stack {
       eventBusName: `ratel-${props.stage}-bus`,
     });
 
+    const schedulerRole = new iam.Role(this, "SurveySchedulerRole", {
+      roleName: `ratel-${props.stage}-${this.region}-survey-scheduler-role`,
+      assumedBy: new iam.ServicePrincipal("scheduler.amazonaws.com"),
+    });
+
+    eventBus.grantPutEventsTo(schedulerRole);
+
     new events.Rule(this, "SurveyFetcherRule", {
       eventBus,
       description: "Route Survey Fetcher events to survey fetcher Lambda",
