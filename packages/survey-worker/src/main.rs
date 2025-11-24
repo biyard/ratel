@@ -14,6 +14,11 @@ use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
 
 #[derive(Debug, Deserialize)]
+struct EventBridgeEnvelope<T> {
+    pub detail: T,
+}
+
+#[derive(Debug, Deserialize)]
 struct StartSurveyEvent {
     pub space_id: String,
     pub survey_id: String,
@@ -75,8 +80,13 @@ fn init_tracing() {
         .init();
 }
 
-async fn handler(event: LambdaEvent<StartSurveyEvent>, state: AppState) -> Result<(), LambdaError> {
+async fn handler(
+    event: LambdaEvent<EventBridgeEnvelope<StartSurveyEvent>>,
+    state: AppState,
+) -> Result<(), LambdaError> {
     let (payload, ctx) = event.into_parts();
+    let payload = payload.detail;
+
     info!(
         "survey-worker invoked: request_id={}, space_id={}, survey_id={}",
         ctx.request_id, payload.space_id, payload.survey_id
