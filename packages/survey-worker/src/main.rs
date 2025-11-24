@@ -61,15 +61,17 @@ async fn main() -> Result<(), LambdaError> {
     let ses = SesClient::new(aws_config, is_local);
 
     let state = AppState { dynamo, ses };
-    let payload = StartSurveyEvent {
-        space_id: "5a383702-d617-4f4f-ad14-b7daf7ead42e".into(),
-        survey_id: "5a383702-d617-4f4f-ad14-b7daf7ead42e".into(),
+
+    let payload = EventBridgeEnvelope {
+        detail: StartSurveyEvent {
+            space_id: "5a383702-d617-4f4f-ad14-b7daf7ead42e".into(),
+            survey_id: "5a383702-d617-4f4f-ad14-b7daf7ead42e".into(),
+        },
     };
 
     let ctx = Context::default();
     handler(LambdaEvent::new(payload, ctx), state).await
 }
-
 fn init_tracing() {
     let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
