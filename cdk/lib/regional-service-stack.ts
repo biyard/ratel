@@ -76,6 +76,22 @@ export class RegionalServiceStack extends Stack {
       }
     );
 
+    startSurveyLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "ses:SendEmail",
+          "ses:SendRawEmail",
+          "ses:SendTemplatedEmail",
+          "ses:SendBulkEmail",
+          "ses:SendBulkTemplatedEmail",
+        ],
+        resources: [
+          `arn:aws:ses:${this.region}:${this.account}:identity/ratel.foundation`,
+        ],
+      })
+    );
+
     const eventBus = new events.EventBus(this, "RatelEventBus", {
       eventBusName: `ratel-${props.stage}-bus`,
     });
