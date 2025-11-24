@@ -14,6 +14,11 @@ use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
 
 #[derive(Debug, Deserialize)]
+struct EventBridgeEnvelope<T> {
+    pub detail: T,
+}
+
+#[derive(Debug, Deserialize)]
 struct StartSurveyEvent {
     pub space_id: String,
     pub survey_id: String,
@@ -56,15 +61,17 @@ async fn main() -> Result<(), LambdaError> {
     let ses = SesClient::new(aws_config, is_local);
 
     let state = AppState { dynamo, ses };
-    let payload = StartSurveyEvent {
-        space_id: "5a383702-d617-4f4f-ad14-b7daf7ead42e".into(),
-        survey_id: "5a383702-d617-4f4f-ad14-b7daf7ead42e".into(),
+
+    let payload = EventBridgeEnvelope {
+        detail: StartSurveyEvent {
+            space_id: "5a383702-d617-4f4f-ad14-b7daf7ead42e".into(),
+            survey_id: "5a383702-d617-4f4f-ad14-b7daf7ead42e".into(),
+        },
     };
 
     let ctx = Context::default();
     handler(LambdaEvent::new(payload, ctx), state).await
 }
-
 fn init_tracing() {
     let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
@@ -75,8 +82,13 @@ fn init_tracing() {
         .init();
 }
 
-async fn handler(event: LambdaEvent<StartSurveyEvent>, state: AppState) -> Result<(), LambdaError> {
+async fn handler(
+    event: LambdaEvent<EventBridgeEnvelope<StartSurveyEvent>>,
+    state: AppState,
+) -> Result<(), LambdaError> {
     let (payload, ctx) = event.into_parts();
+    let payload = payload.detail;
+
     info!(
         "survey-worker invoked: request_id={}, space_id={}, survey_id={}",
         ctx.request_id, payload.space_id, payload.survey_id
