@@ -88,7 +88,7 @@ abstract class Assets {
   static const String keyboard = 'assets/icons/keyboard.svg';
 
   static final addIcon = SvgPicture.asset(add, width: 15, height: 15);
-  static final backIcon = SvgPicture.asset(back, width: 16, height: 16);
+  static final backIcon = SvgPicture.asset(back, width: 24, height: 24);
   static final badgeImage = SvgPicture.asset(badge, width: 20, height: 20);
   static final logoImage = Image.asset(logo, width: 40, height: 40);
   static final googleImage = SvgPicture.asset(google, width: 24, height: 24);

@@ -1,18 +1,35 @@
-// login_controller.dart
 import 'package:ratel/exports.dart';
 
 class LoginController extends BaseController {
   final signupService = Get.find<SignupService>();
   final emailCtrl = TextEditingController();
   final passwordCtrl = TextEditingController();
+  final emailFocus = FocusNode();
+  final passwordFocus = FocusNode();
+
   final isBusy = false.obs;
   final showPassword = false.obs;
   final email = ''.obs;
   final password = ''.obs;
+  final showEmailForm = false.obs;
 
   bool get isFormValid => email.isNotEmpty && password.isNotEmpty;
 
   void toggleShowPassword() => showPassword.toggle();
+
+  void openEmailForm() {
+    showEmailForm.value = true;
+    Future.delayed(const Duration(milliseconds: 280), () {
+      if (showEmailForm.value) {
+        emailFocus.requestFocus();
+      }
+    });
+  }
+
+  void closeEmailForm() {
+    showEmailForm.value = false;
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
 
   Future<void> signIn() async {
     final auth = Get.find<AuthApi>();
@@ -73,6 +90,8 @@ class LoginController extends BaseController {
   void onClose() {
     emailCtrl.dispose();
     passwordCtrl.dispose();
+    emailFocus.dispose();
+    passwordFocus.dispose();
     super.onClose();
   }
 }

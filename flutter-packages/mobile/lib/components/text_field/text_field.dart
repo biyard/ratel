@@ -11,6 +11,8 @@ class AppTextField extends StatelessWidget {
   final bool readOnly;
   final InputBorder? border;
   final Color? bgColor;
+  final FocusNode? focusNode;
+  final bool autofocus;
 
   const AppTextField({
     super.key,
@@ -20,53 +22,67 @@ class AppTextField extends StatelessWidget {
     this.suffixIcon,
     this.keyboardType = TextInputType.text,
     this.onChanged,
-    this.rounded = 8,
+    this.rounded = 10,
     this.readOnly = false,
     this.border,
     this.bgColor,
+    this.focusNode,
+    this.autofocus = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      onChanged: onChanged,
-      readOnly: readOnly,
-      style: TextStyle(
-        fontStyle: FontStyle.normal,
-        color: readOnly ? AppColors.neutral600 : Colors.white,
-        fontWeight: FontWeight.w500,
-        fontSize: 15,
-      ),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(
+    final defaultBorder = OutlineInputBorder(
+      borderRadius: BorderRadius.circular(rounded),
+      borderSide: BorderSide(color: AppColors.mobileFormline, width: 1),
+    );
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 52),
+      child: TextField(
+        autofocus: autofocus,
+        focusNode: focusNode,
+        controller: controller,
+        obscureText: obscureText,
+        keyboardType: keyboardType,
+        onChanged: onChanged,
+        readOnly: readOnly,
+        cursorColor: Colors.white,
+        style: TextStyle(
           fontStyle: FontStyle.normal,
-          color: AppColors.neutral600,
+          color: readOnly ? AppColors.neutral600 : Colors.white,
           fontWeight: FontWeight.w500,
           fontSize: 15,
+          height: 1.2,
         ),
-        filled: true,
-        fillColor: bgColor ?? AppColors.background,
-        suffixIcon: suffixIcon,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: 10,
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+            fontStyle: FontStyle.normal,
+            color: AppColors.mobileFormPlaceholder,
+            fontWeight: FontWeight.w500,
+            fontSize: 15,
+            height: 1.2,
+          ),
+          filled: true,
+          fillColor: bgColor ?? AppColors.mobileFormBg,
+          suffixIcon: suffixIcon,
+          isDense: true,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 14.5,
+          ),
+          enabledBorder: border ?? defaultBorder,
+          focusedBorder:
+              border ??
+              OutlineInputBorder(
+                borderRadius: BorderRadius.circular(rounded),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1,
+                ),
+              ),
         ),
-        enabledBorder:
-            border ??
-            OutlineInputBorder(
-              borderRadius: BorderRadius.circular(rounded),
-              borderSide: BorderSide.none,
-            ),
-        focusedBorder:
-            border ??
-            OutlineInputBorder(
-              borderRadius: BorderRadius.circular(rounded),
-              borderSide: const BorderSide(color: AppColors.primary),
-            ),
       ),
     );
   }

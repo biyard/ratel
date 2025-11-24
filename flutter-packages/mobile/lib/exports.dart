@@ -152,6 +152,7 @@ export 'components/layout/layout.dart';
 export 'components/indicator/biyard_indicator.dart';
 export 'components/biyard/biyard_static.dart';
 export 'components/header/header.dart';
+export 'components/app_top_bar/app_top_bar.dart';
 export 'components/profile/profile.dart';
 export 'components/round_container/round_container.dart';
 export 'components/text_field/text_field.dart';

@@ -41,6 +41,10 @@ abstract class AppColors {
   static const Color btnOText = Color(0xffffffff);
   static const Color btnOHoverText = Color(0xffffffff);
 
+  static const Color mobileFormline = Color(0xff2a2a2a);
+  static const Color mobileFormBg = Color(0xff101010);
+  static const Color mobileFormPlaceholder = Color(0xffbababa);
+
   static const Color panelBg = Color(0xff3a3a3e);
   static const Color iconPrimary = Color(0xff979797);
   static const Color btnHover = Color(0xffcabf00);

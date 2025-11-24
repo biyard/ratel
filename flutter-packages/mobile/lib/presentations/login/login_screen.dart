@@ -1,4 +1,6 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/presentations/login/component/social_chooser.dart';
+import 'package:ratel/presentations/login/component/email_login_form.dart';
 
 class LoginScreen extends GetWidget<LoginController> {
   const LoginScreen({super.key});
@@ -8,177 +10,26 @@ class LoginScreen extends GetWidget<LoginController> {
     return Layout<LoginController>(
       scrollable: false,
       child: SizedBox.expand(
-        child: Column(
-          children: [
-            SizedBox(
-              width: double.infinity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  24.vgap,
-                  Image.asset(
-                    Assets.logoSquare,
-                    width: 150,
-                    fit: BoxFit.contain,
-                  ),
-                ],
-              ),
-            ),
-            50.vgap,
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Sign in to\nyour account",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 34,
-                      height: 1.1,
-                    ),
-                  ),
-                  30.vgap,
-                  _SocialButton(
-                    label: "Continue with Apple",
-                    background: Colors.white,
-                    foreground: AppColors.neutral900,
-                    borderColor: Colors.transparent,
-                    leading: SvgPicture.asset(
-                      Assets.apple,
-                      width: 24,
-                      height: 24,
-                    ),
-                    onTap: controller.signInWithApple,
-                    trailing: const Icon(Icons.chevron_right, size: 20),
-                  ),
-                  12.vgap,
-                  _SocialButton(
-                    label: "Continue with Google",
-                    background: AppColors.neutral900,
-                    foreground: Colors.white,
-                    borderColor: AppColors.borderPrimary,
-                    leading: SvgPicture.asset(
-                      Assets.google,
-                      width: 24,
-                      height: 24,
-                    ),
-                    onTap: controller.signInWithGoogle,
-                    trailing: const Icon(Icons.chevron_right, size: 20),
-                  ),
-                  12.vgap,
-                  _SocialButton(
-                    label: "Continue with email",
-                    background: AppColors.neutral900,
-                    foreground: Colors.white,
-                    borderColor: AppColors.borderPrimary,
-                    leading: SvgPicture.asset(
-                      Assets.email,
-                      width: 24,
-                      height: 24,
-                    ),
-                    onTap: controller.signInWithGoogle,
-                    trailing: const Icon(Icons.chevron_right, size: 20),
-                  ),
-                ],
-              ),
-            ),
-            30.vgap,
-            Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      "Don't have an account?  ",
-                      style: TextStyle(
-                        color: Color(0xffd4d4d4),
-                        fontWeight: FontWeight.w400,
-                        fontSize: 15,
-                        height: 1.2,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: controller.goToSignup,
-                      child: const Text(
-                        "Sign up",
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w400,
-                          fontSize: 15,
-                          height: 1.2,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                28.vgap,
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SocialButton extends StatelessWidget {
-  final String label;
-  final Color background;
-  final Color foreground;
-  final Color borderColor;
-  final SvgPicture leading;
-  final Widget trailing;
-  final VoidCallback onTap;
-
-  const _SocialButton({
-    required this.label,
-    required this.background,
-    required this.foreground,
-    required this.borderColor,
-    required this.leading,
-    required this.trailing,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(100),
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 17),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(100),
-          border: Border.all(color: borderColor, width: 1),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            leading,
-            10.gap,
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: foreground,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  height: 1.2,
-                ),
-              ),
-            ),
-            IconTheme(
-              data: IconThemeData(color: foreground.withValues(alpha: 0.7)),
-              child: trailing,
-            ),
-          ],
+        child: Obx(
+          () => AnimatedSwitcher(
+            duration: const Duration(milliseconds: 260),
+            switchInCurve: Curves.easeOut,
+            switchOutCurve: Curves.easeIn,
+            transitionBuilder: (child, anim) {
+              final slide = Tween<Offset>(
+                begin: const Offset(0, 0.12),
+                end: Offset.zero,
+              ).animate(anim);
+              final fade = Tween<double>(begin: 0, end: 1).animate(anim);
+              return SlideTransition(
+                position: slide,
+                child: FadeTransition(opacity: fade, child: child),
+              );
+            },
+            child: controller.showEmailForm.value
+                ? const EmailLoginForm(key: ValueKey('emailForm'))
+                : const SocialChooser(key: ValueKey('chooser')),
+          ),
         ),
       ),
     );
