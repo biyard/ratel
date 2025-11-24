@@ -331,9 +331,9 @@ jobs:
           WEB_BUILD: false
 
           # NOTE: Change PORTONE API
-          PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
-          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
-          PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
+          PORTONE_API_SECRET: ${{ secrets.PORTONE_API_SECRET }}
+          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.PORTONE_KPN_BILLING_KEY_CHANNEL_KEY }}
+          PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
         run: |
           make bin.build
           mv target/release/survey-worker ../../bootstrap
