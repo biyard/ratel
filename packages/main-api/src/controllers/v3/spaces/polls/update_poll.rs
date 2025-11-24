@@ -7,6 +7,7 @@ use crate::{AppState, Error, Permissions, transact_write};
 
 use bdk::prelude::*;
 
+use by_axum::axum::Extension;
 use by_axum::axum::extract::{Json, Path, State};
 
 use crate::models::user::User;
@@ -31,6 +32,7 @@ pub async fn update_poll_handler(
     NoApi(_user): NoApi<User>,
     NoApi(permissions): NoApi<Permissions>,
     Path(PollPathParam { space_pk, poll_sk }): PollPath,
+    Extension(space): Extension<SpaceCommon>,
     Json(req): Json<UpdatePollSpaceRequest>,
 ) -> crate::Result<Json<UpdatePollSpaceResponse>> {
     //Request Validation
@@ -45,7 +47,8 @@ pub async fn update_poll_handler(
 
     let now = get_now_timestamp_millis();
 
-    let space = SpaceCommon::updater(&space_pk, EntityType::SpaceCommon).with_updated_at(now);
+    let space_updater =
+        SpaceCommon::updater(&space_pk, EntityType::SpaceCommon).with_updated_at(now);
     let mut poll_updater = Poll::updater(&space_pk, &poll_sk).with_updated_at(now);
     match req {
         UpdatePollSpaceRequest::Time {
@@ -59,6 +62,14 @@ pub async fn update_poll_handler(
             poll_updater = poll_updater
                 .with_started_at(started_at)
                 .with_ended_at(ended_at);
+
+            if space.status == Some(crate::types::SpaceStatus::InProgress) {
+                let poll = Poll::get(&dynamo.client, &space_pk, Some(&poll_sk))
+                    .await?
+                    .unwrap_or_default();
+
+                let _ = poll.schedule_start_notification().await?;
+            }
         }
         UpdatePollSpaceRequest::Question { questions } => {
             if questions.is_empty() {
@@ -91,7 +102,7 @@ pub async fn update_poll_handler(
 
     transact_write!(
         &dynamo.client,
-        space.transact_write_item(),
+        space_updater.transact_write_item(),
         poll_updater.transact_write_item(),
     )?;
 
