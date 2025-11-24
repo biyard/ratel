@@ -12,7 +12,7 @@ final darkTheme = ThemeData(
   fontFamily: "Raleway",
   fontFamilyFallback: ["Raleway"],
   textTheme: AppFonts.textTheme,
-  scaffoldBackgroundColor: AppColors.bg,
+  scaffoldBackgroundColor: AppColors.backgroundColor,
   primaryColor: AppColors.primary,
 );
 

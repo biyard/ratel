@@ -3,6 +3,7 @@ import 'package:ratel/exports.dart';
 abstract class Assets {
   static const String introLogo = 'assets/images/logo.png';
   static const String logoLetter = 'assets/images/logo_letter.png';
+  static const String logoSquare = 'assets/images/logo_square.png';
   static const String back = 'assets/icons/back.svg';
   static const String add = 'assets/icons/add.svg';
   static const String passport = 'assets/icons/passport.svg';
@@ -56,10 +57,11 @@ abstract class Assets {
   static const String bell = 'assets/images/bell.svg';
   static const String search = 'assets/images/search.svg';
   static const String google = 'assets/images/google.svg';
+  static const String apple = 'assets/images/apple.svg';
+  static const String email = 'assets/images/email.svg';
 
   static const String upload = 'assets/icons/upload.svg';
   static const String ai = 'assets/icons/ai.svg';
-  static const String apple = 'assets/icons/apple.svg';
 
   static const String docx = 'assets/icons/docx.svg';
   static const String jpg = 'assets/icons/jpg.svg';

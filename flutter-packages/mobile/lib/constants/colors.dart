@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 abstract class AppColors {
   // New Themes
+  static const Color backgroundColor = Color(0xFF1D1D1D);
   static const Color bg = Color(0xFF0A0A0A);
   static const Color primary = Color(0xfffcb300);
 

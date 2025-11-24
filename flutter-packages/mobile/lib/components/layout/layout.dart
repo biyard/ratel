@@ -68,7 +68,7 @@ class Layout<T extends BaseController> extends GetView {
 }
 
 class LayoutStyle {
-  const LayoutStyle({this.background = AppColors.neutral800});
+  const LayoutStyle({this.background = AppColors.backgroundColor});
 
   final Color background;
 }

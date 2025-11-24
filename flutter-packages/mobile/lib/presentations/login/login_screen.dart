@@ -1,4 +1,3 @@
-// login_screen.dart
 import 'package:ratel/exports.dart';
 
 class LoginScreen extends GetWidget<LoginController> {
@@ -7,169 +6,177 @@ class LoginScreen extends GetWidget<LoginController> {
   @override
   Widget build(BuildContext context) {
     return Layout<LoginController>(
-      child: SizedBox(
-        width: double.infinity,
+      scrollable: false,
+      child: SizedBox.expand(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
               width: double.infinity,
-              height: 100,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
-                children: [30.vgap, Image.asset(Assets.logoLetter, width: 182)],
+                children: [
+                  24.vgap,
+                  Image.asset(
+                    Assets.logoSquare,
+                    width: 150,
+                    fit: BoxFit.contain,
+                  ),
+                ],
               ),
             ),
-            SizedBox(
-              height: MediaQuery.of(context).size.height - 250,
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
+            50.vgap,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Sign in to\nyour account",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 34,
+                      height: 1.1,
+                    ),
+                  ),
+                  30.vgap,
+                  _SocialButton(
+                    label: "Continue with Apple",
+                    background: Colors.white,
+                    foreground: AppColors.neutral900,
+                    borderColor: Colors.transparent,
+                    leading: SvgPicture.asset(
+                      Assets.apple,
+                      width: 24,
+                      height: 24,
+                    ),
+                    onTap: controller.signInWithApple,
+                    trailing: const Icon(Icons.chevron_right, size: 20),
+                  ),
+                  12.vgap,
+                  _SocialButton(
+                    label: "Continue with Google",
+                    background: AppColors.neutral900,
+                    foreground: Colors.white,
+                    borderColor: AppColors.borderPrimary,
+                    leading: SvgPicture.asset(
+                      Assets.google,
+                      width: 24,
+                      height: 24,
+                    ),
+                    onTap: controller.signInWithGoogle,
+                    trailing: const Icon(Icons.chevron_right, size: 20),
+                  ),
+                  12.vgap,
+                  _SocialButton(
+                    label: "Continue with email",
+                    background: AppColors.neutral900,
+                    foreground: Colors.white,
+                    borderColor: AppColors.borderPrimary,
+                    leading: SvgPicture.asset(
+                      Assets.email,
+                      width: 24,
+                      height: 24,
+                    ),
+                    onTap: controller.signInWithGoogle,
+                    trailing: const Icon(Icons.chevron_right, size: 20),
+                  ),
+                ],
+              ),
+            ),
+            30.vgap,
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Sign in to your account",
+                    const Text(
+                      "Don't have an account?  ",
                       style: TextStyle(
-                        fontStyle: FontStyle.normal,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                        color: Color(0xffd4d4d4),
+                        fontWeight: FontWeight.w400,
+                        fontSize: 15,
+                        height: 1.2,
                       ),
                     ),
-                    30.vgap,
-                    AppTextField(
-                      hint: 'Email',
-                      controller: controller.emailCtrl,
-                      keyboardType: TextInputType.emailAddress,
-                      onChanged: (val) => controller.email.value = val.trim(),
-                    ),
-                    30.vgap,
-                    Obx(
-                      () => AppTextField(
-                        hint: 'Password',
-                        controller: controller.passwordCtrl,
-                        obscureText: !controller.showPassword.value,
-                        onChanged: (val) =>
-                            controller.password.value = val.trim(),
-                      ),
-                    ),
-                    30.vgap,
-                    Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 6),
-                      width: double.infinity,
-                      child: Obx(
-                        () => ElevatedButton(
-                          onPressed:
-                              controller.isFormValid && !controller.isBusy.value
-                              ? controller.signIn
-                              : null,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            disabledBackgroundColor: AppColors.primary
-                                .withValues(alpha: 0.6),
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: controller.isBusy.value
-                              ? const SizedBox(
-                                  height: 22,
-                                  width: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.black,
-                                  ),
-                                )
-                              : const Text(
-                                  'SIGN IN',
-                                  style: TextStyle(
-                                    fontStyle: FontStyle.normal,
-                                    color: AppColors.bg,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16,
-                                  ),
-                                ),
+                    GestureDetector(
+                      onTap: controller.goToSignup,
+                      child: const Text(
+                        "Sign up",
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w400,
+                          fontSize: 15,
+                          height: 1.2,
                         ),
-                      ),
-                    ),
-                    30.vgap,
-                    SizedBox(
-                      width: double.infinity,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            "- Or Sign in with -",
-                            style: TextStyle(
-                              fontStyle: FontStyle.normal,
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                          ),
-                          20.vgap,
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              InkWell(
-                                onTap: controller.signInWithGoogle,
-                                child: Assets.googleImage,
-                              ),
-                              10.gap,
-                              InkWell(
-                                onTap: controller.signInWithApple,
-                                child: Assets.appleImage,
-                              ),
-                            ],
-                          ),
-                        ],
                       ),
                     ),
                   ],
                 ),
+                28.vgap,
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SocialButton extends StatelessWidget {
+  final String label;
+  final Color background;
+  final Color foreground;
+  final Color borderColor;
+  final SvgPicture leading;
+  final Widget trailing;
+  final VoidCallback onTap;
+
+  const _SocialButton({
+    required this.label,
+    required this.background,
+    required this.foreground,
+    required this.borderColor,
+    required this.leading,
+    required this.trailing,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(100),
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 17),
+        decoration: BoxDecoration(
+          color: background,
+          borderRadius: BorderRadius.circular(100),
+          border: Border.all(color: borderColor, width: 1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            leading,
+            10.gap,
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  color: foreground,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  height: 1.2,
+                ),
               ),
             ),
-            SizedBox(
-              width: double.infinity,
-              height: 100,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account?  ",
-                        style: TextStyle(
-                          fontStyle: FontStyle.normal,
-                          fontWeight: FontWeight.w400,
-                          fontSize: 12,
-                          color: Colors.white,
-                        ),
-                      ),
-                      10.gap,
-                      GestureDetector(
-                        onTap: controller.goToSignup,
-                        child: const Text(
-                          'Sign up',
-                          style: TextStyle(
-                            fontStyle: FontStyle.normal,
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  50.vgap,
-                ],
-              ),
+            IconTheme(
+              data: IconThemeData(color: foreground.withValues(alpha: 0.7)),
+              child: trailing,
             ),
           ],
         ),
