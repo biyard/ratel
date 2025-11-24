@@ -2,6 +2,7 @@ use crate::controllers::v3::spaces::dto::*;
 use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
+use crate::features::spaces::polls::{Poll, PollQueryOption};
 use crate::features::telegrams::{TelegramChannel, get_space_created_message};
 use crate::models::space::SpaceCommon;
 
@@ -111,6 +112,30 @@ pub async fn update_space_handler(
                 && visibility == SpaceVisibility::Public;
 
             SpaceInvitationMember::send_email(&dynamo, &ses, &space, post.title).await?;
+
+            let mut bookmark: Option<String> = None;
+
+            loop {
+                let mut query_options = PollQueryOption::builder()
+                    .sk("SPACE_POLL#".into())
+                    .limit(10);
+
+                if let Some(b) = bookmark.clone() {
+                    query_options = query_options.bookmark(b);
+                }
+
+                let (responses, next_bookmark) =
+                    Poll::query(&dynamo.client, space_pk.clone(), query_options).await?;
+
+                for response in responses {
+                    response.schedule_start_notification().await?;
+                }
+
+                match next_bookmark {
+                    Some(b) => bookmark = Some(b),
+                    None => break,
+                }
+            }
 
             space.publish_state = SpacePublishState::Published;
             space.visibility = visibility;

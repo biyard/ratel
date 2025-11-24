@@ -17,16 +17,15 @@ use aws_sdk_s3::{
     primitives::ByteStream,
     types::{Delete, ObjectIdentifier},
 };
-use aws_sdk_scheduler::Client as SchedulerClient;
 use aws_sdk_scheduler::types::{
     ActionAfterCompletion, EventBridgeParameters, FlexibleTimeWindow, FlexibleTimeWindowMode,
     ScheduleState, Target,
 };
-use chrono::Utc;
-// use aws_sdk_sts::Client as StsClient;
+use aws_sdk_scheduler::{Client as SchedulerClient, error::SdkError};
 use bdk::prelude::*;
 use by_axum::axum::Json;
 use chrono::DateTime;
+use chrono::Utc;
 
 #[allow(dead_code)]
 #[derive(Debug, serde::Serialize)]
@@ -107,7 +106,6 @@ impl Poll {
         };
 
         email.send_email(&dynamo, &ses).await?;
-
         Ok(Json(()))
     }
 
@@ -131,11 +129,9 @@ impl Poll {
             created_at: now,
             updated_at: now,
             user_response_count: 0,
-
             response_editable: false,
             started_at: now,
             ended_at: now + 7 * 24 * 60 * 60 * 1000, // Default to 7 days later
-
             topic: String::new(),
             description: String::new(),
             questions: Vec::new(),
@@ -160,8 +156,10 @@ impl Poll {
         s
     }
 
-    pub async fn _schedule_start_notification(&self) -> crate::Result<()> {
-        let cfg = config::get();
+    pub async fn schedule_start_notification(&self) -> crate::Result<()> {
+        use aws_smithy_types::error::metadata::ProvideErrorMetadata;
+
+        let _cfg = config::get();
         let sdk_config = get_aws_config();
         let client = SchedulerClient::new(&sdk_config);
 
@@ -170,23 +168,22 @@ impl Poll {
             .map(|r| r.as_ref().to_string())
             .unwrap_or_else(|| "ap-northeast-2".to_string());
 
-        let account_id = std::env::var("AWS_ACCOUNT_ID")
-            .map_err(|_| crate::Error::Unknown("AWS_ACCOUNT_ID is required".into()))?;
+        // FIXME: add input account id
+        let account_id = "".to_string();
 
         let pk_str = self.pk.to_string();
         let sk_str = self.sk.to_string();
         let schedule_name =
             Self::sanitize_schedule_name(&format!("poll-start-{}-{}", pk_str, sk_str));
 
+        // FIXME: fix real started at
         let now = get_now_timestamp_millis();
-        if self.started_at <= now {
-            return Ok(());
-        }
+        let started_at = now + 2 * 60 * 1000;
 
-        let start_at: DateTime<Utc> = DateTime::<Utc>::from_timestamp_millis(self.started_at)
+        let start_at: DateTime<Utc> = DateTime::<Utc>::from_timestamp_millis(started_at)
             .ok_or_else(|| crate::Error::Unknown("invalid started_at".into()))?;
 
-        let start_at_str = start_at.format("%Y-%m-%dT%H:%M:%SZ").to_string();
+        let start_at_str = start_at.format("%Y-%m-%dT%H:%M:%S").to_string();
         let schedule_expr = format!("at({})", start_at_str);
 
         let space_id = match &self.pk {
@@ -206,16 +203,18 @@ impl Poll {
             }
         };
 
-        let bus_name = format!("ratel-{}-bus", cfg.env);
+        // FIXME: fix real env
+        let env = "dev";
+
+        let bus_name = format!("ratel-{}-bus", env);
         let bus_arn = format!("arn:aws:events:{region}:{account_id}:event-bus/{bus_name}");
 
-        let scheduler_role_name = format!("ratel-{}-{}-survey-scheduler-role", cfg.env, region);
+        let scheduler_role_name = format!("ratel-{}-{}-survey-scheduler-role", env, region);
         let scheduler_role_arn = format!("arn:aws:iam::{account_id}:role/{scheduler_role_name}");
 
         let input_json = serde_json::json!({
             "space_id": space_id,
             "survey_id": survey_id,
-            "started_at": self.started_at,
         })
         .to_string();
 
@@ -265,8 +264,15 @@ impl Poll {
             .target(target)
             .send()
             .await
-            .map_err(|e| crate::Error::Unknown(e.to_string()))?;
+            .map_err(|e| {
+                tracing::error!("create_schedule failed: {e:?}");
 
+                let code = e.code().unwrap_or("Unknown");
+                let msg = e.message().unwrap_or("No message");
+                tracing::error!("aws error code={code}, message={msg}");
+
+                crate::Error::Unknown(e.to_string())
+            })?;
         Ok(())
     }
 
