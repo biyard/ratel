@@ -1,18 +1,39 @@
 use crate::{
     Error,
-    config::{self, Config},
+    config::{self},
     models::{SpaceCommon, email_template::email_template::EmailTemplate},
     types::{email_operation::EmailOperation, *},
     utils::{
-        aws::{DynamoClient, SesClient},
+        aws::{DynamoClient, SesClient, get_aws_config},
         html::start_survey_html,
         time::get_now_timestamp_millis,
         uuid::sorted_uuid,
     },
 };
+use aws_config::Region;
+use aws_sdk_s3::{
+    Client, Config,
+    config::Credentials,
+    primitives::ByteStream,
+    types::{Delete, ObjectIdentifier},
+};
+use aws_sdk_scheduler::Client as SchedulerClient;
+use aws_sdk_scheduler::types::{
+    ActionAfterCompletion, EventBridgeParameters, FlexibleTimeWindow, FlexibleTimeWindowMode,
+    ScheduleState, Target,
+};
+use chrono::Utc;
 // use aws_sdk_sts::Client as StsClient;
 use bdk::prelude::*;
 use by_axum::axum::Json;
+use chrono::DateTime;
+
+#[allow(dead_code)]
+#[derive(Debug, serde::Serialize)]
+struct StartSurveyEventInput {
+    pub space_id: String,
+    pub survey_id: String,
+}
 
 use crate::features::spaces::polls::PollStatus;
 #[derive(
@@ -121,76 +142,133 @@ impl Poll {
         })
     }
 
-    // FIXME: fix to lambda start handler
-    // pub async fn resolve_self_lambda_arn() -> crate::Result<String> {
-    //     let conf = config::get();
-    //     let sdk_config = aws_config::load_from_env().await;
+    pub fn sanitize_schedule_name(raw: &str) -> String {
+        let mut s: String = raw
+            .chars()
+            .map(|c| {
+                if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.' {
+                    c
+                } else {
+                    '-'
+                }
+            })
+            .collect();
 
-    //     let sts = StsClient::new(&sdk_config);
-    //     let account_id = sts
-    //         .get_caller_identity()
-    //         .send()
-    //         .await
-    //         .map_err(|e| crate::Error::Unknown(format!("sts error: {e:?}")))?
-    //         .account
-    //         .ok_or_else(|| crate::Error::Unknown("no account in sts response".into()))?;
+        if s.len() > 64 {
+            s.truncate(64);
+        }
+        s
+    }
 
-    //     let region_from_env = std::env::var("AWS_REGION").ok();
-    //     let region =
-    //         region_from_env.ok_or_else(|| crate::Error::Unknown("AWS_REGION not set".into()))?;
+    pub async fn _schedule_start_notification(&self) -> crate::Result<()> {
+        let cfg = config::get();
+        let sdk_config = get_aws_config();
+        let client = SchedulerClient::new(&sdk_config);
 
-    //     let function_name = std::env::var("AWS_LAMBDA_FUNCTION_NAME")
-    //         .map_err(|_| crate::Error::Unknown("AWS_LAMBDA_FUNCTION_NAME not set".into()))?;
+        let region = sdk_config
+            .region()
+            .map(|r| r.as_ref().to_string())
+            .unwrap_or_else(|| "ap-northeast-2".to_string());
 
-    //     Ok(format!(
-    //         "arn:aws:lambda:{region}:{account_id}:function:{function_name}"
-    //     ))
-    // }
+        let account_id = std::env::var("AWS_ACCOUNT_ID")
+            .map_err(|_| crate::Error::Unknown("AWS_ACCOUNT_ID is required".into()))?;
 
-    // async fn create_poll_start_schedule(poll: &Poll) -> crate::Result<()> {
-    //     let aws_config = Config::from(&config);
-    //     let client = SchedulerClient::new(&aws_config);
+        let pk_str = self.pk.to_string();
+        let sk_str = self.sk.to_string();
+        let schedule_name =
+            Self::sanitize_schedule_name(&format!("poll-start-{}-{}", pk_str, sk_str));
 
-    //     let lambda_arn =
-    //         std::env::var("POLL_EVENT_LAMBDA_ARN").expect("POLL_EVENT_LAMBDA_ARN is required");
-    //     let role_arn =
-    //         std::env::var("POLL_EVENT_ROLE_ARN").expect("POLL_EVENT_ROLE_ARN is required");
+        let now = get_now_timestamp_millis();
+        if self.started_at <= now {
+            return Ok(());
+        }
 
-    //     let schedule_name = format!("poll-start-{}-{}", poll.pk, poll.sk);
+        let start_at: DateTime<Utc> = DateTime::<Utc>::from_timestamp_millis(self.started_at)
+            .ok_or_else(|| crate::Error::Unknown("invalid started_at".into()))?;
 
-    //     // let start_at: DateTime<Utc> = poll.start_at;
-    //     // let start_at_str = start_at.to_rfc3339();
+        let start_at_str = start_at.format("%Y-%m-%dT%H:%M:%SZ").to_string();
+        let schedule_expr = format!("at({})", start_at_str);
 
-    //     // let schedule_expr = format!("at({})", start_at_str);
+        let space_id = match &self.pk {
+            Partition::Space(id) => id.clone(),
+            _ => {
+                return Err(crate::Error::InvalidPartitionKey(
+                    "Poll must be under Space partition".into(),
+                ));
+            }
+        };
+        let survey_id = match &self.sk {
+            EntityType::SpacePoll(id) => id.clone(),
+            _ => {
+                return Err(crate::Error::Unknown(
+                    "Poll sk must be EntityType::SpacePoll".into(),
+                ));
+            }
+        };
 
-    //     // let input_json = serde_json::to_string(&PollStartEventInput {
-    //     //     space_pk: poll.pk.to_string(),
-    //     //     poll_sk: poll.sk.to_string(),
-    //     //     event_type: "poll_start".to_string(),
-    //     // })?;
+        let bus_name = format!("ratel-{}-bus", cfg.env);
+        let bus_arn = format!("arn:aws:events:{region}:{account_id}:event-bus/{bus_name}");
 
-    //     // let ftw = FlexibleTimeWindow::builder()
-    //     //     .mode(FlexibleTimeWindowMode::Off)
-    //     //     .build();
+        let scheduler_role_name = format!("ratel-{}-{}-survey-scheduler-role", cfg.env, region);
+        let scheduler_role_arn = format!("arn:aws:iam::{account_id}:role/{scheduler_role_name}");
 
-    //     // let target = Target::builder()
-    //     //     .arn(lambda_arn)
-    //     //     .role_arn(role_arn)
-    //     //     .input(input_json)
-    //     //     .build()?;
+        let input_json = serde_json::json!({
+            "space_id": space_id,
+            "survey_id": survey_id,
+            "started_at": self.started_at,
+        })
+        .to_string();
 
-    //     // client
-    //     //     .create_schedule()
-    //     //     .name(schedule_name)
-    //     //     .group_name("default")
-    //     //     .schedule_expression(schedule_expr)
-    //     //     .flexible_time_window(ftw)
-    //     //     .target(target)
-    //     //     .send()
-    //     //     .await?;
+        let ftw = FlexibleTimeWindow::builder()
+            .mode(FlexibleTimeWindowMode::Off)
+            .build()
+            .map_err(|e| crate::Error::Unknown(e.to_string()))?;
 
-    //     Ok(())
-    // }
+        let eb_params = EventBridgeParameters::builder()
+            .source("ratel.spaces")
+            .detail_type("SurveyFetcher")
+            .build()
+            .map_err(|e| crate::Error::Unknown(e.to_string()))?;
+
+        let target = Target::builder()
+            .arn(bus_arn)
+            .role_arn(scheduler_role_arn)
+            .event_bridge_parameters(eb_params)
+            .input(input_json)
+            .build()
+            .map_err(|e| crate::Error::Unknown(e.to_string()))?;
+
+        let update_result = client
+            .update_schedule()
+            .name(schedule_name.clone())
+            .group_name("default")
+            .schedule_expression(schedule_expr.clone())
+            .flexible_time_window(ftw.clone())
+            .state(ScheduleState::Enabled)
+            .action_after_completion(ActionAfterCompletion::Delete)
+            .target(target.clone())
+            .send()
+            .await;
+
+        if update_result.is_ok() {
+            return Ok(());
+        }
+
+        client
+            .create_schedule()
+            .name(schedule_name)
+            .group_name("default")
+            .schedule_expression(schedule_expr)
+            .flexible_time_window(ftw)
+            .state(ScheduleState::Enabled)
+            .action_after_completion(ActionAfterCompletion::Delete)
+            .target(target)
+            .send()
+            .await
+            .map_err(|e| crate::Error::Unknown(e.to_string()))?;
+
+        Ok(())
+    }
 
     pub fn is_default_poll(&self) -> bool {
         match &self.sk {
