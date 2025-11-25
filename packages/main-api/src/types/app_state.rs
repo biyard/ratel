@@ -32,7 +32,7 @@ impl AppState {
         let aws_sdk_config = get_aws_config();
         let dynamo = DynamoClient::new(Some(aws_sdk_config.clone()));
         let ses = SesClient::new(aws_sdk_config.clone(), is_local);
-        let sns = SnsClient::new(aws_sdk_config, is_local);
+        let sns = SnsClient::new(aws_sdk_config);
         let s3 = S3Client::new(conf.bucket.name);
 
         let portone = PortOne::new(&conf.portone.api_secret);
