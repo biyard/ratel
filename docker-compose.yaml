@@ -61,6 +61,8 @@ services:
       VITE_PORTONE_INICIS_CHANNEL_KEY: ${PORTONE_INICIS_CHANNEL_KEY}
       VITE_PORTONE_KPN_CHANNEL_KEY: ${PORTONE_KPN_CHANNEL_KEY}
 
+      VITE_ACCOUNT_ID: ${ACCOUNT_ID}
+
       NODE_ENV: production
     volumes:
       - .:/app

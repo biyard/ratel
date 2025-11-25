@@ -68,7 +68,7 @@ pub async fn update_poll_handler(
                     .await?
                     .unwrap_or_default();
 
-                let _ = poll.schedule_start_notification().await?;
+                let _ = poll.schedule_start_notification(started_at).await?;
             }
         }
         UpdatePollSpaceRequest::Question { questions } => {
