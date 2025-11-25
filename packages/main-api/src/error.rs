@@ -106,6 +106,9 @@ pub enum Error {
     #[error("Exceeded maximum attempt for email verification")]
     #[rest_error(code = 1000)]
     ExceededAttemptEmailVerification,
+    #[error("Exceeded maximum attempt for phone verification")]
+    #[rest_error(code = 1001)]
+    ExceededAttemptPhoneVerification,
     #[error("Failed to send email via AWS SES: {0}")]
     AwsSesSendEmailException(String),
     #[error("Verification code not found or expired")]
@@ -114,6 +117,8 @@ pub enum Error {
     ExpiredVerification,
     #[error("Invalid verification code")]
     InvalidVerificationCode,
+    #[error("Send SMS Failed: {0}")]
+    SendSmsFailed(String),
 
     // /v3/posts endpoints 2000 ~
     #[error("Post visibility is incorrectly configured: {0}")]

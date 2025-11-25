@@ -2,12 +2,13 @@ use crate::{
     AppState, Error,
     constants::SESSION_KEY_USER_ID,
     models::{
-        UserTelegram, UserTelegramQueryOption,
+        UserPhoneNumber, UserPhoneNumberQueryOption, UserTelegram, UserTelegramQueryOption,
+        phone::{PhoneVerification, PhoneVerificationQueryOption},
         user::{User, UserQueryOption},
     },
     transact_write,
-    types::{EntityType, Provider},
-    utils::{password::hash_password, telegram::parse_telegram_raw},
+    types::{EntityType, Partition, Provider},
+    utils::{password::hash_password, telegram::parse_telegram_raw, time::get_now_timestamp},
 };
 use bdk::prelude::*;
 
@@ -21,6 +22,10 @@ use tower_sessions::Session;
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
 #[serde(untagged)]
 pub enum LoginRequest {
+    Phone {
+        phone: String,
+        code: String,
+    },
     Email {
         email: String,
         password: String,
@@ -40,6 +45,9 @@ pub async fn login_handler(
     Json(req): Json<LoginRequest>,
 ) -> Result<Json<User>, Error> {
     let user = match req {
+        LoginRequest::Phone { phone, code } => {
+            login_with_phone(&dynamo.client, phone, code).await?
+        }
         LoginRequest::Email { email, password } => {
             login_with_email(&dynamo.client, email, password).await?
         }
@@ -57,6 +65,104 @@ pub async fn login_handler(
         .await?;
 
     Ok(Json(user))
+}
+
+pub async fn login_with_phone(
+    cli: &aws_sdk_dynamodb::Client,
+    phone: String,
+    code: String,
+) -> Result<User, Error> {
+    // Verify the phone verification code
+    let now = get_now_timestamp();
+    let (verification_list, _) = PhoneVerification::find_by_phone(
+        cli,
+        &phone,
+        PhoneVerificationQueryOption::builder().limit(1),
+    )
+    .await?;
+
+    if verification_list.is_empty() {
+        return Err(Error::NotFoundVerificationCode);
+    }
+
+    #[cfg(feature = "bypass")]
+    if code.eq("000000") {
+        // Bypass verification for testing
+    } else {
+        let phone_verification = verification_list[0].clone();
+
+        if phone_verification.expired_at < now {
+            return Err(Error::ExpiredVerification);
+        }
+
+        if phone_verification.value != code {
+            PhoneVerification::updater(phone_verification.pk, phone_verification.sk)
+                .increase_attempt_count(1)
+                .execute(cli)
+                .await?;
+            return Err(Error::InvalidVerificationCode);
+        }
+    }
+
+    #[cfg(not(feature = "bypass"))]
+    {
+        let phone_verification = verification_list[0].clone();
+
+        if phone_verification.expired_at < now {
+            return Err(Error::ExpiredVerification);
+        }
+
+        if phone_verification.value != code {
+            PhoneVerification::updater(phone_verification.pk, phone_verification.sk)
+                .increase_attempt_count(1)
+                .execute(cli)
+                .await?;
+            return Err(Error::InvalidVerificationCode);
+        }
+    }
+
+    // Get or create user by phone number
+    let (res, _) =
+        UserPhoneNumber::find_by_phone_number(cli, &phone, UserPhoneNumber::opt_one()).await?;
+
+    let user = if res.is_empty() {
+        // Create new user with phone number
+        let username = format!("user{}", now);
+        let display_name = phone.clone();
+        let email = format!("{}@phone.placeholder", username);
+
+        let user = User::new(
+            display_name,
+            email,
+            String::new(), // No avatar
+            false,         // Not verified
+            false,         // Not admin
+            crate::types::UserType::Anonymous,
+            username,
+            None, // No password
+        );
+
+        let user_phone = UserPhoneNumber::new(user.pk.clone(), phone.clone());
+
+        transact_write!(
+            cli,
+            user.create_transact_write_item(),
+            user_phone.create_transact_write_item()
+        )?;
+
+        user
+    } else {
+        let user_phone = res.first().cloned().ok_or(Error::Unauthorized(
+            "No user linked with the given phone number".into(),
+        ))?;
+        User::get(cli, &user_phone.pk, Some(EntityType::User))
+            .await?
+            .ok_or(Error::Unauthorized(
+                "No user linked with the given phone number".into(),
+            ))?
+    };
+
+    Ok(user)
 }
 
 pub async fn login_with_oauth(

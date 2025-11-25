@@ -3,11 +3,8 @@ import 'package:ratel/middlewares/space_middleware.dart';
 
 class AppRoutes {
   static const String mainScreen = '/dashboard';
-  static const String introScreen = '/intro';
-  static const String loginScreen = '/login';
   static const String signupScreen = '/signup';
   static const String verificationScreen = '/verification';
-  static const String welcomeScreen = '/welcome';
   static const String setupProfileScreen = '/setup-profile';
   static const String selectTopicScreen = '/select-topic';
   static const String connectionScreen = '/connection';
@@ -114,24 +111,6 @@ class AppRoutes {
       curve: Curves.easeOutCubic,
     ),
     GetPage(
-      name: introScreen,
-      page: () => const IntroScreen(),
-      binding: IntroBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: loginScreen,
-      page: () => const LoginScreen(),
-      binding: LoginBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
       name: signupScreen,
       page: () => const SignupScreen(),
       binding: SignupBinding(),
@@ -194,15 +173,7 @@ class AppRoutes {
       opaque: true,
       curve: Curves.easeOutCubic,
     ),
-    GetPage(
-      name: welcomeScreen,
-      page: () => const WelcomeScreen(),
-      binding: WelcomeBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
+    ...onboardingPages,
     GetPage(
       name: settingScreen,
       page: () => const SettingsScreen(),
