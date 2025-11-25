@@ -19,13 +19,13 @@ class EmailLoginForm extends GetWidget<LoginController> {
             onRight: controller.goToSignup,
           ),
           20.vgap,
-          const Text(
+          Text(
             "Sign in to\nyour account",
-            style: TextStyle(
+            style: AppFonts.textTheme.headlineMedium?.copyWith(
               color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: 34,
               height: 1.1,
+              fontSize: 34,
+              fontWeight: FontWeight.w900,
             ),
           ),
           30.vgap,
@@ -133,9 +133,9 @@ class EmailLoginForm extends GetWidget<LoginController> {
                                   color: AppColors.backgroundColor,
                                 ),
                               )
-                            : const Text(
+                            : Text(
                                 'Sign in',
-                                style: TextStyle(
+                                style: AppFonts.textTheme.titleMedium?.copyWith(
                                   color: AppColors.backgroundColor,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 16,
@@ -145,9 +145,9 @@ class EmailLoginForm extends GetWidget<LoginController> {
                     ),
                   ),
                   30.vgap,
-                  const Text(
+                  Text(
                     "Forgot password?",
-                    style: TextStyle(
+                    style: AppFonts.textTheme.bodyMedium?.copyWith(
                       color: AppColors.neutral300,
                       fontSize: 15,
                       fontWeight: FontWeight.w400,

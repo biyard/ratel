@@ -23,12 +23,12 @@ class SocialChooser extends GetWidget<LoginController> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 "Sign in to\nyour account",
-                style: TextStyle(
+                style: AppFonts.textTheme.headlineMedium?.copyWith(
                   color: Colors.white,
-                  fontWeight: FontWeight.w900,
                   fontSize: 34,
+                  fontWeight: FontWeight.w900,
                   height: 1.1,
                 ),
               ),
@@ -72,23 +72,23 @@ class SocialChooser extends GetWidget<LoginController> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   "Don't have an account?  ",
-                  style: TextStyle(
-                    color: Color(0xffd4d4d4),
-                    fontWeight: FontWeight.w400,
+                  style: AppFonts.textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xffd4d4d4),
                     fontSize: 15,
+                    fontWeight: FontWeight.w400,
                     height: 1.2,
                   ),
                 ),
                 GestureDetector(
                   onTap: controller.goToSignup,
-                  child: const Text(
+                  child: Text(
                     "Sign up",
-                    style: TextStyle(
+                    style: AppFonts.textTheme.bodyMedium?.copyWith(
                       color: AppColors.primary,
-                      fontWeight: FontWeight.w400,
                       fontSize: 15,
+                      fontWeight: FontWeight.w400,
                       height: 1.2,
                     ),
                   ),
@@ -144,7 +144,7 @@ class _SocialButton extends StatelessWidget {
             Expanded(
               child: Text(
                 label,
-                style: TextStyle(
+                style: AppFonts.textTheme.bodyMedium?.copyWith(
                   color: foreground,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
