@@ -49,6 +49,7 @@ rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-
 ] }
 aws-sdk-scheduler = "1.90.0"
 aws-sdk-sesv2 = "1.83.0"
+aws-sdk-sns = "1.83.0"
 rand = "0.9.1"
 url = "2.5.4"
 hmac = "0.12.1"

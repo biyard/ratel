@@ -16,6 +16,9 @@ pub use dynamo::DynamoClient;
 pub mod ses;
 pub use ses::SesClient;
 
+pub mod sns;
+pub use sns::SnsClient;
+
 use crate::config;
 use aws_config::BehaviorVersion;
 use aws_credential_types::Credentials;
