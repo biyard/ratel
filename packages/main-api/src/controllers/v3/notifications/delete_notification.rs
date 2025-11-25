@@ -13,8 +13,8 @@ pub async fn delete_notification_handler(
     let pk = Partition::Notification(user_pk.to_string());
     let sk: EntityType = notification_id.into();
 
-    // Delete the notification
-    Notification::delete(&dynamo.client, pk.to_string(), Some(sk.to_string())).await?;
-
-    Ok(Json(DeleteNotificationResponse { success: true }))
+    match Notification::delete(&dynamo.client, pk.to_string(), Some(sk.to_string())).await {
+        Ok(_) => Ok(Json(DeleteNotificationResponse { success: true })),
+        Err(e) => Err(e),
+    }
 }
