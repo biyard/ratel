@@ -81,7 +81,7 @@ class MyApp extends StatelessWidget {
           : MainLocalization.appName.tr,
       initialBinding: InitialBindings(),
       routeInformationParser: Get.createInformationParser(
-        initialRoute: AppRoutes.introScreen,
+        initialRoute: introScreen,
       ),
       getPages: AppRoutes.pages,
     );

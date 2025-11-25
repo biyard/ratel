@@ -14,6 +14,9 @@ pub enum Error {
     #[error("AWS Ses error: {0}")]
     #[rest_error(status = 500)]
     SesServiceError(#[from] crate::utils::aws::ses::SesServiceError),
+    #[error("AWS Sns error: {0}")]
+    #[rest_error(status = 500)]
+    SnsServiceError(#[from] crate::utils::aws::sns::SnsServiceError),
     #[error("SerdeDynamo error: {0}")]
     #[rest_error(status = 500)]
     SerdeDynamo(#[from] serde_dynamo::Error),
@@ -106,6 +109,9 @@ pub enum Error {
     #[error("Exceeded maximum attempt for email verification")]
     #[rest_error(code = 1000)]
     ExceededAttemptEmailVerification,
+    #[error("Exceeded maximum attempt for phone verification")]
+    #[rest_error(code = 1001)]
+    ExceededAttemptPhoneVerification,
     #[error("Failed to send email via AWS SES: {0}")]
     AwsSesSendEmailException(String),
     #[error("Verification code not found or expired")]

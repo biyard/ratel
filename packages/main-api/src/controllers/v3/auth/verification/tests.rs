@@ -2,6 +2,7 @@
 use crate::*;
 use crate::{
     models::email::EmailVerification,
+    models::phone::PhoneVerification,
     tests::v3_setup::{TestContextV3, setup_v3},
     types::{EntityType, Partition},
 };
@@ -78,6 +79,87 @@ async fn test_verification_invalid_code() {
         &ddb,
         Partition::Email(email.clone()),
         Some(EntityType::EmailVerification),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+
+    assert_eq!(status, 400);
+    assert_eq!(verification.attempt_count, 1);
+}
+
+#[tokio::test]
+async fn test_phone_verification_code() {
+    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+
+    let phone = format!("+1555{:07}", now % 10000000);
+    tracing::info!("Sending verification code to {}", phone);
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/auth/verification/send-verification-code",
+        body: {
+            "phone": phone.clone(),
+        },
+        response_type: super::send_code::SendCodeResponse
+    };
+    assert_eq!(status, 200);
+    assert!(body.expired_at > now as i64);
+
+    let verification = PhoneVerification::get(
+        &ddb,
+        Partition::Phone(phone.clone()),
+        Some(EntityType::PhoneVerification),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    let code = verification.value;
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/auth/verification/verify-code",
+        body: {
+            "phone": phone.clone(),
+            "code": code,
+        },
+        response_type: super::verify_code::VerifyCodeResponse
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.success, true);
+}
+
+#[tokio::test]
+async fn test_phone_verification_invalid_code() {
+    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+
+    let phone = format!("+1555{:07}", now % 10000000 + 1);
+    tracing::info!("Sending verification code to {}", phone);
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/auth/verification/send-verification-code",
+        body: {
+            "phone": phone.clone(),
+        },
+        response_type: super::send_code::SendCodeResponse
+    };
+    assert_eq!(status, 200);
+    assert!(body.expired_at > now as i64);
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/auth/verification/verify-code",
+        body: {
+            "phone": phone.clone(),
+            "code": "111",
+        }
+    };
+
+    let verification = PhoneVerification::get(
+        &ddb,
+        Partition::Phone(phone.clone()),
+        Some(EntityType::PhoneVerification),
     )
     .await
     .unwrap()
