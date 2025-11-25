@@ -88,6 +88,7 @@ export class RegionalServiceStack extends Stack {
         ],
         resources: [
           `arn:aws:ses:${this.region}:${this.account}:identity/ratel.foundation`,
+          `arn:aws:ses:${this.region}:${this.account}:template/start_survey`,
         ],
       })
     );
