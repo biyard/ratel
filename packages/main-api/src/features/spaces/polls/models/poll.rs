@@ -65,6 +65,7 @@ impl Poll {
     pub async fn send_email(
         dynamo: &DynamoClient,
         ses: &SesClient,
+        survey_id: String,
         space: SpaceCommon,
         title: String,
         user_emails: Vec<String>,
@@ -82,7 +83,10 @@ impl Poll {
             _ => "".to_string(),
         };
 
-        let url = format!("{}/spaces/SPACE%23{}", domain, space_id);
+        let url = format!(
+            "{}/spaces/SPACE%23{}/polls/SPACE_POLL%23{}",
+            domain, space_id, survey_id
+        );
         let survey_title = if is_default {
             "Pre Poll Survey"
         } else {
