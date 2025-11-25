@@ -1,6 +1,8 @@
 use crate::config;
 use crate::services::portone::PortOne;
-use crate::utils::aws::{DynamoClient, S3Client, SesClient, SnsClient, get_aws_config};
+use crate::utils::aws::{
+    DynamoClient, S3Client, SesClient, SnsClient, get_aws_config, get_aws_config_for_sns,
+};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -30,9 +32,10 @@ impl AppState {
         let conf = config::get();
         let is_local = conf.env == "local" || conf.env == "test";
         let aws_sdk_config = get_aws_config();
+        let aws_sns_config = get_aws_config_for_sns();
         let dynamo = DynamoClient::new(Some(aws_sdk_config.clone()));
         let ses = SesClient::new(aws_sdk_config.clone(), is_local);
-        let sns = SnsClient::new(aws_sdk_config);
+        let sns = SnsClient::new(aws_sns_config);
         let s3 = S3Client::new(conf.bucket.name);
 
         let portone = PortOne::new(&conf.portone.api_secret);
