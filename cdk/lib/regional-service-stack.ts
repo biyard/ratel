@@ -76,23 +76,6 @@ export class RegionalServiceStack extends Stack {
       }
     );
 
-    startSurveyLambda.addToRolePolicy(
-      new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        actions: [
-          "ses:SendEmail",
-          "ses:SendRawEmail",
-          "ses:SendTemplatedEmail",
-          "ses:SendBulkEmail",
-          "ses:SendBulkTemplatedEmail",
-        ],
-        resources: [
-          `arn:aws:ses:${this.region}:${this.account}:identity/ratel.foundation`,
-          `arn:aws:ses:${this.region}:${this.account}:template/start_survey`,
-        ],
-      })
-    );
-
     const eventBus = new events.EventBus(this, "RatelEventBus", {
       eventBusName: `ratel-${props.stage}-bus`,
     });
@@ -123,6 +106,40 @@ export class RegionalServiceStack extends Stack {
     );
 
     mainTable.grantReadData(startSurveyLambda);
+
+    startSurveyLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "ses:SendEmail",
+          "ses:SendRawEmail",
+          "ses:SendTemplatedEmail",
+          "ses:SendBulkEmail",
+          "ses:SendBulkTemplatedEmail",
+        ],
+        resources: [
+          `arn:aws:ses:${this.region}:${this.account}:identity/ratel.foundation`,
+          `arn:aws:ses:${this.region}:${this.account}:template/start_survey`,
+        ],
+      })
+    );
+
+    startSurveyLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "dynamodb:GetItem",
+          "dynamodb:BatchGetItem",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:TransactWriteItems",
+        ],
+        resources: [mainTable.tableArn, `${mainTable.tableArn}/index/*`],
+      })
+    );
 
     // --- API Gateway HTTP API ---
     const httpApi = new apigw.HttpApi(this, "HttpApi", {
