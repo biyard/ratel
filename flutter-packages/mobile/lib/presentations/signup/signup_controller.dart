@@ -51,7 +51,7 @@ class SignupController extends BaseController {
   }
 
   void goBack() {
-    Get.rootDelegate.offNamed(AppRoutes.loginScreen);
+    Get.rootDelegate.offNamed(loginScreen);
   }
 
   Future<void> next() async {
