@@ -36,6 +36,7 @@ pub enum EntityType {
     UserTeam(String),      // from Team
     UserTeamGroup(String), // from TeamGroup
     EmailVerification,
+    PhoneVerification,
     UserRelationship(String),
 
     // Feed entity types
