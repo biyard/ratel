@@ -1,12 +1,9 @@
 use crate::{
     features::notification::{MarkAsReadRequest, MarkAsReadResponse, Notification},
-    types::{notification_status::NotificationStatus, EntityType, Partition},
+    types::{EntityType, Partition, notification_status::NotificationStatus},
     utils::time::get_now_timestamp_millis,
     *,
 };
-use aide::NoApi;
-use axum::{extract::State, http::StatusCode, Json};
-use bdk::prelude::*;
 
 pub async fn mark_as_read_handler(
     State(AppState { dynamo, .. }): State<AppState>,
@@ -23,11 +20,11 @@ pub async fn mark_as_read_handler(
 
     for notification_id in req.notification_ids.iter() {
         let pk = Partition::Notification(user_pk.to_string());
-        let sk = EntityType::Notification(notification_id.clone());
+        let sk: EntityType = notification_id.clone().into();
 
         // Verify the notification belongs to the user by attempting to get it
-        if let Some(_) = Notification::get(&dynamo.client, pk.to_string(), Some(sk.to_string()))
-            .await?
+        if let Some(_) =
+            Notification::get(&dynamo.client, pk.to_string(), Some(sk.to_string())).await?
         {
             let update_tx = Notification::updater(pk, sk)
                 .with_status(NotificationStatus::Read)

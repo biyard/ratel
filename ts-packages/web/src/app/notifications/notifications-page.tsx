@@ -1,6 +1,6 @@
 import { useNotificationsI18n } from '@/features/notification/i18n';
 import { useNotificationsPageController } from '@/app/notifications/use-notifications-page-controller';
-import { Bell, Delete_2 } from '@/components/icons';
+import { Bell, Delete_2, CheckCircle } from '@/components/icons';
 import {
   getNotificationType,
   getNotificationData,
@@ -47,11 +47,29 @@ export default function NotificationsPage() {
     <div className="w-full max-w-desktop mx-auto px-4 py-6">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2.5 rounded-xl bg-primary/10">
-            <Bell className="w-6 h-6 text-primary" />
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-primary/10">
+              <Bell className="w-6 h-6 text-primary" />
+            </div>
+            <h1 className="text-2xl font-bold text-text-primary">
+              {i18n.title}
+            </h1>
           </div>
-          <h1 className="text-2xl font-bold text-text-primary">{i18n.title}</h1>
+
+          {/* Mark All as Read Button */}
+          {ctrl.notifications && ctrl.notifications.length > 0 && (
+            <button
+              onClick={ctrl.handleMarkAllAsRead}
+              disabled={ctrl.isMarkingAllAsRead}
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-background rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span className="text-sm font-medium">
+                {i18n.mark_all_as_read}
+              </span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -141,9 +159,14 @@ export default function NotificationsPage() {
                 {/* Content */}
                 <div className="flex-1 min-w-0 pt-0.5">
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <p className="text-sm font-medium text-primary">
-                      {typeLabel}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-primary">
+                        {typeLabel}
+                      </p>
+                      {notification.isUnread() && (
+                        <span className="w-2 h-2 rounded-full bg-primary" />
+                      )}
+                    </div>
                     <span className="text-xs text-foreground-more-muted whitespace-nowrap">
                       {timeAgo}
                     </span>
@@ -169,17 +192,34 @@ export default function NotificationsPage() {
                     )}
                 </div>
 
-                {/* Delete Button */}
-                <button
-                  onClick={() =>
-                    ctrl.handleDelete(notification.getNotificationId())
-                  }
-                  disabled={ctrl.isDeleting}
-                  className="flex-shrink-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-card-bg rounded-lg"
-                  title={i18n.delete}
-                >
-                  <Delete_2 className="w-4 h-4 text-foreground-muted hover:text-destructive transition-colors" />
-                </button>
+                {/* Action Buttons */}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {/* Mark as Read Button - only show if unread */}
+                  {notification.isUnread() && (
+                    <button
+                      onClick={() =>
+                        ctrl.handleMarkAsRead(notification.getNotificationId())
+                      }
+                      disabled={ctrl.isMarkingAsRead}
+                      className="p-2 hover:bg-card-bg rounded-lg transition-colors"
+                      title={i18n.mark_as_read}
+                    >
+                      <CheckCircle className="w-4 h-4 text-foreground-muted hover:text-primary transition-colors" />
+                    </button>
+                  )}
+
+                  {/* Delete Button */}
+                  <button
+                    onClick={() =>
+                      ctrl.handleDelete(notification.getNotificationId())
+                    }
+                    disabled={ctrl.isDeleting}
+                    className="p-2 hover:bg-card-bg rounded-lg transition-colors"
+                    title={i18n.delete}
+                  >
+                    <Delete_2 className="w-4 h-4 text-foreground-muted hover:text-destructive transition-colors" />
+                  </button>
+                </div>
               </div>
             );
           })}
