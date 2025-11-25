@@ -1,17 +1,20 @@
 use crate::config;
 use crate::services::portone::PortOne;
-use crate::utils::aws::{DynamoClient, S3Client, SesClient, get_aws_config};
+use crate::utils::aws::{
+    DynamoClient, S3Client, SesClient, SnsClient, get_aws_config, get_aws_config_for_sns,
+};
 
 #[derive(Clone)]
 pub struct AppState {
     pub dynamo: DynamoClient,
     pub ses: SesClient,
+    pub sns: SnsClient,
     pub portone: PortOne,
     pub s3: S3Client,
 }
 
 impl AppState {
-    pub fn new(dynamo: DynamoClient, ses: SesClient, s3: S3Client) -> Self {
+    pub fn new(dynamo: DynamoClient, ses: SesClient, sns: SnsClient, s3: S3Client) -> Self {
         let conf = config::get();
 
         let portone = PortOne::new(&conf.portone.api_secret);
@@ -19,6 +22,7 @@ impl AppState {
         Self {
             dynamo,
             ses,
+            sns,
             portone,
             s3,
         }
@@ -28,8 +32,10 @@ impl AppState {
         let conf = config::get();
         let is_local = conf.env == "local" || conf.env == "test";
         let aws_sdk_config = get_aws_config();
+        let aws_sns_config = get_aws_config_for_sns();
         let dynamo = DynamoClient::new(Some(aws_sdk_config.clone()));
-        let ses = SesClient::new(aws_sdk_config, is_local);
+        let ses = SesClient::new(aws_sdk_config.clone(), is_local);
+        let sns = SnsClient::new(aws_sns_config);
         let s3 = S3Client::new(conf.bucket.name);
 
         let portone = PortOne::new(&conf.portone.api_secret);
@@ -37,6 +43,7 @@ impl AppState {
         Self {
             dynamo,
             ses,
+            sns,
             portone,
             s3,
         }
