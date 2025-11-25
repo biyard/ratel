@@ -1,15 +1,10 @@
-use crate::{
-    Error,
-    config::{self},
-    models::{SpaceCommon, email_template::email_template::EmailTemplate},
-    types::{email_operation::EmailOperation, *},
-    utils::{
-        aws::{DynamoClient, SesClient, get_aws_config},
-        html::start_survey_html,
-        time::get_now_timestamp_millis,
-        uuid::sorted_uuid,
-    },
-};
+use crate::email_operation::EmailOperation;
+use crate::models::SpaceCommon;
+use crate::models::email_template::email_template::EmailTemplate;
+use crate::time::get_now_timestamp_millis;
+use crate::utils::aws::get_aws_config;
+use crate::utils::aws::{DynamoClient, SesClient};
+use crate::*;
 use aws_config::Region;
 use aws_sdk_s3::{
     Client, Config,
@@ -73,7 +68,7 @@ impl Poll {
         title: String,
         user_emails: Vec<String>,
         is_default: bool,
-    ) -> Result<Json<()>, Error> {
+    ) -> Result<Json<()>> {
         let mut domain = crate::config::get().domain.to_string();
         if domain.contains("localhost") {
             domain = format!("http://{}", domain).to_string();
@@ -156,10 +151,26 @@ impl Poll {
         s
     }
 
-    pub async fn schedule_start_notification(&self) -> crate::Result<()> {
+    pub async fn schedule_start_notification(&self, started_at: i64) -> crate::Result<()> {
         use aws_smithy_types::error::metadata::ProvideErrorMetadata;
 
-        let _cfg = config::get();
+        let now = get_now_timestamp_millis();
+        if started_at <= now {
+            tracing::error!(
+                "schedule_start_notification skipped: started_at({}) <= now({})",
+                started_at,
+                now,
+            );
+            return Ok(());
+        }
+
+        let cfg = config::get();
+
+        // Enable alerm when dev, prod environment
+        if cfg.env == "local" {
+            return Ok(());
+        }
+
         let sdk_config = get_aws_config();
         let client = SchedulerClient::new(&sdk_config);
 
@@ -168,20 +179,17 @@ impl Poll {
             .map(|r| r.as_ref().to_string())
             .unwrap_or_else(|| "ap-northeast-2".to_string());
 
-        // FIXME: add input account id
-        let account_id = "".to_string();
+        let account_id = cfg.account_id.to_string();
 
-        let pk_str = self.pk.to_string();
+        if account_id == "".to_string() {
+            tracing::error!("account id is not found");
+            return Ok(());
+        }
+
         let sk_str = self.sk.to_string();
-        let schedule_name =
-            Self::sanitize_schedule_name(&format!("poll-start-{}-{}", pk_str, sk_str));
-
-        // FIXME: fix real started at
-        let now = get_now_timestamp_millis();
-        let started_at = now + 2 * 60 * 1000;
-
+        let schedule_name = Self::sanitize_schedule_name(&format!("poll-start-{}", sk_str));
         let start_at: DateTime<Utc> = DateTime::<Utc>::from_timestamp_millis(started_at)
-            .ok_or_else(|| crate::Error::Unknown("invalid started_at".into()))?;
+            .ok_or_else(|| crate::Error::InternalServerError("invalid started_at".into()))?;
 
         let start_at_str = start_at.format("%Y-%m-%dT%H:%M:%S").to_string();
         let schedule_expr = format!("at({})", start_at_str);
@@ -197,14 +205,13 @@ impl Poll {
         let survey_id = match &self.sk {
             EntityType::SpacePoll(id) => id.clone(),
             _ => {
-                return Err(crate::Error::Unknown(
+                return Err(crate::Error::InternalServerError(
                     "Poll sk must be EntityType::SpacePoll".into(),
                 ));
             }
         };
 
-        // FIXME: fix real env
-        let env = "dev";
+        let env = cfg.env;
 
         let bus_name = format!("ratel-{}-bus", env);
         let bus_arn = format!("arn:aws:events:{region}:{account_id}:event-bus/{bus_name}");
@@ -221,13 +228,13 @@ impl Poll {
         let ftw = FlexibleTimeWindow::builder()
             .mode(FlexibleTimeWindowMode::Off)
             .build()
-            .map_err(|e| crate::Error::Unknown(e.to_string()))?;
+            .map_err(|e| crate::Error::InternalServerError(e.to_string()))?;
 
         let eb_params = EventBridgeParameters::builder()
             .source("ratel.spaces")
             .detail_type("SurveyFetcher")
             .build()
-            .map_err(|e| crate::Error::Unknown(e.to_string()))?;
+            .map_err(|e| crate::Error::InternalServerError(e.to_string()))?;
 
         let target = Target::builder()
             .arn(bus_arn)
@@ -235,7 +242,7 @@ impl Poll {
             .event_bridge_parameters(eb_params)
             .input(input_json)
             .build()
-            .map_err(|e| crate::Error::Unknown(e.to_string()))?;
+            .map_err(|e| crate::Error::InternalServerError(e.to_string()))?;
 
         let update_result = client
             .update_schedule()
@@ -271,7 +278,7 @@ impl Poll {
                 let msg = e.message().unwrap_or("No message");
                 tracing::error!("aws error code={code}, message={msg}");
 
-                crate::Error::Unknown(e.to_string())
+                crate::Error::InternalServerError(e.to_string())
             })?;
         Ok(())
     }
@@ -333,10 +340,14 @@ impl Poll {
 impl TryFrom<Partition> for Poll {
     type Error = crate::Error;
 
-    fn try_from(value: Partition) -> Result<Self, Self::Error> {
+    fn try_from(value: Partition) -> Result<Self> {
         let uuid = match value {
             Partition::Space(ref s) => s.clone(),
-            _ => return Err(crate::Error::Unknown("server error".to_string())),
+            _ => {
+                return Err(crate::Error::InternalServerError(
+                    "server error".to_string(),
+                ));
+            }
         };
 
         Poll::new(value, Some(EntityType::SpacePoll(uuid)))

@@ -128,7 +128,9 @@ pub async fn update_space_handler(
                     Poll::query(&dynamo.client, space_pk.clone(), query_options).await?;
 
                 for response in responses {
-                    response.schedule_start_notification().await?;
+                    response
+                        .schedule_start_notification(response.started_at)
+                        .await?;
                 }
 
                 match next_bookmark {

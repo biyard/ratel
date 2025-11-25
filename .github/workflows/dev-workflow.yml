@@ -142,6 +142,7 @@ jobs:
           PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
           PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
           PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
+          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
         run: |
           tar xzvf dist.tar.gz
           ls dist
