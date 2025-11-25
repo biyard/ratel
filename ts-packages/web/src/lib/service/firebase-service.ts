@@ -13,6 +13,7 @@ import { Ed25519KeyIdentity } from '@dfinity/identity';
 import { toHex } from '@dfinity/agent';
 import { config } from '@/config';
 import { logger } from '../logger';
+import { initializeAnalytics } from './analytics-service';
 
 // Firebase configuration validation
 const validateFirebaseConfig = (config: any): boolean => {
@@ -83,6 +84,11 @@ if (isFirebaseConfigValid) {
     auth = getAuth(app);
     provider = new GoogleAuthProvider();
     logger.debug('🔥 Firebase initialized successfully');
+
+    // Initialize Analytics if measurement ID is provided
+    if (firebaseConfig.measurementId) {
+      initializeAnalytics();
+    }
   } catch (error) {
     logger.error('🔥 Failed to initialize Firebase:', error);
     app = null;
