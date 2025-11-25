@@ -1,3 +1,4 @@
+// import 'package:ratel/components/theme_toggle_button/theme_toggle_button.dart';
 import 'package:ratel/exports.dart';
 
 class SocialChooser extends GetWidget<LoginController> {
@@ -5,8 +6,16 @@ class SocialChooser extends GetWidget<LoginController> {
 
   @override
   Widget build(BuildContext context) {
+    // final colors = Theme.of(context).extension<ThemeColors>()!;
     return Column(
       children: [
+        // const Align(
+        //   alignment: Alignment.topRight,
+        //   child: Padding(
+        //     padding: EdgeInsets.only(right: 12, top: 12),
+        //     child: ThemeToggleButton(),
+        //   ),
+        // ),
         SizedBox(
           width: double.infinity,
           child: Column(

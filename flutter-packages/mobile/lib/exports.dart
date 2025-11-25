@@ -17,6 +17,7 @@ export 'utils/string/passport_display_name.dart';
 export 'utils/string/map_nationality.dart';
 
 export 'extensions/gap.dart';
+export 'theme_color.dart';
 
 export 'presentations/main_binding.dart';
 export 'presentations/main_controller.dart';

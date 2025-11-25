@@ -1,5 +1,3 @@
-// The original content is temporarily commented out to allow generating a self-contained demo - feel free to uncomment later.
-
 import 'dart:ui';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -7,6 +5,7 @@ import 'package:ratel/components/layout/layout_service.dart' as l;
 import 'package:ratel/firebase_options.dart';
 import 'package:ratel/services/rust/rust_service.dart';
 import 'package:ratel/services/wallet/wallet_service.dart';
+import 'package:ratel/theme_controller.dart';
 import 'package:ratel/utils/biyard_navigate_observer/biyard_navigate_observer.dart';
 
 import 'exports.dart';
@@ -33,6 +32,7 @@ Future<void> main() async {
   NotificationsService.init();
   DocumentsService.init();
   DriveApi.init();
+  Get.put<ThemeController>(ThemeController());
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((
     value,
@@ -40,50 +40,53 @@ Future<void> main() async {
     initializeLogger(Config.logLevel, false);
     logger.i('App is starting...');
 
-    runApp(MyApp());
+    runApp(const MyApp());
   });
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     logger.d(
-      '${Get.deviceLocale?.languageCode}, ${Get.deviceLocale?.countryCode}, ${MainLocalization.appName}',
+      '${Get.deviceLocale?.languageCode}, '
+      '${Get.deviceLocale?.countryCode}, '
+      '${MainLocalization.appName}',
     );
 
-    return GetMaterialApp.router(
-      scrollBehavior: MaterialScrollBehavior().copyWith(
-        dragDevices: {
-          PointerDeviceKind.mouse,
-          PointerDeviceKind.touch,
-          PointerDeviceKind.stylus,
-          PointerDeviceKind.unknown,
-        },
-      ),
-      debugShowCheckedModeBanner: false,
-      defaultTransition: Transition.rightToLeft,
-      theme: getThemeData(Brightness.light),
-      darkTheme: getThemeData(Brightness.dark),
+    return Obx(() {
+      final mode = ThemeController.to.themeMode.value;
 
-      // FIXME: This is a temporary fix for dark mode
-      themeMode: ThemeMode.dark,
-      routerDelegate: Get.createDelegate(
-        navigatorObservers: [BiyardNavigatorObserver(), l.LayoutObserver()],
-      ),
-      translations: AppLocalization(),
-      locale: const Locale('en', 'US'),
-      fallbackLocale: const Locale('en', 'US'),
-      title: MainLocalization.appName.tr == 'appName'
-          ? 'Ratel'
-          : MainLocalization.appName.tr,
-      initialBinding: InitialBindings(),
-      routeInformationParser: Get.createInformationParser(
-        initialRoute: AppRoutes.introScreen,
-      ),
-      getPages: AppRoutes.pages,
-    );
+      return GetMaterialApp.router(
+        scrollBehavior: const MaterialScrollBehavior().copyWith(
+          dragDevices: {
+            PointerDeviceKind.mouse,
+            PointerDeviceKind.touch,
+            PointerDeviceKind.stylus,
+            PointerDeviceKind.unknown,
+          },
+        ),
+        debugShowCheckedModeBanner: false,
+        defaultTransition: Transition.rightToLeft,
+        theme: getThemeData(Brightness.light),
+        darkTheme: getThemeData(Brightness.dark),
+        themeMode: mode,
+        routerDelegate: Get.createDelegate(
+          navigatorObservers: [BiyardNavigatorObserver(), l.LayoutObserver()],
+        ),
+        translations: AppLocalization(),
+        locale: const Locale('en', 'US'),
+        fallbackLocale: const Locale('en', 'US'),
+        title: MainLocalization.appName.tr == 'appName'
+            ? 'Ratel'
+            : MainLocalization.appName.tr,
+        initialBinding: InitialBindings(),
+        routeInformationParser: Get.createInformationParser(
+          initialRoute: AppRoutes.introScreen,
+        ),
+        getPages: AppRoutes.pages,
+      );
+    });
   }
 }
