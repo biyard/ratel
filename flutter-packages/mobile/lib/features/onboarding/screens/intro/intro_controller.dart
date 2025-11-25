@@ -35,7 +35,7 @@ class IntroController extends BaseController {
       );
     } else {
       // await autoLogin();
-      Get.rootDelegate.offNamed(AppRoutes.loginScreen);
+      Get.rootDelegate.offNamed(loginScreen);
     }
   }
 

@@ -44,7 +44,7 @@ class SetupAttributeController extends BaseController {
     }
   }
 
-  void skip() => Get.rootDelegate.offNamed(AppRoutes.welcomeScreen);
+  void skip() => Get.rootDelegate.offNamed(welcomeScreen);
 
   void toCountryCheck() => step.value = SetupAttrStep.countryCheck;
 
@@ -56,5 +56,5 @@ class SetupAttributeController extends BaseController {
 
   void recapture() => step.value = SetupAttrStep.capture;
 
-  void done() => Get.rootDelegate.offNamed(AppRoutes.welcomeScreen);
+  void done() => Get.rootDelegate.offNamed(welcomeScreen);
 }
