@@ -45,12 +45,9 @@ pub async fn send_phone_code_handler(
     AppState { dynamo, sns, .. }: AppState,
     phone: String,
 ) -> Result<Json<SendCodeResponse>> {
-    let (verification_list, _) = PhoneVerification::find_by_phone(
-        &dynamo.client,
-        &phone,
-        PhoneVerificationQueryOption::builder().limit(1),
-    )
-    .await?;
+    let (verification_list, _) =
+        PhoneVerification::find_by_phone(&dynamo.client, &phone, PhoneVerification::opt_one())
+            .await?;
 
     let PhoneVerification {
         value, expired_at, ..

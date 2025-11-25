@@ -14,9 +14,6 @@ pub enum Error {
     #[error("AWS Ses error: {0}")]
     #[rest_error(status = 500)]
     SesServiceError(#[from] crate::utils::aws::ses::SesServiceError),
-    #[error("AWS Sns error: {0}")]
-    #[rest_error(status = 500)]
-    SnsServiceError(#[from] crate::utils::aws::sns::SnsServiceError),
     #[error("SerdeDynamo error: {0}")]
     #[rest_error(status = 500)]
     SerdeDynamo(#[from] serde_dynamo::Error),
@@ -120,6 +117,8 @@ pub enum Error {
     ExpiredVerification,
     #[error("Invalid verification code")]
     InvalidVerificationCode,
+    #[error("Send SMS Failed: {0}")]
+    SendSmsFailed(String),
 
     // /v3/posts endpoints 2000 ~
     #[error("Post visibility is incorrectly configured: {0}")]
