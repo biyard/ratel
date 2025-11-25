@@ -15,9 +15,6 @@ pub async fn delete_notification_handler(
 
     match Notification::delete(&dynamo.client, pk.to_string(), Some(sk.to_string())).await {
         Ok(_) => Ok(Json(DeleteNotificationResponse { success: true })),
-        Err(Error::Unknown(msg)) if msg.contains("Item not found") => {
-            Err(Error::NotFound("Notification not found".to_string()))
-        }
         Err(e) => Err(e),
     }
 }
