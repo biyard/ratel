@@ -28,8 +28,11 @@ export class NotificationResponse {
   }
 
   getNotificationId(): string {
-    // Extract ID from sk which is in format "Notification(uuid)"
-    const match = this.sk.match(/Notification\(([^)]+)\)/);
-    return match ? match[1] : this.sk;
+    // Extract ID from sk which is in format "NOTIFICATION#uuid"
+    const parts = this.sk.split('#');
+    if (parts.length >= 2) {
+      return parts.slice(1).join('#'); // Handle cases with multiple # in the ID
+    }
+    return this.sk;
   }
 }

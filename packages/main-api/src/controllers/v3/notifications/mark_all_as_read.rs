@@ -4,9 +4,6 @@ use crate::{
     utils::time::get_now_timestamp_millis,
     *,
 };
-use aide::NoApi;
-use axum::{extract::State, http::StatusCode, Json};
-use bdk::prelude::*;
 
 pub async fn mark_all_as_read_handler(
     State(AppState { dynamo, .. }): State<AppState>,

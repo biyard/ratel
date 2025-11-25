@@ -1,8 +1,4 @@
 use crate::features::notification::NotificationResponse;
-use crate::*;
+use crate::types::list_items_response::ListItemsResponse;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default, aide::OperationIo, JsonSchema)]
-pub struct ListNotificationsResponse {
-    pub items: Vec<NotificationResponse>,
-    pub bookmark: Option<String>,
-}
+pub type ListNotificationsResponse = ListItemsResponse<NotificationResponse>;
