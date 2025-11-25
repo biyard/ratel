@@ -9,7 +9,9 @@ use crate::models::space::SpaceCommon;
 use crate::models::Post;
 use crate::models::user::User;
 use crate::utils::aws::DynamoClient;
+use crate::utils::aws::PollScheduler;
 use crate::utils::aws::SesClient;
+use crate::utils::aws::get_aws_config;
 use crate::utils::telegram::ArcTelegramBot;
 use crate::utils::time::get_now_timestamp;
 use crate::*;
@@ -71,6 +73,9 @@ pub async fn update_space_handler(
         return Err(Error::NoPermission);
     }
 
+    let sdk_config = get_aws_config();
+    let scheduler = PollScheduler::new(&sdk_config);
+
     let mut space = space.clone();
 
     let now = chrono::Utc::now().timestamp_millis();
@@ -129,7 +134,7 @@ pub async fn update_space_handler(
 
                 for response in responses {
                     response
-                        .schedule_start_notification(response.started_at)
+                        .schedule_start_notification(&scheduler, response.started_at)
                         .await?;
                 }
 

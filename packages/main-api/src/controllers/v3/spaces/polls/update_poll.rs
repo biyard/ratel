@@ -4,6 +4,8 @@ use crate::features::spaces::polls::PollPathParam;
 use crate::features::spaces::polls::PollQuestion;
 use crate::models::SpaceCommon;
 use crate::time::get_now_timestamp_millis;
+use crate::utils::aws::PollScheduler;
+use crate::utils::aws::get_aws_config;
 use crate::*;
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
@@ -56,11 +58,15 @@ pub async fn update_poll_handler(
                 .with_ended_at(ended_at);
 
             if space.status == Some(crate::types::SpaceStatus::InProgress) {
+                let sdk_config = get_aws_config();
+                let scheduler = PollScheduler::new(&sdk_config);
                 let poll = Poll::get(&dynamo.client, &space_pk, Some(&poll_sk))
                     .await?
                     .unwrap_or_default();
 
-                let _ = poll.schedule_start_notification(started_at).await?;
+                let _ = poll
+                    .schedule_start_notification(&scheduler, started_at)
+                    .await?;
             }
         }
         UpdatePollSpaceRequest::Question { questions } => {

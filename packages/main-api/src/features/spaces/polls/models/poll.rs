@@ -2,6 +2,7 @@ use crate::email_operation::EmailOperation;
 use crate::models::SpaceCommon;
 use crate::models::email_template::email_template::EmailTemplate;
 use crate::time::get_now_timestamp_millis;
+use crate::utils::aws::PollScheduler;
 use crate::utils::aws::get_aws_config;
 use crate::utils::aws::{DynamoClient, SesClient};
 use crate::*;
@@ -151,136 +152,14 @@ impl Poll {
         s
     }
 
-    pub async fn schedule_start_notification(&self, started_at: i64) -> crate::Result<()> {
-        use aws_smithy_types::error::metadata::ProvideErrorMetadata;
-
-        let now = get_now_timestamp_millis();
-        if started_at <= now {
-            tracing::error!(
-                "schedule_start_notification skipped: started_at({}) <= now({})",
-                started_at,
-                now,
-            );
-            return Ok(());
-        }
-
-        let cfg = config::get();
-
-        // Enable alerm when dev, prod environment
-        if cfg.env == "local" {
-            return Ok(());
-        }
-
-        let sdk_config = get_aws_config();
-        let client = SchedulerClient::new(&sdk_config);
-
-        let region = sdk_config
-            .region()
-            .map(|r| r.as_ref().to_string())
-            .unwrap_or_else(|| "ap-northeast-2".to_string());
-
-        let account_id = cfg.account_id.to_string();
-
-        if account_id == "".to_string() {
-            tracing::error!("account id is not found");
-            return Ok(());
-        }
-
-        let sk_str = self.sk.to_string();
-        let schedule_name = Self::sanitize_schedule_name(&format!("poll-start-{}", sk_str));
-        let start_at: DateTime<Utc> = DateTime::<Utc>::from_timestamp_millis(started_at)
-            .ok_or_else(|| crate::Error::InternalServerError("invalid started_at".into()))?;
-
-        let start_at_str = start_at.format("%Y-%m-%dT%H:%M:%S").to_string();
-        let schedule_expr = format!("at({})", start_at_str);
-
-        let space_id = match &self.pk {
-            Partition::Space(id) => id.clone(),
-            _ => {
-                return Err(crate::Error::InvalidPartitionKey(
-                    "Poll must be under Space partition".into(),
-                ));
-            }
-        };
-        let survey_id = match &self.sk {
-            EntityType::SpacePoll(id) => id.clone(),
-            _ => {
-                return Err(crate::Error::InternalServerError(
-                    "Poll sk must be EntityType::SpacePoll".into(),
-                ));
-            }
-        };
-
-        let env = cfg.env;
-
-        let bus_name = format!("ratel-{}-bus", env);
-        let bus_arn = format!("arn:aws:events:{region}:{account_id}:event-bus/{bus_name}");
-
-        let scheduler_role_name = format!("ratel-{}-{}-survey-scheduler-role", env, region);
-        let scheduler_role_arn = format!("arn:aws:iam::{account_id}:role/{scheduler_role_name}");
-
-        let input_json = serde_json::json!({
-            "space_id": space_id,
-            "survey_id": survey_id,
-        })
-        .to_string();
-
-        let ftw = FlexibleTimeWindow::builder()
-            .mode(FlexibleTimeWindowMode::Off)
-            .build()
-            .map_err(|e| crate::Error::InternalServerError(e.to_string()))?;
-
-        let eb_params = EventBridgeParameters::builder()
-            .source("ratel.spaces")
-            .detail_type("SurveyFetcher")
-            .build()
-            .map_err(|e| crate::Error::InternalServerError(e.to_string()))?;
-
-        let target = Target::builder()
-            .arn(bus_arn)
-            .role_arn(scheduler_role_arn)
-            .event_bridge_parameters(eb_params)
-            .input(input_json)
-            .build()
-            .map_err(|e| crate::Error::InternalServerError(e.to_string()))?;
-
-        let update_result = client
-            .update_schedule()
-            .name(schedule_name.clone())
-            .group_name("default")
-            .schedule_expression(schedule_expr.clone())
-            .flexible_time_window(ftw.clone())
-            .state(ScheduleState::Enabled)
-            .action_after_completion(ActionAfterCompletion::Delete)
-            .target(target.clone())
-            .send()
-            .await;
-
-        if update_result.is_ok() {
-            return Ok(());
-        }
-
-        client
-            .create_schedule()
-            .name(schedule_name)
-            .group_name("default")
-            .schedule_expression(schedule_expr)
-            .flexible_time_window(ftw)
-            .state(ScheduleState::Enabled)
-            .action_after_completion(ActionAfterCompletion::Delete)
-            .target(target)
-            .send()
+    pub async fn schedule_start_notification(
+        &self,
+        scheduler: &PollScheduler,
+        started_at: i64,
+    ) -> crate::Result<()> {
+        scheduler
+            .schedule_start_notification(self, started_at)
             .await
-            .map_err(|e| {
-                tracing::error!("create_schedule failed: {e:?}");
-
-                let code = e.code().unwrap_or("Unknown");
-                let msg = e.message().unwrap_or("No message");
-                tracing::error!("aws error code={code}, message={msg}");
-
-                crate::Error::InternalServerError(e.to_string())
-            })?;
-        Ok(())
     }
 
     pub fn is_default_poll(&self) -> bool {

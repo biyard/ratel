@@ -1,0 +1,204 @@
+use crate::features::spaces::polls::poll::Poll;
+use crate::time::get_now_timestamp_millis;
+use crate::types::{EntityType, Partition};
+use crate::{Error, Result, config};
+use aws_config::SdkConfig;
+use aws_sdk_scheduler::{
+    Client as SchedulerClient,
+    types::{
+        ActionAfterCompletion, EventBridgeParameters, FlexibleTimeWindow, FlexibleTimeWindowMode,
+        ScheduleState, Target,
+    },
+};
+use chrono::{DateTime, Utc};
+
+#[derive(Clone)]
+pub struct PollScheduler {
+    client: SchedulerClient,
+    region: String,
+    account_id: String,
+    env: String,
+    group_name: String,
+}
+
+impl PollScheduler {
+    pub fn new(sdk_config: &SdkConfig) -> Self {
+        let client = SchedulerClient::new(sdk_config);
+
+        let region = sdk_config
+            .region()
+            .map(|r| r.as_ref().to_string())
+            .unwrap_or_else(|| "ap-northeast-2".to_string());
+
+        let cfg = config::get();
+        let account_id = cfg.account_id.to_string();
+        let env = cfg.env.to_string();
+
+        Self {
+            client,
+            region,
+            account_id,
+            env,
+            group_name: "default".to_string(),
+        }
+    }
+
+    fn sanitize_schedule_name(raw: &str) -> String {
+        let mut s: String = raw
+            .chars()
+            .map(|c| {
+                if c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '.' {
+                    c
+                } else {
+                    '-'
+                }
+            })
+            .collect();
+
+        if s.len() > 64 {
+            s.truncate(64);
+        }
+        s
+    }
+
+    fn bus_arn(&self) -> String {
+        let bus_name = format!("ratel-{}-bus", self.env);
+        format!(
+            "arn:aws:events:{}:{}:event-bus/{}",
+            self.region, self.account_id, bus_name
+        )
+    }
+
+    fn scheduler_role_arn(&self) -> String {
+        let role_name = format!("ratel-{}-{}-survey-scheduler-role", self.env, self.region);
+        format!("arn:aws:iam::{}:role/{}", self.account_id, role_name)
+    }
+
+    pub async fn schedule_start_notification(&self, poll: &Poll, started_at: i64) -> Result<()> {
+        use aws_smithy_types::error::metadata::ProvideErrorMetadata;
+
+        if self.env == "local" {
+            return Ok(());
+        }
+
+        let now = get_now_timestamp_millis();
+        if started_at <= now {
+            tracing::error!(
+                "schedule_start_notification skipped: started_at({}) <= now({})",
+                started_at,
+                now,
+            );
+            return Ok(());
+        }
+
+        if self.account_id.is_empty() {
+            tracing::error!("account id is not found");
+            return Ok(());
+        }
+
+        let sk_str = poll.sk.to_string();
+        let schedule_name = Self::sanitize_schedule_name(&format!("poll-start-{}", sk_str));
+
+        let start_at: DateTime<Utc> = DateTime::<Utc>::from_timestamp_millis(started_at)
+            .ok_or_else(|| Error::InternalServerError("invalid started_at".into()))?;
+
+        let start_at_str = start_at.format("%Y-%m-%dT%H:%M:%S").to_string();
+        let schedule_expr = format!("at({})", start_at_str);
+
+        let space_id = match &poll.pk {
+            Partition::Space(id) => id.clone(),
+            _ => {
+                return Err(Error::InvalidPartitionKey(
+                    "Poll must be under Space partition".into(),
+                ));
+            }
+        };
+
+        let survey_id = match &poll.sk {
+            EntityType::SpacePoll(id) => id.clone(),
+            _ => {
+                return Err(Error::InternalServerError(
+                    "Poll sk must be EntityType::SpacePoll".into(),
+                ));
+            }
+        };
+
+        let input_json = serde_json::json!({
+            "space_id": space_id,
+            "survey_id": survey_id,
+        })
+        .to_string();
+
+        let ftw = FlexibleTimeWindow::builder()
+            .mode(FlexibleTimeWindowMode::Off)
+            .build()
+            .map_err(|e| Error::InternalServerError(e.to_string()))?;
+
+        let eb_params = EventBridgeParameters::builder()
+            .source("ratel.spaces")
+            .detail_type("SurveyFetcher")
+            .build()
+            .map_err(|e| Error::InternalServerError(e.to_string()))?;
+
+        let target = Target::builder()
+            .arn(self.bus_arn())
+            .role_arn(self.scheduler_role_arn())
+            .event_bridge_parameters(eb_params)
+            .input(input_json)
+            .build()
+            .map_err(|e| Error::InternalServerError(e.to_string()))?;
+
+        let update_result = self
+            .client
+            .update_schedule()
+            .name(schedule_name.clone())
+            .group_name(&self.group_name)
+            .schedule_expression(schedule_expr.clone())
+            .flexible_time_window(ftw.clone())
+            .state(ScheduleState::Enabled)
+            .action_after_completion(ActionAfterCompletion::Delete)
+            .target(target.clone())
+            .send()
+            .await;
+
+        if update_result.is_ok() {
+            return Ok(());
+        }
+
+        self.client
+            .create_schedule()
+            .name(schedule_name)
+            .group_name(&self.group_name)
+            .schedule_expression(schedule_expr)
+            .flexible_time_window(ftw)
+            .state(ScheduleState::Enabled)
+            .action_after_completion(ActionAfterCompletion::Delete)
+            .target(target)
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("create_schedule failed: {e:?}");
+
+                let code = e.code().unwrap_or("Unknown");
+                let msg = e.message().unwrap_or("No message");
+                tracing::error!("aws error code={code}, message={msg}");
+
+                Error::InternalServerError(e.to_string())
+            })?;
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+impl PollScheduler {
+    pub fn mock(sdk_config: &SdkConfig) -> Self {
+        Self {
+            client: SchedulerClient::new(sdk_config),
+            region: "ap-northeast-2".to_string(),
+            account_id: "000000000000".to_string(),
+            env: "test".to_string(),
+            group_name: "default".to_string(),
+        }
+    }
+}
