@@ -1,3 +1,4 @@
+use crate::utils::generate_random_numeric_code;
 use crate::*;
 use crate::{
     AppState, Error,
@@ -62,7 +63,7 @@ pub async fn send_phone_code_handler(
     {
         return Err(Error::ExceededAttemptPhoneVerification);
     } else {
-        let code = generate_random_code();
+        let code = generate_random_numeric_code();
         let expired_at = get_now_timestamp() + EXPIRATION_TIME as i64;
 
         if verification_list.len() > 0 {
@@ -84,7 +85,10 @@ pub async fn send_phone_code_handler(
     };
 
     // Send SMS with verification code
-    let message = format!("Your verification code is: {}", value);
+    let message = format!(
+        "Ratel: {} is your code for login. Don't share your code",
+        value
+    );
     sns.send_sms(&phone, &message).await?;
 
     Ok(Json(SendCodeResponse { expired_at }))
