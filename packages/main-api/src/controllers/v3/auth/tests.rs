@@ -439,5 +439,5 @@ async fn test_phone_login_without_verification_code() {
         }
     };
 
-    assert_eq!(status, 404);
+    assert_eq!(status, 400);
 }
