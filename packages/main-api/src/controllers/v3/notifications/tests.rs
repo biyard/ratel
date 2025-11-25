@@ -357,7 +357,7 @@ async fn test_delete_notification_without_permission() {
     };
 
     // Should return an error (notifications are partitioned by user - secure)
-    assert!(status >= 400, "Should return an error for other user's notification, got {}", status);
+    assert!(status.as_u16() >= 400, "Should return an error for other user's notification, got {}", status);
 }
 
 #[tokio::test]
@@ -375,7 +375,7 @@ async fn test_delete_non_existent_notification() {
         headers: headers.clone()
     };
 
-    assert!(status >= 400, "Should return an error for non-existent notification, got {}", status);
+    assert!(status.as_u16() >= 400, "Should return an error for non-existent notification, got {}", status);
 }
 
 #[tokio::test]
