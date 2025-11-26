@@ -47,6 +47,32 @@ impl SpaceParticipant {
         }
     }
 
+    pub fn new_non_anonymous(
+        space_pk: Partition,
+        User {
+            pk,
+            username,
+            display_name,
+            profile_url,
+            user_type,
+            ..
+        }: User,
+    ) -> Self {
+        let created_at = time::get_now_timestamp_millis();
+        let user_pk = pk;
+        Self {
+            pk: CompositePartition(space_pk.clone(), user_pk.clone()),
+            sk: EntityType::SpaceParticipant,
+            created_at,
+            display_name,
+            username,
+            profile_url,
+            user_type,
+            space_pk,
+            user_pk,
+        }
+    }
+
     pub fn invite(space_pk: Partition, user_pk: Partition, display_name: String) -> Self {
         let created_at = time::get_now_timestamp_millis();
         let username = display_name.replace(' ', "-").to_lowercase();
