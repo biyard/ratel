@@ -172,15 +172,6 @@ class AppRoutes {
       opaque: true,
       curve: Curves.easeOutCubic,
     ),
-    GetPage(
-      name: bookmark,
-      page: () => const BookmarkScreen(),
-      binding: BookmarkBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
   ];
 }
 

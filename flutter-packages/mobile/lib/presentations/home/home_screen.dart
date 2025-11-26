@@ -1,7 +1,5 @@
 import 'package:ratel/exports.dart';
-import 'package:ratel/presentations/home/components/matched_feed.dart';
-import 'package:ratel/presentations/home/components/new_release.dart';
-import 'package:ratel/presentations/home/components/top_space.dart';
+import 'package:ratel/components/feed_card/v2/feed_card_v2.dart';
 
 class HomeScreen extends GetWidget<HomeController> {
   const HomeScreen({super.key});
@@ -11,38 +9,46 @@ class HomeScreen extends GetWidget<HomeController> {
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Layout<HomeController>(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(14, 10, 14, bottomPad),
-        child: Column(
-          children: [
-            Obx(() => TopSpace(items: controller.topSpaces.value)),
-            30.vgap,
-            Obx(
-              () => MatchedFeed(
-                items: controller.matchedFeeds.value,
-                onBookmarkTap: (feedId, isBookmarked) async {
-                  if (isBookmarked) {
-                    await controller.removebookmark(feedId);
-                  } else {
-                    await controller.addBookmark(feedId);
-                  }
-                },
-              ),
-            ),
-            30.vgap,
-            Obx(
-              () => NewRelease(
-                items: controller.newFeeds.value,
-                onBookmarkTap: (feedId, isBookmarked) async {
-                  if (isBookmarked) {
-                    await controller.removebookmark(feedId);
-                  } else {
-                    await controller.addBookmark(feedId);
-                  }
-                },
-              ),
-            ),
-          ],
+      scrollable: false,
+      child: Obx(
+        () => RefreshIndicator(
+          onRefresh: controller.loadInitial,
+          color: AppColors.primary,
+          backgroundColor: AppColors.bg,
+          child: ListView.separated(
+            controller: controller.scrollController,
+            padding: EdgeInsets.fromLTRB(0, 10, 0, bottomPad + 10),
+            itemCount:
+                controller.feeds.length + (controller.hasMore.value ? 1 : 0),
+            separatorBuilder: (_, __) => 8.vgap,
+            itemBuilder: (context, index) {
+              if (index >= controller.feeds.length) {
+                return _buildLoadMoreIndicator();
+              }
+
+              final feed = controller.feeds[index];
+              return FeedCardV2(feed: feed, onBookmarkTap: () => {});
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoadMoreIndicator() {
+    if (!controller.hasMore.value) {
+      return const SizedBox.shrink();
+    }
+    if (!controller.isLoadingMore.value) {
+      return const SizedBox(height: 32);
+    }
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 16),
+      child: Center(
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
     );
