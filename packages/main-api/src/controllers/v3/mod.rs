@@ -5,6 +5,7 @@ use bdk::prelude::*;
 
 // pub mod did;
 pub mod networks;
+pub mod notifications;
 mod payments;
 
 pub mod promotions {
@@ -70,6 +71,7 @@ pub fn route(bot: Option<ArcTelegramBot>) -> Result<Router> {
         .nest("/auth", auth::route()?)
         .nest("/teams", teams::route()?)
         .nest("/spaces", spaces::route()?)
+        .nest("/notifications", notifications::route()?)
         .nest(
             "/assets",
             Router::new()
