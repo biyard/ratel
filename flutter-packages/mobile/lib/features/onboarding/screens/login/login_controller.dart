@@ -66,7 +66,7 @@ class LoginController extends BaseController {
   }
 
   void goToSignup() {
-    Get.rootDelegate.offNamed(AppRoutes.signupScreen);
+    Get.rootDelegate.offNamed(signupScreen);
   }
 
   @override

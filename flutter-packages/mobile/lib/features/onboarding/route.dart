@@ -14,6 +14,7 @@ export 'screens/welcome/welcome_screen.dart';
 const String welcomeScreen = '/welcome';
 const String loginScreen = '/login';
 const String introScreen = '/intro';
+const String signupScreen = '/signup';
 
 List<GetPage> onboardingPages = [
   GetPage(
@@ -38,6 +39,15 @@ List<GetPage> onboardingPages = [
     name: loginScreen,
     page: () => const LoginScreen(),
     binding: LoginBinding(),
+    customTransition: SlideOverTransition(),
+    transitionDuration: const Duration(milliseconds: 300),
+    opaque: true,
+    curve: Curves.easeOutCubic,
+  ),
+  GetPage(
+    name: signupScreen,
+    page: () => const SignupScreen(),
+    binding: SignupBinding(),
     customTransition: SlideOverTransition(),
     transitionDuration: const Duration(milliseconds: 300),
     opaque: true,
