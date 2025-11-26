@@ -132,7 +132,7 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-prod
           DYNAMO_ENDPOINT: none
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          RUST_FLAG: "--features lambda --release"
+          RUST_FLAG: "--features lambda"
           WEB_BUILD: false
 
           # NOTE: Change PORTONE API
