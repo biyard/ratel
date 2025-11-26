@@ -1,15 +1,11 @@
-use crate::{
-    Error,
-    config::{self},
-    models::{SpaceCommon, email_template::email_template::EmailTemplate},
-    types::{email_operation::EmailOperation, *},
-    utils::{
-        aws::{DynamoClient, SesClient, get_aws_config},
-        html::start_survey_html,
-        time::get_now_timestamp_millis,
-        uuid::sorted_uuid,
-    },
-};
+use crate::email_operation::EmailOperation;
+use crate::models::SpaceCommon;
+use crate::models::email_template::email_template::EmailTemplate;
+use crate::time::get_now_timestamp_millis;
+use crate::utils::aws::PollScheduler;
+use crate::utils::aws::get_aws_config;
+use crate::utils::aws::{DynamoClient, SesClient};
+use crate::*;
 use aws_config::Region;
 use aws_sdk_s3::{
     Client, Config,
@@ -17,16 +13,15 @@ use aws_sdk_s3::{
     primitives::ByteStream,
     types::{Delete, ObjectIdentifier},
 };
-use aws_sdk_scheduler::Client as SchedulerClient;
 use aws_sdk_scheduler::types::{
     ActionAfterCompletion, EventBridgeParameters, FlexibleTimeWindow, FlexibleTimeWindowMode,
     ScheduleState, Target,
 };
-use chrono::Utc;
-// use aws_sdk_sts::Client as StsClient;
+use aws_sdk_scheduler::{Client as SchedulerClient, error::SdkError};
 use bdk::prelude::*;
 use by_axum::axum::Json;
 use chrono::DateTime;
+use chrono::Utc;
 
 #[allow(dead_code)]
 #[derive(Debug, serde::Serialize)]
@@ -70,11 +65,12 @@ impl Poll {
     pub async fn send_email(
         dynamo: &DynamoClient,
         ses: &SesClient,
+        survey_id: String,
         space: SpaceCommon,
         title: String,
         user_emails: Vec<String>,
         is_default: bool,
-    ) -> Result<Json<()>, Error> {
+    ) -> Result<Json<()>> {
         let mut domain = crate::config::get().domain.to_string();
         if domain.contains("localhost") {
             domain = format!("http://{}", domain).to_string();
@@ -87,7 +83,10 @@ impl Poll {
             _ => "".to_string(),
         };
 
-        let url = format!("{}/spaces/SPACE%23{}", domain, space_id);
+        let url = format!(
+            "{}/spaces/SPACE%23{}/polls/SPACE_POLL%23{}",
+            domain, space_id, survey_id
+        );
         let survey_title = if is_default {
             "Pre Poll Survey"
         } else {
@@ -131,11 +130,9 @@ impl Poll {
             created_at: now,
             updated_at: now,
             user_response_count: 0,
-
             response_editable: false,
             started_at: now,
             ended_at: now + 7 * 24 * 60 * 60 * 1000, // Default to 7 days later
-
             topic: String::new(),
             description: String::new(),
             questions: Vec::new(),
@@ -160,114 +157,14 @@ impl Poll {
         s
     }
 
-    pub async fn _schedule_start_notification(&self) -> crate::Result<()> {
-        let cfg = config::get();
-        let sdk_config = get_aws_config();
-        let client = SchedulerClient::new(&sdk_config);
-
-        let region = sdk_config
-            .region()
-            .map(|r| r.as_ref().to_string())
-            .unwrap_or_else(|| "ap-northeast-2".to_string());
-
-        let account_id = std::env::var("AWS_ACCOUNT_ID")
-            .map_err(|_| crate::Error::Unknown("AWS_ACCOUNT_ID is required".into()))?;
-
-        let pk_str = self.pk.to_string();
-        let sk_str = self.sk.to_string();
-        let schedule_name =
-            Self::sanitize_schedule_name(&format!("poll-start-{}-{}", pk_str, sk_str));
-
-        let now = get_now_timestamp_millis();
-        if self.started_at <= now {
-            return Ok(());
-        }
-
-        let start_at: DateTime<Utc> = DateTime::<Utc>::from_timestamp_millis(self.started_at)
-            .ok_or_else(|| crate::Error::Unknown("invalid started_at".into()))?;
-
-        let start_at_str = start_at.format("%Y-%m-%dT%H:%M:%SZ").to_string();
-        let schedule_expr = format!("at({})", start_at_str);
-
-        let space_id = match &self.pk {
-            Partition::Space(id) => id.clone(),
-            _ => {
-                return Err(crate::Error::InvalidPartitionKey(
-                    "Poll must be under Space partition".into(),
-                ));
-            }
-        };
-        let survey_id = match &self.sk {
-            EntityType::SpacePoll(id) => id.clone(),
-            _ => {
-                return Err(crate::Error::Unknown(
-                    "Poll sk must be EntityType::SpacePoll".into(),
-                ));
-            }
-        };
-
-        let bus_name = format!("ratel-{}-bus", cfg.env);
-        let bus_arn = format!("arn:aws:events:{region}:{account_id}:event-bus/{bus_name}");
-
-        let scheduler_role_name = format!("ratel-{}-{}-survey-scheduler-role", cfg.env, region);
-        let scheduler_role_arn = format!("arn:aws:iam::{account_id}:role/{scheduler_role_name}");
-
-        let input_json = serde_json::json!({
-            "space_id": space_id,
-            "survey_id": survey_id,
-            "started_at": self.started_at,
-        })
-        .to_string();
-
-        let ftw = FlexibleTimeWindow::builder()
-            .mode(FlexibleTimeWindowMode::Off)
-            .build()
-            .map_err(|e| crate::Error::Unknown(e.to_string()))?;
-
-        let eb_params = EventBridgeParameters::builder()
-            .source("ratel.spaces")
-            .detail_type("SurveyFetcher")
-            .build()
-            .map_err(|e| crate::Error::Unknown(e.to_string()))?;
-
-        let target = Target::builder()
-            .arn(bus_arn)
-            .role_arn(scheduler_role_arn)
-            .event_bridge_parameters(eb_params)
-            .input(input_json)
-            .build()
-            .map_err(|e| crate::Error::Unknown(e.to_string()))?;
-
-        let update_result = client
-            .update_schedule()
-            .name(schedule_name.clone())
-            .group_name("default")
-            .schedule_expression(schedule_expr.clone())
-            .flexible_time_window(ftw.clone())
-            .state(ScheduleState::Enabled)
-            .action_after_completion(ActionAfterCompletion::Delete)
-            .target(target.clone())
-            .send()
-            .await;
-
-        if update_result.is_ok() {
-            return Ok(());
-        }
-
-        client
-            .create_schedule()
-            .name(schedule_name)
-            .group_name("default")
-            .schedule_expression(schedule_expr)
-            .flexible_time_window(ftw)
-            .state(ScheduleState::Enabled)
-            .action_after_completion(ActionAfterCompletion::Delete)
-            .target(target)
-            .send()
+    pub async fn schedule_start_notification(
+        &self,
+        scheduler: &PollScheduler,
+        started_at: i64,
+    ) -> crate::Result<()> {
+        scheduler
+            .schedule_start_notification(self, started_at)
             .await
-            .map_err(|e| crate::Error::Unknown(e.to_string()))?;
-
-        Ok(())
     }
 
     pub fn is_default_poll(&self) -> bool {
@@ -327,10 +224,14 @@ impl Poll {
 impl TryFrom<Partition> for Poll {
     type Error = crate::Error;
 
-    fn try_from(value: Partition) -> Result<Self, Self::Error> {
+    fn try_from(value: Partition) -> Result<Self> {
         let uuid = match value {
             Partition::Space(ref s) => s.clone(),
-            _ => return Err(crate::Error::Unknown("server error".to_string())),
+            _ => {
+                return Err(crate::Error::InternalServerError(
+                    "server error".to_string(),
+                ));
+            }
         };
 
         Poll::new(value, Some(EntityType::SpacePoll(uuid)))
