@@ -59,7 +59,12 @@ impl EmailTemplate {
     }
 
     #[allow(unused_variables)]
-    pub async fn send_email(&self, dynamo: &DynamoClient, ses: &SesClient) -> Result<()> {
+    pub async fn send_email(
+        &self,
+        dynamo: &DynamoClient,
+        ses: &SesClient,
+        require_email_success: bool,
+    ) -> Result<()> {
         if self.targets.is_empty() {
             return Ok(());
         }
@@ -88,13 +93,23 @@ impl EmailTemplate {
                 .map(|email| (email, Some(data.clone())))
                 .collect();
 
-            // Try to send email, but log error instead of failing
-            if let Err(e) = ses.send_bulk_with_template(template_name, &recipients).await {
-                tracing::error!("Failed to send email via SES: {:?}", e);
+            // Send email via SES
+            let email_result = ses.send_bulk_with_template(template_name, &recipients).await;
+
+            // Handle email errors based on require_email_success flag
+            if let Err(e) = email_result {
+                if require_email_success {
+                    // Critical flows (e.g., auth) need to propagate errors
+                    return Err(Error::AwsSesSendEmailException(e.to_string()));
+                } else {
+                    // Non-critical flows can log and continue to create notifications
+                    tracing::error!("Failed to send email via SES (non-critical): {:?}", e);
+                }
             }
 
-            // Always create notifications, regardless of email success
+
             self.create_notifications(dynamo).await
+
         }
     }
 }
