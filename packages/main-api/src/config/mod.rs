@@ -44,6 +44,7 @@ pub struct Config {
     pub watermark_sqs_url: &'static str,
 
     pub portone: PortoneConfig,
+    pub account_id: &'static str,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -126,6 +127,7 @@ impl Default for Config {
             watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL").expect("You must set WATERMARK_QUEUE_URL"),
 
             portone: PortoneConfig::default(),
+            account_id: option_env!("ACCOUNT_ID").unwrap_or(""),
         }
     }
 }

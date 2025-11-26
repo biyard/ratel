@@ -108,7 +108,7 @@ async fn start_survey(state: &AppState, evt: &StartSurveyEvent) -> Result<(), La
     let sk = evt.survey_id.clone();
 
     let space_pk = Partition::Space(pk);
-    let poll_sk = EntityType::SpacePoll(sk);
+    let poll_sk = EntityType::SpacePoll(sk.clone());
 
     let space = SpaceCommon::get(
         &state.dynamo.client,
@@ -155,6 +155,7 @@ async fn start_survey(state: &AppState, evt: &StartSurveyEvent) -> Result<(), La
     if let Err(e) = Poll::send_email(
         &state.dynamo,
         &state.ses,
+        sk.clone(),
         space,
         post.title,
         emails,
