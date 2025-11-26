@@ -10,11 +10,19 @@ export 'screens/login/login_screen.dart';
 export 'screens/welcome/welcome_binding.dart';
 export 'screens/welcome/welcome_controller.dart';
 export 'screens/welcome/welcome_screen.dart';
+export 'screens/signup/signup_binding.dart';
+export 'screens/signup/signup_controller.dart';
+export 'screens/signup/signup_model.dart';
+export 'screens/signup/signup_screen.dart';
+export 'screens/verification/verification_binding.dart';
+export 'screens/verification/verification_controller.dart';
+export 'screens/verification/verification_screen.dart';
 
 const String welcomeScreen = '/welcome';
 const String loginScreen = '/login';
 const String introScreen = '/intro';
 const String signupScreen = '/signup';
+const String verificationScreen = '/verification';
 
 List<GetPage> onboardingPages = [
   GetPage(
@@ -48,6 +56,15 @@ List<GetPage> onboardingPages = [
     name: signupScreen,
     page: () => const SignupScreen(),
     binding: SignupBinding(),
+    customTransition: SlideOverTransition(),
+    transitionDuration: const Duration(milliseconds: 300),
+    opaque: true,
+    curve: Curves.easeOutCubic,
+  ),
+  GetPage(
+    name: verificationScreen,
+    page: () => const VerificationScreen(),
+    binding: VerificationBinding(),
     customTransition: SlideOverTransition(),
     transitionDuration: const Duration(milliseconds: 300),
     opaque: true,

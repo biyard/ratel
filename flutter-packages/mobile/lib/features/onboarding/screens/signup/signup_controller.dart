@@ -3,51 +3,37 @@ import 'package:ratel/exports.dart';
 class SignupController extends BaseController {
   final signupService = Get.find<SignupService>();
 
-  final emailCtrl = TextEditingController();
-  final passwordCtrl = TextEditingController();
-  final confirmCtrl = TextEditingController();
+  final phoneCtrl = TextEditingController();
 
   final isBusy = false.obs;
 
-  final showPassword = false.obs;
-  final showConfirm = false.obs;
+  final phone = ''.obs;
 
-  Rx<String> get email => signupService.email;
-  Rx<String> get password => signupService.password;
-  Rx<String> get confirm => signupService.confirm;
+  final selectedCountry = Rx<CountryCode>(kDefaultCountryCode);
 
-  bool isStrongPassword(String s) {
-    final pwd = s.trim();
-    if (pwd.length < 8) return false;
+  final isPhoneValid = false.obs;
 
-    final hasLetter = RegExp(r'[A-Za-z]').hasMatch(pwd);
-    final hasDigit = RegExp(r'\d').hasMatch(pwd);
-    final hasSpecial = RegExp(r'[^A-Za-z0-9]').hasMatch(pwd);
+  String get fullPhoneNumber =>
+      '+${selectedCountry.value.dialCode}${phone.value}';
 
-    return hasLetter && hasDigit && hasSpecial;
+  void onPhoneChanged(String v) {
+    final digits = v.replaceAll(RegExp(r'[^0-9]'), '');
+    phone.value = digits;
+    isPhoneValid.value = digits.length >= 6;
+    phoneCtrl.value = phoneCtrl.value.copyWith(
+      text: digits,
+      selection: TextSelection.collapsed(offset: digits.length),
+    );
   }
 
-  bool get isFormFilled =>
-      email.value.isNotEmpty &&
-      password.value.isNotEmpty &&
-      confirm.value.isNotEmpty &&
-      password.value == confirm.value &&
-      GetUtils.isEmail(email.value) &&
-      isStrongPassword(password.value);
+  void selectCountry(CountryCode c) => selectedCountry.value = c;
 
-  void onEmailChanged(String v) => email.value = v.trim();
-  void onPasswordChanged(String v) => password.value = v;
-  void onConfirmChanged(String v) => confirm.value = v;
-
-  void toggleShowPassword() => showPassword.toggle();
-  void toggleShowConfirm() => showConfirm.toggle();
+  bool get isPhoneStepValid => isPhoneValid.value;
 
   @override
   void onInit() {
     super.onInit();
-    emailCtrl.text = email.value;
-    passwordCtrl.text = password.value;
-    confirmCtrl.text = confirm.value;
+    phoneCtrl.text = phone.value;
   }
 
   void goBack() {
@@ -55,14 +41,16 @@ class SignupController extends BaseController {
   }
 
   Future<void> next() async {
+    if (!isPhoneStepValid || isBusy.value) return;
+
     final auth = AuthApi();
-    if (!isFormFilled || isBusy.value) return;
     isBusy.value = true;
     try {
-      final res = await auth.sendVerificationCode(email.value);
+      final res = await auth.sendVerificationCode(fullPhoneNumber);
 
       if (res != null) {
-        Get.rootDelegate.offNamed(AppRoutes.verificationScreen);
+        signupService.phone(fullPhoneNumber);
+        Get.rootDelegate.offNamed(verificationScreen);
       } else {
         Biyard.error(
           "Failed to send authorization code",
@@ -74,11 +62,15 @@ class SignupController extends BaseController {
     }
   }
 
+  void restartSignup() {
+    phone.value = '';
+    phoneCtrl.clear();
+    selectedCountry.value = kDefaultCountryCode;
+  }
+
   @override
   void onClose() {
-    emailCtrl.dispose();
-    passwordCtrl.dispose();
-    confirmCtrl.dispose();
+    phoneCtrl.dispose();
     super.onClose();
   }
 }
