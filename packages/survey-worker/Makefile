@@ -36,8 +36,7 @@ BUILD_ENV ?= ENV=$(ENV) \
 								API_MODEL_ARTIFACT_DIR=$(API_MODEL_ARTIFACT_DIR) \
 								CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 								DYNAMO_ENDPOINT=$(DYNAMO_ENDPOINT) \
-								DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
-								RUST_FLAG=$(RUST_FLAG)
+								DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX)
 
 run:
 	$(BUILD_ENV) cargo run --features local-run
@@ -48,7 +47,7 @@ watch:
 build: docker.login docker.build docker.push
 
 bin.build:
-	$(BUILD_ENV) cargo build --release
+	$(BUILD_ENV) cargo build --release $(RUST_FLAG)
 
 docker.push:
 	docker push $(ECR_NAME):$(COMMIT)
@@ -57,8 +56,8 @@ docker.login:
 	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 
 docker.build:
-	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'apt-get update && apt-get install -y libssl-dev pkg-config ca-certificates && $(BUILD_ENV) WEB_BUILD=false CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release'
+	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'apt-get update && apt-get install -y libssl-dev pkg-config ca-certificates && $(BUILD_ENV) WEB_BUILD=false CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release $(RUST_FLAG)'
 	docker build -t $(ECR_NAME):$(COMMIT) --no-cache -f Dockerfile $(PWD)/target/release
-
+	
 test:
 	$(BUILD_ENV) RUSTFLAGS="-D warnings" RUST_TEST_THREADS=1 cargo test
