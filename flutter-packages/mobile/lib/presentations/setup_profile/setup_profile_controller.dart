@@ -106,7 +106,7 @@ class SetupProfileController extends BaseController {
   }
 
   void goBack() {
-    Get.rootDelegate.offNamed(AppRoutes.signupScreen);
+    Get.rootDelegate.offNamed(signupScreen);
   }
 
   @override

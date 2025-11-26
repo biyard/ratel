@@ -5,6 +5,8 @@ export 'package:flutter/services.dart';
 export 'package:flutter_svg/svg.dart';
 export 'package:get/get.dart';
 
+export 'theme_color.dart';
+export 'theme_controller.dart';
 export 'binding.dart';
 export 'components/app_card/app_card.dart';
 export 'components/biyard/biyard_static.dart';
@@ -23,6 +25,7 @@ export 'components/profile/profile.dart';
 export 'components/round_container/round_container.dart';
 export 'components/side_panel/side_panel.dart';
 export 'components/text_field/text_field.dart';
+export 'components/app_top_bar/app_top_bar.dart';
 export 'config.dart';
 export 'constants/assets.dart';
 export 'constants/colors.dart';

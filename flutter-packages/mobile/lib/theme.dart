@@ -2,18 +2,32 @@ import 'package:ratel/exports.dart';
 
 final darkTheme = ThemeData(
   brightness: Brightness.dark,
-  pageTransitionsTheme: PageTransitionsTheme(
+  pageTransitionsTheme: const PageTransitionsTheme(
     builders: {
-      TargetPlatform.android: const _SlideBuilder(),
-      TargetPlatform.iOS: const _SlideBuilder(),
+      TargetPlatform.android: _SlideBuilder(),
+      TargetPlatform.iOS: _SlideBuilder(),
     },
   ),
   visualDensity: VisualDensity.standard,
   fontFamily: "Raleway",
   fontFamilyFallback: ["Raleway"],
-  textTheme: AppFonts.textTheme,
+  textTheme: AppFonts.textTheme.apply(
+    bodyColor: Colors.white,
+    displayColor: Colors.white,
+  ),
   scaffoldBackgroundColor: AppColors.bg,
   primaryColor: AppColors.primary,
+  extensions: const <ThemeExtension<dynamic>>[ThemeColors.dark],
+);
+
+final lightTheme = darkTheme.copyWith(
+  brightness: Brightness.light,
+  scaffoldBackgroundColor: Colors.white,
+  textTheme: AppFonts.textTheme.apply(
+    bodyColor: AppColors.neutral900,
+    displayColor: AppColors.neutral900,
+  ),
+  extensions: const <ThemeExtension<dynamic>>[ThemeColors.light],
 );
 
 class _SlideBuilder extends PageTransitionsBuilder {
@@ -28,17 +42,6 @@ class _SlideBuilder extends PageTransitionsBuilder {
   }
 }
 
-// ThemeData for light theme.
-ThemeData _getLightTheme() {
-  return darkTheme.copyWith(brightness: Brightness.light);
-}
-
-// Returns the theme data for the application by Brightness.
 ThemeData getThemeData(Brightness brightness) {
-  switch (brightness) {
-    case Brightness.light:
-      return _getLightTheme();
-    case Brightness.dark:
-      return darkTheme;
-  }
+  return brightness == Brightness.dark ? darkTheme : lightTheme;
 }

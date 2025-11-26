@@ -3,7 +3,6 @@ import 'package:ratel/middlewares/space_middleware.dart';
 
 class AppRoutes {
   static const String mainScreen = '/dashboard';
-  static const String signupScreen = '/signup';
   static const String verificationScreen = '/verification';
   static const String setupProfileScreen = '/setup-profile';
   static const String selectTopicScreen = '/select-topic';
@@ -105,15 +104,6 @@ class AppRoutes {
       name: verifiedScreen,
       page: () => const VerifiedScreen(),
       binding: VerifiedBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: signupScreen,
-      page: () => const SignupScreen(),
-      binding: SignupBinding(),
       customTransition: SlideOverTransition(),
       transitionDuration: const Duration(milliseconds: 300),
       opaque: true,
