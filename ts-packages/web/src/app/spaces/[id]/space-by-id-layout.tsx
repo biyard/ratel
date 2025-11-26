@@ -111,7 +111,7 @@ function GeneralLayout() {
         <Col className="gap-2.5 w-full max-w-[250px]">
           {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
 
-          {participantProfileProps && (
+          {participantProfileProps && ctrl.space.anonymous_participation && (
             <SpaceParticipantProfile {...participantProfileProps} />
           )}
 
