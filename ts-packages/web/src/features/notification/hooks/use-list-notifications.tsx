@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { QK_GET_NOTIFICATIONS } from '@/constants';
+import { QK_GET_NOTIFICATIONS, NOTIFICATION_POLL_INTERVAL } from '@/constants';
 import { call } from '@/lib/api/ratel/call';
 import { logger } from '@/lib/logger';
 import { ListNotificationsResponse } from '../dto/list-notifications-response';
@@ -36,7 +36,8 @@ export function getOptions() {
     getNextPageParam: (last: ListNotificationsResponse) =>
       last.bookmark ?? undefined,
     initialPageParam: undefined as string | undefined,
-    refetchOnWindowFocus: false,
+    refetchInterval: NOTIFICATION_POLL_INTERVAL,
+    refetchOnWindowFocus: true, // Refetch when user returns to the tab
   };
 }
 
