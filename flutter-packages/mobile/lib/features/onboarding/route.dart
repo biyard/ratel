@@ -1,4 +1,5 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/middlewares/intro_middleware.dart';
 
 export 'screens/intro/intro_binding.dart';
 export 'screens/intro/intro_controller.dart';
@@ -28,6 +29,7 @@ List<GetPage> onboardingPages = [
   GetPage(
     name: introScreen,
     page: () => const IntroScreen(),
+    middlewares: [IntroMiddleware()],
     binding: IntroBinding(),
     customTransition: SlideOverTransition(),
     transitionDuration: const Duration(milliseconds: 300),
