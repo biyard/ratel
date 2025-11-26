@@ -305,7 +305,7 @@ jobs:
           DOMAIN: ratel.foundation
           DYNAMO_TABLE_PREFIX: ratel-prod
           DYNAMO_ENDPOINT: none
-          RUST_FLAG: "--features lambda --release"
+          RUST_FLAG: "--features lambda"
           WEB_BUILD: false
         run: |
           make bin.build
