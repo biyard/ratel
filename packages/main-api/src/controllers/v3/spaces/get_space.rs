@@ -73,7 +73,7 @@ pub async fn get_space_handler(
 
     let permissions = post.get_permissions(&dynamo.client, user.clone()).await?;
 
-    let user_participant = if user.is_some() && space.should_explicit_participation() {
+    let user_participant = if user.is_some() {
         let (pk, sk) = SpaceParticipant::keys(space_pk.clone(), user.as_ref().unwrap().pk.clone());
         SpaceParticipant::get(&dynamo.client, pk, Some(sk)).await?
     } else {
@@ -91,6 +91,7 @@ pub async fn get_space_handler(
     let can_participate = if let Some(ref user) = user {
         let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
         let invitation = SpaceInvitationMember::get(&dynamo.client, &pk, Some(&sk)).await?;
+
         invitation.is_some()
             && user_participant.is_none()
             && space.status == Some(SpaceStatus::InProgress)
