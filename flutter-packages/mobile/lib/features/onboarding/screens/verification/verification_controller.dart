@@ -59,11 +59,12 @@ class VerificationController extends BaseController {
       final pin = code.join();
       logger.d("pin value: ${pin}");
       final res = await auth.verifyCode(phone, pin);
+      final res2 = await auth.signup(phone, pin);
 
-      if (res != null) {
-        logger.d("verification response: ${res}");
+      if (res != null && res2 != null) {
+        logger.d("verification response: ${res} ${res}");
         authService.neededSignup = false;
-        Get.rootDelegate.offNamed(AppRoutes.setupProfileScreen);
+        Get.rootDelegate.offNamed(AppRoutes.mainScreen);
       } else {
         Biyard.error(
           "Failed to verify code",

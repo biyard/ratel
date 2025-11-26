@@ -34,7 +34,7 @@ class IntroController extends BaseController {
         curve: Curves.easeOut,
       );
     } else {
-      // await autoLogin();
+      await autoLogin();
       Get.rootDelegate.offNamed(loginScreen);
     }
   }
@@ -43,9 +43,9 @@ class IntroController extends BaseController {
     final auth = AuthApi();
     final user = UserApi();
     await auth.init();
-    final res = await user.getUserInfo();
+    final res = await user.getUserInfoV2();
 
-    if (res.id == 0) {
+    if (res.pk == "") {
       return;
     }
 
