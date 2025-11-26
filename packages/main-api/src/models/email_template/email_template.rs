@@ -88,10 +88,12 @@ impl EmailTemplate {
                 .map(|email| (email, Some(data.clone())))
                 .collect();
 
-            ses.send_bulk_with_template(template_name, &recipients)
-                .await
-                .map_err(|e| Error::AwsSesSendEmailException(e.to_string()))?;
+            // Try to send email, but log error instead of failing
+            if let Err(e) = ses.send_bulk_with_template(template_name, &recipients).await {
+                tracing::error!("Failed to send email via SES: {:?}", e);
+            }
 
+            // Always create notifications, regardless of email success
             self.create_notifications(dynamo).await
         }
     }
