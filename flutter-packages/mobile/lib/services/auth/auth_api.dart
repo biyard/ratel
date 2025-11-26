@@ -116,23 +116,23 @@ class AuthApi extends GetConnect {
     return true;
   }
 
-  Future<dynamic> sendVerificationCode(String email) async {
-    final uri = Uri.parse(apiEndpoint).resolve('/v1/users/verifications');
+  Future<dynamic> sendVerificationCode(String phone) async {
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v3/auth/verification/send-verification-code');
     final headers = <String, String>{'Content-Type': 'application/json'};
-    final body = {
-      'send_verification_code': {'email': email},
-    };
+    final body = {'phone': phone};
     final res = await post(uri.toString(), body, headers: headers);
     if (!res.isOk) return null;
     return res.isOk;
   }
 
-  Future<dynamic> verifyCode(String email, String value) async {
-    final uri = Uri.parse(apiEndpoint).resolve('/v1/users/verifications');
+  Future<dynamic> verifyCode(String phone, String code) async {
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v3/auth/verification/verify-code');
     final headers = <String, String>{'Content-Type': 'application/json'};
-    final body = {
-      'verify': {'email': email, 'value': value},
-    };
+    final body = {"phone": phone, "code": code};
     final res = await post(uri.toString(), body, headers: headers);
     if (!res.isOk) return null;
     return res.body;
