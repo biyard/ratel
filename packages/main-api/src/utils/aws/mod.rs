@@ -4,6 +4,9 @@ pub use bedrock_runtime::{BedrockClient, BedrockModel};
 mod rekognition;
 pub use rekognition::RekognitionClient;
 
+mod poll_scheduler;
+pub use poll_scheduler::PollScheduler;
+
 mod textract;
 pub use textract::TextractClient;
 

@@ -5886,6 +5886,7 @@ dependencies = [
  "aws-sdk-sns",
  "aws-sdk-sqs",
  "aws-sdk-textract",
+ "aws-smithy-types",
  "base64 0.22.1",
  "bcrypt",
  "bdk",
