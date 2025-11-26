@@ -1,6 +1,8 @@
 use crate::features::did::VerifiedAttributes;
 use crate::utils::time::get_now_timestamp_millis;
 use crate::*;
+use names::Generator;
+use names::Name;
 use tower_sessions::Session;
 
 #[derive(
@@ -20,6 +22,7 @@ pub struct User {
 
     #[dynamo(prefix = "TS", index = "gsi2", sk)]
     #[dynamo(prefix = "TS", index = "gsi3", sk)]
+    #[dynamo(prefix = "TS", index = "gsi5", sk)]
     pub created_at: i64,
     #[dynamo(prefix = "USER_TYPE", index = "gsi4", sk)]
     pub updated_at: i64,
@@ -37,6 +40,9 @@ pub struct User {
     // NOTE: username is linked with gsi2-index of team model.
     #[dynamo(prefix = "USERNAME", name = "find_by_username", index = "gsi2", pk)]
     pub username: String,
+    #[dynamo(prefix = "PHONE", name = "find_by_phone", index = "gsi5", pk)]
+    #[serde(default)]
+    pub phone: Option<String>,
 
     pub term_agreed: bool,
     pub informed_agreed: bool,
@@ -87,6 +93,34 @@ impl User {
             user_type,
             username,
             password,
+            ..Default::default()
+        }
+    }
+
+    pub fn new_phone(phone: String) -> Self {
+        let uid = uuid::Uuid::new_v4().to_string();
+        let pk = Partition::User(uid.clone());
+        let sk = EntityType::User;
+
+        let now = get_now_timestamp_millis();
+        let display_name = Generator::with_naming(Name::Numbered)
+            .next()
+            .unwrap()
+            .replace('-', " ");
+
+        Self {
+            pk,
+            sk,
+            created_at: now,
+            updated_at: now,
+            display_name: display_name.clone(),
+            email: phone.to_string(),
+            profile_url: "".to_string(),
+            term_agreed: true,
+            informed_agreed: false,
+            user_type: UserType::Individual,
+            username: display_name.clone(),
+            password: None,
             ..Default::default()
         }
     }
