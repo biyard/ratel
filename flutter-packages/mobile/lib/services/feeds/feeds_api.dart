@@ -298,6 +298,33 @@ class FeedsApi extends GetConnect {
     return feeds;
   }
 
+  Future<FeedV2ListResult> listPostsV2({String? bookmark}) async {
+    final base = Uri.parse(apiEndpoint).resolve('/v3/me/posts');
+    final uri = bookmark == null
+        ? base
+        : base.replace(queryParameters: <String, String>{'bookmark': bookmark});
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await get(uri.toString(), headers: headers);
+
+    if (!res.isOk) {
+      return const FeedV2ListResult(items: [], bookmark: null);
+    }
+
+    final body = res.body;
+    final items = (body['items'] as List?) ?? const [];
+    final nextBookmark = body['bookmark'] as String?;
+
+    final posts = items
+        .map(
+          (e) =>
+              FeedV2SummaryModel.fromJson(Map<String, dynamic>.from(e as Map)),
+        )
+        .toList();
+
+    return FeedV2ListResult(items: posts, bookmark: nextBookmark);
+  }
+
   Future<FeedV2ListResult> listDraftsV2({String? bookmark}) async {
     final base = Uri.parse(apiEndpoint).resolve('/v3/me/drafts');
     final uri = bookmark == null
