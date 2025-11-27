@@ -1,7 +1,10 @@
 import 'dart:convert';
 
-import 'package:ratel/components/rich_editor/model/editor-snapshot.dart';
+import 'package:flutter_quill/flutter_quill.dart' as quill;
+import 'package:flutter_quill/quill_delta.dart';
 import 'package:ratel/exports.dart';
+import 'package:html/parser.dart' as html_parser;
+import 'package:html/dom.dart' as dom;
 
 class RichEditor extends StatefulWidget {
   const RichEditor({super.key, required this.controller, this.onHtmlChanged});
@@ -13,7 +16,14 @@ class RichEditor extends StatefulWidget {
   State<RichEditor> createState() => _RichEditorState();
 }
 
+enum BlockType { paragraph, bullet, numbered, quote }
+
 class _RichEditorState extends State<RichEditor> {
+  late final quill.QuillController _quillController;
+
+  late final FocusNode _editorFocusNode;
+  late final ScrollController _editorScrollController;
+
   bool bold = false;
   bool italic = false;
   bool underline = false;
@@ -24,19 +34,289 @@ class _RichEditorState extends State<RichEditor> {
   TextAlign textAlign = TextAlign.start;
 
   BlockType blockType = BlockType.paragraph;
-  String? linkHref;
-
-  final List<EditorSnapshot> _history = [];
-  int _historyIndex = -1;
-  bool _isRestoringHistory = false;
-
-  String _lastText = '';
 
   @override
   void initState() {
     super.initState();
-    _lastText = widget.controller.text;
-    _pushHistory();
+
+    _editorFocusNode = FocusNode();
+    _editorScrollController = ScrollController();
+
+    final initialText = widget.controller.text;
+
+    if (initialText.isNotEmpty) {
+      if (_looksLikeHtml(initialText)) {
+        final doc = _documentFromHtml(initialText);
+        _quillController = quill.QuillController(
+          document: doc,
+          selection: const TextSelection.collapsed(offset: 0),
+        );
+      } else {
+        _quillController = quill.QuillController(
+          document: quill.Document()..insert(0, initialText),
+          selection: const TextSelection.collapsed(offset: 0),
+        );
+      }
+    } else {
+      _quillController = quill.QuillController.basic();
+    }
+
+    _quillController.addListener(_onQuillChanged);
+    _refreshToolbarState();
+  }
+
+  quill.Document _documentFromHtml(String html) {
+    final doc = html_parser.parse(html);
+    final body = doc.body;
+    final delta = Delta();
+
+    if (body == null) {
+      return quill.Document();
+    }
+
+    void writeInline(dom.Node node, Map<String, dynamic> attrs) {
+      if (node is dom.Text) {
+        final text = node.text;
+        if (text.trim().isEmpty) return;
+        delta.insert(text, attrs.isEmpty ? null : attrs);
+        return;
+      }
+
+      if (node is! dom.Element) return;
+
+      final nextAttrs = Map<String, dynamic>.from(attrs);
+
+      switch (node.localName) {
+        case 'strong':
+        case 'b':
+          nextAttrs['bold'] = true;
+          break;
+        case 'em':
+        case 'i':
+          nextAttrs['italic'] = true;
+          break;
+        case 'u':
+          nextAttrs['underline'] = true;
+          break;
+        case 'span':
+          final style = node.attributes['style'] ?? '';
+          final parts = style.split(';');
+          for (final p in parts) {
+            final kv = p.split(':');
+            if (kv.length != 2) continue;
+            final key = kv[0].trim().toLowerCase();
+            final value = kv[1].trim();
+            if (key == 'font-size') {
+              final num = RegExp(r'([0-9.]+)').firstMatch(value)?.group(1);
+              if (num != null) {
+                nextAttrs['size'] = num;
+              }
+            } else if (key == 'color') {
+              nextAttrs['color'] = value;
+            } else if (key == 'background-color') {
+              nextAttrs['background'] = value;
+            }
+          }
+          break;
+        case 'a':
+          final href = node.attributes['href'];
+          if (href != null) {
+            nextAttrs['link'] = href;
+          }
+          break;
+      }
+
+      for (final child in node.nodes) {
+        writeInline(child, nextAttrs);
+      }
+    }
+
+    void writeBlock(dom.Element element, {Map<String, dynamic>? blockAttrs}) {
+      final attrs = blockAttrs ?? <String, dynamic>{};
+
+      for (final child in element.nodes) {
+        writeInline(child, <String, dynamic>{});
+      }
+
+      delta.insert('\n', attrs.isEmpty ? null : attrs);
+    }
+
+    for (final node in body.nodes) {
+      if (node is dom.Element) {
+        switch (node.localName) {
+          case 'p':
+            writeBlock(node);
+            break;
+          case 'blockquote':
+            writeBlock(node, blockAttrs: {'blockquote': true});
+            break;
+          case 'ul':
+            for (final li in node.children.where((e) => e.localName == 'li')) {
+              writeBlock(li, blockAttrs: {'list': 'bullet'});
+            }
+            break;
+          case 'ol':
+            for (final li in node.children.where((e) => e.localName == 'li')) {
+              writeBlock(li, blockAttrs: {'list': 'ordered'});
+            }
+            break;
+          default:
+            writeBlock(node);
+        }
+      }
+    }
+
+    if (delta.isEmpty) {
+      delta.insert('\n');
+    }
+
+    return quill.Document.fromDelta(delta);
+  }
+
+  bool _looksLikeHtml(String s) {
+    final t = s.trimLeft();
+    return t.startsWith('<') && t.contains('>');
+  }
+
+  @override
+  void dispose() {
+    _quillController.removeListener(_onQuillChanged);
+    _quillController.dispose();
+    _editorFocusNode.dispose();
+    _editorScrollController.dispose();
+    super.dispose();
+  }
+
+  String _segmentToHtml(String text, Map<String, dynamic>? attrs) {
+    var escaped = const HtmlEscape().convert(text);
+
+    if (attrs == null || attrs.isEmpty) {
+      return escaped;
+    }
+
+    String? color = attrs['color'] as String?;
+    String? bgColor = attrs['background'] as String?;
+    String? size = attrs['size']?.toString();
+
+    final styleParts = <String>[];
+    if (color != null) styleParts.add('color: $color');
+    if (bgColor != null) styleParts.add('background-color: $bgColor');
+    if (size != null) styleParts.add('font-size: ${size}px');
+
+    String result = escaped;
+
+    if (styleParts.isNotEmpty) {
+      result = '<span style="${styleParts.join('; ')}">$result</span>';
+    }
+
+    if (attrs['underline'] == true) {
+      result = '<u>$result</u>';
+    }
+    if (attrs['italic'] == true) {
+      result = '<em>$result</em>';
+    }
+    if (attrs['bold'] == true) {
+      result = '<strong>$result</strong>';
+    }
+
+    if (attrs['link'] is String) {
+      final href = attrs['link'] as String;
+      final escapedHref = const HtmlEscape().convert(href);
+      result =
+          '<a href="$escapedHref" target="_blank" rel="noopener noreferrer">$result</a>';
+    }
+
+    return result;
+  }
+
+  String _deltaToHtml(Delta delta) {
+    final ops = delta.toJson() as List;
+    final buffer = StringBuffer();
+
+    final currentLine = <String>[];
+    Map<String, dynamic>? currentBlockAttrs;
+
+    bool inList = false;
+    String? currentListType;
+
+    void closeList() {
+      if (!inList) return;
+      if (currentListType == 'bullet') buffer.write('</ul>');
+      if (currentListType == 'ordered') buffer.write('</ol>');
+      inList = false;
+      currentListType = null;
+    }
+
+    void flushLine() {
+      if (currentLine.isEmpty) {
+        currentBlockAttrs = null;
+        return;
+      }
+
+      final content = currentLine.join();
+      final blockAttrs = currentBlockAttrs ?? {};
+      final list = blockAttrs['list'];
+      final isQuote = blockAttrs['blockquote'] == true;
+
+      if (list == 'bullet' || list == 'ordered') {
+        final listType = list as String;
+        if (!inList || currentListType != listType) {
+          closeList();
+          if (listType == 'bullet') {
+            buffer.write('<ul>');
+          } else {
+            buffer.write('<ol>');
+          }
+          inList = true;
+          currentListType = listType;
+        }
+        buffer.write('<li>$content</li>');
+      } else {
+        closeList();
+        if (isQuote) {
+          buffer.write('<blockquote><p>$content</p></blockquote>');
+        } else {
+          buffer.write('<p>$content</p>');
+        }
+      }
+
+      currentLine.clear();
+      currentBlockAttrs = null;
+    }
+
+    for (final raw in ops) {
+      final op = raw as Map<String, dynamic>;
+      final insert = op['insert'];
+      final attrs = (op['attributes'] as Map?)?.map(
+        (k, v) => MapEntry(k.toString(), v),
+      );
+
+      if (insert is String) {
+        var text = insert;
+        while (text.isNotEmpty) {
+          final idx = text.indexOf('\n');
+          if (idx == -1) {
+            currentLine.add(_segmentToHtml(text, attrs));
+            text = '';
+          } else {
+            final before = text.substring(0, idx);
+            if (before.isNotEmpty) {
+              currentLine.add(_segmentToHtml(before, attrs));
+            }
+            currentBlockAttrs = attrs;
+            flushLine();
+            text = text.substring(idx + 1);
+          }
+        }
+      } else {}
+    }
+
+    if (currentLine.isNotEmpty) {
+      flushLine();
+    }
+    closeList();
+
+    return buffer.toString();
   }
 
   String _colorToHex(Color c) {
@@ -44,250 +324,211 @@ class _RichEditorState extends State<RichEditor> {
     return '#${two(c.red)}${two(c.green)}${two(c.blue)}';
   }
 
-  String _buildHtml(String text) {
-    final escape = const HtmlEscape();
-    final escaped = escape.convert(text);
-
-    final styleParts = <String>[];
-
-    if (bold) styleParts.add('font-weight:700');
-    if (italic) styleParts.add('font-style:italic');
-    if (underline) styleParts.add('text-decoration:underline');
-    styleParts.add('font-size:${fontSize}px');
-
-    if (textColor != Colors.white) {
-      styleParts.add('color:${_colorToHex(textColor)}');
+  Color? _parseColor(String value) {
+    var v = value;
+    if (v.startsWith('#')) {
+      v = v.substring(1);
     }
-    if (highlightColor != null) {
-      styleParts.add('background-color:${_colorToHex(highlightColor!)}');
+    if (v.length == 6) {
+      v = 'FF$v';
     }
-
-    switch (textAlign) {
-      case TextAlign.center:
-        styleParts.add('text-align:center');
-        break;
-      case TextAlign.end:
-      case TextAlign.right:
-        styleParts.add('text-align:right');
-        break;
-      case TextAlign.justify:
-        styleParts.add('text-align:justify');
-        break;
-      case TextAlign.start:
-      case TextAlign.left:
-      default:
-        styleParts.add('text-align:left');
-        break;
-    }
-
-    final styleAttr = styleParts.isEmpty
-        ? ''
-        : ' style="${styleParts.join(';')}"';
-
-    final hrefEscaped = linkHref == null || linkHref!.isEmpty
-        ? null
-        : escape.convert(linkHref!);
-
-    List<String> rawBlocks;
-
-    if (blockType == BlockType.bullet || blockType == BlockType.numbered) {
-      rawBlocks = text.split('\n');
-    } else {
-      rawBlocks = text.split('\n\n');
-    }
-
-    final items = <String>[];
-    for (var raw in rawBlocks) {
-      var line = raw;
-      if (line.trim().isEmpty) continue;
-
-      if (blockType == BlockType.bullet) {
-        var trimmed = line.trimLeft();
-        if (trimmed.startsWith('• ')) {
-          trimmed = trimmed.substring(2);
-        }
-        line = trimmed;
-      } else if (blockType == BlockType.numbered) {
-        var trimmed = line.trimLeft();
-        trimmed = trimmed.replaceFirst(RegExp(r'^\d+\.\s+'), '');
-        line = trimmed;
-      }
-
-      final escaped = escape.convert(line);
-      final withBr = escaped.replaceAll('\n', '<br/>');
-      final inner = hrefEscaped == null
-          ? withBr
-          : '<a href="$hrefEscaped">$withBr</a>';
-
-      items.add(inner);
-    }
-
-    String body;
-    switch (blockType) {
-      case BlockType.bullet:
-        body =
-            '<ul>${items.map((inner) => '<li$styleAttr>$inner</li>').join()}</ul>';
-        break;
-      case BlockType.numbered:
-        body =
-            '<ol>${items.map((inner) => '<li$styleAttr>$inner</li>').join()}</ol>';
-        break;
-      case BlockType.quote:
-        body =
-            '<blockquote>${items.map((inner) => '<p$styleAttr>$inner</p>').join()}</blockquote>';
-        break;
-      case BlockType.paragraph:
-      default:
-        body = items.map((inner) => '<p$styleAttr>$inner</p>').join();
-        break;
-    }
-
-    return '<div>$body</div>';
+    final n = int.tryParse(v, radix: 16);
+    if (n == null) return null;
+    return Color(n);
   }
 
-  void _notifyHtmlChanged() {
-    if (widget.onHtmlChanged == null) return;
+  void _onQuillChanged() {
+    final plain = _quillController.document.toPlainText();
 
-    if (!_isRestoringHistory) {
-      _pushHistory();
+    if (plain != widget.controller.text) {
+      widget.controller.text = plain;
     }
 
-    final text = widget.controller.text;
-    final html = _buildHtml(text);
-    widget.onHtmlChanged!(html);
-  }
+    _refreshToolbarState();
 
-  void _pushHistory() {
-    const maxHistory = 50;
-
-    final snap = EditorSnapshot(
-      text: widget.controller.text,
-      bold: bold,
-      italic: italic,
-      underline: underline,
-      fontSize: fontSize,
-      textColor: textColor,
-      highlightColor: highlightColor,
-      textAlign: textAlign,
-      blockType: blockType,
-      linkHref: linkHref,
-    );
-
-    if (_historyIndex < _history.length - 1) {
-      _history.removeRange(_historyIndex + 1, _history.length);
+    if (widget.onHtmlChanged != null) {
+      final delta = _quillController.document.toDelta();
+      final html = _deltaToHtml(delta);
+      widget.onHtmlChanged!(html);
     }
-
-    _history.add(snap);
-    if (_history.length > maxHistory) {
-      _history.removeAt(0);
-    }
-    _historyIndex = _history.length - 1;
   }
 
-  void _applySnapshot(EditorSnapshot s) {
-    _isRestoringHistory = true;
+  void _refreshToolbarState() {
+    final style = _quillController.getSelectionStyle();
 
-    widget.controller.text = s.text;
-    widget.controller.selection = TextSelection.collapsed(
-      offset: s.text.length,
-    );
+    final sizeAttr = style.attributes[quill.Attribute.size.key];
+    final colorAttr = style.attributes[quill.Attribute.color.key];
+    final bgAttr = style.attributes[quill.Attribute.background.key];
+    final alignAttr = style.attributes[quill.Attribute.align.key];
+    final listAttr = style.attributes[quill.Attribute.list.key];
+    final quoteAttr = style.attributes[quill.Attribute.blockQuote.key];
 
-    bold = s.bold;
-    italic = s.italic;
-    underline = s.underline;
-    fontSize = s.fontSize;
-    textColor = s.textColor;
-    highlightColor = s.highlightColor;
-    textAlign = s.textAlign;
-    blockType = s.blockType;
-    linkHref = s.linkHref;
-
-    _notifyHtmlChanged();
-    _isRestoringHistory = false;
-  }
-
-  void _toggleBlockType(BlockType t) {
     setState(() {
-      final full = widget.controller.text;
-      final sel = widget.controller.selection;
+      bold = style.attributes.containsKey(quill.Attribute.bold.key);
+      italic = style.attributes.containsKey(quill.Attribute.italic.key);
+      underline = style.attributes.containsKey(quill.Attribute.underline.key);
 
-      int caret = sel.start;
-      if (caret < 0 || caret > full.length) {
-        caret = full.length;
-      }
-
-      int lineStart = full.lastIndexOf('\n', caret - 1);
-      if (lineStart == -1) {
-        lineStart = 0;
+      if (sizeAttr != null && sizeAttr.value is String) {
+        final v = double.tryParse(sizeAttr.value as String);
+        fontSize = v ?? 15;
       } else {
-        lineStart += 1;
-      }
-      int lineEnd = full.indexOf('\n', caret);
-      if (lineEnd == -1) {
-        lineEnd = full.length;
+        fontSize = 15;
       }
 
-      final line = full.substring(lineStart, lineEnd);
-      var trimmed = line.trimLeft();
-      final leadingSpaces = line.length - trimmed.length;
-
-      final isBulletLine = trimmed.startsWith('• ');
-      final numberMatch = RegExp(r'^(\d+)\.\s+').firstMatch(trimmed);
-      final isNumberedLine = numberMatch != null;
-
-      if (isBulletLine) {
-        trimmed = trimmed.substring(2);
-      } else if (isNumberedLine) {
-        trimmed = trimmed.substring(numberMatch!.group(0)!.length);
+      if (colorAttr != null && colorAttr.value is String) {
+        textColor = _parseColor(colorAttr.value as String) ?? Colors.white;
+      } else {
+        textColor = Colors.white;
       }
 
-      String newLine = line;
+      if (bgAttr != null && bgAttr.value is String) {
+        highlightColor = _parseColor(bgAttr.value as String);
+      } else {
+        highlightColor = null;
+      }
 
-      if (t == BlockType.bullet) {
-        if (isBulletLine) {
-          newLine = ' ' * leadingSpaces + trimmed;
-          blockType = BlockType.paragraph;
-        } else {
-          newLine = ' ' * leadingSpaces + '• ' + trimmed;
-          blockType = BlockType.bullet;
-        }
-      } else if (t == BlockType.numbered) {
-        if (isNumberedLine) {
-          newLine = ' ' * leadingSpaces + trimmed;
-          blockType = BlockType.paragraph;
-        } else {
-          newLine = ' ' * leadingSpaces + '1. ' + trimmed;
-          blockType = BlockType.numbered;
+      if (alignAttr != null && alignAttr.value is String) {
+        final v = alignAttr.value as String;
+        switch (v) {
+          case 'center':
+            textAlign = TextAlign.center;
+            break;
+          case 'right':
+            textAlign = TextAlign.right;
+            break;
+          case 'justify':
+            textAlign = TextAlign.justify;
+            break;
+          default:
+            textAlign = TextAlign.start;
+            break;
         }
       } else {
-        newLine = ' ' * leadingSpaces + trimmed;
+        textAlign = TextAlign.start;
+      }
+
+      if (listAttr != null && listAttr.value == 'bullet') {
+        blockType = BlockType.bullet;
+      } else if (listAttr != null && listAttr.value == 'ordered') {
+        blockType = BlockType.numbered;
+      } else if (quoteAttr != null) {
+        blockType = BlockType.quote;
+      } else {
         blockType = BlockType.paragraph;
       }
-
-      final newText =
-          full.substring(0, lineStart) + newLine + full.substring(lineEnd);
-
-      widget.controller.text = newText;
-
-      final delta = newLine.length - line.length;
-      final newCaret = (caret + delta).clamp(0, newText.length);
-      widget.controller.selection = TextSelection.collapsed(
-        offset: newCaret as int,
-      );
-
-      _lastText = newText;
     });
+  }
 
-    _notifyHtmlChanged();
+  void toggleBold() {
+    final attr = bold
+        ? quill.Attribute.clone(quill.Attribute.bold, null)
+        : quill.Attribute.bold;
+    _quillController.formatSelection(attr);
+  }
+
+  void toggleItalic() {
+    final attr = italic
+        ? quill.Attribute.clone(quill.Attribute.italic, null)
+        : quill.Attribute.italic;
+    _quillController.formatSelection(attr);
+  }
+
+  void toggleUnderline() {
+    final attr = underline
+        ? quill.Attribute.clone(quill.Attribute.underline, null)
+        : quill.Attribute.underline;
+    _quillController.formatSelection(attr);
+  }
+
+  void setAlign(TextAlign align) {
+    quill.Attribute<String?> attr;
+    switch (align) {
+      case TextAlign.center:
+        attr = quill.Attribute.centerAlignment;
+        break;
+      case TextAlign.right:
+      case TextAlign.end:
+        attr = quill.Attribute.rightAlignment;
+        break;
+      case TextAlign.justify:
+        attr = quill.Attribute.justifyAlignment;
+        break;
+      case TextAlign.left:
+      case TextAlign.start:
+      default:
+        attr = quill.Attribute.leftAlignment;
+        break;
+    }
+    _quillController.formatSelection(attr);
+  }
+
+  void _toggleBullet() {
+    final style = _quillController.getSelectionStyle();
+    final listAttr = style.attributes[quill.Attribute.list.key];
+    final isBullet = listAttr != null && listAttr.value == 'bullet';
+
+    if (isBullet) {
+      _quillController.formatSelection(
+        quill.Attribute.clone(quill.Attribute.ul, null),
+      );
+      blockType = BlockType.paragraph;
+    } else {
+      _quillController.formatSelection(quill.Attribute.ul);
+      blockType = BlockType.bullet;
+    }
+  }
+
+  void _toggleNumbered() {
+    final style = _quillController.getSelectionStyle();
+    final listAttr = style.attributes[quill.Attribute.list.key];
+    final isNumbered = listAttr != null && listAttr.value == 'ordered';
+
+    if (isNumbered) {
+      _quillController.formatSelection(
+        quill.Attribute.clone(quill.Attribute.ol, null),
+      );
+      blockType = BlockType.paragraph;
+    } else {
+      _quillController.formatSelection(quill.Attribute.ol);
+      blockType = BlockType.numbered;
+    }
+  }
+
+  void _toggleQuote() {
+    final style = _quillController.getSelectionStyle();
+    final quoteAttr = style.attributes[quill.Attribute.blockQuote.key];
+    final hasQuote = quoteAttr != null;
+
+    if (hasQuote) {
+      _quillController.formatSelection(
+        quill.Attribute.clone(quill.Attribute.blockQuote, null),
+      );
+      blockType = BlockType.paragraph;
+    } else {
+      _quillController.formatSelection(quill.Attribute.blockQuote);
+      blockType = BlockType.quote;
+    }
+  }
+
+  void _undo() {
+    _quillController.undo();
+  }
+
+  void _redo() {
+    _quillController.redo();
   }
 
   void _openLinkSheet() {
-    final urlController = TextEditingController(text: linkHref ?? '');
+    final style = _quillController.getSelectionStyle();
+    final linkAttr = style.attributes[quill.Attribute.link.key];
+    final urlController = TextEditingController(
+      text: linkAttr?.value as String? ?? '',
+    );
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Color(0xff29292f),
       builder: (_) {
         return _RichBottomSheet(
           title: 'Insert link',
@@ -311,11 +552,14 @@ class _RichEditorState extends State<RichEditor> {
                 ),
                 onPressed: () {
                   Navigator.pop(context);
-                  setState(() {
-                    final v = urlController.text.trim();
-                    linkHref = v.isEmpty ? null : v;
-                  });
-                  _notifyHtmlChanged();
+                  final v = urlController.text.trim();
+                  if (v.isEmpty) {
+                    _quillController.formatSelection(
+                      quill.Attribute.clone(quill.Attribute.link, null),
+                    );
+                  } else {
+                    _quillController.formatSelection(quill.LinkAttribute(v));
+                  }
                 },
                 child: const Text(
                   'Apply',
@@ -327,50 +571,6 @@ class _RichEditorState extends State<RichEditor> {
         );
       },
     );
-  }
-
-  void _undo() {
-    if (_historyIndex <= 0) return;
-    setState(() {
-      _historyIndex--;
-      _applySnapshot(_history[_historyIndex]);
-    });
-  }
-
-  void _redo() {
-    if (_historyIndex < 0 || _historyIndex + 1 >= _history.length) return;
-    setState(() {
-      _historyIndex++;
-      _applySnapshot(_history[_historyIndex]);
-    });
-  }
-
-  void toggleBold() {
-    setState(() {
-      bold = !bold;
-    });
-    _notifyHtmlChanged();
-  }
-
-  void toggleItalic() {
-    setState(() {
-      italic = !italic;
-    });
-    _notifyHtmlChanged();
-  }
-
-  void toggleUnderline() {
-    setState(() {
-      underline = !underline;
-    });
-    _notifyHtmlChanged();
-  }
-
-  void setAlign(TextAlign align) {
-    setState(() {
-      textAlign = align;
-    });
-    _notifyHtmlChanged();
   }
 
   void openTextSizeSheet() {
@@ -403,7 +603,7 @@ class _RichEditorState extends State<RichEditor> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Color(0xff29292f),
       builder: (_) {
         return _RichBottomSheet(
           title: 'Text size',
@@ -414,11 +614,14 @@ class _RichEditorState extends State<RichEditor> {
                   subtitle: opt.meta,
                   selected: fontSize == opt.size,
                   onTap: () {
-                    setState(() {
-                      fontSize = opt.size;
-                    });
+                    _quillController.formatSelection(
+                      quill.Attribute.fromKeyValue(
+                        quill.Attribute.size.key,
+                        opt.size.toString(),
+                      ),
+                    );
+                    fontSize = opt.size;
                     Navigator.pop(context);
-                    _notifyHtmlChanged();
                   },
                 ),
               )
@@ -444,7 +647,7 @@ class _RichEditorState extends State<RichEditor> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Color(0xff29292f),
       builder: (_) {
         return _RichBottomSheet(
           title: 'Text color',
@@ -456,11 +659,19 @@ class _RichEditorState extends State<RichEditor> {
                   colorBullet: opt.color,
                   selected: textColor.value == opt.color.value,
                   onTap: () {
-                    setState(() {
-                      textColor = opt.color;
-                    });
+                    if (opt.label == 'Default') {
+                      _quillController.formatSelection(
+                        quill.Attribute.clone(quill.Attribute.color, null),
+                      );
+                    } else {
+                      _quillController.formatSelection(
+                        quill.Attribute.fromKeyValue(
+                          quill.Attribute.color.key,
+                          _colorToHex(opt.color),
+                        ),
+                      );
+                    }
                     Navigator.pop(context);
-                    _notifyHtmlChanged();
                   },
                 ),
               )
@@ -486,7 +697,7 @@ class _RichEditorState extends State<RichEditor> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Color(0xff29292f),
       builder: (_) {
         return _RichBottomSheet(
           title: 'Highlight color',
@@ -503,13 +714,19 @@ class _RichEditorState extends State<RichEditor> {
                           opt.color == Colors.transparent) ||
                       highlightColor?.value == opt.color.value,
                   onTap: () {
-                    setState(() {
-                      highlightColor = opt.color == Colors.transparent
-                          ? null
-                          : opt.color;
-                    });
+                    if (opt.color == Colors.transparent) {
+                      _quillController.formatSelection(
+                        quill.Attribute.clone(quill.Attribute.background, null),
+                      );
+                    } else {
+                      _quillController.formatSelection(
+                        quill.Attribute.fromKeyValue(
+                          quill.Attribute.background.key,
+                          _colorToHex(opt.color),
+                        ),
+                      );
+                    }
                     Navigator.pop(context);
-                    _notifyHtmlChanged();
                   },
                 ),
               )
@@ -522,7 +739,7 @@ class _RichEditorState extends State<RichEditor> {
   void openAddFileSheet() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Color(0xff29292f),
       builder: (_) {
         return const _RichBottomSheet(
           title: 'Add file',
@@ -542,7 +759,7 @@ class _RichEditorState extends State<RichEditor> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Color(0xff29292f),
       builder: (_) {
         final searchController = TextEditingController();
         return _RichBottomSheet(
@@ -571,106 +788,92 @@ class _RichEditorState extends State<RichEditor> {
   void openAllToolsSheet() {
     final tools = <_EditorToolData>[
       _EditorToolData(
-        label: 'A:',
+        svgAsset: Assets.fontSize,
         onTap: () {
           Navigator.pop(context);
           openTextSizeSheet();
         },
       ),
       _EditorToolData(
-        icon: Icons.format_color_text,
+        svgAsset: Assets.fontColor,
         onTap: () {
           Navigator.pop(context);
           openTextColorSheet();
         },
       ),
       _EditorToolData(
-        icon: Icons.border_color,
+        svgAsset: Assets.fontBackgroundColor,
         onTap: () {
           Navigator.pop(context);
           openHighlightSheet();
         },
       ),
       _EditorToolData(
-        label: 'B',
+        svgAsset: Assets.fontBold,
         isToggle: true,
         initialActive: bold,
-        onToggle: (v) {
-          setState(() => bold = v);
-          _notifyHtmlChanged();
-        },
+        onToggle: (_) => toggleBold(),
       ),
       _EditorToolData(
-        label: 'I',
+        svgAsset: Assets.fontItalic,
         isToggle: true,
         initialActive: italic,
-        onToggle: (v) {
-          setState(() => italic = v);
-          _notifyHtmlChanged();
-        },
+        onToggle: (_) => toggleItalic(),
       ),
       _EditorToolData(
-        label: 'U',
+        svgAsset: Assets.fontBottomLine,
         isToggle: true,
         initialActive: underline,
-        onToggle: (v) {
-          setState(() => underline = v);
-          _notifyHtmlChanged();
-        },
+        onToggle: (_) => toggleUnderline(),
       ),
       _EditorToolData(
-        icon: Icons.format_align_left,
+        svgAsset: Assets.alignLeft,
         onTap: () => setAlign(TextAlign.start),
       ),
       _EditorToolData(
-        icon: Icons.format_align_center,
+        svgAsset: Assets.alignCenter,
         onTap: () => setAlign(TextAlign.center),
       ),
       _EditorToolData(
-        icon: Icons.format_align_right,
+        svgAsset: Assets.alignRight,
         onTap: () => setAlign(TextAlign.end),
       ),
       _EditorToolData(
-        icon: Icons.format_align_justify,
+        svgAsset: Assets.alignStandard,
         onTap: () => setAlign(TextAlign.justify),
       ),
-
       _EditorToolData(
-        icon: Icons.format_list_bulleted,
+        svgAsset: Assets.fontBullet,
         isToggle: true,
         initialActive: blockType == BlockType.bullet,
-        onToggle: (_) => _toggleBlockType(BlockType.bullet),
+        onToggle: (_) => _toggleBullet(),
       ),
       _EditorToolData(
-        icon: Icons.format_list_numbered,
+        svgAsset: Assets.fontNumber,
         isToggle: true,
         initialActive: blockType == BlockType.numbered,
-        onToggle: (_) => _toggleBlockType(BlockType.numbered),
+        onToggle: (_) => _toggleNumbered(),
       ),
       _EditorToolData(
         icon: Icons.format_quote,
         isToggle: true,
         initialActive: blockType == BlockType.quote,
-        onToggle: (_) => _toggleBlockType(BlockType.quote),
+        onToggle: (_) => _toggleQuote(),
       ),
       _EditorToolData(icon: Icons.undo, onTap: _undo),
       _EditorToolData(icon: Icons.redo, onTap: _redo),
       _EditorToolData(
-        icon: Icons.link,
+        svgAsset: Assets.link,
         onTap: () {
           Navigator.pop(context);
           _openLinkSheet();
         },
       ),
-      _EditorToolData(icon: Icons.grid_on),
-      _EditorToolData(icon: Icons.view_column),
-      _EditorToolData(icon: Icons.view_module),
-      _EditorToolData(icon: Icons.table_chart),
     ];
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Color(0xff29292f),
       builder: (_) {
         return _RichBottomSheet(
           title: 'All editor tool',
@@ -696,86 +899,56 @@ class _RichEditorState extends State<RichEditor> {
     );
   }
 
-  void _onFieldChanged(String value) {
-    final isList =
-        blockType == BlockType.bullet || blockType == BlockType.numbered;
+  Widget _buildEditorBody() {
+    final isEmpty = _quillController.document.toPlainText().trim().isEmpty;
 
-    if (isList && value.length > _lastText.length && value.endsWith('\n')) {
-      String prefix;
-
-      if (blockType == BlockType.bullet) {
-        prefix = '• ';
-      } else {
-        final lines = value.split('\n');
-        int count = 0;
-        for (final line in lines) {
-          final trimmed = line.trimLeft();
-          if (trimmed.isEmpty) continue;
-          if (RegExp(r'^\d+\.\s').hasMatch(trimmed)) {
-            count++;
-          }
+    return GestureDetector(
+      behavior: HitTestBehavior.translucent,
+      onTap: () {
+        if (!_editorFocusNode.hasFocus) {
+          _editorFocusNode.requestFocus();
         }
-        final nextNumber = count + 1;
-        prefix = '$nextNumber. ';
-      }
+      },
+      child: Stack(
+        children: [
+          quill.QuillEditor(
+            controller: _quillController,
+            focusNode: _editorFocusNode,
+            scrollController: _editorScrollController,
+            config: const quill.QuillEditorConfig(
+              scrollable: true,
+              padding: EdgeInsets.zero,
+              autoFocus: false,
+              expands: true,
+            ),
+          ),
 
-      final newText = '$value$prefix';
-
-      widget.controller.text = newText;
-      widget.controller.selection = TextSelection.collapsed(
-        offset: newText.length,
-      );
-
-      _lastText = newText;
-      _notifyHtmlChanged();
-      return;
-    }
-
-    _lastText = value;
-    _notifyHtmlChanged();
-  }
-
-  Widget _buildEditorBody(TextStyle style) {
-    return TextField(
-      controller: widget.controller,
-      maxLines: null,
-      keyboardType: TextInputType.multiline,
-      style: style,
-      textAlign: textAlign,
-      textAlignVertical: TextAlignVertical.top,
-      onChanged: _onFieldChanged,
-      decoration: const InputDecoration(
-        hintText: 'Type your script...',
-        hintStyle: TextStyle(
-          color: AppColors.neutral600,
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-          height: 1.5,
-        ),
-        border: InputBorder.none,
-        enabledBorder: InputBorder.none,
-        focusedBorder: InputBorder.none,
-        contentPadding: EdgeInsets.zero,
+          if (isEmpty)
+            IgnorePointer(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: Text(
+                  "Type your script...",
+                  style: const TextStyle(
+                    color: AppColors.neutral500,
+                    fontSize: 16,
+                    height: 24 / 16,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final style = TextStyle(
-      color: textColor,
-      fontSize: fontSize,
-      fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-      fontStyle: italic ? FontStyle.italic : FontStyle.normal,
-      decoration: underline ? TextDecoration.underline : TextDecoration.none,
-      backgroundColor: highlightColor,
-      height: 1.5,
-    );
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: _buildEditorBody(style)),
+        Expanded(child: _buildEditorBody()),
         16.vgap,
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -783,39 +956,45 @@ class _RichEditorState extends State<RichEditor> {
             color: const Color(0xFF151515),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _ToolbarIcon(icon: Icons.apps, onTap: openAllToolsSheet),
-                8.gap,
-                _ToolbarIcon(
-                  icon: Icons.format_bold,
-                  active: bold,
-                  onTap: toggleBold,
-                ),
-                _ToolbarIcon(
-                  icon: Icons.format_italic,
-                  active: italic,
-                  onTap: toggleItalic,
-                ),
-                _ToolbarIcon(
-                  icon: Icons.format_underlined,
-                  active: underline,
-                  onTap: toggleUnderline,
-                ),
-                _ToolbarIcon(icon: Icons.format_size, onTap: openTextSizeSheet),
-                _ToolbarIcon(
-                  icon: Icons.color_lens_outlined,
-                  onTap: openTextColorSheet,
-                ),
-                _ToolbarIcon(
-                  icon: Icons.border_color_outlined,
-                  onTap: openHighlightSheet,
-                ),
-                _ToolbarIcon(icon: Icons.attach_file, onTap: openAddFileSheet),
-                _ToolbarIcon(icon: Icons.search, onTap: openSearchSheet),
-              ],
+          child: Align(
+            alignment: Alignment.center,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ToolbarIcon(icon: Icons.apps, onTap: openAllToolsSheet),
+                  8.gap,
+
+                  _ToolbarIcon(
+                    svgAsset: Assets.fontBold,
+                    active: bold,
+                    onTap: toggleBold,
+                  ),
+                  _ToolbarIcon(
+                    svgAsset: Assets.fontItalic,
+                    active: italic,
+                    onTap: toggleItalic,
+                  ),
+                  _ToolbarIcon(
+                    svgAsset: Assets.fontBottomLine,
+                    active: underline,
+                    onTap: toggleUnderline,
+                  ),
+                  _ToolbarIcon(
+                    svgAsset: Assets.fontSize,
+                    onTap: openTextSizeSheet,
+                  ),
+                  _ToolbarIcon(
+                    svgAsset: Assets.fontColor,
+                    onTap: openTextColorSheet,
+                  ),
+                  _ToolbarIcon(
+                    svgAsset: Assets.fontBackgroundColor,
+                    onTap: openHighlightSheet,
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -825,25 +1004,40 @@ class _RichEditorState extends State<RichEditor> {
 }
 
 class _ToolbarIcon extends StatelessWidget {
-  const _ToolbarIcon({required this.icon, this.onTap, this.active = false});
+  const _ToolbarIcon({
+    this.icon,
+    this.svgAsset,
+    this.onTap,
+    this.active = false,
+  }) : assert(icon != null || svgAsset != null);
 
-  final IconData icon;
+  final IconData? icon;
+  final String? svgAsset;
   final VoidCallback? onTap;
   final bool active;
 
   @override
   Widget build(BuildContext context) {
     final color = active ? AppColors.primary : AppColors.neutral400;
+
+    Widget child;
+    if (svgAsset != null) {
+      child = SvgPicture.asset(
+        svgAsset!,
+        width: 18,
+        height: 18,
+        colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+      );
+    } else {
+      child = Icon(icon, size: 18, color: color);
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
-        child: SizedBox(
-          width: 32,
-          height: 32,
-          child: Icon(icon, size: 18, color: color),
-        ),
+        child: SizedBox(width: 32, height: 32, child: Center(child: child)),
       ),
     );
   }
@@ -853,6 +1047,7 @@ class _EditorToolData {
   _EditorToolData({
     this.label,
     this.icon,
+    this.svgAsset,
     this.onTap,
     this.isToggle = false,
     this.initialActive = false,
@@ -861,6 +1056,7 @@ class _EditorToolData {
 
   final String? label;
   final IconData? icon;
+  final String? svgAsset;
   final VoidCallback? onTap;
   final bool isToggle;
   final bool initialActive;
@@ -882,13 +1078,31 @@ class _EditorToolButtonState extends State<_EditorToolButton> {
   @override
   Widget build(BuildContext context) {
     final isToggle = widget.data.isToggle;
-    final bg = active
-        ? AppColors.primary.withOpacity(0.18)
-        : const Color(0xFF181818);
+    final bg = Color(0xff101010);
     final border = Border.all(
-      color: active ? AppColors.primary : const Color(0xFF262626),
-      width: active ? 1.3 : 1,
+      color: active ? AppColors.primary : Colors.transparent,
+      width: 1,
     );
+
+    Widget child;
+    if (widget.data.label != null) {
+      child = Text(
+        widget.data.label!,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+        ),
+      );
+    } else if (widget.data.svgAsset != null) {
+      child = SvgPicture.asset(widget.data.svgAsset!, width: 20, height: 20);
+    } else {
+      child = Icon(
+        widget.data.icon,
+        size: 20,
+        color: active ? AppColors.primary : Colors.white,
+      );
+    }
 
     return InkWell(
       onTap: () {
@@ -903,26 +1117,13 @@ class _EditorToolButtonState extends State<_EditorToolButton> {
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(12),
           border: border,
         ),
-        alignment: Alignment.center,
-        child: widget.data.label != null
-            ? Text(
-                widget.data.label!,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                ),
-              )
-            : Icon(
-                widget.data.icon,
-                size: 18,
-                color: active ? AppColors.primary : Colors.white,
-              ),
+        child: Center(child: child),
       ),
     );
   }
@@ -970,7 +1171,7 @@ class _RichBottomSheet extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.fromLTRB(20, 16, 20, paddingBottom),
           decoration: const BoxDecoration(
-            color: Color(0xFF111111),
+            color: Color(0xff29292f),
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             boxShadow: [
               BoxShadow(
@@ -985,24 +1186,25 @@ class _RichBottomSheet extends StatelessWidget {
             children: [
               Center(
                 child: Container(
-                  width: 40,
-                  height: 4,
+                  width: 50,
+                  height: 5,
                   decoration: BoxDecoration(
-                    color: AppColors.neutral700,
+                    color: Color(0xff6b6b6d),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
               ),
-              16.vgap,
+              18.vgap,
               Text(
                 title,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 16,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
+                  height: 20 / 14,
                 ),
               ),
-              16.vgap,
+              10.vgap,
               Expanded(
                 child: SingleChildScrollView(child: Column(children: children)),
               ),

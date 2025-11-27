@@ -87,6 +87,21 @@ abstract class Assets {
 
   static const String trash = 'assets/icons/trash.svg';
 
+  static const String alignCenter = 'assets/icons/toolbar/align_center.svg';
+  static const String alignLeft = 'assets/icons/toolbar/align_left.svg';
+  static const String alignRight = 'assets/icons/toolbar/align_right.svg';
+  static const String alignStandard = 'assets/icons/toolbar/align_standard.svg';
+  static const String fontBold = 'assets/icons/toolbar/bold.svg';
+  static const String fontBottomLine = 'assets/icons/toolbar/bottom_line.svg';
+  static const String fontBullet = 'assets/icons/toolbar/bullet.svg';
+  static const String fontNumber = 'assets/icons/toolbar/number.svg';
+  static const String fontBackgroundColor =
+      'assets/icons/toolbar/font_background_color.svg';
+  static const String fontColor = 'assets/icons/toolbar/font_color.svg';
+  static const String fontSize = 'assets/icons/toolbar/font_size.svg';
+  static const String fontItalic = 'assets/icons/toolbar/italic.svg';
+  static const String link = 'assets/icons/toolbar/link.svg';
+
   static final addIcon = SvgPicture.asset(add, width: 15, height: 15);
   static final backIcon = SvgPicture.asset(back, width: 16, height: 16);
   static final badgeImage = SvgPicture.asset(badge, width: 20, height: 20);

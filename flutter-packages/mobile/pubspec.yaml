@@ -47,6 +47,7 @@ dependencies:
       url: https://github.com/victor138128/flutterfire.git
       path: packages/firebase_analytics/firebase_analytics
       ref: main
+  flutter_quill: any
   flutter_html: ^3.0.0
   sign_in_with_apple: ^7.0.1
   googleapis: ^11.4.0
@@ -55,6 +56,7 @@ dependencies:
   googleapis_auth: ^1.4.1
   loading_indicator: ^3.1.1
   http: ^1.1.2
+  html: ^0.15.4
   http_parser: ^4.0.2
   cryptography: ^2.7.0
   flutter_secure_storage: ^9.0.0
@@ -111,6 +113,7 @@ flutter:
     - assets/images/
     - assets/fonts/
     - assets/icons/
+    - assets/icons/toolbar/
     - assets/videos/
     - assets/json/country_codes.json
 
