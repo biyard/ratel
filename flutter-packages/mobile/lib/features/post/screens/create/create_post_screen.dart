@@ -45,17 +45,17 @@ class _PostHeaderBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       alignment: Alignment.center,
       child: Row(
         children: [
           InkWell(
             onTap: onClose,
-            borderRadius: BorderRadius.circular(16),
-            child: const SizedBox(
+            child: RoundContainer(
               width: 32,
               height: 32,
+              radius: 100,
+              color: Color(0xff171717),
               child: Center(
                 child: Icon(Icons.close, size: 18, color: Colors.white),
               ),
@@ -111,7 +111,7 @@ class _PostButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
           color: AppColors.primary,
           borderRadius: BorderRadius.circular(999),
@@ -120,9 +120,9 @@ class _PostButton extends StatelessWidget {
           'Post',
           style: TextStyle(
             color: Colors.black,
-            fontSize: 16,
+            fontSize: 14,
             fontWeight: FontWeight.w700,
-            height: 1.25,
+            height: 1,
           ),
         ),
       ),
