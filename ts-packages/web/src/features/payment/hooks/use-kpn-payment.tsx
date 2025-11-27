@@ -2,15 +2,21 @@ import { useMutation } from '@tanstack/react-query';
 import { MembershipTier } from '@/features/membership/types/membership-tier';
 import { call } from '@/lib/api/ratel/call';
 import { useTranslation } from 'react-i18next';
+import { MembershipResponse } from '@/features/membership/dto/membership-response';
+
+export interface MembershipPaymentResponse {
+  renewal_date: number;
+  receipt?: PaymentReceipt;
+  membership: MembershipResponse;
+}
 
 export interface PaymentReceipt {
-  status: string;
-  transaction_id: string;
-  membership_tier: string;
-  amount: number;
-  duration_days: number;
-  credits: number;
+  id: string;
   paid_at: number;
+  tx_type: string; // PURCHASE__MEMBERSHIP#PRO etc.
+  currency: 'KRW' | 'USD';
+  tx_id: string;
+  amount: number;
 }
 
 export function useKpnPayment() {
@@ -27,26 +33,36 @@ export function useKpnPayment() {
       passwordTwoDigits,
     }: {
       membership: MembershipTier;
-      cardNumber: string;
-      expiryYear: string;
-      expiryMonth: string;
-      birthOrBusinessRegistrationNumber: string;
-      passwordTwoDigits: string;
-    }): Promise<PaymentReceipt> => {
-      const resp = await call('POST', '/v3/me/memberships', {
-        membership,
-        currency,
-        card_info: {
-          card_number: cardNumber,
-          expiry_year: expiryYear,
-          expiry_month: expiryMonth,
-          birth_or_business_registration_number:
-            birthOrBusinessRegistrationNumber,
-          password_two_digits: passwordTwoDigits,
-        },
-      });
+      cardNumber?: string;
+      expiryYear?: string;
+      expiryMonth?: string;
+      birthOrBusinessRegistrationNumber?: string;
+      passwordTwoDigits?: string;
+    }): Promise<MembershipPaymentResponse> => {
+      const card_info = cardNumber
+        ? {
+            card_number: cardNumber,
+            expiry_year: expiryYear,
+            expiry_month: expiryMonth,
+            birth_or_business_registration_number:
+              birthOrBusinessRegistrationNumber,
+            password_two_digits: passwordTwoDigits,
+          }
+        : null;
 
-      return resp as PaymentReceipt;
+      const resp: MembershipPaymentResponse = await call(
+        'POST',
+        '/v3/me/memberships',
+        {
+          membership,
+          currency,
+          card_info,
+        },
+      );
+
+      resp.membership = new MembershipResponse(resp.membership);
+
+      return resp;
     },
     onSuccess: async () => {
       // update did

@@ -64,6 +64,8 @@ pub struct UserDetailResponse {
     //FIXME: Change Telegram Model
     // pub telegram_id: Option<i64>,
     pub teams: Option<Vec<UserTeamResponse>>,
+    pub is_identified: bool,
+    pub has_billing_key: bool,
 }
 
 impl From<Vec<UserMetadata>> for UserDetailResponse {
