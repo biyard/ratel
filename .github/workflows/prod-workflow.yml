@@ -132,13 +132,15 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-prod
           DYNAMO_ENDPOINT: none
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          RUST_FLAG: "--features lambda --release"
+          RUST_FLAG: "--features lambda"
           WEB_BUILD: false
 
           # NOTE: Change PORTONE API
           PORTONE_API_SECRET: ${{ secrets.PORTONE_API_SECRET }}
           PORTONE_KPN_CHANNEL_KEY: ${{ secrets.PORTONE_KPN_CHANNEL_KEY }}
           PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
+          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+
         run: |
           tar xzvf dist.tar.gz
           ls dist
@@ -276,6 +278,12 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
@@ -296,44 +304,10 @@ jobs:
           RUST_LOG: info
           SERVICE: survey-worker
           DOMAIN: ratel.foundation
-
-          BUCKET_NAME: metadata.ratel.foundation
-          SLACK_CHANNEL_SPONSOR: ${{ secrets.SLACK_CHANNEL_SPONSOR }}
-          SLACK_CHANNEL_ABUSING: ${{ secrets.SLACK_CHANNEL_ABUSING }}
-
-          BINANCE_API_KEY: ${{ secrets.PROD_BINANCE_API_KEY }}
-          BINANCE_SECRET_KEY: ${{ secrets.PROD_BINANCE_SECRET_KEY }}
-          BINANCE_WEBHOOK: https://api.ratel.foundation/v2/binances/webhooks
-          REDIRECT_DOMAIN: https://ratel.foundation
-
-          KAIA_ENDPOINT: https://public-en.node.kaia.io
-          KAIA_FEEPAYER_KEY: ${{ secrets.PROD_KAIA_FEEPAYER_KEY }}
-          KAIA_FEEPAYER_ADDR: ${{ secrets.PROD_KAIA_FEEPAYER_ADDR }}
-          KAIA_OWNER_KEY: ${{ secrets.PROD_KAIA_OWNER_KEY }}
-          KAIA_OWNER_ADDR: ${{ secrets.PROD_KAIA_OWNER_KEY_ADDR }}
-
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-
-          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
-          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
-          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
-          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
-
-          P256_X: ${{ secrets.P256_X }}
-          P256_Y: ${{ secrets.P256_Y }}
-          P256_D: ${{ secrets.P256_D }}
-          P256_CRV: ${{ secrets.P256_CRV }}
-
           DYNAMO_TABLE_PREFIX: ratel-prod
           DYNAMO_ENDPOINT: none
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          RUST_FLAG: "--features lambda --release"
+          RUST_FLAG: "--features lambda"
           WEB_BUILD: false
-
-          # NOTE: Change PORTONE API
-          PORTONE_API_SECRET: ${{ secrets.PORTONE_API_SECRET }}
-          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.PORTONE_KPN_BILLING_KEY_CHANNEL_KEY }}
-          PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
         run: |
           make bin.build
           mv target/release/survey-worker ../../bootstrap

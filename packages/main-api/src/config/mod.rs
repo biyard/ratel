@@ -47,6 +47,7 @@ pub struct Config {
 
     pub portone: PortoneConfig,
     pub x402: X402Config,
+    pub account_id: &'static str,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -130,6 +131,7 @@ impl Default for Config {
 
             portone: PortoneConfig::default(),
             x402: X402Config::default(),
+            account_id: option_env!("ACCOUNT_ID").unwrap_or(""),
         }
     }
 }

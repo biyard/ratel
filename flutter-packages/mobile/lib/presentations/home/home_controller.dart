@@ -2,60 +2,71 @@ import 'package:ratel/exports.dart';
 
 class HomeController extends BaseController {
   final feedsApi = Get.find<FeedsApi>();
-  final dashboardsApi = Get.find<DashboardsApi>();
+  final RxList<FeedV2SummaryModel> feeds = <FeedV2SummaryModel>[].obs;
+
+  final RxBool isLoading = false.obs;
+  final RxBool isLoadingMore = false.obs;
+  final RxBool hasMore = true.obs;
+  String? _bookmark;
+
+  late final ScrollController scrollController;
 
   @override
   void onInit() {
     super.onInit();
-    getDashboards();
+    scrollController = ScrollController()..addListener(_onScroll);
+    loadInitial();
   }
 
-  void getDashboards() async {
+  void _onScroll() {
+    if (!scrollController.hasClients) return;
+    if (!hasMore.value || isLoadingMore.value) return;
+
+    final max = scrollController.position.maxScrollExtent;
+    final offset = scrollController.offset;
+
+    if (offset >= max - 200) {
+      loadMore();
+    }
+  }
+
+  Future<void> loadInitial() async {
+    isLoading.value = true;
     showLoading();
-    final item = await dashboardsApi.getDashboards();
-    logger.d(
-      "space length: ${item.topSpaces.length} matched feeds length: ${item.matchedFeeds.length} new feeds length: ${item.newFeeds.length}",
-    );
-    topSpaces(item.topSpaces);
-    matchedFeeds(item.matchedFeeds);
-    newFeeds(item.newFeeds);
-    hideLoading();
-  }
+    feeds.clear();
+    _bookmark = null;
+    hasMore.value = true;
 
-  Future<void> addBookmark(int feedId) async {
-    logger.d("bookmarked feed id: ${feedId}");
     try {
-      final res = await feedsApi.addBookmark(feedId);
+      final result = await feedsApi.listFeedsV2(bookmark: null);
+      feeds.assignAll(result.items);
+      logger.d("feeds data: ${result}");
 
-      if (res != null) {
-        Biyard.info("Bookmarked successfully");
-        getDashboards();
-      } else {
-        Biyard.error(
-          "Failed to bookmark.",
-          "Bookmarked failed. Please try again later.",
-        );
-      }
-    } finally {}
+      _bookmark = result.bookmark;
+      hasMore.value = _bookmark != null && _bookmark!.isNotEmpty;
+    } finally {
+      hideLoading();
+      isLoading.value = false;
+    }
   }
 
-  Future<void> removebookmark(int feedId) async {
+  Future<void> loadMore() async {
+    if (!hasMore.value || isLoadingMore.value) return;
+
+    isLoadingMore.value = true;
     try {
-      final res = await feedsApi.removeBookmark(feedId);
-
-      if (res != null) {
-        Biyard.info("Remove Bookmarked successfully");
-        getDashboards();
-      } else {
-        Biyard.error(
-          "Failed to remove bookmark.",
-          "Remove Bookmarked failed. Please try again later.",
-        );
-      }
-    } finally {}
+      final result = await feedsApi.listFeedsV2(bookmark: _bookmark);
+      feeds.addAll(result.items);
+      _bookmark = result.bookmark;
+      hasMore.value = _bookmark != null && _bookmark!.isNotEmpty;
+    } finally {
+      isLoadingMore.value = false;
+    }
   }
 
-  RxList<SpaceSummary> topSpaces = <SpaceSummary>[].obs;
-  RxList<FeedSummary> matchedFeeds = <FeedSummary>[].obs;
-  RxList<FeedSummary> newFeeds = <FeedSummary>[].obs;
+  @override
+  void onClose() {
+    scrollController.dispose();
+    super.onClose();
+  }
 }
