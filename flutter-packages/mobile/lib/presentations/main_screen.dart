@@ -109,7 +109,7 @@ class _MainScreenState extends State<MainScreen>
                     profileImage: controller.user.value.profileUrl,
                     onTapAvatar: openSidePanel,
                     onTapPlus: () => {
-                      Get.rootDelegate.offNamed(createPostScreen),
+                      Get.rootDelegate.toNamed(createPostScreen),
                     },
                   ),
                 ),
