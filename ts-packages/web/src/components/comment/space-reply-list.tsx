@@ -172,7 +172,7 @@ export function SpaceReplyList({
               </>
             )}
 
-            {!isEditing && canComment && (
+            {!isEditing && (
               <div className="flex flex-row w-full justify-end">
                 {isLoggedIn && (
                   <button
