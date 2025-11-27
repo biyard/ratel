@@ -9,7 +9,7 @@ class VerificationController extends BaseController {
   final isBusy = false.obs;
   final code = List.generate(6, (_) => '').obs;
 
-  String get email => signupService.email.value;
+  String get phone => signupService.phone.value;
   bool get isComplete => code.length == 6 && code.every((c) => c.isNotEmpty);
 
   final List<TextInputFormatter> codeInputFormatters = [
@@ -46,7 +46,7 @@ class VerificationController extends BaseController {
   }
 
   void goBack() {
-    Get.rootDelegate.offNamed(AppRoutes.signupScreen);
+    Get.rootDelegate.offNamed(signupScreen);
   }
 
   Future<void> verify() async {
@@ -58,12 +58,13 @@ class VerificationController extends BaseController {
     try {
       final pin = code.join();
       logger.d("pin value: ${pin}");
-      final res = await auth.verifyCode(email, pin);
+      final res = await auth.verifyCode(phone, pin);
+      final res2 = await auth.signup(phone, pin);
 
-      if (res != null) {
-        logger.d("verification response: ${res}");
+      if (res != null && res2 != null) {
+        logger.d("verification response: ${res} ${res}");
         authService.neededSignup = false;
-        Get.rootDelegate.offNamed(AppRoutes.setupProfileScreen);
+        Get.rootDelegate.offNamed(AppRoutes.mainScreen);
       } else {
         Biyard.error(
           "Failed to verify code",
@@ -81,7 +82,7 @@ class VerificationController extends BaseController {
     isBusy.value = true;
 
     try {
-      final res = await auth.sendVerificationCode(email);
+      final res = await auth.sendVerificationCode(phone);
 
       if (res != null) {
         Biyard.info("Success to resend verification code");

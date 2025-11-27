@@ -13,6 +13,40 @@ class UserApi extends GetConnect {
     });
   }
 
+  Future<UserV2Model> getUserInfoV2() async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/me');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await get(uri.toString(), headers: headers);
+
+    if (!res.isOk || res.body == null) {
+      return UserV2Model(
+        pk: '',
+        email: '',
+        nickname: '',
+        profileUrl: '',
+        description: '',
+        userType: 0,
+        username: '',
+        followersCount: 0,
+        followingsCount: 0,
+        theme: 0,
+        point: 0,
+        referralCode: null,
+        phoneNumber: null,
+        principal: null,
+        evmAddress: null,
+        teams: const [],
+      );
+    }
+
+    final item = res.body as Map<String, dynamic>;
+    logger.d("user info v2: $item");
+
+    return UserV2Model.fromJson(item);
+  }
+
+  //NOTE: this api is deprecated. please use getUserInfoV2 instead.
   //getUserInfo: () => '/v1/users?action=user-info',
   Future<UserModel> getUserInfo() async {
     final uri = Uri.parse(apiEndpoint)
