@@ -1,7 +1,9 @@
 pub mod did_config;
 pub mod portone_config;
+mod x402_config;
 use did_config::DidConfig;
 pub use portone_config::*;
+pub use x402_config::*;
 
 use bdk::prelude::*;
 use by_types::config::*;
@@ -44,6 +46,7 @@ pub struct Config {
     pub watermark_sqs_url: &'static str,
 
     pub portone: PortoneConfig,
+    pub x402: X402Config,
     pub account_id: &'static str,
 }
 
@@ -127,6 +130,7 @@ impl Default for Config {
             watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL").expect("You must set WATERMARK_QUEUE_URL"),
 
             portone: PortoneConfig::default(),
+            x402: X402Config::default(),
             account_id: option_env!("ACCOUNT_ID").unwrap_or(""),
         }
     }
