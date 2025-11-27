@@ -102,7 +102,7 @@ pub async fn pay_with_billing_key_handler(
 
     let amount = membership.price_dollars;
 
-    let mut user_purchase = UserPurchase::new(user.pk.clone(), tx_type, amount);
+    let mut user_purchase = UserPurchase::new(user.pk.clone().into(), tx_type, amount);
 
     let res = portone
         .pay_with_billing_key(

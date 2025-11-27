@@ -221,6 +221,9 @@ pub enum Error {
     NoMembershipFound,
     #[error("Membership already active")]
     MembershipAlreadyActive,
+    #[error("Invalid membership tier")]
+    #[rest_error(status = 400, code = 7001)]
+    InvalidMembershipTier,
 
     // /v3/panels endpoints 8000 ~
     #[rest_error(code = 8000)]
@@ -263,6 +266,8 @@ pub enum Error {
     #[error("Invalid identification for payment")]
     #[rest_error(code = 10000)]
     InvalidIdentification,
+    #[error("Card information is required for payment")]
+    CardInfoRequired,
 
     // DID feature errors 11,000 ~
     #[error("Invalid DID format")]

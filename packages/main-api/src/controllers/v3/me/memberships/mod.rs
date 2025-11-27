@@ -1,6 +1,9 @@
 mod change_membership;
 mod history;
 
+#[cfg(test)]
+mod tests;
+
 use crate::*;
 
 pub fn route() -> Result<Router<AppState>> {

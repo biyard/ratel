@@ -4,6 +4,7 @@ use aws_sdk_sns::{Client, config::Config};
 
 #[derive(Clone)]
 pub struct SnsClient {
+    #[allow(dead_code)]
     client: Client,
 }
 
