@@ -409,8 +409,8 @@ async fn test_user_membership_infinite_duration_logic() {
     membership.create(&ddb).await.unwrap();
 
     let user_membership = UserMembership::new(
-        test_user.0.pk.clone(),
-        membership.pk.clone(),
+        test_user.0.pk.clone().into(),
+        membership.pk.clone().into(),
         -1, // infinite duration
         100,
     )
