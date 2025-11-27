@@ -1,7 +1,20 @@
 use super::*;
 use crate::features::membership::*;
+use crate::features::payment::*;
 use crate::tests::v3_setup::*;
 use change_membership::ChangeMembershipResponse;
+
+async fn seed_test_user_payment(cli: &aws_sdk_dynamodb::Client, user_pk: &Partition) {
+    // Create a test UserPayment with a fake billing_key for testing
+    let mut user_payment = UserPayment::new(
+        user_pk.clone(),
+        format!("test_customer_{}", user_pk.to_string()),
+        "Test User".to_string(),
+        "900101".to_string(),
+    );
+    user_payment.billing_key = Some(format!("test_billing_key_{}", user_pk.to_string()));
+    user_payment.create(cli).await.unwrap();
+}
 
 async fn seed_memberships(cli: &aws_sdk_dynamodb::Client) {
     // Create Free membership if it doesn't exist
@@ -59,8 +72,9 @@ async fn test_change_membership_upgrade_from_free_to_pro() {
     } = TestContextV3::setup().await;
     let cli = &ddb;
 
-    // Seed memberships
+    // Seed memberships and user payment
     seed_memberships(cli).await;
+    seed_test_user_payment(cli, &test_user.0.pk).await;
 
     // Upgrade to Pro
     let (status, _headers, body) = post! {
@@ -68,7 +82,8 @@ async fn test_change_membership_upgrade_from_free_to_pro() {
         path: "/v3/me/memberships",
         headers: test_user.1.clone(),
         body: {
-            "membership": "Pro"
+            "membership": "Pro",
+            "currency": "USD"
         },
         response_type: serde_json::Value
     };
@@ -83,7 +98,8 @@ async fn test_change_membership_upgrade_from_free_to_pro() {
         .unwrap()
         .expect("UserMembership should exist");
 
-    let membership = Membership::get(cli, user_membership.membership_pk.clone(), Some(EntityType::Membership))
+    let membership_pk: Partition = user_membership.membership_pk.clone().into();
+    let membership = Membership::get(cli, membership_pk, Some(EntityType::Membership))
         .await
         .unwrap()
         .expect("Membership should exist");
@@ -103,8 +119,9 @@ async fn test_change_membership_downgrade_from_pro_to_free() {
     } = TestContextV3::setup().await;
     let cli = &ddb;
 
-    // Seed memberships
+    // Seed memberships and user payment
     seed_memberships(cli).await;
+    seed_test_user_payment(cli, &test_user.0.pk).await;
 
     // First upgrade to Pro
     let (status, _headers, _body) = post! {
@@ -112,7 +129,8 @@ async fn test_change_membership_downgrade_from_pro_to_free() {
         path: "/v3/me/memberships",
         headers: test_user.1.clone(),
         body: {
-            "membership": "Pro"
+            "membership": "Pro",
+            "currency": "USD"
         },
         response_type: ChangeMembershipResponse
     };
@@ -124,7 +142,8 @@ async fn test_change_membership_downgrade_from_pro_to_free() {
         path: "/v3/me/memberships",
         headers: test_user.1.clone(),
         body: {
-            "membership": "Free"
+            "membership": "Free",
+            "currency": "USD"
         },
         response_type: serde_json::Value
     };
@@ -134,7 +153,7 @@ async fn test_change_membership_downgrade_from_pro_to_free() {
     assert_eq!(status, 200, "Downgrade request failed: {:?}", body);
 
     let body: ChangeMembershipResponse = serde_json::from_value(body).unwrap();
-    assert_eq!(body.membership, MembershipTier::Free);
+    assert_eq!(body.membership.as_ref().unwrap().tier, MembershipTier::Free);
 
     // Verify the downgrade was scheduled (not applied immediately)
     let user_membership = UserMembership::get(cli, &test_user.0.pk, Some(EntityType::UserMembership))
@@ -142,7 +161,8 @@ async fn test_change_membership_downgrade_from_pro_to_free() {
         .unwrap()
         .expect("UserMembership should exist");
 
-    let membership = Membership::get(cli, user_membership.membership_pk.clone(), Some(EntityType::Membership))
+    let membership_pk: Partition = user_membership.membership_pk.clone().into();
+    let membership = Membership::get(cli, membership_pk, Some(EntityType::Membership))
         .await
         .unwrap()
         .expect("Membership should exist");
@@ -171,7 +191,8 @@ async fn test_change_membership_to_same_tier_returns_error() {
         path: "/v3/me/memberships",
         headers: test_user.1.clone(),
         body: {
-            "membership": "Free"
+            "membership": "Free",
+            "currency": "USD"
         },
         response_type: serde_json::Value
     };
@@ -188,8 +209,9 @@ async fn test_change_membership_upgrade_adds_credits() {
     } = TestContextV3::setup().await;
     let cli = &ddb;
 
-    // Seed memberships
+    // Seed memberships and user payment
     seed_memberships(cli).await;
+    seed_test_user_payment(cli, &test_user.0.pk).await;
 
     // First, trigger the creation of Free membership by trying to change to Free
     // This will create a UserMembership if it doesn't exist
@@ -198,7 +220,8 @@ async fn test_change_membership_upgrade_adds_credits() {
         path: "/v3/me/memberships",
         headers: test_user.1.clone(),
         body: {
-            "membership": "Pro"
+            "membership": "Pro",
+            "currency": "USD"
         },
         response_type: ChangeMembershipResponse
     };
@@ -219,7 +242,8 @@ async fn test_change_membership_upgrade_adds_credits() {
         path: "/v3/me/memberships",
         headers: test_user.1.clone(),
         body: {
-            "membership": "Max"
+            "membership": "Max",
+            "currency": "USD"
         },
         response_type: ChangeMembershipResponse
     };
@@ -244,8 +268,9 @@ async fn test_change_membership_upgrade_clears_scheduled_downgrade() {
     } = TestContextV3::setup().await;
     let cli = &ddb;
 
-    // Seed memberships
+    // Seed memberships and user payment
     seed_memberships(cli).await;
+    seed_test_user_payment(cli, &test_user.0.pk).await;
 
     // Upgrade to Pro
     let (status, _headers, _body) = post! {
@@ -253,7 +278,8 @@ async fn test_change_membership_upgrade_clears_scheduled_downgrade() {
         path: "/v3/me/memberships",
         headers: test_user.1.clone(),
         body: {
-            "membership": "Pro"
+            "membership": "Pro",
+            "currency": "USD"
         },
         response_type: ChangeMembershipResponse
     };
@@ -265,7 +291,8 @@ async fn test_change_membership_upgrade_clears_scheduled_downgrade() {
         path: "/v3/me/memberships",
         headers: test_user.1.clone(),
         body: {
-            "membership": "Free"
+            "membership": "Free",
+            "currency": "USD"
         },
         response_type: ChangeMembershipResponse
     };
@@ -284,7 +311,8 @@ async fn test_change_membership_upgrade_clears_scheduled_downgrade() {
         path: "/v3/me/memberships",
         headers: test_user.1.clone(),
         body: {
-            "membership": "Max"
+            "membership": "Max",
+            "currency": "USD"
         },
         response_type: ChangeMembershipResponse
     };
@@ -296,7 +324,8 @@ async fn test_change_membership_upgrade_clears_scheduled_downgrade() {
         .unwrap()
         .expect("UserMembership should exist");
 
-    let membership = Membership::get(cli, final_membership.membership_pk.clone(), Some(EntityType::Membership))
+    let membership_pk: Partition = final_membership.membership_pk.clone().into();
+    let membership = Membership::get(cli, membership_pk, Some(EntityType::Membership))
         .await
         .unwrap()
         .expect("Membership should exist");
@@ -314,8 +343,9 @@ async fn test_change_membership_creates_purchase_record() {
         ..
     } = TestContextV3::setup().await;
 
-    // Seed memberships
+    // Seed memberships and user payment
     seed_memberships(&ddb).await;
+    seed_test_user_payment(&ddb, &test_user.0.pk).await;
 
     // Upgrade to Pro
     let (status, _headers, _body) = post! {
@@ -323,7 +353,8 @@ async fn test_change_membership_creates_purchase_record() {
         path: "/v3/me/memberships",
         headers: test_user.1.clone(),
         body: {
-            "membership": "Pro"
+            "membership": "Pro",
+            "currency": "USD"
         },
         response_type: ChangeMembershipResponse
     };
@@ -355,7 +386,8 @@ async fn test_change_membership_without_auth_returns_error() {
         app: app,
         path: "/v3/me/memberships",
         body: {
-            "membership": "Pro"
+            "membership": "Pro",
+            "currency": "USD"
         },
         response_type: serde_json::Value
     };
