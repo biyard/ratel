@@ -13,5 +13,5 @@ use crate::*;
 pub enum RewardType {
     #[default]
     None,
-    ParticipationPoll(String), // Poll ID
+    RespondPoll(String), // Poll SK
 }
