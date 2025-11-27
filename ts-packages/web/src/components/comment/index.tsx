@@ -239,32 +239,30 @@ export function Comment({
                   </button>
                 )}
               </div>
-              {canComment && (
-                <button
-                  aria-label="Like Comment"
-                  className="flex flex-row gap-2 justify-center items-center"
-                  onClick={() => {
-                    if (onLike) {
-                      onLike(comment.sk, !comment.liked);
-                    } else {
-                      throw new Error('onLike is not set');
-                    }
-                  }}
-                >
-                  <ThumbUp
-                    width={24}
-                    height={24}
-                    className={
-                      comment.liked
-                        ? '[&>path]:fill-primary [&>path]:stroke-primary'
-                        : '[&>path]:stroke-comment-icon'
-                    }
-                  />
-                  <div className="font-medium text-base/[24px] text-comment-icon-text">
-                    {comment.likes ?? 0}
-                  </div>
-                </button>
-              )}
+              <button
+                aria-label="Like Comment"
+                className="flex flex-row gap-2 justify-center items-center"
+                onClick={() => {
+                  if (onLike) {
+                    onLike(comment.sk, !comment.liked);
+                  } else {
+                    throw new Error('onLike is not set');
+                  }
+                }}
+              >
+                <ThumbUp
+                  width={24}
+                  height={24}
+                  className={
+                    comment.liked
+                      ? '[&>path]:fill-primary [&>path]:stroke-primary'
+                      : '[&>path]:stroke-comment-icon'
+                  }
+                />
+                <div className="font-medium text-base/[24px] text-comment-icon-text">
+                  {comment.likes ?? 0}
+                </div>
+              </button>
             </div>
             {showReplies && comment.replies > 0 && boards && (
               <SpaceReplyList
