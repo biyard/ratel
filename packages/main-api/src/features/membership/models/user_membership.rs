@@ -33,15 +33,12 @@ pub struct UserMembership {
     pub total_credits: i64,
     pub remaining_credits: i64,
 
-    // Payment tracking
-    pub purchase_id: Option<CompositePartition>,
-
     // Renewal tracking
     pub auto_renew: bool,
 
-    // Cancellation tracking
-    pub cancelled_at: Option<i64>,
-    pub cancellation_reason: Option<String>,
+    // Optional: Next membership tier for auto-renewal
+    // If absent, keep same membership
+    pub next_membership: Option<MembershipPartition>,
 }
 
 impl UserMembership {
@@ -72,10 +69,8 @@ impl UserMembership {
             total_credits: credits,
             remaining_credits: credits,
             auto_renew: true,
-            cancelled_at: None,
-            cancellation_reason: None,
-            purchase_id: None,
             status: MembershipStatus::Active,
+            next_membership: None,
         })
     }
 
@@ -95,40 +90,6 @@ impl UserMembership {
     /// Check if membership has infinite duration
     pub fn is_infinite(&self) -> bool {
         self.expired_at == i64::MAX
-    }
-
-    /// Cancel the membership
-    pub fn cancel(&mut self, reason: Option<String>) {
-        self.status = MembershipStatus::Cancelled;
-        self.cancelled_at = Some(chrono::Utc::now().timestamp_micros());
-        self.cancellation_reason = reason;
-        self.updated_at = chrono::Utc::now().timestamp_micros();
-        self.auto_renew = false;
-    }
-
-    /// Renew the membership
-    pub fn renew(&mut self, duration_days: i32) -> crate::Result<()> {
-        let now = chrono::Utc::now().timestamp_micros();
-
-        // Extend from current expiration or now, whichever is later
-        let base_time = if self.expired_at > now {
-            self.expired_at
-        } else {
-            now
-        };
-
-        // Support -1 and 0 for infinite/lifetime memberships
-        let new_expiration = if duration_days <= 0 {
-            i64::MAX
-        } else {
-            base_time + (duration_days as i64) * 24 * 60 * 60 * 1_000_000
-        };
-
-        self.expired_at = new_expiration;
-        self.status = MembershipStatus::Active.into();
-        self.updated_at = now;
-
-        Ok(())
     }
 
     /// Use credits from this membership
