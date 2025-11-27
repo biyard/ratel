@@ -2,6 +2,9 @@
 
 use std::convert;
 
+use crate::auth::verification::verify_code::VerifyCodeResponse;
+use crate::controllers::v3::auth::verification::send_code::SendCodeResponse;
+use crate::models::PhoneVerification;
 use crate::*;
 use crate::{
     models::{email::EmailVerification, user::User},
@@ -73,6 +76,66 @@ async fn test_email_with_password_signup() {
     assert!(headers.get("set-cookie").is_some());
     assert_eq!(user.username, username);
     assert_eq!(user.email, email);
+}
+
+#[tokio::test]
+async fn test_phone_signup() {
+    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+
+    let phone = format!("+1555{:07}", now % 10000000);
+    tracing::info!("Sending verification code to {}", phone);
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/auth/verification/send-verification-code",
+        body: {
+            "phone": phone.clone(),
+        },
+        response_type: SendCodeResponse
+    };
+    assert_eq!(status, 200);
+    assert!(body.expired_at > now as i64);
+
+    let verification = PhoneVerification::get(
+        &ddb,
+        Partition::Phone(phone.clone()),
+        Some(EntityType::PhoneVerification),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    let code = verification.value;
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/auth/verification/verify-code",
+        body: {
+            "phone": phone.clone(),
+            "code": code.clone(),
+        },
+        response_type: VerifyCodeResponse
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.success, true);
+
+    let (status, headers, user) = post! {
+        app: app,
+        path: "/v3/auth/signup",
+        body: {
+            "phone": phone.clone(),
+            "code": code,
+            "display_name": "testuser",
+            "username": "testuser",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
+            "description": "This is a test user.",
+            "term_agreed": true,
+            "informed_agreed": true,
+        },
+        response_type: crate::models::user::User
+    };
+
+    assert_eq!(status, 200);
+    assert!(headers.get("set-cookie").is_some());
 }
 
 #[tokio::test]

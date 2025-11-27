@@ -21,4 +21,6 @@ main-api = { path = "../main-api", features = ["model-only"] }
 
 [features]
 default = []
+bypass = []
+lambda = []
 local-run = []
