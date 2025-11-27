@@ -19,7 +19,7 @@ pub async fn portone_handler(
     NoApi(_user): NoApi<Option<User>>,
     Json(req): Json<PortoneRequest>,
 ) -> Result<Json<PortoneResponse>> {
-    warn!("Handling request: {:?}", req);
+    notify!("Handling request: {:?}", req);
     // TODO: Implement the handler logic here
 
     unimplemented!()
