@@ -28,7 +28,7 @@ pub async fn change_membership_handler(
     NoApi(user): NoApi<User>,
     Json(req): Json<ChangeMembershipRequest>,
 ) -> Result<Json<ChangeMembershipResponse>> {
-    tracing::debug!("Handling request: {:?}", req);
+    tracing::debug!("change_membership_handler request: {:?}", req);
     let cli = &dynamo.client;
 
     // Try to get existing membership, or create a Free one if it doesn't exist
@@ -161,6 +161,8 @@ async fn handle_upgrade_membership(
             currency,
         )
         .await?;
+
+    // TODO: setup schedule period payment
 
     // Create a purchase record
     let user_purchase = UserPurchase::new(
