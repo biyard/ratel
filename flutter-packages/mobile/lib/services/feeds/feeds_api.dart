@@ -298,6 +298,45 @@ class FeedsApi extends GetConnect {
     return feeds;
   }
 
+  Future<FeedV2ListResult> listDraftsV2({String? bookmark}) async {
+    final base = Uri.parse(apiEndpoint).resolve('/v3/me/drafts');
+    final uri = bookmark == null
+        ? base
+        : base.replace(queryParameters: <String, String>{'bookmark': bookmark});
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await get(uri.toString(), headers: headers);
+
+    if (!res.isOk) {
+      return const FeedV2ListResult(items: [], bookmark: null);
+    }
+
+    final body = res.body;
+    final items = (body['items'] as List?) ?? const [];
+    final nextBookmark = body['bookmark'] as String?;
+
+    final drafts = items
+        .map(
+          (e) =>
+              FeedV2SummaryModel.fromJson(Map<String, dynamic>.from(e as Map)),
+        )
+        .toList();
+
+    return FeedV2ListResult(items: drafts, bookmark: nextBookmark);
+  }
+
+  Future<bool> deletePostV2(String feedPk) async {
+    final base = Uri.parse(apiEndpoint);
+    final uri = base.replace(
+      pathSegments: [...base.pathSegments, 'v3', 'posts', feedPk],
+    );
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await delete(uri.toString(), headers: headers);
+
+    return res.isOk;
+  }
+
   Future<FeedV2ListResult> listFeedsV2({String? bookmark}) async {
     final base = Uri.parse(apiEndpoint).resolve('/v3/posts');
     final uri = bookmark == null
