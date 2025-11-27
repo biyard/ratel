@@ -159,6 +159,9 @@ pub enum EntityType {
     UserPayment,
     Purchase,
     UserPurchase(String),
+
+    //
+    UserReward(String, String), // USER_REWARD#{SPACE_PK}#{REWARD_TYPE}
 }
 
 impl TryInto<Partition> for EntityType {

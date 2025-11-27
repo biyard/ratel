@@ -27,6 +27,7 @@ pub use list_spaces::*;
 use participate_space::participate_space_handler;
 pub use update_space::*;
 
+pub mod rewards;
 pub mod sprint_leagues;
 
 use crate::{
@@ -61,6 +62,7 @@ pub fn route() -> Result<Router<AppState>> {
                 .nest("/artworks", artworks::route())
                 .nest("/boards", boards::route())
                 .nest("/polls", polls::route())
+                .nest("/rewards", rewards::route())
                 .nest("/sprint-leagues", sprint_leagues::route()),
         )
         // NOTE: Above all, apply user participant instead of real user.
