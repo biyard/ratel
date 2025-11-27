@@ -1,4 +1,4 @@
-use crate::features::membership::UserMembership;
+use crate::features::membership::{UserMembership, UserMembershipResponse};
 
 use super::*;
 use bdk::prelude::*;
@@ -64,6 +64,7 @@ pub struct UserDetailResponse {
     //FIXME: Change Telegram Model
     // pub telegram_id: Option<i64>,
     pub teams: Option<Vec<UserTeamResponse>>,
+    pub membership: Option<UserMembershipResponse>,
     pub is_identified: bool,
     pub has_billing_key: bool,
 }
@@ -98,7 +99,10 @@ impl From<Vec<UserMetadata>> for UserDetailResponse {
                     }
                     res.teams.as_mut().unwrap().push(team);
                 }
-                _ => {
+                UserMetadata::UserMembership(membership) => {
+                    res.membership = Some(membership.into());
+                }
+                UserMetadata::UserTeamGroup(_) | UserMetadata::UserTelegram(_) => {
                     // Skip
                 }
             }
