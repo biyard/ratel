@@ -56,6 +56,10 @@ TELEGRAM_TOKEN ?=
 FIREBASE_PROJECT_ID ?=
 PORTONE_API_SECRET ?=
 
+BIYARD_API_URL ?= https://dev.biyard.co
+BIYARD_API_SECRET ?= biyard_default_api_secret
+BIYARD_PROJECT_ID ?= ratel_project_id
+
 BUILD_ENV ?= ENV=$(ENV) \
 								RUST_LOG=$(RUST_LOG) \
 								AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \

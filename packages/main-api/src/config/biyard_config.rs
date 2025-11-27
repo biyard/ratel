@@ -13,21 +13,21 @@ impl Default for BiyardConfig {
                     "BIYARD_API_SECRET not set, using default value. Some features may not work properly."
                 );
 
-                "your_default_api_secret"
+                "biyard_default_api_secret"
             }),
             project_id: option_env!("BIYARD_PROJECT_ID").unwrap_or_else(|| {
                 tracing::warn!(
                     "PORTONE_KPN_CHANNEL_KEY not set, using default value. Some features may not work properly."
                 );
 
-                "your_default_kpn_channel_key"
+                "ratel_project_id"
             }),
-            base_url: option_env!("BIYARD_BASE_URL").unwrap_or_else(|| {
+            base_url: option_env!("BIYARD_API_URL").unwrap_or_else(|| {
                 tracing::warn!(
                     "BIYARD_BASE_URL not set, using default value. Some features may not work properly."
                 );
 
-                "your_default_base_url"
+                "https://dev.biyard.co"
             }),
         }
     }
