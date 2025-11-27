@@ -136,10 +136,11 @@ jobs:
           WEB_BUILD: false
 
           # NOTE: Change PORTONE API
-          PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
-          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
-          PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
+          PORTONE_API_SECRET: ${{ secrets.PORTONE_API_SECRET }}
+          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.PORTONE_KPN_CHANNEL_KEY }}
+          PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
           ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+
         run: |
           tar xzvf dist.tar.gz
           ls dist
@@ -187,7 +188,7 @@ jobs:
           VITE_FIREBASE_MEASUREMENT_ID: ${{ secrets.FIREBASE_MEASUREMENT_ID }}
 
           # NOTE: Replace them after accepting.
-          VITE_PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID}}
+          VITE_PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID}}
           VITE_PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_INICIS_CHANNEL_KEY }}
 
           VITE_ENV: prod
