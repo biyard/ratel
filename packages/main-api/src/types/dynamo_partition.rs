@@ -84,6 +84,8 @@ pub enum Partition {
     // Payment Sub partition
     Purchase, // For user purchases, USER#{user_id}##PURCHASE
     Payment,  // For user payment, USER#{user_id}##PAYMENT
+
+    Reward, // For space rewards, SPACE#{space_id}##REWARD
 }
 
 impl Partition {
