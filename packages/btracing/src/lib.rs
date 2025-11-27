@@ -24,7 +24,11 @@ macro_rules! notify_error {
                     tracing::error!("Failed to send Slack message");
                     break;
                 }
-                tracing::warn!("Failed to send Slack message, attempt {}/3", i + 1);
+                tracing::warn!(
+                    "Failed to send Slack message to {}, attempt {}/3",
+                    option_env!("SLACK_HOOK"),
+                    i + 1
+                );
             }
         }
     };
