@@ -46,6 +46,10 @@ export default function PostComments({
   onNextPage,
 }: PostCommentsProps) {
   const { data: user } = useSuspenseUserInfo();
+  const startedAt = post?.started_at ?? 0;
+  const endedAt = post?.ended_at ?? 0;
+  const now = Date.now();
+
   const toPostComment = (c: SpacePostCommentResponse): PostComment => {
     return {
       pk: c.pk,
@@ -78,7 +82,7 @@ export default function PostComments({
             {(post?.number_of_comments ?? 0) > 1 ? t('replies') : t('reply')}
           </span>
         </div>
-        {isLoggedIn && (
+        {startedAt <= now && now <= endedAt && isLoggedIn && (
           <>
             {!expandComment.get() && (
               <button
@@ -117,6 +121,7 @@ export default function PostComments({
           onDelete={handleCommentDelete}
           onUpdate={handleCommentUpdate}
           t={t}
+          canComment={startedAt <= now && now <= endedAt && isLoggedIn}
           canDelete={comment?.author_pk === user?.pk}
           canEdit={comment?.author_pk === user?.pk}
         />

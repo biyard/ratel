@@ -21,6 +21,7 @@ interface CommentProps {
   spacePk?: string;
   isLoggedIn?: boolean;
   canDelete?: boolean;
+  canComment?: boolean;
   canEdit?: boolean;
   comment: PostComment;
   onComment?: (commentId: string, content: string) => Promise<void>;
@@ -39,6 +40,7 @@ export function Comment({
   onUpdate,
   t,
   isLoggedIn = true,
+  canComment = true,
   canDelete = false,
   canEdit = false,
 }: CommentProps) {
@@ -115,19 +117,21 @@ export function Comment({
             </div>
           )}
         </div>
-        <PostAdminMenu
-          t={t}
-          canDelete={canDelete}
-          canEdit={canEdit}
-          handleEditPost={async () => {
-            handleEditPost();
-          }}
-          handleDeletePost={async () => {
-            if (onDelete) {
-              await onDelete(comment.sk);
-            }
-          }}
-        />
+        {canComment && (
+          <PostAdminMenu
+            t={t}
+            canDelete={canDelete}
+            canEdit={canEdit}
+            handleEditPost={async () => {
+              handleEditPost();
+            }}
+            handleDeletePost={async () => {
+              if (onDelete) {
+                await onDelete(comment.sk);
+              }
+            }}
+          />
+        )}
       </div>
 
       <div className="flex flex-col gap-3 ml-12">
@@ -218,7 +222,7 @@ export function Comment({
                     />
                   )}
                 </button>
-                {isLoggedIn && (
+                {canComment && (
                   <button
                     aria-label="Reply to Comment"
                     onClick={() => {
@@ -235,7 +239,7 @@ export function Comment({
                   </button>
                 )}
               </div>
-              {isLoggedIn && (
+              {canComment && (
                 <button
                   aria-label="Like Comment"
                   className="flex flex-row gap-2 justify-center items-center"
@@ -268,6 +272,7 @@ export function Comment({
                 spacePk={spacePk ?? ''}
                 postPk={comment.pk}
                 commentSk={comment.sk}
+                canComment={canComment}
                 isLoggedIn={isLoggedIn}
                 onLike={onLike}
                 onUpdate={onUpdate}
