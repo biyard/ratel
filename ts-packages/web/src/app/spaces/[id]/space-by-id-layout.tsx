@@ -21,6 +21,7 @@ import { SafeArea } from '@/components/ui/safe-area';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import SpaceMobileHeader from '@/features/spaces/components/space-mobile-header';
+import { SpaceStatus } from '@/features/spaces/types/space-common';
 
 export const Context = createContext<SpaceHomeController | undefined>(
   undefined,
@@ -160,7 +161,9 @@ export default function SpaceByIdLayout() {
   const ctrl = useSpaceHomeController(spacePk ?? '');
 
   const content =
-    !ctrl.space.havePreTasks() || ctrl.space.isAdmin() ? (
+    ctrl.space.status !== SpaceStatus.InProgress && !ctrl.space.isAdmin() ? (
+      <></>
+    ) : !ctrl.space.havePreTasks() || ctrl.space.isAdmin() ? (
       <GeneralLayout />
     ) : ctrl.space.participated ? (
       <Requirements />
