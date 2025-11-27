@@ -16,9 +16,9 @@ pub struct ChangeMembershipRequest {
 pub struct ChangeMembershipResponse {
     #[schemars(description = "Status of the operation")]
     #[serde(default)]
-    pub membership: MembershipTier,
-    #[serde(default)]
     pub renewal_date: i64,
+    pub receipt: Option<PaymentReceipt>,
+    pub membership: Option<MembershipResponse>,
 }
 
 pub async fn change_membership_handler(
@@ -62,11 +62,20 @@ pub async fn change_membership_handler(
         return Err(Error::MembershipAlreadyActive);
     }
 
-    let renewal_date = if req.membership < current_membership.tier {
-        handle_downgrade_membership(cli, &user_membership, req.membership.clone()).await?;
-        user_membership.expired_at + 1
+    let mut ret = ChangeMembershipResponse {
+        renewal_date: now(),
+        receipt: None,
+        membership: None,
+    };
+
+    if req.membership < current_membership.tier {
+        let membership =
+            handle_downgrade_membership(cli, &user_membership, req.membership.clone()).await?;
+
+        ret.renewal_date = user_membership.expired_at + 1;
+        ret.membership = Some(membership.into());
     } else {
-        handle_upgrade_membership(
+        let (user_purchase, membership) = handle_upgrade_membership(
             cli,
             &portone,
             &user_membership,
@@ -76,13 +85,12 @@ pub async fn change_membership_handler(
             req.currency,
         )
         .await?;
-        now()
+
+        ret.receipt = Some(user_purchase.into());
+        ret.membership = Some(membership.into());
     };
 
-    Ok(Json(ChangeMembershipResponse {
-        membership: req.membership,
-        renewal_date,
-    }))
+    Ok(Json(ret))
 }
 
 /// Handle membership downgrade by scheduling it for next renewal
@@ -91,7 +99,7 @@ async fn handle_downgrade_membership(
     cli: &aws_sdk_dynamodb::Client,
     user_membership: &UserMembership,
     new_tier: MembershipTier,
-) -> Result<()> {
+) -> Result<Membership> {
     tracing::warn!("Scheduling membership downgrade to {:?}", new_tier);
 
     // Get the new membership details
@@ -100,7 +108,7 @@ async fn handle_downgrade_membership(
     // Schedule the downgrade by setting next_membership
     // Create updated user membership with scheduled downgrade
     let mut updated_membership = user_membership.clone();
-    updated_membership.next_membership = Some(new_membership.pk.into());
+    updated_membership.next_membership = Some(new_membership.pk.clone().into());
     updated_membership.updated_at = now();
 
     // Save the scheduled downgrade (delete old, then create updated)
@@ -115,7 +123,7 @@ async fn handle_downgrade_membership(
         user_membership.expired_at
     );
 
-    Ok(())
+    Ok(new_membership)
 }
 
 /// Handle membership upgrade by immediately activating the new tier
@@ -128,7 +136,7 @@ async fn handle_upgrade_membership(
     new_tier: MembershipTier,
     card_info: Option<CardInfo>,
     currency: Currency,
-) -> Result<()> {
+) -> Result<(UserPurchase, Membership)> {
     tracing::warn!("Processing membership upgrade to {:?}", new_tier);
 
     // Get the new membership details
@@ -168,10 +176,7 @@ async fn handle_upgrade_membership(
     let user_purchase = UserPurchase::new(
         user_membership.pk.clone().into(),
         TransactionType::PurchaseMembership(new_tier.to_string()),
-        match &currency {
-            Currency::Usd => new_membership.price_dollars,
-            Currency::Krw => new_membership.price_won,
-        },
+        amount,
         currency,
         payment_id,
         res.payment.pg_tx_id,
@@ -179,7 +184,7 @@ async fn handle_upgrade_membership(
 
     let user_membership = UserMembership::new(
         user_id.clone(),
-        new_membership.pk.into(),
+        new_membership.pk.clone().into(),
         new_membership.duration_days,
         new_membership.credits,
     )?
@@ -204,5 +209,5 @@ async fn handle_upgrade_membership(
         currency,
     );
 
-    Ok(())
+    Ok((user_purchase, new_membership))
 }
