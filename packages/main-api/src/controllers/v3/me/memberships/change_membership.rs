@@ -34,7 +34,7 @@ pub async fn change_membership_handler(
     // Try to get existing membership, or create a Free one if it doesn't exist
     let (user_membership, current_membership) = match user.get_membership(cli).await {
         Ok(result) => result,
-        Err(Error::NoUserMembershipFound) => {
+        Err(Error::NoUserMembershipFound) | Err(Error::NoMembershipFound) => {
             // User doesn't have a membership yet, create a Free membership
             let free_membership_pk = Partition::Membership(MembershipTier::Free.to_string());
             let free_membership = Membership::get(
@@ -92,7 +92,7 @@ async fn handle_downgrade_membership(
     user_membership: &UserMembership,
     new_tier: MembershipTier,
 ) -> Result<()> {
-    tracing::debug!("Scheduling membership downgrade to {:?}", new_tier);
+    tracing::warn!("Scheduling membership downgrade to {:?}", new_tier);
 
     // Get the new membership details
     let new_membership = Membership::get_by_membership_tier(cli, &new_tier).await?;
@@ -129,7 +129,7 @@ async fn handle_upgrade_membership(
     card_info: Option<CardInfo>,
     currency: Currency,
 ) -> Result<()> {
-    tracing::debug!("Processing membership upgrade to {:?}", new_tier);
+    tracing::warn!("Processing membership upgrade to {:?}", new_tier);
 
     // Get the new membership details
     let new_membership = Membership::get_by_membership_tier(cli, &new_tier).await?;

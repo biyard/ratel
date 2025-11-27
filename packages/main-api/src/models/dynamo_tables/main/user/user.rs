@@ -159,7 +159,8 @@ impl User {
         cli: &aws_sdk_dynamodb::Client,
     ) -> Result<(UserMembership, Membership)> {
         let user_membership = self.get_user_membership(cli).await?;
-        let membership = Membership::get(cli, &user_membership.membership_pk, Some(EntityType::Membership))
+        let pk: Partition = user_membership.membership_pk.clone().into();
+        let membership = Membership::get(cli, pk, Some(EntityType::Membership))
             .await?
             .ok_or_else(|| crate::Error::NoMembershipFound)?;
         Ok((user_membership, membership))
