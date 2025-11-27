@@ -46,25 +46,12 @@ pub struct UserMembership {
 
 impl UserMembership {
     pub fn new(
-        user_pk: Partition,
-        membership_pk: Partition,
+        user_pk: UserPartition,
+        membership_pk: MembershipPartition,
         duration_days: i32,
         credits: i64,
     ) -> crate::Result<Self> {
-        // Validation
-        if !matches!(user_pk, Partition::User(_)) {
-            return Err(crate::Error::InvalidPartitionKey(
-                "pk must be User partition".to_string(),
-            ));
-        }
-
-        if !matches!(membership_pk, Partition::Membership(_)) {
-            return Err(crate::Error::InvalidPartitionKey(
-                "membership_pk must be Membership partition".to_string(),
-            ));
-        }
-
-        let created_at = chrono::Utc::now().timestamp_micros();
+        let created_at = now();
 
         // Fix: Convert to i64 before multiplication to prevent overflow
         // Support -1 and 0 for infinite/lifetime memberships
@@ -72,13 +59,13 @@ impl UserMembership {
             // Infinite/Lifetime membership (far future)
             i64::MAX
         } else {
-            created_at + (duration_days as i64) * 24 * 60 * 60 * 1_000_000
+            created_at + (duration_days as i64) * 24 * 60 * 60 * 1_000
         };
 
         Ok(Self {
-            pk: user_pk,
+            pk: user_pk.into(),
             sk: EntityType::UserMembership,
-            membership_pk,
+            membership_pk: membership_pk.into(),
             created_at,
             updated_at: created_at,
             expired_at,
@@ -102,7 +89,7 @@ impl UserMembership {
     /// Check if membership is expired
     pub fn is_expired(&self) -> bool {
         // Infinite memberships (i64::MAX) never expire
-        self.expired_at != i64::MAX && self.expired_at <= chrono::Utc::now().timestamp_micros()
+        self.expired_at != i64::MAX && self.expired_at <= now()
     }
 
     /// Check if membership has infinite duration

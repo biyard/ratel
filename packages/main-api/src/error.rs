@@ -215,6 +215,12 @@ pub enum Error {
     InsufficientCredits,
     #[error("Membership may be expired")]
     ExpiredMembership,
+    #[error("User membership not found")]
+    NoUserMembershipFound,
+    #[error("Membership not found")]
+    NoMembershipFound,
+    #[error("Membership already active")]
+    MembershipAlreadyActive,
 
     // /v3/panels endpoints 8000 ~
     #[rest_error(code = 8000)]

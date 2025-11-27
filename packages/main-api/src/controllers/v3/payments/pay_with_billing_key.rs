@@ -119,8 +119,8 @@ pub async fn pay_with_billing_key_handler(
 
     txs.push(user_purchase.create_transact_write_item());
     let tx = UserMembership::new(
-        user.pk.clone(),
-        membership.pk,
+        user.pk.clone().into(),
+        membership.pk.into(),
         membership.duration_days,
         membership.credits,
     )?
