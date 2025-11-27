@@ -2,6 +2,7 @@ import 'package:ratel/exports.dart';
 
 class MainController extends BaseController {
   final userApi = Get.find<UserApi>();
+  final feedApi = Get.find<FeedsApi>();
 
   @override
   void onInit() {
@@ -15,6 +16,14 @@ class MainController extends BaseController {
     user(item);
 
     hideLoading();
+  }
+
+  Future<void> createPost() async {
+    final postPk = await feedApi.createPost();
+    logger.d("postPk: $postPk");
+    if (postPk.isNotEmpty) {
+      Get.rootDelegate.toNamed(createPostScreen, arguments: {'postPk': postPk});
+    }
   }
 
   final Rx<UserV2Model> user = UserV2Model(
