@@ -55,23 +55,6 @@ macro_rules! notify_error {
 
 #[macro_export]
 macro_rules! notify {
-    ($hook:expr, $msg:expr) => {
-        let client = reqwest::Client::new();
-        let payload = btracing::SlackMessage { text: $msg };
-
-        for i in 0..3 {
-            if let Ok(_) = client.post($hook).json(&payload).send().await {
-                break;
-            } else {
-                if i == 3 {
-                    tracing::error!("Failed to send Slack message");
-                    break;
-                }
-                tracing::warn!("Failed to send Slack message, attempt {}/3", i + 1);
-            }
-        }
-    };
-
     ($($arg:tt)*) => {
         let text = format!($($arg)*);
         let client = reqwest::Client::new();
@@ -86,11 +69,11 @@ macro_rules! notify {
             {
                 break;
             } else {
-                if i == 3 {
+                if i == 2 {
                     tracing::error!("Failed to send Slack message");
                     break;
                 }
-                tracing::warn!("Failed to send Slack message, attempt {}/3", i + 1);
+                tracing::warn!("Failed to send Slack message to {}, attempt {}/3", option_env!("SLACK_HOOK").unwrap_or_default(), i + 1);
             }
         }
 
