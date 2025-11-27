@@ -4,47 +4,59 @@ class DraftController extends BaseController {
   final userApi = Get.find<UserApi>();
   final feedsApi = Get.find<FeedsApi>();
 
+  RxList<FeedV2SummaryModel> feeds = <FeedV2SummaryModel>[].obs;
+  Rx<bool> isBusy = false.obs;
+  String? bookmark;
+
   @override
   void onInit() {
     super.onInit();
     listFeeds();
   }
 
-  void listFeeds() async {
-    showLoading();
-    final item = await userApi.getUserInfo();
-    final userId = item.id;
-    final items = await feedsApi.listFeedsByUserId(1, 10, userId, 1);
-    feeds.assignAll(items);
-    logger.d('feeds loaded: ${feeds.length}');
-    hideLoading();
+  Future<void> listFeeds({bool loadMore = false}) async {
+    if (!loadMore) {
+      showLoading();
+      bookmark = null;
+    }
+
+    try {
+      final result = await feedsApi.listDraftsV2(bookmark: bookmark);
+      bookmark = result.bookmark;
+
+      if (loadMore) {
+        feeds.addAll(result.items);
+      } else {
+        feeds.assignAll(result.items);
+      }
+
+      logger.d('draft feeds loaded: ${feeds.length}');
+    } finally {
+      hideLoading();
+    }
   }
 
   void goBack() {
     Get.rootDelegate.offNamed(AppRoutes.mainScreen);
   }
 
-  void openDraft(int feedId) {
-    Get.rootDelegate.toNamed(AppRoutes.draftWithId(feedId));
+  void openDraft(String pk) {
+    // Get.rootDelegate.toNamed(AppRoutes.draftWithId(pk));
   }
 
-  Future<void> deleteDraft(int feedId) async {
-    logger.d("delete draft id: ${feedId}");
+  Future<void> deleteDraft(String pk) async {
+    logger.d("delete draft pk: $pk");
+    if (isBusy.value) return;
+    isBusy.value = true;
+
     try {
-      final res = await feedsApi.deleteFeed(feedId);
-
-      if (res != null) {
-        Biyard.info("Delete Draft successfully");
-        listFeeds();
-      } else {
-        Biyard.error(
-          "Failed to delete draft.",
-          "Delete Draft failed. Please try again later.",
-        );
-      }
-    } finally {}
+      await feedsApi.deletePostV2(pk);
+      Biyard.info("Delete Draft successfully");
+      await listFeeds();
+    } finally {
+      isBusy.value = false;
+    }
   }
 
-  RxList<FeedModel> feeds = <FeedModel>[].obs;
-  Rx<bool> isBusy = false.obs;
+  bool get hasMore => bookmark != null;
 }
