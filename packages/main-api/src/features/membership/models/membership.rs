@@ -80,12 +80,9 @@ impl Membership {
         }
     }
 
-    /// Get membership ID from partition key
-    pub fn get_id(&self) -> Option<String> {
-        match &self.pk {
-            Partition::Membership(id) => Some(id.clone()),
-            _ => None,
-        }
+    #[cfg(test)]
+    pub fn get_id(&self) -> Option<MembershipPartition> {
+        Some(self.pk.clone().into())
     }
 
     pub async fn get_by_membership_tier(
