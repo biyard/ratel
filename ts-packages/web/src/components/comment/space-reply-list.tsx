@@ -12,6 +12,7 @@ export type SpaceReplyListProp = {
   spacePk: string;
   postPk: string;
   commentSk: string;
+  canComment: boolean;
   isLoggedIn: boolean;
   onLike?: (commentId: string, like: boolean) => Promise<void>;
   onDelete?: (commentSk: string) => Promise<void>;
@@ -24,6 +25,7 @@ export function SpaceReplyList({
   postPk,
   commentSk,
   isLoggedIn,
+  canComment,
   onLike,
   onDelete,
   onUpdate,
@@ -98,19 +100,21 @@ export function SpaceReplyList({
                 )}
               </div>
 
-              <PostAdminMenu
-                t={t}
-                canDelete={reply?.author_pk === user?.pk}
-                canEdit={reply?.author_pk === user?.pk}
-                handleEditPost={async () => {
-                  handleEditReply(reply.sk, reply.content);
-                }}
-                handleDeletePost={async () => {
-                  if (onDelete) {
-                    await onDelete(reply.sk);
-                  }
-                }}
-              />
+              {canComment && (
+                <PostAdminMenu
+                  t={t}
+                  canDelete={reply?.author_pk === user?.pk}
+                  canEdit={reply?.author_pk === user?.pk}
+                  handleEditPost={async () => {
+                    handleEditReply(reply.sk, reply.content);
+                  }}
+                  handleDeletePost={async () => {
+                    if (onDelete) {
+                      await onDelete(reply.sk);
+                    }
+                  }}
+                />
+              )}
             </div>
 
             {!isEditing && (

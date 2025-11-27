@@ -34,39 +34,8 @@ class LoginController extends BaseController {
     }
   }
 
-  Future<void> signInWithApple() async {}
-
-  Future<void> signInWithGoogle() async {
-    final authService = Get.find<AuthService>();
-    final api = Get.find<AuthApi>();
-    if (isBusy.value) return;
-    isBusy.value = true;
-    try {
-      await api.clearSession();
-      await authService.connectToGoogle("");
-      final neededSignup = authService.neededSignup;
-      if (!neededSignup) {
-        final pk = authService.privateKey ?? "";
-        final res = await api.socialLogin(authService.email ?? "", pk);
-        if (res != null) {
-          Get.rootDelegate.offNamed(AppRoutes.mainScreen);
-        } else {
-          Biyard.error(
-            "Failed to login",
-            "Login failed. Please try again later.",
-          );
-        }
-      } else {
-        signupService.email(authService.email);
-        Get.rootDelegate.toNamed(AppRoutes.setupProfileScreen);
-      }
-    } finally {
-      isBusy.value = false;
-    }
-  }
-
   void goToSignup() {
-    Get.rootDelegate.offNamed(AppRoutes.signupScreen);
+    Get.rootDelegate.offNamed(signupScreen);
   }
 
   @override
