@@ -58,6 +58,7 @@ export const i18nSpaceHome = {
     menu_sprint_league: 'Sprint League',
     // Admin Menus
     menu_admin_settings: 'Settings',
+    menu_rewards_settings: 'Rewards Settings',
     menu_analyze: 'Analyze',
     menu_nft_preview: 'ArtNFT',
     menu_nft_settings: 'Settings',
@@ -146,6 +147,7 @@ export const i18nSpaceHome = {
 
     // Admin Menus
     menu_admin_settings: '설정',
+    menu_rewards_settings: '보상 설정',
     menu_analyze: '분석',
 
     // Actions
