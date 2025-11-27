@@ -3,6 +3,9 @@ pub mod portone_config;
 use did_config::DidConfig;
 pub use portone_config::*;
 
+mod biyard_config;
+use biyard_config::BiyardConfig;
+
 use bdk::prelude::*;
 use by_types::config::*;
 
@@ -44,6 +47,8 @@ pub struct Config {
     pub watermark_sqs_url: &'static str,
 
     pub portone: PortoneConfig,
+
+    pub biyard: BiyardConfig,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -126,6 +131,7 @@ impl Default for Config {
             watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL").expect("You must set WATERMARK_QUEUE_URL"),
 
             portone: PortoneConfig::default(),
+            biyard: BiyardConfig::default(),
         }
     }
 }
