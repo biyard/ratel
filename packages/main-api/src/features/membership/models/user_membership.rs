@@ -26,7 +26,7 @@ pub struct UserMembership {
 
     // Fixed typo: membership_pk not memberhship_pk
     #[dynamo(prefix = "UM", name = "find_by_membership", index = "gsi1", pk)]
-    pub membership_pk: Partition,
+    pub membership_pk: MembershipPartition,
     pub status: MembershipStatus,
 
     // Credits management
@@ -62,7 +62,7 @@ impl UserMembership {
         Ok(Self {
             pk: user_pk.into(),
             sk: EntityType::UserMembership,
-            membership_pk: membership_pk.into(),
+            membership_pk,
             created_at,
             updated_at: created_at,
             expired_at,
@@ -77,8 +77,7 @@ impl UserMembership {
     /// Check if membership is currently active and not expired
     pub fn is_active(&self) -> bool {
         self.status == MembershipStatus::Active
-            && (self.expired_at == i64::MAX
-                || self.expired_at > chrono::Utc::now().timestamp_micros())
+            && (self.expired_at == i64::MAX || self.expired_at > now())
     }
 
     /// Check if membership is expired
@@ -99,7 +98,7 @@ impl UserMembership {
         }
 
         self.remaining_credits -= amount;
-        self.updated_at = chrono::Utc::now().timestamp_micros();
+        self.updated_at = now();
 
         Ok(())
     }
@@ -108,14 +107,14 @@ impl UserMembership {
     pub fn add_credits(&mut self, amount: i64) {
         self.remaining_credits += amount;
         self.total_credits += amount;
-        self.updated_at = chrono::Utc::now().timestamp_micros();
+        self.updated_at = now();
     }
 
     /// Mark as expired if past expiration date
     pub fn check_and_update_expiration(&mut self) -> bool {
         if self.is_expired() && self.status == MembershipStatus::Active {
             self.status = MembershipStatus::Expired;
-            self.updated_at = chrono::Utc::now().timestamp_micros();
+            self.updated_at = now();
             true
         } else {
             false
@@ -130,6 +129,29 @@ impl UserMembership {
     /// Set membership status
     pub fn set_status(&mut self, status: MembershipStatus) {
         self.status = status.into();
-        self.updated_at = chrono::Utc::now().timestamp_micros();
+        self.updated_at = now();
+    }
+
+    /// Builder method - placeholder for purchase_id (field doesn't exist in current model)
+    /// This is a compatibility method for existing code
+    pub fn with_purchase_id(self, _purchase_id: CompositePartition) -> Self {
+        // No-op: purchase_id field doesn't exist in the simplified model
+        self
+    }
+
+    pub fn calculate_remaining_duration_days(&self) -> i32 {
+        if self.is_infinite() {
+            return -1; // Infinite duration
+        }
+
+        let now = now();
+        if self.expired_at <= now {
+            return 0; // Already expired
+        }
+
+        let remaining_millis = self.expired_at - now;
+        let remaining_days = remaining_millis / (24 * 60 * 60 * 1_000);
+
+        remaining_days as i32
     }
 }
