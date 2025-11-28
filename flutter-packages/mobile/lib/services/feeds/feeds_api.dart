@@ -490,4 +490,134 @@ class FeedsApi extends GetConnect {
 
     return FeedV2Model.fromJson(body);
   }
+
+  Future<PostCommentListResult> listComments({
+    required String postPk,
+    required String commentSk,
+    String? bookmark,
+  }) async {
+    final encodedPostPk = Uri.encodeComponent(postPk);
+    final encodedCommentSk = Uri.encodeComponent(commentSk);
+
+    final base = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v3/posts/$encodedPostPk/comments/$encodedCommentSk');
+
+    final uri = bookmark == null
+        ? base
+        : base.replace(queryParameters: <String, String>{'bookmark': bookmark});
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await get(uri.toString(), headers: headers);
+
+    if (!res.isOk) {
+      return const PostCommentListResult(items: [], bookmark: null);
+    }
+
+    final body = res.body as Map<String, dynamic>;
+    final items = (body['items'] as List?) ?? const [];
+    final nextBookmark = body['bookmark'] as String?;
+
+    final comments = items
+        .map(
+          (e) => PostCommentModel.fromJson(Map<String, dynamic>.from(e as Map)),
+        )
+        .toList();
+
+    return PostCommentListResult(items: comments, bookmark: nextBookmark);
+  }
+
+  Future<PostCommentModel?> createComment({
+    required String postPk,
+    required String content,
+  }) async {
+    final encodedPostPk = Uri.encodeComponent(postPk);
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v3/posts/$encodedPostPk/comments');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'content': content};
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    if (!res.isOk) {
+      logger.e(
+        'createComment failed status=${res.statusCode} body=${res.body}',
+      );
+      return null;
+    }
+
+    final json = res.body;
+    if (json is! Map<String, dynamic>) {
+      logger.e('createComment invalid body=${res.body}');
+      return null;
+    }
+
+    return PostCommentModel.fromJson(json);
+  }
+
+  Future<PostCommentModel?> replyToComment({
+    required String postPk,
+    required String parentCommentSk,
+    required String content,
+  }) async {
+    final encodedPostPk = Uri.encodeComponent(postPk);
+    final encodedCommentSk = Uri.encodeComponent(parentCommentSk);
+
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v3/posts/$encodedPostPk/comments/$encodedCommentSk');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'content': content};
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    if (!res.isOk) {
+      logger.e(
+        'replyToComment failed status=${res.statusCode} body=${res.body}',
+      );
+      return null;
+    }
+
+    final json = res.body;
+    if (json is! Map<String, dynamic>) {
+      logger.e('replyToComment invalid body=${res.body}');
+      return null;
+    }
+
+    return PostCommentModel.fromJson(json);
+  }
+
+  Future<LikeCommentResponse?> likeComment({
+    required String postPk,
+    required String commentSk,
+    required bool like,
+  }) async {
+    final encodedPostPk = Uri.encodeComponent(postPk);
+    final encodedCommentSk = Uri.encodeComponent(commentSk);
+
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v3/posts/$encodedPostPk/comments/$encodedCommentSk/likes');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'like': like};
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    if (!res.isOk) {
+      logger.e('likeComment failed status=${res.statusCode} body=${res.body}');
+      return null;
+    }
+
+    final json = res.body;
+    if (json is! Map<String, dynamic>) {
+      logger.e('likeComment invalid body=${res.body}');
+      return null;
+    }
+
+    return LikeCommentResponse.fromJson(json);
+  }
 }
