@@ -45,12 +45,16 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
     return (
       ctrl.user &&
       ctrl.poll.myResponse.length === 0 &&
-      (!ctrl.space.anonymous_participation || ctrl.space.participated)
+      (!ctrl.space.anonymous_participation || ctrl.space.participated) &&
+      ctrl.space.status !== SpaceStatus.Finished
     );
   }, [ctrl]);
 
   const canUpdate =
-    ctrl.user && ctrl.poll.myResponse.length > 0 && ctrl.poll.response_editable;
+    ctrl.user &&
+    ctrl.poll.myResponse.length > 0 &&
+    ctrl.poll.response_editable &&
+    ctrl.space.status !== SpaceStatus.Finished;
 
   return (
     <>

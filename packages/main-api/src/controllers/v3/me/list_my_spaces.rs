@@ -152,12 +152,17 @@ pub async fn list_participating_spaces(
         }
     };
 
-    let keys = sps
-        .into_iter()
-        .map(|sp| (sp.space_pk, EntityType::SpaceCommon))
-        .collect::<Vec<(Partition, EntityType)>>();
+    let keys: Vec<(Partition, EntityType)> = sps
+        .iter()
+        .map(|sp| (sp.space_pk.clone(), EntityType::SpaceCommon))
+        .collect();
 
-    let spaces: Vec<SpaceCommon> = SpaceCommon::batch_get(cli, keys.clone()).await?;
+    let spaces_raw: Vec<SpaceCommon> = SpaceCommon::batch_get(cli, keys.clone()).await?;
+
+    let spaces: Vec<SpaceCommon> = keys
+        .iter()
+        .filter_map(|(pk, _)| spaces_raw.iter().find(|s| s.pk == *pk).cloned())
+        .collect();
 
     let post_keys: Vec<(Partition, EntityType)> = keys
         .iter()
@@ -180,14 +185,23 @@ pub async fn list_invited_spaces(
     opt: SpaceInvitationMemberQueryOption,
 ) -> Result<(Vec<SpaceCommon>, Vec<Post>, Option<String>)> {
     let (si, bookmark) =
-        SpaceInvitationMember::find_user_invitations_by_status(cli, user_pk, opt).await?;
+        SpaceInvitationMember::find_user_invitations_by_status_latest(cli, user_pk, opt).await?;
 
-    let space_keys: Vec<(Partition, EntityType)> = si
+    let mut si_sorted = si.clone();
+    si_sorted.sort_by_key(|m| m.created_at);
+    si_sorted.reverse();
+
+    let space_keys: Vec<(Partition, EntityType)> = si_sorted
         .iter()
         .map(|sp| (sp.pk.clone(), EntityType::SpaceCommon))
         .collect();
 
-    let spaces: Vec<SpaceCommon> = SpaceCommon::batch_get(cli, space_keys.clone()).await?;
+    let spaces_raw: Vec<SpaceCommon> = SpaceCommon::batch_get(cli, space_keys.clone()).await?;
+
+    let spaces: Vec<SpaceCommon> = space_keys
+        .iter()
+        .filter_map(|(pk, _)| spaces_raw.iter().find(|s| s.pk == *pk).cloned())
+        .collect();
 
     let post_keys: Vec<(Partition, EntityType)> = space_keys
         .iter()
