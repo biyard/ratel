@@ -37,6 +37,7 @@ class PostScreen extends GetWidget<PostController> {
                     return FeedCardV2(
                       feed: feed,
                       onTap: () => {
+                        logger.d("feed pk: ${feed.pk}"),
                         Get.rootDelegate.toNamed(postWithPk(feed.pk)),
                       },
                     );

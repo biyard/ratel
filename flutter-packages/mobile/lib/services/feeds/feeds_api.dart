@@ -471,4 +471,23 @@ class FeedsApi extends GetConnect {
 
     return FeedV2ListResult(items: feeds, bookmark: nextBookmark);
   }
+
+  Future<FeedV2Model> getFeedV2(String feedPk) async {
+    final encodedPk = Uri.encodeComponent(feedPk);
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/posts/$encodedPk');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await get(uri.toString(), headers: headers);
+
+    if (!res.isOk) {
+      throw Exception('Failed to load feed detail: ${res.statusCode}');
+    }
+
+    final body = res.body;
+    if (body is! Map<String, dynamic>) {
+      throw Exception('Invalid feed detail response');
+    }
+
+    return FeedV2Model.fromJson(body);
+  }
 }
