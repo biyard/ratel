@@ -1,4 +1,6 @@
 use crate::features::did::VerifiedAttributes;
+use crate::features::membership::Membership;
+use crate::features::membership::UserMembership;
 use crate::utils::time::get_now_timestamp_millis;
 use crate::*;
 use names::Generator;
@@ -139,6 +141,29 @@ impl User {
         Ok(VerifiedAttributes::get(cli, pk, Some(sk))
             .await?
             .unwrap_or_default())
+    }
+
+    pub async fn get_user_membership(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+    ) -> Result<UserMembership> {
+        let user_membership = UserMembership::get(cli, &self.pk, Some(EntityType::UserMembership))
+            .await?
+            .ok_or_else(|| crate::Error::NoUserMembershipFound)?;
+
+        Ok(user_membership)
+    }
+
+    pub async fn get_membership(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+    ) -> Result<(UserMembership, Membership)> {
+        let user_membership = self.get_user_membership(cli).await?;
+        let pk: Partition = user_membership.membership_pk.clone().into();
+        let membership = Membership::get(cli, pk, Some(EntityType::Membership))
+            .await?
+            .ok_or_else(|| crate::Error::NoMembershipFound)?;
+        Ok((user_membership, membership))
     }
 }
 

@@ -26,6 +26,7 @@ pub struct PaymentAmountInput {
 #[derive(
     Debug,
     Clone,
+    Copy,
     serde_with::SerializeDisplay,
     serde_with::DeserializeFromStr,
     Default,
@@ -33,9 +34,11 @@ pub struct PaymentAmountInput {
     JsonSchema,
     OperationIo,
 )]
+#[serde(rename_all = "UPPERCASE")]
 pub enum Currency {
     #[default]
     Usd,
+    Krw,
 }
 
 #[derive(

@@ -64,6 +64,7 @@ services:
       VITE_ACCOUNT_ID: ${ACCOUNT_ID}
 
       NODE_ENV: production
+      SLACK_HOOK: ${SLACK_HOOK}
     volumes:
       - .:/app
       - ./.build/target:/app/target

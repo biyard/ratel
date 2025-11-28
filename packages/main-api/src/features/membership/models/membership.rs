@@ -1,5 +1,6 @@
+use crate::features::payment::Currency;
+use crate::*;
 use crate::{features::membership::MembershipTier, types::*};
-use bdk::prelude::*;
 
 #[derive(
     Debug,
@@ -31,6 +32,7 @@ pub struct Membership {
 
     // price_dollars is a dollar price of this membership
     pub price_dollars: i64,
+    pub price_won: i64,
 
     // Display order in the UI (lower numbers first)
     pub display_order: i32,
@@ -68,6 +70,7 @@ impl Membership {
             updated_at: created_at,
             tier,
             price_dollars: price_dollers,
+            price_won: price_dollers * 1500,
             credits,
             duration_days,
             max_credits_per_space,
@@ -77,47 +80,38 @@ impl Membership {
         }
     }
 
-    /// Get membership ID from partition key
-    pub fn get_id(&self) -> Option<String> {
-        match &self.pk {
-            Partition::Membership(id) => Some(id.clone()),
-            _ => None,
-        }
+    #[cfg(test)]
+    pub fn get_id(&self) -> Option<MembershipPartition> {
+        Some(self.pk.clone().into())
     }
 
-    /// Update membership fields
-    pub fn update(
-        &mut self,
-        tier: Option<MembershipTier>,
-        price_dollers: Option<i64>,
-        credits: Option<i64>,
-        duration_days: Option<i32>,
-        display_order: Option<i32>,
-        is_active: Option<bool>,
-        max_credits_per_space: Option<i64>,
-    ) {
-        if let Some(tier) = tier {
-            self.tier = tier;
+    pub async fn get_by_membership_tier(
+        cli: &aws_sdk_dynamodb::Client,
+        tier: &MembershipTier,
+    ) -> Result<Self> {
+        let pk = Partition::Membership(tier.to_string());
+        let m = Membership::get(cli, pk, Some(EntityType::Membership))
+            .await?
+            .ok_or_else(|| Error::NoMembershipFound)?;
+
+        Ok(m)
+    }
+
+    pub fn calculate_remaining_price(&self, currency: Currency, remaining_days: i32) -> i64 {
+        if self.duration_days <= 0 || remaining_days <= 0 || remaining_days >= self.duration_days {
+            return self.price_in_currency(currency);
         }
-        if let Some(price) = price_dollers {
-            self.price_dollars = price;
+
+        let daily_price = self.price_in_currency(currency) as f64 / self.duration_days as f64;
+        let remaining_price = daily_price * remaining_days as f64;
+
+        remaining_price.round() as i64
+    }
+
+    pub fn price_in_currency(&self, currency: Currency) -> i64 {
+        match currency {
+            Currency::Usd => self.price_dollars,
+            Currency::Krw => self.price_won,
         }
-        if let Some(credits) = credits {
-            self.credits = credits;
-        }
-        if let Some(duration) = duration_days {
-            self.duration_days = duration;
-        }
-        if let Some(order) = display_order {
-            self.display_order = order;
-            self.display_order_indexed = order;
-        }
-        if let Some(active) = is_active {
-            self.is_active = active;
-        }
-        if let Some(max_credits) = max_credits_per_space {
-            self.max_credits_per_space = max_credits;
-        }
-        self.updated_at = chrono::Utc::now().timestamp_micros();
     }
 }
