@@ -1,5 +1,8 @@
 import { useMembershipData, MembershipData } from './use-membership-data';
-import { useMembershipPageI18n, MembershipPageI18n } from './membership-page-i18n';
+import {
+  useMembershipPageI18n,
+  MembershipPageI18n,
+} from './membership-page-i18n';
 
 export interface MembershipPageController extends MembershipData {
   t: MembershipPageI18n;
@@ -15,7 +18,7 @@ export function useMembershipPageController(): MembershipPageController {
     if (timestamp === Number.MAX_SAFE_INTEGER) {
       return t.unlimited;
     }
-    return new Date(timestamp / 1000).toLocaleDateString();
+    return new Date(timestamp).toLocaleDateString();
   };
 
   const formatTier = (tier: string): string => {
