@@ -16,10 +16,14 @@ pub struct PortoneResponse {
 
 pub async fn portone_handler(
     State(AppState { .. }): State<AppState>,
-    NoApi(_user): NoApi<Option<User>>,
-    Json(req): Json<PortoneRequest>,
+    NoApi(headers): NoApi<HeaderMap>,
+    Json(req): Json<serde_json::Value>,
 ) -> Result<Json<PortoneResponse>> {
-    notify!("Handling request: {:?}", req);
+    notify!(
+        "Incomming PortOne hook: {:?} with headers {:?}",
+        req,
+        headers
+    );
     // TODO: Implement the handler logic here
 
     unimplemented!()
