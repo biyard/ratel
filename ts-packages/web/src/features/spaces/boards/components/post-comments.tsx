@@ -13,6 +13,7 @@ export type PostCommentsProps = {
   spacePk: string;
   post: SpacePostResponse;
   comments: SpacePostCommentResponse[];
+  isFinished: boolean;
   isLoggedIn: boolean;
   expandComment: State<boolean>;
   handleCommentDelete: (commentSk: string) => Promise<void>;
@@ -31,6 +32,7 @@ export default function PostComments({
   t,
   spacePk,
   post,
+  isFinished,
   isLoggedIn,
   expandComment,
   handleCommentDelete,
@@ -82,7 +84,7 @@ export default function PostComments({
             {(post?.number_of_comments ?? 0) > 1 ? t('replies') : t('reply')}
           </span>
         </div>
-        {startedAt <= now && now <= endedAt && isLoggedIn && (
+        {startedAt <= now && now <= endedAt && isLoggedIn && !isFinished && (
           <>
             {!expandComment.get() && (
               <button
@@ -121,7 +123,9 @@ export default function PostComments({
           onDelete={handleCommentDelete}
           onUpdate={handleCommentUpdate}
           t={t}
-          canComment={startedAt <= now && now <= endedAt && isLoggedIn}
+          canComment={
+            startedAt <= now && now <= endedAt && isLoggedIn && !isFinished
+          }
           canDelete={comment?.author_pk === user?.pk}
           canEdit={comment?.author_pk === user?.pk}
         />
