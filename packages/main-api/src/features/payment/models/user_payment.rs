@@ -1,3 +1,4 @@
+use crate::features::membership::UserMembership;
 use crate::features::payment::*;
 use crate::services::portone::PortOne;
 use crate::types::*;
@@ -72,5 +73,68 @@ impl UserPayment {
         }
 
         Ok((user_payment, should_update))
+    }
+
+    pub async fn purchase(
+        &self,
+        portone: &PortOne,
+        tx_type: TransactionType,
+        amount: i64,
+        currency: Currency,
+    ) -> crate::Result<UserPurchase> {
+        let (res, payment_id) = portone
+            .pay_with_billing_key(
+                self.customer_id.clone(),
+                self.name.clone(),
+                tx_type.to_string(),
+                self.billing_key.clone().unwrap(),
+                amount,
+                currency,
+            )
+            .await?;
+
+        let user_purchase = UserPurchase::new(
+            self.pk.0.clone().into(),
+            tx_type,
+            amount,
+            currency,
+            payment_id,
+            res.payment.pg_tx_id,
+        );
+
+        Ok(user_purchase)
+    }
+
+    pub async fn schedule_next_membership_purchase(
+        &self,
+        portone: &PortOne,
+        tx_type: TransactionType,
+        amount: i64,
+        currency: Currency,
+        time_to_pay: String,
+    ) -> crate::Result<UserPurchase> {
+        let (res, payment_id) = portone
+            .schedule_pay_with_billing_key(
+                self.customer_id.clone(),
+                self.name.clone(),
+                tx_type.to_string(),
+                self.billing_key.clone().unwrap(),
+                amount,
+                currency,
+                time_to_pay,
+            )
+            .await?;
+
+        let user_purchase = UserPurchase::new(
+            self.pk.0.clone().into(),
+            tx_type,
+            amount,
+            currency,
+            payment_id,
+            res.payment.pg_tx_id,
+        )
+        .with_status(PurchaseStatus::Scheduled);
+
+        Ok(user_purchase)
     }
 }

@@ -154,4 +154,13 @@ impl UserMembership {
 
         remaining_days as i32
     }
+
+    pub fn renewal_date_rfc_3339(&self) -> Option<String> {
+        if self.is_infinite() {
+            return None; // Infinite memberships do not have a renewal date
+        }
+
+        let datetime = chrono::DateTime::from_timestamp_millis(self.expired_at).unwrap();
+        Some(datetime.to_rfc3339())
+    }
 }

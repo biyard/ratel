@@ -20,8 +20,8 @@ export function MembershipReceiptModal({
   t,
 }: MembershipReceiptModalProps) {
   // Convert microseconds to date string
-  const formatDate = (microseconds: number) => {
-    const date = new Date(microseconds / 1000);
+  const formatDate = (milliseconds: number) => {
+    const date = new Date(milliseconds);
     return date.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'long',
@@ -76,7 +76,7 @@ export function MembershipReceiptModal({
                 {t.amountLabel}
               </Paragraph>
               <Heading variant="heading5" className="text-primary">
-                ${receipt.receipt.amount}
+                ₩{receipt.receipt.amount.toLocaleString()}
               </Heading>
             </Row>
 

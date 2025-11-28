@@ -15,7 +15,7 @@ export default function MembershipPage() {
   if (isLoadingMembership) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="w-12 h-12 rounded-full border-b-2 animate-spin border-primary"></div>
       </div>
     );
   }
@@ -36,36 +36,38 @@ export default function MembershipPage() {
     tierColors[tierName as keyof typeof tierColors] || 'text-text-secondary';
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-4xl mx-auto">
+    <div className="flex flex-col gap-6 p-6 mx-auto w-full max-w-4xl">
       <h1 className="text-2xl font-bold text-text-primary">{t.title}</h1>
 
       {/* Current Membership Card */}
-      <div className="p-6 rounded-lg bg-card-bg border border-card-border">
-        <h2 className="text-xl font-semibold text-text-primary mb-4">
+      <div className="p-6 rounded-lg border bg-card-bg border-card-border">
+        <h2 className="mb-4 text-xl font-semibold text-text-primary">
           {t.current_plan}
         </h2>
 
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex gap-3 items-center">
             <Sparkles className={`w-6 h-6 ${tierColor}`} />
             <div>
               <div className="text-sm text-text-secondary">{t.tier}</div>
-              <div className={`text-lg font-bold ${tierColor}`}>
-                {tierName}
-              </div>
+              <div className={`text-lg font-bold ${tierColor}`}>{tierName}</div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-sm text-text-secondary">{t.total_credits}</div>
+              <div className="text-sm text-text-secondary">
+                {t.total_credits}
+              </div>
               <div className="text-lg font-semibold text-text-primary">
                 {membership.total_credits}
               </div>
             </div>
 
             <div>
-              <div className="text-sm text-text-secondary">{t.remaining_credits}</div>
+              <div className="text-sm text-text-secondary">
+                {t.remaining_credits}
+              </div>
               <div className="text-lg font-semibold text-text-primary">
                 {membership.remaining_credits}
               </div>
@@ -80,7 +82,7 @@ export default function MembershipPage() {
           </div>
 
           {membership.next_membership && (
-            <div className="p-3 rounded bg-background-secondary border border-amber-500/30">
+            <div className="p-3 rounded border bg-background-secondary border-amber-500/30">
               <div className="text-sm font-semibold text-amber-500">
                 {t.scheduled_downgrade}
               </div>
@@ -93,30 +95,30 @@ export default function MembershipPage() {
       </div>
 
       {/* Purchase History */}
-      <div className="p-6 rounded-lg bg-card-bg border border-card-border">
-        <h2 className="text-xl font-semibold text-text-primary mb-4">
+      <div className="p-6 rounded-lg border bg-card-bg border-card-border">
+        <h2 className="mb-4 text-xl font-semibold text-text-primary">
           {t.purchase_history}
         </h2>
 
         {isLoadingHistory ? (
           <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <div className="w-8 h-8 rounded-full border-b-2 animate-spin border-primary"></div>
           </div>
         ) : purchaseHistory && purchaseHistory.items.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-card-border">
-                  <th className="text-left py-3 px-2 text-sm font-semibold text-text-secondary">
+                  <th className="py-3 px-2 text-sm font-semibold text-left text-text-secondary">
                     {t.transaction_type}
                   </th>
-                  <th className="text-left py-3 px-2 text-sm font-semibold text-text-secondary">
+                  <th className="py-3 px-2 text-sm font-semibold text-left text-text-secondary">
                     {t.amount}
                   </th>
-                  <th className="text-left py-3 px-2 text-sm font-semibold text-text-secondary">
+                  <th className="py-3 px-2 text-sm font-semibold text-left text-text-secondary">
                     {t.payment_id}
                   </th>
-                  <th className="text-left py-3 px-2 text-sm font-semibold text-text-secondary">
+                  <th className="py-3 px-2 text-sm font-semibold text-left text-text-secondary">
                     {t.date}
                   </th>
                 </tr>
@@ -125,7 +127,7 @@ export default function MembershipPage() {
                 {purchaseHistory.items.map((item, index) => (
                   <tr
                     key={index}
-                    className="border-b border-card-border last:border-0"
+                    className="border-b last:border-0 border-card-border"
                   >
                     <td className="py-3 px-2 text-sm text-text-primary">
                       {item.tx_type}
@@ -133,8 +135,8 @@ export default function MembershipPage() {
                     <td className="py-3 px-2 text-sm text-text-primary">
                       ${item.amount}
                     </td>
-                    <td className="py-3 px-2 text-sm text-text-secondary font-mono text-xs">
-                      {item.payment_id.slice(0, 16)}...
+                    <td className="py-3 px-2 font-mono text-xs text-text-secondary">
+                      {item.payment_id}
                     </td>
                     <td className="py-3 px-2 text-sm text-text-secondary">
                       {formatDate(item.created_at)}
@@ -145,7 +147,7 @@ export default function MembershipPage() {
             </table>
           </div>
         ) : (
-          <div className="text-center py-8 text-text-secondary">
+          <div className="py-8 text-center text-text-secondary">
             {t.no_purchases}
           </div>
         )}
