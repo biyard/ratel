@@ -33,6 +33,7 @@ Future<void> main() async {
   NotificationsService.init();
   DocumentsService.init();
   DriveApi.init();
+  Get.put<ThemeController>(ThemeController());
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((
     value,
@@ -54,36 +55,38 @@ class MyApp extends StatelessWidget {
       '${Get.deviceLocale?.languageCode}, ${Get.deviceLocale?.countryCode}, ${MainLocalization.appName}',
     );
 
-    return GetMaterialApp.router(
-      scrollBehavior: MaterialScrollBehavior().copyWith(
-        dragDevices: {
-          PointerDeviceKind.mouse,
-          PointerDeviceKind.touch,
-          PointerDeviceKind.stylus,
-          PointerDeviceKind.unknown,
-        },
-      ),
-      debugShowCheckedModeBanner: false,
-      defaultTransition: Transition.rightToLeft,
-      theme: getThemeData(Brightness.light),
-      darkTheme: getThemeData(Brightness.dark),
+    return Obx(() {
+      final mode = ThemeController.to.themeMode.value;
 
-      // FIXME: This is a temporary fix for dark mode
-      themeMode: ThemeMode.dark,
-      routerDelegate: Get.createDelegate(
-        navigatorObservers: [BiyardNavigatorObserver(), l.LayoutObserver()],
-      ),
-      translations: AppLocalization(),
-      locale: const Locale('en', 'US'),
-      fallbackLocale: const Locale('en', 'US'),
-      title: MainLocalization.appName.tr == 'appName'
-          ? 'Ratel'
-          : MainLocalization.appName.tr,
-      initialBinding: InitialBindings(),
-      routeInformationParser: Get.createInformationParser(
-        initialRoute: introScreen,
-      ),
-      getPages: AppRoutes.pages,
-    );
+      return GetMaterialApp.router(
+        scrollBehavior: MaterialScrollBehavior().copyWith(
+          dragDevices: {
+            PointerDeviceKind.mouse,
+            PointerDeviceKind.touch,
+            PointerDeviceKind.stylus,
+            PointerDeviceKind.unknown,
+          },
+        ),
+        debugShowCheckedModeBanner: false,
+        defaultTransition: Transition.rightToLeft,
+        theme: getThemeData(Brightness.light),
+        darkTheme: getThemeData(Brightness.dark),
+        themeMode: mode,
+        routerDelegate: Get.createDelegate(
+          navigatorObservers: [BiyardNavigatorObserver(), l.LayoutObserver()],
+        ),
+        translations: AppLocalization(),
+        locale: const Locale('en', 'US'),
+        fallbackLocale: const Locale('en', 'US'),
+        title: MainLocalization.appName.tr == 'appName'
+            ? 'Ratel'
+            : MainLocalization.appName.tr,
+        initialBinding: InitialBindings(),
+        routeInformationParser: Get.createInformationParser(
+          initialRoute: introScreen,
+        ),
+        getPages: AppRoutes.pages,
+      );
+    });
   }
 }

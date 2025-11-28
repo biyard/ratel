@@ -8,7 +8,7 @@ class SidePanel extends StatelessWidget {
     required this.onClose,
   });
 
-  final UserModel user;
+  final UserV2Model user;
   final double width;
   final VoidCallback onClose;
 
@@ -130,7 +130,7 @@ class SidePanel extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  itemLabel(MainLocalization.points, user.points),
+                  itemLabel(MainLocalization.points, 0),
                   30.gap,
                   itemLabel(MainLocalization.following, user.followingsCount),
                   30.gap,
@@ -408,23 +408,32 @@ class _ThemeSheetState extends State<ThemeSheet> {
 
 class AccountsSheet extends StatefulWidget {
   const AccountsSheet({super.key, required this.teams});
-  final List<Team> teams;
+  final List<TeamV2> teams;
 
   @override
   State<AccountsSheet> createState() => _AccountsSheetState();
 }
 
 class _AccountsSheetState extends State<AccountsSheet> {
-  int _selected = 0;
+  String? _selectedPk;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.teams.isNotEmpty) {
+      _selectedPk = widget.teams.first.pk;
+    }
+  }
 
   Widget _accountTile({
-    required int index,
+    required String pk,
     required String name,
     required String sub,
   }) {
-    final isSel = _selected == index;
+    final isSel = _selectedPk == pk;
+
     return ListTile(
-      onTap: () => setState(() => _selected = index),
+      onTap: () => setState(() => _selectedPk = pk),
       contentPadding: EdgeInsets.zero,
       minVerticalPadding: 0,
       horizontalTitleGap: 8,
@@ -482,11 +491,8 @@ class _AccountsSheetState extends State<AccountsSheet> {
   Widget build(BuildContext context) {
     final tiles = widget.teams
         .map(
-          (t) => _accountTile(
-            index: t.id,
-            name: '@${t.nickname}',
-            sub: t.username,
-          ),
+          (t) =>
+              _accountTile(pk: t.pk, name: '@${t.nickname}', sub: t.username),
         )
         .toList();
 

@@ -1,7 +1,9 @@
 pub mod did_config;
 pub mod portone_config;
+mod x402_config;
 use did_config::DidConfig;
 pub use portone_config::*;
+pub use x402_config::*;
 
 mod biyard_config;
 use biyard_config::BiyardConfig;
@@ -28,9 +30,6 @@ pub struct Config {
     pub bucket: BucketConfig,
     pub dynamodb: DatabaseConfig,
     pub chime_bucket_name: &'static str,
-    pub slack_channel_sponsor: &'static str,
-    pub slack_channel_abusing: &'static str,
-    pub slack_channel_monitor: &'static str,
     pub kaia: KaiaConfig,
     pub from_email: &'static str,
     pub telegram_token: Option<&'static str>,
@@ -47,6 +46,8 @@ pub struct Config {
     pub watermark_sqs_url: &'static str,
 
     pub portone: PortoneConfig,
+    pub x402: X402Config,
+    pub account_id: &'static str,
 
     pub biyard: BiyardConfig,
 }
@@ -107,12 +108,6 @@ impl Default for Config {
                     .unwrap(),
             },
             chime_bucket_name: option_env!("CHIME_BUCKET").expect("CHIME_BUCKET required"),
-            slack_channel_sponsor: option_env!("SLACK_CHANNEL_SPONSOR")
-                .expect("SLACK_CHANNEL_SPONSOR is required"),
-            slack_channel_abusing: option_env!("SLACK_CHANNEL_ABUSING")
-                .expect("SLACK_CHANNEL_ABUSING is required"),
-            slack_channel_monitor: option_env!("SLACK_CHANNEL_MONITOR")
-                .expect("SLACK_CHANNEL_MONITOR is required"),
             telegram_token: option_env!("TELEGRAM_TOKEN").filter(|s| !s.is_empty()),
             did: DidConfig::default(),
             private_bucket_name: option_env!("PRIVATE_BUCKET_NAME").expect("You must set PRIVATE_BUCKET_NAME"),
@@ -131,6 +126,8 @@ impl Default for Config {
             watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL").expect("You must set WATERMARK_QUEUE_URL"),
 
             portone: PortoneConfig::default(),
+            x402: X402Config::default(),
+            account_id: option_env!("ACCOUNT_ID").unwrap_or(""),
             biyard: BiyardConfig::default(),
         }
     }

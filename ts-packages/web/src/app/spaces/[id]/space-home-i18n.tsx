@@ -85,6 +85,10 @@ export const i18nSpaceHome = {
     uploading: 'Uploading…',
     upload_file_size_limit:
       'Videos can be uploaded up to a maximum size of 50MB.',
+
+    end_space_title: 'Ended Space',
+    end_space_desc: 'This space has ended.',
+    go_home: 'Go to Home',
   },
   ko: {
     change_private: '비공개 전환',
@@ -173,5 +177,9 @@ export const i18nSpaceHome = {
     upload_media: '미디어 업로드',
     uploading: '업로드 중…',
     upload_file_size_limit: '동영상은 최대 50MB까지만 업로드 가능합니다.',
+
+    end_space_title: '종료된 스페이스',
+    end_space_desc: '종료된 스페이스입니다.',
+    go_home: '홈으로 이동하기',
   },
 };

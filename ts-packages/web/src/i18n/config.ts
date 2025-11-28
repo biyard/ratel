@@ -55,6 +55,7 @@ import { i18nSpaceRecommendationEditor } from '@/features/spaces/recommendations
 import { i18nAdmin } from '@/app/admin/admin-page-i18n';
 import { i18nAdmins } from '@/app/admin/users/admins-page-i18n';
 import { i18nMemberships } from '@/features/membership/i18n';
+import { i18nNotifications } from '@/features/notification/i18n';
 import { i18nHeader } from '@/components/header/i18n';
 import i18nListDrafts from '@/features/drafts/components/list-drafts/i18n';
 import { CreatePostPage } from '@/features/posts/components/create-post-page/i18n';
@@ -146,6 +147,7 @@ Object.entries({
   Admin: i18nAdmin,
   Admins: i18nAdmins,
   Memberships: i18nMemberships,
+  Notifications: i18nNotifications,
   AttributeCodes: i18nAttributeCodes,
   Nav: i18nHeader,
   ListDrafts: i18nListDrafts,

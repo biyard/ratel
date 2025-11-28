@@ -2,6 +2,7 @@ use axum::extract::Query;
 use bdk::prelude::*;
 
 pub type ListItemsQuery = Query<Pagination>;
+pub type PaginationQuery = Query<Pagination>;
 
 #[derive(
     serde::Deserialize,

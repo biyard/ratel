@@ -1,3 +1,5 @@
+use crate::features::payment::*;
+use crate::services::portone::PortOne;
 use crate::types::*;
 use crate::*;
 
@@ -28,5 +30,47 @@ impl UserPayment {
 
             ..Default::default()
         }
+    }
+
+    pub async fn get_by_user(
+        cli: &aws_sdk_dynamodb::Client,
+        portone: &PortOne,
+        user_pk: UserPartition,
+        card_info: Option<CardInfo>,
+    ) -> crate::Result<(Self, bool)> {
+        let pk = CompositePartition::user_payment_pk(user_pk.into());
+        let mut user_payment: UserPayment = UserPayment::get(cli, &pk, None::<String>)
+            .await?
+            .ok_or_else(|| Error::InvalidIdentification)?;
+
+        let mut should_update = false;
+
+        if user_payment.billing_key.is_none() {
+            let CardInfo {
+                card_number,
+                expiry_year,
+                expiry_month,
+                birth_or_business_registration_number,
+                password_two_digits,
+            } = card_info.ok_or_else(|| Error::CardInfoRequired)?;
+
+            let res = portone
+                .get_billing_key(
+                    user_payment.pk.to_string(),
+                    user_payment.name.clone(),
+                    card_number,
+                    expiry_year,
+                    expiry_month,
+                    birth_or_business_registration_number,
+                    password_two_digits,
+                )
+                .await?;
+
+            user_payment.billing_key = Some(res.billing_key_info.billing_key.clone());
+
+            should_update = true;
+        }
+
+        Ok((user_payment, should_update))
     }
 }

@@ -1,6 +1,10 @@
 use crate::features::did::VerifiedAttributes;
+use crate::features::membership::Membership;
+use crate::features::membership::UserMembership;
 use crate::utils::time::get_now_timestamp_millis;
 use crate::*;
+use names::Generator;
+use names::Name;
 use tower_sessions::Session;
 
 #[derive(
@@ -20,6 +24,7 @@ pub struct User {
 
     #[dynamo(prefix = "TS", index = "gsi2", sk)]
     #[dynamo(prefix = "TS", index = "gsi3", sk)]
+    #[dynamo(prefix = "TS", index = "gsi5", sk)]
     pub created_at: i64,
     #[dynamo(prefix = "USER_TYPE", index = "gsi4", sk)]
     pub updated_at: i64,
@@ -37,6 +42,9 @@ pub struct User {
     // NOTE: username is linked with gsi2-index of team model.
     #[dynamo(prefix = "USERNAME", name = "find_by_username", index = "gsi2", pk)]
     pub username: String,
+    #[dynamo(prefix = "PHONE", name = "find_by_phone", index = "gsi5", pk)]
+    #[serde(default)]
+    pub phone: Option<String>,
 
     pub term_agreed: bool,
     pub informed_agreed: bool,
@@ -91,6 +99,34 @@ impl User {
         }
     }
 
+    pub fn new_phone(phone: String) -> Self {
+        let uid = uuid::Uuid::new_v4().to_string();
+        let pk = Partition::User(uid.clone());
+        let sk = EntityType::User;
+
+        let now = get_now_timestamp_millis();
+        let display_name = Generator::with_naming(Name::Numbered)
+            .next()
+            .unwrap()
+            .replace('-', " ");
+
+        Self {
+            pk,
+            sk,
+            created_at: now,
+            updated_at: now,
+            display_name: display_name.clone(),
+            email: phone.to_string(),
+            profile_url: "".to_string(),
+            term_agreed: true,
+            informed_agreed: false,
+            user_type: UserType::Individual,
+            username: display_name.clone(),
+            password: None,
+            ..Default::default()
+        }
+    }
+
     /// Check if the user is an admin
     pub fn is_admin(&self) -> bool {
         self.user_type == UserType::Admin
@@ -105,6 +141,29 @@ impl User {
         Ok(VerifiedAttributes::get(cli, pk, Some(sk))
             .await?
             .unwrap_or_default())
+    }
+
+    pub async fn get_user_membership(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+    ) -> Result<UserMembership> {
+        let user_membership = UserMembership::get(cli, &self.pk, Some(EntityType::UserMembership))
+            .await?
+            .ok_or_else(|| crate::Error::NoUserMembershipFound)?;
+
+        Ok(user_membership)
+    }
+
+    pub async fn get_membership(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+    ) -> Result<(UserMembership, Membership)> {
+        let user_membership = self.get_user_membership(cli).await?;
+        let pk: Partition = user_membership.membership_pk.clone().into();
+        let membership = Membership::get(cli, pk, Some(EntityType::Membership))
+            .await?
+            .ok_or_else(|| crate::Error::NoMembershipFound)?;
+        Ok((user_membership, membership))
     }
 }
 
