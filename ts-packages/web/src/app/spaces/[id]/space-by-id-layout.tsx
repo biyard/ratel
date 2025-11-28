@@ -21,6 +21,7 @@ import { SafeArea } from '@/components/ui/safe-area';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import SpaceMobileHeader from '@/features/spaces/components/space-mobile-header';
+import { SpaceStatus } from '@/features/spaces/types/space-common';
 import RewardMenu from '@/features/spaces/rewards/components/reward-menu';
 
 export const Context = createContext<SpaceHomeController | undefined>(
@@ -112,7 +113,7 @@ function GeneralLayout() {
         <Col className="gap-2.5 w-full max-w-[250px]">
           {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
 
-          {participantProfileProps && (
+          {participantProfileProps && ctrl.space.anonymous_participation && (
             <SpaceParticipantProfile {...participantProfileProps} />
           )}
 
@@ -171,7 +172,9 @@ export default function SpaceByIdLayout() {
   const ctrl = useSpaceHomeController(spacePk ?? '');
 
   const content =
-    !ctrl.space.havePreTasks() || ctrl.space.isAdmin() ? (
+    ctrl.space.status !== SpaceStatus.InProgress && !ctrl.space.isAdmin() ? (
+      <></>
+    ) : !ctrl.space.havePreTasks() || ctrl.space.isAdmin() ? (
       <GeneralLayout />
     ) : ctrl.space.participated ? (
       <Requirements />

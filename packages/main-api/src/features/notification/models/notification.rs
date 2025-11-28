@@ -11,7 +11,13 @@ pub struct Notification {
     pub pk: Partition,
     pub sk: EntityType,
 
-    #[dynamo(index = "gsi1", pk, name = "find_by_user_notifications", order = 0)]
+    #[dynamo(
+        index = "gsi1",
+        pk,
+        prefix = "NOTI_USER",
+        name = "find_by_user_notifications",
+        order = 0
+    )]
     #[dynamo(
         index = "gsi2",
         pk,

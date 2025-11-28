@@ -31,6 +31,8 @@ SLACK_CHANNEL_SPONSOR ?=
 SLACK_CHANNEL_ABUSING ?=
 SLACK_CHANNEL_MONITOR ?=
 
+ACCOUNT_ID ?=
+
 BUCKET_NAME ?= metadata.ratel.foundation
 BUCKET_EXPIRE ?= 3600
 ASSET_DIR ?= metadata
@@ -118,6 +120,7 @@ BUILD_ENV ?= ENV=$(ENV) \
 								PORTONE_API_SECRET=$(PORTONE_API_SECRET) \
 								PORTONE_KPN_CHANNEL_KEY=$(PORTONE_KPN_CHANNEL_KEY) \
 								PORTONE_STORE_ID=$(PORTONE_STORE_ID) \
+								ACCOUNT_ID=$(ACCOUNT_ID)
 
 .build/evm-keys:
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json

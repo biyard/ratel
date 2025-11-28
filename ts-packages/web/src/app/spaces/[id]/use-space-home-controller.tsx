@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { State } from '@/types/state';
 import { useSpaceHomeData } from './use-space-home-data';
 import { SideMenuProps } from '@/features/spaces/components/space-side-menu';
@@ -32,9 +32,13 @@ import { useParticipateSpaceMutation } from '@/features/spaces/hooks/use-partici
 import { SpaceType } from '@/features/spaces/types/space-type';
 import SpaceStartModal from '@/features/spaces/modals/space-start-modal';
 import { useStartSpaceMutation } from '@/features/spaces/hooks/use-start-mutation';
-import { SpaceStatus } from '@/features/spaces/types/space-common';
+import {
+  SpacePublishState,
+  SpaceStatus,
+} from '@/features/spaces/types/space-common';
 import useFileSpace from '@/features/spaces/files/hooks/use-file-space';
 import SpaceAuthorizePopup from './space-authorize-popup';
+import SpaceEndPopup from './space-end-popup';
 import { config } from '@/config';
 import { Trophy } from '@/assets/icons/game';
 
@@ -112,7 +116,12 @@ export class SpaceHomeController {
       }
     });
 
-    if (this.space.isAdmin()) {
+    // It seems like admins shouldn't be able to change settings after a space is published.
+    // If a change is made to the settings, the anomyous attribute can also be changed, but in this case, matching between participating and non-participating users may not be possible.
+    if (
+      this.space.isAdmin() &&
+      this.space.publishState === SpacePublishState.Draft
+    ) {
       menus = menus.concat(this.adminMenus);
     }
 
@@ -288,13 +297,6 @@ export class SpaceHomeController {
 
   handlePublish = async (publishType) => {
     logger.debug('Publishing space with type:', publishType);
-    if (
-      this.space.spaceType === SpaceType.Deliberation &&
-      !this.space.anonymous_participation
-    ) {
-      showErrorToast(this.t('enable_anonymous_option_failed'));
-      return;
-    }
 
     if (this.publishHook) {
       this.publishHook();
@@ -623,6 +625,15 @@ export function useSpaceHomeController(spacePk: string) {
   }, [data.space.data, image]);
 
   useEffect(() => {
+    if (
+      data.space.data.status !== SpaceStatus.InProgress &&
+      !data.space.data.isAdmin()
+    ) {
+      popup.open(<SpaceEndPopup />).withTitle(t('end_space_title'));
+    }
+  }, [data.space.data]);
+
+  useEffect(() => {
     const remote = data.space.data?.files ?? [];
     if (!data.space.isSuccess) return;
     if (filesInitializedRef.current) return;
@@ -643,6 +654,7 @@ export function useSpaceHomeController(spacePk: string) {
   }, [data.space.isSuccess, data.space.data?.files]);
 
   const participationAttemptedRef = useRef(false);
+
   useEffect(() => {
     if (participationAttemptedRef.current || participateSpace.isPending) {
       return;
@@ -652,8 +664,7 @@ export function useSpaceHomeController(spacePk: string) {
 
     if (!space) return;
 
-    const shouldAutoParticipate =
-      space.shouldParticipateManually() && space.canParticipate;
+    const shouldAutoParticipate = space.canParticipate;
 
     if (!shouldAutoParticipate) return;
 

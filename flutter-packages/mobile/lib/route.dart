@@ -3,8 +3,6 @@ import 'package:ratel/middlewares/space_middleware.dart';
 
 class AppRoutes {
   static const String mainScreen = '/dashboard';
-  static const String signupScreen = '/signup';
-  static const String verificationScreen = '/verification';
   static const String setupProfileScreen = '/setup-profile';
   static const String selectTopicScreen = '/select-topic';
   static const String connectionScreen = '/connection';
@@ -111,60 +109,6 @@ class AppRoutes {
       curve: Curves.easeOutCubic,
     ),
     GetPage(
-      name: signupScreen,
-      page: () => const SignupScreen(),
-      binding: SignupBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: verificationScreen,
-      page: () => const VerificationScreen(),
-      binding: VerificationBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: setupProfileScreen,
-      page: () => const SetupProfileScreen(),
-      binding: SetupProfileBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: selectTopicScreen,
-      page: () => const SelectTopicScreen(),
-      binding: SelectTopicBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: connectionScreen,
-      page: () => const ConnectionScreen(),
-      binding: ConnectionBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: setupAttributeScreen,
-      page: () => const SetupAttributeScreen(),
-      binding: SetupAttributeBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
       name: mySpaces,
       page: () => const SpacesScreen(),
       binding: SpacesBinding(),
@@ -223,15 +167,6 @@ class AppRoutes {
     GetPage(
       name: notification,
       page: () => const NotificationScreen(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: bookmark,
-      page: () => const BookmarkScreen(),
-      binding: BookmarkBinding(),
       customTransition: SlideOverTransition(),
       transitionDuration: const Duration(milliseconds: 300),
       opaque: true,

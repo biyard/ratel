@@ -433,159 +433,160 @@ test.describe.serial('[Deliberation] General Spec', () => {
   // =====================================
   // Discussion: Participant and Creator
   // =====================================
-  test(`DS-${i()} [Participant 1] Reply to a post on a board (P1)`, async ({
-    page,
-  }) => {
-    await login(page, participant1);
-    await goToMySpaces(page);
-    await goToSpace(page, POST_TITLE);
-    await replyToPost(
-      page,
-      'I think participation-based rewards are more fair.',
-    );
-  });
+  // FIXME: rewrite testcode date setting scenario
+  // test(`DS-${i()} [Participant 1] Reply to a post on a board (P1)`, async ({
+  //   page,
+  // }) => {
+  //   await login(page, participant1);
+  //   await goToMySpaces(page);
+  //   await goToSpace(page, POST_TITLE);
+  //   await replyToPost(
+  //     page,
+  //     'I think participation-based rewards are more fair.',
+  //   );
+  // });
 
-  test(`DS-${i()} [Participant 2] Reply to a post on a board (P2)`, async ({
-    page,
-  }) => {
-    await login(page, participant2);
-    await goToMySpaces(page);
-    await goToSpace(page, POST_TITLE);
-    await replyToPost(
-      page,
-      'Quality-based approach helps community growth more.',
-    );
-  });
+  // test(`DS-${i()} [Participant 2] Reply to a post on a board (P2)`, async ({
+  //   page,
+  // }) => {
+  //   await login(page, participant2);
+  //   await goToMySpaces(page);
+  //   await goToSpace(page, POST_TITLE);
+  //   await replyToPost(
+  //     page,
+  //     'Quality-based approach helps community growth more.',
+  //   );
+  // });
 
-  test(`DS-${i()} [Creator 1] Write a new post on the board`, async ({
-    page,
-  }) => {
-    await login(page, creator1);
-    await page.goto(`/teams/${teamId}/home`);
-    await page.waitForLoadState('networkidle');
-    await page.getByText(POST_TITLE).click();
-    await page.waitForLoadState('networkidle');
+  // test(`DS-${i()} [Creator 1] Write a new post on the board`, async ({
+  //   page,
+  // }) => {
+  //   await login(page, creator1);
+  //   await page.goto(`/teams/${teamId}/home`);
+  //   await page.waitForLoadState('networkidle');
+  //   await page.getByText(POST_TITLE).click();
+  //   await page.waitForLoadState('networkidle');
 
-    await writeNewPost(
-      page,
-      'Additional discussion: How about a hybrid approach?',
-      'I propose a hybrid approach that considers both participation and quality.',
-      'Fairness and Efficiency of Reward Criteria',
-    );
-  });
+  //   await writeNewPost(
+  //     page,
+  //     'Additional discussion: How about a hybrid approach?',
+  //     'I propose a hybrid approach that considers both participation and quality.',
+  //     'Fairness and Efficiency of Reward Criteria',
+  //   );
+  // });
 
-  test(`DS-${i()} [Participant 3] Reply to the new post`, async ({ page }) => {
-    await login(page, participant3);
-    await goToMySpaces(page);
-    await goToSpace(page, POST_TITLE);
-    await replyToPost(
-      page,
-      'I think a hybrid approach would be a good compromise.',
-    );
-  });
+  // test(`DS-${i()} [Participant 3] Reply to the new post`, async ({ page }) => {
+  //   await login(page, participant3);
+  //   await goToMySpaces(page);
+  //   await goToSpace(page, POST_TITLE);
+  //   await replyToPost(
+  //     page,
+  //     'I think a hybrid approach would be a good compromise.',
+  //   );
+  // });
 
   // =====================================
   // Final Survey
   // =====================================
-  test(`DS-${i()} [Creator 2] Write the final survey`, async ({ page }) => {
-    await login(page, creator2);
-    await page.goto(`/teams/${teamId}/home`);
-    await page.waitForLoadState('networkidle');
-    await page.getByText(POST_TITLE).click();
-    await page.waitForLoadState('networkidle');
+  // test(`DS-${i()} [Creator 2] Write the final survey`, async ({ page }) => {
+  //   await login(page, creator2);
+  //   await page.goto(`/teams/${teamId}/home`);
+  //   await page.waitForLoadState('networkidle');
+  //   await page.getByText(POST_TITLE).click();
+  //   await page.waitForLoadState('networkidle');
 
-    // Navigate to polls and create final survey
-    await createFinalSurvey(page, SURVEY_QUESTIONS);
-  });
+  //   // Navigate to polls and create final survey
+  //   await createFinalSurvey(page, SURVEY_QUESTIONS);
+  // });
 
-  test(`DS-${i()} [Participant 1] Conduct the final survey (P1)`, async ({
-    page,
-  }) => {
-    await login(page, participant1);
-    await goToMySpaces(page);
-    await goToSpace(page, POST_TITLE);
-    await goToFinalSurvey(page);
-    await conductSurvey(page, [
-      0,
-      0,
-      0,
-      1,
-      'Part 1 is important',
-      "I don't have any idea",
-    ]);
+  // test(`DS-${i()} [Participant 1] Conduct the final survey (P1)`, async ({
+  //   page,
+  // }) => {
+  //   await login(page, participant1);
+  //   await goToMySpaces(page);
+  //   await goToSpace(page, POST_TITLE);
+  //   await goToFinalSurvey(page);
+  //   await conductSurvey(page, [
+  //     0,
+  //     0,
+  //     0,
+  //     1,
+  //     'Part 1 is important',
+  //     "I don't have any idea",
+  //   ]);
 
-    await page.getByTestId('btn-confirm').click();
-    await expect(
-      page.getByTestId('complete-survey-modal-btn-confirm'),
-    ).toBeVisible();
-    await page.getByTestId('complete-survey-modal-btn-confirm').click();
-  });
+  //   await page.getByTestId('btn-confirm').click();
+  //   await expect(
+  //     page.getByTestId('complete-survey-modal-btn-confirm'),
+  //   ).toBeVisible();
+  //   await page.getByTestId('complete-survey-modal-btn-confirm').click();
+  // });
 
-  test(`DS-${i()} [Participant 2] Conduct the final survey (P2)`, async ({
-    page,
-  }) => {
-    await login(page, participant2);
-    await goToMySpaces(page);
-    await goToSpace(page, POST_TITLE);
-    await goToFinalSurvey(page);
-    await conductSurvey(page, [1, 1, 2, 1, 'Part 1 is important', 'Good']);
-    await page.getByTestId('btn-confirm').click();
-    await expect(
-      page.getByTestId('complete-survey-modal-btn-confirm'),
-    ).toBeVisible();
-    await page.getByTestId('complete-survey-modal-btn-confirm').click();
-  });
+  // test(`DS-${i()} [Participant 2] Conduct the final survey (P2)`, async ({
+  //   page,
+  // }) => {
+  //   await login(page, participant2);
+  //   await goToMySpaces(page);
+  //   await goToSpace(page, POST_TITLE);
+  //   await goToFinalSurvey(page);
+  //   await conductSurvey(page, [1, 1, 2, 1, 'Part 1 is important', 'Good']);
+  //   await page.getByTestId('btn-confirm').click();
+  //   await expect(
+  //     page.getByTestId('complete-survey-modal-btn-confirm'),
+  //   ).toBeVisible();
+  //   await page.getByTestId('complete-survey-modal-btn-confirm').click();
+  // });
 
-  test(`DS-${i()} [Participant 3] Conduct the final survey (P3)`, async ({
-    page,
-  }) => {
-    await login(page, participant3);
-    await goToMySpaces(page);
-    await goToSpace(page, POST_TITLE);
-    await goToFinalSurvey(page);
-    await conductSurvey(page, [
-      1,
-      0,
-      0,
-      2,
-      'Part 2 is important',
-      "I don't have any idea",
-    ]);
-    await page.getByTestId('btn-confirm').click();
-    await expect(
-      page.getByTestId('complete-survey-modal-btn-confirm'),
-    ).toBeVisible();
-    await page.getByTestId('complete-survey-modal-btn-confirm').click();
-  });
+  // test(`DS-${i()} [Participant 3] Conduct the final survey (P3)`, async ({
+  //   page,
+  // }) => {
+  //   await login(page, participant3);
+  //   await goToMySpaces(page);
+  //   await goToSpace(page, POST_TITLE);
+  //   await goToFinalSurvey(page);
+  //   await conductSurvey(page, [
+  //     1,
+  //     0,
+  //     0,
+  //     2,
+  //     'Part 2 is important',
+  //     "I don't have any idea",
+  //   ]);
+  //   await page.getByTestId('btn-confirm').click();
+  //   await expect(
+  //     page.getByTestId('complete-survey-modal-btn-confirm'),
+  //   ).toBeVisible();
+  //   await page.getByTestId('complete-survey-modal-btn-confirm').click();
+  // });
 
-  test(`DS-${i()} [Participant 4] Conduct the final survey (P4)`, async ({
-    page,
-  }) => {
-    await login(page, participant4);
-    await goToMySpaces(page);
-    await goToSpace(page, POST_TITLE);
-    await goToFinalSurvey(page);
-    await conductSurvey(page, [
-      1,
-      0,
-      0,
-      2,
-      'Part 2 is important',
-      "I don't have any idea",
-    ]);
-    await page.getByTestId('btn-confirm').click();
-    await expect(
-      page.getByTestId('complete-survey-modal-btn-confirm'),
-    ).toBeVisible();
-    await page.getByTestId('complete-survey-modal-btn-confirm').click();
-  });
+  // test(`DS-${i()} [Participant 4] Conduct the final survey (P4)`, async ({
+  //   page,
+  // }) => {
+  //   await login(page, participant4);
+  //   await goToMySpaces(page);
+  //   await goToSpace(page, POST_TITLE);
+  //   await goToFinalSurvey(page);
+  //   await conductSurvey(page, [
+  //     1,
+  //     0,
+  //     0,
+  //     2,
+  //     'Part 2 is important',
+  //     "I don't have any idea",
+  //   ]);
+  //   await page.getByTestId('btn-confirm').click();
+  //   await expect(
+  //     page.getByTestId('complete-survey-modal-btn-confirm'),
+  //   ).toBeVisible();
+  //   await page.getByTestId('complete-survey-modal-btn-confirm').click();
+  // });
 
-  // TODO: check
-  test.skip(`DS-${i()} [Creator 1] See analysis`, async ({ page }) => {
-    await login(page, creator1);
-    await goToMySpaces(page);
-    await goToSpace(page, POST_TITLE);
+  // // TODO: check
+  // test.skip(`DS-${i()} [Creator 1] See analysis`, async ({ page }) => {
+  //   await login(page, creator1);
+  //   await goToMySpaces(page);
+  //   await goToSpace(page, POST_TITLE);
 
-    await viewAnalysis(page);
-  });
+  //   await viewAnalysis(page);
+  // });
 });

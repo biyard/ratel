@@ -59,18 +59,21 @@ impl PortOne {
 
     pub async fn pay_with_billing_key(
         &self,
-        _payment_id: String,
         _customer_id: String,
         _customer_name: String,
         _order_name: String,
         _billing_key: String,
         _amount: i64,
-    ) -> Result<BillingKeyPaymentResponse> {
-        Ok(BillingKeyPaymentResponse {
-            payment: Payment {
-                paid_at: "2025-11-03T11:01:50.08942321Z".to_string(),
-                pg_tx_id: "merchantest".to_string(),
+        _currency: Currency,
+    ) -> Result<(BillingKeyPaymentResponse, String)> {
+        Ok((
+            BillingKeyPaymentResponse {
+                payment: Payment {
+                    paid_at: "2025-11-03T11:01:50.08942321Z".to_string(),
+                    pg_tx_id: "merchantest".to_string(),
+                },
             },
-        })
+            "payment-id".to_string(),
+        ))
     }
 }
