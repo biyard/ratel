@@ -22,7 +22,7 @@ pub struct CreateRewardSpaceRequest {
     reward_type: RewardType,
     label: String,
     description: String,
-    amount: i64,
+    credit: i64,
 }
 
 pub async fn create_reward_handler(
@@ -36,12 +36,14 @@ pub async fn create_reward_handler(
     permissions.permitted(TeamGroupPermission::SpaceWrite)?;
     let mut updater_txs = vec![];
 
+    // TODO: Check Credit Balance and Decrease Credit of Admin
+    let amount = req.reward_type.point() * req.credit;
     let space_reward = SpaceReward::new(
         space_pk.clone(),
         req.reward_type,
         req.label,
         req.description,
-        req.amount,
+        amount,
     );
 
     updater_txs.push(space_reward.create_transact_write_item());

@@ -15,3 +15,12 @@ pub enum RewardType {
     None,
     RespondPoll(String), // Poll SK
 }
+
+impl RewardType {
+    pub fn point(&self) -> i64 {
+        match self {
+            RewardType::None => 0,
+            RewardType::RespondPoll(_) => 10_000,
+        }
+    }
+}
