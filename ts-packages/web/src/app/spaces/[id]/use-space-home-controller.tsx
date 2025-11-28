@@ -38,7 +38,6 @@ import {
 } from '@/features/spaces/types/space-common';
 import useFileSpace from '@/features/spaces/files/hooks/use-file-space';
 import SpaceAuthorizePopup from './space-authorize-popup';
-import SpaceEndPopup from './space-end-popup';
 
 export class SpaceHomeController {
   public space: Space;
@@ -613,15 +612,6 @@ export function useSpaceHomeController(spacePk: string) {
       image[1](data.space.data.urls[0]);
     }
   }, [data.space.data, image]);
-
-  useEffect(() => {
-    if (
-      data.space.data.status !== SpaceStatus.InProgress &&
-      !data.space.data.isAdmin()
-    ) {
-      popup.open(<SpaceEndPopup />).withTitle(t('end_space_title'));
-    }
-  }, [data.space.data]);
 
   useEffect(() => {
     const remote = data.space.data?.files ?? [];
