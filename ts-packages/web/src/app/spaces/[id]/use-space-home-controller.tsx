@@ -38,6 +38,8 @@ import {
 } from '@/features/spaces/types/space-common';
 import useFileSpace from '@/features/spaces/files/hooks/use-file-space';
 import SpaceAuthorizePopup from './space-authorize-popup';
+import SpaceEndModal from '@/features/spaces/modals/space-end-modal';
+import { useFinishSpaceMutation } from '@/features/spaces/hooks/use-finish-mutation';
 
 export class SpaceHomeController {
   public space: Space;
@@ -58,6 +60,7 @@ export class SpaceHomeController {
     public popup: ReturnType<typeof usePopup>,
     public publishSpace: ReturnType<typeof usePublishSpaceMutation>,
     public startSpace: ReturnType<typeof useStartSpaceMutation>,
+    public finishSpace: ReturnType<typeof useFinishSpaceMutation>,
     public deleteSpace: ReturnType<typeof useDeleteSpaceMutation>,
     public image: State<string | null>,
     public hasFiles: boolean,
@@ -326,6 +329,24 @@ export class SpaceHomeController {
     this.popup.close();
   };
 
+  handleFinish = async () => {
+    try {
+      this.finishSpace.mutateAsync({
+        spacePk: this.space.pk,
+        block: true,
+      });
+
+      showSuccessToast(this.t('success_finish_space'));
+    } catch (err) {
+      logger.error('finish space failed: ', err);
+      showErrorToast(this.t('failed_finish_space'));
+    } finally {
+      this.popup.close();
+    }
+
+    this.popup.close();
+  };
+
   handleDelete = async () => {
     if (this.publishHook) {
       this.publishHook();
@@ -401,6 +422,22 @@ export class SpaceHomeController {
         />,
       )
       .withTitle(this.t('start_space'))
+      .withoutBackdropClose();
+  };
+
+  handleActionFinish = async () => {
+    logger.debug('Action end triggered');
+
+    this.popup
+      .open(
+        <SpaceEndModal
+          onEnded={this.handleFinish}
+          onClose={() => {
+            this.popup.close();
+          }}
+        />,
+      )
+      .withTitle(this.t('end_space'))
       .withoutBackdropClose();
   };
 
@@ -552,6 +589,13 @@ export class SpaceHomeController {
       });
     }
 
+    if (this.space.isStarted) {
+      ret.unshift({
+        label: this.t('finished'),
+        onClick: this.handleActionFinish,
+      });
+    }
+
     // if (this.space.isStarted) {
     //   ret.unshift({
     //     label: this.t('finished'),
@@ -587,6 +631,7 @@ export function useSpaceHomeController(spacePk: string) {
   const updateSpaceFiles = useSpaceUpdateFilesMutation();
   const publishSpace = usePublishSpaceMutation();
   const startSpace = useStartSpaceMutation();
+  const finishSpace = useFinishSpaceMutation();
   const deleteSpace = useDeleteSpaceMutation();
   const { mutateAsync: updateDraftImage } = useUpdateDraftImageMutation();
   const participateSpace = useParticipateSpaceMutation();
@@ -683,6 +728,7 @@ export function useSpaceHomeController(spacePk: string) {
     popup,
     publishSpace,
     startSpace,
+    finishSpace,
     deleteSpace,
     new State(image),
     hasFiles,

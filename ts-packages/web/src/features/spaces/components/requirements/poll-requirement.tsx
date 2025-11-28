@@ -12,6 +12,7 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import CompleteSurveyPopup from '../../polls/components/modal/complete_survey';
 import { useSpaceById } from '../../hooks/use-space-by-id';
 import { SpaceType } from '../../types/space-type';
+import { SpaceStatus } from '../../types/space-common';
 export type PollRequirementProps = React.HTMLAttributes<HTMLDivElement> & {
   spacePk: string;
   pollSk: string;
@@ -148,7 +149,7 @@ export default function PollRequirement({
         onSubmit={handleSubmit}
         onLogin={() => {}}
         canParticipate={!!canParticipate}
-        canSubmit={true}
+        canSubmit={space.status !== SpaceStatus.Finished}
         disabled={respondPoll.isPending || canParticipate === false}
         canUpdate={false}
         isLogin={true}
