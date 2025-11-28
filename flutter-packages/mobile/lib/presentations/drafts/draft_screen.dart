@@ -6,62 +6,48 @@ class DraftScreen extends GetWidget<DraftController> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
     return Layout<DraftController>(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-            child: Row(
-              children: [
-                InkWell(
-                  onTap: controller.goBack,
-                  child: SvgPicture.asset(Assets.back, width: 24, height: 24),
-                ),
-                20.gap,
-                Text(
-                  DraftLocalization.draftMyDraft,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    height: 1.2,
+      scrollable: false,
+      child: Obx(
+        () => RefreshIndicator(
+          onRefresh: () => controller.listFeeds(),
+          color: AppColors.primary,
+          backgroundColor: AppColors.bg,
+          child: ListView.separated(
+            padding: EdgeInsets.fromLTRB(0, 0, 0, bottomPad + 10),
+            itemCount: controller.feeds.length + 1,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: AppTopBar(
+                    onBack: () => Get.back(),
+                    title: DraftLocalization.draftMyDraft,
                   ),
-                ),
-              ],
-            ),
+                );
+              }
+
+              final i = index - 1;
+              return DraftSlidableCard(
+                data: controller.feeds[i],
+                onTap: () => controller.openDraft(controller.feeds[i].pk),
+                onDelete: () {
+                  showRemoveDraftModal(context, controller.feeds[i].pk);
+                },
+              );
+            },
           ),
-          Container(
-            width: double.infinity,
-            height: 1,
-            color: const Color(0xff464646),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Obx(
-              () => ListView.separated(
-                primary: false,
-                shrinkWrap: true,
-                itemCount: controller.feeds.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (_, i) => DraftSlidableCard(
-                  data: controller.feeds[i],
-                  onTap: () => controller.openDraft(controller.feeds[i].feedId),
-                  onDelete: () => {
-                    showRemoveDraftModal(context, controller.feeds[i].feedId),
-                  },
-                ),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
 class DraftSlidableCard extends StatelessWidget {
-  final FeedModel data;
+  final FeedV2SummaryModel data;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
 
@@ -75,7 +61,7 @@ class DraftSlidableCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Slidable(
-      key: ValueKey('draft_${data.feedId}'),
+      key: ValueKey('draft_${data.pk}'),
       groupTag: 'drafts',
       closeOnScroll: true,
       endActionPane: ActionPane(
@@ -85,20 +71,20 @@ class DraftSlidableCard extends StatelessWidget {
           CustomSlidableAction(
             onPressed: (_) => onDelete?.call(),
             backgroundColor: const Color(0xFFEF4444),
-
             padding: EdgeInsets.zero,
             child: SvgPicture.asset(Assets.delete2, width: 28, height: 28),
           ),
         ],
       ),
-      child: DraftCard(data: data, onTap: onTap),
+      child: DraftCard(data: data, onTap: onTap, onDelete: onDelete),
     );
   }
 }
 
 class DraftCard extends StatelessWidget {
-  final FeedModel data;
+  final FeedV2SummaryModel data;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete;
   final List<String>? tags;
   final bool hideThumb;
 
@@ -106,70 +92,95 @@ class DraftCard extends StatelessWidget {
     super.key,
     required this.data,
     this.onTap,
+    this.onDelete,
     this.tags,
     this.hideThumb = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final showThumb =
-        !hideThumb && (data.image != null && data.image!.isNotEmpty);
+    final allTags = tags ?? const <String>[];
+    final visibleTags = allTags.length > 4
+        ? allTags.sublist(0, 4)
+        : allTags.toList();
+    final extraCount = allTags.length > 4 ? allTags.length - 4 : 0;
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: RoundContainer(
-        width: double.infinity,
-        radius: 10,
-        color: AppColors.neutral900,
-        padding: const EdgeInsets.all(15),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (data.feedType.isNotEmpty) ...[
-              Wrap(
-                spacing: 4,
-                runSpacing: 4,
-                children: [DraftTagChip(text: data.feedType)],
-              ),
-              15.vgap,
-            ],
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          RoundContainer(
+            width: double.infinity,
+            radius: 0,
+            color: Colors.transparent,
+            padding: const EdgeInsets.all(15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (showThumb) ...[DraftThumbnail(url: data.image!), 10.gap],
-                Expanded(
-                  child: Text(
-                    data.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      height: 1.25,
-                      fontWeight: FontWeight.w700,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Wrap(
+                        spacing: 4,
+                        runSpacing: 4,
+                        children: [
+                          ...visibleTags
+                              .map((t) => DraftTagChip(text: t))
+                              .toList(),
+                          if (extraCount > 0)
+                            DraftTagChip(text: '+$extraCount'),
+                        ],
+                      ),
                     ),
-                  ),
+                    if (onDelete != null) ...[
+                      10.gap,
+                      InkWell(
+                        onTap: onDelete,
+                        borderRadius: BorderRadius.circular(20),
+                        child: SvgPicture.asset(
+                          Assets.trash,
+                          width: 20,
+                          height: 20,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
-            ),
-            15.vgap,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
+                15.vgap,
                 Text(
-                  timeAgo(data.createdAt),
+                  data.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    color: AppColors.neutral500,
-                    fontSize: 12,
-                    height: 1.2,
-                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                    fontSize: 18,
+                    height: 27 / 18,
+                    fontWeight: FontWeight.w700,
                   ),
+                ),
+                15.vgap,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Text(
+                      timeAgo(data.createdAt),
+                      style: const TextStyle(
+                        color: Color(0xFF737373),
+                        fontSize: 12,
+                        height: 1.33,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    30.gap,
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          Container(height: 1, color: const Color(0xFF2D2D2D)),
+        ],
       ),
     );
   }
@@ -182,9 +193,9 @@ class DraftTagChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4.5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: AppColors.neutral800,
+        color: const Color(0xFF262626),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
@@ -193,7 +204,7 @@ class DraftTagChip extends StatelessWidget {
           color: Colors.white,
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          height: 1.1,
+          height: 1.33,
         ),
       ),
     );
@@ -228,7 +239,7 @@ class DraftThumbnail extends StatelessWidget {
   }
 }
 
-void showRemoveDraftModal(BuildContext ctx, int feedId) {
+void showRemoveDraftModal(BuildContext ctx, String feedPk) {
   final controller = Get.find<DraftController>();
 
   showDialog(
@@ -248,21 +259,22 @@ void showRemoveDraftModal(BuildContext ctx, int feedId) {
               children: [
                 Text(
                   DraftLocalization.draftDeleteDraft,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
                     fontSize: 24,
-                    height: 1.33,
+                    height: 32 / 24,
                   ),
                 ),
                 24.vgap,
                 Text(
                   DraftLocalization.draftDeleteDraftDescription,
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppColors.neutral300,
                     fontWeight: FontWeight.w400,
                     fontSize: 12,
-                    height: 1.33,
+                    height: 22 / 15,
                   ),
                 ),
                 35.vgap,
@@ -277,10 +289,10 @@ void showRemoveDraftModal(BuildContext ctx, int feedId) {
                         height: 50,
                         color: Colors.transparent,
                         radius: 10,
-                        child: Padding(
+                        child: const Padding(
                           padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
                           child: Text(
-                            DraftLocalization.draftCancel,
+                            'Cancel',
                             style: TextStyle(
                               color: AppColors.neutral300,
                               fontWeight: FontWeight.w700,
@@ -295,19 +307,19 @@ void showRemoveDraftModal(BuildContext ctx, int feedId) {
                       onTap: controller.isBusy.value
                           ? null
                           : () async {
-                              await controller.deleteDraft(feedId);
+                              await controller.deleteDraft(feedPk);
                               Navigator.pop(context);
                             },
                       child: RoundContainer(
-                        width: 180,
+                        width: 206,
                         height: 50,
                         color: AppColors.primary,
                         radius: 10,
-                        child: Center(
+                        child: const Center(
                           child: Padding(
                             padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
                             child: Text(
-                              DraftLocalization.draftRemove,
+                              'Delete',
                               style: TextStyle(
                                 color: AppColors.bg,
                                 fontWeight: FontWeight.w700,
