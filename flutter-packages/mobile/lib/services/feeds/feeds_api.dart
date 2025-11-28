@@ -620,4 +620,33 @@ class FeedsApi extends GetConnect {
 
     return LikeCommentResponse.fromJson(json);
   }
+
+  Future<LikePostResponse?> likePost({
+    required String postPk,
+    required bool like,
+  }) async {
+    final encodedPostPk = Uri.encodeComponent(postPk);
+
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v3/posts/$encodedPostPk/likes');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'like': like};
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    if (!res.isOk) {
+      logger.e('likePost failed status=${res.statusCode} body=${res.body}');
+      return null;
+    }
+
+    final json = res.body;
+    if (json is! Map<String, dynamic>) {
+      logger.e('likePost invalid body=${res.body}');
+      return null;
+    }
+
+    return LikePostResponse.fromJson(Map<String, dynamic>.from(json));
+  }
 }
