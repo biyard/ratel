@@ -14,7 +14,9 @@ export 'screens/detail/detail_post_screen.dart';
 
 const String createPostScreen = '/posts/new';
 const String postScreen = '/post';
-postWithPk(String postPk) => '/post/$postPk';
+String postWithPk(String postPk) {
+  return '$postScreen/${Uri.encodeComponent(postPk)}';
+}
 
 List<GetPage> postPages = [
   GetPage(
