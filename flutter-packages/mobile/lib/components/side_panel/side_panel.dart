@@ -176,7 +176,7 @@ class SidePanel extends StatelessWidget {
                       label: MainLocalization.posts,
                       onTap: () {
                         onClose();
-                        Get.rootDelegate.offAndToNamed(AppRoutes.postScreen);
+                        Get.rootDelegate.offAndToNamed(postScreen);
                       },
                     ),
                     // MenuItem(
