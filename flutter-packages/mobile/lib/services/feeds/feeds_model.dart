@@ -1,3 +1,10 @@
+class PostCommentListResult {
+  final List<PostCommentModel> items;
+  final String? bookmark;
+
+  const PostCommentListResult({required this.items, this.bookmark});
+}
+
 class FeedModel {
   final int feedId;
   final List<int> spaceIds;
@@ -559,5 +566,15 @@ class FeedV2Model {
       'is_liked': isLiked,
       'permissions': permissions,
     };
+  }
+}
+
+class LikeCommentResponse {
+  final bool liked;
+
+  const LikeCommentResponse({required this.liked});
+
+  factory LikeCommentResponse.fromJson(Map<String, dynamic> json) {
+    return LikeCommentResponse(liked: json['liked'] as bool? ?? false);
   }
 }

@@ -77,6 +77,9 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
 
+  PostCommentModel? _replyTarget;
+  bool _sending = false;
+
   @override
   void initState() {
     super.initState();
@@ -90,6 +93,45 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
+  }
+
+  String _plainContent(String raw) {
+    final noTags = raw.replaceAll(RegExp(r'<[^>]*>'), '');
+    return noTags.trim();
+  }
+
+  Future<void> _handleSend() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty || _sending) return;
+
+    final ctrl = Get.find<DetailPostController>();
+
+    _sending = true;
+    setState(() {});
+
+    try {
+      if (_replyTarget == null) {
+        await ctrl.addComment(text);
+      } else {
+        await ctrl.addReply(parentCommentSk: _replyTarget!.sk, text: text);
+      }
+
+      _controller.clear();
+      setState(() {
+        _replyTarget = null;
+      });
+    } catch (e, s) {
+      logger.e('Failed to send comment: $e', stackTrace: s);
+    } finally {
+      _sending = false;
+      setState(() {});
+    }
+  }
+
+  void _setReplyTarget(PostCommentModel c) {
+    setState(() {
+      _replyTarget = c;
+    });
   }
 
   @override
@@ -140,7 +182,6 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
               ),
             ),
             const SizedBox(height: 16),
-
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -149,16 +190,75 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
                   final c = widget.comments[index];
                   return Column(
                     children: [
-                      _CommentItem(comment: c),
+                      _CommentItem(comment: c, onReply: _setReplyTarget),
                       30.vgap,
                     ],
                   );
                 },
               ),
             ),
-
             const SizedBox(height: 10),
-
+            if (_replyTarget != null) ...[
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: RoundContainer(
+                  radius: 10,
+                  width: double.infinity,
+                  color: const Color(0xFF2563EB),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.subdirectory_arrow_left_rounded,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      8.gap,
+                      RoundContainer(
+                        width: 20,
+                        height: 20,
+                        radius: 118.5,
+                        imageUrl: _replyTarget!.authorProfileUrl.isNotEmpty
+                            ? _replyTarget!.authorProfileUrl
+                            : defaultProfileImage,
+                        color: null,
+                        alignment: Alignment.center,
+                        child: null,
+                      ),
+                      8.gap,
+                      Expanded(
+                        child: Text(
+                          _plainContent(_replyTarget!.content),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white,
+                              ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _replyTarget = null;
+                          });
+                        },
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: RoundContainer(
@@ -205,18 +305,17 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
                     ),
                     const SizedBox(width: 10),
                     GestureDetector(
-                      onTap: () {
-                        final text = _controller.text.trim();
-                        if (text.isEmpty) return;
-
-                        logger.d('send comment: $text');
-
-                        _controller.clear();
-                      },
-                      child: const Icon(
-                        Icons.arrow_upward_rounded,
-                        color: Color(0xFFD4D4D4),
-                      ),
+                      onTap: _handleSend,
+                      child: _sending
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(
+                              Icons.arrow_upward_rounded,
+                              color: Color(0xFFD4D4D4),
+                            ),
                     ),
                   ],
                 ),
@@ -230,9 +329,10 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
 }
 
 class _CommentItem extends StatelessWidget {
-  const _CommentItem({required this.comment});
+  const _CommentItem({required this.comment, required this.onReply});
 
   final PostCommentModel comment;
+  final void Function(PostCommentModel) onReply;
 
   String _relativeTime(int millis) {
     final dt = DateTime.fromMillisecondsSinceEpoch(
@@ -262,61 +362,64 @@ class _CommentItem extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final content = _plainContent(comment.content);
     final timeText = _relativeTime(comment.updatedAt);
+    final ctrl = Get.find<DetailPostController>();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            RoundContainer(
-              width: 24,
-              height: 24,
-              radius: 118.5,
-              imageUrl: comment.authorProfileUrl.isNotEmpty
-                  ? comment.authorProfileUrl
-                  : defaultProfileImage,
-              color: null,
-              alignment: Alignment.center,
-              child: null,
-            ),
-            10.gap,
-            Expanded(
-              child: Row(
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        comment.authorDisplayName,
-                        style: textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                          height: 24 / 16,
-                          letterSpacing: 0.5,
-                          color: Colors.white,
-                        ),
-                      ),
-                      4.gap,
-                      SvgPicture.asset(Assets.badge, width: 20, height: 20),
-                    ],
-                  ),
-                  const Spacer(),
-                  Text(
-                    timeText,
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: 12,
-                      color: const Color(0xFF737373),
-                    ),
-                  ),
-                ],
+    return Obx(() {
+      final replies = ctrl.repliesOf(comment.sk);
+      final isRepliesLoading = ctrl.isRepliesLoadingOf(comment.sk);
+
+      final child = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              RoundContainer(
+                width: 24,
+                height: 24,
+                radius: 118.5,
+                imageUrl: comment.authorProfileUrl.isNotEmpty
+                    ? comment.authorProfileUrl
+                    : defaultProfileImage,
+                color: null,
+                alignment: Alignment.center,
+                child: null,
               ),
-            ),
-          ],
-        ),
-        4.vgap,
-        Padding(
-          padding: const EdgeInsets.only(left: 34), // 24 avatar + 10 gap
-          child: Text(
+              10.gap,
+              Expanded(
+                child: Row(
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          comment.authorDisplayName,
+                          style: textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16,
+                            height: 24 / 16,
+                            letterSpacing: 0.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                        4.gap,
+                        SvgPicture.asset(Assets.badge, width: 20, height: 20),
+                      ],
+                    ),
+                    const Spacer(),
+                    Text(
+                      timeText,
+                      style: textTheme.bodySmall?.copyWith(
+                        fontSize: 12,
+                        color: const Color(0xFF737373),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          4.vgap,
+          Text(
             content,
             style: textTheme.bodyMedium?.copyWith(
               fontSize: 15,
@@ -325,11 +428,8 @@ class _CommentItem extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-        ),
-        10.vgap,
-        Padding(
-          padding: const EdgeInsets.only(left: 34),
-          child: Row(
+          10.vgap,
+          Row(
             children: [
               Row(
                 children: [
@@ -376,7 +476,177 @@ class _CommentItem extends StatelessWidget {
               ),
             ],
           ),
+          if (isRepliesLoading) ...[
+            12.vgap,
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ] else if (replies.isNotEmpty) ...[
+            12.vgap,
+            Column(
+              children: replies
+                  .map(
+                    (r) => Padding(
+                      padding: const EdgeInsets.only(left: 34),
+                      child: _ReplyItem(comment: r),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ],
+        ],
+      );
+
+      return Dismissible(
+        key: ValueKey('comment-${comment.sk}'),
+        direction: DismissDirection.endToStart,
+        confirmDismiss: (direction) async {
+          onReply(comment);
+          return false;
+        },
+        background: Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            width: 80,
+            decoration: const BoxDecoration(
+              color: Color(0xFF2563EB),
+              borderRadius: BorderRadius.only(
+                topRight: Radius.circular(8),
+                bottomRight: Radius.circular(8),
+              ),
+            ),
+            child: const Center(
+              child: Icon(
+                Icons.subdirectory_arrow_left_rounded,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+          ),
         ),
+        child: child,
+      );
+    });
+  }
+}
+
+class _ReplyItem extends StatelessWidget {
+  const _ReplyItem({required this.comment});
+
+  final PostCommentModel comment;
+
+  String _plainContent(String raw) {
+    final noTags = raw.replaceAll(RegExp(r'<[^>]*>'), '');
+    return noTags.trim();
+  }
+
+  String _relativeTime(int millis) {
+    final dt = DateTime.fromMillisecondsSinceEpoch(
+      millis * 1000,
+      isUtc: true,
+    ).toLocal();
+    final now = DateTime.now();
+    final diff = now.difference(dt);
+
+    if (diff.inDays >= 7) {
+      final w = (diff.inDays / 7).floor();
+      return '${w}w ago';
+    }
+    if (diff.inDays >= 1) return '${diff.inDays}d ago';
+    if (diff.inHours >= 1) return '${diff.inHours}h ago';
+    if (diff.inMinutes >= 1) return '${diff.inMinutes}m ago';
+    return 'now';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final content = _plainContent(comment.content);
+    final timeText = _relativeTime(comment.updatedAt);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            RoundContainer(
+              width: 20,
+              height: 20,
+              radius: 118.5,
+              imageUrl: comment.authorProfileUrl.isNotEmpty
+                  ? comment.authorProfileUrl
+                  : defaultProfileImage,
+              color: null,
+              alignment: Alignment.center,
+              child: null,
+            ),
+            8.gap,
+            Expanded(
+              child: Row(
+                children: [
+                  Text(
+                    comment.authorDisplayName,
+                    style: textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  4.gap,
+                  SvgPicture.asset(Assets.badge, width: 16, height: 16),
+                  const Spacer(),
+                  Text(
+                    timeText,
+                    style: textTheme.bodySmall?.copyWith(
+                      fontSize: 12,
+                      color: const Color(0xFF737373),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        4.vgap,
+        Text(
+          content,
+          style: textTheme.bodySmall?.copyWith(
+            fontSize: 14,
+            height: 20 / 14,
+            letterSpacing: 0.5,
+            color: Colors.white,
+          ),
+        ),
+        8.vgap,
+        Row(
+          children: [
+            Row(
+              children: [
+                SvgPicture.asset(
+                  Assets.thumbs,
+                  width: 18,
+                  height: 18,
+                  colorFilter: const ColorFilter.mode(
+                    Color(0xFF737373),
+                    BlendMode.srcIn,
+                  ),
+                ),
+                4.gap,
+                Text(
+                  comment.likes.toString(),
+                  style: textTheme.bodySmall?.copyWith(
+                    fontSize: 13,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        8.vgap,
       ],
     );
   }
