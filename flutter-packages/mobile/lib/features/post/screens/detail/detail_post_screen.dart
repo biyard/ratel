@@ -35,13 +35,34 @@ class DetailPostScreen extends GetWidget<DetailPostController> {
                   return const SizedBox.shrink();
                 }
 
-                return DetailScrollContent(post: model.post);
+                return Obx(() {
+                  return DetailScrollContent(
+                    post: model.post,
+                    isLiked: model.isLiked == true,
+                    isLiking: controller.isLikingPost.value,
+                    onToggleLike: controller.toggleLikePost,
+                  );
+                });
               }),
             ),
             Obx(() {
+              final model = controller.feed.value;
+              if (model == null) {
+                return const SizedBox.shrink();
+              }
+
               return DetailCommentBar(
                 bottomInset: bottomInset,
-                comments: controller.feed.value?.comments ?? [],
+                comments: model.comments,
+                onSendRootComment: controller.addComment,
+                onSendReply: (parentSk, text) =>
+                    controller.addReply(parentCommentSk: parentSk, text: text),
+                repliesOf: controller.repliesOf,
+                isRepliesLoadingOf: controller.isRepliesLoadingOf,
+                isLikingCommentOf: controller.isLikingCommentOf,
+                isCommentLiked: controller.isCommentLiked,
+                onToggleLikeComment: (commentSk) =>
+                    controller.toggleLikeComment(commentSk: commentSk),
               );
             }),
           ],

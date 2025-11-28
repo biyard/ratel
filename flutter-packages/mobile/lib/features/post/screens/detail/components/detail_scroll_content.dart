@@ -2,9 +2,19 @@ import 'package:flutter_html/flutter_html.dart';
 import 'package:ratel/exports.dart';
 
 class DetailScrollContent extends StatelessWidget {
-  const DetailScrollContent({super.key, required this.post});
+  const DetailScrollContent({
+    super.key,
+    required this.post,
+    required this.isLiked,
+    required this.isLiking,
+    required this.onToggleLike,
+  });
 
   final PostDetailPostModel post;
+
+  final bool isLiked;
+  final bool isLiking;
+  final VoidCallback onToggleLike;
 
   String normalizeHtmlColors(String html) {
     final fixed = html.replaceAllMapped(
@@ -51,6 +61,9 @@ class DetailScrollContent extends StatelessWidget {
           _DetailHeaderSection(
             post: post,
             relativeTime: _relativeTime(post.createdAt),
+            isLiked: isLiked,
+            isLiking: isLiking,
+            onToggleLike: onToggleLike,
           ),
           20.vgap,
           Expanded(
@@ -81,10 +94,20 @@ class DetailScrollContent extends StatelessWidget {
 }
 
 class _DetailHeaderSection extends StatelessWidget {
-  const _DetailHeaderSection({required this.post, required this.relativeTime});
+  const _DetailHeaderSection({
+    required this.post,
+    required this.relativeTime,
+    required this.isLiked,
+    required this.isLiking,
+    required this.onToggleLike,
+  });
 
   final PostDetailPostModel post;
   final String relativeTime;
+
+  final bool isLiked;
+  final bool isLiking;
+  final VoidCallback onToggleLike;
 
   @override
   Widget build(BuildContext context) {
@@ -156,6 +179,9 @@ class _DetailHeaderSection extends StatelessWidget {
           comments: post.comments,
           rewards: post.rewards ?? 0,
           reposts: post.shares,
+          isLiked: isLiked,
+          isLiking: isLiking,
+          onToggleLike: onToggleLike,
         ),
       ],
     );
@@ -168,12 +194,19 @@ class _DetailStatsRow extends StatelessWidget {
     required this.comments,
     required this.rewards,
     required this.reposts,
+    required this.isLiked,
+    required this.isLiking,
+    required this.onToggleLike,
   });
 
   final int likes;
   final int comments;
   final int rewards;
   final int reposts;
+
+  final bool isLiked;
+  final bool isLiking;
+  final VoidCallback onToggleLike;
 
   String _formatNumber(int v) {
     if (v >= 10000) {
@@ -187,18 +220,44 @@ class _DetailStatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
+        // FIXME: fix to real background color
         _DetailStatItem(
-          icon: SvgPicture.asset(Assets.thumbs, width: 20, height: 20),
+          icon: SvgPicture.asset(
+            Assets.thumbs,
+            width: 20,
+            height: 20,
+            colorFilter: ColorFilter.mode(
+              isLiked ? AppColors.primary : const Color(0xFF737373),
+              BlendMode.srcIn,
+            ),
+          ),
           label: likes.toString(),
+          onTap: isLiking ? null : onToggleLike,
         ),
         20.gap,
         _DetailStatItem(
-          icon: SvgPicture.asset(Assets.roundBubble, width: 20, height: 20),
+          icon: SvgPicture.asset(
+            Assets.roundBubble,
+            width: 20,
+            height: 20,
+            colorFilter: const ColorFilter.mode(
+              Color(0xFF737373),
+              BlendMode.srcIn,
+            ),
+          ),
           label: comments.toString(),
         ),
         20.gap,
         _DetailStatItem(
-          icon: SvgPicture.asset(Assets.reward, width: 20, height: 20),
+          icon: SvgPicture.asset(
+            Assets.reward,
+            width: 20,
+            height: 20,
+            colorFilter: const ColorFilter.mode(
+              Color(0xFF737373),
+              BlendMode.srcIn,
+            ),
+          ),
           label: _formatNumber(rewards),
         ),
       ],
@@ -207,16 +266,17 @@ class _DetailStatsRow extends StatelessWidget {
 }
 
 class _DetailStatItem extends StatelessWidget {
-  const _DetailStatItem({required this.icon, required this.label});
+  const _DetailStatItem({required this.icon, required this.label, this.onTap});
 
-  final SvgPicture icon;
+  final Widget icon;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Row(
+    final content = Row(
       children: [
         icon,
         5.gap,
@@ -229,6 +289,16 @@ class _DetailStatItem extends StatelessWidget {
           ),
         ),
       ],
+    );
+
+    if (onTap == null) {
+      return content;
+    }
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: content,
     );
   }
 }

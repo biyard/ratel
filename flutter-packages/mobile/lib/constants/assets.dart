@@ -86,6 +86,7 @@ abstract class Assets {
   static const String keyboard = 'assets/icons/keyboard.svg';
 
   static const String trash = 'assets/icons/trash.svg';
+  static const String uploadComment = 'assets/icons/upload_comment.svg';
 
   static const String alignCenter = 'assets/icons/toolbar/align_center.svg';
   static const String alignLeft = 'assets/icons/toolbar/align_left.svg';
@@ -95,6 +96,7 @@ abstract class Assets {
   static const String fontBottomLine = 'assets/icons/toolbar/bottom_line.svg';
   static const String fontBullet = 'assets/icons/toolbar/bullet.svg';
   static const String fontNumber = 'assets/icons/toolbar/number.svg';
+
   static const String fontBackgroundColor =
       'assets/icons/toolbar/font_background_color.svg';
   static const String fontColor = 'assets/icons/toolbar/font_color.svg';

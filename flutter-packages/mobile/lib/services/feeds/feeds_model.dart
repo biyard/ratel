@@ -230,7 +230,7 @@ class PostDetailPostModel {
   final int? visibility;
 
   final int shares;
-  final int likes;
+  int likes;
   final int comments;
 
   final String userPk;
@@ -247,7 +247,7 @@ class PostDetailPostModel {
 
   final List<String> urls;
 
-  const PostDetailPostModel({
+  PostDetailPostModel({
     required this.pk,
     required this.sk,
     required this.createdAt,
@@ -576,5 +576,15 @@ class LikeCommentResponse {
 
   factory LikeCommentResponse.fromJson(Map<String, dynamic> json) {
     return LikeCommentResponse(liked: json['liked'] as bool? ?? false);
+  }
+}
+
+class LikePostResponse {
+  final bool like;
+
+  LikePostResponse({required this.like});
+
+  factory LikePostResponse.fromJson(Map<String, dynamic> json) {
+    return LikePostResponse(like: json['like'] as bool? ?? false);
   }
 }

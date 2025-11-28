@@ -1,14 +1,32 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/features/post/screens/detail/components/comment_item.dart';
 
 class DetailCommentBar extends StatelessWidget {
   const DetailCommentBar({
     super.key,
     required this.bottomInset,
     required this.comments,
+    required this.onSendRootComment,
+    required this.onSendReply,
+    required this.repliesOf,
+    required this.isRepliesLoadingOf,
+    required this.isLikingCommentOf,
+    required this.isCommentLiked,
+    required this.onToggleLikeComment,
   });
 
   final double bottomInset;
   final List<PostCommentModel> comments;
+
+  final Future<void> Function(String text) onSendRootComment;
+  final Future<void> Function(String parentCommentSk, String text) onSendReply;
+
+  final List<PostCommentModel> Function(String commentSk) repliesOf;
+  final bool Function(String commentSk) isRepliesLoadingOf;
+
+  final bool Function(String commentSk) isLikingCommentOf;
+  final bool Function(String commentSk, {bool fallback}) isCommentLiked;
+  final Future<void> Function(String commentSk) onToggleLikeComment;
 
   void _openCommentSheet(BuildContext context) {
     showModalBottomSheet(
@@ -19,7 +37,16 @@ class DetailCommentBar extends StatelessWidget {
       builder: (_) {
         return FractionallySizedBox(
           heightFactor: 0.7,
-          child: _CommentBottomSheet(comments: comments),
+          child: _CommentBottomSheet(
+            comments: comments,
+            onSendRootComment: onSendRootComment,
+            onSendReply: onSendReply,
+            repliesOf: repliesOf,
+            isRepliesLoadingOf: isRepliesLoadingOf,
+            isLikingCommentOf: isLikingCommentOf,
+            isCommentLiked: isCommentLiked,
+            onToggleLikeComment: onToggleLikeComment,
+          ),
         );
       },
     );
@@ -65,9 +92,28 @@ class DetailCommentBar extends StatelessWidget {
 }
 
 class _CommentBottomSheet extends StatefulWidget {
-  const _CommentBottomSheet({required this.comments});
+  const _CommentBottomSheet({
+    required this.comments,
+    required this.onSendRootComment,
+    required this.onSendReply,
+    required this.repliesOf,
+    required this.isRepliesLoadingOf,
+    required this.isLikingCommentOf,
+    required this.isCommentLiked,
+    required this.onToggleLikeComment,
+  });
 
   final List<PostCommentModel> comments;
+
+  final Future<void> Function(String text) onSendRootComment;
+  final Future<void> Function(String parentCommentSk, String text) onSendReply;
+
+  final List<PostCommentModel> Function(String commentSk) repliesOf;
+  final bool Function(String commentSk) isRepliesLoadingOf;
+
+  final bool Function(String commentSk) isLikingCommentOf;
+  final bool Function(String commentSk, {bool fallback}) isCommentLiked;
+  final Future<void> Function(String commentSk) onToggleLikeComment;
 
   @override
   State<_CommentBottomSheet> createState() => _CommentBottomSheetState();
@@ -104,16 +150,14 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
     final text = _controller.text.trim();
     if (text.isEmpty || _sending) return;
 
-    final ctrl = Get.find<DetailPostController>();
-
     _sending = true;
     setState(() {});
 
     try {
       if (_replyTarget == null) {
-        await ctrl.addComment(text);
+        await widget.onSendRootComment(text);
       } else {
-        await ctrl.addReply(parentCommentSk: _replyTarget!.sk, text: text);
+        await widget.onSendReply(_replyTarget!.sk, text);
       }
 
       _controller.clear();
@@ -183,19 +227,33 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: widget.comments.length,
-                itemBuilder: (context, index) {
-                  final c = widget.comments[index];
-                  return Column(
-                    children: [
-                      _CommentItem(comment: c, onReply: _setReplyTarget),
-                      30.vgap,
-                    ],
-                  );
-                },
-              ),
+              child: Obx(() {
+                final ctrl = Get.find<DetailPostController>();
+                final feed = ctrl.feed.value;
+                final comments = feed?.comments ?? widget.comments;
+
+                return ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  itemCount: comments.length,
+                  itemBuilder: (context, index) {
+                    final c = comments[index];
+                    return Column(
+                      children: [
+                        CommentItem(
+                          comment: c,
+                          onReply: _setReplyTarget,
+                          repliesOf: widget.repliesOf,
+                          isRepliesLoadingOf: widget.isRepliesLoadingOf,
+                          isLikingCommentOf: widget.isLikingCommentOf,
+                          isCommentLiked: widget.isCommentLiked,
+                          onToggleLikeComment: widget.onToggleLikeComment,
+                        ),
+                        30.vgap,
+                      ],
+                    );
+                  },
+                );
+              }),
             ),
             const SizedBox(height: 10),
             if (_replyTarget != null) ...[
@@ -294,7 +352,7 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
                         decoration: const InputDecoration(
                           isDense: true,
                           border: InputBorder.none,
-                          hintText: 'Hi...',
+                          hintText: 'Add a comment',
                           hintStyle: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -306,16 +364,11 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
                     const SizedBox(width: 10),
                     GestureDetector(
                       onTap: _handleSend,
-                      child: _sending
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(
-                              Icons.arrow_upward_rounded,
-                              color: Color(0xFFD4D4D4),
-                            ),
+                      child: SvgPicture.asset(
+                        Assets.uploadComment,
+                        width: 24,
+                        height: 24,
+                      ),
                     ),
                   ],
                 ),
@@ -324,330 +377,6 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _CommentItem extends StatelessWidget {
-  const _CommentItem({required this.comment, required this.onReply});
-
-  final PostCommentModel comment;
-  final void Function(PostCommentModel) onReply;
-
-  String _relativeTime(int millis) {
-    final dt = DateTime.fromMillisecondsSinceEpoch(
-      millis * 1000,
-      isUtc: true,
-    ).toLocal();
-    final now = DateTime.now();
-    final diff = now.difference(dt);
-
-    if (diff.inDays >= 7) {
-      final w = (diff.inDays / 7).floor();
-      return '${w}w ago';
-    }
-    if (diff.inDays >= 1) return '${diff.inDays}d ago';
-    if (diff.inHours >= 1) return '${diff.inHours}h ago';
-    if (diff.inMinutes >= 1) return '${diff.inMinutes}m ago';
-    return 'now';
-  }
-
-  String _plainContent(String raw) {
-    final noTags = raw.replaceAll(RegExp(r'<[^>]*>'), '');
-    return noTags.trim();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final content = _plainContent(comment.content);
-    final timeText = _relativeTime(comment.updatedAt);
-    final ctrl = Get.find<DetailPostController>();
-
-    return Obx(() {
-      final replies = ctrl.repliesOf(comment.sk);
-      final isRepliesLoading = ctrl.isRepliesLoadingOf(comment.sk);
-
-      final child = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              RoundContainer(
-                width: 24,
-                height: 24,
-                radius: 118.5,
-                imageUrl: comment.authorProfileUrl.isNotEmpty
-                    ? comment.authorProfileUrl
-                    : defaultProfileImage,
-                color: null,
-                alignment: Alignment.center,
-                child: null,
-              ),
-              10.gap,
-              Expanded(
-                child: Row(
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          comment.authorDisplayName,
-                          style: textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
-                            height: 24 / 16,
-                            letterSpacing: 0.5,
-                            color: Colors.white,
-                          ),
-                        ),
-                        4.gap,
-                        SvgPicture.asset(Assets.badge, width: 20, height: 20),
-                      ],
-                    ),
-                    const Spacer(),
-                    Text(
-                      timeText,
-                      style: textTheme.bodySmall?.copyWith(
-                        fontSize: 12,
-                        color: const Color(0xFF737373),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          4.vgap,
-          Text(
-            content,
-            style: textTheme.bodyMedium?.copyWith(
-              fontSize: 15,
-              height: 24 / 15,
-              letterSpacing: 0.5,
-              color: Colors.white,
-            ),
-          ),
-          10.vgap,
-          Row(
-            children: [
-              Row(
-                children: [
-                  SvgPicture.asset(
-                    Assets.thumbs,
-                    width: 20,
-                    height: 20,
-                    colorFilter: const ColorFilter.mode(
-                      Color(0xFF737373),
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                  5.gap,
-                  Text(
-                    comment.likes.toString(),
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: 15,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-              20.gap,
-              Row(
-                children: [
-                  SvgPicture.asset(
-                    Assets.roundBubble,
-                    width: 20,
-                    height: 20,
-                    colorFilter: const ColorFilter.mode(
-                      Color(0xFF737373),
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                  5.gap,
-                  Text(
-                    comment.replies.toString(),
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: 15,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          if (isRepliesLoading) ...[
-            12.vgap,
-            const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ] else if (replies.isNotEmpty) ...[
-            12.vgap,
-            Column(
-              children: replies
-                  .map(
-                    (r) => Padding(
-                      padding: const EdgeInsets.only(left: 34),
-                      child: _ReplyItem(comment: r),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
-        ],
-      );
-
-      return Dismissible(
-        key: ValueKey('comment-${comment.sk}'),
-        direction: DismissDirection.endToStart,
-        confirmDismiss: (direction) async {
-          onReply(comment);
-          return false;
-        },
-        background: Align(
-          alignment: Alignment.centerRight,
-          child: Container(
-            width: 80,
-            decoration: const BoxDecoration(
-              color: Color(0xFF2563EB),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(8),
-                bottomRight: Radius.circular(8),
-              ),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.subdirectory_arrow_left_rounded,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-          ),
-        ),
-        child: child,
-      );
-    });
-  }
-}
-
-class _ReplyItem extends StatelessWidget {
-  const _ReplyItem({required this.comment});
-
-  final PostCommentModel comment;
-
-  String _plainContent(String raw) {
-    final noTags = raw.replaceAll(RegExp(r'<[^>]*>'), '');
-    return noTags.trim();
-  }
-
-  String _relativeTime(int millis) {
-    final dt = DateTime.fromMillisecondsSinceEpoch(
-      millis * 1000,
-      isUtc: true,
-    ).toLocal();
-    final now = DateTime.now();
-    final diff = now.difference(dt);
-
-    if (diff.inDays >= 7) {
-      final w = (diff.inDays / 7).floor();
-      return '${w}w ago';
-    }
-    if (diff.inDays >= 1) return '${diff.inDays}d ago';
-    if (diff.inHours >= 1) return '${diff.inHours}h ago';
-    if (diff.inMinutes >= 1) return '${diff.inMinutes}m ago';
-    return 'now';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final content = _plainContent(comment.content);
-    final timeText = _relativeTime(comment.updatedAt);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            RoundContainer(
-              width: 20,
-              height: 20,
-              radius: 118.5,
-              imageUrl: comment.authorProfileUrl.isNotEmpty
-                  ? comment.authorProfileUrl
-                  : defaultProfileImage,
-              color: null,
-              alignment: Alignment.center,
-              child: null,
-            ),
-            8.gap,
-            Expanded(
-              child: Row(
-                children: [
-                  Text(
-                    comment.authorDisplayName,
-                    style: textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  4.gap,
-                  SvgPicture.asset(Assets.badge, width: 16, height: 16),
-                  const Spacer(),
-                  Text(
-                    timeText,
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: 12,
-                      color: const Color(0xFF737373),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        4.vgap,
-        Text(
-          content,
-          style: textTheme.bodySmall?.copyWith(
-            fontSize: 14,
-            height: 20 / 14,
-            letterSpacing: 0.5,
-            color: Colors.white,
-          ),
-        ),
-        8.vgap,
-        Row(
-          children: [
-            Row(
-              children: [
-                SvgPicture.asset(
-                  Assets.thumbs,
-                  width: 18,
-                  height: 18,
-                  colorFilter: const ColorFilter.mode(
-                    Color(0xFF737373),
-                    BlendMode.srcIn,
-                  ),
-                ),
-                4.gap,
-                Text(
-                  comment.likes.toString(),
-                  style: textTheme.bodySmall?.copyWith(
-                    fontSize: 13,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        8.vgap,
-      ],
     );
   }
 }

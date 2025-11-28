@@ -14,6 +14,11 @@ class DetailPostController extends BaseController {
   final isSendingRootComment = false.obs;
   final sendingReplyOf = <String, bool>{}.obs;
   final likingCommentOf = <String, bool>{}.obs;
+  final likedOverrideOf = <String, bool>{}.obs;
+
+  final isLikingPost = false.obs;
+  bool get isPostLiked => feed.value?.isLiked == true;
+  int get postLikes => feed.value?.post.likes ?? 0;
 
   @override
   void onInit() {
@@ -29,6 +34,62 @@ class DetailPostController extends BaseController {
     logger.d('DetailPostController postPk = $postPk');
 
     loadFeed();
+  }
+
+  bool isCommentLiked(String commentSk, {bool fallback = false}) {
+    final override = likedOverrideOf[commentSk];
+    if (override != null) {
+      return override;
+    }
+
+    final current = feed.value;
+    if (current != null) {
+      for (final c in current.comments) {
+        if (c.sk == commentSk) {
+          return c.liked == true;
+        }
+      }
+      for (final entry in replies.entries) {
+        for (final c in entry.value) {
+          if (c.sk == commentSk) {
+            return c.liked == true;
+          }
+        }
+      }
+    }
+
+    return fallback;
+  }
+
+  Future<void> toggleLikeComment({required String commentSk}) async {
+    final current = feed.value;
+    if (current == null) return;
+
+    if (likingCommentOf[commentSk] == true) return;
+
+    final currentLiked = isCommentLiked(commentSk, fallback: false);
+    final nextLike = !currentLiked;
+
+    likingCommentOf[commentSk] = true;
+    likingCommentOf.refresh();
+
+    try {
+      final res = await feedsApi.likeComment(
+        postPk: current.post.pk,
+        commentSk: commentSk,
+        like: nextLike,
+      );
+
+      if (res == null) return;
+
+      likedOverrideOf[commentSk] = res.liked;
+      likedOverrideOf.refresh();
+    } catch (e, s) {
+      logger.e('Failed to like/unlike comment $commentSk: $e', stackTrace: s);
+    } finally {
+      likingCommentOf[commentSk] = false;
+      likingCommentOf.refresh();
+    }
   }
 
   Future<void> loadFeed() async {
@@ -112,31 +173,6 @@ class DetailPostController extends BaseController {
     }
   }
 
-  Future<void> toggleLikeComment({
-    required String commentSk,
-    required bool like,
-  }) async {
-    final current = feed.value;
-    if (current == null) return;
-
-    if (likingCommentOf[commentSk] == true) return;
-    likingCommentOf[commentSk] = true;
-    likingCommentOf.refresh();
-
-    try {
-      await feedsApi.likeComment(
-        postPk: current.post.pk,
-        commentSk: commentSk,
-        like: like,
-      );
-    } catch (e, s) {
-      logger.e('Failed to like/unlike comment $commentSk: $e', stackTrace: s);
-    } finally {
-      likingCommentOf[commentSk] = false;
-      likingCommentOf.refresh();
-    }
-  }
-
   String _wrapAsDiv(String text) {
     final escaped = text
         .replaceAll('&', '&amp;')
@@ -176,6 +212,52 @@ class DetailPostController extends BaseController {
     } finally {
       repliesLoading[commentSk] = false;
       repliesLoading.refresh();
+    }
+  }
+
+  Future<void> toggleLikePost() async {
+    final current = feed.value;
+    if (current == null) return;
+    if (isLikingPost.value) return;
+
+    final alreadyLiked = current.isLiked == true;
+    final nextLike = !alreadyLiked;
+
+    isLikingPost.value = true;
+
+    try {
+      final res = await feedsApi.likePost(
+        postPk: current.post.pk,
+        like: nextLike,
+      );
+
+      if (res == null) {
+        return;
+      }
+
+      final oldLikes = current.post.likes;
+      int newLikes = oldLikes;
+
+      if (nextLike && !alreadyLiked) {
+        newLikes = oldLikes + 1;
+      } else if (!nextLike && alreadyLiked && oldLikes > 0) {
+        newLikes = oldLikes - 1;
+      }
+
+      current.post.likes = newLikes;
+
+      feed.value = FeedV2Model(
+        post: current.post,
+        comments: current.comments,
+        artworkMetadata: current.artworkMetadata,
+        repost: current.repost,
+        isLiked: res.like,
+        permissions: current.permissions,
+      );
+    } catch (e, s) {
+      logger.e('Failed to toggle like post: $e', stackTrace: s);
+    } finally {
+      isLikingPost.value = false;
     }
   }
 
