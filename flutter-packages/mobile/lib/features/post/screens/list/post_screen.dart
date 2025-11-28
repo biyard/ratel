@@ -34,7 +34,12 @@ class PostScreen extends GetWidget<PostController> {
                     }
 
                     final feed = controller.feeds[index];
-                    return FeedCardV2(feed: feed, onBookmarkTap: () => {});
+                    return FeedCardV2(
+                      feed: feed,
+                      onTap: () => {
+                        Get.rootDelegate.toNamed(postWithPk(feed.pk)),
+                      },
+                    );
                   },
                 ),
               ),
