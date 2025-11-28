@@ -1,4 +1,3 @@
-// screen
 import 'package:ratel/exports.dart';
 
 class PostScreen extends GetWidget<PostController> {
@@ -6,50 +5,61 @@ class PostScreen extends GetWidget<PostController> {
 
   @override
   Widget build(BuildContext context) {
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
     return Layout<PostController>(
+      scrollable: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
-            child: Row(
-              children: [
-                InkWell(
-                  onTap: controller.goBack,
-                  child: SvgPicture.asset(Assets.back, width: 24, height: 24),
-                ),
-                20.gap,
-                Text(
-                  'My Posts',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    height: 1.2,
-                  ),
-                ),
-              ],
-            ),
+            padding: const EdgeInsets.all(20.0),
+            child: AppTopBar(onBack: () => Get.back(), title: "My Posts"),
           ),
-          Container(
-            width: double.infinity,
-            height: 1,
-            color: Color(0xff464646),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.all(10.0),
+          Expanded(
             child: Obx(
-              () => ListView.separated(
-                primary: false,
-                shrinkWrap: true,
-                itemCount: controller.feeds.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (_, i) => FeedCard(data: controller.feeds[i]),
+              () => RefreshIndicator(
+                onRefresh: controller.loadInitial,
+                color: AppColors.primary,
+                backgroundColor: AppColors.bg,
+                child: ListView.separated(
+                  controller: controller.scrollController,
+                  padding: EdgeInsets.fromLTRB(0, 0, 0, bottomPad + 10),
+                  itemCount:
+                      controller.feeds.length + (controller.hasMore ? 1 : 0),
+                  separatorBuilder: (_, __) => 8.vgap,
+                  itemBuilder: (context, index) {
+                    if (index >= controller.feeds.length) {
+                      return _buildLoadMoreIndicator(controller);
+                    }
+
+                    final feed = controller.feeds[index];
+                    return FeedCardV2(feed: feed, onBookmarkTap: () => {});
+                  },
+                ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadMoreIndicator(PostController controller) {
+    if (!controller.hasMore) {
+      return const SizedBox.shrink();
+    }
+    if (!controller.isLoadingMore.value) {
+      return const SizedBox(height: 32);
+    }
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 16),
+      child: Center(
+        child: SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
       ),
     );
   }
