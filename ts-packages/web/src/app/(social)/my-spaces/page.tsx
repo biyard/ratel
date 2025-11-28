@@ -8,13 +8,12 @@ import Card from '@/components/card';
 import { MySpace } from '@/features/spaces/types/space-common';
 import { Row } from '@/components/ui/row';
 import { useMySpacesI18n } from './i18n';
-import { useUserInfo } from '@/hooks/use-user-info';
 
 function SpaceCard({ space }: { space: MySpace }) {
-  const user = useUserInfo();
   const navigate = useNavigate();
-  const pk = user.data.pk;
-  const isBlocked = pk === space.user_pk ? false : !!space.block_participate;
+
+  const isBlocked =
+    (space.invitation_status === 'pending' && space.block_participate) ?? false;
 
   const t = useMySpacesI18n();
   const status = useMemo(() => {
