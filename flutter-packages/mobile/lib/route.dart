@@ -118,6 +118,7 @@ class AppRoutes {
       curve: Curves.easeOutCubic,
     ),
     ...onboardingPages,
+    ...postPages,
     GetPage(
       name: settingScreen,
       page: () => const SettingsScreen(),

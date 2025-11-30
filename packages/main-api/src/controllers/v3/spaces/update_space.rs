@@ -49,6 +49,8 @@ pub enum UpdateSpaceRequest {
     },
     Finish {
         finished: bool,
+        #[serde(default)]
+        block_participate: bool,
     },
     Quota {
         quotas: i64,
@@ -196,7 +198,10 @@ pub async fn update_space_handler(
             space.block_participate = block_participate;
             let _ = SpaceEmailVerification::expire_verifications(&dynamo, space_pk.clone()).await?;
         }
-        UpdateSpaceRequest::Finish { finished } => {
+        UpdateSpaceRequest::Finish {
+            finished,
+            block_participate,
+        } => {
             if space.status != Some(SpaceStatus::Started) {
                 return Err(Error::NotSupported(
                     "Finish is not available for the current status.".into(),
@@ -204,12 +209,15 @@ pub async fn update_space_handler(
             }
 
             if !finished {
-                return Err(Error::NotSupported("it does not support end now".into()));
+                return Err(Error::NotSupported("it does not support finish now".into()));
             }
 
-            su = su.with_status(SpaceStatus::Finished);
+            su = su
+                .with_status(SpaceStatus::Finished)
+                .with_block_participate(block_participate);
 
             space.status = Some(SpaceStatus::Finished);
+            space.block_participate = block_participate;
         }
         UpdateSpaceRequest::Anonymous {
             anonymous_participation,

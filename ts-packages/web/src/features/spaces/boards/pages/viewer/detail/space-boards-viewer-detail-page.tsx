@@ -6,6 +6,7 @@ import PostHeader from '../../../components/post-header';
 import PostBody from '../../../components/post-body';
 import PostComments from '../../../components/post-comments';
 import { TimeRangeDisplay } from '../../../components/time-range-display';
+import { SpaceStatus } from '@/features/spaces/types/space-common';
 
 export function SpaceBoardsViewerDetailPage({
   spacePk,
@@ -44,6 +45,7 @@ export function SpaceBoardsViewerDetailPage({
           spacePk={ctrl.spacePk}
           post={ctrl.post}
           comments={ctrl.comments.get()}
+          isFinished={ctrl.space.status === SpaceStatus.Finished}
           isLoggedIn={canActive}
           expandComment={ctrl.expandComment}
           handleCommentDelete={ctrl.handleDeleteComment}

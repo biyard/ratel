@@ -1,8 +1,10 @@
+use crate::Error;
 use crate::controllers::v3::spaces::{SpacePostCommentPath, SpacePostCommentPathParam};
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
+use crate::models::SpaceCommon;
 use crate::models::user::User;
 use crate::types::{Partition, SpaceStatus, TeamGroupPermission};
-use crate::{AppState, models::feed::PostComment, Permissions};
+use crate::{AppState, Permissions, models::feed::PostComment};
 use aide::NoApi;
 use axum::extract::*;
 use bdk::prelude::*;
@@ -23,6 +25,7 @@ pub async fn reply_space_comment_handler(
         space_post_pk,
         space_post_comment_sk,
     }): SpacePostCommentPath,
+    Extension(space): Extension<SpaceCommon>,
     Json(req): Json<ReplySpaceCommentRequest>,
 ) -> Result<Json<SpacePostComment>, crate::Error> {
     tracing::debug!("Handling request: {:?}", req);
@@ -34,11 +37,9 @@ pub async fn reply_space_comment_handler(
         return Err(crate::Error::NoPermission);
     }
 
-    // if space_common.status == Some(SpaceStatus::Started)
-    //     || space_common.status == Some(SpaceStatus::Finished)
-    // {
-    //     return Err(crate::Error::FinishedSpace);
-    // }
+    if space.status == Some(SpaceStatus::Finished) {
+        return Err(Error::FinishedSpace);
+    }
 
     let comment = SpacePostComment::reply(
         &dynamo.client,
