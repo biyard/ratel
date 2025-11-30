@@ -1,12 +1,14 @@
 use bdk::prelude::*;
+use by_axum::axum::Extension;
 
 use crate::error::Error;
 use crate::features::spaces::boards::models::space_post::SpacePost;
+use crate::models::SpaceCommon;
 use crate::spaces::SpacePostPath;
 use crate::spaces::SpacePostPathParam;
 use crate::types::SpaceStatus;
 use crate::{
-    AppState,
+    AppState, Permissions,
     controllers::v3::posts::PostPath,
     features::spaces::boards::models::space_post_comment::SpacePostComment,
     models::{
@@ -15,7 +17,6 @@ use crate::{
         user::User,
     },
     types::{EntityType, Partition, TeamGroupPermission},
-    Permissions,
 };
 use aide::NoApi;
 use by_axum::axum::extract::{Json, Path, State};
@@ -39,6 +40,7 @@ pub async fn add_space_comment_handler(
         space_pk,
         space_post_pk,
     }): SpacePostPath,
+    Extension(space): Extension<SpaceCommon>,
     Json(req): Json<SpaceAddCommentRequest>,
 ) -> Result<Json<SpacePostComment>, Error> {
     if !matches!(space_pk, Partition::Space(_)) {
@@ -49,11 +51,9 @@ pub async fn add_space_comment_handler(
         return Err(Error::NoPermission);
     }
 
-    // if space_common.status == Some(SpaceStatus::Started)
-    //     || space_common.status == Some(SpaceStatus::Finished)
-    // {
-    //     return Err(Error::FinishedSpace);
-    // }
+    if space.status == Some(SpaceStatus::Finished) {
+        return Err(Error::FinishedSpace);
+    }
 
     let (pk, sk) = SpacePost::keys(&space_pk, &space_post_pk);
 

@@ -8,6 +8,7 @@ use crate::models::SpaceCommon;
 use crate::types::*;
 use crate::utils::aws::{DynamoClient, SesClient};
 use crate::*;
+use aws_sdk_dynamodb::types::AttributeValue;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema, Default)]
 pub struct SpaceInvitationMember {
@@ -78,6 +79,15 @@ impl SpaceInvitationMember {
             space_pk.clone(),
             EntityType::SpaceInvitationMember(user_pk.to_string()),
         )
+    }
+
+    pub async fn find_user_invitations_by_status_latest(
+        cli: &aws_sdk_dynamodb::Client,
+        user_pk: &Partition,
+        mut opt: SpaceInvitationMemberQueryOption,
+    ) -> Result<(Vec<Self>, Option<String>)> {
+        opt.scan_index_forward = false;
+        SpaceInvitationMember::find_user_invitations_by_status(cli, user_pk, opt).await
     }
 
     pub async fn send_email(

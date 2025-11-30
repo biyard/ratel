@@ -172,9 +172,7 @@ export default function SpaceByIdLayout() {
   const ctrl = useSpaceHomeController(spacePk ?? '');
 
   const content =
-    ctrl.space.status !== SpaceStatus.InProgress && !ctrl.space.isAdmin() ? (
-      <></>
-    ) : !ctrl.space.havePreTasks() || ctrl.space.isAdmin() ? (
+    !ctrl.space.havePreTasks() || ctrl.space.isAdmin() ? (
       <GeneralLayout />
     ) : ctrl.space.participated ? (
       <Requirements />

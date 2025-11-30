@@ -6,15 +6,15 @@ class DraftLocalization {
 
   static final _draftDeleteDraft = s(
     'draftDeleteDraft',
-    'Delete Draft',
-    'Delete Draft',
+    'Delete this draft?',
+    'Delete this draft?',
   );
   static String get draftDeleteDraft => _draftDeleteDraft.tr;
 
   static final _draftDeleteDraftDescription = s(
     'draftDeleteDraftDescription',
-    'Could you remove this draft? This action cannot be undone.',
-    'Could you remove this draft? This action cannot be undone.',
+    'Once deleted, this draft cannot be \nrecovered. Do you want to continue?',
+    'Once deleted, this draft cannot be \nrecovered. Do you want to continue?',
   );
   static String get draftDeleteDraftDescription =>
       _draftDeleteDraftDescription.tr;
