@@ -37,8 +37,19 @@ class PostScreen extends GetWidget<PostController> {
                     return FeedCardV2(
                       feed: feed,
                       onTap: () => {
-                        logger.d("feed pk: ${feed.pk}"),
-                        Get.rootDelegate.toNamed(postWithPk(feed.pk)),
+                        logger.d("feed tapped: ${feed.pk} ${feed.spacePk}"),
+                        if (feed.spacePk != null)
+                          {
+                            logger.d("space pk: ${feed.spacePk}"),
+                            Get.rootDelegate.toNamed(
+                              spaceWithPk(feed.spacePk!),
+                            ),
+                          }
+                        else
+                          {
+                            logger.d("feed pk: ${feed.pk}"),
+                            Get.rootDelegate.toNamed(postWithPk(feed.pk)),
+                          },
                       },
                     );
                   },

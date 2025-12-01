@@ -154,6 +154,13 @@ class DetailPostController extends BaseController {
       isLoading.value = true;
 
       final result = await feedsApi.getFeedV2(postPk);
+
+      final spacePk = result.post.spacePk;
+      if (spacePk != null && spacePk.isNotEmpty) {
+        Get.rootDelegate.offNamed(spaceWithPk(spacePk));
+        return;
+      }
+
       feed.value = result;
       logger.d("feed results: $result");
 
