@@ -1,4 +1,5 @@
 use crate::config;
+use crate::services::biyard::Biyard;
 use crate::services::portone::PortOne;
 use crate::utils::aws::{
     DynamoClient, S3Client, SesClient, SnsClient, get_aws_config, get_aws_config_for_sns,
@@ -11,6 +12,7 @@ pub struct AppState {
     pub sns: SnsClient,
     pub portone: PortOne,
     pub s3: S3Client,
+    pub biyard: Biyard,
 }
 
 impl AppState {
@@ -18,12 +20,13 @@ impl AppState {
         let conf = config::get();
 
         let portone = PortOne::new(&conf.portone.api_secret);
-
+        let biyard = Biyard::new();
         Self {
             dynamo,
             ses,
             sns,
             portone,
+            biyard,
             s3,
         }
     }
@@ -39,6 +42,7 @@ impl AppState {
         let s3 = S3Client::new(conf.bucket.name);
 
         let portone = PortOne::new(&conf.portone.api_secret);
+        let biyard = Biyard::new();
 
         Self {
             dynamo,
@@ -46,6 +50,7 @@ impl AppState {
             sns,
             portone,
             s3,
+            biyard,
         }
     }
 }

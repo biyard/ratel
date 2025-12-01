@@ -77,6 +77,7 @@ import { i18nAttributeCodes } from '@/app/admin/attribute-codes/attribute-codes-
 import { Errors } from '@/features/errors/i18n';
 import { MySpaces } from '@/app/(social)/my-spaces/i18n';
 import { i18nCompleteSurveyModal } from '@/features/spaces/polls/components/modal/complete_survey/complete-survey-modal-i18n';
+import { rewardsI18n } from '@/features/spaces/rewards/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -163,6 +164,7 @@ Object.entries({
   SpaceSettings,
   Errors,
   MySpaces,
+  Rewards: rewardsI18n,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
