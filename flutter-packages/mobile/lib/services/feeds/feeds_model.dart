@@ -231,7 +231,7 @@ class PostDetailPostModel {
 
   final int shares;
   int likes;
-  final int comments;
+  int comments;
 
   final String userPk;
   final String authorDisplayName;
@@ -367,7 +367,7 @@ class PostCommentModel {
   final String content;
 
   int likes;
-  final int replies;
+  int replies;
 
   final String? parentCommentSk;
 

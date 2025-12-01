@@ -167,7 +167,7 @@ class CommentItem extends StatelessWidget {
                   ),
                   5.gap,
                   Text(
-                    comment.replies.toString(),
+                    replies.length.toString(),
                     style: textTheme.bodySmall?.copyWith(
                       fontSize: 15,
                       color: Colors.white,
