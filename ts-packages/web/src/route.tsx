@@ -55,6 +55,8 @@ export const route = {
 
   spaceSetting: (spacePk: string) =>
     `/spaces/${encodeURIComponent(spacePk)}/settings`,
+  spaceRewardSetting: (spacePk: string) =>
+    `/spaces/${encodeURIComponent(spacePk)}/rewards`,
   spaceByType: (spaceType: SpaceType, spaceId: number | string) => {
     switch (spaceType) {
       default:

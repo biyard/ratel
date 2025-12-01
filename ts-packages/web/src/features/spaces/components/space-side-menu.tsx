@@ -38,7 +38,7 @@ export default function SpaceSideMenu({ menus }: SpaceSideMenuProps) {
               setSelected(i);
             }}
           >
-            <item.Icon className="[&>path]:stroke-neutral-80 [&>rect]:stroke-neutral-80 w-5 h-5" />
+            <item.Icon className="[&>path]:stroke-neutral-500 [&>rect]:stroke-neutral-500 w-5 h-5" />
             <div className="text-sm font-bold text-text-primary">
               {item.label}
             </div>

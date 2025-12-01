@@ -5,6 +5,9 @@ use did_config::DidConfig;
 pub use portone_config::*;
 pub use x402_config::*;
 
+mod biyard_config;
+use biyard_config::BiyardConfig;
+
 use bdk::prelude::*;
 use by_types::config::*;
 
@@ -45,6 +48,8 @@ pub struct Config {
     pub portone: PortoneConfig,
     pub x402: X402Config,
     pub account_id: &'static str,
+
+    pub biyard: BiyardConfig,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -123,6 +128,7 @@ impl Default for Config {
             portone: PortoneConfig::default(),
             x402: X402Config::default(),
             account_id: option_env!("ACCOUNT_ID").unwrap_or(""),
+            biyard: BiyardConfig::default(),
         }
     }
 }
