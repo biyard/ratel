@@ -227,33 +227,27 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: Obx(() {
-                final ctrl = Get.find<DetailPostController>();
-                final feed = ctrl.feed.value;
-                final comments = feed?.comments ?? widget.comments;
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  itemCount: comments.length,
-                  itemBuilder: (context, index) {
-                    final c = comments[index];
-                    return Column(
-                      children: [
-                        CommentItem(
-                          comment: c,
-                          onReply: _setReplyTarget,
-                          repliesOf: widget.repliesOf,
-                          isRepliesLoadingOf: widget.isRepliesLoadingOf,
-                          isLikingCommentOf: widget.isLikingCommentOf,
-                          isCommentLiked: widget.isCommentLiked,
-                          onToggleLikeComment: widget.onToggleLikeComment,
-                        ),
-                        30.vgap,
-                      ],
-                    );
-                  },
-                );
-              }),
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: widget.comments.length,
+                itemBuilder: (context, index) {
+                  final c = widget.comments[index];
+                  return Column(
+                    children: [
+                      CommentItem(
+                        comment: c,
+                        onReply: _setReplyTarget,
+                        repliesOf: widget.repliesOf,
+                        isRepliesLoadingOf: widget.isRepliesLoadingOf,
+                        isLikingCommentOf: widget.isLikingCommentOf,
+                        isCommentLiked: widget.isCommentLiked,
+                        onToggleLikeComment: widget.onToggleLikeComment,
+                      ),
+                      30.vgap,
+                    ],
+                  );
+                },
+              ),
             ),
             const SizedBox(height: 10),
             if (_replyTarget != null) ...[

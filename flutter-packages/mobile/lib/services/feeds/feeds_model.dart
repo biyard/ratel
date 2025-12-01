@@ -366,7 +366,7 @@ class PostCommentModel {
 
   final String content;
 
-  final int likes;
+  int likes;
   final int replies;
 
   final String? parentCommentSk;
@@ -378,7 +378,7 @@ class PostCommentModel {
 
   final bool liked;
 
-  const PostCommentModel({
+  PostCommentModel({
     required this.pk,
     required this.sk,
     required this.updatedAt,

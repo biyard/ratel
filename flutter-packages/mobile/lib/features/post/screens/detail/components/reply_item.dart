@@ -43,8 +43,8 @@ class ReplyItem extends StatelessWidget {
     final content = _plainContent(comment.content);
     final timeText = _relativeTime(comment.updatedAt);
 
-    final isLiking = isLikingCommentOf(comment.sk);
-    final liked = isCommentLiked(comment.sk, fallback: comment.liked == true);
+    // final isLiking = isLikingCommentOf(comment.sk);
+    // final liked = isCommentLiked(comment.sk, fallback: comment.liked == true);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,43 +101,43 @@ class ReplyItem extends StatelessWidget {
           ),
         ),
         8.vgap,
-        Row(
-          children: [
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: isLiking ? null : () => onToggleLikeComment(comment.sk),
-              child: Row(
-                children: [
-                  if (isLiking)
-                    const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  else
-                    SvgPicture.asset(
-                      Assets.thumbs,
-                      width: 18,
-                      height: 18,
-                      colorFilter: ColorFilter.mode(
-                        liked ? AppColors.primary : const Color(0xFF737373),
-                        BlendMode.srcIn,
-                      ),
-                    ),
-                  4.gap,
-                  Text(
-                    comment.likes.toString(),
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: 13,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        8.vgap,
+        // Row(
+        //   children: [
+        //     GestureDetector(
+        //       behavior: HitTestBehavior.opaque,
+        //       onTap: isLiking ? null : () => onToggleLikeComment(comment.sk),
+        //       child: Row(
+        //         children: [
+        //           if (isLiking)
+        //             const SizedBox(
+        //               width: 14,
+        //               height: 14,
+        //               child: CircularProgressIndicator(strokeWidth: 2),
+        //             )
+        //           else
+        //             SvgPicture.asset(
+        //               Assets.thumbs,
+        //               width: 18,
+        //               height: 18,
+        //               colorFilter: ColorFilter.mode(
+        //                 liked ? AppColors.primary : const Color(0xFF737373),
+        //                 BlendMode.srcIn,
+        //               ),
+        //             ),
+        //           4.gap,
+        //           Text(
+        //             comment.likes.toString(),
+        //             style: textTheme.bodySmall?.copyWith(
+        //               fontSize: 13,
+        //               color: Colors.white,
+        //             ),
+        //           ),
+        //         ],
+        //       ),
+        //     ),
+        //   ],
+        // ),
+        // 8.vgap,
       ],
     );
   }
