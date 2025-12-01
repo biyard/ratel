@@ -1,5 +1,4 @@
 import 'package:ratel/exports.dart';
-import 'package:ratel/middlewares/space_middleware.dart';
 
 class AppRoutes {
   static const String mainScreen = '/dashboard';
@@ -38,32 +37,6 @@ class AppRoutes {
       curve: Curves.easeOutCubic,
     ),
     GetPage(
-      name: '/space/:id',
-      page: () => Container(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      middlewares: [SpaceMiddleware()],
-      opaque: true,
-      curve: Curves.easeOutCubic,
-      children: [
-        GetPage(
-          name: "/deliberation",
-          page: () => DeliberationSpaceScreen(),
-          binding: DeliberationSpaceBinding(),
-        ),
-        GetPage(
-          name: "/notice",
-          page: () => NoticeSpaceScreen(),
-          binding: NoticeSpaceBinding(),
-        ),
-        GetPage(
-          name: "/not-found",
-          page: () => NotFoundSpaceScreen(),
-          binding: NotFoundSpaceBinding(),
-        ),
-      ],
-    ),
-    GetPage(
       name: '/draft/:id',
       page: () => DraftByIdScreen(),
       binding: DraftByIdBinding(),
@@ -94,15 +67,6 @@ class AppRoutes {
       name: verifiedScreen,
       page: () => const VerifiedScreen(),
       binding: VerifiedBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: mySpaces,
-      page: () => const SpacesScreen(),
-      binding: SpacesBinding(),
       customTransition: SlideOverTransition(),
       transitionDuration: const Duration(milliseconds: 300),
       opaque: true,
