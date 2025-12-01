@@ -22,6 +22,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import SpaceMobileHeader from '@/features/spaces/components/space-mobile-header';
 import { SpaceStatus } from '@/features/spaces/types/space-common';
+import RewardMenu from '@/features/spaces/rewards/components/reward-menu';
 
 export const Context = createContext<SpaceHomeController | undefined>(
   undefined,
@@ -117,7 +118,17 @@ function GeneralLayout() {
           )}
 
           <SpaceSideMenu menus={ctrl.menus} />
-
+          {ctrl.space.booster && (
+            <RewardMenu
+              boosting={ctrl.space.booster}
+              estimatedDate={0}
+              rewardItems={[
+                { label: 'Sample Reward 1', point: 5000 },
+                { label: 'Sample Reward 2', point: 3000 },
+                { label: 'Sample Reward 3', point: 2000 },
+              ]}
+            />
+          )}
           <TimelineMenu
             isEditing={false}
             handleSetting={() => {}}
