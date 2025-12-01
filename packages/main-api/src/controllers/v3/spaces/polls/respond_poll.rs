@@ -1,6 +1,7 @@
 use crate::features::did::VerifiedAttributes;
 use crate::features::spaces::panels::SpacePanelParticipant;
 
+use crate::features::spaces::rewards::{RewardType, SpaceReward, UserReward};
 use crate::features::spaces::{SpaceParticipant, polls::*};
 use crate::models::user::User;
 use crate::types::{
@@ -30,7 +31,7 @@ pub struct RespondPollSpaceResponse {
 }
 
 pub async fn respond_poll_handler(
-    State(AppState { dynamo, .. }): State<AppState>,
+    State(AppState { dynamo, biyard, .. }): State<AppState>,
     NoApi(user): aide::NoApi<User>,
     NoApi(permissions): NoApi<Permissions>,
     Path(PollPathParam { space_pk, poll_sk }): PollPath,
@@ -79,7 +80,19 @@ pub async fn respond_poll_handler(
         respondent = attribute;
     }
 
+    // Response Poll Reward
+    let reward = SpaceReward::get_reward(
+        &dynamo.client,
+        &space_pk,
+        &RewardType::RespondPoll(poll_sk.to_string()),
+    )
+    .await?;
+    //FIXME: Too many awaits in single handler, need to optimize
+
+    // Create or Update User Response
+
     if user_response.is_none() {
+        let user_pk = user.pk.clone();
         let create_tx = PollUserAnswer::new(
             poll.pk.clone(),
             poll_pk.clone(),
@@ -94,6 +107,9 @@ pub async fn respond_poll_handler(
             .transact_write_item();
 
         transact_write!(&dynamo.client, create_tx, space_increment_tx)?;
+        if let Some(reward) = reward {
+            UserReward::award(&dynamo.client, &biyard, user_pk, reward).await?;
+        }
     } else {
         let (pk, sk) = PollUserAnswer::keys(&user.pk.clone(), &poll_pk.clone(), &poll.pk.clone());
         let created_at = get_now_timestamp_millis();
