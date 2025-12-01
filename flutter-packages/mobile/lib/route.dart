@@ -20,13 +20,30 @@ class AppRoutes {
 
   static const String notification = "/dashboard/notification";
   static const String error = '/error';
-  static spaceWithId(int id) => '/space/$id';
+  static spaceWithPk(String spacePk) => '/space/$spacePk';
   static deliberationSpaceWithId(int id) => '/space/$id/deliberation';
   static noticeSpaceWithId(int id) => '/space/$id/notice';
   static notFoundSpaceWithId(int id) => '/space/$id/not-found';
   static draftWithId(int id) => '/draft/$id';
 
   static List<GetPage> pages = [
+    GetPage(
+      name: '/space/:spacePk',
+      page: () => const SpaceScreen(),
+      binding: SpaceBinding(),
+      children: [
+        GetPage(
+          name: '/overview',
+          page: () => const OverviewScreen(),
+          binding: OverviewBinding(),
+        ),
+        GetPage(
+          name: '/file',
+          page: () => const FileScreen(),
+          binding: FileBinding(),
+        ),
+      ],
+    ),
     GetPage(
       name: mainScreen,
       page: () => MainScreen(),
