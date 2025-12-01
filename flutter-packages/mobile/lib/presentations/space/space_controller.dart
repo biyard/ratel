@@ -1,20 +1,26 @@
 import 'package:ratel/exports.dart';
 
 class SpaceController extends BaseController {
-  final spaceApi = Get.find<SpaceApi>();
-  final space = Rxn<SpaceModel>();
+  final SpaceService _spaceService = Get.find<SpaceService>();
 
   late final String spacePk;
 
   final tabs = <SpaceTab>[].obs;
   final currentTab = Rx<SpaceTab>(SpaceTab.summary());
 
+  Rxn<SpaceModel> get spaceRx => _spaceService.spaceOf(spacePk);
+
+  SpaceModel? get space => spaceRx.value;
+
+  RxBool get isLoading => _spaceService.isLoadingOf(spacePk);
+
   @override
   void onInit() {
     super.onInit();
 
-    spacePk = Get.parameters['spacePk']!;
-    _loadSpace();
+    final rawPk = Get.parameters['spacePk']!;
+    spacePk = Uri.decodeComponent(rawPk);
+    _spaceService.loadSpace(spacePk);
 
     tabs.assignAll(_buildTabsForSpace());
   }
@@ -22,27 +28,8 @@ class SpaceController extends BaseController {
   void onTabSelected(SpaceTab tab) {
     currentTab.value = tab;
 
-    final base = '/space/$spacePk';
+    final base = '/space/${Uri.encodeComponent(spacePk)}';
     Get.rootDelegate.toNamed('$base${tab.route}');
-  }
-
-  Future<void> _loadSpace() async {
-    try {
-      final result = await spaceApi.getSpace(spacePk);
-
-      if (result == null) {
-        logger.e('Failed to load space: null response for $spacePk');
-        return;
-      }
-
-      logger.d(
-        "Loaded space: ${result.pk}, ${result.authorUsername}, ${result.isAdmin}",
-      );
-
-      space.value = result;
-    } catch (e, s) {
-      logger.e('Failed to load space $spacePk: $e', stackTrace: s);
-    }
   }
 
   List<SpaceTab> _buildTabsForSpace() {

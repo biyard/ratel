@@ -1,4 +1,8 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/presentations/space/components/space_header_section.dart';
+import 'package:ratel/presentations/space/components/space_stats_section.dart';
+import 'package:ratel/presentations/space/components/space_title_and_author_section.dart';
+import 'package:ratel/presentations/space/components/space_top_bar.dart';
 
 class SpaceScreen extends GetWidget<SpaceController> {
   const SpaceScreen({super.key});
@@ -7,7 +11,93 @@ class SpaceScreen extends GetWidget<SpaceController> {
   Widget build(BuildContext context) {
     return Layout<SpaceController>(
       scrollable: false,
-      child: Text("Space Screen"),
+      child: Container(
+        color: const Color(0xFF1D1D1D),
+        child: Column(
+          children: [
+            const SpaceTopBar(),
+            16.vgap,
+            Expanded(
+              child: Obx(() {
+                final space = controller.space;
+
+                if (space == null) {
+                  return const Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SpaceMetaSection(space: space),
+                          20.vgap,
+                          Container(
+                            width: double.infinity,
+                            height: 0.3,
+                            color: const Color(0xFFD4D4D4),
+                          ),
+                        ],
+                      ),
+                    ),
+                    20.vgap,
+                    Expanded(
+                      child: Builder(
+                        builder: (_) {
+                          final pk = controller.spacePk;
+
+                          if (pk.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+
+                          logger.d(
+                            "Navigating to space with pk: ${Uri.encodeComponent(pk)}",
+                          );
+
+                          return GetRouterOutlet(
+                            anchorRoute: '/space/${Uri.encodeComponent(pk)}',
+                            initialRoute:
+                                '/space/${Uri.encodeComponent(pk)}/overview',
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SpaceMetaSection extends StatelessWidget {
+  const SpaceMetaSection({super.key, required this.space});
+
+  final SpaceModel space;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SpaceHeaderSection(space: space),
+        10.vgap,
+        SpaceTitleAndAuthorSection(space: space),
+        20.vgap,
+        SpaceStatsSection(space: space),
+      ],
     );
   }
 }
