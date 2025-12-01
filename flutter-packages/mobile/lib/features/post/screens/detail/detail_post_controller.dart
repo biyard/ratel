@@ -62,6 +62,7 @@ class DetailPostController extends BaseController {
   }
 
   Future<void> toggleLikeComment({required String commentSk}) async {
+    logger.d('Toggling like for comment: $commentSk');
     final current = feed.value;
     if (current == null) return;
 
@@ -84,11 +85,67 @@ class DetailPostController extends BaseController {
 
       likedOverrideOf[commentSk] = res.liked;
       likedOverrideOf.refresh();
+
+      _applyCommentLikeCountUpdate(
+        commentSk: commentSk,
+        previousLiked: currentLiked,
+        nextLiked: res.liked,
+      );
     } catch (e, s) {
       logger.e('Failed to like/unlike comment $commentSk: $e', stackTrace: s);
     } finally {
       likingCommentOf[commentSk] = false;
       likingCommentOf.refresh();
+    }
+  }
+
+  void _applyCommentLikeCountUpdate({
+    required String commentSk,
+    required bool previousLiked,
+    required bool nextLiked,
+  }) {
+    final current = feed.value;
+    if (current == null) return;
+
+    int delta = 0;
+    if (nextLiked && !previousLiked) {
+      delta = 1;
+    } else if (!nextLiked && previousLiked) {
+      delta = -1;
+    } else {
+      return;
+    }
+
+    var updated = false;
+
+    for (final c in current.comments) {
+      if (c.sk == commentSk) {
+        var newLikes = c.likes + delta;
+        if (newLikes < 0) newLikes = 0;
+        c.likes = newLikes;
+        updated = true;
+        break;
+      }
+    }
+
+    if (!updated) {
+      for (final entry in replies.entries) {
+        for (final c in entry.value) {
+          if (c.sk == commentSk) {
+            var newLikes = c.likes + delta;
+            if (newLikes < 0) newLikes = 0;
+            c.likes = newLikes;
+            updated = true;
+            break;
+          }
+        }
+        if (updated) break;
+      }
+    }
+
+    if (updated) {
+      feed.refresh();
+      replies.refresh();
     }
   }
 
