@@ -5,9 +5,12 @@ class FileScreen extends GetWidget<FileController> {
 
   @override
   Widget build(BuildContext context) {
+    final space = controller.space;
     return Layout<FileController>(
       scrollable: false,
-      child: Text("Space File Screen"),
+      child: space?.isAdmin ?? false
+          ? const FileCreatorScreen()
+          : const FileViewerScreen(),
     );
   }
 }

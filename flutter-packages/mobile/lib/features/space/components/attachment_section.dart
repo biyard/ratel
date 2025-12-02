@@ -16,10 +16,6 @@ class _AttachmentSectionState extends State<AttachmentSection> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.files.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
     return Container(
       decoration: BoxDecoration(
         color: const Color(0xFF1A1A1A),
@@ -45,7 +41,7 @@ class _AttachmentSectionState extends State<AttachmentSection> {
                   children: [
                     SvgPicture.asset(Assets.clip, width: 20, height: 20),
                     4.gap,
-                    Text(
+                    const Text(
                       'Attachments',
                       style: TextStyle(
                         fontFamily: 'Raleway',
@@ -64,15 +60,17 @@ class _AttachmentSectionState extends State<AttachmentSection> {
               ],
             ),
           ),
-          if (_expanded) ...[
-            10.vgap,
-            for (int i = 0; i < widget.files.length; i++) ...[
-              _AttachmentRow(file: widget.files[i]),
-              if (i != widget.files.length - 1) 10.vgap,
+          10.vgap,
+          if (_expanded)
+            if (widget.files.isNotEmpty) ...[
+              for (int i = 0; i < widget.files.length; i++) ...[
+                _AttachmentRow(file: widget.files[i]),
+                if (i != widget.files.length - 1) 10.vgap,
+              ],
+              10.vgap,
+            ] else ...[
+              10.vgap,
             ],
-            10.vgap,
-          ] else
-            10.vgap,
         ],
       ),
     );
@@ -145,17 +143,15 @@ class _DownloadButton extends StatelessWidget {
           color: const Color(0xFFFCB300),
           borderRadius: BorderRadius.circular(50),
         ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
-          child: const Text(
-            'Download',
-            style: TextStyle(
-              fontFamily: 'Raleway',
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-              height: 20 / 13,
-              color: Color(0xFF1D1D1D),
-            ),
+        padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
+        child: const Text(
+          'Download',
+          style: TextStyle(
+            fontFamily: 'Raleway',
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+            height: 20 / 13,
+            color: Color(0xFF1D1D1D),
           ),
         ),
       ),
