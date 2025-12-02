@@ -8,6 +8,7 @@ class PollCreatorController extends BaseController {
 
   final poll = Rxn<PollModel>();
   final isLoading = false.obs;
+  final isSubmitting = false.obs;
 
   @override
   void onInit() {
@@ -47,6 +48,32 @@ class PollCreatorController extends BaseController {
       logger.e('Failed to load poll for spacePk=$spacePk pollSk=$pollSk: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> respondAnswers(List<Answer> answers) async {
+    if (pollSk == null || pollSk!.isEmpty) {
+      logger.w(
+        'PollCreatorController.respondAnswers: pollSk is null or empty, skip submit',
+      );
+      return;
+    }
+
+    try {
+      isSubmitting.value = true;
+
+      final res = await _pollsApi.respondPoll(spacePk, pollSk!, answers);
+
+      logger.d('Responded poll in creator: poll_space_pk=${res.pollSpacePk}');
+
+      await _loadPoll();
+    } catch (e) {
+      logger.e(
+        'Failed to respond poll in creator, spacePk=$spacePk pollSk=$pollSk: $e',
+      );
+      rethrow;
+    } finally {
+      isSubmitting.value = false;
     }
   }
 }
