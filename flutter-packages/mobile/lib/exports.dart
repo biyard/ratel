@@ -16,6 +16,13 @@ export 'features/space/overview/viewer/overview_viewer_binding.dart';
 export 'features/space/overview/viewer/overview_viewer_controller.dart';
 export 'features/space/overview/viewer/overview_viewer_screen.dart';
 
+export 'features/space/file/creator/file_creator_binding.dart';
+export 'features/space/file/creator/file_creator_controller.dart';
+export 'features/space/file/creator/file_creator_screen.dart';
+export 'features/space/file/viewer/file_viewer_binding.dart';
+export 'features/space/file/viewer/file_viewer_controller.dart';
+export 'features/space/file/viewer/file_viewer_screen.dart';
+
 export 'components/app_card/app_card.dart';
 export 'components/biyard/biyard_static.dart';
 export 'components/custom_checkbox/custom_checkbox.dart';
@@ -163,6 +170,8 @@ export 'services/signup/signup_service.dart';
 export 'services/space/space_api.dart';
 export 'services/space/space_model.dart';
 export 'services/space/space_service.dart';
+export 'services/space/files/space_files_api.dart';
+export 'services/space/files/space_files_service.dart';
 export 'services/user/user_api.dart';
 export 'services/user/user_model.dart';
 export 'services/user/user_service.dart';
