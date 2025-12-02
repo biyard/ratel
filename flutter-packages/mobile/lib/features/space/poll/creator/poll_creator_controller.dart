@@ -66,10 +66,15 @@ class PollCreatorController extends BaseController {
 
       logger.d('Responded poll in creator: poll_space_pk=${res.pollSpacePk}');
 
+      Biyard.info("successfully submitted your responses.");
       await _loadPoll();
     } catch (e) {
       logger.e(
         'Failed to respond poll in creator, spacePk=$spacePk pollSk=$pollSk: $e',
+      );
+      Biyard.error(
+        "Failed to Submit Respond",
+        "Failed to submit your responses. Please try again.",
       );
       rethrow;
     } finally {
