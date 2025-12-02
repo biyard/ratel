@@ -68,8 +68,12 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
   void _goNext() {
     if (!_currentValid) return;
     if (_isLast) {
-      final all = _answers.whereType<Answer>().toList();
-      if (all.length != widget.poll.questions.length) return;
+      final all = <Answer>[];
+      for (var i = 0; i < widget.poll.questions.length; i++) {
+        final q = widget.poll.questions[i];
+        final a = _answers[i];
+        all.add(a ?? _buildEmptyAnswer(q));
+      }
       widget.onSubmit(all);
     } else {
       setState(() {
@@ -140,8 +144,48 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
   }
 }
 
+bool _isQuestionRequired(QuestionModel q) {
+  switch (q.type) {
+    case AnswerType.singleChoice:
+    case AnswerType.multipleChoice:
+      return (q as ChoiceQuestionModel).isRequired;
+    case AnswerType.shortAnswer:
+    case AnswerType.subjective:
+      return (q as SubjectiveQuestionModel).isRequired;
+    case AnswerType.checkbox:
+      return (q as CheckboxQuestionModel).isRequired;
+    case AnswerType.dropdown:
+      return (q as DropdownQuestionModel).isRequired;
+    case AnswerType.linearScale:
+      return (q as LinearScaleQuestionModel).isRequired;
+  }
+}
+
+Answer _buildEmptyAnswer(QuestionModel q) {
+  switch (q.type) {
+    case AnswerType.singleChoice:
+      return SingleChoiceAnswer(null, null);
+    case AnswerType.multipleChoice:
+      return MultipleChoiceAnswer(const [], null);
+    case AnswerType.shortAnswer:
+      return ShortAnswer(null);
+    case AnswerType.subjective:
+      return SubjectiveAnswer(null);
+    case AnswerType.checkbox:
+      return CheckboxAnswer(const []);
+    case AnswerType.dropdown:
+      return DropdownAnswer(null);
+    case AnswerType.linearScale:
+      return LinearScaleAnswer(null);
+  }
+}
+
 bool _validateAnswer(QuestionModel q, Answer? a) {
-  if (a == null) return false;
+  final required = _isQuestionRequired(q);
+
+  if (a == null) {
+    return !required;
+  }
 
   switch (q.type) {
     case AnswerType.singleChoice:

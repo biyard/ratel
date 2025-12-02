@@ -85,6 +85,7 @@ class SingleChoiceQuestionView extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   alignment: Alignment.centerLeft,
                   child: TextFormField(
+                    key: ValueKey(question),
                     initialValue: otherText ?? '',
                     onTap: () {
                       if (!isOtherSelected && othersIndex != null) {
