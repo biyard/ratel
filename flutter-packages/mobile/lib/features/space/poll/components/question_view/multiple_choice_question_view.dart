@@ -46,7 +46,6 @@ class MultipleChoiceQuestionView extends StatelessWidget {
             10.vgap,
           ],
         ],
-
         if (_allowOther && othersIndex != null) ...[
           Row(
             children: [
@@ -103,6 +102,7 @@ class MultipleChoiceQuestionView extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   alignment: Alignment.centerLeft,
                   child: TextFormField(
+                    key: ValueKey('${question.title}_multiple_other'),
                     initialValue: otherText ?? '',
                     onTap: () {
                       if (!isOtherSelected) {
