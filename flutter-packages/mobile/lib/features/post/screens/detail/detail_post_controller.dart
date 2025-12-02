@@ -154,6 +154,13 @@ class DetailPostController extends BaseController {
       isLoading.value = true;
 
       final result = await feedsApi.getFeedV2(postPk);
+
+      final spacePk = result.post.spacePk;
+      if (spacePk != null && spacePk.isNotEmpty) {
+        Get.rootDelegate.offNamed(spaceWithPk(spacePk));
+        return;
+      }
+
       feed.value = result;
       logger.d("feed results: $result");
 
@@ -165,11 +172,11 @@ class DetailPostController extends BaseController {
     }
   }
 
-  Future<void> addComment(String text) async {
+  Future<PostCommentModel?> addComment(String text) async {
     final current = feed.value;
-    if (current == null) return;
-    if (text.trim().isEmpty) return;
-    if (isSendingRootComment.value) return;
+    if (current == null) return null;
+    if (text.trim().isEmpty) return null;
+    if (isSendingRootComment.value) return null;
 
     isSendingRootComment.value = true;
 
@@ -180,7 +187,9 @@ class DetailPostController extends BaseController {
         postPk: current.post.pk,
         content: html,
       );
-      if (created == null) return;
+      if (created == null) return null;
+
+      current.post.comments = current.post.comments + 1;
 
       feed.value = FeedV2Model(
         post: current.post,
@@ -190,8 +199,11 @@ class DetailPostController extends BaseController {
         isLiked: current.isLiked,
         permissions: current.permissions,
       );
+
+      return created;
     } catch (e, s) {
       logger.e('Failed to add comment: $e', stackTrace: s);
+      return null;
     } finally {
       isSendingRootComment.value = false;
     }
@@ -222,6 +234,24 @@ class DetailPostController extends BaseController {
       final currentReplies = replies[parentCommentSk] ?? const [];
       replies[parentCommentSk] = [created, ...currentReplies];
       replies.refresh();
+
+      for (final c in current.comments) {
+        if (c.sk == parentCommentSk) {
+          c.replies = c.replies + 1;
+          break;
+        }
+      }
+
+      current.post.comments = current.post.comments + 1;
+
+      feed.value = FeedV2Model(
+        post: current.post,
+        comments: current.comments,
+        artworkMetadata: current.artworkMetadata,
+        repost: current.repost,
+        isLiked: current.isLiked,
+        permissions: current.permissions,
+      );
     } catch (e, s) {
       logger.e('Failed to add reply for $parentCommentSk: $e', stackTrace: s);
     } finally {

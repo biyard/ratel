@@ -49,6 +49,8 @@ dependencies:
       ref: main
   flutter_quill: any
   flutter_html: ^3.0.0
+  flutter_html_iframe: ^3.0.0
+  youtube_player_iframe: ^5.0.0
   sign_in_with_apple: ^7.0.1
   googleapis: ^11.4.0
   google_sign_in: ^6.1.5
