@@ -9,7 +9,7 @@ class AppRoutes {
   static const String setupAttributeScreen = '/setup-attribute';
   static const String boostingScreen = '/boosting';
   static const String draftScreen = '/draft';
-  static const String postScreen = '/post';
+
   static const String verifiedScreen = '/verified';
   static const String settingScreen = '/settings';
   static const String mySpaces = '/my-spaces';
@@ -82,15 +82,6 @@ class AppRoutes {
       curve: Curves.easeOutCubic,
     ),
     GetPage(
-      name: postScreen,
-      page: () => const PostScreen(),
-      binding: PostBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
       name: draftScreen,
       page: () => const DraftScreen(),
       binding: DraftBinding(),
@@ -118,6 +109,7 @@ class AppRoutes {
       curve: Curves.easeOutCubic,
     ),
     ...onboardingPages,
+    ...postPages,
     GetPage(
       name: settingScreen,
       page: () => const SettingsScreen(),

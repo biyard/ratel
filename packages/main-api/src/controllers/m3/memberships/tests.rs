@@ -8,6 +8,20 @@ use crate::{
     types::*,
 };
 
+/// Helper function to delete a membership if it exists
+async fn delete_membership_if_exists(cli: &aws_sdk_dynamodb::Client, tier: MembershipTier) {
+    let pk = Partition::Membership(tier.to_string());
+    if Membership::get(cli, pk.clone(), Some(EntityType::Membership))
+        .await
+        .unwrap()
+        .is_some()
+    {
+        Membership::delete(cli, pk, Some(EntityType::Membership))
+            .await
+            .unwrap();
+    }
+}
+
 #[tokio::test]
 async fn test_list_memberships() {
     let TestContextV3 {
@@ -18,6 +32,9 @@ async fn test_list_memberships() {
     } = TestContextV3::setup().await;
 
     // Create some memberships
+    delete_membership_if_exists(&ddb, MembershipTier::Pro).await;
+    delete_membership_if_exists(&ddb, MembershipTier::Max).await;
+
     let membership1 = Membership::new(MembershipTier::Pro, 10, 100, 30, 1, -1);
     let membership2 = Membership::new(MembershipTier::Max, 20, 200, 365, 2, 1000);
 
@@ -44,6 +61,8 @@ async fn test_list_memberships_as_non_admin() {
         ..
     } = TestContextV3::setup().await;
 
+    delete_membership_if_exists(&ddb, MembershipTier::Pro).await;
+
     let membership = Membership::new(MembershipTier::Pro, 10, 100, 30, 1, -1);
     membership.create(&ddb).await.unwrap();
 
@@ -65,6 +84,8 @@ async fn test_get_membership() {
         admin_user,
         ..
     } = TestContextV3::setup().await;
+
+    delete_membership_if_exists(&ddb, MembershipTier::Pro).await;
 
     let membership = Membership::new(MembershipTier::Pro, 10, 100, 30, 1, -1);
     let membership_id = membership.get_id().unwrap();
@@ -93,6 +114,8 @@ async fn test_get_membership_as_non_admin() {
         ddb,
         ..
     } = TestContextV3::setup().await;
+
+    delete_membership_if_exists(&ddb, MembershipTier::Pro).await;
 
     let membership = Membership::new(MembershipTier::Pro, 10, 100, 30, 1, -1);
     let membership_id = membership.get_id().unwrap();
@@ -127,8 +150,11 @@ async fn test_get_nonexistent_membership() {
 #[tokio::test]
 async fn test_create_membership_as_admin() {
     let TestContextV3 {
-        app, admin_user, ..
+        app, admin_user, ddb, ..
     } = TestContextV3::setup().await;
+
+    // Delete existing Pro membership if it exists
+    delete_membership_if_exists(&ddb, MembershipTier::Pro).await;
 
     let (status, _headers, body) = post! {
         app: app,
@@ -206,6 +232,8 @@ async fn test_update_membership_as_admin() {
         ..
     } = TestContextV3::setup().await;
 
+    delete_membership_if_exists(&ddb, MembershipTier::Pro).await;
+
     let membership = Membership::new(MembershipTier::Pro, 10, 100, 30, 1, -1);
     let membership_id = membership.get_id().unwrap();
 
@@ -216,8 +244,12 @@ async fn test_update_membership_as_admin() {
         path: format!("/m3/memberships/{}", membership_id),
         headers: admin_user.1,
         body: {
+            "tier": "Pro",
             "price_dollars": 25,
             "credits": 250,
+            "duration_days": 30,
+            "display_order": 1,
+            "is_active": true,
             "max_credits_per_space": 1000
         },
         response_type: MembershipResponse
@@ -237,6 +269,8 @@ async fn test_update_membership_as_non_admin() {
         ddb,
         ..
     } = TestContextV3::setup().await;
+
+    delete_membership_if_exists(&ddb, MembershipTier::Pro).await;
 
     let membership = Membership::new(MembershipTier::Pro, 10, 100, 30, 1, -1);
     let membership_id = membership.get_id().unwrap();
@@ -265,6 +299,8 @@ async fn test_delete_membership_as_admin() {
         ..
     } = TestContextV3::setup().await;
 
+    delete_membership_if_exists(&ddb, MembershipTier::Pro).await;
+
     let membership = Membership::new(MembershipTier::Pro, 10, 100, 30, 1, -1);
     let membership_id = membership.get_id().unwrap();
 
@@ -283,7 +319,7 @@ async fn test_delete_membership_as_admin() {
     // Verify deletion
     let result = Membership::get(
         &ddb,
-        Partition::Membership(membership_id),
+        Partition::Membership(membership_id.to_string()),
         Some(EntityType::Membership),
     )
     .await
@@ -299,6 +335,8 @@ async fn test_delete_membership_as_non_admin() {
         ddb,
         ..
     } = TestContextV3::setup().await;
+
+    delete_membership_if_exists(&ddb, MembershipTier::Pro).await;
 
     let membership = Membership::new(MembershipTier::Pro, 10, 100, 30, 1, -1);
     let membership_id = membership.get_id().unwrap();
@@ -318,8 +356,11 @@ async fn test_delete_membership_as_non_admin() {
 #[tokio::test]
 async fn test_create_membership_with_infinite_duration() {
     let TestContextV3 {
-        app, admin_user, ..
+        app, admin_user, ddb, ..
     } = TestContextV3::setup().await;
+
+    // Delete existing Pro membership if it exists
+    delete_membership_if_exists(&ddb, MembershipTier::Pro).await;
 
     let (status, _headers, body) = post! {
         app: app,
@@ -346,8 +387,11 @@ async fn test_create_membership_with_infinite_duration() {
 #[tokio::test]
 async fn test_create_membership_with_limited_credits_per_space() {
     let TestContextV3 {
-        app, admin_user, ..
+        app, admin_user, ddb, ..
     } = TestContextV3::setup().await;
+
+    // Delete existing Max membership if it exists
+    delete_membership_if_exists(&ddb, MembershipTier::Max).await;
 
     let (status, _headers, body) = post! {
         app: app,
@@ -380,6 +424,8 @@ async fn test_update_membership_to_infinite_duration() {
         ..
     } = TestContextV3::setup().await;
 
+    delete_membership_if_exists(&ddb, MembershipTier::Pro).await;
+
     let membership = Membership::new(MembershipTier::Pro, 10, 100, 30, 1, -1);
     let membership_id = membership.get_id().unwrap();
 
@@ -390,7 +436,12 @@ async fn test_update_membership_to_infinite_duration() {
         path: format!("/m3/memberships/{}", membership_id),
         headers: admin_user.1,
         body: {
+            "tier": "Pro",
+            "price_dollars": 10,
+            "credits": 100,
             "duration_days": -1,
+            "display_order": 1,
+            "is_active": true,
             "max_credits_per_space": 1000
         },
         response_type: MembershipResponse
@@ -405,12 +456,14 @@ async fn test_update_membership_to_infinite_duration() {
 async fn test_user_membership_infinite_duration_logic() {
     let TestContextV3 { ddb, test_user, .. } = TestContextV3::setup().await;
 
+    delete_membership_if_exists(&ddb, MembershipTier::Pro).await;
+
     let membership = Membership::new(MembershipTier::Pro, 10, 100, -1, 1, -1);
     membership.create(&ddb).await.unwrap();
 
     let user_membership = UserMembership::new(
-        test_user.0.pk.clone(),
-        membership.pk.clone(),
+        test_user.0.pk.clone().into(),
+        membership.pk.clone().into(),
         -1, // infinite duration
         100,
     )

@@ -1,5 +1,6 @@
 use crate::features::spaces::boards::models::space_post::SpacePost;
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
+use crate::models::SpaceCommon;
 use crate::spaces::SpacePostCommentPath;
 use crate::spaces::SpacePostCommentPathParam;
 use crate::*;
@@ -23,6 +24,7 @@ pub async fn update_space_comment_handler(
         space_post_pk,
         space_post_comment_sk,
     }): SpacePostCommentPath,
+    Extension(space): Extension<SpaceCommon>,
     Json(UpdateSpaceCommentRequest { content }): Json<UpdateSpaceCommentRequest>,
 ) -> Result<Json<UpdateSpaceCommentResponse>> {
     if !matches!(space_pk, Partition::Space(_)) {
@@ -31,6 +33,10 @@ pub async fn update_space_comment_handler(
 
     if !permissions.contains(TeamGroupPermission::SpaceRead) {
         return Err(Error::NoPermission);
+    }
+
+    if space.status == Some(SpaceStatus::Finished) {
+        return Err(Error::FinishedSpace);
     }
 
     let comment = SpacePostComment::get(

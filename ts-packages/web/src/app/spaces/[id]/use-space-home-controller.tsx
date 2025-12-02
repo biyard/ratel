@@ -38,7 +38,10 @@ import {
 } from '@/features/spaces/types/space-common';
 import useFileSpace from '@/features/spaces/files/hooks/use-file-space';
 import SpaceAuthorizePopup from './space-authorize-popup';
-import SpaceEndPopup from './space-end-popup';
+import SpaceEndModal from '@/features/spaces/modals/space-end-modal';
+import { useFinishSpaceMutation } from '@/features/spaces/hooks/use-finish-mutation';
+import { config } from '@/config';
+import { Trophy } from '@/assets/icons/game';
 
 export class SpaceHomeController {
   public space: Space;
@@ -59,6 +62,7 @@ export class SpaceHomeController {
     public popup: ReturnType<typeof usePopup>,
     public publishSpace: ReturnType<typeof usePublishSpaceMutation>,
     public startSpace: ReturnType<typeof useStartSpaceMutation>,
+    public finishSpace: ReturnType<typeof useFinishSpaceMutation>,
     public deleteSpace: ReturnType<typeof useDeleteSpaceMutation>,
     public image: State<string | null>,
     public hasFiles: boolean,
@@ -131,13 +135,21 @@ export class SpaceHomeController {
   }
 
   get adminMenus(): SideMenuProps[] {
-    return [
+    const menus = [
       {
         Icon: Settings,
         to: route.spaceSetting(this.space.pk),
         label: this.t('menu_admin_settings'),
       },
     ];
+    if (config.experiment) {
+      menus.push({
+        Icon: Trophy,
+        to: route.spaceRewardSetting(this.space.pk),
+        label: this.t('menu_rewards_settings'),
+      });
+    }
+    return menus;
   }
 
   handleRemovePdf = (index: number) => {
@@ -327,6 +339,24 @@ export class SpaceHomeController {
     this.popup.close();
   };
 
+  handleFinish = async () => {
+    try {
+      this.finishSpace.mutateAsync({
+        spacePk: this.space.pk,
+        block: true,
+      });
+
+      showSuccessToast(this.t('success_finish_space'));
+    } catch (err) {
+      logger.error('finish space failed: ', err);
+      showErrorToast(this.t('failed_finish_space'));
+    } finally {
+      this.popup.close();
+    }
+
+    this.popup.close();
+  };
+
   handleDelete = async () => {
     if (this.publishHook) {
       this.publishHook();
@@ -402,6 +432,22 @@ export class SpaceHomeController {
         />,
       )
       .withTitle(this.t('start_space'))
+      .withoutBackdropClose();
+  };
+
+  handleActionFinish = async () => {
+    logger.debug('Action end triggered');
+
+    this.popup
+      .open(
+        <SpaceEndModal
+          onEnded={this.handleFinish}
+          onClose={() => {
+            this.popup.close();
+          }}
+        />,
+      )
+      .withTitle(this.t('end_space'))
       .withoutBackdropClose();
   };
 
@@ -553,6 +599,13 @@ export class SpaceHomeController {
       });
     }
 
+    if (this.space.isStarted) {
+      ret.unshift({
+        label: this.t('finished'),
+        onClick: this.handleActionFinish,
+      });
+    }
+
     // if (this.space.isStarted) {
     //   ret.unshift({
     //     label: this.t('finished'),
@@ -588,6 +641,7 @@ export function useSpaceHomeController(spacePk: string) {
   const updateSpaceFiles = useSpaceUpdateFilesMutation();
   const publishSpace = usePublishSpaceMutation();
   const startSpace = useStartSpaceMutation();
+  const finishSpace = useFinishSpaceMutation();
   const deleteSpace = useDeleteSpaceMutation();
   const { mutateAsync: updateDraftImage } = useUpdateDraftImageMutation();
   const participateSpace = useParticipateSpaceMutation();
@@ -613,15 +667,6 @@ export function useSpaceHomeController(spacePk: string) {
       image[1](data.space.data.urls[0]);
     }
   }, [data.space.data, image]);
-
-  useEffect(() => {
-    if (
-      data.space.data.status !== SpaceStatus.InProgress &&
-      !data.space.data.isAdmin()
-    ) {
-      popup.open(<SpaceEndPopup />).withTitle(t('end_space_title'));
-    }
-  }, [data.space.data]);
 
   useEffect(() => {
     const remote = data.space.data?.files ?? [];
@@ -693,6 +738,7 @@ export function useSpaceHomeController(spacePk: string) {
     popup,
     publishSpace,
     startSpace,
+    finishSpace,
     deleteSpace,
     new State(image),
     hasFiles,

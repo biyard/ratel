@@ -176,59 +176,59 @@ class SidePanel extends StatelessWidget {
                       label: MainLocalization.posts,
                       onTap: () {
                         onClose();
-                        Get.rootDelegate.offAndToNamed(AppRoutes.postScreen);
+                        Get.rootDelegate.offAndToNamed(postScreen);
                       },
                     ),
-                    MenuItem(
-                      icon: SvgPicture.asset(
-                        Assets.bookmark,
-                        width: 20,
-                        height: 20,
-                        colorFilter: ColorFilter.mode(
-                          AppColors.neutral500,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      label: MainLocalization.bookmarks,
-                      onTap: () {
-                        onClose();
-                        Get.rootDelegate.offAndToNamed(AppRoutes.bookmark);
-                      },
-                    ),
-                    MenuItem(
-                      icon: SvgPicture.asset(
-                        Assets.verification,
-                        width: 20,
-                        height: 20,
-                        colorFilter: ColorFilter.mode(
-                          AppColors.neutral500,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      label: MainLocalization.verifiedCredential,
-                      onTap: () {
-                        onClose();
-                        Get.rootDelegate.toNamed(AppRoutes.verifiedScreen);
-                      },
-                    ),
-                    MenuItem(
-                      icon: SvgPicture.asset(
-                        Assets.star,
-                        width: 20,
-                        height: 20,
-                        colorFilter: ColorFilter.mode(
-                          AppColors.neutral500,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      label: MainLocalization.myRewards,
-                      onTap: () {
-                        onClose();
-                        Get.rootDelegate.offAndToNamed(
-                          AppRoutes.boostingScreen,
-                        );
-                      },
-                    ),
+                    // MenuItem(
+                    //   icon: SvgPicture.asset(
+                    //     Assets.bookmark,
+                    //     width: 20,
+                    //     height: 20,
+                    //     colorFilter: ColorFilter.mode(
+                    //       AppColors.neutral500,
+                    //       BlendMode.srcIn,
+                    //     ),
+                    //   ),
+                    //   label: MainLocalization.bookmarks,
+                    //   onTap: () {
+                    //     onClose();
+                    //     Get.rootDelegate.offAndToNamed(AppRoutes.bookmark);
+                    //   },
+                    // ),
+                    // MenuItem(
+                    //   icon: SvgPicture.asset(
+                    //     Assets.verification,
+                    //     width: 20,
+                    //     height: 20,
+                    //     colorFilter: ColorFilter.mode(
+                    //       AppColors.neutral500,
+                    //       BlendMode.srcIn,
+                    //     ),
+                    //   ),
+                    //   label: MainLocalization.verifiedCredential,
+                    //   onTap: () {
+                    //     onClose();
+                    //     Get.rootDelegate.toNamed(AppRoutes.verifiedScreen);
+                    //   },
+                    // ),
+                    // MenuItem(
+                    //   icon: SvgPicture.asset(
+                    //     Assets.star,
+                    //     width: 20,
+                    //     height: 20,
+                    //     colorFilter: ColorFilter.mode(
+                    //       AppColors.neutral500,
+                    //       BlendMode.srcIn,
+                    //     ),
+                    //   ),
+                    //   label: MainLocalization.myRewards,
+                    //   onTap: () {
+                    //     onClose();
+                    //     Get.rootDelegate.offAndToNamed(
+                    //       AppRoutes.boostingScreen,
+                    //     );
+                    //   },
+                    // ),
                     MenuItem(
                       icon: SvgPicture.asset(
                         Assets.setting,
