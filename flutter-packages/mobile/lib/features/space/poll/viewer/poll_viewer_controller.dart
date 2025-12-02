@@ -8,6 +8,7 @@ class PollViewerController extends BaseController {
 
   final poll = Rxn<PollModel>();
   final isLoading = false.obs;
+  final isSubmitting = false.obs;
 
   @override
   void onInit() {
@@ -53,4 +54,30 @@ class PollViewerController extends BaseController {
   }
 
   Future<void> reload() => _loadPoll();
+
+  Future<void> respondAnswers(List<Answer> answers) async {
+    if (pollSk == null || pollSk!.isNotEmpty == false) {
+      logger.w(
+        'PollViewerController.respondAnswers: pollSk is null or empty, skip submit',
+      );
+      return;
+    }
+
+    try {
+      isSubmitting.value = true;
+
+      final res = await _pollsApi.respondPoll(spacePk, pollSk!, answers);
+
+      logger.d('Responded poll in viewer: poll_space_pk=${res.pollSpacePk}');
+
+      await _loadPoll();
+    } catch (e) {
+      logger.e(
+        'Failed to respond poll in viewer, spacePk=$spacePk pollSk=$pollSk: $e',
+      );
+      rethrow;
+    } finally {
+      isSubmitting.value = false;
+    }
+  }
 }

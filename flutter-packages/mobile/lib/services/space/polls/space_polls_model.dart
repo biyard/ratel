@@ -494,3 +494,14 @@ List<int>? _asIntListOrNull(dynamic v) {
   }
   return null;
 }
+
+class RespondPollResult {
+  final String pollSpacePk;
+
+  const RespondPollResult({required this.pollSpacePk});
+
+  factory RespondPollResult.fromJson(Map<String, dynamic> j) =>
+      RespondPollResult(pollSpacePk: j['poll_space_pk']?.toString() ?? '');
+
+  Map<String, dynamic> toJson() => {'poll_space_pk': pollSpacePk};
+}

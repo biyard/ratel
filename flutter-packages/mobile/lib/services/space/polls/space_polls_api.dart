@@ -49,4 +49,28 @@ class SpacePollsApi extends GetConnect {
 
     return PollModel.fromJson(resp.body!);
   }
+
+  Future<RespondPollResult> respondPoll(
+    String spacePk,
+    String pollSk,
+    List<Answer> answers,
+  ) async {
+    final encodedSpacePk = Uri.encodeComponent(spacePk);
+    final encodedPollSk = Uri.encodeComponent(pollSk);
+
+    final body = {'answers': answers.map((a) => a.toJson()).toList()};
+
+    final resp = await post<Map<String, dynamic>>(
+      '/v3/spaces/$encodedSpacePk/polls/$encodedPollSk/responses',
+      body,
+    );
+
+    if (!resp.isOk || resp.body == null) {
+      throw Exception(
+        'Failed to respond poll $pollSk in $spacePk: ${resp.statusCode} ${resp.statusText}',
+      );
+    }
+
+    return RespondPollResult.fromJson(resp.body!);
+  }
 }
