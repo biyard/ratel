@@ -33,14 +33,49 @@ class AppRoutes {
       binding: SpaceBinding(),
       children: [
         GetPage(
-          name: '/overview',
-          page: () => const OverviewScreen(),
-          binding: OverviewBinding(),
+          name: '/board',
+          page: () => const BoardScreen(),
+          binding: BoardBinding(),
         ),
         GetPage(
           name: '/file',
           page: () => const FileScreen(),
           binding: FileBinding(),
+        ),
+        GetPage(
+          name: '/member',
+          page: () => const MemberScreen(),
+          binding: MemberBinding(),
+        ),
+        GetPage(
+          name: '/overview',
+          page: () => const OverviewScreen(),
+          binding: OverviewBinding(),
+        ),
+        GetPage(
+          name: '/panel',
+          page: () => const PanelScreen(),
+          binding: PanelBinding(),
+        ),
+        GetPage(
+          name: '/poll',
+          page: () => const PollScreen(),
+          binding: PollBinding(),
+        ),
+        GetPage(
+          name: '/polls',
+          page: () => const PollsScreen(),
+          binding: PollsBinding(),
+        ),
+        GetPage(
+          name: '/analyze',
+          page: () => const AnalyzeScreen(),
+          binding: AnalyzeBinding(),
+        ),
+        GetPage(
+          name: '/setting',
+          page: () => const SettingScreen(),
+          binding: SettingBinding(),
         ),
       ],
     ),
