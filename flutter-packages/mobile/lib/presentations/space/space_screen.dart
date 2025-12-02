@@ -1,6 +1,7 @@
 import 'package:ratel/exports.dart';
 import 'package:ratel/presentations/space/components/space_header_section.dart';
 import 'package:ratel/presentations/space/components/space_stats_section.dart';
+import 'package:ratel/presentations/space/components/space_tab_bar.dart';
 import 'package:ratel/presentations/space/components/space_title_and_author_section.dart';
 import 'package:ratel/presentations/space/components/space_top_bar.dart';
 
@@ -50,26 +51,28 @@ class SpaceScreen extends GetWidget<SpaceController> {
                       ),
                     ),
                     20.vgap,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: SpaceTabBar(controller: controller),
+                    ),
+                    20.vgap,
                     Expanded(
-                      child: Builder(
-                        builder: (_) {
-                          final pk = controller.spacePk;
+                      child: Obx(() {
+                        final pk = controller.spacePk;
+                        if (pk.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
 
-                          if (pk.isEmpty) {
-                            return const SizedBox.shrink();
-                          }
+                        final base = controller.baseRoute;
+                        final current = controller.currentRoute;
 
-                          logger.d(
-                            "Navigating to space with pk: ${Uri.encodeComponent(pk)}",
-                          );
+                        logger.d('Space content route: $current');
 
-                          return GetRouterOutlet(
-                            anchorRoute: '/space/${Uri.encodeComponent(pk)}',
-                            initialRoute:
-                                '/space/${Uri.encodeComponent(pk)}/overview',
-                          );
-                        },
-                      ),
+                        return GetRouterOutlet(
+                          anchorRoute: base,
+                          initialRoute: current,
+                        );
+                      }),
                     ),
                   ],
                 );

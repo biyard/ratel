@@ -7,6 +7,7 @@ class SpaceController extends BaseController {
 
   final tabs = <SpaceTab>[].obs;
   final currentTab = Rx<SpaceTab>(SpaceTab.summary());
+  Worker? _spaceWorker;
 
   Rxn<SpaceModel> get spaceRx => _spaceService.spaceOf(spacePk);
 
@@ -20,24 +21,59 @@ class SpaceController extends BaseController {
 
     final rawPk = Get.parameters['spacePk']!;
     spacePk = Uri.decodeComponent(rawPk);
-    _spaceService.loadSpace(spacePk);
 
-    tabs.assignAll(_buildTabsForSpace());
+    _spaceWorker = ever<SpaceModel?>(spaceRx, (space) {
+      if (space == null) return;
+
+      if (space.spaceType == SpaceType.poll) {
+        tabs.assignAll(_buildTabsForPollSpace());
+      } else if (space.spaceType == SpaceType.deliberation) {
+        tabs.assignAll(_buildTabsForDeliberationSpace());
+      } else {
+        tabs.clear();
+      }
+
+      if (tabs.isNotEmpty && !tabs.any((t) => t.id == currentTab.value.id)) {
+        currentTab.value = tabs.first;
+      }
+    });
+
+    _spaceService.loadSpace(spacePk);
+  }
+
+  @override
+  void onClose() {
+    _spaceWorker?.dispose();
+    super.onClose();
   }
 
   void onTabSelected(SpaceTab tab) {
     currentTab.value = tab;
-
-    final base = '/space/${Uri.encodeComponent(spacePk)}';
-    Get.rootDelegate.toNamed('$base${tab.route}');
   }
 
-  List<SpaceTab> _buildTabsForSpace() {
+  String get baseRoute => '/space/${Uri.encodeComponent(spacePk)}';
+
+  String get currentRoute => '$baseRoute${currentTab.value.route}';
+
+  List<SpaceTab> _buildTabsForPollSpace() {
     return [
-      SpaceTab(id: 'summary', label: 'Summary', route: '/summary'),
-      SpaceTab(id: 'delib', label: 'Deliberation', route: '/deliberation'),
-      SpaceTab(id: 'elearning', label: 'E-Learning', route: '/elearning'),
-      SpaceTab(id: 'poll', label: 'Poll', route: '/poll'),
+      SpaceTab(id: 'overview', label: 'Overview', route: '/overview'),
+      SpaceTab(id: 'poll', label: 'Polls', route: '/poll'),
+      SpaceTab(id: 'analyze', label: 'Analyze', route: '/analyze'),
+      SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
+    ];
+  }
+
+  List<SpaceTab> _buildTabsForDeliberationSpace() {
+    return [
+      SpaceTab(id: 'overview', label: 'Overview', route: '/overview'),
+      SpaceTab(id: 'file', label: 'Files', route: '/file'),
+      SpaceTab(id: 'poll', label: 'Polls', route: '/polls'),
+      SpaceTab(id: 'board', label: 'Boards', route: '/board'),
+      SpaceTab(id: 'member', label: 'Members', route: '/member'),
+      SpaceTab(id: 'panel', label: 'Panels', route: '/panel'),
+      SpaceTab(id: 'analyze', label: 'Analyze', route: '/analyze'),
+      SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
     ];
   }
 }
