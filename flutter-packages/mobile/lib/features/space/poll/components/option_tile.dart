@@ -6,7 +6,7 @@ class OptionTile extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
-    this.enabled = true, // <- 기본값 추가
+    this.enabled = true,
   });
 
   final String label;
@@ -17,9 +17,7 @@ class OptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color fillColor = selected
-        ? (enabled
-              ? AppColors.primary
-              : AppColors.primary.withOpacity(0.5)) // <- 여기 수정
+        ? (enabled ? AppColors.primary : AppColors.primary.withOpacity(0.5))
         : Colors.transparent;
 
     final Color borderColor = enabled
@@ -30,7 +28,7 @@ class OptionTile extends StatelessWidget {
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: enabled ? onTap : null, // 비활성화일 때 탭 막기
+      onTap: enabled ? onTap : null,
       child: Row(
         children: [
           Container(
