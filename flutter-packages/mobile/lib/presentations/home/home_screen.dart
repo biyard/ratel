@@ -27,7 +27,23 @@ class HomeScreen extends GetWidget<HomeController> {
               }
 
               final feed = controller.feeds[index];
-              return FeedCardV2(feed: feed, onBookmarkTap: () => {});
+              return FeedCardV2(
+                feed: feed,
+                onBookmarkTap: () => {},
+                onTap: () => {
+                  logger.d("feed tapped: ${feed.pk} ${feed.spacePk}"),
+                  if (feed.spacePk != null)
+                    {
+                      logger.d("space pk: ${feed.spacePk}"),
+                      Get.rootDelegate.toNamed(spaceWithPk(feed.spacePk!)),
+                    }
+                  else
+                    {
+                      logger.d("feed pk: ${feed.pk}"),
+                      Get.rootDelegate.toNamed(postWithPk(feed.pk)),
+                    },
+                },
+              );
             },
           ),
         ),

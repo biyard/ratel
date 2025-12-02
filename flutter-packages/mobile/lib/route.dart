@@ -1,5 +1,4 @@
 import 'package:ratel/exports.dart';
-import 'package:ratel/middlewares/space_middleware.dart';
 
 class AppRoutes {
   static const String mainScreen = '/dashboard';
@@ -21,13 +20,65 @@ class AppRoutes {
 
   static const String notification = "/dashboard/notification";
   static const String error = '/error';
-  static spaceWithId(int id) => '/space/$id';
+  static spaceWithPk(String spacePk) => '/space/$spacePk';
   static deliberationSpaceWithId(int id) => '/space/$id/deliberation';
   static noticeSpaceWithId(int id) => '/space/$id/notice';
   static notFoundSpaceWithId(int id) => '/space/$id/not-found';
   static draftWithId(int id) => '/draft/$id';
 
   static List<GetPage> pages = [
+    GetPage(
+      name: '/space/:spacePk',
+      page: () => const SpaceScreen(),
+      binding: SpaceBinding(),
+      children: [
+        GetPage(
+          name: '/board',
+          page: () => const BoardScreen(),
+          binding: BoardBinding(),
+        ),
+        GetPage(
+          name: '/file',
+          page: () => const FileScreen(),
+          binding: FileBinding(),
+        ),
+        GetPage(
+          name: '/member',
+          page: () => const MemberScreen(),
+          binding: MemberBinding(),
+        ),
+        GetPage(
+          name: '/overview',
+          page: () => const OverviewScreen(),
+          binding: OverviewBinding(),
+        ),
+        GetPage(
+          name: '/panel',
+          page: () => const PanelScreen(),
+          binding: PanelBinding(),
+        ),
+        GetPage(
+          name: '/poll',
+          page: () => const PollScreen(),
+          binding: PollBinding(),
+        ),
+        GetPage(
+          name: '/polls',
+          page: () => const PollsScreen(),
+          binding: PollsBinding(),
+        ),
+        GetPage(
+          name: '/analyze',
+          page: () => const AnalyzeScreen(),
+          binding: AnalyzeBinding(),
+        ),
+        GetPage(
+          name: '/setting',
+          page: () => const SettingScreen(),
+          binding: SettingBinding(),
+        ),
+      ],
+    ),
     GetPage(
       name: mainScreen,
       page: () => MainScreen(),
@@ -36,32 +87,6 @@ class AppRoutes {
       transitionDuration: const Duration(milliseconds: 300),
       opaque: true,
       curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: '/space/:id',
-      page: () => Container(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      middlewares: [SpaceMiddleware()],
-      opaque: true,
-      curve: Curves.easeOutCubic,
-      children: [
-        GetPage(
-          name: "/deliberation",
-          page: () => DeliberationSpaceScreen(),
-          binding: DeliberationSpaceBinding(),
-        ),
-        GetPage(
-          name: "/notice",
-          page: () => NoticeSpaceScreen(),
-          binding: NoticeSpaceBinding(),
-        ),
-        GetPage(
-          name: "/not-found",
-          page: () => NotFoundSpaceScreen(),
-          binding: NotFoundSpaceBinding(),
-        ),
-      ],
     ),
     GetPage(
       name: '/draft/:id',
@@ -94,15 +119,6 @@ class AppRoutes {
       name: verifiedScreen,
       page: () => const VerifiedScreen(),
       binding: VerifiedBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: mySpaces,
-      page: () => const SpacesScreen(),
-      binding: SpacesBinding(),
       customTransition: SlideOverTransition(),
       transitionDuration: const Duration(milliseconds: 300),
       opaque: true,

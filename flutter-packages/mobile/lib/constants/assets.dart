@@ -104,6 +104,9 @@ abstract class Assets {
   static const String fontItalic = 'assets/icons/toolbar/italic.svg';
   static const String link = 'assets/icons/toolbar/link.svg';
 
+  static const String clip = 'assets/icons/clip.svg';
+  static const String shapeArrowUp = 'assets/icons/shape_arrow_up.svg';
+
   static final addIcon = SvgPicture.asset(add, width: 15, height: 15);
   static final backIcon = SvgPicture.asset(back, width: 16, height: 16);
   static final badgeImage = SvgPicture.asset(badge, width: 20, height: 20);
