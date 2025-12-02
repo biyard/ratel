@@ -68,9 +68,12 @@ class SpaceScreen extends GetWidget<SpaceController> {
 
                         logger.d('Space content route: $current');
 
-                        return GetRouterOutlet(
-                          anchorRoute: base,
-                          initialRoute: current,
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: GetRouterOutlet(
+                            anchorRoute: base,
+                            initialRoute: current,
+                          ),
                         );
                       }),
                     ),
