@@ -34,6 +34,7 @@ Future<void> main() async {
   DocumentsService.init();
   DriveApi.init();
   SpaceFilesService.init();
+  SpacePollsService.init();
   Get.put<ThemeController>(ThemeController());
 
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((
