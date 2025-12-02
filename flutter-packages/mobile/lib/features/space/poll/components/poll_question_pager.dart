@@ -1,4 +1,5 @@
 import 'package:ratel/exports.dart';
+import 'package:intl/intl.dart';
 import 'package:ratel/features/space/poll/components/poll_question_body.dart';
 import 'package:ratel/features/space/poll/components/poll_question_header.dart';
 
@@ -234,6 +235,9 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     final total = widget.poll.questions.length;
     final currentNo = _index + 1;
 
+    final start = _fromTimestamp(widget.poll.startedAt);
+    final end = _fromTimestamp(widget.poll.endedAt);
+
     final body = PollQuestionBody(
       question: _currentQuestion,
       answer: _currentAnswer,
@@ -248,6 +252,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _PollTimeHeader(timeZone: 'Asia/Seoul', start: start, end: end),
         16.vgap,
         Text(
           '$currentNo / $total',
@@ -283,6 +288,78 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
       ],
     );
   }
+}
+
+class _PollTimeHeader extends StatelessWidget {
+  const _PollTimeHeader({
+    required this.timeZone,
+    required this.start,
+    required this.end,
+  });
+
+  final String timeZone;
+  final DateTime start;
+  final DateTime end;
+
+  @override
+  Widget build(BuildContext context) {
+    final fmt = DateFormat('MMM d, yyyy, hh:mm a');
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          timeZone,
+          style: const TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 12,
+            color: Color(0xFF9CA3AF),
+          ),
+        ),
+        4.vgap,
+        Row(
+          children: [
+            Text(
+              fmt.format(start),
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 13,
+                color: Colors.white,
+              ),
+            ),
+            6.gap,
+            const Text(
+              '->',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 13,
+                color: Color(0xFF9CA3AF),
+              ),
+            ),
+            6.gap,
+            Text(
+              fmt.format(end),
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 13,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+DateTime _fromTimestamp(int ts) {
+  if (ts == 0) {
+    return DateTime.fromMillisecondsSinceEpoch(0);
+  }
+  if (ts < 1000000000000) {
+    return DateTime.fromMillisecondsSinceEpoch(ts * 1000);
+  }
+  return DateTime.fromMillisecondsSinceEpoch(ts);
 }
 
 bool _isQuestionRequired(QuestionModel q) {
