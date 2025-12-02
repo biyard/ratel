@@ -5,25 +5,12 @@ class OverviewScreen extends GetWidget<OverviewController> {
 
   @override
   Widget build(BuildContext context) {
+    final space = controller.space;
     return Layout<OverviewController>(
       scrollable: false,
-      child: Obx(() {
-        final space = controller.space;
-
-        if (space == null) {
-          return const Center(
-            child: SizedBox(
-              width: 24,
-              height: 24,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          );
-        }
-
-        return space.isAdmin
-            ? const OverviewCreatorScreen()
-            : const OverviewViewerScreen();
-      }),
+      child: space?.isAdmin ?? false
+          ? const OverviewCreatorScreen()
+          : const OverviewViewerScreen(),
     );
   }
 }
