@@ -6,11 +6,13 @@ class DropdownQuestionView extends StatelessWidget {
     required this.question,
     required this.answer,
     required this.onChanged,
+    required this.readOnly,
   });
 
   final DropdownQuestionModel question;
   final DropdownAnswer? answer;
   final ValueChanged<Answer> onChanged;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +53,11 @@ class DropdownQuestionView extends StatelessWidget {
           for (int i = 0; i < question.options.length; i++)
             DropdownMenuItem<int>(value: i, child: Text(question.options[i])),
         ],
-        onChanged: (v) {
-          onChanged(DropdownAnswer(v));
-        },
+        onChanged: readOnly
+            ? null
+            : (v) {
+                onChanged(DropdownAnswer(v));
+              },
       ),
     );
   }

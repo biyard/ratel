@@ -7,11 +7,13 @@ class CheckboxQuestionView extends StatelessWidget {
     required this.question,
     required this.answer,
     required this.onChanged,
+    required this.readOnly,
   });
 
   final CheckboxQuestionModel question;
   final CheckboxAnswer? answer;
   final ValueChanged<Answer> onChanged;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -24,27 +26,30 @@ class CheckboxQuestionView extends StatelessWidget {
           OptionTile(
             label: question.options[i],
             selected: selected.contains(i),
-            onTap: () {
-              final set = selected.toSet();
+            enabled: !readOnly,
+            onTap: readOnly
+                ? () {}
+                : () {
+                    final set = selected.toSet();
 
-              if (question.isMulti) {
-                if (set.contains(i)) {
-                  set.remove(i);
-                } else {
-                  set.add(i);
-                }
-              } else {
-                if (set.contains(i)) {
-                  set.clear();
-                } else {
-                  set
-                    ..clear()
-                    ..add(i);
-                }
-              }
+                    if (question.isMulti) {
+                      if (set.contains(i)) {
+                        set.remove(i);
+                      } else {
+                        set.add(i);
+                      }
+                    } else {
+                      if (set.contains(i)) {
+                        set.clear();
+                      } else {
+                        set
+                          ..clear()
+                          ..add(i);
+                      }
+                    }
 
-              onChanged(CheckboxAnswer(set.toList()..sort()));
-            },
+                    onChanged(CheckboxAnswer(set.toList()..sort()));
+                  },
           ),
           10.vgap,
         ],

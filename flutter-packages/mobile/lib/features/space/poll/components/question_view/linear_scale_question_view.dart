@@ -6,11 +6,13 @@ class LinearScaleQuestionView extends StatelessWidget {
     required this.question,
     required this.answer,
     required this.onChanged,
+    required this.readOnly,
   });
 
   final LinearScaleQuestionModel question;
   final LinearScaleAnswer? answer;
   final ValueChanged<Answer> onChanged;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +56,9 @@ class LinearScaleQuestionView extends StatelessWidget {
               children: [
                 for (int v = question.minValue; v <= question.maxValue; v++)
                   GestureDetector(
-                    onTap: () => onChanged(LinearScaleAnswer(v)),
+                    onTap: readOnly
+                        ? null
+                        : () => onChanged(LinearScaleAnswer(v)),
                     child: Container(
                       width: 34,
                       height: 34,

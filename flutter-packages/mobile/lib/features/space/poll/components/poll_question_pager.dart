@@ -5,10 +5,12 @@ import 'package:ratel/features/space/poll/components/poll_question_header.dart';
 class PollQuestionPager extends StatefulWidget {
   const PollQuestionPager({
     super.key,
+    required this.spacePk,
     required this.poll,
     required this.onSubmit,
   });
 
+  final String spacePk;
   final PollModel poll;
   final ValueChanged<List<Answer>> onSubmit;
 
@@ -20,6 +22,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
   late int _index;
   late List<Answer?> _answers;
   bool _hasInitialResponse = false;
+  late final bool _readOnly;
 
   @override
   void initState() {
@@ -38,6 +41,8 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
 
     final firstUnanswered = _answers.indexWhere((a) => a == null);
     _index = firstUnanswered == -1 ? 0 : firstUnanswered;
+
+    _readOnly = widget.poll.myResponse != null && !widget.poll.responseEditable;
   }
 
   QuestionModel get _currentQuestion => widget.poll.questions[_index];
@@ -55,6 +60,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
   }
 
   void _updateAnswer(Answer answer) {
+    if (_readOnly) return;
     setState(() {
       _answers[_index] = answer;
     });
@@ -63,18 +69,152 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
   bool get _isLast => _index == widget.poll.questions.length - 1;
   bool get _isFirst => _index == 0;
 
-  bool get _currentValid => _validateAnswer(_currentQuestion, _currentAnswer);
+  bool get _currentValid =>
+      _readOnly ? true : _validateAnswer(_currentQuestion, _currentAnswer);
+
+  void _submit() {
+    final all = <Answer>[];
+    for (var i = 0; i < widget.poll.questions.length; i++) {
+      final q = widget.poll.questions[i];
+      final a = _answers[i];
+      all.add(a ?? _buildEmptyAnswer(q));
+    }
+    widget.onSubmit(all);
+  }
+
+  void _showFinalSubmitDialog() {
+    Get.dialog(
+      Center(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 24),
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF111111),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Submit Survey',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontFamily: 'Raleway',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        decoration: TextDecoration.none,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Get.back(),
+                    child: const Icon(
+                      Icons.close,
+                      size: 18,
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
+              16.vgap,
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Once you submit your response, it cannot be changed.\nPlease double-check before submitting.',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    height: 1.5,
+                    decoration: TextDecoration.none,
+                    color: Color(0xFFA1A1A1),
+                  ),
+                ),
+              ),
+              24.vgap,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap: () => Get.back(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontFamily: 'Raleway',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          decoration: TextDecoration.none,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ),
+                  12.gap,
+                  GestureDetector(
+                    onTap: () {
+                      Get.back();
+                      _submit();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        'Submit',
+                        style: TextStyle(
+                          fontFamily: 'Raleway',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          decoration: TextDecoration.none,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      barrierDismissible: true,
+    );
+  }
 
   void _goNext() {
-    if (!_currentValid) return;
-    if (_isLast) {
-      final all = <Answer>[];
-      for (var i = 0; i < widget.poll.questions.length; i++) {
-        final q = widget.poll.questions[i];
-        final a = _answers[i];
-        all.add(a ?? _buildEmptyAnswer(q));
+    if (_readOnly) {
+      if (!_isLast) {
+        setState(() => _index++);
       }
-      widget.onSubmit(all);
+      return;
+    }
+
+    if (!_currentValid) return;
+
+    if (_isLast) {
+      if (!widget.poll.responseEditable) {
+        _showFinalSubmitDialog();
+      } else {
+        _submit();
+      }
     } else {
       setState(() {
         _index++;
@@ -98,6 +238,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
       question: _currentQuestion,
       answer: _currentAnswer,
       onChanged: _updateAnswer,
+      readOnly: _readOnly,
     );
 
     final lastLabel = _isLast
@@ -133,7 +274,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
             _NavButton(label: 'Prev', enabled: !_isFirst, onTap: _goPrev),
             _NavButton(
               label: lastLabel,
-              enabled: _currentValid,
+              enabled: _readOnly ? !_isLast : _currentValid,
               onTap: _goNext,
             ),
           ],

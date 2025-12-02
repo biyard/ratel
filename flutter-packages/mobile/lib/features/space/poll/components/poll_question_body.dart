@@ -12,11 +12,13 @@ class PollQuestionBody extends StatelessWidget {
     required this.question,
     required this.answer,
     required this.onChanged,
+    required this.readOnly,
   });
 
   final QuestionModel question;
   final Answer? answer;
   final ValueChanged<Answer> onChanged;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -26,12 +28,14 @@ class PollQuestionBody extends StatelessWidget {
           question: question as ChoiceQuestionModel,
           answer: answer as SingleChoiceAnswer?,
           onChanged: onChanged,
+          readOnly: readOnly,
         );
       case AnswerType.multipleChoice:
         return MultipleChoiceQuestionView(
           question: question as ChoiceQuestionModel,
           answer: answer as MultipleChoiceAnswer?,
           onChanged: onChanged,
+          readOnly: readOnly,
         );
       case AnswerType.shortAnswer:
         return ShortAnswerQuestionView(
@@ -39,6 +43,7 @@ class PollQuestionBody extends StatelessWidget {
           answer: answer as ShortAnswer?,
           onChanged: onChanged,
           multiline: false,
+          readOnly: readOnly,
         );
       case AnswerType.subjective:
         return ShortAnswerQuestionView(
@@ -46,24 +51,28 @@ class PollQuestionBody extends StatelessWidget {
           answer: answer as SubjectiveAnswer?,
           onChanged: onChanged,
           multiline: true,
+          readOnly: readOnly,
         );
       case AnswerType.checkbox:
         return CheckboxQuestionView(
           question: question as CheckboxQuestionModel,
           answer: answer as CheckboxAnswer?,
           onChanged: onChanged,
+          readOnly: readOnly,
         );
       case AnswerType.dropdown:
         return DropdownQuestionView(
           question: question as DropdownQuestionModel,
           answer: answer as DropdownAnswer?,
           onChanged: onChanged,
+          readOnly: readOnly,
         );
       case AnswerType.linearScale:
         return LinearScaleQuestionView(
           question: question as LinearScaleQuestionModel,
           answer: answer as LinearScaleAnswer?,
           onChanged: onChanged,
+          readOnly: readOnly,
         );
     }
   }
