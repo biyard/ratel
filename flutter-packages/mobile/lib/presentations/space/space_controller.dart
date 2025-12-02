@@ -7,12 +7,12 @@ class SpaceController extends BaseController {
 
   final tabs = <SpaceTab>[].obs;
   final currentTab = Rx<SpaceTab>(SpaceTab.summary());
+  final selectedPollSk = RxnString();
+
   Worker? _spaceWorker;
 
   Rxn<SpaceModel> get spaceRx => _spaceService.spaceOf(spacePk);
-
   SpaceModel? get space => spaceRx.value;
-
   RxBool get isLoading => _spaceService.isLoadingOf(spacePk);
 
   @override
@@ -47,12 +47,28 @@ class SpaceController extends BaseController {
     super.onClose();
   }
 
-  void onTabSelected(SpaceTab tab) {
+  String _buildDefaultPollSk() {
+    final idx = spacePk.indexOf('#');
+    if (idx == -1) {
+      return '';
+    }
+    final suffix = spacePk.substring(idx + 1);
+    return 'SPACE_POLL#$suffix';
+  }
+
+  void onTabSelected(SpaceTab tab, {String? pollSk}) {
     currentTab.value = tab;
+
+    if (tab.id == 'poll') {
+      selectedPollSk.value = pollSk?.isNotEmpty == true
+          ? pollSk
+          : _buildDefaultPollSk();
+    } else {
+      selectedPollSk.value = null;
+    }
   }
 
   String get baseRoute => '/space/${Uri.encodeComponent(spacePk)}';
-
   String get currentRoute => '$baseRoute${currentTab.value.route}';
 
   List<SpaceTab> _buildTabsForPollSpace() {
