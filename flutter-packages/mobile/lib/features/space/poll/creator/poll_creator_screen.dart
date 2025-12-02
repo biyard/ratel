@@ -30,6 +30,7 @@ class PollCreatorScreen extends GetWidget<PollCreatorController> {
         }
 
         return PollQuestionPager(
+          spacePk: controller.spacePk,
           poll: poll,
           onSubmit: (answers) {
             logger.d("answer: ${answers}");

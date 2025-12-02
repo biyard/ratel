@@ -7,11 +7,13 @@ class MultipleChoiceQuestionView extends StatelessWidget {
     required this.question,
     required this.answer,
     required this.onChanged,
+    required this.readOnly,
   });
 
   final ChoiceQuestionModel question;
   final MultipleChoiceAnswer? answer;
   final ValueChanged<Answer> onChanged;
+  final bool readOnly;
 
   bool get _allowOther => question.allowOther == true;
 
@@ -29,19 +31,22 @@ class MultipleChoiceQuestionView extends StatelessWidget {
         for (int i = 0; i < question.options.length; i++) ...[
           if (!_allowOther || i != othersIndex) ...[
             OptionTile(
+              enabled: !readOnly,
               label: question.options[i],
               selected: selected.contains(i),
-              onTap: () {
-                final set = selected.toSet();
-                if (set.contains(i)) {
-                  set.remove(i);
-                } else {
-                  set.add(i);
-                }
-                onChanged(
-                  MultipleChoiceAnswer(set.toList()..sort(), otherText),
-                );
-              },
+              onTap: readOnly
+                  ? () {}
+                  : () {
+                      final set = selected.toSet();
+                      if (set.contains(i)) {
+                        set.remove(i);
+                      } else {
+                        set.add(i);
+                      }
+                      onChanged(
+                        MultipleChoiceAnswer(set.toList()..sort(), otherText),
+                      );
+                    },
             ),
             10.vgap,
           ],
@@ -51,21 +56,25 @@ class MultipleChoiceQuestionView extends StatelessWidget {
             children: [
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  final set = selected.toSet();
-                  if (isOtherSelected) {
-                    set.remove(othersIndex);
-                    onChanged(MultipleChoiceAnswer(set.toList()..sort(), null));
-                  } else {
-                    set.add(othersIndex);
-                    onChanged(
-                      MultipleChoiceAnswer(
-                        set.toList()..sort(),
-                        otherText ?? '',
-                      ),
-                    );
-                  }
-                },
+                onTap: readOnly
+                    ? null
+                    : () {
+                        final set = selected.toSet();
+                        if (isOtherSelected) {
+                          set.remove(othersIndex);
+                          onChanged(
+                            MultipleChoiceAnswer(set.toList()..sort(), null),
+                          );
+                        } else {
+                          set.add(othersIndex);
+                          onChanged(
+                            MultipleChoiceAnswer(
+                              set.toList()..sort(),
+                              otherText ?? '',
+                            ),
+                          );
+                        }
+                      },
                 child: Container(
                   width: 20,
                   height: 20,
@@ -104,7 +113,10 @@ class MultipleChoiceQuestionView extends StatelessWidget {
                   child: TextFormField(
                     key: ValueKey('${question.title}_multiple_other'),
                     initialValue: otherText ?? '',
+                    enabled: !readOnly,
+                    readOnly: readOnly,
                     onTap: () {
+                      if (readOnly) return;
                       if (!isOtherSelected) {
                         final set = selected.toSet();
                         set.add(othersIndex);
@@ -117,6 +129,7 @@ class MultipleChoiceQuestionView extends StatelessWidget {
                       }
                     },
                     onChanged: (value) {
+                      if (readOnly) return;
                       final set = selected.toSet();
                       if (!set.contains(othersIndex)) {
                         set.add(othersIndex);

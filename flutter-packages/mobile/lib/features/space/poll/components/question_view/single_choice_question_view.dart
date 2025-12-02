@@ -7,11 +7,13 @@ class SingleChoiceQuestionView extends StatelessWidget {
     required this.question,
     required this.answer,
     required this.onChanged,
+    required this.readOnly,
   });
 
   final ChoiceQuestionModel question;
   final SingleChoiceAnswer? answer;
   final ValueChanged<Answer> onChanged;
+  final bool readOnly;
 
   bool get _allowOther => question.allowOther == true;
 
@@ -30,7 +32,10 @@ class SingleChoiceQuestionView extends StatelessWidget {
             OptionTile(
               label: question.options[i],
               selected: selectedIndex == i,
-              onTap: () => onChanged(SingleChoiceAnswer(i, null)),
+              enabled: !readOnly,
+              onTap: readOnly
+                  ? () {}
+                  : () => onChanged(SingleChoiceAnswer(i, null)),
             ),
             10.vgap,
           ],
@@ -40,15 +45,17 @@ class SingleChoiceQuestionView extends StatelessWidget {
             children: [
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  if (isOtherSelected) {
-                    onChanged(const SingleChoiceAnswer(null, null));
-                  } else {
-                    onChanged(
-                      SingleChoiceAnswer(othersIndex!, otherText ?? ''),
-                    );
-                  }
-                },
+                onTap: readOnly
+                    ? null
+                    : () {
+                        if (isOtherSelected) {
+                          onChanged(const SingleChoiceAnswer(null, null));
+                        } else {
+                          onChanged(
+                            SingleChoiceAnswer(othersIndex!, otherText ?? ''),
+                          );
+                        }
+                      },
                 child: Container(
                   width: 20,
                   height: 20,
@@ -87,7 +94,10 @@ class SingleChoiceQuestionView extends StatelessWidget {
                   child: TextFormField(
                     key: ValueKey(question),
                     initialValue: otherText ?? '',
+                    enabled: !readOnly,
+                    readOnly: readOnly,
                     onTap: () {
+                      if (readOnly) return;
                       if (!isOtherSelected && othersIndex != null) {
                         onChanged(
                           SingleChoiceAnswer(othersIndex, otherText ?? ''),
@@ -95,6 +105,7 @@ class SingleChoiceQuestionView extends StatelessWidget {
                       }
                     },
                     onChanged: (value) {
+                      if (readOnly) return;
                       if (othersIndex != null) {
                         onChanged(SingleChoiceAnswer(othersIndex, value));
                       }

@@ -7,12 +7,14 @@ class ShortAnswerQuestionView extends StatelessWidget {
     required this.answer,
     required this.onChanged,
     required this.multiline,
+    required this.readOnly,
   });
 
   final SubjectiveQuestionModel question;
   final Answer? answer;
   final ValueChanged<Answer> onChanged;
   final bool multiline;
+  final bool readOnly;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +37,8 @@ class ShortAnswerQuestionView extends StatelessWidget {
       child: TextFormField(
         key: ValueKey(question.title),
         initialValue: initial ?? '',
+        enabled: !readOnly,
+        readOnly: readOnly,
         maxLines: isMultiline ? null : 1,
         minLines: isMultiline ? 4 : 1,
         style: const TextStyle(
@@ -52,13 +56,15 @@ class ShortAnswerQuestionView extends StatelessWidget {
             color: Color(0xFF6B6B6B),
           ),
         ),
-        onChanged: (v) {
-          if (question.type == AnswerType.subjective) {
-            onChanged(SubjectiveAnswer(v));
-          } else {
-            onChanged(ShortAnswer(v));
-          }
-        },
+        onChanged: readOnly
+            ? null
+            : (v) {
+                if (question.type == AnswerType.subjective) {
+                  onChanged(SubjectiveAnswer(v));
+                } else {
+                  onChanged(ShortAnswer(v));
+                }
+              },
       ),
     );
   }
