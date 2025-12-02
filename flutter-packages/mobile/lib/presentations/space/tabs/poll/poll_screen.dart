@@ -5,9 +5,12 @@ class PollScreen extends GetWidget<PollController> {
 
   @override
   Widget build(BuildContext context) {
+    final space = controller.space;
     return Layout<PollController>(
       scrollable: false,
-      child: Text("Space Poll Screen"),
+      child: space?.isAdmin ?? false
+          ? const PollCreatorScreen()
+          : const PollViewerScreen(),
     );
   }
 }

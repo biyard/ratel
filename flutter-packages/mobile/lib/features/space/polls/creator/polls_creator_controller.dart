@@ -78,8 +78,10 @@ extension PollsCreatorControllerX on PollsCreatorController {
     }
 
     final spaceController = Get.find<SpaceController>();
+
     spaceController.onTabSelected(
       SpaceTab(id: 'poll', label: 'Polls', route: '/poll'),
+      pollSk: poll.sk,
     );
   }
 }
