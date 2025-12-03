@@ -37,6 +37,14 @@ export 'features/space/poll/viewer/poll_viewer_binding.dart';
 export 'features/space/poll/viewer/poll_viewer_controller.dart';
 export 'features/space/poll/viewer/poll_viewer_screen.dart';
 
+export 'features/space/analyze/creator/analyze_creator_binding.dart';
+export 'features/space/analyze/creator/analyze_creator_controller.dart';
+export 'features/space/analyze/creator/analyze_creator_screen.dart';
+
+export 'features/space/analyzes/creator/analyzes_creator_binding.dart';
+export 'features/space/analyzes/creator/analyzes_creator_controller.dart';
+export 'features/space/analyzes/creator/analyzes_creator_screen.dart';
+
 export 'components/app_card/app_card.dart';
 export 'components/biyard/biyard_static.dart';
 export 'components/custom_checkbox/custom_checkbox.dart';
@@ -118,6 +126,9 @@ export 'presentations/space/space_screen.dart';
 export 'presentations/space/tabs/panel/panel_binding.dart';
 export 'presentations/space/tabs/panel/panel_controller.dart';
 export 'presentations/space/tabs/panel/panel_screen.dart';
+export 'presentations/space/tabs/analyzes/analyzes_binding.dart';
+export 'presentations/space/tabs/analyzes/analyzes_controller.dart';
+export 'presentations/space/tabs/analyzes/analyzes_screen.dart';
 export 'presentations/space/tabs/analyze/analyze_binding.dart';
 export 'presentations/space/tabs/analyze/analyze_controller.dart';
 export 'presentations/space/tabs/analyze/analyze_screen.dart';

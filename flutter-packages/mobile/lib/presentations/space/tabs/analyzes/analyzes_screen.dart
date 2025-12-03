@@ -1,15 +1,15 @@
 import 'package:ratel/exports.dart';
 
-class AnalyzeScreen extends GetWidget<AnalyzeController> {
-  const AnalyzeScreen({super.key});
+class AnalyzesScreen extends GetWidget<AnalyzesController> {
+  const AnalyzesScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final space = controller.space;
-    return Layout<AnalyzeController>(
+    return Layout<AnalyzesController>(
       scrollable: false,
       child: space?.isAdmin ?? false
-          ? const AnalyzeCreatorScreen()
+          ? const AnalyzesCreatorScreen()
           : const SizedBox(),
     );
   }

@@ -73,6 +73,11 @@ class AppRoutes {
           binding: AnalyzeBinding(),
         ),
         GetPage(
+          name: '/analyzes',
+          page: () => const AnalyzesScreen(),
+          binding: AnalyzesBinding(),
+        ),
+        GetPage(
           name: '/setting',
           page: () => const SettingScreen(),
           binding: SettingBinding(),

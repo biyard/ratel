@@ -59,7 +59,7 @@ class SpaceController extends BaseController {
   void onTabSelected(SpaceTab tab, {String? pollSk}) {
     currentTab.value = tab;
 
-    if (tab.id == 'poll') {
+    if (tab.id == 'poll' || tab.id == 'analyze') {
       selectedPollSk.value = pollSk?.isNotEmpty == true
           ? pollSk
           : _buildDefaultPollSk();
@@ -88,7 +88,7 @@ class SpaceController extends BaseController {
       SpaceTab(id: 'board', label: 'Boards', route: '/board'),
       SpaceTab(id: 'member', label: 'Members', route: '/member'),
       SpaceTab(id: 'panel', label: 'Panels', route: '/panel'),
-      SpaceTab(id: 'analyze', label: 'Analyze', route: '/analyze'),
+      SpaceTab(id: 'analyze', label: 'Analyze', route: '/analyzes'),
       SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
     ];
   }
