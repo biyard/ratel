@@ -21,6 +21,13 @@ class AppRoutes {
   static const String notification = "/dashboard/notification";
   static const String error = '/error';
   static spaceWithPk(String spacePk) => '/space/$spacePk';
+  static String spacePostWithPk(String spacePk, String postPk) {
+    final encSpacePk = Uri.encodeComponent(spacePk);
+    final encPostPk = Uri.encodeComponent(postPk);
+
+    return '/space/$encSpacePk/board/$encPostPk';
+  }
+
   static deliberationSpaceWithId(int id) => '/space/$id/deliberation';
   static noticeSpaceWithId(int id) => '/space/$id/notice';
   static notFoundSpaceWithId(int id) => '/space/$id/not-found';
@@ -33,9 +40,14 @@ class AppRoutes {
       binding: SpaceBinding(),
       children: [
         GetPage(
-          name: '/board',
+          name: '/board/:postPk',
           page: () => const BoardScreen(),
           binding: BoardBinding(),
+        ),
+        GetPage(
+          name: '/boards',
+          page: () => const BoardsScreen(),
+          binding: BoardsBinding(),
         ),
         GetPage(
           name: '/file',
@@ -71,6 +83,11 @@ class AppRoutes {
           name: '/analyze',
           page: () => const AnalyzeScreen(),
           binding: AnalyzeBinding(),
+        ),
+        GetPage(
+          name: '/analyzes',
+          page: () => const AnalyzesScreen(),
+          binding: AnalyzesBinding(),
         ),
         GetPage(
           name: '/setting',

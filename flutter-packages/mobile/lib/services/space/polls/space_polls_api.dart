@@ -73,4 +73,20 @@ class SpacePollsApi extends GetConnect {
 
     return RespondPollResult.fromJson(resp.body!);
   }
+
+  Future<PollResult> getPollResult(String spacePk, String pollSk) async {
+    final encodedSpacePk = Uri.encodeComponent(spacePk);
+    final encodedPollSk = Uri.encodeComponent(pollSk);
+    final resp = await get<Map<String, dynamic>>(
+      '/v3/spaces/$encodedSpacePk/polls/$encodedPollSk/results',
+    );
+
+    if (!resp.isOk || resp.body == null) {
+      throw Exception(
+        'Failed to get poll result $pollSk in $spacePk: ${resp.statusCode} ${resp.statusText}',
+      );
+    }
+
+    return PollResult.fromJson(resp.body!);
+  }
 }

@@ -1,6 +1,6 @@
 import 'package:ratel/exports.dart';
 
-class AnalyzeController extends BaseController {
+class AnalyzesController extends BaseController {
   final SpaceService _spaceService = Get.find<SpaceService>();
 
   String? spacePk;
@@ -15,7 +15,7 @@ class AnalyzeController extends BaseController {
     super.onInit();
     final rawPk = Get.parameters['spacePk'];
     if (rawPk == null || rawPk.isEmpty) {
-      logger.w('AnalyzeController: spacePk is null or empty in parameters');
+      logger.w('AnalyzesController: spacePk is null or empty in parameters');
       return;
     }
 
