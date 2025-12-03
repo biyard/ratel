@@ -44,6 +44,13 @@ export 'features/space/boards/viewer/boards_viewer_binding.dart';
 export 'features/space/boards/viewer/boards_viewer_controller.dart';
 export 'features/space/boards/viewer/boards_viewer_screen.dart';
 
+export 'features/space/board/creator/board_creator_binding.dart';
+export 'features/space/board/creator/board_creator_controller.dart';
+export 'features/space/board/creator/board_creator_screen.dart';
+export 'features/space/board/viewer/board_viewer_binding.dart';
+export 'features/space/board/viewer/board_viewer_controller.dart';
+export 'features/space/board/viewer/board_viewer_screen.dart';
+
 export 'features/space/analyze/creator/analyze_creator_binding.dart';
 export 'features/space/analyze/creator/analyze_creator_controller.dart';
 export 'features/space/analyze/creator/analyze_creator_screen.dart';

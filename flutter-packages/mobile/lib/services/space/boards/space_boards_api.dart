@@ -63,4 +63,27 @@ class SpaceBoardsApi extends GetConnect {
 
     return SpacePostListResult.fromJson(resp.body!);
   }
+
+  Future<SpacePostModel> getPost(String spacePk, String postPk) async {
+    final encodedSpacePk = Uri.encodeComponent(spacePk);
+    final encodedPostPk = Uri.encodeComponent(postPk);
+
+    final resp = await get<Map<String, dynamic>>(
+      '/v3/spaces/$encodedSpacePk/boards/$encodedPostPk',
+    );
+
+    logger.d(
+      'GET /v3/spaces/$encodedSpacePk/boards/$encodedPostPk '
+      'status=${resp.statusCode}, body=${resp.body}',
+    );
+
+    if (!resp.isOk || resp.body == null) {
+      throw Exception(
+        'Failed to get post $postPk in $spacePk: '
+        '${resp.statusCode} ${resp.statusText}',
+      );
+    }
+
+    return SpacePostModel.fromJson(resp.body!);
+  }
 }

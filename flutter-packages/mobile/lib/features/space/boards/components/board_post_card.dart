@@ -3,8 +3,9 @@ import 'package:ratel/exports.dart';
 
 class BoardPostCard extends StatelessWidget {
   final SpacePostModel post;
+  final VoidCallback? onTap;
 
-  const BoardPostCard({super.key, required this.post});
+  const BoardPostCard({super.key, required this.post, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -19,131 +20,135 @@ class BoardPostCard extends StatelessWidget {
         ? post.authorProfileUrl
         : defaultProfileImage);
 
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 5),
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      decoration: BoxDecoration(
-        color: Color(0xff191919),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        post.title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    10.gap,
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 4,
-                      children: [
-                        _SmallTag(
-                          label: '${post.numberOfComments} Response',
-                          bgColor: AppColors.neutral800,
-                          fgColor: AppColors.neutral300,
-                        ),
-                        if (post.categoryName.isNotEmpty)
-                          _SmallTag(
-                            label: post.categoryName,
-                            bgColor: AppColors.neutral800,
-                            fgColor: AppColors.neutral300,
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (post.htmlContents.isNotEmpty || previewUrl != null) ...[
-            10.vgap,
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 5),
+        padding: const EdgeInsets.symmetric(vertical: 20),
+        decoration: BoxDecoration(
+          color: const Color(0xff191919),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (post.htmlContents.isNotEmpty)
-                    Html(
-                      data: post.htmlContents,
-                      style: {
-                        '*': Style.fromTextStyle(
-                          theme.textTheme.bodyMedium!.copyWith(
-                            color: AppColors.neutral300,
-                            height: 1.4,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          post.title,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.onSurface,
                           ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      },
+                      ),
+                      10.gap,
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          _SmallTag(
+                            label: '${post.numberOfComments} Response',
+                            bgColor: AppColors.neutral800,
+                            fgColor: AppColors.neutral300,
+                          ),
+                          if (post.categoryName.isNotEmpty)
+                            _SmallTag(
+                              label: post.categoryName,
+                              bgColor: AppColors.neutral800,
+                              fgColor: AppColors.neutral300,
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            if (post.htmlContents.isNotEmpty || previewUrl != null) ...[
+              10.vgap,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (post.htmlContents.isNotEmpty)
+                      Html(
+                        data: post.htmlContents,
+                        style: {
+                          '*': Style.fromTextStyle(
+                            theme.textTheme.bodyMedium!.copyWith(
+                              color: AppColors.neutral300,
+                              height: 1.4,
+                            ),
+                          ),
+                        },
+                      ),
+                    if (previewUrl != null) ...[
+                      10.vgap,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(10),
+                        child: AspectRatio(
+                          aspectRatio: 16 / 9,
+                          child: Image.network(previewUrl, fit: BoxFit.cover),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+            10.vgap,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  RoundContainer(
+                    width: 24,
+                    height: 24,
+                    radius: 100,
+                    color: AppColors.neutral500,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(100),
+                      child: Image.network(profileImageUrl, fit: BoxFit.cover),
                     ),
-                  if (previewUrl != null) ...[
-                    10.vgap,
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: AspectRatio(
-                        aspectRatio: 16 / 9,
-                        child: Image.network(previewUrl, fit: BoxFit.cover),
+                  ),
+                  8.gap,
+                  Expanded(
+                    child: Text(
+                      post.authorDisplayName,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontFamily: 'Raleway',
+                        color: Colors.white,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
+                        height: 20 / 14,
                       ),
                     ),
-                  ],
+                  ),
+                  4.gap,
+                  Text(
+                    relative,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppColors.neutral400,
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
-          10.vgap,
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                RoundContainer(
-                  width: 24,
-                  height: 24,
-                  radius: 100,
-                  color: AppColors.neutral500,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(100),
-                    child: Image.network(profileImageUrl, fit: BoxFit.cover),
-                  ),
-                ),
-                8.gap,
-                Expanded(
-                  child: Text(
-                    post.authorDisplayName,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'Raleway',
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14,
-                      height: 20 / 14,
-                    ),
-                  ),
-                ),
-                4.gap,
-                Text(
-                  relative,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.neutral400,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

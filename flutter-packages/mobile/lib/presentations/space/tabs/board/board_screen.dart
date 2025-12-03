@@ -5,9 +5,12 @@ class BoardScreen extends GetWidget<BoardController> {
 
   @override
   Widget build(BuildContext context) {
+    final space = controller.space;
     return Layout<BoardController>(
       scrollable: false,
-      child: Text("Space Board Screen"),
+      child: space?.isAdmin ?? false
+          ? const BoardCreatorScreen()
+          : const BoardViewerScreen(),
     );
   }
 }
