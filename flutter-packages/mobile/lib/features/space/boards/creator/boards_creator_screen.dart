@@ -60,7 +60,7 @@ class BoardsCreatorScreen extends GetWidget<BoardsCreatorController> {
                           post.pk,
                         );
                         logger.d('Navigate to board detail: $route');
-                        Get.rootDelegate.toNamed(route);
+                        Get.rootDelegate.offNamed(route);
                       },
                     );
                   },
