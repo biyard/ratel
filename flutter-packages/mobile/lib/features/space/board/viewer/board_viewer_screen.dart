@@ -5,6 +5,7 @@ class BoardViewerScreen extends GetWidget<BoardViewerController> {
 
   @override
   Widget build(BuildContext context) {
+    // TODO: implement the UI for Board Viewer Screen
     return Layout<BoardViewerController>(
       scrollable: false,
       child: Text("Space Board Viewer Screen"),
