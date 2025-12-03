@@ -55,7 +55,7 @@ class BoardsViewerScreen extends GetWidget<BoardsViewerController> {
                     return BoardPostCard(
                       post: post,
                       onTap: () {
-                        Get.rootDelegate.toNamed(
+                        Get.rootDelegate.offNamed(
                           AppRoutes.spacePostWithPk(
                             controller.spacePk,
                             post.pk,
