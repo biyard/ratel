@@ -299,6 +299,8 @@ class FileModel {
     ext: (j['ext'] ?? '') as String,
     url: (j['url'] ?? '') as String,
   );
+
+  Json toJson() => {'name': name, 'size': size, 'ext': ext, 'url': url};
 }
 
 enum ProjectStatus { ready, inProgress, finish }
