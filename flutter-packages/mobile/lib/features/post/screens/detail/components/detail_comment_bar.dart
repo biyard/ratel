@@ -18,7 +18,7 @@ class DetailCommentBar extends StatelessWidget {
   final double bottomInset;
   final List<PostCommentModel> comments;
 
-  final Future<void> Function(String text) onSendRootComment;
+  final Future<PostCommentModel?> Function(String text) onSendRootComment;
   final Future<void> Function(String parentCommentSk, String text) onSendReply;
 
   final List<PostCommentModel> Function(String commentSk) repliesOf;
@@ -105,7 +105,7 @@ class _CommentBottomSheet extends StatefulWidget {
 
   final List<PostCommentModel> comments;
 
-  final Future<void> Function(String text) onSendRootComment;
+  final Future<PostCommentModel?> Function(String text) onSendRootComment;
   final Future<void> Function(String parentCommentSk, String text) onSendReply;
 
   final List<PostCommentModel> Function(String commentSk) repliesOf;
@@ -126,9 +126,12 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
   PostCommentModel? _replyTarget;
   bool _sending = false;
 
+  late List<PostCommentModel> _comments;
+
   @override
   void initState() {
     super.initState();
+    _comments = List<PostCommentModel>.from(widget.comments);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNode.requestFocus();
     });
@@ -155,7 +158,12 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
 
     try {
       if (_replyTarget == null) {
-        await widget.onSendRootComment(text);
+        final created = await widget.onSendRootComment(text);
+        if (created != null) {
+          setState(() {
+            _comments.insert(0, created);
+          });
+        }
       } else {
         await widget.onSendReply(_replyTarget!.sk, text);
       }
@@ -229,9 +237,9 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: widget.comments.length,
+                itemCount: _comments.length,
                 itemBuilder: (context, index) {
-                  final c = widget.comments[index];
+                  final c = _comments[index];
                   return Column(
                     children: [
                       CommentItem(
