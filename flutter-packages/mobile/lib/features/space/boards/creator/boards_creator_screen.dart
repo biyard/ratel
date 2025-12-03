@@ -52,7 +52,17 @@ class BoardsCreatorScreen extends GetWidget<BoardsCreatorController> {
                     }
 
                     final post = controller.posts[index];
-                    return BoardPostCard(post: post);
+                    return BoardPostCard(
+                      post: post,
+                      onTap: () {
+                        final route = AppRoutes.spacePostWithPk(
+                          controller.spacePk,
+                          post.pk,
+                        );
+                        logger.d('Navigate to board detail: $route');
+                        Get.rootDelegate.toNamed(route);
+                      },
+                    );
                   },
                 ),
               ),

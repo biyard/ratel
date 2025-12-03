@@ -52,7 +52,17 @@ class BoardsViewerScreen extends GetWidget<BoardsViewerController> {
                     }
 
                     final post = controller.posts[index];
-                    return BoardPostCard(post: post);
+                    return BoardPostCard(
+                      post: post,
+                      onTap: () {
+                        Get.rootDelegate.toNamed(
+                          AppRoutes.spacePostWithPk(
+                            controller.spacePk,
+                            post.pk,
+                          ),
+                        );
+                      },
+                    );
                   },
                 ),
               ),
