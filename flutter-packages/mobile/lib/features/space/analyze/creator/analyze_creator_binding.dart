@@ -1,9 +1,8 @@
 import 'package:ratel/exports.dart';
 
-class AnalyzeBinding extends Bindings {
+class AnalyzeCreatorBinding extends Bindings {
   @override
   void dependencies() {
-    Get.lazyPut<AnalyzeController>(() => AnalyzeController());
     Get.lazyPut<AnalyzeCreatorController>(() => AnalyzeCreatorController());
   }
 }
