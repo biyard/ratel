@@ -72,25 +72,43 @@ class SpaceController extends BaseController {
   String get currentRoute => '$baseRoute${currentTab.value.route}';
 
   List<SpaceTab> _buildTabsForPollSpace() {
-    return [
+    final baseTabs = <SpaceTab>[
       SpaceTab(id: 'overview', label: 'Overview', route: '/overview'),
       SpaceTab(id: 'poll', label: 'Polls', route: '/poll'),
-      SpaceTab(id: 'analyze', label: 'Analyze', route: '/analyze'),
-      SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
     ];
+
+    final isAdmin = space?.isAdmin ?? false;
+
+    if (isAdmin) {
+      baseTabs.addAll([
+        SpaceTab(id: 'analyze', label: 'Analyze', route: '/analyze'),
+        SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
+      ]);
+    }
+
+    return baseTabs;
   }
 
   List<SpaceTab> _buildTabsForDeliberationSpace() {
-    return [
+    final baseTabs = <SpaceTab>[
       SpaceTab(id: 'overview', label: 'Overview', route: '/overview'),
       SpaceTab(id: 'file', label: 'Files', route: '/file'),
       SpaceTab(id: 'poll', label: 'Polls', route: '/polls'),
       SpaceTab(id: 'board', label: 'Boards', route: '/board'),
-      SpaceTab(id: 'member', label: 'Members', route: '/member'),
-      SpaceTab(id: 'panel', label: 'Panels', route: '/panel'),
-      SpaceTab(id: 'analyze', label: 'Analyze', route: '/analyzes'),
-      SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
     ];
+
+    final isAdmin = space?.isAdmin ?? false;
+
+    if (isAdmin) {
+      baseTabs.addAll([
+        SpaceTab(id: 'member', label: 'Members', route: '/member'),
+        SpaceTab(id: 'panel', label: 'Panels', route: '/panel'),
+        SpaceTab(id: 'analyze', label: 'Analyze', route: '/analyzes'),
+        SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
+      ]);
+    }
+
+    return baseTabs;
   }
 }
 
