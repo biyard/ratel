@@ -94,7 +94,7 @@ class SpaceController extends BaseController {
       SpaceTab(id: 'overview', label: 'Overview', route: '/overview'),
       SpaceTab(id: 'file', label: 'Files', route: '/file'),
       SpaceTab(id: 'poll', label: 'Polls', route: '/polls'),
-      SpaceTab(id: 'board', label: 'Boards', route: '/board'),
+      SpaceTab(id: 'board', label: 'Boards', route: '/boards'),
     ];
 
     final isAdmin = space?.isAdmin ?? false;

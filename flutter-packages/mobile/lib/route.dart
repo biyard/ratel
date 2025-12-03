@@ -38,6 +38,11 @@ class AppRoutes {
           binding: BoardBinding(),
         ),
         GetPage(
+          name: '/boards',
+          page: () => const BoardsScreen(),
+          binding: BoardsBinding(),
+        ),
+        GetPage(
           name: '/file',
           page: () => const FileScreen(),
           binding: FileBinding(),

@@ -37,6 +37,13 @@ export 'features/space/poll/viewer/poll_viewer_binding.dart';
 export 'features/space/poll/viewer/poll_viewer_controller.dart';
 export 'features/space/poll/viewer/poll_viewer_screen.dart';
 
+export 'features/space/boards/creator/boards_creator_binding.dart';
+export 'features/space/boards/creator/boards_creator_controller.dart';
+export 'features/space/boards/creator/boards_creator_screen.dart';
+export 'features/space/boards/viewer/boards_viewer_binding.dart';
+export 'features/space/boards/viewer/boards_viewer_controller.dart';
+export 'features/space/boards/viewer/boards_viewer_screen.dart';
+
 export 'features/space/analyze/creator/analyze_creator_binding.dart';
 export 'features/space/analyze/creator/analyze_creator_controller.dart';
 export 'features/space/analyze/creator/analyze_creator_screen.dart';
@@ -123,6 +130,9 @@ export 'presentations/verified/verified_screen.dart';
 export 'presentations/space/space_binding.dart';
 export 'presentations/space/space_controller.dart';
 export 'presentations/space/space_screen.dart';
+export 'presentations/space/tabs/boards/boards_binding.dart';
+export 'presentations/space/tabs/boards/boards_controller.dart';
+export 'presentations/space/tabs/boards/boards_screen.dart';
 export 'presentations/space/tabs/panel/panel_binding.dart';
 export 'presentations/space/tabs/panel/panel_controller.dart';
 export 'presentations/space/tabs/panel/panel_screen.dart';
