@@ -376,7 +376,7 @@ class PostCommentModel {
   final String authorUsername;
   final String authorProfileUrl;
 
-  final bool liked;
+  bool liked;
 
   PostCommentModel({
     required this.pk,

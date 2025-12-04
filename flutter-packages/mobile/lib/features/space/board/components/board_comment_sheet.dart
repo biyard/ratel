@@ -395,12 +395,10 @@ class _BoardCommentInputBar extends StatelessWidget {
                               fontSize: 16,
                             ),
                           ),
-                          textInputAction: TextInputAction.send,
-                          onSubmitted: (value) {
-                            if (!sending) {
-                              onSend(value);
-                            }
-                          },
+                          textInputAction: TextInputAction.newline,
+                          keyboardType: TextInputType.multiline,
+                          minLines: 1,
+                          maxLines: 4,
                         ),
                       ),
                       8.gap,

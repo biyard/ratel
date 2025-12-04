@@ -175,15 +175,15 @@ class BoardCommentItem extends StatelessWidget {
                   behavior: HitTestBehavior.opaque,
                   child: Row(
                     children: [
-                      SizedBox(
+                      SvgPicture.asset(
+                        Assets.thumbs,
                         width: 20,
                         height: 20,
-                        child: Icon(
-                          Icons.thumb_up_alt_outlined,
-                          size: 16,
-                          color: comment.liked
+                        colorFilter: ColorFilter.mode(
+                          comment.liked
                               ? AppColors.primary
                               : const Color(0xFF737373),
+                          BlendMode.srcIn,
                         ),
                       ),
                       4.gap,
