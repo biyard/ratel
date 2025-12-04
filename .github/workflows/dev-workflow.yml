@@ -481,21 +481,20 @@ jobs:
         run: |
           make ENV=dev build-config
           flutter build apk --debug --dart-define-from-file=.build/config.json
-      - name: Package single APK (zip)
+
+      - name: Find built APK
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p .build
           APK=$(ls -t build/app/outputs/flutter-apk/*.apk | head -n 1)
-          ZIP=".build/$(basename "${APK%.apk}").zip"
-          zip -j "$ZIP" "$APK"
-          echo "APK_ZIP=$PWD/$ZIP" >> $GITHUB_ENV
-          ls -lh "$APK" "$ZIP"
+          echo "APK_PATH=$PWD/$APK" >> $GITHUB_ENV
+          ls -lh "$APK"
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: mobile-apk-${{ github.sha }}
-          path: ${{ env.APK_ZIP }}
+          path: ${{ env.APK_PATH }}
           if-no-files-found: error
           retention-days: 30
 
