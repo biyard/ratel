@@ -97,6 +97,15 @@ class AppRoutes {
       ],
     ),
     GetPage(
+      name: mySpaces,
+      page: () => MySpaceScreen(),
+      binding: MySpaceBinding(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
       name: mainScreen,
       page: () => MainScreen(),
       binding: MainBinding(),

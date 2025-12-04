@@ -1,31 +1,23 @@
 import 'package:ratel/exports.dart';
-import 'package:ratel/features/post/screens/detail/components/reply_item.dart';
 
 class CommentItem extends StatelessWidget {
   const CommentItem({
     super.key,
     required this.comment,
-    required this.onReply,
-    required this.repliesOf,
-    required this.isRepliesLoadingOf,
     required this.isLikingCommentOf,
     required this.isCommentLiked,
     required this.onToggleLikeComment,
   });
 
   final PostCommentModel comment;
-  final void Function(PostCommentModel) onReply;
-
-  final List<PostCommentModel> Function(String commentSk) repliesOf;
-  final bool Function(String commentSk) isRepliesLoadingOf;
 
   final bool Function(String commentSk) isLikingCommentOf;
   final bool Function(String commentSk, {bool fallback}) isCommentLiked;
   final Future<void> Function(String commentSk) onToggleLikeComment;
 
-  String _relativeTime(int millis) {
+  String _relativeTime(int secs) {
     final dt = DateTime.fromMillisecondsSinceEpoch(
-      millis * 1000,
+      secs * 1000,
       isUtc: true,
     ).toLocal();
     final now = DateTime.now();
@@ -53,12 +45,10 @@ class CommentItem extends StatelessWidget {
       final content = _plainContent(comment.content);
       final timeText = _relativeTime(comment.updatedAt);
 
-      final replies = repliesOf(comment.sk);
-      final isRepliesLoading = isRepliesLoadingOf(comment.sk);
       final isLiking = isLikingCommentOf(comment.sk);
       final liked = isCommentLiked(comment.sk, fallback: comment.liked == true);
 
-      final child = Column(
+      return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -153,86 +143,9 @@ class CommentItem extends StatelessWidget {
                   ],
                 ),
               ),
-              20.gap,
-              Row(
-                children: [
-                  SvgPicture.asset(
-                    Assets.roundBubble,
-                    width: 20,
-                    height: 20,
-                    colorFilter: const ColorFilter.mode(
-                      Color(0xFF737373),
-                      BlendMode.srcIn,
-                    ),
-                  ),
-                  5.gap,
-                  Text(
-                    replies.length.toString(),
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: 15,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
-          if (isRepliesLoading) ...[
-            12.vgap,
-            const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ] else if (replies.isNotEmpty) ...[
-            12.vgap,
-            Column(
-              children: replies
-                  .map(
-                    (r) => Padding(
-                      padding: const EdgeInsets.only(left: 34),
-                      child: ReplyItem(
-                        comment: r,
-                        isCommentLiked: isCommentLiked,
-                        isLikingCommentOf: isLikingCommentOf,
-                        onToggleLikeComment: onToggleLikeComment,
-                      ),
-                    ),
-                  )
-                  .toList(),
-            ),
-          ],
         ],
-      );
-
-      return Dismissible(
-        key: ValueKey('comment-${comment.sk}'),
-        direction: DismissDirection.endToStart,
-        confirmDismiss: (direction) async {
-          onReply(comment);
-          return false;
-        },
-        background: Align(
-          alignment: Alignment.centerRight,
-          child: Container(
-            width: 80,
-            decoration: const BoxDecoration(
-              color: Color(0xFF2563EB),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(8),
-                bottomRight: Radius.circular(8),
-              ),
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.subdirectory_arrow_left_rounded,
-                color: Colors.white,
-                size: 24,
-              ),
-            ),
-          ),
-        ),
-        child: child,
       );
     });
   }

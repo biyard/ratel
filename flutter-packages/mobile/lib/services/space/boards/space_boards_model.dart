@@ -177,3 +177,20 @@ class SpacePostCommentModel {
     'liked': liked,
   };
 }
+
+class SpacePostCommentListResult {
+  final List<SpacePostCommentModel> items;
+  final String? bookmark;
+
+  SpacePostCommentListResult({required this.items, this.bookmark});
+
+  factory SpacePostCommentListResult.fromJson(Map<String, dynamic> json) {
+    final list = (json['items'] as List? ?? [])
+        .map((e) => SpacePostCommentModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+    return SpacePostCommentListResult(
+      items: list,
+      bookmark: json['bookmark'] as String?,
+    );
+  }
+}

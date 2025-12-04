@@ -13,75 +13,39 @@ class SpaceApi extends GetConnect {
     });
   }
 
-  Future<MySpaceModel> getMySpaces() async {
-    final uri = Uri.parse(apiEndpoint).resolve('/v2/my-spaces');
+  Future<MySpaces> getMySpaces({String? bookmark}) async {
+    final base = Uri.parse(apiEndpoint).resolve('/v3/me/spaces');
+
+    final uri = (bookmark == null || bookmark.isEmpty)
+        ? base
+        : base.replace(queryParameters: {'bookmark': bookmark});
+
     final headers = <String, String>{'Content-Type': 'application/json'};
     final res = await get(uri.toString(), headers: headers);
 
-    logger.d("my spaces res: ${res.body}");
+    logger.d('getMySpaces res: status=${res.statusCode}, body=${res.body}');
 
-    if (!res.isOk || res.body == null)
-      return MySpaceModel(spaces: [], boostings: []);
-
-    int _i(dynamic v) {
-      if (v == null) return 0;
-      final s = '$v'.trim();
-      if (s.isEmpty || s.toLowerCase() == 'null') return 0;
-      return int.tryParse(s) ?? 0;
+    if (!res.isOk || res.body == null) {
+      return const MySpaces(items: [], bookmark: null);
     }
 
-    String _s(dynamic v) {
-      if (v == null) return '';
-      final s = '$v';
-      return s.toLowerCase() == 'null' ? '' : s;
+    try {
+      final body = res.body;
+
+      if (body is Map<String, dynamic>) {
+        return MySpaces.fromJson(body);
+      }
+
+      if (body is Map) {
+        return MySpaces.fromJson(Map<String, dynamic>.from(body));
+      }
+
+      logger.e('Unexpected getMySpaces response type: ${body.runtimeType}');
+      return const MySpaces(items: [], bookmark: null);
+    } catch (e, s) {
+      logger.e('Failed to parse MySpacesV3: $e\n$s');
+      return const MySpaces(items: [], bookmark: null);
     }
-
-    final mySpace = <SpaceSummary>[];
-    final boostings = <SpaceSummary>[];
-
-    final spacesJson = res.body['spaces'] as List? ?? const [];
-    for (final space in spacesJson) {
-      mySpace.add(
-        SpaceSummary(
-          id: _i(space['id']),
-          createdAt: _i(space['created_at']),
-          updatedAt: _i(space['updated_at']),
-          feedId: _i(space['feed_id']),
-          title: _s(space['title']),
-          htmlContents: _s(space['html_contents']),
-          imageUrl: _s(space['image_url']),
-          isBookmarked: false,
-          authorUrl: '',
-          authorName: '',
-          likes: 0,
-          rewards: 0,
-          comments: 0,
-        ),
-      );
-    }
-
-    final boostingsJson = res.body['boostings'] as List? ?? const [];
-    for (final space in boostingsJson) {
-      boostings.add(
-        SpaceSummary(
-          id: _i(space['id']),
-          createdAt: _i(space['created_at']),
-          updatedAt: _i(space['updated_at']),
-          feedId: _i(space['feed_id']),
-          title: _s(space['title']),
-          htmlContents: _s(space['html_contents']),
-          imageUrl: _s(space['image_url']),
-          isBookmarked: false,
-          authorUrl: '',
-          authorName: '',
-          likes: 0,
-          rewards: 0,
-          comments: 0,
-        ),
-      );
-    }
-
-    return MySpaceModel(spaces: mySpace, boostings: boostings);
   }
 
   Future<SpaceModel?> getSpace(String spacePk) async {
@@ -118,55 +82,41 @@ class SpaceApi extends GetConnect {
     }
   }
 
-  Future<dynamic> setComment(
-    int feedId,
-    int userId,
-    String htmlContents,
-  ) async {
-    final uri = Uri.parse(apiEndpoint).resolve('/v1/feeds');
-
-    final headers = <String, String>{'Content-Type': 'application/json'};
-    final body = {
-      'comment': {
-        'html_contents': htmlContents,
-        'user_id': userId,
-        'parent_id': feedId,
-      },
-    };
-
-    final res = await post(uri.toString(), body, headers: headers);
-
-    if (!res.isOk) return null;
-
-    logger.d('response body: ${res.body}');
-
-    return res.isOk;
-  }
-
-  Future<dynamic> responseAnswer(
-    int spaceId,
-    int surveyId,
-    List<Answer> answers,
-  ) async {
+  Future<ParticipateSpaceResponse> participateSpace({
+    required String spacePk,
+  }) async {
+    final encodedPk = Uri.encodeComponent(spacePk);
     final uri = Uri.parse(
       apiEndpoint,
-    ).resolve('/v1/spaces/${spaceId}/responses');
+    ).resolve('/v3/spaces/$encodedPk/participate');
 
     final headers = <String, String>{'Content-Type': 'application/json'};
-    final body = {
-      'respond_answer': {
-        'answers': answers.map((e) => e.toJson()).toList(),
-        'survey_type': 2,
-        'survey_id_param': surveyId,
-      },
-    };
+    final body = {'verifiable_presentation': ''};
 
     final res = await post(uri.toString(), body, headers: headers);
 
-    if (!res.isOk) return null;
+    logger.d(
+      'participateSpace($spacePk) res: status=${res.statusCode}, body=${res.body}',
+    );
 
-    logger.d('response body: ${res.body}');
+    if (!res.isOk || res.body == null) {
+      logger.e(
+        'participateSpace failed: status=${res.statusCode}, body=${res.body}',
+      );
+      throw Exception('Failed to participate space');
+    }
 
-    return res.isOk;
+    final raw = res.body;
+
+    if (raw is Map<String, dynamic>) {
+      return ParticipateSpaceResponse.fromJson(raw);
+    }
+
+    if (raw is Map) {
+      return ParticipateSpaceResponse.fromJson(Map<String, dynamic>.from(raw));
+    }
+
+    logger.e('Unexpected participateSpace response type: ${raw.runtimeType}');
+    throw Exception('Invalid participateSpace response');
   }
 }

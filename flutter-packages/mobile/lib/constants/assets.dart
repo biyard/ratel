@@ -26,6 +26,10 @@ abstract class Assets {
   static const String file = 'assets/icons/file.svg';
   static const String setting = 'assets/icons/setting.svg';
 
+  static const String gender = 'assets/icons/gender.svg';
+  static const String age = 'assets/icons/age.svg';
+  static const String university = 'assets/icons/university.svg';
+
   static const String editContent = 'assets/icons/edit_content.svg';
   static const String folder = 'assets/icons/folder.svg';
   static const String option = 'assets/icons/option.svg';
