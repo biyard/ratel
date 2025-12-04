@@ -10,6 +10,7 @@ pub mod members;
 pub mod panels;
 pub mod polls;
 pub mod recommendations;
+pub mod reports;
 
 pub mod dto;
 
@@ -72,7 +73,8 @@ pub fn route() -> Result<Router<AppState>> {
                 .nest("/boards", boards::route())
                 .nest("/polls", polls::route())
                 .nest("/rewards", rewards::route())
-                .nest("/sprint-leagues", sprint_leagues::route()),
+                .nest("/sprint-leagues", sprint_leagues::route())
+                .nest("/reports", reports::route()),
         )
         // NOTE: Above all, apply user participant instead of real user.
         // Real user will be passed only when space admin access is needed.
@@ -117,7 +119,12 @@ pub async fn inject_space(
     // Extract project_id from the URI path
     let path = parts.uri.path();
     let path_segments: Vec<&str> = path.split('/').collect();
-    let space_pk = path_segments[1].to_string();
+    let space_pk_encoded = path_segments[1].to_string();
+
+    // URL-decode the space_pk (it may be percent-encoded in the URI)
+    let space_pk = urlencoding::decode(&space_pk_encoded)
+        .map_err(|_| crate::Error::BadRequest("Invalid URL encoding".to_string()))?
+        .to_string();
 
     debug!("Verifying project access for space_id: {}", space_pk,);
 
