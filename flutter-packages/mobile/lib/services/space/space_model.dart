@@ -1,10 +1,146 @@
 import 'package:ratel/exports.dart';
 
-class MySpaceModel {
-  final List<SpaceSummary> spaces;
-  final List<SpaceSummary> boostings;
+class MySpaces {
+  final List<MySpaceItem> items;
+  final String? bookmark;
 
-  const MySpaceModel({required this.spaces, required this.boostings});
+  const MySpaces({required this.items, this.bookmark});
+
+  factory MySpaces.fromJson(Json j) {
+    final list = (j['items'] as List? ?? const [])
+        .whereType<Json>()
+        .map(MySpaceItem.fromJson)
+        .toList();
+
+    final bm = j['bookmark']?.toString();
+    return MySpaces(
+      items: list,
+      bookmark: (bm == null || bm.isEmpty) ? null : bm,
+    );
+  }
+}
+
+enum MySpaceInvitationStatus { pending, participating }
+
+MySpaceInvitationStatus invitationStatusFromJson(dynamic v) {
+  final s = (v ?? '').toString().toLowerCase();
+  switch (s) {
+    case 'pending':
+      return MySpaceInvitationStatus.pending;
+    case 'participating':
+      return MySpaceInvitationStatus.participating;
+    default:
+      return MySpaceInvitationStatus.participating;
+  }
+}
+
+class MySpaceItem {
+  final MySpaceInvitationStatus invitationStatus;
+
+  final String pk;
+  final String sk;
+  final int createdAt;
+  final int updatedAt;
+
+  final SpaceStatus? status;
+  final SpaceVisibility visibility;
+  final SpacePublishState publishState;
+  final SpaceType spaceType;
+  final BoosterType booster;
+
+  final String postPk;
+  final String content;
+
+  final String userPk;
+  final String authorDisplayName;
+  final String authorProfileUrl;
+  final String authorUsername;
+
+  final int? startedAt;
+  final int? endedAt;
+
+  final bool anonymousParticipation;
+  final bool changeVisibility;
+  final int participants;
+  final bool blockParticipate;
+  final int quota;
+  final int remains;
+
+  final String title;
+  final List<FileModel> files;
+
+  const MySpaceItem({
+    required this.invitationStatus,
+    required this.pk,
+    required this.sk,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.status,
+    required this.visibility,
+    required this.publishState,
+    required this.spaceType,
+    required this.booster,
+    required this.postPk,
+    required this.content,
+    required this.userPk,
+    required this.authorDisplayName,
+    required this.authorProfileUrl,
+    required this.authorUsername,
+    required this.startedAt,
+    required this.endedAt,
+    required this.anonymousParticipation,
+    required this.changeVisibility,
+    required this.participants,
+    required this.blockParticipate,
+    required this.quota,
+    required this.remains,
+    required this.title,
+    required this.files,
+  });
+
+  factory MySpaceItem.fromJson(Json j) {
+    List<FileModel> fileList() {
+      final raw = j['files'];
+      if (raw is List) {
+        return raw.whereType<Json>().map(FileModel.fromJson).toList();
+      }
+      return const [];
+    }
+
+    return MySpaceItem(
+      invitationStatus: invitationStatusFromJson(j['invitation_status']),
+      pk: j['pk']?.toString() ?? '',
+      sk: j['sk']?.toString() ?? '',
+      createdAt: _asIntOrNull(j['created_at']) ?? 0,
+      updatedAt: _asIntOrNull(j['updated_at']) ?? 0,
+      status: spaceStatusFromJson(j['status']),
+      visibility: spaceVisibilityFromJson(j['visibility']),
+      publishState: spacePublishStateFromJson(j['publish_state']),
+      spaceType: spaceTypeFromJson(j['space_type']),
+      booster: boosterTypeFromJson(j['booster']),
+      postPk: (j['post_pk'] ?? '') as String,
+      content: (j['content'] ?? '') as String,
+      userPk: (j['user_pk'] ?? '') as String,
+      authorDisplayName: (j['author_display_name'] ?? '') as String,
+      authorProfileUrl: (j['author_profile_url'] ?? '') as String,
+      authorUsername: (j['author_username'] ?? '') as String,
+      startedAt: _asIntOrNull(j['started_at']),
+      endedAt: _asIntOrNull(j['ended_at']),
+      anonymousParticipation: (j['anonymous_participation'] as bool?) ?? false,
+      changeVisibility: (j['change_visibility'] as bool?) ?? false,
+      participants: _asIntOrNull(j['participants']) ?? 0,
+      blockParticipate: (j['block_participate'] as bool?) ?? false,
+      quota: _asIntOrNull(j['quota']) ?? 0,
+      remains: _asIntOrNull(j['remains']) ?? 0,
+      title: (j['title'] ?? '') as String,
+      files: fileList(),
+    );
+  }
+
+  bool get isClosed {
+    return invitationStatus == MySpaceInvitationStatus.pending &&
+        blockParticipate;
+  }
 }
 
 class SpaceSummary {
