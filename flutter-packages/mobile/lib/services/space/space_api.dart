@@ -81,4 +81,42 @@ class SpaceApi extends GetConnect {
       return null;
     }
   }
+
+  Future<ParticipateSpaceResponse> participateSpace({
+    required String spacePk,
+  }) async {
+    final encodedPk = Uri.encodeComponent(spacePk);
+    final uri = Uri.parse(
+      apiEndpoint,
+    ).resolve('/v3/spaces/$encodedPk/participate');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'verifiable_presentation': ''};
+
+    final res = await post(uri.toString(), body, headers: headers);
+
+    logger.d(
+      'participateSpace($spacePk) res: status=${res.statusCode}, body=${res.body}',
+    );
+
+    if (!res.isOk || res.body == null) {
+      logger.e(
+        'participateSpace failed: status=${res.statusCode}, body=${res.body}',
+      );
+      throw Exception('Failed to participate space');
+    }
+
+    final raw = res.body;
+
+    if (raw is Map<String, dynamic>) {
+      return ParticipateSpaceResponse.fromJson(raw);
+    }
+
+    if (raw is Map) {
+      return ParticipateSpaceResponse.fromJson(Map<String, dynamic>.from(raw));
+    }
+
+    logger.e('Unexpected participateSpace response type: ${raw.runtimeType}');
+    throw Exception('Invalid participateSpace response');
+  }
 }

@@ -471,3 +471,23 @@ int? _asIntOrNull(dynamic v) {
   if (v is num) return v.toInt();
   return int.tryParse(v.toString());
 }
+
+class ParticipateSpaceResponse {
+  final String username;
+  final String displayName;
+  final String profileUrl;
+
+  const ParticipateSpaceResponse({
+    required this.username,
+    required this.displayName,
+    required this.profileUrl,
+  });
+
+  factory ParticipateSpaceResponse.fromJson(Map<String, dynamic> json) {
+    return ParticipateSpaceResponse(
+      username: json['username'] as String? ?? '',
+      displayName: json['display_name'] as String? ?? '',
+      profileUrl: json['profile_url'] as String? ?? '',
+    );
+  }
+}
