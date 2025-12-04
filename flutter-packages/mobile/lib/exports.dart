@@ -9,6 +9,10 @@ export 'theme_color.dart';
 export 'theme_controller.dart';
 export 'binding.dart';
 
+export 'presentations/my_space/my_space_binding.dart';
+export 'presentations/my_space/my_space_controller.dart';
+export 'presentations/my_space/my_space_screen.dart';
+
 export 'features/space/overview/creator/overview_creator_binding.dart';
 export 'features/space/overview/creator/overview_creator_controller.dart';
 export 'features/space/overview/creator/overview_creator_screen.dart';

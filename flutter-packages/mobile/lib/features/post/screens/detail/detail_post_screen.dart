@@ -54,11 +54,7 @@ class DetailPostScreen extends GetWidget<DetailPostController> {
               return DetailCommentBar(
                 bottomInset: bottomInset,
                 comments: model.comments,
-                onSendRootComment: controller.addComment,
-                onSendReply: (parentSk, text) =>
-                    controller.addReply(parentCommentSk: parentSk, text: text),
-                repliesOf: controller.repliesOf,
-                isRepliesLoadingOf: controller.isRepliesLoadingOf,
+                onSendComment: controller.addComment,
                 isLikingCommentOf: controller.isLikingCommentOf,
                 isCommentLiked: controller.isCommentLiked,
                 onToggleLikeComment: (commentSk) =>

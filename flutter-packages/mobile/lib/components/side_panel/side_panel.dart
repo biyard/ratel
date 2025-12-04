@@ -195,22 +195,22 @@ class SidePanel extends StatelessWidget {
                     //     Get.rootDelegate.offAndToNamed(AppRoutes.bookmark);
                     //   },
                     // ),
-                    // MenuItem(
-                    //   icon: SvgPicture.asset(
-                    //     Assets.verification,
-                    //     width: 20,
-                    //     height: 20,
-                    //     colorFilter: ColorFilter.mode(
-                    //       AppColors.neutral500,
-                    //       BlendMode.srcIn,
-                    //     ),
-                    //   ),
-                    //   label: MainLocalization.verifiedCredential,
-                    //   onTap: () {
-                    //     onClose();
-                    //     Get.rootDelegate.toNamed(AppRoutes.verifiedScreen);
-                    //   },
-                    // ),
+                    MenuItem(
+                      icon: SvgPicture.asset(
+                        Assets.verification,
+                        width: 20,
+                        height: 20,
+                        colorFilter: ColorFilter.mode(
+                          AppColors.neutral500,
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                      label: MainLocalization.verifiedCredential,
+                      onTap: () {
+                        onClose();
+                        Get.rootDelegate.toNamed(AppRoutes.verifiedScreen);
+                      },
+                    ),
                     // MenuItem(
                     //   icon: SvgPicture.asset(
                     //     Assets.star,
