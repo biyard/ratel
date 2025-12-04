@@ -1,7 +1,7 @@
 import 'package:ratel/exports.dart';
 
 class MainController extends BaseController {
-  final userApi = Get.find<UserApi>();
+  final userService = Get.find<UserService>();
   final feedApi = Get.find<FeedsApi>();
 
   @override
@@ -12,7 +12,7 @@ class MainController extends BaseController {
 
   void getUser() async {
     showLoading();
-    final item = await userApi.getUserInfoV2();
+    final item = await userService.getUser();
     user(item);
 
     hideLoading();
