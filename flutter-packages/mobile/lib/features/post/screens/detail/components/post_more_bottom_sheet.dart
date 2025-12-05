@@ -36,14 +36,14 @@ class PostMoreBottomSheet extends StatelessWidget {
             ),
             20.vgap,
             _SheetItem(
-              icon: Icons.edit_outlined,
+              icon: SvgPicture.asset(Assets.edit1, width: 20, height: 20),
               label: 'Update',
               labelColor: Colors.white,
               onTap: onUpdate,
             ),
             12.vgap,
             _SheetItem(
-              icon: Icons.delete_outline,
+              icon: SvgPicture.asset(Assets.deleteRed, width: 20, height: 20),
               label: 'Delete post',
               labelColor: const Color(0xFFEF4444),
               onTap: onDelete,
@@ -63,7 +63,7 @@ class _SheetItem extends StatelessWidget {
     required this.onTap,
   });
 
-  final IconData icon;
+  final SvgPicture icon;
   final String label;
   final Color labelColor;
   final VoidCallback onTap;
@@ -77,14 +77,15 @@ class _SheetItem extends StatelessWidget {
         height: 48,
         child: Row(
           children: [
-            Icon(icon, size: 20, color: labelColor),
-            12.gap,
+            icon,
+            5.gap,
             Text(
               label,
               style: TextStyle(
                 color: labelColor,
-                fontSize: 15,
-                fontWeight: FontWeight.w500,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                height: 24 / 16,
               ),
             ),
           ],

@@ -7,6 +7,8 @@ class CreatePostController extends BaseController {
   final String? postPk;
 
   final feedApi = Get.find<FeedsApi>();
+  final feedsService = Get.find<FeedsService>();
+
   final titleController = TextEditingController();
   final bodyController = TextEditingController();
 
@@ -15,10 +17,11 @@ class CreatePostController extends BaseController {
   static const _autoSaveDelay = Duration(seconds: 5);
   Timer? _autoSaveTimer;
   bool _isModified = false;
-  DateTime? lastSavedAt;
 
   final RxBool canSubmit = false.obs;
   final RxBool isEditorReady = false.obs;
+
+  final Rx<int?> lastUpdatedAtMillis = Rx<int?>(null);
 
   static const int minLength = 10;
   static const int maxLength = 1000;
@@ -52,6 +55,8 @@ class CreatePostController extends BaseController {
       titleController.text = title;
       bodyHtml = html;
       bodyController.text = html;
+
+      lastUpdatedAtMillis.value = post.post.updatedAt;
 
       _isModified = false;
       _validateCanSubmit();
@@ -111,6 +116,10 @@ class CreatePostController extends BaseController {
       content: html,
     );
 
+    if (res) {
+      lastUpdatedAtMillis.value = DateTime.now().millisecondsSinceEpoch;
+    }
+
     logger.d('save draft res: $res');
   }
 
@@ -126,8 +135,7 @@ class CreatePostController extends BaseController {
       logger.d('[autosave] start');
       await _saveDraft(title: title, html: html);
       _isModified = false;
-      lastSavedAt = DateTime.now();
-      logger.d('[autosave] success at $lastSavedAt');
+      logger.d('[autosave] success');
     } catch (e) {
       logger.e('[autosave] failed $e');
     }
@@ -137,7 +145,7 @@ class CreatePostController extends BaseController {
     if (!canSubmit.value) {
       Biyard.error(
         'Cannot publish post.',
-        'Title + content must be between $minLength and $maxLength characters.',
+        'Title, content must be between $minLength and $maxLength characters.',
       );
       return;
     }
@@ -162,6 +170,13 @@ class CreatePostController extends BaseController {
       Biyard.error('Failed to publish post.', 'Please try again later.');
       return;
     }
+
+    lastUpdatedAtMillis.value = DateTime.now().millisecondsSinceEpoch;
+
+    feedsService.removeDraftLocally(postPk!);
+
+    final detail = await feedsService.fetchDetail(postPk!, forceRefresh: true);
+    feedsService.updateDetail(detail);
 
     Get.rootDelegate.offNamed(postWithPk(postPk!));
   }
