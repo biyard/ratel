@@ -31,18 +31,33 @@ class MySpaceListItem extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Text(
-                          item.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                            height: 24 / 16,
-                          ),
+                        Row(
+                          children: [
+                            _StatusChip(
+                              label: _isClosed ? 'Closed' : 'Participating',
+                              backgroundColor: _isClosed
+                                  ? const Color(0xFF4A1F1D)
+                                  : const Color(0xFF053321),
+                              textColor: _isClosed
+                                  ? const Color(0xFFFCA5A5)
+                                  : const Color(0xFF6EE7B7),
+                            ),
+                            10.gap,
+                            Text(
+                              item.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'Raleway',
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 18,
+                                height: 24 / 18,
+                              ),
+                            ),
+                          ],
                         ),
-                        4.vgap,
+                        10.vgap,
                         Row(
                           children: [
                             RoundContainer(
@@ -59,36 +74,17 @@ class MySpaceListItem extends StatelessWidget {
                             10.gap,
                             Text(
                               item.authorDisplayName,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                                height: 24 / 16,
-                                letterSpacing: 0.5,
+                              style: const TextStyle(
+                                fontFamily: 'Raleway',
                                 color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                height: 20 / 14,
                               ),
-                            ),
-                            4.gap,
-                            SvgPicture.asset(
-                              Assets.badge,
-                              width: 20,
-                              height: 20,
                             ),
                           ],
                         ),
                         6.vgap,
-                        Row(
-                          children: [
-                            _StatusChip(
-                              label: _isClosed ? 'Closed' : 'Participating',
-                              backgroundColor: _isClosed
-                                  ? const Color(0xFF4A1F1D)
-                                  : const Color(0xFF053321),
-                              textColor: _isClosed
-                                  ? const Color(0xFFFCA5A5)
-                                  : const Color(0xFF6EE7B7),
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ),

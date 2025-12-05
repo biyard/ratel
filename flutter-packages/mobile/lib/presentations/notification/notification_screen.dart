@@ -9,10 +9,12 @@ class NotificationScreen extends GetWidget<NotificationController> {
     final bottomPad = MediaQuery.of(context).padding.bottom;
     return Layout<NotificationController>(
       child: Padding(
-        padding: EdgeInsets.fromLTRB(14, 12, 14, bottomPad),
+        padding: EdgeInsets.fromLTRB(0, 12, 0, bottomPad),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Header(title: 'Notifications'),
+            15.vgap,
             Text(
               "Invitation",
               style: TextStyle(

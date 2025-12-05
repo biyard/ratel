@@ -6,40 +6,11 @@ class MySpaceScreen extends GetWidget<MySpaceController> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Layout<MySpaceController>(
       scrollable: false,
       child: SafeArea(
         bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 4),
-              child: Text(
-                'My Spaces',
-                style: theme.textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 22,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 8),
-              child: Text(
-                'Spaces you’re participating in',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.neutral500,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-            4.vgap,
-            Expanded(child: _MySpaceList(controller: controller)),
-          ],
-        ),
+        child: _MySpaceList(controller: controller),
       ),
     );
   }
@@ -53,6 +24,7 @@ class _MySpaceList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Obx(() {
       final isFirstLoading =
@@ -78,9 +50,13 @@ class _MySpaceList extends StatelessWidget {
       if (items.isEmpty) {
         return RefreshIndicator(
           onRefresh: controller.refreshSpaces,
+          color: AppColors.primary,
+          backgroundColor: AppColors.bg,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(0, 10, 0, bottomPad + 10),
             children: [
+              const Header(title: 'My Spaces'),
               100.vgap,
               Center(
                 child: Text(
@@ -95,27 +71,34 @@ class _MySpaceList extends StatelessWidget {
         );
       }
 
+      final hasMore = controller.hasMore;
+      final itemCount = 1 + items.length + (hasMore ? 1 : 0);
+
       return RefreshIndicator(
         onRefresh: controller.refreshSpaces,
         color: AppColors.primary,
         backgroundColor: AppColors.bg,
         child: ListView.separated(
           physics: const AlwaysScrollableScrollPhysics(),
-          itemCount: items.length + (controller.hasMore ? 1 : 0),
+          padding: EdgeInsets.fromLTRB(0, 10, 0, bottomPad + 10),
+          itemCount: itemCount,
           separatorBuilder: (_, index) {
-            if (controller.hasMore && index == items.length - 1) {
+            if (index == 0) return 10.vgap;
+
+            final listIndex = index - 1;
+            if (hasMore && listIndex == items.length - 1) {
               return const SizedBox(height: 8);
             }
 
             return Column(
               children: [
                 10.vgap,
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                  child: Container(
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
+                  child: SizedBox(
                     width: double.infinity,
                     height: 1,
-                    color: const Color(0xff464646),
+                    child: ColoredBox(color: Color(0xff464646)),
                   ),
                 ),
                 10.vgap,
@@ -123,9 +106,18 @@ class _MySpaceList extends StatelessWidget {
             );
           },
           itemBuilder: (context, index) {
-            final hasMore = controller.hasMore;
+            if (index == 0) {
+              return Column(
+                children: [
+                  const Header(title: 'My Spaces'),
+                  15.vgap,
+                ],
+              );
+            }
 
-            if (hasMore && index == items.length) {
+            final listIndex = index - 1;
+
+            if (hasMore && listIndex == items.length) {
               final isLoadingMore = controller.isLoadingMore.value;
 
               if (!isLoadingMore) {
@@ -150,7 +142,7 @@ class _MySpaceList extends StatelessWidget {
               return const SizedBox(height: 16);
             }
 
-            final item = items[index];
+            final item = items[listIndex];
 
             return MySpaceListItem(
               item: item,

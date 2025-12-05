@@ -28,8 +28,6 @@ class Layout<T extends BaseController> extends GetView {
     return Scaffold(
       backgroundColor: style.background,
       body: SafeArea(
-        top: true,
-        bottom: false,
         child: Stack(
           alignment: Alignment.topLeft,
           children: [

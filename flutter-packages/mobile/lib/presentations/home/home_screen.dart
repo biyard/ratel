@@ -19,29 +19,37 @@ class HomeScreen extends GetWidget<HomeController> {
             controller: controller.scrollController,
             padding: EdgeInsets.fromLTRB(0, 10, 0, bottomPad + 10),
             itemCount:
-                controller.feeds.length + (controller.hasMore.value ? 1 : 0),
-            separatorBuilder: (_, __) => 8.vgap,
+                1 +
+                controller.feeds.length +
+                (controller.hasMore.value ? 1 : 0),
+            separatorBuilder: (_, index) {
+              if (index == 0) return 10.vgap;
+              return 8.vgap;
+            },
             itemBuilder: (context, index) {
-              if (index >= controller.feeds.length) {
+              if (index == 0) {
+                return const Header(title: "");
+              }
+
+              final feedIndex = index - 1;
+
+              if (feedIndex >= controller.feeds.length) {
                 return _buildLoadMoreIndicator();
               }
 
-              final feed = controller.feeds[index];
+              final feed = controller.feeds[feedIndex];
               return FeedCardV2(
                 feed: feed,
-                onBookmarkTap: () => {},
-                onTap: () => {
-                  logger.d("feed tapped: ${feed.pk} ${feed.spacePk}"),
-                  if (feed.spacePk != null)
-                    {
-                      logger.d("space pk: ${feed.spacePk}"),
-                      Get.rootDelegate.toNamed(spaceWithPk(feed.spacePk!)),
-                    }
-                  else
-                    {
-                      logger.d("feed pk: ${feed.pk}"),
-                      Get.rootDelegate.toNamed(postWithPk(feed.pk)),
-                    },
+                onBookmarkTap: () {},
+                onTap: () {
+                  logger.d("feed tapped: ${feed.pk} ${feed.spacePk}");
+                  if (feed.spacePk != null) {
+                    logger.d("space pk: ${feed.spacePk}");
+                    Get.rootDelegate.toNamed(spaceWithPk(feed.spacePk!));
+                  } else {
+                    logger.d("feed pk: ${feed.pk}");
+                    Get.rootDelegate.toNamed(postWithPk(feed.pk));
+                  }
                 },
               );
             },
