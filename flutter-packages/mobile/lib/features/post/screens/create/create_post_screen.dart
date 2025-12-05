@@ -11,7 +11,14 @@ class CreatePostScreen extends GetWidget<CreatePostController> {
       scrollable: false,
       child: Column(
         children: [
-          _PostHeaderBar(onClose: () => Get.back(), onPost: controller.submit),
+          Obx(
+            () => _PostHeaderBar(
+              onClose: () => Get.back(),
+              onPost: controller.submit,
+              canPost: controller.canSubmit.value,
+              updatedAtMillis: controller.lastUpdatedAtMillis.value,
+            ),
+          ),
           Expanded(
             child: Padding(
               padding: EdgeInsets.fromLTRB(20, 24, 20, bottomPad + 24),
@@ -21,10 +28,21 @@ class CreatePostScreen extends GetWidget<CreatePostController> {
                   _TitleField(controller: controller.titleController),
                   30.vgap,
                   Expanded(
-                    child: RichEditor(
-                      controller: controller.bodyController,
-                      onHtmlChanged: controller.onBodyHtmlChanged,
-                    ),
+                    child: Obx(() {
+                      if (!controller.isEditorReady.value) {
+                        return const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        );
+                      }
+                      return RichEditor(
+                        controller: controller.bodyController,
+                        onHtmlChanged: controller.onBodyHtmlChanged,
+                      );
+                    }),
                   ),
                 ],
               ),
@@ -37,13 +55,40 @@ class CreatePostScreen extends GetWidget<CreatePostController> {
 }
 
 class _PostHeaderBar extends StatelessWidget {
-  const _PostHeaderBar({required this.onClose, required this.onPost});
+  const _PostHeaderBar({
+    required this.onClose,
+    required this.onPost,
+    required this.canPost,
+    required this.updatedAtMillis,
+  });
 
   final VoidCallback onClose;
   final VoidCallback onPost;
+  final bool canPost;
+  final int? updatedAtMillis;
+
+  String _formatUpdatedAt(int millis) {
+    final dt = DateTime.fromMillisecondsSinceEpoch(
+      millis,
+      isUtc: true,
+    ).toLocal();
+    final diff = DateTime.now().difference(dt);
+
+    if (diff.inMinutes < 1) return 'Saved just now';
+    if (diff.inMinutes < 60) return 'Saved ${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return 'Saved ${diff.inHours}h ago';
+
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return 'Saved $h:$m';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final label = updatedAtMillis == null
+        ? ''
+        : _formatUpdatedAt(updatedAtMillis!);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       alignment: Alignment.center,
@@ -55,46 +100,26 @@ class _PostHeaderBar extends StatelessWidget {
               width: 32,
               height: 32,
               radius: 100,
-              color: Color(0xff171717),
-              child: Center(
+              color: const Color(0xff171717),
+              child: const Center(
                 child: Icon(Icons.close, size: 18, color: Colors.white),
               ),
             ),
           ),
           const Spacer(),
-          InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(16),
-            child: const SizedBox(
-              width: 32,
-              height: 32,
-              child: Center(
-                child: Icon(
-                  Icons.more_horiz,
-                  size: 18,
-                  color: AppColors.neutral300,
+          if (label.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.neutral500,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(16),
-            child: const SizedBox(
-              width: 32,
-              height: 32,
-              child: Center(
-                child: Icon(
-                  Icons.remove_red_eye_outlined,
-                  size: 18,
-                  color: AppColors.neutral300,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          _PostButton(onTap: onPost),
+          _PostButton(onTap: onPost, enabled: canPost),
         ],
       ),
     );
@@ -102,24 +127,28 @@ class _PostHeaderBar extends StatelessWidget {
 }
 
 class _PostButton extends StatelessWidget {
-  const _PostButton({required this.onTap});
+  const _PostButton({required this.onTap, required this.enabled});
   final VoidCallback onTap;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = enabled ? AppColors.primary : AppColors.neutral700;
+    final textColor = enabled ? Colors.black : AppColors.neutral400;
+
     return InkWell(
-      onTap: onTap,
+      onTap: enabled ? onTap : null,
       borderRadius: BorderRadius.circular(999),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.primary,
+          color: bgColor,
           borderRadius: BorderRadius.circular(999),
         ),
-        child: const Text(
+        child: Text(
           'Post',
           style: TextStyle(
-            color: Colors.black,
+            color: textColor,
             fontSize: 14,
             fontWeight: FontWeight.w700,
             height: 1,

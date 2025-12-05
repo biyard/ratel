@@ -21,6 +21,7 @@ class SpaceScreen extends GetWidget<SpaceController> {
             Expanded(
               child: Obx(() {
                 final space = controller.space;
+                final collapsed = controller.isHeaderCollapsed.value;
 
                 if (space == null) {
                   return const Center(
@@ -32,52 +33,70 @@ class SpaceScreen extends GetWidget<SpaceController> {
                   );
                 }
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SpaceMetaSection(space: space),
-                          20.vgap,
-                          Container(
-                            width: double.infinity,
-                            height: 0.3,
-                            color: const Color(0xFFD4D4D4),
-                          ),
-                        ],
+                return Listener(
+                  onPointerMove: (event) =>
+                      controller.handlePointerMove(event.delta.dy),
+                  onPointerUp: (_) => controller.resetPointer(),
+                  onPointerCancel: (_) => controller.resetPointer(),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        switchInCurve: Curves.easeOut,
+                        switchOutCurve: Curves.easeIn,
+                        child: collapsed
+                            ? const SizedBox.shrink(
+                                key: ValueKey('header_collapsed'),
+                              )
+                            : Padding(
+                                key: const ValueKey('header_expanded'),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    SpaceMetaSection(space: space),
+                                    20.vgap,
+                                    Container(
+                                      width: double.infinity,
+                                      height: 0.3,
+                                      color: const Color(0xFFD4D4D4),
+                                    ),
+                                  ],
+                                ),
+                              ),
                       ),
-                    ),
-                    20.vgap,
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: SpaceTabBar(controller: controller),
-                    ),
-                    20.vgap,
-                    Expanded(
-                      child: Obx(() {
-                        final pk = controller.spacePk;
-                        if (pk.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
+                      if (!collapsed) 20.vgap,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: SpaceTabBar(controller: controller),
+                      ),
+                      20.vgap,
+                      Expanded(
+                        child: Obx(() {
+                          final pk = controller.spacePk;
+                          if (pk.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
 
-                        final base = controller.baseRoute;
-                        final current = controller.currentRoute;
+                          final base = controller.baseRoute;
+                          final current = controller.currentRoute;
 
-                        logger.d('Space content route: $current');
+                          logger.d('Space content route: $current');
 
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: GetRouterOutlet(
-                            anchorRoute: base,
-                            initialRoute: current,
-                          ),
-                        );
-                      }),
-                    ),
-                  ],
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: GetRouterOutlet(
+                              anchorRoute: base,
+                              initialRoute: current,
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
+                  ),
                 );
               }),
             ),

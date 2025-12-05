@@ -1,7 +1,9 @@
 import 'package:ratel/exports.dart';
 
 class DetailPostController extends BaseController {
+  final userService = Get.find<UserService>();
   final feedsApi = Get.find<FeedsApi>();
+  final feedsService = Get.find<FeedsService>();
 
   late final String postPk;
 
@@ -14,6 +16,27 @@ class DetailPostController extends BaseController {
   final isLikingPost = false.obs;
   bool get isPostLiked => feed.value?.isLiked == true;
   int get postLikes => feed.value?.post.likes ?? 0;
+
+  final Rx<UserV2Model> user = UserV2Model(
+    pk: '',
+    email: '',
+    nickname: '',
+    profileUrl: '',
+    description: '',
+    userType: 0,
+    username: '',
+    followersCount: 0,
+    followingsCount: 0,
+    theme: 0,
+    point: 0,
+    referralCode: null,
+    phoneNumber: null,
+    principal: null,
+    evmAddress: null,
+    teams: const [],
+  ).obs;
+
+  late final Worker _detailSubscription;
 
   @override
   void onInit() {
@@ -28,14 +51,32 @@ class DetailPostController extends BaseController {
     postPk = Uri.decodeComponent(raw);
     logger.d('DetailPostController postPk = $postPk');
 
+    _detailSubscription = ever<Map<String, FeedV2Model>>(feedsService.details, (
+      map,
+    ) {
+      final updated = map[postPk];
+      if (updated != null) {
+        feed.value = updated;
+      }
+    });
+
     loadFeed();
+    user(userService.user.value);
   }
 
-  Future<void> loadFeed() async {
+  @override
+  void onClose() {
+    _detailSubscription.dispose();
+    super.onClose();
+  }
+
+  Future<void> loadFeed({bool forceRefresh = false}) async {
     try {
       isLoading.value = true;
-
-      final result = await feedsApi.getFeedV2(postPk);
+      final result = await feedsService.fetchDetail(
+        postPk,
+        forceRefresh: forceRefresh,
+      );
 
       final spacePk = result.post.spacePk;
       if (spacePk != null && spacePk.isNotEmpty) {
@@ -44,12 +85,20 @@ class DetailPostController extends BaseController {
       }
 
       feed.value = result;
-      logger.d("feed results: $result");
     } catch (e, s) {
       logger.e('Failed to load feed detail: $e', stackTrace: s);
     } finally {
       isLoading.value = false;
     }
+  }
+
+  Future<void> deletePost({required String postPk}) async {
+    final ok = await feedsService.deletePost(postPk);
+    if (!ok) {
+      Biyard.error('Failed to delete post.', 'Please try again later.');
+      return;
+    }
+    Get.back();
   }
 
   bool isCommentLiked(String commentSk, {bool fallback = false}) {
@@ -103,6 +152,7 @@ class DetailPostController extends BaseController {
       target.liked = actualLiked;
 
       feed.refresh();
+      feedsService.updateDetail(current);
     } catch (e, s) {
       logger.e('Failed to like/unlike comment $commentSk: $e', stackTrace: s);
     } finally {
@@ -139,6 +189,7 @@ class DetailPostController extends BaseController {
         permissions: current.permissions,
       );
 
+      feedsService.updateDetail(feed.value!);
       return created;
     } catch (e, s) {
       logger.e('Failed to add comment: $e', stackTrace: s);
@@ -195,6 +246,8 @@ class DetailPostController extends BaseController {
         isLiked: res.like,
         permissions: current.permissions,
       );
+
+      feedsService.updateDetail(feed.value!);
     } catch (e, s) {
       logger.e('Failed to toggle like post: $e', stackTrace: s);
     } finally {

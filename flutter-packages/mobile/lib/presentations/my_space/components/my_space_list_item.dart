@@ -31,51 +31,6 @@ class MySpaceListItem extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Text(
-                          item.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                            height: 24 / 16,
-                          ),
-                        ),
-                        4.vgap,
-                        Row(
-                          children: [
-                            RoundContainer(
-                              width: 24,
-                              height: 24,
-                              radius: 118.5,
-                              imageUrl: item.authorProfileUrl.isNotEmpty
-                                  ? item.authorProfileUrl
-                                  : defaultProfileImage,
-                              color: null,
-                              alignment: Alignment.center,
-                              child: null,
-                            ),
-                            10.gap,
-                            Text(
-                              item.authorDisplayName,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 16,
-                                height: 24 / 16,
-                                letterSpacing: 0.5,
-                                color: Colors.white,
-                              ),
-                            ),
-                            4.gap,
-                            SvgPicture.asset(
-                              Assets.badge,
-                              width: 20,
-                              height: 20,
-                            ),
-                          ],
-                        ),
-                        6.vgap,
                         Row(
                           children: [
                             _StatusChip(
@@ -87,8 +42,29 @@ class MySpaceListItem extends StatelessWidget {
                                   ? const Color(0xFFFCA5A5)
                                   : const Color(0xFF6EE7B7),
                             ),
+                            10.gap,
+                            Text(
+                              item.title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontFamily: 'Raleway',
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 18,
+                                height: 24 / 18,
+                              ),
+                            ),
                           ],
                         ),
+                        10.vgap,
+                        Profile(
+                          profileImageUrl: item.authorProfileUrl.isNotEmpty
+                              ? item.authorProfileUrl
+                              : defaultProfileImage,
+                          displayName: item.authorDisplayName,
+                        ),
+                        6.vgap,
                       ],
                     ),
                   ),
