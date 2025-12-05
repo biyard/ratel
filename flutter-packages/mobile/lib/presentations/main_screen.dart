@@ -33,10 +33,10 @@ class _MainScreenState extends State<MainScreen>
 
   final routes = [
     AppRoutes.home,
-    AppRoutes.myNetwork,
     AppRoutes.mySpaces,
+    '__plus__',
     AppRoutes.notification,
-    AppRoutes.message,
+    AppRoutes.myPage,
   ];
 
   Future<void> openSidePanel() async {
@@ -51,7 +51,12 @@ class _MainScreenState extends State<MainScreen>
     _panelCtrl.reverse();
   }
 
-  void onTap(int index) {
+  void onTap(int index) async {
+    if (index == 2) {
+      await controller.createPost();
+      return;
+    }
+
     if (index == currentIndex) return;
 
     final routeName = routes[index];
@@ -75,6 +80,7 @@ class _MainScreenState extends State<MainScreen>
             begin: begin,
             end: end,
           ).chain(CurveTween(curve: curve));
+
           return SlideTransition(
             position: animation.drive(tween),
             child: child,
@@ -99,20 +105,10 @@ class _MainScreenState extends State<MainScreen>
       extendBody: true,
       bottomNavigationBar: buildBottomNav(barHeight, inset),
       body: SafeArea(
-        bottom: false,
         child: Stack(
           children: [
             Column(
               children: [
-                Obx(
-                  () => Header(
-                    profileImage: controller.user.value.profileUrl,
-                    onTapAvatar: openSidePanel,
-                    onTapPlus: () async {
-                      await controller.createPost();
-                    },
-                  ),
-                ),
                 Expanded(
                   child: Navigator(
                     key: Get.nestedKey(1),
@@ -239,27 +235,6 @@ class _MainScreenState extends State<MainScreen>
                       ),
                       BottomNavigationBarItem(
                         icon: SvgPicture.asset(
-                          Assets.people,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.iconPrimary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        activeIcon: SvgPicture.asset(
-                          Assets.people,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.primary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        label: MainLocalization.network,
-                      ),
-                      BottomNavigationBarItem(
-                        icon: SvgPicture.asset(
                           Assets.chat,
                           width: 25,
                           height: 25,
@@ -278,6 +253,27 @@ class _MainScreenState extends State<MainScreen>
                           ),
                         ),
                         label: MainLocalization.spaces,
+                      ),
+                      BottomNavigationBarItem(
+                        icon: SvgPicture.asset(
+                          Assets.plus,
+                          width: 28,
+                          height: 28,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.iconPrimary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        activeIcon: SvgPicture.asset(
+                          Assets.chat,
+                          width: 28,
+                          height: 28,
+                          colorFilter: const ColorFilter.mode(
+                            AppColors.primary,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        label: "",
                       ),
                       BottomNavigationBarItem(
                         icon: SvgPicture.asset(
@@ -302,7 +298,7 @@ class _MainScreenState extends State<MainScreen>
                       ),
                       BottomNavigationBarItem(
                         icon: SvgPicture.asset(
-                          Assets.mail,
+                          Assets.notification,
                           width: 25,
                           height: 25,
                           colorFilter: const ColorFilter.mode(
@@ -311,7 +307,7 @@ class _MainScreenState extends State<MainScreen>
                           ),
                         ),
                         activeIcon: SvgPicture.asset(
-                          Assets.mail,
+                          Assets.notification,
                           width: 25,
                           height: 25,
                           colorFilter: const ColorFilter.mode(
@@ -319,7 +315,7 @@ class _MainScreenState extends State<MainScreen>
                             BlendMode.srcIn,
                           ),
                         ),
-                        label: MainLocalization.messages,
+                        label: MainLocalization.my,
                       ),
                     ],
                   ),
@@ -370,6 +366,8 @@ class _MainScreenState extends State<MainScreen>
         return const MySpaceScreen();
       case AppRoutes.notification:
         return const NotificationScreen();
+      case AppRoutes.myPage:
+        return const MyPageScreen();
       default:
         return const MessageScreen();
     }
