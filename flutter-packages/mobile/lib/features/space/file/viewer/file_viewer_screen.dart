@@ -20,7 +20,18 @@ class FileViewerScreen extends GetWidget<FileViewerController> {
         }
 
         if (controller.files.isEmpty) {
-          return const SizedBox.shrink();
+          return const Center(
+            child: Text(
+              'No files',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+                height: 18 / 13,
+                color: Color(0xFF6B6B6B),
+              ),
+            ),
+          );
         }
 
         return AttachmentSection(files: controller.files);
