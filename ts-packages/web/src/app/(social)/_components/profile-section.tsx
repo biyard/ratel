@@ -3,6 +3,7 @@ import TeamSelector from './team-selector';
 import { TeamContext } from '@/lib/contexts/team-context';
 import UserFollows from './user-follows';
 import { useSuspenseUserInfo } from '@/hooks/use-user-info';
+import MembershipInfo from '@/features/membership/components/membership-info';
 
 export default function ProfileSection() {
   const { data } = useSuspenseUserInfo();
@@ -39,7 +40,7 @@ export default function ProfileSection() {
         className="text-xs text-text-secondary"
         dangerouslySetInnerHTML={{ __html: user.description }}
       />
-      {/* <UserTier /> */}
+      <MembershipInfo />
       {/* FIXME: implement badges */}
       {/* <UserBadges badges={user.badges ? user.badges : []} /> */}
       <UserFollows

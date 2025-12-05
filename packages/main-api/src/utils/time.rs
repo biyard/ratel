@@ -1,4 +1,4 @@
-use chrono::TimeZone;
+use chrono::{NaiveTime, TimeZone};
 
 pub fn format_timestamp<T>(timestamp: i64, timezone: T) -> Option<String>
 where
@@ -25,4 +25,11 @@ pub fn get_now_timestamp_micros() -> i64 {
 
 pub fn now() -> i64 {
     get_now_timestamp_millis()
+}
+
+pub fn after_days_from_now_rfc_3339(days: i64) -> String {
+    (chrono::Utc::now() + chrono::Duration::days(days))
+        .with_time(NaiveTime::from_hms_opt(0, 0, 0).unwrap())
+        .unwrap()
+        .to_rfc3339()
 }

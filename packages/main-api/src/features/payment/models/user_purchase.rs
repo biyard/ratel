@@ -11,6 +11,7 @@ pub struct UserPurchase {
     #[dynamo(prefix = "PAYMENT", name = "find_by_user", index = "gsi1", sk)]
     pub created_at: i64,
 
+    pub status: PurchaseStatus,
     pub tx_type: TransactionType,
     pub amount: i64,
     pub currency: Currency,
@@ -39,6 +40,7 @@ impl UserPurchase {
             payment_id,
             tx_id,
             currency,
+            status: PurchaseStatus::Success,
         }
     }
 }

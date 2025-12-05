@@ -77,3 +77,6 @@ pub use app_state::*;
 
 pub mod attribute;
 pub use attribute::*;
+
+pub mod report_publish_state;
+pub use report_publish_state::*;

@@ -60,7 +60,7 @@ export const MembershipPlan = {
           'Up to 2 credits per a reward space',
           'Earn 10% of the total rewards distributed to participants.',
         ],
-        price: '$20 / month',
+        price: '₩30,000 / month',
         btn: 'Get Pro',
       },
       {
@@ -73,7 +73,7 @@ export const MembershipPlan = {
           'Earn 10% of the total rewards distributed to participants.',
           'Get a trusted creator badge',
         ],
-        price: '$50 / month',
+        price: '₩75,000 / month',
         btn: 'Get Max',
       },
       {
@@ -87,7 +87,7 @@ export const MembershipPlan = {
           'Get a trusted creator badge',
           'Access raw participant data',
         ],
-        price: '$100 / month',
+        price: '₩150,000 / month',
         btn: 'Get VIP',
       },
       {
@@ -160,7 +160,7 @@ export const MembershipPlan = {
           '보상 스페이스 또는 보상 기능별 최대 2 크레딧 사용 가능',
           '참여자 전체 보상의 10% 생성 보상 획득',
         ],
-        price: '월 20,000원',
+        price: '월 30,000원',
         btn: 'Pro 신청',
       },
       {
@@ -173,7 +173,7 @@ export const MembershipPlan = {
           '참여자 전체 보상의 10% 생성 보상 획득',
           '신뢰 크리에이터 배지 획득',
         ],
-        price: '월 50,000원',
+        price: '월 75,000원',
         btn: 'Max 신청',
       },
       {
@@ -188,7 +188,7 @@ export const MembershipPlan = {
           '신뢰 크리에이터 배지 획득',
           '참여자 원본 데이터 열람',
         ],
-        price: '월 100,000원',
+        price: '월 150,000원',
         btn: 'VIP 신청',
       },
       {
