@@ -15,3 +15,5 @@ mod types;
 
 pub use models::*;
 pub use types::*;
+
+pub mod rewards;

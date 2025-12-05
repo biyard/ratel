@@ -1,5 +1,6 @@
 mod config;
 
+use aws_config::BehaviorVersion;
 use bdk::prelude::*;
 use lambda_runtime::{Error as LambdaError, LambdaEvent};
 use main_api::{
@@ -7,11 +8,16 @@ use main_api::{
     features::spaces::polls::Poll,
     models::{Post, SpaceCommon},
     types::{EntityType, Partition},
-    utils::aws::{DynamoClient, SesClient, get_aws_config},
+    utils::aws::{DynamoClient, SesClient},
 };
 use serde::Deserialize;
 use tracing::{error, info};
 use tracing_subscriber::EnvFilter;
+
+#[derive(Debug, Deserialize)]
+struct EventBridgeEnvelope<T> {
+    pub detail: T,
+}
 
 #[derive(Debug, Deserialize)]
 struct StartSurveyEvent {
@@ -34,7 +40,7 @@ async fn main() -> Result<(), LambdaError> {
 
     let cfg = config::get();
     let is_local = cfg.env == "local" || cfg.env == "test";
-    let aws_config = get_aws_config();
+    let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
     let dynamo = DynamoClient::new(Some(aws_config.clone()));
     let ses = SesClient::new(aws_config, is_local);
 
@@ -56,15 +62,17 @@ async fn main() -> Result<(), LambdaError> {
     let ses = SesClient::new(aws_config, is_local);
 
     let state = AppState { dynamo, ses };
-    let payload = StartSurveyEvent {
-        space_id: "5a383702-d617-4f4f-ad14-b7daf7ead42e".into(),
-        survey_id: "5a383702-d617-4f4f-ad14-b7daf7ead42e".into(),
+
+    let payload = EventBridgeEnvelope {
+        detail: StartSurveyEvent {
+            space_id: "5a383702-d617-4f4f-ad14-b7daf7ead42e".into(),
+            survey_id: "5a383702-d617-4f4f-ad14-b7daf7ead42e".into(),
+        },
     };
 
     let ctx = Context::default();
     handler(LambdaEvent::new(payload, ctx), state).await
 }
-
 fn init_tracing() {
     let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
 
@@ -75,8 +83,13 @@ fn init_tracing() {
         .init();
 }
 
-async fn handler(event: LambdaEvent<StartSurveyEvent>, state: AppState) -> Result<(), LambdaError> {
+async fn handler(
+    event: LambdaEvent<EventBridgeEnvelope<StartSurveyEvent>>,
+    state: AppState,
+) -> Result<(), LambdaError> {
     let (payload, ctx) = event.into_parts();
+    let payload = payload.detail;
+
     info!(
         "survey-worker invoked: request_id={}, space_id={}, survey_id={}",
         ctx.request_id, payload.space_id, payload.survey_id
@@ -95,7 +108,7 @@ async fn start_survey(state: &AppState, evt: &StartSurveyEvent) -> Result<(), La
     let sk = evt.survey_id.clone();
 
     let space_pk = Partition::Space(pk);
-    let poll_sk = EntityType::SpacePoll(sk);
+    let poll_sk = EntityType::SpacePoll(sk.clone());
 
     let space = SpaceCommon::get(
         &state.dynamo.client,
@@ -142,6 +155,7 @@ async fn start_survey(state: &AppState, evt: &StartSurveyEvent) -> Result<(), La
     if let Err(e) = Poll::send_email(
         &state.dynamo,
         &state.ses,
+        sk.clone(),
         space,
         post.title,
         emails,

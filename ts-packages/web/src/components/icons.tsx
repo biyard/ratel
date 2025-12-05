@@ -85,7 +85,6 @@ export { default as Share } from '@/assets/icons/share.svg?react';
 export { default as Shares } from '@/assets/icons/shares.svg?react';
 export { default as Telegram_logo } from '@/assets/icons/telegram_logo.svg?react';
 export { default as ThumbUp } from '@/assets/icons/thumb-up.svg?react';
-export { default as Trophy } from '@/assets/icons/trophy.svg?react';
 export { default as Unlock2 } from '@/assets/icons/unlock-2.svg?react';
 export { default as UnlockPublic } from '@/assets/icons/unlock-public.svg?react';
 export { default as Unlock } from '@/assets/icons/unlock.svg?react';

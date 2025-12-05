@@ -12,6 +12,7 @@ use super::Partition;
     DeserializeFromStr,
     Default,
     DynamoEnum,
+    SubPartition,
     JsonSchema,
 )]
 pub enum EntityType {
@@ -20,7 +21,6 @@ pub enum EntityType {
 
     Session,
 
-    Notification(String), // notification id
     // Common
     Created(String), // CREATED#${timestamp}
 
@@ -36,6 +36,7 @@ pub enum EntityType {
     UserTeam(String),      // from Team
     UserTeamGroup(String), // from TeamGroup
     EmailVerification,
+    PhoneVerification,
     UserRelationship(String),
 
     // Feed entity types
@@ -158,6 +159,11 @@ pub enum EntityType {
     UserPayment,
     Purchase,
     UserPurchase(String),
+
+    Notification(String), // notification id
+
+    //
+    UserReward(String, String), // USER_REWARD#{SPACE_PK}#{REWARD_TYPE}
 }
 
 impl TryInto<Partition> for EntityType {

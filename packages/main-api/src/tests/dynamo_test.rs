@@ -12,7 +12,7 @@ use crate::{
     models::user::User,
     types::UserType,
     utils::{
-        aws::{DynamoClient, SesClient},
+        aws::{DynamoClient, SesClient, SnsClient},
         password::hash_password,
     },
 };
@@ -40,6 +40,7 @@ pub fn create_app_state() -> AppState {
     AppState::new(
         DynamoClient::mock(aws_config.clone()),
         SesClient::mock(aws_config.clone()),
+        SnsClient::mock(aws_config.clone()),
         S3Client::mock(aws_config),
     )
 }

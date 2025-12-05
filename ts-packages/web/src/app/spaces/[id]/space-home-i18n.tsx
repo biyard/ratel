@@ -4,14 +4,19 @@ export const i18nSpaceHome = {
     change_public: 'Convert Public',
     publish_space: 'Publish Space',
     start_space: 'Start Space',
+    end_space: 'End Space',
     delete_space: 'Delete Space',
     unsupported_space_type: 'Unsupported space type',
     no_authorized_user: 'No Authorized User',
     untitled_space: 'Untitled Space',
     start_warning:
       'This action cannot be undone. Starting a space will limit user participations.',
+    end_warning:
+      'This action cannot be undone. Ending a space will restrict user participations in space.',
     start_button: 'Start Space',
     starting: 'Starting...',
+    end_button: 'Finish Space',
+    ending: 'Finishing....',
 
     delete_title: 'Delete Space <name></name>',
     delete_warning:
@@ -30,6 +35,7 @@ export const i18nSpaceHome = {
     change_category: 'Change Category',
     delete: 'Delete',
     started: 'Start',
+    finished: 'Finish',
     private: 'Private',
     public: 'Public',
     onboard: 'ONBOARD',
@@ -58,6 +64,7 @@ export const i18nSpaceHome = {
     menu_sprint_league: 'Sprint League',
     // Admin Menus
     menu_admin_settings: 'Settings',
+    menu_rewards_settings: 'Rewards Settings',
     menu_analyze: 'Analyze',
     menu_nft_preview: 'ArtNFT',
     menu_nft_settings: 'Settings',
@@ -77,6 +84,8 @@ export const i18nSpaceHome = {
     failed_delete_space: 'Failed to delete space. please try later.',
     success_start_space: 'Success to start space.',
     failed_start_space: 'Failed to start space. please try later.',
+    success_finish_space: 'Success to finish space.',
+    failed_finish_space: 'Failed to finish space. please try later.',
     success_participate_space: 'Successfully joined the space.',
     failed_participate_space: 'Failed to join the space. please try later.',
 
@@ -94,14 +103,19 @@ export const i18nSpaceHome = {
     change_public: '공개 전환',
     publish_space: '스페이스 게시',
     start_space: '스페이스 시작',
+    end_space: '스페이스 종료',
     delete_space: '스페이스 삭제',
     unsupported_space_type: '지원되지 않는 스페이스 유형입니다.',
     no_authorized_user: '인증되지 않은 사용자입니다.',
     untitled_space: '제목 없는 스페이스',
     start_warning:
       '이 작업은 되돌릴 수 없습니다. 스페이스를 시작할 경우 유저 참여가 제한됩니다.',
+    end_warning:
+      '이 작업은 되돌릴 수 없습니다. 스페이스를 종료할 경우 스페이스 내에서 유저의 모든 참여가 제한됩니다.',
     start_button: '스페이스 시작하기',
     starting: '시작 중....',
+    end_button: '스페이스 종료하기',
+    ending: '종료 중....',
 
     delete_title: '스페이스 삭제 <name></name>',
     delete_warning:
@@ -150,6 +164,7 @@ export const i18nSpaceHome = {
 
     // Admin Menus
     menu_admin_settings: '설정',
+    menu_rewards_settings: '보상 설정',
     menu_analyze: '분석',
 
     // Actions
@@ -168,6 +183,9 @@ export const i18nSpaceHome = {
     success_start_space: '스페이스를 성공적으로 시작했습니다.',
     failed_start_space:
       '스페이스 시작에 실패했습니다. 잠시 후 다시 시도해보세요.',
+    success_finish_space: '스페이스를 성공적으로 종료했습니다.',
+    failed_finish_space:
+      '스페이스 종료에 실패했습니다. 잠시 후 다시 시도해보세요.',
     success_participate_space: '스페이스에 성공적으로 참여했습니다.',
     failed_participate_space:
       '스페이스 참여에 실패했습니다. 잠시 후 다시 시도해보세요.',

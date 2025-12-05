@@ -7,6 +7,9 @@ pub mod list_my_drafts;
 pub mod list_my_notifications;
 pub mod list_my_posts;
 mod list_my_spaces;
+mod memberships;
+
+mod points;
 #[cfg(test)]
 pub mod tests;
 
@@ -22,6 +25,8 @@ use crate::*;
 pub fn route() -> Result<Router<AppState>> {
     Ok(Router::new()
         .nest("/did", did::route()?)
+        .nest("/memberships", memberships::route()?)
+        .nest("/points", points::route())
         .route("/", get(get_info_handler).patch(update_user_handler))
         .route("/posts", get(list_my_posts_handler))
         .route(

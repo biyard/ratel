@@ -31,6 +31,8 @@ SLACK_CHANNEL_SPONSOR ?=
 SLACK_CHANNEL_ABUSING ?=
 SLACK_CHANNEL_MONITOR ?=
 
+ACCOUNT_ID ?=
+
 BUCKET_NAME ?= metadata.ratel.foundation
 BUCKET_EXPIRE ?= 3600
 ASSET_DIR ?= metadata
@@ -55,6 +57,10 @@ KAIA_FEEPAYER_KEY ?= $(strip $(shell ./key.sh | awk '{print $$2}'))
 TELEGRAM_TOKEN ?=
 FIREBASE_PROJECT_ID ?=
 PORTONE_API_SECRET ?=
+
+BIYARD_API_URL ?= https://dev.biyard.co
+BIYARD_API_SECRET ?= biyard_default_api_secret
+BIYARD_PROJECT_ID ?= ratel_project_id
 
 BUILD_ENV ?= ENV=$(ENV) \
 								RUST_LOG=$(RUST_LOG) \
@@ -114,6 +120,7 @@ BUILD_ENV ?= ENV=$(ENV) \
 								PORTONE_API_SECRET=$(PORTONE_API_SECRET) \
 								PORTONE_KPN_CHANNEL_KEY=$(PORTONE_KPN_CHANNEL_KEY) \
 								PORTONE_STORE_ID=$(PORTONE_STORE_ID) \
+								ACCOUNT_ID=$(ACCOUNT_ID)
 
 .build/evm-keys:
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json

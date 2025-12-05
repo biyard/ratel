@@ -55,11 +55,15 @@ pub async fn participate_space_handler(
 
                 let participant = SpaceParticipant::get(&dynamo.client, pk, Some(sk)).await?;
                 if participant.is_none() {
-                    let display_name = Generator::with_naming(Name::Numbered)
-                        .next()
-                        .unwrap()
-                        .replace('-', " ");
-                    let sp = SpaceParticipant::new(space.pk.clone(), user.pk.clone(), display_name);
+                    let sp = if space.anonymous_participation {
+                        let display_name = Generator::with_naming(Name::Numbered)
+                            .next()
+                            .unwrap()
+                            .replace('-', " ");
+                        SpaceParticipant::new(space.pk.clone(), user.pk.clone(), display_name)
+                    } else {
+                        SpaceParticipant::new_non_anonymous(space.pk.clone(), user.clone())
+                    };
                     let new_space = SpaceCommon::updater(&space.pk, &space.sk)
                         .increase_participants(1)
                         .with_updated_at(now);
@@ -82,12 +86,16 @@ pub async fn participate_space_handler(
         }
     }
 
-    let display_name = Generator::with_naming(Name::Numbered)
-        .next()
-        .unwrap()
-        .replace('-', " ");
+    let sp = if space.anonymous_participation {
+        let display_name = Generator::with_naming(Name::Numbered)
+            .next()
+            .unwrap()
+            .replace('-', " ");
+        SpaceParticipant::new(space.pk.clone(), user.pk.clone(), display_name)
+    } else {
+        SpaceParticipant::new_non_anonymous(space.pk.clone(), user.clone())
+    };
 
-    let sp = SpaceParticipant::new(space.pk.clone(), user.pk.clone(), display_name);
     let new_space = SpaceCommon::updater(&space.pk, &space.sk)
         .increase_participants(1)
         .with_updated_at(now);
@@ -101,6 +109,8 @@ pub async fn participate_space_handler(
         new_space.transact_write_item(),
         invitation.transact_write_item(),
     )?;
+
+    tracing::debug!("space participants: {:?}", sp);
 
     Ok(Json(ParticipateSpaceResponse {
         username: sp.username,
