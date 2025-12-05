@@ -9,7 +9,6 @@ class SpaceStatsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final likes = space.likes;
     final comments = space.comments;
-    final rewards = space.rewards;
 
     return Container(
       padding: EdgeInsets.zero,
@@ -44,19 +43,6 @@ class SpaceStatsSection extends StatelessWidget {
             ),
             label: comments.toString(),
           ),
-          20.gap,
-          _StatItem(
-            icon: SvgPicture.asset(
-              Assets.reward,
-              width: 20,
-              height: 20,
-              colorFilter: const ColorFilter.mode(
-                Color(0xFF737373),
-                BlendMode.srcIn,
-              ),
-            ),
-            label: _formatCount(rewards),
-          ),
         ],
       ),
     );
@@ -88,10 +74,4 @@ class _StatItem extends StatelessWidget {
       ],
     );
   }
-}
-
-String _formatCount(int v) {
-  if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
-  if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}K';
-  return v.toString();
 }
