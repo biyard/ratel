@@ -17,27 +17,12 @@ class _MyCredentialsState extends State<MyCredentials> {
       child: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-            child: Row(
-              children: [
-                IconButton(
-                  onPressed: () => Get.back<void>(),
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                ),
-                const Text(
-                  'My Credential',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
+            padding: const EdgeInsets.all(20.0),
+            child: AppTopBar(onBack: () => Get.back(), title: "My Credential"),
           ),
 
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 6, 14, 12),
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
             child: CredentialBanner(
               title: 'Verifiable Credential',
               subtitle: 'ID : ${widget.did}',

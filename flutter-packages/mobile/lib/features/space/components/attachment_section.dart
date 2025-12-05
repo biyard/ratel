@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:ratel/exports.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -12,65 +10,26 @@ class AttachmentSection extends StatefulWidget {
 }
 
 class _AttachmentSectionState extends State<AttachmentSection> {
-  bool _expanded = true;
-
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
+        color: Colors.transparent,
         borderRadius: BorderRadius.circular(10),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: 15),
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              setState(() {
-                _expanded = !_expanded;
-              });
-            },
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SvgPicture.asset(Assets.clip, width: 20, height: 20),
-                    4.gap,
-                    const Text(
-                      'Attachments',
-                      style: TextStyle(
-                        fontFamily: 'Raleway',
-                        fontWeight: FontWeight.w700,
-                        fontSize: 16,
-                        height: 24 / 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-                Transform.rotate(
-                  angle: _expanded ? 0 : math.pi,
-                  child: SvgPicture.asset(Assets.shapeArrowUp),
-                ),
-              ],
-            ),
-          ),
-          10.vgap,
-          if (_expanded)
-            if (widget.files.isNotEmpty) ...[
-              for (int i = 0; i < widget.files.length; i++) ...[
-                _AttachmentRow(file: widget.files[i]),
-                if (i != widget.files.length - 1) 10.vgap,
-              ],
-              10.vgap,
-            ] else ...[
-              10.vgap,
+          if (widget.files.isNotEmpty) ...[
+            for (int i = 0; i < widget.files.length; i++) ...[
+              _AttachmentRow(file: widget.files[i]),
+              if (i != widget.files.length - 1) 10.vgap,
             ],
+            10.vgap,
+          ] else ...[
+            10.vgap,
+          ],
         ],
       ),
     );

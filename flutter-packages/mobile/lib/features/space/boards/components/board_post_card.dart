@@ -113,31 +113,11 @@ class BoardPostCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  RoundContainer(
-                    width: 24,
-                    height: 24,
-                    radius: 100,
-                    color: AppColors.neutral500,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(100),
-                      child: Image.network(profileImageUrl, fit: BoxFit.cover),
-                    ),
+                  Profile(
+                    profileImageUrl: profileImageUrl,
+                    displayName: post.authorDisplayName,
                   ),
-                  8.gap,
-                  Expanded(
-                    child: Text(
-                      post.authorDisplayName,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontFamily: 'Raleway',
-                        color: Colors.white,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14,
-                        height: 20 / 14,
-                      ),
-                    ),
-                  ),
-                  4.gap,
+                  const Spacer(),
                   Text(
                     relative,
                     style: theme.textTheme.bodySmall?.copyWith(

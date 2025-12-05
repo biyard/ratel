@@ -301,6 +301,48 @@ class FeedsApi extends GetConnect {
     return feeds;
   }
 
+  Future<bool> uploadPost({
+    required String postPk,
+    required String title,
+    required String content,
+  }) async {
+    final encodedPk = Uri.encodeComponent(postPk);
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/posts/$encodedPk');
+
+    final authApi = Get.find<AuthApi>();
+    final cookie = await authApi.cookieHeaderAsync();
+    final client = HttpClient();
+
+    try {
+      final request = await client.patchUrl(uri);
+
+      if (cookie != null && cookie.isNotEmpty) {
+        request.headers.set('Cookie', cookie);
+      }
+      request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
+
+      final payload = {
+        'publish': true,
+        'title': title,
+        'content': content,
+        'image_urls': null,
+      };
+
+      logger.d('uploadPost uri=$uri body=$payload');
+
+      request.add(utf8.encode(jsonEncode(payload)));
+
+      final response = await request.close();
+      final bodyString = await response.transform(utf8.decoder).join();
+
+      logger.d('uploadPost status=${response.statusCode} body=$bodyString');
+
+      return response.statusCode >= 200 && response.statusCode < 300;
+    } finally {
+      client.close();
+    }
+  }
+
   Future<bool> updatePost({
     required String postPk,
     required String title,
