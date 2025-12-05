@@ -10,38 +10,78 @@ class VerificationController extends BaseController {
   final code = List.generate(6, (_) => '').obs;
 
   String get phone => signupService.phone.value;
-  bool get isComplete => code.length == 6 && code.every((c) => c.isNotEmpty);
+
+  final _isComplete = false.obs;
+  bool get isComplete => _isComplete.value;
 
   final List<TextInputFormatter> codeInputFormatters = [
-    FilteringTextInputFormatter.allow(RegExp(r'[A-Za-z0-9]')),
-    LengthLimitingTextInputFormatter(1),
+    FilteringTextInputFormatter.digitsOnly,
   ];
 
-  void onChanged(int index, String value) {
-    final v = value.replaceAll(RegExp(r'[^A-Za-z0-9]'), '');
-    fields[index].value = fields[index].value.copyWith(
-      text: v,
-      selection: TextSelection.collapsed(offset: v.length),
-    );
-    code[index] = v;
+  bool _updating = false;
 
-    if (v.isNotEmpty) {
-      if (index < 5) {
-        nodes[index + 1].requestFocus();
+  void onChanged(int index, String value) {
+    if (_updating) return;
+
+    final digits = value.replaceAll(RegExp(r'\D'), '');
+    _updating = true;
+    try {
+      if (digits.isEmpty) {
+        fields[index].value = const TextEditingValue(text: '');
+        code[index] = '';
+      } else if (digits.length == 1) {
+        fields[index].value = TextEditingValue(
+          text: digits,
+          selection: const TextSelection.collapsed(offset: 1),
+        );
+        code[index] = digits;
+
+        if (index < fields.length - 1) {
+          nodes[index + 1].requestFocus();
+        } else {
+          nodes[index].unfocus();
+        }
       } else {
-        nodes[index].unfocus();
+        var cursor = index;
+        for (
+          var i = 0;
+          i < digits.length && cursor < fields.length;
+          i++, cursor++
+        ) {
+          final ch = digits[i];
+          fields[cursor].value = TextEditingValue(
+            text: ch,
+            selection: const TextSelection.collapsed(offset: 1),
+          );
+          code[cursor] = ch;
+        }
+        for (; cursor < fields.length; cursor++) {
+          fields[cursor].value = const TextEditingValue(text: '');
+          code[cursor] = '';
+        }
+
+        if (index + digits.length >= fields.length) {
+          nodes.last.unfocus();
+        } else {
+          nodes[index + digits.length].requestFocus();
+        }
       }
+    } finally {
+      _updating = false;
     }
+
+    _isComplete.value = code.every((c) => c.isNotEmpty);
   }
 
   KeyEventResult onKey(int index, KeyEvent e) {
     if (e is KeyDownEvent && e.logicalKey == LogicalKeyboardKey.backspace) {
       if (fields[index].text.isEmpty && index > 0) {
         nodes[index - 1].requestFocus();
-        fields[index - 1].clear();
+        fields[index - 1].value = const TextEditingValue(text: '');
         code[index - 1] = '';
       }
     }
+    _isComplete.value = code.every((c) => c.isNotEmpty);
     return KeyEventResult.ignored;
   }
 
@@ -57,12 +97,12 @@ class VerificationController extends BaseController {
     isBusy.value = true;
     try {
       final pin = code.join();
-      logger.d("pin value: ${pin}");
+      logger.d("pin value: $pin");
       final res = await auth.verifyCode(phone, pin);
       final res2 = await auth.signup(phone, pin);
 
       if (res != null && res2 != null) {
-        logger.d("verification response: ${res} ${res}");
+        logger.d("verification response: $res $res2");
         authService.neededSignup = false;
         Get.rootDelegate.offNamed(AppRoutes.mainScreen);
       } else {
@@ -83,7 +123,6 @@ class VerificationController extends BaseController {
 
     try {
       final res = await auth.sendVerificationCode(phone);
-
       if (res != null) {
         Biyard.info("Success to resend verification code");
       } else {
