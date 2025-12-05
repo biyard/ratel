@@ -8,6 +8,8 @@ class NotificationScreen extends GetWidget<NotificationController> {
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).padding.bottom;
     return Layout<NotificationController>(
+      enableSafeArea: false,
+      scrollable: false,
       child: Padding(
         padding: EdgeInsets.fromLTRB(0, 12, 0, bottomPad),
         child: Column(

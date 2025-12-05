@@ -104,68 +104,66 @@ class _MainScreenState extends State<MainScreen>
     return Scaffold(
       extendBody: true,
       bottomNavigationBar: buildBottomNav(barHeight, inset),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                Expanded(
-                  child: Navigator(
-                    key: Get.nestedKey(1),
-                    initialRoute: AppRoutes.home,
-                    onGenerateRoute: (settings) => GetPageRoute(
-                      page: () => _routeToPage(settings.name),
-                      settings: settings,
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: Navigator(
+                  key: Get.nestedKey(1),
+                  initialRoute: AppRoutes.home,
+                  onGenerateRoute: (settings) => GetPageRoute(
+                    page: () => _routeToPage(settings.name),
+                    settings: settings,
+                  ),
+                ),
+              ),
+            ],
+          ),
+
+          AnimatedBuilder(
+            animation: _panelCtrl,
+            builder: (_, __) {
+              final show = _panelCtrl.value > 0.0;
+              return IgnorePointer(
+                ignoring: !show,
+                child: Opacity(
+                  opacity: 0.6 * _panelCtrl.value,
+                  child: GestureDetector(
+                    onTap: closeSidePanel,
+                    child: Container(color: Colors.black),
+                  ),
+                ),
+              );
+            },
+          ),
+
+          AnimatedBuilder(
+            animation: _panelCtrl,
+            builder: (_, __) {
+              final dx = -sheetWidth * (1.0 - _panelCtrl.value);
+              return Transform.translate(
+                offset: Offset(dx, 0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Obx(
+                    () => SidePanel(
+                      width: sheetWidth,
+                      user: controller.user.value,
+                      onClose: closeSidePanel,
                     ),
                   ),
                 ),
-              ],
-            ),
-
-            AnimatedBuilder(
-              animation: _panelCtrl,
-              builder: (_, __) {
-                final show = _panelCtrl.value > 0.0;
-                return IgnorePointer(
-                  ignoring: !show,
-                  child: Opacity(
-                    opacity: 0.6 * _panelCtrl.value,
-                    child: GestureDetector(
-                      onTap: closeSidePanel,
-                      child: Container(color: Colors.black),
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            AnimatedBuilder(
-              animation: _panelCtrl,
-              builder: (_, __) {
-                final dx = -sheetWidth * (1.0 - _panelCtrl.value);
-                return Transform.translate(
-                  offset: Offset(dx, 0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Obx(
-                      () => SidePanel(
-                        width: sheetWidth,
-                        user: controller.user.value,
-                        onClose: closeSidePanel,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            // Positioned(
-            //   left: 0,
-            //   right: 0,
-            //   bottom: 0,
-            //   child: buildBottomNav(barHeight, inset),
-            // ),
-          ],
-        ),
+              );
+            },
+          ),
+          // Positioned(
+          //   left: 0,
+          //   right: 0,
+          //   bottom: 0,
+          //   child: buildBottomNav(barHeight, inset),
+          // ),
+        ],
       ),
     );
   }

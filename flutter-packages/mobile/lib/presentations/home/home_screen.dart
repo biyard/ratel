@@ -1,5 +1,4 @@
 import 'package:ratel/exports.dart';
-import 'package:ratel/components/feed_card/v2/feed_card_v2.dart';
 
 class HomeScreen extends GetWidget<HomeController> {
   const HomeScreen({super.key});
@@ -9,6 +8,7 @@ class HomeScreen extends GetWidget<HomeController> {
     final bottomPad = MediaQuery.of(context).padding.bottom;
 
     return Layout<HomeController>(
+      enableSafeArea: false,
       scrollable: false,
       child: Obx(
         () => RefreshIndicator(
