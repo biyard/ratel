@@ -55,39 +55,14 @@ class FeedCardV2 extends StatelessWidget {
               ],
             ),
             10.vgap,
+
             Row(
               children: [
-                RoundContainer(
-                  width: 24,
-                  height: 24,
-                  radius: 100,
-                  color: AppColors.neutral500,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(100),
-                    child: Image.network(profileImageUrl, fit: BoxFit.cover),
-                  ),
+                Profile(
+                  profileImageUrl: profileImageUrl,
+                  displayName: feed.authorDisplayName,
                 ),
-                8.gap,
-                Expanded(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          feed.authorDisplayName,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontFamily: 'Raleway',
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                            height: 20 / 14,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
+                const Spacer(),
                 Text(
                   timeAgo((feed.createdAt / 1000).toInt()),
                   style: const TextStyle(

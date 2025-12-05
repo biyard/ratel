@@ -58,31 +58,11 @@ class MySpaceListItem extends StatelessWidget {
                           ],
                         ),
                         10.vgap,
-                        Row(
-                          children: [
-                            RoundContainer(
-                              width: 24,
-                              height: 24,
-                              radius: 118.5,
-                              imageUrl: item.authorProfileUrl.isNotEmpty
-                                  ? item.authorProfileUrl
-                                  : defaultProfileImage,
-                              color: null,
-                              alignment: Alignment.center,
-                              child: null,
-                            ),
-                            10.gap,
-                            Text(
-                              item.authorDisplayName,
-                              style: const TextStyle(
-                                fontFamily: 'Raleway',
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
-                                height: 20 / 14,
-                              ),
-                            ),
-                          ],
+                        Profile(
+                          profileImageUrl: item.authorProfileUrl.isNotEmpty
+                              ? item.authorProfileUrl
+                              : defaultProfileImage,
+                          displayName: item.authorDisplayName,
                         ),
                         6.vgap,
                       ],

@@ -5,55 +5,89 @@ class DeletePostDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      backgroundColor: const Color(0xFF181818),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Delete this post?',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            8.vgap,
-            const Text(
-              'This action cannot be undone.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 13),
-            ),
-            16.vgap,
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
+    return AlertDialog(
+      backgroundColor: AppColors.bg,
+      surfaceTintColor: AppColors.bg,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
+      content: FittedBox(
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: 350,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Delete this post?',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 24,
+                  height: 32 / 24,
                 ),
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    child: const Text(
-                      'Delete',
-                      style: TextStyle(
-                        color: Color(0xFFEF4444),
-                        fontWeight: FontWeight.w700,
+              ),
+              24.vgap,
+              const Text(
+                'This action cannot be undone.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: AppColors.neutral300,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 12,
+                  height: 22 / 15,
+                ),
+              ),
+              35.vgap,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  InkWell(
+                    onTap: () => Navigator.pop(context, false),
+                    child: RoundContainer(
+                      width: 95,
+                      height: 50,
+                      color: Colors.transparent,
+                      radius: 10,
+                      child: const Padding(
+                        padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
+                        child: Text(
+                          'Cancel',
+                          style: TextStyle(
+                            color: AppColors.neutral300,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  10.gap,
+                  InkWell(
+                    onTap: () => Navigator.pop(context, true),
+                    child: RoundContainer(
+                      width: 206,
+                      height: 50,
+                      color: AppColors.primary,
+                      radius: 10,
+                      child: const Center(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(20, 15, 20, 15),
+                          child: Text(
+                            'Delete',
+                            style: TextStyle(
+                              color: AppColors.bg,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
