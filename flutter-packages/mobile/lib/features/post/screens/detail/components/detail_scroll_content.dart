@@ -123,46 +123,18 @@ class _DetailHeaderSection extends StatelessWidget {
         20.vgap,
         Row(
           children: [
-            RoundContainer(
-              width: 24,
-              height: 24,
-              radius: 118.5,
-              imageUrl: post.authorProfileUrl.isNotEmpty
+            Profile(
+              profileImageUrl: post.authorProfileUrl.isNotEmpty
                   ? post.authorProfileUrl
                   : defaultProfileImage,
-              color: null,
-              alignment: Alignment.center,
-              child: null,
+              displayName: post.authorDisplayName,
             ),
-            10.gap,
-            Expanded(
-              child: Row(
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        post.authorDisplayName,
-                        style: textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                          height: 24 / 16,
-                          letterSpacing: 0.5,
-                          color: Colors.white,
-                        ),
-                      ),
-                      4.gap,
-                      SvgPicture.asset(Assets.badge, width: 20, height: 20),
-                    ],
-                  ),
-                  const Spacer(),
-                  Text(
-                    relativeTime,
-                    style: textTheme.bodySmall?.copyWith(
-                      fontSize: 12,
-                      color: const Color(0xFF737373),
-                    ),
-                  ),
-                ],
+            const Spacer(),
+            Text(
+              relativeTime,
+              style: textTheme.bodySmall?.copyWith(
+                fontSize: 12,
+                color: const Color(0xFF737373),
               ),
             ),
           ],
@@ -202,19 +174,10 @@ class _DetailStatsRow extends StatelessWidget {
   final bool isLiking;
   final VoidCallback onToggleLike;
 
-  String _formatNumber(int v) {
-    if (v >= 10000) {
-      final k = (v / 1000).floor();
-      return '${k}K';
-    }
-    return v.toString();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // FIXME: fix to real background color
         _DetailStatItem(
           icon: SvgPicture.asset(
             Assets.thumbs,
@@ -240,19 +203,6 @@ class _DetailStatsRow extends StatelessWidget {
             ),
           ),
           label: comments.toString(),
-        ),
-        20.gap,
-        _DetailStatItem(
-          icon: SvgPicture.asset(
-            Assets.reward,
-            width: 20,
-            height: 20,
-            colorFilter: const ColorFilter.mode(
-              Color(0xFF737373),
-              BlendMode.srcIn,
-            ),
-          ),
-          label: _formatNumber(rewards),
         ),
       ],
     );

@@ -25,81 +25,72 @@ class NotificationList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading && items.isEmpty) {
-      return const Center(
-        child: SizedBox(
-          width: 24,
-          height: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
+      return const Padding(
+        padding: EdgeInsets.only(top: 40),
+        child: Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
         ),
       );
     }
 
     if (items.isEmpty) {
-      return ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(0, 16, 0, bottomPadding + 16),
-        children: [
-          const SizedBox(height: 80),
-          Center(
-            child: Text(
-              'No notifications yet.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.neutral500),
-            ),
+      return Padding(
+        padding: EdgeInsets.only(top: 80, bottom: bottomPadding + 16),
+        child: Center(
+          child: Text(
+            'No notifications yet.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.neutral500),
           ),
-        ],
+        ),
       );
     }
 
-    return ListView.separated(
-      physics: const AlwaysScrollableScrollPhysics(),
-      padding: EdgeInsets.fromLTRB(0, 8, 0, bottomPadding + 16),
-      itemCount: items.length + (hasMore ? 1 : 0),
-      separatorBuilder: (_, index) {
-        if (hasMore && index == items.length - 1) {
-          return 10.vgap;
-        }
-        return const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16),
-          child: SizedBox(
-            width: double.infinity,
-            height: 1,
-            child: ColoredBox(color: Color(0xff464646)),
-          ),
-        );
-      },
-      itemBuilder: (context, index) {
-        if (hasMore && index == items.length) {
-          if (!isLoadingMore) {
-            WidgetsBinding.instance.addPostFrameCallback((_) => onLoadMore());
-          }
-
-          if (isLoadingMore) {
+    return Column(
+      children: [
+        ListView.separated(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(0, 8, 0, bottomPadding + 16),
+          itemCount: items.length,
+          separatorBuilder: (_, __) {
             return const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
-              child: Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
+              padding: EdgeInsets.symmetric(horizontal: 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 1,
+                child: ColoredBox(color: Color(0xff464646)),
               ),
             );
-          }
+          },
+          itemBuilder: (context, index) {
+            final item = items[index];
 
-          return 15.vgap;
-        }
-
-        final item = items[index];
-
-        return NotificationListItem(
-          notification: item,
-          onTap: () => onMarkRead(item),
-          onMarkRead: item.isUnread ? () => onMarkRead(item) : null,
-          onDelete: () => onDelete(item),
-        );
-      },
+            return NotificationListItem(
+              notification: item,
+              onTap: () => onMarkRead(item),
+              onMarkRead: item.isUnread ? () => onMarkRead(item) : null,
+              onDelete: () => onDelete(item),
+            );
+          },
+        ),
+        if (hasMore)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: isLoadingMore
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const SizedBox(height: 15),
+          ),
+      ],
     );
   }
 }
@@ -126,99 +117,98 @@ class NotificationListItem extends StatelessWidget {
     final createdText = _formatRelativeTime(notification.createdAt);
     final isUnread = notification.isUnread;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // _NotificationAvatar(operation: op),
-          // const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        height: 1.2,
-                      ),
-                    ),
-                    if (isUnread) ...[
-                      5.gap,
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
                           color: AppColors.primary,
-                          shape: BoxShape.circle,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
                         ),
                       ),
-                    ],
-                  ],
-                ),
-                5.vgap,
-                Text(
-                  message,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    height: 1.3,
-                  ),
-                ),
-                10.vgap,
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      createdText,
-                      style: const TextStyle(
-                        color: AppColors.neutral500,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        height: 1.2,
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        if (onMarkRead != null)
-                          InkWell(
-                            onTap: onMarkRead,
-                            child: Icon(
-                              notification.isRead
-                                  ? Icons.check_circle
-                                  : Icons.check_circle_outline,
-                              size: 18,
-                              color: notification.isRead
-                                  ? AppColors.primary
-                                  : AppColors.neutral500,
-                            ),
+                      if (isUnread) ...[
+                        5.gap,
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
                           ),
-
-                        20.gap,
-
-                        if (onDelete != null)
-                          InkWell(
-                            onTap: onDelete,
-                            child: const Icon(
-                              Icons.delete_outline,
-                              size: 18,
-                              color: AppColors.neutral500,
-                            ),
-                          ),
+                        ),
                       ],
+                    ],
+                  ),
+                  5.vgap,
+                  Text(
+                    message,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      height: 1.3,
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  10.vgap,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        createdText,
+                        style: const TextStyle(
+                          color: AppColors.neutral500,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          height: 1.2,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          if (onMarkRead != null)
+                            InkWell(
+                              onTap: onMarkRead,
+                              child: Icon(
+                                notification.isRead
+                                    ? Icons.check_circle
+                                    : Icons.check_circle_outline,
+                                size: 18,
+                                color: notification.isRead
+                                    ? AppColors.primary
+                                    : AppColors.neutral500,
+                              ),
+                            ),
+                          20.gap,
+                          if (onDelete != null)
+                            InkWell(
+                              onTap: onDelete,
+                              child: const Icon(
+                                Icons.delete_outline,
+                                size: 18,
+                                color: AppColors.neutral500,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
