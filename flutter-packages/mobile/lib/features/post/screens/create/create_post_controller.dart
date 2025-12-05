@@ -17,6 +17,12 @@ class CreatePostController extends BaseController {
   bool _isModified = false;
   DateTime? lastSavedAt;
 
+  final RxBool canSubmit = false.obs;
+  final RxBool isEditorReady = false.obs;
+
+  static const int minLength = 10;
+  static const int maxLength = 1000;
+
   @override
   void onInit() {
     super.onInit();
@@ -27,6 +33,35 @@ class CreatePostController extends BaseController {
     bodyController.addListener(_onTextChanged);
 
     _autoSaveTimer = Timer.periodic(_autoSaveDelay, (_) => _autoSave());
+
+    if (postPk != null && postPk!.isNotEmpty) {
+      _loadPost();
+    } else {
+      isEditorReady.value = true;
+    }
+  }
+
+  Future<void> _loadPost() async {
+    try {
+      logger.d('[create] loadPost start pk=$postPk');
+      final post = await feedApi.getFeedV2(postPk!);
+
+      final title = post.post.title;
+      final html = post.post.htmlContents.toString();
+
+      titleController.text = title;
+      bodyHtml = html;
+      bodyController.text = html;
+
+      _isModified = false;
+      _validateCanSubmit();
+
+      logger.d('[create] loadPost done title="$title" len=${html.length}');
+    } catch (e, s) {
+      logger.e('[create] loadPost failed: $e\n$s');
+    } finally {
+      isEditorReady.value = true;
+    }
   }
 
   @override
@@ -39,11 +74,24 @@ class CreatePostController extends BaseController {
 
   void _onTextChanged() {
     _isModified = true;
+    _validateCanSubmit();
   }
 
   void onBodyHtmlChanged(String html) {
     bodyHtml = html;
     _isModified = true;
+    _validateCanSubmit();
+  }
+
+  void _validateCanSubmit() {
+    final titleLen = titleController.text.trim().length;
+    final descLen = bodyController.text.trim().length;
+
+    canSubmit.value =
+        titleLen >= minLength &&
+        titleLen <= maxLength &&
+        descLen >= minLength &&
+        descLen <= maxLength;
   }
 
   Future<void> _saveDraft({required String title, required String html}) async {
@@ -63,7 +111,7 @@ class CreatePostController extends BaseController {
       content: html,
     );
 
-    logger.d("save draft res: $res");
+    logger.d('save draft res: $res');
   }
 
   Future<void> _autoSave() async {
@@ -86,6 +134,14 @@ class CreatePostController extends BaseController {
   }
 
   Future<void> submit() async {
+    if (!canSubmit.value) {
+      Biyard.error(
+        'Cannot publish post.',
+        'Title + content must be between $minLength and $maxLength characters.',
+      );
+      return;
+    }
+
     final title = titleController.text.trim();
     final html = bodyHtml.trim();
 
@@ -93,5 +149,20 @@ class CreatePostController extends BaseController {
 
     logger.d('[submit] title: $title');
     logger.d('[submit] html: $html');
+
+    final res = await feedApi.uploadPost(
+      postPk: postPk!,
+      title: title,
+      content: html,
+    );
+
+    logger.d('save draft res: $res');
+
+    if (!res) {
+      Biyard.error('Failed to publish post.', 'Please try again later.');
+      return;
+    }
+
+    Get.rootDelegate.offNamed(postWithPk(postPk!));
   }
 }

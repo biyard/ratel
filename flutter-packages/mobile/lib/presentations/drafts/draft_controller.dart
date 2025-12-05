@@ -41,7 +41,7 @@ class DraftController extends BaseController {
   }
 
   void openDraft(String pk) {
-    // Get.rootDelegate.toNamed(AppRoutes.draftWithId(pk));
+    Get.rootDelegate.toNamed(createPostScreen, arguments: {'postPk': pk});
   }
 
   Future<void> deleteDraft(String pk) async {

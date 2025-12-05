@@ -11,7 +11,13 @@ class CreatePostScreen extends GetWidget<CreatePostController> {
       scrollable: false,
       child: Column(
         children: [
-          _PostHeaderBar(onClose: () => Get.back(), onPost: controller.submit),
+          Obx(
+            () => _PostHeaderBar(
+              onClose: () => Get.back(),
+              onPost: controller.submit,
+              canPost: controller.canSubmit.value,
+            ),
+          ),
           Expanded(
             child: Padding(
               padding: EdgeInsets.fromLTRB(20, 24, 20, bottomPad + 24),
@@ -21,10 +27,21 @@ class CreatePostScreen extends GetWidget<CreatePostController> {
                   _TitleField(controller: controller.titleController),
                   30.vgap,
                   Expanded(
-                    child: RichEditor(
-                      controller: controller.bodyController,
-                      onHtmlChanged: controller.onBodyHtmlChanged,
-                    ),
+                    child: Obx(() {
+                      if (!controller.isEditorReady.value) {
+                        return const Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        );
+                      }
+                      return RichEditor(
+                        controller: controller.bodyController,
+                        onHtmlChanged: controller.onBodyHtmlChanged,
+                      );
+                    }),
                   ),
                 ],
               ),
@@ -37,10 +54,15 @@ class CreatePostScreen extends GetWidget<CreatePostController> {
 }
 
 class _PostHeaderBar extends StatelessWidget {
-  const _PostHeaderBar({required this.onClose, required this.onPost});
+  const _PostHeaderBar({
+    required this.onClose,
+    required this.onPost,
+    required this.canPost,
+  });
 
   final VoidCallback onClose;
   final VoidCallback onPost;
+  final bool canPost;
 
   @override
   Widget build(BuildContext context) {
@@ -55,46 +77,14 @@ class _PostHeaderBar extends StatelessWidget {
               width: 32,
               height: 32,
               radius: 100,
-              color: Color(0xff171717),
-              child: Center(
+              color: const Color(0xff171717),
+              child: const Center(
                 child: Icon(Icons.close, size: 18, color: Colors.white),
               ),
             ),
           ),
           const Spacer(),
-          InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(16),
-            child: const SizedBox(
-              width: 32,
-              height: 32,
-              child: Center(
-                child: Icon(
-                  Icons.more_horiz,
-                  size: 18,
-                  color: AppColors.neutral300,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          InkWell(
-            onTap: () {},
-            borderRadius: BorderRadius.circular(16),
-            child: const SizedBox(
-              width: 32,
-              height: 32,
-              child: Center(
-                child: Icon(
-                  Icons.remove_red_eye_outlined,
-                  size: 18,
-                  color: AppColors.neutral300,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 12),
-          _PostButton(onTap: onPost),
+          _PostButton(onTap: onPost, enabled: canPost),
         ],
       ),
     );
@@ -102,24 +92,28 @@ class _PostHeaderBar extends StatelessWidget {
 }
 
 class _PostButton extends StatelessWidget {
-  const _PostButton({required this.onTap});
+  const _PostButton({required this.onTap, required this.enabled});
   final VoidCallback onTap;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
+    final bgColor = enabled ? AppColors.primary : AppColors.neutral700;
+    final textColor = enabled ? Colors.black : AppColors.neutral400;
+
     return InkWell(
-      onTap: onTap,
+      onTap: enabled ? onTap : null,
       borderRadius: BorderRadius.circular(999),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: AppColors.primary,
+          color: bgColor,
           borderRadius: BorderRadius.circular(999),
         ),
-        child: const Text(
+        child: Text(
           'Post',
           style: TextStyle(
-            color: Colors.black,
+            color: textColor,
             fontSize: 14,
             fontWeight: FontWeight.w700,
             height: 1,
