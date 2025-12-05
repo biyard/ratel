@@ -15,6 +15,9 @@ class SpaceController extends BaseController {
   SpaceModel? get space => spaceRx.value;
   RxBool get isLoading => _spaceService.isLoadingOf(spacePk);
 
+  final RxBool isHeaderCollapsed = false.obs;
+  double _gestureDelta = 0;
+
   @override
   void onInit() {
     super.onInit();
@@ -70,6 +73,23 @@ class SpaceController extends BaseController {
 
   String get baseRoute => '/space/${Uri.encodeComponent(spacePk)}';
   String get currentRoute => '$baseRoute${currentTab.value.route}';
+
+  void handlePointerMove(double dy) {
+    const threshold = 24.0;
+    _gestureDelta += dy;
+
+    if (_gestureDelta <= -threshold && !isHeaderCollapsed.value) {
+      isHeaderCollapsed.value = true;
+      _gestureDelta = 0;
+    } else if (_gestureDelta >= threshold && isHeaderCollapsed.value) {
+      isHeaderCollapsed.value = false;
+      _gestureDelta = 0;
+    }
+  }
+
+  void resetPointer() {
+    _gestureDelta = 0;
+  }
 
   List<SpaceTab> _buildTabsForPollSpace() {
     final baseTabs = <SpaceTab>[
