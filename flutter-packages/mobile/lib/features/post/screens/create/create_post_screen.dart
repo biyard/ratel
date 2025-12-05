@@ -16,6 +16,7 @@ class CreatePostScreen extends GetWidget<CreatePostController> {
               onClose: () => Get.back(),
               onPost: controller.submit,
               canPost: controller.canSubmit.value,
+              updatedAtMillis: controller.lastUpdatedAtMillis.value,
             ),
           ),
           Expanded(
@@ -58,14 +59,36 @@ class _PostHeaderBar extends StatelessWidget {
     required this.onClose,
     required this.onPost,
     required this.canPost,
+    required this.updatedAtMillis,
   });
 
   final VoidCallback onClose;
   final VoidCallback onPost;
   final bool canPost;
+  final int? updatedAtMillis;
+
+  String _formatUpdatedAt(int millis) {
+    final dt = DateTime.fromMillisecondsSinceEpoch(
+      millis,
+      isUtc: true,
+    ).toLocal();
+    final diff = DateTime.now().difference(dt);
+
+    if (diff.inMinutes < 1) return 'Saved just now';
+    if (diff.inMinutes < 60) return 'Saved ${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return 'Saved ${diff.inHours}h ago';
+
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return 'Saved $h:$m';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final label = updatedAtMillis == null
+        ? ''
+        : _formatUpdatedAt(updatedAtMillis!);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       alignment: Alignment.center,
@@ -84,6 +107,18 @@ class _PostHeaderBar extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          if (label.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: Text(
+                label,
+                style: const TextStyle(
+                  color: AppColors.neutral500,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
           _PostButton(onTap: onPost, enabled: canPost),
         ],
       ),

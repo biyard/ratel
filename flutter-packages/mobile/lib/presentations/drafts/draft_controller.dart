@@ -1,12 +1,10 @@
 import 'package:ratel/exports.dart';
 
 class DraftController extends BaseController {
-  final userApi = Get.find<UserApi>();
-  final feedsApi = Get.find<FeedsApi>();
+  final feedsService = Get.find<FeedsService>();
 
-  RxList<FeedV2SummaryModel> feeds = <FeedV2SummaryModel>[].obs;
-  Rx<bool> isBusy = false.obs;
-  String? bookmark;
+  RxList<FeedV2SummaryModel> get feeds => feedsService.drafts;
+  RxBool isBusy = false.obs;
 
   @override
   void onInit() {
@@ -17,24 +15,20 @@ class DraftController extends BaseController {
   Future<void> listFeeds({bool loadMore = false}) async {
     if (!loadMore) {
       showLoading();
-      bookmark = null;
     }
 
     try {
-      final result = await feedsApi.listDraftsV2(bookmark: bookmark);
-      bookmark = result.bookmark;
-
       if (loadMore) {
-        feeds.addAll(result.items);
+        await feedsService.loadDraftsMore();
       } else {
-        feeds.assignAll(result.items);
+        await feedsService.loadDraftsInitial();
       }
-
-      logger.d('draft feeds loaded: ${feeds.length}');
     } finally {
-      hideLoading();
+      if (!loadMore) hideLoading();
     }
   }
+
+  bool get hasMore => feedsService.hasMoreDrafts;
 
   void goBack() {
     Get.rootDelegate.offNamed(AppRoutes.mainScreen);
@@ -45,18 +39,18 @@ class DraftController extends BaseController {
   }
 
   Future<void> deleteDraft(String pk) async {
-    logger.d("delete draft pk: $pk");
     if (isBusy.value) return;
     isBusy.value = true;
 
     try {
-      await feedsApi.deletePostV2(pk);
-      Biyard.info("Delete Draft successfully");
-      await listFeeds();
+      final ok = await feedsService.deleteDraft(pk);
+      if (ok) {
+        Biyard.info('Delete Draft successfully');
+      } else {
+        Biyard.error('Failed to delete draft.', 'Please try again later.');
+      }
     } finally {
       isBusy.value = false;
     }
   }
-
-  bool get hasMore => bookmark != null;
 }

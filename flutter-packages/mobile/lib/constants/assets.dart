@@ -13,6 +13,7 @@ abstract class Assets {
   static const String coin = 'assets/icons/coin.svg';
   static const String coin2 = 'assets/icons/coin_2.svg';
   static const String edit1 = 'assets/icons/edit_1.svg';
+  static const String deleteRed = 'assets/icons/delete_red.svg';
   static const String extra = 'assets/icons/extra.svg';
   static const String feed = 'assets/icons/feed.svg';
   static const String palace = 'assets/icons/palace.svg';

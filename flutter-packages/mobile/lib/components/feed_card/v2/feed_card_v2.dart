@@ -89,7 +89,7 @@ class FeedCardV2 extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  timeAgo(feed.createdAt),
+                  timeAgo((feed.createdAt / 1000).toInt()),
                   style: const TextStyle(
                     fontFamily: 'Inter',
                     color: AppColors.neutral500,
