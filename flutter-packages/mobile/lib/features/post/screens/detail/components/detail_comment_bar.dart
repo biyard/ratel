@@ -49,7 +49,7 @@ class DetailCommentBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(15, 0, 15, 30 + bottomInset),
+      padding: EdgeInsets.fromLTRB(15, 0, 15, 30),
       child: GestureDetector(
         onTap: () => _openCommentSheet(context),
         child: RoundContainer(

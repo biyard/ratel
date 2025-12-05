@@ -117,15 +117,6 @@ class AppRoutes {
       // curve: Curves.easeOutCubic,
     ),
     GetPage(
-      name: '/draft/:id',
-      page: () => DraftByIdScreen(),
-      binding: DraftByIdBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
       name: boostingScreen,
       page: () => const BoostingScreen(),
       binding: BoostingBinding(),

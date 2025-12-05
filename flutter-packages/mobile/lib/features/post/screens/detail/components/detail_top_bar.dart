@@ -1,51 +1,41 @@
 import 'package:ratel/exports.dart';
 
 class DetailTopBar extends StatelessWidget {
-  const DetailTopBar({super.key});
+  const DetailTopBar({
+    super.key,
+    required this.isCreator,
+    required this.onBack,
+    required this.onExtra,
+  });
+
+  final bool isCreator;
+  final VoidCallback onBack;
+  final VoidCallback onExtra;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      color: const Color(0xFF1D1D1D),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => Get.back(),
-            child: Container(
-              width: 32,
-              height: 32,
-              alignment: Alignment.center,
+    return Column(
+      children: [
+        15.vgap,
+        Row(
+          children: [
+            16.gap,
+            GestureDetector(
+              onTap: onBack,
               child: SvgPicture.asset(Assets.back, width: 24, height: 24),
             ),
-          ),
-          // const Spacer(),
-          // Row(
-          //   children: const [
-          //     SizedBox(
-          //       width: 24,
-          //       height: 24,
-          //       child: Icon(
-          //         Icons.chat_bubble_outline_rounded,
-          //         size: 20,
-          //         color: Color(0xFF737373),
-          //       ),
-          //     ),
-          //     SizedBox(width: 20),
-          //     SizedBox(
-          //       width: 24,
-          //       height: 24,
-          //       child: Icon(
-          //         Icons.more_horiz_rounded,
-          //         size: 20,
-          //         color: Color(0xFF737373),
-          //       ),
-          //     ),
-          //   ],
-          // ),
-        ],
-      ),
+            const Spacer(),
+            if (isCreator) ...[
+              GestureDetector(
+                onTap: onExtra,
+                child: SvgPicture.asset(Assets.extra, width: 24, height: 24),
+              ),
+              16.gap,
+            ],
+          ],
+        ),
+        15.vgap,
+      ],
     );
   }
 }

@@ -55,39 +55,33 @@ class DetailScrollContent extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _DetailHeaderSection(
-            post: post,
-            relativeTime: _relativeTime(post.createdAt),
-            isLiked: isLiked,
-            isLiking: isLiking,
-            onToggleLike: onToggleLike,
-          ),
-          20.vgap,
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Html(
-                    data: fixedHtml,
-                    style: {
-                      'p': Style(
-                        fontSize: FontSize(15),
-                        lineHeight: LineHeight(1.6),
-                        fontFamily: 'Raleway',
-                        color: Colors.white,
-                      ),
-                    },
-                  ),
-                  40.vgap,
-                ],
-              ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.only(bottom: 40),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _DetailHeaderSection(
+              post: post,
+              relativeTime: _relativeTime(post.createdAt),
+              isLiked: isLiked,
+              isLiking: isLiking,
+              onToggleLike: onToggleLike,
             ),
-          ),
-        ],
+            20.vgap,
+            Html(
+              data: fixedHtml,
+              style: {
+                'p': Style(
+                  fontSize: FontSize(15),
+                  lineHeight: LineHeight(1.6),
+                  fontFamily: 'Raleway',
+                  color: Colors.white,
+                ),
+              },
+            ),
+            40.vgap,
+          ],
+        ),
       ),
     );
   }

@@ -1,10 +1,57 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/features/post/screens/detail/components/delete_post_dialog.dart';
 import 'package:ratel/features/post/screens/detail/components/detail_comment_bar.dart';
 import 'package:ratel/features/post/screens/detail/components/detail_scroll_content.dart';
 import 'package:ratel/features/post/screens/detail/components/detail_top_bar.dart';
+import 'package:ratel/features/post/screens/detail/components/post_more_bottom_sheet.dart';
 
 class DetailPostScreen extends GetWidget<DetailPostController> {
   const DetailPostScreen({super.key});
+
+  Future<void> _openPostActionSheet(
+    BuildContext context, {
+    required String postPk,
+  }) async {
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF191919),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return PostMoreBottomSheet(
+          onUpdate: () {
+            Navigator.pop(context);
+            Get.rootDelegate.toNamed(
+              createPostScreen,
+              arguments: {'postPk': postPk},
+            );
+          },
+          onDelete: () async {
+            Navigator.pop(context);
+            await _confirmDelete(context, postPk: postPk);
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context, {
+    required String postPk,
+  }) async {
+    final result =
+        await showDialog<bool>(
+          context: context,
+          barrierDismissible: true,
+          builder: (_) => const DeletePostDialog(),
+        ) ??
+        false;
+
+    if (!result) return;
+
+    await controller.deletePost(postPk: postPk);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +63,18 @@ class DetailPostScreen extends GetWidget<DetailPostController> {
         color: const Color(0xFF1D1D1D),
         child: Column(
           children: [
-            const DetailTopBar(),
+            Obx(() {
+              final model = controller.feed.value;
+              final postPk = model?.post.pk ?? '';
+
+              return DetailTopBar(
+                isCreator: model?.post.userPk == controller.user.value.pk,
+                onBack: () => Get.back(),
+                onExtra: postPk.isEmpty
+                    ? () {}
+                    : () => _openPostActionSheet(context, postPk: postPk),
+              );
+            }),
             Expanded(
               child: Obx(() {
                 if (controller.isLoading.value &&
@@ -35,14 +93,14 @@ class DetailPostScreen extends GetWidget<DetailPostController> {
                   return const SizedBox.shrink();
                 }
 
-                return Obx(() {
-                  return DetailScrollContent(
+                return Obx(
+                  () => DetailScrollContent(
                     post: model.post,
                     isLiked: model.isLiked == true,
                     isLiking: controller.isLikingPost.value,
                     onToggleLike: controller.toggleLikePost,
-                  );
-                });
+                  ),
+                );
               }),
             ),
             Obx(() {

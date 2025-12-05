@@ -1,6 +1,7 @@
 import 'package:ratel/exports.dart';
 
 class DetailPostController extends BaseController {
+  final userService = Get.find<UserService>();
   final feedsApi = Get.find<FeedsApi>();
 
   late final String postPk;
@@ -14,6 +15,25 @@ class DetailPostController extends BaseController {
   final isLikingPost = false.obs;
   bool get isPostLiked => feed.value?.isLiked == true;
   int get postLikes => feed.value?.post.likes ?? 0;
+
+  final Rx<UserV2Model> user = UserV2Model(
+    pk: '',
+    email: '',
+    nickname: '',
+    profileUrl: '',
+    description: '',
+    userType: 0,
+    username: '',
+    followersCount: 0,
+    followingsCount: 0,
+    theme: 0,
+    point: 0,
+    referralCode: null,
+    phoneNumber: null,
+    principal: null,
+    evmAddress: null,
+    teams: const [],
+  ).obs;
 
   @override
   void onInit() {
@@ -29,6 +49,19 @@ class DetailPostController extends BaseController {
     logger.d('DetailPostController postPk = $postPk');
 
     loadFeed();
+    user(userService.user.value);
+  }
+
+  Future<void> deletePost({required String postPk}) async {
+    final api = Get.find<FeedsApi>();
+    final ok = await api.deletePostV2(postPk);
+
+    if (!ok) {
+      Biyard.error('Failed to delete post.', 'Please try again later.');
+      return;
+    }
+
+    Get.back();
   }
 
   Future<void> loadFeed() async {
