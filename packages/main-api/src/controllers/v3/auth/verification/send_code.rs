@@ -164,7 +164,7 @@ pub async fn send_email_code_handler(
         },
     };
 
-    email.send_email(&dynamo, &ses).await?;
+    email.send_email(&dynamo, &ses, true).await?;
 
     Ok(Json(SendCodeResponse { expired_at }))
 }

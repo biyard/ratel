@@ -182,7 +182,7 @@ impl SpacePost {
             },
         };
 
-        email.send_email(&dynamo, &ses).await?;
+        email.send_email(&dynamo, &ses, false).await?;
 
         Ok(Json(()))
     }
