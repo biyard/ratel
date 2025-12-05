@@ -306,7 +306,7 @@ class _CodeBox extends StatelessWidget {
         child: TextField(
           controller: controller,
           focusNode: focusNode,
-          keyboardType: TextInputType.visiblePassword,
+          keyboardType: TextInputType.number,
           textAlign: TextAlign.center,
           style: const TextStyle(
             color: Colors.white,
