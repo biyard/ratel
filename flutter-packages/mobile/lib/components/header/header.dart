@@ -14,18 +14,23 @@ class Header extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: sidePad),
       alignment: Alignment.center,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
+      child: Column(
         children: [
-          _Avatar(imageUrl: defaultProfileImage, size: avatar),
-          10.gap,
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
+          30.vgap,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              _Avatar(imageUrl: defaultProfileImage, size: avatar),
+              10.gap,
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
         ],
       ),
