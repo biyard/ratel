@@ -7,6 +7,10 @@ abstract class Assets {
   static const String add = 'assets/icons/add.svg';
   static const String passport = 'assets/icons/passport.svg';
 
+  static const String create = 'assets/icons/create.svg';
+  static const String noti = 'assets/icons/noti.svg';
+  static const String myInfo = 'assets/icons/my_info.svg';
+
   static const String badge = 'assets/icons/badge.svg';
   static const String bookmark = 'assets/icons/bookmark.svg';
   static const String bookmarkFilled = 'assets/icons/bookmark_filled.svg';

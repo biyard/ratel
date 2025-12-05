@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:ratel/exports.dart';
 
 class MainScreen extends StatefulWidget {
@@ -95,15 +93,12 @@ class _MainScreenState extends State<MainScreen>
   Widget build(BuildContext context) {
     final sheetWidth = 330.0;
 
-    final rawInset = MediaQuery.of(context).viewPadding.bottom;
-    final inset = math.min(rawInset, 8.0);
-
-    const double navContentHeight = 60.0;
-    final double barHeight = navContentHeight + rawInset + 10;
+    const double navContentHeight = 70.0;
+    final double barHeight = navContentHeight;
 
     return Scaffold(
       extendBody: true,
-      bottomNavigationBar: buildBottomNav(barHeight, inset),
+      bottomNavigationBar: buildBottomNav(barHeight),
       body: Stack(
         children: [
           Column(
@@ -120,7 +115,6 @@ class _MainScreenState extends State<MainScreen>
               ),
             ],
           ),
-
           AnimatedBuilder(
             animation: _panelCtrl,
             builder: (_, __) {
@@ -137,7 +131,6 @@ class _MainScreenState extends State<MainScreen>
               );
             },
           ),
-
           AnimatedBuilder(
             animation: _panelCtrl,
             builder: (_, __) {
@@ -157,18 +150,12 @@ class _MainScreenState extends State<MainScreen>
               );
             },
           ),
-          // Positioned(
-          //   left: 0,
-          //   right: 0,
-          //   bottom: 0,
-          //   child: buildBottomNav(barHeight, inset),
-          // ),
         ],
       ),
     );
   }
 
-  AnimatedBuilder buildBottomNav(double barHeight, double inset) {
+  AnimatedBuilder buildBottomNav(double barHeight) {
     return AnimatedBuilder(
       animation: _panelCtrl,
       builder: (_, child) {
@@ -183,139 +170,136 @@ class _MainScreenState extends State<MainScreen>
             return Stack(
               children: [
                 Container(
-                  decoration: const BoxDecoration(
-                    color: AppColors.neutral800,
+                  decoration: BoxDecoration(
+                    color: AppColors.neutral800.withAlpha(180),
                     border: Border(
                       top: BorderSide(color: AppColors.iconPrimary, width: 0.1),
                     ),
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.only(bottom: inset),
-                  child: BottomNavigationBar(
-                    type: BottomNavigationBarType.fixed,
-                    backgroundColor: Colors.transparent,
-                    currentIndex: currentIndex,
-                    selectedItemColor: AppColors.primary,
-                    unselectedItemColor: AppColors.neutral500,
-                    selectedLabelStyle: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.primary,
+                MediaQuery.removePadding(
+                  context: context,
+                  removeBottom: true,
+                  child: Theme(
+                    data: Theme.of(context).copyWith(
+                      splashFactory: NoSplash.splashFactory,
+                      highlightColor: Colors.transparent,
+                      splashColor: Colors.transparent,
+                      hoverColor: Colors.transparent,
                     ),
-                    unselectedLabelStyle: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.neutral500,
+                    child: BottomNavigationBar(
+                      type: BottomNavigationBarType.fixed,
+                      backgroundColor: Colors.transparent,
+                      currentIndex: currentIndex,
+                      selectedItemColor: AppColors.primary,
+                      unselectedItemColor: AppColors.neutral500,
+                      showSelectedLabels: false,
+                      showUnselectedLabels: false,
+                      onTap: onTap,
+                      items: [
+                        BottomNavigationBarItem(
+                          icon: SvgPicture.asset(
+                            Assets.home,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.iconPrimary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          activeIcon: SvgPicture.asset(
+                            Assets.home,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.primary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          label: MainLocalization.home,
+                        ),
+                        BottomNavigationBarItem(
+                          icon: SvgPicture.asset(
+                            Assets.palace,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.iconPrimary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          activeIcon: SvgPicture.asset(
+                            Assets.palace,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.primary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          label: MainLocalization.spaces,
+                        ),
+                        BottomNavigationBarItem(
+                          icon: SvgPicture.asset(
+                            Assets.create,
+                            width: 25,
+                            height: 25,
+                          ),
+                          activeIcon: SvgPicture.asset(
+                            Assets.create,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.primary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          label: "",
+                        ),
+                        BottomNavigationBarItem(
+                          icon: SvgPicture.asset(
+                            Assets.noti,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.iconPrimary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          activeIcon: SvgPicture.asset(
+                            Assets.noti,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.primary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          label: MainLocalization.notification,
+                        ),
+                        BottomNavigationBarItem(
+                          icon: SvgPicture.asset(
+                            Assets.myInfo,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.iconPrimary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          activeIcon: SvgPicture.asset(
+                            Assets.myInfo,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.primary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          label: MainLocalization.my,
+                        ),
+                      ],
                     ),
-                    onTap: onTap,
-                    items: [
-                      BottomNavigationBarItem(
-                        icon: SvgPicture.asset(
-                          Assets.home,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.iconPrimary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        activeIcon: SvgPicture.asset(
-                          Assets.home,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.primary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        label: MainLocalization.home,
-                      ),
-                      BottomNavigationBarItem(
-                        icon: SvgPicture.asset(
-                          Assets.chat,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.iconPrimary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        activeIcon: SvgPicture.asset(
-                          Assets.chat,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.primary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        label: MainLocalization.spaces,
-                      ),
-                      BottomNavigationBarItem(
-                        icon: SvgPicture.asset(
-                          Assets.plus,
-                          width: 28,
-                          height: 28,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.iconPrimary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        activeIcon: SvgPicture.asset(
-                          Assets.chat,
-                          width: 28,
-                          height: 28,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.primary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        label: "",
-                      ),
-                      BottomNavigationBarItem(
-                        icon: SvgPicture.asset(
-                          Assets.notification,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.iconPrimary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        activeIcon: SvgPicture.asset(
-                          Assets.notification,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.primary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        label: MainLocalization.notification,
-                      ),
-                      BottomNavigationBarItem(
-                        icon: SvgPicture.asset(
-                          Assets.notification,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.iconPrimary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        activeIcon: SvgPicture.asset(
-                          Assets.notification,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.primary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        label: MainLocalization.my,
-                      ),
-                    ],
                   ),
                 ),
                 Positioned(
