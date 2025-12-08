@@ -61,7 +61,6 @@ class _MainScreenState extends State<MainScreen>
     final page = _routeToPage(routeName);
     final context = Get.nestedKey(1)!.currentContext!;
 
-    final isForward = index > currentIndex;
     setState(() {
       currentIndex = index;
     });
