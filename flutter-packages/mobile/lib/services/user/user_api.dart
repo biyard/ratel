@@ -100,4 +100,88 @@ class UserApi extends GetConnect {
       teams: teams,
     );
   }
+
+  Future<DidDocument?> getOrCreateDid() async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/me/did');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await get(uri.toString(), headers: headers);
+
+    logger.d('getOrCreateDid: status=${res.statusCode}, body=${res.body}');
+
+    if (!res.isOk || res.body == null) {
+      return null;
+    }
+
+    final body = res.body;
+
+    if (body is Map<String, dynamic>) {
+      return DidDocument.fromJson(body);
+    }
+
+    if (body is Map) {
+      return DidDocument.fromJson(Map<String, dynamic>.from(body));
+    }
+
+    logger.e('Unexpected getOrCreateDid response type: ${body.runtimeType}');
+    return null;
+  }
+
+  Future<UserAttributes> getAttributes() async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/me/did/attributes');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await get(uri.toString(), headers: headers);
+
+    logger.d('getAttributes: status=${res.statusCode}, body=${res.body}');
+
+    if (!res.isOk || res.body == null) {
+      return UserAttributes.empty;
+    }
+
+    final body = res.body;
+
+    if (body is Map<String, dynamic>) {
+      return UserAttributes.fromJson(body);
+    }
+
+    if (body is Map) {
+      return UserAttributes.fromJson(Map<String, dynamic>.from(body));
+    }
+
+    logger.e('Unexpected getAttributes response type: ${body.runtimeType}');
+    return UserAttributes.empty;
+  }
+
+  Future<UserAttributes> signAttributesWithCode(String code) async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/me/did');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'type': 'code', 'code': code};
+
+    final res = await put(uri.toString(), body, headers: headers);
+
+    logger.d(
+      'signAttributesWithCode: status=${res.statusCode}, body=${res.body}',
+    );
+
+    if (!res.isOk || res.body == null) {
+      return UserAttributes.empty;
+    }
+
+    final data = res.body;
+
+    if (data is Map<String, dynamic>) {
+      return UserAttributes.fromJson(data);
+    }
+
+    if (data is Map) {
+      return UserAttributes.fromJson(Map<String, dynamic>.from(data));
+    }
+
+    logger.e(
+      'Unexpected signAttributesWithCode response type: ${data.runtimeType}',
+    );
+    return UserAttributes.empty;
+  }
 }

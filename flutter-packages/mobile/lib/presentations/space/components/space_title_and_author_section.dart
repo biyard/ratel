@@ -27,52 +27,23 @@ class SpaceTitleAndAuthorSection extends StatelessWidget {
         20.vgap,
         Row(
           children: [
-            RoundContainer(
-              width: 24,
-              height: 24,
-              radius: 118.5,
-              imageUrl: space.authorProfileUrl.isNotEmpty
+            Profile(
+              profileImageUrl: space.authorProfileUrl.isNotEmpty
                   ? space.authorProfileUrl
                   : defaultProfileImage,
-              color: null,
-              alignment: Alignment.center,
-              child: null,
+              displayName: space.authorDisplayName.isNotEmpty
+                  ? space.authorDisplayName
+                  : space.authorUsername,
             ),
-            10.gap,
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        space.authorDisplayName.isNotEmpty
-                            ? space.authorDisplayName
-                            : space.authorUsername,
-                        style: const TextStyle(
-                          fontFamily: 'Raleway',
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16,
-                          height: 24 / 16,
-                          letterSpacing: 0.5,
-                          color: Colors.white,
-                        ),
-                      ),
-                      4.gap,
-                      SvgPicture.asset(Assets.badge, width: 20, height: 20),
-                    ],
-                  ),
-                  Text(
-                    relative,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w300,
-                      fontSize: 12,
-                      height: 15 / 12,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
+            const Spacer(),
+            Text(
+              relative,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w300,
+                fontSize: 12,
+                height: 15 / 12,
+                color: Colors.white,
               ),
             ),
           ],

@@ -6,10 +6,7 @@ class DetailCommentBar extends StatelessWidget {
     super.key,
     required this.bottomInset,
     required this.comments,
-    required this.onSendRootComment,
-    required this.onSendReply,
-    required this.repliesOf,
-    required this.isRepliesLoadingOf,
+    required this.onSendComment,
     required this.isLikingCommentOf,
     required this.isCommentLiked,
     required this.onToggleLikeComment,
@@ -18,12 +15,7 @@ class DetailCommentBar extends StatelessWidget {
   final double bottomInset;
   final List<PostCommentModel> comments;
 
-  final Future<PostCommentModel?> Function(String text) onSendRootComment;
-  final Future<void> Function(String parentCommentSk, String text) onSendReply;
-
-  final List<PostCommentModel> Function(String commentSk) repliesOf;
-  final bool Function(String commentSk) isRepliesLoadingOf;
-
+  final Future<PostCommentModel?> Function(String text) onSendComment;
   final bool Function(String commentSk) isLikingCommentOf;
   final bool Function(String commentSk, {bool fallback}) isCommentLiked;
   final Future<void> Function(String commentSk) onToggleLikeComment;
@@ -32,21 +24,23 @@ class DetailCommentBar extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      enableDrag: true,
       backgroundColor: Colors.transparent,
       builder: (_) {
-        return FractionallySizedBox(
-          heightFactor: 0.7,
-          child: _CommentBottomSheet(
-            comments: comments,
-            onSendRootComment: onSendRootComment,
-            onSendReply: onSendReply,
-            repliesOf: repliesOf,
-            isRepliesLoadingOf: isRepliesLoadingOf,
-            isLikingCommentOf: isLikingCommentOf,
-            isCommentLiked: isCommentLiked,
-            onToggleLikeComment: onToggleLikeComment,
-          ),
+        return DraggableScrollableSheet(
+          initialChildSize: 0.5,
+          minChildSize: 0.3,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return _CommentBottomSheet(
+              comments: comments,
+              onSendComment: onSendComment,
+              isLikingCommentOf: isLikingCommentOf,
+              isCommentLiked: isCommentLiked,
+              onToggleLikeComment: onToggleLikeComment,
+              scrollController: scrollController,
+            );
+          },
         );
       },
     );
@@ -55,7 +49,7 @@ class DetailCommentBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.fromLTRB(15, 0, 15, 30 + bottomInset),
+      padding: EdgeInsets.fromLTRB(15, 0, 15, 30),
       child: GestureDetector(
         onTap: () => _openCommentSheet(context),
         child: RoundContainer(
@@ -65,23 +59,24 @@ class DetailCommentBar extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
           child: Row(
             children: [
-              SvgPicture.asset(
-                Assets.add,
-                width: 24,
-                height: 24,
-                colorFilter: const ColorFilter.mode(
-                  Colors.white,
-                  BlendMode.srcIn,
+              SvgPicture.asset(Assets.roundBubble, width: 20, height: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Add a comment',
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF404040),
+                  ),
                 ),
               ),
-              const SizedBox(width: 10),
-              Text(
-                'Add a comment',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFF404040),
-                ),
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.send_rounded,
+                size: 18,
+                color: AppColors.neutral500,
               ),
             ],
           ),
@@ -94,26 +89,19 @@ class DetailCommentBar extends StatelessWidget {
 class _CommentBottomSheet extends StatefulWidget {
   const _CommentBottomSheet({
     required this.comments,
-    required this.onSendRootComment,
-    required this.onSendReply,
-    required this.repliesOf,
-    required this.isRepliesLoadingOf,
+    required this.onSendComment,
     required this.isLikingCommentOf,
     required this.isCommentLiked,
     required this.onToggleLikeComment,
+    required this.scrollController,
   });
 
   final List<PostCommentModel> comments;
-
-  final Future<PostCommentModel?> Function(String text) onSendRootComment;
-  final Future<void> Function(String parentCommentSk, String text) onSendReply;
-
-  final List<PostCommentModel> Function(String commentSk) repliesOf;
-  final bool Function(String commentSk) isRepliesLoadingOf;
-
+  final Future<PostCommentModel?> Function(String text) onSendComment;
   final bool Function(String commentSk) isLikingCommentOf;
   final bool Function(String commentSk, {bool fallback}) isCommentLiked;
   final Future<void> Function(String commentSk) onToggleLikeComment;
+  final ScrollController scrollController;
 
   @override
   State<_CommentBottomSheet> createState() => _CommentBottomSheetState();
@@ -123,9 +111,7 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
 
-  PostCommentModel? _replyTarget;
   bool _sending = false;
-
   late List<PostCommentModel> _comments;
 
   @override
@@ -144,11 +130,6 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
     super.dispose();
   }
 
-  String _plainContent(String raw) {
-    final noTags = raw.replaceAll(RegExp(r'<[^>]*>'), '');
-    return noTags.trim();
-  }
-
   Future<void> _handleSend() async {
     final text = _controller.text.trim();
     if (text.isEmpty || _sending) return;
@@ -157,33 +138,19 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
     setState(() {});
 
     try {
-      if (_replyTarget == null) {
-        final created = await widget.onSendRootComment(text);
-        if (created != null) {
-          setState(() {
-            _comments.insert(0, created);
-          });
-        }
-      } else {
-        await widget.onSendReply(_replyTarget!.sk, text);
+      final created = await widget.onSendComment(text);
+      if (created != null) {
+        setState(() {
+          _comments.insert(0, created);
+        });
       }
-
       _controller.clear();
-      setState(() {
-        _replyTarget = null;
-      });
     } catch (e, s) {
       logger.e('Failed to send comment: $e', stackTrace: s);
     } finally {
       _sending = false;
       setState(() {});
     }
-  }
-
-  void _setReplyTarget(PostCommentModel c) {
-    setState(() {
-      _replyTarget = c;
-    });
   }
 
   @override
@@ -235,90 +202,46 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: _comments.length,
-                itemBuilder: (context, index) {
-                  final c = _comments[index];
-                  return Column(
-                    children: [
-                      CommentItem(
-                        comment: c,
-                        onReply: _setReplyTarget,
-                        repliesOf: widget.repliesOf,
-                        isRepliesLoadingOf: widget.isRepliesLoadingOf,
-                        isLikingCommentOf: widget.isLikingCommentOf,
-                        isCommentLiked: widget.isCommentLiked,
-                        onToggleLikeComment: widget.onToggleLikeComment,
-                      ),
-                      30.vgap,
-                    ],
-                  );
-                },
-              ),
+              child: _comments.isEmpty
+                  ? ListView(
+                      controller: widget.scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      children: [
+                        SizedBox(
+                          height: 200,
+                          child: Center(
+                            child: Text(
+                              'No comments yet.',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(color: AppColors.neutral500),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : ListView.builder(
+                      controller: widget.scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: _comments.length,
+                      itemBuilder: (context, index) {
+                        final c = _comments[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 24),
+                          child: CommentItem(
+                            comment: c,
+                            isLikingCommentOf: widget.isLikingCommentOf,
+                            isCommentLiked: widget.isCommentLiked,
+                            onToggleLikeComment: (commentSk) async {
+                              await widget.onToggleLikeComment(commentSk);
+                              if (mounted) {
+                                setState(() {});
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
             ),
-            const SizedBox(height: 10),
-            if (_replyTarget != null) ...[
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: RoundContainer(
-                  radius: 10,
-                  width: double.infinity,
-                  color: const Color(0xFF2563EB),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.subdirectory_arrow_left_rounded,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                      8.gap,
-                      RoundContainer(
-                        width: 20,
-                        height: 20,
-                        radius: 118.5,
-                        imageUrl: _replyTarget!.authorProfileUrl.isNotEmpty
-                            ? _replyTarget!.authorProfileUrl
-                            : defaultProfileImage,
-                        color: null,
-                        alignment: Alignment.center,
-                        child: null,
-                      ),
-                      8.gap,
-                      Expanded(
-                        child: Text(
-                          _plainContent(_replyTarget!.content),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.white,
-                              ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _replyTarget = null;
-                          });
-                        },
-                        child: const Icon(
-                          Icons.close_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: RoundContainer(
@@ -333,9 +256,9 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
                 child: Row(
                   children: [
                     SvgPicture.asset(
-                      Assets.add,
-                      width: 24,
-                      height: 24,
+                      Assets.roundBubble,
+                      width: 20,
+                      height: 20,
                       colorFilter: const ColorFilter.mode(
                         Color(0xFFD4D4D4),
                         BlendMode.srcIn,
@@ -365,12 +288,18 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
                     ),
                     const SizedBox(width: 10),
                     GestureDetector(
-                      onTap: _handleSend,
-                      child: SvgPicture.asset(
-                        Assets.uploadComment,
-                        width: 24,
-                        height: 24,
-                      ),
+                      onTap: _sending ? null : _handleSend,
+                      child: _sending
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(
+                              Icons.send_rounded,
+                              size: 20,
+                              color: AppColors.neutral500,
+                            ),
                     ),
                   ],
                 ),

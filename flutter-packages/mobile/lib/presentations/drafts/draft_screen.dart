@@ -165,7 +165,7 @@ class DraftCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      timeAgo(data.createdAt),
+                      timeAgo((data.createdAt / 1000).toInt()),
                       style: const TextStyle(
                         color: Color(0xFF737373),
                         fontSize: 12,

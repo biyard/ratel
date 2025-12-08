@@ -505,3 +505,406 @@ class RespondPollResult {
 
   Map<String, dynamic> toJson() => {'poll_space_pk': pollSpacePk};
 }
+
+class PollResult {
+  final int createdAt;
+  final List<PollSummary> summaries;
+  final Map<String, List<PollSummary>> summariesByGender;
+  final Map<String, List<PollSummary>> summariesByAge;
+  final Map<String, List<PollSummary>> summariesBySchool;
+  final List<PollUserAnswer> sampleAnswers;
+  final List<PollUserAnswer> finalAnswers;
+
+  const PollResult({
+    required this.createdAt,
+    required this.summaries,
+    required this.summariesByGender,
+    required this.summariesByAge,
+    required this.summariesBySchool,
+    required this.sampleAnswers,
+    required this.finalAnswers,
+  });
+
+  factory PollResult.fromJson(Json j) {
+    return PollResult(
+      createdAt: (j['created_at'] as num?)?.toInt() ?? 0,
+      summaries: (j['summaries'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => PollSummary.fromJson(e.cast<String, dynamic>()))
+          .toList(),
+      summariesByGender: _parseGroupedSummaries(j['summaries_by_gender']),
+      summariesByAge: _parseGroupedSummaries(j['summaries_by_age']),
+      summariesBySchool: _parseGroupedSummaries(j['summaries_by_school']),
+      sampleAnswers: (j['sample_answers'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => PollUserAnswer.fromJson(e.cast<String, dynamic>()))
+          .toList(),
+      finalAnswers: (j['final_answers'] as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => PollUserAnswer.fromJson(e.cast<String, dynamic>()))
+          .toList(),
+    );
+  }
+
+  Json toJson() => {
+    'created_at': createdAt,
+    'summaries': summaries.map((s) => s.toJson()).toList(),
+    'summaries_by_gender': summariesByGender.map(
+      (k, v) => MapEntry(k, v.map((e) => e.toJson()).toList()),
+    ),
+    'summaries_by_age': summariesByAge.map(
+      (k, v) => MapEntry(k, v.map((e) => e.toJson()).toList()),
+    ),
+    'summaries_by_school': summariesBySchool.map(
+      (k, v) => MapEntry(k, v.map((e) => e.toJson()).toList()),
+    ),
+    'sample_answers': sampleAnswers.map((a) => a.toJson()).toList(),
+    'final_answers': finalAnswers.map((a) => a.toJson()).toList(),
+  };
+}
+
+Map<String, List<PollSummary>> _parseGroupedSummaries(dynamic raw) {
+  final result = <String, List<PollSummary>>{};
+  if (raw is Map) {
+    raw.forEach((key, value) {
+      final list = (value as List? ?? const [])
+          .whereType<Map>()
+          .map((e) => PollSummary.fromJson(e.cast<String, dynamic>()))
+          .toList();
+      result[key.toString()] = list;
+    });
+  }
+  return result;
+}
+
+abstract class PollSummary {
+  final AnswerType type;
+  final int totalCount;
+
+  const PollSummary(this.type, this.totalCount);
+
+  factory PollSummary.fromJson(Json j) {
+    final t = answerTypeFromString(j['answer_type'] as String);
+    final total = (j['total_count'] as num?)?.toInt() ?? 0;
+    switch (t) {
+      case AnswerType.singleChoice:
+        return SingleChoiceSummary(
+          total,
+          _parseIntCountMap(j['answers']),
+          _parseStringCountMap(j['other_answers']),
+        );
+      case AnswerType.multipleChoice:
+        return MultipleChoiceSummary(
+          total,
+          _parseIntCountMap(j['answers']),
+          _parseStringCountMap(j['other_answers']),
+        );
+      case AnswerType.shortAnswer:
+        return ShortAnswerSummary(total, _parseStringCountMap(j['answers']));
+      case AnswerType.subjective:
+        return SubjectiveSummary(total, _parseStringCountMap(j['answers']));
+      case AnswerType.checkbox:
+        return CheckboxSummary(total, _parseIntCountMap(j['answers']));
+      case AnswerType.dropdown:
+        return DropdownSummary(total, _parseIntCountMap(j['answers']));
+      case AnswerType.linearScale:
+        return LinearScaleSummary(total, _parseIntCountMap(j['answers']));
+    }
+  }
+
+  Json toJson();
+}
+
+class SingleChoiceSummary extends PollSummary {
+  final Map<int, int> answers;
+  final Map<String, int> otherAnswers;
+
+  const SingleChoiceSummary(int totalCount, this.answers, this.otherAnswers)
+    : super(AnswerType.singleChoice, totalCount);
+
+  @override
+  Json toJson() => {
+    'answer_type': answerTypeToString(type),
+    'total_count': totalCount,
+    'answers': answers.map((k, v) => MapEntry(k.toString(), v)),
+    'other_answers': otherAnswers,
+  };
+}
+
+class MultipleChoiceSummary extends PollSummary {
+  final Map<int, int> answers;
+  final Map<String, int> otherAnswers;
+
+  const MultipleChoiceSummary(int totalCount, this.answers, this.otherAnswers)
+    : super(AnswerType.multipleChoice, totalCount);
+
+  @override
+  Json toJson() => {
+    'answer_type': answerTypeToString(type),
+    'total_count': totalCount,
+    'answers': answers.map((k, v) => MapEntry(k.toString(), v)),
+    'other_answers': otherAnswers,
+  };
+}
+
+class ShortAnswerSummary extends PollSummary {
+  final Map<String, int> answers;
+
+  const ShortAnswerSummary(int totalCount, this.answers)
+    : super(AnswerType.shortAnswer, totalCount);
+
+  @override
+  Json toJson() => {
+    'answer_type': answerTypeToString(type),
+    'total_count': totalCount,
+    'answers': answers,
+  };
+}
+
+class SubjectiveSummary extends PollSummary {
+  final Map<String, int> answers;
+
+  const SubjectiveSummary(int totalCount, this.answers)
+    : super(AnswerType.subjective, totalCount);
+
+  @override
+  Json toJson() => {
+    'answer_type': answerTypeToString(type),
+    'total_count': totalCount,
+    'answers': answers,
+  };
+}
+
+class CheckboxSummary extends PollSummary {
+  final Map<int, int> answers;
+
+  const CheckboxSummary(int totalCount, this.answers)
+    : super(AnswerType.checkbox, totalCount);
+
+  @override
+  Json toJson() => {
+    'answer_type': answerTypeToString(type),
+    'total_count': totalCount,
+    'answers': answers.map((k, v) => MapEntry(k.toString(), v)),
+  };
+}
+
+class DropdownSummary extends PollSummary {
+  final Map<int, int> answers;
+
+  const DropdownSummary(int totalCount, this.answers)
+    : super(AnswerType.dropdown, totalCount);
+
+  @override
+  Json toJson() => {
+    'answer_type': answerTypeToString(type),
+    'total_count': totalCount,
+    'answers': answers.map((k, v) => MapEntry(k.toString(), v)),
+  };
+}
+
+class LinearScaleSummary extends PollSummary {
+  final Map<int, int> answers;
+
+  const LinearScaleSummary(int totalCount, this.answers)
+    : super(AnswerType.linearScale, totalCount);
+
+  @override
+  Json toJson() => {
+    'answer_type': answerTypeToString(type),
+    'total_count': totalCount,
+    'answers': answers.map((k, v) => MapEntry(k.toString(), v)),
+  };
+}
+
+Map<int, int> _parseIntCountMap(dynamic raw) {
+  final result = <int, int>{};
+  if (raw is Map) {
+    raw.forEach((k, v) {
+      final key = int.tryParse(k.toString());
+      final val = (v as num?)?.toInt();
+      if (key != null && val != null) {
+        result[key] = val;
+      }
+    });
+  }
+  return result;
+}
+
+Map<String, int> _parseStringCountMap(dynamic raw) {
+  final result = <String, int>{};
+  if (raw is Map) {
+    raw.forEach((k, v) {
+      final key = k.toString();
+      final val = (v as num?)?.toInt();
+      if (val != null) {
+        result[key] = val;
+      }
+    });
+  }
+  return result;
+}
+
+class PollUserAnswer {
+  final int createdAt;
+  final List<Answer> answers;
+  final RespondentAttr? respondent;
+  final String? userPk;
+  final String? displayName;
+  final String? profileUrl;
+  final String? username;
+
+  const PollUserAnswer({
+    required this.createdAt,
+    required this.answers,
+    required this.respondent,
+    required this.userPk,
+    required this.displayName,
+    required this.profileUrl,
+    required this.username,
+  });
+
+  factory PollUserAnswer.fromJson(Json j) {
+    final answersJson = (j['answers'] as List? ?? const []);
+    return PollUserAnswer(
+      createdAt: (j['created_at'] as num?)?.toInt() ?? 0,
+      answers: answersJson
+          .whereType<Map>()
+          .map((e) => Answer.fromJson(e.cast<String, dynamic>()))
+          .toList(),
+      respondent: j['respondent'] is Map
+          ? RespondentAttr.fromJson(
+              (j['respondent'] as Map).cast<String, dynamic>(),
+            )
+          : null,
+      userPk: j['user_pk']?.toString(),
+      displayName: j['display_name']?.toString(),
+      profileUrl: j['profile_url']?.toString(),
+      username: j['username']?.toString(),
+    );
+  }
+
+  Json toJson() => {
+    'created_at': createdAt,
+    'answers': answers.map((a) => a.toJson()).toList(),
+    'respondent': respondent?.toJson(),
+    'user_pk': userPk,
+    'display_name': displayName,
+    'profile_url': profileUrl,
+    'username': username,
+  };
+}
+
+enum GenderType { male, female, unknown }
+
+GenderType genderTypeFromString(String? s) {
+  switch (s) {
+    case 'male':
+      return GenderType.male;
+    case 'female':
+      return GenderType.female;
+    default:
+      return GenderType.unknown;
+  }
+}
+
+String genderTypeToString(GenderType g) {
+  switch (g) {
+    case GenderType.male:
+      return 'male';
+    case GenderType.female:
+      return 'female';
+    case GenderType.unknown:
+      return 'unknown';
+  }
+}
+
+enum AgeKind { specific, range }
+
+class AgeModel {
+  final AgeKind kind;
+  final int? value;
+  final int? inclusiveMin;
+  final int? inclusiveMax;
+
+  const AgeModel._({
+    required this.kind,
+    this.value,
+    this.inclusiveMin,
+    this.inclusiveMax,
+  });
+
+  factory AgeModel.specific(int? value) =>
+      AgeModel._(kind: AgeKind.specific, value: value);
+
+  factory AgeModel.range({int? inclusiveMin, int? inclusiveMax}) => AgeModel._(
+    kind: AgeKind.range,
+    inclusiveMin: inclusiveMin,
+    inclusiveMax: inclusiveMax,
+  );
+
+  factory AgeModel.fromJson(Json j) {
+    final t = j['age_type']?.toString();
+    if (t == 'specific') {
+      final v = j['value'];
+      return AgeModel.specific(v is num ? v.toInt() : _asIntOrNull(v));
+    } else if (t == 'range') {
+      final v = j['value'];
+      if (v is Map) {
+        final min = v['inclusive_min'];
+        final max = v['inclusive_max'];
+        return AgeModel.range(
+          inclusiveMin: min is num ? min.toInt() : _asIntOrNull(min),
+          inclusiveMax: max is num ? max.toInt() : _asIntOrNull(max),
+        );
+      }
+      return AgeModel.range();
+    }
+    return AgeModel.specific(null);
+  }
+
+  Json toJson() {
+    switch (kind) {
+      case AgeKind.specific:
+        return {'age_type': 'specific', 'value': value};
+      case AgeKind.range:
+        return {
+          'age_type': 'range',
+          'value': {
+            'inclusive_min': inclusiveMin,
+            'inclusive_max': inclusiveMax,
+          },
+        };
+    }
+  }
+}
+
+class RespondentAttr {
+  final GenderType? gender;
+  final AgeModel? age;
+  final String? school;
+
+  const RespondentAttr({
+    required this.gender,
+    required this.age,
+    required this.school,
+  });
+
+  factory RespondentAttr.fromJson(Json j) {
+    return RespondentAttr(
+      gender: j['gender'] == null
+          ? null
+          : genderTypeFromString(j['gender']?.toString()),
+      age: j['age'] is Map
+          ? AgeModel.fromJson((j['age'] as Map).cast<String, dynamic>())
+          : null,
+      school: j['school']?.toString(),
+    );
+  }
+
+  Json toJson() => {
+    'gender': gender == null ? null : genderTypeToString(gender!),
+    'age': age?.toJson(),
+    'school': school,
+  };
+}

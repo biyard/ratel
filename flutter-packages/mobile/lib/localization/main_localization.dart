@@ -22,6 +22,9 @@ class MainLocalization {
   );
   static String get notification => _notification.tr;
 
+  static final _my = s('my', 'My', 'My');
+  static String get my => _my.tr;
+
   static final _messages = s('messages', 'Messages', 'Messages');
   static String get messages => _messages.tr;
 

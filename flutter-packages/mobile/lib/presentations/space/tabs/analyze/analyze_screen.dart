@@ -5,9 +5,12 @@ class AnalyzeScreen extends GetWidget<AnalyzeController> {
 
   @override
   Widget build(BuildContext context) {
+    final space = controller.space;
     return Layout<AnalyzeController>(
       scrollable: false,
-      child: Text("Space Analyze Screen"),
+      child: space?.isAdmin ?? false
+          ? const AnalyzeCreatorScreen()
+          : const SizedBox(),
     );
   }
 }
