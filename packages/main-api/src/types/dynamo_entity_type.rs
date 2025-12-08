@@ -28,6 +28,7 @@ pub enum EntityType {
     // USER_PK index is aligned by gsi1-index
     User,
     UserEvmAddress,
+    UserNotification(String), //notification id
     UserReferralCode,
     UserPrincipal,
     UserOAuth,

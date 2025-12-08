@@ -12,6 +12,7 @@ mod r {
     use once_cell::sync::Lazy;
     use serde::Deserialize;
     use std::collections::HashMap;
+    use std::sync::Once;
     use std::time::{Duration, Instant};
     use tokio::sync::Mutex;
 
@@ -49,6 +50,17 @@ mod r {
 
     const GOOGLE_PUBLIC_KEYS_URL: &str =
         "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
+
+    fn init_rustls_crypto_provider() {
+        use rustls::crypto::{CryptoProvider, aws_lc_rs};
+
+        static ONCE: Once = Once::new();
+
+        ONCE.call_once(|| {
+            CryptoProvider::install_default(aws_lc_rs::default_provider())
+                .expect("failed to install rustls default CryptoProvider");
+        });
+    }
 
     async fn fetch_and_cache_keys() -> Result<(), Error> {
         let client = reqwest::Client::new();
@@ -160,6 +172,25 @@ mod r {
 
         // FIXME: return email
         Ok(claims.sub)
+    }
+
+    pub async fn get_fcm_access_token() -> Result<String, Error> {
+        use gcp_auth::TokenProvider;
+
+        init_rustls_crypto_provider();
+
+        let scopes = &["https://www.googleapis.com/auth/firebase.messaging"];
+
+        let provider = gcp_auth::provider().await.map_err(|e| {
+            Error::InternalServerError(format!("gcp_auth provider init failed: {e}"))
+        })?;
+
+        let token = provider
+            .token(scopes)
+            .await
+            .map_err(|e| Error::InternalServerError(format!("gcp_auth token failed: {e}")))?;
+
+        Ok(token.as_str().to_string())
     }
 }
 

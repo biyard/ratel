@@ -22,6 +22,15 @@ class NotificationApi extends GetConnect {
     return base.resolve('$basePath$path');
   }
 
+  Uri _meUri([String path = '']) {
+    final base = Uri.parse(apiEndpoint);
+    const basePath = '/v3/me';
+    if (path.isEmpty) {
+      return base.resolve(basePath);
+    }
+    return base.resolve('$basePath$path');
+  }
+
   Future<NotificationsPage> getNotifications({String? bookmark}) async {
     final base = _baseUri();
     final uri = (bookmark == null || bookmark.isEmpty)
@@ -111,5 +120,32 @@ class NotificationApi extends GetConnect {
 
     final data = res.body as Map<String, dynamic>;
     return DeleteNotificationResult.fromJson(data);
+  }
+
+  Future<bool> registerNotificationDevice({
+    required String deviceToken,
+    required String platform, // "android" | "ios" | "web"
+    String? deviceId,
+  }) async {
+    final uri = _meUri('/notification-devices');
+    final headers = <String, String>{'Content-Type': 'application/json'};
+
+    final payload = <String, dynamic>{
+      'device_token': deviceToken,
+      'platform': platform,
+      if (deviceId != null && deviceId.isNotEmpty) 'device_id': deviceId,
+    };
+
+    final res = await post(uri.toString(), payload, headers: headers);
+
+    logger.d(
+      'POST register-notification-device: status=${res.statusCode}, body=${res.body}',
+    );
+
+    if (!res.isOk) {
+      return false;
+    }
+
+    return true;
   }
 }
