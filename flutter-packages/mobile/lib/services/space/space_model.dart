@@ -264,6 +264,7 @@ class SpaceModel {
   });
 
   bool get isAdmin => permissions.isAdmin;
+  bool get havePreTasks => requirements.any((e) => !e.responded);
 
   factory SpaceModel.fromJson(Json j) {
     List<String> stringList(String key) {

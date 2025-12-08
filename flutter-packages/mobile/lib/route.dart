@@ -1,4 +1,5 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/middlewares/space_middleware.dart';
 
 class AppRoutes {
   static const String mainScreen = '/dashboard';
@@ -29,6 +30,12 @@ class AppRoutes {
     return '/space/$encSpacePk/board/$encPostPk';
   }
 
+  static String spaceRequirements(String spacePk) {
+    final encSpacePk = Uri.encodeComponent(spacePk);
+
+    return '/space/$encSpacePk/requirements';
+  }
+
   static deliberationSpaceWithId(int id) => '/space/$id/deliberation';
   static noticeSpaceWithId(int id) => '/space/$id/notice';
   static notFoundSpaceWithId(int id) => '/space/$id/not-found';
@@ -36,8 +43,18 @@ class AppRoutes {
 
   static List<GetPage> pages = [
     GetPage(
+      name: '/space/:spacePk/requirements',
+      page: () => SpaceRequirementScreen(),
+      binding: SpaceRequirementBinding(),
+      customTransition: SlideOverTransition(),
+      transitionDuration: const Duration(milliseconds: 300),
+      opaque: true,
+      curve: Curves.easeOutCubic,
+    ),
+    GetPage(
       name: '/space/:spacePk',
       page: () => const SpaceScreen(),
+      middlewares: [SpaceMiddleware()],
       binding: SpaceBinding(),
       children: [
         GetPage(
@@ -97,6 +114,7 @@ class AppRoutes {
         ),
       ],
     ),
+
     GetPage(
       name: mySpaces,
       page: () => MySpaceScreen(),
