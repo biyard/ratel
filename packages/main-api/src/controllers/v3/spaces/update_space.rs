@@ -118,7 +118,8 @@ pub async fn update_space_handler(
                 && (space.publish_state == SpacePublishState::Draft && publish)
                 && visibility == SpaceVisibility::Public;
 
-            SpaceInvitationMember::send_email(&dynamo, &ses, &space, post.title).await?;
+            SpaceInvitationMember::send_email(&dynamo, &ses, &space, post.title.clone()).await?;
+            SpaceInvitationMember::send_notification(&dynamo, &space, post.title).await?;
 
             let mut bookmark: Option<String> = None;
 

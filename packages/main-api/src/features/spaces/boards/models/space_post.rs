@@ -196,116 +196,23 @@ impl SpacePost {
         post_title: String,
         recipients: Vec<Partition>,
     ) -> Result<(), Error> {
-        let project_id = config::get().ratel_project_id;
-        let fcm_enabled = config::get().fcm_enabled;
-
-        if !fcm_enabled {
-            tracing::info!(
-                "send_notification: FCM_ENABLED != true, skip sending push (project_id={})",
-                project_id
-            );
+        if recipients.is_empty() {
+            tracing::info!("send_notification: no recipients, skip push");
             return Ok(());
         }
-
-        tracing::info!(
-            "send_notification: start, project_id={}, recipients={}",
-            project_id,
-            recipients.len()
-        );
-
-        let access_token = get_fcm_access_token().await?;
-        tracing::debug!(
-            "send_notification: got access_token (len={})",
-            access_token.len()
-        );
-
-        let client = reqwest::Client::new();
-
-        let endpoint = format!(
-            "https://fcm.googleapis.com/v1/projects/{}/messages:send",
-            project_id
-        );
 
         let title = "Space members are posting new space contents.".to_string();
         let body = post_title;
 
+        tracing::info!("send_notification: start, recipients={}", recipients.len());
+
         for user_pk in recipients {
             tracing::debug!("send_notification: processing user_pk={}", user_pk);
 
-            let Some(device) =
-                UserNotification::find_latest_by_user(&dynamo.client, &user_pk).await?
-            else {
-                tracing::debug!(
-                    "send_notification: no UserNotification found for user_pk={}",
-                    user_pk
-                );
-                continue;
-            };
-
-            if !device.enabled {
-                tracing::debug!(
-                    "send_notification: device disabled for user_pk={}, token_prefix={}",
-                    user_pk,
-                    &device.device_token.chars().take(10).collect::<String>()
-                );
-                continue;
-            }
-
-            tracing::info!(
-                "send_notification: sending push to user_pk={}, platform={:?}, token_prefix={}",
-                user_pk,
-                device.platform,
-                &device.device_token.chars().take(10).collect::<String>()
-            );
-
-            let payload = json!({
-                "message": {
-                    "token": device.device_token,
-                    "notification": {
-                        "title": title,
-                        "body":  body,
-                    },
-                }
-            });
-
-            tracing::debug!(
-                "send_notification: request payload for user_pk={}: {}",
-                user_pk,
-                payload
-            );
-
-            let res = client
-                .post(&endpoint)
-                .bearer_auth(&access_token)
-                .json(&payload)
-                .send()
-                .await
-                .map_err(|e| Error::InternalServerError(format!("FCM v1 request failed: {e}")))?;
-
-            let status = res.status();
-            let text = res.text().await.unwrap_or_default();
-
-            if !status.is_success() {
-                tracing::warn!(
-                    "send_notification: FCM v1 push failed: status={}, body={}, user_pk={}, token_prefix={}",
-                    status,
-                    text,
-                    user_pk,
-                    &device.device_token.chars().take(10).collect::<String>()
-                );
-            } else {
-                tracing::info!(
-                    "send_notification: FCM v1 push success: status={}, user_pk={}, token_prefix={}, body_snippet={}",
-                    status,
-                    user_pk,
-                    &device.device_token.chars().take(10).collect::<String>(),
-                    &text.chars().take(100).collect::<String>()
-                );
-            }
+            UserNotification::send_to_user(dynamo, &user_pk, title.clone(), body.clone()).await?;
         }
 
         tracing::info!("send_notification: done");
-
         Ok(())
     }
 

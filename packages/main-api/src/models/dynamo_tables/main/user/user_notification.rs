@@ -1,4 +1,11 @@
-use crate::{utils::time::get_now_timestamp_millis, *};
+use serde_json::json;
+
+use crate::{
+    utils::{
+        aws::DynamoClient, firebase::oauth::get_fcm_access_token, time::get_now_timestamp_millis,
+    },
+    *,
+};
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, Default)]
 pub struct UserNotification {
@@ -81,5 +88,103 @@ impl UserNotification {
         let opt = Self::opt_one().scan_index_forward(false);
         let (items, _) = Self::find_user_notifications_by_user(cli, user_pk, opt).await?;
         Ok(items.into_iter().filter(|d| d.enabled).next())
+    }
+
+    pub async fn send_to_user(
+        dynamo: &DynamoClient,
+        user_pk: &Partition,
+        title: impl Into<String>,
+        body: impl Into<String>,
+    ) -> Result<()> {
+        let title = title.into();
+        let body = body.into();
+
+        let project_id = config::get().ratel_project_id;
+        let fcm_enabled = config::get().fcm_enabled;
+
+        if !fcm_enabled {
+            tracing::info!(
+                "UserNotification::send_to_user: FCM_ENABLED != true, skip push (project_id={})",
+                project_id
+            );
+            return Ok(());
+        }
+
+        let Some(device) = UserNotification::find_latest_by_user(&dynamo.client, user_pk).await?
+        else {
+            tracing::debug!(
+                "UserNotification::send_to_user: no active device for user_pk={}",
+                user_pk
+            );
+            return Ok(());
+        };
+
+        if !device.enabled {
+            tracing::debug!(
+                "UserNotification::send_to_user: device disabled for user_pk={}, token_prefix={}",
+                user_pk,
+                &device.device_token.chars().take(10).collect::<String>()
+            );
+            return Ok(());
+        }
+
+        let access_token = get_fcm_access_token().await?;
+        tracing::debug!(
+            "UserNotification::send_to_user: got access_token (len={})",
+            access_token.len()
+        );
+
+        let client = reqwest::Client::new();
+        let endpoint = format!(
+            "https://fcm.googleapis.com/v1/projects/{}/messages:send",
+            project_id
+        );
+
+        let payload = json!({
+            "message": {
+                "token": device.device_token,
+                "notification": {
+                    "title": title,
+                    "body":  body,
+                },
+            }
+        });
+
+        tracing::debug!(
+            "UserNotification::send_to_user: request payload for user_pk={}: {}",
+            user_pk,
+            payload
+        );
+
+        let res = client
+            .post(&endpoint)
+            .bearer_auth(&access_token)
+            .json(&payload)
+            .send()
+            .await
+            .map_err(|e| Error::InternalServerError(format!("FCM v1 request failed: {e}")))?;
+
+        let status = res.status();
+        let text = res.text().await.unwrap_or_default();
+
+        if !status.is_success() {
+            tracing::warn!(
+                "UserNotification::send_to_user: FCM v1 push failed: status={}, body={}, user_pk={}, token_prefix={}",
+                status,
+                text,
+                user_pk,
+                &device.device_token.chars().take(10).collect::<String>()
+            );
+        } else {
+            tracing::info!(
+                "UserNotification::send_to_user: FCM v1 push success: status={}, user_pk={}, token_prefix={}, body_snippet={}",
+                status,
+                user_pk,
+                &device.device_token.chars().take(10).collect::<String>(),
+                &text.chars().take(100).collect::<String>()
+            );
+        }
+
+        Ok(())
     }
 }

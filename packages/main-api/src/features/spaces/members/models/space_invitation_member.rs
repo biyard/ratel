@@ -1,12 +1,14 @@
 use futures::future::try_join_all;
+use serde_json::json;
 
 use super::*;
 use crate::features::spaces::members::{
     InvitationStatus, SpaceEmailVerification, SpaceInvitationMemberResponse,
 };
-use crate::models::SpaceCommon;
+use crate::models::{SpaceCommon, UserNotification};
 use crate::types::*;
 use crate::utils::aws::{DynamoClient, SesClient};
+use crate::utils::firebase::oauth::get_fcm_access_token;
 use crate::*;
 use aws_sdk_dynamodb::types::AttributeValue;
 
@@ -128,6 +130,57 @@ impl SpaceInvitationMember {
             .await?;
         }
 
+        Ok(())
+    }
+
+    pub async fn send_notification(
+        dynamo: &DynamoClient,
+        space: &SpaceCommon,
+        space_title: String,
+    ) -> Result<()> {
+        tracing::info!(
+            "SpaceInvitationMember::send_notification: start for space_pk={}",
+            space.pk
+        );
+
+        let (invites, _) = SpaceInvitationMember::find_space_invitations_by_status(
+            &dynamo.client,
+            space.pk.clone(),
+            SpaceInvitationMember::opt_all().sk(InvitationStatus::Invited.to_string()),
+        )
+        .await?;
+
+        if invites.is_empty() {
+            tracing::info!(
+                "SpaceInvitationMember::send_notification: no pending invitations for space_pk={}",
+                space.pk
+            );
+            return Ok(());
+        }
+
+        let title = "You are invited in space.".to_string();
+        let body = format!("Participate new space: {space_title}");
+
+        let futures = invites.into_iter().map(|m| {
+            let user_pk = m.user_pk;
+            let title = title.clone();
+            let body = body.clone();
+
+            async move {
+                tracing::debug!(
+                    "SpaceInvitationMember::send_notification: sending to user_pk={}",
+                    user_pk
+                );
+                UserNotification::send_to_user(dynamo, &user_pk, title, body).await
+            }
+        });
+
+        try_join_all(futures).await?;
+
+        tracing::info!(
+            "SpaceInvitationMember::send_notification: done for space_pk={}",
+            space.pk
+        );
         Ok(())
     }
 
