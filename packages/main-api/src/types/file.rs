@@ -1,20 +1,43 @@
+use crate::types::file_location::FileLocation;
 use bdk::prelude::*;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, JsonSchema, PartialEq, Eq)]
 pub struct File {
+    /// Unique ID for the file
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<String>,
+
     pub name: String,
     pub size: String,
     pub ext: FileExtension,
     pub url: Option<String>,
+
+    /// Locations where this file should appear (Overview, Board, Files)
+    #[serde(default = "default_locations")]
+    pub locations: Vec<FileLocation>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub uploaded_at: Option<i64>,
+}
+
+fn default_locations() -> Vec<FileLocation> {
+    vec![FileLocation::Files]
 }
 
 impl Default for File {
     fn default() -> Self {
         File {
+            id: None,
             name: String::new(),
             size: String::new(),
             ext: FileExtension::JPG,
             url: None,
+            locations: default_locations(),
+            description: None,
+            uploaded_at: None,
         }
     }
 }

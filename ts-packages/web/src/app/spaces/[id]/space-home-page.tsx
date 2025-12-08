@@ -1,5 +1,6 @@
 import SpaceHTMLContentEditor from '@/features/spaces/components/content-editor';
 import { useSpaceLayoutContext } from './use-space-layout-context';
+import { OverviewFiles } from '@/features/spaces/files';
 
 export function SpaceHomePage() {
   const ctrl = useSpaceLayoutContext();
@@ -18,6 +19,15 @@ export function SpaceHomePage() {
         onImageUpload={ctrl.handleImageUpload}
         onRemoveImage={ctrl.handleRemoveImage}
       />
+
+      {/* Files section with location filtering */}
+      <div className="mt-8">
+        <OverviewFiles
+          spacePk={ctrl.space.pk}
+          isAdmin={ctrl.isAdmin}
+          onFileAdded={ctrl.handleAddFile}
+        />
+      </div>
     </div>
   );
 }

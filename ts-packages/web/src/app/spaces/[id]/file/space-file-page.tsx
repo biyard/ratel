@@ -1,8 +1,7 @@
 import { useParams } from 'react-router';
 import '@/features/spaces/deliberations/deliberation-side-menus';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
-import { SpaceFileEditorPage } from '@/features/spaces/files/pages/creator/space-file-editor-page';
-import { SpaceFileViewerPage } from '@/features/spaces/files/pages/viewer/space-file-viewer-page';
+import { FilesPage } from '@/features/spaces/files';
 
 export default function SpaceFilePage() {
   const { spacePk } = useParams<{ spacePk: string }>();
@@ -12,10 +11,5 @@ export default function SpaceFilePage() {
     throw new Error('Space not found');
   }
 
-  if (space.isAdmin()) {
-    // Edit Mode
-    return <SpaceFileEditorPage spacePk={spacePk} />;
-  }
-
-  return <SpaceFileViewerPage spacePk={spacePk} />;
+  return <FilesPage spacePk={spacePk} isAdmin={space.isAdmin()} />;
 }

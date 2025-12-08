@@ -7,6 +7,7 @@ use aide::NoApi;
 
 use crate::features::spaces::files::SpaceFile;
 use crate::types::File;
+use crate::utils::time::get_now_timestamp_millis;
 use axum::extract::{Json, Path, State};
 use bdk::prelude::*;
 
@@ -40,22 +41,29 @@ pub async fn update_files_handler(
 
     let files = SpaceFile::get(&dynamo.client, &pk.clone(), Some(sk.clone())).await?;
 
+    let mut updated_files = req.files;
+    let now = get_now_timestamp_millis();
+    for file in &mut updated_files {
+        if file.id.is_none() {
+            file.id = Some(uuid::Uuid::new_v4().to_string());
+        }
+        if file.uploaded_at.is_none() {
+            file.uploaded_at = Some(now);
+        }
+    }
+
     if files.is_some() {
         SpaceFile::updater(&pk.clone(), sk.clone())
-            .with_files(req.files)
+            .with_files(updated_files.clone())
             .execute(&dynamo.client)
             .await?;
     } else {
-        let files = SpaceFile::new(space_pk.clone(), req.files);
+        let files = SpaceFile::new(space_pk.clone(), updated_files.clone());
 
         files.create(&dynamo.client).await?;
     }
 
-    let files = SpaceFile::get(&dynamo.client, &pk.clone(), Some(sk.clone())).await?;
-
-    let files = files.unwrap();
-
     Ok(Json(UpdateSpaceFileResponse {
-        files: files.clone().files,
+        files: updated_files,
     }))
 }

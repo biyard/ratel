@@ -1,8 +1,18 @@
+export enum FileLocation {
+  Overview = 'overview',
+  Board = 'board',
+  Files = 'files',
+}
+
 interface FileModel {
+  id?: string | null;
   name: string;
   size: string;
   ext: FileExtension;
   url?: string | null;
+  locations?: FileLocation[];
+  description?: string | null;
+  uploaded_at?: number | null;
 }
 export default FileModel;
 

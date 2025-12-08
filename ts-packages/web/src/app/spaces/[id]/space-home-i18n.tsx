@@ -70,6 +70,15 @@ export const i18nSpaceHome = {
     menu_nft_settings: 'Settings',
     menu_nft_art_twin: 'Art Twin',
 
+    // File Locations
+    location_overview: 'Overview',
+    location_board: 'Board',
+    location_files: 'Files',
+    file_locations: 'Show in',
+    upload_file: 'Upload File',
+    no_files_in_location: 'No files in this location',
+    all_files: 'All Files',
+
     // Actions
     action_participate: 'Participate',
 
@@ -161,6 +170,15 @@ export const i18nSpaceHome = {
     menu_recommendations: '권고사항',
 
     menu_sprint_league: 'Sprint League',
+
+    // File Locations
+    location_overview: '개요',
+    location_board: '게시판',
+    location_files: '파일',
+    file_locations: '표시 위치',
+    upload_file: '파일 업로드',
+    no_files_in_location: '이 위치에 파일이 없습니다',
+    all_files: '모든 파일',
 
     // Admin Menus
     menu_admin_settings: '설정',

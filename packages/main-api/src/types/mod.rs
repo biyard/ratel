@@ -3,6 +3,7 @@ pub mod dynamo_entity_type;
 pub mod dynamo_partition;
 pub mod oauth_provider;
 
+pub mod file_location;
 pub mod file_type;
 pub mod notification_status;
 pub mod post_status;

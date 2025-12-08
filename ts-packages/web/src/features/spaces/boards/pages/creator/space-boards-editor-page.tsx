@@ -4,6 +4,7 @@ import { useSpaceBoardsEditorController } from './space-boards-editor-controller
 import BoardsList from '../../components/boards-list';
 import { Button } from '@/components/ui/button';
 import { Add } from '@/components/icons';
+import { BoardFiles } from '@/features/spaces/files';
 
 export function SpaceBoardsEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceBoardsEditorPage: spacePk=${spacePk}`);
@@ -35,6 +36,11 @@ export function SpaceBoardsEditorPage({ spacePk }: SpacePathProps) {
         bookmark={ctrl.bookmark.get()}
         onLoadMore={ctrl.loadMore}
       />
+
+      {/* Files section for Board tab */}
+      <div className="mt-8">
+        <BoardFiles spacePk={spacePk} isAdmin={true} />
+      </div>
     </div>
   );
 }

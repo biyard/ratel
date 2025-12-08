@@ -72,10 +72,14 @@ async fn test_update_recommendation_files() {
         body: {
             "File": {
                 "files": vec![File{
+                    id: None,
                     name: "recommendation file name".to_string(),
                     size: "15KB".to_string(),
                     ext: FileExtension::PDF,
-                    url: None
+                    url: None,
+                    locations: vec![],
+                    description: None,
+                    uploaded_at: None
                 }]
             }
         },
