@@ -205,4 +205,8 @@ mod noop {
         // NOTE: token_str must be email address.
         Ok(token_str.to_string())
     }
+
+    pub async fn get_fcm_access_token() -> Result<String, Error> {
+        Ok("".to_string())
+    }
 }
