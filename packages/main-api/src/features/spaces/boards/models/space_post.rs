@@ -6,7 +6,6 @@ use std::collections::HashMap;
 use crate::email_operation::EmailOperation;
 use crate::features::migration::*;
 use crate::models::user;
-use crate::utils::firebase::oauth::get_fcm_access_token;
 use crate::{
     Error,
     features::spaces::boards::models::{
