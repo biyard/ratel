@@ -67,11 +67,21 @@ pub async fn resent_invitation_code_handler(
     }
 
     let user_email = req.email;
+    let user = User::find_by_email(&dynamo.client, user_email.clone(), Default::default())
+        .await?
+        .0;
     let _ = SpaceEmailVerification::send_email(
         &dynamo,
         &ses,
         vec![user_email.clone()],
         space_common.clone(),
+        post.title.clone(),
+    )
+    .await?;
+    let _ = SpaceEmailVerification::send_notification(
+        &dynamo,
+        vec![user[0].pk.clone()],
+        &space_common,
         post.title,
     )
     .await?;

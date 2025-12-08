@@ -109,7 +109,10 @@ pub async fn upsert_invitation_handler(
             .await?
             .unwrap_or_default();
 
-        let emails: Vec<String> = users.iter().map(|member| member.email.clone()).collect();
+        let (pks, emails): (Vec<Partition>, Vec<String>) = users
+            .iter()
+            .map(|member| (member.pk.clone(), member.email.clone()))
+            .collect();
 
         if !emails.is_empty() {
             let _ = SpaceEmailVerification::send_email(
@@ -118,6 +121,14 @@ pub async fn upsert_invitation_handler(
                 emails,
                 space_common.clone(),
                 post.title.clone(),
+            )
+            .await?;
+
+            let _ = SpaceEmailVerification::send_notification(
+                &dynamo,
+                pks.clone(),
+                &space_common,
+                post.title,
             )
             .await?;
         }

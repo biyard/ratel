@@ -118,6 +118,44 @@ impl UserTeam {
 
         Ok(())
     }
+
+    pub async fn send_notification(
+        dynamo: &DynamoClient,
+        recipients: Vec<Partition>,
+        team: &Team,
+    ) -> Result<(), Error> {
+        if recipients.is_empty() {
+            tracing::info!(
+                "UserTeam::send_notification: no recipients, skip push (team_pk={})",
+                team.pk
+            );
+            return Ok(());
+        }
+
+        tracing::info!(
+            "UserTeam::send_notification: start, team_pk={}, recipients={}",
+            team.pk,
+            recipients.len()
+        );
+
+        let title = "You are invited to join a team.".to_string();
+        let body = format!(
+            "Join team {} (@{}) and collaborate together.",
+            team.display_name, team.username
+        );
+
+        for user_pk in recipients {
+            tracing::debug!(
+                "UserTeam::send_notification: sending to user_pk={}",
+                user_pk
+            );
+            UserNotification::send_to_user(dynamo, &user_pk, title.clone(), body.clone()).await?;
+        }
+
+        tracing::info!("UserTeam::send_notification: done for team_pk={}", team.pk);
+
+        Ok(())
+    }
 }
 
 #[derive(Default, serde::Serialize, schemars::JsonSchema)]
