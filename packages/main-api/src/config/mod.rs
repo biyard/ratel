@@ -50,6 +50,9 @@ pub struct Config {
     pub account_id: &'static str,
 
     pub biyard: BiyardConfig,
+
+    pub ratel_project_id: &'static str,
+    pub fcm_enabled: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -129,6 +132,9 @@ impl Default for Config {
             x402: X402Config::default(),
             account_id: option_env!("ACCOUNT_ID").unwrap_or(""),
             biyard: BiyardConfig::default(),
+
+            ratel_project_id: option_env!("RATEL_PROJECT_ID").unwrap_or(""),
+            fcm_enabled: option_env!("FCM_ENABLED").map(|s| s.parse::<bool>().unwrap_or(false)).unwrap_or(false),
         }
     }
 }

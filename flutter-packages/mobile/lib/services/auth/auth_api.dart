@@ -112,6 +112,14 @@ class AuthApi extends GetConnect {
     if (auth?.isNotEmpty == true) {
       await _secure.write(key: _authKeyStorage, value: auth);
     }
+
+    try {
+      await NotificationsService.to.registerForCurrentUserIfPossible();
+    } catch (e) {
+      logger.w(
+        'AuthApi.tryAutoSignIn: failed to register notification device: $e',
+      );
+    }
     return true;
   }
 
@@ -167,6 +175,13 @@ class AuthApi extends GetConnect {
       await _secure.write(key: authName, value: cookies[authName]!);
     }
     await AuthDb.save(phone, cookies[sidName], cookies[authName]);
+
+    try {
+      await NotificationsService.to.registerForCurrentUserIfPossible();
+    } catch (e) {
+      logger.w('AuthApi.signup: failed to register notification device: $e');
+    }
+
     return LoginResult(
       body: res.body,
       sid: cookies[sidName],
@@ -207,6 +222,15 @@ class AuthApi extends GetConnect {
       await _secure.write(key: authName, value: cookies[authName]!);
     }
     await AuthDb.save(email, cookies[sidName], cookies[authName]);
+
+    try {
+      await NotificationsService.to.registerForCurrentUserIfPossible();
+    } catch (e) {
+      logger.w(
+        'AuthApi.loginWithPassword: failed to register notification device: $e',
+      );
+    }
+
     return LoginResult(
       body: res.body,
       sid: cookies[sidName],
