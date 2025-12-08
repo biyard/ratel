@@ -8,7 +8,6 @@ use crate::features::spaces::members::{
 use crate::models::{SpaceCommon, UserNotification};
 use crate::types::*;
 use crate::utils::aws::{DynamoClient, SesClient};
-use crate::utils::firebase::oauth::get_fcm_access_token;
 use crate::*;
 use aws_sdk_dynamodb::types::AttributeValue;
 

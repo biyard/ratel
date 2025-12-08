@@ -11,7 +11,6 @@ use crate::models::SpaceCommon;
 use crate::models::UserNotification;
 use crate::utils::aws::DynamoClient;
 
-use crate::utils::firebase::oauth::get_fcm_access_token;
 use crate::{
     models::team::Team,
     types::*,
