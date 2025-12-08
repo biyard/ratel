@@ -1,3 +1,4 @@
+import 'package:ratel/components/header/main_header.dart';
 import 'package:ratel/exports.dart';
 
 class HomeScreen extends GetWidget<HomeController> {
@@ -17,18 +18,18 @@ class HomeScreen extends GetWidget<HomeController> {
           backgroundColor: AppColors.bg,
           child: ListView.separated(
             controller: controller.scrollController,
-            padding: EdgeInsets.fromLTRB(0, 10, 0, bottomPad + 10),
+            padding: EdgeInsets.fromLTRB(0, 0, 0, bottomPad + 10),
             itemCount:
                 1 +
                 controller.feeds.length +
                 (controller.hasMore.value ? 1 : 0),
             separatorBuilder: (_, index) {
-              if (index == 0) return 10.vgap;
+              if (index == 0) return const SizedBox.shrink();
               return 8.vgap;
             },
             itemBuilder: (context, index) {
               if (index == 0) {
-                return const Header(title: "");
+                return const MainHeader();
               }
 
               final feedIndex = index - 1;
