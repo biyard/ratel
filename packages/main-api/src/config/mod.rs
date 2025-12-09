@@ -1,7 +1,10 @@
 pub mod did_config;
-pub mod portone_config;
+pub mod google_cloud;
+mod portone_config;
 mod x402_config;
+
 use did_config::DidConfig;
+pub use google_cloud::*;
 pub use portone_config::*;
 pub use x402_config::*;
 
@@ -50,9 +53,7 @@ pub struct Config {
     pub account_id: &'static str,
 
     pub biyard: BiyardConfig,
-
-    pub ratel_project_id: &'static str,
-    pub fcm_enabled: bool,
+    pub google_cloud: GoogleCloudConfig,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -133,8 +134,7 @@ impl Default for Config {
             account_id: option_env!("ACCOUNT_ID").unwrap_or(""),
             biyard: BiyardConfig::default(),
 
-            ratel_project_id: option_env!("RATEL_PROJECT_ID").unwrap_or(""),
-            fcm_enabled: option_env!("FCM_ENABLED").map(|s| s.parse::<bool>().unwrap_or(false)).unwrap_or(false),
+            google_cloud: GoogleCloudConfig::default(),
         }
     }
 }
