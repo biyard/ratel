@@ -121,10 +121,10 @@ class SpaceController extends BaseController {
 
     if (isAdmin) {
       baseTabs.addAll([
-        SpaceTab(id: 'member', label: 'Members', route: '/member'),
-        SpaceTab(id: 'panel', label: 'Panels', route: '/panel'),
+        // SpaceTab(id: 'member', label: 'Members', route: '/member'),
+        // SpaceTab(id: 'panel', label: 'Panels', route: '/panel'),
         SpaceTab(id: 'analyze', label: 'Analyze', route: '/analyzes'),
-        SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
+        // SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
       ]);
     }
 

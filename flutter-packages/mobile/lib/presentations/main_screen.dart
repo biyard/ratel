@@ -61,7 +61,6 @@ class _MainScreenState extends State<MainScreen>
     final page = _routeToPage(routeName);
     final context = Get.nestedKey(1)!.currentContext!;
 
-    final isForward = index > currentIndex;
     setState(() {
       currentIndex = index;
     });
@@ -69,22 +68,9 @@ class _MainScreenState extends State<MainScreen>
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => page,
-        transitionsBuilder: (_, animation, __, child) {
-          final begin = Offset(isForward ? 1.0 : -1.0, 0.0);
-          const end = Offset.zero;
-          const curve = Curves.easeInOut;
-
-          final tween = Tween(
-            begin: begin,
-            end: end,
-          ).chain(CurveTween(curve: curve));
-
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 300),
+        transitionsBuilder: (_, __, ___, child) => child,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
       ),
     );
   }
@@ -319,15 +305,6 @@ class _MainScreenState extends State<MainScreen>
                         ),
                       ),
                     ),
-                  ),
-                ),
-                Positioned(
-                  top: 0,
-                  left: itemWidth * currentIndex,
-                  child: Container(
-                    width: itemWidth,
-                    height: 2,
-                    color: AppColors.primary,
                   ),
                 ),
               ],

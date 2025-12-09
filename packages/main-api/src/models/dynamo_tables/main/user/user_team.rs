@@ -1,8 +1,15 @@
+use std::collections::HashMap;
+
 use crate::Error;
 use crate::models::email_template::email_template::EmailTemplate;
 // #[cfg(all(not(test), not(feature = "no-secret")))]
 // use crate::features::spaces::templates::SpaceTemplate;
+use crate::User;
 use crate::email_operation::EmailOperation;
+use crate::features::spaces::boards::models::space_post::SpacePost;
+use crate::models::SpaceCommon;
+use crate::models::UserNotification;
+use crate::services::fcm_notification::FCMService;
 use crate::utils::aws::DynamoClient;
 
 use crate::{
@@ -108,6 +115,39 @@ impl UserTeam {
         };
 
         email.send_email(&dynamo, &ses).await?;
+
+        Ok(())
+    }
+
+    pub async fn send_notification(
+        dynamo: &DynamoClient,
+        fcm: &mut FCMService,
+        recipients: Vec<Partition>,
+        team: &Team,
+    ) -> Result<(), Error> {
+        if recipients.is_empty() {
+            tracing::info!(
+                "UserTeam::send_notification: no recipients, skip push (team_pk={})",
+                team.pk
+            );
+            return Ok(());
+        }
+
+        tracing::info!(
+            "UserTeam::send_notification: start, team_pk={}, recipients={}",
+            team.pk,
+            recipients.len()
+        );
+
+        let title = "You are invited to join a team.".to_string();
+        let body = format!(
+            "Join team {} (@{}) and collaborate together.",
+            team.display_name, team.username
+        );
+
+        UserNotification::send_to_users(dynamo, fcm, &recipients, title, body).await?;
+
+        tracing::info!("UserTeam::send_notification: done for team_pk={}", team.pk);
 
         Ok(())
     }
