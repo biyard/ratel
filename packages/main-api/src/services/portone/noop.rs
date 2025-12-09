@@ -76,4 +76,25 @@ impl PortOne {
             "payment-id".to_string(),
         ))
     }
+
+    pub async fn schedule_pay_with_billing_key(
+        &self,
+        _customer_id: String,
+        _customer_name: String,
+        _order_name: String,
+        _billing_key: String,
+        _amount: i64,
+        _currency: Currency,
+        _time_to_pay: String,
+    ) -> Result<(BillingKeyPaymentResponse, String)> {
+        Ok((
+            BillingKeyPaymentResponse {
+                payment: Payment {
+                    paid_at: "2025-11-03T11:01:50.08942321Z".to_string(),
+                    pg_tx_id: "merchantest".to_string(),
+                },
+            },
+            "payment-id".to_string(),
+        ))
+    }
 }

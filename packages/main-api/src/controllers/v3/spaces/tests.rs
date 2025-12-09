@@ -30,12 +30,7 @@ pub async fn test_create_space() {
     assert_eq!(status, 200);
 
     let space_pk = res.space_pk;
-    let encoded_pk = percent_encoding::percent_encode(
-        space_pk.to_string().as_bytes(),
-        percent_encoding::NON_ALPHANUMERIC,
-    )
-    .to_string();
-    let path = format!("/v3/spaces/{}", encoded_pk);
+    let path = format!("/v3/spaces/{}", space_pk);
 
     let (status, _, res) = delete! {
         app: app,
@@ -43,7 +38,7 @@ pub async fn test_create_space() {
         headers: headers.clone()
     };
     tracing::debug!("Delete space response: {:?}", res);
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "{:?}", res);
 }
 
 #[tokio::test]
