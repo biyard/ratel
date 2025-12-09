@@ -1,6 +1,7 @@
 import 'package:ratel/exports.dart';
 
 class SpaceController extends BaseController {
+  final ReportApi reportApi = Get.find<ReportApi>();
   final SpaceService _spaceService = Get.find<SpaceService>();
 
   late final String spacePk;
@@ -48,6 +49,25 @@ class SpaceController extends BaseController {
   void onClose() {
     _spaceWorker?.dispose();
     super.onClose();
+  }
+
+  Future<void> reportSpace({required String spacePk}) async {
+    final rx = spaceRx;
+    final current = rx.value;
+    if (current == null) return;
+
+    try {
+      await reportApi.reportSpace(spacePk: spacePk);
+      Biyard.info('Reported successfully.');
+
+      current.isReport = true;
+      current.reports = (current.reports ?? 0) + 1;
+
+      rx.refresh();
+    } catch (e) {
+      logger.e('reportSpace error: $e');
+      Biyard.error('Report Failed', 'Failed to report. Please try again.');
+    }
   }
 
   String _buildDefaultPollSk() {

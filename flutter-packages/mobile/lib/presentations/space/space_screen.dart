@@ -4,9 +4,31 @@ import 'package:ratel/presentations/space/components/space_stats_section.dart';
 import 'package:ratel/presentations/space/components/space_tab_bar.dart';
 import 'package:ratel/presentations/space/components/space_title_and_author_section.dart';
 import 'package:ratel/presentations/space/components/space_top_bar.dart';
+import 'package:ratel/presentations/space/components/space_more_bottom_sheet.dart';
 
 class SpaceScreen extends GetWidget<SpaceController> {
   const SpaceScreen({super.key});
+
+  Future<void> _openSpaceActionSheet(
+    BuildContext context, {
+    required String spacePk,
+  }) async {
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF191919),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return SpaceMoreBottomSheet(
+          onReport: () async {
+            Navigator.pop(context);
+            await controller.reportSpace(spacePk: spacePk);
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +38,18 @@ class SpaceScreen extends GetWidget<SpaceController> {
         color: const Color(0xFF1D1D1D),
         child: Column(
           children: [
-            const SpaceTopBar(),
+            Obx(() {
+              final space = controller.space;
+              final canReport = space != null && (space.isReport != true);
+
+              return SpaceTopBar(
+                onBack: () => Get.back(),
+                showMore: canReport,
+                onMore: canReport && space != null
+                    ? () => _openSpaceActionSheet(context, spacePk: space.pk)
+                    : null,
+              );
+            }),
             16.vgap,
             Expanded(
               child: Obx(() {

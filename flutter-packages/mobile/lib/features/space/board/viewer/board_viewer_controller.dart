@@ -1,6 +1,7 @@
 import 'package:ratel/exports.dart';
 
 class BoardViewerController extends BaseController {
+  final reportApi = Get.find<ReportApi>();
   final userService = Get.find<UserService>();
   final SpaceBoardsApi _boardsApi = Get.find<SpaceBoardsApi>();
 
@@ -332,6 +333,24 @@ class BoardViewerController extends BaseController {
         'Failed to update comment',
         'Could not update this comment. Please try again.',
       );
+    }
+  }
+
+  Future<void> reportSpacePost({
+    required String spacePk,
+    required String spacePostPk,
+  }) async {
+    try {
+      await reportApi.reportSpacePost(
+        spacePk: spacePk,
+        spacePostPk: spacePostPk,
+      );
+
+      Biyard.info('Reported successfully.');
+      await _loadPost();
+    } catch (e) {
+      logger.e('reportSpacePost error: $e');
+      Biyard.error('Report Failed', 'Failed to report. Please try again.');
     }
   }
 }
