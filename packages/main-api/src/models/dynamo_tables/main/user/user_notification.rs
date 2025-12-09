@@ -64,7 +64,6 @@ impl UserNotification {
         self.last_used_at = Some(now);
         self.updated_at = now;
     }
-
     pub async fn device_tokens_by_user(
         cli: &aws_sdk_dynamodb::Client,
         user_pk: &Partition,

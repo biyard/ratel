@@ -111,6 +111,7 @@ pub async fn add_member_handler(
     if !invite_emails.is_empty() {
         let _ = UserTeam::send_email(&dynamo, &ses, team.clone(), invite_emails).await?;
 
+        // FIXME: fix to one call code
         let mut fcm = FCMService::new().await?;
         let _ = UserTeam::send_notification(&dynamo, &mut fcm, invite_pks, &team).await?;
     }

@@ -145,6 +145,7 @@ async fn send_create_post_alerm(
     )
     .await?;
 
+    // FIXME: fix to one call code
     let mut fcm = FCMService::new().await?;
     let _ = SpacePost::send_notification(&dynamo, &mut fcm, title, user_pks).await?;
 

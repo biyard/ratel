@@ -125,6 +125,7 @@ pub async fn upsert_invitation_handler(
             )
             .await?;
 
+            // FIXME: fix to one call code
             let mut fcm = FCMService::new().await?;
             let _ = SpaceEmailVerification::send_notification(
                 &dynamo,

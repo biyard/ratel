@@ -307,15 +307,6 @@ class _MainScreenState extends State<MainScreen>
                     ),
                   ),
                 ),
-                Positioned(
-                  top: 0,
-                  left: itemWidth * currentIndex,
-                  child: Container(
-                    width: itemWidth,
-                    height: 2,
-                    color: AppColors.primary,
-                  ),
-                ),
               ],
             );
           },
