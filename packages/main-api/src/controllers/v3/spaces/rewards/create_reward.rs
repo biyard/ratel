@@ -1,4 +1,5 @@
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
+use crate::features::membership::{UserMembership, user_membership};
 use crate::features::spaces::rewards::{RewardType, SpaceReward, SpaceRewardResponse};
 use crate::models::space::SpaceCommon;
 use crate::types::{EntityType, SpacePublishState};
@@ -28,15 +29,19 @@ pub struct CreateRewardSpaceRequest {
 pub async fn create_reward_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
-    Extension(_space_common): Extension<SpaceCommon>,
+    NoApi(user): NoApi<User>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<CreateRewardSpaceRequest>,
 ) -> Result<Json<SpaceRewardResponse>, Error> {
-    //Check Permissions
     permissions.permitted(TeamGroupPermission::SpaceWrite)?;
     let mut updater_txs = vec![];
 
-    // TODO: Check Credit Balance and Decrease Credit of Admin
+    let (mut user_membership, _membership) = user.get_membership(&dynamo.client).await?;
+
+    user_membership.use_credits(req.credit)?;
+
+    updater_txs.push(user_membership.upsert_transact_write_item());
+
     let amount = req.reward_type.point() * req.credit;
     let space_reward = SpaceReward::new(
         space_pk.clone(),
@@ -47,7 +52,6 @@ pub async fn create_reward_handler(
     );
 
     updater_txs.push(space_reward.create_transact_write_item());
-    // let updater = SpaceCommon::updater(space_common.pk, space_common.sk)
 
     transact_write_items!(&dynamo.client, updater_txs)?;
     Ok(Json(space_reward.into()))
