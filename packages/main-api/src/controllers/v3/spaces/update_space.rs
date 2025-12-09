@@ -8,6 +8,7 @@ use crate::models::space::SpaceCommon;
 
 use crate::models::Post;
 use crate::models::user::User;
+use crate::services::fcm_notification::FCMService;
 use crate::utils::aws::DynamoClient;
 use crate::utils::aws::PollScheduler;
 use crate::utils::aws::SesClient;
@@ -118,7 +119,11 @@ pub async fn update_space_handler(
                 && (space.publish_state == SpacePublishState::Draft && publish)
                 && visibility == SpaceVisibility::Public;
 
-            SpaceInvitationMember::send_email(&dynamo, &ses, &space, post.title).await?;
+            SpaceInvitationMember::send_email(&dynamo, &ses, &space, post.title.clone()).await?;
+
+            // FIXME: fix to one call code
+            let mut fcm = FCMService::new().await?;
+            SpaceInvitationMember::send_notification(&dynamo, &mut fcm, &space, post.title).await?;
 
             let mut bookmark: Option<String> = None;
 

@@ -54,6 +54,7 @@ export class RegionalServiceStack extends Stack {
         REGION: this.region,
         DISABLE_ANSI: "true",
         NO_COLOR: "true",
+        GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
       },
       memorySize: 128,
       timeout: cdk.Duration.seconds(30),

@@ -6,7 +6,6 @@ class Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const double avatar = 36;
     const double sidePad = 16;
 
     return Container(
@@ -20,13 +19,12 @@ class Header extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              _Avatar(imageUrl: defaultProfileImage, size: avatar),
-              10.gap,
               Text(
                 title,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 24,
                   fontWeight: FontWeight.w700,
+                  height: 32 / 24,
                   color: Colors.white,
                 ),
               ),
