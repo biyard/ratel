@@ -107,7 +107,7 @@ impl Default for Config {
                     "3600"
                 }) .parse()
                     .unwrap(),
-                region: option_env!("S3_REGION").expect("You must set S3_REGION"),
+                region: option_env!("S3_REGION").unwrap_or("ap-northeast-2"),
             },
             chime_bucket_name: option_env!("CHIME_BUCKET").expect("CHIME_BUCKET required"),
             telegram_token: option_env!("TELEGRAM_TOKEN").filter(|s| !s.is_empty()),
