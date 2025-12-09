@@ -47,13 +47,11 @@ pub async fn register_notification_device_handler(
     if let Some(mut n) = existing {
         n.device_token = req.device_token.clone();
         n.platform = req.platform;
-        n.enabled = true;
         n.touch();
 
         UserNotification::updater(user.pk, sk)
             .with_device_token(n.device_token.clone())
             .with_platform(n.platform)
-            .with_enabled(true)
             .with_updated_at(n.updated_at)
             .with_last_used_at(n.last_used_at.unwrap_or_default())
             .execute(&dynamo.client)

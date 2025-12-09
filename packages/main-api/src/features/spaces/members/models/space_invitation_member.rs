@@ -6,6 +6,7 @@ use crate::features::spaces::members::{
     InvitationStatus, SpaceEmailVerification, SpaceInvitationMemberResponse,
 };
 use crate::models::{SpaceCommon, UserNotification};
+use crate::services::fcm_notification::FCMService;
 use crate::types::*;
 use crate::utils::aws::{DynamoClient, SesClient};
 use crate::*;
@@ -134,6 +135,7 @@ impl SpaceInvitationMember {
 
     pub async fn send_notification(
         dynamo: &DynamoClient,
+        fcm: &mut FCMService,
         space: &SpaceCommon,
         space_title: String,
     ) -> Result<()> {
@@ -151,7 +153,7 @@ impl SpaceInvitationMember {
 
         if invites.is_empty() {
             tracing::info!(
-                "SpaceInvitationMember::send_notification: no pending invitations for space_pk={}",
+                "SpaceInvitationMember::send_notification: no invited members for space_pk={}",
                 space.pk
             );
             return Ok(());
@@ -160,21 +162,9 @@ impl SpaceInvitationMember {
         let title = "You are invited in space.".to_string();
         let body = format!("Participate new space: {space_title}");
 
-        let futures = invites.into_iter().map(|m| {
-            let user_pk = m.user_pk;
-            let title = title.clone();
-            let body = body.clone();
+        let user_pks: Vec<Partition> = invites.into_iter().map(|m| m.user_pk).collect();
 
-            async move {
-                tracing::debug!(
-                    "SpaceInvitationMember::send_notification: sending to user_pk={}",
-                    user_pk
-                );
-                UserNotification::send_to_user(dynamo, &user_pk, title, body).await
-            }
-        });
-
-        try_join_all(futures).await?;
+        UserNotification::send_to_users(dynamo, fcm, &user_pks, title, body).await?;
 
         tracing::info!(
             "SpaceInvitationMember::send_notification: done for space_pk={}",

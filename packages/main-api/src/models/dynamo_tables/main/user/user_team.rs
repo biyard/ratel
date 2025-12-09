@@ -9,6 +9,7 @@ use crate::email_operation::EmailOperation;
 use crate::features::spaces::boards::models::space_post::SpacePost;
 use crate::models::SpaceCommon;
 use crate::models::UserNotification;
+use crate::services::fcm_notification::FCMService;
 use crate::utils::aws::DynamoClient;
 
 use crate::{
@@ -120,6 +121,7 @@ impl UserTeam {
 
     pub async fn send_notification(
         dynamo: &DynamoClient,
+        fcm: &mut FCMService,
         recipients: Vec<Partition>,
         team: &Team,
     ) -> Result<(), Error> {
@@ -143,13 +145,7 @@ impl UserTeam {
             team.display_name, team.username
         );
 
-        for user_pk in recipients {
-            tracing::debug!(
-                "UserTeam::send_notification: sending to user_pk={}",
-                user_pk
-            );
-            UserNotification::send_to_user(dynamo, &user_pk, title.clone(), body.clone()).await?;
-        }
+        UserNotification::send_to_users(dynamo, fcm, &recipients, title, body).await?;
 
         tracing::info!("UserTeam::send_notification: done for team_pk={}", team.pk);
 
