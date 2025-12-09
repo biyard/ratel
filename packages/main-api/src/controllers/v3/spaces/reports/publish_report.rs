@@ -1,7 +1,9 @@
-use crate::features::spaces::reports::dto::PublishReportResponse;
 use crate::features::spaces::SpaceReport;
+use crate::features::spaces::reports::dto::PublishReportResponse;
 use crate::spaces::{SpacePath, SpacePathParam};
-use crate::types::{EntityType, Partition, ReportPublishState, SpacePartition, TeamGroupPermission};
+use crate::types::{
+    EntityType, Partition, ReportPublishState, SpacePartition, TeamGroupPermission,
+};
 use crate::utils::time::get_now_timestamp_millis;
 use crate::*;
 
@@ -26,10 +28,13 @@ pub async fn publish_report_handler(
     }
 
     // Get existing report
-    let mut report =
-        SpaceReport::get(&dynamo.client, space_pk.clone(), Some(EntityType::SpaceReport))
-            .await?
-            .ok_or(Error::NotFound("Report not found".to_string()))?;
+    let mut report = SpaceReport::get(
+        &dynamo.client,
+        space_pk.clone(),
+        Some(EntityType::SpaceReport),
+    )
+    .await?
+    .ok_or(Error::NotFound("Report not found".to_string()))?;
 
     // Check if already published
     if report.publish_state == ReportPublishState::Published {
@@ -53,8 +58,6 @@ pub async fn publish_report_handler(
     let now = get_now_timestamp_millis();
     report.publish_state = ReportPublishState::Published;
     report.published_at = Some(now);
-    report.gsi1_pk = Some("REPORT_PUBLISHED".to_string());
-    report.gsi1_sk = Some(now.to_string());
     report.updated_at = now;
 
     report.upsert(&dynamo.client).await?;

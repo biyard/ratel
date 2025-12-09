@@ -22,28 +22,30 @@ pub struct SpaceReport {
     pub address_verified: bool,
 
     // Revenue split percentages
-    pub treasury_percent: u8,
-    pub platform_percent: u8,
-    pub creator_percent: u8,
+    pub treasury_percent: u32,
+    pub platform_percent: u32,
+    pub creator_percent: u32,
 
     // Publishing state
+    #[dynamo(index = "gsi1", prefix = "SR", name = "find_by_publish_state", pk)]
     pub publish_state: ReportPublishState,
+
+    #[dynamo(index = "gsi1", name = "find_by_publish_state", sk)]
     pub published_at: Option<i64>,
 
     // Author info
     pub author_pk: Partition,
     pub author_display_name: String,
     pub author_username: String,
-
-    // GSI for listing published reports
-    #[dynamo(prefix = "REPORT_PUBLISHED", name = "find_published", index = "gsi1", pk)]
-    pub gsi1_pk: Option<String>,
-    #[dynamo(index = "gsi1", sk)]
-    pub gsi1_sk: Option<String>,
 }
 
 impl SpaceReport {
-    pub fn new(space_pk: Partition, author_pk: Partition, author_display_name: String, author_username: String) -> Self {
+    pub fn new(
+        space_pk: Partition,
+        author_pk: Partition,
+        author_display_name: String,
+        author_username: String,
+    ) -> Self {
         let now = get_now_timestamp_millis();
         Self {
             pk: space_pk,
@@ -65,17 +67,7 @@ impl SpaceReport {
             author_pk,
             author_display_name,
             author_username,
-            gsi1_pk: None,
-            gsi1_sk: None,
         }
-    }
-
-    pub fn set_report_content(mut self, title: String, content: String, summary: Option<String>) -> Self {
-        self.title = title;
-        self.content = content;
-        self.summary = summary;
-        self.updated_at = get_now_timestamp_millis();
-        self
     }
 
     pub fn with_pricing(mut self, price_dollars: i64, recipient_address: String) -> Self {
@@ -91,8 +83,6 @@ impl SpaceReport {
         let now = get_now_timestamp_millis();
         self.publish_state = ReportPublishState::Published;
         self.published_at = Some(now);
-        self.gsi1_pk = Some("REPORT_PUBLISHED".to_string());
-        self.gsi1_sk = Some(now.to_string());
         self.updated_at = now;
         self
     }

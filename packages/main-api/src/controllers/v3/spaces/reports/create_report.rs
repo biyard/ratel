@@ -1,5 +1,5 @@
-use crate::features::spaces::reports::dto::{CreateReportRequest, CreateReportResponse};
 use crate::features::spaces::SpaceReport;
+use crate::features::spaces::reports::dto::{CreateReportRequest, CreateReportResponse};
 use crate::models::space::SpaceCommon;
 use crate::models::user::User;
 use crate::spaces::{SpacePath, SpacePathParam};
@@ -10,38 +10,33 @@ pub async fn create_report_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
-    Path(SpacePathParam { space_pk }): SpacePath,
-    Extension(_space): Extension<SpaceCommon>,
+    Extension(space): Extension<SpaceCommon>,
     Json(req): Json<CreateReportRequest>,
 ) -> crate::Result<Json<CreateReportResponse>> {
-    // Validate space_pk
-    if !matches!(space_pk, Partition::Space(_)) {
-        return Err(Error::NotFoundSpace);
-    }
-
     // Check permissions - only space admin can create report
-    if !permissions.contains(TeamGroupPermission::SpaceEdit) {
-        return Err(Error::NoPermission);
-    }
+    permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
-    // Check if report already exists
-    let existing_report =
-        SpaceReport::get(&dynamo.client, space_pk.clone(), Some(EntityType::SpaceReport)).await?;
-
-    if existing_report.is_some() {
-        return Err(Error::AlreadyExists("Report already exists for this space".to_string()));
-    }
+    let space_pk = space.pk.clone();
 
     // Create new report
-    let report = SpaceReport::new(
+    let mut report = SpaceReport::new(
         space_pk.clone(),
         user.pk.clone(),
         user.display_name.clone(),
         user.username.clone(),
     )
-    .set_report_content(req.title.clone(), req.content, req.summary);
+    .with_title(req.title.clone())
+    .with_content(req.content);
 
-    report.create(&dynamo.client).await?;
+    if let Some(summary) = req.summary {
+        report = report.with_summary(summary);
+    }
+
+    report.create(&dynamo.client).await.map_err(|e| {
+        error!("Failed to create report: {:?}", e);
+
+        Error::AlreadyExists("Report may already exists for this space".to_string())
+    })?;
 
     let space_id: SpacePartition = space_pk.into();
 

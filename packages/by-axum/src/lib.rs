@@ -26,7 +26,15 @@ use tracing_subscriber::EnvFilter;
 
 pub fn new() -> BiyardRouter {
     let _ = tracing_subscriber::fmt()
-        .with_env_filter(EnvFilter::from(option_env!("RUST_LOG").unwrap_or("info")))
+        .with_env_filter(
+            EnvFilter::from(option_env!("RUST_LOG").unwrap_or("info"))
+                .add_directive("aws_smithy_http_client=info".parse().unwrap())
+                .add_directive("aws_smithy_runtime_api=info".parse().unwrap())
+                .add_directive("aws_sdk_dynamodb=info".parse().unwrap())
+                .add_directive("hyper_util=info".parse().unwrap())
+                .add_directive("tower_http=info".parse().unwrap())
+                .add_directive("aws_smithy_runtime=info".parse().unwrap()),
+        )
         .with_file(true)
         .with_line_number(true)
         .with_thread_ids(true)
