@@ -34,6 +34,7 @@ class SpacePostModel {
   final String title;
   final String htmlContents;
   final String categoryName;
+  int reports;
   final int numberOfComments;
 
   final String userPk;
@@ -41,11 +42,12 @@ class SpacePostModel {
   final String authorProfileUrl;
   final String authorUsername;
 
+  bool isReport;
   final List<String> urls;
   final List<FileModel> files;
   final List<SpacePostCommentModel> comments;
 
-  const SpacePostModel({
+  SpacePostModel({
     required this.pk,
     required this.createdAt,
     required this.updatedAt,
@@ -62,6 +64,8 @@ class SpacePostModel {
     required this.urls,
     required this.files,
     required this.comments,
+    required this.isReport,
+    required this.reports,
   });
 
   factory SpacePostModel.fromJson(Json j) {
@@ -91,6 +95,8 @@ class SpacePostModel {
           .whereType<Map>()
           .map((e) => SpacePostCommentModel.fromJson(e.cast<String, dynamic>()))
           .toList(),
+      isReport: j['is_report'] as bool? ?? false,
+      reports: (j['reports'] as num?)?.toInt() ?? 0,
     );
   }
 

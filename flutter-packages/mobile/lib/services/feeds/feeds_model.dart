@@ -524,6 +524,7 @@ class FeedV2Model {
   final List<PostArtworkMetadataModel> artworkMetadata;
   final PostRepostModel? repost;
   final bool isLiked;
+  final bool isReport;
   final int permissions;
 
   const FeedV2Model({
@@ -532,6 +533,7 @@ class FeedV2Model {
     List<PostArtworkMetadataModel>? artworkMetadata,
     this.repost,
     required this.isLiked,
+    required this.isReport,
     required this.permissions,
   }) : comments = comments ?? const [],
        artworkMetadata = artworkMetadata ?? const [];
@@ -553,6 +555,7 @@ class FeedV2Model {
           ? PostRepostModel.fromJson(json['repost'] as Map<String, dynamic>)
           : null,
       isLiked: json['is_liked'] as bool? ?? false,
+      isReport: json['is_report'] as bool? ?? false,
       permissions: PostDetailPostModel._asInt(json['permissions']),
     );
   }
