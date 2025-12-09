@@ -142,13 +142,14 @@ export class SpaceHomeController {
         label: this.t('menu_admin_settings'),
       },
     ];
-    if (config.experiment) {
-      menus.push({
-        Icon: Trophy,
-        to: route.spaceRewardSetting(this.space.pk),
-        label: this.t('menu_rewards_settings'),
-      });
-    }
+    // FIXME: add rewards only space_common.rewards is not null 
+    // if (config.experiment) {
+    //   menus.push({
+    //     Icon: Trophy,
+    //     to: route.spaceRewardSetting(this.space.pk),
+    //     label: this.t('menu_rewards_settings'),
+    //   });
+    // }
     return menus;
   }
 
