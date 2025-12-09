@@ -4,6 +4,7 @@ use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
 use crate::models::{Post, SpaceCommon, User};
+use crate::services::fcm_notification::FCMService;
 use crate::types::TeamGroupPermission;
 use crate::types::{EntityType, SpacePublishState};
 use crate::types::{Partition, SpaceStatus};
@@ -78,8 +79,11 @@ pub async fn resent_invitation_code_handler(
         post.title.clone(),
     )
     .await?;
+
+    let mut fcm = FCMService::new().await?;
     let _ = SpaceEmailVerification::send_notification(
         &dynamo,
+        &mut fcm,
         vec![user[0].pk.clone()],
         &space_common,
         post.title,
