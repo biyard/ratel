@@ -223,7 +223,10 @@ async fn test_get_pricing_challenge() {
     assert!(!body.message.is_empty());
     assert!(!body.nonce.is_empty());
     assert!(body.expires_at > 0);
-    assert!(body.message.contains("0x1234567890123456789012345678901234567890"));
+    assert!(
+        body.message
+            .contains("0x1234567890123456789012345678901234567890")
+    );
 }
 
 #[tokio::test]

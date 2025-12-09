@@ -46,16 +46,21 @@ pub struct SetPricingResponse {
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, JsonSchema, OperationIo)]
 pub struct RevenueSplitInfo {
-    pub treasury_percent: u8,
-    pub platform_percent: u8,
-    pub creator_percent: u8,
+    pub treasury_percent: u32,
+    pub platform_percent: u32,
+    pub creator_percent: u32,
     pub creator_earning: i64,
     pub treasury_amount: i64,
     pub platform_fee: i64,
 }
 
 impl RevenueSplitInfo {
-    pub fn new(price_dollars: i64, treasury_percent: u8, platform_percent: u8, creator_percent: u8) -> Self {
+    pub fn new(
+        price_dollars: i64,
+        treasury_percent: u32,
+        platform_percent: u32,
+        creator_percent: u32,
+    ) -> Self {
         let treasury_amount = price_dollars * treasury_percent as i64 / 100;
         let platform_fee = price_dollars * platform_percent as i64 / 100;
         let creator_earning = price_dollars - treasury_amount - platform_fee;
