@@ -13,6 +13,7 @@ pub struct BucketConfig {
     pub name: &'static str,
     pub asset_dir: &'static str,
     pub expire: u64,
+    pub region: &'static str,
 }
 
 impl Default for Config {
@@ -28,6 +29,7 @@ impl Default for Config {
                     "3600"
                 }) .parse()
                     .unwrap(),
+                region: option_env!("S3_REGION").unwrap_or("ap-northeast-2"),
             },
         }
     }

@@ -62,7 +62,10 @@ pub async fn get_put_object_uri(
                 Error::AssetError(e.to_string())
             })?;
         presigned_uris.push(presigned_request.uri().to_string());
-        uris.push(format!("https://{}/{}", aws_bucket_config.name, key));
+        uris.push(format!(
+            "https://{}.s3.{}.amazonaws.com/{}",
+            aws_bucket_config.name, aws_bucket_config.region, key
+        ));
     }
 
     Ok(PresignedUrl {

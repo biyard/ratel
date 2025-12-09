@@ -48,6 +48,7 @@ impl S3Client {
             name,
             asset_dir,
             expire,
+            region,
         } = config::get().bucket;
 
         for _ in 0..total_count {
@@ -72,7 +73,10 @@ impl S3Client {
                         Error::AssetError(e.to_string())
                     })?;
             presigned_uris.push(presigned_request.uri().to_string());
-            uris.push(format!("https://{}/{}", name, key));
+            uris.push(format!(
+                "https://{}.s3.{}.amazonaws.com/{}",
+                name, region, key
+            ));
         }
 
         Ok(PresignedUrl {
