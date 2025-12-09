@@ -138,7 +138,7 @@ async fn handle_upgrade_membership(
     card_info: Option<CardInfo>,
     currency: Currency,
 ) -> Result<(UserPurchase, Membership)> {
-    tracing::warn!("Processing membership upgrade to {:?}", new_tier);
+    tracing::debug!("Processing membership upgrade to {:?}", new_tier);
 
     // Get the new membership details
     let new_membership = Membership::get_by_membership_tier(cli, &new_tier).await?;

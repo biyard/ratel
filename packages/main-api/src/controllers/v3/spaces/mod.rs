@@ -19,7 +19,6 @@ pub mod get_space;
 pub mod tests;
 
 pub mod artworks;
-mod get_space_report;
 pub mod participate_space;
 pub use create_space::*;
 pub use delete_space::*;
@@ -29,8 +28,6 @@ pub use get_space::*;
 pub use list_spaces::*;
 use participate_space::participate_space_handler;
 pub use update_space::*;
-use x402_axum::{IntoPriceTag, X402Middleware};
-use x402_rs::network::{Network, USDCDeployment};
 
 pub mod rewards;
 pub mod sprint_leagues;
@@ -43,22 +40,18 @@ use crate::{
 
 pub fn route() -> Result<Router<AppState>> {
     let app_state = AppState::default();
-    let x402_config = config::get().x402;
-    let x402 = X402Middleware::try_from(x402_config.facilitator_url)
-        .unwrap()
-        .with_base_url(url::Url::parse("http://localhost:3000/").unwrap());
-    let usdc = USDCDeployment::by_network(Network::BaseSepolia);
 
     Ok(Router::new()
-        .route(
-            "/:space_pk",
-            delete(delete_space_handler)
-                .patch(update_space_handler)
-                .get(get_space_handler),
-        )
         .nest(
             "/:space_pk",
             Router::new()
+                .route(
+                    "/",
+                    delete(delete_space_handler)
+                        .patch(update_space_handler)
+                        .get(get_space_handler),
+                )
+                .route("/participate", post(participate_space_handler))
                 .nest("/panels", panels::route())
                 // NOTE: Above are TeamAdmin-only routes
                 .layer(middleware::from_fn_with_state(
@@ -78,15 +71,7 @@ pub fn route() -> Result<Router<AppState>> {
         )
         // NOTE: Above all, apply user participant instead of real user.
         // Real user will be passed only when space admin access is needed.
-        .route("/:space_pk/participate", post(participate_space_handler))
         .layer(middleware::from_fn_with_state(app_state, inject_space))
-        .route(
-            "/:space_pk/reports",
-            get(get_space_report::get_space_report_handler).layer(
-                x402.with_price_tag(usdc.amount("0.025").pay_to(x402_config.address()).unwrap())
-                    .with_dynamic_price(get_space_report::get_usdt_price_callback()),
-            ),
-        )
         .route("/", post(create_space_handler).get(list_spaces_handler)))
 }
 
@@ -128,7 +113,8 @@ pub async fn inject_space(
 
     debug!("Verifying project access for space_id: {}", space_pk,);
 
-    let space_pk: Partition = space_pk.parse()?;
+    let space_pk: SpacePartition = space_pk.parse()?;
+    let space_pk: Partition = space_pk.into();
 
     let space: SpaceCommon = SpaceCommon::get(
         &state.dynamo.client,
