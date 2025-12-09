@@ -121,6 +121,7 @@ pub async fn update_space_handler(
 
             SpaceInvitationMember::send_email(&dynamo, &ses, &space, post.title.clone()).await?;
 
+            // FIXME: fix to one call code
             let mut fcm = FCMService::new().await?;
             SpaceInvitationMember::send_notification(&dynamo, &mut fcm, &space, post.title).await?;
 
