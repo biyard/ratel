@@ -31,7 +31,7 @@ pub async fn complete_multipart_upload(
     let bucket_name = config.bucket.name;
 
     let config = defaults(BehaviorVersion::latest())
-        .region(Region::new(aws_config.region))
+        .region(Region::new(config.bucket.region))
         .credentials_provider(Credentials::new(
             aws_config.access_key_id,
             aws_config.secret_access_key,

@@ -48,9 +48,10 @@ pub async fn get_put_object_uri(
     let asset_dir = config.bucket.asset_dir;
     let bucket_name = config.bucket.name;
     let expire = config.bucket.expire;
+    let bucket_region = config.bucket.region;
 
     let config = defaults(BehaviorVersion::latest())
-        .region(Region::new(aws_config.region))
+        .region(Region::new(config.bucket.region))
         .credentials_provider(Credentials::new(
             aws_config.access_key_id,
             aws_config.secret_access_key,
@@ -89,7 +90,10 @@ pub async fn get_put_object_uri(
                 Error::AssetError(e.to_string())
             })?;
         presigned_uris.push(presigned_request.uri().to_string());
-        uris.push(format!("https://{}/{}", bucket_name, key));
+        uris.push(format!(
+            "https://{}.s3.{}.amazonaws.com/{}",
+            bucket_name, bucket_region, key
+        ));
     }
 
     Ok(Json(AssetPresignedUris {
