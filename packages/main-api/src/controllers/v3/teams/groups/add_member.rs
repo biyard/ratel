@@ -4,6 +4,7 @@ use crate::{
         team::{Team, TeamGroup},
         user::{User, UserTeam, UserTeamGroup},
     },
+    services::fcm_notification::FCMService,
     types::{EntityType, Partition, TeamGroupPermission},
     utils::security::{RatelResource, check_any_permission_with_user},
 };
@@ -109,7 +110,10 @@ pub async fn add_member_handler(
     // Bulk send team invite emails (only for newly-linked users)
     if !invite_emails.is_empty() {
         let _ = UserTeam::send_email(&dynamo, &ses, team.clone(), invite_emails).await?;
-        let _ = UserTeam::send_notification(&dynamo, invite_pks, &team).await?;
+
+        // FIXME: fix to one call code
+        let mut fcm = FCMService::new().await?;
+        let _ = UserTeam::send_notification(&dynamo, &mut fcm, invite_pks, &team).await?;
     }
 
     TeamGroup::updater(team_group.pk, team_group.sk)

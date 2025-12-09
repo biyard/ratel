@@ -1,4 +1,5 @@
 use crate::models::UserNotification;
+use crate::services::fcm_notification::FCMService;
 use std::collections::HashMap;
 
 // #[cfg(all(not(test), not(feature = "no-secret")))]
@@ -6,7 +7,6 @@ use std::collections::HashMap;
 use crate::email_operation::EmailOperation;
 use crate::features::migration::*;
 use crate::models::user;
-use crate::utils::firebase::oauth::get_fcm_access_token;
 use crate::{
     Error,
     features::spaces::boards::models::{
@@ -193,6 +193,7 @@ impl SpacePost {
 
     pub async fn send_notification(
         dynamo: &DynamoClient,
+        fcm: &mut FCMService,
         post_title: String,
         recipients: Vec<Partition>,
     ) -> Result<(), Error> {
@@ -206,11 +207,7 @@ impl SpacePost {
 
         tracing::info!("send_notification: start, recipients={}", recipients.len());
 
-        for user_pk in recipients {
-            tracing::debug!("send_notification: processing user_pk={}", user_pk);
-
-            UserNotification::send_to_user(dynamo, &user_pk, title.clone(), body.clone()).await?;
-        }
+        UserNotification::send_to_users(dynamo, fcm, &recipients, title, body).await?;
 
         tracing::info!("send_notification: done");
         Ok(())

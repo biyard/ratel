@@ -2,6 +2,7 @@ use crate::Error;
 use crate::email_operation::EmailOperation;
 use crate::models::email_template::email_template::EmailTemplate;
 use crate::models::{SpaceCommon, UserNotification};
+use crate::services::fcm_notification::FCMService;
 use crate::{
     constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT},
     types::*,
@@ -241,6 +242,7 @@ impl SpaceEmailVerification {
 
     pub async fn send_notification(
         dynamo: &DynamoClient,
+        fcm: &mut FCMService,
         recipients: Vec<Partition>,
         space: &SpaceCommon,
         title: String,
@@ -268,20 +270,7 @@ impl SpaceEmailVerification {
             format!("Participate new space: {} — {}", title, excerpt)
         };
 
-        for user_pk in recipients {
-            tracing::debug!(
-                "SpaceEmailVerification::send_notification: sending to user_pk={}",
-                user_pk
-            );
-
-            UserNotification::send_to_user(
-                dynamo,
-                &user_pk,
-                notif_title.clone(),
-                notif_body.clone(),
-            )
-            .await?;
-        }
+        UserNotification::send_to_users(dynamo, fcm, &recipients, notif_title, notif_body).await?;
 
         tracing::info!(
             "SpaceEmailVerification::send_notification: done for space_pk={}",
