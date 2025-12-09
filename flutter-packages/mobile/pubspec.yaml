@@ -42,6 +42,7 @@ dependencies:
   firebase_auth: ^5.0.0
   firebase_core: ^3.13.1
   firebase_messaging: ^15.2.6
+  flutter_local_notifications: ^17.0.0
   firebase_analytics:
     git:
       url: https://github.com/victor138128/flutterfire.git
@@ -88,6 +89,8 @@ dependencies:
   markdown: ^7.3.0
   fl_chart: ^1.1.1
   agent_dart: ^1.0.0-dev.40
+  shared_preferences: ^2.5.3
+  uuid: ^4.5.2
 
 dev_dependencies:
   flutter_test:

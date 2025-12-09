@@ -8,6 +8,7 @@ pub mod list_my_notifications;
 pub mod list_my_posts;
 mod list_my_spaces;
 mod memberships;
+mod register_notification_device;
 
 mod points;
 #[cfg(test)]
@@ -17,6 +18,7 @@ use get_info::get_info_handler;
 use list_my_drafts::list_my_drafts_handler;
 use list_my_notifications::list_my_notifications_handler;
 use list_my_posts::list_my_posts_handler;
+use register_notification_device::register_notification_device_handler;
 use update_notification_status::update_my_notifications_status_handler;
 use update_user::update_user_handler;
 
@@ -29,6 +31,10 @@ pub fn route() -> Result<Router<AppState>> {
         .nest("/points", points::route())
         .route("/", get(get_info_handler).patch(update_user_handler))
         .route("/posts", get(list_my_posts_handler))
+        .route(
+            "/notification-devices",
+            post(register_notification_device_handler),
+        )
         .route(
             "/notifications",
             get(list_my_notifications_handler).patch(update_my_notifications_status_handler),

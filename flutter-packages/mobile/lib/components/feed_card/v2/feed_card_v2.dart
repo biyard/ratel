@@ -38,8 +38,7 @@ class FeedCardV2 extends StatelessWidget {
           children: [
             Row(
               children: [
-                if (hasSpace) ...[_spaceChip('Space')],
-                8.gap,
+                if (hasSpace) ...[_spaceChip('Space'), 8.gap],
                 Text(
                   feed.title,
                   maxLines: 1,

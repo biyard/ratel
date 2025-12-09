@@ -1,8 +1,12 @@
+use crate::models::UserNotification;
+use crate::services::fcm_notification::FCMService;
+use std::collections::HashMap;
+
 // #[cfg(all(not(test), not(feature = "no-secret")))]
 // use crate::features::spaces::templates::SpaceTemplate;
 use crate::email_operation::EmailOperation;
 use crate::features::migration::*;
-use crate::transact_write_all_items;
+use crate::models::user;
 use crate::{
     Error,
     features::spaces::boards::models::{
@@ -16,6 +20,7 @@ use crate::{
     types::{author::Author, *},
     utils::aws::{DynamoClient, SesClient},
 };
+use crate::{config, transact_write_all_items};
 use aws_sdk_dynamodb::types::TransactWriteItem;
 use bdk::prelude::axum::Json;
 use bdk::prelude::*;
@@ -183,8 +188,29 @@ impl SpacePost {
         };
 
         email.send_email(&dynamo, &ses).await?;
-
         Ok(Json(()))
+    }
+
+    pub async fn send_notification(
+        dynamo: &DynamoClient,
+        fcm: &mut FCMService,
+        post_title: String,
+        recipients: Vec<Partition>,
+    ) -> Result<(), Error> {
+        if recipients.is_empty() {
+            tracing::info!("send_notification: no recipients, skip push");
+            return Ok(());
+        }
+
+        let title = "Space members are posting new space contents.".to_string();
+        let body = post_title;
+
+        tracing::info!("send_notification: start, recipients={}", recipients.len());
+
+        UserNotification::send_to_users(dynamo, fcm, &recipients, title, body).await?;
+
+        tracing::info!("send_notification: done");
+        Ok(())
     }
 
     pub async fn comment(

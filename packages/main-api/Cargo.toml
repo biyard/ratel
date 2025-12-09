@@ -31,6 +31,7 @@ async-trait = "0.1.88"
 rlp = "0.5.2"
 hex = "0.4.3"
 tower-sessions = "0.14.0"
+google-cloud-auth = "1.2"
 tower-sessions-sqlx-store = { version = "0.15.0", features = ["postgres"] }
 aws-sdk-s3 = "1.74.0"
 aws-sdk-chimesdkmeetings = "1.63.0"
