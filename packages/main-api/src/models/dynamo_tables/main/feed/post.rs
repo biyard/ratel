@@ -1,5 +1,6 @@
 use crate::{
     Error,
+    features::report::ContentReport,
     models::{PostCommentLike, team::Team, user::User},
     types::{author::Author, *},
 };
@@ -43,6 +44,9 @@ pub struct Post {
     pub shares: i64,
     pub likes: i64,
     pub comments: i64,
+
+    #[serde(default)]
+    pub reports: i64,
 
     #[dynamo(prefix = "USER_PK", name = "find_by_user_pk", index = "gsi1", pk)]
     #[dynamo(
@@ -108,6 +112,7 @@ impl Post {
             shares: 0,
             likes: 0,
             comments: 0,
+            reports: 0,
 
             user_pk: pk,
             author_display_name: display_name,
@@ -172,6 +177,17 @@ impl Post {
         user_pk: &Partition,
     ) -> Result<bool, crate::Error> {
         Ok(PostLike::find_one(cli, &self.pk, user_pk).await?.is_some())
+    }
+
+    pub async fn is_report(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        user_pk: &Partition,
+    ) -> Result<bool, crate::Error> {
+        Ok(
+            ContentReport::is_reported_for_target_by_user(cli, &self.pk, Some(&self.sk), user_pk)
+                .await?,
+        )
     }
 
     pub async fn has_permission(

@@ -1,4 +1,5 @@
 use super::*;
+use crate::features::report::ContentReport;
 use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMember};
 use crate::features::spaces::{
     SpaceRequirement, SpaceRequirementDto, SpaceRequirementQueryOption, SpaceRequirementResponse,
@@ -12,7 +13,13 @@ use axum::extract::*;
 use bdk::prelude::*;
 
 #[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, aide::OperationIo, schemars::JsonSchema,
+    Debug,
+    Clone,
+    Default,
+    serde::Serialize,
+    serde::Deserialize,
+    aide::OperationIo,
+    schemars::JsonSchema,
 )]
 pub struct GetSpaceResponse {
     pub pk: Partition,
@@ -36,6 +43,7 @@ pub struct GetSpaceResponse {
     pub likes: i64,
     pub comments: i64,
     pub shares: i64,
+    pub reports: i64,
     pub rewards: Option<i64>,
     pub visibility: SpaceVisibility,
     pub publish_state: SpacePublishState,
@@ -55,6 +63,8 @@ pub struct GetSpaceResponse {
     pub requirements: Vec<SpaceRequirementDto>,
     pub remains: i64,
     pub quota: i64,
+
+    pub is_report: bool,
 }
 
 pub async fn get_space_handler(
@@ -99,19 +109,27 @@ pub async fn get_space_handler(
         false
     };
 
-    let mut res = GetSpaceResponse::from((space, post, permissions, user_participant));
+    let mut res = GetSpaceResponse::from((space.clone(), post, permissions, user_participant));
     requirements.sort_by(|a, b| a.order.cmp(&b.order));
 
-    let keys = if let Some(ref user) = user {
-        requirements
+    let (is_report, keys) = if let Some(ref user) = user {
+        let is_report = ContentReport::is_reported_for_target_by_user(
+            &dynamo.client,
+            &space.clone().pk,
+            Some(&space.clone().sk),
+            &user.clone().pk,
+        )
+        .await?;
+        let keys = requirements
             .iter()
             .map(|e| {
                 e.get_respondent_keys(&user.pk)
                     .expect("failed to get respondent key")
             })
-            .collect()
+            .collect();
+        (is_report, keys)
     } else {
-        vec![]
+        (false, vec![])
     };
 
     let resp = SpaceRequirementResponse::batch_get(&dynamo.client, keys).await?;
@@ -121,6 +139,7 @@ pub async fn get_space_handler(
         .map(|r| SpaceRequirementDto::new(r, &user, &resp))
         .collect();
     res.can_participate = can_participate;
+    res.is_report = is_report;
 
     Ok(Json(res))
 }
@@ -178,6 +197,7 @@ impl
             likes: post.likes,
             comments: post.comments,
             shares: post.shares,
+            reports: space.reports,
             rewards: space.rewards,
             visibility: space.visibility,
             publish_state: space.publish_state,
@@ -193,6 +213,8 @@ impl
             requirements: vec![],
             remains: space.remains,
             quota: space.quota,
+
+            is_report: false,
         }
     }
 }
