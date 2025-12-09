@@ -1,3 +1,6 @@
+use std::collections::HashSet;
+
+use crate::features::report::ContentReport;
 use crate::features::spaces::boards::dto::space_post_comment_response::SpacePostCommentResponse;
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
 use crate::features::spaces::boards::models::space_post_comment::SpacePostCommentQueryOption;
@@ -17,7 +20,6 @@ pub async fn list_space_reply_comments_handler(
     }): SpacePostCommentPath,
     Query(query): ListItemsQuery,
 ) -> Result<Json<ListItemsResponse<SpacePostCommentResponse>>> {
-    let _space_post_pk = space_post_pk;
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(crate::Error::NotFoundSpace);
     }
@@ -44,12 +46,24 @@ pub async fn list_space_reply_comments_handler(
 
     let likes = SpacePostCommentLike::batch_get(&dynamo.client, like_keys).await?;
 
+    let reported_comment_ids: HashSet<String> =
+        ContentReport::reported_comment_ids_for_post_by_user(
+            &dynamo.client,
+            &space_post_pk,
+            &user.pk,
+        )
+        .await?;
+
     let items: Vec<SpacePostCommentResponse> = comments
         .into_iter()
         .map(|comment| {
             let liked = likes.iter().any(|like| like == &comment);
+            let sk_str = comment.sk.to_string();
+            let reported = reported_comment_ids.contains(&sk_str);
+
             let mut resp: SpacePostCommentResponse = comment.into();
             resp.liked = liked;
+            resp.is_report = reported;
             resp
         })
         .collect();

@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::features::spaces::boards::models::space_post::SpacePost;
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
 use crate::models::{Post, SpaceCommon};
@@ -28,12 +30,10 @@ pub struct ContentReport {
     pub pk: Partition,
     pub sk: EntityType,
 
-    #[dynamo(index = "gsi1", sk)]
     #[dynamo(index = "gsi2", sk)]
     pub created_at: i64,
     pub updated_at: i64,
 
-    #[dynamo(prefix = "TARGET_PK", name = "find_by_target", index = "gsi1", pk)]
     pub target_pk: Partition,
     pub target_sk: Option<EntityType>,
     pub target: ReportTarget,
@@ -111,21 +111,45 @@ impl ContentReport {
     pub async fn is_reported_for_target_by_user(
         cli: &aws_sdk_dynamodb::Client,
         target_pk: &Partition,
+        target_sk: Option<&EntityType>,
         reporter_pk: &Partition,
     ) -> Result<bool> {
         let opt = ContentReport::opt_all();
         let (items, _) =
             ContentReport::find_by_reporter(cli, format!("{}", reporter_pk), opt).await?;
 
-        Ok(items.iter().any(|r| &r.target_pk == target_pk))
+        let already = items.iter().any(|r| {
+            if &r.target_pk != target_pk {
+                return false;
+            }
+
+            match (target_sk, r.target_sk.as_ref()) {
+                (None, None) => true,
+                (Some(sk), Some(rsk)) => sk == rsk,
+                _ => false,
+            }
+        });
+
+        Ok(already)
     }
 
-    pub async fn count_for_target(
+    pub async fn reported_comment_ids_for_post_by_user(
         cli: &aws_sdk_dynamodb::Client,
-        target_pk: &Partition,
-    ) -> Result<i64> {
+        space_post_pk: &Partition,
+        reporter_pk: &Partition,
+    ) -> Result<HashSet<String>> {
         let opt = ContentReport::opt_all();
-        let (items, _) = ContentReport::find_by_target(cli, format!("{}", target_pk), opt).await?;
-        Ok(items.len() as i64)
+        let (items, _) =
+            ContentReport::find_by_reporter(cli, format!("{}", reporter_pk), opt).await?;
+
+        let set = items
+            .into_iter()
+            .filter(|r| {
+                &r.target_pk == space_post_pk && matches!(r.target, ReportTarget::SpacePostComment)
+            })
+            .filter_map(|r| r.target_sk.map(|sk| sk.to_string()))
+            .collect::<HashSet<_>>();
+
+        Ok(set)
     }
 }

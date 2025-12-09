@@ -2,6 +2,9 @@ pub mod report_content;
 
 pub use report_content::*;
 
+#[cfg(test)]
+pub mod tests;
+
 use crate::*;
 
 pub fn route() -> Result<Router<AppState>> {
