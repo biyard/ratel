@@ -1,7 +1,6 @@
 pub mod email;
 pub mod feed;
 pub mod phone;
-pub mod report;
 pub mod session;
 pub mod team;
 pub mod user;
@@ -9,7 +8,6 @@ pub mod user;
 pub use email::*;
 pub use feed::*;
 pub use phone::*;
-pub use report::*;
 pub use team::*;
 pub use user::*;
 

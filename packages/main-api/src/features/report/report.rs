@@ -6,7 +6,7 @@ use crate::*;
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
 #[serde(rename_all = "snake_case")]
-pub enum ReportTargetKind {
+pub enum ReportTarget {
     #[default]
     Post,
     Space,
@@ -36,7 +36,7 @@ pub struct ContentReport {
     #[dynamo(prefix = "TARGET_PK", name = "find_by_target", index = "gsi1", pk)]
     pub target_pk: Partition,
     pub target_sk: Option<EntityType>,
-    pub target_kind: ReportTargetKind,
+    pub target: ReportTarget,
 
     #[dynamo(prefix = "REPORTER_PK", name = "find_by_reporter", index = "gsi2", pk)]
     pub reporter_pk: Partition,
@@ -46,7 +46,7 @@ impl ContentReport {
     fn new_base(
         target_pk: Partition,
         target_sk: Option<EntityType>,
-        target_kind: ReportTargetKind,
+        target: ReportTarget,
         reporter: &User,
     ) -> Self {
         let now = get_now_timestamp_millis();
@@ -59,7 +59,7 @@ impl ContentReport {
             updated_at: now,
             target_pk,
             target_sk,
-            target_kind,
+            target,
             reporter_pk: reporter.pk.clone(),
         }
     }
@@ -68,7 +68,7 @@ impl ContentReport {
         ContentReport::new_base(
             post.pk.clone(),
             Some(post.sk.clone()),
-            ReportTargetKind::Post,
+            ReportTarget::Post,
             reporter,
         )
     }
@@ -77,7 +77,7 @@ impl ContentReport {
         ContentReport::new_base(
             space.pk.clone(),
             Some(space.sk.clone()),
-            ReportTargetKind::Space,
+            ReportTarget::Space,
             reporter,
         )
     }
@@ -86,7 +86,7 @@ impl ContentReport {
         ContentReport::new_base(
             space_post.pk.clone(),
             Some(space_post.sk.clone()),
-            ReportTargetKind::SpacePost,
+            ReportTarget::SpacePost,
             reporter,
         )
     }
@@ -99,7 +99,7 @@ impl ContentReport {
         ContentReport::new_base(
             space_post_pk.clone(),
             Some(comment.sk.clone()),
-            ReportTargetKind::SpacePostComment,
+            ReportTarget::SpacePostComment,
             reporter,
         )
     }
