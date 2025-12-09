@@ -1,6 +1,7 @@
 #![allow(warnings)]
 use crate::File;
 use crate::models::email_template::email_template::EmailTemplate;
+use crate::services::fcm_notification::FCMService;
 use crate::utils::html::create_space_post_html;
 use crate::{
     AppState, Error, Permissions,
@@ -144,7 +145,9 @@ async fn send_create_post_alerm(
     )
     .await?;
 
-    let _ = SpacePost::send_notification(&dynamo, title, user_pks).await?;
+    // FIXME: fix to one call code
+    let mut fcm = FCMService::new().await?;
+    let _ = SpacePost::send_notification(&dynamo, &mut fcm, title, user_pks).await?;
 
     Ok(Json(()))
 }

@@ -44,22 +44,12 @@ pub async fn register_notification_device_handler(
 
     let existing = UserNotification::get(&dynamo.client, user.pk.clone(), Some(sk.clone())).await?;
 
-    if let Some(mut n) = existing {
+    let (notification, created) = if let Some(mut n) = existing {
         n.device_token = req.device_token.clone();
         n.platform = req.platform;
-        n.enabled = true;
         n.touch();
 
-        UserNotification::updater(user.pk, sk)
-            .with_device_token(n.device_token.clone())
-            .with_platform(n.platform)
-            .with_enabled(true)
-            .with_updated_at(n.updated_at)
-            .with_last_used_at(n.last_used_at.unwrap_or_default())
-            .execute(&dynamo.client)
-            .await?;
-
-        Ok(Json(RegisterNotificationDeviceResponse { created: false }))
+        (n, false)
     } else {
         let mut n = UserNotification::new(
             user.pk.clone(),
@@ -69,8 +59,10 @@ pub async fn register_notification_device_handler(
         );
         n.touch();
 
-        n.create(&dynamo.client).await?;
+        (n, true)
+    };
 
-        Ok(Json(RegisterNotificationDeviceResponse { created: true }))
-    }
+    notification.upsert(&dynamo.client).await?;
+
+    Ok(Json(RegisterNotificationDeviceResponse { created }))
 }
