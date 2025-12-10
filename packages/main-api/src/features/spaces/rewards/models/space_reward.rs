@@ -127,9 +127,12 @@ impl SpaceReward {
         if let Some(bookmark) = bookmark {
             opt = opt.bookmark(bookmark);
         }
+
         if let Some(entity_type) = entity_type {
-            opt = opt.sk(entity_type.to_string());
+            let begin_sk = RewardKey::get_feature_begin_sk(entity_type);
+            opt = opt.sk(begin_sk);
         }
+
         let (items, next) = Self::query(cli, pk, opt).await?;
 
         Ok((items, next))

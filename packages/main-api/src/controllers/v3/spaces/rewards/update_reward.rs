@@ -27,8 +27,9 @@ pub async fn update_reward_handler(
 
     let mut space_reward =
         SpaceReward::get_by_reward_key(&dynamo.client, space_pk.into(), req.reward.into()).await?;
-    let credit_delta = req.credits - space_reward.credits;
-
+    
+    let credit_delta = space_reward.credits - req.credits;
+    
     let mut user_membership = user.get_user_membership(&dynamo.client).await?;
 
     user_membership.use_credits(credit_delta)?;
@@ -36,7 +37,7 @@ pub async fn update_reward_handler(
 
     updater_txs.push(
         UserMembership::updater(user_membership.pk, user_membership.sk)
-            .decrease_remaining_credits(req.credits)
+            .increase_remaining_credits(credit_delta)
             .transact_write_item(),
     );
 

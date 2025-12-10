@@ -6,7 +6,7 @@ use crate::{
 #[derive(Debug, serde::Serialize, serde::Deserialize, schemars::JsonSchema, Clone)]
 #[serde(untagged)]
 pub enum RewardTypeRequest {
-    PollRespond { poll_sk: String },
+    PollRespond { poll_sk: SpacePollEntityType },
 }
 
 impl From<RewardTypeRequest> for RewardType {
@@ -21,7 +21,7 @@ impl From<RewardTypeRequest> for RewardKey {
     fn from(value: RewardTypeRequest) -> Self {
         match value {
             RewardTypeRequest::PollRespond { poll_sk } => {
-                RewardKey::Poll(SpacePollEntityType(poll_sk), PollReward::Respond)
+                RewardKey::Poll(poll_sk, PollReward::Respond)
             }
         }
     }
