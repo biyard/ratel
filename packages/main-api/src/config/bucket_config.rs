@@ -8,10 +8,7 @@ pub struct BucketConfig {
 
 impl BucketConfig {
     pub fn get_url(&self, key: &str) -> String {
-        format!(
-            "https://{}.s3.{}.amazonaws.com/{}",
-            self.name, self.region, key
-        )
+        format!("https://{}/{}", self.name, key)
     }
 }
 

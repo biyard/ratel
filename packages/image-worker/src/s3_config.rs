@@ -3,12 +3,11 @@ pub struct S3Config {
     pub name: &'static str,
     pub asset_dir: &'static str,
     pub expire: u64,
-    pub region: &'static str,
 }
 
 impl S3Config {
     pub fn get_url(&self, key: &str) -> String {
-        format!("https://{}.s3.{}.amazonaws.com/{}", self.name, self.region, key)
+        format!("https://{}/{}", self.name, key)
     }
 }
 
@@ -26,7 +25,6 @@ impl Default for S3Config {
                 })
                 .parse()
                 .unwrap(),
-            region: option_env!("S3_REGION").unwrap_or("ap-northeast-2"),
         }
     }
 }

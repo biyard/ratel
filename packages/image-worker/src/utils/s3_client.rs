@@ -49,7 +49,6 @@ impl S3Client {
             name,
             asset_dir,
             expire,
-            region: _,
         } = config::get().bucket;
 
         for _ in 0..total_count {
