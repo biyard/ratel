@@ -1,4 +1,6 @@
-use crate::features::spaces::rewards::{RewardHistoryType, RewardPeriod, RewardType, SpaceReward};
+use crate::features::spaces::rewards::{
+    RewardKey, RewardPeriod, RewardType, SpaceReward, UserRewardHistoryKey,
+};
 use crate::services::biyard::Biyard;
 use crate::types::*;
 use crate::*;
@@ -26,8 +28,8 @@ use crate::*;
 /// - SK: SPACE_BOARD#{BOARD_UUID}#Respond#TIMESTAMP
 
 pub struct UserRewardHistory {
-    pub pk: CompositePartition, // USER#{user_pk}##REWARD_HISTORY
-    pub sk: RewardHistoryType,  // Feature#{feature_key}#{reward_type}#{time_key}
+    pub pk: CompositePartition,   // USER#{user_pk}##REWARD_HISTORY
+    pub sk: UserRewardHistoryKey, // Feature#{feature_key}#{reward_type}#{time_key}
 
     pub point: i64,
     pub created_at: i64,
@@ -40,6 +42,7 @@ impl UserRewardHistory {
     pub fn new(user_pk: UserPartition, space_reward: SpaceReward) -> Self {
         let now = time::get_now_timestamp_millis();
         let time_key = space_reward.period.to_time_key(now);
+        let amount = space_reward.get_amount();
         let (pk, sk) = Self::keys(
             user_pk,
             space_reward.get_space_pk(),
@@ -50,7 +53,7 @@ impl UserRewardHistory {
         Self {
             pk,
             sk,
-            point: space_reward.point,
+            point: amount,
             created_at: now,
             ..Default::default()
         }
@@ -63,12 +66,12 @@ impl UserRewardHistory {
     pub fn keys(
         user_pk: UserPartition,
         space_pk: SpacePartition,
-        reward_type: RewardType,
+        reward_key: RewardKey,
         time_key: String,
-    ) -> (CompositePartition, RewardHistoryType) {
+    ) -> (CompositePartition, UserRewardHistoryKey) {
         let user_reward_history: UserRewardHistoryPartition = UserRewardHistoryPartition(user_pk.0);
 
-        let reward_history_type = RewardHistoryType(reward_type, time_key);
+        let reward_history_type = UserRewardHistoryKey(reward_key, time_key);
         (
             CompositePartition(user_reward_history.into(), space_pk.into()),
             reward_history_type,

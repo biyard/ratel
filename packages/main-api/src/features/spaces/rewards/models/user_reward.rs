@@ -1,5 +1,5 @@
 use crate::features::spaces::rewards::{
-    RewardCondition, RewardPeriod, RewardType, SpaceReward, UserRewardHistory,
+    RewardCondition, RewardKey, RewardPeriod, SpaceReward, UserRewardHistory,
 };
 use crate::services::biyard::Biyard;
 use crate::types::*;
@@ -19,7 +19,7 @@ use crate::*;
 ///
 /// Key Structure:
 /// - PK: USER#{USER_pk}##SPACE#{SPACE_PK}
-/// - SK: {EntityType}#{RewardType}
+/// - SK: {EntityType}#{RewardKey}
 ///
 /// Examples:
 /// POLL RESPOND : PK: USER_REWARD#{USER_pk}##SPACE#{SPACE_PK}, SK: POLL#{POLL_ID}#RESPOND
@@ -29,7 +29,7 @@ use crate::*;
 /// - Get Specific Entity Reward: UserReward::query_begins_with_sk(EntityType)
 pub struct UserReward {
     pub pk: CompositePartition,
-    pub sk: RewardType,
+    pub sk: RewardKey,
 
     pub created_at: i64,
     pub updated_at: i64,
@@ -55,13 +55,13 @@ impl UserReward {
     pub fn keys(
         user_pk: UserPartition,
         space_pk: SpacePartition,
-        reward_type: RewardType,
-    ) -> (CompositePartition, RewardType) {
+        reward_key: RewardKey,
+    ) -> (CompositePartition, RewardKey) {
         let user_reward: UserRewardPartition = UserRewardPartition(user_pk.0);
 
         (
             CompositePartition(user_reward.into(), space_pk.into()),
-            reward_type,
+            reward_key,
         )
     }
 
@@ -82,7 +82,7 @@ impl UserReward {
         let mut txs = vec![];
 
         // Check Reward Condition and Upsert UserReward
-        let mut user_reward = if let Some(mut user_reward) = user_reward {
+        let user_reward = if let Some(mut user_reward) = user_reward {
             match &space_reward.condition {
                 RewardCondition::None => {}
                 RewardCondition::MaxClaims(max) => {
@@ -108,19 +108,19 @@ impl UserReward {
             }
             txs.push(
                 UserReward::updater(&user_reward.pk, &user_reward.sk)
-                    .increase_total_points(space_reward.point)
+                    .increase_total_points(space_reward.get_amount())
                     .increase_total_claims(1)
                     .with_updated_at(now)
                     .transact_write_item(),
             );
             user_reward.total_claims += 1;
-            user_reward.total_points += space_reward.point;
+            user_reward.total_points += space_reward.get_amount();
 
             user_reward
         } else {
             let mut user_reward = Self::new(space_reward.clone(), user_pk.clone());
             user_reward.total_claims += 1;
-            user_reward.total_points += space_reward.point;
+            user_reward.total_points += space_reward.get_amount();
             txs.push(user_reward.create_transact_write_item());
             user_reward
         };
@@ -129,7 +129,7 @@ impl UserReward {
         txs.push(
             SpaceReward::updater(&space_reward.pk, &space_reward.sk)
                 .increase_total_claims(1)
-                .increase_total_points(space_reward.point)
+                .increase_total_points(space_reward.get_amount())
                 .with_updated_at(now)
                 .transact_write_item(),
         );
@@ -140,8 +140,8 @@ impl UserReward {
         let res = biyard
             .award_points(
                 user_pk.clone().into(),
-                space_reward.point,
-                space_reward.description,
+                space_reward.get_amount(),
+                space_reward.description.clone(),
                 None,
             )
             .await?;
@@ -153,7 +153,7 @@ impl UserReward {
             biyard
                 .award_points(
                     user_pk.clone().into(),
-                    space_reward.point * -1,
+                    space_reward.get_amount() * -1,
                     "Revert Points".to_string(),
                     Some(res.month),
                 )

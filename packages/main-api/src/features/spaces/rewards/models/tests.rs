@@ -1,7 +1,7 @@
 use crate::features::spaces::polls::{Poll, PollResponse, PollUserAnswer};
 use crate::features::spaces::rewards::{
-    BoardReward, FeatureRewardTrait, PollReward, RewardCondition, RewardDetail, RewardPeriod,
-    RewardType, SpaceReward, UserReward, UserRewardHistory, UserRewardHistoryQueryOption,
+    BoardReward, FeatureRewardTrait, PollReward, RewardCondition, RewardKey, RewardPeriod,
+    SpaceReward, UserReward, UserRewardHistory, UserRewardHistoryQueryOption,
 };
 use crate::types::*;
 use crate::utils::time::get_now_timestamp_millis;
@@ -64,16 +64,22 @@ async fn test_reward_period_daily() {
     let space = create_test_space(&cli, &user).await;
     let poll = create_test_poll(&cli, &space).await;
     let biyard = crate::services::biyard::Biyard::new();
+    let credits = 1;
+    let point = 10_000;
+    let period = RewardPeriod::Daily;
+    let condition = RewardCondition::None;
 
     // Create a reward with Daily period
-    let mut reward = SpaceReward::new(
+    let reward = SpaceReward::new(
         space.pk.clone().into(),
-        RewardType::Poll(poll.sk.clone().into(), PollReward::Respond),
+        RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
         "Daily Poll Reward".to_string(),
         "Can be claimed once per day".to_string(),
-        1,
+        credits,
+        point,
+        period,
+        condition,
     );
-    reward.period = RewardPeriod::Daily;
     reward.create(&cli).await.unwrap();
 
     // First award on same day - should succeed
@@ -81,7 +87,7 @@ async fn test_reward_period_daily() {
     assert!(result1.is_ok(), "First award should succeed");
     let user_reward1 = result1.unwrap();
     assert_eq!(user_reward1.total_claims, 1);
-    assert_eq!(user_reward1.total_points, reward.point);
+    assert_eq!(user_reward1.total_points, reward.get_amount());
 
     // Second award on same day - should fail (duplicate)
     let result2 = UserReward::award(&cli, &biyard, user.pk.clone().into(), reward.clone()).await;
@@ -112,7 +118,7 @@ async fn test_reward_period_daily() {
     .await
     .unwrap();
     assert_eq!(histories.0.len(), 1, "Should have one history entry");
-    assert_eq!(histories.0[0].point, reward.point);
+    assert_eq!(histories.0[0].point, reward.get_amount());
 }
 
 #[tokio::test]
@@ -123,17 +129,21 @@ async fn test_reward_condition_max_user_claims() {
     let space = create_test_space(&cli, &user).await;
     let poll = create_test_poll(&cli, &space).await;
     let biyard = crate::services::biyard::Biyard::new();
-
+    let credits = 1;
+    let point = 10_000;
+    let period = RewardPeriod::Unlimited;
+    let condition = RewardCondition::MaxUserClaims(2);
     // Create a reward with MaxUserClaims(2) - user can claim only 2 times
-    let mut reward = SpaceReward::new(
+    let reward = SpaceReward::new(
         space.pk.clone().into(),
-        RewardType::Poll(poll.sk.clone().into(), PollReward::Respond),
+        RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
         "Limited Poll Reward".to_string(),
         "Can be claimed only 2 times per user".to_string(),
-        1,
+        credits,
+        point,
+        period,
+        condition,
     );
-    reward.period = RewardPeriod::Unlimited; // No period restriction
-    reward.condition = RewardCondition::MaxUserClaims(2);
     reward.create(&cli).await.unwrap();
 
     // First claim - should succeed
@@ -141,14 +151,14 @@ async fn test_reward_condition_max_user_claims() {
     assert!(result1.is_ok(), "First claim should succeed");
     let user_reward1 = result1.unwrap();
     assert_eq!(user_reward1.total_claims, 1);
-    assert_eq!(user_reward1.total_points, reward.point);
+    assert_eq!(user_reward1.total_points, reward.get_amount());
 
     // Second claim - should succeed
     let result2 = UserReward::award(&cli, &biyard, user.pk.clone().into(), reward.clone()).await;
     assert!(result2.is_ok(), "Second claim should succeed");
     let user_reward2 = result2.unwrap();
     assert_eq!(user_reward2.total_claims, 2);
-    assert_eq!(user_reward2.total_points, reward.point * 2);
+    assert_eq!(user_reward2.total_points, reward.get_amount() * 2);
 
     // Third claim - should fail (MaxUserClaims reached)
     let result3 = UserReward::award(&cli, &biyard, user.pk.clone().into(), reward.clone()).await;
@@ -168,7 +178,7 @@ async fn test_reward_condition_max_user_claims() {
     );
     let final_user_reward = UserReward::get(&cli, pk, Some(sk)).await.unwrap().unwrap();
     assert_eq!(final_user_reward.total_claims, 2);
-    assert_eq!(final_user_reward.total_points, reward.point * 2);
+    assert_eq!(final_user_reward.total_points, reward.get_amount() * 2);
 }
 
 #[tokio::test]
@@ -180,18 +190,24 @@ async fn test_user_reward_award_flow() {
     let poll = create_test_poll(&cli, &space).await;
     let biyard = crate::services::biyard::Biyard::new();
 
+    let credits = 2;
+    let point = 10_000;
+    let period = RewardPeriod::Unlimited;
+    let condition = RewardCondition::None;
     // Create a SpaceReward
-    let mut reward = SpaceReward::new(
+    let reward = SpaceReward::new(
         space.pk.clone().into(),
-        RewardType::Poll(poll.sk.clone().into(), PollReward::Respond),
+        RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
         "Integration Test Reward".to_string(),
         "Testing full award flow".to_string(),
-        2, // 2 credits multiplier
+        credits,
+        point,
+        period,
+        condition,
     );
-    reward.period = RewardPeriod::Unlimited;
     reward.create(&cli).await.unwrap();
 
-    let initial_reward_point = reward.point;
+    let initial_reward_point = reward.get_amount();
 
     // Call UserReward::award()
     let result = UserReward::award(&cli, &biyard, user.pk.clone().into(), reward.clone()).await;
@@ -218,7 +234,7 @@ async fn test_user_reward_award_flow() {
     // 3. Verify SpaceReward total_claims and total_points increased
     let (sr_pk, sr_sk) = SpaceReward::keys(
         space.pk.clone().into(),
-        RewardType::Poll(poll.sk.clone().into(), PollReward::Respond),
+        RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
     );
     let updated_space_reward = SpaceReward::get(&cli, sr_pk, Some(sr_sk))
         .await
@@ -268,15 +284,21 @@ async fn test_biyard_transaction_rollback_on_duplicate() {
     let poll = create_test_poll(&cli, &space).await;
     let biyard = crate::services::biyard::Biyard::new();
 
+    let credits = 1;
+    let point = 10_000;
+    let period = RewardPeriod::Once;
+    let condition = RewardCondition::None;
     // Create a reward with Once period (can only be claimed once)
-    let mut reward = SpaceReward::new(
+    let reward = SpaceReward::new(
         space.pk.clone().into(),
-        RewardType::Poll(poll.sk.clone().into(), PollReward::Respond),
+        RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
         "One-Time Reward".to_string(),
         "Can only be claimed once".to_string(),
-        1,
+        credits,
+        point,
+        period,
+        condition,
     );
-    reward.period = RewardPeriod::Once;
     reward.create(&cli).await.unwrap();
 
     // First award - should succeed and Biyard points awarded
@@ -336,19 +358,19 @@ async fn test_biyard_transaction_rollback_on_duplicate() {
         .unwrap()
         .unwrap();
     assert_eq!(user_reward.total_claims, 1);
-    assert_eq!(user_reward.total_points, reward.point);
+    assert_eq!(user_reward.total_points, reward.get_amount());
 
     // Verify SpaceReward still shows only 1 claim
     let (sr_pk, sr_sk) = SpaceReward::keys(
         space.pk.clone().into(),
-        RewardType::Poll(poll.sk.clone().into(), PollReward::Respond),
+        RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
     );
     let space_reward = SpaceReward::get(&cli, sr_pk, Some(sr_sk))
         .await
         .unwrap()
         .unwrap();
     assert_eq!(space_reward.total_claims, 1);
-    assert_eq!(space_reward.total_points, reward.point);
+    assert_eq!(space_reward.total_points, reward.get_amount());
 
     // Note: In the real implementation, Biyard service receives a rollback call
     // with negative points (-reward.point) to revert the transaction.

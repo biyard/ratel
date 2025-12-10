@@ -1,4 +1,4 @@
-use crate::features::spaces::rewards::{RewardCondition, RewardPeriod, RewardType};
+use crate::features::spaces::rewards::{RewardCondition, RewardKey, RewardPeriod};
 use crate::types::*;
 use crate::*;
 
@@ -35,7 +35,7 @@ use crate::*;
 /// - Get Specific Reward: SpaceReward::get(pk, sk)
 pub struct SpaceReward {
     pub pk: CompositePartition,
-    pub sk: RewardType,
+    pub sk: RewardKey,
 
     pub created_at: i64,
     pub updated_at: i64,
@@ -43,6 +43,7 @@ pub struct SpaceReward {
     pub label: String,
     pub description: String,
 
+    pub credits: i64,
     pub point: i64,
 
     pub total_points: i64,
@@ -55,15 +56,16 @@ pub struct SpaceReward {
 impl SpaceReward {
     pub fn new(
         space_pk: SpacePartition,
-        reward_type: RewardType,
+        reward_key: RewardKey,
         label: String,
         description: String,
         credits: i64,
+        point: i64,
+        period: RewardPeriod,
+        condition: RewardCondition,
     ) -> Self {
-        let detail = reward_type.detail();
-
-        let (pk, sk) = Self::keys(space_pk, reward_type);
-        let now = time::get_now_timestamp_millis();
+        let (pk, sk) = Self::keys(space_pk, reward_key);
+        let now = now();
 
         Self {
             pk,
@@ -72,39 +74,64 @@ impl SpaceReward {
             updated_at: now,
 
             label,
-            point: detail.point * credits,
+            credits,
+            point,
             description,
 
-            period: detail.period,
-            condition: detail.condition,
-            ..Default::default()
+            period,
+            condition,
+            total_points: 0,
+            total_claims: 0,
         }
     }
 
     pub fn keys(
         space_pk: SpacePartition,
-        reward_type: RewardType,
-    ) -> (CompositePartition, RewardType) {
+        reward_key: RewardKey,
+    ) -> (CompositePartition, RewardKey) {
         // SPACE#{space_pk}##REWARD
         (
             CompositePartition(space_pk.into(), Partition::Reward),
-            reward_type,
+            reward_key,
         )
+    }
+
+    pub fn get_amount(&self) -> i64 {
+        self.point * self.credits
     }
 
     pub fn get_space_pk(&self) -> SpacePartition {
         self.pk.0.clone().into()
     }
 
-    pub async fn get_by_reward_type(
+    pub async fn get_by_reward_key(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: SpacePartition,
-        reward_type: RewardType,
+        reward_key: RewardKey,
     ) -> Result<Self> {
-        let key = Self::keys(space_pk, reward_type);
+        let key = Self::keys(space_pk, reward_key);
         let res = Self::get(cli, key.0, Some(key.1))
             .await?
             .ok_or(Error::RewardNotFound)?;
         Ok(res)
+    }
+
+    pub async fn list_by_feature(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: SpacePartition,
+        entity_type: Option<EntityType>,
+        bookmark: Option<String>,
+    ) -> Result<(Vec<Self>, Option<String>)> {
+        let pk: CompositePartition = CompositePartition(space_pk.into(), Partition::Reward);
+        let mut opt = SpaceRewardQueryOption::builder();
+        if let Some(bookmark) = bookmark {
+            opt = opt.bookmark(bookmark);
+        }
+        if let Some(entity_type) = entity_type {
+            opt = opt.sk(entity_type.to_string());
+        }
+        let (items, next) = Self::query(cli, pk, opt).await?;
+
+        Ok((items, next))
     }
 }

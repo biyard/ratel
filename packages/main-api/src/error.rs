@@ -283,6 +283,9 @@ pub enum Error {
     RewardMaxUserClaimsReached,
     #[error("User reward max points reached")]
     RewardMaxUserPointsReached,
+    #[error("Reward disabled")]
+    #[rest_error(status = 500)]
+    RewardDisabled,
 
     // DID feature errors 11,000 ~
     #[error("Invalid DID format")]
