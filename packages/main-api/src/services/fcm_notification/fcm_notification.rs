@@ -1,4 +1,5 @@
 use super::*;
+use crate::config::GoogleCloudConfig;
 use crate::utils::firebase::oauth::get_fcm_access_token;
 use crate::*;
 use std::collections::HashMap;
@@ -30,11 +31,13 @@ pub struct FCMService {
 
 impl FCMService {
     pub async fn new() -> Result<Self> {
-        let project_id = config::get().ratel_project_id;
-        let fcm_enabled = config::get().fcm_enabled;
+        let GoogleCloudConfig {
+            project_id,
+            enable_fcm,
+        } = config::get().google_cloud;
 
-        if !fcm_enabled {
-            tracing::info!("FCMService::new: FCM is disabled by config, but service is created.");
+        if !enable_fcm {
+            tracing::warn!("FCMService::new: FCM is disabled by config, but service is created.");
         }
 
         let token = get_fcm_access_token().await?;
@@ -81,7 +84,7 @@ impl FCMService {
         let text = res.text().await.unwrap_or_default();
 
         if !status.is_success() {
-            tracing::warn!(
+            tracing::error!(
                 "FCMService::send_one: push failed: status={}, body={}, token_prefix={}",
                 status,
                 text,
@@ -109,13 +112,14 @@ impl FCMService {
         use futures::future::join_all;
 
         if device_tokens.is_empty() {
-            tracing::info!("FCMService::send_notification: no device tokens, skip.");
+            tracing::warn!("FCMService::send_notification: no device tokens, skip.");
             return Ok(());
         }
 
         let mut tasks = Vec::with_capacity(device_tokens.len());
         for token in device_tokens {
             let data_clone = data.clone();
+            // FIXME: implement failover / retry logic
             tasks.push(self.send_one(title, body, token.clone(), data_clone));
         }
 

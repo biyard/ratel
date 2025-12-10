@@ -52,7 +52,7 @@ import SpaceAnalyzesPage from './app/spaces/[id]/analyzes/space_analyzes-page';
 import CreateArtworkPage from './features/posts/components/create-artwork-page';
 import SpaceArtNftPreviewPage from './app/spaces/[id]/art-nfts/space-art-nft-page';
 import SpaceArtNftArtTwinPage from './app/spaces/[id]/art-nfts/space-art-nft-twin-page';
-import { MembershipPlan } from './features/membership/components/membership-plan';
+import MembershipPage from './app/membership/membership-page';
 import SpaceBoardPage from './app/spaces/[id]/boards/[post-id]/space-board-page';
 import SpaceBoardsPage from './app/spaces/[id]/boards/space-boards-page';
 import SpaceBoardCreatePage from './app/spaces/[id]/boards/create/space-board-create-page';
@@ -63,6 +63,7 @@ import { Refund } from './app/refund';
 import SpaceMemberPage from './app/spaces/[id]/members/space-member-page';
 import MySpacesPage from './app/(social)/my-spaces/page';
 import NotificationsPage from './app/notifications/page';
+import { MembershipPlan } from './features/membership/components/membership-plan';
 
 export const routes = createBrowserRouter([
   {
@@ -98,6 +99,12 @@ export const routes = createBrowserRouter([
             index: true,
             Component: HomePage,
           },
+          {
+            id: 'my-membership-page',
+            path: 'my-membership',
+            Component: MembershipPage,
+          },
+
           {
             id: 'my-posts-page',
             path: 'my-posts',
