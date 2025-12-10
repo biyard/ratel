@@ -1,19 +1,12 @@
+use crate::s3_config::S3Config;
 use bdk::prelude::*;
 use by_types::config::*;
 
 #[derive(Debug)]
 pub struct Config {
     pub aws: AwsConfig,
-    pub bucket: BucketConfig,
+    pub bucket: S3Config,
     pub database: DatabaseConfig,
-}
-
-#[derive(Debug)]
-pub struct BucketConfig {
-    pub name: &'static str,
-    pub asset_dir: &'static str,
-    pub expire: u64,
-    pub region: &'static str,
 }
 
 impl Default for Config {
@@ -21,16 +14,7 @@ impl Default for Config {
         Config {
             aws: AwsConfig::default(),
             database: DatabaseConfig::default(),
-            bucket: BucketConfig {
-                name: option_env!("BUCKET_NAME").expect("You must set BUCKET_NAME"),
-                asset_dir: option_env!("ASSET_DIR").expect("You must set ASSET_DIR"),
-                expire: option_env!("BUCKET_EXPIRE").unwrap_or_else(|| {
-                    tracing::warn!("We recommend to set BUCKET_EXPIRE. BUCKET_EXPIRE is not set. Default is 3600.");
-                    "3600"
-                }) .parse()
-                    .unwrap(),
-                region: option_env!("S3_REGION").unwrap_or("ap-northeast-2"),
-            },
+            bucket: S3Config::default(),
         }
     }
 }

@@ -71,6 +71,7 @@ pub async fn complete_multipart_upload(
             Error::AssetError(e.to_string())
         })?;
 
-    let final_url = format!("https://{}/{}", bucket_name, req.key);
+    let bucket_config = crate::config::get().bucket;
+    let final_url = bucket_config.get_url(&req.key);
     Ok(Json(final_url))
 }

@@ -21,7 +21,6 @@ pub struct PutObjectResult {
 pub struct S3Client {
     pub client: Client,
     bucket_name: String,
-    region: String,
 }
 
 pub enum S3ContentType {
@@ -66,7 +65,6 @@ impl S3Client {
         S3Client {
             client,
             bucket_name: bucket_name.to_string(),
-            region: conf.bucket.region.to_string(),
         }
     }
 
@@ -88,10 +86,8 @@ impl S3Client {
                 tracing::error!("Failed to upload object {}", e.to_string());
                 Error::AssetError(e.to_string())
             })?;
-        let url = format!(
-            "https://{}.s3.{}.amazonaws.com/{}",
-            &self.bucket_name, &self.region, key
-        );
+        let conf = config::get();
+        let url = conf.bucket.get_url(key);
         Ok(url)
     }
     pub async fn get_object_bytes(&self, key: &str) -> Result<S3Object> {
@@ -155,12 +151,10 @@ impl S3Client {
                     Error::AssetError(e.to_string())
                 })?;
 
+            let conf = config::get();
             result.push(PutObjectResult {
                 presigned_uri: presigned_request.uri().to_string(),
-                uri: format!(
-                    "https://{}.s3.{}.amazonaws.com/{}",
-                    &self.bucket_name, &self.region, key
-                ),
+                uri: conf.bucket.get_url(&key),
                 key,
             });
         }
@@ -204,7 +198,6 @@ impl S3Client {
         Self {
             client: Client::from_conf(Config::from(&config)),
             bucket_name: "test-bucket".to_string(),
-            region: "us-east-1".to_string(),
         }
     }
 }
