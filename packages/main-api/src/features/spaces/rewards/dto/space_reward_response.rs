@@ -33,7 +33,7 @@ impl From<SpaceReward> for SpaceRewardResponse {
             updated_at: reward.updated_at,
             label: reward.label,
             description: reward.description,
-            amount: reward.amount,
+            amount: reward.point,
         }
     }
 }

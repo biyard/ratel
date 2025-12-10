@@ -269,6 +269,21 @@ pub enum Error {
     #[error("Card information is required for payment")]
     CardInfoRequired,
 
+    // Reward errors 10,100 ~
+    #[error("Reward already claimed in this period")]
+    #[rest_error(status = 400, code = 10100)]
+    RewardAlreadyClaimedInPeriod,
+    #[error("Reward not found")]
+    RewardNotFound,
+    #[error("Reward max claims reached")]
+    RewardMaxClaimsReached,
+    #[error("Reward max points reached")]
+    RewardMaxPointsReached,
+    #[error("User reward max claims reached")]
+    RewardMaxUserClaimsReached,
+    #[error("User reward max points reached")]
+    RewardMaxUserPointsReached,
+
     // DID feature errors 11,000 ~
     #[error("Invalid DID format")]
     #[rest_error(code = 11000)]
