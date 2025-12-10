@@ -1,28 +1,68 @@
-use crate::features::spaces::rewards::RewardType;
+use crate::features::spaces::rewards::{RewardCondition, RewardPeriod, RewardType};
 use crate::types::*;
 use crate::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default, JsonSchema, OperationIo)]
+/// SpaceReward: 스페이스에 설정한 리워드
+///
+/// Key Structure:
+/// - PK: SPACE#{space_pk}##REWARD
+/// - SK: {EntityType}#{RewardType}
+///
+/// Examples:
+/// - Get All Rewards: SpaceReward::query(pk)
+/// - Get Specific Entity Reward: SpaceReward::query_begins_with_sk(EntityType)
+/// - Get Specific Reward: SpaceReward::get(pk, sk)
+
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    DynamoEntity,
+    JsonSchema,
+    OperationIo,
+    serde::Serialize,
+    serde::Deserialize,
+)]
+/// SpaceReward: 스페이스에 설정한 리워드
+///
+/// Key Structure:
+/// - PK: SPACE#{space_pk}##REWARD
+/// - SK: {EntityType}#{RewardType}
+///
+/// Examples:
+/// - Get All Rewards: SpaceReward::query(pk)
+/// - Get Specific Entity Reward: SpaceReward::query_begins_with_sk(EntityType)
+/// - Get Specific Reward: SpaceReward::get(pk, sk)
 pub struct SpaceReward {
     pub pk: CompositePartition,
     pub sk: RewardType,
 
     pub created_at: i64,
     pub updated_at: i64,
+
     pub label: String,
     pub description: String,
-    pub amount: i64,
+
+    pub point: i64,
+
+    pub total_points: i64,
+    pub total_claims: i64,
+
+    pub period: RewardPeriod,
+    pub condition: RewardCondition,
 }
 
 impl SpaceReward {
     pub fn new(
-        space_pk: Partition,
+        space_pk: SpacePartition,
         reward_type: RewardType,
         label: String,
         description: String,
-        amount: i64,
+        credits: i64,
     ) -> Self {
-        let (pk, sk) = Self::keys(&space_pk, &reward_type);
+        let detail = reward_type.detail();
+
+        let (pk, sk) = Self::keys(space_pk, reward_type);
         let now = time::get_now_timestamp_millis();
 
         Self {
@@ -32,57 +72,39 @@ impl SpaceReward {
             updated_at: now,
 
             label,
-            amount,
+            point: detail.point * credits,
             description,
+
+            period: detail.period,
+            condition: detail.condition,
+            ..Default::default()
         }
     }
 
     pub fn keys(
-        space_pk: &Partition,
-        reward_type: &RewardType,
+        space_pk: SpacePartition,
+        reward_type: RewardType,
     ) -> (CompositePartition, RewardType) {
-        if !matches!(space_pk, Partition::Space(_)) {
-            panic!("SpaceReward pk must be of Partition::Space type");
-        }
+        // SPACE#{space_pk}##REWARD
         (
-            CompositePartition(space_pk.clone(), Partition::Reward),
-            reward_type.clone(),
+            CompositePartition(space_pk.into(), Partition::Reward),
+            reward_type,
         )
     }
-    pub fn space_pk(&self) -> Partition {
-        match &self.pk.0 {
-            Partition::Space(v) => Partition::Space(v.clone()),
-            _ => panic!("SpaceReward pk must be of Partition::Space type"),
-        }
-    }
-    pub fn reward_type(&self) -> RewardType {
-        self.sk.clone()
-    }
-}
 
-impl SpaceReward {
-    pub async fn list_by_space(
+    pub fn get_space_pk(&self) -> SpacePartition {
+        self.pk.0.clone().into()
+    }
+
+    pub async fn get_by_reward_type(
         cli: &aws_sdk_dynamodb::Client,
-        space_pk: &Partition,
-        limit: Option<i32>,
-        bookmark: Option<String>,
-    ) -> Result<(Vec<SpaceReward>, Option<String>)> {
-        let (pk, _) = SpaceReward::keys(space_pk, &RewardType::None);
-
-        let mut options = SpaceRewardQueryOption::builder().limit(limit.unwrap_or(50));
-        if let Some(next) = bookmark {
-            options = options.bookmark(next);
-        };
-
-        Self::query(cli, pk, options).await
-    }
-
-    pub async fn get_reward(
-        cli: &aws_sdk_dynamodb::Client,
-        space_pk: &Partition,
-        reward_type: &RewardType,
-    ) -> Result<Option<Self>> {
-        let (pk, sk) = Self::keys(space_pk, reward_type);
-        Self::get(cli, pk, Some(sk)).await
+        space_pk: SpacePartition,
+        reward_type: RewardType,
+    ) -> Result<Self> {
+        let key = Self::keys(space_pk, reward_type);
+        let res = Self::get(cli, key.0, Some(key.1))
+            .await?
+            .ok_or(Error::RewardNotFound)?;
+        Ok(res)
     }
 }

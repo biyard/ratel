@@ -1,86 +1,165 @@
-use crate::features::spaces::rewards::{RewardType, SpaceReward};
+use crate::features::spaces::rewards::{
+    RewardCondition, RewardPeriod, RewardType, SpaceReward, UserRewardHistory,
+};
 use crate::services::biyard::Biyard;
 use crate::types::*;
 use crate::*;
 
-#[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default, JsonSchema, OperationIo)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    DynamoEntity,
+    JsonSchema,
+    OperationIo,
+    serde::Serialize,
+    serde::Deserialize,
+)]
+/// SpaceReward: 스페이스에 설정한 리워드
+///
+/// Key Structure:
+/// - PK: USER#{USER_pk}##SPACE#{SPACE_PK}
+/// - SK: {EntityType}#{RewardType}
+///
+/// Examples:
+/// POLL RESPOND : PK: USER_REWARD#{USER_pk}##SPACE#{SPACE_PK}, SK: POLL#{POLL_ID}#RESPOND
+/// SPACE BOARD Comment : PK: USER_REWARD#{USER_pk}##SPACE#{SPACE_PK}, SK: SPACE_BOARD#{SPACE_BOARD_ID}#Comment
+/// SPACE BOARD LIKE : PK: USER_REWARD#{USER_pk}##SPACE#{SPACE_PK}, SK: SPACE_BOARD#{SPACE_BOARD_ID}#LIKE
+/// - Get All Rewards: UserReward::query(pk)
+/// - Get Specific Entity Reward: UserReward::query_begins_with_sk(EntityType)
 pub struct UserReward {
-    // #[dynamo(index = "gsi1", name = "find_by_month", pk)]
-    // USER#{USER_PK}#REWARDS#SPACE_PK#REWARD_TYPE
     pub pk: CompositePartition,
-    pub sk: EntityType,
-    // #[dynamo(index = "gsi1", sk, order = 1)]
+    pub sk: RewardType,
+
     pub created_at: i64,
+    pub updated_at: i64,
 
-    // pub reward_label: String,
-    // pub reward_amount: i64,
-    // pub reward_description: Option<String>,
-
-    // #[dynamo(index = "gsi1", sk, order = 0)]
-    // pub month: String, // e.g., "2024-06"
-    pub month: String,          // e.g., "2024-06"
-    pub transaction_id: String, // Biyard Transaction ID
+    pub total_claims: i64,
+    pub total_points: i64,
 }
 
 impl UserReward {
-    pub fn new(
-        user_pk: Partition,
-        space_reward: SpaceReward,
-        month: String,
-        transaction_id: String,
-    ) -> Self {
+    pub fn new(space_reward: SpaceReward, user_pk: UserPartition) -> Self {
+        let (pk, sk) = Self::keys(user_pk, space_reward.get_space_pk(), space_reward.sk);
         let now = time::get_now_timestamp_millis();
-        let (pk, sk) = Self::keys(&user_pk, &space_reward);
         Self {
             pk,
             sk,
             created_at: now,
-
-            // SpaceReward Info
-            // SpaceReward Info
-            // reward_label: space_reward.label,
-            // reward_description: space_reward.description,
-            // reward_amount: space_reward.amount,
-
-            // Biyard Response
-            transaction_id,
-            month,
+            updated_at: now,
+            total_claims: 0,
+            total_points: 0,
         }
     }
 
     pub fn keys(
-        user_pk: &Partition,
-        space_reward: &SpaceReward,
-    ) -> (CompositePartition, EntityType) {
-        if !matches!(user_pk, Partition::User(_)) {
-            panic!("UserReward pk must be of Partition::User type");
-        }
+        user_pk: UserPartition,
+        space_pk: SpacePartition,
+        reward_type: RewardType,
+    ) -> (CompositePartition, RewardType) {
+        let user_reward: UserRewardPartition = UserRewardPartition(user_pk.0);
+
         (
-            CompositePartition(user_pk.clone(), Partition::Reward),
-            EntityType::UserReward(
-                space_reward.space_pk().to_string(),
-                space_reward.reward_type().to_string(),
-            ),
+            CompositePartition(user_reward.into(), space_pk.into()),
+            reward_type,
         )
     }
 
     pub async fn award(
         cli: &aws_sdk_dynamodb::Client,
         biyard: &Biyard,
-        user_pk: Partition,
+        user_pk: UserPartition,
         space_reward: SpaceReward,
-    ) -> Result<UserReward> {
+    ) -> Result<Self> {
+        let now = time::get_now_timestamp_millis();
+        let space_pk = space_reward.get_space_pk();
+
+        let (user_reward_pk, user_reward_sk) =
+            Self::keys(user_pk.clone(), space_pk.clone(), space_reward.sk.clone());
+        let user_reward =
+            Self::get(cli, user_reward_pk.clone(), Some(user_reward_sk.clone())).await?;
+
+        let mut txs = vec![];
+
+        // Check Reward Condition and Upsert UserReward
+        let mut user_reward = if let Some(mut user_reward) = user_reward {
+            match &space_reward.condition {
+                RewardCondition::None => {}
+                RewardCondition::MaxClaims(max) => {
+                    if space_reward.total_claims >= *max {
+                        return Err(Error::RewardMaxClaimsReached);
+                    }
+                }
+                RewardCondition::MaxPoints(max) => {
+                    if space_reward.total_points >= *max {
+                        return Err(Error::RewardMaxPointsReached);
+                    }
+                }
+                RewardCondition::MaxUserClaims(max) => {
+                    if user_reward.total_claims >= *max {
+                        return Err(Error::RewardMaxUserClaimsReached);
+                    }
+                }
+                RewardCondition::MaxUserPoints(max) => {
+                    if user_reward.total_points >= *max {
+                        return Err(Error::RewardMaxUserPointsReached);
+                    }
+                }
+            }
+            txs.push(
+                UserReward::updater(&user_reward.pk, &user_reward.sk)
+                    .increase_total_points(space_reward.point)
+                    .increase_total_claims(1)
+                    .with_updated_at(now)
+                    .transact_write_item(),
+            );
+            user_reward.total_claims += 1;
+            user_reward.total_points += space_reward.point;
+
+            user_reward
+        } else {
+            let mut user_reward = Self::new(space_reward.clone(), user_pk.clone());
+            user_reward.total_claims += 1;
+            user_reward.total_points += space_reward.point;
+            txs.push(user_reward.create_transact_write_item());
+            user_reward
+        };
+
+        // Update SpaceReward
+        txs.push(
+            SpaceReward::updater(&space_reward.pk, &space_reward.sk)
+                .increase_total_claims(1)
+                .increase_total_points(space_reward.point)
+                .with_updated_at(now)
+                .transact_write_item(),
+        );
+
+        // Create UserRewardHistory
+        let mut history = UserRewardHistory::new(user_pk.clone(), space_reward.clone());
+
         let res = biyard
             .award_points(
-                user_pk.clone(),
-                space_reward.amount,
-                space_reward.description.clone(),
+                user_pk.clone().into(),
+                space_reward.point,
+                space_reward.description,
                 None,
             )
             .await?;
 
-        let user_reward = Self::new(user_pk, space_reward, res.month, res.transaction_id);
-        user_reward.create(cli).await?;
+        history.set_transaction(res.transaction_id.clone(), res.month.clone());
+        txs.push(history.create_transact_write_item());
+        if let Err(_) = transact_write_items!(cli, txs) {
+            //When Transaction Failed. Revert Points
+            biyard
+                .award_points(
+                    user_pk.clone().into(),
+                    space_reward.point * -1,
+                    "Revert Points".to_string(),
+                    Some(res.month),
+                )
+                .await?;
+            return Err(Error::RewardAlreadyClaimedInPeriod);
+        }
         Ok(user_reward)
     }
 }

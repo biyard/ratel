@@ -50,6 +50,7 @@ pub struct Config {
     pub account_id: &'static str,
 
     pub biyard: BiyardConfig,
+    pub reward: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -129,6 +130,7 @@ impl Default for Config {
             x402: X402Config::default(),
             account_id: option_env!("ACCOUNT_ID").unwrap_or(""),
             biyard: BiyardConfig::default(),
+            reward: option_env!("REWARD").unwrap_or("false").parse().unwrap(),
         }
     }
 }
