@@ -49,7 +49,7 @@ export function SpaceActionDropdown({
       <Button
         aria-role={firstAction.label}
         variant="rounded_secondary"
-        className="w-full !important text-[#262626]"
+        className="w-full"
         onPointerDown={(e) => {
           e.stopPropagation();
           e.preventDefault();
@@ -77,7 +77,7 @@ export function SpaceActionDropdown({
                 aria-role={firstAction.label}
                 data-testid="space-action-button"
                 variant="rounded_secondary"
-                className="w-full rounded-r-none !important text-[#262626]"
+                className="w-full rounded-r-none"
                 onPointerDown={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -94,8 +94,11 @@ export function SpaceActionDropdown({
               </Button>
             </div>
 
-            <Row className="justify-center items-center px-3 bg-white rounded-full rounded-l-none cursor-pointer w-fit hover:bg-neutral-200">
-              <BottomTriangle aria-role="Expand Space Actions" />
+            <Row className="justify-center items-center px-3 rounded-full rounded-l-none cursor-pointer bg-btn-secondary-bg w-fit hover:bg-btn-secondary-hover-bg">
+              <BottomTriangle
+                className="[&>path]:fill-btn-secondary-text [&>path]:stroke-btn-secondary-text"
+                aria-role="Expand Space Actions"
+              />
             </Row>
           </Row>
         </DropdownMenuTrigger>

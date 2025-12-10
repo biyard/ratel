@@ -23,7 +23,7 @@ export class AttributeCodeResponse {
   }
 
   getFormattedDate(): string {
-    return new Date(this.created_at / 1000).toLocaleDateString();
+    return new Date(this.created_at).toLocaleDateString();
   }
 
   getDisplayAttributes(): string {

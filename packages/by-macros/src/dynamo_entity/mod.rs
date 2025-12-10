@@ -1208,6 +1208,8 @@ fn generate_struct_impl(
 
                 let item = self.indexed_fields(item);
 
+                tracing::debug!("Creating item in table {}: {:?}", Self::table_name(), item);
+
                 cli.put_item()
                     .table_name(Self::table_name())
                     .condition_expression(#create_key_condition)
