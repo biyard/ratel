@@ -2,7 +2,7 @@ mod change_membership;
 mod history;
 
 #[cfg(test)]
-mod tests;
+pub mod tests;
 
 use crate::*;
 

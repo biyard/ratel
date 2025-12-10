@@ -4,7 +4,7 @@ use crate::features::payment::*;
 use crate::tests::v3_setup::*;
 use change_membership::ChangeMembershipResponse;
 
-async fn seed_test_user_payment(cli: &aws_sdk_dynamodb::Client, user_pk: &Partition) {
+pub async fn seed_test_user_payment(cli: &aws_sdk_dynamodb::Client, user_pk: &Partition) {
     // Create a test UserPayment with a fake billing_key for testing
     let mut user_payment = UserPayment::new(
         user_pk.clone(),
@@ -16,7 +16,7 @@ async fn seed_test_user_payment(cli: &aws_sdk_dynamodb::Client, user_pk: &Partit
     user_payment.create(cli).await.unwrap();
 }
 
-async fn seed_memberships(cli: &aws_sdk_dynamodb::Client) {
+pub async fn seed_memberships(cli: &aws_sdk_dynamodb::Client) {
     // Create Free membership if it doesn't exist
     let free_pk = Partition::Membership(MembershipTier::Free.to_string());
     if Membership::get(cli, free_pk.clone(), Some(EntityType::Membership))
@@ -90,13 +90,18 @@ async fn test_change_membership_upgrade_from_free_to_pro() {
     if status != 200 {
         println!("Error response: {:?}", body);
     }
-    assert_eq!(status, 200, "Failed to upgrade membership. Response: {:?}", body);
+    assert_eq!(
+        status, 200,
+        "Failed to upgrade membership. Response: {:?}",
+        body
+    );
 
     // Verify the membership was upgraded
-    let user_membership = UserMembership::get(cli, &test_user.0.pk, Some(EntityType::UserMembership))
-        .await
-        .unwrap()
-        .expect("UserMembership should exist");
+    let user_membership =
+        UserMembership::get(cli, &test_user.0.pk, Some(EntityType::UserMembership))
+            .await
+            .unwrap()
+            .expect("UserMembership should exist");
 
     let membership_pk: Partition = user_membership.membership_pk.clone().into();
     let membership = Membership::get(cli, membership_pk, Some(EntityType::Membership))
@@ -156,10 +161,11 @@ async fn test_change_membership_downgrade_from_pro_to_free() {
     assert_eq!(body.membership.as_ref().unwrap().tier, MembershipTier::Free);
 
     // Verify the downgrade was scheduled (not applied immediately)
-    let user_membership = UserMembership::get(cli, &test_user.0.pk, Some(EntityType::UserMembership))
-        .await
-        .unwrap()
-        .expect("UserMembership should exist");
+    let user_membership =
+        UserMembership::get(cli, &test_user.0.pk, Some(EntityType::UserMembership))
+            .await
+            .unwrap()
+            .expect("UserMembership should exist");
 
     let membership_pk: Partition = user_membership.membership_pk.clone().into();
     let membership = Membership::get(cli, membership_pk, Some(EntityType::Membership))
@@ -170,7 +176,11 @@ async fn test_change_membership_downgrade_from_pro_to_free() {
     // Current membership should still be Pro
     assert_eq!(membership.tier, MembershipTier::Pro);
     // But next_membership should be set to Free
-    assert!(user_membership.next_membership.is_some(), "next_membership should be set to Free, but got: {:?}", user_membership.next_membership);
+    assert!(
+        user_membership.next_membership.is_some(),
+        "next_membership should be set to Free, but got: {:?}",
+        user_membership.next_membership
+    );
 }
 
 #[tokio::test]
@@ -230,10 +240,11 @@ async fn test_change_membership_upgrade_adds_credits() {
     assert_eq!(status, 200);
 
     // Get credits after first upgrade
-    let initial_membership = UserMembership::get(cli, &test_user.0.pk, Some(EntityType::UserMembership))
-        .await
-        .unwrap()
-        .expect("UserMembership should exist after first upgrade");
+    let initial_membership =
+        UserMembership::get(cli, &test_user.0.pk, Some(EntityType::UserMembership))
+            .await
+            .unwrap()
+            .expect("UserMembership should exist after first upgrade");
     let initial_credits = initial_membership.remaining_credits;
 
     // Upgrade to Max to test credits are added again
@@ -250,10 +261,11 @@ async fn test_change_membership_upgrade_adds_credits() {
     assert_eq!(status, 200);
 
     // Verify credits were added
-    let updated_membership = UserMembership::get(cli, &test_user.0.pk, Some(EntityType::UserMembership))
-        .await
-        .unwrap()
-        .expect("UserMembership should exist");
+    let updated_membership =
+        UserMembership::get(cli, &test_user.0.pk, Some(EntityType::UserMembership))
+            .await
+            .unwrap()
+            .expect("UserMembership should exist");
 
     assert!(updated_membership.remaining_credits > initial_credits);
 }
@@ -299,10 +311,11 @@ async fn test_change_membership_upgrade_clears_scheduled_downgrade() {
     assert_eq!(status, 200);
 
     // Verify downgrade was scheduled
-    let membership_with_downgrade = UserMembership::get(cli, &test_user.0.pk, Some(EntityType::UserMembership))
-        .await
-        .unwrap()
-        .expect("UserMembership should exist");
+    let membership_with_downgrade =
+        UserMembership::get(cli, &test_user.0.pk, Some(EntityType::UserMembership))
+            .await
+            .unwrap()
+            .expect("UserMembership should exist");
     assert!(membership_with_downgrade.next_membership.is_some());
 
     // Now upgrade to Max
@@ -319,10 +332,11 @@ async fn test_change_membership_upgrade_clears_scheduled_downgrade() {
     assert_eq!(status, 200);
 
     // Verify scheduled downgrade was cleared
-    let final_membership = UserMembership::get(cli, &test_user.0.pk, Some(EntityType::UserMembership))
-        .await
-        .unwrap()
-        .expect("UserMembership should exist");
+    let final_membership =
+        UserMembership::get(cli, &test_user.0.pk, Some(EntityType::UserMembership))
+            .await
+            .unwrap()
+            .expect("UserMembership should exist");
 
     let membership_pk: Partition = final_membership.membership_pk.clone().into();
     let membership = Membership::get(cli, membership_pk, Some(EntityType::Membership))
@@ -370,7 +384,9 @@ async fn test_change_membership_creates_purchase_record() {
     assert_eq!(status, 200);
 
     // Should have at least one purchase
-    let purchases = body["items"].as_array().expect("Should have items field as array");
+    let purchases = body["items"]
+        .as_array()
+        .expect("Should have items field as array");
     assert!(!purchases.is_empty());
 }
 
