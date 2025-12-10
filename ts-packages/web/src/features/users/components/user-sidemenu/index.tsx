@@ -2,6 +2,7 @@ import ProfileSection from '../../../../app/(social)/_components/profile-section
 
 import { route } from '@/route';
 import { Post, Draft, Settings, Did, UserGroup } from '@/components/icons';
+import { Sparkles } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { NavLink } from 'react-router';
@@ -69,6 +70,15 @@ export default function UserSidemenu() {
         >
           <Did className="w-6 h-6" />
           <span>{t.credentials}</span>
+        </NavLink>
+
+        <NavLink
+          to={route.myMembership()}
+          className="sidemenu-link text-text-primary"
+          data-testid="sidemenu-membership"
+        >
+          <Sparkles className="[&>path]:stroke-icon w-6 h-6" />
+          <span>{t.membership}</span>
         </NavLink>
 
         <NavLink

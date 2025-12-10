@@ -1,6 +1,7 @@
 #![allow(warnings)]
 use crate::File;
 use crate::models::email_template::email_template::EmailTemplate;
+use crate::services::fcm_notification::FCMService;
 use crate::utils::html::create_space_post_html;
 use crate::{
     AppState, Error, Permissions,
@@ -102,6 +103,7 @@ async fn send_create_post_alerm(
 ) -> Result<Json<()>, Error> {
     let mut bookmark = None::<String>;
     let mut emails: Vec<String> = Vec::new();
+    let mut user_pks: Vec<Partition> = Vec::new();
 
     loop {
         let (responses, new_bookmark) = SpaceInvitationMember::query(
@@ -119,6 +121,7 @@ async fn send_create_post_alerm(
 
         for response in responses {
             emails.push(response.email);
+            user_pks.push(response.user_pk);
         }
 
         match new_bookmark {
@@ -131,14 +134,20 @@ async fn send_create_post_alerm(
         return Ok(Json(()));
     }
 
-    SpacePost::send_email(
+    let _ = SpacePost::send_email(
         dynamo,
         ses,
         emails,
         space.clone(),
-        title,
+        title.clone(),
         html_contents,
         user,
     )
-    .await
+    .await?;
+
+    // FIXME: fix to one call code
+    let mut fcm = FCMService::new().await?;
+    let _ = SpacePost::send_notification(&dynamo, &mut fcm, title, user_pks).await?;
+
+    Ok(Json(()))
 }

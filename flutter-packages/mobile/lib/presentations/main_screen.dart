@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:ratel/exports.dart';
 
 class MainScreen extends StatefulWidget {
@@ -33,10 +31,10 @@ class _MainScreenState extends State<MainScreen>
 
   final routes = [
     AppRoutes.home,
-    AppRoutes.myNetwork,
     AppRoutes.mySpaces,
+    '__plus__',
     AppRoutes.notification,
-    AppRoutes.message,
+    AppRoutes.myPage,
   ];
 
   Future<void> openSidePanel() async {
@@ -51,14 +49,18 @@ class _MainScreenState extends State<MainScreen>
     _panelCtrl.reverse();
   }
 
-  void onTap(int index) {
+  void onTap(int index) async {
+    if (index == 2) {
+      await controller.createPost();
+      return;
+    }
+
     if (index == currentIndex) return;
 
     final routeName = routes[index];
     final page = _routeToPage(routeName);
     final context = Get.nestedKey(1)!.currentContext!;
 
-    final isForward = index > currentIndex;
     setState(() {
       currentIndex = index;
     });
@@ -66,21 +68,9 @@ class _MainScreenState extends State<MainScreen>
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => page,
-        transitionsBuilder: (_, animation, __, child) {
-          final begin = Offset(isForward ? 1.0 : -1.0, 0.0);
-          const end = Offset.zero;
-          const curve = Curves.easeInOut;
-
-          final tween = Tween(
-            begin: begin,
-            end: end,
-          ).chain(CurveTween(curve: curve));
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-        transitionDuration: const Duration(milliseconds: 300),
+        transitionsBuilder: (_, __, ___, child) => child,
+        transitionDuration: Duration.zero,
+        reverseTransitionDuration: Duration.zero,
       ),
     );
   }
@@ -89,92 +79,69 @@ class _MainScreenState extends State<MainScreen>
   Widget build(BuildContext context) {
     final sheetWidth = 330.0;
 
-    final rawInset = MediaQuery.of(context).viewPadding.bottom;
-    final inset = math.min(rawInset, 8.0);
-
-    const double navContentHeight = 60.0;
-    final double barHeight = navContentHeight + rawInset + 10;
+    const double navContentHeight = 70.0;
+    final double barHeight = navContentHeight;
 
     return Scaffold(
       extendBody: true,
-      bottomNavigationBar: buildBottomNav(barHeight, inset),
-      body: SafeArea(
-        bottom: false,
-        child: Stack(
-          children: [
-            Column(
-              children: [
-                Obx(
-                  () => Header(
-                    profileImage: controller.user.value.profileUrl,
-                    onTapAvatar: openSidePanel,
-                    onTapPlus: () async {
-                      await controller.createPost();
-                    },
+      bottomNavigationBar: buildBottomNav(barHeight),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: Navigator(
+                  key: Get.nestedKey(1),
+                  initialRoute: AppRoutes.home,
+                  onGenerateRoute: (settings) => GetPageRoute(
+                    page: () => _routeToPage(settings.name),
+                    settings: settings,
                   ),
                 ),
-                Expanded(
-                  child: Navigator(
-                    key: Get.nestedKey(1),
-                    initialRoute: AppRoutes.home,
-                    onGenerateRoute: (settings) => GetPageRoute(
-                      page: () => _routeToPage(settings.name),
-                      settings: settings,
+              ),
+            ],
+          ),
+          AnimatedBuilder(
+            animation: _panelCtrl,
+            builder: (_, __) {
+              final show = _panelCtrl.value > 0.0;
+              return IgnorePointer(
+                ignoring: !show,
+                child: Opacity(
+                  opacity: 0.6 * _panelCtrl.value,
+                  child: GestureDetector(
+                    onTap: closeSidePanel,
+                    child: Container(color: Colors.black),
+                  ),
+                ),
+              );
+            },
+          ),
+          AnimatedBuilder(
+            animation: _panelCtrl,
+            builder: (_, __) {
+              final dx = -sheetWidth * (1.0 - _panelCtrl.value);
+              return Transform.translate(
+                offset: Offset(dx, 0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Obx(
+                    () => SidePanel(
+                      width: sheetWidth,
+                      user: controller.user.value,
+                      onClose: closeSidePanel,
                     ),
                   ),
                 ),
-              ],
-            ),
-
-            AnimatedBuilder(
-              animation: _panelCtrl,
-              builder: (_, __) {
-                final show = _panelCtrl.value > 0.0;
-                return IgnorePointer(
-                  ignoring: !show,
-                  child: Opacity(
-                    opacity: 0.6 * _panelCtrl.value,
-                    child: GestureDetector(
-                      onTap: closeSidePanel,
-                      child: Container(color: Colors.black),
-                    ),
-                  ),
-                );
-              },
-            ),
-
-            AnimatedBuilder(
-              animation: _panelCtrl,
-              builder: (_, __) {
-                final dx = -sheetWidth * (1.0 - _panelCtrl.value);
-                return Transform.translate(
-                  offset: Offset(dx, 0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Obx(
-                      () => SidePanel(
-                        width: sheetWidth,
-                        user: controller.user.value,
-                        onClose: closeSidePanel,
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            // Positioned(
-            //   left: 0,
-            //   right: 0,
-            //   bottom: 0,
-            //   child: buildBottomNav(barHeight, inset),
-            // ),
-          ],
-        ),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
-  AnimatedBuilder buildBottomNav(double barHeight, double inset) {
+  AnimatedBuilder buildBottomNav(double barHeight) {
     return AnimatedBuilder(
       animation: _panelCtrl,
       builder: (_, child) {
@@ -189,139 +156,136 @@ class _MainScreenState extends State<MainScreen>
             return Stack(
               children: [
                 Container(
-                  decoration: const BoxDecoration(
-                    color: AppColors.neutral800,
+                  decoration: BoxDecoration(
+                    color: AppColors.neutral800.withAlpha(180),
                     border: Border(
                       top: BorderSide(color: AppColors.iconPrimary, width: 0.1),
                     ),
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.only(bottom: inset),
-                  child: BottomNavigationBar(
-                    type: BottomNavigationBarType.fixed,
-                    backgroundColor: Colors.transparent,
-                    currentIndex: currentIndex,
-                    selectedItemColor: AppColors.primary,
-                    unselectedItemColor: AppColors.neutral500,
-                    selectedLabelStyle: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.primary,
+                MediaQuery.removePadding(
+                  context: context,
+                  removeBottom: true,
+                  child: Theme(
+                    data: Theme.of(context).copyWith(
+                      splashFactory: NoSplash.splashFactory,
+                      highlightColor: Colors.transparent,
+                      splashColor: Colors.transparent,
+                      hoverColor: Colors.transparent,
                     ),
-                    unselectedLabelStyle: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.neutral500,
+                    child: BottomNavigationBar(
+                      type: BottomNavigationBarType.fixed,
+                      backgroundColor: Colors.transparent,
+                      currentIndex: currentIndex,
+                      selectedItemColor: AppColors.primary,
+                      unselectedItemColor: AppColors.neutral500,
+                      showSelectedLabels: false,
+                      showUnselectedLabels: false,
+                      onTap: onTap,
+                      items: [
+                        BottomNavigationBarItem(
+                          icon: SvgPicture.asset(
+                            Assets.home,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.iconPrimary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          activeIcon: SvgPicture.asset(
+                            Assets.home,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.primary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          label: MainLocalization.home,
+                        ),
+                        BottomNavigationBarItem(
+                          icon: SvgPicture.asset(
+                            Assets.palace,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.iconPrimary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          activeIcon: SvgPicture.asset(
+                            Assets.palace,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.primary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          label: MainLocalization.spaces,
+                        ),
+                        BottomNavigationBarItem(
+                          icon: SvgPicture.asset(
+                            Assets.create,
+                            width: 25,
+                            height: 25,
+                          ),
+                          activeIcon: SvgPicture.asset(
+                            Assets.create,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.primary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          label: "",
+                        ),
+                        BottomNavigationBarItem(
+                          icon: SvgPicture.asset(
+                            Assets.noti,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.iconPrimary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          activeIcon: SvgPicture.asset(
+                            Assets.noti,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.primary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          label: MainLocalization.notification,
+                        ),
+                        BottomNavigationBarItem(
+                          icon: SvgPicture.asset(
+                            Assets.myInfo,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.iconPrimary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          activeIcon: SvgPicture.asset(
+                            Assets.myInfo,
+                            width: 25,
+                            height: 25,
+                            colorFilter: const ColorFilter.mode(
+                              AppColors.primary,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                          label: MainLocalization.my,
+                        ),
+                      ],
                     ),
-                    onTap: onTap,
-                    items: [
-                      BottomNavigationBarItem(
-                        icon: SvgPicture.asset(
-                          Assets.home,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.iconPrimary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        activeIcon: SvgPicture.asset(
-                          Assets.home,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.primary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        label: MainLocalization.home,
-                      ),
-                      BottomNavigationBarItem(
-                        icon: SvgPicture.asset(
-                          Assets.people,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.iconPrimary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        activeIcon: SvgPicture.asset(
-                          Assets.people,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.primary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        label: MainLocalization.network,
-                      ),
-                      BottomNavigationBarItem(
-                        icon: SvgPicture.asset(
-                          Assets.chat,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.iconPrimary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        activeIcon: SvgPicture.asset(
-                          Assets.chat,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.primary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        label: MainLocalization.spaces,
-                      ),
-                      BottomNavigationBarItem(
-                        icon: SvgPicture.asset(
-                          Assets.notification,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.iconPrimary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        activeIcon: SvgPicture.asset(
-                          Assets.notification,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.primary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        label: MainLocalization.notification,
-                      ),
-                      BottomNavigationBarItem(
-                        icon: SvgPicture.asset(
-                          Assets.mail,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.iconPrimary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        activeIcon: SvgPicture.asset(
-                          Assets.mail,
-                          width: 25,
-                          height: 25,
-                          colorFilter: const ColorFilter.mode(
-                            AppColors.primary,
-                            BlendMode.srcIn,
-                          ),
-                        ),
-                        label: MainLocalization.messages,
-                      ),
-                    ],
                   ),
                 ),
                 Positioned(
@@ -343,15 +307,6 @@ class _MainScreenState extends State<MainScreen>
                     ),
                   ),
                 ),
-                Positioned(
-                  top: 0,
-                  left: itemWidth * currentIndex,
-                  child: Container(
-                    width: itemWidth,
-                    height: 2,
-                    color: AppColors.primary,
-                  ),
-                ),
               ],
             );
           },
@@ -367,9 +322,11 @@ class _MainScreenState extends State<MainScreen>
       case AppRoutes.myNetwork:
         return const NetworkScreen();
       case AppRoutes.mySpaces:
-        return const SpacesScreen();
+        return const MySpaceScreen();
       case AppRoutes.notification:
         return const NotificationScreen();
+      case AppRoutes.myPage:
+        return const MyPageScreen();
       default:
         return const MessageScreen();
     }

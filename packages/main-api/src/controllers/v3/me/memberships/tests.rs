@@ -16,52 +16,6 @@ pub async fn seed_test_user_payment(cli: &aws_sdk_dynamodb::Client, user_pk: &Pa
     user_payment.create(cli).await.unwrap();
 }
 
-pub async fn seed_memberships(cli: &aws_sdk_dynamodb::Client) {
-    // Create Free membership if it doesn't exist
-    let free_pk = Partition::Membership(MembershipTier::Free.to_string());
-    if Membership::get(cli, free_pk.clone(), Some(EntityType::Membership))
-        .await
-        .unwrap()
-        .is_none()
-    {
-        let free = Membership::new(MembershipTier::Free, 0, 0, -1, 0, -1);
-        free.create(cli).await.unwrap();
-    }
-
-    // Create Pro membership if it doesn't exist
-    let pro_pk = Partition::Membership(MembershipTier::Pro.to_string());
-    if Membership::get(cli, pro_pk.clone(), Some(EntityType::Membership))
-        .await
-        .unwrap()
-        .is_none()
-    {
-        let pro = Membership::new(MembershipTier::Pro, 10, 100, 30, 1, -1);
-        pro.create(cli).await.unwrap();
-    }
-
-    // Create Max membership if it doesn't exist
-    let max_pk = Partition::Membership(MembershipTier::Max.to_string());
-    if Membership::get(cli, max_pk.clone(), Some(EntityType::Membership))
-        .await
-        .unwrap()
-        .is_none()
-    {
-        let max = Membership::new(MembershipTier::Max, 20, 200, 365, 2, 1000);
-        max.create(cli).await.unwrap();
-    }
-
-    // Create Vip membership if it doesn't exist
-    let vip_pk = Partition::Membership(MembershipTier::Vip.to_string());
-    if Membership::get(cli, vip_pk.clone(), Some(EntityType::Membership))
-        .await
-        .unwrap()
-        .is_none()
-    {
-        let vip = Membership::new(MembershipTier::Vip, 50, 500, -1, 3, -1);
-        vip.create(cli).await.unwrap();
-    }
-}
-
 #[tokio::test]
 async fn test_change_membership_upgrade_from_free_to_pro() {
     let TestContextV3 {
@@ -72,8 +26,6 @@ async fn test_change_membership_upgrade_from_free_to_pro() {
     } = TestContextV3::setup().await;
     let cli = &ddb;
 
-    // Seed memberships and user payment
-    seed_memberships(cli).await;
     seed_test_user_payment(cli, &test_user.0.pk).await;
 
     // Upgrade to Pro
@@ -124,8 +76,6 @@ async fn test_change_membership_downgrade_from_pro_to_free() {
     } = TestContextV3::setup().await;
     let cli = &ddb;
 
-    // Seed memberships and user payment
-    seed_memberships(cli).await;
     seed_test_user_payment(cli, &test_user.0.pk).await;
 
     // First upgrade to Pro
@@ -192,9 +142,6 @@ async fn test_change_membership_to_same_tier_returns_error() {
         ..
     } = TestContextV3::setup().await;
 
-    // Seed memberships
-    seed_memberships(&ddb).await;
-
     // Try to change to Free (which is already the default)
     let (status, _headers, _body) = post! {
         app: app,
@@ -219,8 +166,6 @@ async fn test_change_membership_upgrade_adds_credits() {
     } = TestContextV3::setup().await;
     let cli = &ddb;
 
-    // Seed memberships and user payment
-    seed_memberships(cli).await;
     seed_test_user_payment(cli, &test_user.0.pk).await;
 
     // First, trigger the creation of Free membership by trying to change to Free
@@ -280,8 +225,6 @@ async fn test_change_membership_upgrade_clears_scheduled_downgrade() {
     } = TestContextV3::setup().await;
     let cli = &ddb;
 
-    // Seed memberships and user payment
-    seed_memberships(cli).await;
     seed_test_user_payment(cli, &test_user.0.pk).await;
 
     // Upgrade to Pro
@@ -358,11 +301,10 @@ async fn test_change_membership_creates_purchase_record() {
     } = TestContextV3::setup().await;
 
     // Seed memberships and user payment
-    seed_memberships(&ddb).await;
     seed_test_user_payment(&ddb, &test_user.0.pk).await;
 
     // Upgrade to Pro
-    let (status, _headers, _body) = post! {
+    let (status, _headers, body) = post! {
         app: app,
         path: "/v3/me/memberships",
         headers: test_user.1.clone(),
@@ -372,7 +314,7 @@ async fn test_change_membership_creates_purchase_record() {
         },
         response_type: ChangeMembershipResponse
     };
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "{body:?}");
 
     // Verify purchase record was created by checking purchase history
     let (status, _headers, body) = get! {
@@ -381,7 +323,7 @@ async fn test_change_membership_creates_purchase_record() {
         headers: test_user.1.clone(),
         response_type: serde_json::Value
     };
-    assert_eq!(status, 200);
+    assert_eq!(status, 200, "{body:?}");
 
     // Should have at least one purchase
     let purchases = body["items"]
@@ -393,9 +335,6 @@ async fn test_change_membership_creates_purchase_record() {
 #[tokio::test]
 async fn test_change_membership_without_auth_returns_error() {
     let TestContextV3 { app, ddb, .. } = TestContextV3::setup().await;
-
-    // Seed memberships
-    seed_memberships(&ddb).await;
 
     // Try to change membership without authentication
     let (status, _headers, _body) = post! {

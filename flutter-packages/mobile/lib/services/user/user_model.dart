@@ -157,3 +157,42 @@ class Team {
     required this.username,
   });
 }
+
+class DidDocument {
+  final String id;
+  final String controller;
+
+  const DidDocument({required this.id, required this.controller});
+
+  factory DidDocument.fromJson(Map<String, dynamic> j) {
+    return DidDocument(
+      id: j['id']?.toString() ?? '',
+      controller: j['controller']?.toString() ?? '',
+    );
+  }
+}
+
+class UserAttributes {
+  final int? age;
+  final String? gender;
+  final String? university;
+
+  const UserAttributes({this.age, this.gender, this.university});
+
+  static const empty = UserAttributes();
+
+  factory UserAttributes.fromJson(Map<String, dynamic> j) {
+    int? _intOrNull(dynamic v) {
+      if (v == null) return null;
+      if (v is int) return v;
+      if (v is num) return v.toInt();
+      return int.tryParse(v.toString());
+    }
+
+    return UserAttributes(
+      age: _intOrNull(j['age']),
+      gender: j['gender'] as String?,
+      university: j['university'] as String?,
+    );
+  }
+}

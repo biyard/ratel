@@ -49,8 +49,8 @@ export default function RewardMenu({
               </div>
             </div>
           ))}
-
-          {boosting && (
+          {/* FIXME: Use space_common.rewards, Not boosting */}
+          {/* {boosting && (
             <div className="flex flex-col gap-2.5 py-2.5 px-1.5 bg-primary/5 rounded">
               <div className="flex flex-row justify-between items-center">
                 <div className="flex flex-row items-center justify-center gap-1">
@@ -67,7 +67,7 @@ export default function RewardMenu({
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
 
         <div className="w-full h-px bg-neutral-800" />

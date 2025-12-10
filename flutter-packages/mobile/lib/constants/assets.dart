@@ -7,12 +7,17 @@ abstract class Assets {
   static const String add = 'assets/icons/add.svg';
   static const String passport = 'assets/icons/passport.svg';
 
+  static const String create = 'assets/icons/create.svg';
+  static const String noti = 'assets/icons/noti.svg';
+  static const String myInfo = 'assets/icons/my_info.svg';
+
   static const String badge = 'assets/icons/badge.svg';
   static const String bookmark = 'assets/icons/bookmark.svg';
   static const String bookmarkFilled = 'assets/icons/bookmark_filled.svg';
   static const String coin = 'assets/icons/coin.svg';
   static const String coin2 = 'assets/icons/coin_2.svg';
   static const String edit1 = 'assets/icons/edit_1.svg';
+  static const String deleteRed = 'assets/icons/delete_red.svg';
   static const String extra = 'assets/icons/extra.svg';
   static const String feed = 'assets/icons/feed.svg';
   static const String palace = 'assets/icons/palace.svg';
@@ -25,6 +30,10 @@ abstract class Assets {
   static const String bot = 'assets/icons/bot.svg';
   static const String file = 'assets/icons/file.svg';
   static const String setting = 'assets/icons/setting.svg';
+
+  static const String gender = 'assets/icons/gender.svg';
+  static const String age = 'assets/icons/age.svg';
+  static const String university = 'assets/icons/university.svg';
 
   static const String editContent = 'assets/icons/edit_content.svg';
   static const String folder = 'assets/icons/folder.svg';
@@ -103,6 +112,11 @@ abstract class Assets {
   static const String fontSize = 'assets/icons/toolbar/font_size.svg';
   static const String fontItalic = 'assets/icons/toolbar/italic.svg';
   static const String link = 'assets/icons/toolbar/link.svg';
+
+  static const String clip = 'assets/icons/clip.svg';
+  static const String shapeArrowUp = 'assets/icons/shape_arrow_up.svg';
+
+  static const String mainLogo = 'assets/icons/main_logo.svg';
 
   static final addIcon = SvgPicture.asset(add, width: 15, height: 15);
   static final backIcon = SvgPicture.asset(back, width: 16, height: 16);

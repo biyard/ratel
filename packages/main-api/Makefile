@@ -36,6 +36,7 @@ ACCOUNT_ID ?=
 BUCKET_NAME ?= metadata.ratel.foundation
 BUCKET_EXPIRE ?= 3600
 ASSET_DIR ?= metadata
+S3_REGION ?= ap-northeast-2
 
 CHIME_BUCKET ?= metadata.ratel.foundation
 NOVA_MICRO_MODEL_ID ?= dummy
@@ -61,6 +62,9 @@ PORTONE_API_SECRET ?=
 BIYARD_API_URL ?= https://dev.biyard.co
 BIYARD_API_SECRET ?= biyard_default_api_secret
 BIYARD_PROJECT_ID ?= ratel_project_id
+
+RATEL_PROJECT_ID ?= 
+FCM_ENABLED ?= false
 
 REWARD ?= false
 
@@ -90,6 +94,7 @@ BUILD_ENV ?= ENV=$(ENV) \
 								BUCKET_NAME=$(BUCKET_NAME) \
 								ASSET_DIR=$(ASSET_DIR) \
 								BUCKET_EXPIRE=$(BUCKET_EXPIRE) \
+								S3_REGION=$(S3_REGION) \
 								CHIME_BUCKET=$(CHIME_BUCKET) \
 								NONCELAB_TOKEN=$(NONCELAB_TOKEN) \
 								WATERMARK_QUEUE_URL=$(WATERMARK_QUEUE_URL) \
@@ -124,6 +129,8 @@ BUILD_ENV ?= ENV=$(ENV) \
 								PORTONE_KPN_CHANNEL_KEY=$(PORTONE_KPN_CHANNEL_KEY) \
 								PORTONE_STORE_ID=$(PORTONE_STORE_ID) \
 								ACCOUNT_ID=$(ACCOUNT_ID) \
+								RATEL_PROJECT_ID=$(RATEL_PROJECT_ID) \
+								FCM_ENABLED=$(FCM_ENABLED) \
 								REWARD=$(REWARD)
 
 .build/evm-keys:

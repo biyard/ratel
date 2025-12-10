@@ -9,6 +9,29 @@ export interface ListMySpacesResponse {
   bookmark?: string;
 }
 
+export type MembershipTier = 'Free' | 'Pro' | 'Max' | 'Vip';
+
+export interface UserMembershipResponse {
+  tier: string;
+  expired_at: number;
+  total_credits: number;
+  remaining_credits: number;
+  next_membership?: string;
+}
+
+export interface PurchaseHistoryItem {
+  tx_type: string;
+  amount: number;
+  payment_id: string;
+  tx_id: string;
+  created_at: number;
+}
+
+export interface ListPurchaseHistoryResponse {
+  items: PurchaseHistoryItem[];
+  bookmark?: string;
+}
+
 export async function getUserInfo(): Promise<UserDetailResponse> {
   return call('GET', '/v3/me');
 }
@@ -74,4 +97,19 @@ export async function updateUserProfile(
 
 export async function getDid(): Promise<DidDocument> {
   return call('GET', '/v3/me/did');
+}
+
+export async function getUserMembership(): Promise<UserMembershipResponse> {
+  return call('GET', '/v3/me/memberships');
+}
+
+export async function getPurchaseHistory(
+  bookmark?: string,
+): Promise<ListPurchaseHistoryResponse> {
+  let path = '/v3/me/memberships/history';
+  if (bookmark) {
+    path += `?bookmark=${encodeURIComponent(bookmark)}`;
+  }
+
+  return call('GET', path);
 }
