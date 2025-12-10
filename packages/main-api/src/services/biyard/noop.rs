@@ -8,7 +8,7 @@ impl Biyard {
     pub fn new() -> Self {
         Self {}
     }
-
+    #[allow(dead_code)]
     fn convert_to_meta_user_id(user_pk: &Partition) -> String {
         match user_pk {
             Partition::User(id) => id.clone(),
