@@ -34,7 +34,7 @@ pub async fn get_put_multi_object_uri(
     let expire = config.bucket.expire;
 
     let config = defaults(BehaviorVersion::latest())
-        .region(Region::new(aws_config.region))
+        .region(Region::new(config.bucket.region))
         .credentials_provider(Credentials::new(
             aws_config.access_key_id,
             aws_config.secret_access_key,
@@ -95,7 +95,8 @@ pub async fn get_put_multi_object_uri(
         presigned_uris.push(presigned.uri().to_string());
     }
 
-    let public_url = format!("https://{}/{}", bucket_name, key);
+    let ratel_config = crate::config::get();
+    let public_url = ratel_config.bucket.get_url(&key);
 
     Ok(Json(AssetPresignedUris {
         presigned_uris,

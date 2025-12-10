@@ -9,6 +9,8 @@ class Layout<T extends BaseController> extends GetView {
     this.decoration,
     this.height,
     this.bottomSheet,
+
+    this.enableSafeArea = true,
     this.scrollable = true,
   });
 
@@ -19,6 +21,7 @@ class Layout<T extends BaseController> extends GetView {
   final double? height;
   final Widget? bottomSheet;
   final bool scrollable;
+  final bool enableSafeArea;
 
   @override
   Widget build(BuildContext context) {
@@ -27,23 +30,35 @@ class Layout<T extends BaseController> extends GetView {
 
     return Scaffold(
       backgroundColor: style.background,
-      body: SafeArea(
-        top: true,
-        bottom: false,
-        child: Stack(
-          alignment: Alignment.topLeft,
-          children: [
-            buildBody(context, notBuilder),
-            notBuilder
-                ? Container()
-                : Obx(
-                    () => ctrl!.pageState.value == PageState.LOADING
-                        ? const BiyardIndicator()
-                        : Container(),
-                  ),
-          ],
-        ),
-      ),
+      body: enableSafeArea
+          ? SafeArea(
+              child: Stack(
+                alignment: Alignment.topLeft,
+                children: [
+                  buildBody(context, notBuilder),
+                  notBuilder
+                      ? Container()
+                      : Obx(
+                          () => ctrl!.pageState.value == PageState.LOADING
+                              ? const BiyardIndicator()
+                              : Container(),
+                        ),
+                ],
+              ),
+            )
+          : Stack(
+              alignment: Alignment.topLeft,
+              children: [
+                buildBody(context, notBuilder),
+                notBuilder
+                    ? Container()
+                    : Obx(
+                        () => ctrl!.pageState.value == PageState.LOADING
+                            ? const BiyardIndicator()
+                            : Container(),
+                      ),
+              ],
+            ),
       bottomSheet: bottomSheet,
     );
   }

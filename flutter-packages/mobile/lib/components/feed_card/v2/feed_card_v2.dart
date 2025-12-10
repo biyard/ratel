@@ -36,55 +36,34 @@ class FeedCardV2 extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (hasSpace) ...[
-              Row(
-                children: [
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [_spaceChip('Space')],
-                  ),
-                ],
-              ),
-              16.vgap,
-            ],
             Row(
               children: [
-                RoundContainer(
-                  width: 32,
-                  height: 32,
-                  radius: 100,
-                  color: AppColors.neutral500,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(100),
-                    child: Image.network(profileImageUrl, fit: BoxFit.cover),
-                  ),
-                ),
-                8.gap,
-                Expanded(
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          feed.authorDisplayName,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontFamily: 'Raleway',
-                            color: Colors.white,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 14,
-                            height: 20 / 14,
-                          ),
-                        ),
-                      ),
-                      4.gap,
-                      SvgPicture.asset(Assets.badge, width: 16, height: 16),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
+                if (hasSpace) ...[_spaceChip('Space'), 8.gap],
                 Text(
-                  timeAgo(feed.createdAt),
+                  feed.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Raleway',
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    height: 24 / 18,
+                  ),
+                ),
+              ],
+            ),
+            10.vgap,
+
+            Row(
+              children: [
+                Profile(
+                  profileImageUrl: profileImageUrl,
+                  displayName: feed.authorDisplayName,
+                ),
+                const Spacer(),
+                Text(
+                  timeAgo((feed.createdAt / 1000).toInt()),
                   style: const TextStyle(
                     fontFamily: 'Inter',
                     color: AppColors.neutral500,
@@ -94,19 +73,6 @@ class FeedCardV2 extends StatelessWidget {
                   ),
                 ),
               ],
-            ),
-            10.vgap,
-            Text(
-              feed.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontFamily: 'Raleway',
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-                fontSize: 18,
-                height: 24 / 18,
-              ),
             ),
             10.vgap,
             if (bodyText.isNotEmpty)
@@ -133,34 +99,34 @@ class FeedCardV2 extends StatelessWidget {
               ),
             ],
 
-            if (hasSpace) ...[
-              20.vgap,
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton(
-                  onPressed: onJoinSpaceTap,
-                  style: TextButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    padding: EdgeInsets.zero,
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-                    child: const Text(
-                      'Join Space',
-                      style: TextStyle(
-                        fontFamily: 'Raleway',
-                        color: Colors.black,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            // if (hasSpace) ...[
+            //   20.vgap,
+            //   Align(
+            //     alignment: Alignment.centerLeft,
+            //     child: TextButton(
+            //       onPressed: onJoinSpaceTap,
+            //       style: TextButton.styleFrom(
+            //         backgroundColor: AppColors.primary,
+            //         shape: RoundedRectangleBorder(
+            //           borderRadius: BorderRadius.circular(24),
+            //         ),
+            //         padding: EdgeInsets.zero,
+            //       ),
+            //       child: Padding(
+            //         padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            //         child: const Text(
+            //           'Join Space',
+            //           style: TextStyle(
+            //             fontFamily: 'Raleway',
+            //             color: Colors.black,
+            //             fontWeight: FontWeight.w700,
+            //             fontSize: 14,
+            //           ),
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ],
           ],
         ),
       ),
@@ -174,28 +140,21 @@ class FeedCardV2 extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                _bottomMetric(
-                  icon: SvgPicture.asset(Assets.thumbs, width: 20, height: 20),
-                  value: feed.likes,
+          Row(
+            children: [
+              _bottomMetric(
+                icon: SvgPicture.asset(Assets.thumbs, width: 20, height: 20),
+                value: feed.likes,
+              ),
+              _bottomMetric(
+                icon: SvgPicture.asset(
+                  Assets.roundBubble,
+                  width: 20,
+                  height: 20,
                 ),
-                _bottomMetric(
-                  icon: SvgPicture.asset(
-                    Assets.roundBubble,
-                    width: 20,
-                    height: 20,
-                  ),
-                  value: feed.comments,
-                ),
-                _bottomMetric(
-                  icon: SvgPicture.asset(Assets.reward, width: 20, height: 20),
-                  value: feed.rewards ?? 0,
-                ),
-              ],
-            ),
+                value: feed.comments,
+              ),
+            ],
           ),
         ],
       ),
@@ -207,9 +166,9 @@ class FeedCardV2 extends StatelessWidget {
         Container(
           decoration: const BoxDecoration(
             color: AppColors.panelBg,
-            border: Border(
-              top: BorderSide(color: Color(0xFF2D2D2D), width: 0.5),
-            ),
+            // border: Border(
+            //   top: BorderSide(color: Color(0xFF2D2D2D), width: 0.5),
+            // ),
           ),
           child: top,
         ),
@@ -223,8 +182,7 @@ class FeedCardV2 extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: ClipRRect(borderRadius: BorderRadius.circular(10), child: content),
+      child: ClipRRect(borderRadius: BorderRadius.circular(0), child: content),
     );
   }
 
@@ -261,7 +219,7 @@ class FeedCardV2 extends StatelessWidget {
 
   Widget _spaceChip(String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4.5),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
         color: AppColors.primary,
         borderRadius: BorderRadius.circular(4),
@@ -275,8 +233,8 @@ class FeedCardV2 extends StatelessWidget {
             style: const TextStyle(
               fontFamily: 'Raleway',
               color: Colors.black,
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
             ),
           ),
         ],

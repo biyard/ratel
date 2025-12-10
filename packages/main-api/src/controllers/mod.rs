@@ -9,6 +9,7 @@ pub mod web;
 use std::sync::Arc;
 
 use bdk::prelude::*;
+use by_axum::axum::body::Body;
 use tower_http::trace::TraceLayer;
 use tracing::Level;
 
@@ -44,7 +45,7 @@ pub async fn route(bot: Option<ArcTelegramBot>) -> Result<by_axum::axum::Router,
                             tracing::error!(
                                 status = %response.status(),
                                 latency = ?latency,
-                                "error response generated"
+                                "error response",
                             );
                             return;
                         }
@@ -52,7 +53,6 @@ pub async fn route(bot: Option<ArcTelegramBot>) -> Result<by_axum::axum::Router,
                         tracing::info!(
                             status = %response.status(),
                             latency = ?latency,
-                            "response generated"
                         )
                     },
                 ),

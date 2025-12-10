@@ -85,12 +85,12 @@ class FeedV2SummaryModel {
   final int createdAt;
   final int updatedAt;
 
-  final String title;
+  String title;
   final String htmlContents;
 
   final int shares;
-  final int likes;
-  final int comments;
+  int likes;
+  int comments;
 
   final String authorDisplayName;
   final String authorProfileUrl;
@@ -107,7 +107,7 @@ class FeedV2SummaryModel {
   final List<String> urls;
   final bool liked;
 
-  const FeedV2SummaryModel({
+  FeedV2SummaryModel({
     required this.pk,
     required this.createdAt,
     required this.updatedAt,
@@ -222,8 +222,8 @@ class PostDetailPostModel {
   final int createdAt;
   final int updatedAt;
 
-  final String title;
-  final String htmlContents;
+  String title;
+  String htmlContents;
 
   final int postType;
   final int status;
@@ -231,7 +231,7 @@ class PostDetailPostModel {
 
   final int shares;
   int likes;
-  final int comments;
+  int comments;
 
   final String userPk;
   final String authorDisplayName;
@@ -367,7 +367,7 @@ class PostCommentModel {
   final String content;
 
   int likes;
-  final int replies;
+  int replies;
 
   final String? parentCommentSk;
 
@@ -376,7 +376,7 @@ class PostCommentModel {
   final String authorUsername;
   final String authorProfileUrl;
 
-  final bool liked;
+  bool liked;
 
   PostCommentModel({
     required this.pk,

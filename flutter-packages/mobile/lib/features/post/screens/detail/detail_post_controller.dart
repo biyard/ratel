@@ -1,24 +1,42 @@
 import 'package:ratel/exports.dart';
 
 class DetailPostController extends BaseController {
+  final userService = Get.find<UserService>();
   final feedsApi = Get.find<FeedsApi>();
+  final feedsService = Get.find<FeedsService>();
 
   late final String postPk;
 
   final feed = Rxn<FeedV2Model>();
   final isLoading = false.obs;
 
-  final replies = <String, List<PostCommentModel>>{}.obs;
-  final repliesLoading = <String, bool>{}.obs;
-
   final isSendingRootComment = false.obs;
-  final sendingReplyOf = <String, bool>{}.obs;
   final likingCommentOf = <String, bool>{}.obs;
-  final likedOverrideOf = <String, bool>{}.obs;
 
   final isLikingPost = false.obs;
   bool get isPostLiked => feed.value?.isLiked == true;
   int get postLikes => feed.value?.post.likes ?? 0;
+
+  final Rx<UserV2Model> user = UserV2Model(
+    pk: '',
+    email: '',
+    nickname: '',
+    profileUrl: '',
+    description: '',
+    userType: 0,
+    username: '',
+    followersCount: 0,
+    followingsCount: 0,
+    theme: 0,
+    point: 0,
+    referralCode: null,
+    phoneNumber: null,
+    principal: null,
+    evmAddress: null,
+    teams: const [],
+  ).obs;
+
+  late final Worker _detailSubscription;
 
   @override
   void onInit() {
@@ -33,28 +51,63 @@ class DetailPostController extends BaseController {
     postPk = Uri.decodeComponent(raw);
     logger.d('DetailPostController postPk = $postPk');
 
+    _detailSubscription = ever<Map<String, FeedV2Model>>(feedsService.details, (
+      map,
+    ) {
+      final updated = map[postPk];
+      if (updated != null) {
+        feed.value = updated;
+      }
+    });
+
     loadFeed();
+    user(userService.user.value);
+  }
+
+  @override
+  void onClose() {
+    _detailSubscription.dispose();
+    super.onClose();
+  }
+
+  Future<void> loadFeed({bool forceRefresh = false}) async {
+    try {
+      isLoading.value = true;
+      final result = await feedsService.fetchDetail(
+        postPk,
+        forceRefresh: forceRefresh,
+      );
+
+      final spacePk = result.post.spacePk;
+      if (spacePk != null && spacePk.isNotEmpty) {
+        Get.rootDelegate.offNamed(spaceWithPk(spacePk));
+        return;
+      }
+
+      feed.value = result;
+    } catch (e, s) {
+      logger.e('Failed to load feed detail: $e', stackTrace: s);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  Future<void> deletePost({required String postPk}) async {
+    final ok = await feedsService.deletePost(postPk);
+    if (!ok) {
+      Biyard.error('Failed to delete post.', 'Please try again later.');
+      return;
+    }
+    Get.back();
   }
 
   bool isCommentLiked(String commentSk, {bool fallback = false}) {
-    final override = likedOverrideOf[commentSk];
-    if (override != null) {
-      return override;
-    }
-
     final current = feed.value;
-    if (current != null) {
-      for (final c in current.comments) {
-        if (c.sk == commentSk) {
-          return c.liked == true;
-        }
-      }
-      for (final entry in replies.entries) {
-        for (final c in entry.value) {
-          if (c.sk == commentSk) {
-            return c.liked == true;
-          }
-        }
+    if (current == null) return fallback;
+
+    for (final c in current.comments) {
+      if (c.sk == commentSk) {
+        return c.liked == true;
       }
     }
 
@@ -62,14 +115,17 @@ class DetailPostController extends BaseController {
   }
 
   Future<void> toggleLikeComment({required String commentSk}) async {
-    logger.d('Toggling like for comment: $commentSk');
     final current = feed.value;
     if (current == null) return;
 
     if (likingCommentOf[commentSk] == true) return;
 
-    final currentLiked = isCommentLiked(commentSk, fallback: false);
-    final nextLike = !currentLiked;
+    final idx = current.comments.indexWhere((c) => c.sk == commentSk);
+    if (idx < 0) return;
+
+    final target = current.comments[idx];
+    final previousLiked = target.liked == true;
+    final nextLike = !previousLiked;
 
     likingCommentOf[commentSk] = true;
     likingCommentOf.refresh();
@@ -83,14 +139,20 @@ class DetailPostController extends BaseController {
 
       if (res == null) return;
 
-      likedOverrideOf[commentSk] = res.liked;
-      likedOverrideOf.refresh();
+      final actualLiked = res.liked;
 
-      _applyCommentLikeCountUpdate(
-        commentSk: commentSk,
-        previousLiked: currentLiked,
-        nextLiked: res.liked,
-      );
+      var likes = target.likes;
+      if (actualLiked && !previousLiked) {
+        likes = likes + 1;
+      } else if (!actualLiked && previousLiked && likes > 0) {
+        likes = likes - 1;
+      }
+
+      target.likes = likes;
+      target.liked = actualLiked;
+
+      feed.refresh();
+      feedsService.updateDetail(current);
     } catch (e, s) {
       logger.e('Failed to like/unlike comment $commentSk: $e', stackTrace: s);
     } finally {
@@ -99,77 +161,11 @@ class DetailPostController extends BaseController {
     }
   }
 
-  void _applyCommentLikeCountUpdate({
-    required String commentSk,
-    required bool previousLiked,
-    required bool nextLiked,
-  }) {
+  Future<PostCommentModel?> addComment(String text) async {
     final current = feed.value;
-    if (current == null) return;
-
-    int delta = 0;
-    if (nextLiked && !previousLiked) {
-      delta = 1;
-    } else if (!nextLiked && previousLiked) {
-      delta = -1;
-    } else {
-      return;
-    }
-
-    var updated = false;
-
-    for (final c in current.comments) {
-      if (c.sk == commentSk) {
-        var newLikes = c.likes + delta;
-        if (newLikes < 0) newLikes = 0;
-        c.likes = newLikes;
-        updated = true;
-        break;
-      }
-    }
-
-    if (!updated) {
-      for (final entry in replies.entries) {
-        for (final c in entry.value) {
-          if (c.sk == commentSk) {
-            var newLikes = c.likes + delta;
-            if (newLikes < 0) newLikes = 0;
-            c.likes = newLikes;
-            updated = true;
-            break;
-          }
-        }
-        if (updated) break;
-      }
-    }
-
-    if (updated) {
-      feed.refresh();
-      replies.refresh();
-    }
-  }
-
-  Future<void> loadFeed() async {
-    try {
-      isLoading.value = true;
-
-      final result = await feedsApi.getFeedV2(postPk);
-      feed.value = result;
-      logger.d("feed results: $result");
-
-      await _loadAllReplies(result);
-    } catch (e, s) {
-      logger.e('Failed to load feed detail: $e', stackTrace: s);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
-  Future<void> addComment(String text) async {
-    final current = feed.value;
-    if (current == null) return;
-    if (text.trim().isEmpty) return;
-    if (isSendingRootComment.value) return;
+    if (current == null) return null;
+    if (text.trim().isEmpty) return null;
+    if (isSendingRootComment.value) return null;
 
     isSendingRootComment.value = true;
 
@@ -180,7 +176,9 @@ class DetailPostController extends BaseController {
         postPk: current.post.pk,
         content: html,
       );
-      if (created == null) return;
+      if (created == null) return null;
+
+      current.post.comments = current.post.comments + 1;
 
       feed.value = FeedV2Model(
         post: current.post,
@@ -190,43 +188,14 @@ class DetailPostController extends BaseController {
         isLiked: current.isLiked,
         permissions: current.permissions,
       );
+
+      feedsService.updateDetail(feed.value!);
+      return created;
     } catch (e, s) {
       logger.e('Failed to add comment: $e', stackTrace: s);
+      return null;
     } finally {
       isSendingRootComment.value = false;
-    }
-  }
-
-  Future<void> addReply({
-    required String parentCommentSk,
-    required String text,
-  }) async {
-    final current = feed.value;
-    if (current == null) return;
-    if (text.trim().isEmpty) return;
-
-    final html = _wrapAsDiv(text);
-
-    sendingReplyOf[parentCommentSk] = true;
-    sendingReplyOf.refresh();
-
-    try {
-      final created = await feedsApi.replyToComment(
-        postPk: current.post.pk,
-        parentCommentSk: parentCommentSk,
-        content: html,
-      );
-
-      if (created == null) return;
-
-      final currentReplies = replies[parentCommentSk] ?? const [];
-      replies[parentCommentSk] = [created, ...currentReplies];
-      replies.refresh();
-    } catch (e, s) {
-      logger.e('Failed to add reply for $parentCommentSk: $e', stackTrace: s);
-    } finally {
-      sendingReplyOf[parentCommentSk] = false;
-      sendingReplyOf.refresh();
     }
   }
 
@@ -236,40 +205,6 @@ class DetailPostController extends BaseController {
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;');
     return '<div>$escaped</div>';
-  }
-
-  Future<void> _loadAllReplies(FeedV2Model feed) async {
-    final futures = <Future<void>>[];
-    final pk = feed.post.pk;
-
-    for (final c in feed.comments) {
-      if (c.replies <= 0) continue;
-      futures.add(_loadRepliesForComment(postPk: pk, commentSk: c.sk));
-    }
-
-    if (futures.isEmpty) return;
-
-    await Future.wait(futures);
-  }
-
-  Future<void> _loadRepliesForComment({
-    required String postPk,
-    required String commentSk,
-  }) async {
-    try {
-      repliesLoading[commentSk] = true;
-      final res = await feedsApi.listComments(
-        postPk: postPk,
-        commentSk: commentSk,
-      );
-      replies[commentSk] = res.items;
-      replies.refresh();
-    } catch (e, s) {
-      logger.e('Failed to load replies for $commentSk: $e', stackTrace: s);
-    } finally {
-      repliesLoading[commentSk] = false;
-      repliesLoading.refresh();
-    }
   }
 
   Future<void> toggleLikePost() async {
@@ -311,23 +246,13 @@ class DetailPostController extends BaseController {
         isLiked: res.like,
         permissions: current.permissions,
       );
+
+      feedsService.updateDetail(feed.value!);
     } catch (e, s) {
       logger.e('Failed to toggle like post: $e', stackTrace: s);
     } finally {
       isLikingPost.value = false;
     }
-  }
-
-  List<PostCommentModel> repliesOf(String commentSk) {
-    return replies[commentSk] ?? const [];
-  }
-
-  bool isRepliesLoadingOf(String commentSk) {
-    return repliesLoading[commentSk] ?? false;
-  }
-
-  bool isSendingReplyOf(String commentSk) {
-    return sendingReplyOf[commentSk] ?? false;
   }
 
   bool isLikingCommentOf(String commentSk) {

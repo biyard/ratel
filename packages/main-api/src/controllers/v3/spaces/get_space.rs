@@ -62,9 +62,9 @@ pub async fn get_space_handler(
     NoApi(user): NoApi<Option<User>>,
     NoApi(perms): NoApi<Permissions>,
     Extension(space): Extension<SpaceCommon>,
-    Path(SpacePathParam { space_pk }): SpacePath,
 ) -> Result<Json<GetSpaceResponse>> {
     perms.permitted(TeamGroupPermission::SpaceRead)?;
+    let space_pk = space.pk.clone();
 
     let post_pk = space_pk.clone().to_post_key()?;
     let post = Post::get(&dynamo.client, &post_pk, Some(&EntityType::Post)).await?;

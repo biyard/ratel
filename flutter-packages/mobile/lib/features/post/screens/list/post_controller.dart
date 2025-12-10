@@ -1,11 +1,12 @@
 import 'package:ratel/exports.dart';
 
 class PostController extends BaseController {
-  final feedsApi = Get.find<FeedsApi>();
+  final feedsService = Get.find<FeedsService>();
 
-  RxList<FeedV2SummaryModel> feeds = <FeedV2SummaryModel>[].obs;
+  RxList<FeedV2SummaryModel> get feeds => feedsService.summaries;
+
+  RxBool isInitialLoading = false.obs;
   RxBool isLoadingMore = false.obs;
-  String? bookmark;
   late ScrollController scrollController;
 
   @override
@@ -17,46 +18,27 @@ class PostController extends BaseController {
   }
 
   Future<void> loadInitial() async {
-    bookmark = null;
-    await _loadFeeds(reset: true);
-  }
-
-  void listFeeds() {
-    loadInitial();
-  }
-
-  Future<void> _loadFeeds({required bool reset}) async {
-    if (reset) showLoading();
-
+    isInitialLoading.value = true;
     try {
-      final result = await feedsApi.listPostsV2(bookmark: bookmark);
-      bookmark = result.bookmark;
-
-      if (reset) {
-        feeds.assignAll(result.items);
-      } else {
-        feeds.addAll(result.items);
-      }
-
-      logger.d('posts loaded: ${feeds.length}');
+      await feedsService.loadInitial();
     } finally {
-      if (reset) hideLoading();
+      isInitialLoading.value = false;
     }
   }
 
   Future<void> loadMore() async {
-    if (bookmark == null) return;
+    if (!feedsService.hasMore) return;
     if (isLoadingMore.value) return;
 
     isLoadingMore.value = true;
     try {
-      await _loadFeeds(reset: false);
+      await feedsService.loadMore();
     } finally {
       isLoadingMore.value = false;
     }
   }
 
-  bool get hasMore => bookmark != null;
+  bool get hasMore => feedsService.hasMore;
 
   void _onScroll() {
     if (!scrollController.hasClients) return;

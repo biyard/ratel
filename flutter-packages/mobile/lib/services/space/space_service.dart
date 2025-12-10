@@ -1,31 +1,38 @@
 import 'package:ratel/exports.dart';
 
 class SpaceService extends GetxService {
-  Rx<SpaceModel> space = SpaceModel(
-    id: 0,
-    feedId: 0,
-    title: "",
-    htmlContents: "",
-    spaceType: 0,
-    files: [],
-    discussions: [],
-    elearnings: [],
-    surveys: [],
-    comments: [],
-    userResponses: [],
-  ).obs;
-
   static void init() {
-    Get.put<SpaceService>(SpaceService());
     Get.put<SpaceApi>(SpaceApi());
+    Get.put<SpaceService>(SpaceService());
   }
 
-  Future<SpaceModel> getSpaceById(int spaceId) async {
-    final spaceApi = Get.find<SpaceApi>();
-    final item = await spaceApi.getSpaceById(spaceId);
-    logger.d("surveys: ${item.surveys}");
-    space(item);
+  final SpaceApi _spaceApi = Get.find<SpaceApi>();
 
-    return space.value;
+  final _spaces = <String, Rxn<SpaceModel>>{}.obs;
+  final _isLoading = <String, RxBool>{}.obs;
+
+  Rxn<SpaceModel> spaceOf(String pk) {
+    return _spaces.putIfAbsent(pk, () => Rxn<SpaceModel>());
+  }
+
+  RxBool isLoadingOf(String pk) {
+    return _isLoading.putIfAbsent(pk, () => false.obs);
+  }
+
+  Future<void> loadSpace(String pk) async {
+    final loading = isLoadingOf(pk);
+    final rx = spaceOf(pk);
+
+    if (loading.value) return;
+    try {
+      loading.value = true;
+      final result = await _spaceApi.getSpace(pk);
+      rx.value = result;
+    } catch (e, s) {
+      Get.log('Failed to load space $pk: $e\n$s');
+      rx.value = null;
+    } finally {
+      loading.value = false;
+    }
   }
 }

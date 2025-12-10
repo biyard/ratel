@@ -1,6 +1,7 @@
 use crate::features::membership::*;
 use crate::features::payment::*;
 use crate::services::portone::{Currency, PortOne};
+use crate::utils::time::after_days_from_now_rfc_3339;
 
 use super::*;
 
@@ -137,7 +138,7 @@ async fn handle_upgrade_membership(
     card_info: Option<CardInfo>,
     currency: Currency,
 ) -> Result<(UserPurchase, Membership)> {
-    tracing::warn!("Processing membership upgrade to {:?}", new_tier);
+    tracing::debug!("Processing membership upgrade to {:?}", new_tier);
 
     // Get the new membership details
     let new_membership = Membership::get_by_membership_tier(cli, &new_tier).await?;
@@ -159,30 +160,12 @@ async fn handle_upgrade_membership(
 
     let amount = amount - remaining_price;
 
-    let (res, payment_id) = portone
-        .pay_with_billing_key(
-            user_payment.customer_id.clone(),
-            user_payment.name.clone(),
-            tx_type.to_string(),
-            user_payment.billing_key.clone().unwrap(),
-            amount,
-            currency,
-        )
+    // Create a purchase record
+    let user_purchase = user_payment
+        .purchase(portone, tx_type.clone(), amount, currency)
         .await?;
 
-    // TODO: setup schedule period payment
-
-    // Create a purchase record
-    let user_purchase = UserPurchase::new(
-        user_membership.pk.clone().into(),
-        TransactionType::PurchaseMembership(new_tier.to_string()),
-        amount,
-        currency,
-        payment_id,
-        res.payment.pg_tx_id,
-    );
-
-    let user_membership = UserMembership::new(
+    let mut user_membership = UserMembership::new(
         user_id.clone(),
         new_membership.pk.clone().into(),
         new_membership.duration_days,
@@ -191,10 +174,34 @@ async fn handle_upgrade_membership(
     .with_purchase_id(user_purchase.pk.clone())
     .with_auto_renew(true);
 
+    let next_purchase = user_payment
+        .schedule_next_membership_purchase(
+            portone,
+            tx_type,
+            amount,
+            currency,
+            user_membership
+                .renewal_date_rfc_3339()
+                .unwrap_or(after_days_from_now_rfc_3339(
+                    new_membership.duration_days as i64,
+                )),
+        )
+        .await;
+
+    if next_purchase.is_err() {
+        user_membership.auto_renew = false;
+        user_membership.next_membership =
+            Some(Partition::Membership(MembershipTier::Free.to_string()).into())
+    }
+
     let mut txs = vec![
         user_purchase.create_transact_write_item(),
         user_membership.upsert_transact_write_item(),
     ];
+
+    if let Ok(next_purchase) = next_purchase {
+        txs.push(next_purchase.create_transact_write_item());
+    }
 
     if should_update {
         txs.push(user_payment.upsert_transact_write_item());
