@@ -62,10 +62,17 @@ impl Permissions {
     }
 
     pub fn contains(&self, permission: TeamGroupPermission) -> bool {
+        debug!(
+            "Check permission: {:#x} after shift {} {:?}",
+            (1 << permission as i32),
+            permission as i32,
+            permission
+        );
         (self.0 & (1 << permission as i32)) != 0
     }
 
     pub fn permitted(&self, permission: TeamGroupPermission) -> Result<()> {
+        debug!("Checking permitted for permission: {:?}", permission);
         if !self.contains(permission) {
             Err(Error::NoPermission)
         } else {

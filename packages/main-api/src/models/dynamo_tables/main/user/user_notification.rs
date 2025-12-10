@@ -111,7 +111,7 @@ impl UserNotification {
         let title = title.into();
         let body = body.into();
 
-        let fcm_enabled = config::get().fcm_enabled;
+        let fcm_enabled = config::get().google_cloud.enable_fcm;
         if !fcm_enabled {
             tracing::info!(
                 "UserNotification::send_to_users: FCM_ENABLED != true, skip push (user_count={})",

@@ -21,7 +21,8 @@ export interface PaymentReceipt {
 
 export function useKpnPayment() {
   const { i18n } = useTranslation();
-  const currency = i18n.language === 'ko' ? 'KRW' : 'USD';
+  // NOTE: KPN seems to only support KRW.
+  const currency = i18n.language === 'ko' ? 'KRW' : 'KRW';
 
   const mutation = useMutation({
     mutationFn: async ({
