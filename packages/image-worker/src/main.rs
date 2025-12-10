@@ -8,6 +8,7 @@ use dto::{
 };
 use lambda_runtime::{LambdaEvent, run, service_fn};
 mod config;
+mod s3_config;
 mod utils;
 use tracing_subscriber::EnvFilter;
 use utils::s3_client::S3Client;
