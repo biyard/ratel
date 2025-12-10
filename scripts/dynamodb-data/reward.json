@@ -5,10 +5,10 @@
         "Item": {
           "created_at": { "N": "1764227900883722" },
           "updated_at": { "N": "1764227900883722" },
-          "sk": { "S": "REWARD" },
-          "pk": { "S": "POLL_RESPOND" },
+          "sk": { "S": "POLL_RESPOND" },
+          "pk": { "S": "REWARD" },
           "point": { "N": "10000" },
-          "period": { "S": "ONCE" },
+          "period": { "S": "Once" },
           "condition": { "S": "None" }
         }
       }

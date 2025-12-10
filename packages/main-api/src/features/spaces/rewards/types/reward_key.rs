@@ -30,3 +30,13 @@ pub enum RewardKey {
 pub trait FeatureRewardTrait {
     fn is_empty(&self) -> bool;
 }
+
+impl RewardKey {
+    pub fn get_feature_begin_sk(entity_type: EntityType) -> String {
+        match entity_type {
+            EntityType::SpacePoll(id) => format!("POLL#{}", SpacePollEntityType(id).to_string()),
+            EntityType::SpacePost(id) => format!("BOARD#{}", SpacePostEntityType(id).to_string()),
+            _ => "".to_string(),
+        }
+    }
+}

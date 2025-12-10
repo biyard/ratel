@@ -66,7 +66,7 @@ BIYARD_PROJECT_ID ?= ratel_project_id
 RATEL_PROJECT_ID ?= 
 FCM_ENABLED ?= false
 
-REWARD ?= false
+REWARD ?= true
 
 
 BUILD_ENV ?= ENV=$(ENV) \

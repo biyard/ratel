@@ -9,3 +9,6 @@ pub use biyard::*;
 mod noop;
 #[cfg(feature = "no-secret")]
 pub use noop::*;
+
+#[cfg(test)]
+pub mod tests;

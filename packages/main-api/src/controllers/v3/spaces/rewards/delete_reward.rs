@@ -19,7 +19,7 @@ pub async fn delete_reward_handler(
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<DeleteRewardRequest>,
 ) -> Result<Json<()>> {
-    permissions.permitted(TeamGroupPermission::SpaceWrite)?;
+    permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
     let space_reward =
         SpaceReward::get_by_reward_key(&dynamo.client, space_pk.into(), req.reward.into()).await?;
@@ -31,7 +31,7 @@ pub async fn delete_reward_handler(
     let mut txs = vec![];
     txs.push(
         UserMembership::updater(user_membership.pk, user_membership.sk)
-            .decrease_remaining_credits(space_reward.credits)
+            .increase_remaining_credits(space_reward.credits)
             .transact_write_item(),
     );
 

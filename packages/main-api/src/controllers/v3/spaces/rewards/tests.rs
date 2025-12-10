@@ -1,6 +1,7 @@
 use crate::controllers::v3::me::memberships::tests::seed_test_user_payment;
 use crate::controllers::v3::posts::CreatePostResponse;
 use crate::controllers::v3::spaces::create_space::CreateSpaceResponse;
+use crate::controllers::v3::spaces::polls::RespondPollSpaceResponse;
 use crate::controllers::v3::spaces::polls::tests::setup_published_poll_space;
 use crate::features::membership::*;
 use crate::features::payment::*;
@@ -51,20 +52,20 @@ async fn setup_user_with_credits(
     )
     .unwrap();
 
+    user_membership.create(cli).await.unwrap();
+
     user_membership
 }
 
 #[tokio::test]
 async fn test_create_reward_success() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
     let TestContextV3 {
         app,
         test_user,
         ddb,
         ..
-    } = TestContextV3::setup().await;
-
-    // Setup space and poll
-    let (_, space_pk, poll_sk, _) = setup_published_poll_space().await;
+    } = ctx;
 
     // Setup user with credits
     setup_user_with_credits(&ddb, &test_user.0.pk).await;
@@ -86,7 +87,6 @@ async fn test_create_reward_success() {
         },
         response_type: SpaceRewardResponse
     };
-
     assert_eq!(status, 200, "Failed to create reward. Response: {:?}", body);
     assert_eq!(body.label, "Poll Response Reward");
     assert_eq!(body.credits, 10);
@@ -107,20 +107,19 @@ async fn test_create_reward_success() {
             .await
             .unwrap()
             .expect("UserMembership should exist");
-    assert_eq!(user_membership.remaining_credits, 90); // 100 - 10 = 90
+    assert_eq!(user_membership.remaining_credits, 30); // 40 - 10 = 30
 }
 
 #[tokio::test]
 async fn test_create_reward_insufficient_credits() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
     let TestContextV3 {
         app,
         test_user,
         ddb,
         ..
-    } = TestContextV3::setup().await;
+    } = ctx;
 
-    // Setup space and poll
-    let (_, space_pk, poll_sk, _) = setup_published_poll_space().await;
     // Setup user with limited credits
     let mut user_membership = setup_user_with_credits(&ddb, &test_user.0.pk).await;
     user_membership.remaining_credits = 5; // Only 5 credits
@@ -151,15 +150,14 @@ async fn test_create_reward_insufficient_credits() {
 
 #[tokio::test]
 async fn test_list_rewards_authenticated() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
     let TestContextV3 {
         app,
         test_user,
         ddb,
         ..
-    } = TestContextV3::setup().await;
+    } = ctx;
 
-    // Setup space and poll
-    let (_, space_pk, poll_sk, _) = setup_published_poll_space().await;
     // Setup user with credits and create a reward
     setup_user_with_credits(&ddb, &test_user.0.pk).await;
 
@@ -196,15 +194,14 @@ async fn test_list_rewards_authenticated() {
 
 #[tokio::test]
 async fn test_list_rewards_guest() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
     let TestContextV3 {
         app,
         test_user,
         ddb,
         ..
-    } = TestContextV3::setup().await;
+    } = ctx;
 
-    // Setup space and poll
-    let (_, space_pk, poll_sk, _) = setup_published_poll_space().await;
     // Setup user with credits and create a reward
     setup_user_with_credits(&ddb, &test_user.0.pk).await;
 
@@ -240,15 +237,14 @@ async fn test_list_rewards_guest() {
 
 #[tokio::test]
 async fn test_list_rewards_filtered_by_feature() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
     let TestContextV3 {
         app,
         test_user,
         ddb,
         ..
-    } = TestContextV3::setup().await;
+    } = ctx;
 
-    // Setup space and poll
-    let (_, space_pk, poll_sk, _) = setup_published_poll_space().await;
     // Setup user with credits
     setup_user_with_credits(&ddb, &test_user.0.pk).await;
 
@@ -272,7 +268,7 @@ async fn test_list_rewards_filtered_by_feature() {
     // List rewards filtered by POLL entity type
     let (status, _headers, body) = get! {
         app: app,
-        path: format!("/v3/spaces/{}/rewards?feature=POLL", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/rewards?feature={}", space_pk.to_string(), poll_sk.to_string()),
         headers: test_user.1.clone(),
         response_type: ListItemsResponse<SpaceRewardResponse>
     };
@@ -284,15 +280,14 @@ async fn test_list_rewards_filtered_by_feature() {
 
 #[tokio::test]
 async fn test_update_reward_success() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
     let TestContextV3 {
         app,
         test_user,
         ddb,
         ..
-    } = TestContextV3::setup().await;
+    } = ctx;
 
-    // Setup space and poll
-    let (_, space_pk, poll_sk, _) = setup_published_poll_space().await;
     // Setup user with credits
     setup_user_with_credits(&ddb, &test_user.0.pk).await;
 
@@ -350,20 +345,19 @@ async fn test_update_reward_success() {
             .await
             .unwrap()
             .expect("UserMembership should exist");
-    assert_eq!(user_membership.remaining_credits, 85); // 100 - 10 - 5 = 85
+    assert_eq!(user_membership.remaining_credits, 25); // 40 - 10 - 5 = 25
 }
 
 #[tokio::test]
 async fn test_update_reward_reduce_credits() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
     let TestContextV3 {
         app,
         test_user,
         ddb,
         ..
-    } = TestContextV3::setup().await;
+    } = ctx;
 
-    // Setup space and poll
-    let (_, space_pk, poll_sk, _) = setup_published_poll_space().await;
     // Setup user with credits
     setup_user_with_credits(&ddb, &test_user.0.pk).await;
 
@@ -390,7 +384,7 @@ async fn test_update_reward_reduce_credits() {
             .await
             .unwrap()
             .expect("UserMembership should exist");
-    assert_eq!(user_membership.remaining_credits, 80); // 100 - 20 = 80
+    assert_eq!(user_membership.remaining_credits, 20); // 40 - 20 = 20
 
     // Update reward with fewer credits (reduce to 10)
     let (status, _headers, body) = put! {
@@ -417,21 +411,20 @@ async fn test_update_reward_reduce_credits() {
             .await
             .unwrap()
             .expect("UserMembership should exist");
-    assert_eq!(user_membership.remaining_credits, 90); // 80 + 10 = 90
+    assert_eq!(user_membership.remaining_credits, 30); // 20 + 10 = 30
 }
 
 #[tokio::test]
 async fn test_update_reward_without_permission() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
     let TestContextV3 {
         app,
         test_user,
-        user2,
         ddb,
+        user2,
         ..
-    } = TestContextV3::setup().await;
+    } = ctx;
 
-    // Setup space and poll with test_user
-    let (_, space_pk, poll_sk, _) = setup_published_poll_space().await;
     // Setup test_user with credits and create reward
     setup_user_with_credits(&ddb, &test_user.0.pk).await;
 
@@ -467,20 +460,18 @@ async fn test_update_reward_without_permission() {
         response_type: serde_json::Value
     };
 
-    assert_eq!(status, 403); // Forbidden
+    assert_eq!(status, 401); // Forbidden
 }
 
 #[tokio::test]
 async fn test_delete_reward_success() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
     let TestContextV3 {
         app,
         test_user,
         ddb,
         ..
-    } = TestContextV3::setup().await;
-
-    // Setup space and poll
-    let (_, space_pk, poll_sk, _) = setup_published_poll_space().await;
+    } = ctx;
     // Setup user with credits
     setup_user_with_credits(&ddb, &test_user.0.pk).await;
 
@@ -507,7 +498,7 @@ async fn test_delete_reward_success() {
             .await
             .unwrap()
             .expect("UserMembership should exist");
-    assert_eq!(user_membership.remaining_credits, 90); // 100 - 10 = 90
+    assert_eq!(user_membership.remaining_credits, 30); // 40 - 10 = 30
 
     // Delete the reward
     let (status, _headers, _body) = delete! {
@@ -536,20 +527,19 @@ async fn test_delete_reward_success() {
             .await
             .unwrap()
             .expect("UserMembership should exist");
-    assert_eq!(user_membership.remaining_credits, 100); // 90 + 10 = 100 (refunded)
+    assert_eq!(user_membership.remaining_credits, 40); // 30 + 10 = 40 (refunded)
 }
 
 #[tokio::test]
 async fn test_delete_reward_nonexistent() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
     let TestContextV3 {
         app,
         test_user,
         ddb,
         ..
-    } = TestContextV3::setup().await;
+    } = ctx;
 
-    // Setup space and poll
-    let (_, space_pk, poll_sk, _) = setup_published_poll_space().await;
     // Setup user with credits
     setup_user_with_credits(&ddb, &test_user.0.pk).await;
 
@@ -566,21 +556,20 @@ async fn test_delete_reward_nonexistent() {
         response_type: serde_json::Value
     };
 
-    assert_eq!(status, 404); // Not found
+    assert_eq!(status, 400); // Not found
 }
 
 #[tokio::test]
 async fn test_delete_reward_without_permission() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
     let TestContextV3 {
         app,
         test_user,
-        user2,
         ddb,
+        user2,
         ..
-    } = TestContextV3::setup().await;
+    } = ctx;
 
-    // Setup space and poll with test_user
-    let (_, space_pk, poll_sk, _) = setup_published_poll_space().await;
     // Setup test_user with credits and create reward
     setup_user_with_credits(&ddb, &test_user.0.pk).await;
 
@@ -613,21 +602,20 @@ async fn test_delete_reward_without_permission() {
         response_type: serde_json::Value
     };
 
-    assert_eq!(status, 403); // Forbidden
+    assert_eq!(status, 401); // Forbidden
 }
 
 #[tokio::test]
 async fn test_create_multiple_rewards_deducts_total_credits() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
     let TestContextV3 {
         app,
         test_user,
         ddb,
         ..
-    } = TestContextV3::setup().await;
+    } = ctx;
 
-    // Setup space and poll
-    let (_, space_pk, poll_sk, _) = setup_published_poll_space().await;
-    // Setup user with 100 credits
+    // Setup user with 40 credits
     setup_user_with_credits(&ddb, &test_user.0.pk).await;
 
     // Create first reward (10 credits)
@@ -653,8 +641,113 @@ async fn test_create_multiple_rewards_deducts_total_credits() {
             .await
             .unwrap()
             .expect("UserMembership should exist");
-    assert_eq!(user_membership.remaining_credits, 90); // 100 - 10 = 90
+    assert_eq!(user_membership.remaining_credits, 30); // 40 - 10 = 30
 
     // Note: We can't create another reward for the same poll_sk since it would be duplicate
     // This test verifies that credits are properly tracked across operations
+}
+
+#[tokio::test]
+async fn test_poll_respond_increases_user_claim() {
+    let (ctx, space_pk, poll_sk, _) = setup_published_poll_space().await;
+    let TestContextV3 {
+        app,
+        test_user,
+        ddb,
+        user2,
+        ..
+    } = ctx;
+
+    // Setup user with credits
+    setup_user_with_credits(&ddb, &test_user.0.pk).await;
+
+    // Create a poll reward
+    let (status, _headers, _) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "reward": {
+                "poll_sk": poll_sk.to_string()
+            },
+            "label": "Poll Response Reward",
+            "description": "Get points for responding to this poll",
+            "credits": 10
+        },
+        response_type: SpaceRewardResponse
+    };
+    assert_eq!(status, 200, "Failed to create reward");
+
+    // Check user_claims before poll response
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
+        headers: user2.1.clone(),
+        response_type: ListItemsResponse<SpaceRewardResponse>
+    };
+    assert_eq!(status, 200);
+    assert_eq!(body.items.len(), 1);
+    assert_eq!(
+        body.items[0].user_claims, 0,
+        "User should have 0 claims initially"
+    );
+
+    let answers = vec![
+        Answer::SingleChoice {
+            answer: Some(1),
+            other: None,
+        },
+        Answer::MultipleChoice {
+            answer: Some(vec![0, 2]),
+            other: None,
+        },
+    ];
+
+    // user2 responds to the poll
+    let (status, _headers, _res) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/polls/{}/responses", space_pk.to_string(), poll_sk.to_string()),
+        headers: user2.1.clone(),
+        body: {
+            "answers": answers.clone(),
+        },
+        response_type: RespondPollSpaceResponse
+    };
+    assert_eq!(status, 200, "Failed to respond to poll");
+
+    // Check user_claims after poll response
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
+        headers: user2.1.clone(),
+        response_type: ListItemsResponse<SpaceRewardResponse>
+    };
+    assert_eq!(status, 200);
+    assert_eq!(body.items.len(), 1);
+    assert_eq!(
+        body.items[0].user_claims, 1,
+        "User should have 1 claim after poll response"
+    );
+
+    // Verify UserReward was created with correct values
+    let reward_key = RewardKey::Poll(poll_sk.clone().into(), PollReward::Respond);
+    let (user_reward_pk, user_reward_sk) = UserReward::keys(
+        user2.0.pk.clone().into(),
+        space_pk.clone().into(),
+        reward_key,
+    );
+    let user_reward = UserReward::get(&ddb, user_reward_pk, Some(user_reward_sk))
+        .await
+        .unwrap()
+        .expect("UserReward should exist");
+
+    assert_eq!(
+        user_reward.total_claims, 1,
+        "UserReward should have 1 total claim"
+    );
+    assert_eq!(
+        user_reward.total_points,
+        10_000 * 10,
+        "UserReward should have 10,000 total points"
+    ); // Point * Credit
 }

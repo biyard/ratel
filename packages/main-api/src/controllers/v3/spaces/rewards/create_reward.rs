@@ -38,7 +38,7 @@ pub async fn create_reward_handler(
     if !config::get().reward {
         return Err(Error::RewardDisabled);
     }
-    permissions.permitted(TeamGroupPermission::SpaceWrite)?;
+    permissions.permitted(TeamGroupPermission::SpaceEdit)?;
     let mut updater_txs = vec![];
 
     let mut user_membership = user.get_user_membership(&dynamo.client).await?;
