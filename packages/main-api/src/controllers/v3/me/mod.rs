@@ -7,7 +7,7 @@ pub mod list_my_drafts;
 pub mod list_my_notifications;
 pub mod list_my_posts;
 mod list_my_spaces;
-mod memberships;
+pub mod memberships;
 
 mod points;
 #[cfg(test)]
