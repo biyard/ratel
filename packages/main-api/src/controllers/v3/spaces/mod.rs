@@ -47,17 +47,16 @@ pub fn route() -> Result<Router<AppState>> {
             Router::new()
                 .route(
                     "/",
-                    delete(delete_space_handler)
-                        .patch(update_space_handler)
-                        .get(get_space_handler),
+                    delete(delete_space_handler).patch(update_space_handler),
                 )
-                .route("/participate", post(participate_space_handler))
                 .nest("/panels", panels::route())
                 // NOTE: Above are TeamAdmin-only routes
                 .layer(middleware::from_fn_with_state(
                     app_state.clone(),
                     authorize_team_admin,
                 ))
+                .route("/", get(get_space_handler))
+                .route("/participate", post(participate_space_handler))
                 .nest("/members", members::route())
                 .nest("/files", files::route())
                 .nest("/recommendations", recommendations::route())

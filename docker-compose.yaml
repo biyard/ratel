@@ -34,7 +34,7 @@ services:
       ENV: local
       PORT: 3000
       WEB_BUILD: "ignore"
-      RUST_LOG: ${RUST_LOG:-info}
+      RUST_LOG: ${RUST_LOG:-debug}
       RUST_FLAG: ${RUST_FLAG:---features bypass}
       DYNAMO_ENDPOINT: http://localstack:4566
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
