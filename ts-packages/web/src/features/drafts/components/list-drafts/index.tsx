@@ -119,10 +119,8 @@ export function CreatePostButton({ teamPk }: { teamPk?: string | undefined }) {
       data-testid="create-post-button"
       className={cn(baseClass, 'justify-start w-full')}
     >
-      <Edit1 className="w-4 h-4 [&>path]:stroke-text-third" />
-      <div className="font-bold text-base/[22px] text-text-third">
-        {t('btn_create_post')}
-      </div>
+      <Edit1 className="w-4 h-4 [&>path]:stroke-btn-secondary-text" />
+      <div className="font-bold text-base/[22px]">{t('btn_create_post')}</div>
     </Link>
   );
 }

@@ -1,5 +1,8 @@
 use super::*;
-use crate::{utils::time::get_now_timestamp_micros, *};
+use crate::{
+    utils::time::{after_days_from_now_rfc_3339, get_now_timestamp_micros},
+    *,
+};
 
 use percent_encoding::{AsciiSet, NON_ALPHANUMERIC};
 
@@ -38,8 +41,9 @@ impl PortOne {
             ))
             .send()
             .await?;
-
-        Ok(res.json().await?)
+        let j: serde_json::Value = res.json().await?;
+        warn!("PortOne identify response: {:?}", j);
+        Ok(serde_json::from_value(j)?)
     }
 
     pub async fn get_billing_key(
@@ -125,6 +129,58 @@ impl PortOne {
         let res = self
             .cli
             .post(format!("{}/payments/{}/billing-key", BASE_URL, payment_id))
+            .json(&body)
+            .send()
+            .await?;
+
+        Ok((res.json().await?, payment_id))
+    }
+
+    pub async fn schedule_pay_with_billing_key(
+        &self,
+        customer_id: String,
+        customer_name: String,
+        order_name: String,
+        billing_key: String,
+        amount: i64,
+        currency: Currency,
+        time_to_pay: String,
+    ) -> Result<(BillingKeyPaymentResponse, String)> {
+        let portone_conf = config::get().portone;
+        let payment_id = format!(
+            "{}-{}",
+            random_string::generate(10, CHARSET),
+            get_now_timestamp_micros(),
+        );
+
+        let payment = BillingKeyPaymentRequest {
+            store_id: portone_conf.store_id.to_string(),
+            channel_key: portone_conf.kpn_channel_key.to_string(),
+            billing_key,
+            order_name,
+            customer: CustomerRequest {
+                id: customer_id,
+                name: CustomerName {
+                    full: customer_name,
+                },
+            },
+            amount: PaymentAmountInput {
+                total: amount,
+                tax_free: None,
+                vat: None,
+            },
+            currency: currency.to_string(),
+            locale: None,
+        };
+
+        let body = ScheduleBillingKeyRequest {
+            payment,
+            time_to_pay,
+        };
+
+        let res = self
+            .cli
+            .post(format!("{}/payments/{}/schedule", BASE_URL, payment_id))
             .json(&body)
             .send()
             .await?;

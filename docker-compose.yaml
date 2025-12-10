@@ -34,8 +34,8 @@ services:
       ENV: local
       PORT: 3000
       WEB_BUILD: "ignore"
-      RUST_LOG: ${RUST_LOG:-info}
-      RUST_FLAG: ${RUST_FLAG:---features bypass,no-secret}
+      RUST_LOG: ${RUST_LOG:-debug}
+      RUST_FLAG: ${RUST_FLAG:---features bypass}
       DYNAMO_ENDPOINT: http://localstack:4566
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
@@ -65,6 +65,12 @@ services:
 
       NODE_ENV: production
       SLACK_HOOK: ${SLACK_HOOK}
+
+      PORTONE_STORE_ID:  ${PORTONE_STORE_ID}
+      PORTONE_INICIS_CHANNEL_KEY:  ${PORTONE_INICIS_CHANNEL_KEY}
+      PORTONE_KPN_CHANNEL_KEY:  ${PORTONE_KPN_CHANNEL_KEY}
+      PORTONE_API_SECRET:  ${PORTONE_API_SECRET}
+      PORTONE_WEBHOOK_SECRET:  ${PORTONE_WEBHOOK_SECRET}
     volumes:
       - .:/app
       - ./.build/target:/app/target
