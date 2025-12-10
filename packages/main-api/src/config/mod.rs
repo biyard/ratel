@@ -1,13 +1,13 @@
-mod bucket_config;
 pub mod did_config;
 pub mod google_cloud;
 mod portone_config;
+mod s3_config;
 mod x402_config;
 
-pub use bucket_config::BucketConfig;
 use did_config::DidConfig;
 pub use google_cloud::*;
 pub use portone_config::*;
+pub use s3_config::S3Config;
 pub use x402_config::*;
 
 mod biyard_config;
@@ -32,7 +32,7 @@ pub struct Config {
     // FIXME: disable for test
     pub binance: BinanceConfig,
     pub aws: AwsConfig,
-    pub bucket: BucketConfig,
+    pub s3: S3Config,
     pub dynamodb: DatabaseConfig,
     pub chime_bucket_name: &'static str,
     pub kaia: KaiaConfig,
@@ -112,7 +112,7 @@ impl Default for Config {
                 table_prefix: option_env!("DYNAMO_TABLE_PREFIX")
                     .expect("You must set TABLE_PREFIX"),
             },
-            bucket: BucketConfig::default(),
+            s3: S3Config::default(),
             chime_bucket_name: option_env!("CHIME_BUCKET").expect("CHIME_BUCKET required"),
             telegram_token: option_env!("TELEGRAM_TOKEN").filter(|s| !s.is_empty()),
             did: DidConfig::default(),
