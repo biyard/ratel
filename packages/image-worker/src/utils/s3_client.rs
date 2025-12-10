@@ -49,7 +49,7 @@ impl S3Client {
             name,
             asset_dir,
             expire,
-        } = config::get().bucket;
+        } = config::get().s3;
 
         for _ in 0..total_count {
             let id = Uuid::new_v4();
@@ -73,7 +73,7 @@ impl S3Client {
                         Error::AssetError(e.to_string())
                     })?;
             presigned_uris.push(presigned_request.uri().to_string());
-            uris.push(config::get().bucket.get_url(&key));
+            uris.push(config::get().s3.get_url(&key));
         }
 
         Ok(PresignedUrl {

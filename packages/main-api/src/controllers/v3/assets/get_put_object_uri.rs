@@ -45,10 +45,10 @@ pub async fn get_put_object_uri(
 
     let ratel_config = crate::config::get();
     let aws_config = &ratel_config.aws;
-    let asset_dir = ratel_config.bucket.asset_dir;
-    let bucket_name = ratel_config.bucket.name;
-    let expire = ratel_config.bucket.expire;
-    let bucket_region = ratel_config.bucket.region;
+    let asset_dir = ratel_config.s3.asset_dir;
+    let bucket_name = ratel_config.s3.name;
+    let expire = ratel_config.s3.expire;
+    let bucket_region = ratel_config.s3.region;
 
     let config = defaults(BehaviorVersion::latest())
         .region(Region::new(bucket_region))
@@ -90,7 +90,7 @@ pub async fn get_put_object_uri(
                 Error::AssetError(e.to_string())
             })?;
         presigned_uris.push(presigned_request.uri().to_string());
-        uris.push(ratel_config.bucket.get_url(&key));
+        uris.push(ratel_config.s3.get_url(&key));
     }
 
     Ok(Json(AssetPresignedUris {

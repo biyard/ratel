@@ -58,7 +58,7 @@ impl S3Client {
                 None,
                 "ratel",
             ))
-            .region(Region::new(conf.bucket.region))
+            .region(Region::new(conf.s3.region))
             .behavior_version_latest()
             .build();
         let client = Client::from_conf(aws_config);
@@ -87,7 +87,7 @@ impl S3Client {
                 Error::AssetError(e.to_string())
             })?;
         let conf = config::get();
-        let url = conf.bucket.get_url(key);
+        let url = conf.s3.get_url(key);
         Ok(url)
     }
     pub async fn get_object_bytes(&self, key: &str) -> Result<S3Object> {
@@ -154,7 +154,7 @@ impl S3Client {
             let conf = config::get();
             result.push(PutObjectResult {
                 presigned_uri: presigned_request.uri().to_string(),
-                uri: conf.bucket.get_url(&key),
+                uri: conf.s3.get_url(&key),
                 key,
             });
         }

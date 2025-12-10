@@ -5,7 +5,7 @@ use by_types::config::*;
 #[derive(Debug)]
 pub struct Config {
     pub aws: AwsConfig,
-    pub bucket: S3Config,
+    pub s3: S3Config,
     pub database: DatabaseConfig,
 }
 
@@ -14,7 +14,7 @@ impl Default for Config {
         Config {
             aws: AwsConfig::default(),
             database: DatabaseConfig::default(),
-            bucket: S3Config::default(),
+            s3: S3Config::default(),
         }
     }
 }
