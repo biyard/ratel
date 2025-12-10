@@ -9,7 +9,8 @@ use aws_config::{BehaviorVersion, Region, defaults};
 use aws_sdk_s3::config::Credentials;
 use aws_sdk_s3::presigning::PresigningConfig;
 
-use crate::config::{self, BucketConfig};
+use crate::{config, s3_config::S3Config};
+
 pub struct PresignedUrl {
     pub presigned_uris: Vec<String>,
     pub uris: Vec<String>,
@@ -44,11 +45,11 @@ impl S3Client {
 
         let mut presigned_uris = vec![];
         let mut uris = vec![];
-        let BucketConfig {
+        let S3Config {
             name,
             asset_dir,
             expire,
-            region,
+            region: _,
         } = config::get().bucket;
 
         for _ in 0..total_count {
@@ -73,10 +74,7 @@ impl S3Client {
                         Error::AssetError(e.to_string())
                     })?;
             presigned_uris.push(presigned_request.uri().to_string());
-            uris.push(format!(
-                "https://{}.s3.{}.amazonaws.com/{}",
-                name, region, key
-            ));
+            uris.push(config::get().bucket.get_url(&key));
         }
 
         Ok(PresignedUrl {
