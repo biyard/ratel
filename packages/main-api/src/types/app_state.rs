@@ -39,7 +39,7 @@ impl AppState {
         let dynamo = DynamoClient::new(Some(aws_sdk_config.clone()));
         let ses = SesClient::new(aws_sdk_config.clone(), is_local);
         let sns = SnsClient::new(aws_sns_config);
-        let s3 = S3Client::new(conf.bucket.name);
+        let s3 = S3Client::new(conf.s3.name);
 
         let portone = PortOne::new(&conf.portone.api_secret);
         let biyard = Biyard::new();
