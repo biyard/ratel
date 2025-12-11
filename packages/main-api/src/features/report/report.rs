@@ -4,6 +4,7 @@ use crate::features::spaces::boards::models::space_post::SpacePost;
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
 use crate::models::{Post, SpaceCommon};
 use crate::time::get_now_timestamp_millis;
+use crate::types::*;
 use crate::*;
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
@@ -27,10 +28,8 @@ pub enum ReportTarget {
     aide::OperationIo,
 )]
 pub struct ContentReport {
-    pub pk: Partition,
+    pub pk: CompositePartition,
     pub sk: EntityType,
-
-    #[dynamo(index = "gsi2", sk)]
     pub created_at: i64,
     pub updated_at: i64,
 
@@ -38,7 +37,6 @@ pub struct ContentReport {
     pub target_sk: Option<EntityType>,
     pub target: ReportTarget,
 
-    #[dynamo(prefix = "REPORTER_PK", name = "find_by_reporter", index = "gsi2", pk)]
     pub reporter_pk: Partition,
 }
 
@@ -50,17 +48,19 @@ impl ContentReport {
         reporter: &User,
     ) -> Self {
         let now = get_now_timestamp_millis();
-        let id = crate::sorted_uuid();
+        let reporter_pk = reporter.pk.clone();
+        let pk = CompositePartition(reporter_pk.clone(), target_pk.clone());
+        let sk = target_sk.clone().unwrap_or(EntityType::ContentReport);
 
         Self {
-            pk: Partition::Report(id),
-            sk: EntityType::ContentReport,
+            pk,
+            sk,
             created_at: now,
             updated_at: now,
             target_pk,
             target_sk,
             target,
-            reporter_pk: reporter.pk.clone(),
+            reporter_pk,
         }
     }
 
@@ -108,45 +108,51 @@ impl ContentReport {
         self.create(cli).await
     }
 
+    pub fn key_for_target(
+        reporter_pk: &Partition,
+        target_pk: &Partition,
+        target_sk: Option<&EntityType>,
+    ) -> (CompositePartition, EntityType) {
+        let pk = CompositePartition(reporter_pk.clone(), target_pk.clone());
+        let sk = target_sk.cloned().unwrap_or(EntityType::ContentReport);
+        (pk, sk)
+    }
+
+    pub fn key_for_space_post_comment(
+        reporter_pk: &Partition,
+        space_post_pk: &Partition,
+        comment: &SpacePostComment,
+    ) -> (CompositePartition, EntityType) {
+        Self::key_for_target(reporter_pk, space_post_pk, Some(&comment.sk))
+    }
+
     pub async fn is_reported_for_target_by_user(
         cli: &aws_sdk_dynamodb::Client,
         target_pk: &Partition,
         target_sk: Option<&EntityType>,
         reporter_pk: &Partition,
     ) -> Result<bool> {
-        let opt = ContentReport::opt_all();
-        let (items, _) =
-            ContentReport::find_by_reporter(cli, format!("{}", reporter_pk), opt).await?;
-
-        let already = items.iter().any(|r| {
-            if &r.target_pk != target_pk {
-                return false;
-            }
-
-            match (target_sk, r.target_sk.as_ref()) {
-                (None, None) => true,
-                (Some(sk), Some(rsk)) => sk == rsk,
-                _ => false,
-            }
-        });
-
-        Ok(already)
+        let (pk, sk) = Self::key_for_target(reporter_pk, target_pk, target_sk);
+        let reported = ContentReport::get(cli, &pk, Some(&sk)).await?.is_some();
+        Ok(reported)
     }
 
     pub async fn reported_comment_ids_for_post_by_user(
         cli: &aws_sdk_dynamodb::Client,
         space_post_pk: &Partition,
         reporter_pk: &Partition,
+        comments: &[SpacePostComment],
     ) -> Result<HashSet<String>> {
-        let opt = ContentReport::opt_all();
-        let (items, _) =
-            ContentReport::find_by_reporter(cli, format!("{}", reporter_pk), opt).await?;
+        let keys: Vec<_> = comments
+            .iter()
+            .map(|c| Self::key_for_space_post_comment(reporter_pk, space_post_pk, c))
+            .collect();
 
-        let set = items
+        let reports = ContentReport::batch_get(cli, keys).await?;
+
+        let set = reports
             .into_iter()
-            .filter(|r| {
-                &r.target_pk == space_post_pk && matches!(r.target, ReportTarget::SpacePostComment)
-            })
+            .filter(|r| matches!(r.target, ReportTarget::SpacePostComment))
             .filter_map(|r| r.target_sk.map(|sk| sk.to_string()))
             .collect::<HashSet<_>>();
 
