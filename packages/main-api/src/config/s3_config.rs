@@ -1,23 +1,20 @@
 #[derive(Debug, Clone, Copy)]
-pub struct BucketConfig {
+pub struct S3Config {
     pub name: &'static str,
     pub asset_dir: &'static str,
     pub expire: u64,
     pub region: &'static str,
 }
 
-impl BucketConfig {
+impl S3Config {
     pub fn get_url(&self, key: &str) -> String {
-        format!(
-            "https://{}.s3.{}.amazonaws.com/{}",
-            self.name, self.region, key
-        )
+        format!("https://{}/{}", self.name, key)
     }
 }
 
-impl Default for BucketConfig {
+impl Default for S3Config {
     fn default() -> Self {
-        BucketConfig {
+        S3Config {
             name: option_env!("BUCKET_NAME").expect("You must set BUCKET_NAME"),
             asset_dir: option_env!("ASSET_DIR").expect("You must set ASSET_DIR"),
             expire: option_env!("BUCKET_EXPIRE")
