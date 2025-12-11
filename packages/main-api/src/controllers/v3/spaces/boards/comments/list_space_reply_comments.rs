@@ -39,11 +39,7 @@ pub async fn list_space_reply_comments_handler(
     let (comments, bookmark) =
         SpacePostComment::list_by_comment(&dynamo.client, space_post_comment_sk, opt).await?;
 
-    let mut like_keys = Vec::with_capacity(comments.len());
-    for c in &comments {
-        like_keys.push(c.like_keys(&user.pk));
-    }
-
+    let like_keys: Vec<_> = comments.iter().map(|c| c.like_keys(&user.pk)).collect();
     let likes = SpacePostCommentLike::batch_get(&dynamo.client, like_keys).await?;
 
     let reported_comment_ids: HashSet<String> =
@@ -51,6 +47,7 @@ pub async fn list_space_reply_comments_handler(
             &dynamo.client,
             &space_post_pk,
             &user.pk,
+            &comments,
         )
         .await?;
 

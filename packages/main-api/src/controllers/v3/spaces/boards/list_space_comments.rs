@@ -50,15 +50,17 @@ pub async fn list_space_comments_handler(
         .collect();
 
     let like_keys: Vec<_> = comments.iter().map(|c| c.like_keys(&user.pk)).collect();
-
     let likes = SpacePostCommentLike::batch_get(&dynamo.client, like_keys).await?;
+
     let reported_comment_ids: HashSet<String> =
         ContentReport::reported_comment_ids_for_post_by_user(
             &dynamo.client,
             &space_post_pk,
             &user.pk,
+            &comments,
         )
         .await?;
+
     let items: Vec<SpacePostCommentResponse> = comments
         .into_iter()
         .map(|comment| {
