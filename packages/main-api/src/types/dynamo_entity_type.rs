@@ -166,6 +166,8 @@ pub enum EntityType {
 
     //
     UserReward(String, String), // USER_REWARD#{SPACE_PK}#{REWARD_TYPE}
+
+    ContentReport,
 }
 
 impl TryInto<Partition> for EntityType {

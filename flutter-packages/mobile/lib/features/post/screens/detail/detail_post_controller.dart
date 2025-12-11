@@ -1,6 +1,7 @@
 import 'package:ratel/exports.dart';
 
 class DetailPostController extends BaseController {
+  final reportApi = Get.find<ReportApi>();
   final userService = Get.find<UserService>();
   final feedsApi = Get.find<FeedsApi>();
   final feedsService = Get.find<FeedsService>();
@@ -186,6 +187,7 @@ class DetailPostController extends BaseController {
         artworkMetadata: current.artworkMetadata,
         repost: current.repost,
         isLiked: current.isLiked,
+        isReport: current.isReport,
         permissions: current.permissions,
       );
 
@@ -244,6 +246,7 @@ class DetailPostController extends BaseController {
         artworkMetadata: current.artworkMetadata,
         repost: current.repost,
         isLiked: res.like,
+        isReport: current.isReport,
         permissions: current.permissions,
       );
 
@@ -252,6 +255,19 @@ class DetailPostController extends BaseController {
       logger.e('Failed to toggle like post: $e', stackTrace: s);
     } finally {
       isLikingPost.value = false;
+    }
+  }
+
+  Future<void> reportPost({required String postPk}) async {
+    try {
+      await reportApi.reportPost(postPk: postPk);
+      Biyard.info('Reported successfully.');
+
+      final detail = await feedsService.fetchDetail(postPk, forceRefresh: true);
+      feed.value = detail;
+    } catch (e) {
+      logger.e('reportPost error: $e');
+      Biyard.error('Report Failed', 'Failed to report. Please try again.');
     }
   }
 

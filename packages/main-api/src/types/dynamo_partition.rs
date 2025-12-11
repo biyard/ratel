@@ -86,6 +86,8 @@ pub enum Partition {
     Payment,  // For user payment, USER#{user_id}##PAYMENT
 
     Reward, // For space rewards, SPACE#{space_id}##REWARD
+
+    Report(String),
 }
 
 impl Partition {
