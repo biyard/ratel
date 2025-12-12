@@ -87,7 +87,7 @@ class BoardCommentInputBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
+        padding: const EdgeInsets.fromLTRB(12, 4, 12, 20),
         child: SizedBox(
           height: 44,
           child: GestureDetector(
