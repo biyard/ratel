@@ -123,11 +123,13 @@ class _DetailHeaderSection extends StatelessWidget {
         20.vgap,
         Row(
           children: [
-            Profile(
-              profileImageUrl: post.authorProfileUrl.isNotEmpty
-                  ? post.authorProfileUrl
-                  : defaultProfileImage,
-              displayName: post.authorDisplayName,
+            Expanded(
+              child: Profile(
+                profileImageUrl: post.authorProfileUrl.isNotEmpty
+                    ? post.authorProfileUrl
+                    : defaultProfileImage,
+                displayName: post.authorDisplayName,
+              ),
             ),
             const Spacer(),
             Text(

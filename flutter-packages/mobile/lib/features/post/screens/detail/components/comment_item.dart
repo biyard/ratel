@@ -80,11 +80,13 @@ class CommentItem extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Profile(
-                profileImageUrl: comment.authorProfileUrl.isNotEmpty
-                    ? comment.authorProfileUrl
-                    : defaultProfileImage,
-                displayName: comment.authorDisplayName,
+              Expanded(
+                child: Profile(
+                  profileImageUrl: comment.authorProfileUrl.isNotEmpty
+                      ? comment.authorProfileUrl
+                      : defaultProfileImage,
+                  displayName: comment.authorDisplayName,
+                ),
               ),
               const Spacer(),
               Row(

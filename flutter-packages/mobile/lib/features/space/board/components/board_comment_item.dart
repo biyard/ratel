@@ -48,9 +48,11 @@ class BoardCommentItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              Profile(
-                profileImageUrl: profileImageUrl,
-                displayName: comment.authorDisplayName,
+              Expanded(
+                child: Profile(
+                  profileImageUrl: profileImageUrl,
+                  displayName: comment.authorDisplayName,
+                ),
               ),
               const Spacer(),
               Text(
