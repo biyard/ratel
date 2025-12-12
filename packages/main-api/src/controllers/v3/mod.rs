@@ -23,6 +23,7 @@ pub mod assets {
 
 pub mod auth;
 pub mod posts;
+pub mod reports;
 pub mod spaces;
 pub mod teams;
 
@@ -65,6 +66,7 @@ pub fn route(bot: Option<ArcTelegramBot>) -> Result<Router> {
             ),
         )
         .route("/promotions/top", get(get_top_promotion_handler))
+        .nest("/reports", reports::route()?)
         .nest("/me", me::route()?)
         .nest("/users", users::route()?)
         .nest("/posts", posts::route()?)
