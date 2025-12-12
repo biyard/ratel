@@ -18,24 +18,7 @@ class DetailPostController extends BaseController {
   bool get isPostLiked => feed.value?.isLiked == true;
   int get postLikes => feed.value?.post.likes ?? 0;
 
-  final Rx<UserModel> user = UserModel(
-    pk: '',
-    email: '',
-    nickname: '',
-    profileUrl: '',
-    description: '',
-    userType: 0,
-    username: '',
-    followersCount: 0,
-    followingsCount: 0,
-    theme: 0,
-    point: 0,
-    referralCode: null,
-    phoneNumber: null,
-    principal: null,
-    evmAddress: null,
-    teams: const [],
-  ).obs;
+  Rx<UserModel> get user => userService.user;
 
   late final Worker _detailSubscription;
 
@@ -62,7 +45,6 @@ class DetailPostController extends BaseController {
     });
 
     loadFeed();
-    user(userService.user.value);
   }
 
   @override
