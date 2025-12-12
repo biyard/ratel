@@ -172,6 +172,15 @@ class _MainScreenState extends State<MainScreen>
                       highlightColor: Colors.transparent,
                       splashColor: Colors.transparent,
                       hoverColor: Colors.transparent,
+                      bottomNavigationBarTheme:
+                          const BottomNavigationBarThemeData(
+                            elevation: 0,
+                            backgroundColor: Colors.transparent,
+                          ),
+                      shadowColor: Colors.transparent,
+                      colorScheme: Theme.of(
+                        context,
+                      ).colorScheme.copyWith(surfaceTint: Colors.transparent),
                     ),
                     child: BottomNavigationBar(
                       type: BottomNavigationBarType.fixed,
