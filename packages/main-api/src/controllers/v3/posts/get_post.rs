@@ -1,6 +1,7 @@
 use crate::{
     AppState, Error,
-    models::{PostCommentLike, feed::PostMetadata, user::User},
+    features::report::ContentReport,
+    models::{PostComment, PostCommentLike, feed::PostMetadata, user::User},
 };
 use aide::NoApi;
 use axum::{
@@ -8,6 +9,7 @@ use axum::{
     extract::{Path, State},
 };
 use bdk::prelude::*;
+use std::collections::HashSet;
 
 use super::*;
 
@@ -22,6 +24,7 @@ pub async fn get_post_handler(
     let post_metadata = PostMetadata::query(cli, &post_pk).await?;
     let mut comment_keys = vec![];
     let mut post = None;
+    let mut post_comments = Vec::<PostComment>::new();
 
     for metadata in &post_metadata {
         match metadata {
@@ -29,6 +32,7 @@ pub async fn get_post_handler(
                 if let Some(user) = &user {
                     comment_keys.push(comment.like_keys(&user.pk));
                 }
+                post_comments.push(comment.clone());
             }
             PostMetadata::Post(p) => post = Some(p.clone()),
             _ => {}
@@ -45,7 +49,7 @@ pub async fn get_post_handler(
     }
     let can_read_space = permissions.contains(crate::types::TeamGroupPermission::SpaceRead);
 
-    let (is_liked, is_report, comment_likes) = if let Some(user) = &user {
+    let (is_liked, is_report, comment_likes, reported_comment_ids) = if let Some(user) = &user {
         let is_liked = post.is_liked(cli, &user.pk);
         let is_report = post.is_report(cli, &user.pk);
 
@@ -60,9 +64,17 @@ pub async fn get_post_handler(
         let is_liked = is_liked.await?;
         let is_report = is_report.await?;
 
-        (is_liked, is_report, all_comment_likes)
+        let reported_ids = ContentReport::reported_post_comment_sks_for_post_by_user(
+            cli,
+            &post_pk,
+            &user.pk,
+            &post_comments,
+        )
+        .await?;
+
+        (is_liked, is_report, all_comment_likes, reported_ids)
     } else {
-        (false, false, vec![])
+        (false, false, vec![], HashSet::new())
     };
 
     // TODO: query with sk
@@ -77,6 +89,7 @@ pub async fn get_post_handler(
         is_liked,
         is_report,
         comment_likes,
+        reported_comment_ids,
     )
         .into();
 

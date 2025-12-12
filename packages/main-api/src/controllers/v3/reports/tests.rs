@@ -5,6 +5,7 @@ use crate::controllers::v3::spaces::{CreateSpaceResponse, GetSpaceResponse};
 use crate::features::spaces::boards::dto::space_post_comment_response::SpacePostCommentResponse;
 use crate::features::spaces::boards::dto::space_post_response::SpacePostResponse;
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
+use crate::models::PostComment;
 use crate::posts::CreatePostResponse;
 use crate::{tests::v3_setup::TestContextV3, *};
 
@@ -42,6 +43,66 @@ async fn test_report_post() {
     assert_eq!(status_get, 200);
     assert_eq!(body.is_report, true);
     assert_eq!(body.post.unwrap_or_default().reports, 1);
+}
+
+#[tokio::test]
+async fn test_report_post_comment() {
+    let TestContextV3 {
+        app,
+        test_user,
+        now,
+        ..
+    } = TestContextV3::setup().await;
+
+    let (status_create, _headers, create_body) = post! {
+        app: app,
+        path: "/v3/posts",
+        headers: test_user.1.clone(),
+        response_type: CreatePostResponse
+    };
+
+    assert_eq!(status_create, 200);
+    assert!(!create_body.post_pk.to_string().is_empty());
+
+    let post_pk = create_body.post_pk.to_string();
+
+    let comment_content = format!("<p>Test comment {}</p>", now);
+    let (status, _headers, body) = post! {
+        app: app,
+        path: format!("/v3/posts/{}/comments", post_pk.clone()),
+        headers: test_user.1.clone(),
+        body: {
+            "content": &comment_content
+        },
+        response_type: PostComment
+    };
+    assert_eq!(status, 200);
+
+    tracing::debug!("comment body: {:?}", body.clone());
+
+    let (status_report, _headers, _report_body) = post! {
+        app: app,
+        path: "/v3/reports",
+        headers: test_user.1.clone(),
+        body: { "post_pk": post_pk.clone(), "comment_sk": body.sk },
+        response_type: ReportContentResponse
+    };
+
+    assert_eq!(status_report, 200);
+
+    let (status, _headers, body) = get! {
+        app: app,
+        path: format!("/v3/posts/{}", post_pk),
+        headers: test_user.1.clone(),
+        response_type: PostDetailResponse
+    };
+
+    assert_eq!(status, 200);
+    assert!(body.post.is_some());
+    assert!(body.comments.len() >= 1);
+
+    assert_eq!(body.comments[0].is_report, true);
+    assert_eq!(body.comments[0].reports, 1);
 }
 
 #[tokio::test]

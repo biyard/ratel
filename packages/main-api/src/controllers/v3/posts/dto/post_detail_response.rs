@@ -1,6 +1,9 @@
+use std::collections::HashSet;
+
 use super::*;
 use crate::{
     models::feed::*,
+    types::EntityType,
     // types::{TeamGroupPermission, TeamGroupPermissions},
 };
 use bdk::prelude::*;
@@ -33,14 +36,24 @@ impl From<Vec<PostMetadata>> for PostDetailResponse {
 }
 
 // (PostMetadata, permissions, is_liked)
-impl From<(Vec<PostMetadata>, i64, bool, bool, Vec<PostCommentLike>)> for PostDetailResponse {
+impl
+    From<(
+        Vec<PostMetadata>,
+        i64,
+        bool,
+        bool,
+        Vec<PostCommentLike>,
+        HashSet<String>,
+    )> for PostDetailResponse
+{
     fn from(
-        (items, perms, is_liked, is_report, post_comment_likes): (
+        (items, perms, is_liked, is_report, post_comment_likes, reported_comment_ids): (
             Vec<PostMetadata>,
             i64,
             bool,
             bool,
             Vec<PostCommentLike>,
+            HashSet<String>,
         ),
     ) -> Self {
         let mut res = Self::default();
@@ -54,9 +67,15 @@ impl From<(Vec<PostMetadata>, i64, bool, bool, Vec<PostCommentLike>)> for PostDe
                 PostMetadata::PostComment(comment) => {
                     let liked = post_comment_likes.iter().any(|like| like == comment);
 
-                    res.comments.push((comment, liked).into());
+                    let sk_str = comment.sk.to_string();
+                    let is_comment_reported = reported_comment_ids.contains(&sk_str);
+
+                    res.comments
+                        .push((comment, liked, is_comment_reported).into());
                 }
-                PostMetadata::PostArtwork(artwork) => res.artwork_metadata = artwork.metadata,
+                PostMetadata::PostArtwork(artwork) => {
+                    res.artwork_metadata = artwork.metadata;
+                }
                 PostMetadata::PostRepost(repost) => res.repost = Some(repost),
             }
         }

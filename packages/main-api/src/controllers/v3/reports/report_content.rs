@@ -2,6 +2,7 @@ use crate::features::report::ContentReport;
 use crate::features::spaces::boards::models::space_post::SpacePost;
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
 use crate::models::Post;
+use crate::models::PostComment;
 use crate::models::SpaceCommon;
 use crate::*;
 
@@ -17,6 +18,11 @@ pub enum ReportContentRequest {
 
     SpacePostComment {
         space_post_pk: Partition,
+        comment_sk: EntityType,
+    },
+
+    PostComment {
+        post_pk: Partition,
         comment_sk: EntityType,
     },
 
@@ -87,6 +93,49 @@ pub async fn report_content_handler(
                 .map_err(|e| {
                     tracing::error!("Failed to report post: {}", e);
                     crate::Error::PostReportError
+                })?;
+
+            Ok(Json(ReportContentResponse { reported: true }))
+        }
+
+        ReportContentRequest::PostComment {
+            post_pk,
+            comment_sk,
+        } => {
+            let comment = PostComment::get(cli, post_pk.clone(), Some(comment_sk.clone()))
+                .await?
+                .ok_or_else(|| Error::BadRequest("post_comment not found".into()))?;
+
+            if ContentReport::is_reported_for_target_by_user(
+                cli,
+                &post_pk,
+                Some(&comment.sk),
+                &user.pk,
+            )
+            .await?
+            {
+                tracing::info!(
+                    "report_content_handler: post_comment already reported by user, user_pk={}, post_pk={}",
+                    user.pk,
+                    post_pk
+                );
+                return Ok(Json(ReportContentResponse { reported: false }));
+            }
+
+            let report_tx = ContentReport::from_post_comment(&comment, &post_pk, &user)
+                .create_transact_write_item();
+
+            let c_tx = PostComment::updater(&comment.pk, comment.sk)
+                .increase_reports(1)
+                .transact_write_item();
+
+            cli.transact_write_items()
+                .set_transact_items(Some(vec![report_tx, c_tx]))
+                .send()
+                .await
+                .map_err(|e| {
+                    tracing::error!("Failed to report post comment: {}", e);
+                    crate::Error::PostCommentReportError
                 })?;
 
             Ok(Json(ReportContentResponse { reported: true }))
