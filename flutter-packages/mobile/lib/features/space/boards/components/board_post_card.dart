@@ -113,9 +113,11 @@ class BoardPostCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Profile(
-                    profileImageUrl: profileImageUrl,
-                    displayName: post.authorDisplayName,
+                  Expanded(
+                    child: Profile(
+                      profileImageUrl: profileImageUrl,
+                      displayName: post.authorDisplayName,
+                    ),
                   ),
                   const Spacer(),
                   Text(

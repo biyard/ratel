@@ -27,13 +27,15 @@ class SpaceTitleAndAuthorSection extends StatelessWidget {
         20.vgap,
         Row(
           children: [
-            Profile(
-              profileImageUrl: space.authorProfileUrl.isNotEmpty
-                  ? space.authorProfileUrl
-                  : defaultProfileImage,
-              displayName: space.authorDisplayName.isNotEmpty
-                  ? space.authorDisplayName
-                  : space.authorUsername,
+            Expanded(
+              child: Profile(
+                profileImageUrl: space.authorProfileUrl.isNotEmpty
+                    ? space.authorProfileUrl
+                    : defaultProfileImage,
+                displayName: space.authorDisplayName.isNotEmpty
+                    ? space.authorDisplayName
+                    : space.authorUsername,
+              ),
             ),
             const Spacer(),
             Text(

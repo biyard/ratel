@@ -57,9 +57,11 @@ class FeedCard extends StatelessWidget {
 
             Row(
               children: [
-                Profile(
-                  profileImageUrl: profileImageUrl,
-                  displayName: feed.authorDisplayName,
+                Expanded(
+                  child: Profile(
+                    profileImageUrl: profileImageUrl,
+                    displayName: feed.authorDisplayName,
+                  ),
                 ),
                 const Spacer(),
                 Text(
@@ -141,6 +143,8 @@ class FeedCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _bottomMetric(
                 icon: SvgPicture.asset(Assets.thumbs, width: 20, height: 20),
@@ -192,8 +196,9 @@ class FeedCard extends StatelessWidget {
     VoidCallback? onTap,
   }) {
     final child = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           icon,
@@ -212,9 +217,7 @@ class FeedCard extends StatelessWidget {
       ),
     );
 
-    return Expanded(
-      child: onTap == null ? child : InkWell(onTap: onTap, child: child),
-    );
+    return onTap == null ? child : InkWell(onTap: onTap, child: child);
   }
 
   Widget _spaceChip(String label) {
