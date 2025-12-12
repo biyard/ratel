@@ -9,56 +9,59 @@ class PostScreen extends GetWidget<PostController> {
 
     return Layout<PostController>(
       scrollable: false,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: AppTopBar(onBack: () => Get.back(), title: "My Posts"),
-          ),
-          Expanded(
-            child: Obx(
-              () => RefreshIndicator(
-                onRefresh: controller.loadInitial,
-                color: AppColors.primary,
-                backgroundColor: AppColors.bg,
-                child: ListView.separated(
-                  controller: controller.scrollController,
-                  padding: EdgeInsets.fromLTRB(0, 0, 0, bottomPad + 10),
-                  itemCount:
-                      controller.feeds.length + (controller.hasMore ? 1 : 0),
-                  separatorBuilder: (_, __) => 8.vgap,
-                  itemBuilder: (context, index) {
-                    if (index >= controller.feeds.length) {
-                      return _buildLoadMoreIndicator(controller);
-                    }
+      child: Obx(() {
+        final hasMore = controller.hasMore;
+        final feeds = controller.feeds;
 
-                    final feed = controller.feeds[index];
-                    return FeedCard(
-                      feed: feed,
-                      onTap: () => {
-                        logger.d("feed tapped: ${feed.pk} ${feed.spacePk}"),
-                        if (feed.spacePk != null)
-                          {
-                            logger.d("space pk: ${feed.spacePk}"),
-                            Get.rootDelegate.toNamed(
-                              spaceWithPk(feed.spacePk!),
-                            ),
-                          }
-                        else
-                          {
-                            logger.d("feed pk: ${feed.pk}"),
-                            Get.rootDelegate.toNamed(postWithPk(feed.pk)),
-                          },
-                      },
-                    );
-                  },
-                ),
-              ),
-            ),
+        final itemCount = feeds.length + 1 + (hasMore ? 1 : 0);
+
+        return RefreshIndicator(
+          onRefresh: controller.loadInitial,
+          color: AppColors.primary,
+          backgroundColor: AppColors.bg,
+          child: ListView.separated(
+            controller: controller.scrollController,
+            padding: EdgeInsets.fromLTRB(0, 0, 0, bottomPad + 10),
+            itemCount: itemCount,
+            separatorBuilder: (_, index) {
+              if (index == 0) {
+                return 4.vgap;
+              }
+              return 8.vgap;
+            },
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                  child: AppTopBar(onBack: () => Get.back(), title: "My Posts"),
+                );
+              }
+
+              final loadMoreIndex = itemCount - 1;
+              if (hasMore && index == loadMoreIndex) {
+                return _buildLoadMoreIndicator(controller);
+              }
+
+              final feedIndex = index - 1;
+              final feed = feeds[feedIndex];
+
+              return FeedCard(
+                feed: feed,
+                onTap: () {
+                  logger.d("feed tapped: ${feed.pk} ${feed.spacePk}");
+                  if (feed.spacePk != null) {
+                    logger.d("space pk: ${feed.spacePk}");
+                    Get.rootDelegate.toNamed(spaceWithPk(feed.spacePk!));
+                  } else {
+                    logger.d("feed pk: ${feed.pk}");
+                    Get.rootDelegate.toNamed(postWithPk(feed.pk));
+                  }
+                },
+              );
+            },
           ),
-        ],
-      ),
+        );
+      }),
     );
   }
 

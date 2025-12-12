@@ -10,38 +10,46 @@ class DraftScreen extends GetWidget<DraftController> {
 
     return Layout<DraftController>(
       scrollable: false,
-      child: Obx(
-        () => RefreshIndicator(
+      child: Obx(() {
+        final feeds = controller.feeds;
+        final itemCount = feeds.length + 1;
+
+        return RefreshIndicator(
           onRefresh: () => controller.listFeeds(),
           color: AppColors.primary,
           backgroundColor: AppColors.bg,
           child: ListView.separated(
             padding: EdgeInsets.fromLTRB(0, 0, 0, bottomPad + 10),
-            itemCount: controller.feeds.length + 1,
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            itemCount: itemCount,
+            separatorBuilder: (_, index) {
+              if (index == 0) {
+                return 4.vgap;
+              }
+              return 8.vgap;
+            },
             itemBuilder: (context, index) {
               if (index == 0) {
-                return Padding(
-                  padding: const EdgeInsets.all(20.0),
-                  child: AppTopBar(
-                    onBack: () => Get.back(),
-                    title: DraftLocalization.draftMyDraft,
-                  ),
+                return AppTopBar(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                  onBack: () => Get.back(),
+                  title: DraftLocalization.draftMyDraft,
                 );
               }
 
               final i = index - 1;
+              final draft = feeds[i];
+
               return DraftSlidableCard(
-                data: controller.feeds[i],
-                onTap: () => controller.openDraft(controller.feeds[i].pk),
+                data: draft,
+                onTap: () => controller.openDraft(draft.pk),
                 onDelete: () {
-                  showRemoveDraftModal(context, controller.feeds[i].pk);
+                  showRemoveDraftModal(context, draft.pk);
                 },
               );
             },
           ),
-        ),
-      ),
+        );
+      }),
     );
   }
 }
