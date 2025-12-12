@@ -1,7 +1,7 @@
 import 'package:ratel/exports.dart';
 
 class BoardCommentItem extends StatelessWidget {
-  final UserV2Model user;
+  final UserModel user;
   final SpacePostCommentModel comment;
   final VoidCallback? onLikeTap;
   final VoidCallback? onMoreTap;

@@ -6,7 +6,7 @@ class BoardCreatorController extends BaseController {
   final SpaceBoardsApi _boardsApi = Get.find<SpaceBoardsApi>();
   late final String spacePk;
   late final String postPk;
-  Rx<UserV2Model> get user => userService.user;
+  Rx<UserModel> get user => userService.user;
   final post = Rxn<SpacePostModel>();
   final isLoading = false.obs;
   final comments = <SpacePostCommentModel>[].obs;

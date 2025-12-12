@@ -6,7 +6,7 @@ typedef CommentEditTap<T> = Future<void> Function(T comment, String newContent);
 typedef CommentDeleteTap<T> = Future<void> Function(T comment);
 
 Future<void> showBoardCommentsBottomSheet({
-  required Rx<UserV2Model> user,
+  required Rx<UserModel> user,
   required BuildContext context,
   required List<SpacePostCommentModel> comments,
   required bool isLoading,
@@ -53,7 +53,7 @@ Future<void> showBoardCommentsBottomSheet({
 }
 
 class BoardCommentInputBar extends StatelessWidget {
-  final Rx<UserV2Model> user;
+  final Rx<UserModel> user;
   final Future<void> Function(String text) onSubmit;
   final List<SpacePostCommentModel> comments;
   final bool isLoading;

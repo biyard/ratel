@@ -18,7 +18,7 @@ class DetailPostController extends BaseController {
   bool get isPostLiked => feed.value?.isLiked == true;
   int get postLikes => feed.value?.post.likes ?? 0;
 
-  final Rx<UserV2Model> user = UserV2Model(
+  final Rx<UserModel> user = UserModel(
     pk: '',
     email: '',
     nickname: '',
