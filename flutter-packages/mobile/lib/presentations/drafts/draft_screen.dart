@@ -107,144 +107,95 @@ class DraftCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final allTags = tags ?? const <String>[];
-    final visibleTags = allTags.length > 4
-        ? allTags.sublist(0, 4)
-        : allTags.toList();
-    final extraCount = allTags.length > 4 ? allTags.length - 4 : 0;
+    final bodyText = _plainTextFromHtml(data.htmlContents);
+    final profileImageUrl = data.authorProfileUrl.isNotEmpty
+        ? data.authorProfileUrl
+        : defaultProfileImage;
 
     return InkWell(
+      borderRadius: BorderRadius.circular(10),
       onTap: onTap,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          RoundContainer(
-            width: double.infinity,
-            radius: 0,
-            color: Colors.transparent,
-            padding: const EdgeInsets.all(15),
-            child: Column(
+      child: Container(
+        decoration: BoxDecoration(color: const Color(0xFF171717)),
+        padding: const EdgeInsets.fromLTRB(15, 14, 15, 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Wrap(
-                        spacing: 4,
-                        runSpacing: 4,
-                        children: [
-                          ...visibleTags
-                              .map((t) => DraftTagChip(text: t))
-                              .toList(),
-                          if (extraCount > 0)
-                            DraftTagChip(text: '+$extraCount'),
-                        ],
-                      ),
+                Expanded(
+                  child: Text(
+                    '(Draft) ${data.title}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      height: 22 / 16,
+                      fontWeight: FontWeight.w700,
                     ),
-                    if (onDelete != null) ...[
-                      10.gap,
-                      InkWell(
-                        onTap: onDelete,
-                        borderRadius: BorderRadius.circular(20),
-                        child: SvgPicture.asset(
-                          Assets.trash,
-                          width: 20,
-                          height: 20,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                15.vgap,
-                Text(
-                  data.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    height: 27 / 18,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                15.vgap,
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Text(
-                      timeAgo((data.createdAt / 1000).toInt()),
-                      style: const TextStyle(
-                        color: Color(0xFF737373),
-                        fontSize: 12,
-                        height: 1.33,
-                        fontWeight: FontWeight.w500,
-                      ),
+                if (onDelete != null) ...[
+                  8.gap,
+                  InkWell(
+                    onTap: onDelete,
+                    borderRadius: BorderRadius.circular(20),
+                    child: SvgPicture.asset(
+                      Assets.trash,
+                      width: 20,
+                      height: 20,
                     ),
-                    30.gap,
-                  ],
+                  ),
+                ],
+              ],
+            ),
+            12.vgap,
+            Row(
+              children: [
+                Expanded(
+                  child: Profile(
+                    displayName: data.authorDisplayName,
+                    profileImageUrl: profileImageUrl,
+                  ),
+                ),
+                Text(
+                  timeAgo((data.createdAt / 1000).toInt()),
+                  style: const TextStyle(
+                    color: Color(0xFF737373),
+                    fontSize: 12,
+                    height: 1.33,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
-          ),
-          Container(height: 1, color: const Color(0xFF2D2D2D)),
-        ],
-      ),
-    );
-  }
-}
-
-class DraftTagChip extends StatelessWidget {
-  final String text;
-  const DraftTagChip({super.key, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: const Color(0xFF262626),
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          height: 1.33,
+            if (bodyText.isNotEmpty) ...[
+              12.vgap,
+              Text(
+                bodyText,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                  height: 20 / 14,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
   }
 }
 
-class DraftThumbnail extends StatelessWidget {
-  final String url;
-  const DraftThumbnail({super.key, required this.url});
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: SizedBox(
-        width: 54,
-        height: 54,
-        child: Image.network(
-          url,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) {
-            return RoundContainer(
-              color: AppColors.neutral500,
-              radius: 8,
-              width: 54,
-              height: 54,
-            );
-          },
-        ),
-      ),
-    );
-  }
+String _plainTextFromHtml(String html) {
+  if (html.isEmpty) return '';
+  final noTags = html.replaceAll(RegExp(r'<[^>]+>'), '');
+  return noTags.trim();
 }
 
 void showRemoveDraftModal(BuildContext ctx, String feedPk) {
