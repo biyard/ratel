@@ -141,6 +141,8 @@ pub enum Error {
     SpacePostReportError,
     #[error("Failed to report space post comment")]
     SpacePostCommentReportError,
+    #[error("Failed to report post comment")]
+    PostCommentReportError,
 
     // /v3/spaces endpoints 3000 ~
     #[error("Space not found")]

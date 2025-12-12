@@ -1,7 +1,7 @@
 import 'package:ratel/exports.dart';
 
 class UserService extends GetxService {
-  final Rx<UserV2Model> user = UserV2Model(
+  final Rx<UserModel> user = UserModel(
     pk: '',
     email: '',
     nickname: '',
@@ -25,7 +25,7 @@ class UserService extends GetxService {
     Get.put<UserApi>(UserApi());
   }
 
-  Future<UserV2Model> getUser() async {
+  Future<UserModel> getUser() async {
     final userApi = Get.find<UserApi>();
     final item = await userApi.getUserInfoV2();
     user(item);

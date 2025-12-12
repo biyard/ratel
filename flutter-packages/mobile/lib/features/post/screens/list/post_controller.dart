@@ -3,7 +3,7 @@ import 'package:ratel/exports.dart';
 class PostController extends BaseController {
   final feedsService = Get.find<FeedsService>();
 
-  RxList<FeedV2SummaryModel> get feeds => feedsService.summaries;
+  RxList<FeedSummaryModel> get feeds => feedsService.summaries;
 
   RxBool isInitialLoading = false.obs;
   RxBool isLoadingMore = false.obs;

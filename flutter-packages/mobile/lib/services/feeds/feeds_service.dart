@@ -2,13 +2,13 @@ import 'package:ratel/exports.dart';
 
 class FeedsService extends GetxService {
   final feedsApi = Get.find<FeedsApi>();
-
-  final RxList<FeedV2SummaryModel> summaries = <FeedV2SummaryModel>[].obs;
-  final RxMap<String, FeedV2Model> details = <String, FeedV2Model>{}.obs;
-
-  final RxList<FeedV2SummaryModel> drafts = <FeedV2SummaryModel>[].obs;
+  final RxList<FeedSummaryModel> summaries = <FeedSummaryModel>[].obs;
+  final RxList<FeedSummaryModel> homeFeeds = <FeedSummaryModel>[].obs;
+  final RxMap<String, FeedModel> details = <String, FeedModel>{}.obs;
+  final RxList<FeedSummaryModel> drafts = <FeedSummaryModel>[].obs;
 
   String? bookmark;
+  String? homeBookmark;
   String? draftBookmark;
 
   static void init() {
@@ -17,6 +17,7 @@ class FeedsService extends GetxService {
   }
 
   bool get hasMore => bookmark != null;
+  bool get hasMoreHome => homeBookmark != null;
   bool get hasMoreDrafts => draftBookmark != null;
 
   Future<void> loadInitial() async {
@@ -42,7 +43,34 @@ class FeedsService extends GetxService {
     summaries.refresh();
   }
 
-  Future<FeedV2Model> fetchDetail(
+  // ===== Home Feeds (listFeedsV2) =====
+
+  Future<void> loadHomeInitial() async {
+    homeBookmark = null;
+    await _loadHomeFeeds(reset: true);
+  }
+
+  Future<void> loadHomeMore() async {
+    if (!hasMoreHome) return;
+    await _loadHomeFeeds(reset: false);
+  }
+
+  Future<void> _loadHomeFeeds({required bool reset}) async {
+    final result = await feedsApi.listFeedsV2(bookmark: homeBookmark);
+    homeBookmark = result.bookmark;
+
+    if (reset) {
+      homeFeeds.assignAll(result.items);
+    } else {
+      homeFeeds.addAll(result.items);
+    }
+
+    homeFeeds.refresh();
+  }
+
+  // ===== Detail =====
+
+  Future<FeedModel> fetchDetail(
     String postPk, {
     bool forceRefresh = false,
   }) async {
@@ -56,7 +84,7 @@ class FeedsService extends GetxService {
     return result;
   }
 
-  void updateDetail(FeedV2Model model) {
+  void updateDetail(FeedModel model) {
     final pk = model.post.pk;
     details[pk] = model;
     _syncSummaryFromDetail(model);
@@ -71,12 +99,21 @@ class FeedsService extends GetxService {
     final idx = summaries.indexWhere((e) => e.pk == postPk);
     if (idx >= 0) {
       summaries.removeAt(idx);
-      summaries.refresh();
     }
+
+    final homeIdx = homeFeeds.indexWhere((e) => e.pk == postPk);
+    if (homeIdx >= 0) {
+      homeFeeds.removeAt(homeIdx);
+    }
+
+    summaries.refresh();
+    homeFeeds.refresh();
 
     removeDraftLocally(postPk);
     return true;
   }
+
+  // ===== Drafts =====
 
   Future<void> loadDraftsInitial() async {
     draftBookmark = null;
@@ -114,17 +151,23 @@ class FeedsService extends GetxService {
     drafts.refresh();
   }
 
-  void _syncSummaryFromDetail(FeedV2Model detail) {
+  void _syncSummaryFromDetail(FeedModel detail) {
     final pk = detail.post.pk;
-    final idx = summaries.indexWhere((e) => e.pk == pk);
-    if (idx < 0) return;
 
-    final s = summaries[idx];
+    void updateList(RxList<FeedSummaryModel> list) {
+      final idx = list.indexWhere((e) => e.pk == pk);
+      if (idx < 0) return;
 
-    s.title = detail.post.title;
-    s.likes = detail.post.likes;
-    s.comments = detail.post.comments;
+      final s = list[idx];
+      s.title = detail.post.title;
+      s.likes = detail.post.likes;
+      s.comments = detail.post.comments;
+    }
+
+    updateList(summaries);
+    updateList(homeFeeds);
 
     summaries.refresh();
+    homeFeeds.refresh();
   }
 }

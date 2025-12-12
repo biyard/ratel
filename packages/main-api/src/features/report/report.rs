@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::features::spaces::boards::models::space_post::SpacePost;
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
-use crate::models::{Post, SpaceCommon};
+use crate::models::{Post, PostComment, SpaceCommon};
 use crate::time::get_now_timestamp_millis;
 use crate::types::*;
 use crate::*;
@@ -12,6 +12,7 @@ use crate::*;
 pub enum ReportTarget {
     #[default]
     Post,
+    PostComment,
     Space,
     SpacePost,
     SpacePostComment,
@@ -69,6 +70,15 @@ impl ContentReport {
             post.pk.clone(),
             Some(post.sk.clone()),
             ReportTarget::Post,
+            reporter,
+        )
+    }
+
+    pub fn from_post_comment(comment: &PostComment, post_pk: &Partition, reporter: &User) -> Self {
+        ContentReport::new_base(
+            post_pk.clone(),
+            Some(comment.sk.clone()),
+            ReportTarget::PostComment,
             reporter,
         )
     }
@@ -135,6 +145,32 @@ impl ContentReport {
         let (pk, sk) = Self::key_for_target(reporter_pk, target_pk, target_sk);
         let reported = ContentReport::get(cli, &pk, Some(&sk)).await?.is_some();
         Ok(reported)
+    }
+
+    pub async fn reported_post_comment_sks_for_post_by_user(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: &Partition,
+        reporter_pk: &Partition,
+        comments: &[PostComment],
+    ) -> Result<HashSet<String>> {
+        let keys: Vec<_> = comments
+            .iter()
+            .map(|c| {
+                let pk = CompositePartition(reporter_pk.clone(), post_pk.clone());
+                let sk = c.sk.clone();
+                (pk, sk)
+            })
+            .collect();
+
+        let reports = ContentReport::batch_get(cli, keys).await?;
+
+        let set = reports
+            .into_iter()
+            .filter(|r| matches!(r.target, ReportTarget::PostComment))
+            .filter_map(|r| r.target_sk.map(|sk| sk.to_string()))
+            .collect::<HashSet<_>>();
+
+        Ok(set)
     }
 
     pub async fn reported_comment_ids_for_post_by_user(

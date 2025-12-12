@@ -10,6 +10,7 @@ class DetailCommentBar extends StatelessWidget {
     required this.isLikingCommentOf,
     required this.isCommentLiked,
     required this.onToggleLikeComment,
+    required this.onReportComment,
   });
 
   final double bottomInset;
@@ -19,6 +20,7 @@ class DetailCommentBar extends StatelessWidget {
   final bool Function(String commentSk) isLikingCommentOf;
   final bool Function(String commentSk, {bool fallback}) isCommentLiked;
   final Future<void> Function(String commentSk) onToggleLikeComment;
+  final Future<void> Function(String commentSk)? onReportComment;
 
   void _openCommentSheet(BuildContext context) {
     showModalBottomSheet(
@@ -39,6 +41,7 @@ class DetailCommentBar extends StatelessWidget {
               isCommentLiked: isCommentLiked,
               onToggleLikeComment: onToggleLikeComment,
               scrollController: scrollController,
+              onReportComment: onReportComment,
             );
           },
         );
@@ -94,6 +97,7 @@ class _CommentBottomSheet extends StatefulWidget {
     required this.isCommentLiked,
     required this.onToggleLikeComment,
     required this.scrollController,
+    required this.onReportComment,
   });
 
   final List<PostCommentModel> comments;
@@ -102,6 +106,8 @@ class _CommentBottomSheet extends StatefulWidget {
   final bool Function(String commentSk, {bool fallback}) isCommentLiked;
   final Future<void> Function(String commentSk) onToggleLikeComment;
   final ScrollController scrollController;
+
+  final Future<void> Function(String commentSk)? onReportComment;
 
   @override
   State<_CommentBottomSheet> createState() => _CommentBottomSheetState();
@@ -232,11 +238,49 @@ class _CommentBottomSheetState extends State<_CommentBottomSheet> {
                             isLikingCommentOf: widget.isLikingCommentOf,
                             isCommentLiked: widget.isCommentLiked,
                             onToggleLikeComment: (commentSk) async {
+                              final idx = _comments.indexWhere(
+                                (e) => e.sk == commentSk,
+                              );
+                              if (idx == -1) return;
+
+                              final current = _comments[idx];
+                              final prevLiked = current.liked == true;
+                              final prevLikes = current.likes;
                               await widget.onToggleLikeComment(commentSk);
-                              if (mounted) {
-                                setState(() {});
+                              final nextLiked = !prevLiked;
+                              int nextLikes = prevLikes;
+                              if (nextLiked && !prevLiked) {
+                                nextLikes = prevLikes + 1;
+                              } else if (!nextLiked &&
+                                  prevLiked &&
+                                  prevLikes > 0) {
+                                nextLikes = prevLikes - 1;
                               }
+
+                              if (!mounted) return;
+
+                              setState(() {
+                                _comments[idx]
+                                  ..liked = nextLiked
+                                  ..likes = nextLikes;
+                              });
                             },
+                            isReported: c.isReport,
+                            onReport: widget.onReportComment == null
+                                ? null
+                                : (sk) async {
+                                    await widget.onReportComment!(sk);
+                                    final idx = _comments.indexWhere(
+                                      (e) => e.sk == sk,
+                                    );
+                                    if (idx != -1) {
+                                      _comments[idx].isReport = true;
+                                    }
+
+                                    if (mounted) {
+                                      setState(() {});
+                                    }
+                                  },
                           ),
                         );
                       },

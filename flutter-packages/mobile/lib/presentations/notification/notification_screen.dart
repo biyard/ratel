@@ -41,10 +41,10 @@ class NotificationScreen extends GetWidget<NotificationController> {
                     child: Column(
                       children: [
                         const Header(title: 'Notification'),
-                        15.vgap,
-                        NotificationHeader(
-                          onMarkAllRead: () => controller.markAllAsRead(),
-                        ),
+                        // 15.vgap,
+                        // NotificationHeader(
+                        //   onMarkAllRead: () => controller.markAllAsRead(),
+                        // ),
                       ],
                     ),
                   ),

@@ -21,7 +21,7 @@ class AppTopBar extends StatelessWidget {
     this.rightStyle,
     this.enableBack = true,
     this.onRight,
-    this.padding = const EdgeInsets.fromLTRB(0, 20, 0, 20),
+    this.padding = const EdgeInsets.fromLTRB(0, 5, 0, 2),
   });
 
   @override

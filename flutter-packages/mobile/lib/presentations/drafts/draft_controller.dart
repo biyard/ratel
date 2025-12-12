@@ -3,7 +3,7 @@ import 'package:ratel/exports.dart';
 class DraftController extends BaseController {
   final feedsService = Get.find<FeedsService>();
 
-  RxList<FeedV2SummaryModel> get feeds => feedsService.drafts;
+  RxList<FeedSummaryModel> get feeds => feedsService.drafts;
   RxBool isBusy = false.obs;
 
   @override

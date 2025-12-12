@@ -33,6 +33,20 @@ class ReportApi extends GetConnect {
     return ReportContentResponse.fromJson(Map<String, dynamic>.from(json));
   }
 
+  Future<ReportContentResponse?> reportPostComment({
+    required String postPk,
+    required String commentSk,
+  }) {
+    return _sendReport({'post_pk': postPk, 'comment_sk': commentSk});
+  }
+
+  Future<ReportContentResponse?> reportSpaceComment({
+    required String spacePostPk,
+    required String commentSk,
+  }) {
+    return _sendReport({'space_post_pk': spacePostPk, 'comment_sk': commentSk});
+  }
+
   Future<ReportContentResponse?> reportPost({required String postPk}) {
     return _sendReport({'post_pk': postPk});
   }

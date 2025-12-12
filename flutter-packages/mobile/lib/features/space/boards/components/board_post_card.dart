@@ -15,7 +15,7 @@ class BoardPostCard extends StatelessWidget {
       post.createdAt,
       isUtc: false,
     );
-    final relative = _formatRelativeTime(createdAt);
+    final relative = formatRelativeTime(createdAt);
     final profileImageUrl = (post.authorProfileUrl.isNotEmpty
         ? post.authorProfileUrl
         : defaultProfileImage);
@@ -113,9 +113,11 @@ class BoardPostCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Profile(
-                    profileImageUrl: profileImageUrl,
-                    displayName: post.authorDisplayName,
+                  Expanded(
+                    child: Profile(
+                      profileImageUrl: profileImageUrl,
+                      displayName: post.authorDisplayName,
+                    ),
                   ),
                   const Spacer(),
                   Text(
@@ -140,17 +142,6 @@ class BoardPostCard extends StatelessWidget {
       }
     }
     return null;
-  }
-
-  String _formatRelativeTime(DateTime time) {
-    final now = DateTime.now();
-    final diff = now.difference(time);
-
-    if (diff.inDays >= 7) return '${(diff.inDays / 7).floor()}w ago';
-    if (diff.inDays >= 1) return '${diff.inDays}d ago';
-    if (diff.inHours >= 1) return '${diff.inHours}h ago';
-    if (diff.inMinutes >= 1) return '${diff.inMinutes}m ago';
-    return 'now';
   }
 }
 

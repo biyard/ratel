@@ -31,10 +31,9 @@ class BoardDetailTopBar extends StatelessWidget {
           ],
           const Spacer(),
           if (onMoreTap != null)
-            IconButton(
-              icon: const Icon(Icons.more_horiz, size: 22),
-              color: Colors.white,
-              onPressed: onMoreTap,
+            InkWell(
+              onTap: onMoreTap,
+              child: SvgPicture.asset(Assets.extra, width: 24, height: 24),
             ),
         ],
       ),

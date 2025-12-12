@@ -1,326 +1,253 @@
-import 'package:flutter_html/flutter_html.dart';
 import 'package:ratel/exports.dart';
 
 class FeedCard extends StatelessWidget {
-  const FeedCard({super.key, required this.data});
-  final FeedModel data;
+  const FeedCard({
+    super.key,
+    required this.feed,
+    this.onBookmarkTap,
+    this.onTap,
+    this.onEditTap,
+    this.onMoreTap,
+    this.onJoinSpaceTap,
+  });
+
+  final FeedSummaryModel feed;
+  final VoidCallback? onBookmarkTap;
+  final VoidCallback? onTap;
+  final VoidCallback? onEditTap;
+  final VoidCallback? onMoreTap;
+  final VoidCallback? onJoinSpaceTap;
+
+  bool get hasSpace => feed.spacePk != null && feed.spacePk!.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
-    final hasSpace = data.spaceIds.isNotEmpty;
-    final hasRewards = data.rewards != null;
+    final imageUrl = feed.mainImage;
+    final bodyText = _plainTextFromHtml(feed.htmlContents);
 
-    return InkWell(
-      onTap: () {
-        if (!hasSpace) return;
+    final profileImageUrl = (feed.authorProfileUrl.isNotEmpty
+        ? feed.authorProfileUrl
+        : defaultProfileImage);
 
-        // Get.rootDelegate.toNamed(AppRoutes.spaceWithId(spaceId));
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.bg,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppColors.neutral700),
-        ),
+    final top = Container(
+      color: const Color(0xff171717),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      if (hasSpace)
-                        _Badge(
-                          icon: SvgPicture.asset(
-                            Assets.palace,
-                            width: 14,
-                            height: 14,
-                          ),
-                          label: 'SPACE',
-                          fg: AppColors.neutral800,
-                          bg: AppColors.primary,
-                        ),
-                      if (hasSpace) 10.gap,
-                      if (hasRewards)
-                        _Badge(
-                          icon: SvgPicture.asset(
-                            Assets.coin2,
-                            width: 14,
-                            height: 14,
-                          ),
-                          label: 'REWARDS',
-                          fg: AppColors.neutral800,
-                          bg: AppColors.primary,
-                        ),
-                      if (hasRewards) 10.gap,
-                      _Badge(
-                        icon: null,
-                        label: data.feedType,
-                        fg: Colors.white,
-                        bg: Colors.transparent,
-                        border: AppColors.neutral700,
-                      ),
-                      const Spacer(),
-                      // SvgPicture.asset(Assets.bookmark, width: 20, height: 20),
-                      // 10.gap,
-                      // SvgPicture.asset(Assets.edit1, width: 20, height: 20),
-                      // 10.gap,
-                      // SvgPicture.asset(Assets.extra, width: 20, height: 20),
-                    ],
+            Row(
+              children: [
+                if (hasSpace) ...[_spaceChip('Space'), 8.gap],
+                Text(
+                  feed.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Raleway',
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    height: 24 / 18,
                   ),
-                  11.5.vgap,
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (data.image != null && data.image != "") ...[
-                        _thumb(data.image!),
-                        10.gap,
-                      ],
-                      Flexible(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              data.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                height: 1.3,
-                              ),
-                            ),
-                            10.vgap,
-                            Row(
-                              children: [
-                                _avatar(data.authorUrl),
-                                10.gap,
-                                Text(
-                                  data.authorName,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 12,
-                                    height: 1.3,
-                                  ),
-                                ),
-                                10.gap,
-                                SvgPicture.asset(
-                                  Assets.badge,
-                                  width: 20,
-                                  height: 20,
-                                ),
-                                const Spacer(),
-                                Text(
-                                  _timeAgo(data.createdAt),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 12,
-                                    height: 1.3,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            10.vgap,
-                            Html(
-                              data: data.description,
-                              style: {
-                                "*": Style(
-                                  margin: Margins.zero,
-                                  padding: HtmlPaddings.zero,
-                                  color: Colors.white,
-                                  fontSize: FontSize(12),
-                                  fontWeight: FontWeight.w400,
-                                  lineHeight: LineHeight.number(1.3),
-                                  maxLines: 1,
-                                  textOverflow: TextOverflow.ellipsis,
-                                ),
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                ),
+              ],
+            ),
+            10.vgap,
+
+            Row(
+              children: [
+                Expanded(
+                  child: Profile(
+                    profileImageUrl: profileImageUrl,
+                    displayName: feed.authorDisplayName,
                   ),
-                ],
+                ),
+                const Spacer(),
+                Text(
+                  timeAgo((feed.createdAt / 1000).toInt()),
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    color: AppColors.neutral500,
+                    fontWeight: FontWeight.w500,
+                    fontSize: 12,
+                    height: 16 / 12,
+                  ),
+                ),
+              ],
+            ),
+            10.vgap,
+            if (bodyText.isNotEmpty)
+              Text(
+                bodyText,
+                maxLines: 5,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontFamily: 'Raleway',
+                  color: Colors.white,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 15,
+                  height: 22 / 15,
+                ),
               ),
-            ),
-            Container(
-              height: 1,
-              width: double.infinity,
-              color: AppColors.neutral800,
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(7, 10, 7, 10),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _Stat(
-                    icon: SvgPicture.asset(
-                      Assets.thumbs,
-                      width: 13,
-                      height: 13,
-                    ),
-                    label: '${data.likes}',
-                  ),
-                  10.gap,
-                  _Stat(
-                    icon: SvgPicture.asset(
-                      Assets.roundBubble,
-                      width: 13,
-                      height: 13,
-                    ),
-                    label: '${data.comments}',
-                  ),
-                  if (data.rewards != null) ...[
-                    10.gap,
-                    _Stat(
-                      icon: SvgPicture.asset(
-                        Assets.reward,
-                        width: 13,
-                        height: 13,
-                      ),
-                      label: '${data.rewards}',
-                    ),
-                  ],
-                  10.gap,
-                  _Stat(
-                    icon: SvgPicture.asset(Assets.feed, width: 13, height: 13),
-                    label: '${data.reposts}',
-                  ),
-                ],
+            if (imageUrl != null && imageUrl.isNotEmpty) ...[
+              10.vgap,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: AspectRatio(
+                  aspectRatio: 367 / 206,
+                  child: Image.network(imageUrl, fit: BoxFit.cover),
+                ),
               ),
-            ),
+            ],
+
+            // if (hasSpace) ...[
+            //   20.vgap,
+            //   Align(
+            //     alignment: Alignment.centerLeft,
+            //     child: TextButton(
+            //       onPressed: onJoinSpaceTap,
+            //       style: TextButton.styleFrom(
+            //         backgroundColor: AppColors.primary,
+            //         shape: RoundedRectangleBorder(
+            //           borderRadius: BorderRadius.circular(24),
+            //         ),
+            //         padding: EdgeInsets.zero,
+            //       ),
+            //       child: Padding(
+            //         padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            //         child: const Text(
+            //           'Join Space',
+            //           style: TextStyle(
+            //             fontFamily: 'Raleway',
+            //             color: Colors.black,
+            //             fontWeight: FontWeight.w700,
+            //             fontSize: 14,
+            //           ),
+            //         ),
+            //       ),
+            //     ),
+            //   ),
+            // ],
           ],
         ),
       ),
     );
-  }
 
-  Widget _thumb(String url) {
-    const size = 78.0;
-    if (url.isEmpty) {
-      return Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: AppColors.neutral700,
-          borderRadius: BorderRadius.circular(10),
+    final bottom = Container(
+      decoration: const BoxDecoration(
+        color: Color(0xff171717),
+        border: Border(top: BorderSide(color: Color(0xFF262626), width: 1)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _bottomMetric(
+                icon: SvgPicture.asset(Assets.thumbs, width: 20, height: 20),
+                value: feed.likes,
+              ),
+              _bottomMetric(
+                icon: SvgPicture.asset(
+                  Assets.roundBubble,
+                  width: 20,
+                  height: 20,
+                ),
+                value: feed.comments,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          decoration: const BoxDecoration(
+            color: AppColors.panelBg,
+            // border: Border(
+            //   top: BorderSide(color: Color(0xFF2D2D2D), width: 0.5),
+            // ),
+          ),
+          child: top,
         ),
-        child: const Icon(Icons.image, color: AppColors.neutral400),
-      );
+        bottom,
+      ],
+    );
+
+    if (onTap == null) {
+      return content;
     }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: Image.network(url, width: size, height: size, fit: BoxFit.cover),
+
+    return InkWell(
+      onTap: onTap,
+      child: ClipRRect(borderRadius: BorderRadius.circular(0), child: content),
     );
   }
 
-  Widget _avatar(String url) {
-    const s = 22.0;
-    if (url.isEmpty) {
-      return Container(
-        width: s,
-        height: s,
-        decoration: const BoxDecoration(
-          color: AppColors.neutral600,
-          shape: BoxShape.circle,
-        ),
-      );
-    }
-    return ClipOval(
-      child: Image.network(url, width: s, height: s, fit: BoxFit.cover),
+  Widget _bottomMetric({
+    required SvgPicture icon,
+    required int value,
+    VoidCallback? onTap,
+  }) {
+    final child = Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          icon,
+          const SizedBox(width: 6),
+          Text(
+            value.toString(),
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              color: Colors.white,
+              fontWeight: FontWeight.w500,
+              fontSize: 15,
+              height: 20 / 15,
+            ),
+          ),
+        ],
+      ),
     );
+
+    return onTap == null ? child : InkWell(onTap: onTap, child: child);
   }
-}
 
-class _Badge extends StatelessWidget {
-  const _Badge({
-    required this.icon,
-    required this.label,
-    required this.fg,
-    required this.bg,
-    this.border,
-  });
-
-  final SvgPicture? icon;
-  final String label;
-  final Color fg;
-  final Color bg;
-  final Color? border;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _spaceChip(String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: bg,
+        color: AppColors.primary,
         borderRadius: BorderRadius.circular(4),
-        border: border == null ? null : Border.all(color: border!),
       ),
-      child: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[icon!, const SizedBox(width: 6)],
-            Text(
-              label,
-              style: TextStyle(
-                color: fg,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
+      child: Row(
+        children: [
+          SvgPicture.asset(Assets.palace, width: 14, height: 14),
+          4.gap,
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Raleway',
+              color: Colors.black,
+              fontWeight: FontWeight.w600,
+              fontSize: 11,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
-}
 
-class _Stat extends StatelessWidget {
-  const _Stat({required this.icon, required this.label});
-  final SvgPicture? icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 60,
-      child: Center(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (icon != null) ...[icon!, 5.gap],
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                height: 1.3,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  String _plainTextFromHtml(String html) {
+    if (html.isEmpty) return '';
+    final noTags = html.replaceAll(RegExp(r'<[^>]+>'), '');
+    return noTags.trim();
   }
-}
-
-String _timeAgo(int epochSec) {
-  final now = DateTime.now();
-  final dt = DateTime.fromMillisecondsSinceEpoch(epochSec * 1000);
-  final diff = now.difference(dt);
-  if (diff.inDays >= 7) return '${(diff.inDays / 7).floor()}w ago';
-  if (diff.inDays >= 1) return '${diff.inDays}d ago';
-  if (diff.inHours >= 1) return '${diff.inHours}h ago';
-  if (diff.inMinutes >= 1) return '${diff.inMinutes}m ago';
-  return 'now';
 }
