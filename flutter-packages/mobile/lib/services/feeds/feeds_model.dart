@@ -291,6 +291,7 @@ class PostCommentModel {
   final String content;
 
   int likes;
+  int reports;
   int replies;
 
   final String? parentCommentSk;
@@ -301,6 +302,7 @@ class PostCommentModel {
   final String authorProfileUrl;
 
   bool liked;
+  bool isReport;
 
   PostCommentModel({
     required this.pk,
@@ -308,6 +310,7 @@ class PostCommentModel {
     required this.updatedAt,
     required this.content,
     required this.likes,
+    required this.reports,
     required this.replies,
     this.parentCommentSk,
     required this.authorPk,
@@ -315,6 +318,7 @@ class PostCommentModel {
     required this.authorUsername,
     required this.authorProfileUrl,
     required this.liked,
+    required this.isReport,
   });
 
   factory PostCommentModel.fromJson(Map<String, dynamic> json) {
@@ -324,6 +328,7 @@ class PostCommentModel {
       updatedAt: PostDetailPostModel._asInt(json['updated_at']),
       content: PostDetailPostModel._asString(json['content']),
       likes: PostDetailPostModel._asInt(json['likes']),
+      reports: PostDetailPostModel._asInt(json['reports']),
       replies: PostDetailPostModel._asInt(json['replies']),
       parentCommentSk: PostDetailPostModel._asOptString(
         json['parent_comment_sk'],
@@ -337,6 +342,7 @@ class PostCommentModel {
         json['author_profile_url'],
       ),
       liked: json['liked'] as bool? ?? false,
+      isReport: json['is_report'] as bool? ?? false,
     );
   }
 

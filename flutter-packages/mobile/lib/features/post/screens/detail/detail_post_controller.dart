@@ -271,6 +271,22 @@ class DetailPostController extends BaseController {
     }
   }
 
+  Future<void> reportPostComment({
+    required String postPk,
+    required String commentSk,
+  }) async {
+    try {
+      await reportApi.reportPostComment(postPk: postPk, commentSk: commentSk);
+      Biyard.info('Reported successfully.');
+
+      final detail = await feedsService.fetchDetail(postPk, forceRefresh: true);
+      feed.value = detail;
+    } catch (e) {
+      logger.e('reportPost error: $e');
+      Biyard.error('Report Failed', 'Failed to report. Please try again.');
+    }
+  }
+
   bool isLikingCommentOf(String commentSk) {
     return likingCommentOf[commentSk] ?? false;
   }
