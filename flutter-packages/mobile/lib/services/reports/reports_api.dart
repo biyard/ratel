@@ -40,6 +40,13 @@ class ReportApi extends GetConnect {
     return _sendReport({'post_pk': postPk, 'comment_sk': commentSk});
   }
 
+  Future<ReportContentResponse?> reportSpaceComment({
+    required String spacePostPk,
+    required String commentSk,
+  }) {
+    return _sendReport({'space_post_pk': spacePostPk, 'comment_sk': commentSk});
+  }
+
   Future<ReportContentResponse?> reportPost({required String postPk}) {
     return _sendReport({'post_pk': postPk});
   }
