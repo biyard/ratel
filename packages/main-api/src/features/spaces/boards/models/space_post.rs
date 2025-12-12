@@ -57,6 +57,8 @@ pub struct SpacePost {
     #[dynamo(index = "gsi6", name = "find_by_category", order = 2, pk)]
     pub category_name: String,
     pub comments: i64,
+    #[serde(default)]
+    pub reports: i64,
 
     pub user_pk: Partition,
     pub author_display_name: String,
@@ -99,6 +101,7 @@ impl SpacePost {
             html_contents,
             category_name,
             comments: 0,
+            reports: 0,
             user_pk: pk,
             author_display_name: display_name,
             author_profile_url: profile_url,
