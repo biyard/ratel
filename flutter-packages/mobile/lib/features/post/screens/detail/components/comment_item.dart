@@ -1,4 +1,5 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/features/post/screens/detail/components/comment_more_bottom_sheet.dart';
 
 class CommentItem extends StatelessWidget {
   const CommentItem({
@@ -7,6 +8,8 @@ class CommentItem extends StatelessWidget {
     required this.isLikingCommentOf,
     required this.isCommentLiked,
     required this.onToggleLikeComment,
+    this.isReported = false,
+    this.onReport,
   });
 
   final PostCommentModel comment;
@@ -14,6 +17,9 @@ class CommentItem extends StatelessWidget {
   final bool Function(String commentSk) isLikingCommentOf;
   final bool Function(String commentSk, {bool fallback}) isCommentLiked;
   final Future<void> Function(String commentSk) onToggleLikeComment;
+
+  final bool isReported;
+  final Future<void> Function(String commentSk)? onReport;
 
   String _relativeTime(int secs) {
     final dt = DateTime.fromMillisecondsSinceEpoch(
@@ -38,6 +44,26 @@ class CommentItem extends StatelessWidget {
     return noTags.trim();
   }
 
+  Future<void> _openMoreSheet(BuildContext context) async {
+    if (isReported || onReport == null) return;
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF191919),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return CommentMoreBottomSheet(
+          onReport: () async {
+            Navigator.pop(context);
+            await onReport!(comment.sk);
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Obx(() {
@@ -54,47 +80,35 @@ class CommentItem extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              RoundContainer(
-                width: 24,
-                height: 24,
-                radius: 118.5,
-                imageUrl: comment.authorProfileUrl.isNotEmpty
+              Profile(
+                profileImageUrl: comment.authorProfileUrl.isNotEmpty
                     ? comment.authorProfileUrl
                     : defaultProfileImage,
-                color: null,
-                alignment: Alignment.center,
-                child: null,
+                displayName: comment.authorDisplayName,
               ),
-              10.gap,
-              Expanded(
-                child: Row(
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          comment.authorDisplayName,
-                          style: textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16,
-                            height: 24 / 16,
-                            letterSpacing: 0.5,
-                            color: Colors.white,
-                          ),
-                        ),
-                        4.gap,
-                        SvgPicture.asset(Assets.badge, width: 20, height: 20),
-                      ],
+              const Spacer(),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    timeText,
+                    style: textTheme.bodySmall?.copyWith(
+                      fontSize: 12,
+                      color: const Color(0xFF737373),
                     ),
-                    const Spacer(),
-                    Text(
-                      timeText,
-                      style: textTheme.bodySmall?.copyWith(
-                        fontSize: 12,
-                        color: const Color(0xFF737373),
+                  ),
+                  if (!isReported && onReport != null) ...[
+                    8.gap,
+                    GestureDetector(
+                      onTap: () => _openMoreSheet(context),
+                      child: SvgPicture.asset(
+                        Assets.extra,
+                        width: 20,
+                        height: 20,
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
             ],
           ),
