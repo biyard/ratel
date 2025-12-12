@@ -157,6 +157,8 @@ jobs:
 
           FCM_ENABLED: true
           RATEL_PROJECT_ID: ${{ secrets.RATEL_PROJECT_ID }}
+          REWARD: true
+
         run: |
           tar xzvf dist.tar.gz
           ls dist

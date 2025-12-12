@@ -10,9 +10,10 @@ use reqwest::StatusCode;
 
 use crate::{AppState, models::dynamo_tables::main::user::User};
 
+pub mod admin;
 mod attribute_codes;
 pub mod memberships;
-pub mod admin;
+pub mod rewards;
 
 pub fn route() -> crate::Result<by_axum::axum::Router> {
     let app_state = AppState::default();
@@ -20,6 +21,7 @@ pub fn route() -> crate::Result<by_axum::axum::Router> {
         .nest("/memberships", memberships::route()?)
         .nest("/attribute-codes", attribute_codes::route()?)
         .nest("/admin", admin::route()?)
+        .nest("/rewards", rewards::route()?)
         .layer(middleware::from_fn_with_state(
             app_state.clone(),
             authorize_service_admin,
