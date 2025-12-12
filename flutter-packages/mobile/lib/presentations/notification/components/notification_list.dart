@@ -114,7 +114,8 @@ class NotificationListItem extends StatelessWidget {
     final op = notification.operation;
     final title = _NotificationTextHelper.titleFor(op);
     final message = _NotificationTextHelper.messageFor(op);
-    final createdText = _formatRelativeTime(notification.createdAt);
+    final dt = DateTime.fromMillisecondsSinceEpoch(notification.createdAt);
+    final createdText = formatRelativeTime(dt);
     final isUnread = notification.isUnread;
 
     return Padding(
@@ -260,24 +261,5 @@ class _NotificationTextHelper {
       return 'A new survey has started.';
     }
     return 'You have a new notification.';
-  }
-}
-
-String _formatRelativeTime(int millis) {
-  final now = DateTime.now();
-  final dt = DateTime.fromMillisecondsSinceEpoch(millis);
-  final diff = now.difference(dt);
-
-  if (diff.inMinutes < 1) {
-    return 'just now';
-  } else if (diff.inMinutes < 60) {
-    return '${diff.inMinutes}m ago';
-  } else if (diff.inHours < 24) {
-    return '${diff.inHours}h ago';
-  } else if (diff.inDays < 7) {
-    return '${diff.inDays}d ago';
-  } else {
-    final weeks = (diff.inDays / 7).floor();
-    return '${weeks}w ago';
   }
 }

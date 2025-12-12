@@ -62,7 +62,7 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
   }
 
   void _beginInlineEdit(int index, SpacePostCommentModel comment) {
-    final initial = _stripHtml(comment.content).trim();
+    final initial = stripHtml(comment.content).trim();
     setState(() {
       _editingIndex = index;
       _editingController.text = initial;
@@ -480,11 +480,4 @@ class _BoardCommentInputBar extends StatelessWidget {
       ),
     );
   }
-}
-
-String _stripHtml(String text) {
-  final brReg = RegExp(r'<br\s*/?>', caseSensitive: false);
-  final withoutBr = text.replaceAll(brReg, '\n');
-  final tagReg = RegExp(r'<[^>]+>', multiLine: true, caseSensitive: false);
-  return withoutBr.replaceAll(tagReg, '');
 }

@@ -239,4 +239,5 @@ export 'utils/string/compact.dart';
 export 'utils/string/map_nationality.dart';
 export 'utils/string/passport_display_name.dart';
 export 'utils/string/passport_ymd.dart';
+export 'utils/string/strip_html.dart';
 export 'utils/time/time.dart';

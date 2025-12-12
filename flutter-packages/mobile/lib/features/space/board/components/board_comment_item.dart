@@ -32,14 +32,14 @@ class BoardCommentItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final createdAt = _fromTimestamp(comment.createdAt);
-    final relative = _formatRelativeTime(createdAt);
+    final createdAt = fromTimestampToDate(comment.createdAt);
+    final relative = formatRelativeTime(createdAt);
 
     final profileImageUrl = comment.authorProfileUrl.isNotEmpty
         ? comment.authorProfileUrl
         : defaultProfileImage;
 
-    final plainContent = _stripHtml(comment.content).trim();
+    final plainContent = stripHtml(comment.content).trim();
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -207,34 +207,4 @@ class BoardCommentItem extends StatelessWidget {
       ),
     );
   }
-}
-
-String _stripHtml(String text) {
-  final brReg = RegExp(r'<br\s*/?>', caseSensitive: false);
-  final withoutBr = text.replaceAll(brReg, '\n');
-  final tagReg = RegExp(r'<[^>]+>', multiLine: true, caseSensitive: false);
-  return withoutBr.replaceAll(tagReg, '');
-}
-
-DateTime _fromTimestamp(int ts) {
-  if (ts < 1000000000000) {
-    return DateTime.fromMillisecondsSinceEpoch(
-      ts * 1000,
-      isUtc: true,
-    ).toLocal();
-  } else {
-    return DateTime.fromMillisecondsSinceEpoch(ts, isUtc: true).toLocal();
-  }
-}
-
-String _formatRelativeTime(DateTime time) {
-  final now = DateTime.now();
-  final diff = now.difference(time);
-
-  if (diff.inMinutes < 1) return 'now';
-  if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-  if (diff.inHours < 24) return '${diff.inHours}h ago';
-  if (diff.inDays < 7) return '${diff.inDays}d ago';
-  final weeks = (diff.inDays / 7).floor();
-  return '${weeks}w ago';
 }
