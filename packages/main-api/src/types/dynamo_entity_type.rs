@@ -166,6 +166,8 @@ pub enum EntityType {
 
     //
     Reward(String), // Type
+
+    ContentReport,
 }
 
 impl TryInto<Partition> for EntityType {

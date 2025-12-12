@@ -1,4 +1,5 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/features/post/screens/detail/components/post_more_bottom_sheet.dart';
 import 'package:ratel/features/space/board/components/board_body_card.dart';
 import 'package:ratel/features/space/board/components/board_detail_top_bar.dart';
 import 'package:ratel/features/space/board/components/board_time_header.dart';
@@ -7,6 +8,37 @@ import 'package:ratel/features/space/board/components/board_comment_input_bar.da
 
 class BoardCreatorScreen extends GetWidget<BoardCreatorController> {
   const BoardCreatorScreen({super.key});
+
+  Future<void> _openBoardActionSheet(
+    BuildContext context, {
+    required String spacePk,
+    required String spacePostPk,
+    required bool isReported,
+  }) async {
+    if (isReported) return;
+
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF191919),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) {
+        return PostMoreBottomSheet(
+          onUpdate: null,
+          onDelete: null,
+          onReport: () async {
+            Navigator.pop(context);
+            await controller.reportSpacePost(
+              spacePk: spacePk,
+              spacePostPk: spacePostPk,
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     logger.d("Board hasMoreComents: ${controller.hasMoreComments}");
@@ -34,6 +66,9 @@ class BoardCreatorScreen extends GetWidget<BoardCreatorController> {
                   if (post == null) {
                     return const SizedBox.shrink();
                   }
+
+                  final canReport = !(post.isReport ?? false);
+
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -44,9 +79,14 @@ class BoardCreatorScreen extends GetWidget<BoardCreatorController> {
                             spaceWithPk(controller.spacePk),
                           );
                         },
-                        onEditTap: () {
-                          logger.d('BoardCreatorScreen: edit post ${post.pk}');
-                        },
+                        onMoreTap: canReport
+                            ? () => _openBoardActionSheet(
+                                context,
+                                spacePk: controller.spacePk,
+                                spacePostPk: post.pk,
+                                isReported: post.isReport ?? false,
+                              )
+                            : null,
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),

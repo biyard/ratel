@@ -16,7 +16,6 @@ RUST_LOG ?= debug
 AWS_ACCESS_KEY_ID ?= $(shell aws configure get aws_access_key_id $(AWS_FLAG))
 AWS_SECRET_ACCESS_KEY ?= $(shell aws configure get aws_secret_access_key $(AWS_FLAG))
 AWS_REGION ?= $(shell aws configure get region)
-S3_REGION ?= ap-northeast-2
 
 DYNAMO_ENDPOINT ?= http://localstack:4566
 DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
@@ -29,7 +28,6 @@ BUILD_ENV ?= ENV=$(ENV) \
 								AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 								AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
 								AWS_REGION=$(AWS_REGION) \
-								S3_REGION=$(S3_REGION) \
 								VERSION=$(VERSION) \
 								COMMIT=$(COMMIT) \
 								DOMAIN=$(DOMAIN) \

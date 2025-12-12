@@ -29,12 +29,12 @@ pub async fn get_put_multi_object_uri(
 
     let config = crate::config::get();
     let aws_config = &config.aws;
-    let asset_dir = config.bucket.asset_dir;
-    let bucket_name = config.bucket.name;
-    let expire = config.bucket.expire;
+    let asset_dir = config.s3.asset_dir;
+    let bucket_name = config.s3.name;
+    let expire = config.s3.expire;
 
     let config = defaults(BehaviorVersion::latest())
-        .region(Region::new(config.bucket.region))
+        .region(Region::new(config.s3.region))
         .credentials_provider(Credentials::new(
             aws_config.access_key_id,
             aws_config.secret_access_key,
@@ -96,7 +96,7 @@ pub async fn get_put_multi_object_uri(
     }
 
     let ratel_config = crate::config::get();
-    let public_url = ratel_config.bucket.get_url(&key);
+    let public_url = ratel_config.s3.get_url(&key);
 
     Ok(Json(AssetPresignedUris {
         presigned_uris,
