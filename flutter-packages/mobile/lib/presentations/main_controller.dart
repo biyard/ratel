@@ -26,7 +26,7 @@ class MainController extends BaseController {
     }
   }
 
-  final Rx<UserV2Model> user = UserV2Model(
+  final Rx<UserModel> user = UserModel(
     pk: '',
     email: '',
     nickname: '',

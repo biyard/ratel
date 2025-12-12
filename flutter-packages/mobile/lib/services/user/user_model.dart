@@ -1,4 +1,4 @@
-class UserV2Model {
+class UserModel {
   final String pk;
   final String email;
   final String nickname;
@@ -18,9 +18,9 @@ class UserV2Model {
   final String? principal;
   final String? evmAddress;
 
-  final List<TeamV2> teams;
+  final List<Team> teams;
 
-  const UserV2Model({
+  const UserModel({
     required this.pk,
     required this.email,
     required this.nickname,
@@ -39,10 +39,10 @@ class UserV2Model {
     this.teams = const [],
   });
 
-  factory UserV2Model.fromJson(Map<String, dynamic> json) {
+  factory UserModel.fromJson(Map<String, dynamic> json) {
     final teamsJson = (json['teams'] as List?) ?? const [];
 
-    return UserV2Model(
+    return UserModel(
       pk: json['pk'] as String,
       email: json['email'] as String? ?? '',
       nickname: json['nickname'] as String? ?? '',
@@ -59,7 +59,7 @@ class UserV2Model {
       principal: json['principal'] as String?,
       evmAddress: json['evm_address'] as String?,
       teams: teamsJson
-          .map((e) => TeamV2.fromJson(e as Map<String, dynamic>))
+          .map((e) => Team.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
   }
@@ -86,23 +86,23 @@ class UserV2Model {
   }
 }
 
-class TeamV2 {
+class Team {
   final String pk;
   final String profileUrl;
   final String nickname;
   final String username;
 
-  const TeamV2({
+  const Team({
     required this.pk,
     required this.profileUrl,
     required this.nickname,
     required this.username,
   });
 
-  factory TeamV2.fromJson(Map<String, dynamic> json) {
+  factory Team.fromJson(Map<String, dynamic> json) {
     final rawPk = json['pk'] ?? json['id'] ?? json['username'] ?? '';
 
-    return TeamV2(
+    return Team(
       pk: rawPk.toString(),
       profileUrl: json['profile_url'] as String? ?? '',
       nickname: json['nickname'] as String? ?? '',
@@ -118,44 +118,6 @@ class TeamV2 {
       'username': username,
     };
   }
-}
-
-class UserModel {
-  final int id;
-  final String profileUrl;
-  final String nickname;
-  final String username;
-  final int points;
-  final int followingsCount;
-  final int followersCount;
-
-  final List<Team> teams;
-
-  const UserModel({
-    required this.id,
-    required this.profileUrl,
-    required this.nickname,
-    required this.username,
-    required this.points,
-    required this.followersCount,
-    required this.followingsCount,
-
-    required this.teams,
-  });
-}
-
-class Team {
-  final int id;
-  final String profileUrl;
-  final String nickname;
-  final String username;
-
-  const Team({
-    required this.id,
-    required this.profileUrl,
-    required this.nickname,
-    required this.username,
-  });
 }
 
 class DidDocument {

@@ -8,7 +8,7 @@ class BoardViewerController extends BaseController {
   late final String spacePk;
   late final String postPk;
 
-  Rx<UserV2Model> get user => userService.user;
+  Rx<UserModel> get user => userService.user;
 
   final post = Rxn<SpacePostModel>();
   final isLoading = false.obs;

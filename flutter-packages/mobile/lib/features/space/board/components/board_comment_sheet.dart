@@ -3,7 +3,7 @@ import 'package:ratel/features/space/board/components/board_comment_input_bar.da
 import 'package:ratel/features/space/board/components/board_comment_item.dart';
 
 class BoardCommentsSheet extends StatefulWidget {
-  final Rx<UserV2Model> user;
+  final Rx<UserModel> user;
   final List<SpacePostCommentModel> comments;
   final bool isLoading;
   final bool hasMore;
