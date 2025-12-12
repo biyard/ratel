@@ -45,8 +45,9 @@ pub async fn get_post_handler(
     }
     let can_read_space = permissions.contains(crate::types::TeamGroupPermission::SpaceRead);
 
-    let (is_liked, comment_likes) = if let Some(user) = &user {
+    let (is_liked, is_report, comment_likes) = if let Some(user) = &user {
         let is_liked = post.is_liked(cli, &user.pk);
+        let is_report = post.is_report(cli, &user.pk);
 
         // DynamoDB batch_get_item has a limit of 100 items per request
         // Split comment_keys into chunks of 100 and process them
@@ -57,10 +58,11 @@ pub async fn get_post_handler(
         }
 
         let is_liked = is_liked.await?;
+        let is_report = is_report.await?;
 
-        (is_liked, all_comment_likes)
+        (is_liked, is_report, all_comment_likes)
     } else {
-        (false, vec![])
+        (false, false, vec![])
     };
 
     // TODO: query with sk
@@ -69,8 +71,14 @@ pub async fn get_post_handler(
     // let (post_metadata, post_likes) = tokio::try_join!(post_metadata, post_likes)?;
 
     // TODO: Check if the user has liked the post and set is_liked accordingly
-    let mut resp: PostDetailResponse =
-        (post_metadata, permissions.into(), is_liked, comment_likes).into();
+    let mut resp: PostDetailResponse = (
+        post_metadata,
+        permissions.into(),
+        is_liked,
+        is_report,
+        comment_likes,
+    )
+        .into();
 
     if !can_read_space {
         resp.post.as_mut().map(|p| {

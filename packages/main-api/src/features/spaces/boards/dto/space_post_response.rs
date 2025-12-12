@@ -25,6 +25,7 @@ pub struct SpacePostResponse {
     pub html_contents: String,
     pub category_name: String,
     pub number_of_comments: i64,
+    pub reports: i64,
 
     pub user_pk: Partition,
     pub author_display_name: String,
@@ -34,6 +35,8 @@ pub struct SpacePostResponse {
     pub urls: Vec<String>,
     pub files: Vec<File>,
     pub comments: Vec<SpacePostCommentResponse>,
+
+    pub is_report: bool,
 }
 
 impl From<SpacePost> for SpacePostResponse {
@@ -60,6 +63,8 @@ impl From<SpacePost> for SpacePostResponse {
             urls: post.urls,
             files: post.files.unwrap_or_default(),
             comments: vec![],
+            reports: post.reports,
+            is_report: false,
         }
     }
 }

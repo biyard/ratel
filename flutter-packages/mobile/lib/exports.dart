@@ -189,6 +189,9 @@ export 'services/space/types/space_requirement_dto.dart';
 export 'services/user/types/team_group_permission.dart';
 export 'services/anonymous/anonymous_service.dart';
 
+export 'services/reports/reports_api.dart';
+export 'services/reports/reports_model.dart';
+export 'services/reports/reports_service.dart';
 export 'services/api/drive_api.dart';
 export 'services/asset/asset_api.dart';
 export 'services/asset/asset_model.dart';

@@ -66,6 +66,9 @@ pub struct SpaceCommon {
     pub rewards: Option<i64>,
 
     #[serde(default)]
+    pub reports: i64,
+
+    #[serde(default)]
     pub anonymous_participation: bool,
     #[serde(default)]
     pub change_visibility: bool,

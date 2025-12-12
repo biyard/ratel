@@ -11,6 +11,8 @@ class DetailPostScreen extends GetWidget<DetailPostController> {
   Future<void> _openPostActionSheet(
     BuildContext context, {
     required String postPk,
+    required bool isCreator,
+    required bool isReport,
   }) async {
     await showModalBottomSheet(
       context: context,
@@ -20,17 +22,27 @@ class DetailPostScreen extends GetWidget<DetailPostController> {
       ),
       builder: (_) {
         return PostMoreBottomSheet(
-          onUpdate: () {
-            Navigator.pop(context);
-            Get.rootDelegate.toNamed(
-              createPostScreen,
-              arguments: {'postPk': postPk},
-            );
-          },
-          onDelete: () async {
-            Navigator.pop(context);
-            await _confirmDelete(context, postPk: postPk);
-          },
+          onUpdate: isCreator
+              ? () {
+                  Navigator.pop(context);
+                  Get.rootDelegate.toNamed(
+                    createPostScreen,
+                    arguments: {'postPk': postPk},
+                  );
+                }
+              : null,
+          onDelete: isCreator
+              ? () async {
+                  Navigator.pop(context);
+                  await _confirmDelete(context, postPk: postPk);
+                }
+              : null,
+          onReport: isReport
+              ? null
+              : () async {
+                  Navigator.pop(context);
+                  await controller.reportPost(postPk: postPk);
+                },
         );
       },
     );
@@ -66,13 +78,21 @@ class DetailPostScreen extends GetWidget<DetailPostController> {
             Obx(() {
               final model = controller.feed.value;
               final postPk = model?.post.pk ?? '';
+              final isCreator = model?.post.userPk == controller.user.value.pk;
+              final isReport = model?.isReport ?? false;
 
               return DetailTopBar(
-                isCreator: model?.post.userPk == controller.user.value.pk,
+                isCreator: isCreator,
+                isReport: isReport,
                 onBack: () => Get.back(),
                 onExtra: postPk.isEmpty
                     ? () {}
-                    : () => _openPostActionSheet(context, postPk: postPk),
+                    : () => _openPostActionSheet(
+                        context,
+                        postPk: postPk,
+                        isCreator: isCreator,
+                        isReport: isReport,
+                      ),
               );
             }),
             Expanded(
