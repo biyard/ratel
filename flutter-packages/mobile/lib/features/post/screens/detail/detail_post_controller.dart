@@ -8,7 +8,7 @@ class DetailPostController extends BaseController {
 
   late final String postPk;
 
-  final feed = Rxn<FeedV2Model>();
+  final feed = Rxn<FeedModel>();
   final isLoading = false.obs;
 
   final isSendingRootComment = false.obs;
@@ -52,7 +52,7 @@ class DetailPostController extends BaseController {
     postPk = Uri.decodeComponent(raw);
     logger.d('DetailPostController postPk = $postPk');
 
-    _detailSubscription = ever<Map<String, FeedV2Model>>(feedsService.details, (
+    _detailSubscription = ever<Map<String, FeedModel>>(feedsService.details, (
       map,
     ) {
       final updated = map[postPk];
@@ -181,7 +181,7 @@ class DetailPostController extends BaseController {
 
       current.post.comments = current.post.comments + 1;
 
-      feed.value = FeedV2Model(
+      feed.value = FeedModel(
         post: current.post,
         comments: [created, ...current.comments],
         artworkMetadata: current.artworkMetadata,
@@ -240,7 +240,7 @@ class DetailPostController extends BaseController {
 
       current.post.likes = newLikes;
 
-      feed.value = FeedV2Model(
+      feed.value = FeedModel(
         post: current.post,
         comments: current.comments,
         artworkMetadata: current.artworkMetadata,
