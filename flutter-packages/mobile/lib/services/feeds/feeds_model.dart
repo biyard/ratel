@@ -442,7 +442,7 @@ class PostRepostModel {
   }
 }
 
-class FeedV2Model {
+class FeedModel {
   final PostDetailPostModel post;
   final List<PostCommentModel> comments;
   final List<PostArtworkMetadataModel> artworkMetadata;
@@ -451,7 +451,7 @@ class FeedV2Model {
   final bool isReport;
   final int permissions;
 
-  const FeedV2Model({
+  const FeedModel({
     required this.post,
     List<PostCommentModel>? comments,
     List<PostArtworkMetadataModel>? artworkMetadata,
@@ -462,8 +462,8 @@ class FeedV2Model {
   }) : comments = comments ?? const [],
        artworkMetadata = artworkMetadata ?? const [];
 
-  factory FeedV2Model.fromJson(Map<String, dynamic> json) {
-    return FeedV2Model(
+  factory FeedModel.fromJson(Map<String, dynamic> json) {
+    return FeedModel(
       post: PostDetailPostModel.fromJson(
         (json['post'] as Map<String, dynamic>? ?? const {}),
       ),

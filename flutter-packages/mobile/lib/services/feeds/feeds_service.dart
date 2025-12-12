@@ -4,7 +4,7 @@ class FeedsService extends GetxService {
   final feedsApi = Get.find<FeedsApi>();
 
   final RxList<FeedSummaryModel> summaries = <FeedSummaryModel>[].obs;
-  final RxMap<String, FeedV2Model> details = <String, FeedV2Model>{}.obs;
+  final RxMap<String, FeedModel> details = <String, FeedModel>{}.obs;
 
   final RxList<FeedSummaryModel> drafts = <FeedSummaryModel>[].obs;
 
@@ -42,7 +42,7 @@ class FeedsService extends GetxService {
     summaries.refresh();
   }
 
-  Future<FeedV2Model> fetchDetail(
+  Future<FeedModel> fetchDetail(
     String postPk, {
     bool forceRefresh = false,
   }) async {
@@ -56,7 +56,7 @@ class FeedsService extends GetxService {
     return result;
   }
 
-  void updateDetail(FeedV2Model model) {
+  void updateDetail(FeedModel model) {
     final pk = model.post.pk;
     details[pk] = model;
     _syncSummaryFromDetail(model);
@@ -114,7 +114,7 @@ class FeedsService extends GetxService {
     drafts.refresh();
   }
 
-  void _syncSummaryFromDetail(FeedV2Model detail) {
+  void _syncSummaryFromDetail(FeedModel detail) {
     final pk = detail.post.pk;
     final idx = summaries.indexWhere((e) => e.pk == pk);
     if (idx < 0) return;

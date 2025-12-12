@@ -274,7 +274,7 @@ class FeedsApi extends GetConnect {
     return FeedV2ListResult(items: feeds, bookmark: nextBookmark);
   }
 
-  Future<FeedV2Model> getFeedV2(String feedPk) async {
+  Future<FeedModel> getFeedV2(String feedPk) async {
     final encodedPk = Uri.encodeComponent(feedPk);
     final uri = Uri.parse(apiEndpoint).resolve('/v3/posts/$encodedPk');
 
@@ -290,7 +290,7 @@ class FeedsApi extends GetConnect {
       throw Exception('Invalid feed detail response');
     }
 
-    return FeedV2Model.fromJson(body);
+    return FeedModel.fromJson(body);
   }
 
   Future<PostCommentListResult> listComments({
