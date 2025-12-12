@@ -3,7 +3,7 @@ import 'package:ratel/features/space/board/components/board_comment_input_bar.da
 import 'package:ratel/features/space/board/components/board_comment_item.dart';
 
 class BoardCommentsSheet extends StatefulWidget {
-  final UserV2Model user;
+  final Rx<UserV2Model> user;
   final List<SpacePostCommentModel> comments;
   final bool isLoading;
   final bool hasMore;
@@ -15,6 +15,7 @@ class BoardCommentsSheet extends StatefulWidget {
   final CommentEditTap<SpacePostCommentModel>? onEdit;
   final CommentDeleteTap<SpacePostCommentModel>? onDelete;
   final Future<bool> Function()? onLoadMore;
+  final Future<void> Function(SpacePostCommentModel comment)? onReport;
 
   const BoardCommentsSheet({
     super.key,
@@ -30,6 +31,7 @@ class BoardCommentsSheet extends StatefulWidget {
     this.onDelete,
     this.onLoadMore,
     this.canComment = true,
+    this.onReport,
   });
 
   @override
@@ -92,6 +94,11 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
     int index,
     SpacePostCommentModel comment,
   ) async {
+    final isOwner = comment.authorPk == widget.user.value.pk;
+    final isReport = comment.isReport;
+
+    logger.d("widget user: ${widget.user.value.email}");
+
     await showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF29292F),
@@ -104,7 +111,7 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (widget.onEdit != null)
+              if (isOwner && widget.onEdit != null)
                 ListTile(
                   leading: const Icon(Icons.edit_rounded, color: Colors.white),
                   title: const Text(
@@ -116,7 +123,7 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
                     _beginInlineEdit(index, comment);
                   },
                 ),
-              if (widget.onDelete != null)
+              if (isOwner && widget.onDelete != null)
                 ListTile(
                   leading: const Icon(
                     Icons.delete_outline_rounded,
@@ -132,12 +139,26 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
                     if (mounted) setState(() {});
                   },
                 ),
-              if (widget.onEdit == null && widget.onDelete == null)
-                const ListTile(
-                  title: Text(
-                    'No actions available',
-                    style: TextStyle(color: Colors.white70),
+
+              if (widget.onReport != null && !isReport)
+                ListTile(
+                  leading: const Icon(
+                    Icons.flag_outlined,
+                    color: Color(0xFFFF4D4F),
                   ),
+                  title: const Text(
+                    'Report comment',
+                    style: TextStyle(color: Color(0xFFFF4D4F)),
+                  ),
+                  onTap: () async {
+                    Navigator.of(ctx).pop();
+                    await widget.onReport!(comment);
+                    if (!mounted) return;
+
+                    setState(() {
+                      comment.isReport = true;
+                    });
+                  },
                 ),
               const SizedBox(height: 8),
             ],
@@ -215,10 +236,12 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
                         if (index < widget.comments.length) {
                           final c = widget.comments[index];
                           final editing = _editingIndex == index;
+
                           return BoardCommentItem(
-                            user: widget.user,
+                            user: widget.user.value,
                             comment: c,
                             isEditing: editing,
+                            isReported: c.isReport,
                             editingController: editing
                                 ? _editingController
                                 : null,
@@ -228,11 +251,31 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
                             onCancelEdit: editing ? _cancelInlineEdit : null,
                             onLikeTap: widget.onLikeTap == null
                                 ? null
-                                : () {
+                                : () async {
+                                    if (editing) return;
+
+                                    final prevLiked = c.liked;
+                                    final prevLikes = c.likes;
+
+                                    final nextLiked = !prevLiked;
+                                    int nextLikes = prevLikes;
+                                    if (nextLiked && !prevLiked) {
+                                      nextLikes = prevLikes + 1;
+                                    } else if (!nextLiked &&
+                                        prevLiked &&
+                                        prevLikes > 0) {
+                                      nextLikes = prevLikes - 1;
+                                    }
+
                                     widget.onLikeTap!(c);
-                                    if (mounted) setState(() {});
+
+                                    setState(() {
+                                      c.liked = nextLiked;
+                                      c.likes = nextLikes;
+                                    });
                                   },
                             onMoreTap: () => _showCommentActions(index, c),
+                            onReportTap: null,
                           );
                         }
 

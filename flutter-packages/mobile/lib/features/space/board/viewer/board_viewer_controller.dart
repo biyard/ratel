@@ -8,24 +8,7 @@ class BoardViewerController extends BaseController {
   late final String spacePk;
   late final String postPk;
 
-  final Rx<UserV2Model> user = UserV2Model(
-    pk: '',
-    email: '',
-    nickname: '',
-    profileUrl: '',
-    description: '',
-    userType: 0,
-    username: '',
-    followersCount: 0,
-    followingsCount: 0,
-    theme: 0,
-    point: 0,
-    referralCode: null,
-    phoneNumber: null,
-    principal: null,
-    evmAddress: null,
-    teams: const [],
-  ).obs;
+  Rx<UserV2Model> get user => userService.user;
 
   final post = Rxn<SpacePostModel>();
   final isLoading = false.obs;
@@ -67,7 +50,8 @@ class BoardViewerController extends BaseController {
 
     _loadPost();
     loadComments(reset: true);
-    user(userService.user.value);
+
+    logger.d("user services values: ${userService.user.value.email} ");
   }
 
   Future<void> _loadPost() async {
@@ -222,6 +206,7 @@ class BoardViewerController extends BaseController {
       updatedAt: old.updatedAt,
       content: old.content,
       likes: newLiked ? old.likes + 1 : (old.likes > 0 ? old.likes - 1 : 0),
+      reports: old.reports,
       replies: old.replies,
       parentCommentSk: old.parentCommentSk,
       authorPk: old.authorPk,
@@ -229,6 +214,7 @@ class BoardViewerController extends BaseController {
       authorUsername: old.authorUsername,
       authorProfileUrl: old.authorProfileUrl,
       liked: newLiked,
+      isReport: old.isReport,
     );
 
     comments[idx] = updated;
@@ -306,6 +292,7 @@ class BoardViewerController extends BaseController {
       updatedAt: now,
       content: trimmed,
       likes: old.likes,
+      reports: old.reports,
       replies: old.replies,
       parentCommentSk: old.parentCommentSk,
       authorPk: old.authorPk,
@@ -313,6 +300,7 @@ class BoardViewerController extends BaseController {
       authorUsername: old.authorUsername,
       authorProfileUrl: old.authorProfileUrl,
       liked: old.liked,
+      isReport: old.isReport,
     );
 
     comments[idx] = updated;
@@ -350,6 +338,24 @@ class BoardViewerController extends BaseController {
       await _loadPost();
     } catch (e) {
       logger.e('reportSpacePost error: $e');
+      Biyard.error('Report Failed', 'Failed to report. Please try again.');
+    }
+  }
+
+  Future<void> reportSpaceComment({
+    required String spacePostPk,
+    required String commentSk,
+  }) async {
+    try {
+      await reportApi.reportSpaceComment(
+        spacePostPk: spacePostPk,
+        commentSk: commentSk,
+      );
+
+      Biyard.info('Reported successfully.');
+      await loadComments();
+    } catch (e) {
+      logger.e('reportSpacePostComment error: $e');
       Biyard.error('Report Failed', 'Failed to report. Please try again.');
     }
   }

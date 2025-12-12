@@ -134,7 +134,7 @@ class BoardViewerScreen extends GetWidget<BoardViewerController> {
                 }
 
                 return BoardCommentInputBar(
-                  user: controller.user.value,
+                  user: controller.user,
                   onSubmit: (text) async => controller.addComment(text),
                   comments: controller.comments,
                   isLoading: controller.isLoadingComments.value,
@@ -148,6 +148,12 @@ class BoardViewerScreen extends GetWidget<BoardViewerController> {
                   onLoadMore: () async {
                     await controller.loadMoreComments();
                     return controller.hasMoreComments;
+                  },
+                  onReport: (comment) async {
+                    await controller.reportSpaceComment(
+                      spacePostPk: controller.post.value?.pk ?? "",
+                      commentSk: comment.sk,
+                    );
                   },
                 );
               }),

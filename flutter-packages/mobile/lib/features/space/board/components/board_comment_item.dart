@@ -6,6 +6,9 @@ class BoardCommentItem extends StatelessWidget {
   final VoidCallback? onLikeTap;
   final VoidCallback? onMoreTap;
 
+  final bool isReported;
+  final VoidCallback? onReportTap;
+
   final bool isEditing;
   final TextEditingController? editingController;
   final VoidCallback? onSaveEdit;
@@ -21,6 +24,8 @@ class BoardCommentItem extends StatelessWidget {
     this.editingController,
     this.onSaveEdit,
     this.onCancelEdit,
+    this.isReported = false,
+    this.onReportTap,
   });
 
   @override
@@ -43,56 +48,26 @@ class BoardCommentItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              RoundContainer(
-                width: 24,
-                height: 24,
-                radius: 100,
-                color: AppColors.neutral600,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(100),
-                  child: Image.network(profileImageUrl, fit: BoxFit.cover),
+              Profile(
+                profileImageUrl: profileImageUrl,
+                displayName: comment.authorDisplayName,
+              ),
+              const Spacer(),
+              Text(
+                relative,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.neutral500,
                 ),
               ),
               10.gap,
-              Expanded(
-                child: Row(
-                  children: [
-                    Text(
-                      comment.authorDisplayName,
-                      style: const TextStyle(
-                        fontFamily: 'Raleway',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.5,
-                        color: Colors.white,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    4.gap,
-                    SvgPicture.asset(Assets.badge, width: 16, height: 16),
-                    const Spacer(),
-                    Text(
-                      relative,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontFamily: 'Inter',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.neutral500,
-                      ),
-                    ),
-                    10.gap,
-                    if (!isEditing && comment.authorPk == user.pk)
-                      InkWell(
-                        onTap: onMoreTap,
-                        child: SvgPicture.asset(
-                          Assets.extra,
-                          width: 24,
-                          height: 24,
-                        ),
-                      ),
-                  ],
+              if ((!isEditing && comment.authorPk == user.pk) || !isReported)
+                InkWell(
+                  onTap: onMoreTap,
+                  child: SvgPicture.asset(Assets.extra, width: 24, height: 24),
                 ),
-              ),
             ],
           ),
           6.vgap,

@@ -6,7 +6,7 @@ typedef CommentEditTap<T> = Future<void> Function(T comment, String newContent);
 typedef CommentDeleteTap<T> = Future<void> Function(T comment);
 
 Future<void> showBoardCommentsBottomSheet({
-  required UserV2Model user,
+  required Rx<UserV2Model> user,
   required BuildContext context,
   required List<SpacePostCommentModel> comments,
   required bool isLoading,
@@ -18,6 +18,7 @@ Future<void> showBoardCommentsBottomSheet({
   CommentDeleteTap<SpacePostCommentModel>? onDelete,
   Future<bool> Function()? onLoadMore,
   bool canComment = true,
+  Future<void> Function(SpacePostCommentModel comment)? onReport,
 }) {
   return showModalBottomSheet(
     context: context,
@@ -43,6 +44,7 @@ Future<void> showBoardCommentsBottomSheet({
             onDelete: onDelete,
             onLoadMore: onLoadMore,
             canComment: canComment,
+            onReport: onReport,
           );
         },
       );
@@ -51,7 +53,7 @@ Future<void> showBoardCommentsBottomSheet({
 }
 
 class BoardCommentInputBar extends StatelessWidget {
-  final UserV2Model user;
+  final Rx<UserV2Model> user;
   final Future<void> Function(String text) onSubmit;
   final List<SpacePostCommentModel> comments;
   final bool isLoading;
@@ -62,6 +64,7 @@ class BoardCommentInputBar extends StatelessWidget {
   final CommentEditTap<SpacePostCommentModel>? onEdit;
   final CommentDeleteTap<SpacePostCommentModel>? onDelete;
   final Future<bool> Function()? onLoadMore;
+  final Future<void> Function(SpacePostCommentModel comment)? onReport;
 
   const BoardCommentInputBar({
     super.key,
@@ -76,6 +79,7 @@ class BoardCommentInputBar extends StatelessWidget {
     this.onEdit,
     this.onDelete,
     this.onLoadMore,
+    this.onReport,
   });
 
   @override
@@ -102,6 +106,7 @@ class BoardCommentInputBar extends StatelessWidget {
                 onDelete: onDelete,
                 onLoadMore: onLoadMore,
                 canComment: canComment,
+                onReport: onReport,
               );
             },
             child: Container(
