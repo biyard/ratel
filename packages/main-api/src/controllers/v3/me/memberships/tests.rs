@@ -4,7 +4,7 @@ use crate::features::payment::*;
 use crate::tests::v3_setup::*;
 use change_membership::ChangeMembershipResponse;
 
-async fn seed_test_user_payment(cli: &aws_sdk_dynamodb::Client, user_pk: &Partition) {
+pub async fn seed_test_user_payment(cli: &aws_sdk_dynamodb::Client, user_pk: &Partition) {
     // Create a test UserPayment with a fake billing_key for testing
     let mut user_payment = UserPayment::new(
         user_pk.clone(),
