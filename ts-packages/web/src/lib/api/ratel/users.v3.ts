@@ -27,6 +27,8 @@ export interface UserDetailResponse extends UserResponse {
     profile_url: string;
     username: string;
   }>;
+  is_identified: boolean;
+  has_billing_key: boolean;
 }
 
 export type FindUserQueryType = 'email' | 'username' | 'phone-number';

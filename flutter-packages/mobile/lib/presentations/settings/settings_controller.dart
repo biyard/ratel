@@ -5,7 +5,7 @@ class SettingsController extends BaseController {
   Future<void> logout() async {
     try {
       await Get.find<AuthApi>().logout();
-      Get.rootDelegate.offNamed(AppRoutes.loginScreen);
+      Get.rootDelegate.offNamed(loginScreen);
     } catch (e) {
       logger.e('logout failed: $e');
     }

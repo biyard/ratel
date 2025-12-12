@@ -43,14 +43,15 @@ pub async fn get_put_object_uri(
     use aws_config::{Region, defaults};
     use aws_sdk_s3::config::Credentials;
 
-    let config = crate::config::get();
-    let aws_config = &config.aws;
-    let asset_dir = config.bucket.asset_dir;
-    let bucket_name = config.bucket.name;
-    let expire = config.bucket.expire;
+    let ratel_config = crate::config::get();
+    let aws_config = &ratel_config.aws;
+    let asset_dir = ratel_config.s3.asset_dir;
+    let bucket_name = ratel_config.s3.name;
+    let expire = ratel_config.s3.expire;
+    let bucket_region = ratel_config.s3.region;
 
     let config = defaults(BehaviorVersion::latest())
-        .region(Region::new(aws_config.region))
+        .region(Region::new(bucket_region))
         .credentials_provider(Credentials::new(
             aws_config.access_key_id,
             aws_config.secret_access_key,
@@ -89,7 +90,7 @@ pub async fn get_put_object_uri(
                 Error::AssetError(e.to_string())
             })?;
         presigned_uris.push(presigned_request.uri().to_string());
-        uris.push(format!("https://{}/{}", bucket_name, key));
+        uris.push(ratel_config.s3.get_url(&key));
     }
 
     Ok(Json(AssetPresignedUris {

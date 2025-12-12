@@ -33,6 +33,8 @@ pub struct SpacePostComment {
 
     #[serde(default)]
     pub likes: u64,
+    #[serde(default)]
+    pub reports: i64,
 
     #[serde(default)]
     #[dynamo(index = "gsi2", sk, order = 0)]
@@ -85,6 +87,7 @@ impl SpacePostComment {
             author_username,
             author_profile_url,
             likes: 0,
+            reports: 0,
             likes_align: format!("{:020}", 0),
             updated_at_align: format!("{:020}", now),
             parent_id_for_likes: "ROOT".to_string(),

@@ -4,6 +4,13 @@ use super::CustomerRequest;
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]
 #[serde(rename_all = "camelCase")]
+pub struct ScheduleBillingKeyRequest {
+    pub payment: BillingKeyPaymentRequest,
+    pub time_to_pay: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]
+#[serde(rename_all = "camelCase")]
 pub struct BillingKeyPaymentRequest {
     pub store_id: String,
     pub billing_key: String,
@@ -26,6 +33,7 @@ pub struct PaymentAmountInput {
 #[derive(
     Debug,
     Clone,
+    Copy,
     serde_with::SerializeDisplay,
     serde_with::DeserializeFromStr,
     Default,
@@ -33,9 +41,11 @@ pub struct PaymentAmountInput {
     JsonSchema,
     OperationIo,
 )]
+#[serde(rename_all = "UPPERCASE")]
 pub enum Currency {
     #[default]
     Usd,
+    Krw,
 }
 
 #[derive(

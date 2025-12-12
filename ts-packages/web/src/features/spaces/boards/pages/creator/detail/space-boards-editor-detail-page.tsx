@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import PostBody from '../../../components/post-body';
 import PostComments from '../../../components/post-comments';
 import { TimeRangeSetting } from '@/features/spaces/polls/components/time-range-setting';
+import { SpaceStatus } from '@/features/spaces/types/space-common';
 // import { TimeRangeSetting } from '@/features/spaces/polls/components/time-range-setting';
 
 export function SpaceBoardsEditorDetailPage({
@@ -44,6 +45,7 @@ export function SpaceBoardsEditorDetailPage({
           spacePk={ctrl.spacePk}
           post={ctrl.post}
           comments={ctrl.comments.get()}
+          isFinished={ctrl.space.status === SpaceStatus.Finished}
           isLoggedIn={true}
           expandComment={ctrl.expandComment}
           handleCommentDelete={ctrl.handleDeleteComment}

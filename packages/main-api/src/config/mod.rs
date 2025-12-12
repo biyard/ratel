@@ -1,7 +1,17 @@
 pub mod did_config;
-pub mod portone_config;
+pub mod google_cloud;
+mod portone_config;
+mod s3_config;
+mod x402_config;
+
 use did_config::DidConfig;
+pub use google_cloud::*;
 pub use portone_config::*;
+pub use s3_config::S3Config;
+pub use x402_config::*;
+
+mod biyard_config;
+use biyard_config::BiyardConfig;
 
 use bdk::prelude::*;
 use by_types::config::*;
@@ -22,12 +32,9 @@ pub struct Config {
     // FIXME: disable for test
     pub binance: BinanceConfig,
     pub aws: AwsConfig,
-    pub bucket: BucketConfig,
+    pub s3: S3Config,
     pub dynamodb: DatabaseConfig,
     pub chime_bucket_name: &'static str,
-    pub slack_channel_sponsor: &'static str,
-    pub slack_channel_abusing: &'static str,
-    pub slack_channel_monitor: &'static str,
     pub kaia: KaiaConfig,
     pub from_email: &'static str,
     pub telegram_token: Option<&'static str>,
@@ -44,6 +51,12 @@ pub struct Config {
     pub watermark_sqs_url: &'static str,
 
     pub portone: PortoneConfig,
+    pub x402: X402Config,
+    pub account_id: &'static str,
+
+    pub biyard: BiyardConfig,
+    pub google_cloud: GoogleCloudConfig,
+    pub reward: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -55,12 +68,6 @@ pub struct KaiaConfig {
     pub feepayer_address: &'static str,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub struct BucketConfig {
-    pub name: &'static str,
-    pub asset_dir: &'static str,
-    pub expire: u64,
-}
 #[derive(Debug, Clone, Copy)]
 pub struct BedrockConfig {
     pub nova_micro_model_id: &'static str,
@@ -76,56 +83,67 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             kaia: KaiaConfig {
-                endpoint: option_env!("KAIA_ENDPOINT").unwrap_or("https://public-en-kairos.node.kaia.io"),
+                endpoint: option_env!("KAIA_ENDPOINT")
+                    .unwrap_or("https://public-en-kairos.node.kaia.io"),
                 owner_key: option_env!("KAIA_OWNER_KEY").expect("You must set KAIA_OWNER_KEY"),
-                owner_address: option_env!("KAIA_OWNER_ADDR").expect("You must set KAIA_OWNER_ADDRESS"),
-                feepayer_key: option_env!("KAIA_FEEPAYER_KEY").expect("You must set KAIA_FEEPAYER_KEY"),
-                feepayer_address: option_env!("KAIA_FEEPAYER_ADDR").expect("You must set KAIA_FEEPAYER_ADDR"),
+                owner_address: option_env!("KAIA_OWNER_ADDR")
+                    .expect("You must set KAIA_OWNER_ADDRESS"),
+                feepayer_key: option_env!("KAIA_FEEPAYER_KEY")
+                    .expect("You must set KAIA_FEEPAYER_KEY"),
+                feepayer_address: option_env!("KAIA_FEEPAYER_ADDR")
+                    .expect("You must set KAIA_FEEPAYER_ADDR"),
             },
             from_email: option_env!("FROM_EMAIL").unwrap_or("no-reply@ratel.foundation"),
             env: option_env!("ENV").expect("You must set ENV"),
-            binance: BinanceConfig { redirect_domain: option_env!("REDIRECT_DOMAIN").unwrap_or("https://dev.ratel.foundation"), api_key: option_env!("BINANCE_API_KEY").expect("BINANCE_API_KEY is required"), base_url: "https://bpay.binanceapi.com/binancepay/openapi", secret_key: option_env!("BINANCE_SECRET_KEY").expect("BINANCE_SECRET_KEY is required"), webhook: option_env!("BINANCE_WEBHOOK").unwrap_or("https://api.dev.ratel.foundation/v2/binances/webhooks"), },
+            binance: BinanceConfig {
+                redirect_domain: option_env!("REDIRECT_DOMAIN")
+                    .unwrap_or("https://dev.ratel.foundation"),
+                api_key: option_env!("BINANCE_API_KEY").expect("BINANCE_API_KEY is required"),
+                base_url: "https://bpay.binanceapi.com/binancepay/openapi",
+                secret_key: option_env!("BINANCE_SECRET_KEY")
+                    .expect("BINANCE_SECRET_KEY is required"),
+                webhook: option_env!("BINANCE_WEBHOOK")
+                    .unwrap_or("https://api.dev.ratel.foundation/v2/binances/webhooks"),
+            },
             domain: option_env!("DOMAIN").expect("You must set DOMAIN"),
             aws: AwsConfig::default(),
             dynamodb: DatabaseConfig::DynamoDb {
                 aws: AwsConfig::default(),
                 endpoint: option_env!("DYNAMO_ENDPOINT"),
-                table_prefix: option_env!("DYNAMO_TABLE_PREFIX").expect("You must set TABLE_PREFIX"),
+                table_prefix: option_env!("DYNAMO_TABLE_PREFIX")
+                    .expect("You must set TABLE_PREFIX"),
             },
-            bucket: BucketConfig {
-                name: option_env!("BUCKET_NAME").expect("You must set BUCKET_NAME"),
-                asset_dir: option_env!("ASSET_DIR").expect("You must set ASSET_DIR"),
-                expire: option_env!("BUCKET_EXPIRE").unwrap_or_else(|| {
-                    tracing::warn!("We recommend to set BUCKET_EXPIRE. BUCKET_EXPIRE is not set. Default is 3600.");
-                    "3600"
-                }) .parse()
-                    .unwrap(),
-            },
+            s3: S3Config::default(),
             chime_bucket_name: option_env!("CHIME_BUCKET").expect("CHIME_BUCKET required"),
-            slack_channel_sponsor: option_env!("SLACK_CHANNEL_SPONSOR")
-                .expect("SLACK_CHANNEL_SPONSOR is required"),
-            slack_channel_abusing: option_env!("SLACK_CHANNEL_ABUSING")
-                .expect("SLACK_CHANNEL_ABUSING is required"),
-            slack_channel_monitor: option_env!("SLACK_CHANNEL_MONITOR")
-                .expect("SLACK_CHANNEL_MONITOR is required"),
             telegram_token: option_env!("TELEGRAM_TOKEN").filter(|s| !s.is_empty()),
             did: DidConfig::default(),
-            private_bucket_name: option_env!("PRIVATE_BUCKET_NAME").expect("You must set PRIVATE_BUCKET_NAME"),
+            private_bucket_name: option_env!("PRIVATE_BUCKET_NAME")
+                .expect("You must set PRIVATE_BUCKET_NAME"),
             #[cfg(not(feature = "no-secret"))]
             firebase: FirebaseConfig {
-                project_id: option_env!("FIREBASE_PROJECT_ID").expect("You must set FIREBASE_PROJECT_ID"),
+                project_id: option_env!("FIREBASE_PROJECT_ID")
+                    .expect("You must set FIREBASE_PROJECT_ID"),
             },
 
             #[cfg(not(feature = "no-secret"))]
             bedrock: BedrockConfig {
-                nova_micro_model_id: option_env!("NOVA_MICRO_MODEL_ID").expect("You must set NOVA_MICRO_MODEL_ID"),
-                nova_lite_model_id: option_env!("NOVA_LITE_MODEL_ID").expect("You must set NOVA_LITE_MODEL_ID"),
+                nova_micro_model_id: option_env!("NOVA_MICRO_MODEL_ID")
+                    .expect("You must set NOVA_MICRO_MODEL_ID"),
+                nova_lite_model_id: option_env!("NOVA_LITE_MODEL_ID")
+                    .expect("You must set NOVA_LITE_MODEL_ID"),
             },
 
             #[cfg(not(feature = "no-secret"))]
-            watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL").expect("You must set WATERMARK_QUEUE_URL"),
+            watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL")
+                .expect("You must set WATERMARK_QUEUE_URL"),
 
             portone: PortoneConfig::default(),
+            x402: X402Config::default(),
+            account_id: option_env!("ACCOUNT_ID").unwrap_or(""),
+            biyard: BiyardConfig::default(),
+
+            google_cloud: GoogleCloudConfig::default(),
+            reward: option_env!("REWARD").unwrap_or("false").parse().unwrap(),
         }
     }
 }

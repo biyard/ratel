@@ -1,15 +1,7 @@
 import 'package:ratel/exports.dart';
 import 'package:loading_indicator/loading_indicator.dart';
 
-const List<Color> _kDefaultRainbowColors = const [
-  Colors.red,
-  Colors.orange,
-  Colors.yellow,
-  Colors.green,
-  Colors.blue,
-  Colors.indigo,
-  Colors.purple,
-];
+const List<Color> _kDefaultRainbowColors = [AppColors.neutral700];
 
 class BiyardIndicator extends ProgressIndicator {
   const BiyardIndicator({

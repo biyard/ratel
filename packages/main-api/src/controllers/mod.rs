@@ -1,3 +1,4 @@
+mod hooks;
 pub mod m3;
 pub mod v3;
 pub mod web;
@@ -8,6 +9,7 @@ pub mod web;
 use std::sync::Arc;
 
 use bdk::prelude::*;
+use by_axum::axum::body::Body;
 use tower_http::trace::TraceLayer;
 use tracing::Level;
 
@@ -20,8 +22,9 @@ pub async fn route(bot: Option<ArcTelegramBot>) -> Result<by_axum::axum::Router,
     Ok(by_axum::axum::Router::new()
         .with_state(AppState::default())
         // .merge(well_known_router)
-        .nest("/v3", controllers::v3::route(bot)?)
-        .nest("/m3", controllers::m3::route()?)
+        .nest("/v3", v3::route(bot)?)
+        .nest("/m3", m3::route()?)
+        .nest("/hooks", hooks::route()?)
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(|request: &axum::http::Request<_>| {
@@ -42,7 +45,7 @@ pub async fn route(bot: Option<ArcTelegramBot>) -> Result<by_axum::axum::Router,
                             tracing::error!(
                                 status = %response.status(),
                                 latency = ?latency,
-                                "error response generated"
+                                "error response",
                             );
                             return;
                         }
@@ -50,7 +53,6 @@ pub async fn route(bot: Option<ArcTelegramBot>) -> Result<by_axum::axum::Router,
                         tracing::info!(
                             status = %response.status(),
                             latency = ?latency,
-                            "response generated"
                         )
                     },
                 ),

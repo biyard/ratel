@@ -5,6 +5,7 @@ pub mod members;
 pub mod panels;
 pub mod polls;
 pub mod recommendations;
+pub mod reports;
 pub mod templates;
 
 pub mod artworks;
@@ -15,3 +16,5 @@ mod types;
 
 pub use models::*;
 pub use types::*;
+
+pub mod rewards;

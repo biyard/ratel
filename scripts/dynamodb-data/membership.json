@@ -1,0 +1,88 @@
+{
+  "ratel-local-main": [
+    {
+      "PutRequest": {
+        "Item": {
+          "is_active": { "BOOL": true },
+          "display_order_indexed": { "N": "3" },
+          "display_order": { "N": "3" },
+          "created_at": { "N": "1764227900883722" },
+          "price_dollars": { "N": "100" },
+          "price_won": { "N": "75000" },
+          "updated_at": { "N": "1764227900883722" },
+          "tier": { "S": "VIP" },
+          "credits": { "N": "1360" },
+          "duration_days": { "N": "30" },
+          "sk": { "S": "MEMBERSHIP" },
+          "gsi1_pk": { "S": "ACTIVE#true" },
+          "pk": { "S": "MEMBERSHIP#VIP" },
+          "gsi1_sk": { "S": "ORDER#3" },
+          "max_credits_per_space": { "N": "100" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "is_active": { "BOOL": true },
+          "display_order_indexed": { "N": "1" },
+          "display_order": { "N": "1" },
+          "created_at": { "N": "1764227900857256" },
+          "price_dollars": { "N": "20" },
+          "price_won": { "N": "15000" },
+          "tier": { "S": "PRO" },
+          "updated_at": { "N": "1764227900857256" },
+          "credits": { "N": "40" },
+          "gsi1_pk": { "S": "ACTIVE#true" },
+          "sk": { "S": "MEMBERSHIP" },
+          "duration_days": { "N": "30" },
+          "pk": { "S": "MEMBERSHIP#PRO" },
+          "max_credits_per_space": { "N": "2" },
+          "gsi1_sk": { "S": "ORDER#1" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "is_active": { "BOOL": true },
+          "display_order_indexed": { "N": "2" },
+          "display_order": { "N": "2" },
+          "created_at": { "N": "1764227900869019" },
+          "price_dollars": { "N": "50" },
+          "price_won": { "N": "30000" },
+          "tier": { "S": "MAX" },
+          "updated_at": { "N": "1764227900869019" },
+          "credits": { "N": "190" },
+          "sk": { "S": "MEMBERSHIP" },
+          "duration_days": { "N": "30" },
+          "gsi1_pk": { "S": "ACTIVE#true" },
+          "pk": { "S": "MEMBERSHIP#MAX" },
+          "gsi1_sk": { "S": "ORDER#2" },
+          "max_credits_per_space": { "N": "10" }
+        }
+      }
+    },
+    {
+      "PutRequest": {
+        "Item": {
+          "is_active": { "BOOL": true },
+          "display_order_indexed": { "N": "0" },
+          "display_order": { "N": "0" },
+          "created_at": { "N": "1764227900847989" },
+          "price_dollars": { "N": "0" },
+          "price_won": { "N": "0" },
+          "updated_at": { "N": "1764227900847989" },
+          "tier": { "S": "FREE" },
+          "credits": { "N": "0" },
+          "sk": { "S": "MEMBERSHIP" },
+          "duration_days": { "N": "-1" },
+          "gsi1_pk": { "S": "ACTIVE#true" },
+          "pk": { "S": "MEMBERSHIP#FREE" },
+          "gsi1_sk": { "S": "ORDER#0" },
+          "max_credits_per_space": { "N": "-1" }
+        }
+      }
+    }
+  ]
+}

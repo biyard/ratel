@@ -10,15 +10,15 @@ const buttonVariants = cva(
     variants: {
       variant: {
         rounded_primary:
-          'bg-primary text-background rounded-full hover:bg-primary/70 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)]',
+          'bg-btn-primary-bg text-btn-primary-text border-btn-primary-outline hover:bg-btn-primary-hover-bg hover:border-btn-primary-hover-outline hover:text-btn-primary-hover-text disabled:bg-primary-btn-disable-bg disabled:border-btn-primary-disable-outline disabled:text-btn-primary-disable-text rounded-full',
         rounded_secondary:
-          'bg-white text-background rounded-full hover:bg-white/80 hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)]',
+          'bg-btn-secondary-bg text-btn-secondary-text border-btn-secondary-outline hover:bg-btn-secondary-hover-bg hover:border-btn-secondary-hover-outline hover:text-btn-secondary-hover-text disabled:bg-btn-secondary--disable-bg disabled:border-btn-secondary-disable-outline disabled:text-btn-secondary-disable-text rounded-full',
         default:
           'bg-white text-black rounded-xl hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)]',
         primary:
           'bg-primary text-black rounded-xl hover:shadow-[inset_0_0_0_1000px_rgba(0,0,0,0.2)]',
         outline:
-          'bg-transparent text-btn-outline-text rounded-lg border border-btn-outline hover:border-btn-outline-hover hover:bg-background',
+          'bg-btn-outline-bg text-btn-outline-text border-btn-outline-outline hover:bg-btn-outline-hover-bg hover:border-btn-outline-hover-outline hover:text-btn-outline-hover-text disabled:bg-btn-outline-disable-bg disabled:border-btn-outline-disable-outline disabled:text-btn-outline-disable-text rounded-full',
         text: 'px-10 text-base font-bold bg-transparent transition-colors hover:text-white min-w-[50px] py-[14.5px] text-neutral-400',
       },
       size: {

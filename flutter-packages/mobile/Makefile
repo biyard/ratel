@@ -8,6 +8,7 @@ BUILD_CONFIG_FILE=$(BUILD_DIR)/config.json
 NET ?= local
 MOBILE ?= android
 PORT ?= 5000
+MAIN_IP := $(shell ip route get 1.1.1.1 | awk '{print $$7}')
 
 ANDROID_OUT_APK_DIR ?= build/app/outputs/flutter-apk
 ANDROID_OUT_APK_GLOB ?= $(ANDROID_OUT_APK_DIR)/*.apk
@@ -39,7 +40,7 @@ endif
 
 ifeq ("$(ENV)","local")
 	REDIRECT_URL = https://dev.ratel.foundation
-	API_ENDPOINT = http://10.0.2.2:3000
+	API_ENDPOINT = http://$(MAIN_IP):3000
 	SIGN_DOMAIN = dev.ratel.foundation
 endif
 

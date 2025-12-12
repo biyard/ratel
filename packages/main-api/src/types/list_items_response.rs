@@ -1,5 +1,7 @@
 use bdk::prelude::*;
 
+pub type ListResponse<T> = ListItemsResponse<T>;
+
 #[derive(
     Clone, serde::Serialize, serde::Deserialize, Default, aide::OperationIo, schemars::JsonSchema,
 )]

@@ -34,30 +34,32 @@ pub fn rest_error_impl(input: TokenStream) -> TokenStream {
         code_arms.push(quote! { #pat => #code });
     }
 
-    let expanded = quote! {
-        impl #enum_ident {
-            pub fn status(&self) -> u16 {
-                match self {
-                    #(#status_arms),*
+    let expanded = {
+        let mut _s = quote::__private::TokenStream::new();
+        quote::quote_each_token! {
+            _s impl #enum_ident {
+                pub fn status(&self)->u16 {
+                    match self {
+                        #(#status_arms),*
+                    }
+                }pub fn code(&self)->u64 {
+                    match self {
+                        #(#code_arms),*
+                    }
                 }
-            }
-            pub fn code(&self) -> u64 {
-                match self {
-                    #(#code_arms),*
-                }
-            }
-        }
+            }impl axum::response::IntoResponse for #enum_ident {
+                fn into_response(self)->axum::response::Response {
+                    let status = self.status();
+                    let body =  ::serde_json::json!({
+                        "code":self.code(),"message":self.to_string(),
+                    });
+                    tracing::error!("Returning error response: status={}, body={:?}", status,body);
 
-        impl axum::response::IntoResponse for #enum_ident {
-            fn into_response(self) -> axum::response::Response {
-                let status = self.status();
-                let body = ::serde_json::json!({
-                    "code": self.code(),
-                    "message": self.to_string(),
-                });
-                (axum::http::StatusCode::from_u16(status).unwrap(), axum::Json(body)).into_response()
+                    (axum::http::StatusCode::from_u16(status).unwrap(),axum::Json(body)).into_response()
+                }
             }
         }
+        _s
     };
 
     write_file::write_file(enum_ident.to_string(), "rest_error", expanded.to_string());

@@ -7,15 +7,19 @@ pub use noop::*;
 #[cfg(not(feature = "no-secret"))]
 mod r {
     use bdk::prelude::reqwest;
+    use by_axum::axum::http::Extensions;
     use chrono::Utc;
     use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode, decode_header};
     use once_cell::sync::Lazy;
+    use reqwest::header;
     use serde::Deserialize;
     use std::collections::HashMap;
+    use std::sync::Once;
     use std::time::{Duration, Instant};
     use tokio::sync::Mutex;
 
     use crate::{Error, config};
+    use google_cloud_auth::credentials::Builder;
 
     // https://firebase.google.com/docs/auth/admin/verify-id-tokens?_gl=1*rpu45t*_up*MQ..*_ga*MTA3NjIzNjEyOS4xNzU4Njk1MDI0*_ga_CW55HF8NVT*czE3NTg2OTUwMjMkbzEkZzAkdDE3NTg2OTUwMjMkajYwJGwwJGgw#c++
 
@@ -49,6 +53,17 @@ mod r {
 
     const GOOGLE_PUBLIC_KEYS_URL: &str =
         "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com";
+
+    // fn init_rustls_crypto_provider() {
+    //     use rustls::crypto::{CryptoProvider, aws_lc_rs};
+
+    //     static ONCE: Once = Once::new();
+
+    //     ONCE.call_once(|| {
+    //         CryptoProvider::install_default(aws_lc_rs::default_provider())
+    //             .expect("failed to install rustls default CryptoProvider");
+    //     });
+    // }
 
     async fn fetch_and_cache_keys() -> Result<(), Error> {
         let client = reqwest::Client::new();
@@ -161,6 +176,50 @@ mod r {
         // FIXME: return email
         Ok(claims.sub)
     }
+
+    pub async fn get_fcm_access_token() -> Result<String, Error> {
+        let scopes = vec!["https://www.googleapis.com/auth/firebase.messaging".to_string()];
+
+        let credentials = Builder::default()
+            .with_scopes(scopes)
+            .build()
+            .map_err(|e| {
+                Error::InternalServerError(format!("google_cloud_auth build failed: {e}"))
+            })?;
+
+        let cacheable = credentials.headers(Extensions::new()).await.map_err(|e| {
+            Error::InternalServerError(format!("google_cloud_auth headers() failed: {e}"))
+        })?;
+
+        let headers = match cacheable {
+            google_cloud_auth::credentials::CacheableResource::New {
+                data,
+                entity_tag: _,
+            } => data,
+            google_cloud_auth::credentials::CacheableResource::NotModified => {
+                return Err(Error::InternalServerError(
+                    "google_cloud_auth headers() returned NotModified but no cache is available"
+                        .into(),
+                ));
+            }
+        };
+
+        let auth = headers.get(header::AUTHORIZATION).ok_or_else(|| {
+            Error::InternalServerError("missing Authorization header from google_cloud_auth".into())
+        })?;
+
+        let auth_str = auth.to_str().map_err(|e| {
+            Error::InternalServerError(format!(
+                "invalid Authorization header from google_cloud_auth: {e}"
+            ))
+        })?;
+
+        let token = auth_str.strip_prefix("Bearer ").ok_or_else(|| {
+            Error::InternalServerError("Authorization header does not start with 'Bearer '".into())
+        })?;
+
+        Ok(token.to_string())
+    }
 }
 
 #[cfg(feature = "no-secret")]
@@ -173,5 +232,9 @@ mod noop {
     pub async fn verify_token(token_str: &str) -> Result<String, Error> {
         // NOTE: token_str must be email address.
         Ok(token_str.to_string())
+    }
+
+    pub async fn get_fcm_access_token() -> Result<String, Error> {
+        Ok("".to_string())
     }
 }

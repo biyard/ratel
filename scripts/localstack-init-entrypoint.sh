@@ -28,6 +28,12 @@ ADMIN_UUID="10000000-0000-0000-0000-000000000001"
 ADMIN_PASSWORD_HASH="d590005c41712ddad6630ca03348fad16ce2fbfb611725116c14631ff02268d8"
 TIMESTAMP=$(date +%s%3N)
 
+# Membership
+aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/membership.json
+
+# Reward
+aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/reward.json
+
 aws --endpoint-url=$ENDPOINT dynamodb put-item \
   --table-name ratel-local-main \
   --item '{

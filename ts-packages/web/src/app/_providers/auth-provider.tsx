@@ -13,6 +13,7 @@ import { logger } from '@/lib/logger';
 import { useQueryClient } from '@tanstack/react-query';
 import { config } from '@/config';
 import { removeUserInfo } from '@/hooks/use-user-info';
+import { trackLogin } from '@/lib/service/analytics-service';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | undefined>(undefined);
@@ -40,6 +41,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     setAuthUser(authInfo);
+
+    // Track login event
+    trackLogin('google');
 
     return authInfo;
   };

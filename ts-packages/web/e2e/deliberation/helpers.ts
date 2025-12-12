@@ -33,10 +33,16 @@ export async function login(
   await page.getByTestId('continue-button').click();
   await page.getByTestId('password-input').fill(password);
   await page.getByTestId('continue-button').click();
-  await page.waitForLoadState('networkidle');
-  await page.waitForURL('/');
-  await expect(page.getByText('My Spaces', { exact: true })).toBeVisible();
-  await page.waitForTimeout(100);
+
+  await page.getByRole('dialog').waitFor({
+    state: 'detached',
+    timeout: TIMEOUT,
+  });
+
+  await page.waitForURL('/', {
+    waitUntil: 'networkidle',
+    timeout: TIMEOUT,
+  });
 }
 
 export async function logout(page: Page) {
@@ -403,7 +409,9 @@ export async function publishSpacePrivately(page: Page) {
 
 export async function goToMySpaces(page: Page) {
   await page.getByText('My Spaces', { exact: true }).click();
-  await page.waitForLoadState('networkidle');
+
+  await page.waitForURL(/.*/, { waitUntil: 'networkidle', timeout: TIMEOUT });
+
   await expect(page.getByTestId('space-card').first()).toBeVisible();
   await expect(page.getByTestId('space-card').first()).toContainText(
     POST_TITLE,
@@ -414,9 +422,12 @@ export async function goToSpace(page: Page, spaceName: string) {
   const spaceCard = page.getByText(spaceName).first();
   await spaceCard.waitFor({ state: 'visible', timeout: TIMEOUT });
   await spaceCard.click();
-  await page.waitForLoadState('networkidle');
-  // Wait for URL to match space pattern to ensure navigation completed
-  await page.waitForURL(/\/spaces\/[^/]+/, { timeout: TIMEOUT });
+
+  // Wait for URL to match space pattern with network idle
+  await page.waitForURL(/\/spaces\/[^/]+/, {
+    waitUntil: 'networkidle',
+    timeout: TIMEOUT,
+  });
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -589,7 +600,18 @@ export async function mobileLogin(page: Page, email: string, password: string) {
   await page.getByTestId('continue-button').click();
   await page.getByTestId('password-input').fill(password);
   await page.getByTestId('continue-button').click();
-  await page.waitForURL('/');
+
+  // Wait for login dialog to be completely removed from DOM
+  await page.getByRole('dialog').waitFor({
+    state: 'detached',
+    timeout: TIMEOUT,
+  });
+
+  // Wait for navigation to complete with network idle
+  await page.waitForURL('/', {
+    waitUntil: 'networkidle',
+    timeout: TIMEOUT,
+  });
 }
 
 export async function clickTeamSidebarMenu(page: Page, menuName: string) {

@@ -41,3 +41,8 @@ benchmark/**/*.csv
 user.json
 /ts-packages/web/admin.json
 .dir-locals.el
+
+
+# Davia
+.davia/
+.github/instructions/davia.instructions.md

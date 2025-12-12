@@ -1,1 +1,3 @@
 .vscode/*
+.gcp
+.gcp/firebase-service-account.json

@@ -17,6 +17,7 @@ pub struct SpacePostCommentResponse {
 
     pub likes: u64,
     pub replies: u64,
+    pub reports: i64,
 
     pub parent_comment_sk: Option<EntityType>,
 
@@ -26,10 +27,11 @@ pub struct SpacePostCommentResponse {
     pub author_profile_url: String,
 
     pub liked: bool,
+    pub is_report: bool,
 }
 
-impl From<(SpacePostComment, bool)> for SpacePostCommentResponse {
-    fn from((comment, liked): (SpacePostComment, bool)) -> Self {
+impl From<(SpacePostComment, bool, bool)> for SpacePostCommentResponse {
+    fn from((comment, liked, is_report): (SpacePostComment, bool, bool)) -> Self {
         Self {
             pk: comment.pk,
             sk: comment.sk,
@@ -37,6 +39,7 @@ impl From<(SpacePostComment, bool)> for SpacePostCommentResponse {
             updated_at: comment.updated_at,
             content: comment.content,
             likes: comment.likes,
+            reports: comment.reports,
             replies: comment.replies,
             parent_comment_sk: comment.parent_comment_sk,
             author_pk: comment.author_pk,
@@ -44,6 +47,7 @@ impl From<(SpacePostComment, bool)> for SpacePostCommentResponse {
             author_username: comment.author_username,
             author_profile_url: comment.author_profile_url,
             liked,
+            is_report,
         }
     }
 }
@@ -57,6 +61,7 @@ impl From<SpacePostComment> for SpacePostCommentResponse {
             updated_at: comment.updated_at,
             content: comment.content,
             likes: comment.likes,
+            reports: comment.reports,
             replies: comment.replies,
             parent_comment_sk: comment.parent_comment_sk,
             author_pk: comment.author_pk,
@@ -64,6 +69,7 @@ impl From<SpacePostComment> for SpacePostCommentResponse {
             author_username: comment.author_username,
             author_profile_url: comment.author_profile_url,
             liked: false,
+            is_report: false,
         }
     }
 }

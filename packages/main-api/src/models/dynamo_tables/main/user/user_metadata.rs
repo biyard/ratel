@@ -1,4 +1,4 @@
-use crate::features::membership::UserMembership;
+use crate::features::membership::{UserMembership, UserMembershipResponse};
 
 use super::*;
 use bdk::prelude::*;
@@ -8,6 +8,7 @@ use bdk::prelude::*;
 #[dynamo(pk_prefix = "EMAIL", index = "gsi3", name = "find_by_email")]
 pub enum UserMetadata {
     User(User),
+    UserNotification(UserNotification),
     UserPrincipal(UserPrincipal),
     UserEvmAddress(UserEvmAddress),
     UserReferralCode(UserReferralCode),
@@ -64,6 +65,9 @@ pub struct UserDetailResponse {
     //FIXME: Change Telegram Model
     // pub telegram_id: Option<i64>,
     pub teams: Option<Vec<UserTeamResponse>>,
+    pub membership: Option<UserMembershipResponse>,
+    pub is_identified: bool,
+    pub has_billing_key: bool,
 }
 
 impl From<Vec<UserMetadata>> for UserDetailResponse {
@@ -74,6 +78,7 @@ impl From<Vec<UserMetadata>> for UserDetailResponse {
                 UserMetadata::User(user) => {
                     res.user = user.into();
                 }
+                UserMetadata::UserNotification(_) => {}
                 UserMetadata::UserReferralCode(user_referral_code) => {
                     res.referral_code = Some(user_referral_code.referral_code);
                 }
@@ -96,7 +101,10 @@ impl From<Vec<UserMetadata>> for UserDetailResponse {
                     }
                     res.teams.as_mut().unwrap().push(team);
                 }
-                _ => {
+                UserMetadata::UserMembership(membership) => {
+                    res.membership = Some(membership.into());
+                }
+                UserMetadata::UserTeamGroup(_) | UserMetadata::UserTelegram(_) => {
                     // Skip
                 }
             }

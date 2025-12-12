@@ -26,8 +26,8 @@ use by_axum::aide::{NoApi, OperationIo};
 use by_axum::axum::*;
 use by_axum::axum::{
     body::Body,
-    http::StatusCode,
     http::request::Parts,
+    http::{HeaderMap, StatusCode},
     middleware::{self, Next},
     native_routing as nr,
     response::Response,

@@ -1,6 +1,7 @@
 pub mod membership;
 pub mod notification;
 pub mod payment;
+pub mod report;
 pub mod spaces;
 
 pub mod did;
