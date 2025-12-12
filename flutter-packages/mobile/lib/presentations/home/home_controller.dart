@@ -2,7 +2,7 @@ import 'package:ratel/exports.dart';
 
 class HomeController extends BaseController {
   final feedsApi = Get.find<FeedsApi>();
-  final RxList<FeedV2SummaryModel> feeds = <FeedV2SummaryModel>[].obs;
+  final RxList<FeedSummaryModel> feeds = <FeedSummaryModel>[].obs;
 
   final RxBool isLoading = false.obs;
   final RxBool isLoadingMore = false.obs;

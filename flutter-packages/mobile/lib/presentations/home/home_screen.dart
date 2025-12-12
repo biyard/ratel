@@ -39,7 +39,7 @@ class HomeScreen extends GetWidget<HomeController> {
               }
 
               final feed = controller.feeds[feedIndex];
-              return FeedCardV2(
+              return FeedCard(
                 feed: feed,
                 onBookmarkTap: () {},
                 onTap: () {

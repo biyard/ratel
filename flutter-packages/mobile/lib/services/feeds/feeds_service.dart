@@ -3,10 +3,10 @@ import 'package:ratel/exports.dart';
 class FeedsService extends GetxService {
   final feedsApi = Get.find<FeedsApi>();
 
-  final RxList<FeedV2SummaryModel> summaries = <FeedV2SummaryModel>[].obs;
+  final RxList<FeedSummaryModel> summaries = <FeedSummaryModel>[].obs;
   final RxMap<String, FeedV2Model> details = <String, FeedV2Model>{}.obs;
 
-  final RxList<FeedV2SummaryModel> drafts = <FeedV2SummaryModel>[].obs;
+  final RxList<FeedSummaryModel> drafts = <FeedSummaryModel>[].obs;
 
   String? bookmark;
   String? draftBookmark;

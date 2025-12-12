@@ -47,7 +47,7 @@ class DraftScreen extends GetWidget<DraftController> {
 }
 
 class DraftSlidableCard extends StatelessWidget {
-  final FeedV2SummaryModel data;
+  final FeedSummaryModel data;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
 
@@ -82,7 +82,7 @@ class DraftSlidableCard extends StatelessWidget {
 }
 
 class DraftCard extends StatelessWidget {
-  final FeedV2SummaryModel data;
+  final FeedSummaryModel data;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
   final List<String>? tags;

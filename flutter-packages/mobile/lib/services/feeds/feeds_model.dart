@@ -5,81 +5,7 @@ class PostCommentListResult {
   const PostCommentListResult({required this.items, this.bookmark});
 }
 
-class FeedModel {
-  final int feedId;
-  final List<int> spaceIds;
-  final String feedType;
-  final String? image;
-  final String title;
-  final String description;
-  final int authorId;
-  final String authorUrl;
-  final String authorName;
-  final int createdAt;
-
-  final int? rewards;
-  final int likes;
-  final int comments;
-  final int reposts;
-
-  const FeedModel({
-    required this.feedId,
-    required this.spaceIds,
-    required this.feedType,
-    required this.image,
-    required this.title,
-    required this.description,
-    required this.authorId,
-    required this.authorUrl,
-    required this.authorName,
-    required this.createdAt,
-
-    required this.rewards,
-    required this.likes,
-    required this.comments,
-    required this.reposts,
-  });
-}
-
-class FeedSummary {
-  final int feedId;
-  final List<int> spaceIds;
-  final String feedType;
-  final String? image;
-  final String title;
-  final String description;
-  final int authorId;
-  final bool isBookmarked;
-  final String authorUrl;
-  final String authorName;
-  final int createdAt;
-
-  final int? rewards;
-  final int likes;
-  final int comments;
-  final int reposts;
-
-  const FeedSummary({
-    required this.feedId,
-    required this.spaceIds,
-    required this.feedType,
-    required this.image,
-    required this.title,
-    required this.description,
-    required this.isBookmarked,
-    required this.authorId,
-    required this.authorUrl,
-    required this.authorName,
-    required this.createdAt,
-
-    required this.rewards,
-    required this.likes,
-    required this.comments,
-    required this.reposts,
-  });
-}
-
-class FeedV2SummaryModel {
+class FeedSummaryModel {
   final String pk;
 
   final int createdAt;
@@ -107,7 +33,7 @@ class FeedV2SummaryModel {
   final List<String> urls;
   final bool liked;
 
-  FeedV2SummaryModel({
+  FeedSummaryModel({
     required this.pk,
     required this.createdAt,
     required this.updatedAt,
@@ -153,10 +79,10 @@ class FeedV2SummaryModel {
     return int.tryParse(v.toString());
   }
 
-  factory FeedV2SummaryModel.fromJson(Map<String, dynamic> json) {
+  factory FeedSummaryModel.fromJson(Map<String, dynamic> json) {
     final urlsJson = json['urls'] as List<dynamic>? ?? const [];
 
-    return FeedV2SummaryModel(
+    return FeedSummaryModel(
       pk: _asString(json['pk']),
       createdAt: _asInt(json['created_at']),
       updatedAt: _asInt(json['updated_at']),
@@ -207,13 +133,11 @@ class FeedV2SummaryModel {
 }
 
 class FeedV2ListResult {
-  final List<FeedV2SummaryModel> items;
+  final List<FeedSummaryModel> items;
   final String? bookmark;
 
   const FeedV2ListResult({required this.items, this.bookmark});
 }
-
-////////////
 
 class PostDetailPostModel {
   final String pk;

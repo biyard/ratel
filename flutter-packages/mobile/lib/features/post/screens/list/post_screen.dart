@@ -34,7 +34,7 @@ class PostScreen extends GetWidget<PostController> {
                     }
 
                     final feed = controller.feeds[index];
-                    return FeedCardV2(
+                    return FeedCard(
                       feed: feed,
                       onTap: () => {
                         logger.d("feed tapped: ${feed.pk} ${feed.spacePk}"),
