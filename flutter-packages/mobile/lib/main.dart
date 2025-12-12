@@ -39,7 +39,6 @@ Future<void> main() async {
   UserService.init();
   AssetService.init();
   WalletService.init();
-  DashboardsService.init();
   await NotificationsService.init();
   DocumentsService.init();
   DriveApi.init();
