@@ -117,98 +117,95 @@ class NotificationListItem extends StatelessWidget {
     final createdText = _formatRelativeTime(notification.createdAt);
     final isUnread = notification.isUnread;
 
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          height: 1.2,
-                        ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        height: 1.2,
                       ),
-                      if (isUnread) ...[
-                        5.gap,
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: AppColors.primary,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                  5.vgap,
-                  Text(
-                    message,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      height: 1.3,
                     ),
+                    // if (isUnread) ...[
+                    //   5.gap,
+                    //   Container(
+                    //     width: 6,
+                    //     height: 6,
+                    //     decoration: const BoxDecoration(
+                    //       color: AppColors.primary,
+                    //       shape: BoxShape.circle,
+                    //     ),
+                    //   ),
+                    // ],
+                  ],
+                ),
+                5.vgap,
+                Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    height: 1.3,
                   ),
-                  10.vgap,
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        createdText,
-                        style: const TextStyle(
-                          color: AppColors.neutral500,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          height: 1.2,
-                        ),
+                ),
+                10.vgap,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      createdText,
+                      style: const TextStyle(
+                        color: AppColors.neutral500,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        height: 1.2,
                       ),
-                      Row(
-                        children: [
-                          if (onMarkRead != null)
-                            InkWell(
-                              onTap: onMarkRead,
-                              child: Icon(
-                                notification.isRead
-                                    ? Icons.check_circle
-                                    : Icons.check_circle_outline,
-                                size: 18,
-                                color: notification.isRead
-                                    ? AppColors.primary
-                                    : AppColors.neutral500,
-                              ),
-                            ),
-                          20.gap,
-                          if (onDelete != null)
-                            InkWell(
-                              onTap: onDelete,
-                              child: const Icon(
-                                Icons.delete_outline,
-                                size: 18,
-                                color: AppColors.neutral500,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                    // Row(
+                    //   children: [
+                    //     if (onMarkRead != null)
+                    //       InkWell(
+                    //         onTap: onMarkRead,
+                    //         child: Icon(
+                    //           notification.isRead
+                    //               ? Icons.check_circle
+                    //               : Icons.check_circle_outline,
+                    //           size: 18,
+                    //           color: notification.isRead
+                    //               ? AppColors.primary
+                    //               : AppColors.neutral500,
+                    //         ),
+                    //       ),
+                    //     20.gap,
+                    //     if (onDelete != null)
+                    //       InkWell(
+                    //         onTap: onDelete,
+                    //         child: const Icon(
+                    //           Icons.delete_outline,
+                    //           size: 18,
+                    //           color: AppColors.neutral500,
+                    //         ),
+                    //       ),
+                    //   ],
+                    // ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
