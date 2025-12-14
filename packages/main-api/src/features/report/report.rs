@@ -153,18 +153,27 @@ impl ContentReport {
         reporter_pk: &Partition,
         comments: &[PostComment],
     ) -> Result<HashSet<String>> {
-        let keys: Vec<_> = comments
-            .iter()
-            .map(|c| {
-                let pk = CompositePartition(reporter_pk.clone(), post_pk.clone());
-                let sk = c.sk.clone();
-                (pk, sk)
-            })
-            .collect();
+        let mut all_reports = Vec::new();
 
-        let reports = ContentReport::batch_get(cli, keys).await?;
+        for chunk in comments.chunks(100) {
+            if chunk.is_empty() {
+                continue;
+            }
 
-        let set = reports
+            let keys: Vec<_> = chunk
+                .iter()
+                .map(|c| {
+                    let pk = CompositePartition(reporter_pk.clone(), post_pk.clone());
+                    let sk = c.sk.clone();
+                    (pk, sk)
+                })
+                .collect();
+
+            let reports = ContentReport::batch_get(cli, keys).await?;
+            all_reports.extend(reports);
+        }
+
+        let set = all_reports
             .into_iter()
             .filter(|r| matches!(r.target, ReportTarget::PostComment))
             .filter_map(|r| r.target_sk.map(|sk| sk.to_string()))
@@ -179,14 +188,23 @@ impl ContentReport {
         reporter_pk: &Partition,
         comments: &[SpacePostComment],
     ) -> Result<HashSet<String>> {
-        let keys: Vec<_> = comments
-            .iter()
-            .map(|c| Self::key_for_space_post_comment(reporter_pk, space_post_pk, c))
-            .collect();
+        let mut all_reports = Vec::new();
 
-        let reports = ContentReport::batch_get(cli, keys).await?;
+        for chunk in comments.chunks(100) {
+            if chunk.is_empty() {
+                continue;
+            }
 
-        let set = reports
+            let keys: Vec<_> = chunk
+                .iter()
+                .map(|c| Self::key_for_space_post_comment(reporter_pk, space_post_pk, c))
+                .collect();
+
+            let reports = ContentReport::batch_get(cli, keys).await?;
+            all_reports.extend(reports);
+        }
+
+        let set = all_reports
             .into_iter()
             .filter(|r| matches!(r.target, ReportTarget::SpacePostComment))
             .filter_map(|r| r.target_sk.map(|sk| sk.to_string()))
