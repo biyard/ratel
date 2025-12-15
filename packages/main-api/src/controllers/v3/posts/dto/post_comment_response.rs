@@ -14,6 +14,7 @@ pub struct PostCommentResponse {
     pub content: String,
 
     pub likes: u64,
+    pub reports: i64,
     pub replies: u64,
 
     pub parent_comment_sk: Option<EntityType>,
@@ -24,16 +25,18 @@ pub struct PostCommentResponse {
     pub author_profile_url: String,
 
     pub liked: bool,
+    pub is_report: bool,
 }
 
-impl From<(PostComment, bool)> for PostCommentResponse {
-    fn from((comment, liked): (PostComment, bool)) -> Self {
+impl From<(PostComment, bool, bool)> for PostCommentResponse {
+    fn from((comment, liked, is_report): (PostComment, bool, bool)) -> Self {
         Self {
             pk: comment.pk,
             sk: comment.sk,
             updated_at: comment.updated_at,
             content: comment.content,
             likes: comment.likes,
+            reports: comment.reports,
             replies: comment.replies,
             parent_comment_sk: comment.parent_comment_sk,
             author_pk: comment.author_pk,
@@ -41,6 +44,7 @@ impl From<(PostComment, bool)> for PostCommentResponse {
             author_username: comment.author_username,
             author_profile_url: comment.author_profile_url,
             liked,
+            is_report,
         }
     }
 }
@@ -53,6 +57,7 @@ impl From<PostComment> for PostCommentResponse {
             updated_at: comment.updated_at,
             content: comment.content,
             likes: comment.likes,
+            reports: comment.reports,
             replies: comment.replies,
             parent_comment_sk: comment.parent_comment_sk,
             author_pk: comment.author_pk,
@@ -60,6 +65,7 @@ impl From<PostComment> for PostCommentResponse {
             author_username: comment.author_username,
             author_profile_url: comment.author_profile_url,
             liked: false,
+            is_report: false,
         }
     }
 }

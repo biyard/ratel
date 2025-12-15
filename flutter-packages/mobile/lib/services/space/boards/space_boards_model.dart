@@ -126,22 +126,25 @@ class SpacePostCommentModel {
   final int updatedAt;
   final int createdAt;
   final String content;
-  final int likes;
+  int likes;
+  int reports;
   final int replies;
   final String? parentCommentSk;
   final String authorPk;
   final String authorDisplayName;
   final String authorUsername;
   final String authorProfileUrl;
-  final bool liked;
+  bool liked;
+  bool isReport;
 
-  const SpacePostCommentModel({
+  SpacePostCommentModel({
     required this.pk,
     required this.sk,
     required this.updatedAt,
     required this.createdAt,
     required this.content,
     required this.likes,
+    required this.reports,
     required this.replies,
     required this.parentCommentSk,
     required this.authorPk,
@@ -149,6 +152,7 @@ class SpacePostCommentModel {
     required this.authorUsername,
     required this.authorProfileUrl,
     required this.liked,
+    required this.isReport,
   });
 
   factory SpacePostCommentModel.fromJson(Json j) => SpacePostCommentModel(
@@ -158,6 +162,7 @@ class SpacePostCommentModel {
     createdAt: (j['created_at'] as num?)?.toInt() ?? 0,
     content: j['content']?.toString() ?? '',
     likes: (j['likes'] as num?)?.toInt() ?? 0,
+    reports: (j['reports'] as num?)?.toInt() ?? 0,
     replies: (j['replies'] as num?)?.toInt() ?? 0,
     parentCommentSk: j['parent_comment_sk']?.toString(),
     authorPk: j['author_pk']?.toString() ?? '',
@@ -165,6 +170,7 @@ class SpacePostCommentModel {
     authorUsername: j['author_username']?.toString() ?? '',
     authorProfileUrl: j['author_profile_url']?.toString() ?? '',
     liked: j['liked'] as bool? ?? false,
+    isReport: j['is_report'] as bool? ?? false,
   );
 
   Json toJson() => {

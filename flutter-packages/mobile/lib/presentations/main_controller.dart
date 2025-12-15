@@ -4,12 +4,6 @@ class MainController extends BaseController {
   final userService = Get.find<UserService>();
   final feedApi = Get.find<FeedsApi>();
 
-  @override
-  void onInit() {
-    super.onInit();
-    getUser();
-  }
-
   void getUser() async {
     showLoading();
     final item = await userService.getUser();
@@ -26,22 +20,5 @@ class MainController extends BaseController {
     }
   }
 
-  final Rx<UserV2Model> user = UserV2Model(
-    pk: '',
-    email: '',
-    nickname: '',
-    profileUrl: '',
-    description: '',
-    userType: 0,
-    username: '',
-    followersCount: 0,
-    followingsCount: 0,
-    theme: 0,
-    point: 0,
-    referralCode: null,
-    phoneNumber: null,
-    principal: null,
-    evmAddress: null,
-    teams: const [],
-  ).obs;
+  Rx<UserModel> get user => userService.user;
 }

@@ -137,6 +137,10 @@ class DetailPostScreen extends GetWidget<DetailPostController> {
                 isCommentLiked: controller.isCommentLiked,
                 onToggleLikeComment: (commentSk) =>
                     controller.toggleLikeComment(commentSk: commentSk),
+                onReportComment: (commentSk) => controller.reportPostComment(
+                  postPk: model.post.pk,
+                  commentSk: commentSk,
+                ),
               );
             }),
           ],

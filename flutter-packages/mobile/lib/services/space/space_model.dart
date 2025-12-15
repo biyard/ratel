@@ -385,45 +385,6 @@ class CommentModel {
   );
 }
 
-class ElearningModel {
-  final int id;
-  final List<FileModel> files;
-
-  const ElearningModel({required this.id, required this.files});
-
-  factory ElearningModel.fromJson(Json j) => ElearningModel(
-    id: (j['id'] ?? 0) as int,
-    files: (j['files'] as List? ?? const [])
-        .whereType<Json>()
-        .map(FileModel.fromJson)
-        .toList(),
-  );
-}
-
-class DiscussionModel {
-  final int id;
-  final int startedAt;
-  final int endedAt;
-  final String name;
-  final String? record;
-
-  const DiscussionModel({
-    required this.id,
-    required this.startedAt,
-    required this.endedAt,
-    required this.name,
-    required this.record,
-  });
-
-  factory DiscussionModel.fromJson(Json j) => DiscussionModel(
-    id: (j['id'] ?? 0) as int,
-    startedAt: (j['started_at'] ?? j['startedAt'] ?? 0) as int,
-    endedAt: (j['ended_at'] ?? j['endedAt'] ?? 0) as int,
-    name: (j['name'] ?? '') as String,
-    record: j['record'] as String?,
-  );
-}
-
 class FileModel {
   final String name;
   final String size;

@@ -16,13 +16,14 @@ class _MyCredentialsState extends State<MyCredentials> {
     return SingleChildScrollView(
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: AppTopBar(onBack: () => Get.back(), title: "My Credential"),
+          AppTopBar(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+            onBack: () => Get.back(),
+            title: "My Credential",
           ),
 
           Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+            padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
             child: CredentialBanner(
               title: 'Verifiable Credential',
               subtitle: 'ID : ${widget.did}',

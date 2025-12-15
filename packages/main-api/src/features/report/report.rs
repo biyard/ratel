@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::features::spaces::boards::models::space_post::SpacePost;
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
-use crate::models::{Post, SpaceCommon};
+use crate::models::{Post, PostComment, SpaceCommon};
 use crate::time::get_now_timestamp_millis;
 use crate::types::*;
 use crate::*;
@@ -12,6 +12,7 @@ use crate::*;
 pub enum ReportTarget {
     #[default]
     Post,
+    PostComment,
     Space,
     SpacePost,
     SpacePostComment,
@@ -69,6 +70,15 @@ impl ContentReport {
             post.pk.clone(),
             Some(post.sk.clone()),
             ReportTarget::Post,
+            reporter,
+        )
+    }
+
+    pub fn from_post_comment(comment: &PostComment, post_pk: &Partition, reporter: &User) -> Self {
+        ContentReport::new_base(
+            post_pk.clone(),
+            Some(comment.sk.clone()),
+            ReportTarget::PostComment,
             reporter,
         )
     }
@@ -137,20 +147,64 @@ impl ContentReport {
         Ok(reported)
     }
 
+    pub async fn reported_post_comment_sks_for_post_by_user(
+        cli: &aws_sdk_dynamodb::Client,
+        post_pk: &Partition,
+        reporter_pk: &Partition,
+        comments: &[PostComment],
+    ) -> Result<HashSet<String>> {
+        let mut all_reports = Vec::new();
+
+        for chunk in comments.chunks(100) {
+            if chunk.is_empty() {
+                continue;
+            }
+
+            let keys: Vec<_> = chunk
+                .iter()
+                .map(|c| {
+                    let pk = CompositePartition(reporter_pk.clone(), post_pk.clone());
+                    let sk = c.sk.clone();
+                    (pk, sk)
+                })
+                .collect();
+
+            let reports = ContentReport::batch_get(cli, keys).await?;
+            all_reports.extend(reports);
+        }
+
+        let set = all_reports
+            .into_iter()
+            .filter(|r| matches!(r.target, ReportTarget::PostComment))
+            .filter_map(|r| r.target_sk.map(|sk| sk.to_string()))
+            .collect::<HashSet<_>>();
+
+        Ok(set)
+    }
+
     pub async fn reported_comment_ids_for_post_by_user(
         cli: &aws_sdk_dynamodb::Client,
         space_post_pk: &Partition,
         reporter_pk: &Partition,
         comments: &[SpacePostComment],
     ) -> Result<HashSet<String>> {
-        let keys: Vec<_> = comments
-            .iter()
-            .map(|c| Self::key_for_space_post_comment(reporter_pk, space_post_pk, c))
-            .collect();
+        let mut all_reports = Vec::new();
 
-        let reports = ContentReport::batch_get(cli, keys).await?;
+        for chunk in comments.chunks(100) {
+            if chunk.is_empty() {
+                continue;
+            }
 
-        let set = reports
+            let keys: Vec<_> = chunk
+                .iter()
+                .map(|c| Self::key_for_space_post_comment(reporter_pk, space_post_pk, c))
+                .collect();
+
+            let reports = ContentReport::batch_get(cli, keys).await?;
+            all_reports.extend(reports);
+        }
+
+        let set = all_reports
             .into_iter()
             .filter(|r| matches!(r.target, ReportTarget::SpacePostComment))
             .filter_map(|r| r.target_sk.map(|sk| sk.to_string()))

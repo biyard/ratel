@@ -8,7 +8,7 @@ class SidePanel extends StatelessWidget {
     required this.onClose,
   });
 
-  final UserV2Model user;
+  final UserModel user;
   final double width;
   final VoidCallback onClose;
 
@@ -408,7 +408,7 @@ class _ThemeSheetState extends State<ThemeSheet> {
 
 class AccountsSheet extends StatefulWidget {
   const AccountsSheet({super.key, required this.teams});
-  final List<TeamV2> teams;
+  final List<Team> teams;
 
   @override
   State<AccountsSheet> createState() => _AccountsSheetState();
