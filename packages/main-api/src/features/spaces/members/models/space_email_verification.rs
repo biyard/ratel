@@ -270,7 +270,8 @@ impl SpaceEmailVerification {
             format!("Participate new space: {} — {}", title, excerpt)
         };
 
-        UserNotification::send_to_users(dynamo, fcm, &recipients, notif_title, notif_body).await?;
+        UserNotification::send_to_users(dynamo, fcm, &recipients, notif_title, notif_body, None)
+            .await?;
 
         tracing::info!(
             "SpaceEmailVerification::send_notification: done for space_pk={}",

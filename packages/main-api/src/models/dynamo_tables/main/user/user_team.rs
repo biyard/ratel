@@ -145,7 +145,7 @@ impl UserTeam {
             team.display_name, team.username
         );
 
-        UserNotification::send_to_users(dynamo, fcm, &recipients, title, body).await?;
+        UserNotification::send_to_users(dynamo, fcm, &recipients, title, body, None).await?;
 
         tracing::info!("UserTeam::send_notification: done for team_pk={}", team.pk);
 

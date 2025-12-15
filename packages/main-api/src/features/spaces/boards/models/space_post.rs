@@ -210,7 +210,7 @@ impl SpacePost {
 
         tracing::info!("send_notification: start, recipients={}", recipients.len());
 
-        UserNotification::send_to_users(dynamo, fcm, &recipients, title, body).await?;
+        UserNotification::send_to_users(dynamo, fcm, &recipients, title, body, None).await?;
 
         tracing::info!("send_notification: done");
         Ok(())
