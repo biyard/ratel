@@ -16,6 +16,7 @@ use bdk::prelude::*;
 use rand::Rng;
 use regex::Regex;
 use serde_json::json;
+use urlencoding::encode;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema, Default)]
 pub struct SpaceEmailVerification {
@@ -270,8 +271,19 @@ impl SpaceEmailVerification {
             format!("Participate new space: {} — {}", title, excerpt)
         };
 
-        UserNotification::send_to_users(dynamo, fcm, &recipients, notif_title, notif_body, None)
-            .await?;
+        let pk_str = space.pk.to_string();
+        let space_pk_encoded = encode(&pk_str);
+        let deeplink = format!("ratelapp://space/{space_pk_encoded}");
+
+        UserNotification::send_to_users(
+            dynamo,
+            fcm,
+            &recipients,
+            notif_title,
+            notif_body,
+            Some(deeplink),
+        )
+        .await?;
 
         tracing::info!(
             "SpaceEmailVerification::send_notification: done for space_pk={}",

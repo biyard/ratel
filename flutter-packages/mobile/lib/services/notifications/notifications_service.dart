@@ -239,10 +239,7 @@ class NotificationsService extends GetxService {
             final encodedPk = segments[0];
             logger.d('encodedPk from deeplink: $encodedPk');
 
-            final route = '/space/$encodedPk';
-            logger.d('Navigate via deeplink, route=$route');
-
-            Get.rootDelegate.toNamed(route);
+            Get.rootDelegate.toNamed(spaceWithPk(encodedPk));
             return;
           }
         }
