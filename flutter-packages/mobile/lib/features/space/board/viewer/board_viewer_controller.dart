@@ -372,7 +372,7 @@ class BoardViewerController extends BaseController {
       );
 
       Biyard.info('Reported successfully.');
-      await loadComments();
+      await loadComments(reset: true);
     } catch (e) {
       logger.e('reportSpacePostComment error: $e');
       Biyard.error('Report Failed', 'Failed to report. Please try again.');
