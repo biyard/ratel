@@ -76,11 +76,28 @@ class PostController extends BaseController {
       }
 
       feedsService.patchDetailFromSummary(feeds[index]);
+      if (nextLike) {
+        Biyard.info("Success to like post");
+      } else {
+        Biyard.info("Success to unlike post");
+      }
     } catch (e, s) {
       logger.e('Failed to toggle like from posts: $e', stackTrace: s);
       feeds[index].liked = alreadyLiked;
       feeds[index].likes = originalLikes;
       feeds.refresh();
+
+      if (nextLike) {
+        Biyard.error(
+          "Like Failed",
+          "Failed to like post. Please try again later.",
+        );
+      } else {
+        Biyard.error(
+          "Unlike Failed",
+          "Failed to unlike post. Please try again later.",
+        );
+      }
     } finally {
       isLikingPost.value = false;
     }
