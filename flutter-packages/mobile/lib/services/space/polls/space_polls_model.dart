@@ -86,6 +86,7 @@ class PollListResult {
   const PollListResult({required this.polls, required this.bookmark});
 
   factory PollListResult.fromJson(Json j) {
+    logger.d("json polls: ${(j['polls'] as List).length} ${j}");
     final pollsJson = (j['polls'] as List? ?? const []);
     final polls = pollsJson
         .whereType<Map>()
