@@ -1,6 +1,6 @@
 use crate::features::membership::UserMembership;
 use crate::features::payment::*;
-use crate::services::portone::PortOne;
+use crate::services::portone::{PaymentCancelScheduleResponse, PortOne};
 use crate::types::*;
 use crate::*;
 
@@ -131,10 +131,47 @@ impl UserPayment {
             amount,
             currency,
             payment_id,
-            res.payment.pg_tx_id,
+            res.schedule.id,
         )
         .with_status(PurchaseStatus::Scheduled);
 
         Ok(user_purchase)
+    }
+
+    pub async fn cancel_scheduled_payments(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        portone: &PortOne,
+    ) -> crate::Result<PaymentCancelScheduleResponse> {
+        if self.billing_key.is_none() {
+            return Err(Error::CardInfoRequired);
+        }
+
+        let res = portone
+            .cancel_schedule_with_billing_key(self.billing_key.clone().unwrap())
+            .await?;
+
+        let user_id: UserPartition = self.pk.0.clone().into();
+        let opt = UserPurchase::opt_one().sk(PurchaseStatus::Scheduled.to_string());
+        let (purchase, _bm) = UserPurchase::find_by_status(cli, user_id, opt).await?;
+
+        let purchase = purchase
+            .into_iter()
+            .next()
+            .ok_or_else(|| Error::InvalidIdentification)?;
+
+        while let Err(err) = UserPurchase::updater(&purchase.pk, &purchase.sk)
+            .with_status(PurchaseStatus::Canceled)
+            .execute(cli)
+            .await
+        {
+            error!(
+                "Failed to update purchase status to Canceled: {:?}, retrying...",
+                err
+            );
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        }
+
+        Ok(res)
     }
 }
