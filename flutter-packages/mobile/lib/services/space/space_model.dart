@@ -268,6 +268,7 @@ class SpaceModel {
     required this.quota,
   });
 
+  bool get isFinished => status == SpaceStatus.finished;
   bool get isAdmin => permissions.isAdmin;
   bool get havePreTasks => requirements.any((e) => !e.responded);
 

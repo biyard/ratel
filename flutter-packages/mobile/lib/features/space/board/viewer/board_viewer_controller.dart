@@ -1,12 +1,16 @@
 import 'package:ratel/exports.dart';
 
 class BoardViewerController extends BaseController {
+  final spaceService = Get.find<SpaceService>();
   final reportApi = Get.find<ReportApi>();
   final userService = Get.find<UserService>();
   final SpaceBoardsApi _boardsApi = Get.find<SpaceBoardsApi>();
 
   late final String spacePk;
   late final String postPk;
+
+  Rxn<SpaceModel> get spaceRx => spaceService.spaceOf(spacePk);
+  SpaceModel? get space => spaceRx.value;
 
   Rx<UserModel> get user => userService.user;
 

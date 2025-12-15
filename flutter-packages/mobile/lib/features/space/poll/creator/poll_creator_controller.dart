@@ -1,10 +1,14 @@
 import 'package:ratel/exports.dart';
 
 class PollCreatorController extends BaseController {
+  final SpaceService _spaceService = Get.find<SpaceService>();
   final SpacePollsApi _pollsApi = Get.find<SpacePollsApi>();
 
   late final String spacePk;
   late final String? pollSk;
+
+  Rxn<SpaceModel> get spaceRx => _spaceService.spaceOf(spacePk);
+  SpaceModel? get space => spaceRx.value;
 
   final poll = Rxn<PollModel>();
   final isLoading = false.obs;

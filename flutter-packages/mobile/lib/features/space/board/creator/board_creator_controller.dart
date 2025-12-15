@@ -1,6 +1,7 @@
 import 'package:ratel/exports.dart';
 
 class BoardCreatorController extends BaseController {
+  final spaceService = Get.find<SpaceService>();
   final reportApi = Get.find<ReportApi>();
   final userService = Get.find<UserService>();
   final SpaceBoardsApi _boardsApi = Get.find<SpaceBoardsApi>();
@@ -15,6 +16,10 @@ class BoardCreatorController extends BaseController {
   String? _commentsBookmark;
   bool get hasMoreComments =>
       _commentsBookmark != null && _commentsBookmark!.isNotEmpty;
+
+  Rxn<SpaceModel> get spaceRx => spaceService.spaceOf(spacePk);
+  SpaceModel? get space => spaceRx.value;
+
   @override
   void onInit() {
     super.onInit();
