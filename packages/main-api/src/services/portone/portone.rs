@@ -107,7 +107,13 @@ impl PortOne {
             get_now_timestamp_micros()
         );
 
-        let notice_urls = if conf.is_local() { vec![] } else { vec![] };
+        let notice_urls = if conf.is_local() {
+            let ip = conf.ip_address();
+            warn!("Using local IP address for notice_urls: {}", ip);
+            vec![format!("http://{ip}:3000/hooks/portone")]
+        } else {
+            vec![format!("https://{}/hooks/portone", conf.domain)]
+        };
 
         let body = BillingKeyPaymentRequest {
             store_id: portone_conf.store_id.to_string(),
@@ -150,12 +156,21 @@ impl PortOne {
         currency: Currency,
         time_to_pay: String,
     ) -> Result<(PaymentScheduleResponse, String)> {
-        let portone_conf = config::get().portone;
+        let conf = config::get();
+        let portone_conf = conf.portone;
         let payment_id = format!(
             "{}-{}",
             random_string::generate(10, CHARSET),
             get_now_timestamp_micros(),
         );
+
+        let notice_urls = if conf.is_local() {
+            let ip = conf.ip_address();
+            warn!("Using local IP address for notice_urls: {}", ip);
+            vec![format!("http://{ip}:3000/hooks/portone")]
+        } else {
+            vec![format!("https://{}/hooks/portone", conf.domain)]
+        };
 
         let payment = BillingKeyPaymentRequest {
             store_id: portone_conf.store_id.to_string(),
@@ -175,7 +190,7 @@ impl PortOne {
             },
             currency: currency.to_string(),
             locale: None,
-            notice_urls: vec![],
+            notice_urls,
         };
 
         let body = ScheduleBillingKeyRequest {
