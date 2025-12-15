@@ -50,7 +50,6 @@ class SpaceScreen extends GetWidget<SpaceController> {
                     : null,
               );
             }),
-            16.vgap,
             Expanded(
               child: Obx(() {
                 final space = controller.space;

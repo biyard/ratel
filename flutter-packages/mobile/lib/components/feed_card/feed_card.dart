@@ -4,6 +4,7 @@ class FeedCard extends StatelessWidget {
   const FeedCard({
     super.key,
     required this.feed,
+    this.onLikeTap,
     this.onBookmarkTap,
     this.onTap,
     this.onEditTap,
@@ -12,6 +13,7 @@ class FeedCard extends StatelessWidget {
   });
 
   final FeedSummaryModel feed;
+  final VoidCallback? onLikeTap;
   final VoidCallback? onBookmarkTap;
   final VoidCallback? onTap;
   final VoidCallback? onEditTap;
@@ -146,9 +148,22 @@ class FeedCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _bottomMetric(
-                icon: SvgPicture.asset(Assets.thumbs, width: 20, height: 20),
-                value: feed.likes,
+              InkWell(
+                onTap: () {
+                  onLikeTap!();
+                },
+                child: _bottomMetric(
+                  icon: SvgPicture.asset(
+                    Assets.thumbs,
+                    width: 20,
+                    height: 20,
+                    colorFilter: ColorFilter.mode(
+                      feed.liked ? AppColors.primary : const Color(0xFF737373),
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  value: feed.likes,
+                ),
               ),
               _bottomMetric(
                 icon: SvgPicture.asset(
