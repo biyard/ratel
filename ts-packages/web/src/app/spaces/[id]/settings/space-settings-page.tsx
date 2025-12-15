@@ -37,7 +37,7 @@ export function SpaceSettingsPage() {
       <div className="flex flex-col w-full gap-3">
         <Card key={'participant-setting'}>
           <div className="flex flex-col gap-4">
-            <div className="text-sm font-semibold text-text-primary">
+            <div className="text-xs font-semibold text-text-primary">
               {i18n.participation_title}
             </div>
 
@@ -67,7 +67,7 @@ export function SpaceSettingsPage() {
         {ctrl.data.space.data.publishState === SpacePublishState.Published && (
           <Card key={'public-setting'}>
             <div className="flex flex-col gap-4">
-              <div className="text-sm font-semibold text-text-primary">
+              <div className="text-xs font-semibold text-text-primary">
                 {i18n.public_setting}
               </div>
 
