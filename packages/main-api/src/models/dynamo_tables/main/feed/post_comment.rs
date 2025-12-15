@@ -28,6 +28,8 @@ pub struct PostComment {
     #[serde(default)]
     pub likes: u64,
     #[serde(default)]
+    pub reports: i64,
+    #[serde(default)]
     pub replies: u64,
 
     pub parent_comment_sk: Option<EntityType>,
@@ -64,6 +66,7 @@ impl PostComment {
             author_username,
             author_profile_url,
             likes: 0,
+            reports: 0,
             replies: 0,
             parent_comment_sk: None,
         }

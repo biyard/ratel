@@ -120,6 +120,9 @@ class AuthApi extends GetConnect {
         'AuthApi.tryAutoSignIn: failed to register notification device: $e',
       );
     }
+
+    final userService = Get.find<UserService>();
+    await userService.getUser();
     return true;
   }
 
@@ -182,6 +185,9 @@ class AuthApi extends GetConnect {
       logger.w('AuthApi.signup: failed to register notification device: $e');
     }
 
+    final userService = Get.find<UserService>();
+    await userService.getUser();
+
     return LoginResult(
       body: res.body,
       sid: cookies[sidName],
@@ -230,6 +236,9 @@ class AuthApi extends GetConnect {
         'AuthApi.loginWithPassword: failed to register notification device: $e',
       );
     }
+
+    final userService = Get.find<UserService>();
+    await userService.getUser();
 
     return LoginResult(
       body: res.body,
