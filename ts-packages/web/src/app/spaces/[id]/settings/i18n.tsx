@@ -14,6 +14,10 @@ export const SpaceSettings = {
     error_update: 'Failed to update anonymous participation',
     success_visibility_update: 'Successfully updated visibility setting',
     error_visibility_update: 'Failed to update visibility',
+
+    public_setting: 'Public Setting',
+    public: 'Public',
+    private: 'Private',
   },
   ko: {
     title: '스페이스 설정',
@@ -28,6 +32,10 @@ export const SpaceSettings = {
     error_update: '익명 참여 설정 업데이트에 실패했습니다',
     success_visibility_update: '게시 상태 설정이 성공적으로 업데이트되었습니다',
     error_visibility_update: '게시 상태 설정 업데이트에 실패했습니다',
+
+    public_setting: '공개 설정',
+    public: '공개',
+    private: '비공개',
   },
 };
 
@@ -43,6 +51,10 @@ export interface SettingsI18n {
   error_update: string;
   success_visibility_update: string;
   error_visibility_update: string;
+
+  public_setting: string;
+  public: string;
+  private: string;
 }
 
 export function useSettingsI18n(): SettingsI18n {
@@ -62,5 +74,9 @@ export function useSettingsI18n(): SettingsI18n {
     error_update: t('error_update'),
     success_visibility_update: t('success_visibility_update'),
     error_visibility_update: t('error_visibility_update'),
+
+    public_setting: t('public_setting'),
+    public: t('public'),
+    private: t('private'),
   };
 }

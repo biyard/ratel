@@ -120,10 +120,7 @@ export class SpaceHomeController {
 
     // It seems like admins shouldn't be able to change settings after a space is published.
     // If a change is made to the settings, the anomyous attribute can also be changed, but in this case, matching between participating and non-participating users may not be possible.
-    if (
-      this.space.isAdmin() &&
-      this.space.publishState === SpacePublishState.Draft
-    ) {
+    if (this.space.isAdmin()) {
       menus = menus.concat(this.adminMenus);
     }
 
@@ -142,7 +139,7 @@ export class SpaceHomeController {
         label: this.t('menu_admin_settings'),
       },
     ];
-    // FIXME: add rewards only space_common.rewards is not null 
+    // FIXME: add rewards only space_common.rewards is not null
     // if (config.experiment) {
     //   menus.push({
     //     Icon: Trophy,
