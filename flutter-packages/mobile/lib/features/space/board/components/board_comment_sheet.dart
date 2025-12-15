@@ -3,7 +3,7 @@ import 'package:ratel/features/space/board/components/board_comment_input_bar.da
 import 'package:ratel/features/space/board/components/board_comment_item.dart';
 
 class BoardCommentsSheet extends StatefulWidget {
-  final UserV2Model user;
+  final Rx<UserModel> user;
   final List<SpacePostCommentModel> comments;
   final bool isLoading;
   final bool hasMore;
@@ -15,6 +15,7 @@ class BoardCommentsSheet extends StatefulWidget {
   final CommentEditTap<SpacePostCommentModel>? onEdit;
   final CommentDeleteTap<SpacePostCommentModel>? onDelete;
   final Future<bool> Function()? onLoadMore;
+  final Future<void> Function(SpacePostCommentModel comment)? onReport;
 
   const BoardCommentsSheet({
     super.key,
@@ -30,6 +31,7 @@ class BoardCommentsSheet extends StatefulWidget {
     this.onDelete,
     this.onLoadMore,
     this.canComment = true,
+    this.onReport,
   });
 
   @override
@@ -60,7 +62,7 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
   }
 
   void _beginInlineEdit(int index, SpacePostCommentModel comment) {
-    final initial = _stripHtml(comment.content).trim();
+    final initial = stripHtml(comment.content).trim();
     setState(() {
       _editingIndex = index;
       _editingController.text = initial;
@@ -92,6 +94,9 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
     int index,
     SpacePostCommentModel comment,
   ) async {
+    final isOwner = comment.authorPk == widget.user.value.pk;
+    final isReport = comment.isReport;
+
     await showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF29292F),
@@ -104,7 +109,7 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (widget.onEdit != null)
+              if (isOwner && widget.onEdit != null)
                 ListTile(
                   leading: const Icon(Icons.edit_rounded, color: Colors.white),
                   title: const Text(
@@ -116,7 +121,7 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
                     _beginInlineEdit(index, comment);
                   },
                 ),
-              if (widget.onDelete != null)
+              if (isOwner && widget.onDelete != null)
                 ListTile(
                   leading: const Icon(
                     Icons.delete_outline_rounded,
@@ -132,12 +137,24 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
                     if (mounted) setState(() {});
                   },
                 ),
-              if (widget.onEdit == null && widget.onDelete == null)
-                const ListTile(
-                  title: Text(
-                    'No actions available',
-                    style: TextStyle(color: Colors.white70),
+              if (widget.onReport != null && !isReport)
+                ListTile(
+                  leading: const Icon(
+                    Icons.flag_outlined,
+                    color: Color(0xFFFF4D4F),
                   ),
+                  title: const Text(
+                    'Report comment',
+                    style: TextStyle(color: Color(0xFFFF4D4F)),
+                  ),
+                  onTap: () async {
+                    Navigator.of(ctx).pop();
+                    await widget.onReport!(comment);
+                    if (!mounted) return;
+                    setState(() {
+                      comment.isReport = true;
+                    });
+                  },
                 ),
               const SizedBox(height: 8),
             ],
@@ -160,21 +177,30 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
         decoration: const BoxDecoration(
           color: Color(0xFF29292F),
           borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+          border: Border(top: BorderSide(color: Color(0xFF3E3E4A))),
+          boxShadow: [
+            BoxShadow(
+              offset: Offset(0, -4),
+              blurRadius: 20,
+              spreadRadius: 10,
+              color: Color.fromARGB(128, 10, 10, 10),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            6.vgap,
+            const SizedBox(height: 8),
             Container(
               width: 50,
               height: 5,
               decoration: BoxDecoration(
                 color: const Color(0xFF6B6B6D),
-                borderRadius: BorderRadius.circular(40),
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
-            18.vgap,
+            const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
@@ -188,7 +214,7 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
                 ),
               ),
             ),
-            10.vgap,
+            const SizedBox(height: 16),
             Expanded(
               child: widget.isLoading
                   ? const Center(
@@ -199,44 +225,80 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
                       ),
                     )
                   : widget.comments.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No comments yet.',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: AppColors.neutral500,
+                  ? ListView(
+                      controller: widget.scrollController,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      children: [
+                        SizedBox(
+                          height: 200,
+                          child: Center(
+                            child: Text(
+                              'No comments yet.',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: AppColors.neutral500,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     )
                   : ListView.builder(
                       controller: widget.scrollController,
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
                       itemCount: widget.comments.length + (_hasMore ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (index < widget.comments.length) {
                           final c = widget.comments[index];
                           final editing = _editingIndex == index;
-                          return BoardCommentItem(
-                            user: widget.user,
-                            comment: c,
-                            isEditing: editing,
-                            editingController: editing
-                                ? _editingController
-                                : null,
-                            onSaveEdit: editing
-                                ? () => _saveInlineEdit(index, c)
-                                : null,
-                            onCancelEdit: editing ? _cancelInlineEdit : null,
-                            onLikeTap: widget.onLikeTap == null
-                                ? null
-                                : () {
-                                    widget.onLikeTap!(c);
-                                    if (mounted) setState(() {});
-                                  },
-                            onMoreTap: () => _showCommentActions(index, c),
+
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            child: BoardCommentItem(
+                              user: widget.user.value,
+                              comment: c,
+                              isEditing: editing,
+                              isReported: c.isReport,
+                              editingController: editing
+                                  ? _editingController
+                                  : null,
+                              onSaveEdit: editing
+                                  ? () => _saveInlineEdit(index, c)
+                                  : null,
+                              onCancelEdit: editing ? _cancelInlineEdit : null,
+                              onLikeTap: widget.onLikeTap == null
+                                  ? null
+                                  : () async {
+                                      if (editing) return;
+
+                                      final prevLiked = c.liked;
+                                      final prevLikes = c.likes;
+
+                                      final nextLiked = !prevLiked;
+                                      int nextLikes = prevLikes;
+                                      if (nextLiked && !prevLiked) {
+                                        nextLikes = prevLikes + 1;
+                                      } else if (!nextLiked &&
+                                          prevLiked &&
+                                          prevLikes > 0) {
+                                        nextLikes = prevLikes - 1;
+                                      }
+
+                                      widget.onLikeTap!(c);
+
+                                      setState(() {
+                                        c.liked = nextLiked;
+                                        c.likes = nextLikes;
+                                      });
+                                    },
+                              onMoreTap: () => _showCommentActions(index, c),
+                              onReportTap: null,
+                            ),
                           );
                         }
 
-                        if (!_hasMore) return const SizedBox.shrink();
+                        if (!_hasMore) {
+                          return const SizedBox.shrink();
+                        }
 
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8),
@@ -341,7 +403,6 @@ class _BoardCommentInputBar extends StatelessWidget {
   final TextEditingController controller;
   final bool sending;
   final Future<void> Function(String text) onSend;
-
   const _BoardCommentInputBar({
     required this.controller,
     required this.sending,
@@ -355,70 +416,63 @@ class _BoardCommentInputBar extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-        child: SizedBox(
-          height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: RoundContainer(
+          radius: 100,
+          width: double.infinity,
+          color: const Color(0xFF101010),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          border: Border.all(color: const Color(0xFF3E3E4A)),
           child: Row(
             children: [
+              SvgPicture.asset(
+                Assets.roundBubble,
+                width: 20,
+                height: 20,
+                colorFilter: const ColorFilter.mode(
+                  Color(0xFFD4D4D4),
+                  BlendMode.srcIn,
+                ),
+              ),
+              const SizedBox(width: 10),
               Expanded(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF191919),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(
-                      color: const Color(0xFF262626),
-                      width: 1,
+                child: TextField(
+                  controller: controller,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    border: InputBorder.none,
+                    hintText: 'Add a comment',
+                    hintStyle: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF6B6B6D),
                     ),
                   ),
-                  child: Row(
-                    children: [
-                      SvgPicture.asset(
-                        Assets.roundBubble,
-                        width: 20,
-                        height: 20,
-                      ),
-                      8.gap,
-                      Expanded(
-                        child: TextField(
-                          controller: controller,
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
-                          decoration: const InputDecoration(
-                            isDense: true,
-                            border: InputBorder.none,
-                            hintText: 'Add a comment',
-                            hintStyle: TextStyle(
-                              color: Color(0xFF404040),
-                              fontSize: 16,
-                            ),
-                          ),
-                          textInputAction: TextInputAction.newline,
-                          keyboardType: TextInputType.multiline,
-                          minLines: 1,
-                          maxLines: 4,
-                        ),
-                      ),
-                      8.gap,
-                      GestureDetector(
-                        onTap: sending
-                            ? null
-                            : () {
-                                onSend(controller.text);
-                              },
-                        child: Icon(
-                          Icons.send_rounded,
-                          size: 18,
-                          color: sending
-                              ? const Color(0xFF555555)
-                              : AppColors.neutral500,
-                        ),
-                      ),
-                    ],
-                  ),
+                  textInputAction: TextInputAction.newline,
+                  keyboardType: TextInputType.multiline,
+                  minLines: 1,
+                  maxLines: 4,
                 ),
+              ),
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: sending ? null : () => onSend(controller.text),
+                child: sending
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(
+                        Icons.send_rounded,
+                        size: 20,
+                        color: AppColors.neutral500,
+                      ),
               ),
             ],
           ),
@@ -426,11 +480,4 @@ class _BoardCommentInputBar extends StatelessWidget {
       ),
     );
   }
-}
-
-String _stripHtml(String text) {
-  final brReg = RegExp(r'<br\s*/?>', caseSensitive: false);
-  final withoutBr = text.replaceAll(brReg, '\n');
-  final tagReg = RegExp(r'<[^>]+>', multiLine: true, caseSensitive: false);
-  return withoutBr.replaceAll(tagReg, '');
 }

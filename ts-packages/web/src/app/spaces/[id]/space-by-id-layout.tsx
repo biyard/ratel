@@ -37,15 +37,15 @@ function GeneralLayout() {
 
   const participantProfileProps =
     !ctrl.space.isAdmin() &&
-      ctrl.space.participated &&
-      ctrl.space.participantDisplayName &&
-      ctrl.space.participantProfileUrl &&
-      ctrl.space.participantUsername
+    ctrl.space.participated &&
+    ctrl.space.participantDisplayName &&
+    ctrl.space.participantProfileUrl &&
+    ctrl.space.participantUsername
       ? {
-        displayName: ctrl.space.participantDisplayName,
-        profileUrl: ctrl.space.participantProfileUrl,
-        username: ctrl.space.participantUsername,
-      }
+          displayName: ctrl.space.participantDisplayName,
+          profileUrl: ctrl.space.participantProfileUrl,
+          username: ctrl.space.participantUsername,
+        }
       : null;
 
   const currentTab = useMemo(() => {
@@ -132,7 +132,7 @@ function GeneralLayout() {
           )} */}
           <TimelineMenu
             isEditing={false}
-            handleSetting={() => { }}
+            handleSetting={() => {}}
             items={ctrl.timelineItems}
             titleLabel={ctrl.t('timeline_title')}
           />
@@ -156,7 +156,7 @@ function GeneralLayout() {
 
               <TimelineMenu
                 isEditing={false}
-                handleSetting={() => { }}
+                handleSetting={() => {}}
                 items={ctrl.timelineItems}
                 titleLabel={ctrl.t('timeline_title')}
               />
@@ -173,7 +173,9 @@ export default function SpaceByIdLayout() {
   const ctrl = useSpaceHomeController(spacePk ?? '');
 
   const content =
-    !ctrl.space.havePreTasks() || ctrl.space.isAdmin() ? (
+    !ctrl.space.havePreTasks() ||
+    ctrl.space.isAdmin() ||
+    ctrl.space.isFinished ? (
       <GeneralLayout />
     ) : ctrl.space.participated ? (
       <Requirements />

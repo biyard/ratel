@@ -35,10 +35,10 @@ Future<void> main() async {
   NetworkService.init();
   FeedsService.init();
   SpaceService.init();
+  ReportsService.init();
   UserService.init();
   AssetService.init();
   WalletService.init();
-  DashboardsService.init();
   await NotificationsService.init();
   DocumentsService.init();
   DriveApi.init();

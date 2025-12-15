@@ -2,16 +2,19 @@
 use crate::{
     AppState, Error, Permissions,
     controllers::v3::spaces::{SpacePath, SpacePathParam, SpacePostPath, SpacePostPathParam},
-    features::spaces::boards::{
-        dto::{
-            space_post_comment_response::SpacePostCommentResponse,
-            space_post_response::SpacePostResponse,
-        },
-        models::{
-            space_category::SpaceCategory,
-            space_post::SpacePost,
-            space_post_comment::{SpacePostComment, SpacePostCommentQueryOption},
-            space_post_comment_like::SpacePostCommentLike,
+    features::{
+        report::ContentReport,
+        spaces::boards::{
+            dto::{
+                space_post_comment_response::SpacePostCommentResponse,
+                space_post_response::SpacePostResponse,
+            },
+            models::{
+                space_category::SpaceCategory,
+                space_post::SpacePost,
+                space_post_comment::{SpacePostComment, SpacePostCommentQueryOption},
+                space_post_comment_like::SpacePostCommentLike,
+            },
         },
     },
     models::{SpaceCommon, feed::Post, team::Team, user::User},
@@ -44,5 +47,15 @@ pub async fn get_space_post_handler(
         .await?
         .ok_or(Error::PostNotFound)?;
 
-    Ok(Json(post.into()))
+    let mut post_response: SpacePostResponse = post.clone().into();
+    let is_report = ContentReport::is_reported_for_target_by_user(
+        &dynamo.client,
+        &post.clone().pk,
+        Some(&post.clone().sk),
+        &user.clone().pk,
+    )
+    .await?;
+    post_response.is_report = is_report;
+
+    Ok(Json(post_response))
 }

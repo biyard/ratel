@@ -56,6 +56,7 @@ pub struct Config {
 
     pub biyard: BiyardConfig,
     pub google_cloud: GoogleCloudConfig,
+    pub reward: bool,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -142,6 +143,7 @@ impl Default for Config {
             biyard: BiyardConfig::default(),
 
             google_cloud: GoogleCloudConfig::default(),
+            reward: option_env!("REWARD").unwrap_or("false").parse().unwrap(),
         }
     }
 }

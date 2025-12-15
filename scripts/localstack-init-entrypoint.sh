@@ -31,6 +31,9 @@ TIMESTAMP=$(date +%s%3N)
 # Membership
 aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/membership.json
 
+# Reward
+aws --endpoint-url=$ENDPOINT dynamodb batch-write-item --request-items file://scripts/dynamodb-data/reward.json
+
 aws --endpoint-url=$ENDPOINT dynamodb put-item \
   --table-name ratel-local-main \
   --item '{

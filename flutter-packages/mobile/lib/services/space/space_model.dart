@@ -200,10 +200,13 @@ class SpaceModel {
   final String authorProfileUrl;
 
   final bool certified;
+  int reports;
   final int likes;
   final int comments;
   final int shares;
   final int rewards;
+
+  bool isReport;
 
   final SpaceVisibility visibility;
   final SpacePublishState publishState;
@@ -225,7 +228,7 @@ class SpaceModel {
   final int remains;
   final int quota;
 
-  const SpaceModel({
+  SpaceModel({
     required this.pk,
     required this.sk,
     required this.title,
@@ -243,6 +246,8 @@ class SpaceModel {
     required this.authorProfileUrl,
     required this.certified,
     required this.likes,
+    required this.reports,
+    required this.isReport,
     required this.comments,
     required this.shares,
     required this.rewards,
@@ -313,7 +318,9 @@ class SpaceModel {
       authorUsername: (j['author_username'] ?? '') as String,
       authorProfileUrl: (j['author_profile_url'] ?? '') as String,
       certified: (j['certified'] as bool?) ?? false,
+      isReport: (j['is_report'] as bool?) ?? false,
       likes: _asIntOrNull(j['likes']) ?? 0,
+      reports: _asIntOrNull(j['reports']) ?? 0,
       comments: _asIntOrNull(j['comments']) ?? 0,
       shares: _asIntOrNull(j['shares']) ?? 0,
       rewards: _asIntOrNull(j['rewards']) ?? 0,
@@ -375,45 +382,6 @@ class CommentModel {
     profileUrl: j['profile_url'] ?? '',
     nickname: j['nickname'] ?? '',
     comment: j['html_contents'] ?? '',
-  );
-}
-
-class ElearningModel {
-  final int id;
-  final List<FileModel> files;
-
-  const ElearningModel({required this.id, required this.files});
-
-  factory ElearningModel.fromJson(Json j) => ElearningModel(
-    id: (j['id'] ?? 0) as int,
-    files: (j['files'] as List? ?? const [])
-        .whereType<Json>()
-        .map(FileModel.fromJson)
-        .toList(),
-  );
-}
-
-class DiscussionModel {
-  final int id;
-  final int startedAt;
-  final int endedAt;
-  final String name;
-  final String? record;
-
-  const DiscussionModel({
-    required this.id,
-    required this.startedAt,
-    required this.endedAt,
-    required this.name,
-    required this.record,
-  });
-
-  factory DiscussionModel.fromJson(Json j) => DiscussionModel(
-    id: (j['id'] ?? 0) as int,
-    startedAt: (j['started_at'] ?? j['startedAt'] ?? 0) as int,
-    endedAt: (j['ended_at'] ?? j['endedAt'] ?? 0) as int,
-    name: (j['name'] ?? '') as String,
-    record: j['record'] as String?,
   );
 }
 

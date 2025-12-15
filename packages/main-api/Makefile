@@ -66,6 +66,9 @@ BIYARD_PROJECT_ID ?= ratel_project_id
 RATEL_PROJECT_ID ?= 
 FCM_ENABLED ?= false
 
+REWARD ?= true
+
+
 BUILD_ENV ?= ENV=$(ENV) \
 								RUST_LOG=$(RUST_LOG) \
 								AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
@@ -127,7 +130,8 @@ BUILD_ENV ?= ENV=$(ENV) \
 								PORTONE_STORE_ID=$(PORTONE_STORE_ID) \
 								ACCOUNT_ID=$(ACCOUNT_ID) \
 								RATEL_PROJECT_ID=$(RATEL_PROJECT_ID) \
-								FCM_ENABLED=$(FCM_ENABLED)
+								FCM_ENABLED=$(FCM_ENABLED) \
+								REWARD=$(REWARD)
 
 .build/evm-keys:
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json

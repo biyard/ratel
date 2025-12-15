@@ -14,7 +14,6 @@ pub use update_reward::*;
 pub mod tests;
 
 use crate::AppState;
-use bdk::prelude::*;
 use by_axum::aide::axum::routing::*;
 use by_axum::axum::*;
 
@@ -26,8 +25,4 @@ pub fn route() -> Router<AppState> {
             .put(update_reward_handler)
             .delete(delete_reward_handler),
     )
-    // .route(
-    //     "/:reward_sk",
-    //     put(update_reward_handler).delete(delete_reward_handler),
-    // )
 }

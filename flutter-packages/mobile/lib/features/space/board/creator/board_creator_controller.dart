@@ -1,28 +1,12 @@
 import 'package:ratel/exports.dart';
 
 class BoardCreatorController extends BaseController {
+  final reportApi = Get.find<ReportApi>();
   final userService = Get.find<UserService>();
   final SpaceBoardsApi _boardsApi = Get.find<SpaceBoardsApi>();
   late final String spacePk;
   late final String postPk;
-  final Rx<UserV2Model> user = UserV2Model(
-    pk: '',
-    email: '',
-    nickname: '',
-    profileUrl: '',
-    description: '',
-    userType: 0,
-    username: '',
-    followersCount: 0,
-    followingsCount: 0,
-    theme: 0,
-    point: 0,
-    referralCode: null,
-    phoneNumber: null,
-    principal: null,
-    evmAddress: null,
-    teams: const [],
-  ).obs;
+  Rx<UserModel> get user => userService.user;
   final post = Rxn<SpacePostModel>();
   final isLoading = false.obs;
   final comments = <SpacePostCommentModel>[].obs;
@@ -55,7 +39,6 @@ class BoardCreatorController extends BaseController {
     );
     _loadPost();
     loadComments(reset: true);
-    user(userService.user.value);
   }
 
   Future<void> _loadPost() async {
@@ -183,6 +166,7 @@ class BoardCreatorController extends BaseController {
     final targetSk = comment.sk;
     final currentLiked = comment.liked;
     final newLiked = !currentLiked;
+    logger.d("current liked: $currentLiked $newLiked");
     final idx = comments.indexWhere((c) => c.sk == targetSk);
     if (idx < 0) return;
     final old = comments[idx];
@@ -193,6 +177,7 @@ class BoardCreatorController extends BaseController {
       updatedAt: old.updatedAt,
       content: old.content,
       likes: newLiked ? old.likes + 1 : (old.likes > 0 ? old.likes - 1 : 0),
+      reports: old.reports,
       replies: old.replies,
       parentCommentSk: old.parentCommentSk,
       authorPk: old.authorPk,
@@ -200,8 +185,10 @@ class BoardCreatorController extends BaseController {
       authorUsername: old.authorUsername,
       authorProfileUrl: old.authorProfileUrl,
       liked: newLiked,
+      isReport: old.isReport,
     );
     comments[idx] = updated;
+
     try {
       await _boardsApi.likeComment(spacePk, postPk, targetSk, like: newLiked);
       logger.d(
@@ -211,7 +198,7 @@ class BoardCreatorController extends BaseController {
     } catch (e) {
       logger.e(
         'BoardCreatorController: failed to toggle like '
-        'spacePk=$spacePk postPk=$postPk commentSk=$targetSk: $e',
+        'spacePk=$spacePk postPk=$postPk commentSk=$targetSk liked=$newLiked: $e',
       );
       comments[idx] = old;
       Biyard.error(
@@ -264,6 +251,7 @@ class BoardCreatorController extends BaseController {
       updatedAt: now,
       content: trimmed,
       likes: old.likes,
+      reports: old.reports,
       replies: old.replies,
       parentCommentSk: old.parentCommentSk,
       authorPk: old.authorPk,
@@ -271,6 +259,7 @@ class BoardCreatorController extends BaseController {
       authorUsername: old.authorUsername,
       authorProfileUrl: old.authorProfileUrl,
       liked: old.liked,
+      isReport: old.isReport,
     );
     comments[idx] = updated;
     try {
@@ -286,6 +275,42 @@ class BoardCreatorController extends BaseController {
         'Failed to update comment',
         'Could not update this comment. Please try again.',
       );
+    }
+  }
+
+  Future<void> reportSpacePost({
+    required String spacePk,
+    required String spacePostPk,
+  }) async {
+    try {
+      await reportApi.reportSpacePost(
+        spacePk: spacePk,
+        spacePostPk: spacePostPk,
+      );
+
+      Biyard.info('Reported successfully.');
+      await _loadPost();
+    } catch (e) {
+      logger.e('reportSpacePost error: $e');
+      Biyard.error('Report Failed', 'Failed to report. Please try again.');
+    }
+  }
+
+  Future<void> reportSpaceComment({
+    required String spacePostPk,
+    required String commentSk,
+  }) async {
+    try {
+      await reportApi.reportSpaceComment(
+        spacePostPk: spacePostPk,
+        commentSk: commentSk,
+      );
+
+      Biyard.info('Reported successfully.');
+      await loadComments(reset: true);
+    } catch (e) {
+      logger.e('reportSpacePostComment error: $e');
+      Biyard.error('Report Failed', 'Failed to report. Please try again.');
     }
   }
 }

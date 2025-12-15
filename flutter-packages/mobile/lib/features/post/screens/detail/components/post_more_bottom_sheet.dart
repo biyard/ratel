@@ -5,13 +5,52 @@ class PostMoreBottomSheet extends StatelessWidget {
     super.key,
     required this.onUpdate,
     required this.onDelete,
+    required this.onReport,
   });
 
-  final VoidCallback onUpdate;
-  final VoidCallback onDelete;
+  final VoidCallback? onUpdate;
+  final VoidCallback? onDelete;
+  final VoidCallback? onReport;
 
   @override
   Widget build(BuildContext context) {
+    final items = <Widget>[];
+
+    if (onUpdate != null) {
+      items.addAll([
+        _SheetItem(
+          icon: SvgPicture.asset(Assets.edit1, width: 20, height: 20),
+          label: 'Update',
+          labelColor: Colors.white,
+          onTap: onUpdate!,
+        ),
+        12.vgap,
+      ]);
+    }
+
+    if (onDelete != null) {
+      items.addAll([
+        _SheetItem(
+          icon: SvgPicture.asset(Assets.deleteRed, width: 20, height: 20),
+          label: 'Delete post',
+          labelColor: const Color(0xFFEF4444),
+          onTap: onDelete!,
+        ),
+        12.vgap,
+      ]);
+    }
+
+    if (onReport != null) {
+      items.add(
+        _SheetItem(
+          icon: SvgPicture.asset(Assets.report, width: 20, height: 20),
+          label: 'Report post',
+          labelColor: const Color(0xFFEF4444),
+          onTap: onReport!,
+        ),
+      );
+    }
+
     return SafeArea(
       top: false,
       child: Container(
@@ -35,19 +74,7 @@ class PostMoreBottomSheet extends StatelessWidget {
               ),
             ),
             20.vgap,
-            _SheetItem(
-              icon: SvgPicture.asset(Assets.edit1, width: 20, height: 20),
-              label: 'Update',
-              labelColor: Colors.white,
-              onTap: onUpdate,
-            ),
-            12.vgap,
-            _SheetItem(
-              icon: SvgPicture.asset(Assets.deleteRed, width: 20, height: 20),
-              label: 'Delete post',
-              labelColor: const Color(0xFFEF4444),
-              onTap: onDelete,
-            ),
+            ...items,
           ],
         ),
       ),

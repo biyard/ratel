@@ -26,7 +26,12 @@ export const Checkbox = ({
   };
 
   return (
-    <div className="flex flex-row items-start text-sm font-normal text-white gap-2.25 select-none">
+    <div
+      className={cn(
+        'flex flex-row items-start text-sm font-normal gap-2.25 select-none',
+        disabled ? 'text-c-wg-200' : 'text-white',
+      )}
+    >
       <div className="flex relative flex-row justify-start items-center cursor-pointer gap-[6px]">
         <input
           id={id}
@@ -38,15 +43,21 @@ export const Checkbox = ({
         />
 
         <label
-          className={cn(
-            'border border-c-wg-50 light:border-modal-card-border',
-            'peer-checked:bg-primary peer-checked:border-primary',
-            'peer-checked:[&_svg_path]:stroke-bg',
-            'flex items-center justify-center',
-            'w-4.25 h-4.25 cursor-pointer',
-            isRounded ? 'rounded-full' : 'rounded-sm',
-          )}
           htmlFor={id}
+          className={cn(
+            'flex items-center justify-center w-4.25 h-4.25',
+            isRounded ? 'rounded-full' : 'rounded-sm',
+            disabled
+              ? [
+                  'cursor-not-allowed border-c-wg-200 bg-c-wg-900',
+                  value &&
+                    '[&_svg_path]:stroke-c-wg-300 bg-neutral-500 border-neutral-500 light:bg-neutral-300 light:border-neutral-300 [&_svg_path]:stroke-bg',
+                ]
+              : [
+                  'cursor-pointer border border-c-wg-50 light:border-modal-card-border',
+                  value && 'bg-primary border-primary [&_svg_path]:stroke-bg',
+                ],
+          )}
         >
           <CheckboxIcon
             width={13}
@@ -57,7 +68,7 @@ export const Checkbox = ({
       </div>
 
       <div
-        className="cursor-pointer"
+        className={cn('cursor-pointer', disabled && 'cursor-not-allowed')}
         onClick={handleChange}
         data-testid={id ? `${id}-label` : undefined}
       >

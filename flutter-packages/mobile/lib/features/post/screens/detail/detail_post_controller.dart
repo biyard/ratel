@@ -1,13 +1,14 @@
 import 'package:ratel/exports.dart';
 
 class DetailPostController extends BaseController {
+  final reportApi = Get.find<ReportApi>();
   final userService = Get.find<UserService>();
   final feedsApi = Get.find<FeedsApi>();
   final feedsService = Get.find<FeedsService>();
 
   late final String postPk;
 
-  final feed = Rxn<FeedV2Model>();
+  final feed = Rxn<FeedModel>();
   final isLoading = false.obs;
 
   final isSendingRootComment = false.obs;
@@ -17,24 +18,7 @@ class DetailPostController extends BaseController {
   bool get isPostLiked => feed.value?.isLiked == true;
   int get postLikes => feed.value?.post.likes ?? 0;
 
-  final Rx<UserV2Model> user = UserV2Model(
-    pk: '',
-    email: '',
-    nickname: '',
-    profileUrl: '',
-    description: '',
-    userType: 0,
-    username: '',
-    followersCount: 0,
-    followingsCount: 0,
-    theme: 0,
-    point: 0,
-    referralCode: null,
-    phoneNumber: null,
-    principal: null,
-    evmAddress: null,
-    teams: const [],
-  ).obs;
+  Rx<UserModel> get user => userService.user;
 
   late final Worker _detailSubscription;
 
@@ -51,7 +35,7 @@ class DetailPostController extends BaseController {
     postPk = Uri.decodeComponent(raw);
     logger.d('DetailPostController postPk = $postPk');
 
-    _detailSubscription = ever<Map<String, FeedV2Model>>(feedsService.details, (
+    _detailSubscription = ever<Map<String, FeedModel>>(feedsService.details, (
       map,
     ) {
       final updated = map[postPk];
@@ -61,7 +45,6 @@ class DetailPostController extends BaseController {
     });
 
     loadFeed();
-    user(userService.user.value);
   }
 
   @override
@@ -180,12 +163,13 @@ class DetailPostController extends BaseController {
 
       current.post.comments = current.post.comments + 1;
 
-      feed.value = FeedV2Model(
+      feed.value = FeedModel(
         post: current.post,
         comments: [created, ...current.comments],
         artworkMetadata: current.artworkMetadata,
         repost: current.repost,
         isLiked: current.isLiked,
+        isReport: current.isReport,
         permissions: current.permissions,
       );
 
@@ -238,12 +222,13 @@ class DetailPostController extends BaseController {
 
       current.post.likes = newLikes;
 
-      feed.value = FeedV2Model(
+      feed.value = FeedModel(
         post: current.post,
         comments: current.comments,
         artworkMetadata: current.artworkMetadata,
         repost: current.repost,
         isLiked: res.like,
+        isReport: current.isReport,
         permissions: current.permissions,
       );
 
@@ -252,6 +237,35 @@ class DetailPostController extends BaseController {
       logger.e('Failed to toggle like post: $e', stackTrace: s);
     } finally {
       isLikingPost.value = false;
+    }
+  }
+
+  Future<void> reportPost({required String postPk}) async {
+    try {
+      await reportApi.reportPost(postPk: postPk);
+      Biyard.info('Reported successfully.');
+
+      final detail = await feedsService.fetchDetail(postPk, forceRefresh: true);
+      feed.value = detail;
+    } catch (e) {
+      logger.e('reportPost error: $e');
+      Biyard.error('Report Failed', 'Failed to report. Please try again.');
+    }
+  }
+
+  Future<void> reportPostComment({
+    required String postPk,
+    required String commentSk,
+  }) async {
+    try {
+      await reportApi.reportPostComment(postPk: postPk, commentSk: commentSk);
+      Biyard.info('Reported successfully.');
+
+      final detail = await feedsService.fetchDetail(postPk, forceRefresh: true);
+      feed.value = detail;
+    } catch (e) {
+      logger.e('reportPost error: $e');
+      Biyard.error('Report Failed', 'Failed to report. Please try again.');
     }
   }
 
