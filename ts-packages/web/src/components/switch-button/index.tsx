@@ -12,7 +12,7 @@ export default function SwitchButton({
   return (
     <div
       onClick={() => onChange(!value)}
-      className={`w-11 h-5 flex items-center rounded-full p-0.5 transition-colors duration-300 ${
+      className={`cursor-pointer w-11 h-5 flex items-center rounded-full p-0.5 transition-colors duration-300 ${
         value ? color : 'bg-gray-400'
       }`}
     >
