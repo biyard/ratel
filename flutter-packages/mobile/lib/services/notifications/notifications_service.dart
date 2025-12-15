@@ -226,14 +226,22 @@ class NotificationsService extends GetxService {
         uri = Uri();
       }
 
+      logger.d(
+        'uri.scheme=${uri.scheme}, host=${uri.host}, pathSegments=${uri.pathSegments}',
+      );
+
       if (uri.scheme == 'ratelapp') {
-        final segments = uri.pathSegments;
+        if (uri.host == 'space') {
+          final segments = uri.pathSegments;
+          logger.d('space deeplink segments: $segments');
 
-        if (segments.isNotEmpty && segments.first == 'space') {
-          final spacePk = segments.length > 1 ? segments[1] : null;
+          if (segments.isNotEmpty) {
+            final encodedPk = segments[0];
+            logger.d('encodedPk from deeplink: $encodedPk');
 
-          if (spacePk != null && spacePk.isNotEmpty) {
-            final route = '/space/$spacePk';
+            final route = '/space/$encodedPk';
+            logger.d('Navigate via deeplink, route=$route');
+
             Get.rootDelegate.toNamed(route);
             return;
           }
