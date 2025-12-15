@@ -2,12 +2,15 @@ import 'package:ratel/exports.dart';
 
 class HomeController extends BaseController {
   final feedsService = Get.find<FeedsService>();
+  final feedsApi = Get.find<FeedsApi>();
 
   RxList<FeedSummaryModel> get feeds => feedsService.homeFeeds;
 
   final RxBool isLoading = false.obs;
   final RxBool isLoadingMore = false.obs;
   final RxBool hasMore = false.obs;
+
+  final RxBool isLikingPost = false.obs;
 
   late final ScrollController scrollController;
 
@@ -52,6 +55,52 @@ class HomeController extends BaseController {
       hasMore.value = feedsService.hasMoreHome;
     } finally {
       isLoadingMore.value = false;
+    }
+  }
+
+  Future<void> toggleLikePost(FeedSummaryModel target) async {
+    if (isLikingPost.value) return;
+
+    final index = feeds.indexWhere((f) => f.pk == target.pk);
+    if (index == -1) return;
+
+    final original = feeds[index];
+
+    final alreadyLiked = original.liked == true;
+    final nextLike = !alreadyLiked;
+
+    final originalLikes = original.likes;
+    var newLikes = originalLikes;
+
+    if (nextLike && !alreadyLiked) {
+      newLikes = originalLikes + 1;
+    } else if (!nextLike && alreadyLiked && originalLikes > 0) {
+      newLikes = originalLikes - 1;
+    }
+
+    feeds[index].liked = nextLike;
+    feeds[index].likes = newLikes;
+    feeds.refresh();
+
+    isLikingPost.value = true;
+    try {
+      final res = await feedsApi.likePost(postPk: original.pk, like: nextLike);
+
+      if (res == null || res.like != nextLike) {
+        feeds[index].liked = alreadyLiked;
+        feeds[index].likes = originalLikes;
+        feeds.refresh();
+        return;
+      }
+
+      feedsService.patchDetailFromSummary(feeds[index]);
+    } catch (e, s) {
+      logger.e('Failed to toggle like from home: $e', stackTrace: s);
+      feeds[index].liked = alreadyLiked;
+      feeds[index].likes = originalLikes;
+      feeds.refresh();
+    } finally {
+      isLikingPost.value = false;
     }
   }
 
