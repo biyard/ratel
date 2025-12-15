@@ -26,6 +26,40 @@ class NotificationsService extends GetxService {
 
   String? _currentToken;
 
+  Future<void> debugLocalNotification() async {
+    logger.d('debugLocalNotification called >>>');
+
+    const androidDetails = AndroidNotificationDetails(
+      'default_channel',
+      'Default',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+    );
+    const darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: darwinDetails,
+    );
+
+    await _flutterLocal.show(
+      0,
+      'iOS Test Notification',
+      'This is a local test notification.',
+      details,
+      payload: jsonEncode(<String, dynamic>{
+        'type': 'space_post',
+        'space_pk': 'SPACE#debug',
+        'post_pk': 'POST#debug',
+      }),
+    );
+
+    logger.d('debugLocalNotification show() completed');
+  }
+
   Future<String> getOrCreateDeviceId() async {
     const deviceIdKey = 'ratel_device_id';
     final prefs = await SharedPreferences.getInstance();
@@ -41,11 +75,17 @@ class NotificationsService extends GetxService {
 
   Future<void> _initFcm() async {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const darwinInit = DarwinInitializationSettings();
+    const darwinInit = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+
     const initSettings = InitializationSettings(
       android: androidInit,
       iOS: darwinInit,
     );
+
     await _flutterLocal.initialize(
       initSettings,
       onDidReceiveNotificationResponse: (resp) {
@@ -166,6 +206,14 @@ class NotificationsService extends GetxService {
   }
 
   void _handleClick(Map<String, dynamic> data) {
+    logger.d('Notification clicked: $data');
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navigateFromNotification(data);
+    });
+  }
+
+  void _navigateFromNotification(Map<String, dynamic> data) {
     final route = data['route'] as String?;
     if (route != null && route.isNotEmpty) {
       Get.rootDelegate.toNamed(route);
