@@ -43,16 +43,18 @@ class MySpaceListItem extends StatelessWidget {
                                   : const Color(0xFF6EE7B7),
                             ),
                             10.gap,
-                            Text(
-                              item.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontFamily: 'Raleway',
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 18,
-                                height: 24 / 18,
+                            Expanded(
+                              child: Text(
+                                item.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: 'Raleway',
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 18,
+                                  height: 24 / 18,
+                                ),
                               ),
                             ),
                           ],
