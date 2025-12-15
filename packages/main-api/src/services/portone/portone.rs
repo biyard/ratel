@@ -99,12 +99,15 @@ impl PortOne {
         amount: i64,
         currency: Currency,
     ) -> Result<(BillingKeyPaymentResponse, String)> {
-        let portone_conf = config::get().portone;
+        let conf = config::get();
+        let portone_conf = conf.portone;
         let payment_id = format!(
             "{}-{}",
             random_string::generate(10, CHARSET),
             get_now_timestamp_micros()
         );
+
+        let notice_urls = if conf.is_local() { vec![] } else { vec![] };
 
         let body = BillingKeyPaymentRequest {
             store_id: portone_conf.store_id.to_string(),
@@ -124,6 +127,7 @@ impl PortOne {
             },
             currency: currency.to_string(),
             locale: None,
+            notice_urls,
         };
 
         let res = self
@@ -171,6 +175,7 @@ impl PortOne {
             },
             currency: currency.to_string(),
             locale: None,
+            notice_urls: vec![],
         };
 
         let body = ScheduleBillingKeyRequest {
