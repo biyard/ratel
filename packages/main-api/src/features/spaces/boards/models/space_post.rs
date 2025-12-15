@@ -1,6 +1,7 @@
 use crate::models::UserNotification;
 use crate::services::fcm_notification::FCMService;
 use std::collections::HashMap;
+use urlencoding::encode;
 
 // #[cfg(all(not(test), not(feature = "no-secret")))]
 // use crate::features::spaces::templates::SpaceTemplate;
@@ -197,6 +198,7 @@ impl SpacePost {
     pub async fn send_notification(
         dynamo: &DynamoClient,
         fcm: &mut FCMService,
+        space: &SpaceCommon,
         post_title: String,
         recipients: Vec<Partition>,
     ) -> Result<(), Error> {
@@ -208,9 +210,14 @@ impl SpacePost {
         let title = "Space members are posting new space contents.".to_string();
         let body = post_title;
 
+        let pk_str = space.pk.to_string();
+        let space_pk_encoded = encode(&pk_str);
+        let deeplink = format!("ratelapp://space/{space_pk_encoded}");
+
         tracing::info!("send_notification: start, recipients={}", recipients.len());
 
-        UserNotification::send_to_users(dynamo, fcm, &recipients, title, body, None).await?;
+        UserNotification::send_to_users(dynamo, fcm, &recipients, title, body, Some(deeplink))
+            .await?;
 
         tracing::info!("send_notification: done");
         Ok(())
