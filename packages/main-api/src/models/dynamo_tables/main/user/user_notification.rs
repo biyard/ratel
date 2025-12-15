@@ -107,6 +107,7 @@ impl UserNotification {
         user_pks: &[Partition],
         title: impl Into<String>,
         body: impl Into<String>,
+        deeplink: Option<String>,
     ) -> Result<()> {
         let title = title.into();
         let body = body.into();
@@ -135,7 +136,17 @@ impl UserNotification {
             return Ok(());
         }
 
-        fcm.send_notification(&title, &body, tokens, None).await
+        if deeplink.is_none() {
+            fcm.send_notification(&title, &body, tokens, None).await
+        } else {
+            fcm.send_notification_with_deeplink(
+                &title,
+                &body,
+                tokens,
+                deeplink.unwrap_or_default().as_str(),
+            )
+            .await
+        }
     }
 
     pub async fn send_to_user(
@@ -144,7 +155,16 @@ impl UserNotification {
         user_pk: &Partition,
         title: impl Into<String>,
         body: impl Into<String>,
+        deeplink: Option<String>,
     ) -> Result<()> {
-        Self::send_to_users(dynamo, fcm, std::slice::from_ref(user_pk), title, body).await
+        Self::send_to_users(
+            dynamo,
+            fcm,
+            std::slice::from_ref(user_pk),
+            title,
+            body,
+            deeplink,
+        )
+        .await
     }
 }

@@ -163,8 +163,10 @@ impl SpaceInvitationMember {
         let body = format!("Participate new space: {space_title}");
 
         let user_pks: Vec<Partition> = invites.into_iter().map(|m| m.user_pk).collect();
+        let deeplink = format!("ratelapp://space/{}", space.pk);
 
-        UserNotification::send_to_users(dynamo, fcm, &user_pks, title, body).await?;
+        UserNotification::send_to_users(dynamo, fcm, &user_pks, title, body, Some(deeplink))
+            .await?;
 
         tracing::info!(
             "SpaceInvitationMember::send_notification: done for space_pk={}",

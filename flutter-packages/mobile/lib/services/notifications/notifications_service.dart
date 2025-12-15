@@ -214,8 +214,42 @@ class NotificationsService extends GetxService {
   }
 
   void _navigateFromNotification(Map<String, dynamic> data) {
+    final deeplink = data['deeplink'] as String?;
+    if (deeplink != null && deeplink.isNotEmpty) {
+      logger.d('Notification deeplink: $deeplink');
+
+      Uri uri;
+      try {
+        uri = Uri.parse(deeplink);
+      } catch (e) {
+        logger.e('Invalid deeplink: $deeplink, error=$e');
+        uri = Uri();
+      }
+
+      if (uri.scheme == 'ratelapp') {
+        final segments = uri.pathSegments;
+
+        if (segments.isNotEmpty && segments.first == 'space') {
+          final spacePk = segments.length > 1 ? segments[1] : null;
+
+          if (spacePk != null && spacePk.isNotEmpty) {
+            final route = '/space/$spacePk';
+            Get.rootDelegate.toNamed(route);
+            return;
+          }
+        }
+      }
+
+      if (uri.scheme.isEmpty) {
+        logger.d('Navigate using raw deeplink as route: $deeplink');
+        Get.rootDelegate.toNamed(deeplink);
+        return;
+      }
+    }
+
     final route = data['route'] as String?;
     if (route != null && route.isNotEmpty) {
+      logger.d('Navigate using data.route: $route');
       Get.rootDelegate.toNamed(route);
       return;
     }
@@ -225,6 +259,9 @@ class NotificationsService extends GetxService {
       final spacePk = data['space_pk'] as String?;
       final postPk = data['post_pk'] as String?;
       if (spacePk != null && postPk != null) {
+        logger.d(
+          'Navigate using type=space_post: space=$spacePk, post=$postPk',
+        );
         Get.rootDelegate.toNamed(AppRoutes.spacePostWithPk(spacePk, postPk));
       }
     }
