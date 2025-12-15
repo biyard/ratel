@@ -101,7 +101,7 @@ class SpaceRequirementController extends BaseController {
         'Failed to respond poll in viewer, spacePk=$spacePk pollSk=$pollSk: $e',
       );
       Biyard.error(
-        "Failed to Submit Respond",
+        "Failed to Submit Responses",
         "Failed to submit your responses. Please try again.",
       );
       rethrow;

@@ -155,6 +155,7 @@ class BoardCreatorController extends BaseController {
         'BoardCreatorController: added comment '
         'sk=${res.sk}, content=${res.content}',
       );
+      Biyard.info("Success to submit your comment.");
     } catch (e) {
       logger.e(
         'BoardCreatorController: failed to add comment '
@@ -162,7 +163,7 @@ class BoardCreatorController extends BaseController {
       );
       Biyard.error(
         'Failed to add comment',
-        'Could not submit your comment. Please try again.',
+        'Failed to submit your comment. Please try again.',
       );
     }
   }
@@ -200,16 +201,28 @@ class BoardCreatorController extends BaseController {
         'BoardCreatorController: toggled like on comment '
         'sk=$targetSk, liked=$newLiked',
       );
+      if (newLiked) {
+        Biyard.info("Success to like space post");
+      } else {
+        Biyard.info("Success to unlike space post");
+      }
     } catch (e) {
       logger.e(
         'BoardCreatorController: failed to toggle like '
         'spacePk=$spacePk postPk=$postPk commentSk=$targetSk liked=$newLiked: $e',
       );
       comments[idx] = old;
-      Biyard.error(
-        'Failed to update like',
-        'Could not update the like status. Please try again.',
-      );
+      if (newLiked) {
+        Biyard.error(
+          "Like Failed",
+          "Failed to like space post. Please try again later.",
+        );
+      } else {
+        Biyard.error(
+          "Unlike Failed",
+          "Failed to unlike space post. Please try again later.",
+        );
+      }
     }
   }
 
@@ -222,6 +235,7 @@ class BoardCreatorController extends BaseController {
     try {
       await _boardsApi.deleteComment(spacePk, postPk, targetSk);
       logger.d('BoardCreatorController: deleted comment sk=$targetSk');
+      Biyard.info("Success to delete comment");
     } catch (e) {
       logger.e(
         'BoardCreatorController: failed to delete comment '
@@ -230,7 +244,7 @@ class BoardCreatorController extends BaseController {
       comments.assignAll(backup);
       Biyard.error(
         'Failed to delete comment',
-        'Could not delete this comment. Please try again.',
+        'Failed to delete comment. Please try again later.',
       );
     }
   }
@@ -270,6 +284,7 @@ class BoardCreatorController extends BaseController {
     try {
       await _boardsApi.updateComment(spacePk, postPk, targetSk, trimmed);
       logger.d('BoardCreatorController: updated comment sk=$targetSk');
+      Biyard.info("Success to update comment");
     } catch (e) {
       logger.e(
         'BoardCreatorController: failed to update comment '
@@ -278,7 +293,7 @@ class BoardCreatorController extends BaseController {
       comments[idx] = old;
       Biyard.error(
         'Failed to update comment',
-        'Could not update this comment. Please try again.',
+        'Failed to update comment. Please try again later.',
       );
     }
   }
