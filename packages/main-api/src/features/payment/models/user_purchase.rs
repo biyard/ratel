@@ -13,10 +13,12 @@ pub struct UserPurchase {
     pub created_at: i64,
 
     #[dynamo(prefix = "PAYMENT", name = "find_by_status", index = "gsi2", sk)]
+    #[dynamo(name = "find_by_payment_id", index = "gsi3", sk)]
     pub status: PurchaseStatus,
     pub tx_type: TransactionType,
     pub amount: i64,
     pub currency: Currency,
+    #[dynamo(prefix = "PAYMENT", name = "find_by_payment_id", index = "gsi3", pk)]
     pub payment_id: String,
     pub tx_id: String,
 }

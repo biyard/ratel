@@ -63,6 +63,12 @@ impl Config {
     pub fn is_local(&self) -> bool {
         self.env == "local"
     }
+
+    /// Returns the IP address fetched from ifconfig.me at build time.
+    /// This is determined during compilation, not at runtime.
+    pub fn ip_address(&self) -> &'static str {
+        env!("BUILD_IP_ADDRESS")
+    }
 }
 
 #[derive(Debug, Clone, Copy)]
