@@ -86,15 +86,24 @@ impl PortOne {
         _amount: i64,
         _currency: Currency,
         _time_to_pay: String,
-    ) -> Result<(BillingKeyPaymentResponse, String)> {
+    ) -> Result<(PaymentScheduleResponse, String)> {
         Ok((
-            BillingKeyPaymentResponse {
-                payment: Payment {
-                    paid_at: "2025-11-03T11:01:50.08942321Z".to_string(),
-                    pg_tx_id: "merchantest".to_string(),
+            PaymentScheduleResponse {
+                schedule: PaymentSschedule {
+                    id: "merchantest".to_string(),
                 },
             },
             "payment-id".to_string(),
         ))
+    }
+
+    pub async fn cancel_schedule_with_billing_key(
+        &self,
+        billing_key: String,
+    ) -> Result<PaymentCancelScheduleResponse> {
+        Ok(PaymentCancelScheduleResponse {
+            revoked_schedule_ids: vec![billing_key],
+            revoked_at: "2025-11-03T11:01:50.08942321Z".to_string(),
+        })
     }
 }

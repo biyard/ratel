@@ -71,7 +71,8 @@ pub async fn change_membership_handler(
 
     if req.membership < current_membership.tier {
         let membership =
-            handle_downgrade_membership(cli, &user_membership, req.membership.clone()).await?;
+            handle_downgrade_membership(cli, &portone, &user_membership, req.membership.clone())
+                .await?;
 
         ret.renewal_date = user_membership.expired_at + 1;
         ret.membership = Some(membership.into());
@@ -98,6 +99,7 @@ pub async fn change_membership_handler(
 /// The downgrade takes effect when current membership expires
 async fn handle_downgrade_membership(
     cli: &aws_sdk_dynamodb::Client,
+    portone: &PortOne,
     user_membership: &UserMembership,
     new_tier: MembershipTier,
 ) -> Result<Membership> {
@@ -112,12 +114,14 @@ async fn handle_downgrade_membership(
     updated_membership.next_membership = Some(new_membership.pk.clone().into());
     updated_membership.updated_at = now();
 
+    let user_id: UserPartition = user_membership.pk.clone().into();
+    let (user_payment, _) = UserPayment::get_by_user(cli, portone, user_id.clone(), None).await?;
+    user_payment.cancel_scheduled_payments(cli, portone).await?;
+
     // Save the scheduled downgrade (delete old, then create updated)
     updated_membership.upsert(cli).await?;
 
-    // TODO: cancel or change payment
-
-    tracing::info!(
+    notify!(
         "Scheduled membership downgrade to {:?} for user {:?}, effective at {}",
         new_tier,
         user_membership.pk,

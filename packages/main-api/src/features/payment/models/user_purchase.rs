@@ -5,12 +5,14 @@ use crate::*;
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default, JsonSchema, OperationIo)]
 pub struct UserPurchase {
     #[dynamo(prefix = "PAYMENT", name = "find_by_user", index = "gsi1", pk)]
+    #[dynamo(prefix = "PAYMENT", name = "find_by_status", index = "gsi2", pk)]
     pub pk: CompositePartition,
     pub sk: EntityType,
 
     #[dynamo(prefix = "PAYMENT", name = "find_by_user", index = "gsi1", sk)]
     pub created_at: i64,
 
+    #[dynamo(prefix = "PAYMENT", name = "find_by_status", index = "gsi2", sk)]
     pub status: PurchaseStatus,
     pub tx_type: TransactionType,
     pub amount: i64,
