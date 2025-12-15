@@ -33,21 +33,23 @@ export function SpaceSettingsPage() {
     <div className="flex flex-col gap-6 p-6">
       <div className="text-2xl font-bold text-text-primary">{i18n.title}</div>
 
-      {ctrl.data.space.data.publishState === SpacePublishState.Draft && (
-        <div className="flex flex-col gap-4">
-          <div className="text-lg font-semibold text-text-primary">
-            {i18n.participation_title}
-          </div>
+      <div className="flex flex-col gap-4">
+        <div className="text-lg font-semibold text-text-primary">
+          {i18n.participation_title}
+        </div>
 
-          <Checkbox
-            id="anonymous-participation"
-            value={ctrl.anonymousParticipation}
-            onChange={ctrl.handleAnonymousParticipationChange}
-          >
-            <span className="font-medium text-text-primary">
-              {i18n.anonymous_participation_label}
-            </span>
-            {/* <Tooltip>
+        <Checkbox
+          id="anonymous-participation"
+          value={ctrl.anonymousParticipation}
+          disabled={
+            ctrl.data.space.data.publishState !== SpacePublishState.Draft
+          }
+          onChange={ctrl.handleAnonymousParticipationChange}
+        >
+          <span className="font-medium text-text-primary">
+            {i18n.anonymous_participation_label}
+          </span>
+          {/* <Tooltip>
             <TooltipTrigger asChild>
               <Info />
             </TooltipTrigger>
@@ -55,9 +57,8 @@ export function SpaceSettingsPage() {
               <p>Add to library</p>
             </TooltipContent>
           </Tooltip> */}
-          </Checkbox>
-        </div>
-      )}
+        </Checkbox>
+      </div>
 
       {ctrl.data.space.data.publishState === SpacePublishState.Published && (
         <div className="flex flex-col gap-4">
