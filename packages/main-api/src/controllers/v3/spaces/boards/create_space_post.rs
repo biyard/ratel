@@ -8,6 +8,7 @@ use crate::{
     controllers::v3::spaces::{SpacePath, SpacePathParam},
     features::spaces::{
         boards::models::{space_category::SpaceCategory, space_post::SpacePost},
+        files::{FileLink, FileLinkTarget},
         members::{SpaceInvitationMember, SpaceInvitationMemberQueryOption},
     },
     models::{SpaceCommon, feed::Post, team::Team, user::User},
@@ -68,7 +69,7 @@ pub async fn create_space_post_handler(
     }
 
     let post = SpacePost::new(
-        space_pk,
+        space_pk.clone(),
         req.title.clone(),
         req.html_contents.clone(),
         req.category_name.clone(),
@@ -80,13 +81,36 @@ pub async fn create_space_post_handler(
     );
     post.create(&dynamo.client).await?;
 
-    let _ =
-        send_create_post_alerm(&dynamo, &ses, &common, req.title, req.html_contents, user).await?;
-
-    let post_id = match post.sk {
+    // Link files to both Files tab and Board
+    let post_id = match &post.sk {
         EntityType::SpacePost(v) => v.to_string(),
         _ => "".to_string(),
     };
+
+    for file in &req.files {
+        if let Some(url) = &file.url {
+            // Link to Files tab
+            FileLink::add_link_target(
+                &dynamo.client,
+                space_pk.clone(),
+                url.clone(),
+                FileLinkTarget::Files,
+            )
+            .await?;
+
+            // Link to Board post
+            FileLink::add_link_target(
+                &dynamo.client,
+                space_pk.clone(),
+                url.clone(),
+                FileLinkTarget::Board(post_id.clone()),
+            )
+            .await?;
+        }
+    }
+
+    let _ =
+        send_create_post_alerm(&dynamo, &ses, &common, req.title, req.html_contents, user).await?;
 
     Ok(Json(CreateSpacePostResponse {
         space_post_pk: Partition::SpacePost(post_id),

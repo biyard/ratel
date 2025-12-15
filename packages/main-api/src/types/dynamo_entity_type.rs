@@ -128,6 +128,7 @@ pub enum EntityType {
 
     //SPACE FEATURE
     SpaceFile,
+    FileLink(String), // FileLink#{file_id}
     SpaceDiscussion(String),
     SpaceDiscussionMember(String, String),
     SpaceDiscussionParticipant(String, String),
