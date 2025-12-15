@@ -1,10 +1,13 @@
 import 'package:ratel/exports.dart';
 
 class BoardCommentItem extends StatelessWidget {
-  final UserV2Model user;
+  final UserModel user;
   final SpacePostCommentModel comment;
   final VoidCallback? onLikeTap;
   final VoidCallback? onMoreTap;
+
+  final bool isReported;
+  final VoidCallback? onReportTap;
 
   final bool isEditing;
   final TextEditingController? editingController;
@@ -21,20 +24,22 @@ class BoardCommentItem extends StatelessWidget {
     this.editingController,
     this.onSaveEdit,
     this.onCancelEdit,
+    this.isReported = false,
+    this.onReportTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final createdAt = _fromTimestamp(comment.createdAt);
-    final relative = _formatRelativeTime(createdAt);
+    final createdAt = fromTimestampToDate(comment.createdAt);
+    final relative = formatRelativeTime(createdAt);
 
     final profileImageUrl = comment.authorProfileUrl.isNotEmpty
         ? comment.authorProfileUrl
         : defaultProfileImage;
 
-    final plainContent = _stripHtml(comment.content).trim();
+    final plainContent = stripHtml(comment.content).trim();
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -43,56 +48,28 @@ class BoardCommentItem extends StatelessWidget {
         children: [
           Row(
             children: [
-              RoundContainer(
-                width: 24,
-                height: 24,
-                radius: 100,
-                color: AppColors.neutral600,
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(100),
-                  child: Image.network(profileImageUrl, fit: BoxFit.cover),
+              Expanded(
+                child: Profile(
+                  profileImageUrl: profileImageUrl,
+                  displayName: comment.authorDisplayName,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                relative,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontFamily: 'Inter',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.neutral500,
                 ),
               ),
               10.gap,
-              Expanded(
-                child: Row(
-                  children: [
-                    Text(
-                      comment.authorDisplayName,
-                      style: const TextStyle(
-                        fontFamily: 'Raleway',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.5,
-                        color: Colors.white,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    4.gap,
-                    SvgPicture.asset(Assets.badge, width: 16, height: 16),
-                    const Spacer(),
-                    Text(
-                      relative,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontFamily: 'Inter',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.neutral500,
-                      ),
-                    ),
-                    10.gap,
-                    if (!isEditing && comment.authorPk == user.pk)
-                      InkWell(
-                        onTap: onMoreTap,
-                        child: SvgPicture.asset(
-                          Assets.extra,
-                          width: 24,
-                          height: 24,
-                        ),
-                      ),
-                  ],
+              if ((!isEditing && comment.authorPk == user.pk) || !isReported)
+                InkWell(
+                  onTap: onMoreTap,
+                  child: SvgPicture.asset(Assets.extra, width: 24, height: 24),
                 ),
-              ),
             ],
           ),
           6.vgap,
@@ -230,34 +207,4 @@ class BoardCommentItem extends StatelessWidget {
       ),
     );
   }
-}
-
-String _stripHtml(String text) {
-  final brReg = RegExp(r'<br\s*/?>', caseSensitive: false);
-  final withoutBr = text.replaceAll(brReg, '\n');
-  final tagReg = RegExp(r'<[^>]+>', multiLine: true, caseSensitive: false);
-  return withoutBr.replaceAll(tagReg, '');
-}
-
-DateTime _fromTimestamp(int ts) {
-  if (ts < 1000000000000) {
-    return DateTime.fromMillisecondsSinceEpoch(
-      ts * 1000,
-      isUtc: true,
-    ).toLocal();
-  } else {
-    return DateTime.fromMillisecondsSinceEpoch(ts, isUtc: true).toLocal();
-  }
-}
-
-String _formatRelativeTime(DateTime time) {
-  final now = DateTime.now();
-  final diff = now.difference(time);
-
-  if (diff.inMinutes < 1) return 'now';
-  if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-  if (diff.inHours < 24) return '${diff.inHours}h ago';
-  if (diff.inDays < 7) return '${diff.inDays}d ago';
-  final weeks = (diff.inDays / 7).floor();
-  return '${weeks}w ago';
 }

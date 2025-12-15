@@ -3,13 +3,13 @@ import 'package:ratel/exports.dart';
 class BoardDetailTopBar extends StatelessWidget {
   final String categoryName;
   final VoidCallback onBackTap;
-  final VoidCallback onEditTap;
+  final VoidCallback? onMoreTap;
 
   const BoardDetailTopBar({
     super.key,
     required this.categoryName,
     required this.onBackTap,
-    required this.onEditTap,
+    this.onMoreTap,
   });
 
   @override
@@ -29,6 +29,12 @@ class BoardDetailTopBar extends StatelessWidget {
             6.gap,
             _BoardTagChip(label: categoryName),
           ],
+          const Spacer(),
+          if (onMoreTap != null)
+            InkWell(
+              onTap: onMoreTap,
+              child: SvgPicture.asset(Assets.extra, width: 24, height: 24),
+            ),
         ],
       ),
     );

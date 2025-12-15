@@ -50,7 +50,7 @@ pub enum Partition {
 
     PanelAttribute,
     PanelParticipant,
-    Panels(String),
+    // Panels(String),
     Panel(String),
     // Survey(String),
     // SurveyResponse(String),
@@ -86,6 +86,11 @@ pub enum Partition {
     Payment,  // For user payment, USER#{user_id}##PAYMENT
 
     Reward, // For space rewards, SPACE#{space_id}##REWARD
+
+    Report(String),
+
+    UserReward(String),        // USER_REWARD#{user_id}
+    UserRewardHistory(String), // USER_REWARD_HISTORY#{user_id}
 }
 
 impl Partition {

@@ -5,81 +5,7 @@ class PostCommentListResult {
   const PostCommentListResult({required this.items, this.bookmark});
 }
 
-class FeedModel {
-  final int feedId;
-  final List<int> spaceIds;
-  final String feedType;
-  final String? image;
-  final String title;
-  final String description;
-  final int authorId;
-  final String authorUrl;
-  final String authorName;
-  final int createdAt;
-
-  final int? rewards;
-  final int likes;
-  final int comments;
-  final int reposts;
-
-  const FeedModel({
-    required this.feedId,
-    required this.spaceIds,
-    required this.feedType,
-    required this.image,
-    required this.title,
-    required this.description,
-    required this.authorId,
-    required this.authorUrl,
-    required this.authorName,
-    required this.createdAt,
-
-    required this.rewards,
-    required this.likes,
-    required this.comments,
-    required this.reposts,
-  });
-}
-
-class FeedSummary {
-  final int feedId;
-  final List<int> spaceIds;
-  final String feedType;
-  final String? image;
-  final String title;
-  final String description;
-  final int authorId;
-  final bool isBookmarked;
-  final String authorUrl;
-  final String authorName;
-  final int createdAt;
-
-  final int? rewards;
-  final int likes;
-  final int comments;
-  final int reposts;
-
-  const FeedSummary({
-    required this.feedId,
-    required this.spaceIds,
-    required this.feedType,
-    required this.image,
-    required this.title,
-    required this.description,
-    required this.isBookmarked,
-    required this.authorId,
-    required this.authorUrl,
-    required this.authorName,
-    required this.createdAt,
-
-    required this.rewards,
-    required this.likes,
-    required this.comments,
-    required this.reposts,
-  });
-}
-
-class FeedV2SummaryModel {
+class FeedSummaryModel {
   final String pk;
 
   final int createdAt;
@@ -107,7 +33,7 @@ class FeedV2SummaryModel {
   final List<String> urls;
   final bool liked;
 
-  FeedV2SummaryModel({
+  FeedSummaryModel({
     required this.pk,
     required this.createdAt,
     required this.updatedAt,
@@ -153,10 +79,10 @@ class FeedV2SummaryModel {
     return int.tryParse(v.toString());
   }
 
-  factory FeedV2SummaryModel.fromJson(Map<String, dynamic> json) {
+  factory FeedSummaryModel.fromJson(Map<String, dynamic> json) {
     final urlsJson = json['urls'] as List<dynamic>? ?? const [];
 
-    return FeedV2SummaryModel(
+    return FeedSummaryModel(
       pk: _asString(json['pk']),
       createdAt: _asInt(json['created_at']),
       updatedAt: _asInt(json['updated_at']),
@@ -207,13 +133,11 @@ class FeedV2SummaryModel {
 }
 
 class FeedV2ListResult {
-  final List<FeedV2SummaryModel> items;
+  final List<FeedSummaryModel> items;
   final String? bookmark;
 
   const FeedV2ListResult({required this.items, this.bookmark});
 }
-
-////////////
 
 class PostDetailPostModel {
   final String pk;
@@ -367,6 +291,7 @@ class PostCommentModel {
   final String content;
 
   int likes;
+  int reports;
   int replies;
 
   final String? parentCommentSk;
@@ -377,6 +302,7 @@ class PostCommentModel {
   final String authorProfileUrl;
 
   bool liked;
+  bool isReport;
 
   PostCommentModel({
     required this.pk,
@@ -384,6 +310,7 @@ class PostCommentModel {
     required this.updatedAt,
     required this.content,
     required this.likes,
+    required this.reports,
     required this.replies,
     this.parentCommentSk,
     required this.authorPk,
@@ -391,6 +318,7 @@ class PostCommentModel {
     required this.authorUsername,
     required this.authorProfileUrl,
     required this.liked,
+    required this.isReport,
   });
 
   factory PostCommentModel.fromJson(Map<String, dynamic> json) {
@@ -400,6 +328,7 @@ class PostCommentModel {
       updatedAt: PostDetailPostModel._asInt(json['updated_at']),
       content: PostDetailPostModel._asString(json['content']),
       likes: PostDetailPostModel._asInt(json['likes']),
+      reports: PostDetailPostModel._asInt(json['reports']),
       replies: PostDetailPostModel._asInt(json['replies']),
       parentCommentSk: PostDetailPostModel._asOptString(
         json['parent_comment_sk'],
@@ -413,6 +342,7 @@ class PostCommentModel {
         json['author_profile_url'],
       ),
       liked: json['liked'] as bool? ?? false,
+      isReport: json['is_report'] as bool? ?? false,
     );
   }
 
@@ -518,26 +448,28 @@ class PostRepostModel {
   }
 }
 
-class FeedV2Model {
+class FeedModel {
   final PostDetailPostModel post;
   final List<PostCommentModel> comments;
   final List<PostArtworkMetadataModel> artworkMetadata;
   final PostRepostModel? repost;
   final bool isLiked;
+  final bool isReport;
   final int permissions;
 
-  const FeedV2Model({
+  const FeedModel({
     required this.post,
     List<PostCommentModel>? comments,
     List<PostArtworkMetadataModel>? artworkMetadata,
     this.repost,
     required this.isLiked,
+    required this.isReport,
     required this.permissions,
   }) : comments = comments ?? const [],
        artworkMetadata = artworkMetadata ?? const [];
 
-  factory FeedV2Model.fromJson(Map<String, dynamic> json) {
-    return FeedV2Model(
+  factory FeedModel.fromJson(Map<String, dynamic> json) {
+    return FeedModel(
       post: PostDetailPostModel.fromJson(
         (json['post'] as Map<String, dynamic>? ?? const {}),
       ),
@@ -553,6 +485,7 @@ class FeedV2Model {
           ? PostRepostModel.fromJson(json['repost'] as Map<String, dynamic>)
           : null,
       isLiked: json['is_liked'] as bool? ?? false,
+      isReport: json['is_report'] as bool? ?? false,
       permissions: PostDetailPostModel._asInt(json['permissions']),
     );
   }
