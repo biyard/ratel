@@ -59,6 +59,12 @@ pub struct Config {
     pub reward: bool,
 }
 
+impl Config {
+    pub fn is_local(&self) -> bool {
+        self.env == "local"
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct KaiaConfig {
     pub endpoint: &'static str,

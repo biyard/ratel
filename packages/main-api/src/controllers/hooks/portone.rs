@@ -8,17 +8,11 @@ pub struct PortoneRequest {
     pub tx_id: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, OperationIo, JsonSchema)]
-pub struct PortoneResponse {
-    #[schemars(description = "Status of the operation")]
-    pub status: String,
-}
-
 pub async fn portone_handler(
     State(AppState { .. }): State<AppState>,
     NoApi(headers): NoApi<HeaderMap>,
     Json(req): Json<serde_json::Value>,
-) -> Result<Json<PortoneResponse>> {
+) -> Result<()> {
     notify!(
         "Incomming PortOne hook: {:?} with headers {:?}",
         req,
@@ -26,5 +20,5 @@ pub async fn portone_handler(
     );
     // TODO: Implement the handler logic here
 
-    unimplemented!()
+    Ok(())
 }
