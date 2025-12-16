@@ -17,6 +17,7 @@ import { useUpdateSpacePostMutation } from '../../../hooks/use-update-space-post
 import { getSpacePost } from '../../../hooks/use-space-post';
 import FileModel, { FileExtension } from '@/features/spaces/files/types/file';
 import { extractFilesFromHtml } from '@/features/spaces/files/utils/extract-files-from-html';
+import { uploadBase64ImagesToS3 } from '@/features/spaces/files/utils/upload-base64-images';
 
 export class SpaceBoardsCreateController {
   constructor(
@@ -38,14 +39,16 @@ export class SpaceBoardsCreateController {
     public updateSpacePosts: ReturnType<typeof useUpdateSpacePostMutation>,
   ) {}
 
-  handleContent = (htmlContents: string) => {
+  handleContent = async (htmlContents: string) => {
     this.htmlContents.set(htmlContents);
 
     const extractedFiles = extractFilesFromHtml(htmlContents);
+    const uploadedFiles = await uploadBase64ImagesToS3(extractedFiles);
+
     const currentFiles = this.files.get();
     const currentUrls = new Set(currentFiles.map((f) => f.url).filter(Boolean));
 
-    const newFiles = extractedFiles.filter(
+    const newFiles = uploadedFiles.filter(
       (file) => file.url && !currentUrls.has(file.url),
     );
 
