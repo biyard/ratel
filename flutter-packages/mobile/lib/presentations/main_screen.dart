@@ -207,16 +207,16 @@ class _MainScreenState extends State<MainScreen>
                       items: [
                         BottomNavigationBarItem(
                           icon: SvgPicture.asset(
-                            Assets.home,
+                            Assets.bottomHome,
                             width: 25,
                             height: 25,
                             colorFilter: const ColorFilter.mode(
-                              AppColors.iconPrimary,
+                              Colors.white,
                               BlendMode.srcIn,
                             ),
                           ),
                           activeIcon: SvgPicture.asset(
-                            Assets.home,
+                            Assets.bottomHome,
                             width: 25,
                             height: 25,
                             colorFilter: const ColorFilter.mode(
@@ -228,16 +228,16 @@ class _MainScreenState extends State<MainScreen>
                         ),
                         BottomNavigationBarItem(
                           icon: SvgPicture.asset(
-                            Assets.palace,
+                            Assets.bottomPalace,
                             width: 25,
                             height: 25,
                             colorFilter: const ColorFilter.mode(
-                              AppColors.iconPrimary,
+                              Colors.white,
                               BlendMode.srcIn,
                             ),
                           ),
                           activeIcon: SvgPicture.asset(
-                            Assets.palace,
+                            Assets.bottomPalace,
                             width: 25,
                             height: 25,
                             colorFilter: const ColorFilter.mode(
@@ -249,12 +249,12 @@ class _MainScreenState extends State<MainScreen>
                         ),
                         BottomNavigationBarItem(
                           icon: SvgPicture.asset(
-                            Assets.create,
+                            Assets.bottomCreate,
                             width: 25,
                             height: 25,
                           ),
                           activeIcon: SvgPicture.asset(
-                            Assets.create,
+                            Assets.bottomCreate,
                             width: 25,
                             height: 25,
                             colorFilter: const ColorFilter.mode(
@@ -266,16 +266,16 @@ class _MainScreenState extends State<MainScreen>
                         ),
                         BottomNavigationBarItem(
                           icon: SvgPicture.asset(
-                            Assets.noti,
+                            Assets.bottomNotification,
                             width: 25,
                             height: 25,
                             colorFilter: const ColorFilter.mode(
-                              AppColors.iconPrimary,
+                              Colors.white,
                               BlendMode.srcIn,
                             ),
                           ),
                           activeIcon: SvgPicture.asset(
-                            Assets.noti,
+                            Assets.bottomNotification,
                             width: 25,
                             height: 25,
                             colorFilter: const ColorFilter.mode(
@@ -287,16 +287,16 @@ class _MainScreenState extends State<MainScreen>
                         ),
                         BottomNavigationBarItem(
                           icon: SvgPicture.asset(
-                            Assets.myInfo,
+                            Assets.bottomUser,
                             width: 25,
                             height: 25,
                             colorFilter: const ColorFilter.mode(
-                              AppColors.iconPrimary,
+                              Colors.white,
                               BlendMode.srcIn,
                             ),
                           ),
                           activeIcon: SvgPicture.asset(
-                            Assets.myInfo,
+                            Assets.bottomUser,
                             width: 25,
                             height: 25,
                             colorFilter: const ColorFilter.mode(

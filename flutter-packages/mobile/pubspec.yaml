@@ -120,6 +120,7 @@ flutter:
     - assets/fonts/
     - assets/icons/
     - assets/icons/toolbar/
+    - assets/icons/bottom/
     - assets/videos/
     - assets/json/country_codes.json
 
