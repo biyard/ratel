@@ -98,7 +98,7 @@ class CreatePostController extends BaseController {
 
   void _validateCanSubmit() {
     final titleLen = titleController.text.trim().length;
-    final descLen = bodyHtml.trim().length;
+    final descLen = bodyController.text.trim().length;
 
     titleErrorVisible.value = titleLen < minLength;
     bodyErrorVisible.value = descLen < minLength;
