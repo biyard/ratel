@@ -20,18 +20,17 @@ class SpaceTopBar extends StatelessWidget {
       color: const Color(0xFF1D1D1D),
       child: Row(
         children: [
-          GestureDetector(
-            onTap: onBack,
-            child: Container(
-              width: 32,
-              height: 32,
-              alignment: Alignment.center,
-              child: SvgPicture.asset(Assets.back, width: 24, height: 24),
+          Expanded(
+            child: InkWell(
+              onTap: onBack,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SvgPicture.asset(Assets.back, width: 24, height: 24),
+              ),
             ),
           ),
-          const Spacer(),
           if (showMore && onMore != null)
-            GestureDetector(
+            InkWell(
               onTap: onMore,
               child: Container(
                 width: 32,

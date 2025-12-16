@@ -35,6 +35,22 @@ class LoginScreen extends GetWidget<LoginController> {
               controller: controller.emailCtrl,
               keyboardType: TextInputType.emailAddress,
               onChanged: (val) => controller.email.value = val.trim(),
+              rounded: 10,
+              bgColor: const Color(0xFF101010),
+              enabledBorderOverride: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: Color(0xFF2A2A2A),
+                  width: 1,
+                ),
+              ),
+              focusedBorderOverride: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1,
+                ),
+              ),
             ),
             20.vgap,
             Obx(
@@ -43,6 +59,23 @@ class LoginScreen extends GetWidget<LoginController> {
                 controller: controller.passwordCtrl,
                 obscureText: !controller.showPassword.value,
                 onChanged: (val) => controller.password.value = val.trim(),
+                keyboardType: TextInputType.emailAddress,
+                rounded: 10,
+                bgColor: const Color(0xFF101010),
+                enabledBorderOverride: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF2A2A2A),
+                    width: 1,
+                  ),
+                ),
+                focusedBorderOverride: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 1,
+                  ),
+                ),
               ),
             ),
             20.vgap,
