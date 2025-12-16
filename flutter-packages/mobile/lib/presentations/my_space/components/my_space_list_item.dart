@@ -21,6 +21,8 @@ class MySpaceListItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -75,7 +77,6 @@ class MySpaceListItem extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      8.vgap,
                       Text(
                         _formatRelativeDate(item.createdAt),
                         style: theme.textTheme.bodySmall?.copyWith(
