@@ -9,8 +9,8 @@ final darkTheme = ThemeData(
     },
   ),
   visualDensity: VisualDensity.standard,
-  fontFamily: "Raleway",
-  fontFamilyFallback: ["Raleway"],
+  fontFamily: "RalewayNoDigits",
+  fontFamilyFallback: ["Pretendard"],
   textTheme: AppFonts.textTheme.apply(
     bodyColor: Colors.white,
     displayColor: Colors.white,

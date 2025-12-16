@@ -1,5 +1,4 @@
 import 'package:ratel/exports.dart';
-import 'package:ratel/features/onboarding/screens/signup/components/country_picker_sheet.dart';
 
 class SignupScreen extends GetWidget<SignupController> {
   const SignupScreen({super.key});
@@ -13,7 +12,13 @@ class SignupScreen extends GetWidget<SignupController> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AppTopBar(onBack: () => Get.back(), title: "Sign up"),
+            AppTopBar(
+              onBack: () {
+                Get.rootDelegate.offNamed(loginScreen);
+              },
+              enableBack: true,
+              title: "Sign up",
+            ),
             40.vgap,
             Center(
               child: Text(
@@ -40,6 +45,22 @@ class SignupScreen extends GetWidget<SignupController> {
               controller: controller.phoneCtrl,
               keyboardType: TextInputType.phone,
               onChanged: controller.onPhoneChanged,
+              rounded: 10,
+              bgColor: const Color(0xFF101010),
+              enabledBorderOverride: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: Color(0xFF2A2A2A),
+                  width: 1,
+                ),
+              ),
+              focusedBorderOverride: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: AppColors.primary,
+                  width: 1,
+                ),
+              ),
             ),
             const Spacer(),
             SizedBox(
@@ -139,21 +160,18 @@ class _CountrySelector extends StatelessWidget {
   }
 }
 
+Future<CountryCode?> showCountryPickerBottomSheet(BuildContext context) {
+  return showAppBottomSheet<CountryCode>(
+    context: context,
+    child: const CountryPickerSheet(),
+  );
+}
+
 Future<void> _showCountryPicker(
   BuildContext context,
   SignupController controller,
 ) async {
-  final selected = await showModalBottomSheet<CountryCode>(
-    context: context,
-    isScrollControlled: true,
-    backgroundColor: AppColors.background,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
-    builder: (ctx) {
-      return const CountryPickerSheet();
-    },
-  );
+  final selected = await showCountryPickerBottomSheet(context);
 
   if (selected != null) {
     controller.selectCountry(selected);

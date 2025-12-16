@@ -32,7 +32,6 @@ class Profile extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontFamily: 'Raleway',
               color: Colors.white,
               fontWeight: FontWeight.w700,
               fontSize: 14,

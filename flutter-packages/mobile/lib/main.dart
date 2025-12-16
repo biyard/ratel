@@ -47,6 +47,17 @@ Future<void> main() async {
   SpaceBoardsService.init();
   Get.put<ThemeController>(ThemeController());
 
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      systemNavigationBarColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness.light,
+      systemNavigationBarContrastEnforced: false,
+    ),
+  );
+
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]).then((
     value,
   ) {

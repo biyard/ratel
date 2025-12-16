@@ -15,7 +15,6 @@ class Header extends StatelessWidget {
       alignment: Alignment.center,
       child: Column(
         children: [
-          30.vgap,
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
