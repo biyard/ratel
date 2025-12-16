@@ -69,6 +69,14 @@ impl Config {
     pub fn ip_address(&self) -> &'static str {
         env!("BUILD_IP_ADDRESS")
     }
+
+    pub fn day_unit(&self) -> i64 {
+        if self.is_local() {
+            return 60 * 1_000; // 1 minute in milliseconds
+        }
+
+        24 * 60 * 60 * 1_000
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

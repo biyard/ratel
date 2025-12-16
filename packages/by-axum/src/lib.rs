@@ -28,6 +28,7 @@ pub fn new() -> BiyardRouter {
     let _ = tracing_subscriber::fmt()
         .with_env_filter(
             EnvFilter::from(option_env!("RUST_LOG").unwrap_or("debug"))
+                .add_directive("rustls=info".parse().unwrap())
                 .add_directive("aws_smithy_http_client=info".parse().unwrap())
                 .add_directive("aws_smithy_runtime_api=info".parse().unwrap())
                 .add_directive("aws_sdk_dynamodb=info".parse().unwrap())

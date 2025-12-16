@@ -150,7 +150,7 @@ async fn handle_upgrade_membership(
     let (user_payment, should_update) =
         UserPayment::get_by_user(cli, portone, user_id.clone(), card_info).await?;
 
-    let tx_type = TransactionType::PurchaseMembership(new_tier.to_string());
+    let tx_type = TransactionType::PurchaseMembership(new_tier.clone());
 
     let amount = match &currency {
         Currency::Usd => new_membership.price_dollars,
@@ -169,7 +169,7 @@ async fn handle_upgrade_membership(
         .purchase(portone, tx_type.clone(), amount, currency)
         .await?;
 
-    let mut user_membership = UserMembership::new(
+    let user_membership = UserMembership::new(
         user_id.clone(),
         new_membership.pk.clone().into(),
         new_membership.duration_days,
@@ -178,34 +178,34 @@ async fn handle_upgrade_membership(
     .with_purchase_id(user_purchase.pk.clone())
     .with_auto_renew(true);
 
-    let next_purchase = user_payment
-        .schedule_next_membership_purchase(
-            portone,
-            tx_type,
-            amount,
-            currency,
-            user_membership
-                .renewal_date_rfc_3339()
-                .unwrap_or(after_days_from_now_rfc_3339(
-                    new_membership.duration_days as i64,
-                )),
-        )
-        .await;
+    // let next_purchase = user_payment
+    //     .schedule_next_membership_purchase(
+    //         portone,
+    //         tx_type,
+    //         amount,
+    //         currency,
+    //         user_membership
+    //             .renewal_date_rfc_3339()
+    //             .unwrap_or(after_days_from_now_rfc_3339(
+    //                 new_membership.duration_days as i64,
+    //             )),
+    //     )
+    //     .await;
 
-    if next_purchase.is_err() {
-        user_membership.auto_renew = false;
-        user_membership.next_membership =
-            Some(Partition::Membership(MembershipTier::Free.to_string()).into())
-    }
+    // if next_purchase.is_err() {
+    //     user_membership.auto_renew = false;
+    //     user_membership.next_membership =
+    //         Some(Partition::Membership(MembershipTier::Free.to_string()).into())
+    // }
 
     let mut txs = vec![
         user_purchase.create_transact_write_item(),
         user_membership.upsert_transact_write_item(),
     ];
 
-    if let Ok(next_purchase) = next_purchase {
-        txs.push(next_purchase.create_transact_write_item());
-    }
+    // if let Ok(next_purchase) = next_purchase {
+    //     txs.push(next_purchase.create_transact_write_item());
+    // }
 
     if should_update {
         txs.push(user_payment.upsert_transact_write_item());
@@ -213,12 +213,12 @@ async fn handle_upgrade_membership(
 
     transact_write_all_items_with_failover!(cli, txs);
 
-    notify!(
-        "Upgraded membership to {:?} for user {:?} payed by {}",
-        new_tier,
-        user_id,
-        currency,
-    );
+    // notify!(
+    //     "Upgraded membership to {:?} for user {:?} payed by {}",
+    //     new_tier,
+    //     user_id,
+    //     currency,
+    // );
 
     Ok((user_purchase, new_membership))
 }
