@@ -59,7 +59,6 @@ class _AttachmentRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      fontFamily: 'Raleway',
                       fontWeight: FontWeight.w700,
                       fontSize: 18,
                       height: 24 / 18,
@@ -70,7 +69,6 @@ class _AttachmentRow extends StatelessWidget {
                   Text(
                     file.size,
                     style: const TextStyle(
-                      fontFamily: 'Inter',
                       fontWeight: FontWeight.w500,
                       fontSize: 12,
                       height: 16 / 12,
@@ -106,7 +104,6 @@ class _DownloadButton extends StatelessWidget {
         child: const Text(
           'Download',
           style: TextStyle(
-            fontFamily: 'Raleway',
             fontWeight: FontWeight.w600,
             fontSize: 13,
             height: 20 / 13,

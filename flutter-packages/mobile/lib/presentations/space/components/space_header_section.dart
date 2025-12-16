@@ -50,7 +50,6 @@ class _BadgePrimary extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              fontFamily: 'Raleway',
               fontWeight: FontWeight.w600,
               fontSize: 12,
               height: 16 / 12,
