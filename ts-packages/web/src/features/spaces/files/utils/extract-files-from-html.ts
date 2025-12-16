@@ -7,42 +7,8 @@ export function extractFilesFromHtml(html: string): FileModel[] {
 
   doc.querySelectorAll('img').forEach((img) => {
     const src = img.src;
-    if (src && isValidFileUrl(src)) {
+    if (src && (isValidFileUrl(src) || isBase64Image(src))) {
       fileUrls.add(src);
-    }
-  });
-
-  doc.querySelectorAll('video source, video').forEach((video) => {
-    const src =
-      video.getAttribute('src') ||
-      (video as HTMLVideoElement).src ||
-      (video as HTMLSourceElement).src;
-    if (src && isValidFileUrl(src)) {
-      fileUrls.add(src);
-    }
-  });
-
-  doc.querySelectorAll('iframe').forEach((iframe) => {
-    const src = iframe.src;
-    if (src && isValidFileUrl(src)) {
-      fileUrls.add(src);
-    }
-  });
-
-  doc.querySelectorAll('audio source, audio').forEach((audio) => {
-    const src =
-      audio.getAttribute('src') ||
-      (audio as HTMLAudioElement).src ||
-      (audio as HTMLSourceElement).src;
-    if (src && isValidFileUrl(src)) {
-      fileUrls.add(src);
-    }
-  });
-
-  doc.querySelectorAll('a').forEach((link) => {
-    const href = link.href;
-    if (href && isValidFileUrl(href) && looksLikeFile(href)) {
-      fileUrls.add(href);
     }
   });
 
@@ -63,41 +29,24 @@ function isValidFileUrl(url: string): boolean {
   }
 }
 
-function looksLikeFile(url: string): boolean {
-  const fileExtensions = [
-    'jpg',
-    'jpeg',
-    'png',
-    'gif',
-    'webp',
-    'svg',
-    'mp4',
-    'mov',
-    'avi',
-    'mkv',
-    'webm',
-    'mp3',
-    'wav',
-    'ogg',
-    'pdf',
-    'doc',
-    'docx',
-    'xls',
-    'xlsx',
-    'ppt',
-    'pptx',
-    'zip',
-    'rar',
-    'txt',
-  ];
-
-  const urlLower = url.toLowerCase();
-  return fileExtensions.some((ext) => urlLower.includes(`.${ext}`));
+function isBase64Image(url: string): boolean {
+  return url.startsWith('data:image/');
 }
 
 function urlToFileModel(url: string): FileModel {
-  const fileName = url.split('/').pop()?.split('?')[0] || 'file';
-  const extension = fileName.split('.').pop() || '';
+  if (isBase64Image(url)) {
+    const match = url.match(/^data:image\/(\w+);base64,/);
+    const extension = match?.[1] || 'png';
+    return {
+      name: `image.${extension}`,
+      size: '0',
+      ext: toFileExtension(extension),
+      url,
+    };
+  }
+
+  const fileName = url.split('/').pop()?.split('?')[0] || 'image';
+  const extension = fileName.split('.').pop() || 'png';
 
   return {
     name: fileName,

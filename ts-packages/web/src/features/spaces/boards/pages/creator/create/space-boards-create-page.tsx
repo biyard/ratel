@@ -198,7 +198,9 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
               placeholder={t('contents_hint')}
               files={ctrl.files.get()}
               content={ctrl.htmlContents.get()}
-              onUpdate={(nextContent) => ctrl.handleContent(nextContent)}
+              onUpdate={(nextContent) => {
+                void ctrl.handleContent(nextContent);
+              }}
               editable
               showToolbar
               uploadAsset={ctrl.uploadAsset}

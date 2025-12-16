@@ -65,6 +65,13 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
     const [isFolded, setIsFolded] = useState<boolean>(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [showFoldToggle, setShowFoldToggle] = useState(false);
+    const uploadAssetRef = useRef(uploadAsset);
+    const uploadVideoRef = useRef(uploadVideo);
+
+    useEffect(() => {
+      uploadAssetRef.current = uploadAsset;
+      uploadVideoRef.current = uploadVideo;
+    }, [uploadAsset, uploadVideo]);
 
     const insertImage = (ed: Editor, src: string, alt?: string) =>
       ed.chain().focus().setImage({ src, alt }).run();
@@ -76,9 +83,11 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       const file = files[0];
 
       if (file.type.startsWith('image/')) {
-        if (file.size > maxImageSizeMB * 1024 * 1024) return false;
-        if (uploadAsset) {
-          const { url } = await uploadAsset(file);
+        if (file.size > maxImageSizeMB * 1024 * 1024) {
+          return false;
+        }
+        if (uploadAssetRef.current) {
+          const { url } = await uploadAssetRef.current(file);
           insertImage(ed, url, file.name);
           return false;
         }
@@ -87,8 +96,8 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
 
       if (file.type.startsWith('video/')) {
         if (file.size > maxVideoSizeMB * 1024 * 1024) return false;
-        if (uploadVideo) {
-          const { url } = await uploadVideo(file);
+        if (uploadVideoRef.current) {
+          const { url } = await uploadVideoRef.current(file);
           insertVideo(ed, url);
           return false;
         }
@@ -121,7 +130,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           Underline,
           Image.configure({
             inline: true,
-            allowBase64: true,
+            allowBase64: false,
             HTMLAttributes: {
               class: 'rounded-lg max-w-full h-auto my-4 mx-auto block',
             },
@@ -164,28 +173,28 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
         onBlur: () => onBlur?.(),
         editorProps: {
           handleDrop(view, ev) {
+            if (!editor) return false;
             const dt = (ev as DragEvent).dataTransfer;
             if (!dt?.files?.length) return false;
             ev.preventDefault();
             ev.stopPropagation();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            handleFiles((view as any).editor, dt.files);
+            handleFiles(editor, dt.files);
             return true;
           },
           handlePaste(view, ev) {
+            if (!editor) return false;
             const cb = (ev as ClipboardEvent).clipboardData;
             const files = cb?.files ?? null;
             if (files?.length) {
               ev.preventDefault();
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              handleFiles((view as any).editor, files);
+              handleFiles(editor, files);
               return true;
             }
             return false;
           },
         },
       },
-      [editable, uploadAsset, uploadVideo, maxImageSizeMB, maxVideoSizeMB],
+      [editable, maxImageSizeMB, maxVideoSizeMB],
     ) as Editor | null;
 
     useEffect(() => {
