@@ -120,6 +120,7 @@ flutter:
     - assets/fonts/
     - assets/icons/
     - assets/icons/toolbar/
+    - assets/icons/bottom/
     - assets/videos/
     - assets/json/country_codes.json
 
@@ -136,6 +137,26 @@ flutter:
   # example:
 
   fonts:
+    - family: RalewayNoDigits
+      fonts:
+        - asset: assets/fonts/RalewayNoDigits-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/RalewayNoDigits-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/RalewayNoDigits-Light.ttf
+          weight: 300
+        - asset: assets/fonts/RalewayNoDigits-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/RalewayNoDigits-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/RalewayNoDigits-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/RalewayNoDigits-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/RalewayNoDigits-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/RalewayNoDigits-Black.ttf
+          weight: 900
     - family: Raleway
       fonts:
         - asset: assets/fonts/Raleway-Thin.ttf

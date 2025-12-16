@@ -7,10 +7,16 @@ import 'package:html/parser.dart' as html_parser;
 import 'package:html/dom.dart' as dom;
 
 class RichEditor extends StatefulWidget {
-  const RichEditor({super.key, required this.controller, this.onHtmlChanged});
+  const RichEditor({
+    super.key,
+    required this.controller,
+    this.onHtmlChanged,
+    this.bottomWarning,
+  });
 
   final TextEditingController controller;
   final ValueChanged<String>? onHtmlChanged;
+  final Widget? bottomWarning;
 
   @override
   State<RichEditor> createState() => _RichEditorState();
@@ -902,44 +908,35 @@ class _RichEditorState extends State<RichEditor> {
   Widget _buildEditorBody() {
     final isEmpty = _quillController.document.toPlainText().trim().isEmpty;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
-        if (!_editorFocusNode.hasFocus) {
-          _editorFocusNode.requestFocus();
-        }
-      },
-      child: Stack(
-        children: [
-          quill.QuillEditor(
-            controller: _quillController,
-            focusNode: _editorFocusNode,
-            scrollController: _editorScrollController,
-            config: const quill.QuillEditorConfig(
-              scrollable: true,
-              padding: EdgeInsets.zero,
-              autoFocus: false,
-              expands: true,
-            ),
+    return Stack(
+      children: [
+        quill.QuillEditor(
+          controller: _quillController,
+          focusNode: _editorFocusNode,
+          scrollController: _editorScrollController,
+          config: const quill.QuillEditorConfig(
+            scrollable: true,
+            padding: EdgeInsets.zero,
+            autoFocus: false,
+            expands: true,
           ),
-
-          if (isEmpty)
-            IgnorePointer(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: Text(
-                  "Type your script...",
-                  style: const TextStyle(
-                    color: AppColors.neutral500,
-                    fontSize: 16,
-                    height: 24 / 16,
-                    fontWeight: FontWeight.w400,
-                  ),
+        ),
+        if (isEmpty)
+          IgnorePointer(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Text(
+                "Type your script...",
+                style: TextStyle(
+                  color: AppColors.neutral500,
+                  fontSize: 16,
+                  height: 24 / 16,
+                  fontWeight: FontWeight.w400,
                 ),
               ),
             ),
-        ],
-      ),
+          ),
+      ],
     );
   }
 
@@ -948,8 +945,21 @@ class _RichEditorState extends State<RichEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(child: _buildEditorBody()),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _buildEditorBody()),
+              if (widget.bottomWarning != null) ...[
+                10.vgap,
+                widget.bottomWarning!,
+              ],
+            ],
+          ),
+        ),
+
         16.vgap,
+
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
@@ -965,7 +975,6 @@ class _RichEditorState extends State<RichEditor> {
                 children: [
                   _ToolbarIcon(icon: Icons.apps, onTap: openAllToolsSheet),
                   8.gap,
-
                   _ToolbarIcon(
                     svgAsset: Assets.fontBold,
                     active: bold,
