@@ -95,7 +95,7 @@ class _MySpaceList extends StatelessWidget {
                   padding: EdgeInsets.fromLTRB(10, 0, 10, 0),
                   child: SizedBox(
                     width: double.infinity,
-                    height: 1,
+                    height: 0.5,
                     child: ColoredBox(color: Color(0xff464646)),
                   ),
                 ),
@@ -136,8 +136,6 @@ class _MySpaceList extends StatelessWidget {
                   ),
                 );
               }
-
-              return const SizedBox(height: 16);
             }
 
             final item = items[listIndex];

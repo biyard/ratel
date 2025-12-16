@@ -78,10 +78,15 @@ class DetailPostController extends BaseController {
   Future<void> deletePost({required String postPk}) async {
     final ok = await feedsService.deletePost(postPk);
     if (!ok) {
-      Biyard.error('Failed to delete post.', 'Please try again later.');
+      Biyard.error(
+        'Delete post failed.',
+        'Failed to delete post. Please try again later.',
+      );
       return;
     }
+
     Get.back();
+    Biyard.info("Success to delete post");
   }
 
   bool isCommentLiked(String commentSk, {bool fallback = false}) {
@@ -134,10 +139,28 @@ class DetailPostController extends BaseController {
       target.likes = likes;
       target.liked = actualLiked;
 
+      if (nextLike) {
+        Biyard.info("Success to like post");
+      } else {
+        Biyard.info("Success to unlike post");
+      }
+
       feed.refresh();
       feedsService.updateDetail(current);
     } catch (e, s) {
       logger.e('Failed to like/unlike comment $commentSk: $e', stackTrace: s);
+
+      if (nextLike) {
+        Biyard.error(
+          "Like Failed",
+          "Failed to like post. Please try again later.",
+        );
+      } else {
+        Biyard.error(
+          "Unlike Failed",
+          "Failed to unlike post. Please try again later.",
+        );
+      }
     } finally {
       likingCommentOf[commentSk] = false;
       likingCommentOf.refresh();
@@ -173,10 +196,13 @@ class DetailPostController extends BaseController {
         permissions: current.permissions,
       );
 
+      Biyard.info("Success to create comment");
       feedsService.updateDetail(feed.value!);
+
       return created;
     } catch (e, s) {
       logger.e('Failed to add comment: $e', stackTrace: s);
+      Biyard.info("Failed to create comment. please try again later.");
       return null;
     } finally {
       isSendingRootComment.value = false;
@@ -232,9 +258,27 @@ class DetailPostController extends BaseController {
         permissions: current.permissions,
       );
 
+      if (nextLike) {
+        Biyard.info("Success to like post");
+      } else {
+        Biyard.info("Success to unlike post");
+      }
+
       feedsService.updateDetail(feed.value!);
     } catch (e, s) {
       logger.e('Failed to toggle like post: $e', stackTrace: s);
+
+      if (nextLike) {
+        Biyard.error(
+          "Like Failed",
+          "Failed to like post. Please try again later.",
+        );
+      } else {
+        Biyard.error(
+          "Unlike Failed",
+          "Failed to unlike post. Please try again later.",
+        );
+      }
     } finally {
       isLikingPost.value = false;
     }

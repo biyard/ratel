@@ -120,6 +120,7 @@ class BoardCreatorScreen extends GetWidget<BoardCreatorController> {
                 final post = controller.post.value;
 
                 bool canComment = true;
+                bool isFinished = controller.space?.isFinished ?? false;
                 if (post != null) {
                   final hasSchedule = post.startedAt != 0 && post.endedAt != 0;
                   if (hasSchedule) {
@@ -130,7 +131,7 @@ class BoardCreatorScreen extends GetWidget<BoardCreatorController> {
                     final end = _fromTimestamp(
                       post.endedAt,
                     ).millisecondsSinceEpoch;
-                    canComment = now >= start && now <= end;
+                    canComment = now >= start && now <= end && !isFinished;
                   }
                 }
 

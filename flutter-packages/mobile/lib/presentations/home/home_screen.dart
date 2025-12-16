@@ -41,11 +41,19 @@ class HomeScreen extends GetWidget<HomeController> {
               final feed = controller.feeds[feedIndex];
               return FeedCard(
                 feed: feed,
+                onLikeTap: () {
+                  controller.toggleLikePost(feed);
+                },
                 onBookmarkTap: () {},
-                onTap: () {
+                onTap: () async {
                   logger.d("feed tapped: ${feed.pk} ${feed.spacePk}");
                   if (feed.spacePk != null) {
                     logger.d("space pk: ${feed.spacePk}");
+                    controller.feedsService.fetchDetail(
+                      feed.pk,
+                      forceRefresh: true,
+                    );
+
                     Get.rootDelegate.toNamed(spaceWithPk(feed.spacePk!));
                   } else {
                     logger.d("feed pk: ${feed.pk}");

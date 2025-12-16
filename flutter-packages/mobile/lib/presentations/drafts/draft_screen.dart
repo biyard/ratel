@@ -7,11 +7,41 @@ class DraftScreen extends GetWidget<DraftController> {
   @override
   Widget build(BuildContext context) {
     final bottomPad = MediaQuery.of(context).padding.bottom;
+    final theme = Theme.of(context);
 
     return Layout<DraftController>(
       scrollable: false,
       child: Obx(() {
         final feeds = controller.feeds;
+
+        if (feeds.isEmpty) {
+          return RefreshIndicator(
+            onRefresh: () => controller.listFeeds(),
+            color: AppColors.primary,
+            backgroundColor: AppColors.bg,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(0, 0, 0, bottomPad + 10),
+              children: [
+                AppTopBar(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                  onBack: () => Get.back(),
+                  title: DraftLocalization.draftMyDraft,
+                ),
+                100.vgap,
+                Center(
+                  child: Text(
+                    'No drafts yet.',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: AppColors.neutral500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
         final itemCount = feeds.length + 1;
 
         return RefreshIndicator(

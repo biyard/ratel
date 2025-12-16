@@ -1,10 +1,14 @@
 import 'package:ratel/exports.dart';
 
 class SpaceRequirementController extends BaseController {
+  final SpaceService _spaceService = Get.find<SpaceService>();
   final SpacePollsApi _pollsApi = Get.find<SpacePollsApi>();
 
   late final String spacePk;
   late final String? pollSk;
+
+  Rxn<SpaceModel> get spaceRx => _spaceService.spaceOf(spacePk);
+  SpaceModel? get space => spaceRx.value;
 
   final poll = Rxn<PollModel>();
   final isLoading = false.obs;
@@ -97,7 +101,7 @@ class SpaceRequirementController extends BaseController {
         'Failed to respond poll in viewer, spacePk=$spacePk pollSk=$pollSk: $e',
       );
       Biyard.error(
-        "Failed to Submit Respond",
+        "Failed to Submit Responses",
         "Failed to submit your responses. Please try again.",
       );
       rethrow;

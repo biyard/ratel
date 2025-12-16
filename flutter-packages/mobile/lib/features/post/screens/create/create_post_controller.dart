@@ -167,7 +167,10 @@ class CreatePostController extends BaseController {
     logger.d('save draft res: $res');
 
     if (!res) {
-      Biyard.error('Failed to publish post.', 'Please try again later.');
+      Biyard.error(
+        'Publish post failed',
+        'Failed to publish post. Please try again later.',
+      );
       return;
     }
 
@@ -177,6 +180,8 @@ class CreatePostController extends BaseController {
 
     final detail = await feedsService.fetchDetail(postPk!, forceRefresh: true);
     feedsService.updateDetail(detail);
+
+    Biyard.info('Success to publish post.');
 
     Get.rootDelegate.offNamed(postWithPk(postPk!));
   }

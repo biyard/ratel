@@ -86,7 +86,7 @@ class SettingTile extends StatelessWidget {
             const Icon(
               Icons.chevron_right,
               color: AppColors.neutral500,
-              size: 30,
+              size: 20,
             ),
           ],
         ),

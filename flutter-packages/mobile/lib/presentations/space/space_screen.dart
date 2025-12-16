@@ -50,7 +50,6 @@ class SpaceScreen extends GetWidget<SpaceController> {
                     : null,
               );
             }),
-            16.vgap,
             Expanded(
               child: Obx(() {
                 final space = controller.space;
@@ -92,10 +91,12 @@ class SpaceScreen extends GetWidget<SpaceController> {
                                   children: [
                                     SpaceMetaSection(space: space),
                                     20.vgap,
-                                    Container(
+                                    SizedBox(
                                       width: double.infinity,
-                                      height: 0.3,
-                                      color: const Color(0xFFD4D4D4),
+                                      height: 0.5,
+                                      child: ColoredBox(
+                                        color: Color(0xff464646),
+                                      ),
                                     ),
                                   ],
                                 ),

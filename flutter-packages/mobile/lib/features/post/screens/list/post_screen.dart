@@ -45,8 +45,11 @@ class PostScreen extends GetWidget<PostController> {
               final feedIndex = index - 1;
               final feed = feeds[feedIndex];
 
+              logger.d("feed liked: ${feed.pk} ${feed.liked}");
+
               return FeedCard(
                 feed: feed,
+                onLikeTap: () => controller.toggleLikePost(feed),
                 onTap: () {
                   logger.d("feed tapped: ${feed.pk} ${feed.spacePk}");
                   if (feed.spacePk != null) {
