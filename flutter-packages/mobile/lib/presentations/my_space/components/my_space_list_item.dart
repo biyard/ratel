@@ -19,8 +19,10 @@ class MySpaceListItem extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+          padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -32,6 +34,8 @@ class MySpaceListItem extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             _StatusChip(
                               label: _isClosed ? 'Closed' : 'Participating',
@@ -43,16 +47,18 @@ class MySpaceListItem extends StatelessWidget {
                                   : const Color(0xFF6EE7B7),
                             ),
                             10.gap,
-                            Text(
-                              item.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontFamily: 'Raleway',
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 18,
-                                height: 24 / 18,
+                            Expanded(
+                              child: Text(
+                                item.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontFamily: 'Raleway',
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 18,
+                                  height: 24 / 18,
+                                ),
                               ),
                             ),
                           ],
@@ -64,7 +70,6 @@ class MySpaceListItem extends StatelessWidget {
                               : defaultProfileImage,
                           displayName: item.authorDisplayName,
                         ),
-                        6.vgap,
                       ],
                     ),
                   ),
@@ -72,7 +77,6 @@ class MySpaceListItem extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      8.vgap,
                       Text(
                         _formatRelativeDate(item.createdAt),
                         style: theme.textTheme.bodySmall?.copyWith(

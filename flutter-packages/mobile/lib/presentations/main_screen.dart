@@ -79,64 +79,77 @@ class _MainScreenState extends State<MainScreen>
   Widget build(BuildContext context) {
     final sheetWidth = 330.0;
 
-    const double navContentHeight = 70.0;
+    const double navContentHeight = 60.0;
     final double barHeight = navContentHeight;
 
-    return Scaffold(
-      extendBody: true,
-      bottomNavigationBar: buildBottomNav(barHeight),
-      body: Stack(
-        children: [
-          Column(
-            children: [
-              Expanded(
-                child: Navigator(
-                  key: Get.nestedKey(1),
-                  initialRoute: AppRoutes.home,
-                  onGenerateRoute: (settings) => GetPageRoute(
-                    page: () => _routeToPage(settings.name),
-                    settings: settings,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          AnimatedBuilder(
-            animation: _panelCtrl,
-            builder: (_, __) {
-              final show = _panelCtrl.value > 0.0;
-              return IgnorePointer(
-                ignoring: !show,
-                child: Opacity(
-                  opacity: 0.6 * _panelCtrl.value,
-                  child: GestureDetector(
-                    onTap: closeSidePanel,
-                    child: Container(color: Colors.black),
-                  ),
-                ),
-              );
-            },
-          ),
-          AnimatedBuilder(
-            animation: _panelCtrl,
-            builder: (_, __) {
-              final dx = -sheetWidth * (1.0 - _panelCtrl.value);
-              return Transform.translate(
-                offset: Offset(dx, 0),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Obx(
-                    () => SidePanel(
-                      width: sheetWidth,
-                      user: controller.user.value,
-                      onClose: closeSidePanel,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: AppColors.bg,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        backgroundColor: AppColors.bg,
+        extendBody: true,
+        bottomNavigationBar: SafeArea(
+          top: false,
+          bottom: true,
+          child: buildBottomNav(barHeight),
+        ),
+        body: Stack(
+          children: [
+            Column(
+              children: [
+                Expanded(
+                  child: Navigator(
+                    key: Get.nestedKey(1),
+                    initialRoute: AppRoutes.home,
+                    onGenerateRoute: (settings) => GetPageRoute(
+                      page: () => _routeToPage(settings.name),
+                      settings: settings,
                     ),
                   ),
                 ),
-              );
-            },
-          ),
-        ],
+              ],
+            ),
+            AnimatedBuilder(
+              animation: _panelCtrl,
+              builder: (_, __) {
+                final show = _panelCtrl.value > 0.0;
+                return IgnorePointer(
+                  ignoring: !show,
+                  child: Opacity(
+                    opacity: 0.6 * _panelCtrl.value,
+                    child: GestureDetector(
+                      onTap: closeSidePanel,
+                      child: Container(color: Colors.black),
+                    ),
+                  ),
+                );
+              },
+            ),
+            AnimatedBuilder(
+              animation: _panelCtrl,
+              builder: (_, __) {
+                final dx = -sheetWidth * (1.0 - _panelCtrl.value);
+                return Transform.translate(
+                  offset: Offset(dx, 0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Obx(
+                      () => SidePanel(
+                        width: sheetWidth,
+                        user: controller.user.value,
+                        onClose: closeSidePanel,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

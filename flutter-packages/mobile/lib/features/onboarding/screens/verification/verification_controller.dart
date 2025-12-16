@@ -105,6 +105,7 @@ class VerificationController extends BaseController {
         logger.d("verification response: $res $res2");
         authService.neededSignup = false;
         Get.rootDelegate.offNamed(AppRoutes.mainScreen);
+        Biyard.info("Verification Successed");
       } else {
         Biyard.error(
           "Failed to verify code",
