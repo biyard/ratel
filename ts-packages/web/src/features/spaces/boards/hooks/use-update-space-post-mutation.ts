@@ -85,6 +85,7 @@ export function useUpdateSpacePostMutation<T extends SpacePostResponse>() {
       qc.invalidateQueries({
         queryKey: spacePostQk,
       });
+      qc.invalidateQueries({ queryKey: spaceKeys.files(spacePk) });
     },
   });
 

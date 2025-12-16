@@ -201,6 +201,7 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
               onUpdate={(nextContent) => ctrl.handleContent(nextContent)}
               editable
               showToolbar
+              uploadAsset={ctrl.uploadAsset}
               onImageUpload={ctrl.handleImageUpload}
               onUploadPDF={ctrl.handlePdfUpload}
               onRemovePdf={ctrl.handleRemovePdf}

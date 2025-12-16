@@ -8,7 +8,7 @@ use crate::{
     controllers::v3::spaces::{SpacePath, SpacePathParam},
     features::spaces::{
         boards::models::{space_category::SpaceCategory, space_post::SpacePost},
-        files::{FileLink, FileLinkTarget},
+        files::{FileLink, FileLinkTarget, SpaceFile},
         members::{SpaceInvitationMember, SpaceInvitationMemberQueryOption},
     },
     models::{SpaceCommon, feed::Post, team::Team, user::User},
@@ -87,25 +87,42 @@ pub async fn create_space_post_handler(
         _ => "".to_string(),
     };
 
+    tracing::info!("Linking {} files for post {}", req.files.len(), post_id);
+
+    // Add files to SpaceFile entity (for Files tab)
+    if !req.files.is_empty() {
+        SpaceFile::add_files(&dynamo.client, space_pk.clone(), req.files.clone()).await?;
+    }
+
     for file in &req.files {
         if let Some(url) = &file.url {
+            tracing::info!("Linking file URL: {}", url);
+
             // Link to Files tab
-            FileLink::add_link_target(
+            match FileLink::add_link_target(
                 &dynamo.client,
                 space_pk.clone(),
                 url.clone(),
                 FileLinkTarget::Files,
             )
-            .await?;
+            .await
+            {
+                Ok(_) => tracing::info!("Successfully linked file to Files tab"),
+                Err(e) => tracing::error!("Failed to link file to Files tab: {:?}", e),
+            }
 
             // Link to Board post
-            FileLink::add_link_target(
+            match FileLink::add_link_target(
                 &dynamo.client,
                 space_pk.clone(),
                 url.clone(),
                 FileLinkTarget::Board(post_id.clone()),
             )
-            .await?;
+            .await
+            {
+                Ok(_) => tracing::info!("Successfully linked file to Board"),
+                Err(e) => tracing::error!("Failed to link file to Board: {:?}", e),
+            }
         }
     }
 

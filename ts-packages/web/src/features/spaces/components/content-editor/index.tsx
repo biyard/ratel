@@ -59,6 +59,7 @@ export default function SpaceHTMLContentEditor({
   disabledFileUpload = true,
   // enableEnterToSave = false,
   onContentChange,
+  uploadAsset,
   onImageUpload,
   onRemoveImage,
   onUploadPDF,
@@ -70,6 +71,7 @@ export default function SpaceHTMLContentEditor({
   canEdit: boolean;
   enableEnterToSave?: boolean;
   disabledFileUpload?: boolean;
+  uploadAsset?: (file: File) => Promise<{ url: string }>;
   onUploadPDF?: (fileList: FileList | File[]) => void;
   onRemovePdf?: (index: number) => void;
   onContentChange: (newContent: string) => void;
@@ -101,11 +103,9 @@ export default function SpaceHTMLContentEditor({
             className="absolute right-5 bottom-6 w-5 h-5 [&>path]:stroke-1  text-gray-400 cursor-pointer hover:text-gray-600"
             onClick={() => {
               if (isEditing) {
-                console.log('save');
                 onContentChange(content);
                 setEditing(false);
               } else if (canEdit) {
-                console.log('Start editing');
                 setEditing(true);
               }
             }}
@@ -121,6 +121,7 @@ export default function SpaceHTMLContentEditor({
           onUpdate={(nextContent) => {
             setContent(nextContent);
           }}
+          uploadAsset={uploadAsset}
           uploadVideo={uploadVideo}
           editable={isEditing}
           showToolbar={isEditing}

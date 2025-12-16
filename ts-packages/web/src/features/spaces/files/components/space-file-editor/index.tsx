@@ -15,12 +15,16 @@ export interface SpaceFilesEditorProps {
   files: FileModel[];
   onremove?: (index: number) => void;
   onadd?: (file: FileModel) => void;
+  linkToOverview?: boolean;
+  onLinkToOverviewChange?: (checked: boolean) => void;
 }
 
 export default function SpaceFileEditors({
   files,
   onremove = () => {},
   onadd = () => {},
+  linkToOverview = false,
+  onLinkToOverviewChange = () => {},
 }: SpaceFilesEditorProps) {
   const { t } = useTranslation('SpaceFile');
   const uploaderRef = useRef<FileUploaderHandle | null>(null);
@@ -73,6 +77,18 @@ export default function SpaceFileEditors({
             {t('attached_files')}
           </div>
         </div>
+
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={linkToOverview}
+            onChange={(e) => onLinkToOverviewChange(e.target.checked)}
+            className="w-4 h-4 rounded"
+          />
+          <span className="text-sm">
+            {t('link_to_overview', 'Link to Overview')}
+          </span>
+        </label>
 
         <FileUploaderMetadata
           ref={uploaderRef}

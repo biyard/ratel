@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::SpacePathParam;
-use crate::features::spaces::files::{FileLink, FileLinkTarget};
+use crate::features::spaces::files::{FileLink, FileLinkTarget, SpaceFile};
 use crate::features::spaces::recommendations::{SpaceRecommendation, SpaceRecommendationResponse};
 
 use crate::types::{File, Partition, TeamGroupPermission};
@@ -37,6 +37,11 @@ pub async fn update_recommendation_handler(
             let recommendation =
                 SpaceRecommendation::update_files(&dynamo.client, space_pk.clone(), files.clone())
                     .await?;
+
+            // Add files to SpaceFile entity (for Files tab)
+            if !files.is_empty() {
+                SpaceFile::add_files(&dynamo.client, space_pk.clone(), files.clone()).await?;
+            }
 
             // Link files to both Files tab and Overview
             for file in &files {
