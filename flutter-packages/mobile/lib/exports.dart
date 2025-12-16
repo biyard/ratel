@@ -67,6 +67,7 @@ export 'features/space/analyzes/creator/analyzes_creator_binding.dart';
 export 'features/space/analyzes/creator/analyzes_creator_controller.dart';
 export 'features/space/analyzes/creator/analyzes_creator_screen.dart';
 
+export 'components/setting_item/setting_item.dart';
 export 'components/app_card/app_card.dart';
 export 'components/biyard/biyard_static.dart';
 export 'components/custom_checkbox/custom_checkbox.dart';

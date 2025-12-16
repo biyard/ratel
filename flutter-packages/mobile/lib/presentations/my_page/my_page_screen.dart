@@ -1,5 +1,4 @@
 import 'package:ratel/exports.dart';
-import 'package:ratel/presentations/my_page/components/my_page_item.dart';
 
 class MyPageScreen extends GetWidget<MyPageController> {
   const MyPageScreen({super.key});
@@ -25,7 +24,7 @@ class MyPageScreen extends GetWidget<MyPageController> {
                   ),
                   child: Column(
                     children: [
-                      MyPageItem(
+                      SettingItem(
                         icon: SvgPicture.asset(
                           Assets.editContent,
                           width: 20,
@@ -42,7 +41,7 @@ class MyPageScreen extends GetWidget<MyPageController> {
                         },
                       ),
                       MyPageDivider(),
-                      MyPageItem(
+                      SettingItem(
                         icon: SvgPicture.asset(
                           Assets.file,
                           width: 20,
@@ -59,7 +58,7 @@ class MyPageScreen extends GetWidget<MyPageController> {
                         },
                       ),
                       MyPageDivider(),
-                      MyPageItem(
+                      SettingItem(
                         icon: SvgPicture.asset(
                           Assets.verification,
                           width: 20,
@@ -76,7 +75,7 @@ class MyPageScreen extends GetWidget<MyPageController> {
                         },
                       ),
                       MyPageDivider(),
-                      MyPageItem(
+                      SettingItem(
                         icon: SvgPicture.asset(
                           Assets.setting,
                           width: 20,
