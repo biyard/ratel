@@ -7,10 +7,16 @@ import 'package:html/parser.dart' as html_parser;
 import 'package:html/dom.dart' as dom;
 
 class RichEditor extends StatefulWidget {
-  const RichEditor({super.key, required this.controller, this.onHtmlChanged});
+  const RichEditor({
+    super.key,
+    required this.controller,
+    this.onHtmlChanged,
+    this.bottomWarning,
+  });
 
   final TextEditingController controller;
   final ValueChanged<String>? onHtmlChanged;
+  final Widget? bottomWarning;
 
   @override
   State<RichEditor> createState() => _RichEditorState();
@@ -949,6 +955,7 @@ class _RichEditorState extends State<RichEditor> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(child: _buildEditorBody()),
+        if (widget.bottomWarning != null) ...[10.vgap, widget.bottomWarning!],
         16.vgap,
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

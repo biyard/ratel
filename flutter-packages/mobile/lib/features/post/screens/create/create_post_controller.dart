@@ -12,6 +12,9 @@ class CreatePostController extends BaseController {
   final titleController = TextEditingController();
   final bodyController = TextEditingController();
 
+  final titleErrorVisible = false.obs;
+  final bodyErrorVisible = false.obs;
+
   String bodyHtml = '';
 
   static const _autoSaveDelay = Duration(seconds: 5);
@@ -41,7 +44,12 @@ class CreatePostController extends BaseController {
       _loadPost();
     } else {
       isEditorReady.value = true;
+      _validateCanSubmit();
     }
+  }
+
+  void onTitleChanged(String text) {
+    _validateCanSubmit();
   }
 
   Future<void> _loadPost() async {
@@ -90,7 +98,10 @@ class CreatePostController extends BaseController {
 
   void _validateCanSubmit() {
     final titleLen = titleController.text.trim().length;
-    final descLen = bodyController.text.trim().length;
+    final descLen = bodyHtml.trim().length;
+
+    titleErrorVisible.value = titleLen < minLength;
+    bodyErrorVisible.value = descLen < minLength;
 
     canSubmit.value =
         titleLen >= minLength &&
