@@ -13,7 +13,7 @@ pub use x402_config::*;
 mod biyard_config;
 use biyard_config::BiyardConfig;
 
-use bdk::prelude::*;
+use crate::*;
 use by_types::config::*;
 
 #[derive(Debug, Clone, Copy)]
