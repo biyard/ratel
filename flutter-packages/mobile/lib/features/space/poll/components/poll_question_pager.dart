@@ -31,6 +31,8 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
   void initState() {
     super.initState();
 
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+
     _answers = List<Answer?>.filled(widget.poll.questions.length, null);
 
     final prev = widget.poll.myResponse;
@@ -45,9 +47,14 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     final firstUnanswered = _answers.indexWhere((a) => a == null);
     _index = firstUnanswered == -1 ? 0 : firstUnanswered;
 
+    logger.d(
+      "date time: ${now} ${widget.poll.startedAt} ${widget.poll.endedAt}",
+    );
     _readOnly =
         (widget.poll.myResponse != null && !widget.poll.responseEditable) ||
-        (widget.isFinished);
+        (widget.isFinished) ||
+        (now < widget.poll.startedAt) ||
+        (now > widget.poll.endedAt);
   }
 
   QuestionModel get _currentQuestion => widget.poll.questions[_index];
