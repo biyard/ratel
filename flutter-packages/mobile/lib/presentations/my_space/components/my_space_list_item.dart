@@ -19,7 +19,7 @@ class MySpaceListItem extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
+          padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
           child: Column(
             children: [
               Row(
@@ -32,6 +32,8 @@ class MySpaceListItem extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
                           children: [
                             _StatusChip(
                               label: _isClosed ? 'Closed' : 'Participating',
@@ -66,7 +68,6 @@ class MySpaceListItem extends StatelessWidget {
                               : defaultProfileImage,
                           displayName: item.authorDisplayName,
                         ),
-                        6.vgap,
                       ],
                     ),
                   ),

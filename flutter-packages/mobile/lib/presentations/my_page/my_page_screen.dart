@@ -113,7 +113,7 @@ class MyPageDivider extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: double.infinity,
-      height: 1,
+      height: 0.5,
       child: ColoredBox(color: Color(0xff464646)),
     );
   }
