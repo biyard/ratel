@@ -24,34 +24,13 @@ class DetailScrollContent extends StatelessWidget {
     return fixed;
   }
 
-  String _relativeTime(int millis) {
-    final dt = DateTime.fromMillisecondsSinceEpoch(
-      millis,
-      isUtc: true,
-    ).toLocal();
-    final now = DateTime.now();
-    final diff = now.difference(dt);
-
-    if (diff.inDays >= 7) {
-      final w = (diff.inDays / 7).floor();
-      return '${w}w ago';
-    }
-    if (diff.inDays >= 1) {
-      return '${diff.inDays}d ago';
-    }
-    if (diff.inHours >= 1) {
-      return '${diff.inHours}h ago';
-    }
-    if (diff.inMinutes >= 1) {
-      return '${diff.inMinutes}m ago';
-    }
-    return 'now';
-  }
-
   @override
   Widget build(BuildContext context) {
     final fixedHtml = normalizeHtmlColors(post.htmlContents);
     logger.d('htmlContents = $fixedHtml');
+
+    final createdAt = fromTimestampToDate(post.createdAt);
+    final relativeTime = formatRelativeTime(createdAt);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -62,7 +41,7 @@ class DetailScrollContent extends StatelessWidget {
           children: [
             _DetailHeaderSection(
               post: post,
-              relativeTime: _relativeTime(post.createdAt),
+              relativeTime: relativeTime,
               isLiked: isLiked,
               isLiking: isLiking,
               onToggleLike: onToggleLike,

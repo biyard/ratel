@@ -21,24 +21,6 @@ class CommentItem extends StatelessWidget {
   final bool isReported;
   final Future<void> Function(String commentSk)? onReport;
 
-  String _relativeTime(int secs) {
-    final dt = DateTime.fromMillisecondsSinceEpoch(
-      secs * 1000,
-      isUtc: true,
-    ).toLocal();
-    final now = DateTime.now();
-    final diff = now.difference(dt);
-
-    if (diff.inDays >= 7) {
-      final w = (diff.inDays / 7).floor();
-      return '${w}w ago';
-    }
-    if (diff.inDays >= 1) return '${diff.inDays}d ago';
-    if (diff.inHours >= 1) return '${diff.inHours}h ago';
-    if (diff.inMinutes >= 1) return '${diff.inMinutes}m ago';
-    return 'now';
-  }
-
   String _plainContent(String raw) {
     final noTags = raw.replaceAll(RegExp(r'<[^>]*>'), '');
     return noTags.trim();
@@ -69,7 +51,8 @@ class CommentItem extends StatelessWidget {
     return Obx(() {
       final textTheme = Theme.of(context).textTheme;
       final content = _plainContent(comment.content);
-      final timeText = _relativeTime(comment.updatedAt);
+      final time = fromTimestampToDate(comment.updatedAt);
+      final timeText = formatRelativeTime(time);
 
       final isLiking = isLikingCommentOf(comment.sk);
       final liked = isCommentLiked(comment.sk, fallback: comment.liked == true);
