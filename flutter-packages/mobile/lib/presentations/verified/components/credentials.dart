@@ -22,8 +22,8 @@ class Credentials extends StatefulWidget {
 }
 
 class _CredentialsState extends State<Credentials> {
-  static const double _minSize = 0.20;
-  static const double _openSize = 0.60;
+  static const double _minSize = 0.40;
+  static const double _openSize = 0.95;
   static const double _maxSize = 0.7;
 
   var crypto = false;

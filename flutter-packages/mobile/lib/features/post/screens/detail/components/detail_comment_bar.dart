@@ -29,9 +29,9 @@ class DetailCommentBar extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (_) {
         return DraggableScrollableSheet(
-          initialChildSize: 0.5,
-          minChildSize: 0.3,
-          maxChildSize: 0.9,
+          initialChildSize: 0.7,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
           expand: false,
           builder: (context, scrollController) {
             return _CommentBottomSheet(

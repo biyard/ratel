@@ -31,7 +31,7 @@ class FeedSummaryModel {
   final int? rewards;
 
   final List<String> urls;
-  final bool liked;
+  bool liked;
 
   FeedSummaryModel({
     required this.pk,
@@ -453,11 +453,11 @@ class FeedModel {
   final List<PostCommentModel> comments;
   final List<PostArtworkMetadataModel> artworkMetadata;
   final PostRepostModel? repost;
-  final bool isLiked;
+  bool isLiked;
   final bool isReport;
   final int permissions;
 
-  const FeedModel({
+  FeedModel({
     required this.post,
     List<PostCommentModel>? comments,
     List<PostArtworkMetadataModel>? artworkMetadata,

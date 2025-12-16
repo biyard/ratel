@@ -44,6 +44,7 @@ class SpaceRequirementScreen extends GetWidget<SpaceRequirementController> {
                 child: PollQuestionPager(
                   spacePk: controller.spacePk,
                   poll: poll,
+                  isFinished: controller.space?.isFinished ?? false,
                   onSubmit: (answers) {
                     logger.d("answer: $answers");
                     controller.respondAnswers(answers);
