@@ -50,7 +50,6 @@ class AnalyzeRow extends StatelessWidget {
                       Text(
                         'SURVEY',
                         style: TextStyle(
-                          fontFamily: 'Raleway',
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                           height: 20 / 13,
@@ -61,7 +60,6 @@ class AnalyzeRow extends StatelessWidget {
                       Text(
                         '$questionCount QUESTIONS',
                         style: TextStyle(
-                          fontFamily: 'Raleway',
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                           height: 20 / 13,
@@ -76,7 +74,6 @@ class AnalyzeRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: 'Raleway',
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
                       height: 24 / 16,
@@ -105,7 +102,6 @@ class AnalyzeRow extends StatelessWidget {
                 child: Text(
                   "View Results",
                   style: TextStyle(
-                    fontFamily: 'Raleway',
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
                     height: 20 / 13,

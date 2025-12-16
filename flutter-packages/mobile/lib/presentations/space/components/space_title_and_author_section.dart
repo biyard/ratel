@@ -16,7 +16,6 @@ class SpaceTitleAndAuthorSection extends StatelessWidget {
         Text(
           space.title,
           style: const TextStyle(
-            fontFamily: 'Raleway',
             fontWeight: FontWeight.w700,
             fontSize: 24,
             height: 32 / 24,

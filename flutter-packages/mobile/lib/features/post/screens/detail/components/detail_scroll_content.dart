@@ -74,7 +74,6 @@ class DetailScrollContent extends StatelessWidget {
                 'p': Style(
                   fontSize: FontSize(15),
                   lineHeight: LineHeight(1.6),
-                  fontFamily: 'Raleway',
                   color: Colors.white,
                 ),
               },

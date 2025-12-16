@@ -75,7 +75,6 @@ class IntroScreen extends GetWidget<IntroController> {
                   child: Text(
                     isLast ? 'GET STARTED' : 'NEXT',
                     style: TextStyle(
-                      fontFamily: 'Raleway',
                       fontStyle: FontStyle.normal,
                       fontWeight: FontWeight.w700,
                       fontSize: 16,
@@ -116,7 +115,6 @@ class OnboardingPage extends StatelessWidget {
           title1,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontFamily: 'Raleway',
             fontStyle: FontStyle.normal,
             fontWeight: FontWeight.w900,
             fontSize: 36,
@@ -127,7 +125,6 @@ class OnboardingPage extends StatelessWidget {
           title2,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontFamily: 'Raleway',
             fontStyle: FontStyle.normal,
             fontWeight: FontWeight.w900,
             fontSize: 36,
@@ -139,7 +136,6 @@ class OnboardingPage extends StatelessWidget {
           description,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontFamily: 'Raleway',
             fontStyle: FontStyle.normal,
             fontWeight: FontWeight.w400,
             fontSize: 12,

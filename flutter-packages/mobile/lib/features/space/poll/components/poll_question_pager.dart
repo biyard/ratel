@@ -114,7 +114,6 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
                       'Submit Survey',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        fontFamily: 'Raleway',
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         decoration: TextDecoration.none,
@@ -138,7 +137,6 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
                 child: Text(
                   'Once you submit your response, it cannot be changed.\nPlease double-check before submitting.',
                   style: TextStyle(
-                    fontFamily: 'Inter',
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                     height: 1.5,
@@ -165,7 +163,6 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
                       child: const Text(
                         'Cancel',
                         style: TextStyle(
-                          fontFamily: 'Raleway',
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                           decoration: TextDecoration.none,
@@ -192,7 +189,6 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
                       child: const Text(
                         'Submit',
                         style: TextStyle(
-                          fontFamily: 'Raleway',
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
                           decoration: TextDecoration.none,
@@ -493,7 +489,6 @@ class _NavButton extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              fontFamily: 'Raleway',
               fontWeight: FontWeight.w600,
               fontSize: 14,
               color: enabled

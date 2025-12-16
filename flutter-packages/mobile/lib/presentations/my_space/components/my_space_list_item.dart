@@ -53,7 +53,6 @@ class MySpaceListItem extends StatelessWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
-                                  fontFamily: 'Raleway',
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 18,
