@@ -8,7 +8,7 @@ class SpaceTitleAndAuthorSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final created = DateTime.fromMillisecondsSinceEpoch(space.createdAt);
-    final relative = _relativeTime(created);
+    final relative = formatRelativeTime(created);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,24 +52,4 @@ class SpaceTitleAndAuthorSection extends StatelessWidget {
       ],
     );
   }
-}
-
-String _relativeTime(DateTime created) {
-  final now = DateTime.now();
-  final diff = now.difference(created);
-
-  if (diff.inDays >= 7) {
-    final w = (diff.inDays / 7).floor();
-    return '${w}w ago';
-  }
-  if (diff.inDays >= 1) {
-    return '${diff.inDays}d ago';
-  }
-  if (diff.inHours >= 1) {
-    return '${diff.inHours}h ago';
-  }
-  if (diff.inMinutes >= 1) {
-    return '${diff.inMinutes}m ago';
-  }
-  return 'Just now';
 }
