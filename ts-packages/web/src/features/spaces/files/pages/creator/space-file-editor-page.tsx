@@ -51,19 +51,19 @@ export function SpaceFileEditorPage({ spacePk }: SpacePathProps) {
       <Row className="justify-between items-center mb-4">
         <Row className="gap-2">
           <Button
-            variant={activeTab === 'all' ? 'primary' : 'secondary'}
+            variant={activeTab === 'all' ? 'primary' : 'default'}
             onClick={() => setActiveTab('all')}
           >
             {t('tab_all_files')}
           </Button>
           <Button
-            variant={activeTab === 'overview' ? 'primary' : 'secondary'}
+            variant={activeTab === 'overview' ? 'primary' : 'default'}
             onClick={() => setActiveTab('overview')}
           >
             {t('tab_overview')}
           </Button>
           <Button
-            variant={activeTab === 'boards' ? 'primary' : 'secondary'}
+            variant={activeTab === 'boards' ? 'primary' : 'default'}
             onClick={() => setActiveTab('boards')}
           >
             {t('tab_boards')}
