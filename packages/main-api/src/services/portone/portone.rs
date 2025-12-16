@@ -107,13 +107,7 @@ impl PortOne {
             get_now_timestamp_micros()
         );
 
-        let notice_urls = if conf.is_local() {
-            let ip = conf.ip_address();
-            warn!("Using local IP address for notice_urls: {}", ip);
-            vec![format!("http://{ip}:3000/hooks/portone")]
-        } else {
-            vec![format!("https://{}/hooks/portone", conf.domain)]
-        };
+        let notice_urls = portone_conf.notice_urls();
 
         let body = BillingKeyPaymentRequest {
             store_id: portone_conf.store_id.to_string(),
@@ -164,13 +158,7 @@ impl PortOne {
             get_now_timestamp_micros(),
         );
 
-        let notice_urls = if conf.is_local() {
-            let ip = conf.ip_address();
-            warn!("Using local IP address for notice_urls: {}", ip);
-            vec![format!("http://{ip}:3000/hooks/portone")]
-        } else {
-            vec![format!("https://{}/hooks/portone", conf.domain)]
-        };
+        let notice_urls = portone_conf.notice_urls();
 
         let payment = BillingKeyPaymentRequest {
             store_id: portone_conf.store_id.to_string(),
