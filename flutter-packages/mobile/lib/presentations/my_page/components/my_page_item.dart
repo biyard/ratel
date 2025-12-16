@@ -24,17 +24,17 @@ class MyPageItem extends StatelessWidget {
         title,
         style: const TextStyle(
           color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          height: 1.2,
+          fontSize: 17,
+          fontWeight: FontWeight.w700,
+          height: 24 / 17,
         ),
       ),
       subtitle: Text(
         subtitle,
         style: const TextStyle(
-          color: AppColors.neutral400,
+          color: AppColors.neutral300,
           fontSize: 13,
-          height: 1.2,
+          height: 20 / 13,
         ),
       ),
       trailing: const Icon(
@@ -42,7 +42,7 @@ class MyPageItem extends StatelessWidget {
         color: AppColors.neutral500,
         size: 20,
       ),
-      minVerticalPadding: 10,
+      minVerticalPadding: 15,
     );
   }
 }
