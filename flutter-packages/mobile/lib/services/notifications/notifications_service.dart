@@ -26,6 +26,40 @@ class NotificationsService extends GetxService {
 
   String? _currentToken;
 
+  Future<void> debugLocalNotification() async {
+    logger.d('debugLocalNotification called >>>');
+
+    const androidDetails = AndroidNotificationDetails(
+      'default_channel',
+      'Default',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+    );
+    const darwinDetails = DarwinNotificationDetails(
+      presentAlert: true,
+      presentBadge: true,
+      presentSound: true,
+    );
+    const details = NotificationDetails(
+      android: androidDetails,
+      iOS: darwinDetails,
+    );
+
+    await _flutterLocal.show(
+      0,
+      'iOS Test Notification',
+      'This is a local test notification.',
+      details,
+      payload: jsonEncode(<String, dynamic>{
+        'type': 'space_post',
+        'space_pk': 'SPACE#debug',
+        'post_pk': 'POST#debug',
+      }),
+    );
+
+    logger.d('debugLocalNotification show() completed');
+  }
+
   Future<String> getOrCreateDeviceId() async {
     const deviceIdKey = 'ratel_device_id';
     final prefs = await SharedPreferences.getInstance();
@@ -41,11 +75,17 @@ class NotificationsService extends GetxService {
 
   Future<void> _initFcm() async {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const darwinInit = DarwinInitializationSettings();
+    const darwinInit = DarwinInitializationSettings(
+      requestAlertPermission: true,
+      requestBadgePermission: true,
+      requestSoundPermission: true,
+    );
+
     const initSettings = InitializationSettings(
       android: androidInit,
       iOS: darwinInit,
     );
+
     await _flutterLocal.initialize(
       initSettings,
       onDidReceiveNotificationResponse: (resp) {
@@ -166,8 +206,55 @@ class NotificationsService extends GetxService {
   }
 
   void _handleClick(Map<String, dynamic> data) {
+    logger.d('Notification clicked: $data');
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _navigateFromNotification(data);
+    });
+  }
+
+  void _navigateFromNotification(Map<String, dynamic> data) {
+    final deeplink = data['deeplink'] as String?;
+    if (deeplink != null && deeplink.isNotEmpty) {
+      logger.d('Notification deeplink: $deeplink');
+
+      Uri uri;
+      try {
+        uri = Uri.parse(deeplink);
+      } catch (e) {
+        logger.e('Invalid deeplink: $deeplink, error=$e');
+        uri = Uri();
+      }
+
+      logger.d(
+        'uri.scheme=${uri.scheme}, host=${uri.host}, pathSegments=${uri.pathSegments}',
+      );
+
+      if (uri.scheme == 'ratelapp') {
+        if (uri.host == 'space') {
+          final segments = uri.pathSegments;
+          logger.d('space deeplink segments: $segments');
+
+          if (segments.isNotEmpty) {
+            final encodedPk = segments[0];
+            logger.d('encodedPk from deeplink: $encodedPk');
+
+            Get.rootDelegate.toNamed(spaceWithPk(encodedPk));
+            return;
+          }
+        }
+      }
+
+      if (uri.scheme.isEmpty) {
+        logger.d('Navigate using raw deeplink as route: $deeplink');
+        Get.rootDelegate.toNamed(deeplink);
+        return;
+      }
+    }
+
     final route = data['route'] as String?;
     if (route != null && route.isNotEmpty) {
+      logger.d('Navigate using data.route: $route');
       Get.rootDelegate.toNamed(route);
       return;
     }
@@ -177,6 +264,9 @@ class NotificationsService extends GetxService {
       final spacePk = data['space_pk'] as String?;
       final postPk = data['post_pk'] as String?;
       if (spacePk != null && postPk != null) {
+        logger.d(
+          'Navigate using type=space_post: space=$spacePk, post=$postPk',
+        );
         Get.rootDelegate.toNamed(AppRoutes.spacePostWithPk(spacePk, postPk));
       }
     }

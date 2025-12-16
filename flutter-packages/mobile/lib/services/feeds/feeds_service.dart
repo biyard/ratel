@@ -162,6 +162,7 @@ class FeedsService extends GetxService {
       s.title = detail.post.title;
       s.likes = detail.post.likes;
       s.comments = detail.post.comments;
+      s.liked = detail.isLiked == true;
     }
 
     updateList(summaries);
@@ -169,5 +170,17 @@ class FeedsService extends GetxService {
 
     summaries.refresh();
     homeFeeds.refresh();
+  }
+
+  void patchDetailFromSummary(FeedSummaryModel summary) {
+    final pk = summary.pk;
+    final detail = details[pk];
+    if (detail == null) return;
+
+    detail.post.likes = summary.likes;
+    detail.post.comments = summary.comments;
+    detail.isLiked = summary.liked == true;
+
+    details[pk] = detail;
   }
 }

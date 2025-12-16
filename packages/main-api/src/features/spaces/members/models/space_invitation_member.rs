@@ -1,5 +1,6 @@
 use futures::future::try_join_all;
 use serde_json::json;
+use urlencoding::encode;
 
 use super::*;
 use crate::features::spaces::members::{
@@ -163,8 +164,12 @@ impl SpaceInvitationMember {
         let body = format!("Participate new space: {space_title}");
 
         let user_pks: Vec<Partition> = invites.into_iter().map(|m| m.user_pk).collect();
+        let pk_str = space.pk.to_string();
+        let space_pk_encoded = encode(&pk_str);
+        let deeplink = format!("ratelapp://space/{space_pk_encoded}");
 
-        UserNotification::send_to_users(dynamo, fcm, &user_pks, title, body).await?;
+        UserNotification::send_to_users(dynamo, fcm, &user_pks, title, body, Some(deeplink))
+            .await?;
 
         tracing::info!(
             "SpaceInvitationMember::send_notification: done for space_pk={}",

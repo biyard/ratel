@@ -63,7 +63,7 @@ class NotificationList extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 16),
               child: SizedBox(
                 width: double.infinity,
-                height: 1,
+                height: 0.5,
                 child: ColoredBox(color: Color(0xff464646)),
               ),
             );
@@ -119,7 +119,7 @@ class NotificationListItem extends StatelessWidget {
     final isUnread = notification.isUnread;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 15, 16, 15),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -128,6 +128,7 @@ class NotificationListItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
                       title,
@@ -135,6 +136,15 @@ class NotificationListItem extends StatelessWidget {
                         color: AppColors.primary,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
+                        height: 1.2,
+                      ),
+                    ),
+                    Text(
+                      createdText,
+                      style: const TextStyle(
+                        color: AppColors.neutral500,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
                         height: 1.2,
                       ),
                     ),
@@ -157,51 +167,9 @@ class NotificationListItem extends StatelessWidget {
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                    fontWeight: FontWeight.w400,
                     height: 1.3,
                   ),
-                ),
-                10.vgap,
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      createdText,
-                      style: const TextStyle(
-                        color: AppColors.neutral500,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        height: 1.2,
-                      ),
-                    ),
-                    // Row(
-                    //   children: [
-                    //     if (onMarkRead != null)
-                    //       InkWell(
-                    //         onTap: onMarkRead,
-                    //         child: Icon(
-                    //           notification.isRead
-                    //               ? Icons.check_circle
-                    //               : Icons.check_circle_outline,
-                    //           size: 18,
-                    //           color: notification.isRead
-                    //               ? AppColors.primary
-                    //               : AppColors.neutral500,
-                    //         ),
-                    //       ),
-                    //     20.gap,
-                    //     if (onDelete != null)
-                    //       InkWell(
-                    //         onTap: onDelete,
-                    //         child: const Icon(
-                    //           Icons.delete_outline,
-                    //           size: 18,
-                    //           color: AppColors.neutral500,
-                    //         ),
-                    //       ),
-                    //   ],
-                    // ),
-                  ],
                 ),
               ],
             ),

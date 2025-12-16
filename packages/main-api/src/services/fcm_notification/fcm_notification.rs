@@ -102,6 +102,20 @@ impl FCMService {
         Ok(())
     }
 
+    pub async fn send_notification_with_deeplink(
+        &mut self,
+        title: &str,
+        body: &str,
+        device_tokens: Vec<String>,
+        deeplink: &str,
+    ) -> Result<()> {
+        let mut data = HashMap::new();
+        data.insert("deeplink".to_string(), deeplink.to_string());
+
+        self.send_notification(title, body, device_tokens, Some(data))
+            .await
+    }
+
     pub async fn send_notification(
         &mut self,
         title: &str,

@@ -32,7 +32,7 @@ class SpaceMiddleware extends GetMiddleware {
       return route;
     }
 
-    if (!space.havePreTasks || space.isAdmin) {
+    if (!space.havePreTasks || space.isAdmin || space.isFinished) {
       return route;
     }
 

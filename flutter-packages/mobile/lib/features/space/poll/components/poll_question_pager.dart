@@ -7,11 +7,13 @@ class PollQuestionPager extends StatefulWidget {
   const PollQuestionPager({
     super.key,
     required this.spacePk,
+    required this.isFinished,
     required this.poll,
     required this.onSubmit,
   });
 
   final String spacePk;
+  final bool isFinished;
   final PollModel poll;
   final ValueChanged<List<Answer>> onSubmit;
 
@@ -43,7 +45,9 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     final firstUnanswered = _answers.indexWhere((a) => a == null);
     _index = firstUnanswered == -1 ? 0 : firstUnanswered;
 
-    _readOnly = widget.poll.myResponse != null && !widget.poll.responseEditable;
+    _readOnly =
+        (widget.poll.myResponse != null && !widget.poll.responseEditable) ||
+        (widget.isFinished);
   }
 
   QuestionModel get _currentQuestion => widget.poll.questions[_index];

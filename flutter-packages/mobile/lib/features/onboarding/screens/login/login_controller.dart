@@ -23,6 +23,7 @@ class LoginController extends BaseController {
       final res = await auth.loginWithPassword(email.value, password.value);
       if (res != null) {
         Get.rootDelegate.offNamed(AppRoutes.mainScreen);
+        Biyard.info("Login Successed.");
       } else {
         Biyard.error(
           "Failed to login",
