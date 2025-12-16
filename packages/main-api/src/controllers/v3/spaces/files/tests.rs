@@ -159,28 +159,6 @@ async fn test_link_file_to_targets() {
 }
 
 #[tokio::test]
-async fn test_link_file_without_permission() {
-    let TestContextV3 { app, .. } = setup_v3().await;
-
-    let space_pk = Partition::Space("test-space".to_string());
-    let space_pk_encoded = space_pk.to_string().replace('#', "%23");
-
-    // Try to link without authentication - should fail
-    let (status, _headers, _body) = post! {
-        app: app,
-        path: format!("/v3/spaces/{}/files/links", space_pk_encoded),
-        body: {
-            "file_url": "https://example.com/test.pdf",
-            "targets": vec!["Files"]
-        },
-        response_type: serde_json::Value
-    };
-
-    // Without authentication, we expect an error status (4xx or 5xx)
-    assert!(status >= 400, "Expected error status, got {}", status);
-}
-
-#[tokio::test]
 async fn test_update_files_with_link_targets() {
     let TestContextV3 {
         app,

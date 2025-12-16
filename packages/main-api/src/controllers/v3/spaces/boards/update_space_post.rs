@@ -3,9 +3,12 @@ use crate::File;
 use crate::{
     AppState, Error, Permissions,
     controllers::v3::spaces::{SpacePath, SpacePathParam, SpacePostPath, SpacePostPathParam},
-    features::spaces::boards::{
-        dto::space_post_response::SpacePostResponse,
-        models::{space_category::SpaceCategory, space_post::SpacePost},
+    features::spaces::{
+        boards::{
+            dto::space_post_response::SpacePostResponse,
+            models::{space_category::SpaceCategory, space_post::SpacePost},
+        },
+        files::{FileLink, FileLinkTarget, SpaceFile},
     },
     models::{SpaceCommon, feed::Post, team::Team, user::User},
     types::{EntityType, Partition, TeamGroupPermission, author::Author},
@@ -69,6 +72,39 @@ pub async fn update_space_post_handler(
         .with_ended_at(req.ended_at.clone())
         .execute(&dynamo.client)
         .await?;
+
+    // Link files to both Files tab and Board
+    let post_id = match &v.sk {
+        EntityType::SpacePost(id) => id.to_string(),
+        _ => "".to_string(),
+    };
+
+    // Add files to SpaceFile entity (for Files tab)
+    if !req.files.is_empty() {
+        SpaceFile::add_files(&dynamo.client, space_pk.clone(), req.files.clone()).await?;
+    }
+
+    for file in &req.files {
+        if let Some(url) = &file.url {
+            // Link to Files tab
+            FileLink::add_link_target(
+                &dynamo.client,
+                space_pk.clone(),
+                url.clone(),
+                FileLinkTarget::Files,
+            )
+            .await?;
+
+            // Link to Board post
+            FileLink::add_link_target(
+                &dynamo.client,
+                space_pk.clone(),
+                url.clone(),
+                FileLinkTarget::Board(post_id.clone()),
+            )
+            .await?;
+        }
+    }
 
     Ok(Json(v.into()))
 }
