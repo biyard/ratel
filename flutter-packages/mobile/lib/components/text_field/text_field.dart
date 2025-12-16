@@ -12,6 +12,9 @@ class AppTextField extends StatelessWidget {
   final InputBorder? border;
   final Color? bgColor;
 
+  final InputBorder? enabledBorderOverride;
+  final InputBorder? focusedBorderOverride;
+
   const AppTextField({
     super.key,
     required this.hint,
@@ -24,6 +27,9 @@ class AppTextField extends StatelessWidget {
     this.readOnly = false,
     this.border,
     this.bgColor,
+
+    this.enabledBorderOverride,
+    this.focusedBorderOverride,
   });
 
   @override
@@ -56,12 +62,14 @@ class AppTextField extends StatelessWidget {
           vertical: 10,
         ),
         enabledBorder:
+            enabledBorderOverride ??
             border ??
             OutlineInputBorder(
               borderRadius: BorderRadius.circular(rounded),
               borderSide: BorderSide.none,
             ),
         focusedBorder:
+            focusedBorderOverride ??
             border ??
             OutlineInputBorder(
               borderRadius: BorderRadius.circular(rounded),

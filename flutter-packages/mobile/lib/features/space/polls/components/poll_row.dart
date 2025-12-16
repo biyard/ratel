@@ -65,7 +65,6 @@ class PollRow extends StatelessWidget {
                       Text(
                         'SURVEY',
                         style: TextStyle(
-                          fontFamily: 'Raleway',
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                           height: 20 / 13,
@@ -76,7 +75,6 @@ class PollRow extends StatelessWidget {
                       Text(
                         '$questionCount QUESTIONS',
                         style: TextStyle(
-                          fontFamily: 'Raleway',
                           fontWeight: FontWeight.w600,
                           fontSize: 13,
                           height: 20 / 13,
@@ -91,7 +89,6 @@ class PollRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: 'Raleway',
                       fontWeight: FontWeight.w600,
                       fontSize: 16,
                       height: 24 / 16,
@@ -120,7 +117,6 @@ class PollRow extends StatelessWidget {
                 child: Text(
                   _buttonLabel(),
                   style: TextStyle(
-                    fontFamily: 'Raleway',
                     fontWeight: FontWeight.w600,
                     fontSize: 13,
                     height: 20 / 13,

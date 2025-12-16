@@ -9,7 +9,10 @@ class MySpaceScreen extends GetWidget<MySpaceController> {
     return Layout<MySpaceController>(
       enableSafeArea: false,
       scrollable: false,
-      child: _MySpaceList(controller: controller),
+      child: SafeArea(
+        bottom: false,
+        child: _MySpaceList(controller: controller),
+      ),
     );
   }
 }

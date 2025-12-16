@@ -120,6 +120,13 @@ abstract class Assets {
 
   static const String mainLogo = 'assets/icons/main_logo.svg';
 
+  static const String bottomHome = 'assets/icons/bottom/home.svg';
+  static const String bottomCreate = 'assets/icons/bottom/create.svg';
+  static const String bottomNotification =
+      'assets/icons/bottom/notification.svg';
+  static const String bottomPalace = 'assets/icons/bottom/palace.svg';
+  static const String bottomUser = 'assets/icons/bottom/user.svg';
+
   static final addIcon = SvgPicture.asset(add, width: 15, height: 15);
   static final backIcon = SvgPicture.asset(back, width: 16, height: 16);
   static final badgeImage = SvgPicture.asset(badge, width: 20, height: 20);
