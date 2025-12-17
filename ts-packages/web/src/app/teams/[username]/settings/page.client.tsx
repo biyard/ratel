@@ -280,25 +280,28 @@ export default function SettingsPage({ username }: { username: string }) {
             data-pw="team-description-input"
           />
         </Col>
-        <Row className="items-center">
-          <label className="w-35 font-bold text-text-primary">
-            {t('dao_address')}
-          </label>
-          {team.dao_address ? (
-            <span className="text-sm text-text-primary break-all">
-              {team.dao_address}
-            </span>
-          ) : (
-            <Button
-              variant="primary"
-              onClick={handleActivateDao}
-              disabled={isConnectingWallet}
-              data-pw="team-dao-activate-button"
-            >
-              {isConnectingWallet ? t('activating_dao') : t('activate_dao')}
-            </Button>
-          )}
-        </Row>
+        {config.experiment && (
+          <Row className="items-center">
+            <label className="w-35 font-bold text-text-primary">
+              {t('dao_address')}
+            </label>
+            {team.dao_address ? (
+              <span className="text-sm text-text-primary break-all">
+                {team.dao_address}
+              </span>
+            ) : (
+              <Button
+                variant="primary"
+                onClick={handleActivateDao}
+                disabled={isConnectingWallet}
+                data-pw="team-dao-activate-button"
+              >
+                {isConnectingWallet ? t('activating_dao') : t('activate_dao')}
+              </Button>
+            )}
+          </Row>
+        )}
+
         <Row className="justify-end py-5">
           <Button
             disabled={invalidInput}
