@@ -12,7 +12,9 @@ contract StateOperator {
     bool private _ready = false;
 
     constructor(address owner) {
-        require(_operators.add(owner, false), "failed to add operator");
+        require(owner != address(0), "invalid owner");
+        bool ok = _operators.add(owner, true); 
+        require(ok, "internal error");
         _allowPublicRead = true;
     }
 

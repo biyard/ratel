@@ -102,25 +102,25 @@ contract DaoRegistryStateV1 is StateOperator {
         _namedAddresses.add(name, addr, false);
     }
 
-    function addExtension(RegisteredExtension memory ext) public canWrite {
-        _extensions.add(ext);
-    }
+    // function addExtension(RegisteredExtension memory ext) public canWrite {
+    //     _extensions.add(ext);
+    // }
 
-    function updateExtension(RegisteredExtension memory ext) public canWrite {
-        _extensions.update(ext);
-    }
+    // function updateExtension(RegisteredExtension memory ext) public canWrite {
+    //     _extensions.update(ext);
+    // }
 
-    function removeExtension(string calldata name) public canWrite {
-        _extensions.del(name);
-    }
+    // function removeExtension(string calldata name) public canWrite {
+    //     _extensions.del(name);
+    // }
 
-    function getExtension(string memory name) public view canRead returns (RegisteredExtension memory) {
-        return _extensions.get(name);
-    }
+    // function getExtension(string memory name) public view canRead returns (RegisteredExtension memory) {
+    //     return _extensions.get(name);
+    // }
 
-    function listExtensions() public view canRead returns (RegisteredExtension[] memory) {
-        return _extensions.list();
-    }
+    // function listExtensions() public view canRead returns (RegisteredExtension[] memory) {
+    //     return _extensions.list();
+    // }
 
     function addProposal(ProposalSummary memory p) external canWrite returns (bytes memory) {
         return _proposals.add(p, false);
