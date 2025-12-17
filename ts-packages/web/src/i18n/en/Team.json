@@ -50,5 +50,10 @@
   "team_owner": "Team Owner",
   "remove_from_group": "Remove from group",
   "member_removed_from_group": "Member removed from {{groupName}}",
-  "failed_remove_member_from_group": "Failed to remove member from group"
+  "failed_remove_member_from_group": "Failed to remove member from group",
+
+  "failed_active_dao": "Failed to active DAO. please check gas fee and try again later.",
+  "dao_address": "DAO Address",
+  "activate_dao": "Activate DAO",
+  "activating_dao": "Activating DAO..."
 }

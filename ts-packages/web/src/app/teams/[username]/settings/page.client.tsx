@@ -68,8 +68,6 @@ export default function SettingsPage({ username }: { username: string }) {
     return <></>;
   }
 
-  console.log('team dao address: ', team?.dao_address);
-
   const handleContents = (evt: React.FormEvent<HTMLTextAreaElement>) => {
     setHtmlContents(evt.currentTarget.value);
   };
@@ -210,9 +208,7 @@ export default function SettingsPage({ username }: { username: string }) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       logger.error('Failed to activate DAO (deploy DaoRegistry)', e);
-      showErrorToast(
-        'Failed to active DAO. please check gas fee and try again later.',
-      );
+      showErrorToast(t('failed_active_dao'));
     } finally {
       setIsConnectingWallet(false);
     }
@@ -285,7 +281,9 @@ export default function SettingsPage({ username }: { username: string }) {
           />
         </Col>
         <Row className="items-center">
-          <label className="w-35 font-bold text-text-primary">DAO 주소</label>
+          <label className="w-35 font-bold text-text-primary">
+            {t('dao_address')}
+          </label>
           {team.dao_address ? (
             <span className="text-sm text-text-primary break-all">
               {team.dao_address}
@@ -297,7 +295,7 @@ export default function SettingsPage({ username }: { username: string }) {
               disabled={isConnectingWallet}
               data-pw="team-dao-activate-button"
             >
-              {isConnectingWallet ? 'Activating DAO...' : 'DAO 활성화'}
+              {isConnectingWallet ? t('activating_dao') : t('activate_dao')}
             </Button>
           )}
         </Row>
