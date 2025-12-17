@@ -213,6 +213,9 @@ export default function SettingsPage({ username }: { username: string }) {
             data-pw="team-description-input"
           />
         </Col>
+        {/* <Row>
+          <Button variant="primary">DAO 활성화</Button>
+        </Row> */}
         <Row className="justify-end py-5">
           <Button
             disabled={invalidInput}
