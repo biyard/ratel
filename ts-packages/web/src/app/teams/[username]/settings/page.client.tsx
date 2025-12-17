@@ -29,6 +29,12 @@ import { TeamGroupPermission } from '@/features/auth/utils/team-group-permission
 import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
 import { useUserInfo } from '@/hooks/use-user-info';
 
+import daoRegistryArtifact from '../../../../contracts/DaoRegistry.json';
+import daoRegistryStateV1Artifact from '../../../../contracts/DaoRegistryStateV1.json';
+import { ethers } from 'ethers';
+import { getKaiaSigner } from '@/lib/service/kaia-wallet-service';
+import { config } from '@/config';
+
 export default function SettingsPage({ username }: { username: string }) {
   const { t } = useTranslation('Team');
   const popup = usePopup();
@@ -36,14 +42,11 @@ export default function SettingsPage({ username }: { username: string }) {
   const { teams, updateSelectedTeam, setSelectedTeam } =
     useContext(TeamContext);
 
-  // Use v3 API to get team details with permissions
   const teamDetailQuery = useTeamDetailByUsername(username);
   const userInfo = useUserInfo();
 
-  // Get permissions directly from team detail response (no API calls!)
   const permissions = useTeamPermissionsFromDetail(teamDetailQuery.data);
 
-  // Get legacy team from context for backward compatibility
   const team = useMemo(() => {
     return teams.find((t) => t.username === username);
   }, [teams, username]);
@@ -53,6 +56,10 @@ export default function SettingsPage({ username }: { username: string }) {
   const [profileUrl, setProfileUrl] = useState(team?.profile_url || '');
   const [nickname, setNickname] = useState(team?.nickname);
   const [htmlContents, setHtmlContents] = useState(team?.html_contents);
+  const [isConnectingWallet, setIsConnectingWallet] = useState(false);
+  const [daoRegistryAddress, setDaoRegistryAddress] = useState<string | null>(
+    null,
+  );
 
   const deleteTeamPermission =
     permissions?.has(TeamGroupPermission.TeamAdmin) ?? false;
@@ -60,6 +67,7 @@ export default function SettingsPage({ username }: { username: string }) {
   if (!team) {
     return <></>;
   }
+
   const handleContents = (evt: React.FormEvent<HTMLTextAreaElement>) => {
     setHtmlContents(evt.currentTarget.value);
   };
@@ -83,14 +91,12 @@ export default function SettingsPage({ username }: { username: string }) {
               await teamsV3Api.deleteTeam(username);
               showInfoToast(t('success_delete_team'));
 
-              // Invalidate all team-related queries
               await queryClient.invalidateQueries({
                 predicate: (query) =>
                   query.queryKey[0]?.toString().includes('team') ||
                   query.queryKey[0]?.toString().includes('user-info'),
               });
 
-              // Invalidate all published feeds after deleting team
               await queryClient.invalidateQueries({
                 queryKey: feedKeys.list({
                   status: FeedStatus.Published,
@@ -130,7 +136,6 @@ export default function SettingsPage({ username }: { username: string }) {
         profile_url: profileUrl || undefined,
       });
 
-      // Refetch team data
       teamDetailQuery.refetch();
 
       updateSelectedTeam({
@@ -144,6 +149,71 @@ export default function SettingsPage({ username }: { username: string }) {
     } catch (e) {
       logger.error('Failed to update team:', e);
       showErrorToast(t('failed_update_team') || 'Failed to update team');
+    }
+  };
+
+  const handleActivateDao = async () => {
+    try {
+      setIsConnectingWallet(true);
+
+      const { signer, account } = await getKaiaSigner(
+        config.env === 'dev' || config.env === 'local' ? 'testnet' : 'mainnet',
+      );
+
+      logger.info('Connected wallet account (Kaia):', account);
+
+      const { abi: stateAbi, bytecode: stateBytecode } =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        daoRegistryStateV1Artifact as any;
+      const stateFactory = new ethers.ContractFactory(
+        stateAbi,
+        stateBytecode,
+        signer,
+      );
+      const stateContract = await stateFactory.deploy(account);
+      const stateDeployed = await stateContract.waitForDeployment();
+      const stateAddress = await stateDeployed.getAddress();
+      logger.info('DaoRegistryStateV1 deployed at:', stateAddress);
+
+      const { abi: registryAbi, bytecode: registryBytecode } =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        daoRegistryArtifact as any;
+      const daoName =
+        teamDetailQuery.data.nickname || teamDetailQuery.data.username || 'DAO';
+
+      const registryFactory = new ethers.ContractFactory(
+        registryAbi,
+        registryBytecode,
+        signer,
+      );
+
+      const registryContract = await registryFactory.deploy(
+        daoName,
+        stateAddress,
+        config.operator_address, // operator address
+      );
+      const registryDeployed = await registryContract.waitForDeployment();
+      const registryAddress = await registryDeployed.getAddress();
+      logger.info('DaoRegistry deployed at:', registryAddress);
+
+      setDaoRegistryAddress(registryAddress);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      logger.error('Failed to activate DAO (deploy DaoRegistry)', e);
+
+      if (e?.code === 'METAMASK_NOT_INSTALLED') {
+        showErrorToast('MetaMask is not installed');
+      } else if (e?.code === 'USER_REJECTED' || e?.code === 4001) {
+        showErrorToast('You rejected the wallet request');
+      } else if (e?.code === 'CHAIN_SWITCH_FAILED') {
+        showErrorToast('Failed to convert kaia network');
+      } else if (e?.code === 'NO_ACCOUNTS') {
+        showErrorToast('Wallet connection cancelled');
+      } else {
+        showErrorToast('Failed to activate DAO');
+      }
+    } finally {
+      setIsConnectingWallet(false);
     }
   };
 
@@ -213,9 +283,23 @@ export default function SettingsPage({ username }: { username: string }) {
             data-pw="team-description-input"
           />
         </Col>
-        {/* <Row>
-          <Button variant="primary">DAO 활성화</Button>
-        </Row> */}
+        <Row className="items-center">
+          <label className="w-35 font-bold text-text-primary">DAO 주소</label>
+          {daoRegistryAddress ? (
+            <span className="text-sm text-text-primary break-all">
+              {daoRegistryAddress}
+            </span>
+          ) : (
+            <Button
+              variant="primary"
+              onClick={handleActivateDao}
+              disabled={isConnectingWallet}
+              data-pw="team-dao-activate-button"
+            >
+              {isConnectingWallet ? 'Activating DAO...' : 'DAO 활성화'}
+            </Button>
+          )}
+        </Row>
         <Row className="justify-end py-5">
           <Button
             disabled={invalidInput}
