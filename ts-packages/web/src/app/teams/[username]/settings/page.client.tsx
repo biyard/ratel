@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useContext, useMemo, useState } from 'react';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useNavigate } from 'react-router';
-import { route } from '@/route';
+// import { route } from '@/route';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast, showInfoToast } from '@/lib/toast';
 
@@ -42,11 +42,14 @@ export default function SettingsPage({ username }: { username: string }) {
   const { teams, updateSelectedTeam, setSelectedTeam } =
     useContext(TeamContext);
 
+  // Use v3 API to get team details with permissions
   const teamDetailQuery = useTeamDetailByUsername(username);
   const userInfo = useUserInfo();
 
+  // Get permissions directly from team detail response (no API calls!)
   const permissions = useTeamPermissionsFromDetail(teamDetailQuery.data);
 
+  // Get legacy team from context for backward compatibility
   const team = useMemo(() => {
     return teams.find((t) => t.username === username);
   }, [teams, username]);
@@ -56,17 +59,16 @@ export default function SettingsPage({ username }: { username: string }) {
   const [profileUrl, setProfileUrl] = useState(team?.profile_url || '');
   const [nickname, setNickname] = useState(team?.nickname);
   const [htmlContents, setHtmlContents] = useState(team?.html_contents);
+  const [daoAddress, setDaoAddress] = useState(team?.dao_address);
   const [isConnectingWallet, setIsConnectingWallet] = useState(false);
-  const [daoRegistryAddress, setDaoRegistryAddress] = useState<string | null>(
-    null,
-  );
-
   const deleteTeamPermission =
     permissions?.has(TeamGroupPermission.TeamAdmin) ?? false;
 
   if (!team) {
     return <></>;
   }
+
+  console.log('team dao address: ', team?.dao_address);
 
   const handleContents = (evt: React.FormEvent<HTMLTextAreaElement>) => {
     setHtmlContents(evt.currentTarget.value);
@@ -91,12 +93,14 @@ export default function SettingsPage({ username }: { username: string }) {
               await teamsV3Api.deleteTeam(username);
               showInfoToast(t('success_delete_team'));
 
+              // Invalidate all team-related queries
               await queryClient.invalidateQueries({
                 predicate: (query) =>
                   query.queryKey[0]?.toString().includes('team') ||
                   query.queryKey[0]?.toString().includes('user-info'),
               });
 
+              // Invalidate all published feeds after deleting team
               await queryClient.invalidateQueries({
                 queryKey: feedKeys.list({
                   status: FeedStatus.Published,
@@ -121,7 +125,7 @@ export default function SettingsPage({ username }: { username: string }) {
       .withTitle('');
   };
 
-  const handleSave = async () => {
+  const handleSave = async (nextDaoAddress?: string) => {
     if (!teamDetailQuery.data) return;
 
     if (checkString(nickname ?? '') || checkString(htmlContents ?? '')) {
@@ -129,11 +133,15 @@ export default function SettingsPage({ username }: { username: string }) {
       return;
     }
 
+    const mergedDaoAddress =
+      nextDaoAddress ?? daoAddress ?? team.dao_address ?? undefined;
+
     try {
       await teamsV3Api.updateTeam(teamDetailQuery.data.id, {
         nickname: nickname || undefined,
         description: htmlContents || undefined,
         profile_url: profileUrl || undefined,
+        dao_address: mergedDaoAddress,
       });
 
       teamDetailQuery.refetch();
@@ -143,9 +151,12 @@ export default function SettingsPage({ username }: { username: string }) {
         nickname: nickname!,
         html_contents: htmlContents!,
         profile_url: profileUrl,
+        dao_address: mergedDaoAddress ?? null,
       });
 
-      navigate(route.teamByUsername(username));
+      setDaoAddress(mergedDaoAddress ?? null);
+
+      // navigate(route.teamByUsername(username));
     } catch (e) {
       logger.error('Failed to update team:', e);
       showErrorToast(t('failed_update_team') || 'Failed to update team');
@@ -186,32 +197,22 @@ export default function SettingsPage({ username }: { username: string }) {
         registryBytecode,
         signer,
       );
-
       const registryContract = await registryFactory.deploy(
         daoName,
         stateAddress,
-        config.operator_address, // operator address
+        config.operator_address,
       );
       const registryDeployed = await registryContract.waitForDeployment();
       const registryAddress = await registryDeployed.getAddress();
       logger.info('DaoRegistry deployed at:', registryAddress);
 
-      setDaoRegistryAddress(registryAddress);
+      await handleSave(registryAddress);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (e: any) {
       logger.error('Failed to activate DAO (deploy DaoRegistry)', e);
-
-      if (e?.code === 'METAMASK_NOT_INSTALLED') {
-        showErrorToast('MetaMask is not installed');
-      } else if (e?.code === 'USER_REJECTED' || e?.code === 4001) {
-        showErrorToast('You rejected the wallet request');
-      } else if (e?.code === 'CHAIN_SWITCH_FAILED') {
-        showErrorToast('Failed to convert kaia network');
-      } else if (e?.code === 'NO_ACCOUNTS') {
-        showErrorToast('Wallet connection cancelled');
-      } else {
-        showErrorToast('Failed to activate DAO');
-      }
+      showErrorToast(
+        'Failed to active DAO. please check gas fee and try again later.',
+      );
     } finally {
       setIsConnectingWallet(false);
     }
@@ -285,9 +286,9 @@ export default function SettingsPage({ username }: { username: string }) {
         </Col>
         <Row className="items-center">
           <label className="w-35 font-bold text-text-primary">DAO 주소</label>
-          {daoRegistryAddress ? (
+          {team.dao_address ? (
             <span className="text-sm text-text-primary break-all">
-              {daoRegistryAddress}
+              {team.dao_address}
             </span>
           ) : (
             <Button
@@ -305,7 +306,9 @@ export default function SettingsPage({ username }: { username: string }) {
             disabled={invalidInput}
             className={invalidInput ? 'bg-neutral-600' : 'bg-primary'}
             variant={'rounded_primary'}
-            onClick={handleSave}
+            onClick={async () => {
+              await handleSave();
+            }}
             data-pw="team-settings-save-button"
           >
             {t('save')}
