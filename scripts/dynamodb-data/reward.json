@@ -1,0 +1,17 @@
+{
+  "ratel-local-main": [
+    {
+      "PutRequest": {
+        "Item": {
+          "created_at": { "N": "1764227900883722" },
+          "updated_at": { "N": "1764227900883722" },
+          "sk": { "S": "POLL_RESPOND" },
+          "pk": { "S": "REWARD" },
+          "point": { "N": "10000" },
+          "period": { "S": "Once" },
+          "condition": { "S": "None" }
+        }
+      }
+    }
+  ]
+}

@@ -61,6 +61,32 @@ export class Controller {
       displayAmount = Math.round(displayAmount * 1000);
     }
 
+    if (this.user.data.has_billing_key) {
+      const receipt = await this.kpnPayment.mutation.mutateAsync({
+        membership,
+      });
+
+      if (!receipt.receipt) {
+        // TODO: handle downgrade membership
+        return;
+      }
+
+      // Show receipt modal
+      this.popup
+        .open(
+          <MembershipReceiptModal
+            receipt={receipt}
+            onClose={() => {
+              this.popup.close();
+            }}
+            t={this.t.receiptModal}
+          />,
+        )
+        .withTitle('Receipt');
+
+      return;
+    }
+
     try {
       const resp = await this.verification.mutateAsync();
       logger.debug('Identity verification successful:', resp);

@@ -2,6 +2,7 @@ use crate::{
     AppState, Error,
     constants::SESSION_KEY_USER_ID,
     models::{
+        PhoneVerification, PhoneVerificationQueryOption,
         email::{EmailVerification, EmailVerificationQueryOption},
         user::{User, UserEvmAddress, UserQueryOption, UserReferralCode},
     },
@@ -47,6 +48,10 @@ pub enum SignupType {
         password: String,
         code: String,
     },
+    Phone {
+        phone: String,
+        code: String,
+    },
     OAuth {
         provider: Provider,
         access_token: String,
@@ -76,6 +81,7 @@ pub async fn signup_handler(
             password,
             code,
         } => signup_with_email_password(&dynamo.client, req, email, password, code).await?,
+        SignupType::Phone { phone, code } => signup_with_phone(&dynamo.client, phone, code).await?,
         SignupType::OAuth {
             provider,
             access_token,
@@ -195,6 +201,45 @@ async fn signup_with_oauth(
         username,
         None,
     );
+
+    user.create(cli).await?;
+
+    Ok(user)
+}
+
+async fn signup_with_phone(
+    cli: &aws_sdk_dynamodb::Client,
+    phone: String,
+    code: String,
+) -> Result<User, Error> {
+    tracing::debug!("Signing up with phone: {}", phone);
+
+    let is_invalid = PhoneVerification::find_by_phone_and_code(
+        cli,
+        phone.clone(),
+        PhoneVerificationQueryOption::builder()
+            .sk(code.clone())
+            .limit(1),
+    )
+    .await?
+    .0
+    .len()
+        == 0;
+
+    #[cfg(feature = "bypass")]
+    let is_invalid = is_invalid && !code.eq("000000");
+
+    if is_invalid {
+        return Err(Error::InvalidVerificationCode);
+    }
+
+    let (users, _) = User::find_by_phone(cli, &phone, UserQueryOption::builder().limit(1)).await?;
+
+    if users.len() > 0 {
+        return Ok(users[0].clone());
+    }
+
+    let user = User::new_phone(phone);
 
     user.create(cli).await?;
 

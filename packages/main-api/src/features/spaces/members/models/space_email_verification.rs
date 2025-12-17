@@ -1,7 +1,8 @@
 use crate::Error;
 use crate::email_operation::EmailOperation;
-use crate::models::SpaceCommon;
 use crate::models::email_template::email_template::EmailTemplate;
+use crate::models::{SpaceCommon, UserNotification};
+use crate::services::fcm_notification::FCMService;
 use crate::{
     constants::{ATTEMPT_BLOCK_TIME, EXPIRATION_TIME, MAX_ATTEMPT_COUNT},
     types::*,
@@ -15,6 +16,7 @@ use bdk::prelude::*;
 use rand::Rng;
 use regex::Regex;
 use serde_json::json;
+use urlencoding::encode;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema, Default)]
 pub struct SpaceEmailVerification {
@@ -237,6 +239,58 @@ impl SpaceEmailVerification {
         email.send_email(&dynamo, &ses).await?;
 
         Ok(Json(()))
+    }
+
+    pub async fn send_notification(
+        dynamo: &DynamoClient,
+        fcm: &mut FCMService,
+        recipients: Vec<Partition>,
+        space: &SpaceCommon,
+        title: String,
+    ) -> Result<(), Error> {
+        if recipients.is_empty() {
+            tracing::info!(
+                "SpaceEmailVerification::send_notification: no recipients, skip push (space_pk={})",
+                space.pk
+            );
+            return Ok(());
+        }
+
+        tracing::info!(
+            "SpaceEmailVerification::send_notification: start, space_pk={}, recipients={}",
+            space.pk,
+            recipients.len()
+        );
+
+        let notif_title = "You are invited in space.".to_string();
+
+        let excerpt = Self::html_excerpt_ellipsis(&space.content, 80);
+        let notif_body = if excerpt.is_empty() {
+            format!("Participate new space: {}", title)
+        } else {
+            format!("Participate new space: {} — {}", title, excerpt)
+        };
+
+        let pk_str = space.pk.to_string();
+        let space_pk_encoded = encode(&pk_str);
+        let deeplink = format!("ratelapp://space/{space_pk_encoded}");
+
+        UserNotification::send_to_users(
+            dynamo,
+            fcm,
+            &recipients,
+            notif_title,
+            notif_body,
+            Some(deeplink),
+        )
+        .await?;
+
+        tracing::info!(
+            "SpaceEmailVerification::send_notification: done for space_pk={}",
+            space.pk
+        );
+
+        Ok(())
     }
 
     #[allow(dead_code)]

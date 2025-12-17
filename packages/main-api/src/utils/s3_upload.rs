@@ -2,7 +2,7 @@
 /// This function will be removed in future versions.
 use crate::{Error, Result, by_types::AwsConfig};
 
-use crate::config::BucketConfig;
+use crate::config::S3Config;
 
 pub struct PresignedUrl {
     pub presigned_uris: Vec<String>,
@@ -12,7 +12,7 @@ pub struct PresignedUrl {
 
 pub async fn get_put_object_uri(
     aws_config: &AwsConfig,
-    aws_bucket_config: &BucketConfig,
+    aws_bucket_config: &S3Config,
     total_count: Option<i32>,
 ) -> Result<PresignedUrl> {
     use aws_sdk_s3::presigning::PresigningConfig;
@@ -62,7 +62,7 @@ pub async fn get_put_object_uri(
                 Error::AssetError(e.to_string())
             })?;
         presigned_uris.push(presigned_request.uri().to_string());
-        uris.push(format!("https://{}/{}", aws_bucket_config.name, key));
+        uris.push(aws_bucket_config.get_url(&key));
     }
 
     Ok(PresignedUrl {

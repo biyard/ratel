@@ -130,7 +130,7 @@ class SidePanel extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  itemLabel(MainLocalization.points, user.points),
+                  itemLabel(MainLocalization.points, 0),
                   30.gap,
                   itemLabel(MainLocalization.following, user.followingsCount),
                   30.gap,
@@ -176,25 +176,25 @@ class SidePanel extends StatelessWidget {
                       label: MainLocalization.posts,
                       onTap: () {
                         onClose();
-                        Get.rootDelegate.offAndToNamed(AppRoutes.postScreen);
+                        Get.rootDelegate.offAndToNamed(postScreen);
                       },
                     ),
-                    MenuItem(
-                      icon: SvgPicture.asset(
-                        Assets.bookmark,
-                        width: 20,
-                        height: 20,
-                        colorFilter: ColorFilter.mode(
-                          AppColors.neutral500,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      label: MainLocalization.bookmarks,
-                      onTap: () {
-                        onClose();
-                        Get.rootDelegate.offAndToNamed(AppRoutes.bookmark);
-                      },
-                    ),
+                    // MenuItem(
+                    //   icon: SvgPicture.asset(
+                    //     Assets.bookmark,
+                    //     width: 20,
+                    //     height: 20,
+                    //     colorFilter: ColorFilter.mode(
+                    //       AppColors.neutral500,
+                    //       BlendMode.srcIn,
+                    //     ),
+                    //   ),
+                    //   label: MainLocalization.bookmarks,
+                    //   onTap: () {
+                    //     onClose();
+                    //     Get.rootDelegate.offAndToNamed(AppRoutes.bookmark);
+                    //   },
+                    // ),
                     MenuItem(
                       icon: SvgPicture.asset(
                         Assets.verification,
@@ -211,24 +211,24 @@ class SidePanel extends StatelessWidget {
                         Get.rootDelegate.toNamed(AppRoutes.verifiedScreen);
                       },
                     ),
-                    MenuItem(
-                      icon: SvgPicture.asset(
-                        Assets.star,
-                        width: 20,
-                        height: 20,
-                        colorFilter: ColorFilter.mode(
-                          AppColors.neutral500,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                      label: MainLocalization.myRewards,
-                      onTap: () {
-                        onClose();
-                        Get.rootDelegate.offAndToNamed(
-                          AppRoutes.boostingScreen,
-                        );
-                      },
-                    ),
+                    // MenuItem(
+                    //   icon: SvgPicture.asset(
+                    //     Assets.star,
+                    //     width: 20,
+                    //     height: 20,
+                    //     colorFilter: ColorFilter.mode(
+                    //       AppColors.neutral500,
+                    //       BlendMode.srcIn,
+                    //     ),
+                    //   ),
+                    //   label: MainLocalization.myRewards,
+                    //   onTap: () {
+                    //     onClose();
+                    //     Get.rootDelegate.offAndToNamed(
+                    //       AppRoutes.boostingScreen,
+                    //     );
+                    //   },
+                    // ),
                     MenuItem(
                       icon: SvgPicture.asset(
                         Assets.setting,
@@ -415,16 +415,25 @@ class AccountsSheet extends StatefulWidget {
 }
 
 class _AccountsSheetState extends State<AccountsSheet> {
-  int _selected = 0;
+  String? _selectedPk;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.teams.isNotEmpty) {
+      _selectedPk = widget.teams.first.pk;
+    }
+  }
 
   Widget _accountTile({
-    required int index,
+    required String pk,
     required String name,
     required String sub,
   }) {
-    final isSel = _selected == index;
+    final isSel = _selectedPk == pk;
+
     return ListTile(
-      onTap: () => setState(() => _selected = index),
+      onTap: () => setState(() => _selectedPk = pk),
       contentPadding: EdgeInsets.zero,
       minVerticalPadding: 0,
       horizontalTitleGap: 8,
@@ -482,11 +491,8 @@ class _AccountsSheetState extends State<AccountsSheet> {
   Widget build(BuildContext context) {
     final tiles = widget.teams
         .map(
-          (t) => _accountTile(
-            index: t.id,
-            name: '@${t.nickname}',
-            sub: t.username,
-          ),
+          (t) =>
+              _accountTile(pk: t.pk, name: '@${t.nickname}', sub: t.username),
         )
         .toList();
 

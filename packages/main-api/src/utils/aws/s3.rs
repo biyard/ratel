@@ -58,7 +58,7 @@ impl S3Client {
                 None,
                 "ratel",
             ))
-            .region(Region::new(conf.aws.region))
+            .region(Region::new(conf.s3.region))
             .behavior_version_latest()
             .build();
         let client = Client::from_conf(aws_config);
@@ -86,7 +86,8 @@ impl S3Client {
                 tracing::error!("Failed to upload object {}", e.to_string());
                 Error::AssetError(e.to_string())
             })?;
-        let url = format!("https://{}/{}", &self.bucket_name, key);
+        let conf = config::get();
+        let url = conf.s3.get_url(key);
         Ok(url)
     }
     pub async fn get_object_bytes(&self, key: &str) -> Result<S3Object> {
@@ -150,9 +151,10 @@ impl S3Client {
                     Error::AssetError(e.to_string())
                 })?;
 
+            let conf = config::get();
             result.push(PutObjectResult {
                 presigned_uri: presigned_request.uri().to_string(),
-                uri: format!("https://{}/{}", &self.bucket_name, key),
+                uri: conf.s3.get_url(&key),
                 key,
             });
         }

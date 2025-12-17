@@ -2,13 +2,17 @@ use crate::controllers::v3::spaces::dto::*;
 use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
+use crate::features::spaces::polls::{Poll, PollQueryOption};
 use crate::features::telegrams::{TelegramChannel, get_space_created_message};
 use crate::models::space::SpaceCommon;
 
 use crate::models::Post;
 use crate::models::user::User;
+use crate::services::fcm_notification::FCMService;
 use crate::utils::aws::DynamoClient;
+use crate::utils::aws::PollScheduler;
 use crate::utils::aws::SesClient;
+use crate::utils::aws::get_aws_config;
 use crate::utils::telegram::ArcTelegramBot;
 use crate::utils::time::get_now_timestamp;
 use crate::*;
@@ -46,6 +50,8 @@ pub enum UpdateSpaceRequest {
     },
     Finish {
         finished: bool,
+        #[serde(default)]
+        block_participate: bool,
     },
     Quota {
         quotas: i64,
@@ -69,6 +75,9 @@ pub async fn update_space_handler(
         );
         return Err(Error::NoPermission);
     }
+
+    let sdk_config = get_aws_config();
+    let scheduler = PollScheduler::new(&sdk_config);
 
     let mut space = space.clone();
 
@@ -110,7 +119,41 @@ pub async fn update_space_handler(
                 && (space.publish_state == SpacePublishState::Draft && publish)
                 && visibility == SpaceVisibility::Public;
 
-            SpaceInvitationMember::send_email(&dynamo, &ses, &space, post.title).await?;
+            SpaceInvitationMember::send_email(&dynamo, &ses, &space, post.title.clone()).await?;
+
+            // FIXME: fix to one call code
+            if let Ok(mut fcm) = FCMService::new().await {
+                SpaceInvitationMember::send_notification(&dynamo, &mut fcm, &space, post.title)
+                    .await?;
+            } else {
+                warn!("Failed to initialize FCMService, skipping notifications.");
+            }
+
+            let mut bookmark: Option<String> = None;
+
+            loop {
+                let mut query_options = PollQueryOption::builder()
+                    .sk("SPACE_POLL#".into())
+                    .limit(10);
+
+                if let Some(b) = bookmark.clone() {
+                    query_options = query_options.bookmark(b);
+                }
+
+                let (responses, next_bookmark) =
+                    Poll::query(&dynamo.client, space_pk.clone(), query_options).await?;
+
+                for response in responses {
+                    response
+                        .schedule_start_notification(&scheduler, response.started_at)
+                        .await?;
+                }
+
+                match next_bookmark {
+                    Some(b) => bookmark = Some(b),
+                    None => break,
+                }
+            }
 
             space.publish_state = SpacePublishState::Published;
             space.visibility = visibility;
@@ -164,7 +207,10 @@ pub async fn update_space_handler(
             space.block_participate = block_participate;
             let _ = SpaceEmailVerification::expire_verifications(&dynamo, space_pk.clone()).await?;
         }
-        UpdateSpaceRequest::Finish { finished } => {
+        UpdateSpaceRequest::Finish {
+            finished,
+            block_participate,
+        } => {
             if space.status != Some(SpaceStatus::Started) {
                 return Err(Error::NotSupported(
                     "Finish is not available for the current status.".into(),
@@ -172,12 +218,15 @@ pub async fn update_space_handler(
             }
 
             if !finished {
-                return Err(Error::NotSupported("it does not support end now".into()));
+                return Err(Error::NotSupported("it does not support finish now".into()));
             }
 
-            su = su.with_status(SpaceStatus::Finished);
+            su = su
+                .with_status(SpaceStatus::Finished)
+                .with_block_participate(block_participate);
 
             space.status = Some(SpaceStatus::Finished);
+            space.block_participate = block_participate;
         }
         UpdateSpaceRequest::Anonymous {
             anonymous_participation,

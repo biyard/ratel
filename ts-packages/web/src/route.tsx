@@ -26,6 +26,7 @@ export const route = {
 
   myNetwork: () => '/my-network',
   membership: () => '/membership',
+  myMembership: () => '/my-membership',
   myFollower: (type: RelationType) => `/my-follower?type=${type}`,
   messages: () => '/messages',
   notifications: () => '/notifications',
@@ -55,6 +56,8 @@ export const route = {
 
   spaceSetting: (spacePk: string) =>
     `/spaces/${encodeURIComponent(spacePk)}/settings`,
+  spaceRewardSetting: (spacePk: string) =>
+    `/spaces/${encodeURIComponent(spacePk)}/rewards`,
   spaceByType: (spaceType: SpaceType, spaceId: number | string) => {
     switch (spaceType) {
       default:

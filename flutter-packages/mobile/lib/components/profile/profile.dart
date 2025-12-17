@@ -1,28 +1,45 @@
 import 'package:ratel/exports.dart';
 
 class Profile extends StatelessWidget {
-  Profile({super.key, this.width, this.height, this.profile});
+  const Profile({
+    super.key,
+    required this.profileImageUrl,
+    required this.displayName,
+  });
 
-  final String? profile;
-  double? width = 30;
-  double? height = 30;
+  final String profileImageUrl;
+  final String displayName;
 
   @override
   Widget build(BuildContext context) {
-    return (profile != "" && profile != null)
-        ? ClipOval(
-            child: Image.network(
-              profile!,
-              width: width,
-              height: height,
-              fit: BoxFit.cover,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        RoundContainer(
+          width: 24,
+          height: 24,
+          radius: 100,
+          color: AppColors.neutral500,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(100),
+            child: Image.network(profileImageUrl, fit: BoxFit.cover),
+          ),
+        ),
+        8.gap,
+        Flexible(
+          child: Text(
+            displayName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+              fontSize: 14,
+              height: 20 / 14,
             ),
-          )
-        : RoundContainer(
-            color: AppColors.neutral400,
-            width: width,
-            height: height,
-            radius: 100,
-          );
+          ),
+        ),
+      ],
+    );
   }
 }

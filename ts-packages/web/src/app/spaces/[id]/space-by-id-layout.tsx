@@ -22,6 +22,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import SpaceMobileHeader from '@/features/spaces/components/space-mobile-header';
 import { SpaceStatus } from '@/features/spaces/types/space-common';
+import RewardMenu from '@/features/spaces/rewards/components/reward-menu';
 
 export const Context = createContext<SpaceHomeController | undefined>(
   undefined,
@@ -112,12 +113,23 @@ function GeneralLayout() {
         <Col className="gap-2.5 w-full max-w-[250px]">
           {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
 
-          {participantProfileProps && (
+          {participantProfileProps && ctrl.space.anonymous_participation && (
             <SpaceParticipantProfile {...participantProfileProps} />
           )}
 
           <SpaceSideMenu menus={ctrl.menus} />
-
+          {/* FIXME: After Merge f8f504f8913ad6d8744dae2ff000c708b8a4686a   */}
+          {/* {ctrl.space.booster && (
+            <RewardMenu
+              boosting={ctrl.space.booster}
+              estimatedDate={0}
+              rewardItems={[
+                { label: 'Sample Reward 1', point: 5000 },
+                { label: 'Sample Reward 2', point: 3000 },
+                { label: 'Sample Reward 3', point: 2000 },
+              ]}
+            />
+          )} */}
           <TimelineMenu
             isEditing={false}
             handleSetting={() => {}}
@@ -161,9 +173,9 @@ export default function SpaceByIdLayout() {
   const ctrl = useSpaceHomeController(spacePk ?? '');
 
   const content =
-    ctrl.space.status !== SpaceStatus.InProgress && !ctrl.space.isAdmin() ? (
-      <></>
-    ) : !ctrl.space.havePreTasks() || ctrl.space.isAdmin() ? (
+    !ctrl.space.havePreTasks() ||
+    ctrl.space.isAdmin() ||
+    ctrl.space.isFinished ? (
       <GeneralLayout />
     ) : ctrl.space.participated ? (
       <Requirements />

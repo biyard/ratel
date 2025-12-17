@@ -13,57 +13,120 @@ class UserApi extends GetConnect {
     });
   }
 
-  //getUserInfo: () => '/v1/users?action=user-info',
-  Future<UserModel> getUserInfo() async {
-    final uri = Uri.parse(apiEndpoint)
-        .resolve('/v1/users')
-        .replace(queryParameters: <String, String>{'action': 'user-info'});
+  Future<UserModel> getUserInfoV2() async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/me');
 
     final headers = <String, String>{'Content-Type': 'application/json'};
     final res = await get(uri.toString(), headers: headers);
 
-    if (!res.isOk) {
+    if (!res.isOk || res.body == null) {
       return UserModel(
-        id: 0,
-        profileUrl: '',
+        pk: '',
+        email: '',
         nickname: '',
+        profileUrl: '',
+        description: '',
+        userType: 0,
         username: '',
-        points: 0,
         followersCount: 0,
         followingsCount: 0,
-
-        teams: [],
+        theme: 0,
+        point: 0,
+        referralCode: null,
+        phoneNumber: null,
+        principal: null,
+        evmAddress: null,
+        teams: const [],
       );
     }
 
-    logger.d("user info: ${res.body}");
+    final item = res.body as Map<String, dynamic>;
+    logger.d("user info v2: $item");
 
-    final item = res.body;
-    final List<Team> teams = [];
+    return UserModel.fromJson(item);
+  }
 
-    for (var i = 0; i < item["teams"].length; i++) {
-      final team = item["teams"][i];
+  Future<DidDocument?> getOrCreateDid() async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/me/did');
 
-      teams.add(
-        Team(
-          id: int.parse(team["id"].toString()),
-          profileUrl: team["profile_url"] ?? "",
-          nickname: team["nickname"] ?? "",
-          username: team["username"] ?? "",
-        ),
-      );
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await get(uri.toString(), headers: headers);
+
+    logger.d('getOrCreateDid: status=${res.statusCode}, body=${res.body}');
+
+    if (!res.isOk || res.body == null) {
+      return null;
     }
 
-    return UserModel(
-      id: int.parse(item["id"].toString()),
-      profileUrl: item["profile_url"] ?? "",
-      nickname: item["nickname"] ?? "",
-      username: item["username"] ?? "",
-      points: int.parse(item["points"].toString()),
-      followersCount: int.parse(item["followers_count"].toString()),
-      followingsCount: int.parse(item["followings_count"].toString()),
+    final body = res.body;
 
-      teams: teams,
+    if (body is Map<String, dynamic>) {
+      return DidDocument.fromJson(body);
+    }
+
+    if (body is Map) {
+      return DidDocument.fromJson(Map<String, dynamic>.from(body));
+    }
+
+    logger.e('Unexpected getOrCreateDid response type: ${body.runtimeType}');
+    return null;
+  }
+
+  Future<UserAttributes> getAttributes() async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/me/did/attributes');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final res = await get(uri.toString(), headers: headers);
+
+    logger.d('getAttributes: status=${res.statusCode}, body=${res.body}');
+
+    if (!res.isOk || res.body == null) {
+      return UserAttributes.empty;
+    }
+
+    final body = res.body;
+
+    if (body is Map<String, dynamic>) {
+      return UserAttributes.fromJson(body);
+    }
+
+    if (body is Map) {
+      return UserAttributes.fromJson(Map<String, dynamic>.from(body));
+    }
+
+    logger.e('Unexpected getAttributes response type: ${body.runtimeType}');
+    return UserAttributes.empty;
+  }
+
+  Future<UserAttributes> signAttributesWithCode(String code) async {
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/me/did');
+
+    final headers = <String, String>{'Content-Type': 'application/json'};
+    final body = {'type': 'code', 'code': code};
+
+    final res = await put(uri.toString(), body, headers: headers);
+
+    logger.d(
+      'signAttributesWithCode: status=${res.statusCode}, body=${res.body}',
     );
+
+    if (!res.isOk || res.body == null) {
+      return UserAttributes.empty;
+    }
+
+    final data = res.body;
+
+    if (data is Map<String, dynamic>) {
+      return UserAttributes.fromJson(data);
+    }
+
+    if (data is Map) {
+      return UserAttributes.fromJson(Map<String, dynamic>.from(data));
+    }
+
+    logger.e(
+      'Unexpected signAttributesWithCode response type: ${data.runtimeType}',
+    );
+    return UserAttributes.empty;
   }
 }

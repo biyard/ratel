@@ -1,50 +1,81 @@
 import 'package:ratel/exports.dart';
 
 class NotificationController extends BaseController {
-  final networkApi = Get.find<NetworkApi>();
   final notificationsApi = Get.find<NotificationApi>();
 
-  RxList<NotificationFollower> items = <NotificationFollower>[].obs;
+  RxList<AppNotification> items = <AppNotification>[].obs;
+  final bookmark = RxnString();
+  final isLoading = false.obs;
+  final isLoadingMore = false.obs;
+
+  bool get hasMore => bookmark.value != null && bookmark.value!.isNotEmpty;
 
   @override
   void onInit() {
     super.onInit();
-    getNotifications();
+    loadInitial();
   }
 
-  Future<void> getNotifications() async {
-    showLoading();
+  Future<void> loadInitial() async {
+    isLoading.value = true;
     try {
-      final data = await notificationsApi.getNotifications();
-      items.assignAll(data.networks);
+      bookmark.value = null;
+      final page = await notificationsApi.getNotifications();
+      items.assignAll(page.items);
+      bookmark.value = page.bookmark;
     } finally {
-      hideLoading();
+      isLoading.value = false;
     }
   }
 
-  Future<void> acceptInvitation(int followeeId) async {
-    final res = await networkApi.acceptInvitation([], followeeId);
-    if (res != null) {
-      await getNotifications();
-      Biyard.info('Invitation accepted.');
-    } else {
-      Biyard.error(
-        'Failed to accept invitation.',
-        'Accept invitation is failed. Please try again later.',
+  Future<void> refreshNotifications() async {
+    await loadInitial();
+  }
+
+  Future<void> loadMore() async {
+    if (isLoadingMore.value || !hasMore) return;
+
+    isLoadingMore.value = true;
+    try {
+      final page = await notificationsApi.getNotifications(
+        bookmark: bookmark.value,
       );
+      items.addAll(page.items);
+      bookmark.value = page.bookmark;
+    } finally {
+      isLoadingMore.value = false;
     }
   }
 
-  Future<void> rejectInvitation(int followeeId) async {
-    final res = await networkApi.rejectInvitation([], followeeId);
-    if (res != null) {
-      await getNotifications();
-      Biyard.info('Invitation rejected.');
+  Future<void> markNotificationAsRead(AppNotification notification) async {
+    final res = await notificationsApi.markAsRead([notification.sk]);
+    if (res.success) {
+      await loadInitial();
+      Biyard.info('Marked as read.');
     } else {
-      Biyard.error(
-        'Failed to reject invitation.',
-        'Reject invitation is failed. Please try again later.',
-      );
+      Biyard.error('Failed to mark as read.', 'Please try again later.');
+    }
+  }
+
+  Future<void> markAllAsRead() async {
+    final res = await notificationsApi.markAllAsRead();
+    if (res.success) {
+      await loadInitial();
+      Biyard.info('All notifications marked as read.');
+    } else {
+      Biyard.error('Failed to mark all as read.', 'Please try again later.');
+    }
+  }
+
+  Future<void> deleteNotification(AppNotification notification) async {
+    final res = await notificationsApi.deleteNotification(
+      notification.notificationId,
+    );
+    if (res.success) {
+      await loadInitial();
+      Biyard.info('Notification deleted.');
+    } else {
+      Biyard.error('Failed to delete notification.', 'Please try again later.');
     }
   }
 }

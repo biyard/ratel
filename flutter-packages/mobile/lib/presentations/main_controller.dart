@@ -1,31 +1,24 @@
 import 'package:ratel/exports.dart';
 
 class MainController extends BaseController {
-  final userApi = Get.find<UserApi>();
-
-  @override
-  void onInit() {
-    super.onInit();
-    getUser();
-  }
+  final userService = Get.find<UserService>();
+  final feedApi = Get.find<FeedsApi>();
 
   void getUser() async {
     showLoading();
-    final item = await userApi.getUserInfo();
+    final item = await userService.getUser();
     user(item);
 
     hideLoading();
   }
 
-  Rx<UserModel> user = UserModel(
-    id: 0,
-    profileUrl: '',
-    nickname: '',
-    username: '',
-    points: 0,
-    followersCount: 0,
-    followingsCount: 0,
+  Future<void> createPost() async {
+    final postPk = await feedApi.createPost();
+    logger.d("postPk: $postPk");
+    if (postPk.isNotEmpty) {
+      Get.rootDelegate.toNamed(createPostScreen, arguments: {'postPk': postPk});
+    }
+  }
 
-    teams: [],
-  ).obs;
+  Rx<UserModel> get user => userService.user;
 }

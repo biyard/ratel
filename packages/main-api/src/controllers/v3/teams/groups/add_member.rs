@@ -4,7 +4,8 @@ use crate::{
         team::{Team, TeamGroup},
         user::{User, UserTeam, UserTeamGroup},
     },
-    types::{EntityType, TeamGroupPermission},
+    services::fcm_notification::FCMService,
+    types::{EntityType, Partition, TeamGroupPermission},
     utils::security::{RatelResource, check_any_permission_with_user},
 };
 use bdk::prelude::*;
@@ -75,6 +76,7 @@ pub async fn add_member_handler(
     let mut success_count = 0;
     let mut failed_pks = vec![];
     let mut invite_emails: Vec<String> = Vec::new();
+    let mut invite_pks: Vec<Partition> = Vec::new();
 
     for member in &req.user_pks {
         let user = User::get(&dynamo.client, member, Some(EntityType::User)).await?;
@@ -95,6 +97,7 @@ pub async fn add_member_handler(
                 .await?;
 
             invite_emails.push(user.email.clone());
+            invite_pks.push(user.pk.clone());
         }
 
         // Always create UserTeamGroup (user joining a new group)
@@ -107,6 +110,10 @@ pub async fn add_member_handler(
     // Bulk send team invite emails (only for newly-linked users)
     if !invite_emails.is_empty() {
         let _ = UserTeam::send_email(&dynamo, &ses, team.clone(), invite_emails).await?;
+
+        // FIXME: fix to one call code
+        let mut fcm = FCMService::new().await?;
+        let _ = UserTeam::send_notification(&dynamo, &mut fcm, invite_pks, &team).await?;
     }
 
     TeamGroup::updater(team_group.pk, team_group.sk)

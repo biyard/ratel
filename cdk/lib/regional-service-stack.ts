@@ -16,6 +16,7 @@ import { Construct } from "constructs";
 import * as r53Targets from "aws-cdk-lib/aws-route53-targets";
 import { HttpLambdaIntegration } from "aws-cdk-lib/aws-apigatewayv2-integrations";
 import * as apigateway from "aws-cdk-lib/aws-apigateway";
+import * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 
 export interface RegionalServiceStackProps extends StackProps {
   // Domain parts, e.g. "dev2.ratel.foundation"
@@ -53,6 +54,7 @@ export class RegionalServiceStack extends Stack {
         REGION: this.region,
         DISABLE_ANSI: "true",
         NO_COLOR: "true",
+        GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
       },
       memorySize: 128,
       timeout: cdk.Duration.seconds(30),
@@ -95,6 +97,50 @@ export class RegionalServiceStack extends Stack {
       },
       targets: [new eventsTargets.LambdaFunction(startSurveyLambda)],
     });
+
+    const tableName = `ratel-${props.stage}-main`;
+
+    const mainTable = dynamodb.Table.fromTableName(
+      this,
+      "MainTable",
+      tableName
+    );
+
+    mainTable.grantReadData(startSurveyLambda);
+
+    startSurveyLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "ses:SendEmail",
+          "ses:SendRawEmail",
+          "ses:SendTemplatedEmail",
+          "ses:SendBulkEmail",
+          "ses:SendBulkTemplatedEmail",
+        ],
+        resources: [
+          `arn:aws:ses:${this.region}:${this.account}:identity/ratel.foundation`,
+          `arn:aws:ses:${this.region}:${this.account}:template/start_survey`,
+        ],
+      })
+    );
+
+    startSurveyLambda.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "dynamodb:GetItem",
+          "dynamodb:BatchGetItem",
+          "dynamodb:Query",
+          "dynamodb:Scan",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:TransactWriteItems",
+        ],
+        resources: [mainTable.tableArn, `${mainTable.tableArn}/index/*`],
+      })
+    );
 
     // --- API Gateway HTTP API ---
     const httpApi = new apigw.HttpApi(this, "HttpApi", {
