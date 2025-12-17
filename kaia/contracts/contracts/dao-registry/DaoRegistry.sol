@@ -70,34 +70,34 @@ contract DaoRegistry is VersionManager("v2.0"), EIP2771, NativeMetaTransaction {
     //     emit withdrawalEvent(addr);
     // }
 
-    function getStateAddr() external view returns (address[] memory) {
-        address[] memory addrs = new address[](2);
-        addrs[0] = _prev;
-        addrs[1] = address(_state);
-        return addrs;
-    }
+    // function getStateAddr() external view returns (address[] memory) {
+    //     address[] memory addrs = new address[](2);
+    //     addrs[0] = _prev;
+    //     addrs[1] = address(_state);
+    //     return addrs;
+    // }
 
-    function upgradeHook(address state) external {
-        require(!_ready, "it was already initialized");
-        _ready = true;
-        _state = IDaoRegistryStateV1(state);
+    // function upgradeHook(address state) external {
+    //     require(!_ready, "it was already initialized");
+    //     _ready = true;
+    //     _state = IDaoRegistryStateV1(state);
 
-        emit upgradeHookEvent(state, _ready);
-    }
+    //     emit upgradeHookEvent(state, _ready);
+    // }
 
-    function setReady(bool check) external {
-        require(!_ready, "it was already ready");
-        _ready = check;
-        emit setReadyEvent(check);
-    }
+    // function setReady(bool check) external {
+    //     require(!_ready, "it was already ready");
+    //     _ready = check;
+    //     emit setReadyEvent(check);
+    // }
 
-    function name() external view returns (string memory) {
-        return _state.getNamedString(NAME);
-    }
+    // function name() external view returns (string memory) {
+    //     return _state.getNamedString(NAME);
+    // }
 
-    function getBalance() external view returns (uint256) {
-        return address(this).balance;
-    }
+    // function getBalance() external view returns (uint256) {
+    //     return address(this).balance;
+    // }
 
     function addressOfExtension(string memory name_) public view returns (address) {
         return addressOf(name_);
@@ -109,62 +109,62 @@ contract DaoRegistry is VersionManager("v2.0"), EIP2771, NativeMetaTransaction {
         return ext.addr;
     }
 
-    function ready() external view returns (bool) {
-        return _ready;
-    }
+    // function ready() external view returns (bool) {
+    //     return _ready;
+    // }
 
-    function registerActivityHook(address addr) internal {
-        AddressArray.add(_activityHooks, addr, false);
+    // function registerActivityHook(address addr) internal {
+    //     AddressArray.add(_activityHooks, addr, false);
 
-        emit changeActivityHookEvent(addr);
-    }
+    //     emit changeActivityHookEvent(addr);
+    // }
 
-    function deregisterActivityHook(address addr) internal {
-        if (AddressArray.exists(_activityHooks, addr)) {
-            AddressArray.del(_activityHooks, addr);
-        }
+    // function deregisterActivityHook(address addr) internal {
+    //     if (AddressArray.exists(_activityHooks, addr)) {
+    //         AddressArray.del(_activityHooks, addr);
+    //     }
 
-        emit changeActivityHookEvent(addr);
-    }
+    //     emit changeActivityHookEvent(addr);
+    // }
 
-    function listProposals() external view returns (ProposalSummary[] memory) {
-        return _state.listProposals();
-    }
+    // function listProposals() external view returns (ProposalSummary[] memory) {
+    //     return _state.listProposals();
+    // }
 
-    function getProposal(string memory proposalAppName, uint256 proposalId) external view returns (ProposalSummary memory) {
-        (ProposalSummary memory pro, ) = _state.getProposal(proposalAppName, proposalId);
-        return pro;
-    }
+    // function getProposal(string memory proposalAppName, uint256 proposalId) external view returns (ProposalSummary memory) {
+    //     (ProposalSummary memory pro, ) = _state.getProposal(proposalAppName, proposalId);
+    //     return pro;
+    // }
 
-    function submitProposal(ProposalSummary memory proposal) external {
-        _state.addProposal(proposal);
-        emit changeProposalEvent(proposal.proposalAppName, proposal.proposalId);
-    }
+    // function submitProposal(ProposalSummary memory proposal) external {
+    //     _state.addProposal(proposal);
+    //     emit changeProposalEvent(proposal.proposalAppName, proposal.proposalId);
+    // }
 
-    function voteProposal(string memory proposalAppName, uint256 proposalId) external {
-        (ProposalSummary memory proposal, bool exists) = _state.getProposal(proposalAppName, proposalId);
-        require(exists, "unknown proposal");
-        proposal.numberOfVotes = proposal.numberOfVotes + 1;
-        _state.updateProposal(proposal);
-        emit changeProposalEvent(proposalAppName, proposalId);
-    }
+    // function voteProposal(string memory proposalAppName, uint256 proposalId) external {
+    //     (ProposalSummary memory proposal, bool exists) = _state.getProposal(proposalAppName, proposalId);
+    //     require(exists, "unknown proposal");
+    //     proposal.numberOfVotes = proposal.numberOfVotes + 1;
+    //     _state.updateProposal(proposal);
+    //     emit changeProposalEvent(proposalAppName, proposalId);
+    // }
 
-    function finishVoting(string memory proposalAppName, uint256 proposalId, uint16 voteStatus) external {
-        (ProposalSummary memory proposal, bool exists) = _state.getProposal(proposalAppName, proposalId);
-        require(exists, "unknown proposal");
-        proposal.voteStatus = voteStatus;
-        _state.updateProposal(proposal);
-        emit changeProposalEvent(proposalAppName, proposalId);
-    }
+    // function finishVoting(string memory proposalAppName, uint256 proposalId, uint16 voteStatus) external {
+    //     (ProposalSummary memory proposal, bool exists) = _state.getProposal(proposalAppName, proposalId);
+    //     require(exists, "unknown proposal");
+    //     proposal.voteStatus = voteStatus;
+    //     _state.updateProposal(proposal);
+    //     emit changeProposalEvent(proposalAppName, proposalId);
+    // }
 
-    modifier checkDaoManager() {
-        require(_state.getDaoManagerAddress() == msg.sender, "only daoManager can call Function");
-        _;
-    }
+    // modifier checkDaoManager() {
+    //     require(_state.getDaoManagerAddress() == msg.sender, "only daoManager can call Function");
+    //     _;
+    // }
 
-    modifier shouldRegisteredApp() {
-        bool exists = _state.existsExtensionByAddress(msg.sender);
-        require(!_ready || exists, "unknown app");
-        _;
-    }
+    // modifier shouldRegisteredApp() {
+    //     bool exists = _state.existsExtensionByAddress(msg.sender);
+    //     require(!_ready || exists, "unknown app");
+    //     _;
+    // }
 }
