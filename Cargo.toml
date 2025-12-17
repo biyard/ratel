@@ -1,5 +1,5 @@
 [workspace]
-members = [ "packages/*" ]
+members = ["packages/*"]
 resolver = "2"
 exclude = ["deps", "benchmark/*"]
 
@@ -26,18 +26,18 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 dto = { path = "./packages/dto" }
 sqlx = { version = "0.8.3", features = [
-    "sqlite",
-    "postgres",
-    "runtime-tokio",
-    "time",
-    "bigdecimal",
+  "sqlite",
+  "postgres",
+  "runtime-tokio",
+  "time",
+  "bigdecimal",
 ] }
 tokio = { version = "1.40.0", features = ["full"] }
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 reqwest = { version = "0.12.12", features = ["blocking", "json", "multipart"] }
 schemars = { version = "1.0.4", features = ["uuid1"] }
-aide = { version = "0.15", git="https://github.com/tamasfe/aide.git", features = [
+aide = { version = "0.15", git = "https://github.com/tamasfe/aide.git", features = [
   "axum",
   "axum-query",
   "axum-extra",

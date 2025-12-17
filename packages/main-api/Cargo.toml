@@ -31,6 +31,7 @@ async-trait = "0.1.88"
 rlp = "0.5.2"
 hex = "0.4.3"
 tower-sessions = "0.14.0"
+google-cloud-auth = "1.2"
 tower-sessions-sqlx-store = { version = "0.15.0", features = ["postgres"] }
 aws-sdk-s3 = "1.74.0"
 aws-sdk-chimesdkmeetings = "1.63.0"
@@ -39,6 +40,7 @@ aws-sdk-mediaconvert = "1.82.0"
 aws-sdk-sqs = "1.81.0"
 jsonwebtoken = "9.3.0"
 percent-encoding = "2.3.2"
+aws-smithy-types = "1"
 
 rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-sdk", features = [
     "server",
@@ -49,6 +51,7 @@ rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-
 ] }
 aws-sdk-scheduler = "1.90.0"
 aws-sdk-sesv2 = "1.83.0"
+aws-sdk-sns = "1.83.0"
 rand = "0.9.1"
 url = "2.5.4"
 hmac = "0.12.1"
@@ -82,6 +85,8 @@ names = "0.14.0"
 static-iref = "3.0.0"
 iref = "3.2.2"
 futures = "0.3.31"
+x402-axum = "0.6.2"
+x402-rs = "0.9.3"
 
 [[bin]]
 name = "main-api"

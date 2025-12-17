@@ -12,6 +12,7 @@ use super::Partition;
     DeserializeFromStr,
     Default,
     DynamoEnum,
+    SubPartition,
     JsonSchema,
 )]
 pub enum EntityType {
@@ -20,7 +21,6 @@ pub enum EntityType {
 
     Session,
 
-    Notification(String), // notification id
     // Common
     Created(String), // CREATED#${timestamp}
 
@@ -28,6 +28,7 @@ pub enum EntityType {
     // USER_PK index is aligned by gsi1-index
     User,
     UserEvmAddress,
+    UserNotification(String), //notification id
     UserReferralCode,
     UserPrincipal,
     UserOAuth,
@@ -36,6 +37,7 @@ pub enum EntityType {
     UserTeam(String),      // from Team
     UserTeamGroup(String), // from TeamGroup
     EmailVerification,
+    PhoneVerification,
     UserRelationship(String),
 
     // Feed entity types
@@ -131,6 +133,7 @@ pub enum EntityType {
     SpaceDiscussionParticipant(String, String),
     SpaceQuiz(String),
     SpaceRecommendation,
+    SpaceReport,
     SpacePanels,
     SpacePanel(String),
     SpacePanelAttribute(String, String),
@@ -158,6 +161,13 @@ pub enum EntityType {
     UserPayment,
     Purchase,
     UserPurchase(String),
+
+    Notification(String), // notification id
+
+    //
+    Reward(String), // Type
+
+    ContentReport,
 }
 
 impl TryInto<Partition> for EntityType {

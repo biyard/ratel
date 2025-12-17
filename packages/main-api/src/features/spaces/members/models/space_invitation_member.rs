@@ -1,13 +1,17 @@
 use futures::future::try_join_all;
+use serde_json::json;
+use urlencoding::encode;
 
 use super::*;
 use crate::features::spaces::members::{
     InvitationStatus, SpaceEmailVerification, SpaceInvitationMemberResponse,
 };
-use crate::models::SpaceCommon;
+use crate::models::{SpaceCommon, UserNotification};
+use crate::services::fcm_notification::FCMService;
 use crate::types::*;
 use crate::utils::aws::{DynamoClient, SesClient};
 use crate::*;
+use aws_sdk_dynamodb::types::AttributeValue;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity, JsonSchema, Default)]
 pub struct SpaceInvitationMember {
@@ -80,6 +84,15 @@ impl SpaceInvitationMember {
         )
     }
 
+    pub async fn find_user_invitations_by_status_latest(
+        cli: &aws_sdk_dynamodb::Client,
+        user_pk: &Partition,
+        mut opt: SpaceInvitationMemberQueryOption,
+    ) -> Result<(Vec<Self>, Option<String>)> {
+        opt.scan_index_forward = false;
+        SpaceInvitationMember::find_user_invitations_by_status(cli, user_pk, opt).await
+    }
+
     pub async fn send_email(
         dynamo: &DynamoClient,
         ses: &SesClient,
@@ -118,6 +131,50 @@ impl SpaceInvitationMember {
             .await?;
         }
 
+        Ok(())
+    }
+
+    pub async fn send_notification(
+        dynamo: &DynamoClient,
+        fcm: &mut FCMService,
+        space: &SpaceCommon,
+        space_title: String,
+    ) -> Result<()> {
+        tracing::info!(
+            "SpaceInvitationMember::send_notification: start for space_pk={}",
+            space.pk
+        );
+
+        let (invites, _) = SpaceInvitationMember::find_space_invitations_by_status(
+            &dynamo.client,
+            space.pk.clone(),
+            SpaceInvitationMember::opt_all().sk(InvitationStatus::Invited.to_string()),
+        )
+        .await?;
+
+        if invites.is_empty() {
+            tracing::info!(
+                "SpaceInvitationMember::send_notification: no invited members for space_pk={}",
+                space.pk
+            );
+            return Ok(());
+        }
+
+        let title = "You are invited in space.".to_string();
+        let body = format!("Participate new space: {space_title}");
+
+        let user_pks: Vec<Partition> = invites.into_iter().map(|m| m.user_pk).collect();
+        let pk_str = space.pk.to_string();
+        let space_pk_encoded = encode(&pk_str);
+        let deeplink = format!("ratelapp://space/{space_pk_encoded}");
+
+        UserNotification::send_to_users(dynamo, fcm, &user_pks, title, body, Some(deeplink))
+            .await?;
+
+        tracing::info!(
+            "SpaceInvitationMember::send_notification: done for space_pk={}",
+            space.pk
+        );
         Ok(())
     }
 

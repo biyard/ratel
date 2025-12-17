@@ -3,21 +3,17 @@ import 'package:ratel/middlewares/space_middleware.dart';
 
 class AppRoutes {
   static const String mainScreen = '/dashboard';
-  static const String introScreen = '/intro';
-  static const String loginScreen = '/login';
-  static const String signupScreen = '/signup';
-  static const String verificationScreen = '/verification';
-  static const String welcomeScreen = '/welcome';
   static const String setupProfileScreen = '/setup-profile';
   static const String selectTopicScreen = '/select-topic';
   static const String connectionScreen = '/connection';
   static const String setupAttributeScreen = '/setup-attribute';
   static const String boostingScreen = '/boosting';
   static const String draftScreen = '/draft';
-  static const String postScreen = '/post';
+
   static const String verifiedScreen = '/verified';
   static const String settingScreen = '/settings';
   static const String mySpaces = '/my-spaces';
+  static const String myPage = '/my-page';
   static const String explore = "/dashboard/explore";
   static const String home = "/dashboard/home";
   static const String myNetwork = "/dashboard/network";
@@ -26,7 +22,20 @@ class AppRoutes {
 
   static const String notification = "/dashboard/notification";
   static const String error = '/error';
-  static spaceWithId(int id) => '/space/$id';
+  static spaceWithPk(String spacePk) => '/space/$spacePk';
+  static String spacePostWithPk(String spacePk, String postPk) {
+    final encSpacePk = Uri.encodeComponent(spacePk);
+    final encPostPk = Uri.encodeComponent(postPk);
+
+    return '/space/$encSpacePk/board/$encPostPk';
+  }
+
+  static String spaceRequirements(String spacePk) {
+    final encSpacePk = Uri.encodeComponent(spacePk);
+
+    return '/space/$encSpacePk/requirements';
+  }
+
   static deliberationSpaceWithId(int id) => '/space/$id/deliberation';
   static noticeSpaceWithId(int id) => '/space/$id/notice';
   static notFoundSpaceWithId(int id) => '/space/$id/not-found';
@@ -34,62 +43,98 @@ class AppRoutes {
 
   static List<GetPage> pages = [
     GetPage(
-      name: mainScreen,
-      page: () => MainScreen(),
-      binding: MainBinding(),
+      name: '/space/:spacePk/requirements',
+      page: () => SpaceRequirementScreen(),
+      binding: SpaceRequirementBinding(),
       customTransition: SlideOverTransition(),
       transitionDuration: const Duration(milliseconds: 300),
       opaque: true,
       curve: Curves.easeOutCubic,
     ),
     GetPage(
-      name: '/space/:id',
-      page: () => Container(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
+      name: '/space/:spacePk',
+      page: () => const SpaceScreen(),
       middlewares: [SpaceMiddleware()],
-      opaque: true,
-      curve: Curves.easeOutCubic,
+      binding: SpaceBinding(),
       children: [
         GetPage(
-          name: "/deliberation",
-          page: () => DeliberationSpaceScreen(),
-          binding: DeliberationSpaceBinding(),
+          name: '/board/:postPk',
+          page: () => const BoardScreen(),
+          binding: BoardBinding(),
         ),
         GetPage(
-          name: "/notice",
-          page: () => NoticeSpaceScreen(),
-          binding: NoticeSpaceBinding(),
+          name: '/boards',
+          page: () => const BoardsScreen(),
+          binding: BoardsBinding(),
         ),
         GetPage(
-          name: "/not-found",
-          page: () => NotFoundSpaceScreen(),
-          binding: NotFoundSpaceBinding(),
+          name: '/file',
+          page: () => const FileScreen(),
+          binding: FileBinding(),
+        ),
+        GetPage(
+          name: '/member',
+          page: () => const MemberScreen(),
+          binding: MemberBinding(),
+        ),
+        GetPage(
+          name: '/overview',
+          page: () => const OverviewScreen(),
+          binding: OverviewBinding(),
+        ),
+        GetPage(
+          name: '/panel',
+          page: () => const PanelScreen(),
+          binding: PanelBinding(),
+        ),
+        GetPage(
+          name: '/poll',
+          page: () => const PollScreen(),
+          binding: PollBinding(),
+        ),
+        GetPage(
+          name: '/polls',
+          page: () => const PollsScreen(),
+          binding: PollsBinding(),
+        ),
+        GetPage(
+          name: '/analyze',
+          page: () => const AnalyzeScreen(),
+          binding: AnalyzeBinding(),
+        ),
+        GetPage(
+          name: '/analyzes',
+          page: () => const AnalyzesScreen(),
+          binding: AnalyzesBinding(),
+        ),
+        GetPage(
+          name: '/setting',
+          page: () => const SettingScreen(),
+          binding: SettingBinding(),
         ),
       ],
     ),
+
     GetPage(
-      name: '/draft/:id',
-      page: () => DraftByIdScreen(),
-      binding: DraftByIdBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
+      name: mySpaces,
+      page: () => MySpaceScreen(),
+      binding: MySpaceBinding(),
+      transition: Transition.noTransition,
+    ),
+    GetPage(name: myPage, page: () => MyPageScreen(), binding: MyPageBinding()),
+    GetPage(
+      name: mainScreen,
+      page: () => MainScreen(),
+      binding: MainBinding(),
+      transition: Transition.noTransition,
+      // customTransition: SlideOverTransition(),
+      // transitionDuration: const Duration(milliseconds: 300),
+      // curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: boostingScreen,
       page: () => const BoostingScreen(),
       binding: BoostingBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: postScreen,
-      page: () => const PostScreen(),
-      binding: PostBinding(),
       customTransition: SlideOverTransition(),
       transitionDuration: const Duration(milliseconds: 300),
       opaque: true,
@@ -113,96 +158,8 @@ class AppRoutes {
       opaque: true,
       curve: Curves.easeOutCubic,
     ),
-    GetPage(
-      name: introScreen,
-      page: () => const IntroScreen(),
-      binding: IntroBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: loginScreen,
-      page: () => const LoginScreen(),
-      binding: LoginBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: signupScreen,
-      page: () => const SignupScreen(),
-      binding: SignupBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: verificationScreen,
-      page: () => const VerificationScreen(),
-      binding: VerificationBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: setupProfileScreen,
-      page: () => const SetupProfileScreen(),
-      binding: SetupProfileBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: selectTopicScreen,
-      page: () => const SelectTopicScreen(),
-      binding: SelectTopicBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: connectionScreen,
-      page: () => const ConnectionScreen(),
-      binding: ConnectionBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: setupAttributeScreen,
-      page: () => const SetupAttributeScreen(),
-      binding: SetupAttributeBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: mySpaces,
-      page: () => const SpacesScreen(),
-      binding: SpacesBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: welcomeScreen,
-      page: () => const WelcomeScreen(),
-      binding: WelcomeBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
+    ...onboardingPages,
+    ...postPages,
     GetPage(
       name: settingScreen,
       page: () => const SettingsScreen(),
@@ -225,46 +182,41 @@ class AppRoutes {
       name: home,
       page: () => HomeScreen(),
       binding: HomeBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
+      transition: Transition.noTransition,
+      // customTransition: SlideOverTransition(),
+      // transitionDuration: const Duration(milliseconds: 300),
+      // opaque: true,
+      // curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: myNetwork,
       page: () => NetworkScreen(),
       binding: NetworkBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
+      transition: Transition.noTransition,
+      // customTransition: SlideOverTransition(),
+      // transitionDuration: const Duration(milliseconds: 300),
+      // opaque: true,
+      // curve: Curves.easeOutCubic,
     ),
     GetPage(
       name: message,
       page: () => MessageScreen(),
       binding: MessageBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
+      transition: Transition.noTransition,
+      // customTransition: SlideOverTransition(),
+      // transitionDuration: const Duration(milliseconds: 300),
+      // opaque: true,
+      // curve: Curves.easeOutCubic,
     ),
 
     GetPage(
       name: notification,
       page: () => const NotificationScreen(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
-    ),
-    GetPage(
-      name: bookmark,
-      page: () => const BookmarkScreen(),
-      binding: BookmarkBinding(),
-      customTransition: SlideOverTransition(),
-      transitionDuration: const Duration(milliseconds: 300),
-      opaque: true,
-      curve: Curves.easeOutCubic,
+      transition: Transition.noTransition,
+      // customTransition: SlideOverTransition(),
+      // transitionDuration: const Duration(milliseconds: 300),
+      // opaque: true,
+      // curve: Curves.easeOutCubic,
     ),
   ];
 }

@@ -1,8 +1,10 @@
 import 'package:ratel/exports.dart';
 
 class DraftController extends BaseController {
-  final userApi = Get.find<UserApi>();
-  final feedsApi = Get.find<FeedsApi>();
+  final feedsService = Get.find<FeedsService>();
+
+  RxList<FeedSummaryModel> get feeds => feedsService.drafts;
+  RxBool isBusy = false.obs;
 
   @override
   void onInit() {
@@ -10,41 +12,45 @@ class DraftController extends BaseController {
     listFeeds();
   }
 
-  void listFeeds() async {
-    showLoading();
-    final item = await userApi.getUserInfo();
-    final userId = item.id;
-    final items = await feedsApi.listFeedsByUserId(1, 10, userId, 1);
-    feeds.assignAll(items);
-    logger.d('feeds loaded: ${feeds.length}');
-    hideLoading();
+  Future<void> listFeeds({bool loadMore = false}) async {
+    if (!loadMore) {
+      showLoading();
+    }
+
+    try {
+      if (loadMore) {
+        await feedsService.loadDraftsMore();
+      } else {
+        await feedsService.loadDraftsInitial();
+      }
+    } finally {
+      if (!loadMore) hideLoading();
+    }
   }
+
+  bool get hasMore => feedsService.hasMoreDrafts;
 
   void goBack() {
     Get.rootDelegate.offNamed(AppRoutes.mainScreen);
   }
 
-  void openDraft(int feedId) {
-    Get.rootDelegate.toNamed(AppRoutes.draftWithId(feedId));
+  void openDraft(String pk) {
+    Get.rootDelegate.toNamed(createPostScreen, arguments: {'postPk': pk});
   }
 
-  Future<void> deleteDraft(int feedId) async {
-    logger.d("delete draft id: ${feedId}");
+  Future<void> deleteDraft(String pk) async {
+    if (isBusy.value) return;
+    isBusy.value = true;
+
     try {
-      final res = await feedsApi.deleteFeed(feedId);
-
-      if (res != null) {
-        Biyard.info("Delete Draft successfully");
-        listFeeds();
+      final ok = await feedsService.deleteDraft(pk);
+      if (ok) {
+        Biyard.info('Delete Draft successfully');
       } else {
-        Biyard.error(
-          "Failed to delete draft.",
-          "Delete Draft failed. Please try again later.",
-        );
+        Biyard.error('Failed to delete draft.', 'Please try again later.');
       }
-    } finally {}
+    } finally {
+      isBusy.value = false;
+    }
   }
-
-  RxList<FeedModel> feeds = <FeedModel>[].obs;
-  Rx<bool> isBusy = false.obs;
 }

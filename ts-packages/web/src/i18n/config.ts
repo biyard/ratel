@@ -55,6 +55,7 @@ import { i18nSpaceRecommendationEditor } from '@/features/spaces/recommendations
 import { i18nAdmin } from '@/app/admin/admin-page-i18n';
 import { i18nAdmins } from '@/app/admin/users/admins-page-i18n';
 import { i18nMemberships } from '@/features/membership/i18n';
+import { i18nNotifications } from '@/features/notification/i18n';
 import { i18nHeader } from '@/components/header/i18n';
 import i18nListDrafts from '@/features/drafts/components/list-drafts/i18n';
 import { CreatePostPage } from '@/features/posts/components/create-post-page/i18n';
@@ -62,6 +63,7 @@ import { CreateArtworkPage } from '@/features/posts/components/create-artwork-pa
 import { i18nSpaceForm } from '@/features/spaces/components/space-form-i18n';
 import { i18nSubmitSurveyModal } from '@/features/spaces/polls/components/modal/submit_survey/submit-survey-modal-i18n';
 import { MembershipPlan } from '@/features/membership/components/membership-plan/i18n';
+import { MembershipPage } from '@/app/membership/membership-page-i18n';
 import { UserSidemenu } from '@/features/users/components/user-sidemenu/i18n';
 import { Credentials } from '@/features/did/components/credentials/i18n';
 import { i18nFooter } from '@/components/footer/i18n';
@@ -76,6 +78,7 @@ import { i18nAttributeCodes } from '@/app/admin/attribute-codes/attribute-codes-
 import { Errors } from '@/features/errors/i18n';
 import { MySpaces } from '@/app/(social)/my-spaces/i18n';
 import { i18nCompleteSurveyModal } from '@/features/spaces/polls/components/modal/complete_survey/complete-survey-modal-i18n';
+import { rewardsI18n } from '@/features/spaces/rewards/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -145,6 +148,7 @@ Object.entries({
   Admin: i18nAdmin,
   Admins: i18nAdmins,
   Memberships: i18nMemberships,
+  Notifications: i18nNotifications,
   AttributeCodes: i18nAttributeCodes,
   Nav: i18nHeader,
   ListDrafts: i18nListDrafts,
@@ -152,6 +156,7 @@ Object.entries({
   CreateArtworkPage,
   SpaceForm: i18nSpaceForm,
   MembershipPlan,
+  MembershipPage,
   UserSidemenu,
   Credentials,
   Footer: i18nFooter,
@@ -161,6 +166,7 @@ Object.entries({
   SpaceSettings,
   Errors,
   MySpaces,
+  Rewards: rewardsI18n,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;

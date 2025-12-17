@@ -29,6 +29,12 @@ jobs:
           name: survey-worker-${{ github.sha }}
           path: ./cdk/survey-worker
 
+      - name: Write Firebase service account (dev)
+        run: |
+          mkdir -p cdk/main-api/.gcp
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" \
+            | base64 -d > cdk/main-api/.gcp/firebase-service-account.json
+
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -64,6 +70,12 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - name: Write Firebase service account (dev)
+        run: |
+          mkdir -p .gcp
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON_BASE64 }}" | base64 -d > .gcp/firebase-service-account.json
+
       - name: Cache builder
         id: main-api-build-cache
         uses: actions/cache@v4
@@ -108,8 +120,7 @@ jobs:
           SERVICE: main-api
           DOMAIN: dev.ratel.foundation
           BUCKET_NAME: metadata.ratel.foundation
-          SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
-          SLACK_CHANNEL_ABUSING: ${{ secrets.DEV_SLACK }}
+          SLACK_HOOK: ${{ secrets.DEV_SLACK }}
 
           BINANCE_API_KEY: ${{ secrets.DEV_BINANCE_API_KEY }}
           BINANCE_SECRET_KEY: ${{ secrets.DEV_BINANCE_SECRET_KEY }}
@@ -137,17 +148,25 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-dev
           DYNAMO_ENDPOINT: none
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          RUST_FLAG: "--features bypass,lambda --release"
+          RUST_FLAG: "--features lambda --release"
           WEB_BUILD: false
           PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
           PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
           PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
+          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+
+          FCM_ENABLED: true
+          RATEL_PROJECT_ID: ${{ secrets.RATEL_PROJECT_ID }}
+          REWARD: true
+
         run: |
           tar xzvf dist.tar.gz
           ls dist
 
           make build
 
+          mkdir -p ../../.gcp
+          cp .gcp/firebase-service-account.json ../../.gcp/firebase-service-account.json
           mv target/release/main-api ../../bootstrap
 
       - name: Upload Artifacts
@@ -279,6 +298,12 @@ jobs:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
 
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           components: clippy, rustfmt
@@ -299,41 +324,10 @@ jobs:
           RUST_LOG: info
           SERVICE: survey-worker
           DOMAIN: dev.ratel.foundation
-          BUCKET_NAME: metadata.ratel.foundation
-          SLACK_CHANNEL_SPONSOR: ${{ secrets.DEV_SLACK }}
-          SLACK_CHANNEL_ABUSING: ${{ secrets.DEV_SLACK }}
-
-          BINANCE_API_KEY: ${{ secrets.DEV_BINANCE_API_KEY }}
-          BINANCE_SECRET_KEY: ${{ secrets.DEV_BINANCE_SECRET_KEY }}
-          BINANCE_WEBHOOK: https://api.dev.ratel.foundation/v2/binances/webhooks
-          REDIRECT_DOMAIN: https://dev.ratel.foundation
-
-          KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
-          KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
-          KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
-          KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
-          KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
-
-          TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
-
-          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
-          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
-          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
-          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
-
-          P256_X: ${{ secrets.P256_X }}
-          P256_Y: ${{ secrets.P256_Y }}
-          P256_D: ${{ secrets.P256_D }}
-          P256_CRV: ${{ secrets.P256_CRV }}
-
           DYNAMO_TABLE_PREFIX: ratel-dev
           DYNAMO_ENDPOINT: none
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          RUST_FLAG: "--features bypass,lambda --release"
+          RUST_FLAG: "--features bypass,lambda"
           WEB_BUILD: false
-          PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
-          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
-          PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
         run: |
           make bin.build
           mv target/release/survey-worker ../../bootstrap
@@ -465,6 +459,22 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
+      - name: Free disk space for Android build
+        run: |
+          echo "Before cleanup:"
+          df -h
+
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+
+          sudo rm -rf /usr/local/lib/android/sdk/system-images
+          sudo rm -rf /usr/local/lib/android/sdk/emulator
+
+          docker system prune -af || true
+
+          echo "After cleanup:"
+          df -h
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -506,21 +516,20 @@ jobs:
         run: |
           make ENV=dev build-config
           flutter build apk --debug --dart-define-from-file=.build/config.json
-      - name: Package single APK (zip)
+
+      - name: Find built APK
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p .build
           APK=$(ls -t build/app/outputs/flutter-apk/*.apk | head -n 1)
-          ZIP=".build/$(basename "${APK%.apk}").zip"
-          zip -j "$ZIP" "$APK"
-          echo "APK_ZIP=$PWD/$ZIP" >> $GITHUB_ENV
-          ls -lh "$APK" "$ZIP"
+          echo "APK_PATH=$PWD/$APK" >> $GITHUB_ENV
+          ls -lh "$APK"
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: mobile-apk-${{ github.sha }}
-          path: ${{ env.APK_ZIP }}
+          path: ${{ env.APK_PATH }}
           if-no-files-found: error
           retention-days: 30
 

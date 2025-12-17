@@ -26,45 +26,29 @@ pub struct UserMembership {
 
     // Fixed typo: membership_pk not memberhship_pk
     #[dynamo(prefix = "UM", name = "find_by_membership", index = "gsi1", pk)]
-    pub membership_pk: Partition,
+    pub membership_pk: MembershipPartition,
     pub status: MembershipStatus,
 
     // Credits management
     pub total_credits: i64,
     pub remaining_credits: i64,
 
-    // Payment tracking
-    pub purchase_id: Option<CompositePartition>,
-
     // Renewal tracking
     pub auto_renew: bool,
 
-    // Cancellation tracking
-    pub cancelled_at: Option<i64>,
-    pub cancellation_reason: Option<String>,
+    // Optional: Next membership tier for auto-renewal
+    // If absent, keep same membership
+    pub next_membership: Option<MembershipPartition>,
 }
 
 impl UserMembership {
     pub fn new(
-        user_pk: Partition,
-        membership_pk: Partition,
+        user_pk: UserPartition,
+        membership_pk: MembershipPartition,
         duration_days: i32,
         credits: i64,
     ) -> crate::Result<Self> {
-        // Validation
-        if !matches!(user_pk, Partition::User(_)) {
-            return Err(crate::Error::InvalidPartitionKey(
-                "pk must be User partition".to_string(),
-            ));
-        }
-
-        if !matches!(membership_pk, Partition::Membership(_)) {
-            return Err(crate::Error::InvalidPartitionKey(
-                "membership_pk must be Membership partition".to_string(),
-            ));
-        }
-
-        let created_at = chrono::Utc::now().timestamp_micros();
+        let created_at = now();
 
         // Fix: Convert to i64 before multiplication to prevent overflow
         // Support -1 and 0 for infinite/lifetime memberships
@@ -72,11 +56,11 @@ impl UserMembership {
             // Infinite/Lifetime membership (far future)
             i64::MAX
         } else {
-            created_at + (duration_days as i64) * 24 * 60 * 60 * 1_000_000
+            created_at + (duration_days as i64) * 24 * 60 * 60 * 1_000
         };
 
         Ok(Self {
-            pk: user_pk,
+            pk: user_pk.into(),
             sk: EntityType::UserMembership,
             membership_pk,
             created_at,
@@ -85,63 +69,26 @@ impl UserMembership {
             total_credits: credits,
             remaining_credits: credits,
             auto_renew: true,
-            cancelled_at: None,
-            cancellation_reason: None,
-            purchase_id: None,
             status: MembershipStatus::Active,
+            next_membership: None,
         })
     }
 
     /// Check if membership is currently active and not expired
     pub fn is_active(&self) -> bool {
         self.status == MembershipStatus::Active
-            && (self.expired_at == i64::MAX
-                || self.expired_at > chrono::Utc::now().timestamp_micros())
+            && (self.expired_at == i64::MAX || self.expired_at > now())
     }
 
     /// Check if membership is expired
     pub fn is_expired(&self) -> bool {
         // Infinite memberships (i64::MAX) never expire
-        self.expired_at != i64::MAX && self.expired_at <= chrono::Utc::now().timestamp_micros()
+        self.expired_at != i64::MAX && self.expired_at <= now()
     }
 
     /// Check if membership has infinite duration
     pub fn is_infinite(&self) -> bool {
         self.expired_at == i64::MAX
-    }
-
-    /// Cancel the membership
-    pub fn cancel(&mut self, reason: Option<String>) {
-        self.status = MembershipStatus::Cancelled;
-        self.cancelled_at = Some(chrono::Utc::now().timestamp_micros());
-        self.cancellation_reason = reason;
-        self.updated_at = chrono::Utc::now().timestamp_micros();
-        self.auto_renew = false;
-    }
-
-    /// Renew the membership
-    pub fn renew(&mut self, duration_days: i32) -> crate::Result<()> {
-        let now = chrono::Utc::now().timestamp_micros();
-
-        // Extend from current expiration or now, whichever is later
-        let base_time = if self.expired_at > now {
-            self.expired_at
-        } else {
-            now
-        };
-
-        // Support -1 and 0 for infinite/lifetime memberships
-        let new_expiration = if duration_days <= 0 {
-            i64::MAX
-        } else {
-            base_time + (duration_days as i64) * 24 * 60 * 60 * 1_000_000
-        };
-
-        self.expired_at = new_expiration;
-        self.status = MembershipStatus::Active.into();
-        self.updated_at = now;
-
-        Ok(())
     }
 
     /// Use credits from this membership
@@ -151,7 +98,7 @@ impl UserMembership {
         }
 
         self.remaining_credits -= amount;
-        self.updated_at = chrono::Utc::now().timestamp_micros();
+        self.updated_at = now();
 
         Ok(())
     }
@@ -160,14 +107,14 @@ impl UserMembership {
     pub fn add_credits(&mut self, amount: i64) {
         self.remaining_credits += amount;
         self.total_credits += amount;
-        self.updated_at = chrono::Utc::now().timestamp_micros();
+        self.updated_at = now();
     }
 
     /// Mark as expired if past expiration date
     pub fn check_and_update_expiration(&mut self) -> bool {
         if self.is_expired() && self.status == MembershipStatus::Active {
             self.status = MembershipStatus::Expired;
-            self.updated_at = chrono::Utc::now().timestamp_micros();
+            self.updated_at = now();
             true
         } else {
             false
@@ -182,6 +129,38 @@ impl UserMembership {
     /// Set membership status
     pub fn set_status(&mut self, status: MembershipStatus) {
         self.status = status.into();
-        self.updated_at = chrono::Utc::now().timestamp_micros();
+        self.updated_at = now();
+    }
+
+    /// Builder method - placeholder for purchase_id (field doesn't exist in current model)
+    /// This is a compatibility method for existing code
+    pub fn with_purchase_id(self, _purchase_id: CompositePartition) -> Self {
+        // No-op: purchase_id field doesn't exist in the simplified model
+        self
+    }
+
+    pub fn calculate_remaining_duration_days(&self) -> i32 {
+        if self.is_infinite() {
+            return -1; // Infinite duration
+        }
+
+        let now = now();
+        if self.expired_at <= now {
+            return 0; // Already expired
+        }
+
+        let remaining_millis = self.expired_at - now;
+        let remaining_days = remaining_millis / (24 * 60 * 60 * 1_000);
+
+        remaining_days as i32
+    }
+
+    pub fn renewal_date_rfc_3339(&self) -> Option<String> {
+        if self.is_infinite() {
+            return None; // Infinite memberships do not have a renewal date
+        }
+
+        let datetime = chrono::DateTime::from_timestamp_millis(self.expired_at).unwrap();
+        Some(datetime.to_rfc3339())
     }
 }

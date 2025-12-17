@@ -32,10 +32,16 @@ import { useParticipateSpaceMutation } from '@/features/spaces/hooks/use-partici
 import { SpaceType } from '@/features/spaces/types/space-type';
 import SpaceStartModal from '@/features/spaces/modals/space-start-modal';
 import { useStartSpaceMutation } from '@/features/spaces/hooks/use-start-mutation';
-import { SpaceStatus } from '@/features/spaces/types/space-common';
+import {
+  SpacePublishState,
+  SpaceStatus,
+} from '@/features/spaces/types/space-common';
 import useFileSpace from '@/features/spaces/files/hooks/use-file-space';
 import SpaceAuthorizePopup from './space-authorize-popup';
-import SpaceEndPopup from './space-end-popup';
+import SpaceEndModal from '@/features/spaces/modals/space-end-modal';
+import { useFinishSpaceMutation } from '@/features/spaces/hooks/use-finish-mutation';
+import { config } from '@/config';
+import { Trophy } from '@/assets/icons/game';
 
 export class SpaceHomeController {
   public space: Space;
@@ -56,6 +62,7 @@ export class SpaceHomeController {
     public popup: ReturnType<typeof usePopup>,
     public publishSpace: ReturnType<typeof usePublishSpaceMutation>,
     public startSpace: ReturnType<typeof useStartSpaceMutation>,
+    public finishSpace: ReturnType<typeof useFinishSpaceMutation>,
     public deleteSpace: ReturnType<typeof useDeleteSpaceMutation>,
     public image: State<string | null>,
     public hasFiles: boolean,
@@ -111,6 +118,8 @@ export class SpaceHomeController {
       }
     });
 
+    // It seems like admins shouldn't be able to change settings after a space is published.
+    // If a change is made to the settings, the anomyous attribute can also be changed, but in this case, matching between participating and non-participating users may not be possible.
     if (this.space.isAdmin()) {
       menus = menus.concat(this.adminMenus);
     }
@@ -123,13 +132,22 @@ export class SpaceHomeController {
   }
 
   get adminMenus(): SideMenuProps[] {
-    return [
+    const menus = [
       {
         Icon: Settings,
         to: route.spaceSetting(this.space.pk),
         label: this.t('menu_admin_settings'),
       },
     ];
+    // FIXME: add rewards only space_common.rewards is not null
+    // if (config.experiment) {
+    //   menus.push({
+    //     Icon: Trophy,
+    //     to: route.spaceRewardSetting(this.space.pk),
+    //     label: this.t('menu_rewards_settings'),
+    //   });
+    // }
+    return menus;
   }
 
   handleRemovePdf = (index: number) => {
@@ -279,13 +297,6 @@ export class SpaceHomeController {
 
   handlePublish = async (publishType) => {
     logger.debug('Publishing space with type:', publishType);
-    if (
-      this.space.spaceType === SpaceType.Deliberation &&
-      !this.space.anonymous_participation
-    ) {
-      showErrorToast(this.t('enable_anonymous_option_failed'));
-      return;
-    }
 
     if (this.publishHook) {
       this.publishHook();
@@ -319,6 +330,24 @@ export class SpaceHomeController {
     } catch (err) {
       logger.error('start space failed: ', err);
       showErrorToast(this.t('failed_start_space'));
+    } finally {
+      this.popup.close();
+    }
+
+    this.popup.close();
+  };
+
+  handleFinish = async () => {
+    try {
+      this.finishSpace.mutateAsync({
+        spacePk: this.space.pk,
+        block: true,
+      });
+
+      showSuccessToast(this.t('success_finish_space'));
+    } catch (err) {
+      logger.error('finish space failed: ', err);
+      showErrorToast(this.t('failed_finish_space'));
     } finally {
       this.popup.close();
     }
@@ -401,6 +430,22 @@ export class SpaceHomeController {
         />,
       )
       .withTitle(this.t('start_space'))
+      .withoutBackdropClose();
+  };
+
+  handleActionFinish = async () => {
+    logger.debug('Action end triggered');
+
+    this.popup
+      .open(
+        <SpaceEndModal
+          onEnded={this.handleFinish}
+          onClose={() => {
+            this.popup.close();
+          }}
+        />,
+      )
+      .withTitle(this.t('end_space'))
       .withoutBackdropClose();
   };
 
@@ -552,6 +597,13 @@ export class SpaceHomeController {
       });
     }
 
+    if (this.space.isStarted) {
+      ret.unshift({
+        label: this.t('finished'),
+        onClick: this.handleActionFinish,
+      });
+    }
+
     // if (this.space.isStarted) {
     //   ret.unshift({
     //     label: this.t('finished'),
@@ -587,6 +639,7 @@ export function useSpaceHomeController(spacePk: string) {
   const updateSpaceFiles = useSpaceUpdateFilesMutation();
   const publishSpace = usePublishSpaceMutation();
   const startSpace = useStartSpaceMutation();
+  const finishSpace = useFinishSpaceMutation();
   const deleteSpace = useDeleteSpaceMutation();
   const { mutateAsync: updateDraftImage } = useUpdateDraftImageMutation();
   const participateSpace = useParticipateSpaceMutation();
@@ -614,15 +667,6 @@ export function useSpaceHomeController(spacePk: string) {
   }, [data.space.data, image]);
 
   useEffect(() => {
-    if (
-      data.space.data.status !== SpaceStatus.InProgress &&
-      !data.space.data.isAdmin()
-    ) {
-      popup.open(<SpaceEndPopup />).withTitle(t('end_space_title'));
-    }
-  }, [data.space.data]);
-
-  useEffect(() => {
     const remote = data.space.data?.files ?? [];
     if (!data.space.isSuccess) return;
     if (filesInitializedRef.current) return;
@@ -643,6 +687,7 @@ export function useSpaceHomeController(spacePk: string) {
   }, [data.space.isSuccess, data.space.data?.files]);
 
   const participationAttemptedRef = useRef(false);
+
   useEffect(() => {
     if (participationAttemptedRef.current || participateSpace.isPending) {
       return;
@@ -652,8 +697,7 @@ export function useSpaceHomeController(spacePk: string) {
 
     if (!space) return;
 
-    const shouldAutoParticipate =
-      space.shouldParticipateManually() && space.canParticipate;
+    const shouldAutoParticipate = space.canParticipate;
 
     if (!shouldAutoParticipate) return;
 
@@ -692,6 +736,7 @@ export function useSpaceHomeController(spacePk: string) {
     popup,
     publishSpace,
     startSpace,
+    finishSpace,
     deleteSpace,
     new State(image),
     hasFiles,

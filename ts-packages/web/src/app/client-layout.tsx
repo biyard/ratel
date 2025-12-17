@@ -10,6 +10,8 @@ import { NavLink } from 'react-router';
 import { useUserInfo } from '@/hooks/use-user-info';
 import Footer from '@/components/footer';
 import MobileSideMenu from '@/components/mobile-side-menu';
+import { usePageTracking } from '@/features/analytics/hooks/use-analytics';
+import { setAnalyticsUserId, setAnalyticsUserProperties } from '@/lib/service/analytics-service';
 
 export default function ClientLayout({
   children,
@@ -20,6 +22,23 @@ export default function ClientLayout({
   const popup = usePopup();
   const { data } = useUserInfo();
   const [mobileExtends, setMobileExtends] = useState(false);
+
+  // Track page views automatically
+  usePageTracking();
+
+  // Track user identification for analytics
+  useEffect(() => {
+    if (data) {
+      setAnalyticsUserId(data.pk);
+      setAnalyticsUserProperties({
+        username: data.username,
+        email: data.email,
+        nickname: data.nickname,
+      });
+    } else {
+      setAnalyticsUserId(null);
+    }
+  }, [data]);
 
   useEffect(() => {
     document.body.style.overflow = mobileExtends ? 'hidden' : '';

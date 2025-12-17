@@ -1,61 +1,130 @@
 import 'package:ratel/exports.dart';
 
 class HomeController extends BaseController {
+  final feedsService = Get.find<FeedsService>();
   final feedsApi = Get.find<FeedsApi>();
-  final dashboardsApi = Get.find<DashboardsApi>();
+
+  RxList<FeedSummaryModel> get feeds => feedsService.homeFeeds;
+
+  final RxBool isLoading = false.obs;
+  final RxBool isLoadingMore = false.obs;
+  final RxBool hasMore = false.obs;
+
+  final RxBool isLikingPost = false.obs;
+
+  late final ScrollController scrollController;
 
   @override
   void onInit() {
     super.onInit();
-    getDashboards();
+    scrollController = ScrollController()..addListener(_onScroll);
+    loadInitial();
   }
 
-  void getDashboards() async {
+  void _onScroll() {
+    if (!scrollController.hasClients) return;
+    if (!hasMore.value || isLoadingMore.value) return;
+
+    final max = scrollController.position.maxScrollExtent;
+    final offset = scrollController.offset;
+
+    if (offset >= max - 200) {
+      loadMore();
+    }
+  }
+
+  Future<void> loadInitial() async {
+    isLoading.value = true;
     showLoading();
-    final item = await dashboardsApi.getDashboards();
-    logger.d(
-      "space length: ${item.topSpaces.length} matched feeds length: ${item.matchedFeeds.length} new feeds length: ${item.newFeeds.length}",
-    );
-    topSpaces(item.topSpaces);
-    matchedFeeds(item.matchedFeeds);
-    newFeeds(item.newFeeds);
-    hideLoading();
+
+    try {
+      await feedsService.loadHomeInitial();
+      hasMore.value = feedsService.hasMoreHome;
+    } finally {
+      hideLoading();
+      isLoading.value = false;
+    }
   }
 
-  Future<void> addBookmark(int feedId) async {
-    logger.d("bookmarked feed id: ${feedId}");
-    try {
-      final res = await feedsApi.addBookmark(feedId);
+  Future<void> loadMore() async {
+    if (!hasMore.value || isLoadingMore.value) return;
 
-      if (res != null) {
-        Biyard.info("Bookmarked successfully");
-        getDashboards();
+    isLoadingMore.value = true;
+    try {
+      await feedsService.loadHomeMore();
+      hasMore.value = feedsService.hasMoreHome;
+    } finally {
+      isLoadingMore.value = false;
+    }
+  }
+
+  Future<void> toggleLikePost(FeedSummaryModel target) async {
+    if (isLikingPost.value) return;
+
+    final index = feeds.indexWhere((f) => f.pk == target.pk);
+    if (index == -1) return;
+
+    final original = feeds[index];
+
+    final alreadyLiked = original.liked == true;
+    final nextLike = !alreadyLiked;
+
+    final originalLikes = original.likes;
+    var newLikes = originalLikes;
+
+    if (nextLike && !alreadyLiked) {
+      newLikes = originalLikes + 1;
+    } else if (!nextLike && alreadyLiked && originalLikes > 0) {
+      newLikes = originalLikes - 1;
+    }
+
+    feeds[index].liked = nextLike;
+    feeds[index].likes = newLikes;
+    feeds.refresh();
+
+    isLikingPost.value = true;
+    try {
+      final res = await feedsApi.likePost(postPk: original.pk, like: nextLike);
+
+      if (res == null || res.like != nextLike) {
+        feeds[index].liked = alreadyLiked;
+        feeds[index].likes = originalLikes;
+        feeds.refresh();
+        return;
+      }
+
+      feedsService.patchDetailFromSummary(feeds[index]);
+
+      if (nextLike) {
+        Biyard.info("Success to like post");
+      } else {
+        Biyard.info("Success to unlike post");
+      }
+    } catch (e, s) {
+      logger.e('Failed to toggle like from home: $e', stackTrace: s);
+      feeds[index].liked = alreadyLiked;
+      feeds[index].likes = originalLikes;
+      feeds.refresh();
+
+      if (nextLike) {
+        Biyard.error(
+          "Like Failed",
+          "Failed to like post. Please try again later.",
+        );
       } else {
         Biyard.error(
-          "Failed to bookmark.",
-          "Bookmarked failed. Please try again later.",
+          "Unlike Failed",
+          "Failed to unlike post. Please try again later.",
         );
       }
-    } finally {}
+    } finally {
+      isLikingPost.value = false;
+    }
   }
 
-  Future<void> removebookmark(int feedId) async {
-    try {
-      final res = await feedsApi.removeBookmark(feedId);
-
-      if (res != null) {
-        Biyard.info("Remove Bookmarked successfully");
-        getDashboards();
-      } else {
-        Biyard.error(
-          "Failed to remove bookmark.",
-          "Remove Bookmarked failed. Please try again later.",
-        );
-      }
-    } finally {}
+  @override
+  void onClose() {
+    scrollController.dispose();
+    super.onClose();
   }
-
-  RxList<SpaceSummary> topSpaces = <SpaceSummary>[].obs;
-  RxList<FeedSummary> matchedFeeds = <FeedSummary>[].obs;
-  RxList<FeedSummary> newFeeds = <FeedSummary>[].obs;
 }

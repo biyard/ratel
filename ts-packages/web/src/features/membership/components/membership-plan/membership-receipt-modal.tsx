@@ -6,19 +6,10 @@ import { Paragraph } from '@/components/ui/paragraph';
 import Heading from '@/components/ui/heading';
 import Card from '@/components/card';
 import { ReceiptModalI18n } from './i18n';
-
-export interface PaymentReceipt {
-  status: string;
-  transaction_id: string;
-  membership_tier: string;
-  amount: number;
-  duration_days: number;
-  credits: number;
-  paid_at: number;
-}
+import { MembershipPaymentResponse } from '@/features/payment/hooks/use-kpn-payment';
 
 export interface MembershipReceiptModalProps {
-  receipt: PaymentReceipt;
+  receipt: MembershipPaymentResponse;
   onClose: () => void;
   t: ReceiptModalI18n;
 }
@@ -29,8 +20,8 @@ export function MembershipReceiptModal({
   t,
 }: MembershipReceiptModalProps) {
   // Convert microseconds to date string
-  const formatDate = (microseconds: number) => {
-    const date = new Date(microseconds / 1000);
+  const formatDate = (milliseconds: number) => {
+    const date = new Date(milliseconds);
     return date.toLocaleDateString(undefined, {
       year: 'numeric',
       month: 'long',
@@ -62,8 +53,8 @@ export function MembershipReceiptModal({
               <Paragraph className="text-sm font-medium text-text-secondary">
                 {t.transactionIdLabel}
               </Paragraph>
-              <Paragraph className="text-sm font-mono text-text-primary">
-                {receipt.transaction_id.slice(0, 16)}...
+              <Paragraph className="font-mono text-sm text-text-primary">
+                {receipt.receipt.tx_id.slice(0, 16)}...
               </Paragraph>
             </Row>
 
@@ -75,7 +66,7 @@ export function MembershipReceiptModal({
                 {t.membershipLabel}
               </Paragraph>
               <Paragraph className="text-sm font-semibold text-text-primary">
-                {receipt.membership_tier}
+                {receipt.membership.tier}
               </Paragraph>
             </Row>
 
@@ -85,7 +76,7 @@ export function MembershipReceiptModal({
                 {t.amountLabel}
               </Paragraph>
               <Heading variant="heading5" className="text-primary">
-                ${receipt.amount}
+                ₩{receipt.receipt.amount.toLocaleString()}
               </Heading>
             </Row>
 
@@ -95,7 +86,7 @@ export function MembershipReceiptModal({
                 {t.durationLabel}
               </Paragraph>
               <Paragraph className="text-sm text-text-primary">
-                {receipt.duration_days} {t.daysLabel}
+                {receipt.membership.duration_days} {t.daysLabel}
               </Paragraph>
             </Row>
 
@@ -105,7 +96,7 @@ export function MembershipReceiptModal({
                 {t.creditsLabel}
               </Paragraph>
               <Paragraph className="text-sm text-text-primary">
-                {receipt.credits.toLocaleString()}
+                {receipt.membership.credits.toLocaleString()}
               </Paragraph>
             </Row>
 
@@ -117,7 +108,7 @@ export function MembershipReceiptModal({
                 {t.paidAtLabel}
               </Paragraph>
               <Paragraph className="text-sm text-text-primary">
-                {formatDate(receipt.paid_at)}
+                {formatDate(receipt.receipt.paid_at)}
               </Paragraph>
             </Row>
           </Col>
@@ -127,7 +118,7 @@ export function MembershipReceiptModal({
         <button
           data-pw="receipt-close-button"
           onClick={onClose}
-          className="w-full px-10 text-base font-bold transition-colors py-[14.5px] text-submit-button-text rounded-[10px] bg-submit-button-bg hover:bg-submit-button-bg/80"
+          className="px-10 w-full text-base font-bold transition-colors py-[14.5px] text-submit-button-text rounded-[10px] bg-submit-button-bg hover:bg-submit-button-bg/80"
         >
           {t.closeButton}
         </button>

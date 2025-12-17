@@ -28,6 +28,7 @@ pub enum Partition {
 
     User(String),
     Email(String),
+    Phone(String),
     Feed(String),
     PostReply(String), // POST_REPLY#{{post_pk}}
     PostLike(String),
@@ -49,7 +50,7 @@ pub enum Partition {
 
     PanelAttribute,
     PanelParticipant,
-    Panels(String),
+    // Panels(String),
     Panel(String),
     // Survey(String),
     // SurveyResponse(String),
@@ -83,6 +84,13 @@ pub enum Partition {
     // Payment Sub partition
     Purchase, // For user purchases, USER#{user_id}##PURCHASE
     Payment,  // For user payment, USER#{user_id}##PAYMENT
+
+    Reward, // For space rewards, SPACE#{space_id}##REWARD
+
+    Report(String),
+
+    UserReward(String),        // USER_REWARD#{user_id}
+    UserRewardHistory(String), // USER_REWARD_HISTORY#{user_id}
 }
 
 impl Partition {

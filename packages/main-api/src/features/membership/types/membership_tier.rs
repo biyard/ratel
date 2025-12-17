@@ -4,6 +4,8 @@ use bdk::prelude::*;
     Debug,
     Clone,
     PartialEq,
+    PartialOrd,
+    Ord,
     Eq,
     serde_with::SerializeDisplay,
     serde_with::DeserializeFromStr,

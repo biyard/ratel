@@ -6,11 +6,13 @@ import { logger } from '@/lib/logger';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { useSettingsI18n } from './i18n';
 import { useSpaceUpdateChangeVisibilityMutation } from '@/features/spaces/hooks/use-space-update-change-visibility-mutation';
+import { usePublishSpaceMutation } from '@/features/spaces/hooks/use-publish-mutation';
 
 export class SpaceSettingsController {
   constructor(
     public data: ReturnType<typeof useSpaceSettingsData>,
     public state: State<boolean>,
+    public publishSpace: ReturnType<typeof usePublishSpaceMutation>,
     public updateAnonymousParticipation: ReturnType<
       typeof useSpaceUpdateAnonymousParticipationMutation
     >,
@@ -20,6 +22,20 @@ export class SpaceSettingsController {
     public spacePk: string,
     public i18n: ReturnType<typeof useSettingsI18n>,
   ) {}
+
+  handleActionPrivate = async () => {
+    this.publishSpace.mutateAsync({
+      spacePk: this.data.space.data.pk,
+      visibility: { type: 'PRIVATE' },
+    });
+  };
+
+  handleActionPublic = async () => {
+    this.publishSpace.mutateAsync({
+      spacePk: this.data.space.data.pk,
+      visibility: { type: 'PUBLIC' },
+    });
+  };
 
   handleAnonymousParticipationChange = async (value: boolean) => {
     try {
@@ -63,10 +79,12 @@ export function useSpaceSettingsController(spacePk: string) {
     useSpaceUpdateAnonymousParticipationMutation();
   const updateChangeVisibility = useSpaceUpdateChangeVisibilityMutation();
   const i18n = useSettingsI18n();
+  const publishSpace = usePublishSpaceMutation();
 
   return new SpaceSettingsController(
     data,
     new State(state),
+    publishSpace,
     updateAnonymousParticipation,
     updateChangeVisibility,
     spacePk,

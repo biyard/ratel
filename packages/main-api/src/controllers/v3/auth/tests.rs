@@ -2,6 +2,9 @@
 
 use std::convert;
 
+use crate::auth::verification::verify_code::VerifyCodeResponse;
+use crate::controllers::v3::auth::verification::send_code::SendCodeResponse;
+use crate::models::PhoneVerification;
 use crate::*;
 use crate::{
     models::{email::EmailVerification, user::User},
@@ -73,6 +76,66 @@ async fn test_email_with_password_signup() {
     assert!(headers.get("set-cookie").is_some());
     assert_eq!(user.username, username);
     assert_eq!(user.email, email);
+}
+
+#[tokio::test]
+async fn test_phone_signup() {
+    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+
+    let phone = format!("+1555{:07}", now % 10000000);
+    tracing::info!("Sending verification code to {}", phone);
+
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/auth/verification/send-verification-code",
+        body: {
+            "phone": phone.clone(),
+        },
+        response_type: SendCodeResponse
+    };
+    assert_eq!(status, 200);
+    assert!(body.expired_at > now as i64);
+
+    let verification = PhoneVerification::get(
+        &ddb,
+        Partition::Phone(phone.clone()),
+        Some(EntityType::PhoneVerification),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    let code = verification.value;
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/auth/verification/verify-code",
+        body: {
+            "phone": phone.clone(),
+            "code": code.clone(),
+        },
+        response_type: VerifyCodeResponse
+    };
+
+    assert_eq!(status, 200);
+    assert_eq!(body.success, true);
+
+    let (status, headers, user) = post! {
+        app: app,
+        path: "/v3/auth/signup",
+        body: {
+            "phone": phone.clone(),
+            "code": code,
+            "display_name": "testuser",
+            "username": "testuser",
+            "profile_url": "https://metadata.ratel.foundation/ratel/default-profile.png",
+            "description": "This is a test user.",
+            "term_agreed": true,
+            "informed_agreed": true,
+        },
+        response_type: crate::models::user::User
+    };
+
+    assert_eq!(status, 200);
+    assert!(headers.get("set-cookie").is_some());
 }
 
 #[tokio::test]
@@ -258,4 +321,186 @@ async fn test_reset_password() {
     };
 
     assert_eq!(status, 200);
+}
+
+#[tokio::test]
+async fn test_phone_login_new_user_auto_registration() {
+    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+
+    let phone = format!("+1555{:07}", now % 10000000);
+
+    // Send verification code
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/auth/verification/send-verification-code",
+        body: {
+            "phone": phone.clone(),
+        },
+        response_type: super::verification::send_code::SendCodeResponse
+    };
+    assert_eq!(status, 200);
+    assert!(body.expired_at > now as i64);
+
+    // Get the verification code from DynamoDB
+    let verification = crate::models::phone::PhoneVerification::get(
+        &ddb,
+        Partition::Phone(phone.clone()),
+        Some(EntityType::PhoneVerification),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    let code = verification.value;
+
+    // Login with phone (should auto-register)
+    let (status, headers, user) = post! {
+        app: app,
+        path: "/v3/auth/login",
+        body: {
+            "phone": phone.clone(),
+            "code": code,
+        },
+        response_type: crate::models::user::User
+    };
+
+    assert_eq!(status, 200);
+    assert!(headers.get("set-cookie").is_some());
+    assert_eq!(user.display_name, phone);
+    assert!(user.username.starts_with("user"));
+    assert!(user.email.ends_with("@phone.placeholder"));
+}
+
+#[tokio::test]
+async fn test_phone_login_existing_user() {
+    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+
+    let phone = format!("+1555{:07}", now % 10000000 + 100);
+
+    // First login - auto-register
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/auth/verification/send-verification-code",
+        body: {
+            "phone": phone.clone(),
+        },
+        response_type: super::verification::send_code::SendCodeResponse
+    };
+    assert_eq!(status, 200);
+
+    let verification = crate::models::phone::PhoneVerification::get(
+        &ddb,
+        Partition::Phone(phone.clone()),
+        Some(EntityType::PhoneVerification),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    let code1 = verification.value;
+
+    let (status, _headers, first_user) = post! {
+        app: app,
+        path: "/v3/auth/login",
+        body: {
+            "phone": phone.clone(),
+            "code": code1,
+        },
+        response_type: crate::models::user::User
+    };
+    assert_eq!(status, 200);
+
+    // Second login - should return same user
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/auth/verification/send-verification-code",
+        body: {
+            "phone": phone.clone(),
+        },
+        response_type: super::verification::send_code::SendCodeResponse
+    };
+    assert_eq!(status, 200);
+
+    let verification = crate::models::phone::PhoneVerification::get(
+        &ddb,
+        Partition::Phone(phone.clone()),
+        Some(EntityType::PhoneVerification),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    let code2 = verification.value;
+
+    let (status, headers, second_user) = post! {
+        app: app,
+        path: "/v3/auth/login",
+        body: {
+            "phone": phone.clone(),
+            "code": code2,
+        },
+        response_type: crate::models::user::User
+    };
+
+    assert_eq!(status, 200);
+    assert!(headers.get("set-cookie").is_some());
+    assert_eq!(first_user.pk, second_user.pk);
+    assert_eq!(first_user.username, second_user.username);
+}
+
+#[tokio::test]
+async fn test_phone_login_with_invalid_code() {
+    let TestContextV3 { app, now, ddb, .. } = setup_v3().await;
+
+    let phone = format!("+1555{:07}", now % 10000000 + 200);
+
+    // Send verification code
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/auth/verification/send-verification-code",
+        body: {
+            "phone": phone.clone(),
+        },
+        response_type: super::verification::send_code::SendCodeResponse
+    };
+    assert_eq!(status, 200);
+
+    // Attempt login with invalid code
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/auth/login",
+        body: {
+            "phone": phone.clone(),
+            "code": "999999",
+        }
+    };
+
+    assert_eq!(status, 400);
+
+    // Verify attempt count was incremented
+    let verification = crate::models::phone::PhoneVerification::get(
+        &ddb,
+        Partition::Phone(phone.clone()),
+        Some(EntityType::PhoneVerification),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+    assert_eq!(verification.attempt_count, 1);
+}
+
+#[tokio::test]
+async fn test_phone_login_without_verification_code() {
+    let TestContextV3 { app, now, .. } = setup_v3().await;
+
+    let phone = format!("+1555{:07}", now % 10000000 + 300);
+
+    // Attempt login without sending verification code first
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/auth/login",
+        body: {
+            "phone": phone.clone(),
+            "code": "123456",
+        }
+    };
+
+    assert_eq!(status, 400);
 }
