@@ -50,7 +50,7 @@ class SignupController extends BaseController {
 
       if (res != null) {
         signupService.phone(fullPhoneNumber);
-        Get.rootDelegate.offNamed(verificationScreen);
+        Get.rootDelegate.toNamed(verificationScreen);
       } else {
         Biyard.error(
           "Failed to send authorization code",
