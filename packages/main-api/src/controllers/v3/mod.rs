@@ -23,6 +23,7 @@ pub mod assets {
 
 pub mod auth;
 pub mod posts;
+pub mod presence;
 pub mod reports;
 pub mod spaces;
 pub mod teams;
@@ -57,6 +58,7 @@ pub struct RouteDeps {
 pub fn route(bot: Option<ArcTelegramBot>) -> Result<Router> {
     Ok(Router::new()
         .nest("/payments", payments::route()?)
+        .nest("/presence", presence::route()?)
         // .nest("/did", did::route()?)
         .nest(
             "/networks",
