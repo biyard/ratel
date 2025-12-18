@@ -303,22 +303,23 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
         10.vgap,
         if (_shouldExpandBody) ...[
           Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                body,
-                if (_showMissingRequired) ...[
-                  10.vgap,
-                  const WarningMessage(message: "Missing required fields"),
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  body,
+                  if (_showMissingRequired) ...[
+                    10.vgap,
+                    const WarningMessage(message: "Missing required fields"),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ] else ...[
           Column(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               body,
@@ -328,7 +329,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
               ],
             ],
           ),
-          Spacer(),
+          const Spacer(),
         ],
         24.vgap,
         Row(
