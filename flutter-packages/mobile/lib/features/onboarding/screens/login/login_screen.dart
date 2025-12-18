@@ -1,4 +1,8 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/features/onboarding/screens/login/components/email_form.dart';
+import 'package:ratel/features/onboarding/screens/login/components/login_top_bar.dart';
+import 'package:ratel/features/onboarding/screens/login/components/method_tab.dart';
+import 'package:ratel/features/onboarding/screens/login/components/phone_form.dart';
 
 class LoginScreen extends GetWidget<LoginController> {
   const LoginScreen({super.key});
@@ -6,119 +10,187 @@ class LoginScreen extends GetWidget<LoginController> {
   @override
   Widget build(BuildContext context) {
     return Layout<LoginController>(
-      scrollable: true,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+      scrollable: false,
+      child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AppTopBar(
-              onBack: () => {},
-              title: "Sign in",
-              rightLabel: "Sign up",
-              onRight: controller.goToSignup,
-              enableBack: false,
-            ),
-            20.vgap,
-            Text(
-              "Sign in to\nyour account",
-              style: AppFonts.textTheme.headlineMedium?.copyWith(
-                color: Colors.white,
-                height: 1.1,
-                fontSize: 34,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-            30.vgap,
-            AppTextField(
-              hint: 'Email',
-              controller: controller.emailCtrl,
-              keyboardType: TextInputType.emailAddress,
-              onChanged: (val) => controller.email.value = val.trim(),
-              rounded: 10,
-              bgColor: const Color(0xFF101010),
-              enabledBorderOverride: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(
-                  color: Color(0xFF2A2A2A),
-                  width: 1,
-                ),
-              ),
-              focusedBorderOverride: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(
-                  color: AppColors.primary,
-                  width: 1,
-                ),
-              ),
-            ),
-            20.vgap,
-            Obx(
-              () => AppTextField(
-                hint: 'Password',
-                controller: controller.passwordCtrl,
-                obscureText: !controller.showPassword.value,
-                onChanged: (val) => controller.password.value = val.trim(),
-                keyboardType: TextInputType.emailAddress,
-                rounded: 10,
-                bgColor: const Color(0xFF101010),
-                enabledBorderOverride: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(
-                    color: Color(0xFF2A2A2A),
-                    width: 1,
-                  ),
-                ),
-                focusedBorderOverride: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(
-                    color: AppColors.primary,
-                    width: 1,
-                  ),
-                ),
-              ),
-            ),
-            20.vgap,
-            SizedBox(
-              width: double.infinity,
-              child: Obx(
-                () => ElevatedButton(
-                  onPressed: controller.isFormValid && !controller.isBusy.value
-                      ? controller.signIn
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    disabledBackgroundColor: AppColors.primary.withValues(
-                      alpha: 0.6,
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LoginTopBar(
+                      title: 'Login',
+                      onBack: () => Get.back(),
+                      enableBack: true,
                     ),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                    6.vgap,
+                    Obx(
+                      () => MethodTabs(
+                        leftLabel: 'Phone',
+                        rightLabel: 'Email',
+                        leftSelected: controller.isPhone,
+                        onLeftTap: () =>
+                            controller.selectMethod(LoginMethod.phone),
+                        onRightTap: () =>
+                            controller.selectMethod(LoginMethod.email),
+                      ),
                     ),
-                  ),
-                  child: controller.isBusy.value
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xff1d1d1d),
-                          ),
-                        )
-                      : Text(
-                          'Sign in',
-                          style: AppFonts.textTheme.titleMedium?.copyWith(
-                            color: Color(0xff1d1d1d),
-                            fontWeight: FontWeight.w700,
-                            fontSize: 16,
-                          ),
-                        ),
+                    22.vgap,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Obx(
+                        () => controller.isPhone
+                            ? PhoneForm(
+                                countryName:
+                                    controller.selectedCountry.value.name,
+                                dialCode:
+                                    controller.selectedCountry.value.dialCode,
+                                phoneController: controller.phoneCtrl,
+                                onPhoneChanged: controller.onPhoneChanged,
+                                showWarning: controller.showWarning.value,
+                                onTapCountry: () async {
+                                  final selected =
+                                      await showCountryPickerBottomSheet(
+                                        context,
+                                      );
+                                  if (selected != null) {
+                                    controller.selectCountry(selected);
+                                  }
+                                },
+                              )
+                            : EmailForm(
+                                emailController: controller.emailCtrl,
+                                passwordController: controller.passwordCtrl,
+                                showPassword: controller.showPassword.value,
+                                onEmailChanged: controller.onEmailChanged,
+                                onPasswordChanged: controller.onPasswordChanged,
+                                showWarning: controller.showWarning.value,
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            40.vgap,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+              child: Column(
+                children: [
+                  Obx(() {
+                    final enabled =
+                        controller.isFormValid && !controller.isBusy.value;
+
+                    return _ContinueButton(
+                      enabled: enabled,
+                      loading: controller.isBusy.value,
+                      onTap: enabled
+                          ? controller.submit
+                          : controller.markWarningIfInvalid,
+                    );
+                  }),
+                  10.vgap,
+                  _SignupInlineRow(onTap: controller.goToSignup),
+                ],
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SignupInlineRow extends StatelessWidget {
+  const _SignupInlineRow({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 22,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            "Don’t have an account?",
+            style: AppFonts.textTheme.bodyMedium?.copyWith(
+              color: AppColors.neutral300,
+              fontWeight: FontWeight.w400,
+              fontSize: 15,
+              height: 22 / 15,
+            ),
+          ),
+          10.gap,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onTap,
+            child: Text(
+              'Sign up',
+              style: AppFonts.textTheme.bodyMedium?.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w400,
+                fontSize: 15,
+                height: 22 / 15,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ContinueButton extends StatelessWidget {
+  const _ContinueButton({
+    required this.enabled,
+    required this.loading,
+    required this.onTap,
+  });
+
+  final bool enabled;
+  final bool loading;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = enabled
+        ? AppColors.primary
+        : AppColors.primary.withValues(alpha: 0.6);
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: loading ? null : onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: loading
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Color(0xFF1D1D1D),
+                  ),
+                )
+              : Text(
+                  'Continue',
+                  style: AppFonts.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    height: 18 / 16,
+                    color: const Color(0xFF0A0A0A),
+                  ),
+                ),
         ),
       ),
     );
