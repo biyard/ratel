@@ -38,7 +38,6 @@ class SingleChoiceQuestionView extends StatelessWidget {
               child: Text(
                 question.options[i],
                 style: const TextStyle(
-                  fontFamily: 'Raleway',
                   fontWeight: FontWeight.w400,
                   fontSize: 16,
                   height: 24 / 16,
@@ -82,7 +81,6 @@ class SingleChoiceQuestionView extends StatelessWidget {
                 onChanged(SingleChoiceAnswer(othersIndex, value));
               },
               style: const TextStyle(
-                fontFamily: 'Raleway',
                 fontWeight: FontWeight.w400,
                 fontSize: 16,
                 height: 24 / 16,
@@ -94,7 +92,6 @@ class SingleChoiceQuestionView extends StatelessWidget {
                 border: InputBorder.none,
                 hintText: 'Input the option.',
                 hintStyle: TextStyle(
-                  fontFamily: 'Raleway',
                   fontWeight: FontWeight.w400,
                   fontSize: 16,
                   height: 24 / 16,
