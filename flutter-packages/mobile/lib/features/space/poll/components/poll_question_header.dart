@@ -33,7 +33,6 @@ class PollQuestionHeader extends StatelessWidget {
         const TextSpan(
           text: '[Required] ',
           style: TextStyle(
-            fontFamily: 'Raleway',
             fontWeight: FontWeight.w600,
             fontSize: 14,
             color: Color(0xFFFF6467),
@@ -47,7 +46,6 @@ class PollQuestionHeader extends StatelessWidget {
         const TextSpan(
           text: '[Single Choice] ',
           style: TextStyle(
-            fontFamily: 'Raleway',
             fontWeight: FontWeight.w600,
             fontSize: 14,
             color: Color(0xFF60A5FA),
@@ -59,7 +57,6 @@ class PollQuestionHeader extends StatelessWidget {
         const TextSpan(
           text: '[Multiple Choice] ',
           style: TextStyle(
-            fontFamily: 'Raleway',
             fontWeight: FontWeight.w600,
             fontSize: 14,
             color: Color(0xFF60A5FA),
@@ -72,7 +69,6 @@ class PollQuestionHeader extends StatelessWidget {
         TextSpan(
           text: q.isMulti ? '[Multiple Choice] ' : '[Single Choice] ',
           style: TextStyle(
-            fontFamily: 'Raleway',
             fontWeight: FontWeight.w600,
             fontSize: 14,
             color: q.isMulti
@@ -89,7 +85,6 @@ class PollQuestionHeader extends StatelessWidget {
       TextSpan(
         text: question.title,
         style: const TextStyle(
-          fontFamily: 'Raleway',
           fontWeight: FontWeight.w600,
           fontSize: 16,
           color: Colors.white,
