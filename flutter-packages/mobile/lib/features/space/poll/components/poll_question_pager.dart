@@ -1,7 +1,11 @@
+import 'dart:math' as math;
+
 import 'package:ratel/exports.dart';
 import 'package:intl/intl.dart';
 import 'package:ratel/features/space/poll/components/poll_question_body.dart';
 import 'package:ratel/features/space/poll/components/poll_question_header.dart';
+
+import 'poll_progress_header.dart';
 
 class PollQuestionPager extends StatefulWidget {
   const PollQuestionPager({
@@ -23,6 +27,7 @@ class PollQuestionPager extends StatefulWidget {
 
 class _PollQuestionPagerState extends State<PollQuestionPager> {
   late int _index;
+  late int _maxReached;
   late List<Answer?> _answers;
   bool _hasInitialResponse = false;
   late final bool _readOnly;
@@ -50,11 +55,22 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     logger.d(
       "date time: ${now} ${widget.poll.startedAt} ${widget.poll.endedAt}",
     );
+
     _readOnly =
         (widget.poll.myResponse != null && !widget.poll.responseEditable) ||
         (widget.isFinished) ||
         (now < widget.poll.startedAt) ||
         (now > widget.poll.endedAt);
+
+    final lastAnswered = _answers.lastIndexWhere((a) => a != null);
+    final total = widget.poll.questions.length;
+    _maxReached = _readOnly
+        ? (total - 1)
+        : math.max(_index, lastAnswered < 0 ? 0 : lastAnswered);
+
+    if (firstUnanswered == -1 && total > 0) {
+      _maxReached = total - 1;
+    }
   }
 
   QuestionModel get _currentQuestion => widget.poll.questions[_index];
@@ -207,10 +223,19 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     );
   }
 
+  void _goTo(int i) {
+    if (i < 0 || i >= widget.poll.questions.length) return;
+    if (i > _maxReached) return;
+    setState(() => _index = i);
+  }
+
   void _goNext() {
     if (_readOnly) {
       if (!_isLast) {
-        setState(() => _index++);
+        setState(() {
+          _index++;
+          _maxReached = math.max(_maxReached, _index);
+        });
       }
       return;
     }
@@ -226,6 +251,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     } else {
       setState(() {
         _index++;
+        _maxReached = math.max(_maxReached, _index);
       });
     }
   }
@@ -259,6 +285,13 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        PollProgressBar(
+          total: total,
+          currentIndex: _index,
+          maxReached: _maxReached,
+          onTap: _goTo,
+        ),
+        16.vgap,
         _PollTimeHeader(timeZone: 'Asia/Seoul', start: start, end: end),
         16.vgap,
         Text(
@@ -431,9 +464,7 @@ bool _validateAnswer(QuestionModel q, Answer? a) {
     case AnswerType.shortAnswer:
     case AnswerType.subjective:
       final qq = q as SubjectiveQuestionModel;
-      final aa = a is ShortAnswer
-          ? (a as ShortAnswer).answer
-          : (a as SubjectiveAnswer).answer;
+      final aa = a is ShortAnswer ? (a).answer : (a as SubjectiveAnswer).answer;
       if (!qq.isRequired) return true;
       return (aa != null && aa.trim().isNotEmpty);
 
