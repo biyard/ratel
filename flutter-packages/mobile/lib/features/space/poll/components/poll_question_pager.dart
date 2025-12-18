@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:ratel/exports.dart';
-import 'package:intl/intl.dart';
 import 'package:ratel/features/space/poll/components/poll_question_body.dart';
 import 'package:ratel/features/space/poll/components/poll_question_header.dart';
 
 import 'poll_progress_header.dart';
+import 'poll_time_header.dart';
 
 class PollQuestionPager extends StatefulWidget {
   const PollQuestionPager({
@@ -127,7 +127,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
                 children: [
                   const Expanded(
                     child: Text(
-                      'Submit Survey',
+                      'Submit Response',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
@@ -151,7 +151,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'Once you submit your response, it cannot be changed.\nPlease double-check before submitting.',
+                  "Once submitted,\nyou won't be able to edit your response.",
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -203,7 +203,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Text(
-                        'Submit',
+                        'Confirm',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
@@ -266,7 +266,6 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
   @override
   Widget build(BuildContext context) {
     final total = widget.poll.questions.length;
-    final currentNo = _index + 1;
 
     final start = _fromTimestamp(widget.poll.startedAt);
     final end = _fromTimestamp(widget.poll.endedAt);
@@ -291,20 +290,10 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
           maxReached: _maxReached,
           onTap: _goTo,
         ),
-        16.vgap,
-        _PollTimeHeader(timeZone: 'Asia/Seoul', start: start, end: end),
-        16.vgap,
-        Text(
-          '$currentNo / $total',
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14,
-            height: 22.5 / 14,
-            color: Colors.white,
-          ),
-        ),
-        5.vgap,
+        40.vgap,
         PollQuestionHeader(question: _currentQuestion),
+        16.vgap,
+        PollTimeHeader(timeZone: 'Asia/Seoul', start: start, end: end),
         15.vgap,
         if (_shouldExpandBody) ...[
           Expanded(child: body),
@@ -325,68 +314,6 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
           ],
         ),
         20.vgap,
-      ],
-    );
-  }
-}
-
-class _PollTimeHeader extends StatelessWidget {
-  const _PollTimeHeader({
-    required this.timeZone,
-    required this.start,
-    required this.end,
-  });
-
-  final String timeZone;
-  final DateTime start;
-  final DateTime end;
-
-  @override
-  Widget build(BuildContext context) {
-    final fmt = DateFormat('MMM d, yyyy, hh:mm a');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          timeZone,
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 12,
-            color: Color(0xFF9CA3AF),
-          ),
-        ),
-        4.vgap,
-        Row(
-          children: [
-            Text(
-              fmt.format(start),
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13,
-                color: Colors.white,
-              ),
-            ),
-            6.gap,
-            const Text(
-              '->',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13,
-                color: Color(0xFF9CA3AF),
-              ),
-            ),
-            6.gap,
-            Text(
-              fmt.format(end),
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }
