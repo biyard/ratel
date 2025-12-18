@@ -25,7 +25,19 @@ class CreatePostScreen extends GetWidget<CreatePostController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _TitleField(controller: controller.titleController),
+                  _TitleField(
+                    controller: controller.titleController,
+                    onChanged: controller.onTitleChanged,
+                  ),
+                  10.vgap,
+                  Obx(() {
+                    if (controller.titleErrorVisible.value) {
+                      return const WarningMessage(
+                        message: 'Enter at least 10 characters to continue',
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  }),
                   30.vgap,
                   Expanded(
                     child: Obx(() {
@@ -38,9 +50,34 @@ class CreatePostScreen extends GetWidget<CreatePostController> {
                           ),
                         );
                       }
-                      return RichEditor(
-                        controller: controller.bodyController,
-                        onHtmlChanged: controller.onBodyHtmlChanged,
+                      return Column(
+                        children: [
+                          Expanded(
+                            child: Obx(() {
+                              if (!controller.isEditorReady.value) {
+                                return const Center(
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                );
+                              }
+                              return RichEditor(
+                                controller: controller.bodyController,
+                                onHtmlChanged: controller.onBodyHtmlChanged,
+                                bottomWarning: controller.bodyErrorVisible.value
+                                    ? const WarningMessage(
+                                        message:
+                                            'Enter at least 10 characters to continue',
+                                      )
+                                    : null,
+                              );
+                            }),
+                          ),
+                        ],
                       );
                     }),
                   ),
@@ -160,14 +197,16 @@ class _PostButton extends StatelessWidget {
 }
 
 class _TitleField extends StatelessWidget {
-  const _TitleField({required this.controller});
+  const _TitleField({required this.controller, required this.onChanged});
 
   final TextEditingController controller;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: controller,
+      onChanged: onChanged,
       style: const TextStyle(
         color: Colors.white,
         fontSize: 24,

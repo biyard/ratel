@@ -41,16 +41,17 @@ class FeedCard extends StatelessWidget {
             Row(
               children: [
                 if (hasSpace) ...[_spaceChip('Space'), 8.gap],
-                Text(
-                  feed.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'Raleway',
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 18,
-                    height: 24 / 18,
+                Expanded(
+                  child: Text(
+                    feed.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 18,
+                      height: 24 / 18,
+                    ),
                   ),
                 ),
               ],
@@ -85,7 +86,6 @@ class FeedCard extends StatelessWidget {
                 maxLines: 5,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontFamily: 'Raleway',
                   color: Colors.white,
                   fontWeight: FontWeight.w400,
                   fontSize: 15,
@@ -249,7 +249,6 @@ class FeedCard extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              fontFamily: 'Raleway',
               color: Colors.black,
               fontWeight: FontWeight.w600,
               fontSize: 11,

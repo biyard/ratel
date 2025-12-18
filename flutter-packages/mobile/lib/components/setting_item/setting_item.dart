@@ -1,7 +1,7 @@
 import 'package:ratel/exports.dart';
 
-class MyPageItem extends StatelessWidget {
-  const MyPageItem({
+class SettingItem extends StatelessWidget {
+  const SettingItem({
     super.key,
     required this.icon,
     required this.title,

@@ -84,7 +84,6 @@ class BoardCommentItem extends StatelessWidget {
                           controller: editingController,
                           maxLines: null,
                           style: const TextStyle(
-                            fontFamily: 'Raleway',
                             fontSize: 15,
                             fontWeight: FontWeight.w400,
                             height: 24 / 15,
@@ -119,7 +118,6 @@ class BoardCommentItem extends StatelessWidget {
                       Text(
                         plainContent.isEmpty ? comment.content : plainContent,
                         style: const TextStyle(
-                          fontFamily: 'Raleway',
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           height: 24 / 15,
@@ -132,7 +130,6 @@ class BoardCommentItem extends StatelessWidget {
                         Text(
                           "(Updated)",
                           style: const TextStyle(
-                            fontFamily: 'Raleway',
                             fontSize: 11,
                             fontWeight: FontWeight.w300,
                             color: AppColors.neutral500,
@@ -167,7 +164,6 @@ class BoardCommentItem extends StatelessWidget {
                       Text(
                         comment.likes.toString(),
                         style: const TextStyle(
-                          fontFamily: 'Raleway',
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
                           color: Colors.white,

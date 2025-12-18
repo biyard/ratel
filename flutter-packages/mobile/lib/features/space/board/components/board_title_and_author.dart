@@ -20,7 +20,6 @@ class BoardTitleAndAuthor extends StatelessWidget {
           Text(
             post.title,
             style: const TextStyle(
-              fontFamily: 'Raleway',
               fontWeight: FontWeight.w700,
               fontSize: 20,
               height: 24 / 20,

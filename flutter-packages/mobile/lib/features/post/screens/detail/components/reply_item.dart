@@ -19,29 +19,12 @@ class ReplyItem extends StatelessWidget {
     return noTags.trim();
   }
 
-  String _relativeTime(int millis) {
-    final dt = DateTime.fromMillisecondsSinceEpoch(
-      millis * 1000,
-      isUtc: true,
-    ).toLocal();
-    final now = DateTime.now();
-    final diff = now.difference(dt);
-
-    if (diff.inDays >= 7) {
-      final w = (diff.inDays / 7).floor();
-      return '${w}w ago';
-    }
-    if (diff.inDays >= 1) return '${diff.inDays}d ago';
-    if (diff.inHours >= 1) return '${diff.inHours}h ago';
-    if (diff.inMinutes >= 1) return '${diff.inMinutes}m ago';
-    return 'now';
-  }
-
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final content = _plainContent(comment.content);
-    final timeText = _relativeTime(comment.updatedAt);
+    final time = fromTimestampToDate(comment.updatedAt);
+    final timeText = formatRelativeTime(time);
 
     // final isLiking = isLikingCommentOf(comment.sk);
     // final liked = isCommentLiked(comment.sk, fallback: comment.liked == true);

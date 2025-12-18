@@ -24,13 +24,17 @@ class DetailTopBar extends StatelessWidget {
         Row(
           children: [
             16.gap,
-            GestureDetector(
-              onTap: onBack,
-              child: SvgPicture.asset(Assets.back, width: 24, height: 24),
+            Expanded(
+              child: InkWell(
+                onTap: onBack,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: SvgPicture.asset(Assets.back, width: 24, height: 24),
+                ),
+              ),
             ),
-            const Spacer(),
             if (showExtra)
-              GestureDetector(
+              InkWell(
                 onTap: onExtra,
                 child: SvgPicture.asset(Assets.extra, width: 24, height: 24),
               ),
