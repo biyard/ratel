@@ -94,7 +94,7 @@ class SpaceRequirementController extends BaseController {
       final res = await _pollsApi.respondPoll(spacePk, pollSk!, answers);
 
       logger.d('Responded poll in viewer: poll_space_pk=${res.pollSpacePk}');
-      Biyard.info("successfully submitted your responses.");
+      Biyard.info("Thanks for your participation!");
       Get.rootDelegate.offNamed(spaceWithPk(spacePk));
     } catch (e) {
       logger.e(

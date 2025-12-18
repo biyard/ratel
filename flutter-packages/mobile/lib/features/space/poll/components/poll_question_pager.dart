@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:ratel/exports.dart';
 import 'package:ratel/features/space/poll/components/poll_question_body.dart';
 import 'package:ratel/features/space/poll/components/poll_question_header.dart';
+import 'package:ratel/features/space/poll/components/submit_modal.dart';
 
 import 'poll_progress_header.dart';
 import 'poll_time_header.dart';
@@ -32,6 +33,9 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
   bool _hasInitialResponse = false;
   late final bool _readOnly;
 
+  bool get _isSubmitted =>
+      (widget.poll.myResponse != null && !widget.poll.responseEditable);
+
   @override
   void initState() {
     super.initState();
@@ -52,13 +56,9 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     final firstUnanswered = _answers.indexWhere((a) => a == null);
     _index = firstUnanswered == -1 ? 0 : firstUnanswered;
 
-    logger.d(
-      "date time: ${now} ${widget.poll.startedAt} ${widget.poll.endedAt}",
-    );
-
     _readOnly =
         (widget.poll.myResponse != null && !widget.poll.responseEditable) ||
-        (widget.isFinished) ||
+        widget.isFinished ||
         (now < widget.poll.startedAt) ||
         (now > widget.poll.endedAt);
 
@@ -117,116 +117,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
   }
 
   void _showFinalSubmitDialog() {
-    Get.dialog(
-      Center(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 24),
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF111111),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Submit Response',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        decoration: TextDecoration.none,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Get.back(),
-                    child: const Icon(
-                      Icons.close,
-                      size: 18,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-              16.vgap,
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "Once submitted,\nyou won't be able to edit your response.",
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    height: 1.5,
-                    decoration: TextDecoration.none,
-                    color: Color(0xFFA1A1A1),
-                  ),
-                ),
-              ),
-              24.vgap,
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  GestureDetector(
-                    onTap: () => Get.back(),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          decoration: TextDecoration.none,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                  12.gap,
-                  GestureDetector(
-                    onTap: () {
-                      Get.back();
-                      _submit();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Confirm',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          decoration: TextDecoration.none,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-      barrierDismissible: true,
-    );
+    SubmitModal.show(onConfirm: _submit);
   }
 
   void _goTo(int i) {
@@ -287,6 +178,8 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
         ? (_hasInitialResponse ? 'Update' : 'Submit')
         : 'Next';
 
+    final isSubmit = lastLabel == 'Submit';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -332,30 +225,67 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
           const Spacer(),
         ],
         24.vgap,
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _NavButton(label: 'Prev', enabled: !_isFirst, onTap: _goPrev),
-            _NavButton(
-              label: lastLabel,
-              enabled: _readOnly ? !_isLast : _currentValid,
-              onTap: _goNext,
-            ),
-          ],
-        ),
+        if (_isSubmitted) ...[
+          _SubmittedBar(),
+        ] else ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _NavButton(
+                label: 'Prev',
+                enabled: !_isFirst,
+                onTap: _goPrev,
+                isPrimary: false,
+                variant: _NavButtonVariant.outline,
+              ),
+              _NavButton(
+                label: lastLabel,
+                enabled: _readOnly ? !_isLast : _currentValid,
+                onTap: _goNext,
+                isPrimary: true,
+                variant: isSubmit
+                    ? _NavButtonVariant.submit
+                    : _NavButtonVariant.primary,
+              ),
+            ],
+          ),
+        ],
         20.vgap,
       ],
     );
   }
 }
 
+class _SubmittedBar extends StatelessWidget {
+  const _SubmittedBar();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.check, size: 24, color: Color(0xFF737373)),
+          SizedBox(width: 8),
+          Text(
+            'Submitted',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 16,
+              height: 18 / 16,
+              color: Colors.white.withAlpha(125),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 DateTime _fromTimestamp(int ts) {
-  if (ts == 0) {
-    return DateTime.fromMillisecondsSinceEpoch(0);
-  }
-  if (ts < 1000000000000) {
-    return DateTime.fromMillisecondsSinceEpoch(ts * 1000);
-  }
+  if (ts == 0) return DateTime.fromMillisecondsSinceEpoch(0);
+  if (ts < 1000000000000) return DateTime.fromMillisecondsSinceEpoch(ts * 1000);
   return DateTime.fromMillisecondsSinceEpoch(ts);
 }
 
@@ -398,9 +328,7 @@ Answer _buildEmptyAnswer(QuestionModel q) {
 bool _validateAnswer(QuestionModel q, Answer? a) {
   final required = _isQuestionRequired(q);
 
-  if (a == null) {
-    return !required;
-  }
+  if (a == null) return !required;
 
   switch (q.type) {
     case AnswerType.singleChoice:
@@ -421,9 +349,9 @@ bool _validateAnswer(QuestionModel q, Answer? a) {
     case AnswerType.shortAnswer:
     case AnswerType.subjective:
       final qq = q as SubjectiveQuestionModel;
-      final aa = a is ShortAnswer ? (a).answer : (a as SubjectiveAnswer).answer;
+      final text = a is ShortAnswer ? a.answer : (a as SubjectiveAnswer).answer;
       if (!qq.isRequired) return true;
-      return (aa != null && aa.trim().isNotEmpty);
+      return text != null && text.trim().isNotEmpty;
 
     case AnswerType.checkbox:
       final qq = q as CheckboxQuestionModel;
@@ -451,39 +379,86 @@ bool _validateAnswer(QuestionModel q, Answer? a) {
   }
 }
 
+enum _NavButtonVariant { outline, primary, submit }
+
 class _NavButton extends StatelessWidget {
   const _NavButton({
     required this.label,
     required this.enabled,
     required this.onTap,
+    required this.isPrimary,
+    this.variant = _NavButtonVariant.primary,
   });
 
   final String label;
   final bool enabled;
   final VoidCallback onTap;
+  final bool isPrimary;
+  final _NavButtonVariant variant;
 
   @override
   Widget build(BuildContext context) {
+    final isOutline = variant == _NavButtonVariant.outline;
+    final isSubmit = variant == _NavButtonVariant.submit;
+
+    final bgColor = isSubmit
+        ? const Color(0xFFFCB300)
+        : (isPrimary ? Colors.white : Colors.transparent);
+
+    final textColor = isSubmit
+        ? const Color(0xFF0A0A0A)
+        : (isPrimary ? const Color(0xFF0A0A0A) : Colors.white);
+
+    final disabledBg = isSubmit
+        ? const Color(0xFFFCB300).withAlpha(140)
+        : (isPrimary ? Colors.white.withAlpha(125) : Colors.transparent);
+
+    final effectiveBg = enabled ? bgColor : disabledBg;
+    final effectiveText = enabled
+        ? textColor
+        : (isSubmit ? const Color(0xFF0A0A0A) : const Color(0xFF737373));
+
+    final borderColor = isOutline
+        ? (enabled ? Colors.white : const Color(0xFF737373))
+        : Colors.transparent;
+
+    Widget chevron() {
+      if (isSubmit) return const SizedBox.shrink();
+      final iconColor = enabled
+          ? const Color(0xFF737373)
+          : const Color(0xFF404040);
+      return Icon(
+        isPrimary ? Icons.chevron_right : Icons.chevron_left,
+        size: 24,
+        color: iconColor,
+      );
+    }
+
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: enabled ? onTap : null,
       child: Container(
-        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
         decoration: BoxDecoration(
-          color: enabled ? Colors.white : const Color(0xFF737373),
+          color: effectiveBg,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: borderColor, width: 1),
         ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: enabled
-                  ? const Color(0xFF1D1D1D)
-                  : const Color(0xFF262626),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (!isPrimary && !isSubmit) ...[chevron(), 8.gap],
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 16,
+                height: 18 / 16,
+                color: effectiveText,
+              ),
             ),
-          ),
+            if (isPrimary && !isSubmit) ...[8.gap, chevron()],
+          ],
         ),
       ),
     );
