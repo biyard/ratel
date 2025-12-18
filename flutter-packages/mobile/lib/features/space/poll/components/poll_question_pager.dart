@@ -87,6 +87,12 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     }
   }
 
+  bool get _showMissingRequired {
+    if (_readOnly) return false;
+    if (!_isQuestionRequired(_currentQuestion)) return false;
+    return !_currentValid;
+  }
+
   void _updateAnswer(Answer answer) {
     if (_readOnly) return;
     setState(() {
@@ -292,14 +298,37 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
         ),
         40.vgap,
         PollQuestionHeader(question: _currentQuestion),
-        16.vgap,
+        20.vgap,
         PollTimeHeader(timeZone: 'Asia/Seoul', start: start, end: end),
-        15.vgap,
+        10.vgap,
         if (_shouldExpandBody) ...[
-          Expanded(child: body),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                body,
+                if (_showMissingRequired) ...[
+                  10.vgap,
+                  const WarningMessage(message: "Missing required fields"),
+                ],
+              ],
+            ),
+          ),
         ] else ...[
-          body,
-          const Spacer(),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              body,
+              if (_showMissingRequired) ...[
+                10.vgap,
+                const WarningMessage(message: "Missing required fields"),
+              ],
+            ],
+          ),
+          Spacer(),
         ],
         24.vgap,
         Row(
