@@ -39,6 +39,7 @@ class CheckboxQuestionView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selected = (answer?.answer ?? const <int>[]).toSet();
+    final enabled = !readOnly;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,7 +47,7 @@ class CheckboxQuestionView extends StatelessWidget {
         for (int i = 0; i < question.options.length; i++) ...[
           GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: readOnly ? null : () => _toggle(selected, i),
+            onTap: enabled ? () => _toggle(selected, i) : null,
             child: Container(
               height: 72,
               padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -57,36 +58,44 @@ class CheckboxQuestionView extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(
-                        color: selected.contains(i)
-                            ? AppColors.primary
-                            : const Color(0xFF737373),
-                        width: 2,
-                      ),
-                      color: selected.contains(i)
+                  Builder(
+                    builder: (_) {
+                      final isSelected = selected.contains(i);
+                      final selectedColor = enabled
                           ? AppColors.primary
-                          : const Color(0xFF101010),
-                    ),
-                    alignment: Alignment.center,
-                    child: selected.contains(i)
-                        ? const Icon(
-                            Icons.check,
-                            size: 16,
-                            color: Color(0xFF1D1D1D),
-                          )
-                        : null,
+                          : AppColors.primary.withAlpha(125);
+
+                      final checkBg = isSelected
+                          ? selectedColor
+                          : const Color(0xFF101010);
+                      final checkBorder = isSelected
+                          ? Colors.transparent
+                          : const Color(0xFF737373);
+
+                      return Container(
+                        width: 20,
+                        height: 20,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: checkBorder, width: 2),
+                          color: checkBg,
+                        ),
+                        child: isSelected
+                            ? const Icon(
+                                Icons.check,
+                                size: 16,
+                                color: Color(0xFF0A0A0A),
+                              )
+                            : null,
+                      );
+                    },
                   ),
                   20.gap,
                   Expanded(
                     child: Text(
                       question.options[i],
                       style: const TextStyle(
-                        fontFamily: 'Raleway',
                         fontWeight: FontWeight.w400,
                         fontSize: 16,
                         height: 24 / 16,
