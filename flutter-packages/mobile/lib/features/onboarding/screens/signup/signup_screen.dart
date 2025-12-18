@@ -1,4 +1,12 @@
 import 'package:ratel/exports.dart';
+import 'package:ratel/features/onboarding/screens/signup/components/already_have_account_row.dart';
+import 'package:ratel/features/onboarding/screens/signup/components/or_divider.dart';
+import 'package:ratel/features/onboarding/screens/signup/components/signup_email_form.dart';
+import 'package:ratel/features/onboarding/screens/signup/components/signup_logo.dart';
+import 'package:ratel/features/onboarding/screens/signup/components/signup_phone_form.dart';
+import 'package:ratel/features/onboarding/screens/signup/components/switch_signup_method_button.dart';
+
+import 'signup_controller.dart';
 
 class SignupScreen extends GetWidget<SignupController> {
   const SignupScreen({super.key});
@@ -7,152 +15,141 @@ class SignupScreen extends GetWidget<SignupController> {
   Widget build(BuildContext context) {
     return Layout<SignupController>(
       scrollable: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AppTopBar(
-              onBack: () {
-                Get.rootDelegate.offNamed(loginScreen);
-              },
-              enableBack: true,
-              title: "Sign up",
-            ),
-            40.vgap,
-            Center(
-              child: Text(
-                'Enter your phone number',
-                style: AppFonts.textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            30.vgap,
-            Obx(
-              () => _CountrySelector(
-                countryName: controller.selectedCountry.value.name,
-                dialCode: controller.selectedCountry.value.dialCode,
-                onTap: () => _showCountryPicker(context, controller),
-              ),
-            ),
-            15.vgap,
-            AppTextField(
-              hint: 'Phone Number',
-              controller: controller.phoneCtrl,
-              keyboardType: TextInputType.phone,
-              onChanged: controller.onPhoneChanged,
-              rounded: 10,
-              bgColor: const Color(0xFF101010),
-              enabledBorderOverride: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(
-                  color: Color(0xFF2A2A2A),
-                  width: 1,
-                ),
-              ),
-              focusedBorderOverride: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(
-                  color: AppColors.primary,
-                  width: 1,
-                ),
-              ),
-            ),
-            const Spacer(),
-            SizedBox(
-              width: double.infinity,
-              child: Obx(
-                () => ElevatedButton(
-                  onPressed:
-                      controller.isPhoneStepValid && !controller.isBusy.value
-                      ? controller.next
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    disabledBackgroundColor: AppColors.primary.withValues(
-                      alpha: 0.4,
-                    ),
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: controller.isBusy.value
-                      ? const SizedBox(
-                          height: 22,
-                          width: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.black,
-                          ),
-                        )
-                      : const Text(
-                          'OK',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black,
-                          ),
-                        ),
-                ),
-              ),
-            ),
-            40.vgap,
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _CountrySelector extends StatelessWidget {
-  final String countryName;
-  final String dialCode;
-  final VoidCallback onTap;
-
-  const _CountrySelector({
-    required this.countryName,
-    required this.dialCode,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.background,
-          borderRadius: BorderRadius.circular(8),
-          border: Border.all(
-            color: AppColors.neutral600.withOpacity(0.6),
-            width: 1,
-          ),
-        ),
-        child: Row(
           children: [
             Expanded(
-              child: Text(
-                countryName,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.only(top: 20),
+                child: Column(
+                  children: [
+                    const SignupLogo(),
+                    55.vgap,
+                    Text(
+                      'Sign up',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        height: 32 / 24,
+                      ),
+                    ),
+                    20.vgap,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Obx(() {
+                        final isPhone = controller.isPhone;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            isPhone
+                                ? SignupPhoneForm(
+                                    countryCode:
+                                        controller.selectedCountry.value.code,
+                                    dialCode: controller
+                                        .selectedCountry
+                                        .value
+                                        .dialCode,
+                                    phoneController: controller.phoneCtrl,
+                                    onTapCountry: () async {
+                                      final selected =
+                                          await showCountryPickerBottomSheet(
+                                            context,
+                                          );
+                                      if (selected != null)
+                                        controller.selectCountry(selected);
+                                    },
+                                    onPhoneChanged: controller.onPhoneChanged,
+                                    onSubmit: controller.nextPhone,
+                                  )
+                                : SignupEmailForm(
+                                    emailController: controller.emailCtrl,
+                                    passwordController: controller.passwordCtrl,
+                                    onEmailChanged: controller.onEmailChanged,
+                                    onPasswordChanged:
+                                        controller.onPasswordChanged,
+                                    onSubmit: controller.nextEmail,
+                                  ),
+
+                            10.vgap,
+
+                            SizedBox(
+                              width: double.infinity,
+                              child: Obx(() {
+                                final canContinue = isPhone
+                                    ? controller.isPhoneStepValid
+                                    : controller.isEmailStepValid;
+
+                                return ElevatedButton(
+                                  onPressed: canContinue
+                                      ? (isPhone
+                                            ? controller.nextPhone
+                                            : controller.nextEmail)
+                                      : null,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primary,
+                                    disabledBackgroundColor: AppColors.primary
+                                        .withValues(alpha: 0.6),
+                                    foregroundColor: const Color(0xFF0A0A0A),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 25,
+                                      vertical: 15,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: Text(
+                                    'Continue',
+                                    style: AppFonts.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 16,
+                                          height: 18 / 16,
+                                          color: const Color(0xFF0A0A0A),
+                                        ),
+                                  ),
+                                );
+                              }),
+                            ),
+                          ],
+                        );
+                      }),
+                    ),
+                    18.vgap,
+                    const OrDivider(),
+                    14.vgap,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Obx(
+                        () => controller.isPhone
+                            ? SwitchSignupMethodButton(
+                                icon: Assets.email,
+                                label: 'Continue with email',
+                                onTap: () =>
+                                    controller.selectMethod(SignupMethod.email),
+                              )
+                            : SwitchSignupMethodButton(
+                                icon: Assets.mobile,
+                                label: 'Continue with phone',
+                                onTap: () =>
+                                    controller.selectMethod(SignupMethod.phone),
+                              ),
+                      ),
+                    ),
+                    40.vgap,
+                  ],
+                ),
               ),
             ),
-            Text(
-              '+$dialCode',
-              style: const TextStyle(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
+
+            Padding(
+              padding: const EdgeInsets.only(bottom: 18),
+              child: AlreadyHaveAccountRow(onTapLogin: controller.goToLogin),
             ),
-            const SizedBox(width: 4),
-            const Icon(Icons.arrow_drop_down, color: Colors.white),
           ],
         ),
       ),
@@ -165,15 +162,4 @@ Future<CountryCode?> showCountryPickerBottomSheet(BuildContext context) {
     context: context,
     child: const CountryPickerSheet(),
   );
-}
-
-Future<void> _showCountryPicker(
-  BuildContext context,
-  SignupController controller,
-) async {
-  final selected = await showCountryPickerBottomSheet(context);
-
-  if (selected != null) {
-    controller.selectCountry(selected);
-  }
 }
