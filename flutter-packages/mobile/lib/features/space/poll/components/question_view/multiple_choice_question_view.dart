@@ -1,5 +1,5 @@
 import 'package:ratel/exports.dart';
-import 'package:ratel/features/space/poll/components/option_tile.dart';
+import 'package:ratel/features/space/poll/components/question_view/choice_box.dart';
 
 class MultipleChoiceQuestionView extends StatelessWidget {
   const MultipleChoiceQuestionView({
@@ -30,12 +30,11 @@ class MultipleChoiceQuestionView extends StatelessWidget {
       children: [
         for (int i = 0; i < question.options.length; i++) ...[
           if (!_allowOther || i != othersIndex) ...[
-            OptionTile(
+            ChoiceBox(
               enabled: !readOnly,
-              label: question.options[i],
               selected: selected.contains(i),
               onTap: readOnly
-                  ? () {}
+                  ? null
                   : () {
                       final set = selected.toSet();
                       if (set.contains(i)) {
@@ -47,116 +46,90 @@ class MultipleChoiceQuestionView extends StatelessWidget {
                         MultipleChoiceAnswer(set.toList()..sort(), otherText),
                       );
                     },
+              child: Text(
+                question.options[i],
+                style: const TextStyle(
+                  fontFamily: 'Raleway',
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16,
+                  height: 24 / 16,
+                  letterSpacing: 0.5,
+                  color: Colors.white,
+                ),
+                softWrap: true,
+              ),
             ),
             10.vgap,
           ],
         ],
         if (_allowOther && othersIndex != null) ...[
-          Row(
-            children: [
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: readOnly
-                    ? null
-                    : () {
-                        final set = selected.toSet();
-                        if (isOtherSelected) {
-                          set.remove(othersIndex);
-                          onChanged(
-                            MultipleChoiceAnswer(set.toList()..sort(), null),
-                          );
-                        } else {
-                          set.add(othersIndex);
-                          onChanged(
-                            MultipleChoiceAnswer(
-                              set.toList()..sort(),
-                              otherText ?? '',
-                            ),
-                          );
-                        }
-                      },
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(
-                      color: isOtherSelected
-                          ? AppColors.primary
-                          : AppColors.neutral80,
-                      width: 1.5,
-                    ),
-                    color: isOtherSelected
-                        ? AppColors.primary
-                        : Colors.transparent,
-                  ),
-                  alignment: Alignment.center,
-                  child: isOtherSelected
-                      ? const Icon(
-                          Icons.check,
-                          size: 16,
-                          color: Color(0xFF1D1D1D),
-                        )
-                      : null,
-                ),
-              ),
-              10.gap,
-              Expanded(
-                child: Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFF404040)),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  alignment: Alignment.centerLeft,
-                  child: TextFormField(
-                    key: ValueKey('${question.title}_multiple_other'),
-                    initialValue: otherText ?? '',
-                    enabled: !readOnly,
-                    readOnly: readOnly,
-                    onTap: () {
-                      if (readOnly) return;
-                      if (!isOtherSelected) {
-                        final set = selected.toSet();
-                        set.add(othersIndex);
-                        onChanged(
-                          MultipleChoiceAnswer(
-                            set.toList()..sort(),
-                            otherText ?? '',
-                          ),
-                        );
-                      }
-                    },
-                    onChanged: (value) {
-                      if (readOnly) return;
-                      final set = selected.toSet();
-                      if (!set.contains(othersIndex)) {
-                        set.add(othersIndex);
-                      }
+          ChoiceBox(
+            enabled: !readOnly,
+            selected: isOtherSelected,
+            onTap: readOnly
+                ? null
+                : () {
+                    final set = selected.toSet();
+                    if (isOtherSelected) {
+                      set.remove(othersIndex);
                       onChanged(
-                        MultipleChoiceAnswer(set.toList()..sort(), value),
+                        MultipleChoiceAnswer(set.toList()..sort(), null),
                       );
-                    },
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                      hintText: 'Input the option.',
-                      hintStyle: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
-                        color: Color(0xFF6B6B6B),
-                      ),
-                    ),
-                  ),
+                    } else {
+                      set.add(othersIndex);
+                      onChanged(
+                        MultipleChoiceAnswer(
+                          set.toList()..sort(),
+                          otherText ?? '',
+                        ),
+                      );
+                    }
+                  },
+            child: TextFormField(
+              key: ValueKey('${question.title}_multiple_other'),
+              initialValue: otherText ?? '',
+              enabled: !readOnly,
+              readOnly: readOnly,
+              onTap: () {
+                if (readOnly) return;
+                if (!isOtherSelected) {
+                  final set = selected.toSet();
+                  set.add(othersIndex);
+                  onChanged(
+                    MultipleChoiceAnswer(set.toList()..sort(), otherText ?? ''),
+                  );
+                }
+              },
+              onChanged: (value) {
+                if (readOnly) return;
+                final set = selected.toSet();
+                if (!set.contains(othersIndex)) {
+                  set.add(othersIndex);
+                }
+                onChanged(MultipleChoiceAnswer(set.toList()..sort(), value));
+              },
+              style: const TextStyle(
+                fontFamily: 'Raleway',
+                fontWeight: FontWeight.w400,
+                fontSize: 16,
+                height: 24 / 16,
+                letterSpacing: 0.5,
+                color: Colors.white,
+              ),
+              decoration: const InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                hintText: 'Input the option.',
+                hintStyle: TextStyle(
+                  fontFamily: 'Raleway',
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16,
+                  height: 24 / 16,
+                  letterSpacing: 0.5,
+                  color: Color(0xFF737373),
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ],
