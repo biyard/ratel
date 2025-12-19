@@ -1,31 +1,38 @@
+import { lang } from '@/i18n/config';
 import { useTranslation } from 'react-i18next';
 
-export const rewardsI18n = {
+// change Type key: String, value: RewardsI18n
+export const rewardsI18n: Record<lang, RewardsI18n> = {
   en: {
-    reward_side_menu_title: 'Reward',
-    reward_side_menu_boosting: 'Boosting',
-    reward_side_menu_total_estimated_value: 'Total estimated Value',
+    sidemenu: {
+      title: 'Reward',
+      totalPoint: 'Total Point',
+    },
   },
   ko: {
-    reward_side_menu_title: '리워드',
-    reward_side_menu_boosting: '부스팅',
-    reward_side_menu_total_estimated_value: '총 예상 가치',
+    sidemenu: {
+      title: '리워드',
+      totalPoint: '총 포인트',
+    },
   },
 };
 
 export interface RewardsI18n {
-  rewardSideMenuTitle: string;
-  rewardSideMenuBoosting: string;
-  rewardSideMenuTotalEstimatedValue: string;
+  sidemenu: SideMenu;
+}
+
+interface SideMenu {
+  title: string;
+  totalPoint: string;
 }
 
 export function useRewardsI18n(): RewardsI18n {
   const { t } = useTranslation('Rewards');
+  console.log('t', t('sidemenu.title'));
   return {
-    rewardSideMenuTitle: t('reward_side_menu_title'),
-    rewardSideMenuBoosting: t('reward_side_menu_boosting'),
-    rewardSideMenuTotalEstimatedValue: t(
-      'reward_side_menu_total_estimated_value',
-    ),
+    sidemenu: {
+      title: t('sidemenu.title'),
+      totalPoint: t('sidemenu.totalPoint'),
+    },
   };
 }
