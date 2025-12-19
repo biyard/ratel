@@ -33,7 +33,9 @@ interface IDaoRegistryStateV1 is IStateOperator {
 
     // function getNamedString(string calldata name) external view returns (string memory);
 
-    // function addNamedAddress(string calldata name, address addr) external;
+    function addNamedAddress(string calldata name, address addr) external;
+
+    function getNamedAddress(string calldata name) external view returns (address);
 
     // function existsExtensionByAddress(address addr) external view returns (bool);
 
@@ -50,6 +52,27 @@ interface IDaoRegistryStateV1 is IStateOperator {
     function setDaoManagerAddress(address daoManager) external;
 
     function getDaoManagerAddress() external view returns (address);
+
+    struct SurveyDaoInfo {
+        string name;
+        address daoManager;
+        address operator;
+        address surveyDao;
+        address surveyState;
+        uint64 createdAt;
+    }
+
+    function writeAddSurveyDao(
+        string calldata name,
+        address daoManager,
+        address operator,
+        address surveyDao,
+        address surveyState
+    ) external returns (uint256 daoId);
+
+    function surveyDaoCount() external view returns (uint256);
+    function getSurveyDao(uint256 daoId) external view returns (SurveyDaoInfo memory);
+    function listSurveyDaoIdsByManager(address daoManager) external view returns (uint256[] memory);
 }
 
 contract DaoRegistryStateV1 is StateOperator {
@@ -68,6 +91,13 @@ contract DaoRegistryStateV1 is StateOperator {
 
     address private _daoManager;
 
+    uint256 private _surveyDaoCount;
+    mapping(uint256 => IDaoRegistryStateV1.SurveyDaoInfo) private _surveyDaos;
+    mapping(address => uint256[]) private _surveyDaoIdsByManager;
+    
+    mapping(address => uint256[]) private _daoIdsByManager;
+    mapping(uint256 => IDaoRegistryStateV1.SurveyDaoInfo) private _daos;
+    
     constructor(address operator) StateOperator(operator) {}
 
     function setDaoManagerAddress(address daoManager) public canWrite {
@@ -79,7 +109,11 @@ contract DaoRegistryStateV1 is StateOperator {
     }
 
     function addNamedString(string calldata name, string calldata value) external {
-        _namedStrings.add(name, value, false);
+        _namedStrings.add(name, value, true);
+    }
+
+    function getNamedAddress(string calldata name) public view canRead returns (address) {
+        return _namedAddresses.get(name);
     }
 
     // function existsNamedString(string calldata name) public view canRead returns (bool) {
@@ -98,9 +132,9 @@ contract DaoRegistryStateV1 is StateOperator {
     //     return _namedStrings.get(name);
     // }
 
-    // function addNamedAddress(string calldata name, address addr) public canWrite {
-    //     _namedAddresses.add(name, addr, false);
-    // }
+    function addNamedAddress(string calldata name, address addr) public canWrite {
+        _namedAddresses.add(name, addr, false);
+    }
 
     // function addExtension(RegisteredExtension memory ext) public canWrite {
     //     _extensions.add(ext);
@@ -116,6 +150,50 @@ contract DaoRegistryStateV1 is StateOperator {
 
     function getExtension(string memory name) public view canRead returns (RegisteredExtension memory) {
         return _extensions.get(name);
+    }
+
+    function writeAddSurveyDao(
+        string calldata name,
+        address daoManager,
+        address operator,
+        address surveyDao,
+        address surveyState
+    ) external canWrite returns (uint256 daoId) {
+        _surveyDaoCount += 1;
+        daoId = _surveyDaoCount;
+
+        _surveyDaos[daoId] = IDaoRegistryStateV1.SurveyDaoInfo({
+            name: name,
+            daoManager: daoManager,
+            operator: operator,
+            surveyDao: surveyDao,
+            surveyState: surveyState,
+            createdAt: uint64(block.timestamp)
+        });
+
+        _surveyDaoIdsByManager[daoManager].push(daoId);
+    }
+
+    function surveyDaoCount() external view canRead returns (uint256) {
+        return _surveyDaoCount;
+    }
+
+    function getSurveyDao(uint256 daoId)
+        external
+        view
+        canRead
+        returns (IDaoRegistryStateV1.SurveyDaoInfo memory)
+    {
+        return _surveyDaos[daoId];
+    }
+
+    function listSurveyDaoIdsByManager(address daoManager)
+        external
+        view
+        canRead
+        returns (uint256[] memory)
+    {
+        return _surveyDaoIdsByManager[daoManager];
     }
 
     // function listExtensions() public view canRead returns (RegisteredExtension[] memory) {
