@@ -49,6 +49,9 @@ services:
 
       VITE_API_URL: "http://localhost:3000"
       VITE_LOG_LEVEL: ${VITE_LOG_LEVEL:-debug}
+      VITE_RPC_URL: "https://public-en-kairos.node.kaia.io"
+      VITE_BLOCK_EXPLORER_URL: "https://kairos.scope.kaia.io"
+      VITE_OPERATOR_ADDRESS: ${VITE_OPERATOR_ADDRESS:-dummy}
       VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-dummy}
       VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-dummy}
       VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-dummy}
@@ -66,11 +69,11 @@ services:
       NODE_ENV: production
       SLACK_HOOK: ${SLACK_HOOK}
 
-      PORTONE_STORE_ID:  ${PORTONE_STORE_ID}
-      PORTONE_INICIS_CHANNEL_KEY:  ${PORTONE_INICIS_CHANNEL_KEY}
-      PORTONE_KPN_CHANNEL_KEY:  ${PORTONE_KPN_CHANNEL_KEY}
-      PORTONE_API_SECRET:  ${PORTONE_API_SECRET}
-      PORTONE_WEBHOOK_SECRET:  ${PORTONE_WEBHOOK_SECRET}
+      PORTONE_STORE_ID: ${PORTONE_STORE_ID}
+      PORTONE_INICIS_CHANNEL_KEY: ${PORTONE_INICIS_CHANNEL_KEY}
+      PORTONE_KPN_CHANNEL_KEY: ${PORTONE_KPN_CHANNEL_KEY}
+      PORTONE_API_SECRET: ${PORTONE_API_SECRET}
+      PORTONE_WEBHOOK_SECRET: ${PORTONE_WEBHOOK_SECRET}
     volumes:
       - .:/app
       - ./.build/target:/app/target
@@ -156,6 +159,9 @@ services:
 
       VITE_API_URL: "http://localhost:3000"
       VITE_LOG_LEVEL: ${VITE_LOG_LEVEL:-debug}
+      VITE_RPC_URL: "https://public-en-kairos.node.kaia.io"
+      VITE_BLOCK_EXPLORER_URL: "https://kairos.scope.kaia.io"
+      VITE_OPERATOR_ADDRESS: ${VITE_OPERATOR_ADDRESS:-dummy}
       VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-dummy}
       VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-dummy}
       VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-dummy}
@@ -201,6 +207,9 @@ services:
       PORT: 8080
       VITE_API_URL: "http://localhost:3000"
       VITE_LOG_LEVEL: ${VITE_LOG_LEVEL:-debug}
+      VITE_RPC_URL: "https://public-en-kairos.node.kaia.io"
+      VITE_BLOCK_EXPLORER_URL: "https://kairos.scope.kaia.io"
+      VITE_OPERATOR_ADDRESS: ${VITE_OPERATOR_ADDRESS:-dummy}
       VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-dummy}
       VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-dummy}
       VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-dummy}
@@ -243,6 +252,9 @@ services:
       PORT: 8080
       VITE_API_URL: "http://localhost:3000"
       VITE_LOG_LEVEL: ${VITE_LOG_LEVEL:-debug}
+      VITE_RPC_URL: "https://public-en-kairos.node.kaia.io"
+      VITE_BLOCK_EXPLORER_URL: "https://kairos.scope.kaia.io"
+      VITE_OPERATOR_ADDRESS: ${VITE_OPERATOR_ADDRESS:-dummy}
       VITE_FIREBASE_API_KEY: ${VITE_FIREBASE_API_KEY:-dummy}
       VITE_FIREBASE_AUTH_DOMAIN: ${VITE_FIREBASE_AUTH_DOMAIN:-dummy}
       VITE_FIREBASE_PROJECT_ID: ${VITE_FIREBASE_PROJECT_ID:-dummy}
