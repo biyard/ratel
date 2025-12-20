@@ -321,7 +321,23 @@ export const routes = createBrowserRouter([
           {
             id: 'space-file-feature',
             path: 'files',
-            Component: SpaceFilePage,
+            children: [
+              {
+                id: 'space-file-list',
+                index: true,
+                Component: SpaceFilePage,
+              },
+              {
+                id: 'space-pdf-viewer',
+                path: ':fileId',
+                lazy: async () => {
+                  const { SpacePdfViewerPage } = await import(
+                    './features/spaces/files/pages/pdf-viewer/space-pdf-viewer-page'
+                  );
+                  return { Component: SpacePdfViewerPage };
+                },
+              },
+            ],
           }, // End of File Feature
           // Space Panel Feature
           {
