@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router';
+import React from 'react';
 import RootLayout from './app/layout';
 import HomePage from './app/(social)/home-page';
 import SocialLayout from './app/(social)/layout';
@@ -64,8 +65,20 @@ import SpaceMemberPage from './app/spaces/[id]/members/space-member-page';
 import MySpacesPage from './app/(social)/my-spaces/page';
 import NotificationsPage from './app/notifications/page';
 import { MembershipPlan } from './features/membership/components/membership-plan';
+import Providers from './providers/providers';
+import { PdfViewerLoader } from './features/spaces/files/components/pdf-viewer-loader';
 
 export const routes = createBrowserRouter([
+  // PDF Viewer - Completely standalone without any layout
+  {
+    id: 'space-pdf-viewer-standalone',
+    path: '/spaces/:spacePk/files/:fileId',
+    Component: () => (
+      <Providers>
+        <PdfViewerLoader />
+      </Providers>
+    ),
+  },
   {
     id: 'root-layout',
     Component: RootLayout,
@@ -321,23 +334,7 @@ export const routes = createBrowserRouter([
           {
             id: 'space-file-feature',
             path: 'files',
-            children: [
-              {
-                id: 'space-file-list',
-                index: true,
-                Component: SpaceFilePage,
-              },
-              {
-                id: 'space-pdf-viewer',
-                path: ':fileId',
-                lazy: async () => {
-                  const { SpacePdfViewerPage } = await import(
-                    './features/spaces/files/pages/pdf-viewer/space-pdf-viewer-page'
-                  );
-                  return { Component: SpacePdfViewerPage };
-                },
-              },
-            ],
+            Component: SpaceFilePage,
           }, // End of File Feature
           // Space Panel Feature
           {
