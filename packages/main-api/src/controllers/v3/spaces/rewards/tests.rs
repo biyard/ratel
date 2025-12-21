@@ -1,3 +1,4 @@
+use crate::controllers::v3::me::memberships::change_membership::ChangeMembershipResponse;
 use crate::controllers::v3::me::memberships::tests::seed_test_user_payment;
 use crate::controllers::v3::posts::CreatePostResponse;
 use crate::controllers::v3::spaces::create_space::CreateSpaceResponse;
@@ -750,4 +751,283 @@ async fn test_poll_respond_increases_user_claim() {
         10_000 * 10,
         "UserReward should have 10,000 total points"
     ); // Point * Credit
+}
+
+/// Integration test: Full flow from membership subscription to reward configuration
+/// This test covers the complete user journey:
+/// 1. User creates a poll space
+/// 2. User subscribes to Pro membership (gains 40 credits)
+/// 3. User configures a reward for poll responses (uses 10 credits)
+/// 4. Another user responds to the poll
+/// 5. The responding user receives the reward
+#[tokio::test]
+async fn test_full_flow_membership_to_reward_configuration() {
+    // Step 1: Setup a published poll space
+    let (ctx, space_pk, poll_sk, _questions) = setup_published_poll_space().await;
+    let TestContextV3 {
+        app,
+        test_user,
+        ddb,
+        user2,
+        ..
+    } = ctx;
+
+    // Step 2: Setup payment info for membership subscription
+    seed_test_user_payment(&ddb, &test_user.0.pk).await;
+
+    // Step 3: Subscribe to Pro membership
+    let (status, _headers, body) = post! {
+        app: app,
+        path: "/v3/me/memberships",
+        headers: test_user.1.clone(),
+        body: {
+            "membership": "Pro",
+            "currency": "USD"
+        },
+        response_type: serde_json::Value
+    };
+    assert_eq!(
+        status, 200,
+        "Failed to subscribe to Pro membership. Response: {:?}",
+        body
+    );
+
+    // Step 4: Verify membership was upgraded and credits were added
+    let user_membership =
+        UserMembership::get(&ddb, &test_user.0.pk, Some(EntityType::UserMembership))
+            .await
+            .unwrap()
+            .expect("UserMembership should exist after subscription");
+
+    let membership_pk: Partition = user_membership.membership_pk.clone().into();
+    let membership = Membership::get(&ddb, membership_pk, Some(EntityType::Membership))
+        .await
+        .unwrap()
+        .expect("Membership should exist");
+
+    assert_eq!(membership.tier, MembershipTier::Pro);
+    assert_eq!(
+        user_membership.remaining_credits, 40,
+        "Pro membership should have 40 credits"
+    );
+
+    // Step 5: Create a reward for poll responses
+    let (status, _headers, reward_body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "reward": {
+                "poll_sk": poll_sk.to_string()
+            },
+            "label": "Poll Participation Reward",
+            "description": "Earn points for responding to our poll",
+            "credits": 10
+        },
+        response_type: SpaceRewardResponse
+    };
+    assert_eq!(
+        status, 200,
+        "Failed to create reward. Response: {:?}",
+        reward_body
+    );
+    assert_eq!(reward_body.label, "Poll Participation Reward");
+    assert_eq!(reward_body.credits, 10);
+    assert_eq!(reward_body.points, 10_000); // Default points per reward
+
+    // Step 6: Verify credits were deducted after reward creation
+    let user_membership_after =
+        UserMembership::get(&ddb, &test_user.0.pk, Some(EntityType::UserMembership))
+            .await
+            .unwrap()
+            .expect("UserMembership should exist");
+    assert_eq!(
+        user_membership_after.remaining_credits, 30,
+        "Credits should be 30 after creating reward (40 - 10)"
+    );
+
+    // Step 7: Another user (user2) responds to the poll
+    let answers = vec![
+        Answer::SingleChoice {
+            answer: Some(1),
+            other: None,
+        },
+        Answer::MultipleChoice {
+            answer: Some(vec![0, 2]),
+            other: None,
+        },
+    ];
+
+    let (status, _headers, _response_body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/polls/{}/responses", space_pk.to_string(), poll_sk.to_string()),
+        headers: user2.1.clone(),
+        body: {
+            "answers": answers.clone(),
+        },
+        response_type: RespondPollSpaceResponse
+    };
+    assert_eq!(status, 200, "Failed to respond to poll");
+
+    // Step 8: Verify user2's reward claim was recorded
+    let (status, _headers, rewards_list) = get! {
+        app: app,
+        path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
+        headers: user2.1.clone(),
+        response_type: ListItemsResponse<SpaceRewardResponse>
+    };
+    assert_eq!(status, 200);
+    assert_eq!(rewards_list.items.len(), 1);
+    assert_eq!(
+        rewards_list.items[0].user_claims, 1,
+        "User2 should have 1 claim after poll response"
+    );
+
+    // Step 9: Verify UserReward record was created for user2
+    let reward_key = RewardKey::Poll(poll_sk.clone().into(), PollReward::Respond);
+    let (user_reward_pk, user_reward_sk) = UserReward::keys(
+        user2.0.pk.clone().into(),
+        space_pk.clone().into(),
+        reward_key,
+    );
+    let user_reward = UserReward::get(&ddb, user_reward_pk, Some(user_reward_sk))
+        .await
+        .unwrap()
+        .expect("UserReward should exist for user2");
+
+    assert_eq!(user_reward.total_claims, 1);
+    assert_eq!(
+        user_reward.total_points,
+        10_000 * 10,
+        "Total points should be 100,000 (10,000 points * 10 credits)"
+    );
+
+    // Step 10: Verify SpaceReward total_claims was incremented
+    let space_reward = SpaceReward::get_by_reward_key(
+        &ddb,
+        space_pk.clone().into(),
+        RewardKey::Poll(poll_sk.clone().into(), PollReward::Respond),
+    )
+    .await
+    .expect("SpaceReward should exist");
+    assert_eq!(
+        space_reward.total_claims, 1,
+        "SpaceReward total_claims should be 1"
+    );
+}
+
+/// Integration test: Membership upgrade adds more credits for rewards
+#[tokio::test]
+async fn test_membership_upgrade_enables_more_rewards() {
+    let (ctx, space_pk, poll_sk, _questions) = setup_published_poll_space().await;
+    let TestContextV3 {
+        app,
+        test_user,
+        ddb,
+        ..
+    } = ctx;
+
+    // Setup payment info
+    seed_test_user_payment(&ddb, &test_user.0.pk).await;
+
+    // Subscribe to Pro membership (40 credits)
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/me/memberships",
+        headers: test_user.1.clone(),
+        body: {
+            "membership": "Pro",
+            "currency": "USD"
+        },
+        response_type: ChangeMembershipResponse
+    };
+    assert_eq!(status, 200);
+
+    // Create a reward using 35 credits
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "reward": {
+                "poll_sk": poll_sk.to_string()
+            },
+            "label": "Large Reward",
+            "description": "Using most credits",
+            "credits": 35
+        },
+        response_type: SpaceRewardResponse
+    };
+    assert_eq!(status, 200);
+
+    // Verify only 5 credits remain
+    let user_membership =
+        UserMembership::get(&ddb, &test_user.0.pk, Some(EntityType::UserMembership))
+            .await
+            .unwrap()
+            .expect("UserMembership should exist");
+    assert_eq!(user_membership.remaining_credits, 5);
+
+    // Upgrade to Max membership (gains 190 more credits)
+    let (status, _headers, _body) = post! {
+        app: app,
+        path: "/v3/me/memberships",
+        headers: test_user.1.clone(),
+        body: {
+            "membership": "Max",
+            "currency": "USD"
+        },
+        response_type: ChangeMembershipResponse
+    };
+    assert_eq!(status, 200);
+
+    // Verify credits were added
+    let user_membership_after =
+        UserMembership::get(&ddb, &test_user.0.pk, Some(EntityType::UserMembership))
+            .await
+            .unwrap()
+            .expect("UserMembership should exist");
+    assert_eq!(
+        user_membership_after.remaining_credits,
+        5 + 190,
+        "Should have 195 credits after Max upgrade (5 remaining + 190 new)"
+    );
+
+    // Verify membership tier changed
+    let membership_pk: Partition = user_membership_after.membership_pk.clone().into();
+    let membership = Membership::get(&ddb, membership_pk, Some(EntityType::Membership))
+        .await
+        .unwrap()
+        .expect("Membership should exist");
+    assert_eq!(membership.tier, MembershipTier::Max);
+}
+
+/// Integration test: Free user cannot create rewards (no credits)
+#[tokio::test]
+async fn test_free_user_cannot_create_rewards() {
+    let (ctx, space_pk, poll_sk, _questions) = setup_published_poll_space().await;
+    let TestContextV3 {
+        app, test_user, ..
+    } = ctx;
+
+    // Try to create reward without membership (Free tier has 0 credits)
+    let (status, _headers, body) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/rewards", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "reward": {
+                "poll_sk": poll_sk.to_string()
+            },
+            "label": "Should Fail",
+            "description": "No credits",
+            "credits": 10
+        },
+        response_type: serde_json::Value
+    };
+    assert_eq!(
+        status, 400,
+        "Free user should not be able to create rewards. Response: {:?}",
+        body
+    );
 }

@@ -27,6 +27,7 @@ import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
 import SpaceByIdLayout from './app/spaces/[id]/space-by-id-layout';
 import { SpaceHomePage } from './app/spaces/[id]/space-home-page';
 import { SpaceSettingsPage } from './app/spaces/[id]/settings/space-settings-page';
+import { SpaceRewardsPage } from './app/spaces/[id]/rewards/space-rewards-page';
 import SpaceSprintLeaguePage from './app/spaces/[id]/sprint-league/page';
 import SpaceDiscussionPage from './app/spaces/[id]/discussions/space-discussion-page';
 import SpaceFilePage from './app/spaces/[id]/file/space-file-page';
@@ -259,6 +260,11 @@ export const routes = createBrowserRouter([
             id: 'space-settings-page',
             path: 'settings',
             Component: SpaceSettingsPage,
+          },
+          {
+            id: 'space-rewards-page',
+            path: 'rewards',
+            Component: SpaceRewardsPage,
           },
 
           {
