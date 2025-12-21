@@ -16,6 +16,7 @@ interface PdfAiChatSidebarProps {
   pdfContext: PdfContext;
   onSendMessage: (message: string) => void;
   onCollapse: () => void;
+  onClose: () => void;
   onClearMessages: () => void;
   defaultSize?: number;
   onResize?: (size: number) => void;
@@ -27,6 +28,7 @@ export function PdfAiChatSidebar({
   pdfContext,
   onSendMessage,
   onCollapse,
+  onClose,
   onClearMessages,
   defaultSize: _defaultSize = 30,
   onResize: _onResize,
@@ -110,7 +112,7 @@ export function PdfAiChatSidebar({
           <Button
             variant="text"
             size="sm"
-            onClick={onCollapse}
+            onClick={onClose}
             className="h-8 w-8 p-0"
             aria-label="Close chat"
           >

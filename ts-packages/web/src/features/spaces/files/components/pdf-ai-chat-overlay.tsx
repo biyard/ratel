@@ -9,6 +9,7 @@ interface PdfAiChatOverlayProps {
   pdfContext: PdfContext;
   onSendMessage: (message: string) => void;
   onExpand: () => void;
+  defaultOpen?: boolean;
 }
 
 export function PdfAiChatOverlay({
@@ -17,8 +18,9 @@ export function PdfAiChatOverlay({
   pdfContext,
   onSendMessage,
   onExpand,
+  defaultOpen = false,
 }: PdfAiChatOverlayProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(defaultOpen);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
