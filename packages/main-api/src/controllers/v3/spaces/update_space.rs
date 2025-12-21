@@ -1,4 +1,5 @@
 use crate::controllers::v3::spaces::dto::*;
+use crate::features::spaces::files::{FileLink, FileLinkTarget, SpaceFile};
 use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
@@ -175,6 +176,42 @@ pub async fn update_space_handler(
         }
         UpdateSpaceRequest::File { files } => {
             su = su.with_files(files.clone());
+
+            // Add files to SpaceFile entity (for Files tab)
+            if !files.is_empty() {
+                SpaceFile::add_files(&dynamo.client, space_pk.clone(), files.clone()).await?;
+            }
+
+            // Link files in parallel
+            let link_futures: Vec<_> = files
+                .iter()
+                .filter_map(|file| file.url.as_ref())
+                .flat_map(|url| {
+                    vec![
+                        FileLink::add_link_target(
+                            &dynamo.client,
+                            space_pk.clone(),
+                            url.clone(),
+                            FileLinkTarget::Files,
+                        ),
+                        FileLink::add_link_target(
+                            &dynamo.client,
+                            space_pk.clone(),
+                            url.clone(),
+                            FileLinkTarget::Overview,
+                        ),
+                    ]
+                })
+                .collect();
+
+            let results = futures::future::join_all(link_futures).await;
+            
+            for result in results {
+                match result {
+                    Ok(_) => tracing::info!("Successfully linked file"),
+                    Err(e) => tracing::error!("Failed to link file: {:?}", e),
+                }
+            }
 
             space.files = Some(files);
         }

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { FileLinkInfo, FileLinkTarget } from '../types/file-link-target';
 import { spaceKeys } from '@/constants';
@@ -29,48 +29,6 @@ export function useFilesByTarget(spacePk: string, target: FileLinkTarget) {
         'GET',
         `/v3/spaces/${encodeURIComponent(spacePk)}/files/by-target?target=${target}`,
       );
-    },
-  });
-}
-
-// Link file to targets
-export function useLinkFileMutation(spacePk: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: {
-      file_url: string;
-      targets: FileLinkTarget[];
-    }) => {
-      return await call(
-        'POST',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/files/links`,
-        params,
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: spaceKeys.files(spacePk) });
-    },
-  });
-}
-
-// Unlink file from targets
-export function useUnlinkFileMutation(spacePk: string) {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (params: {
-      file_url: string;
-      targets: FileLinkTarget[];
-    }) => {
-      return await call(
-        'POST',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/files/unlink`,
-        params,
-      );
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: spaceKeys.files(spacePk) });
     },
   });
 }

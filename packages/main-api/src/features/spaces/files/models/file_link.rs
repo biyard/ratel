@@ -127,36 +127,11 @@ impl FileLink {
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
     ) -> Result<Vec<Self>, crate::Error> {
-        let table_name = Self::table_name();
+        let mut prefix = EntityType::FileLink(String::default()).to_string();
+        prefix.retain(|c| c != '#');
 
-        let pk_value = serde_dynamo::to_attribute_value(space_pk).map_err(|e| {
-            crate::Error::InternalServerError(format!("Serialization failed: {}", e))
-        })?;
-
-        let sk_prefix_value = serde_dynamo::to_attribute_value(
-            &EntityType::FileLink(String::new()),
-        )
-        .map_err(|e| crate::Error::InternalServerError(format!("Serialization failed: {}", e)))?;
-
-        let result = cli
-            .query()
-            .table_name(table_name)
-            .key_condition_expression("pk = :pk AND begins_with(sk, :sk_prefix)")
-            .expression_attribute_values(":pk", pk_value)
-            .expression_attribute_values(":sk_prefix", sk_prefix_value)
-            .send()
-            .await
-            .map_err(|e| crate::Error::InternalServerError(format!("Query failed: {}", e)))?;
-
-        if let Some(items) = result.items {
-            let file_links: Vec<FileLink> = items
-                .into_iter()
-                .filter_map(|item| serde_dynamo::from_item(item).ok())
-                .collect();
-            Ok(file_links)
-        } else {
-            Ok(vec![])
-        }
+        let (file_links, _bookmark) = Self::query_begins_with_sk(cli, space_pk, prefix).await?;
+        Ok(file_links)
     }
 
     /// Get all files linked to a specific target

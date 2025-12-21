@@ -94,35 +94,35 @@ pub async fn create_space_post_handler(
         SpaceFile::add_files(&dynamo.client, space_pk.clone(), req.files.clone()).await?;
     }
 
-    for file in &req.files {
-        if let Some(url) = &file.url {
-            tracing::info!("Linking file URL: {}", url);
+    // Link files in parallel
+    let link_futures: Vec<_> = req
+        .files
+        .iter()
+        .filter_map(|file| file.url.as_ref())
+        .flat_map(|url| {
+            vec![
+                FileLink::add_link_target(
+                    &dynamo.client,
+                    space_pk.clone(),
+                    url.clone(),
+                    FileLinkTarget::Files,
+                ),
+                FileLink::add_link_target(
+                    &dynamo.client,
+                    space_pk.clone(),
+                    url.clone(),
+                    FileLinkTarget::Board(post_id.clone()),
+                ),
+            ]
+        })
+        .collect();
 
-            // Link to Files tab
-            match FileLink::add_link_target(
-                &dynamo.client,
-                space_pk.clone(),
-                url.clone(),
-                FileLinkTarget::Files,
-            )
-            .await
-            {
-                Ok(_) => tracing::info!("Successfully linked file to Files tab"),
-                Err(e) => tracing::error!("Failed to link file to Files tab: {:?}", e),
-            }
-
-            // Link to Board post
-            match FileLink::add_link_target(
-                &dynamo.client,
-                space_pk.clone(),
-                url.clone(),
-                FileLinkTarget::Board(post_id.clone()),
-            )
-            .await
-            {
-                Ok(_) => tracing::info!("Successfully linked file to Board"),
-                Err(e) => tracing::error!("Failed to link file to Board: {:?}", e),
-            }
+    let results = futures::future::join_all(link_futures).await;
+    
+    for result in results {
+        match result {
+            Ok(_) => tracing::info!("Successfully linked file"),
+            Err(e) => tracing::error!("Failed to link file: {:?}", e),
         }
     }
 

@@ -89,8 +89,6 @@ export function SpaceFileEditorPage({ spacePk }: SpacePathProps) {
           files={ctrl.files.get()}
           onremove={ctrl.handleRemoveFile}
           onadd={ctrl.handleAddFile}
-          linkToOverview={ctrl.linkToOverview.get()}
-          onLinkToOverviewChange={ctrl.handleLinkToOverviewChange}
         />
       ) : (
         <SpaceFileViewer files={displayedFiles} />
