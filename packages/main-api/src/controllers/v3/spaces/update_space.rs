@@ -182,34 +182,27 @@ pub async fn update_space_handler(
                 SpaceFile::add_files(&dynamo.client, space_pk.clone(), files.clone()).await?;
             }
 
-            // Link files in parallel
-            let link_futures: Vec<_> = files
-                .iter()
-                .filter_map(|file| file.url.as_ref())
-                .flat_map(|url| {
-                    vec![
-                        FileLink::add_link_target(
-                            &dynamo.client,
-                            space_pk.clone(),
-                            url.clone(),
-                            FileLinkTarget::Files,
-                        ),
-                        FileLink::add_link_target(
-                            &dynamo.client,
-                            space_pk.clone(),
-                            url.clone(),
-                            FileLinkTarget::Overview,
-                        ),
-                    ]
-                })
-                .collect();
+            for file in &files {
+                if let Some(url) = &file.url {
+                    // Add Files target first
+                    FileLink::add_link_target(
+                        &dynamo.client,
+                        space_pk.clone(),
+                        url.clone(),
+                        FileLinkTarget::Files,
+                    )
+                    .await
+                    .ok();
 
-            let results = futures::future::join_all(link_futures).await;
-            
-            for result in results {
-                match result {
-                    Ok(_) => tracing::info!("Successfully linked file"),
-                    Err(e) => tracing::error!("Failed to link file: {:?}", e),
+                    // Add Overview target (will update existing link)
+                    FileLink::add_link_target(
+                        &dynamo.client,
+                        space_pk.clone(),
+                        url.clone(),
+                        FileLinkTarget::Overview,
+                    )
+                    .await
+                    .ok();
                 }
             }
 
