@@ -1,41 +1,38 @@
 /**
  * Custom TipTap extension for theme-aware text colors
- * Automatically inverts colors when switching between light and dark themes
- * to maintain readability
+ * Automatically adjusts colors dynamically for any color code when switching themes
  */
 
 import { Extension } from '@tiptap/core';
 import '@tiptap/extension-text-style';
+import { getThemeAdjustedColor } from '../color-utils';
 
 export interface ThemeAwareColorOptions {
   types: string[];
+  getCurrentTheme: () => 'light' | 'dark';
 }
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     themeAwareColor: {
-      /**
-       * Set the text color with theme awareness
-       */
       setThemeAwareColor: (color: string) => ReturnType;
-      /**
-       * Unset the text color
-       */
       unsetThemeAwareColor: () => ReturnType;
+      updateThemeColors: () => ReturnType;
     };
   }
 }
 
-/**
- * ThemeAwareColor extension
- * Stores the original color as data attribute and uses CSS to handle theme-based inversion
- */
 export const ThemeAwareColor = Extension.create<ThemeAwareColorOptions>({
   name: 'themeAwareColor',
 
   addOptions() {
     return {
       types: ['textStyle'],
+      getCurrentTheme: () => {
+        if (typeof document === 'undefined') return 'dark';
+        const theme = document.documentElement.getAttribute('data-theme');
+        return (theme === 'light' ? 'light' : 'dark') as 'light' | 'dark';
+      },
     };
   },
 
@@ -46,17 +43,35 @@ export const ThemeAwareColor = Extension.create<ThemeAwareColorOptions>({
         attributes: {
           color: {
             default: null,
-            parseHTML: (element) =>
-              element.getAttribute('data-color') ||
-              element.style.color?.replace(/['"]+/g, ''),
+            parseHTML: (element) => {
+              const dataColor = element.getAttribute('data-color');
+              if (dataColor) return dataColor;
+              
+              const styleColor = element.style.color?.replace(/['"]+/g, '');
+              return styleColor || null;
+            },
             renderHTML: (attributes) => {
               if (!attributes.color) {
                 return {};
               }
 
+              const currentTheme = this.options.getCurrentTheme();
+              const adjustedColor = getThemeAdjustedColor(
+                attributes.color,
+                currentTheme,
+              );
+
+              if (process.env.NODE_ENV === 'development') {
+                console.log('[ThemeAwareColor]', {
+                  original: attributes.color,
+                  theme: currentTheme,
+                  adjusted: adjustedColor,
+                });
+              }
+
               return {
                 'data-color': attributes.color,
-                style: `color: var(--theme-text-color, ${attributes.color})`,
+                style: `color: ${adjustedColor}`,
               };
             },
           },
@@ -79,6 +94,35 @@ export const ThemeAwareColor = Extension.create<ThemeAwareColorOptions>({
             .setMark('textStyle', { color: null })
             .removeEmptyTextStyle()
             .run();
+        },
+      updateThemeColors:
+        () =>
+        ({ tr, state, dispatch }) => {
+          if (!dispatch) return false;
+
+          const { doc } = state;
+          let modified = false;
+
+          doc.descendants((node, pos) => {
+            if (node.marks && node.marks.length > 0) {
+              node.marks.forEach((mark) => {
+                if (mark.type.name === 'textStyle' && mark.attrs.color) {
+                  const from = pos;
+                  const to = pos + node.nodeSize;
+                  
+                  tr.removeMark(from, to, mark.type);
+                  tr.addMark(from, to, mark.type.create(mark.attrs));
+                  modified = true;
+                }
+              });
+            }
+          });
+
+          if (modified) {
+            dispatch(tr);
+          }
+
+          return modified;
         },
     };
   },

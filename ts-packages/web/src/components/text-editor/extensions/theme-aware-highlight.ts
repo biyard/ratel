@@ -1,40 +1,29 @@
 /**
  * Custom TipTap extension for theme-aware text highlighting
- * Automatically inverts highlight colors when switching between light and dark themes
- * to maintain readability
+ * Automatically adjusts highlight colors dynamically for any color when switching themes
  */
 
 import { Extension } from '@tiptap/core';
 import '@tiptap/extension-text-style';
+import { getThemeAdjustedHighlight } from '../color-utils';
 
 export interface ThemeAwareHighlightOptions {
   multicolor: boolean;
   types: string[];
+  getCurrentTheme: () => 'light' | 'dark';
 }
 
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     themeAwareHighlight: {
-      /**
-       * Set highlight with theme awareness
-       */
       setThemeAwareHighlight: (attributes?: { color: string }) => ReturnType;
-      /**
-       * Toggle highlight
-       */
       toggleThemeAwareHighlight: (attributes?: { color: string }) => ReturnType;
-      /**
-       * Unset highlight
-       */
       unsetThemeAwareHighlight: () => ReturnType;
+      updateThemeHighlights: () => ReturnType;
     };
   }
 }
 
-/**
- * ThemeAwareHighlight extension
- * Stores the original highlight color as data attribute and uses CSS to handle theme-based inversion
- */
 export const ThemeAwareHighlight = Extension.create<ThemeAwareHighlightOptions>(
   {
     name: 'themeAwareHighlight',
@@ -43,6 +32,11 @@ export const ThemeAwareHighlight = Extension.create<ThemeAwareHighlightOptions>(
       return {
         multicolor: true,
         types: ['textStyle'],
+        getCurrentTheme: () => {
+          if (typeof document === 'undefined') return 'dark';
+          const theme = document.documentElement.getAttribute('data-theme');
+          return (theme === 'light' ? 'light' : 'dark') as 'light' | 'dark';
+        },
       };
     },
 
@@ -53,17 +47,27 @@ export const ThemeAwareHighlight = Extension.create<ThemeAwareHighlightOptions>(
           attributes: {
             highlight: {
               default: null,
-              parseHTML: (element) =>
-                element.getAttribute('data-highlight') ||
-                element.style.backgroundColor?.replace(/['"]+/g, ''),
+              parseHTML: (element) => {
+                const dataHighlight = element.getAttribute('data-highlight');
+                if (dataHighlight) return dataHighlight;
+                
+                const styleColor = element.style.backgroundColor?.replace(/['"]+/g, '');
+                return styleColor || null;
+              },
               renderHTML: (attributes) => {
                 if (!attributes.highlight) {
                   return {};
                 }
 
+                const currentTheme = this.options.getCurrentTheme();
+                const adjustedColor = getThemeAdjustedHighlight(
+                  attributes.highlight,
+                  currentTheme,
+                );
+
                 return {
                   'data-highlight': attributes.highlight,
-                  style: `background-color: var(--theme-highlight-color, ${attributes.highlight})`,
+                  style: `background-color: ${adjustedColor}`,
                 };
               },
             },
@@ -95,6 +99,35 @@ export const ThemeAwareHighlight = Extension.create<ThemeAwareHighlightOptions>(
               .setMark('textStyle', { highlight: null })
               .removeEmptyTextStyle()
               .run();
+          },
+        updateThemeHighlights:
+          () =>
+          ({ tr, state, dispatch }) => {
+            if (!dispatch) return false;
+
+            const { doc } = state;
+            let modified = false;
+
+            doc.descendants((node, pos) => {
+              if (node.marks && node.marks.length > 0) {
+                node.marks.forEach((mark) => {
+                  if (mark.type.name === 'textStyle' && mark.attrs.highlight) {
+                    const from = pos;
+                    const to = pos + node.nodeSize;
+                    
+                    tr.removeMark(from, to, mark.type);
+                    tr.addMark(from, to, mark.type.create(mark.attrs));
+                    modified = true;
+                  }
+                });
+              }
+            });
+
+            if (modified) {
+              dispatch(tr);
+            }
+
+            return modified;
           },
       };
     },

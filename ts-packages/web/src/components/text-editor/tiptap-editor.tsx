@@ -16,6 +16,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Video from './extensions/video';
 import { ThemeAwareColor } from './extensions/theme-aware-color';
 import { ThemeAwareHighlight } from './extensions/theme-aware-highlight';
+import { getThemeAdjustedColor, getThemeAdjustedHighlight } from './color-utils';
 import {
   forwardRef,
   useEffect,
@@ -28,9 +29,19 @@ import { cn } from '@/lib/utils';
 import { TiptapEditorProps, DEFAULT_ENABLED_FEATURES } from './types';
 import { TiptapToolbar } from './tiptap-toolbar';
 import { showErrorToast } from '@/lib/toast';
+import type { Theme } from '@/hooks/use-theme';
 import './theme-aware-colors.css';
 
 const FOLD_HEIGHT = 240;
+
+// Helper function to detect current theme
+const getCurrentTheme = (): Theme => {
+  if (typeof document !== 'undefined') {
+    const theme = document.documentElement.getAttribute('data-theme');
+    return (theme === 'light' ? 'light' : 'dark') as Theme;
+  }
+  return 'dark';
+};
 
 export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
   (
@@ -112,8 +123,13 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           TextStyle,
           Color,
           Highlight.configure({ multicolor: true }),
-          ThemeAwareColor,
-          ThemeAwareHighlight.configure({ multicolor: true }),
+          ThemeAwareColor.configure({
+            getCurrentTheme,
+          }),
+          ThemeAwareHighlight.configure({
+            multicolor: true,
+            getCurrentTheme,
+          }),
           TextAlign.configure({
             types: ['heading', 'paragraph'],
             alignments: ['left', 'center', 'right'],
@@ -187,6 +203,68 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       },
       [editable, uploadAsset, uploadVideo, maxImageSizeMB, maxVideoSizeMB],
     ) as Editor | null;
+
+    // Listen for theme changes and update colors
+    useEffect(() => {
+      if (!editor || editor.isDestroyed) return;
+
+      let timeoutId: NodeJS.Timeout | null = null;
+
+      const handleThemeChange = () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        
+        timeoutId = setTimeout(() => {
+          if (!editor.isDestroyed) {
+            const editorElement = editor.view.dom;
+            const theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+            
+            const coloredElements = editorElement.querySelectorAll('[data-color]');
+            coloredElements.forEach((el) => {
+              const originalColor = el.getAttribute('data-color');
+              if (originalColor) {
+                const adjustedColor = getThemeAdjustedColor(originalColor, theme);
+                (el as HTMLElement).style.color = adjustedColor;
+              }
+            });
+            
+            const highlightedElements = editorElement.querySelectorAll('[data-highlight]');
+            highlightedElements.forEach((el) => {
+              const originalColor = el.getAttribute('data-highlight');
+              if (originalColor) {
+                const adjustedColor = getThemeAdjustedHighlight(originalColor, theme);
+                (el as HTMLElement).style.backgroundColor = adjustedColor;
+              }
+            });
+          }
+        }, 10);
+      };
+
+      window.addEventListener('theme-change', handleThemeChange);
+      window.addEventListener('storage', handleThemeChange);
+      
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (
+            mutation.type === 'attributes' &&
+            mutation.attributeName === 'data-theme'
+          ) {
+            handleThemeChange();
+          }
+        });
+      });
+
+      observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ['data-theme'],
+      });
+
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId);
+        window.removeEventListener('theme-change', handleThemeChange);
+        window.removeEventListener('storage', handleThemeChange);
+        observer.disconnect();
+      };
+    }, [editor]);
 
     useEffect(() => {
       if (!isFoldable) {
