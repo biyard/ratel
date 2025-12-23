@@ -71,7 +71,8 @@ pub async fn change_membership_handler(
 
     if req.membership < current_membership.tier {
         let membership =
-            handle_downgrade_membership(cli, &user_membership, req.membership.clone()).await?;
+            handle_downgrade_membership(cli, &portone, &user_membership, req.membership.clone())
+                .await?;
 
         ret.renewal_date = user_membership.expired_at + 1;
         ret.membership = Some(membership.into());
@@ -98,10 +99,11 @@ pub async fn change_membership_handler(
 /// The downgrade takes effect when current membership expires
 async fn handle_downgrade_membership(
     cli: &aws_sdk_dynamodb::Client,
+    portone: &PortOne,
     user_membership: &UserMembership,
     new_tier: MembershipTier,
 ) -> Result<Membership> {
-    tracing::warn!("Scheduling membership downgrade to {:?}", new_tier);
+    tracing::debug!("Scheduling membership downgrade to {:?}", new_tier);
 
     // Get the new membership details
     let new_membership = Membership::get_by_membership_tier(cli, &new_tier).await?;
@@ -112,12 +114,14 @@ async fn handle_downgrade_membership(
     updated_membership.next_membership = Some(new_membership.pk.clone().into());
     updated_membership.updated_at = now();
 
+    let user_id: UserPartition = user_membership.pk.clone().into();
+    let (user_payment, _) = UserPayment::get_by_user(cli, portone, user_id.clone(), None).await?;
+    user_payment.cancel_scheduled_payments(cli, portone).await?;
+
     // Save the scheduled downgrade (delete old, then create updated)
     updated_membership.upsert(cli).await?;
 
-    // TODO: cancel or change payment
-
-    tracing::info!(
+    notify!(
         "Scheduled membership downgrade to {:?} for user {:?}, effective at {}",
         new_tier,
         user_membership.pk,
@@ -146,7 +150,7 @@ async fn handle_upgrade_membership(
     let (user_payment, should_update) =
         UserPayment::get_by_user(cli, portone, user_id.clone(), card_info).await?;
 
-    let tx_type = TransactionType::PurchaseMembership(new_tier.to_string());
+    let tx_type = TransactionType::PurchaseMembership(new_tier.clone());
 
     let amount = match &currency {
         Currency::Usd => new_membership.price_dollars,
@@ -165,7 +169,7 @@ async fn handle_upgrade_membership(
         .purchase(portone, tx_type.clone(), amount, currency)
         .await?;
 
-    let mut user_membership = UserMembership::new(
+    let user_membership = UserMembership::new(
         user_id.clone(),
         new_membership.pk.clone().into(),
         new_membership.duration_days,
@@ -174,33 +178,19 @@ async fn handle_upgrade_membership(
     .with_purchase_id(user_purchase.pk.clone())
     .with_auto_renew(true);
 
-    let next_purchase = user_payment
-        .schedule_next_membership_purchase(
-            portone,
-            tx_type,
-            amount,
-            currency,
-            user_membership
-                .renewal_date_rfc_3339()
-                .unwrap_or(after_days_from_now_rfc_3339(
-                    new_membership.duration_days as i64,
-                )),
-        )
-        .await;
-
-    if next_purchase.is_err() {
-        user_membership.auto_renew = false;
-        user_membership.next_membership =
-            Some(Partition::Membership(MembershipTier::Free.to_string()).into())
-    }
-
     let mut txs = vec![
         user_purchase.create_transact_write_item(),
         user_membership.upsert_transact_write_item(),
     ];
 
-    if let Ok(next_purchase) = next_purchase {
-        txs.push(next_purchase.create_transact_write_item());
+    #[cfg(test)]
+    {
+        // NOTE: Real payment will call /hooks/portone but testing code.
+        let next_time_to_pay = after_days_from_now_rfc_3339(new_membership.duration_days as i64);
+        let next_user_purchase = user_payment
+            .schedule_next_membership_purchase(portone, tx_type, amount, currency, next_time_to_pay)
+            .await?;
+        txs.push(next_user_purchase.create_transact_write_item());
     }
 
     if should_update {
@@ -208,13 +198,6 @@ async fn handle_upgrade_membership(
     }
 
     transact_write_all_items_with_failover!(cli, txs);
-
-    notify!(
-        "Upgraded membership to {:?} for user {:?} payed by {}",
-        new_tier,
-        user_id,
-        currency,
-    );
 
     Ok((user_purchase, new_membership))
 }
