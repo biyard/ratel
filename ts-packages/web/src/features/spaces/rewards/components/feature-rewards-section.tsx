@@ -28,7 +28,6 @@ export function FeatureRewardsSection({
     poll.questions.length > 0
       ? poll.questions[0].title || `Poll #${poll.sk.slice(-6)}`
       : `Poll #${poll.sk.slice(-6)}`;
-
   return (
     <div className="border border-c-wg-20 rounded-lg p-4 bg-c-bg-card">
       <Col className="gap-4">
@@ -37,18 +36,16 @@ export function FeatureRewardsSection({
             <h3 className="text-base font-semibold text-c-wg-100">
               {pollTitle}
             </h3>
-            <p className="text-sm text-c-wg-60">{t.poll_respond_reward}</p>
+            <p className="text-sm text-c-wg-60">{t.poll_reward_section}</p>
           </div>
-          {!reward && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onCreateReward(poll.sk)}
-            >
-              <PlusIcon className="w-4 h-4" />
-              {t.create_reward}
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onCreateReward(poll.sk)}
+          >
+            <PlusIcon className="w-4 h-4" />
+            {t.create_reward}
+          </Button>
         </div>
 
         {reward ? (

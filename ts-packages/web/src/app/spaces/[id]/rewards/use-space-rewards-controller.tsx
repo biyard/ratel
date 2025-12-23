@@ -4,8 +4,6 @@ import { State } from '@/types/state';
 import { Space } from '@/features/spaces/types/space';
 import { SpaceRewardResponse } from '@/features/spaces/rewards/types/space-reward-response';
 import { ListRewardsResponse } from '@/features/spaces/rewards/types/list-rewards-response';
-import { ListPollResponse } from '@/features/spaces/polls/types/list-poll-response';
-import { Poll } from '@/features/spaces/polls/types/poll';
 import { useCreateRewardMutation } from '@/features/spaces/rewards/hooks/use-create-reward-mutation';
 import { useUpdateRewardMutation } from '@/features/spaces/rewards/hooks/use-update-reward-mutation';
 import { useDeleteRewardMutation } from '@/features/spaces/rewards/hooks/use-delete-reward-mutation';
@@ -13,17 +11,18 @@ import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { CreateRewardRequest } from '@/features/spaces/rewards/types/create-reward-request';
 import { UpdateRewardRequest } from '@/features/spaces/rewards/types/update-reward-request';
-import { useSpaceRewardsData } from './use-space-rewards-data';
 import { RewardsI18n, useRewardsI18n } from '@/features/spaces/rewards/i18n';
 
+import { RewardType } from '@/features/spaces/rewards/types/reward-type';
+import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
+import { SpaceType } from '@/features/spaces/types/space-type';
+import useSpaceRewards from '@/features/spaces/rewards/hooks/use-space-rewards';
+
 export interface RewardFormData {
+  rewardType?: RewardType;
+  pollSk?: string;
   description?: string;
   credits: number;
-}
-
-export interface RewardsByPoll {
-  poll: Poll;
-  rewards: SpaceRewardResponse[];
 }
 
 export class SpaceRewardsController {
@@ -32,10 +31,8 @@ export class SpaceRewardsController {
     public i18n: RewardsI18n,
     public space: Space,
     public rewards: ListRewardsResponse,
-    public polls: ListPollResponse | null,
     public isPollSpace: boolean,
 
-    public selectedPollSk: State<string | null>,
     public editingReward: State<SpaceRewardResponse | null>,
     public isModalOpen: State<boolean>,
 
@@ -44,57 +41,27 @@ export class SpaceRewardsController {
     public deleteReward: ReturnType<typeof useDeleteRewardMutation>,
   ) {}
 
-  getRewardsByPoll(): RewardsByPoll[] {
-    if (!this.polls || !this.isPollSpace) {
-      return [];
-    }
-
-    return this.polls.polls.map((poll) => {
-      const pollRewards = this.rewards.items.filter((reward) => {
-        // sk format: "POLL#<poll_sk>#Respond"
-        return reward.sk.startsWith(`POLL#${poll.sk}#`);
-      });
-
-      return {
-        poll,
-        rewards: pollRewards,
-      };
-    });
-  }
-
-  getRewardForPoll(pollSk: string): SpaceRewardResponse | null {
-    return (
-      this.rewards.items.find((reward) =>
-        reward.sk.startsWith(`POLL#${pollSk}#`),
-      ) ?? null
-    );
-  }
-
-  openCreateModal = (pollSk: string) => {
-    this.selectedPollSk.set(pollSk);
+  openCreateModal = () => {
     this.editingReward.set(null);
     this.isModalOpen.set(true);
   };
 
-  openEditModal = (reward: SpaceRewardResponse, pollSk: string) => {
-    this.selectedPollSk.set(pollSk);
+  openEditModal = (reward: SpaceRewardResponse) => {
     this.editingReward.set(reward);
     this.isModalOpen.set(true);
   };
 
   closeModal = () => {
-    this.selectedPollSk.set(null);
     this.editingReward.set(null);
     this.isModalOpen.set(false);
   };
 
   handleCreate = async (data: RewardFormData) => {
-    const pollSk = this.selectedPollSk.get();
-    if (!pollSk) return;
+    if (!data.pollSk) return;
 
     try {
       const req: CreateRewardRequest = {
-        reward: { poll_sk: pollSk },
+        reward: { poll_sk: data.pollSk },
         description: data.description,
         credits: data.credits,
       };
@@ -112,13 +79,10 @@ export class SpaceRewardsController {
     }
   };
 
-  handleUpdate = async (data: RewardFormData) => {
-    const pollSk = this.selectedPollSk.get();
-    if (!pollSk) return;
-
+  handleUpdate = async (data: RewardFormData, reward: SpaceRewardResponse) => {
     try {
       const req: UpdateRewardRequest = {
-        reward: { poll_sk: pollSk },
+        sk: reward.sk,
         description: data.description,
         credits: data.credits,
       };
@@ -136,11 +100,11 @@ export class SpaceRewardsController {
     }
   };
 
-  handleDelete = async (pollSk: string) => {
+  handleDelete = async (reward: SpaceRewardResponse) => {
     try {
       await this.deleteReward.mutateAsync({
         spacePk: this.spacePk,
-        req: { reward: { poll_sk: pollSk } },
+        req: { sk: reward.sk },
       });
 
       showSuccessToast(this.i18n.settings.delete_success);
@@ -151,8 +115,9 @@ export class SpaceRewardsController {
   };
 
   handleSubmit = async (data: RewardFormData) => {
-    if (this.editingReward.get()) {
-      await this.handleUpdate(data);
+    const editing = this.editingReward.get();
+    if (editing) {
+      await this.handleUpdate(data, editing);
     } else {
       await this.handleCreate(data);
     }
@@ -161,9 +126,11 @@ export class SpaceRewardsController {
 
 export function useSpaceRewardsController(spacePk: string) {
   const i18n = useRewardsI18n();
-  const { space, rewards, polls, isPollSpace } = useSpaceRewardsData(spacePk);
-
-  const selectedPollSk = useState<string | null>(null);
+  const { data: space } = useSpaceById(spacePk);
+  const isPollSpace =
+    space?.spaceType === SpaceType.Poll ||
+    space?.spaceType === SpaceType.Deliberation;
+  const { data: rewards } = useSpaceRewards(spacePk);
   const editingReward = useState<SpaceRewardResponse | null>(null);
   const isModalOpen = useState<boolean>(false);
 
@@ -176,9 +143,7 @@ export function useSpaceRewardsController(spacePk: string) {
     i18n,
     space,
     rewards,
-    polls,
     isPollSpace,
-    new State(selectedPollSk),
     new State(editingReward),
     new State(isModalOpen),
     createReward,
