@@ -89,7 +89,7 @@ impl PortOne {
     ) -> Result<(PaymentScheduleResponse, String)> {
         Ok((
             PaymentScheduleResponse {
-                schedule: PaymentSschedule {
+                schedule: PaymentSchedule {
                     id: "merchantest".to_string(),
                 },
             },
