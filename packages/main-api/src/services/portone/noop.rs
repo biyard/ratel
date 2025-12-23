@@ -103,7 +103,7 @@ impl PortOne {
     ) -> Result<PaymentCancelScheduleResponse> {
         Ok(PaymentCancelScheduleResponse {
             revoked_schedule_ids: vec![billing_key],
-            revoked_at: "2025-11-03T11:01:50.08942321Z".to_string(),
+            revoked_at: Some("2025-11-03T11:01:50.08942321Z".to_string()),
         })
     }
 }
