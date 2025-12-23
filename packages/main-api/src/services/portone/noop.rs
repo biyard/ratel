@@ -66,7 +66,6 @@ impl PortOne {
         _amount: i64,
         _currency: Currency,
     ) -> Result<(BillingKeyPaymentResponse, String)> {
-        let now = chrono::Utc::now().timestamp();
         Ok((
             BillingKeyPaymentResponse {
                 payment: Payment {
@@ -88,7 +87,6 @@ impl PortOne {
         _currency: Currency,
         _time_to_pay: String,
     ) -> Result<(PaymentScheduleResponse, String)> {
-        let now = chrono::Utc::now().timestamp();
         Ok((
             PaymentScheduleResponse {
                 schedule: PaymentSchedule {
