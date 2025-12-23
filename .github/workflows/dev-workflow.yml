@@ -148,7 +148,7 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-dev
           DYNAMO_ENDPOINT: none
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          RUST_FLAG: "--features lambda --release"
+          RUST_FLAG: "--features bypass,lambda --release"
           WEB_BUILD: false
           PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
           PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
@@ -547,6 +547,7 @@ jobs:
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
       APP_IDENTIFIER: foundation.ratel.app
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -610,6 +611,7 @@ jobs:
           chmod 644 ~/.ssh/known_hosts
 
       - name: Create and unlock temporary keychain
+        shell: bash
         run: |
           set -euo pipefail
           KEYCHAIN_LABEL="ci-temp"
@@ -630,37 +632,76 @@ jobs:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
+          set -euo pipefail
           bundle exec fastlane match appstore \
             --readonly \
             --git_url "$MATCH_GIT_URL" \
-            --app_identifier foundation.ratel.app \
+            --app_identifier "foundation.ratel.app" \
             --team_id "$APPLE_TEAM_ID" \
             --keychain_name "$MATCH_KEYCHAIN_NAME" \
             --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
 
-      - name: Resolve installed provisioning profile name
+      - name: Validate provisioning profile matches bundle id + team and export PROFILE_NAME
         shell: bash
         run: |
           set -euo pipefail
           TARGET_BUNDLE_ID="foundation.ratel.app"
-          FOUND_NAME=""
-          for f in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+          TARGET_TEAM_ID="${APPLE_TEAM_ID}"
+          HIT=0
+          HIT_FILE=""
+
+          check_file () {
+            local f="$1"
+            [[ -f "$f" ]] || return 1
+            local TMP
             TMP="$(mktemp)"
-            security cms -D -i "$f" > "$TMP" 2>/dev/null || continue
-            BID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$TMP" 2>/dev/null || true)
-            NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$TMP" 2>/dev/null || true)
-            if [[ "${BID#*.}" == "$TARGET_BUNDLE_ID" ]]; then
-              FOUND_NAME="$NAME"
-              UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$TMP" 2>/dev/null || true)
-              echo "Resolved provisioning profile: $FOUND_NAME ($UUID)"
-              break
+            security cms -D -i "$f" > "$TMP" 2>/dev/null || return 1
+            local APPID TEAM
+            APPID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$TMP" 2>/dev/null || true)
+            TEAM=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$TMP" 2>/dev/null || true)
+            if [[ "${APPID#*.}" == "$TARGET_BUNDLE_ID" && "$TEAM" == "$TARGET_TEAM_ID" ]]; then
+              return 0
             fi
+            return 1
+          }
+
+          for dir in \
+            "$HOME/Library/MobileDevice/Provisioning Profiles" \
+            "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
+          do
+            [[ -d "$dir" ]] || continue
+            for f in "$dir"/*.mobileprovision; do
+              [[ -f "$f" ]] || continue
+              if check_file "$f"; then
+                HIT=1
+                HIT_FILE="$f"
+                break
+              fi
+            done
+            [[ "$HIT" -eq 1 ]] && break
           done
-          if [[ -z "$FOUND_NAME" ]]; then
-            echo "PROFILE_NAME=match AppStore $TARGET_BUNDLE_ID" >> $GITHUB_ENV
-          else
-            echo "PROFILE_NAME=$FOUND_NAME" >> $GITHUB_ENV
+
+          echo "PROFILE_MATCH=$HIT" >> "$GITHUB_ENV"
+          echo "PROFILE_MATCH=$HIT"
+
+          if [[ "$HIT" -eq 1 ]]; then
+            TMP="$(mktemp)"
+            security cms -D -i "$HIT_FILE" > "$TMP" 2>/dev/null
+            NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$TMP" 2>/dev/null || true)
+            if [[ -n "$NAME" ]]; then
+              echo "PROFILE_NAME=$NAME" >> "$GITHUB_ENV"
+            fi
+            echo "PROFILE_PATH=$HIT_FILE" >> "$GITHUB_ENV"
+            echo "Matched profile file: $HIT_FILE"
+            echo "Matched profile name: $NAME"
           fi
+
+      - name: Fail if provisioning profile missing
+        if: env.PROFILE_MATCH != '1'
+        shell: bash
+        run: |
+          echo "No matching provisioning profile installed for bundle id 'foundation.ratel.app'."
+          exit 1
 
       - name: Compute iOS build number
         env:
@@ -675,10 +716,12 @@ jobs:
           APP_IDENTIFIER: foundation.ratel.app
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
+          set -euo pipefail
           bundle exec fastlane deploy
 
       - name: Dump xcodebuild log on failure
         if: failure()
+        shell: bash
         run: |
           LOG_DIR="$HOME/Library/Logs/gym"
           ls -la "$LOG_DIR" || true
