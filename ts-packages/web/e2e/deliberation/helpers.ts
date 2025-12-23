@@ -27,7 +27,10 @@ export {
 
 import { expect, Page } from '@playwright/test';
 import { POST_TITLE, TEAM_ID } from './data';
-import { goToTeam as goToTeamBase, goToTeamSpace as goToTeamSpaceBase } from '../helpers';
+import {
+  goToTeam as goToTeamBase,
+  goToTeamSpace as goToTeamSpaceBase,
+} from '../helpers';
 
 // Deliberation-specific wrappers that use TEAM_ID from data
 export async function goToTeam(page: Page) {
