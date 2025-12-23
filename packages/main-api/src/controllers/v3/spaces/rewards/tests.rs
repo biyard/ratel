@@ -4,8 +4,8 @@ use crate::controllers::v3::spaces::polls::RespondPollSpaceResponse;
 use crate::controllers::v3::spaces::polls::tests::setup_published_poll_space;
 use crate::features::membership::*;
 use crate::features::payment::*;
-use crate::features::spaces::rewards::*;
 use crate::features::spaces::rewards::PollRewardKey;
+use crate::features::spaces::rewards::*;
 use crate::tests::v3_setup::*;
 use crate::types::*;
 use crate::*;
@@ -15,13 +15,17 @@ use crate::*;
 async fn default_poll_rewards(cli: &aws_sdk_dynamodb::Client) {
     // Create PollRespond reward if it doesn't exist
     let poll_respond_pk = Partition::Reward;
-    if Reward::get(cli, poll_respond_pk.clone(), Some(&RewardType::PollRespond))
-        .await
-        .unwrap()
-        .is_none()
+    if Reward::get(
+        cli,
+        poll_respond_pk.clone(),
+        Some(&RewardAction::PollRespond),
+    )
+    .await
+    .unwrap()
+    .is_none()
     {
         let poll_reward = Reward::new(
-            RewardType::PollRespond,
+            RewardAction::PollRespond,
             10_000, // 10,000 points
             RewardPeriod::Daily,
             RewardCondition::None,

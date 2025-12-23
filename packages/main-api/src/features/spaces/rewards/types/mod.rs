@@ -1,6 +1,3 @@
-pub mod reward_type;
-pub use reward_type::*;
-
 pub mod reward_key;
 pub use reward_key::*;
 
@@ -16,5 +13,8 @@ pub use reward_period::*;
 pub mod poll_reward_key;
 pub use poll_reward_key::*;
 
-pub mod board_reward_key;
-pub use board_reward_key::*;
+pub mod feature_type;
+pub use feature_type::*;
+
+pub mod reward_action;
+pub use reward_action::*;

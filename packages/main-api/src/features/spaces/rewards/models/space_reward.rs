@@ -6,7 +6,7 @@ use crate::*;
 ///
 /// Key Structure:
 /// - PK: SPACE#{space_pk}##REWARD
-/// - SK: {EntityType}#{RewardType}
+/// - SK: {EntityType}#{RewardAction}
 ///
 /// Examples:
 /// - Get All Rewards: SpaceReward::query(pk)
@@ -27,7 +27,7 @@ use crate::*;
 ///
 /// Key Structure:
 /// - PK: SPACE#{space_pk}##REWARD
-/// - SK: {EntityType}#{RewardType}
+/// - SK: {EntityType}#{RewardAction}
 ///
 /// Examples:
 /// - Get All Rewards: SpaceReward::query(pk)
@@ -127,7 +127,7 @@ impl SpaceReward {
         }
 
         if let Some(entity_type) = entity_type {
-            let begin_sk = RewardKey::get_feature_begin_sk(entity_type);
+            let begin_sk = RewardKey::get_sk_prefix(entity_type);
             opt = opt.sk(begin_sk);
         }
 

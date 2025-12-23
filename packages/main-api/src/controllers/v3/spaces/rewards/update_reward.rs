@@ -1,6 +1,6 @@
 use crate::features::membership::UserMembership;
+use crate::features::spaces::rewards::RewardAction;
 use crate::features::spaces::rewards::RewardKey;
-use crate::features::spaces::rewards::RewardType;
 use crate::features::spaces::rewards::RewardTypeRequest;
 use crate::features::spaces::rewards::SpaceReward;
 use crate::features::spaces::rewards::SpaceRewardResponse;

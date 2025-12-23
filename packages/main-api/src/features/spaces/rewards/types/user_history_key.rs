@@ -4,9 +4,7 @@ use chrono::Datelike;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 use crate::{
-    features::spaces::rewards::{
-        BoardRewardKey, PollRewardKey, RewardCondition, RewardKey, RewardPeriod,
-    },
+    features::spaces::rewards::{PollRewardKey, RewardCondition, RewardKey, RewardPeriod},
     *,
 };
 
