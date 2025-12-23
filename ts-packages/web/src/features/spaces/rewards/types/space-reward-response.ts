@@ -8,7 +8,6 @@ export class SpaceRewardResponse {
   created_at: number;
   updated_at: number;
 
-  label: string;
   description: string;
   points: number;
   credits: number;
@@ -27,7 +26,6 @@ export class SpaceRewardResponse {
     this.sk = json.sk ?? '';
     this.created_at = json.created_at ?? 0;
     this.updated_at = json.updated_at ?? 0;
-    this.label = json.label ?? '';
     this.description = json.description ?? '';
     this.points = json.points ?? 0;
     this.credits = json.credits ?? 0;
@@ -37,5 +35,22 @@ export class SpaceRewardResponse {
     this.condition = json.condition ?? { None: {} };
     this.user_claims = json.user_claims ?? 0;
     this.user_points = json.user_points ?? 0;
+  }
+
+  /**
+   * Get localized label based on reward type (sk)
+   * sk format: "POLL#<poll_sk>#Respond" or "BOARD#<post_sk>#Comment" etc.
+   */
+  getRewardType(): 'poll_respond' | 'board_comment' | 'board_like' | 'unknown' {
+    if (this.sk.includes('#Respond')) {
+      return 'poll_respond';
+    }
+    if (this.sk.includes('#Comment')) {
+      return 'board_comment';
+    }
+    if (this.sk.includes('#Like')) {
+      return 'board_like';
+    }
+    return 'unknown';
   }
 }

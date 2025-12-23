@@ -23,10 +23,9 @@ export const rewardsI18n: Record<lang, RewardsI18n> = {
       total_claims: 'Total Claims',
       total_points: 'Total Points',
 
-      label_placeholder: 'Enter reward label',
-      description_placeholder: 'Enter reward description',
+      description: 'Description',
+      description_placeholder: 'Enter reward description (optional)',
       credits_placeholder: 'Enter credits amount',
-      label_required: 'Label is required',
       credits_required: 'Credits amount is required',
       credits_min: 'Credits must be at least 1',
 
@@ -48,7 +47,10 @@ export const rewardsI18n: Record<lang, RewardsI18n> = {
         'Are you sure you want to delete this reward? This action cannot be undone.',
 
       poll_reward_section: 'Poll Rewards',
-      poll_respond_reward: 'Response Reward',
+      poll_respond_reward: 'Poll Response Reward',
+      board_comment_reward: 'Comment Reward',
+      board_like_reward: 'Like Reward',
+      unknown_reward: 'Reward',
     },
   },
   ko: {
@@ -72,10 +74,9 @@ export const rewardsI18n: Record<lang, RewardsI18n> = {
       total_claims: '총 청구 횟수',
       total_points: '총 포인트',
 
-      label_placeholder: '리워드 라벨을 입력하세요',
-      description_placeholder: '리워드 설명을 입력하세요',
+      description: '설명',
+      description_placeholder: '리워드 설명을 입력하세요 (선택사항)',
       credits_placeholder: '크레딧 금액을 입력하세요',
-      label_required: '라벨은 필수입니다',
       credits_required: '크레딧 금액은 필수입니다',
       credits_min: '크레딧은 최소 1 이상이어야 합니다',
 
@@ -97,7 +98,10 @@ export const rewardsI18n: Record<lang, RewardsI18n> = {
         '이 리워드를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
 
       poll_reward_section: '설문 리워드',
-      poll_respond_reward: '응답 리워드',
+      poll_respond_reward: '설문 응답 리워드',
+      board_comment_reward: '댓글 작성 리워드',
+      board_like_reward: '좋아요 리워드',
+      unknown_reward: '리워드',
     },
   },
 };
@@ -127,10 +131,9 @@ interface SettingsI18n {
   total_claims: string;
   total_points: string;
 
-  label_placeholder: string;
+  description: string;
   description_placeholder: string;
   credits_placeholder: string;
-  label_required: string;
   credits_required: string;
   credits_min: string;
 
@@ -152,6 +155,9 @@ interface SettingsI18n {
 
   poll_reward_section: string;
   poll_respond_reward: string;
+  board_comment_reward: string;
+  board_like_reward: string;
+  unknown_reward: string;
 }
 
 export function useRewardsI18n(): RewardsI18n {
@@ -176,10 +182,9 @@ export function useRewardsI18n(): RewardsI18n {
       total_claims: t('settings.total_claims'),
       total_points: t('settings.total_points'),
 
-      label_placeholder: t('settings.label_placeholder'),
+      description: t('settings.description'),
       description_placeholder: t('settings.description_placeholder'),
       credits_placeholder: t('settings.credits_placeholder'),
-      label_required: t('settings.label_required'),
       credits_required: t('settings.credits_required'),
       credits_min: t('settings.credits_min'),
 
@@ -201,6 +206,9 @@ export function useRewardsI18n(): RewardsI18n {
 
       poll_reward_section: t('settings.poll_reward_section'),
       poll_respond_reward: t('settings.poll_respond_reward'),
+      board_comment_reward: t('settings.board_comment_reward'),
+      board_like_reward: t('settings.board_like_reward'),
+      unknown_reward: t('settings.unknown_reward'),
     },
   };
 }

@@ -17,8 +17,7 @@ import { useSpaceRewardsData } from './use-space-rewards-data';
 import { RewardsI18n, useRewardsI18n } from '@/features/spaces/rewards/i18n';
 
 export interface RewardFormData {
-  label: string;
-  description: string;
+  description?: string;
   credits: number;
 }
 
@@ -96,7 +95,6 @@ export class SpaceRewardsController {
     try {
       const req: CreateRewardRequest = {
         reward: { poll_sk: pollSk },
-        label: data.label,
         description: data.description,
         credits: data.credits,
       };
@@ -121,7 +119,6 @@ export class SpaceRewardsController {
     try {
       const req: UpdateRewardRequest = {
         reward: { poll_sk: pollSk },
-        label: data.label,
         description: data.description,
         credits: data.credits,
       };

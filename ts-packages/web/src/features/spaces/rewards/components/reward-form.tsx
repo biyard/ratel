@@ -22,7 +22,6 @@ export function RewardForm({
   isSubmitting,
 }: RewardFormProps) {
   const t = i18n.settings;
-  const [label, setLabel] = useState(initialData?.label ?? '');
   const [description, setDescription] = useState(
     initialData?.description ?? '',
   );
@@ -31,10 +30,6 @@ export function RewardForm({
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-
-    if (!label.trim()) {
-      newErrors.label = t.label_required;
-    }
 
     if (credits < 1) {
       newErrors.credits = t.credits_min;
@@ -50,7 +45,6 @@ export function RewardForm({
     if (!validate()) return;
 
     await onSubmit({
-      label: label.trim(),
       description: description.trim(),
       credits,
     });
@@ -61,22 +55,7 @@ export function RewardForm({
       <Col className="gap-4">
         <div>
           <label className="block text-sm font-medium text-c-wg-80 mb-1">
-            {t.reward_label}
-          </label>
-          <Input
-            value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder={t.label_placeholder}
-            aria-invalid={!!errors.label}
-          />
-          {errors.label && (
-            <p className="text-sm text-red-500 mt-1">{errors.label}</p>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-c-wg-80 mb-1">
-            Description
+            {t.description}
           </label>
           <Input
             value={description}
