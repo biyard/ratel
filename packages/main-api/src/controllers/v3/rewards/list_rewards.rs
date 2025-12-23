@@ -1,6 +1,8 @@
 use crate::Result;
-use crate::features::spaces::rewards::{RewardCondition, RewardConfig, RewardPeriod, RewardType};
-
+use crate::features::spaces::rewards::{
+    FeatureType, Reward, RewardAction, RewardCondition, RewardPeriod, RewardQueryOption,
+};
+use crate::*;
 use bdk::prelude::*;
 use by_axum::axum::Json;
 use by_axum::axum::extract::Query;
@@ -8,7 +10,8 @@ use by_axum::axum::extract::Query;
 #[derive(Debug, Clone, Default, serde::Deserialize, schemars::JsonSchema)]
 pub struct ListRewardsQuery {
     /// Filter by feature type: "poll", "board"
-    pub feature: Option<String>,
+    pub feature: Option<FeatureType>,
+    pub bookmark: Option<String>,
 }
 
 #[derive(
@@ -21,23 +24,22 @@ pub struct ListRewardsQuery {
     aide::OperationIo,
 )]
 pub struct RewardResponse {
-    pub reward_type: RewardType,
+    pub reward_action: RewardAction,
     pub point: i64,
     pub period: RewardPeriod,
     pub condition: RewardCondition,
 }
 
-impl From<RewardConfig> for RewardResponse {
-    fn from(config: RewardConfig) -> Self {
+impl From<Reward> for RewardResponse {
+    fn from(value: Reward) -> Self {
         Self {
-            reward_type: config.reward_type,
-            point: config.point,
-            period: config.period,
-            condition: config.condition,
+            reward_action: value.sk,
+            point: value.point,
+            period: value.period,
+            condition: value.condition,
         }
     }
 }
-
 #[derive(
     Debug,
     Clone,
@@ -52,16 +54,25 @@ pub struct ListRewardsResponse {
 }
 
 pub async fn list_rewards_handler(
-    Query(query): Query<ListRewardsQuery>,
-) -> Result<Json<ListRewardsResponse>> {
-    let configs = match query.feature.as_deref() {
-        Some("poll") => RewardType::poll_types(),
-        _ => RewardType::all(),
+    State(AppState { dynamo, .. }): State<AppState>,
+    Query(ListRewardsQuery { feature, bookmark }): Query<ListRewardsQuery>,
+) -> Result<Json<ListItemsResponse<RewardResponse>>> {
+    let (items, bookmark) = if let Some(feature) = feature {
+        Reward::list_by_feature(&dynamo.client, &feature, bookmark).await?
+    } else {
+        Reward::query(
+            &dynamo.client,
+            Partition::Reward,
+            RewardQueryOption::builder().limit(100),
+        )
+        .await?
     };
+    let items = items
+        .into_iter()
+        .map(|item| RewardResponse::from(item))
+        .collect();
 
-    let items = configs.into_iter().map(RewardResponse::from).collect();
-
-    Ok(Json(ListRewardsResponse { items }))
+    Ok(Json(ListItemsResponse { items, bookmark }))
 }
 
 #[cfg(test)]
@@ -87,7 +98,7 @@ mod tests {
         let poll_respond = body
             .items
             .iter()
-            .find(|r| r.reward_type == RewardType::PollRespond);
+            .find(|r| r.reward_action == RewardAction::PollRespond);
         assert!(
             poll_respond.is_some(),
             "PollRespond reward type should exist"
@@ -107,6 +118,6 @@ mod tests {
 
         assert_eq!(status, 200);
         assert_eq!(body.items.len(), 1, "Should have 1 poll reward type");
-        assert_eq!(body.items[0].reward_type, RewardType::PollRespond);
+        assert_eq!(body.items[0].reward_action, RewardAction::PollRespond);
     }
 }

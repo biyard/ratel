@@ -4,7 +4,7 @@ use chrono::Datelike;
 
 use crate::{
     features::spaces::rewards::{
-        FeatureRewardTrait, RewardCondition, RewardKey, RewardPeriod, RewardType,
+        FeatureRewardKeyTrait, RewardAction, RewardCondition, RewardKey, RewardPeriod,
     },
     *,
 };
@@ -26,7 +26,7 @@ pub enum PollRewardKey {
     Respond,
 }
 
-impl FeatureRewardTrait for PollRewardKey {
+impl FeatureRewardKeyTrait for PollRewardKey {
     fn is_empty(&self) -> bool {
         false
     }
