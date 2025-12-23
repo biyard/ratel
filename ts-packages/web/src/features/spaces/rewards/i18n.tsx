@@ -47,10 +47,14 @@ export const rewardsI18n: Record<lang, RewardsI18n> = {
         'Are you sure you want to delete this reward? This action cannot be undone.',
 
       poll_reward_section: 'Poll Rewards',
+      poll_respond: 'Poll Response Reward',
       poll_respond_reward: 'Poll Response Reward',
-      board_comment_reward: 'Comment Reward',
-      board_like_reward: 'Like Reward',
+      board_comment_reward: 'Board Comment Reward',
+      board_like_reward: 'Board Like Reward',
       unknown_reward: 'Reward',
+
+      reward_type: 'Reward Type',
+      points: 'Reward Points',
     },
   },
   ko: {
@@ -98,10 +102,15 @@ export const rewardsI18n: Record<lang, RewardsI18n> = {
         '이 리워드를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
 
       poll_reward_section: '설문 리워드',
+      poll_respond: '설문 응답 리워드',
       poll_respond_reward: '설문 응답 리워드',
-      board_comment_reward: '댓글 작성 리워드',
-      board_like_reward: '좋아요 리워드',
+      board_comment_reward: '게시판 댓글 리워드',
+      board_like_reward: '게시판 좋아요 리워드',
+
       unknown_reward: '리워드',
+
+      reward_type: '리워드 타입',
+      points: '기본 포인트',
     },
   },
 };
@@ -154,10 +163,14 @@ interface SettingsI18n {
   delete_confirm_message: string;
 
   poll_reward_section: string;
+  poll_respond: string;
   poll_respond_reward: string;
   board_comment_reward: string;
   board_like_reward: string;
   unknown_reward: string;
+
+  reward_type: string;
+  points: string;
 }
 
 export function useRewardsI18n(): RewardsI18n {
@@ -205,10 +218,14 @@ export function useRewardsI18n(): RewardsI18n {
       delete_confirm_message: t('settings.delete_confirm_message'),
 
       poll_reward_section: t('settings.poll_reward_section'),
+      poll_respond: t('settings.poll_respond'),
       poll_respond_reward: t('settings.poll_respond_reward'),
       board_comment_reward: t('settings.board_comment_reward'),
       board_like_reward: t('settings.board_like_reward'),
       unknown_reward: t('settings.unknown_reward'),
+
+      reward_type: t('settings.reward_type'),
+      points: t('settings.points'),
     },
   };
 }

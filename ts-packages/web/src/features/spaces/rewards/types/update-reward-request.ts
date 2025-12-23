@@ -1,7 +1,5 @@
-import { RewardTypeRequest } from './reward-type-request';
-
 export interface UpdateRewardRequest {
-  reward: RewardTypeRequest;
+  sk: string;
   description?: string;
   credits: number;
 }

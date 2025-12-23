@@ -72,7 +72,7 @@ async fn test_reward_period_daily() {
     // Create a reward with Daily period
     let reward = SpaceReward::new(
         space.pk.clone().into(),
-        RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
+        RewardKey::Poll(poll.sk.clone().into(), PollRewardKey::Respond),
         "Can be claimed once per day".to_string(),
         credits,
         point,
@@ -135,7 +135,7 @@ async fn test_reward_condition_max_user_claims() {
     // Create a reward with MaxUserClaims(2) - user can claim only 2 times
     let reward = SpaceReward::new(
         space.pk.clone().into(),
-        RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
+        RewardKey::Poll(poll.sk.clone().into(), PollRewardKey::Respond),
         "Can be claimed only 2 times per user".to_string(),
         credits,
         point,
@@ -195,7 +195,7 @@ async fn test_user_reward_award_flow() {
     // Create a SpaceReward
     let reward = SpaceReward::new(
         space.pk.clone().into(),
-        RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
+        RewardKey::Poll(poll.sk.clone().into(), PollRewardKey::Respond),
         "Testing full award flow".to_string(),
         credits,
         point,
@@ -231,7 +231,7 @@ async fn test_user_reward_award_flow() {
     // 3. Verify SpaceReward total_claims and total_points increased
     let (sr_pk, sr_sk) = SpaceReward::keys(
         space.pk.clone().into(),
-        RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
+        RewardKey::Poll(poll.sk.clone().into(), PollRewardKey::Respond),
     );
     let updated_space_reward = SpaceReward::get(&cli, sr_pk, Some(sr_sk))
         .await
@@ -288,7 +288,7 @@ async fn test_biyard_transaction_rollback_on_duplicate() {
     // Create a reward with Once period (can only be claimed once)
     let reward = SpaceReward::new(
         space.pk.clone().into(),
-        RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
+        RewardKey::Poll(poll.sk.clone().into(), PollRewardKey::Respond),
         "Can only be claimed once".to_string(),
         credits,
         point,
@@ -359,7 +359,7 @@ async fn test_biyard_transaction_rollback_on_duplicate() {
     // Verify SpaceReward still shows only 1 claim
     let (sr_pk, sr_sk) = SpaceReward::keys(
         space.pk.clone().into(),
-        RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
+        RewardKey::Poll(poll.sk.clone().into(), PollRewardKey::Respond),
     );
     let space_reward = SpaceReward::get(&cli, sr_pk, Some(sr_sk))
         .await

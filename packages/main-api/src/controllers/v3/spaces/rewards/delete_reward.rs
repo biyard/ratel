@@ -1,6 +1,5 @@
 use crate::features::membership::UserMembership;
-use crate::features::spaces::rewards::RewardType;
-use crate::features::spaces::rewards::RewardTypeRequest;
+use crate::features::spaces::rewards::RewardKey;
 use crate::features::spaces::rewards::SpaceReward;
 use crate::spaces::SpacePath;
 use crate::spaces::SpacePathParam;
@@ -8,7 +7,7 @@ use crate::*;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 pub struct DeleteRewardRequest {
-    pub reward: RewardTypeRequest,
+    pub sk: RewardKey,
 }
 
 pub async fn delete_reward_handler(
@@ -22,7 +21,7 @@ pub async fn delete_reward_handler(
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
     let space_reward =
-        SpaceReward::get_by_reward_key(&dynamo.client, space_pk.into(), req.reward.into()).await?;
+        SpaceReward::get_by_reward_key(&dynamo.client, space_pk.into(), req.sk).await?;
 
     // Refund Credit
     let mut user_membership = user.get_user_membership(&dynamo.client).await?;

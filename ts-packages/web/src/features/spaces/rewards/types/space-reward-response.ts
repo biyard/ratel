@@ -37,10 +37,6 @@ export class SpaceRewardResponse {
     this.user_points = json.user_points ?? 0;
   }
 
-  /**
-   * Get localized label based on reward type (sk)
-   * sk format: "POLL#<poll_sk>#Respond" or "BOARD#<post_sk>#Comment" etc.
-   */
   getRewardType(): 'poll_respond' | 'board_comment' | 'board_like' | 'unknown' {
     if (this.sk.includes('#Respond')) {
       return 'poll_respond';

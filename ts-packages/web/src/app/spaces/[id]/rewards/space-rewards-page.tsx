@@ -1,24 +1,21 @@
 import { useParams } from 'react-router';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
-import { RewardSettings } from '@/features/spaces/rewards/components/reward-settings';
+import { RewardEditor } from '@/features/spaces/rewards/components/reward-settings';
+import { RewardViewer } from '@/features/spaces/rewards/components/reward-viewer';
+import useSpaceRewards from '@/features/spaces/rewards/hooks/use-space-rewards';
 
 export function SpaceRewardsPage() {
   const { spacePk } = useParams<{ spacePk: string }>();
   const { data: space } = useSpaceById(spacePk);
+  const { data: rewards } = useSpaceRewards(spacePk!);
 
   if (!space) {
     throw new Error('Space not found');
   }
 
-  if (!space.isAdmin()) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <p className="text-c-wg-60">
-          You do not have permission to access this page.
-        </p>
-      </div>
-    );
+  if (space.isAdmin()) {
+    return <RewardEditor spacePk={spacePk!} />;
   }
 
-  return <RewardSettings spacePk={spacePk!} />;
+  return <RewardViewer rewards={rewards} />;
 }

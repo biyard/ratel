@@ -26,7 +26,7 @@ export function getOption(spacePk: string, feature?: string) {
   };
 }
 
-export default function useRewards(
+export default function useSpaceRewards(
   spacePk: string,
   feature?: string,
 ): UseSuspenseQueryResult<ListRewardsResponse> {
