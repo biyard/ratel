@@ -631,55 +631,24 @@ jobs:
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          MATCH_SKIP_PROVISIONING_PROFILES: "false"
-          MATCH_VERBOSE: "true"
         run: |
           set -euo pipefail
           bundle exec fastlane match appstore \
             --readonly \
-            --verbose \
             --git_url "$MATCH_GIT_URL" \
             --app_identifier "foundation.ratel.app" \
             --team_id "$APPLE_TEAM_ID" \
             --keychain_name "$MATCH_KEYCHAIN_NAME" \
             --keychain_password "$MATCH_KEYCHAIN_PASSWORD"
 
-      - name: Resolve provisioning profile name/path from match env
-        shell: bash
-        run: |
-          set -euo pipefail
-          # NOTE: match sets env vars like:
-          # sigh_foundation.ratel.app_appstore_profile-name
-          # sigh_foundation.ratel.app_appstore_profile-path
-          APP_ID="foundation.ratel.app"
-
-          # In bash, dots can't be used in variable names when referencing.
-          # But printenv can fetch them safely.
-          PROFILE_PATH="$(printenv "sigh_${APP_ID}_appstore_profile-path" 2>/dev/null || true)"
-          PROFILE_NAME="$(printenv "sigh_${APP_ID}_appstore_profile-name" 2>/dev/null || true)"
-
-          if [[ -n "$PROFILE_NAME" ]]; then
-            echo "PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
-          else
-            echo "PROFILE_NAME=match AppStore $APP_ID" >> "$GITHUB_ENV"
-          fi
-
-          if [[ -n "$PROFILE_PATH" ]]; then
-            echo "PROFILE_PATH=$PROFILE_PATH" >> "$GITHUB_ENV"
-          else
-            echo "PROFILE_PATH=" >> "$GITHUB_ENV"
-          fi
-
-          echo "Resolved PROFILE_NAME=${PROFILE_NAME:-"(empty)"}"
-          echo "Resolved PROFILE_PATH=${PROFILE_PATH:-"(empty)"}"
-
-      - name: Validate provisioning profile matches bundle id + team
+      - name: Validate provisioning profile matches bundle id + team and export PROFILE_NAME
         shell: bash
         run: |
           set -euo pipefail
           TARGET_BUNDLE_ID="foundation.ratel.app"
           TARGET_TEAM_ID="${APPLE_TEAM_ID}"
           HIT=0
+          HIT_FILE=""
 
           check_file () {
             local f="$1"
@@ -696,84 +665,42 @@ jobs:
             return 1
           }
 
-          # 1) Prefer the exact path match installed (often goes to Xcode UserData dir)
-          if [[ -n "${PROFILE_PATH:-}" ]]; then
-            if check_file "$PROFILE_PATH"; then
-              HIT=1
-              echo "Matched profile at PROFILE_PATH: $PROFILE_PATH"
-            else
-              echo "PROFILE_PATH exists but did not match bundle/team: $PROFILE_PATH"
-            fi
-          fi
-
-          # 2) Fallback: scan common dirs
-          if [[ "$HIT" -ne 1 ]]; then
-            for dir in \
-              "$HOME/Library/MobileDevice/Provisioning Profiles" \
-              "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
-            do
-              [[ -d "$dir" ]] || continue
-              for f in "$dir"/*.mobileprovision; do
-                [[ -f "$f" ]] || continue
-                if check_file "$f"; then
-                  HIT=1
-                  echo "Matched profile at: $f"
-                  break
-                fi
-              done
-              [[ "$HIT" -eq 1 ]] && break
-            done
-          fi
-
-          echo "PROFILE_MATCH=$HIT" >> "$GITHUB_ENV"
-          echo "PROFILE_MATCH=$HIT"
-
-      - name: Signing inventory (certs + profiles) [only when mismatch]
-        if: env.PROFILE_MATCH != '1'
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          echo "Codesigning identities (CN redacted):"
-          security find-identity -v -p codesigning 2>/dev/null | sed -E 's/"[^"]+"/"<redacted>"/g' || true
-
-          echo ""
-          echo "Provisioning profiles (safe summary):"
           for dir in \
             "$HOME/Library/MobileDevice/Provisioning Profiles" \
             "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"
           do
-            echo "- dir: $dir"
-            if [[ ! -d "$dir" ]]; then
-              echo "  (missing)"
-              continue
-            fi
-
-            found_any=0
+            [[ -d "$dir" ]] || continue
             for f in "$dir"/*.mobileprovision; do
               [[ -f "$f" ]] || continue
-              found_any=1
-              TMP="$(mktemp)"
-              security cms -D -i "$f" > "$TMP" 2>/dev/null || continue
-
-              NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$TMP" 2>/dev/null || true)
-              TEAM=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$TMP" 2>/dev/null || true)
-              APPID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$TMP" 2>/dev/null || true)
-
-              team_suffix="$(printf "%s" "$TEAM" | tail -c 4)"
-              bundle_id="${APPID#*.}"
-
-              echo "  - ${NAME} | team=…${team_suffix} | bundle=${bundle_id}"
+              if check_file "$f"; then
+                HIT=1
+                HIT_FILE="$f"
+                break
+              fi
             done
-
-            [[ "$found_any" -eq 0 ]] && echo "  (no .mobileprovision files)"
+            [[ "$HIT" -eq 1 ]] && break
           done
+
+          echo "PROFILE_MATCH=$HIT" >> "$GITHUB_ENV"
+          echo "PROFILE_MATCH=$HIT"
+
+          if [[ "$HIT" -eq 1 ]]; then
+            TMP="$(mktemp)"
+            security cms -D -i "$HIT_FILE" > "$TMP" 2>/dev/null
+            NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$TMP" 2>/dev/null || true)
+            if [[ -n "$NAME" ]]; then
+              echo "PROFILE_NAME=$NAME" >> "$GITHUB_ENV"
+            fi
+            echo "PROFILE_PATH=$HIT_FILE" >> "$GITHUB_ENV"
+            echo "Matched profile file: $HIT_FILE"
+            echo "Matched profile name: $NAME"
+          fi
 
       - name: Fail if provisioning profile missing
         if: env.PROFILE_MATCH != '1'
         shell: bash
         run: |
-          echo "No matching provisioning profile installed for bundle id 'foundation.ratel.app' and team id (redacted)."
+          echo "No matching provisioning profile installed for bundle id 'foundation.ratel.app'."
           exit 1
 
       - name: Compute iOS build number
@@ -788,7 +715,6 @@ jobs:
           ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
           APP_IDENTIFIER: foundation.ratel.app
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-          PROFILE_NAME: ${{ env.PROFILE_NAME }}
         run: |
           set -euo pipefail
           bundle exec fastlane deploy
