@@ -40,7 +40,7 @@ pub struct SpaceReward {
     pub created_at: i64,
     pub updated_at: i64,
 
-    pub label: String,
+    #[serde(default)]
     pub description: String,
 
     pub credits: i64,
@@ -57,7 +57,6 @@ impl SpaceReward {
     pub fn new(
         space_pk: SpacePartition,
         reward_key: RewardKey,
-        label: String,
         description: String,
         credits: i64,
         point: i64,
@@ -73,7 +72,6 @@ impl SpaceReward {
             created_at: now,
             updated_at: now,
 
-            label,
             credits,
             point,
             description,

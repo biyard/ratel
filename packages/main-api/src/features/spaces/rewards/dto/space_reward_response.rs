@@ -21,7 +21,6 @@ pub struct SpaceRewardResponse {
     pub created_at: i64,
     pub updated_at: i64,
 
-    pub label: String,
     pub description: String,
     pub points: i64,
     pub credits: i64,
@@ -45,7 +44,6 @@ impl From<(SpaceReward, UserReward)> for SpaceRewardResponse {
             sk: reward.sk,
             created_at: reward.created_at,
             updated_at: reward.updated_at,
-            label: reward.label,
             description: reward.description,
 
             points: reward.point,
@@ -69,7 +67,6 @@ impl From<SpaceReward> for SpaceRewardResponse {
             sk: reward.sk,
             created_at: reward.created_at,
             updated_at: reward.updated_at,
-            label: reward.label,
             description: reward.description,
 
             points: reward.point,

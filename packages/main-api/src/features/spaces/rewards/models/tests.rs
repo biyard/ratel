@@ -73,7 +73,6 @@ async fn test_reward_period_daily() {
     let reward = SpaceReward::new(
         space.pk.clone().into(),
         RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
-        "Daily Poll Reward".to_string(),
         "Can be claimed once per day".to_string(),
         credits,
         point,
@@ -137,7 +136,6 @@ async fn test_reward_condition_max_user_claims() {
     let reward = SpaceReward::new(
         space.pk.clone().into(),
         RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
-        "Limited Poll Reward".to_string(),
         "Can be claimed only 2 times per user".to_string(),
         credits,
         point,
@@ -198,7 +196,6 @@ async fn test_user_reward_award_flow() {
     let reward = SpaceReward::new(
         space.pk.clone().into(),
         RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
-        "Integration Test Reward".to_string(),
         "Testing full award flow".to_string(),
         credits,
         point,
@@ -292,7 +289,6 @@ async fn test_biyard_transaction_rollback_on_duplicate() {
     let reward = SpaceReward::new(
         space.pk.clone().into(),
         RewardKey::Poll(poll.sk.clone().into(), PollReward::Respond),
-        "One-Time Reward".to_string(),
         "Can only be claimed once".to_string(),
         credits,
         point,

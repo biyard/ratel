@@ -23,7 +23,7 @@ use aide::NoApi;
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 pub struct CreateRewardSpaceRequest {
     reward: RewardTypeRequest,
-    label: String,
+    #[serde(default)]
     description: String,
     credits: i64,
 }
@@ -65,7 +65,6 @@ pub async fn create_reward_handler(
     let space_reward = SpaceReward::new(
         space_pk.into(),
         reward_key,
-        req.label,
         req.description,
         req.credits,
         reward.point,

@@ -82,14 +82,13 @@ async fn test_create_reward_success() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Poll Response Reward",
             "description": "Get points for responding to this poll",
             "credits": 10
         },
         response_type: SpaceRewardResponse
     };
     assert_eq!(status, 200, "Failed to create reward. Response: {:?}", body);
-    assert_eq!(body.label, "Poll Response Reward");
+    assert_eq!(body.description, "Get points for responding to this poll");
     assert_eq!(body.credits, 10);
     assert_eq!(body.points, 10_000);
 
@@ -99,7 +98,7 @@ async fn test_create_reward_success() {
         .await
         .expect("SpaceReward should exist");
 
-    assert_eq!(space_reward.label, "Poll Response Reward");
+    assert_eq!(space_reward.description, "Get points for responding to this poll");
     assert_eq!(space_reward.credits, 10);
 
     // Verify user credits were deducted
@@ -139,7 +138,6 @@ async fn test_create_reward_insufficient_credits() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Expensive Reward",
             "description": "Too expensive",
             "credits": 10
         },
@@ -170,7 +168,6 @@ async fn test_list_rewards_authenticated() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Test Reward",
             "description": "Description",
             "credits": 10
         },
@@ -188,7 +185,7 @@ async fn test_list_rewards_authenticated() {
 
     assert_eq!(status, 200);
     assert_eq!(body.items.len(), 1);
-    assert_eq!(body.items[0].label, "Test Reward");
+    assert_eq!(body.items[0].description, "Description");
     assert_eq!(body.items[0].credits, 10);
     assert_eq!(body.items[0].points, 10_000);
 }
@@ -214,7 +211,6 @@ async fn test_list_rewards_guest() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Test Reward",
             "description": "Description",
             "credits": 10
         },
@@ -231,7 +227,7 @@ async fn test_list_rewards_guest() {
 
     assert_eq!(status, 200);
     assert_eq!(body.items.len(), 1);
-    assert_eq!(body.items[0].label, "Test Reward");
+    assert_eq!(body.items[0].description, "Description");
     // Guest should not see user-specific reward progress
     assert_eq!(body.items[0].user_claims, 0);
 }
@@ -258,7 +254,6 @@ async fn test_list_rewards_filtered_by_feature() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Poll Reward",
             "description": "Description",
             "credits": 10
         },
@@ -276,7 +271,7 @@ async fn test_list_rewards_filtered_by_feature() {
 
     assert_eq!(status, 200);
     assert_eq!(body.items.len(), 1);
-    assert_eq!(body.items[0].label, "Poll Reward");
+    assert_eq!(body.items[0].description, "Description");
 }
 
 #[tokio::test]
@@ -301,7 +296,6 @@ async fn test_update_reward_success() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Original Label",
             "description": "Original Description",
             "credits": 10
         },
@@ -318,7 +312,6 @@ async fn test_update_reward_success() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Updated Label",
             "description": "Updated Description",
             "credits": 15
         },
@@ -326,7 +319,6 @@ async fn test_update_reward_success() {
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body.label, "Updated Label");
     assert_eq!(body.description, "Updated Description");
     assert_eq!(body.credits, 15);
 
@@ -336,7 +328,6 @@ async fn test_update_reward_success() {
         .await
         .expect("SpaceReward should exist");
 
-    assert_eq!(space_reward.label, "Updated Label");
     assert_eq!(space_reward.description, "Updated Description");
     assert_eq!(space_reward.credits, 15);
 
@@ -371,7 +362,6 @@ async fn test_update_reward_reduce_credits() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Test Reward",
             "description": "Description",
             "credits": 20
         },
@@ -396,7 +386,6 @@ async fn test_update_reward_reduce_credits() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Test Reward",
             "description": "Description",
             "credits": 10
         },
@@ -437,7 +426,6 @@ async fn test_update_reward_without_permission() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Test Reward",
             "description": "Description",
             "credits": 10
         },
@@ -454,7 +442,6 @@ async fn test_update_reward_without_permission() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Unauthorized Update",
             "description": "Should fail",
             "credits": 15
         },
@@ -485,7 +472,6 @@ async fn test_delete_reward_success() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Test Reward",
             "description": "To be deleted",
             "credits": 10
         },
@@ -582,7 +568,6 @@ async fn test_delete_reward_without_permission() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Test Reward",
             "description": "Description",
             "credits": 10
         },
@@ -628,7 +613,6 @@ async fn test_create_multiple_rewards_deducts_total_credits() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "First Reward",
             "description": "Description",
             "credits": 10
         },
@@ -671,7 +655,6 @@ async fn test_poll_respond_increases_user_claim() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Poll Response Reward",
             "description": "Get points for responding to this poll",
             "credits": 10
         },
@@ -820,7 +803,6 @@ async fn test_full_flow_membership_to_reward_configuration() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Poll Participation Reward",
             "description": "Earn points for responding to our poll",
             "credits": 10
         },
@@ -831,7 +813,7 @@ async fn test_full_flow_membership_to_reward_configuration() {
         "Failed to create reward. Response: {:?}",
         reward_body
     );
-    assert_eq!(reward_body.label, "Poll Participation Reward");
+    assert_eq!(reward_body.description, "Earn points for responding to our poll");
     assert_eq!(reward_body.credits, 10);
     assert_eq!(reward_body.points, 10_000); // Default points per reward
 
@@ -952,7 +934,6 @@ async fn test_membership_upgrade_enables_more_rewards() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Large Reward",
             "description": "Using most credits",
             "credits": 35
         },
@@ -1019,7 +1000,6 @@ async fn test_free_user_cannot_create_rewards() {
             "reward": {
                 "poll_sk": poll_sk.to_string()
             },
-            "label": "Should Fail",
             "description": "No credits",
             "credits": 10
         },
