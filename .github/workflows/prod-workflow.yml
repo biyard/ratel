@@ -149,7 +149,7 @@ jobs:
 
           # NOTE: Change PORTONE API
           PORTONE_API_SECRET: ${{ secrets.PORTONE_API_SECRET }}
-          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.PORTONE_KPN_CHANNEL_KEY }}
+          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.PORTONE_KPN_BILLING_KEY_CHANNEL_KEY }}
           PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
           ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
           REWARD: false
