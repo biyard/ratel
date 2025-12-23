@@ -21,12 +21,8 @@ use crate::*;
 pub enum RewardType {
     #[default]
     PollRespond,
-    // QuizWin,
-    // BoardComment,
-    // BoardLike,
 }
 
-/// Reward configuration for each type
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct RewardConfig {
     pub reward_type: RewardType,
@@ -36,7 +32,6 @@ pub struct RewardConfig {
 }
 
 impl RewardType {
-    /// Get all available reward types with their configurations
     pub fn all() -> Vec<RewardConfig> {
         vec![RewardConfig {
             reward_type: RewardType::PollRespond,

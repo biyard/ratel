@@ -21,19 +21,19 @@ use crate::{
     serde::Deserialize,
     OperationIo,
 )]
-pub enum PollReward {
+pub enum PollRewardKey {
     #[default]
     Respond,
 }
 
-impl FeatureRewardTrait for PollReward {
+impl FeatureRewardTrait for PollRewardKey {
     fn is_empty(&self) -> bool {
         false
     }
 }
 
-impl From<(SpacePollEntityType, PollReward)> for RewardKey {
-    fn from(value: (SpacePollEntityType, PollReward)) -> Self {
+impl From<(SpacePollEntityType, PollRewardKey)> for RewardKey {
+    fn from(value: (SpacePollEntityType, PollRewardKey)) -> Self {
         Self::Poll(value.0, value.1)
     }
 }

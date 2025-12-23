@@ -3,7 +3,7 @@ use std::fmt::Display;
 use chrono::Datelike;
 
 use crate::{
-    features::spaces::rewards::{FeatureRewardTrait, RewardCondition, RewardPeriod},
+    features::spaces::rewards::{FeatureRewardTrait, RewardCondition, RewardKey, RewardPeriod},
     *,
 };
 
@@ -19,7 +19,7 @@ use crate::{
     serde::Deserialize,
     OperationIo,
 )]
-pub enum BoardReward {
+pub enum BoardRewardKey {
     #[default]
     Default,
     Comment(String),
@@ -27,8 +27,14 @@ pub enum BoardReward {
     Like(String),
 }
 
-impl FeatureRewardTrait for BoardReward {
+impl FeatureRewardTrait for BoardRewardKey {
     fn is_empty(&self) -> bool {
         false
+    }
+}
+
+impl From<(SpacePostEntityType, BoardRewardKey)> for RewardKey {
+    fn from(value: (SpacePostEntityType, BoardRewardKey)) -> Self {
+        Self::Board(value.0, value.1)
     }
 }

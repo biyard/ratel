@@ -1,6 +1,6 @@
 use crate::features::spaces::polls::{Poll, PollResponse, PollUserAnswer};
 use crate::features::spaces::rewards::{
-    BoardReward, FeatureRewardTrait, PollReward, RewardCondition, RewardKey, RewardPeriod,
+    BoardRewardKey, FeatureRewardTrait, PollRewardKey, RewardCondition, RewardKey, RewardPeriod,
     SpaceReward, UserReward, UserRewardHistory, UserRewardHistoryQueryOption,
 };
 use crate::types::*;
