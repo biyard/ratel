@@ -662,69 +662,73 @@ jobs:
             echo "PROFILE_NAME=$FOUND_NAME" >> $GITHUB_ENV
           fi
 
-      - name: Validate provisioning profile matches bundle id + team
+      - name: Validate provisioning profile matches bundle id + team (no fail yet)
         shell: bash
         run: |
           set -euo pipefail
           TARGET_BUNDLE_ID="foundation.ratel.app"
           TARGET_TEAM_ID="${APPLE_TEAM_ID}"
           HIT=0
+
           for f in "$HOME/Library/MobileDevice/Provisioning Profiles"/*.mobileprovision; do
             [[ -f "$f" ]] || continue
             TMP="$(mktemp)"
             security cms -D -i "$f" > "$TMP" 2>/dev/null || continue
+
             APPID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$TMP" 2>/dev/null || true)
             TEAM=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$TMP" 2>/dev/null || true)
-            NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$TMP" 2>/dev/null || true)
-            UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$TMP" 2>/dev/null || true)
+
             if [[ "${APPID#*.}" == "$TARGET_BUNDLE_ID" && "$TEAM" == "$TARGET_TEAM_ID" ]]; then
-              uuid_short="$(printf "%s" "$UUID" | cut -c1-8)"
-              team_suffix="$(printf "%s" "$TEAM" | tail -c 4)"
-              echo "Matched profile: ${uuid_short}… | ${NAME} | team=…${team_suffix} | bundle=${TARGET_BUNDLE_ID}"
               HIT=1
               break
             fi
           done
-          if [[ "$HIT" -ne 1 ]]; then
-            echo "No matching provisioning profile installed for bundle id '$TARGET_BUNDLE_ID' and team id (redacted)."
-            exit 1
-          fi
 
-      - name: Signing inventory (certs + profiles)
-        if: failure()
+          echo "PROFILE_MATCH=$HIT" >> "$GITHUB_ENV"
+
+      - name: Signing inventory (certs + profiles) [only when mismatch]
+        if: env.PROFILE_MATCH != '1'
         shell: bash
         run: |
           set -euo pipefail
-          echo "Keychains:"
-          security list-keychains -d user
-          echo "Default keychain:"
-          security default-keychain -d user
 
           echo "Codesigning identities (CN redacted):"
           security find-identity -v -p codesigning 2>/dev/null | sed -E 's/"[^"]+"/"<redacted>"/g' || true
 
           echo "Provisioning profiles (safe summary):"
-          if [[ -d "$HOME/Library/MobileDevice/Provisioning Profiles" ]]; then
-            ls -la "$HOME/Library/MobileDevice/Provisioning Profiles" || true
-          else
-            echo "No provisioning profiles directory."
+          dir="$HOME/Library/MobileDevice/Provisioning Profiles"
+          if [[ ! -d "$dir" ]]; then
+            echo "No provisioning profiles directory: $dir"
+            exit 0
           fi
 
-          for f in "$HOME/Library/MobileDevice/Provisioning Profiles"/*.mobileprovision; do
+          found_any=0
+          for f in "$dir"/*.mobileprovision; do
             [[ -f "$f" ]] || continue
+            found_any=1
             TMP="$(mktemp)"
             security cms -D -i "$f" > "$TMP" 2>/dev/null || continue
+
             NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$TMP" 2>/dev/null || true)
-            UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$TMP" 2>/dev/null || true)
             TEAM=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$TMP" 2>/dev/null || true)
             APPID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$TMP" 2>/dev/null || true)
 
-            uuid_short="$(printf "%s" "$UUID" | cut -c1-8)"
             team_suffix="$(printf "%s" "$TEAM" | tail -c 4)"
             bundle_id="${APPID#*.}"
 
-            echo "- ${uuid_short}… | ${NAME} | team=…${team_suffix} | bundle=${bundle_id}"
+            echo "- ${NAME} | team=…${team_suffix} | bundle=${bundle_id}"
           done
+
+          if [[ "$found_any" -eq 0 ]]; then
+            echo "No .mobileprovision files installed."
+          fi
+
+      - name: Fail if provisioning profile missing
+        if: env.PROFILE_MATCH != '1'
+        shell: bash
+        run: |
+          echo "No matching provisioning profile installed for bundle id 'foundation.ratel.app' and team id (redacted)."
+          exit 1
 
       - name: Compute iOS build number
         env:
