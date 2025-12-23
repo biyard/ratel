@@ -1,5 +1,6 @@
 import { RewardCondition } from './reward-condition';
 import { RewardPeriod } from './reward-period';
+import { RewardAction } from './reward-type';
 
 export class SpaceRewardResponse {
   pk: string;
@@ -7,6 +8,8 @@ export class SpaceRewardResponse {
 
   created_at: number;
   updated_at: number;
+
+  reward_action: RewardAction;
 
   description: string;
   points: number;
@@ -26,6 +29,7 @@ export class SpaceRewardResponse {
     this.sk = json.sk ?? '';
     this.created_at = json.created_at ?? 0;
     this.updated_at = json.updated_at ?? 0;
+    this.reward_action = json.reward_action;
     this.description = json.description ?? '';
     this.points = json.points ?? 0;
     this.credits = json.credits ?? 0;
@@ -35,18 +39,5 @@ export class SpaceRewardResponse {
     this.condition = json.condition ?? { None: {} };
     this.user_claims = json.user_claims ?? 0;
     this.user_points = json.user_points ?? 0;
-  }
-
-  getRewardType(): 'poll_respond' | 'board_comment' | 'board_like' | 'unknown' {
-    if (this.sk.includes('#Respond')) {
-      return 'poll_respond';
-    }
-    if (this.sk.includes('#Comment')) {
-      return 'board_comment';
-    }
-    if (this.sk.includes('#Like')) {
-      return 'board_like';
-    }
-    return 'unknown';
   }
 }

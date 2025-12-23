@@ -7,15 +7,15 @@ import { spaceKeys } from '@/constants';
 import { call } from '@/lib/api/ratel/call';
 import { ListRewardsResponse } from '../types/list-rewards-response';
 
-export function getOption(spacePk: string, feature?: string) {
+export function getOption(spacePk: string, entityType?: string) {
   return {
-    queryKey: feature
-      ? [...spaceKeys.rewards(spacePk), feature]
+    queryKey: entityType
+      ? [...spaceKeys.rewards(spacePk), entityType]
       : spaceKeys.rewards(spacePk),
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (feature) {
-        params.append('feature', feature);
+      if (entityType) {
+        params.append('entity_type', entityType);
       }
       const queryString = params.toString();
       const url = `/v3/spaces/${encodeURIComponent(spacePk)}/rewards${queryString ? `?${queryString}` : ''}`;
@@ -28,8 +28,8 @@ export function getOption(spacePk: string, feature?: string) {
 
 export default function useSpaceRewards(
   spacePk: string,
-  feature?: string,
+  entityType?: string,
 ): UseSuspenseQueryResult<ListRewardsResponse> {
-  const query = useSuspenseQuery(getOption(spacePk, feature));
+  const query = useSuspenseQuery(getOption(spacePk, entityType));
   return query;
 }

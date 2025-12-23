@@ -53,7 +53,9 @@ export const rewardsI18n: Record<lang, RewardsI18n> = {
       board_like_reward: 'Board Like Reward',
       unknown_reward: 'Reward',
 
-      reward_type: 'Reward Type',
+      reward_action: 'Reward Type',
+      reward_type_required: 'Please select a reward type',
+      select_reward_type: 'Select reward type',
       points: 'Reward Points',
     },
   },
@@ -109,7 +111,9 @@ export const rewardsI18n: Record<lang, RewardsI18n> = {
 
       unknown_reward: '리워드',
 
-      reward_type: '리워드 타입',
+      reward_action: '리워드 타입',
+      reward_type_required: '리워드 타입을 선택해주세요',
+      select_reward_type: '리워드 타입 선택',
       points: '기본 포인트',
     },
   },
@@ -169,7 +173,9 @@ interface SettingsI18n {
   board_like_reward: string;
   unknown_reward: string;
 
-  reward_type: string;
+  reward_action: string;
+  reward_type_required: string;
+  select_reward_type: string;
   points: string;
 }
 
@@ -224,7 +230,9 @@ export function useRewardsI18n(): RewardsI18n {
       board_like_reward: t('settings.board_like_reward'),
       unknown_reward: t('settings.unknown_reward'),
 
-      reward_type: t('settings.reward_type'),
+      reward_action: t('settings.reward_action'),
+      reward_type_required: t('settings.reward_type_required'),
+      select_reward_type: t('settings.select_reward_type'),
       points: t('settings.points'),
     },
   };

@@ -2,11 +2,6 @@ import { useState } from 'react';
 import { Col } from '@/components/ui/col';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { SpaceRewardResponse } from '../types/space-reward-response';
-import { RewardFormData } from '@/app/spaces/[id]/rewards/use-space-rewards-controller';
-import { RewardsI18n } from '../i18n';
-import { RewardConfig } from '../types/reward-config';
-import { Poll } from '@/features/spaces/polls/types/poll';
 import {
   Select,
   SelectContent,
@@ -14,31 +9,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { SpaceRewardResponse } from '../types/space-reward-response';
+import { RewardsI18n } from '../i18n';
+import { RewardAction, getRewardActionI18nKey } from '../types/reward-type';
+import { RewardFormData } from '../pages/editor/reward-editor-controller';
 
 interface RewardFormProps {
   i18n: RewardsI18n;
   initialData?: SpaceRewardResponse | null;
-  availableRewards: RewardConfig[];
-  polls: Poll[];
   onSubmit: (data: RewardFormData) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
+  rewardActions: RewardAction[];
 }
 
 export function RewardForm({
   i18n,
   initialData,
-  availableRewards,
-  polls,
   onSubmit,
   onCancel,
   isSubmitting,
+  rewardActions,
 }: RewardFormProps) {
   const t = i18n.settings;
-  const isEditing = !!initialData;
 
-  const [pollSk, setPollSk] = useState<string>(
-    initialData?.getPollSk() ?? polls[0]?.sk ?? '',
+  const [action, setAction] = useState<RewardAction | undefined>(
+    initialData?.reward_action ?? rewardActions[0] ?? undefined,
   );
   const [description, setDescription] = useState(
     initialData?.description ?? '',
@@ -46,13 +42,11 @@ export function RewardForm({
   const [credits, setCredits] = useState(initialData?.credits ?? 1);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const selectedConfig = availableRewards[0];
-
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!isEditing && !pollSk) {
-      newErrors.pollSk = 'Poll is required';
+    if (!action) {
+      newErrors.action = t.reward_type_required;
     }
 
     if (credits < 1) {
@@ -69,62 +63,38 @@ export function RewardForm({
     if (!validate()) return;
 
     await onSubmit({
-      pollSk,
+      reward_action: action!,
       description: description.trim(),
       credits,
     });
   };
 
-  const getPollTitle = (poll: Poll): string => {
-    return poll.questions.length > 0
-      ? poll.questions[0].title || `Poll #${poll.sk.slice(-6)}`
-      : `Poll #${poll.sk.slice(-6)}`;
-  };
-
   return (
     <form onSubmit={handleSubmit}>
       <Col className="gap-4">
-        {!isEditing && polls.length > 0 && (
-          <div>
-            <label className="block text-sm font-medium text-c-wg-80 mb-1">
-              {t.poll_reward_section}
-            </label>
-            <Select value={pollSk} onValueChange={(value) => setPollSk(value)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {polls.map((poll) => (
-                  <SelectItem key={poll.sk} value={poll.sk}>
-                    {getPollTitle(poll)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.pollSk && (
-              <p className="text-sm text-red-500 mt-1">{errors.pollSk}</p>
-            )}
-          </div>
-        )}
-
-        {selectedConfig && (
-          <div>
-            <label className="block text-sm font-medium text-c-wg-80 mb-1">
-              {t.points}
-            </label>
-            <Input disabled value={selectedConfig.point.toLocaleString()} />
-          </div>
-        )}
-
         <div>
           <label className="block text-sm font-medium text-c-wg-80 mb-1">
-            {t.description}
+            {t.reward_action}
           </label>
-          <Input
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder={t.description_placeholder}
-          />
+          <Select
+            value={action}
+            onValueChange={(value) => setAction(value as RewardAction)}
+          >
+            <SelectTrigger className="w-full" aria-invalid={!!errors.action}>
+              <SelectValue placeholder={t.select_reward_type} />
+            </SelectTrigger>
+            <SelectContent>
+              {rewardActions.map((rewardAction) => (
+                <SelectItem key={rewardAction} value={rewardAction}>
+                  {t[getRewardActionI18nKey(rewardAction) as keyof typeof t] ||
+                    rewardAction}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {errors.action && (
+            <p className="text-sm text-red-500 mt-1">{errors.action}</p>
+          )}
         </div>
 
         <div>
@@ -142,6 +112,17 @@ export function RewardForm({
           {errors.credits && (
             <p className="text-sm text-red-500 mt-1">{errors.credits}</p>
           )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-c-wg-80 mb-1">
+            {t.description}
+          </label>
+          <Input
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder={t.description_placeholder}
+          />
         </div>
 
         <div className="flex gap-3 justify-end mt-4">

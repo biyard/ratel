@@ -37,7 +37,6 @@ import useFileSpace from '@/features/spaces/files/hooks/use-file-space';
 import SpaceAuthorizePopup from './space-authorize-popup';
 import SpaceEndModal from '@/features/spaces/modals/space-end-modal';
 import { useFinishSpaceMutation } from '@/features/spaces/hooks/use-finish-mutation';
-import { config } from '@/config';
 import { Trophy } from '@/assets/icons/game';
 
 export class SpaceHomeController {
@@ -136,11 +135,11 @@ export class SpaceHomeController {
         label: this.t('menu_admin_settings'),
       },
     ];
-    menus.push({
-      Icon: Trophy,
-      to: route.spaceReward(this.space.pk),
-      label: this.t('menu_rewards'),
-    });
+    // menus.push({
+    //   Icon: Trophy,
+    //   to: route.spaceReward(this.space.pk),
+    //   label: this.t('menu_rewards'),
+    // });
     return menus;
   }
 

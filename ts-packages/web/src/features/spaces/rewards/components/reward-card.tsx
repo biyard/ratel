@@ -3,29 +3,13 @@ import { Button } from '@/components/ui/button';
 import { SpaceRewardResponse } from '../types/space-reward-response';
 import { Edit2Icon, Trash2Icon } from 'lucide-react';
 import { RewardsI18n } from '../i18n';
+import { getRewardActionI18nKey } from '../types/reward-type';
 
 interface RewardCardProps {
   i18n: RewardsI18n;
   reward: SpaceRewardResponse;
   onEdit: () => void;
   onDelete: () => void;
-}
-
-function getRewardLabel(
-  reward: SpaceRewardResponse,
-  t: RewardsI18n['settings'],
-): string {
-  const rewardType = reward.getRewardType();
-  switch (rewardType) {
-    case 'poll_respond':
-      return t.poll_respond_reward;
-    case 'board_comment':
-      return t.board_comment_reward;
-    case 'board_like':
-      return t.board_like_reward;
-    default:
-      return t.unknown_reward;
-  }
 }
 
 export function RewardCard({
@@ -35,14 +19,16 @@ export function RewardCard({
   onDelete,
 }: RewardCardProps) {
   const t = i18n.settings;
-
+  console.log('reward.reward_action', reward.reward_action);
   return (
     <div className="border border-c-wg-20 rounded-lg p-4 bg-c-bg-card">
       <Col className="gap-3">
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <h4 className="text-lg font-semibold text-c-wg-100">
-              {getRewardLabel(reward, t)}
+              {t[
+                getRewardActionI18nKey(reward.reward_action) as keyof typeof t
+              ] || reward.reward_action}
             </h4>
             {reward.description && (
               <p className="text-sm text-c-wg-60 mt-1">{reward.description}</p>
