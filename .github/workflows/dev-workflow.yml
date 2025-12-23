@@ -629,9 +629,12 @@ jobs:
           MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          MATCH_SKIP_PROVISIONING_PROFILES: "false"
+          MATCH_VERBOSE: "true"
         run: |
           bundle exec fastlane match appstore \
             --readonly \
+            --verbose \
             --git_url "$MATCH_GIT_URL" \
             --app_identifier foundation.ratel.app \
             --team_id "$APPLE_TEAM_ID" \
@@ -685,6 +688,83 @@ jobs:
           done
 
           echo "PROFILE_MATCH=$HIT" >> "$GITHUB_ENV"
+
+      - name: Signing inventory (certs + profiles) [only when mismatch]
+        if: env.PROFILE_MATCH != '1'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          echo "Codesigning identities (CN redacted):"
+          security find-identity -v -p codesigning 2>/dev/null | sed -E 's/"[^"]+"/"<redacted>"/g' || true
+
+          echo "Provisioning profiles (safe summary):"
+          dir="$HOME/Library/MobileDevice/Provisioning Profiles"
+          if [[ ! -d "$dir" ]]; then
+            echo "No provisioning profiles directory: $dir"
+            exit 0
+          fi
+
+          found_any=0
+          for f in "$dir"/*.mobileprovision; do
+            [[ -f "$f" ]] || continue
+            found_any=1
+            TMP="$(mktemp)"
+            security cms -D -i "$f" > "$TMP" 2>/dev/null || continue
+
+            NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$TMP" 2>/dev/null || true)
+            TEAM=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$TMP" 2>/dev/null || true)
+            APPID=$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$TMP" 2>/dev/null || true)
+
+            team_suffix="$(printf "%s" "$TEAM" | tail -c 4)"
+            bundle_id="${APPID#*.}"
+
+            echo "- ${NAME} | team=…${team_suffix} | bundle=${bundle_id}"
+          done
+
+          if [[ "$found_any" -eq 0 ]]; then
+            echo "No .mobileprovision files installed."
+          fi
+
+      - name: Fail if provisioning profile missing
+        if: env.PROFILE_MATCH != '1'
+        shell: bash
+        run: |
+          echo "No matching provisioning profile installed for bundle id 'foundation.ratel.app' and team id (redacted)."
+          exit 1
+
+      - name: Compute iOS build number
+        env:
+          IOS_BUILD_BASE: 8
+        run: echo "FLUTTER_BUILD_NUMBER=$(( GITHUB_RUN_NUMBER + ${IOS_BUILD_BASE:-0} ))" >> $GITHUB_ENV
+
+      - name: Build and Upload to TestFlight
+        working-directory: flutter-packages/mobile/ios
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          APP_IDENTIFIER: foundation.ratel.app
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          bundle exec fastlane deploy
+
+      - name: Dump xcodebuild log on failure
+        if: failure()
+        run: |
+          LOG_DIR="$HOME/Library/Logs/gym"
+          ls -la "$LOG_DIR" || true
+          tail -n +200 "$LOG_DIR"/Runner-Runner.log || true
+
+      - name: Upload .ipa artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa-${{ github.sha }}
+          path: |
+            flutter-packages/mobile/build/ios/**/*.ipa
+            flutter-packages/mobile/ios/*.ipa
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Signing inventory (certs + profiles) [only when mismatch]
         if: env.PROFILE_MATCH != '1'
