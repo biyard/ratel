@@ -35,7 +35,7 @@ impl FeatureType {
     pub fn get_sk_prefix(&self) -> String {
         match self {
             FeatureType::None => "".to_string(),
-            FeatureType::Poll => "POLL#".to_string(),
+            FeatureType::Poll => "POLL".to_string(),
         }
     }
 }

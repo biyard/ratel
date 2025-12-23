@@ -1,4 +1,4 @@
-use crate::features::spaces::rewards::{RewardCondition, RewardKey, RewardPeriod};
+use crate::features::spaces::rewards::{RewardAction, RewardCondition, RewardKey, RewardPeriod};
 use crate::types::*;
 use crate::*;
 
@@ -40,6 +40,7 @@ pub struct SpaceReward {
     pub created_at: i64,
     pub updated_at: i64,
 
+    pub action: RewardAction,
     #[serde(default)]
     pub description: String,
 
@@ -63,15 +64,17 @@ impl SpaceReward {
         period: RewardPeriod,
         condition: RewardCondition,
     ) -> Self {
+        let action = reward_key.get_action();
         let (pk, sk) = Self::keys(space_pk, reward_key);
         let now = now();
 
         Self {
             pk,
             sk,
+
             created_at: now,
             updated_at: now,
-
+            action,
             credits,
             point,
             description,
