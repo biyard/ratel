@@ -59,13 +59,14 @@ impl PortOne {
 
     pub async fn pay_with_billing_key(
         &self,
-        _customer_id: String,
+        customer_id: String,
         _customer_name: String,
         _order_name: String,
         _billing_key: String,
         _amount: i64,
         _currency: Currency,
     ) -> Result<(BillingKeyPaymentResponse, String)> {
+        let now = chrono::Utc::now().timestamp();
         Ok((
             BillingKeyPaymentResponse {
                 payment: Payment {
@@ -73,13 +74,13 @@ impl PortOne {
                     pg_tx_id: "merchantest".to_string(),
                 },
             },
-            "payment-id".to_string(),
+            customer_id,
         ))
     }
 
     pub async fn schedule_pay_with_billing_key(
         &self,
-        _customer_id: String,
+        customer_id: String,
         _customer_name: String,
         _order_name: String,
         _billing_key: String,
@@ -87,13 +88,14 @@ impl PortOne {
         _currency: Currency,
         _time_to_pay: String,
     ) -> Result<(PaymentScheduleResponse, String)> {
+        let now = chrono::Utc::now().timestamp();
         Ok((
             PaymentScheduleResponse {
                 schedule: PaymentSchedule {
                     id: "merchantest".to_string(),
                 },
             },
-            "payment-id".to_string(),
+            customer_id,
         ))
     }
 
