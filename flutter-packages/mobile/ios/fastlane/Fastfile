@@ -20,7 +20,8 @@ platform :ios do
       build_configurations: ["Release"],
       team_id: team_id,
       profile_name: profile_name,
-      code_sign_identity: "Apple Distribution"
+      code_sign_identity: "Apple Distribution",
+      path: "Runner.xcodeproj"
     )
 
     build_ios_app(
@@ -29,10 +30,11 @@ platform :ios do
       configuration:  "Release",
       export_method:  "app-store",
       clean:          true,
-      xcargs: "DEVELOPMENT_TEAM=#{team_id} PRODUCT_BUNDLE_IDENTIFIER=#{app_id} OTHER_LDFLAGS='$(inherited)' FLUTTER_BUILD_NUMBER=#{ENV['FLUTTER_BUILD_NUMBER'] || 7}", 
+      xcargs: "DEVELOPMENT_TEAM=#{team_id} PRODUCT_BUNDLE_IDENTIFIER=#{app_id} PROVISIONING_PROFILE_SPECIFIER='#{profile_name}' OTHER_LDFLAGS='$(inherited)' FLUTTER_BUILD_NUMBER=#{ENV['FLUTTER_BUILD_NUMBER'] || 7}",
       export_options: {
         method: "app-store",
         signingStyle: "manual",
+        teamID: team_id,
         provisioningProfiles: {
           app_id => profile_name
         }

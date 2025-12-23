@@ -1,8 +1,24 @@
+use super::*;
+
 #[derive(Debug, Clone, Copy)]
 pub struct PortoneConfig {
     pub api_secret: &'static str,
     pub kpn_channel_key: &'static str,
     pub store_id: &'static str,
+}
+
+impl PortoneConfig {
+    pub fn notice_urls(&self) -> Vec<String> {
+        let conf = get();
+
+        if conf.is_local() {
+            let ip = conf.ip_address();
+            warn!("Using local IP address for notice_urls: {}", ip);
+            vec![format!("http://{ip}:3000/hooks/portone")]
+        } else {
+            vec![format!("https://{}/hooks/portone", conf.domain)]
+        }
+    }
 }
 
 impl Default for PortoneConfig {

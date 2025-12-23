@@ -278,6 +278,8 @@ pub enum Error {
     InvalidIdentification,
     #[error("Card information is required for payment")]
     CardInfoRequired,
+    #[error("No user purchase found for payment")]
+    NoUserPurchaseFound,
 
     // Reward errors 10,100 ~
     #[error("Reward already claimed in this period")]
