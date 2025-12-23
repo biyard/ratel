@@ -1,8 +1,8 @@
 pub mod create_reward;
 pub use create_reward::*;
 
-pub mod list_rewards;
-pub use list_rewards::*;
+pub mod list_space_rewards;
+pub use list_space_rewards::*;
 
 pub mod delete_reward;
 pub use delete_reward::*;

@@ -4,7 +4,7 @@ use chrono::Datelike;
 use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 use crate::{
-    features::spaces::rewards::{BoardReward, PollReward, RewardCondition, RewardPeriod},
+    features::spaces::rewards::{BoardRewardKey, PollRewardKey, RewardCondition, RewardPeriod},
     *,
 };
 
@@ -23,8 +23,8 @@ use crate::{
 pub enum RewardKey {
     #[default]
     Default,
-    Poll(SpacePollEntityType, PollReward),
-    Board(SpacePostEntityType, BoardReward),
+    Poll(SpacePollEntityType, PollRewardKey),
+    Board(SpacePostEntityType, BoardRewardKey),
 }
 
 pub trait FeatureRewardTrait {

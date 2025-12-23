@@ -3,6 +3,13 @@ use crate::features::spaces::rewards::{RewardCondition, RewardConfig, RewardPeri
 
 use bdk::prelude::*;
 use by_axum::axum::Json;
+use by_axum::axum::extract::Query;
+
+#[derive(Debug, Clone, Default, serde::Deserialize, schemars::JsonSchema)]
+pub struct ListRewardsQuery {
+    /// Filter by feature type: "poll", "board"
+    pub feature: Option<String>,
+}
 
 #[derive(
     Debug,
@@ -44,15 +51,15 @@ pub struct ListRewardsResponse {
     pub items: Vec<RewardResponse>,
 }
 
-/// List all available reward types
-///
-/// Returns all reward definitions that can be configured for spaces.
-/// This endpoint is public and doesn't require authentication.
-pub async fn list_rewards_handler() -> Result<Json<ListRewardsResponse>> {
-    let items = RewardType::all()
-        .into_iter()
-        .map(RewardResponse::from)
-        .collect();
+pub async fn list_rewards_handler(
+    Query(query): Query<ListRewardsQuery>,
+) -> Result<Json<ListRewardsResponse>> {
+    let configs = match query.feature.as_deref() {
+        Some("poll") => RewardType::poll_types(),
+        _ => RewardType::all(),
+    };
+
+    let items = configs.into_iter().map(RewardResponse::from).collect();
 
     Ok(Json(ListRewardsResponse { items }))
 }
@@ -86,5 +93,20 @@ mod tests {
             "PollRespond reward type should exist"
         );
         assert_eq!(poll_respond.unwrap().point, 10_000);
+    }
+
+    #[tokio::test]
+    async fn test_list_rewards_filtered_by_poll() {
+        let TestContextV3 { app, .. } = TestContextV3::setup().await;
+
+        let (status, _headers, body) = get! {
+            app: app,
+            path: "/v3/rewards?feature=poll",
+            response_type: ListRewardsResponse
+        };
+
+        assert_eq!(status, 200);
+        assert_eq!(body.items.len(), 1, "Should have 1 poll reward type");
+        assert_eq!(body.items[0].reward_type, RewardType::PollRespond);
     }
 }

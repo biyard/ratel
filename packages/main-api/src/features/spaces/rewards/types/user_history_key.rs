@@ -5,7 +5,7 @@ use serde_with::{DeserializeFromStr, SerializeDisplay};
 
 use crate::{
     features::spaces::rewards::{
-        BoardReward, PollReward, RewardCondition, RewardKey, RewardPeriod,
+        BoardRewardKey, PollRewardKey, RewardCondition, RewardKey, RewardPeriod,
     },
     *,
 };
