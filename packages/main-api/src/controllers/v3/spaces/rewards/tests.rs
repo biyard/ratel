@@ -1,7 +1,5 @@
 use crate::controllers::v3::me::memberships::change_membership::ChangeMembershipResponse;
 use crate::controllers::v3::me::memberships::tests::seed_test_user_payment;
-use crate::controllers::v3::posts::CreatePostResponse;
-use crate::controllers::v3::spaces::create_space::CreateSpaceResponse;
 use crate::controllers::v3::spaces::polls::RespondPollSpaceResponse;
 use crate::controllers::v3::spaces::polls::tests::setup_published_poll_space;
 use crate::features::membership::*;
@@ -98,7 +96,10 @@ async fn test_create_reward_success() {
         .await
         .expect("SpaceReward should exist");
 
-    assert_eq!(space_reward.description, "Get points for responding to this poll");
+    assert_eq!(
+        space_reward.description,
+        "Get points for responding to this poll"
+    );
     assert_eq!(space_reward.credits, 10);
 
     // Verify user credits were deducted
@@ -813,7 +814,10 @@ async fn test_full_flow_membership_to_reward_configuration() {
         "Failed to create reward. Response: {:?}",
         reward_body
     );
-    assert_eq!(reward_body.description, "Earn points for responding to our poll");
+    assert_eq!(
+        reward_body.description,
+        "Earn points for responding to our poll"
+    );
     assert_eq!(reward_body.credits, 10);
     assert_eq!(reward_body.points, 10_000); // Default points per reward
 
@@ -987,9 +991,7 @@ async fn test_membership_upgrade_enables_more_rewards() {
 #[tokio::test]
 async fn test_free_user_cannot_create_rewards() {
     let (ctx, space_pk, poll_sk, _questions) = setup_published_poll_space().await;
-    let TestContextV3 {
-        app, test_user, ..
-    } = ctx;
+    let TestContextV3 { app, test_user, .. } = ctx;
 
     // Try to create reward without membership (Free tier has 0 credits)
     let (status, _headers, body) = post! {
