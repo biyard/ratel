@@ -135,12 +135,7 @@ async fn test_change_membership_downgrade_from_pro_to_free() {
 
 #[tokio::test]
 async fn test_change_membership_to_same_tier_returns_error() {
-    let TestContextV3 {
-        app,
-        test_user,
-        ddb: _,
-        ..
-    } = TestContextV3::setup().await;
+    let TestContextV3 { app, test_user, .. } = TestContextV3::setup().await;
 
     // Try to change to Free (which is already the default)
     let (status, _headers, _body) = post! {
@@ -334,7 +329,7 @@ async fn test_change_membership_creates_purchase_record() {
 
 #[tokio::test]
 async fn test_change_membership_without_auth_returns_error() {
-    let TestContextV3 { app, ddb: _, .. } = TestContextV3::setup().await;
+    let TestContextV3 { app, .. } = TestContextV3::setup().await;
 
     // Try to change membership without authentication
     let (status, _headers, _body) = post! {

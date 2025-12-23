@@ -13,7 +13,7 @@ pub use x402_config::*;
 mod biyard_config;
 use biyard_config::BiyardConfig;
 
-use bdk::prelude::*;
+use crate::*;
 use by_types::config::*;
 
 #[derive(Debug, Clone, Copy)]
@@ -57,6 +57,26 @@ pub struct Config {
     pub biyard: BiyardConfig,
     pub google_cloud: GoogleCloudConfig,
     pub reward: bool,
+}
+
+impl Config {
+    pub fn is_local(&self) -> bool {
+        self.env == "local"
+    }
+
+    /// Returns the IP address fetched from ifconfig.me at build time.
+    /// This is determined during compilation, not at runtime.
+    pub fn ip_address(&self) -> &'static str {
+        env!("BUILD_IP_ADDRESS")
+    }
+
+    pub fn day_unit(&self) -> i64 {
+        if self.is_local() {
+            return 60 * 1_000; // 1 minute in milliseconds
+        }
+
+        24 * 60 * 60 * 1_000
+    }
 }
 
 #[derive(Debug, Clone, Copy)]

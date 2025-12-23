@@ -108,7 +108,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-[220px]">
+      <PopoverContent className="p-0 w-[var(--radix-popover-trigger-width)]">
         <Command>
           <CommandInput className="text-text-primary" placeholder="검색..." />
           <CommandList>
