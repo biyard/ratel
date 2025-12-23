@@ -1,10 +1,11 @@
-pub mod billing_key_payment_request;
-pub mod billing_key_payment_response;
-pub mod billing_key_request;
-pub mod billing_key_response;
-pub mod channel_response;
-pub mod identify_response;
-pub mod verified_customer;
+mod billing_key_payment_request;
+mod billing_key_payment_response;
+mod billing_key_request;
+mod billing_key_response;
+mod channel_response;
+mod identify_response;
+mod payment_schedule_response;
+mod verified_customer;
 
 pub use billing_key_payment_request::*;
 pub use billing_key_payment_response::*;
@@ -12,6 +13,7 @@ pub use billing_key_request::*;
 pub use billing_key_response::*;
 pub use channel_response::*;
 pub use identify_response::*;
+pub use payment_schedule_response::*;
 pub use verified_customer::*;
 
 #[cfg(not(feature = "no-secret"))]
