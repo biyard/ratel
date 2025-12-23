@@ -1,7 +1,7 @@
 use bdk::prelude::*;
 
 use crate::features::spaces::rewards::{
-    RewardCondition, RewardKey, RewardPeriod, SpaceReward, UserReward,
+    RewardAction, RewardCondition, RewardKey, RewardPeriod, SpaceReward, UserReward,
 };
 use crate::types::{CompositePartition, Partition};
 
@@ -20,7 +20,7 @@ pub struct SpaceRewardResponse {
 
     pub created_at: i64,
     pub updated_at: i64,
-
+    pub reward_action: RewardAction,
     pub description: String,
     pub points: i64,
     pub credits: i64,
@@ -46,6 +46,7 @@ impl From<(SpaceReward, UserReward)> for SpaceRewardResponse {
             updated_at: reward.updated_at,
             description: reward.description,
 
+            reward_action: reward.action,
             points: reward.point,
             credits: reward.credits,
             total_points: reward.total_points,
@@ -68,6 +69,7 @@ impl From<SpaceReward> for SpaceRewardResponse {
             created_at: reward.created_at,
             updated_at: reward.updated_at,
             description: reward.description,
+            reward_action: reward.action,
 
             points: reward.point,
             credits: reward.credits,

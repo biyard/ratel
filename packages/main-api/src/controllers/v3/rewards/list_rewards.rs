@@ -57,6 +57,7 @@ pub async fn list_rewards_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Query(ListRewardsQuery { feature, bookmark }): Query<ListRewardsQuery>,
 ) -> Result<Json<ListItemsResponse<RewardResponse>>> {
+    tracing::debug!("feature: {:?}, bookmark: {:?}", feature, bookmark);
     let (items, bookmark) = if let Some(feature) = feature {
         Reward::list_by_feature(&dynamo.client, &feature, bookmark).await?
     } else {

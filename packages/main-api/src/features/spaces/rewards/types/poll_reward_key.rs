@@ -30,6 +30,10 @@ impl FeatureRewardKeyTrait for PollRewardKey {
     fn is_empty(&self) -> bool {
         false
     }
+
+    fn get_action(&self) -> RewardAction {
+        RewardAction::PollRespond
+    }
 }
 
 impl From<(SpacePollEntityType, PollRewardKey)> for RewardKey {
