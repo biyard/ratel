@@ -3,6 +3,7 @@ import { config } from '@/config';
 import { route } from '@/route';
 import { addSideMenusForSpaceType } from '../utils/side-menus-for-space-type';
 import { SpaceType } from '../types/space-type';
+import { Trophy } from '@/assets/icons/game';
 
 addSideMenusForSpaceType(SpaceType.Poll, [
   {
@@ -27,5 +28,11 @@ addSideMenusForSpaceType(SpaceType.Poll, [
     },
     visible: (space) => !space.isDraft && space.isAdmin(),
     label: 'menu_analyze',
+  },
+  {
+    Icon: Trophy,
+    to: (space) => route.spaceReward(space.pk),
+    visible: (space) => !space.isDraft || space.isAdmin(),
+    label: 'menu_rewards',
   },
 ]);
