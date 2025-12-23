@@ -11,7 +11,29 @@ interface RewardCardProps {
   onDelete: () => void;
 }
 
-export function RewardCard({ i18n, reward, onEdit, onDelete }: RewardCardProps) {
+function getRewardLabel(
+  reward: SpaceRewardResponse,
+  t: RewardsI18n['settings'],
+): string {
+  const rewardType = reward.getRewardType();
+  switch (rewardType) {
+    case 'poll_respond':
+      return t.poll_respond_reward;
+    case 'board_comment':
+      return t.board_comment_reward;
+    case 'board_like':
+      return t.board_like_reward;
+    default:
+      return t.unknown_reward;
+  }
+}
+
+export function RewardCard({
+  i18n,
+  reward,
+  onEdit,
+  onDelete,
+}: RewardCardProps) {
   const t = i18n.settings;
 
   return (
@@ -20,7 +42,7 @@ export function RewardCard({ i18n, reward, onEdit, onDelete }: RewardCardProps) 
         <div className="flex justify-between items-start">
           <div className="flex-1">
             <h4 className="text-lg font-semibold text-c-wg-100">
-              {reward.label || t.reward_label}
+              {getRewardLabel(reward, t)}
             </h4>
             {reward.description && (
               <p className="text-sm text-c-wg-60 mt-1">{reward.description}</p>
