@@ -9,7 +9,9 @@ import { ListRewardsResponse } from '../types/list-rewards-response';
 
 export function getOption(spacePk: string, feature?: string) {
   return {
-    queryKey: [...spaceKeys.rewards(spacePk), feature],
+    queryKey: feature
+      ? [...spaceKeys.rewards(spacePk), feature]
+      : spaceKeys.rewards(spacePk),
     queryFn: async () => {
       const params = new URLSearchParams();
       if (feature) {
