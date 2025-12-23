@@ -11,7 +11,7 @@ use crate::*;
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 pub struct UpdateRewardRequest {
     pub reward: RewardTypeRequest,
-    pub label: String,
+    #[serde(default)]
     pub description: String,
     pub credits: i64,
 }
@@ -42,7 +42,6 @@ pub async fn update_reward_handler(
     );
 
     let updater = SpaceReward::updater(&space_reward.pk, &space_reward.sk)
-        .with_label(req.label.clone())
         .with_description(req.description.clone())
         .with_credits(req.credits)
         .with_updated_at(now())
@@ -52,7 +51,6 @@ pub async fn update_reward_handler(
 
     transact_write_items!(&dynamo.client, updater_txs)?;
     space_reward.updated_at = now();
-    space_reward.label = req.label;
     space_reward.description = req.description;
     space_reward.credits = req.credits;
     Ok(Json(space_reward.into()))
