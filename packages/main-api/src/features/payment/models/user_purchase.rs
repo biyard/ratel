@@ -12,7 +12,7 @@ pub struct UserPurchase {
     #[dynamo(prefix = "PAYMENT", name = "find_by_user", index = "gsi1", sk)]
     pub created_at: i64,
 
-    #[dynamo(prefix = "PAYMENT", name = "find_by_status", index = "gsi2", sk)]
+    #[dynamo(name = "find_by_status", index = "gsi2", sk)]
     #[dynamo(name = "find_by_payment_id", index = "gsi3", sk)]
     pub status: PurchaseStatus,
     pub tx_type: TransactionType,
@@ -36,7 +36,7 @@ impl UserPurchase {
         let created_at = now();
 
         Self {
-            pk: CompositePartition(pk.into(), Partition::Purchase),
+            pk: CompositePartition::user_purchase_pk(pk.into()),
             sk: EntityType::UserPurchase(uuid),
             tx_type,
             amount,

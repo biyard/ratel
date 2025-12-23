@@ -1714,6 +1714,7 @@ fn generate_query_option(st_name: &str, cfg: &StructCfg) -> proc_macro2::TokenSt
     };
 
     quote! {
+        #[derive(Debug, Clone)]
         pub struct #opt_ident {
             #sk_field
             pub bookmark: Option<String>,
@@ -1905,6 +1906,7 @@ fn generate_index_fn(
             pk: impl std::fmt::Display + Clone,
             opt: #opt_ident,
         ) -> #result_ty <(Vec<Self>, Option<String>), #err_ctor> {
+            tracing::debug!("[{}] Querying index {} with pk: {} and {:?}", stringify!(#idx_ident), #idx_name, Self::#pk_composer(pk.clone()), opt);
             #key_condition
 
             let mut req = cli

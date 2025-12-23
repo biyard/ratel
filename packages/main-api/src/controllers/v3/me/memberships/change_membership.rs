@@ -103,7 +103,7 @@ async fn handle_downgrade_membership(
     user_membership: &UserMembership,
     new_tier: MembershipTier,
 ) -> Result<Membership> {
-    tracing::warn!("Scheduling membership downgrade to {:?}", new_tier);
+    tracing::debug!("Scheduling membership downgrade to {:?}", new_tier);
 
     // Get the new membership details
     let new_membership = Membership::get_by_membership_tier(cli, &new_tier).await?;
@@ -178,47 +178,26 @@ async fn handle_upgrade_membership(
     .with_purchase_id(user_purchase.pk.clone())
     .with_auto_renew(true);
 
-    // let next_purchase = user_payment
-    //     .schedule_next_membership_purchase(
-    //         portone,
-    //         tx_type,
-    //         amount,
-    //         currency,
-    //         user_membership
-    //             .renewal_date_rfc_3339()
-    //             .unwrap_or(after_days_from_now_rfc_3339(
-    //                 new_membership.duration_days as i64,
-    //             )),
-    //     )
-    //     .await;
-
-    // if next_purchase.is_err() {
-    //     user_membership.auto_renew = false;
-    //     user_membership.next_membership =
-    //         Some(Partition::Membership(MembershipTier::Free.to_string()).into())
-    // }
-
     let mut txs = vec![
         user_purchase.create_transact_write_item(),
         user_membership.upsert_transact_write_item(),
     ];
 
-    // if let Ok(next_purchase) = next_purchase {
-    //     txs.push(next_purchase.create_transact_write_item());
-    // }
+    #[cfg(test)]
+    {
+        // NOTE: Real payment will call /hooks/portone but testing code.
+        let next_time_to_pay = after_days_from_now_rfc_3339(new_membership.duration_days as i64);
+        let next_user_purchase = user_payment
+            .schedule_next_membership_purchase(portone, tx_type, amount, currency, next_time_to_pay)
+            .await?;
+        txs.push(next_user_purchase.create_transact_write_item());
+    }
 
     if should_update {
         txs.push(user_payment.upsert_transact_write_item());
     }
 
     transact_write_all_items_with_failover!(cli, txs);
-
-    // notify!(
-    //     "Upgraded membership to {:?} for user {:?} payed by {}",
-    //     new_tier,
-    //     user_id,
-    //     currency,
-    // );
 
     Ok((user_purchase, new_membership))
 }

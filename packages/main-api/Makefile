@@ -25,12 +25,6 @@ MIGRATE ?= false
 
 WATERMARK_QUEUE_URL ?= https://sqs.ap-northeast-2.amazonaws.com/385474633683/dev-artwork-image-queue
 
-OPENAPI_KEY ?=
-SLACK_CHANNEL_BILL ?=
-SLACK_CHANNEL_SPONSOR ?=
-SLACK_CHANNEL_ABUSING ?=
-SLACK_CHANNEL_MONITOR ?=
-
 ACCOUNT_ID ?=
 
 BUCKET_NAME ?= metadata.ratel.foundation
