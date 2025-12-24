@@ -17,7 +17,7 @@ impl Default for BiyardConfig {
             }),
             project_id: option_env!("BIYARD_PROJECT_ID").unwrap_or_else(|| {
                 tracing::warn!(
-                    "PORTONE_KPN_CHANNEL_KEY not set, using default value. Some features may not work properly."
+                    "BIYARD_PROJECT_ID not set, using default value. Some features may not work properly."
                 );
 
                 "ratel_project_id"
