@@ -41,7 +41,6 @@ pub async fn delete_space_post_handler(
         _ => "".to_string(),
     };
 
-    // Get the post to retrieve its files before deletion
     let post = SpacePost::get(
         &dynamo.client,
         space_pk.clone(),
@@ -49,7 +48,6 @@ pub async fn delete_space_post_handler(
     )
     .await?;
 
-    // Delete the post
     SpacePost::delete(
         &dynamo.client,
         space_pk.clone(),
@@ -57,7 +55,6 @@ pub async fn delete_space_post_handler(
     )
     .await?;
 
-    // Clean up file links for this board post
     if let Some(post) = post {
         if let Some(files) = post.files {
             let file_urls: Vec<String> = files.iter().filter_map(|f| f.url.clone()).collect();

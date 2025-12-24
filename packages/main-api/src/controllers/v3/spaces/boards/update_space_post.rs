@@ -62,7 +62,6 @@ pub async fn update_space_post_handler(
 
     let (pk, sk) = SpacePost::keys(&space_pk, &space_post_pk);
 
-    // Get existing post to compare files
     let existing_post = SpacePost::get(&dynamo.client, pk.clone(), Some(sk.clone())).await?;
     let old_file_urls: Vec<String> = existing_post
         .as_ref()
@@ -81,18 +80,15 @@ pub async fn update_space_post_handler(
         .execute(&dynamo.client)
         .await?;
 
-    // Link files to both Files tab and Board
     let post_id = match &v.sk {
         EntityType::SpacePost(id) => id.to_string(),
         _ => "".to_string(),
     };
 
-    // Add files to SpaceFile entity (for Files tab)
     if !req.files.is_empty() {
         SpaceFile::add_files(&dynamo.client, space_pk.clone(), req.files.clone()).await?;
     }
 
-    // Link files: Batch add both Files and Board targets to all file URLs
     let new_file_urls: Vec<String> = req.files.iter().filter_map(|f| f.url.clone()).collect();
     if !new_file_urls.is_empty() {
         FileLink::add_link_targets_batch(
@@ -107,7 +103,6 @@ pub async fn update_space_post_handler(
         .await?;
     }
 
-    // Remove Board target from files that were removed
     let removed_urls: Vec<String> = old_file_urls
         .into_iter()
         .filter(|url| !new_file_urls.contains(url))
