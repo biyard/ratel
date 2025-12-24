@@ -21,6 +21,8 @@ class SignupController extends BaseController {
 
   final isPhoneValid = false.obs;
 
+  final showWarning = false.obs;
+
   bool get isPhone => method.value == SignupMethod.phone;
   bool get isEmail => method.value == SignupMethod.email;
 
@@ -32,8 +34,11 @@ class SignupController extends BaseController {
   bool get isEmailStepValid =>
       email.value.trim().isNotEmpty && password.value.trim().isNotEmpty;
 
+  bool get isCurrentStepValid => isPhone ? isPhoneStepValid : isEmailStepValid;
+
   void selectMethod(SignupMethod m) {
     method.value = m;
+    showWarning.value = false;
   }
 
   void onPhoneChanged(String v) {
@@ -45,14 +50,24 @@ class SignupController extends BaseController {
       text: digits,
       selection: TextSelection.collapsed(offset: digits.length),
     );
+
+    if (showWarning.value) {
+      showWarning.value = !isCurrentStepValid;
+    }
   }
 
   void onEmailChanged(String v) {
     email.value = v.trim();
+    if (showWarning.value) {
+      showWarning.value = !isCurrentStepValid;
+    }
   }
 
   void onPasswordChanged(String v) {
     password.value = v.trim();
+    if (showWarning.value) {
+      showWarning.value = !isCurrentStepValid;
+    }
   }
 
   void selectCountry(CountryCode c) => selectedCountry.value = c;
@@ -69,8 +84,30 @@ class SignupController extends BaseController {
     Get.rootDelegate.offNamed(loginScreen);
   }
 
+  void onContinueTap() {
+    if (isBusy.value) return;
+
+    if (!isCurrentStepValid) {
+      showWarning.value = true;
+      return;
+    }
+
+    showWarning.value = false;
+
+    if (isPhone) {
+      nextPhone();
+    } else {
+      nextEmail();
+    }
+  }
+
   Future<void> nextPhone() async {
-    if (!isPhoneStepValid || isBusy.value) return;
+    if (isBusy.value) return;
+
+    if (!isPhoneStepValid) {
+      showWarning.value = true;
+      return;
+    }
 
     final auth = AuthApi();
     isBusy.value = true;
@@ -92,7 +129,12 @@ class SignupController extends BaseController {
   }
 
   Future<void> nextEmail() async {
-    if (!isEmailStepValid || isBusy.value) return;
+    if (isBusy.value) return;
+
+    if (!isEmailStepValid) {
+      showWarning.value = true;
+      return;
+    }
 
     isBusy.value = true;
     try {

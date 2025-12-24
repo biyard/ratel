@@ -56,8 +56,6 @@ class SignupScreen extends GetWidget<SignupController> {
                               ),
                               20.vgap,
                               Obx(() {
-                                final isPhone = controller.isPhone;
-
                                 return Column(
                                   crossAxisAlignment:
                                       CrossAxisAlignment.stretch,
@@ -80,57 +78,24 @@ class SignupScreen extends GetWidget<SignupController> {
                                         }
                                       },
                                       onPhoneChanged: controller.onPhoneChanged,
-                                      onSubmit: controller.nextPhone,
+                                      onSubmit: controller.onContinueTap,
                                     ),
-                                    10.vgap,
-                                    Obx(() {
-                                      final canContinue = isPhone
-                                          ? controller.isPhoneStepValid
-                                          : controller.isEmailStepValid;
-
-                                      return SizedBox(
-                                        width: double.infinity,
-                                        child: ElevatedButton(
-                                          onPressed: canContinue
-                                              ? (isPhone
-                                                    ? controller.nextPhone
-                                                    : controller.nextEmail)
-                                              : null,
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: AppColors.primary,
-                                            disabledBackgroundColor: AppColors
-                                                .primary
-                                                .withValues(alpha: 0.6),
-                                            foregroundColor: const Color(
-                                              0xFF0A0A0A,
+                                    if (controller.showWarning.value) ...[
+                                      const Padding(
+                                        padding: EdgeInsets.only(top: 10),
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          widthFactor: 1,
+                                          child: IntrinsicWidth(
+                                            child: WarningMessage(
+                                              message:
+                                                  'Missing required fields',
                                             ),
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 25,
-                                              vertical: 15,
-                                            ),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            elevation: 0,
-                                          ),
-                                          child: Text(
-                                            'Continue',
-                                            style: AppFonts
-                                                .textTheme
-                                                .titleMedium
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.w700,
-                                                  fontSize: 16,
-                                                  height: 18 / 16,
-                                                  color: const Color(
-                                                    0xFF0A0A0A,
-                                                  ),
-                                                ),
                                           ),
                                         ),
-                                      );
-                                    }),
+                                      ),
+                                    ],
+                                    10.vgap,
                                   ],
                                 );
                               }),
@@ -139,6 +104,46 @@ class SignupScreen extends GetWidget<SignupController> {
                           ),
                         ),
                       ),
+                      Obx(() {
+                        final isPhone = controller.isPhone;
+
+                        final canContinue = isPhone
+                            ? controller.isPhoneStepValid
+                            : controller.isEmailStepValid;
+
+                        final bg = canContinue
+                            ? AppColors.primary
+                            : AppColors.primary.withValues(alpha: 0.6);
+                        return Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.fromLTRB(15, 0, 15, 0),
+                          child: ElevatedButton(
+                            onPressed: controller.onContinueTap,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: bg,
+                              foregroundColor: const Color(0xFF0A0A0A),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 25,
+                                vertical: 15,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              'Continue',
+                              style: AppFonts.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                                height: 18 / 16,
+                                color: const Color(0xFF0A0A0A),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                      10.vgap,
                       SafeArea(
                         top: false,
                         child: Padding(
