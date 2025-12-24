@@ -209,3 +209,5 @@ i18next.init({
     default: ['en'],
   },
 });
+
+export type lang = 'en' | 'ko';

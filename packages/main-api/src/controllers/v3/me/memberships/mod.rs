@@ -1,4 +1,4 @@
-mod change_membership;
+pub mod change_membership;
 mod get_membership;
 mod history;
 
