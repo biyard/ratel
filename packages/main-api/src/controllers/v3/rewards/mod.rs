@@ -1,4 +1,6 @@
 pub mod list_rewards;
+#[cfg(test)]
+pub mod tests;
 
 use by_axum::axum::{Router, routing::get};
 
