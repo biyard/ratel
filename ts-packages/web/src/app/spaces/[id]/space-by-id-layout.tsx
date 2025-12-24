@@ -22,6 +22,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import SpaceMobileHeader from '@/features/spaces/components/space-mobile-header';
 import { cn } from '@/lib/utils';
+import RewardMenu from '@/features/spaces/rewards/components/reward-menu';
 
 export const Context = createContext<SpaceHomeController | undefined>(
   undefined,
@@ -47,6 +48,7 @@ function GeneralLayout() {
         }
       : null;
 
+  // When Tab Changed, Read Current Feautures Rewards
   const currentTab = useMemo(() => {
     const ret = ctrl.menus
       ?.filter((menu) => {
@@ -122,19 +124,15 @@ function GeneralLayout() {
           )}
 
           <SpaceSideMenu menus={ctrl.menus} />
-          {/* FIXME: After Merge f8f504f8913ad6d8744dae2ff000c708b8a4686a   */}
-          {/* {ctrl.space.booster && (
+          {ctrl.space.rewards && (
             <RewardMenu
-              boosting={ctrl.space.booster}
-              estimatedDate={0}
               rewardItems={[
-                { label: 'Sample Reward 1', point: 5000 },
-                { label: 'Sample Reward 2', point: 3000 },
-                { label: 'Sample Reward 3', point: 2000 },
+                { label: 'Sample Reward 1', point: 5000, isUserRewared: true },
+                { label: 'Sample Reward 2', point: 3000, isUserRewared: false },
+                { label: 'Sample Reward 3', point: 2000, isUserRewared: false },
               ]}
             />
-          )} */}
-
+          )}
           <TimelineMenu
             isEditing={false}
             handleSetting={() => {}}

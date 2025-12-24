@@ -1,5 +1,5 @@
 use crate::features::spaces::rewards::{
-    RewardKey, RewardPeriod, RewardType, SpaceReward, UserRewardHistoryKey,
+    RewardAction, RewardKey, RewardPeriod, SpaceReward, UserRewardHistoryKey,
 };
 use crate::services::biyard::Biyard;
 use crate::types::*;
@@ -29,7 +29,7 @@ use crate::*;
 
 pub struct UserRewardHistory {
     pub pk: CompositePartition,   // USER#{user_pk}##REWARD_HISTORY
-    pub sk: UserRewardHistoryKey, // Feature#{feature_key}#{reward_type}#{time_key}
+    pub sk: UserRewardHistoryKey, // Feature#{feature_key}#{reward_action}#{time_key}
 
     pub point: i64,
     pub created_at: i64,

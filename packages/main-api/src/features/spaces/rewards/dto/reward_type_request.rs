@@ -1,5 +1,5 @@
 use crate::{
-    features::spaces::rewards::{PollReward, RewardKey, RewardPeriod, RewardType},
+    features::spaces::rewards::{PollRewardKey, RewardAction, RewardKey},
     *,
 };
 
@@ -9,10 +9,10 @@ pub enum RewardTypeRequest {
     PollRespond { poll_sk: SpacePollEntityType },
 }
 
-impl From<RewardTypeRequest> for RewardType {
+impl From<RewardTypeRequest> for RewardAction {
     fn from(value: RewardTypeRequest) -> Self {
         match value {
-            RewardTypeRequest::PollRespond { poll_sk: _ } => RewardType::PollRespond,
+            RewardTypeRequest::PollRespond { poll_sk: _ } => RewardAction::PollRespond,
         }
     }
 }
@@ -21,7 +21,7 @@ impl From<RewardTypeRequest> for RewardKey {
     fn from(value: RewardTypeRequest) -> Self {
         match value {
             RewardTypeRequest::PollRespond { poll_sk } => {
-                RewardKey::Poll(poll_sk, PollReward::Respond)
+                RewardKey::Poll(poll_sk, PollRewardKey::Respond)
             }
         }
     }
