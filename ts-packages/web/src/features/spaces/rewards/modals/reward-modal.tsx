@@ -31,7 +31,7 @@ export function RewardModal({
 }: RewardModalProps) {
   const t = i18n.settings;
   const rewardActions = editingReward
-    ? [editingReward.action]
+    ? [editingReward.reward_action]
     : (configs?.map((config) => config.reward_action) ?? []);
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
