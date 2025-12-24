@@ -366,23 +366,7 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
                     )
                   : Padding(
                       padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
-                      child: SizedBox(
-                        height: 44,
-                        child: Container(
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: AppColors.neutral700,
-                            borderRadius: BorderRadius.circular(22),
-                          ),
-                          child: const Text(
-                            "This discussion is not open at this time.",
-                            style: TextStyle(
-                              color: AppColors.neutral500,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ),
+                      child: Container(),
                     ),
             ),
         ],
