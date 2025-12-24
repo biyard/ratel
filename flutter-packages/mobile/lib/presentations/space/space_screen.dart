@@ -1,3 +1,4 @@
+import 'package:flutter/rendering.dart';
 import 'package:ratel/exports.dart';
 import 'package:ratel/presentations/space/components/space_header_section.dart';
 import 'package:ratel/presentations/space/components/space_stats_section.dart';
@@ -46,8 +47,21 @@ class SpaceScreen extends GetWidget<SpaceController> {
 
     if (!collapsedNow && pixels > _collapseThreshold) {
       controller.isHeaderCollapsed.value = true;
-    } else if (collapsedNow && pixels < _expandThreshold) {
-      controller.isHeaderCollapsed.value = false;
+      return false;
+    }
+
+    if (collapsedNow) {
+      final min = n.metrics.minScrollExtent;
+      final atTop = pixels <= (min + 0.5);
+
+      final pullingDown =
+          (n is UserScrollNotification &&
+              n.direction == ScrollDirection.forward) ||
+          (n is ScrollUpdateNotification && (n.scrollDelta ?? 0) < 0);
+
+      if (atTop && pullingDown) {
+        controller.isHeaderCollapsed.value = false;
+      }
     }
 
     return false;
