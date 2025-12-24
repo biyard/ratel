@@ -94,30 +94,20 @@ pub async fn create_space_post_handler(
         SpaceFile::add_files(&dynamo.client, space_pk.clone(), req.files.clone()).await?;
     }
 
-    // Link files: Add both targets sequentially per file to avoid race conditions
-    // (parallel calls to add_link_target for same URL can create duplicate FileLink entities)
-    for file in &req.files {
-        if let Some(url) = &file.url {
-            // Add Files target first
-            FileLink::add_link_target(
-                &dynamo.client,
-                space_pk.clone(),
-                url.clone(),
+    // Link files: Batch add both Files and Board targets to all file URLs
+    let file_urls: Vec<String> = req.files.iter().filter_map(|f| f.url.clone()).collect();
+    if !file_urls.is_empty() {
+        FileLink::add_link_targets_batch(
+            &dynamo.client,
+            space_pk.clone(),
+            file_urls.clone(),
+            vec![
                 FileLinkTarget::Files,
-            )
-            .await
-            .ok();
-
-            // Add Board target (will update existing link)
-            FileLink::add_link_target(
-                &dynamo.client,
-                space_pk.clone(),
-                url.clone(),
                 FileLinkTarget::Board(post_id.clone()),
-            )
-            .await
-            .ok();
-        }
+            ],
+        )
+        .await
+        .ok();
     }
 
     let _ =

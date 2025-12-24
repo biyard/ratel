@@ -57,18 +57,15 @@ pub async fn update_files_handler(
 
     // Create file links if targets are specified
     if !req.link_targets.is_empty() {
-        for file in &req.files {
-            if let Some(url) = &file.url {
-                for target in &req.link_targets {
-                    FileLink::add_link_target(
-                        &dynamo.client,
-                        space_pk.clone(),
-                        url.clone(),
-                        target.clone(),
-                    )
-                    .await?;
-                }
-            }
+        let file_urls: Vec<String> = req.files.iter().filter_map(|f| f.url.clone()).collect();
+        if !file_urls.is_empty() {
+            FileLink::add_link_targets_batch(
+                &dynamo.client,
+                space_pk.clone(),
+                file_urls,
+                req.link_targets.clone(),
+            )
+            .await?;
         }
     }
 

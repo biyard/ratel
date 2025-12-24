@@ -2,7 +2,10 @@
 use crate::{
     AppState, Error, Permissions,
     controllers::v3::spaces::{SpacePath, SpacePathParam, SpacePostPath, SpacePostPathParam},
-    features::spaces::boards::models::{space_category::SpaceCategory, space_post::SpacePost},
+    features::spaces::{
+        boards::models::{space_category::SpaceCategory, space_post::SpacePost},
+        files::{FileLink, FileLinkTarget},
+    },
     models::{SpaceCommon, feed::Post, team::Team, user::User},
     types::{EntityType, Partition, TeamGroupPermission, author::Author},
 };
@@ -38,12 +41,38 @@ pub async fn delete_space_post_handler(
         _ => "".to_string(),
     };
 
-    let post = SpacePost::delete(
+    // Get the post to retrieve its files before deletion
+    let post = SpacePost::get(
         &dynamo.client,
         space_pk.clone(),
         Some(EntityType::SpacePost(space_post_id.clone())),
     )
     .await?;
+
+    // Delete the post
+    SpacePost::delete(
+        &dynamo.client,
+        space_pk.clone(),
+        Some(EntityType::SpacePost(space_post_id.clone())),
+    )
+    .await?;
+
+    // Clean up file links for this board post
+    if let Some(post) = post {
+        if let Some(files) = post.files {
+            let file_urls: Vec<String> = files.iter().filter_map(|f| f.url.clone()).collect();
+            if !file_urls.is_empty() {
+                FileLink::remove_link_targets_batch(
+                    &dynamo.client,
+                    &space_pk,
+                    file_urls,
+                    &FileLinkTarget::Board(space_post_id.clone()),
+                )
+                .await
+                .ok();
+            }
+        }
+    }
 
     Ok(Json(DeleteSpacePostResponse {
         space_post_pk: Partition::SpacePost(space_post_id),

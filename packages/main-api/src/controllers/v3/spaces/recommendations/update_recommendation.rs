@@ -34,6 +34,14 @@ pub async fn update_recommendation_handler(
 
     match req {
         UpdateRecommendationRequest::File { files } => {
+            // Get existing recommendation to compare files
+            let (pk, sk) = SpaceRecommendation::keys(&space_pk);
+            let existing = SpaceRecommendation::get(&dynamo.client, pk, Some(sk)).await?;
+            let old_file_urls: Vec<String> = existing
+                .as_ref()
+                .map(|r| r.files.iter().filter_map(|f| f.url.clone()).collect())
+                .unwrap_or_default();
+
             let recommendation =
                 SpaceRecommendation::update_files(&dynamo.client, space_pk.clone(), files.clone())
                     .await?;
@@ -43,27 +51,32 @@ pub async fn update_recommendation_handler(
                 SpaceFile::add_files(&dynamo.client, space_pk.clone(), files.clone()).await?;
             }
 
-            // Link files to both Files tab and Overview
-            for file in &files {
-                if let Some(url) = &file.url {
-                    // Link to Files tab
-                    FileLink::add_link_target(
-                        &dynamo.client,
-                        space_pk.clone(),
-                        url.clone(),
-                        FileLinkTarget::Files,
-                    )
-                    .await?;
+            // Link files: Batch add both Files and Overview targets to all file URLs
+            let new_file_urls: Vec<String> = files.iter().filter_map(|f| f.url.clone()).collect();
+            if !new_file_urls.is_empty() {
+                FileLink::add_link_targets_batch(
+                    &dynamo.client,
+                    space_pk.clone(),
+                    new_file_urls.clone(),
+                    vec![FileLinkTarget::Files, FileLinkTarget::Overview],
+                )
+                .await?;
+            }
 
-                    // Link to Overview
-                    FileLink::add_link_target(
-                        &dynamo.client,
-                        space_pk.clone(),
-                        url.clone(),
-                        FileLinkTarget::Overview,
-                    )
-                    .await?;
-                }
+            // Remove Overview target from files that were removed
+            let removed_urls: Vec<String> = old_file_urls
+                .into_iter()
+                .filter(|url| !new_file_urls.contains(url))
+                .collect();
+            if !removed_urls.is_empty() {
+                FileLink::remove_link_targets_batch(
+                    &dynamo.client,
+                    &space_pk,
+                    removed_urls,
+                    &FileLinkTarget::Overview,
+                )
+                .await
+                .ok();
             }
 
             Ok(Json(recommendation.into()))
