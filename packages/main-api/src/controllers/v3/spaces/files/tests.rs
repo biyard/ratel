@@ -200,7 +200,7 @@ async fn test_get_files_by_target() {
     // Query files by Overview target
     let (status, _headers, body) = get! {
         app: app,
-        path: format!("/v3/spaces/{}/files/by-target?target=Overview", space_pk_encoded),
+        path: format!("/v3/spaces/{}/files/links/target?target=Overview", space_pk_encoded),
         headers: headers.clone(),
         response_type: GetFilesByTargetResponse
     };
