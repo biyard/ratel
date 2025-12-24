@@ -32,7 +32,8 @@ addSideMenusForSpaceType(SpaceType.Poll, [
   {
     Icon: Trophy,
     to: (space) => route.spaceReward(space.pk),
-    visible: (space) => !space.isDraft || space.isAdmin(),
+    visible: (space) =>
+      (config.experiment && !space.isDraft) || space.isAdmin(),
     label: 'menu_rewards',
   },
 ]);
