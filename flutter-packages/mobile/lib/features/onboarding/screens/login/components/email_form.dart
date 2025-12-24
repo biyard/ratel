@@ -30,7 +30,7 @@ class EmailForm extends StatelessWidget {
           hint: 'Email',
           controller: emailController,
           keyboardType: TextInputType.emailAddress,
-          onChanged: (val) => onEmailChanged(val.trim()),
+          onChanged: onEmailChanged,
           rounded: 10,
           bgColor: const Color(0xFF101010),
           enabledBorderOverride: OutlineInputBorder(
@@ -48,7 +48,7 @@ class EmailForm extends StatelessWidget {
           controller: passwordController,
           obscureText: !showPassword,
           keyboardType: TextInputType.visiblePassword,
-          onChanged: (val) => onPasswordChanged(val.trim()),
+          onChanged: onPasswordChanged,
           rounded: 10,
           bgColor: const Color(0xFF101010),
           enabledBorderOverride: OutlineInputBorder(
