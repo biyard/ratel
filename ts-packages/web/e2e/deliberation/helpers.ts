@@ -1,40 +1,92 @@
-// Re-export all common helpers from shared location
-export {
-  login,
-  logout,
-  mobileLogin,
-  TIMEOUT,
-  verifyCredential,
-  createTeam,
-  clickTeamSidebarMenu,
-  goToSpace,
-  publishSpacePrivately,
-  startDeliberation,
-  inviteMembers,
-  setupPanels,
-  enableAnonymousParticipation,
-  viewAnalysis,
-  createDeliberationPost,
-  replyToPost,
-  writeNewPost,
-  setEndTimeOneHourLater,
-  createPrePollSurvey,
-  createFinalSurvey,
-  conductSurvey,
-  goToFinalSurvey,
-  createBoardPosts,
-} from '../helpers';
-
 import { expect, Page } from '@playwright/test';
 import { POST_TITLE, TEAM_ID } from './data';
-import {
-  goToTeam as goToTeamBase,
-  goToTeamSpace as goToTeamSpaceBase,
-} from '../helpers';
 
-// Deliberation-specific wrappers that use TEAM_ID from data
+export const TIMEOUT = 10000;
+
+// Helper functions
+export async function login(
+  page: Page,
+  { email, password }: { email: string; password: string },
+) {
+  // Clear cookies to ensure a fresh session
+  await page.context().clearCookies();
+
+  // Navigate to the page first, then clear storage
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+
+  // Clear storage after navigation
+  await page.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  // Reload page to apply cleared storage
+  await page.reload();
+  await page.waitForLoadState('networkidle');
+
+  // Now sign in
+  const signInButton = page.getByRole('button', { name: /sign in/i });
+  await signInButton.waitFor({ state: 'visible', timeout: TIMEOUT });
+  await signInButton.click();
+  await page.getByTestId('email-input').fill(email);
+  await page.getByTestId('continue-button').click();
+  await page.getByTestId('password-input').fill(password);
+  await page.getByTestId('continue-button').click();
+
+  await page.getByRole('dialog').waitFor({
+    state: 'detached',
+    timeout: TIMEOUT,
+  });
+
+  await page.waitForURL('/', {
+    waitUntil: 'networkidle',
+    timeout: TIMEOUT,
+  });
+}
+
+export async function logout(page: Page) {
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+  // Click user menu and logout
+  const userMenu = page.getByTestId('user-menu-trigger');
+  if (await userMenu.isVisible()) {
+    await userMenu.click();
+    await page.getByTestId('logout-button').click();
+    await page.waitForLoadState('networkidle');
+  }
+}
+
+export async function verifyCredential(page: Page, code: string) {
+  await page.goto('/credentials');
+  await page.waitForLoadState('networkidle');
+
+  // Click the verify button to open method selection modal
+  const verifyButton = page.getByTestId('credential-verify-button');
+  await verifyButton.waitFor({ state: 'visible', timeout: TIMEOUT });
+  await verifyButton.click();
+
+  // Select code verification option
+  const codeVerificationOption = page.getByTestId('code-verification-option');
+  await codeVerificationOption.waitFor({ state: 'visible', timeout: TIMEOUT });
+  await codeVerificationOption.click();
+
+  // Enter the code
+  const codeInput = page.getByTestId('credential-code-input');
+  await codeInput.waitFor({ state: 'visible', timeout: TIMEOUT });
+  await codeInput.fill(code);
+
+  // Submit the code
+  const submitButton = page.getByTestId('credential-code-submit');
+  await submitButton.click();
+
+  // Wait for verification to complete
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(500);
+}
+
 export async function goToTeam(page: Page) {
-  await goToTeamBase(page, TEAM_ID);
+  await page.goto(`/teams/${TEAM_ID}/home`, { waitUntil: 'networkidle' });
 }
 
 export async function goToTeamSpace(page: Page) {
@@ -374,10 +426,240 @@ export async function publishSpacePrivately(page: Page) {
 export async function goToMySpaces(page: Page) {
   await page.getByText('My Spaces', { exact: true }).click();
 
-  await page.waitForURL(/.*/, { waitUntil: 'networkidle', timeout: 10000 });
+  await page.waitForURL(/.*/, { waitUntil: 'networkidle', timeout: TIMEOUT });
 
   await expect(page.getByTestId('space-card').first()).toBeVisible();
   await expect(page.getByTestId('space-card').first()).toContainText(
     POST_TITLE,
   );
+}
+
+export async function goToSpace(page: Page, spaceName: string) {
+  const spaceCard = page.getByText(spaceName).first();
+  await spaceCard.waitFor({ state: 'visible', timeout: TIMEOUT });
+  await spaceCard.click();
+
+  // Wait for URL to match space pattern with network idle
+  await page.waitForURL(/\/spaces\/[^/]+/, {
+    waitUntil: 'networkidle',
+    timeout: TIMEOUT,
+  });
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function conductSurvey(page: Page, answers: any[]) {
+  // Wait for survey to load
+  const firstOption = page.getByTestId('objective-viewer-option').first();
+  await expect(firstOption).toBeVisible({ timeout: TIMEOUT });
+  await page.waitForTimeout(500);
+
+  await page.getByTestId('objective-viewer-option').nth(answers[0]).click();
+  await page.waitForTimeout(500);
+
+  await page.getByTestId('objective-viewer-option').nth(answers[1]).click();
+  await page.waitForTimeout(500);
+
+  await page.getByTestId('objective-viewer-option').nth(answers[2]).click();
+  await page.waitForTimeout(500);
+  await page.getByTestId('objective-viewer-option').nth(answers[3]).click();
+  await page.waitForTimeout(500);
+  await page.getByTestId('survey-btn-next').click();
+  await page.waitForTimeout(500);
+
+  await page
+    .getByPlaceholder('Please share your opinion.', { exact: true })
+    .fill(answers[4]);
+  await page.waitForTimeout(500);
+  await page.getByTestId('survey-btn-next').click();
+  await page.waitForTimeout(500);
+
+  await page
+    .getByPlaceholder('Please share your opinion.', { exact: true })
+    .fill(answers[5]);
+  await page.waitForTimeout(500);
+  await page.getByTestId('survey-btn-submit').click();
+  await page.waitForTimeout(500);
+}
+
+export async function startDeliberation(page: Page) {
+  // Try clicking the space action button which might open a dropdown
+
+  const actionButton = page.getByTestId('space-action-button');
+  await expect(actionButton).toHaveText('Start');
+  await actionButton.click();
+
+  const startSpaceButton = page.getByTestId('start-space-button');
+  await expect(startSpaceButton).toBeVisible();
+  await startSpaceButton.click();
+  await expect(page.getByText('Success to start space.')).toBeVisible();
+}
+
+export async function replyToPost(page: Page, replyContent: string) {
+  // Wait for the boards menu item to be visible
+  const boardsMenuItem = page.getByTestId('space-sidemenu-boards');
+  await boardsMenuItem.waitFor({ state: 'visible', timeout: 15000 });
+  await boardsMenuItem.click();
+  await page.waitForURL(/.*\/boards$/, { timeout: TIMEOUT });
+  await page.waitForLoadState('networkidle');
+
+  // Force a reload to ensure boards list loads fresh data
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.waitForTimeout(1000);
+
+  // Wait for board posts to load with a longer timeout
+  const firstPost = page.getByTestId('board-post-item').first();
+  await expect(firstPost).toBeVisible({ timeout: 15000 });
+
+  // Add a small delay to ensure the post is fully interactive
+  await page.waitForTimeout(500);
+
+  await firstPost.click();
+  await page.waitForLoadState('networkidle');
+
+  // Write reply
+  await page.getByTestId('open-new-comment-box-button').click();
+  await page.waitForTimeout(300);
+
+  const commentEditor = page.locator('[data-pw="comment-editor"]');
+  await commentEditor
+    .getByTestId('tiptap-editor-content')
+    .first()
+    .locator('[contenteditable="true"]')
+    .first()
+    .fill(replyContent);
+
+  // Submit reply
+  await page.getByLabel('Publish', { exact: true }).click();
+  await page.waitForLoadState('networkidle');
+}
+
+export async function writeNewPost(
+  page: Page,
+  title: string,
+  content: string,
+  category: string,
+) {
+  await page.getByTestId('space-sidemenu-boards').click();
+  await page.waitForURL(/.*\/boards$/, { timeout: TIMEOUT });
+  await page.waitForLoadState('networkidle');
+
+  const createButton = page.getByTestId('board-btn-create-board');
+  await createButton.click();
+
+  await page.waitForURL(/.*\/create$/, { timeout: TIMEOUT });
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(1000);
+
+  await setEndTimeOneHourLater(page);
+
+  const titleInput = page.getByTestId('board-title-input');
+  await titleInput.fill(title);
+
+  const categoryInput = page.getByTestId('board-category-input');
+  await categoryInput.fill(category);
+  await page.keyboard.press('Enter');
+  await page.keyboard.press('Enter');
+
+  const editor = page.locator(
+    '[data-pw="space-board-content-editor"] .ProseMirror',
+  );
+  await editor.click();
+  await editor.fill(content);
+
+  await page.getByTestId('board-btn-submit').click();
+  await page.waitForURL(/.*\/boards$/, { timeout: TIMEOUT });
+}
+
+export async function goToFinalSurvey(page: Page) {
+  await page.getByTestId('space-sidemenu-polls').click();
+
+  // Wait for FINAL SURVEY text to be visible
+  const finalSurveyCard = page.getByTestId('FINAL SURVEY');
+  await expect(finalSurveyCard).toBeVisible();
+
+  // Click the first Enter button (FINAL SURVEY is listed first)
+  const enterButton = finalSurveyCard
+    .getByRole('button', { name: 'Enter' })
+    .first();
+  await expect(enterButton).toBeVisible();
+  await enterButton.click();
+  await expect(
+    page.getByTestId('objective-viewer-option').first(),
+  ).toBeVisible();
+}
+
+export async function viewAnalysis(page: Page) {
+  // Wait for the analysis menu item to be visible
+  const analysisMenuItem = page.getByTestId('space-sidemenu-analysis');
+  await analysisMenuItem.waitFor({ state: 'visible', timeout: 15000 });
+  await analysisMenuItem.click();
+  await page.waitForLoadState('networkidle');
+
+  // Verify analysis page loaded
+  await expect(page.getByTestId('analysis-container')).toBeVisible({
+    timeout: 15000,
+  });
+}
+
+export async function mobileLogin(page: Page, email: string, password: string) {
+  await page.goto('/');
+  await page.waitForLoadState('networkidle');
+  const menuButton = page.getByTestId('mobile-menu-toggle');
+  await menuButton.waitFor({ state: 'visible' });
+  await menuButton.click();
+
+  const signInButton = page.getByRole('button', { name: /sign in/i });
+  await signInButton.waitFor({ state: 'visible' });
+  await signInButton.click();
+
+  await page.getByTestId('email-input').fill(email);
+  await page.getByTestId('continue-button').click();
+  await page.getByTestId('password-input').fill(password);
+  await page.getByTestId('continue-button').click();
+
+  // Wait for login dialog to be completely removed from DOM
+  await page.getByRole('dialog').waitFor({
+    state: 'detached',
+    timeout: TIMEOUT,
+  });
+
+  // Wait for navigation to complete with network idle
+  await page.waitForURL('/', {
+    waitUntil: 'networkidle',
+    timeout: TIMEOUT,
+  });
+}
+
+export async function clickTeamSidebarMenu(page: Page, menuName: string) {
+  const menu = page.getByTestId(`sidemenu-team-${menuName}`);
+  await menu.waitFor({ state: 'visible' });
+  await menu.click();
+  await page.waitForLoadState('networkidle');
+}
+
+export async function setEndTimeOneHourLater(page: Page) {
+  // Calculate current time and 1 hour later
+  const now = new Date();
+  const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+
+  // Format time for selection (e.g., "02:00 PM")
+  const endHour = oneHourLater.getHours();
+  const endHour12 = endHour % 12 || 12;
+  const endPeriod = endHour < 12 ? 'AM' : 'PM';
+  const endTimeText = `${endHour12.toString().padStart(2, '0')}:00 ${endPeriod}`;
+
+  // Click end time dropdown - wait with explicit timeout
+  const endTimeButton = page.getByTestId('time-end-dropdown');
+  await endTimeButton.waitFor({ state: 'visible', timeout: 15000 });
+  await endTimeButton.click();
+  await page.waitForTimeout(500);
+
+  // Select the time option
+  const timeOption = page.getByText(endTimeText, { exact: true });
+  await timeOption.waitFor({ state: 'visible', timeout: 15000 });
+  await timeOption.click();
+  await page.waitForTimeout(500);
+
+  // Verify the time was set
+  await expect(endTimeButton).toContainText(endTimeText);
 }
