@@ -54,23 +54,76 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
   bool _hasMore = false;
   bool _loadingMore = false;
 
+  static const double _loadMoreThresholdPx = 200.0;
+
   @override
   void initState() {
     super.initState();
     _hasMore = widget.hasMore;
+
+    widget.scrollController.addListener(_onScroll);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeLoadMore(force: true);
+    });
   }
 
   @override
   void didUpdateWidget(covariant BoardCommentsSheet oldWidget) {
     super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.scrollController != widget.scrollController) {
+      oldWidget.scrollController.removeListener(_onScroll);
+      widget.scrollController.addListener(_onScroll);
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _maybeLoadMore(force: true);
+      });
+    }
+
     if (oldWidget.hasMore != widget.hasMore) _hasMore = widget.hasMore;
   }
 
   @override
   void dispose() {
+    widget.scrollController.removeListener(_onScroll);
     _textController.dispose();
     _editingController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    _maybeLoadMore();
+  }
+
+  void _maybeLoadMore({bool force = false}) {
+    if (!mounted) return;
+    if (widget.onLoadMore == null) return;
+    if (!_hasMore) return;
+    if (_loadingMore) return;
+
+    final ctrl = widget.scrollController;
+    if (!ctrl.hasClients) return;
+
+    final pos = ctrl.position;
+    final shouldLoad = force || (pos.extentAfter <= _loadMoreThresholdPx);
+    if (!shouldLoad) return;
+
+    _triggerLoadMore();
+  }
+
+  Future<void> _triggerLoadMore() async {
+    if (_loadingMore) return;
+    if (widget.onLoadMore == null) return;
+
+    setState(() => _loadingMore = true);
+    try {
+      final hasMore = await widget.onLoadMore!();
+      if (!mounted) return;
+      setState(() => _hasMore = hasMore);
+    } finally {
+      if (mounted) setState(() => _loadingMore = false);
+    }
   }
 
   void _beginInlineEdit(int index, SpacePostCommentModel comment) {
@@ -213,11 +266,13 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
       );
     }
 
+    final extra = (_hasMore || _loadingMore) ? 1 : 0;
+
     return ListView.builder(
       controller: widget.scrollController,
       physics: _physics,
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-      itemCount: widget.comments.length + (_hasMore ? 1 : 0),
+      itemCount: widget.comments.length + extra,
       itemBuilder: (context, index) {
         if (index < widget.comments.length) {
           final c = widget.comments[index];
@@ -263,7 +318,7 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
         }
 
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           child: Center(
             child: _loadingMore
                 ? const SizedBox(
@@ -271,27 +326,7 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
                     height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : TextButton(
-                    onPressed: widget.onLoadMore == null
-                        ? null
-                        : () async {
-                            setState(() => _loadingMore = true);
-                            try {
-                              final hasMore = await widget.onLoadMore!();
-                              if (!mounted) return;
-                              setState(() => _hasMore = hasMore);
-                            } finally {
-                              if (mounted) setState(() => _loadingMore = false);
-                            }
-                          },
-                    child: const Text(
-                      'More',
-                      style: TextStyle(
-                        color: AppColors.neutral500,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
+                : const SizedBox.shrink(),
           ),
         );
       },
@@ -331,7 +366,23 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
                     )
                   : Padding(
                       padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
-                      child: Container(),
+                      child: SizedBox(
+                        height: 44,
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: AppColors.neutral700,
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: const Text(
+                            "This discussion is not open at this time.",
+                            style: TextStyle(
+                              color: AppColors.neutral500,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
             ),
         ],
