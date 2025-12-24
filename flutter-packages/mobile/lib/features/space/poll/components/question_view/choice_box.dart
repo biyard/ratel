@@ -23,6 +23,16 @@ class ChoiceBox extends StatelessWidget {
     final checkBg = selected ? selectedColor : const Color(0xFF101010);
     final checkBorder = selected ? Colors.transparent : const Color(0xFF737373);
 
+    final boxBg = (selected && enabled)
+        ? const Color(0xFFFCB300).withOpacity(0.05)
+        : const Color(0xFF171717);
+
+    final boxBorder = (selected && enabled)
+        ? const Border.fromBorderSide(
+            BorderSide(color: Color(0xFFFCB300), width: 1),
+          )
+        : Border.all(color: Colors.transparent, width: 1);
+
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: enabled ? onTap : null,
@@ -30,8 +40,9 @@ class ChoiceBox extends StatelessWidget {
         height: 72,
         padding: const EdgeInsets.symmetric(horizontal: 15),
         decoration: BoxDecoration(
-          color: const Color(0xFF171717),
+          color: boxBg,
           borderRadius: BorderRadius.circular(10),
+          border: boxBorder,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,

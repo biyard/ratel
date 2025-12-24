@@ -6,13 +6,11 @@ class PollProgressBar extends StatelessWidget {
     required this.total,
     required this.currentIndex,
     required this.maxReached,
-    required this.onTap,
   });
 
   final int total;
   final int currentIndex;
   final int maxReached;
-  final ValueChanged<int> onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -26,17 +24,13 @@ class PollProgressBar extends StatelessWidget {
         return Expanded(
           child: Padding(
             padding: EdgeInsets.only(right: i == total - 1 ? 0 : 10),
-            child: GestureDetector(
-              behavior: HitTestBehavior.translucent,
-              onTap: clickable ? () => onTap(i) : null,
-              child: Container(
-                height: 8,
-                decoration: BoxDecoration(
-                  color: isBlue
-                      ? const Color(0x803B82F6)
-                      : const Color(0xFF262626),
-                  borderRadius: BorderRadius.circular(100),
-                ),
+            child: Container(
+              height: 8,
+              decoration: BoxDecoration(
+                color: isBlue
+                    ? const Color(0x803B82F6)
+                    : const Color(0xFF262626),
+                borderRadius: BorderRadius.circular(100),
               ),
             ),
           ),

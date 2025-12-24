@@ -45,34 +45,46 @@ class CheckboxQuestionView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (int i = 0; i < question.options.length; i++) ...[
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: enabled ? () => _toggle(selected, i) : null,
-            child: Container(
-              height: 72,
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              decoration: BoxDecoration(
-                color: const Color(0xFF171717),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Builder(
-                    builder: (_) {
-                      final isSelected = selected.contains(i);
-                      final selectedColor = enabled
-                          ? AppColors.primary
-                          : AppColors.primary.withAlpha(125);
+          Builder(
+            builder: (_) {
+              final isSelected = selected.contains(i);
 
-                      final checkBg = isSelected
-                          ? selectedColor
-                          : const Color(0xFF101010);
-                      final checkBorder = isSelected
-                          ? Colors.transparent
-                          : const Color(0xFF737373);
+              final selectedColor = enabled
+                  ? AppColors.primary
+                  : AppColors.primary.withAlpha(125);
 
-                      return Container(
+              final checkBg = isSelected
+                  ? selectedColor
+                  : const Color(0xFF101010);
+              final checkBorder = isSelected
+                  ? Colors.transparent
+                  : const Color(0xFF737373);
+
+              final boxBg = (isSelected && enabled)
+                  ? const Color(0xFFFCB300).withOpacity(0.05)
+                  : const Color(0xFF171717);
+
+              final boxBorder = (isSelected && enabled)
+                  ? const Border.fromBorderSide(
+                      BorderSide(color: Color(0xFFFCB300), width: 1),
+                    )
+                  : Border.all(color: Colors.transparent, width: 1);
+
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: enabled ? () => _toggle(selected, i) : null,
+                child: Container(
+                  height: 72,
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  decoration: BoxDecoration(
+                    color: boxBg,
+                    borderRadius: BorderRadius.circular(10),
+                    border: boxBorder,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
                         width: 20,
                         height: 20,
                         alignment: Alignment.center,
@@ -88,25 +100,25 @@ class CheckboxQuestionView extends StatelessWidget {
                                 color: Color(0xFF0A0A0A),
                               )
                             : null,
-                      );
-                    },
-                  ),
-                  20.gap,
-                  Expanded(
-                    child: Text(
-                      question.options[i],
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w400,
-                        fontSize: 16,
-                        height: 24 / 16,
-                        letterSpacing: 0.5,
-                        color: Colors.white,
                       ),
-                    ),
+                      20.gap,
+                      Expanded(
+                        child: Text(
+                          question.options[i],
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w400,
+                            fontSize: 16,
+                            height: 24 / 16,
+                            letterSpacing: 0.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
+              );
+            },
           ),
           10.vgap,
         ],

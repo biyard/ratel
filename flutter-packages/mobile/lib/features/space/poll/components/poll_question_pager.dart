@@ -32,6 +32,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
   late List<Answer?> _answers;
   bool _hasInitialResponse = false;
   late final bool _readOnly;
+  bool _triedNextOnInvalid = false;
 
   bool get _isSubmitted =>
       (widget.poll.myResponse != null && !widget.poll.responseEditable);
@@ -89,6 +90,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
 
   bool get _showMissingRequired {
     if (_readOnly) return false;
+    if (!_triedNextOnInvalid) return false;
     if (!_isQuestionRequired(_currentQuestion)) return false;
     return !_currentValid;
   }
@@ -97,6 +99,9 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     if (_readOnly) return;
     setState(() {
       _answers[_index] = answer;
+      if (_triedNextOnInvalid && _validateAnswer(_currentQuestion, answer)) {
+        _triedNextOnInvalid = false;
+      }
     });
   }
 
@@ -105,6 +110,21 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
 
   bool get _currentValid =>
       _readOnly ? true : _validateAnswer(_currentQuestion, _currentAnswer);
+
+  bool get _canSubmitOrUpdate {
+    if (_readOnly) return false;
+    if (widget.isFinished) return false;
+
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+    if (now < widget.poll.startedAt) return false;
+    if (now > widget.poll.endedAt) return false;
+
+    if (widget.poll.myResponse != null && !widget.poll.responseEditable) {
+      return false;
+    }
+
+    return true;
+  }
 
   void _submit() {
     final all = <Answer>[];
@@ -120,26 +140,32 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     SubmitModal.show(onConfirm: _submit);
   }
 
-  void _goTo(int i) {
-    if (i < 0 || i >= widget.poll.questions.length) return;
-    if (i > _maxReached) return;
-    setState(() => _index = i);
-  }
-
   void _goNext() {
     if (_readOnly) {
       if (!_isLast) {
         setState(() {
           _index++;
           _maxReached = math.max(_maxReached, _index);
+          _triedNextOnInvalid = false;
         });
       }
       return;
     }
 
-    if (!_currentValid) return;
+    if (!_currentValid) {
+      setState(() {
+        _triedNextOnInvalid = true;
+      });
+      return;
+    }
+
+    setState(() {
+      _triedNextOnInvalid = false;
+    });
 
     if (_isLast) {
+      if (!_canSubmitOrUpdate) return;
+
       if (!widget.poll.responseEditable) {
         _showFinalSubmitDialog();
       } else {
@@ -149,6 +175,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
       setState(() {
         _index++;
         _maxReached = math.max(_maxReached, _index);
+        _triedNextOnInvalid = false;
       });
     }
   }
@@ -157,6 +184,7 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     if (_isFirst) return;
     setState(() {
       _index--;
+      _triedNextOnInvalid = false;
     });
   }
 
@@ -174,22 +202,40 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
       readOnly: _readOnly,
     );
 
-    final lastLabel = _isLast
+    final showPrev = !_isFirst;
+
+    final showRightButton = _readOnly
+        ? !_isLast
+        : (!_isLast || (_isLast && _canSubmitOrUpdate));
+
+    final isFinalAction = !_readOnly && _isLast && _canSubmitOrUpdate;
+
+    final rightLabel = isFinalAction
         ? (_hasInitialResponse ? 'Update' : 'Submit')
         : 'Next';
 
-    final isSubmit = lastLabel == 'Submit';
+    final rightVariant = (isFinalAction && rightLabel == 'Submit')
+        ? NavButtonVariant.submit
+        : NavButtonVariant.primary;
+
+    final rightStyleEnabled = _readOnly ? true : _currentValid;
+
+    final rightTapEnabled = _readOnly ? !_isLast : true;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        PollProgressBar(
-          total: total,
-          currentIndex: _index,
-          maxReached: _maxReached,
-          onTap: _goTo,
-        ),
-        40.vgap,
+        if (_isSubmitted) ...[
+          SubmittedLabel(),
+          20.vgap,
+        ] else ...[
+          PollProgressBar(
+            total: total,
+            currentIndex: _index,
+            maxReached: _maxReached,
+          ),
+          40.vgap,
+        ],
         PollQuestionHeader(question: _currentQuestion),
         20.vgap,
         PollTimeHeader(timeZone: 'Asia/Seoul', start: start, end: end),
@@ -225,56 +271,56 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
           const Spacer(),
         ],
         24.vgap,
-        if (_isSubmitted) ...[
-          _SubmittedBar(),
-        ] else ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _NavButton(
+        Row(
+          children: [
+            if (showPrev)
+              NavButton(
                 label: 'Prev',
-                enabled: !_isFirst,
+                enabled: true,
                 onTap: _goPrev,
                 isPrimary: false,
-                variant: _NavButtonVariant.outline,
+                variant: NavButtonVariant.outline,
               ),
-              _NavButton(
-                label: lastLabel,
-                enabled: _readOnly ? !_isLast : _currentValid,
+            const Spacer(),
+            if (showRightButton)
+              NavButton(
+                label: rightLabel,
+                enabled: rightStyleEnabled,
+                tapEnabled: rightTapEnabled,
                 onTap: _goNext,
                 isPrimary: true,
-                variant: isSubmit
-                    ? _NavButtonVariant.submit
-                    : _NavButtonVariant.primary,
+                variant: rightVariant,
               ),
-            ],
-          ),
-        ],
+          ],
+        ),
         20.vgap,
       ],
     );
   }
 }
 
-class _SubmittedBar extends StatelessWidget {
-  const _SubmittedBar();
+class SubmittedLabel extends StatelessWidget {
+  const SubmittedLabel({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
+    return RoundContainer(
+      radius: 8,
+      color: Color(0xFF22C55E).withAlpha(25),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.check, size: 24, color: Color(0xFF737373)),
-          SizedBox(width: 8),
+          Icon(Icons.check, size: 16, color: Color(0xFF22C55E)),
+          4.gap,
           Text(
             'Submitted',
             style: TextStyle(
               fontWeight: FontWeight.w700,
-              fontSize: 16,
-              height: 18 / 16,
-              color: Colors.white.withAlpha(125),
+              fontSize: 13,
+              height: 16 / 13,
+              color: Color(0xFF22C55E),
             ),
           ),
         ],
@@ -376,91 +422,5 @@ bool _validateAnswer(QuestionModel q, Answer? a) {
       if (aa.answer == null) return true;
       final v = aa.answer!;
       return v >= qq.minValue && v <= qq.maxValue;
-  }
-}
-
-enum _NavButtonVariant { outline, primary, submit }
-
-class _NavButton extends StatelessWidget {
-  const _NavButton({
-    required this.label,
-    required this.enabled,
-    required this.onTap,
-    required this.isPrimary,
-    this.variant = _NavButtonVariant.primary,
-  });
-
-  final String label;
-  final bool enabled;
-  final VoidCallback onTap;
-  final bool isPrimary;
-  final _NavButtonVariant variant;
-
-  @override
-  Widget build(BuildContext context) {
-    final isOutline = variant == _NavButtonVariant.outline;
-    final isSubmit = variant == _NavButtonVariant.submit;
-
-    final bgColor = isSubmit
-        ? const Color(0xFFFCB300)
-        : (isPrimary ? Colors.white : Colors.transparent);
-
-    final textColor = isSubmit
-        ? const Color(0xFF0A0A0A)
-        : (isPrimary ? const Color(0xFF0A0A0A) : Colors.white);
-
-    final disabledBg = isSubmit
-        ? const Color(0xFFFCB300).withAlpha(140)
-        : (isPrimary ? Colors.white.withAlpha(125) : Colors.transparent);
-
-    final effectiveBg = enabled ? bgColor : disabledBg;
-    final effectiveText = enabled
-        ? textColor
-        : (isSubmit ? const Color(0xFF0A0A0A) : const Color(0xFF737373));
-
-    final borderColor = isOutline
-        ? (enabled ? Colors.white : const Color(0xFF737373))
-        : Colors.transparent;
-
-    Widget chevron() {
-      if (isSubmit) return const SizedBox.shrink();
-      final iconColor = enabled
-          ? const Color(0xFF737373)
-          : const Color(0xFF404040);
-      return Icon(
-        isPrimary ? Icons.chevron_right : Icons.chevron_left,
-        size: 24,
-        color: iconColor,
-      );
-    }
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: enabled ? onTap : null,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
-        decoration: BoxDecoration(
-          color: effectiveBg,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor, width: 1),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (!isPrimary && !isSubmit) ...[chevron(), 8.gap],
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-                height: 18 / 16,
-                color: effectiveText,
-              ),
-            ),
-            if (isPrimary && !isSubmit) ...[8.gap, chevron()],
-          ],
-        ),
-      ),
-    );
   }
 }
