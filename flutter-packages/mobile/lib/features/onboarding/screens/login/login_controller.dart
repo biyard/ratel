@@ -24,14 +24,15 @@ class LoginController extends BaseController {
     dialCode: '82',
   ).obs;
 
+  final isPhoneValid = false.obs;
   final showWarning = false.obs;
 
   bool get isPhone => method.value == LoginMethod.phone;
   bool get isEmail => method.value == LoginMethod.email;
 
   bool get isFormValid {
-    if (isPhone) return phone.value.isNotEmpty;
-    return email.value.isNotEmpty && password.value.isNotEmpty;
+    if (isPhone) return isPhoneValid.value;
+    return email.value.trim().isNotEmpty && password.value.trim().isNotEmpty;
   }
 
   void selectMethod(LoginMethod m) {
@@ -42,7 +43,15 @@ class LoginController extends BaseController {
   void selectCountry(CountryCode code) => selectedCountry.value = code;
 
   void onPhoneChanged(String v) {
-    phone.value = v.trim();
+    final digits = v.replaceAll(RegExp(r'[^0-9]'), '');
+    phone.value = digits;
+    isPhoneValid.value = digits.length >= 6;
+
+    phoneCtrl.value = phoneCtrl.value.copyWith(
+      text: digits,
+      selection: TextSelection.collapsed(offset: digits.length),
+    );
+
     if (showWarning.value) showWarning.value = !isFormValid;
   }
 
