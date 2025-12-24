@@ -3,6 +3,15 @@
  * to maintain readability when users switch between light and dark themes
  */
 
+/**
+ * Theme background colors
+ * These must match the actual background colors used in your theme CSS
+ */
+export const THEME_BACKGROUNDS = {
+  light: '#ffffff',
+  dark: '#1d1d1d',
+} as const;
+
 export function hexToRgb(
   hex: string,
 ): { r: number; g: number; b: number } | null {
@@ -162,14 +171,13 @@ export function adjustForContrast(
 
   const bgLuminance = getLuminance(bgRgb.r, bgRgb.g, bgRgb.b);
   
-  // Determine if we need to go lighter or darker
   const shouldLighten = bgLuminance < 0.5;
   
-  // For very dark colors on dark backgrounds, we need to blend towards white
-  // For very light colors on light backgrounds, we need to blend towards black
   let { r, g, b } = rgb;
   
-  // Iteratively blend until we achieve good contrast
+  // Iterative adjustment with blending (max 20 iterations)
+  // 20 iterations is sufficient to achieve WCAG contrast ratios for most colors
+  // while preventing infinite loops for edge cases
   for (let i = 0; i < 20; i++) {
     const currentColor = rgbToHex(r, g, b);
     const ratio = getContrastRatio(currentColor, backgroundColor);
@@ -179,12 +187,14 @@ export function adjustForContrast(
     }
     
     if (shouldLighten) {
-      // Blend towards white
+      // Blend 20% towards white + fixed increment of 10
+      // The blend preserves hue, while +10 ensures pure black (0,0,0) can escape zero
       r = Math.min(255, r + (255 - r) * 0.2 + 10);
       g = Math.min(255, g + (255 - g) * 0.2 + 10);
       b = Math.min(255, b + (255 - b) * 0.2 + 10);
     } else {
-      // Blend towards black
+      // Darken by 20% (multiply by 0.8) - fixed decrement of 10
+      // The multiplication preserves hue, while -10 ensures near-white colors adjust
       r = Math.max(0, r * 0.8 - 10);
       g = Math.max(0, g * 0.8 - 10);
       b = Math.max(0, b * 0.8 - 10);
@@ -211,10 +221,8 @@ export function getThemeAdjustedColor(
     return originalColor;
   }
 
-  // Background colors for each theme
-  const backgroundColor = theme === 'dark' ? '#1d1d1d' : '#ffffff';
+  const backgroundColor = THEME_BACKGROUNDS[theme];
   
-  // Check if we need to adjust
   const needsAdjustment = !hasGoodContrast(originalColor, backgroundColor);
   
   if (!needsAdjustment) {
@@ -240,9 +248,7 @@ export function getThemeAdjustedHighlight(
     return originalColor;
   }
 
-  const backgroundColor = theme === 'dark' ? '#1d1d1d' : '#ffffff';
+  const backgroundColor = THEME_BACKGROUNDS[theme];
   
-  // For highlights, we want reasonable contrast but not too extreme
-  // Use lower ratio (3:1) so highlights don't become too different from original
   return adjustForContrast(originalColor, backgroundColor, 3.0);
 }
