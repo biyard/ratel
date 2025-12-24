@@ -20,6 +20,7 @@ pub struct BillingKeyPaymentRequest {
     pub amount: PaymentAmountInput,
     pub currency: String,
     pub locale: Option<Locale>,
+    pub notice_urls: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]

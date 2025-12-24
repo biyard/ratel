@@ -56,7 +56,7 @@ impl UserMembership {
             // Infinite/Lifetime membership (far future)
             i64::MAX
         } else {
-            created_at + (duration_days as i64) * 24 * 60 * 60 * 1_000
+            created_at + (duration_days as i64) * config::get().day_unit()
         };
 
         Ok(Self {
@@ -150,7 +150,7 @@ impl UserMembership {
         }
 
         let remaining_millis = self.expired_at - now;
-        let remaining_days = remaining_millis / (24 * 60 * 60 * 1_000);
+        let remaining_days = remaining_millis / config::get().day_unit();
 
         remaining_days as i32
     }
