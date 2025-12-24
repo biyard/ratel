@@ -30,33 +30,20 @@ class LoginController extends BaseController {
   bool get isEmail => method.value == LoginMethod.email;
 
   bool get isFormValid {
-    if (isPhone) return phone.isNotEmpty;
-    return email.isNotEmpty && password.isNotEmpty;
-  }
-
-  @override
-  void onInit() {
-    super.onInit();
-    _syncWarningForCurrentMethod();
-  }
-
-  void _syncWarningForCurrentMethod() {
-    showWarning.value = !isFormValid;
+    if (isPhone) return phone.value.isNotEmpty;
+    return email.value.isNotEmpty && password.value.isNotEmpty;
   }
 
   void selectMethod(LoginMethod m) {
     method.value = m;
-    _syncWarningForCurrentMethod();
+    showWarning.value = false;
   }
 
   void selectCountry(CountryCode code) => selectedCountry.value = code;
 
   void onPhoneChanged(String v) {
     phone.value = v.trim();
-
-    if (isPhone) {
-      showWarning.value = phone.value.isEmpty;
-    }
+    if (showWarning.value) showWarning.value = !isFormValid;
   }
 
   void onEmailChanged(String v) {
@@ -103,7 +90,6 @@ class LoginController extends BaseController {
 
       final auth = AuthApi();
       final fullPhone = '+${selectedCountry.value.dialCode}${phone.value}';
-
       final res = await auth.sendVerificationCode(fullPhone);
 
       if (res != null) {

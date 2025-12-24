@@ -88,6 +88,7 @@ export 'components/profile/profile.dart';
 export 'components/round_container/round_container.dart';
 export 'components/side_panel/side_panel.dart';
 export 'components/text_field/text_field.dart';
+export 'components/text_field/phone_number_field.dart';
 export 'components/app_top_bar/app_top_bar.dart';
 export 'components/nav_button/nav_button.dart';
 export 'config.dart';

@@ -2,7 +2,6 @@ import 'package:ratel/exports.dart';
 import 'package:ratel/features/onboarding/screens/login/components/email_form.dart';
 import 'package:ratel/features/onboarding/screens/login/components/login_top_bar.dart';
 import 'package:ratel/features/onboarding/screens/login/components/method_tab.dart';
-import 'package:ratel/features/onboarding/screens/login/components/phone_form.dart';
 
 class LoginScreen extends GetWidget<LoginController> {
   const LoginScreen({super.key});
@@ -42,16 +41,16 @@ class LoginScreen extends GetWidget<LoginController> {
                     22.vgap,
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Obx(
-                        () => controller.isPhone
-                            ? PhoneForm(
-                                countryName:
-                                    controller.selectedCountry.value.name,
-                                dialCode:
-                                    controller.selectedCountry.value.dialCode,
-                                phoneController: controller.phoneCtrl,
-                                onPhoneChanged: controller.onPhoneChanged,
-                                showWarning: controller.showWarning.value,
+                      child: Obx(() {
+                        if (controller.isPhone) {
+                          final cc = controller.selectedCountry.value;
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              PhoneNumberField(
+                                countryCode: cc.code,
+                                dialCode: cc.dialCode,
+                                controller: controller.phoneCtrl,
                                 onTapCountry: () async {
                                   final selected =
                                       await showCountryPickerBottomSheet(
@@ -61,16 +60,30 @@ class LoginScreen extends GetWidget<LoginController> {
                                     controller.selectCountry(selected);
                                   }
                                 },
-                              )
-                            : EmailForm(
-                                emailController: controller.emailCtrl,
-                                passwordController: controller.passwordCtrl,
-                                showPassword: controller.showPassword.value,
-                                onEmailChanged: controller.onEmailChanged,
-                                onPasswordChanged: controller.onPasswordChanged,
-                                showWarning: controller.showWarning.value,
+                                onChanged: controller.onPhoneChanged,
+                                onSubmit: controller.submit,
                               ),
-                      ),
+                              if (controller.showWarning.value) ...[
+                                const Padding(
+                                  padding: EdgeInsets.only(top: 10),
+                                  child: WarningMessage(
+                                    message: 'Missing required fields',
+                                  ),
+                                ),
+                              ],
+                            ],
+                          );
+                        }
+
+                        return EmailForm(
+                          emailController: controller.emailCtrl,
+                          passwordController: controller.passwordCtrl,
+                          showPassword: controller.showPassword.value,
+                          onEmailChanged: controller.onEmailChanged,
+                          onPasswordChanged: controller.onPasswordChanged,
+                          showWarning: controller.showWarning.value,
+                        );
+                      }),
                     ),
                   ],
                 ),

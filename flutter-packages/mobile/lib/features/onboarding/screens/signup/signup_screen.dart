@@ -1,12 +1,9 @@
 import 'package:ratel/exports.dart';
 import 'package:ratel/features/onboarding/screens/signup/components/already_have_account_row.dart';
 import 'package:ratel/features/onboarding/screens/signup/components/or_divider.dart';
-import 'package:ratel/features/onboarding/screens/signup/components/signup_email_form.dart';
 import 'package:ratel/features/onboarding/screens/signup/components/signup_logo.dart';
 import 'package:ratel/features/onboarding/screens/signup/components/signup_phone_form.dart';
 import 'package:ratel/features/onboarding/screens/signup/components/switch_signup_method_button.dart';
-
-import 'signup_controller.dart';
 
 class SignupScreen extends GetWidget<SignupController> {
   const SignupScreen({super.key});
@@ -44,34 +41,22 @@ class SignupScreen extends GetWidget<SignupController> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            isPhone
-                                ? SignupPhoneForm(
-                                    countryCode:
-                                        controller.selectedCountry.value.code,
-                                    dialCode: controller
-                                        .selectedCountry
-                                        .value
-                                        .dialCode,
-                                    phoneController: controller.phoneCtrl,
-                                    onTapCountry: () async {
-                                      final selected =
-                                          await showCountryPickerBottomSheet(
-                                            context,
-                                          );
-                                      if (selected != null)
-                                        controller.selectCountry(selected);
-                                    },
-                                    onPhoneChanged: controller.onPhoneChanged,
-                                    onSubmit: controller.nextPhone,
-                                  )
-                                : SignupEmailForm(
-                                    emailController: controller.emailCtrl,
-                                    passwordController: controller.passwordCtrl,
-                                    onEmailChanged: controller.onEmailChanged,
-                                    onPasswordChanged:
-                                        controller.onPasswordChanged,
-                                    onSubmit: controller.nextEmail,
-                                  ),
+                            SignupPhoneForm(
+                              countryCode:
+                                  controller.selectedCountry.value.code,
+                              dialCode:
+                                  controller.selectedCountry.value.dialCode,
+                              phoneController: controller.phoneCtrl,
+                              onTapCountry: () async {
+                                final selected =
+                                    await showCountryPickerBottomSheet(context);
+                                if (selected != null) {
+                                  controller.selectCountry(selected);
+                                }
+                              },
+                              onPhoneChanged: controller.onPhoneChanged,
+                              onSubmit: controller.nextPhone,
+                            ),
 
                             10.vgap,
 
@@ -120,26 +105,26 @@ class SignupScreen extends GetWidget<SignupController> {
                       }),
                     ),
                     18.vgap,
-                    const OrDivider(),
-                    14.vgap,
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Obx(
-                        () => controller.isPhone
-                            ? SwitchSignupMethodButton(
-                                icon: Assets.email,
-                                label: 'Continue with email',
-                                onTap: () =>
-                                    controller.selectMethod(SignupMethod.email),
-                              )
-                            : SwitchSignupMethodButton(
-                                icon: Assets.mobile,
-                                label: 'Continue with phone',
-                                onTap: () =>
-                                    controller.selectMethod(SignupMethod.phone),
-                              ),
-                      ),
-                    ),
+                    // const OrDivider(),
+                    // 14.vgap,
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(horizontal: 15),
+                    //   child: Obx(
+                    //     () => controller.isPhone
+                    //         ? SwitchSignupMethodButton(
+                    //             icon: Assets.email,
+                    //             label: 'Continue with email',
+                    //             onTap: () =>
+                    //                 controller.selectMethod(SignupMethod.email),
+                    //           )
+                    //         : SwitchSignupMethodButton(
+                    //             icon: Assets.mobile,
+                    //             label: 'Continue with phone',
+                    //             onTap: () =>
+                    //                 controller.selectMethod(SignupMethod.phone),
+                    //           ),
+                    //   ),
+                    // ),
                     40.vgap,
                   ],
                 ),
