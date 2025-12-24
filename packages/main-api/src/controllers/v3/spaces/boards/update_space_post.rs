@@ -62,6 +62,14 @@ pub async fn update_space_post_handler(
 
     let (pk, sk) = SpacePost::keys(&space_pk, &space_post_pk);
 
+    // Get existing post to compare files
+    let existing_post = SpacePost::get(&dynamo.client, pk.clone(), Some(sk.clone())).await?;
+    let old_file_urls: Vec<String> = existing_post
+        .as_ref()
+        .and_then(|p| p.files.as_ref())
+        .map(|files| files.iter().filter_map(|f| f.url.clone()).collect())
+        .unwrap_or_default();
+
     let v = SpacePost::updater(pk, sk)
         .with_title(req.title.clone())
         .with_html_contents(req.html_contents.clone())
@@ -84,26 +92,35 @@ pub async fn update_space_post_handler(
         SpaceFile::add_files(&dynamo.client, space_pk.clone(), req.files.clone()).await?;
     }
 
-    for file in &req.files {
-        if let Some(url) = &file.url {
-            // Link to Files tab
-            FileLink::add_link_target(
-                &dynamo.client,
-                space_pk.clone(),
-                url.clone(),
+    // Link files: Batch add both Files and Board targets to all file URLs
+    let new_file_urls: Vec<String> = req.files.iter().filter_map(|f| f.url.clone()).collect();
+    if !new_file_urls.is_empty() {
+        FileLink::add_link_targets_batch(
+            &dynamo.client,
+            space_pk.clone(),
+            new_file_urls.clone(),
+            vec![
                 FileLinkTarget::Files,
-            )
-            .await?;
-
-            // Link to Board post
-            FileLink::add_link_target(
-                &dynamo.client,
-                space_pk.clone(),
-                url.clone(),
                 FileLinkTarget::Board(post_id.clone()),
-            )
-            .await?;
-        }
+            ],
+        )
+        .await?;
+    }
+
+    // Remove Board target from files that were removed
+    let removed_urls: Vec<String> = old_file_urls
+        .into_iter()
+        .filter(|url| !new_file_urls.contains(url))
+        .collect();
+    if !removed_urls.is_empty() {
+        FileLink::remove_link_targets_batch(
+            &dynamo.client,
+            &space_pk,
+            removed_urls,
+            &FileLinkTarget::Board(post_id.clone()),
+        )
+        .await
+        .ok();
     }
 
     Ok(Json(v.into()))

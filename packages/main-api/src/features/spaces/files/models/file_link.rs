@@ -1,4 +1,5 @@
 use crate::types::*;
+use crate::utils::time::get_now_timestamp_micros;
 use bdk::prelude::*;
 
 use crate::features::spaces::files::FileLinkTarget;
@@ -20,7 +21,7 @@ pub struct FileLink {
 
 impl FileLink {
     pub fn new(space_pk: Partition, file_url: String, link_targets: Vec<FileLinkTarget>) -> Self {
-        let now = chrono::Utc::now().timestamp_micros();
+        let now = get_now_timestamp_micros();
         let file_id = uuid::Uuid::new_v4().to_string();
 
         Self {
@@ -48,7 +49,7 @@ impl FileLink {
         if let Some(mut file_link) = existing {
             if !file_link.link_targets.contains(&target) {
                 file_link.link_targets.push(target.clone());
-                let now = chrono::Utc::now().timestamp_micros();
+                let now = get_now_timestamp_micros();
 
                 // Use DynamoDB updater
                 Self::updater(&file_link.pk, &file_link.sk)
@@ -68,6 +69,52 @@ impl FileLink {
         }
     }
 
+    pub async fn add_link_targets_batch(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: Partition,
+        file_urls: Vec<String>,
+        targets: Vec<FileLinkTarget>,
+    ) -> Result<Vec<Self>, crate::Error> {
+        if file_urls.is_empty() || targets.is_empty() {
+            return Ok(vec![]);
+        }
+
+        let mut results = Vec::new();
+
+        for file_url in file_urls {
+            let existing = Self::find_by_url(cli, &space_pk, &file_url).await?;
+
+            if let Some(mut file_link) = existing {
+                let mut updated = false;
+                for target in &targets {
+                    if !file_link.link_targets.contains(target) {
+                        file_link.link_targets.push(target.clone());
+                        updated = true;
+                    }
+                }
+
+                if updated {
+                    let now = get_now_timestamp_micros();
+                    Self::updater(&file_link.pk, &file_link.sk)
+                        .with_link_targets(file_link.link_targets.clone())
+                        .with_updated_at(now)
+                        .execute(cli)
+                        .await?;
+
+                    file_link.updated_at = now;
+                }
+                results.push(file_link);
+            } else {
+                // Create new file link with all targets
+                let file_link = Self::new(space_pk.clone(), file_url, targets.clone());
+                file_link.create(cli).await?;
+                results.push(file_link);
+            }
+        }
+
+        Ok(results)
+    }
+
     /// Remove a link target from a file
     pub async fn remove_link_target(
         cli: &aws_sdk_dynamodb::Client,
@@ -79,7 +126,7 @@ impl FileLink {
 
         if let Some(mut file_link) = existing {
             file_link.link_targets.retain(|t| t != target);
-            let now = chrono::Utc::now().timestamp_micros();
+            let now = get_now_timestamp_micros();
 
             // If no more targets, delete the file link
             if file_link.link_targets.is_empty() {
@@ -99,6 +146,28 @@ impl FileLink {
         } else {
             Ok(None)
         }
+    }
+
+    /// Batch remove link targets from multiple URLs to reduce database operations
+    /// This is more efficient than calling remove_link_target in a loop
+    pub async fn remove_link_targets_batch(
+        cli: &aws_sdk_dynamodb::Client,
+        space_pk: &Partition,
+        file_urls: Vec<String>,
+        target: &FileLinkTarget,
+    ) -> Result<Vec<Option<Self>>, crate::Error> {
+        if file_urls.is_empty() {
+            return Ok(vec![]);
+        }
+
+        let mut results = Vec::new();
+
+        for file_url in file_urls {
+            let result = Self::remove_link_target(cli, space_pk, &file_url, target).await?;
+            results.push(result);
+        }
+
+        Ok(results)
     }
 
     /// Find a file link by URL within a space using GSI

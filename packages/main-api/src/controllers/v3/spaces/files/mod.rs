@@ -18,5 +18,5 @@ pub fn route() -> Router<AppState> {
     Router::new()
         .route("/", patch(update_files_handler).get(get_files_handler))
         .route("/links", get(list_file_links_handler))
-        .route("/by-target", get(get_files_by_target_handler))
+        .route("/links/target", get(get_files_by_target_handler))
 }
