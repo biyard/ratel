@@ -177,19 +177,16 @@ pub async fn update_space_handler(
         UpdateSpaceRequest::File { files } => {
             su = su.with_files(files.clone());
 
-            // Get old files to compare
             let old_file_urls: Vec<String> = space
                 .files
                 .as_ref()
                 .map(|files| files.iter().filter_map(|f| f.url.clone()).collect())
                 .unwrap_or_default();
 
-            // Add files to SpaceFile entity (for Files tab)
             if !files.is_empty() {
                 SpaceFile::add_files(&dynamo.client, space_pk.clone(), files.clone()).await?;
             }
 
-            // Link files: Batch add both Files and Overview targets to all file URLs
             let new_file_urls: Vec<String> = files.iter().filter_map(|f| f.url.clone()).collect();
             if !new_file_urls.is_empty() {
                 FileLink::add_link_targets_batch(
@@ -202,7 +199,6 @@ pub async fn update_space_handler(
                 .ok();
             }
 
-            // Remove Overview target from files that were removed
             let removed_urls: Vec<String> = old_file_urls
                 .into_iter()
                 .filter(|url| !new_file_urls.contains(url))

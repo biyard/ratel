@@ -115,7 +115,6 @@ impl FileLink {
         Ok(results)
     }
 
-    /// Remove a link target from a file
     pub async fn remove_link_target(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
@@ -128,13 +127,21 @@ impl FileLink {
             file_link.link_targets.retain(|t| t != target);
             let now = get_now_timestamp_micros();
 
-            // If no more targets, delete the file link
             if file_link.link_targets.is_empty() {
                 Self::delete(cli, &file_link.pk, Some(file_link.sk.clone())).await?;
                 return Ok(None);
             }
 
-            // Use DynamoDB updater
+            let has_non_files_target = file_link
+                .link_targets
+                .iter()
+                .any(|t| !matches!(t, FileLinkTarget::Files));
+
+            if !has_non_files_target {
+                Self::delete(cli, &file_link.pk, Some(file_link.sk.clone())).await?;
+                return Ok(None);
+            }
+
             Self::updater(&file_link.pk, &file_link.sk)
                 .with_link_targets(file_link.link_targets.clone())
                 .with_updated_at(now)
@@ -148,8 +155,6 @@ impl FileLink {
         }
     }
 
-    /// Batch remove link targets from multiple URLs to reduce database operations
-    /// This is more efficient than calling remove_link_target in a loop
     pub async fn remove_link_targets_batch(
         cli: &aws_sdk_dynamodb::Client,
         space_pk: &Partition,
