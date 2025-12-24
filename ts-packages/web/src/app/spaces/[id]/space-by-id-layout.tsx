@@ -21,6 +21,7 @@ import { SafeArea } from '@/components/ui/safe-area';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import SpaceMobileHeader from '@/features/spaces/components/space-mobile-header';
+import { cn } from '@/lib/utils';
 import RewardMenu from '@/features/spaces/rewards/components/reward-menu';
 
 export const Context = createContext<SpaceHomeController | undefined>(
@@ -68,8 +69,14 @@ function GeneralLayout() {
   }, [ctrl.menus, location.pathname]);
 
   return (
-    <Row className="max-mobile:gap-1">
-      <Col className="gap-4 w-full">
+    <Row
+      data-testid="space-layout-root"
+      className={cn(
+        'flex flex-row items-start gap-4 flex-nowrap',
+        isMobile && 'flex-col gap-1',
+      )}
+    >
+      <Col className="gap-4 flex-1 min-w-0 basis-0">
         {/* Mobile Header */}
         {isMobile && (
           <SpaceMobileHeader
@@ -80,7 +87,7 @@ function GeneralLayout() {
         )}
 
         {showInfo && (
-          <Col className="gap-4 w-full">
+          <Col className="gap-4 w-full min-w-0">
             <TitleSection
               canEdit={ctrl.isAdmin}
               title={ctrl.space.title}
@@ -93,7 +100,6 @@ function GeneralLayout() {
               isCertified={ctrl.space.certified}
               createdAt={ctrl.space.createdAt}
             />
-
             <PostInfoSection
               likes={ctrl.space.likes}
               shares={ctrl.space.shares}
@@ -110,7 +116,7 @@ function GeneralLayout() {
 
       {/* Desktop Side Menu */}
       {!isMobile && (
-        <Col className="gap-2.5 w-full max-w-[250px]">
+        <Col className="gap-2.5 w-[250px] shrink-0">
           {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
 
           {participantProfileProps && ctrl.space.anonymous_participation && (
@@ -144,13 +150,10 @@ function GeneralLayout() {
               {ctrl.actions.length > 0 && (
                 <SpaceActions actions={ctrl.actions} />
               )}
-
               {participantProfileProps && (
                 <SpaceParticipantProfile {...participantProfileProps} />
               )}
-
               <SpaceSideMenu menus={ctrl.menus} />
-
               <TimelineMenu
                 isEditing={false}
                 handleSetting={() => {}}
