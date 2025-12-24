@@ -1,36 +1,28 @@
 import 'package:ratel/exports.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class AttachmentSection extends StatefulWidget {
+class AttachmentSection extends StatelessWidget {
   final List<FileModel> files;
   const AttachmentSection({super.key, required this.files});
 
   @override
-  State<AttachmentSection> createState() => _AttachmentSectionState();
-}
-
-class _AttachmentSectionState extends State<AttachmentSection> {
-  @override
   Widget build(BuildContext context) {
+    if (files.isEmpty) {
+      return const SizedBox(height: 10);
+    }
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.transparent,
         borderRadius: BorderRadius.circular(10),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (widget.files.isNotEmpty) ...[
-            for (int i = 0; i < widget.files.length; i++) ...[
-              _AttachmentRow(file: widget.files[i]),
-              if (i != widget.files.length - 1) 10.vgap,
-            ],
-            10.vgap,
-          ] else ...[
-            10.vgap,
-          ],
-        ],
+      child: ListView.separated(
+        itemCount: files.length,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        separatorBuilder: (_, __) => 10.vgap,
+        itemBuilder: (_, i) => _AttachmentRow(file: files[i]),
       ),
     );
   }
