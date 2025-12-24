@@ -10,7 +10,7 @@ import { getThemeAdjustedHighlight } from '../color-utils';
 export interface ThemeAwareHighlightOptions {
   multicolor: boolean;
   types: string[];
-  getCurrentTheme: () => 'light' | 'dark';
+  getCurrentTheme?: () => 'light' | 'dark';
 }
 
 declare module '@tiptap/core' {
@@ -19,7 +19,6 @@ declare module '@tiptap/core' {
       setThemeAwareHighlight: (attributes?: { color: string }) => ReturnType;
       toggleThemeAwareHighlight: (attributes?: { color: string }) => ReturnType;
       unsetThemeAwareHighlight: () => ReturnType;
-      updateThemeHighlights: () => ReturnType;
     };
   }
 }
@@ -32,11 +31,6 @@ export const ThemeAwareHighlight = Extension.create<ThemeAwareHighlightOptions>(
       return {
         multicolor: true,
         types: ['textStyle'],
-        getCurrentTheme: () => {
-          if (typeof document === 'undefined') return 'dark';
-          const theme = document.documentElement.getAttribute('data-theme');
-          return (theme === 'light' ? 'light' : 'dark') as 'light' | 'dark';
-        },
       };
     },
 
@@ -59,7 +53,8 @@ export const ThemeAwareHighlight = Extension.create<ThemeAwareHighlightOptions>(
                   return {};
                 }
 
-                const currentTheme = this.options.getCurrentTheme();
+                const currentTheme = this.options.getCurrentTheme?.() || 
+                  (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
                 const adjustedColor = getThemeAdjustedHighlight(
                   attributes.highlight,
                   currentTheme,
@@ -99,35 +94,6 @@ export const ThemeAwareHighlight = Extension.create<ThemeAwareHighlightOptions>(
               .setMark('textStyle', { highlight: null })
               .removeEmptyTextStyle()
               .run();
-          },
-        updateThemeHighlights:
-          () =>
-          ({ tr, state, dispatch }) => {
-            if (!dispatch) return false;
-
-            const { doc } = state;
-            let modified = false;
-
-            doc.descendants((node, pos) => {
-              if (node.marks && node.marks.length > 0) {
-                node.marks.forEach((mark) => {
-                  if (mark.type.name === 'textStyle' && mark.attrs.highlight) {
-                    const from = pos;
-                    const to = pos + node.nodeSize;
-                    
-                    tr.removeMark(from, to, mark.type);
-                    tr.addMark(from, to, mark.type.create(mark.attrs));
-                    modified = true;
-                  }
-                });
-              }
-            });
-
-            if (modified) {
-              dispatch(tr);
-            }
-
-            return modified;
           },
       };
     },
