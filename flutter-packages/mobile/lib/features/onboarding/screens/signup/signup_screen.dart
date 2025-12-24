@@ -13,9 +13,12 @@ class SignupScreen extends GetWidget<SignupController> {
 
     return Layout<SignupController>(
       scrollable: false,
+      enableSafeArea: false,
+      style: const LayoutStyle(background: pageBg),
       child: Container(
         color: pageBg,
         child: SafeArea(
+          bottom: false,
           child: Column(
             children: [
               Padding(
@@ -136,10 +139,13 @@ class SignupScreen extends GetWidget<SignupController> {
                           ),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        child: AlreadyHaveAccountRow(
-                          onTapLogin: controller.goToLogin,
+                      SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 20),
+                          child: AlreadyHaveAccountRow(
+                            onTapLogin: controller.goToLogin,
+                          ),
                         ),
                       ),
                     ],
