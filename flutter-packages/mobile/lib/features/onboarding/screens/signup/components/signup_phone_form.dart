@@ -21,71 +21,21 @@ class SignupPhoneForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return PhoneNumberField(
+      countryCode: countryCode,
+      dialCode: dialCode,
+      controller: phoneController,
+      onTapCountry: onTapCountry,
+      onChanged: onPhoneChanged,
+      onSubmit: onSubmit,
+      hintText: 'Phone Number',
       height: 52,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF101010),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFF2A2A2A), width: 1),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: onTapCountry,
-            child: Row(
-              children: [
-                Text(
-                  '${countryCode.toUpperCase()} +$dialCode',
-                  style: AppFonts.textTheme.bodyMedium?.copyWith(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    height: 22 / 16,
-                  ),
-                ),
-                6.gap,
-                const Icon(
-                  Icons.keyboard_arrow_down,
-                  size: 18,
-                  color: Color(0xFF737373),
-                ),
-              ],
-            ),
-          ),
-          12.gap,
-          Container(width: 1, height: 18, color: const Color(0xFF262626)),
-          12.gap,
-          Expanded(
-            child: TextField(
-              controller: phoneController,
-              keyboardType: TextInputType.number,
-              textInputAction: TextInputAction.done,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              style: AppFonts.textTheme.bodyMedium?.copyWith(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                height: 22 / 16,
-              ),
-              decoration: InputDecoration(
-                isCollapsed: true,
-                border: InputBorder.none,
-                hintText: 'Phone Number',
-                hintStyle: AppFonts.textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFFBABABA),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  height: 22 / 16,
-                ),
-              ),
-              onChanged: onPhoneChanged,
-              onSubmitted: (_) => onSubmit(),
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: const Color(0xFF101010),
+      borderColor: const Color(0xFF2A2A2A),
+      focusedBorderColor: const Color(0xFF2A2A2A),
+      borderRadius: 10,
+      dividerColor: const Color(0xFF262626),
     );
   }
 }
