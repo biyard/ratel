@@ -56,12 +56,12 @@ class LoginController extends BaseController {
   }
 
   void onEmailChanged(String v) {
-    email.value = v.trim();
+    email.value = v;
     if (showWarning.value) showWarning.value = !isFormValid;
   }
 
   void onPasswordChanged(String v) {
-    password.value = v.trim();
+    password.value = v;
     if (showWarning.value) showWarning.value = !isFormValid;
   }
 
@@ -84,7 +84,10 @@ class LoginController extends BaseController {
       if (isEmail) {
         final auth = Get.find<AuthApi>();
         await auth.clearSession();
-        final res = await auth.loginWithPassword(email.value, password.value);
+
+        final e = email.value.trim();
+        final p = password.value.trim();
+        final res = await auth.loginWithPassword(e, p);
         if (res != null) {
           Get.rootDelegate.offNamed(AppRoutes.mainScreen);
           Biyard.info("Login Successed.");
