@@ -1,5 +1,5 @@
-mod types;
-pub use types::*;
+pub mod dto;
+pub use dto::*;
 #[cfg(not(feature = "no-secret"))]
 pub mod biyard;
 #[cfg(not(feature = "no-secret"))]

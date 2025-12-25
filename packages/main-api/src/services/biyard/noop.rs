@@ -2,11 +2,11 @@ use super::*;
 use crate::*;
 
 #[derive(Debug, Clone)]
-pub struct Biyard {}
+pub struct Biyard;
 
 impl Biyard {
     pub fn new() -> Self {
-        Self {}
+        Self
     }
 
     #[allow(dead_code)]
@@ -15,6 +15,21 @@ impl Biyard {
             Partition::User(id) => id.clone(),
             _ => panic!("Biyard user_pk must be of Partition::User type"),
         }
+    }
+
+    /// Get token info (mock - always returns same data)
+    pub async fn get_token(&self) -> Result<TokenResponse> {
+        Ok(TokenResponse {
+            project_id: "PROJECT#ratel".to_string(),
+            name: "Ratel Token".to_string(),
+            symbol: "RATEL".to_string(),
+            decimals: 18,
+            total_supply: 1000000,
+            circulating_supply: 500000,
+            description: Some("Ratel governance token".to_string()),
+            created_at: 1750000000,
+            updated_at: 1750000000,
+        })
     }
 
     pub async fn award_points(
@@ -65,7 +80,7 @@ impl Biyard {
                 description: Some("test-description".to_string()),
                 created_at: 1750000000,
             }],
-            bookmark: Some("test-bookmark".to_string()),
+            bookmark: None,
         })
     }
 
@@ -81,22 +96,6 @@ impl Biyard {
             meta_user_id: "test-user-id".to_string(),
             transaction_type: "Exchange".to_string(),
             amount,
-        })
-    }
-
-    // Token-related methods
-
-    pub async fn get_token(&self) -> Result<TokenResponse> {
-        Ok(TokenResponse {
-            project_id: "PROJECT#ratel".to_string(),
-            name: "Ratel Token".to_string(),
-            symbol: "RATEL".to_string(),
-            decimals: 18,
-            total_supply: 1000000,
-            circulating_supply: 500000,
-            description: Some("Ratel governance token".to_string()),
-            created_at: 1750000000,
-            updated_at: 1750000000,
         })
     }
 

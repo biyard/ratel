@@ -1,11 +1,24 @@
+use std::sync::Arc;
+use std::time::{Duration, Instant};
+
 use super::*;
 use crate::*;
+use tokio::sync::RwLock;
+
+const TOKEN_CACHE_TTL: Duration = Duration::from_secs(3600); // 1 hour
+
+#[derive(Debug)]
+struct CachedToken {
+    token: TokenResponse,
+    cached_at: Instant,
+}
 
 #[derive(Debug, Clone)]
 pub struct Biyard {
     project_id: String,
     base_url: String,
     cli: reqwest::Client,
+    token_cache: Arc<RwLock<Option<CachedToken>>>,
 }
 
 impl Biyard {
@@ -26,10 +39,15 @@ impl Biyard {
             })
             .build()
             .unwrap();
+
+        let base_url = biyard_conf.base_url.to_string();
+        let project_id = biyard_conf.project_id.to_string();
+
         Self {
             cli,
-            base_url: biyard_conf.base_url.to_string(),
-            project_id: biyard_conf.project_id.to_string(),
+            base_url,
+            project_id,
+            token_cache: Arc::new(RwLock::new(None)),
         }
     }
 
@@ -38,6 +56,54 @@ impl Biyard {
             Partition::User(id) => id.clone(),
             _ => panic!("Biyard user_pk must be of Partition::User type"),
         }
+    }
+
+    async fn fetch_token_from_api(&self) -> Result<TokenResponse> {
+        let path = format!(
+            "{}/v1/projects/{}/tokens",
+            self.base_url, self.project_id
+        );
+
+        let res = self.cli.get(&path).send().await?;
+
+        if !res.status().is_success() {
+            let status = res.status();
+            let error_text = res.text().await.unwrap_or_default();
+            return Err(Error::Unknown(format!(
+                "Biyard API error: {} - {}",
+                status, error_text
+            )));
+        }
+
+        let token: TokenResponse = res.json().await?;
+        Ok(token)
+    }
+
+    /// Get token info with TTL-based caching (refreshes after 1 hour)
+    pub async fn get_token(&self) -> Result<TokenResponse> {
+        // Check if cache is valid
+        {
+            let cache = self.token_cache.read().await;
+            if let Some(cached) = cache.as_ref() {
+                if cached.cached_at.elapsed() < TOKEN_CACHE_TTL {
+                    return Ok(cached.token.clone());
+                }
+            }
+        }
+
+        // Cache miss or expired - fetch new token
+        let token = self.fetch_token_from_api().await?;
+
+        // Update cache
+        {
+            let mut cache = self.token_cache.write().await;
+            *cache = Some(CachedToken {
+                token: token.clone(),
+                cached_at: Instant::now(),
+            });
+        }
+
+        Ok(token)
     }
 
     pub async fn award_points(
@@ -69,9 +135,10 @@ impl Biyard {
         }
 
         let responses: Vec<TransactPointResponse> = res.json().await?;
-        responses.into_iter().next().ok_or_else(|| {
-            Error::Unknown("Biyard API returned empty response".to_string())
-        })
+        responses
+            .into_iter()
+            .next()
+            .ok_or_else(|| Error::Unknown("Biyard API returned empty response".to_string()))
     }
 
     pub async fn get_user_balance(
@@ -80,7 +147,7 @@ impl Biyard {
         month: String,
     ) -> Result<UserPointBalanceResponse> {
         let path = format!(
-            "{}/v1/projects/{}/points/{}?month={}",
+            "{}/v1/projects/{}/points/{}?date={}",
             self.base_url,
             self.project_id,
             Self::convert_to_meta_user_id(&user_pk),
@@ -99,9 +166,11 @@ impl Biyard {
         }
 
         let list_response: ListItemsResponse<UserPointBalanceResponse> = res.json().await?;
-        list_response.items.into_iter().next().ok_or_else(|| {
-            Error::Unknown("No balance found for the specified month".to_string())
-        })
+        list_response
+            .items
+            .into_iter()
+            .next()
+            .ok_or_else(|| Error::Unknown("No balance found for the specified month".to_string()))
     }
 
     pub async fn get_user_transactions(
@@ -168,32 +237,10 @@ impl Biyard {
         }
 
         let responses: Vec<TransactPointResponse> = res.json().await?;
-        responses.into_iter().next().ok_or_else(|| {
-            Error::Unknown("Biyard API returned empty response".to_string())
-        })
-    }
-
-    // Token-related methods
-
-    pub async fn get_token(&self) -> Result<TokenResponse> {
-        let path = format!(
-            "{}/v1/projects/{}/tokens",
-            self.base_url, self.project_id
-        );
-
-        let res = self.cli.get(&path).send().await?;
-
-        if !res.status().is_success() {
-            let status = res.status();
-            let error_text = res.text().await.unwrap_or_default();
-            return Err(Error::Unknown(format!(
-                "Biyard API error: {} - {}",
-                status, error_text
-            )));
-        }
-
-        let token: TokenResponse = res.json().await?;
-        Ok(token)
+        responses
+            .into_iter()
+            .next()
+            .ok_or_else(|| Error::Unknown("Biyard API returned empty response".to_string()))
     }
 
     pub async fn get_token_balance(&self, user_pk: Partition) -> Result<TokenBalanceResponse> {
