@@ -139,4 +139,111 @@ impl Biyard {
         let transactions = res.json().await?;
         Ok(transactions)
     }
+
+    pub async fn exchange_points(
+        &self,
+        user_pk: Partition,
+        amount: i64,
+        month: String,
+    ) -> Result<TransactPointResponse> {
+        let path = format!("{}/v1/projects/{}/points", self.base_url, self.project_id);
+        let body = vec![TransactPointRequest {
+            tx_type: "Exchange".to_string(),
+            to: None,
+            from: Some(Self::convert_to_meta_user_id(&user_pk)),
+            amount,
+            description: Some("Exchange points to tokens".to_string()),
+            month: Some(month),
+        }];
+
+        let res = self.cli.post(&path).json(&body).send().await?;
+
+        if !res.status().is_success() {
+            let status = res.status();
+            let error_text = res.text().await.unwrap_or_default();
+            return Err(Error::Unknown(format!(
+                "Biyard API error: {} - {}",
+                status, error_text
+            )));
+        }
+
+        let responses: Vec<TransactPointResponse> = res.json().await?;
+        responses.into_iter().next().ok_or_else(|| {
+            Error::Unknown("Biyard API returned empty response".to_string())
+        })
+    }
+
+    // Token-related methods
+
+    pub async fn get_token(&self) -> Result<TokenResponse> {
+        let path = format!(
+            "{}/v1/projects/{}/tokens",
+            self.base_url, self.project_id
+        );
+
+        let res = self.cli.get(&path).send().await?;
+
+        if !res.status().is_success() {
+            let status = res.status();
+            let error_text = res.text().await.unwrap_or_default();
+            return Err(Error::Unknown(format!(
+                "Biyard API error: {} - {}",
+                status, error_text
+            )));
+        }
+
+        let token: TokenResponse = res.json().await?;
+        Ok(token)
+    }
+
+    pub async fn get_token_balance(&self, user_pk: Partition) -> Result<TokenBalanceResponse> {
+        let path = format!(
+            "{}/v1/projects/{}/tokens/balances/{}",
+            self.base_url,
+            self.project_id,
+            Self::convert_to_meta_user_id(&user_pk)
+        );
+
+        let res = self.cli.get(&path).send().await?;
+
+        if !res.status().is_success() {
+            let status = res.status();
+            let error_text = res.text().await.unwrap_or_default();
+            return Err(Error::Unknown(format!(
+                "Biyard API error: {} - {}",
+                status, error_text
+            )));
+        }
+
+        let balance: TokenBalanceResponse = res.json().await?;
+        Ok(balance)
+    }
+
+    pub async fn mint_tokens(
+        &self,
+        user_pk: Partition,
+        amount: i64,
+    ) -> Result<TokenBalanceResponse> {
+        let path = format!(
+            "{}/v1/projects/{}/tokens/mint/{}",
+            self.base_url,
+            self.project_id,
+            Self::convert_to_meta_user_id(&user_pk)
+        );
+
+        let body = MintTokenRequest { amount };
+        let res = self.cli.post(&path).json(&body).send().await?;
+
+        if !res.status().is_success() {
+            let status = res.status();
+            let error_text = res.text().await.unwrap_or_default();
+            return Err(Error::Unknown(format!(
+                "Biyard API error: {} - {}",
+                status, error_text
+            )));
+        }
+
+        let balance: TokenBalanceResponse = res.json().await?;
+        Ok(balance)
+    }
 }
