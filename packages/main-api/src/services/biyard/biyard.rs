@@ -39,6 +39,7 @@ impl Biyard {
             _ => panic!("Biyard user_pk must be of Partition::User type"),
         }
     }
+
     pub async fn award_points(
         &self,
         user_pk: Partition,
@@ -46,19 +47,31 @@ impl Biyard {
         description: String,
         month: Option<String>,
     ) -> Result<AwardPointResponse> {
-        //TODO: Validate Month format: "YYYY-MM"
-
-        let path = format!("{}/projects/{}/points", self.base_url, self.project_id);
-        let body = AwardPointRequest {
+        let path = format!("{}/v1/projects/{}/points", self.base_url, self.project_id);
+        let body = vec![TransactPointRequest {
             tx_type: "Award".to_string(),
-            to: Self::convert_to_meta_user_id(&user_pk),
+            to: Some(Self::convert_to_meta_user_id(&user_pk)),
+            from: None,
             amount: points,
-            description,
+            description: Some(description),
             month,
-        };
+        }];
 
         let res = self.cli.post(&path).json(&body).send().await?;
-        Ok(res.json().await?)
+
+        if !res.status().is_success() {
+            let status = res.status();
+            let error_text = res.text().await.unwrap_or_default();
+            return Err(Error::Unknown(format!(
+                "Biyard API error: {} - {}",
+                status, error_text
+            )));
+        }
+
+        let responses: Vec<TransactPointResponse> = res.json().await?;
+        responses.into_iter().next().ok_or_else(|| {
+            Error::Unknown("Biyard API returned empty response".to_string())
+        })
     }
 
     pub async fn get_user_balance(
@@ -67,7 +80,7 @@ impl Biyard {
         month: String,
     ) -> Result<UserPointBalanceResponse> {
         let path = format!(
-            "{}/projects/{}/points/{}??month={}",
+            "{}/v1/projects/{}/points/{}?month={}",
             self.base_url,
             self.project_id,
             Self::convert_to_meta_user_id(&user_pk),
@@ -75,7 +88,20 @@ impl Biyard {
         );
 
         let res = self.cli.get(&path).send().await?;
-        Ok(res.json().await?)
+
+        if !res.status().is_success() {
+            let status = res.status();
+            let error_text = res.text().await.unwrap_or_default();
+            return Err(Error::Unknown(format!(
+                "Biyard API error: {} - {}",
+                status, error_text
+            )));
+        }
+
+        let list_response: ListItemsResponse<UserPointBalanceResponse> = res.json().await?;
+        list_response.items.into_iter().next().ok_or_else(|| {
+            Error::Unknown("No balance found for the specified month".to_string())
+        })
     }
 
     pub async fn get_user_transactions(
@@ -86,7 +112,7 @@ impl Biyard {
         limit: Option<i32>,
     ) -> Result<ListItemsResponse<UserPointTransactionResponse>> {
         let mut path = format!(
-            "{}/projects/{}/points/{}/transactions?month={}",
+            "{}/v1/projects/{}/points/{}/transactions?month={}",
             self.base_url,
             self.project_id,
             Self::convert_to_meta_user_id(&user_pk),
@@ -100,6 +126,16 @@ impl Biyard {
         }
 
         let res = self.cli.get(&path).send().await?;
+
+        if !res.status().is_success() {
+            let status = res.status();
+            let error_text = res.text().await.unwrap_or_default();
+            return Err(Error::Unknown(format!(
+                "Biyard API error: {} - {}",
+                status, error_text
+            )));
+        }
+
         let transactions = res.json().await?;
         Ok(transactions)
     }
