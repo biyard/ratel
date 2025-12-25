@@ -6,3 +6,4 @@ export * from './list-rewards-response';
 export * from './create-reward-request';
 export * from './update-reward-request';
 export * from './delete-reward-request';
+export * from './global-reward';

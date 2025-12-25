@@ -29,6 +29,13 @@ export function AdminPage() {
       icon: '🔐',
       color: 'border-l-green-500',
     },
+    {
+      to: route.adminRewards(),
+      title: i18n.rewards,
+      description: i18n.rewardsDesc,
+      icon: '🎁',
+      color: 'border-l-yellow-500',
+    },
   ];
 
   return (
