@@ -8,6 +8,7 @@ impl Biyard {
     pub fn new() -> Self {
         Self {}
     }
+
     #[allow(dead_code)]
     fn convert_to_meta_user_id(user_pk: &Partition) -> String {
         match user_pk {
@@ -15,6 +16,7 @@ impl Biyard {
             _ => panic!("Biyard user_pk must be of Partition::User type"),
         }
     }
+
     pub async fn award_points(
         &self,
         _user_pk: Partition,
@@ -22,9 +24,12 @@ impl Biyard {
         _description: String,
         _month: Option<String>,
     ) -> Result<AwardPointResponse> {
-        Ok(AwardPointResponse {
-            month: "2025-12".to_string(),
+        Ok(TransactPointResponse {
             transaction_id: "test-transaction-id".to_string(),
+            month: "2025-12".to_string(),
+            meta_user_id: "test-user-id".to_string(),
+            transaction_type: "Award".to_string(),
+            amount: 100,
         })
     }
 
