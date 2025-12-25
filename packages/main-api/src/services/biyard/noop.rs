@@ -44,6 +44,8 @@ impl Biyard {
             total_earned: 100,
             total_spent: 0,
             updated_at: 1750000000,
+            project_total_points: 100000,
+            monthly_token_supply: 10000,
         })
     }
 
@@ -64,6 +66,61 @@ impl Biyard {
                 created_at: 1750000000,
             }],
             bookmark: Some("test-bookmark".to_string()),
+        })
+    }
+
+    pub async fn exchange_points(
+        &self,
+        _user_pk: Partition,
+        amount: i64,
+        month: String,
+    ) -> Result<TransactPointResponse> {
+        Ok(TransactPointResponse {
+            transaction_id: "test-exchange-transaction-id".to_string(),
+            month,
+            meta_user_id: "test-user-id".to_string(),
+            transaction_type: "Exchange".to_string(),
+            amount,
+        })
+    }
+
+    // Token-related methods
+
+    pub async fn get_token(&self) -> Result<TokenResponse> {
+        Ok(TokenResponse {
+            project_id: "PROJECT#ratel".to_string(),
+            name: "Ratel Token".to_string(),
+            symbol: "RATEL".to_string(),
+            decimals: 18,
+            total_supply: 1000000,
+            circulating_supply: 500000,
+            description: Some("Ratel governance token".to_string()),
+            created_at: 1750000000,
+            updated_at: 1750000000,
+        })
+    }
+
+    pub async fn get_token_balance(&self, _user_pk: Partition) -> Result<TokenBalanceResponse> {
+        Ok(TokenBalanceResponse {
+            project_id: "PROJECT#ratel".to_string(),
+            meta_user_id: "test-user-id".to_string(),
+            balance: 1000,
+            created_at: 1750000000,
+            updated_at: 1750000000,
+        })
+    }
+
+    pub async fn mint_tokens(
+        &self,
+        _user_pk: Partition,
+        amount: i64,
+    ) -> Result<TokenBalanceResponse> {
+        Ok(TokenBalanceResponse {
+            project_id: "PROJECT#ratel".to_string(),
+            meta_user_id: "test-user-id".to_string(),
+            balance: amount,
+            created_at: 1750000000,
+            updated_at: 1750000000,
         })
     }
 }
