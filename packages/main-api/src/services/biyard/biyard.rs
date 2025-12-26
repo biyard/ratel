@@ -59,10 +59,7 @@ impl Biyard {
     }
 
     async fn fetch_token_from_api(&self) -> Result<TokenResponse> {
-        let path = format!(
-            "{}/v1/projects/{}/tokens",
-            self.base_url, self.project_id
-        );
+        let path = format!("{}/v1/projects/{}/tokens", self.base_url, self.project_id);
 
         let res = self.cli.get(&path).send().await?;
 
@@ -165,12 +162,8 @@ impl Biyard {
             )));
         }
 
-        let list_response: ListItemsResponse<UserPointBalanceResponse> = res.json().await?;
-        list_response
-            .items
-            .into_iter()
-            .next()
-            .ok_or_else(|| Error::Unknown("No balance found for the specified month".to_string()))
+        let response: UserPointBalanceResponse = res.json().await?;
+        Ok(response)
     }
 
     pub async fn get_user_transactions(
@@ -180,12 +173,10 @@ impl Biyard {
         bookmark: Option<String>,
         limit: Option<i32>,
     ) -> Result<ListItemsResponse<UserPointTransactionResponse>> {
+        let meta_user_id = Self::convert_to_meta_user_id(&user_pk);
         let mut path = format!(
-            "{}/v1/projects/{}/points/{}/transactions?month={}",
-            self.base_url,
-            self.project_id,
-            Self::convert_to_meta_user_id(&user_pk),
-            month
+            "{}/v1/projects/{}/points/{}/transactions?date={}",
+            self.base_url, self.project_id, meta_user_id, month
         );
         if let Some(bm) = bookmark {
             path = format!("{}&bookmark={}", path, bm);
