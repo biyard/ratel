@@ -66,19 +66,14 @@ impl Biyard {
         if !res.status().is_success() {
             let status = res.status();
             let error_text = res.text().await.unwrap_or_default();
-            return Err(Error::Unknown(format!(
-                "Biyard API error: {} - {}",
-                status, error_text
-            )));
+            return Err(BiyardError::from_status(status, error_text).into());
         }
 
-        let token: TokenResponse = res.json().await?;
+        let token: TokenResponse = res.json().await.map_err(BiyardError::parse_error)?;
         Ok(token)
     }
 
-    /// Get token info with TTL-based caching (refreshes after 1 hour)
-    pub async fn get_token(&self) -> Result<TokenResponse> {
-        // Check if cache is valid
+    pub async fn get_project_info(&self) -> Result<TokenResponse> {
         {
             let cache = self.token_cache.read().await;
             if let Some(cached) = cache.as_ref() {
@@ -88,10 +83,8 @@ impl Biyard {
             }
         }
 
-        // Cache miss or expired - fetch new token
         let token = self.fetch_token_from_api().await?;
 
-        // Update cache
         {
             let mut cache = self.token_cache.write().await;
             *cache = Some(CachedToken {
@@ -125,17 +118,15 @@ impl Biyard {
         if !res.status().is_success() {
             let status = res.status();
             let error_text = res.text().await.unwrap_or_default();
-            return Err(Error::Unknown(format!(
-                "Biyard API error: {} - {}",
-                status, error_text
-            )));
+            return Err(BiyardError::from_status(status, error_text).into());
         }
 
-        let responses: Vec<TransactPointResponse> = res.json().await?;
+        let responses: Vec<TransactPointResponse> =
+            res.json().await.map_err(BiyardError::parse_error)?;
         responses
             .into_iter()
             .next()
-            .ok_or_else(|| Error::Unknown("Biyard API returned empty response".to_string()))
+            .ok_or_else(|| BiyardError::EmptyResponse.into())
     }
 
     pub async fn get_user_balance(
@@ -156,17 +147,15 @@ impl Biyard {
         if !res.status().is_success() {
             let status = res.status();
             let error_text = res.text().await.unwrap_or_default();
-            return Err(Error::Unknown(format!(
-                "Biyard API error: {} - {}",
-                status, error_text
-            )));
+            return Err(BiyardError::from_status(status, error_text).into());
         }
 
-        let response: UserPointBalanceResponse = res.json().await?;
+        let response: UserPointBalanceResponse =
+            res.json().await.map_err(BiyardError::parse_error)?;
         Ok(response)
     }
 
-    pub async fn get_user_transactions(
+    pub async fn list_user_transactions(
         &self,
         user_pk: Partition,
         month: String,
@@ -190,13 +179,10 @@ impl Biyard {
         if !res.status().is_success() {
             let status = res.status();
             let error_text = res.text().await.unwrap_or_default();
-            return Err(Error::Unknown(format!(
-                "Biyard API error: {} - {}",
-                status, error_text
-            )));
+            return Err(BiyardError::from_status(status, error_text).into());
         }
 
-        let transactions = res.json().await?;
+        let transactions = res.json().await.map_err(BiyardError::parse_error)?;
         Ok(transactions)
     }
 
@@ -221,17 +207,15 @@ impl Biyard {
         if !res.status().is_success() {
             let status = res.status();
             let error_text = res.text().await.unwrap_or_default();
-            return Err(Error::Unknown(format!(
-                "Biyard API error: {} - {}",
-                status, error_text
-            )));
+            return Err(BiyardError::from_status(status, error_text).into());
         }
 
-        let responses: Vec<TransactPointResponse> = res.json().await?;
+        let responses: Vec<TransactPointResponse> =
+            res.json().await.map_err(BiyardError::parse_error)?;
         responses
             .into_iter()
             .next()
-            .ok_or_else(|| Error::Unknown("Biyard API returned empty response".to_string()))
+            .ok_or_else(|| BiyardError::EmptyResponse.into())
     }
 
     pub async fn get_token_balance(&self, user_pk: Partition) -> Result<TokenBalanceResponse> {
@@ -247,13 +231,10 @@ impl Biyard {
         if !res.status().is_success() {
             let status = res.status();
             let error_text = res.text().await.unwrap_or_default();
-            return Err(Error::Unknown(format!(
-                "Biyard API error: {} - {}",
-                status, error_text
-            )));
+            return Err(BiyardError::from_status(status, error_text).into());
         }
 
-        let balance: TokenBalanceResponse = res.json().await?;
+        let balance: TokenBalanceResponse = res.json().await.map_err(BiyardError::parse_error)?;
         Ok(balance)
     }
 
@@ -275,17 +256,14 @@ impl Biyard {
         if !res.status().is_success() {
             let status = res.status();
             let error_text = res.text().await.unwrap_or_default();
-            return Err(Error::Unknown(format!(
-                "Biyard API error: {} - {}",
-                status, error_text
-            )));
+            return Err(BiyardError::from_status(status, error_text).into());
         }
 
-        let balance: TokenBalanceResponse = res.json().await?;
+        let balance: TokenBalanceResponse = res.json().await.map_err(BiyardError::parse_error)?;
         Ok(balance)
     }
 
-    pub async fn get_all_transactions(
+    pub async fn list_transactions(
         &self,
         date: Option<String>,
         bookmark: Option<String>,
@@ -310,50 +288,16 @@ impl Biyard {
             path = format!("{}?{}", path, query_params.join("&"));
         }
 
-        tracing::debug!("Biyard get_all_transactions - requesting: {}", path);
-
         let res = self.cli.get(&path).send().await?;
-
-        tracing::debug!(
-            "Biyard get_all_transactions - response status: {}",
-            res.status()
-        );
 
         if !res.status().is_success() {
             let status = res.status();
             let error_text = res.text().await.unwrap_or_default();
-            tracing::error!(
-                "Biyard get_all_transactions failed - status: {}, error: {}",
-                status,
-                error_text
-            );
-            return Err(Error::Unknown(format!(
-                "Biyard API error: {} - {}",
-                status, error_text
-            )));
+            return Err(BiyardError::from_status(status, error_text).into());
         }
 
-        let response_text = res.text().await?;
-        tracing::debug!(
-            "Biyard get_all_transactions - response body: {}",
-            &response_text[..std::cmp::min(500, response_text.len())]
-        );
-
         let transactions: ListItemsResponse<ProjectPointTransactionResponse> =
-            serde_json::from_str(&response_text).map_err(|e| {
-                tracing::error!(
-                    "Biyard get_all_transactions - JSON parse error: {}, body: {}",
-                    e,
-                    &response_text[..std::cmp::min(500, response_text.len())]
-                );
-                Error::Unknown(format!("Failed to parse Biyard response: {}", e))
-            })?;
-
-        tracing::debug!(
-            "Biyard get_all_transactions - parsed {} transactions",
-            transactions.items.len()
-        );
-
+            res.json().await.map_err(BiyardError::parse_error)?;
         Ok(transactions)
     }
 }

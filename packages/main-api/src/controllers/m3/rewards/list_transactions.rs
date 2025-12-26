@@ -27,7 +27,7 @@ pub async fn list_transactions_handler(
     let date = query.date.unwrap_or_else(current_month);
 
     let result = biyard
-        .get_all_transactions(Some(date), query.bookmark, query.limit)
+        .list_transactions(Some(date), query.bookmark, query.limit)
         .await?;
 
     Ok(Json(ListTransactionsResponse {
