@@ -65,6 +65,7 @@ import { Refund } from './app/refund';
 import SpaceMemberPage from './app/spaces/[id]/members/space-member-page';
 import MySpacesPage from './app/(social)/my-spaces/page';
 import NotificationsPage from './app/notifications/page';
+import RewardsPage from './app/rewards/page';
 import { MembershipPlan } from './features/membership/components/membership-plan';
 
 export const routes = createBrowserRouter([
@@ -179,6 +180,11 @@ export const routes = createBrowserRouter([
             id: 'notifications-page',
             path: 'notifications',
             Component: NotificationsPage,
+          },
+          {
+            id: 'rewards-page',
+            path: 'rewards',
+            Component: RewardsPage,
           },
         ],
       }, // End of Social Layout

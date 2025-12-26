@@ -36,7 +36,7 @@ export class SpaceRewardResponse {
     this.total_points = json.total_points ?? 0;
     this.total_claims = json.total_claims ?? 0;
     this.period = json.period ?? RewardPeriod.Once;
-    this.condition = json.condition ?? { None: {} };
+    this.condition = json.condition ?? 'None';
     this.user_claims = json.user_claims ?? 0;
     this.user_points = json.user_points ?? 0;
   }
