@@ -55,7 +55,7 @@ PORTONE_API_SECRET ?=
 
 BIYARD_API_URL ?= https://dev.biyard.co
 BIYARD_API_SECRET ?= biyard_default_api_secret
-BIYARD_PROJECT_ID ?= ratel_project_id
+BIYARD_PROJECT_ID ?= ratel
 
 RATEL_PROJECT_ID ?= 
 FCM_ENABLED ?= false
@@ -125,7 +125,10 @@ BUILD_ENV ?= ENV=$(ENV) \
 								ACCOUNT_ID=$(ACCOUNT_ID) \
 								RATEL_PROJECT_ID=$(RATEL_PROJECT_ID) \
 								FCM_ENABLED=$(FCM_ENABLED) \
-								REWARD=$(REWARD)
+								REWARD=$(REWARD) \
+								BIYARD_API_URL=$(BIYARD_API_URL) \
+								BIYARD_API_SECRET=$(BIYARD_API_SECRET) \
+								BIYARD_PROJECT_ID=$(BIYARD_PROJECT_ID)
 
 .build/evm-keys:
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json

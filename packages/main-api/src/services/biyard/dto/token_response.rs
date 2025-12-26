@@ -2,7 +2,7 @@ use crate::*;
 
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, OperationIo)]
 pub struct TokenResponse {
-    pub project_id: String,
+    pub pk: String,
     pub name: String,
     pub symbol: String,
     pub decimals: u8,
