@@ -1,6 +1,7 @@
 mod exchange_info_response;
 mod mint_token_request;
 mod monthly_point_summary;
+mod project_point_transaction_response;
 mod token_balance_response;
 mod token_response;
 mod transact_point_request;
@@ -11,6 +12,7 @@ mod user_point_transaction_response;
 pub use exchange_info_response::*;
 pub use mint_token_request::*;
 pub use monthly_point_summary::*;
+pub use project_point_transaction_response::*;
 pub use token_balance_response::*;
 pub use token_response::*;
 pub use transact_point_request::*;

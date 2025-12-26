@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { useRewardsPageController } from './use-rewards-page-controller';
 import { useAdminRewardsI18n, AdminRewardsI18n } from './rewards-page-i18n';
+import {
+  useAllTransactions,
+  ProjectPointTransactionResponse,
+} from './_hooks/use-all-transactions';
 import type {
   GlobalRewardResponse,
   GlobalRewardAction,
@@ -13,6 +17,8 @@ import {
   getConditionValue,
   RewardPeriod,
 } from '@/features/spaces/rewards/types';
+
+type TabType = 'rules' | 'transactions';
 
 function getActionLabel(
   action: GlobalRewardAction,
@@ -135,6 +141,134 @@ function RewardTable({
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function TransactionTable({
+  i18n,
+}: {
+  i18n: AdminRewardsI18n;
+}) {
+  const {
+    data,
+    isLoading,
+    error,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = useAllTransactions();
+
+  const transactions =
+    data?.pages.flatMap((page) => page.items) || [];
+
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp / 1000).toLocaleString();
+  };
+
+  const getTransactionTypeColor = (type: string) => {
+    switch (type.toUpperCase()) {
+      case 'AWARD':
+        return 'text-green-600 dark:text-green-400';
+      case 'DEDUCT':
+        return 'text-red-600 dark:text-red-400';
+      case 'TRANSFER':
+        return 'text-blue-600 dark:text-blue-400';
+      case 'EXCHANGE':
+        return 'text-purple-600 dark:text-purple-400';
+      default:
+        return 'text-gray-600 dark:text-gray-400';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="py-8 text-center text-gray-500">{i18n.loading}</div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="py-8 text-center text-red-500">
+        {i18n.loadError}: {(error as Error).message}
+      </div>
+    );
+  }
+
+  if (transactions.length === 0) {
+    return (
+      <div className="py-8 text-center text-gray-500">{i18n.noTransactions}</div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                {i18n.userId}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                {i18n.month}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                {i18n.transactionType}
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                {i18n.amount}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                {i18n.description}
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-300">
+                {i18n.createdAt}
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+            {transactions.map((tx, idx) => (
+              <tr key={`${tx.meta_user_id}-${tx.created_at}-${idx}`}>
+                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                  {tx.meta_user_id.length > 20
+                    ? `${tx.meta_user_id.slice(0, 20)}...`
+                    : tx.meta_user_id}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {tx.month}
+                </td>
+                <td
+                  className={`whitespace-nowrap px-6 py-4 text-sm font-medium ${getTransactionTypeColor(tx.transaction_type)}`}
+                >
+                  {tx.transaction_type}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-right text-sm text-gray-500 dark:text-gray-300">
+                  {tx.amount.toLocaleString()}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-xs truncate">
+                  {tx.description || '-'}
+                </td>
+                <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 dark:text-gray-300">
+                  {formatDate(tx.created_at)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {hasNextPage && (
+        <div className="flex justify-center py-4">
+          <button
+            onClick={() => fetchNextPage()}
+            disabled={isFetchingNextPage}
+            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {isFetchingNextPage ? i18n.loadingMore : i18n.loadMore}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -282,24 +416,7 @@ function RewardEditForm({
 export function RewardsPage() {
   const ctrl = useRewardsPageController();
   const i18n = useAdminRewardsI18n();
-
-  if (ctrl.isLoading) {
-    return (
-      <div className="mx-auto w-full max-w-desktop p-6">
-        <div className="py-8 text-center">{i18n.loading}</div>
-      </div>
-    );
-  }
-
-  if (ctrl.error) {
-    return (
-      <div className="mx-auto w-full max-w-desktop p-6">
-        <div className="py-8 text-center text-red-500">
-          {i18n.loadError}: {ctrl.error.message}
-        </div>
-      </div>
-    );
-  }
+  const [activeTab, setActiveTab] = useState<TabType>('transactions');
 
   return (
     <div className="mx-auto w-full max-w-desktop p-6">
@@ -307,12 +424,52 @@ export function RewardsPage() {
         <h1 className="text-3xl font-bold">{i18n.title}</h1>
       </div>
 
+      {/* Tab Navigation */}
+      <div className="mb-4 border-b border-gray-200 dark:border-gray-700">
+        <nav className="-mb-px flex gap-4">
+          <button
+            onClick={() => setActiveTab('transactions')}
+            className={`py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'transactions'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            {i18n.tabTransactions}
+          </button>
+          <button
+            onClick={() => setActiveTab('rules')}
+            className={`py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'rules'
+                ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
+            }`}
+          >
+            {i18n.tabRules}
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
       <div className="rounded-lg bg-white shadow dark:bg-gray-800">
-        <RewardTable
-          rewards={ctrl.rewards}
-          onEdit={ctrl.openEditForm}
-          i18n={i18n}
-        />
+        {activeTab === 'transactions' && <TransactionTable i18n={i18n} />}
+        {activeTab === 'rules' && (
+          <>
+            {ctrl.isLoading ? (
+              <div className="py-8 text-center">{i18n.loading}</div>
+            ) : ctrl.error ? (
+              <div className="py-8 text-center text-red-500">
+                {i18n.loadError}: {ctrl.error.message}
+              </div>
+            ) : (
+              <RewardTable
+                rewards={ctrl.rewards}
+                onEdit={ctrl.openEditForm}
+                i18n={i18n}
+              />
+            )}
+          </>
+        )}
       </div>
 
       {ctrl.isFormOpen && ctrl.editingReward && (

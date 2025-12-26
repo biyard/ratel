@@ -284,4 +284,76 @@ impl Biyard {
         let balance: TokenBalanceResponse = res.json().await?;
         Ok(balance)
     }
+
+    pub async fn get_all_transactions(
+        &self,
+        date: Option<String>,
+        bookmark: Option<String>,
+        limit: Option<i32>,
+    ) -> Result<ListItemsResponse<ProjectPointTransactionResponse>> {
+        let mut path = format!(
+            "{}/v1/projects/{}/points/transactions",
+            self.base_url, self.project_id
+        );
+
+        let mut query_params = vec![];
+        if let Some(d) = date {
+            query_params.push(format!("date={}", d));
+        }
+        if let Some(bm) = bookmark {
+            query_params.push(format!("bookmark={}", bm));
+        }
+        if let Some(lim) = limit {
+            query_params.push(format!("limit={}", lim));
+        }
+        if !query_params.is_empty() {
+            path = format!("{}?{}", path, query_params.join("&"));
+        }
+
+        tracing::debug!("Biyard get_all_transactions - requesting: {}", path);
+
+        let res = self.cli.get(&path).send().await?;
+
+        tracing::debug!(
+            "Biyard get_all_transactions - response status: {}",
+            res.status()
+        );
+
+        if !res.status().is_success() {
+            let status = res.status();
+            let error_text = res.text().await.unwrap_or_default();
+            tracing::error!(
+                "Biyard get_all_transactions failed - status: {}, error: {}",
+                status,
+                error_text
+            );
+            return Err(Error::Unknown(format!(
+                "Biyard API error: {} - {}",
+                status, error_text
+            )));
+        }
+
+        let response_text = res.text().await?;
+        tracing::debug!(
+            "Biyard get_all_transactions - response body: {}",
+            &response_text[..std::cmp::min(500, response_text.len())]
+        );
+
+        let transactions: ListItemsResponse<ProjectPointTransactionResponse> =
+            serde_json::from_str(&response_text).map_err(|e| {
+                tracing::error!(
+                    "Biyard get_all_transactions - JSON parse error: {}, body: {}",
+                    e,
+                    &response_text[..std::cmp::min(500, response_text.len())]
+                );
+                Error::Unknown(format!("Failed to parse Biyard response: {}", e))
+            })?;
+
+        tracing::debug!(
+            "Biyard get_all_transactions - parsed {} transactions",
+            transactions.items.len()
+        );
+
+        Ok(transactions)
+    }
 }
