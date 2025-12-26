@@ -161,7 +161,7 @@ jobs:
 
           BIYARD_API_URL: https://api.dev.biyard.co
           BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
-          BIYARD_API_SECRET: ${{ secrets.DEV_BIYARD_API_SECRET }}
+          BIYARD_PROJECT_ID: ${{ secrets.DEV_BIYARD_PROJECT_ID }}
 
         run: |
           tar xzvf dist.tar.gz

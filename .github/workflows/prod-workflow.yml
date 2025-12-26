@@ -157,9 +157,9 @@ jobs:
           FCM_ENABLED: true
           RATEL_PROJECT_ID: ${{ secrets.RATEL_PROJECT_ID }}
 
-          BIYARD_API_URL: https://api.dev.biyard.co
-          BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
-          BIYARD_API_SECRET: ${{ secrets.DEV_BIYARD_API_SECRET }}
+          BIYARD_API_URL: https://api.biyard.co
+          BIYARD_API_KEY: ${{ secrets.BIYARD_API_KEY }}
+          BIYARD_PROJECT_ID: ${{ secrets.BIYARD_PROJECT_ID }}
 
         run: |
           tar xzvf dist.tar.gz
