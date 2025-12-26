@@ -122,4 +122,24 @@ impl Biyard {
             updated_at: 1750000000,
         })
     }
+
+    pub async fn get_all_transactions(
+        &self,
+        _date: Option<String>,
+        _bookmark: Option<String>,
+        _limit: Option<i32>,
+    ) -> Result<ListItemsResponse<ProjectPointTransactionResponse>> {
+        Ok(ListItemsResponse {
+            items: vec![ProjectPointTransactionResponse {
+                meta_user_id: "test-user-id".to_string(),
+                month: "2025-12".to_string(),
+                transaction_type: "Award".to_string(),
+                amount: 100,
+                target_user_id: None,
+                description: Some("Test award".to_string()),
+                created_at: 1750000000,
+            }],
+            bookmark: None,
+        })
+    }
 }
