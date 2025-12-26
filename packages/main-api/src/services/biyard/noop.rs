@@ -20,7 +20,7 @@ impl Biyard {
     /// Get token info (mock - always returns same data)
     pub async fn get_project_info(&self) -> Result<TokenResponse> {
         Ok(TokenResponse {
-            project_id: "PROJECT#ratel".to_string(),
+            pk: "RATEL".to_string(),
             name: "Ratel Token".to_string(),
             symbol: "RATEL".to_string(),
             decimals: 18,
