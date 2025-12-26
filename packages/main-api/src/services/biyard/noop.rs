@@ -18,7 +18,7 @@ impl Biyard {
     }
 
     /// Get token info (mock - always returns same data)
-    pub async fn get_token(&self) -> Result<TokenResponse> {
+    pub async fn get_project_info(&self) -> Result<TokenResponse> {
         Ok(TokenResponse {
             project_id: "PROJECT#ratel".to_string(),
             name: "Ratel Token".to_string(),
@@ -64,7 +64,7 @@ impl Biyard {
         })
     }
 
-    pub async fn get_user_transactions(
+    pub async fn list_user_transactions(
         &self,
         _user_pk: Partition,
         _month: String,
@@ -123,7 +123,7 @@ impl Biyard {
         })
     }
 
-    pub async fn get_all_transactions(
+    pub async fn list_transactions(
         &self,
         _date: Option<String>,
         _bookmark: Option<String>,

@@ -26,15 +26,7 @@ pub async fn get_my_rewards_handler(
         .get_user_balance(user.pk.clone(), month.clone())
         .await?;
 
-    let token = biyard.get_token().await?;
-
-    // let exchange_ratio = if balance.project_total_points > 0 {
-    //     balance.monthly_token_supply as f64 / balance.project_total_points as f64
-    // } else {
-    //     0.0
-    // };
-
-    // let estimated_tokens = balance.balance as f64 * exchange_ratio;
+    let token = biyard.get_project_info().await?;
 
     Ok(Json(MyRewardsResponse {
         month,
