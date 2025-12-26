@@ -159,6 +159,10 @@ jobs:
           RATEL_PROJECT_ID: ${{ secrets.RATEL_PROJECT_ID }}
           REWARD: true
 
+          BIYARD_API_URL: https://api.dev.biyard.co
+          BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
+          BIYARD_PROJECT_ID: ${{ secrets.DEV_BIYARD_PROJECT_ID }}
+
         run: |
           tar xzvf dist.tar.gz
           ls dist

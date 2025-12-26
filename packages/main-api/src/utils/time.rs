@@ -27,6 +27,10 @@ pub fn now() -> i64 {
     get_now_timestamp_millis()
 }
 
+pub fn current_month() -> String {
+    chrono::Utc::now().format("%Y-%m").to_string()
+}
+
 pub fn after_days_from_now_rfc_3339(days: i64) -> String {
     let conf = crate::config::get();
 
