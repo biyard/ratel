@@ -99,12 +99,15 @@ impl PortOne {
         amount: i64,
         currency: Currency,
     ) -> Result<(BillingKeyPaymentResponse, String)> {
-        let portone_conf = config::get().portone;
+        let conf = config::get();
+        let portone_conf = conf.portone;
         let payment_id = format!(
             "{}-{}",
             random_string::generate(10, CHARSET),
             get_now_timestamp_micros()
         );
+
+        let notice_urls = portone_conf.notice_urls();
 
         let body = BillingKeyPaymentRequest {
             store_id: portone_conf.store_id.to_string(),
@@ -124,6 +127,7 @@ impl PortOne {
             },
             currency: currency.to_string(),
             locale: None,
+            notice_urls,
         };
 
         let res = self
@@ -145,13 +149,16 @@ impl PortOne {
         amount: i64,
         currency: Currency,
         time_to_pay: String,
-    ) -> Result<(BillingKeyPaymentResponse, String)> {
-        let portone_conf = config::get().portone;
+    ) -> Result<(PaymentScheduleResponse, String)> {
+        let conf = config::get();
+        let portone_conf = conf.portone;
         let payment_id = format!(
             "{}-{}",
             random_string::generate(10, CHARSET),
             get_now_timestamp_micros(),
         );
+
+        let notice_urls = portone_conf.notice_urls();
 
         let payment = BillingKeyPaymentRequest {
             store_id: portone_conf.store_id.to_string(),
@@ -171,6 +178,7 @@ impl PortOne {
             },
             currency: currency.to_string(),
             locale: None,
+            notice_urls,
         };
 
         let body = ScheduleBillingKeyRequest {
@@ -184,7 +192,31 @@ impl PortOne {
             .json(&body)
             .send()
             .await?;
+        let res = res.json().await?;
+        debug!("PortOne schedule payment response: {:?}", res);
 
-        Ok((res.json().await?, payment_id))
+        Ok((res, payment_id))
+    }
+
+    pub async fn cancel_schedule_with_billing_key(
+        &self,
+        billing_key: String,
+    ) -> Result<PaymentCancelScheduleResponse> {
+        let body = serde_json::json!({
+            "storeId": config::get().portone.store_id,
+            "billingKey": billing_key,
+        });
+
+        let res = self
+            .cli
+            .delete(format!("{}/payment-schedules", BASE_URL))
+            .json(&body)
+            .send()
+            .await?;
+
+        let res: PaymentCancelScheduleResponse = res.json().await?;
+        debug!("PortOne cancel scheduled payment response: {:?}", res);
+
+        Ok(res)
     }
 }

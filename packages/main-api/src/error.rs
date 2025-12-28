@@ -278,6 +278,13 @@ pub enum Error {
     InvalidIdentification,
     #[error("Card information is required for payment")]
     CardInfoRequired,
+    #[error("No user purchase found for payment")]
+    NoUserPurchaseFound,
+
+    // Biyard API errors 10,050 ~
+    #[error("Biyard error: {0}")]
+    #[rest_error(status = 502, code = 10050)]
+    Biyard(#[from] crate::services::biyard::BiyardError),
 
     // Reward errors 10,100 ~
     #[error("Reward already claimed in this period")]
