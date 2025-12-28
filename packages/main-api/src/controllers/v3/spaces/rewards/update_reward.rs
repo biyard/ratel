@@ -1,5 +1,6 @@
 use crate::features::membership::UserMembership;
-use crate::features::spaces::rewards::RewardType;
+use crate::features::spaces::rewards::RewardAction;
+use crate::features::spaces::rewards::RewardKey;
 use crate::features::spaces::rewards::RewardTypeRequest;
 use crate::features::spaces::rewards::SpaceReward;
 use crate::features::spaces::rewards::SpaceRewardResponse;
@@ -10,8 +11,9 @@ use crate::*;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 pub struct UpdateRewardRequest {
-    pub reward: RewardTypeRequest,
-    pub label: String,
+    pub sk: RewardKey,
+
+    #[serde(default)]
     pub description: String,
     pub credits: i64,
 }
@@ -26,10 +28,10 @@ pub async fn update_reward_handler(
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
     let mut space_reward =
-        SpaceReward::get_by_reward_key(&dynamo.client, space_pk.into(), req.reward.into()).await?;
-    
+        SpaceReward::get_by_reward_key(&dynamo.client, space_pk.into(), req.sk).await?;
+
     let credit_delta = space_reward.credits - req.credits;
-    
+
     let mut user_membership = user.get_user_membership(&dynamo.client).await?;
 
     user_membership.use_credits(credit_delta)?;
@@ -42,7 +44,6 @@ pub async fn update_reward_handler(
     );
 
     let updater = SpaceReward::updater(&space_reward.pk, &space_reward.sk)
-        .with_label(req.label.clone())
         .with_description(req.description.clone())
         .with_credits(req.credits)
         .with_updated_at(now())
@@ -52,7 +53,6 @@ pub async fn update_reward_handler(
 
     transact_write_items!(&dynamo.client, updater_txs)?;
     space_reward.updated_at = now();
-    space_reward.label = req.label;
     space_reward.description = req.description;
     space_reward.credits = req.credits;
     Ok(Json(space_reward.into()))
