@@ -75,10 +75,12 @@ import { i18nSpaceBoardsCreate } from '@/features/spaces/boards/pages/creator/cr
 import { i18nSpaceBoardsEditor } from '@/features/spaces/boards/pages/creator/space-boards-editor-i18n';
 import { i18nSpaceBoardsEditorDetail } from '@/features/spaces/boards/pages/creator/detail/space-boards-editor-detail-i18n';
 import { i18nAttributeCodes } from '@/app/admin/attribute-codes/attribute-codes-page-i18n';
+import { i18nAdminRewards } from '@/app/admin/rewards/rewards-page-i18n';
 import { Errors } from '@/features/errors/i18n';
 import { MySpaces } from '@/app/(social)/my-spaces/i18n';
 import { i18nCompleteSurveyModal } from '@/features/spaces/polls/components/modal/complete_survey/complete-survey-modal-i18n';
 import { rewardsI18n } from '@/features/spaces/rewards/i18n';
+import { i18nRewardsPage } from '@/app/rewards/rewards-page-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -150,6 +152,7 @@ Object.entries({
   Memberships: i18nMemberships,
   Notifications: i18nNotifications,
   AttributeCodes: i18nAttributeCodes,
+  AdminRewards: i18nAdminRewards,
   Nav: i18nHeader,
   ListDrafts: i18nListDrafts,
   CreatePostPage,
@@ -167,6 +170,7 @@ Object.entries({
   Errors,
   MySpaces,
   Rewards: rewardsI18n,
+  MyRewards: i18nRewardsPage,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
@@ -209,3 +213,5 @@ i18next.init({
     default: ['en'],
   },
 });
+
+export type lang = 'en' | 'ko';
