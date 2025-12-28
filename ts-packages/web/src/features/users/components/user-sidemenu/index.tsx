@@ -8,6 +8,7 @@ import { useUserInfo } from '@/hooks/use-user-info';
 import { NavLink } from 'react-router';
 import { UserType } from '@/lib/api/ratel/users.v3';
 import { useUserSidemenuI18n } from './i18n';
+import { Trophy } from '@/assets/icons/game';
 // import DevTools from './dev-tools';
 
 export default function UserSidemenu() {
@@ -79,6 +80,15 @@ export default function UserSidemenu() {
         >
           <Sparkles className="[&>path]:stroke-icon w-6 h-6" />
           <span>{t.membership}</span>
+        </NavLink>
+
+        <NavLink
+          to={route.rewards()}
+          className="sidemenu-link text-text-primary"
+          data-testid="sidemenu-rewards"
+        >
+          <Trophy className="[&>path]:stroke-icon w-6 h-6" />
+          <span>{t.rewards}</span>
         </NavLink>
 
         <NavLink

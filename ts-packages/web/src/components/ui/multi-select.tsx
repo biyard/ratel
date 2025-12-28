@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Check, ChevronDown, X } from 'lucide-react';
 
-import { cn } from '@/lib/utils'; // shadcn 기본 유틸 있다고 가정
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
   Popover,
@@ -45,15 +45,38 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
 }) => {
   const [open, setOpen] = React.useState(false);
 
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const [triggerWidth, setTriggerWidth] = React.useState<number | null>(null);
+
+  React.useLayoutEffect(() => {
+    if (!open) return;
+
+    const el = triggerRef.current;
+    if (!el) return;
+
+    const update = () => {
+      const w = Math.ceil(el.getBoundingClientRect().width);
+      setTriggerWidth(w);
+    };
+
+    const raf = requestAnimationFrame(update);
+
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
+  }, [open]);
+
   const toggleValue = (val: string) => {
-    if (value.includes(val)) {
-      onChange(value.filter((v) => v !== val));
-    } else {
-      onChange([...value, val]);
-    }
+    if (value.includes(val)) onChange(value.filter((v) => v !== val));
+    else onChange([...value, val]);
   };
 
   const clearAll = (e: React.MouseEvent) => {
+    // e.preventDefault();
     e.stopPropagation();
     onChange([]);
   };
@@ -61,9 +84,16 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
   const selectedOptions = options.filter((opt) => value.includes(opt.value));
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) setTriggerWidth(null);
+      }}
+    >
       <PopoverTrigger asChild>
         <Button
+          ref={triggerRef}
           type="button"
           variant="outline"
           role="combobox"
@@ -71,7 +101,7 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
           disabled={disabled}
           data-testid="multi-select-trigger"
           className={cn(
-            'justify-between gap-2',
+            'justify-between gap-2 min-w-0',
             !selectedOptions.length && 'text-muted-foreground',
             className,
           )}
@@ -94,21 +124,30 @@ export const MultiSelect: React.FC<MultiSelectProps> = ({
 
           <div className="flex gap-1 items-center shrink-0">
             {selectedOptions.length > 0 && (
-              <button
-                type="button"
-                onClick={clearAll}
+              <span
+                role="button"
+                tabIndex={0}
+                onPointerDown={clearAll}
                 className="p-1 rounded-full hover:bg-muted"
                 aria-label="Clear selection"
               >
                 <X className="w-3 h-3" />
-              </button>
+              </span>
             )}
             <ChevronDown className="w-4 h-4 opacity-60" />
           </div>
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="p-0 w-[--radix-popover-trigger-width] min-w-[220px]">
+      <PopoverContent
+        align="start"
+        className="p-0 max-w-none min-w-[220px]"
+        style={
+          {
+            width: triggerWidth ? `${triggerWidth}px` : undefined,
+          } as React.CSSProperties
+        }
+      >
         <Command>
           <CommandInput className="text-text-primary" placeholder="검색..." />
           <CommandList>

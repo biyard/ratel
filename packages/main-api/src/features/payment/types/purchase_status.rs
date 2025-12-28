@@ -17,4 +17,5 @@ pub enum PurchaseStatus {
     Scheduled,
     Success,
     Failed,
+    Canceled,
 }
