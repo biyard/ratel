@@ -100,6 +100,7 @@ class VerificationController extends BaseController {
       logger.d("pin value: $pin");
       final res = await auth.verifyCode(phone, pin);
       final res2 = await auth.signup(phone, pin);
+      await authService.loadAccounts(refresh: false);
 
       if (res != null && res2 != null) {
         logger.d("verification response: $res $res2");
