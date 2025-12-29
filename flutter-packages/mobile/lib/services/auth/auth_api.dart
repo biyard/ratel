@@ -259,9 +259,6 @@ class AuthApi extends GetConnect {
     final refreshToken = map?['refresh_token'] as String?;
     if (refreshToken != null) {
       await _secure.write(key: _rtKey(user.pk), value: refreshToken);
-
-      final secureKey = await _secure.read(key: _rtKey(user.pk));
-      logger.d('Stored refresh token: $secureKey');
     }
 
     return LoginResult(
