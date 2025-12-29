@@ -52,7 +52,7 @@ pub async fn list_file_links_handler(
         .into_iter()
         .map(|link| FileLinkInfo {
             file_url: link.file_url,
-            linked_targets: link.link_targets,
+            link_target: link.link_target,
             created_at: link.created_at,
             updated_at: link.updated_at,
         })

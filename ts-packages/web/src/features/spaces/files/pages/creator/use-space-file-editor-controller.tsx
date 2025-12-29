@@ -7,6 +7,7 @@ import { Space } from '@/features/spaces/types/space';
 import { useUpdateFileMutation } from '../../hooks/use-update-file-mutation';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import FileModel from '../../types/file';
+import { deleteSpaceFile } from '@/lib/api/ratel/spaces.v3';
 
 export class SpaceFileEditorController {
   constructor(
@@ -47,9 +48,25 @@ export class SpaceFileEditorController {
     this.files.set([...this.files.get(), file]);
   };
 
-  handleRemoveFile = (index: number) => {
-    const newFiles = this.files.get().filter((_, i) => i !== index);
+  handleRemoveFile = async (index: number) => {
+    const currentFiles = this.files.get();
+    const fileToRemove = currentFiles[index];
+    
+    // Optimistically update UI
+    const newFiles = currentFiles.filter((_, i) => i !== index);
     this.files.set(newFiles);
+
+    // Call API to delete file and cascade to Overview/Boards
+    if (fileToRemove?.url) {
+      try {
+        await deleteSpaceFile(this.spacePk, fileToRemove.url);
+        showSuccessToast('File deleted successfully');
+      } catch (error) {
+        showErrorToast('Failed to delete file');
+        // Revert on error
+        this.files.set(currentFiles);
+      }
+    }
   };
 }
 

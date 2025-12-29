@@ -8,7 +8,7 @@ export type FileLinkTargetString = string;
 
 export interface FileLinkInfo {
   file_url: string;
-  linked_targets: FileLinkTargetString[];
+  link_target: FileLinkTargetString;
   created_at: number;
   updated_at: number;
 }

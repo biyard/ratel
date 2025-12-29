@@ -55,7 +55,7 @@ pub async fn update_recommendation_handler(
                     &dynamo.client,
                     space_pk.clone(),
                     new_file_urls.clone(),
-                    vec![FileLinkTarget::Files, FileLinkTarget::Overview],
+                    FileLinkTarget::Overview,
                 )
                 .await?;
             }
@@ -68,11 +68,28 @@ pub async fn update_recommendation_handler(
                 FileLink::remove_link_targets_batch(
                     &dynamo.client,
                     &space_pk,
-                    removed_urls,
+                    removed_urls.clone(),
                     &FileLinkTarget::Overview,
                 )
                 .await
                 .ok();
+
+                // Also remove from SpaceFile
+                let (pk, sk) = SpaceFile::keys(&space_pk);
+                if let Some(mut space_file) = SpaceFile::get(&dynamo.client, &pk, Some(sk.clone())).await? {
+                    space_file.files.retain(|f| {
+                        if let Some(url) = &f.url {
+                            !removed_urls.contains(url)
+                        } else {
+                            true
+                        }
+                    });
+                    
+                    SpaceFile::updater(&pk, sk)
+                        .with_files(space_file.files.clone())
+                        .execute(&dynamo.client)
+                        .await?;
+                }
             }
 
             Ok(Json(recommendation.into()))

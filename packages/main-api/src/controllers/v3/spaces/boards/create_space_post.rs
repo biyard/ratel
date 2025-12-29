@@ -89,22 +89,19 @@ pub async fn create_space_post_handler(
 
     tracing::info!("Linking {} files for post {}", req.files.len(), post_id);
 
-    // Add files to SpaceFile entity (for Files tab)
+    // Add files to SpaceFile entity (for Files tab visibility)
     if !req.files.is_empty() {
         SpaceFile::add_files(&dynamo.client, space_pk.clone(), req.files.clone()).await?;
     }
 
-    // Link files: Batch add both Files and Board targets to all file URLs
+    // Link files to Board origin (files uploaded from board belong to the board)
     let file_urls: Vec<String> = req.files.iter().filter_map(|f| f.url.clone()).collect();
     if !file_urls.is_empty() {
         FileLink::add_link_targets_batch(
             &dynamo.client,
             space_pk.clone(),
             file_urls.clone(),
-            vec![
-                FileLinkTarget::Files,
-                FileLinkTarget::Board(post_id.clone()),
-            ],
+            FileLinkTarget::Board(post_id.clone()),
         )
         .await
         .ok();

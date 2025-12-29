@@ -1,40 +1,6 @@
 use crate::features::spaces::files::FileLinkTarget;
 use bdk::prelude::*;
 
-/// Request to link a file to additional targets
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, JsonSchema)]
-pub struct LinkFileRequest {
-    #[schemars(description = "File URL to link")]
-    pub file_url: String,
-
-    #[schemars(description = "Target locations to link the file to")]
-    pub targets: Vec<FileLinkTarget>,
-}
-
-/// Response after linking a file
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
-pub struct LinkFileResponse {
-    pub file_url: String,
-    pub linked_targets: Vec<FileLinkTarget>,
-}
-
-/// Request to unlink a file from targets
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize, JsonSchema)]
-pub struct UnlinkFileRequest {
-    #[schemars(description = "File URL to unlink")]
-    pub file_url: String,
-
-    #[schemars(description = "Targets to unlink from")]
-    pub targets: Vec<FileLinkTarget>,
-}
-
-/// Response after unlinking a file
-#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
-pub struct UnlinkFileResponse {
-    pub file_url: String,
-    pub remaining_targets: Vec<FileLinkTarget>,
-}
-
 /// Query parameter for getting files by target
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct GetFilesByTargetRequest {
@@ -59,7 +25,7 @@ pub struct ListFileLinksResponse {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, JsonSchema)]
 pub struct FileLinkInfo {
     pub file_url: String,
-    pub linked_targets: Vec<FileLinkTarget>,
+    pub link_target: FileLinkTarget,
     pub created_at: i64,
     pub updated_at: i64,
 }
