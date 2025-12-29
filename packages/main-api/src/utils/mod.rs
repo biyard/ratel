@@ -16,6 +16,7 @@ pub mod parse_json;
 pub mod referal_code;
 pub mod s3_upload;
 // pub mod space_visibility;
+pub mod sha256_baseurl;
 pub mod sqs_client;
 pub mod telegram;
 pub mod time;
