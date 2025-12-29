@@ -1,7 +1,12 @@
+import 'dart:math' as math;
+
 import 'package:ratel/exports.dart';
-import 'package:intl/intl.dart';
 import 'package:ratel/features/space/poll/components/poll_question_body.dart';
 import 'package:ratel/features/space/poll/components/poll_question_header.dart';
+import 'package:ratel/features/space/poll/components/submit_modal.dart';
+
+import 'poll_progress_header.dart';
+import 'poll_time_header.dart';
 
 class PollQuestionPager extends StatefulWidget {
   const PollQuestionPager({
@@ -23,9 +28,14 @@ class PollQuestionPager extends StatefulWidget {
 
 class _PollQuestionPagerState extends State<PollQuestionPager> {
   late int _index;
+  late int _maxReached;
   late List<Answer?> _answers;
   bool _hasInitialResponse = false;
   late final bool _readOnly;
+  bool _triedNextOnInvalid = false;
+
+  bool get _isSubmitted =>
+      (widget.poll.myResponse != null && !widget.poll.responseEditable);
 
   @override
   void initState() {
@@ -47,14 +57,21 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     final firstUnanswered = _answers.indexWhere((a) => a == null);
     _index = firstUnanswered == -1 ? 0 : firstUnanswered;
 
-    logger.d(
-      "date time: ${now} ${widget.poll.startedAt} ${widget.poll.endedAt}",
-    );
     _readOnly =
         (widget.poll.myResponse != null && !widget.poll.responseEditable) ||
-        (widget.isFinished) ||
+        widget.isFinished ||
         (now < widget.poll.startedAt) ||
         (now > widget.poll.endedAt);
+
+    final lastAnswered = _answers.lastIndexWhere((a) => a != null);
+    final total = widget.poll.questions.length;
+    _maxReached = _readOnly
+        ? (total - 1)
+        : math.max(_index, lastAnswered < 0 ? 0 : lastAnswered);
+
+    if (firstUnanswered == -1 && total > 0) {
+      _maxReached = total - 1;
+    }
   }
 
   QuestionModel get _currentQuestion => widget.poll.questions[_index];
@@ -71,10 +88,20 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     }
   }
 
+  bool get _showMissingRequired {
+    if (_readOnly) return false;
+    if (!_triedNextOnInvalid) return false;
+    if (!_isQuestionRequired(_currentQuestion)) return false;
+    return !_currentValid;
+  }
+
   void _updateAnswer(Answer answer) {
     if (_readOnly) return;
     setState(() {
       _answers[_index] = answer;
+      if (_triedNextOnInvalid && _validateAnswer(_currentQuestion, answer)) {
+        _triedNextOnInvalid = false;
+      }
     });
   }
 
@@ -83,6 +110,21 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
 
   bool get _currentValid =>
       _readOnly ? true : _validateAnswer(_currentQuestion, _currentAnswer);
+
+  bool get _canSubmitOrUpdate {
+    if (_readOnly) return false;
+    if (widget.isFinished) return false;
+
+    final now = DateTime.now().toUtc().millisecondsSinceEpoch;
+    if (now < widget.poll.startedAt) return false;
+    if (now > widget.poll.endedAt) return false;
+
+    if (widget.poll.myResponse != null && !widget.poll.responseEditable) {
+      return false;
+    }
+
+    return true;
+  }
 
   void _submit() {
     final all = <Answer>[];
@@ -95,129 +137,35 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
   }
 
   void _showFinalSubmitDialog() {
-    Get.dialog(
-      Center(
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 24),
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF111111),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                children: [
-                  const Expanded(
-                    child: Text(
-                      'Submit Survey',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        decoration: TextDecoration.none,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () => Get.back(),
-                    child: const Icon(
-                      Icons.close,
-                      size: 18,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-              16.vgap,
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Once you submit your response, it cannot be changed.\nPlease double-check before submitting.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    height: 1.5,
-                    decoration: TextDecoration.none,
-                    color: Color(0xFFA1A1A1),
-                  ),
-                ),
-              ),
-              24.vgap,
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  GestureDetector(
-                    onTap: () => Get.back(),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Cancel',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          decoration: TextDecoration.none,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                  12.gap,
-                  GestureDetector(
-                    onTap: () {
-                      Get.back();
-                      _submit();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primary,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Text(
-                        'Submit',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                          decoration: TextDecoration.none,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-      barrierDismissible: true,
-    );
+    SubmitModal.show(onConfirm: _submit);
   }
 
   void _goNext() {
     if (_readOnly) {
       if (!_isLast) {
-        setState(() => _index++);
+        setState(() {
+          _index++;
+          _maxReached = math.max(_maxReached, _index);
+          _triedNextOnInvalid = false;
+        });
       }
       return;
     }
 
-    if (!_currentValid) return;
+    if (!_currentValid) {
+      setState(() {
+        _triedNextOnInvalid = true;
+      });
+      return;
+    }
+
+    setState(() {
+      _triedNextOnInvalid = false;
+    });
 
     if (_isLast) {
+      if (!_canSubmitOrUpdate) return;
+
       if (!widget.poll.responseEditable) {
         _showFinalSubmitDialog();
       } else {
@@ -226,6 +174,8 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     } else {
       setState(() {
         _index++;
+        _maxReached = math.max(_maxReached, _index);
+        _triedNextOnInvalid = false;
       });
     }
   }
@@ -234,13 +184,13 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
     if (_isFirst) return;
     setState(() {
       _index--;
+      _triedNextOnInvalid = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final total = widget.poll.questions.length;
-    final currentNo = _index + 1;
 
     final start = _fromTimestamp(widget.poll.startedAt);
     final end = _fromTimestamp(widget.poll.endedAt);
@@ -252,43 +202,95 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
       readOnly: _readOnly,
     );
 
-    final lastLabel = _isLast
+    final showPrev = !_isFirst;
+
+    final showRightButton = _readOnly
+        ? !_isLast
+        : (!_isLast || (_isLast && _canSubmitOrUpdate));
+
+    final isFinalAction = !_readOnly && _isLast && _canSubmitOrUpdate;
+
+    final rightLabel = isFinalAction
         ? (_hasInitialResponse ? 'Update' : 'Submit')
         : 'Next';
+
+    final rightVariant = (isFinalAction && rightLabel == 'Submit')
+        ? NavButtonVariant.submit
+        : NavButtonVariant.primary;
+
+    final rightStyleEnabled = _readOnly ? true : _currentValid;
+
+    final rightTapEnabled = _readOnly ? !_isLast : true;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _PollTimeHeader(timeZone: 'Asia/Seoul', start: start, end: end),
-        16.vgap,
-        Text(
-          '$currentNo / $total',
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14,
-            height: 22.5 / 14,
-            color: Colors.white,
-          ),
-        ),
-        5.vgap,
-        PollQuestionHeader(question: _currentQuestion),
-        15.vgap,
-        if (_shouldExpandBody) ...[
-          Expanded(child: body),
+        if (_isSubmitted) ...[
+          SubmittedLabel(),
+          20.vgap,
         ] else ...[
-          body,
+          PollProgressBar(
+            total: total,
+            currentIndex: _index,
+            maxReached: _maxReached,
+          ),
+          40.vgap,
+        ],
+        PollQuestionHeader(question: _currentQuestion),
+        20.vgap,
+        PollTimeHeader(timeZone: 'Asia/Seoul', start: start, end: end),
+        10.vgap,
+        if (_shouldExpandBody) ...[
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  body,
+                  if (_showMissingRequired) ...[
+                    10.vgap,
+                    const WarningMessage(message: "Missing required fields"),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ] else ...[
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              body,
+              if (_showMissingRequired) ...[
+                10.vgap,
+                const WarningMessage(message: "Missing required fields"),
+              ],
+            ],
+          ),
           const Spacer(),
         ],
         24.vgap,
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _NavButton(label: 'Prev', enabled: !_isFirst, onTap: _goPrev),
-            _NavButton(
-              label: lastLabel,
-              enabled: _readOnly ? !_isLast : _currentValid,
-              onTap: _goNext,
-            ),
+            if (showPrev)
+              NavButton(
+                label: 'Prev',
+                enabled: true,
+                onTap: _goPrev,
+                isPrimary: false,
+                variant: NavButtonVariant.outline,
+              ),
+            const Spacer(),
+            if (showRightButton)
+              NavButton(
+                label: rightLabel,
+                enabled: rightStyleEnabled,
+                tapEnabled: rightTapEnabled,
+                onTap: _goNext,
+                isPrimary: true,
+                variant: rightVariant,
+              ),
           ],
         ),
         20.vgap,
@@ -297,75 +299,39 @@ class _PollQuestionPagerState extends State<PollQuestionPager> {
   }
 }
 
-class _PollTimeHeader extends StatelessWidget {
-  const _PollTimeHeader({
-    required this.timeZone,
-    required this.start,
-    required this.end,
-  });
-
-  final String timeZone;
-  final DateTime start;
-  final DateTime end;
+class SubmittedLabel extends StatelessWidget {
+  const SubmittedLabel({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final fmt = DateFormat('MMM d, yyyy, hh:mm a');
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          timeZone,
-          style: const TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 12,
-            color: Color(0xFF9CA3AF),
+    return RoundContainer(
+      radius: 8,
+      color: Color(0xFF22C55E).withAlpha(25),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.check, size: 16, color: Color(0xFF22C55E)),
+          4.gap,
+          Text(
+            'Submitted',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              height: 16 / 13,
+              color: Color(0xFF22C55E),
+            ),
           ),
-        ),
-        4.vgap,
-        Row(
-          children: [
-            Text(
-              fmt.format(start),
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13,
-                color: Colors.white,
-              ),
-            ),
-            6.gap,
-            const Text(
-              '->',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13,
-                color: Color(0xFF9CA3AF),
-              ),
-            ),
-            6.gap,
-            Text(
-              fmt.format(end),
-              style: const TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 13,
-                color: Colors.white,
-              ),
-            ),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
 DateTime _fromTimestamp(int ts) {
-  if (ts == 0) {
-    return DateTime.fromMillisecondsSinceEpoch(0);
-  }
-  if (ts < 1000000000000) {
-    return DateTime.fromMillisecondsSinceEpoch(ts * 1000);
-  }
+  if (ts == 0) return DateTime.fromMillisecondsSinceEpoch(0);
+  if (ts < 1000000000000) return DateTime.fromMillisecondsSinceEpoch(ts * 1000);
   return DateTime.fromMillisecondsSinceEpoch(ts);
 }
 
@@ -408,9 +374,7 @@ Answer _buildEmptyAnswer(QuestionModel q) {
 bool _validateAnswer(QuestionModel q, Answer? a) {
   final required = _isQuestionRequired(q);
 
-  if (a == null) {
-    return !required;
-  }
+  if (a == null) return !required;
 
   switch (q.type) {
     case AnswerType.singleChoice:
@@ -431,11 +395,9 @@ bool _validateAnswer(QuestionModel q, Answer? a) {
     case AnswerType.shortAnswer:
     case AnswerType.subjective:
       final qq = q as SubjectiveQuestionModel;
-      final aa = a is ShortAnswer
-          ? (a as ShortAnswer).answer
-          : (a as SubjectiveAnswer).answer;
+      final text = a is ShortAnswer ? a.answer : (a as SubjectiveAnswer).answer;
       if (!qq.isRequired) return true;
-      return (aa != null && aa.trim().isNotEmpty);
+      return text != null && text.trim().isNotEmpty;
 
     case AnswerType.checkbox:
       final qq = q as CheckboxQuestionModel;
@@ -460,44 +422,5 @@ bool _validateAnswer(QuestionModel q, Answer? a) {
       if (aa.answer == null) return true;
       final v = aa.answer!;
       return v >= qq.minValue && v <= qq.maxValue;
-  }
-}
-
-class _NavButton extends StatelessWidget {
-  const _NavButton({
-    required this.label,
-    required this.enabled,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool enabled;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: Container(
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: enabled ? Colors.white : const Color(0xFF737373),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 10, 20, 10),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-              color: enabled
-                  ? const Color(0xFF1D1D1D)
-                  : const Color(0xFF262626),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

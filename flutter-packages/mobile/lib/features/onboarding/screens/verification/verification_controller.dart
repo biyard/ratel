@@ -86,7 +86,7 @@ class VerificationController extends BaseController {
   }
 
   void goBack() {
-    Get.rootDelegate.offNamed(signupScreen);
+    Get.back();
   }
 
   Future<void> verify() async {

@@ -21,7 +21,7 @@ class HtmlViewer extends StatelessWidget {
     final sanitized = _normalizeHtmlColors(htmlContents);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

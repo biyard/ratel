@@ -16,8 +16,13 @@ class SpaceController extends BaseController {
   SpaceModel? get space => spaceRx.value;
   RxBool get isLoading => _spaceService.isLoadingOf(spacePk);
 
-  final RxBool isHeaderCollapsed = false.obs;
-  double _gestureDelta = 0;
+  final isHeaderCollapsed = false.obs;
+
+  static const double collapseThresholdPx = 56.0;
+  static const double dragThresholdPx = 56.0;
+
+  double _dragSum = 0.0;
+  int _lastScrollMs = 0;
 
   @override
   void onInit() {
@@ -94,21 +99,31 @@ class SpaceController extends BaseController {
   String get baseRoute => '/space/${Uri.encodeComponent(spacePk)}';
   String get currentRoute => '$baseRoute${currentTab.value.route}';
 
-  void handlePointerMove(double dy) {
-    const threshold = 24.0;
-    _gestureDelta += dy;
+  void markScrollActivity() {
+    _lastScrollMs = DateTime.now().millisecondsSinceEpoch;
+  }
 
-    if (_gestureDelta <= -threshold && !isHeaderCollapsed.value) {
-      isHeaderCollapsed.value = true;
-      _gestureDelta = 0;
-    } else if (_gestureDelta >= threshold && isHeaderCollapsed.value) {
-      isHeaderCollapsed.value = false;
-      _gestureDelta = 0;
+  void handlePointerMove(double dy) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - _lastScrollMs < 140) return;
+
+    _dragSum += dy;
+
+    if (_dragSum <= -dragThresholdPx) {
+      if (!isHeaderCollapsed.value) isHeaderCollapsed.value = true;
+      _dragSum = 0;
+      return;
+    }
+
+    if (_dragSum >= dragThresholdPx) {
+      if (isHeaderCollapsed.value) isHeaderCollapsed.value = false;
+      _dragSum = 0;
+      return;
     }
   }
 
   void resetPointer() {
-    _gestureDelta = 0;
+    _dragSum = 0.0;
   }
 
   List<SpaceTab> _buildTabsForPollSpace() {

@@ -4,6 +4,7 @@ import 'package:ratel/features/post/screens/detail/components/detail_comment_bar
 import 'package:ratel/features/post/screens/detail/components/detail_scroll_content.dart';
 import 'package:ratel/features/post/screens/detail/components/detail_top_bar.dart';
 import 'package:ratel/features/post/screens/detail/components/post_more_bottom_sheet.dart';
+import 'package:ratel/features/post/screens/detail/components/post_comments_dock.dart';
 
 class DetailPostScreen extends GetWidget<DetailPostController> {
   const DetailPostScreen({super.key});
@@ -109,40 +110,41 @@ class DetailPostScreen extends GetWidget<DetailPostController> {
                 }
 
                 final model = controller.feed.value;
-                if (model == null) {
-                  return const SizedBox.shrink();
-                }
+                if (model == null) return const SizedBox.shrink();
 
-                return Obx(
-                  () => DetailScrollContent(
-                    post: model.post,
-                    isLiked: model.isLiked == true,
-                    isLiking: controller.isLikingPost.value,
-                    onToggleLike: controller.toggleLikePost,
-                  ),
+                const peekPadding = 72.0;
+                return Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: peekPadding),
+                      child: DetailScrollContent(
+                        post: model.post,
+                        isLiked: model.isLiked == true,
+                        isLiking: controller.isLikingPost.value,
+                        onToggleLike: controller.toggleLikePost,
+                      ),
+                    ),
+
+                    Align(
+                      alignment: Alignment.bottomCenter,
+                      child: PostCommentsDock(
+                        comments: model.comments,
+                        onSendComment: controller.addComment,
+                        isLikingCommentOf: controller.isLikingCommentOf,
+                        isCommentLiked: controller.isCommentLiked,
+                        onToggleLikeComment: (commentSk) =>
+                            controller.toggleLikeComment(commentSk: commentSk),
+                        onReportComment: (commentSk) =>
+                            controller.reportPostComment(
+                              postPk: model.post.pk,
+                              commentSk: commentSk,
+                            ),
+                      ),
+                    ),
+                  ],
                 );
               }),
             ),
-            Obx(() {
-              final model = controller.feed.value;
-              if (model == null) {
-                return const SizedBox.shrink();
-              }
-
-              return DetailCommentBar(
-                bottomInset: bottomInset,
-                comments: model.comments,
-                onSendComment: controller.addComment,
-                isLikingCommentOf: controller.isLikingCommentOf,
-                isCommentLiked: controller.isCommentLiked,
-                onToggleLikeComment: (commentSk) =>
-                    controller.toggleLikeComment(commentSk: commentSk),
-                onReportComment: (commentSk) => controller.reportPostComment(
-                  postPk: model.post.pk,
-                  commentSk: commentSk,
-                ),
-              );
-            }),
           ],
         ),
       ),
