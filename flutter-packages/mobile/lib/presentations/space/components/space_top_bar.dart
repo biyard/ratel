@@ -20,15 +20,16 @@ class SpaceTopBar extends StatelessWidget {
       color: const Color(0xFF1D1D1D),
       child: Row(
         children: [
-          Expanded(
-            child: InkWell(
-              onTap: onBack,
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: SvgPicture.asset(Assets.back, width: 24, height: 24),
-              ),
-            ),
-          ),
+          // Expanded(
+          //   child: InkWell(
+          //     onTap: onBack,
+          //     child: Align(
+          //       alignment: Alignment.centerLeft,
+          //       child: SvgPicture.asset(Assets.back, width: 24, height: 24),
+          //     ),
+          //   ),
+          // ),
+          if (showMore && onMore != null) const Spacer(),
           if (showMore && onMore != null)
             InkWell(
               onTap: onMore,

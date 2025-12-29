@@ -111,32 +111,32 @@ class BoardCommentItem extends StatelessWidget {
                       ),
                     ],
                   )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        plainContent.isEmpty ? comment.content : plainContent,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w400,
-                          height: 24 / 15,
-                          letterSpacing: 0.5,
-                          color: Colors.white,
-                        ),
+                : Text.rich(
+                    TextSpan(
+                      text: plainContent.isEmpty
+                          ? comment.content
+                          : plainContent,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w400,
+                        height: 24 / 15,
+                        letterSpacing: 0.5,
+                        color: Colors.white,
                       ),
-                      if (comment.createdAt != comment.updatedAt) ...[
-                        4.gap,
-                        Text(
-                          "(Updated)",
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w300,
-                            color: AppColors.neutral500,
-                          ),
-                        ),
-                      ],
-                    ],
+                      children: comment.createdAt != comment.updatedAt
+                          ? const [
+                              TextSpan(text: ' '),
+                              TextSpan(
+                                text: '(Updated)',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w300,
+                                  color: AppColors.neutral500,
+                                ),
+                              ),
+                            ]
+                          : const [],
+                    ),
                   ),
           ),
           8.vgap,

@@ -76,12 +76,15 @@ class VerificationScreen extends GetWidget<VerificationController> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: List.generate(6, (i) {
-                            return _CodeBox(
-                              controller: controller.fields[i],
-                              focusNode: controller.nodes[i],
-                              inputFormatters: controller.codeInputFormatters,
-                              onChanged: (v) => controller.onChanged(i, v),
-                              onKey: (e) => controller.onKey(i, e),
+                            return Padding(
+                              padding: EdgeInsets.only(right: i == 5 ? 0 : 10),
+                              child: _CodeBox(
+                                controller: controller.fields[i],
+                                focusNode: controller.nodes[i],
+                                inputFormatters: controller.codeInputFormatters,
+                                onChanged: (v) => controller.onChanged(i, v),
+                                onKey: (e) => controller.onKey(i, e),
+                              ),
                             );
                           }),
                         ),
@@ -296,39 +299,51 @@ class _CodeBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 42,
+    return SizedBox(
+      width: 48,
       height: 48,
-      margin: const EdgeInsets.only(right: 10),
       child: KeyboardListener(
         focusNode: FocusNode(),
         onKeyEvent: onKey,
-        child: TextField(
-          controller: controller,
-          focusNode: focusNode,
-          keyboardType: TextInputType.number,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-          inputFormatters: inputFormatters,
-          onChanged: onChanged,
-          decoration: InputDecoration(
-            counterText: '',
-            filled: true,
-            fillColor: AppColors.background,
-            contentPadding: EdgeInsets.zero,
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: BorderSide(color: Colors.white),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(4),
-              borderSide: BorderSide(color: AppColors.primary),
-            ),
-          ),
+        child: AnimatedBuilder(
+          animation: focusNode,
+          builder: (_, __) {
+            final borderColor = focusNode.hasFocus
+                ? AppColors.primary
+                : const Color(0xFF2A2A2A);
+
+            return Container(
+              width: 48,
+              height: 48,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: const Color(0xFF101010),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: borderColor, width: 1),
+              ),
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                keyboardType: TextInputType.number,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+                inputFormatters: [
+                  ...inputFormatters,
+                  LengthLimitingTextInputFormatter(1),
+                ],
+                onChanged: onChanged,
+                decoration: const InputDecoration(
+                  border: InputBorder.none,
+                  isCollapsed: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

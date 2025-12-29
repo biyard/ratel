@@ -30,30 +30,16 @@ class AppTopBar extends StatelessWidget {
       padding: padding,
       child: Row(
         children: [
-          InkWell(
-            onTap: () {
-              if (enableBack ?? false) {
-                onBack!();
-              }
-            },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (enableBack == true) backIcon ?? Assets.backIcon,
-                10.gap,
-                Text(
-                  title,
-                  style:
-                      titleStyle ??
-                      const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 18,
-                        height: 1.2,
-                      ),
+          Text(
+            title,
+            style:
+                titleStyle ??
+                const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 18,
+                  height: 1.2,
                 ),
-              ],
-            ),
           ),
 
           const Spacer(),
