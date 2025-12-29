@@ -7,28 +7,31 @@ class SignupHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return RichText(
-      text: TextSpan(
-        style: const TextStyle(
-          fontSize: 15,
-          color: Color(0xFFD4D4D4),
-          fontWeight: FontWeight.w400,
-          height: 22 / 15,
-        ),
+    return SizedBox(
+      height: 22,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const TextSpan(text: "Don't have an account?  "),
-          WidgetSpan(
-            alignment: PlaceholderAlignment.middle,
-            child: GestureDetector(
-              onTap: onSignup,
-              child: const Text(
-                'Sign up',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xFFFCB300),
-                  height: 22 / 15,
-                ),
+          Text(
+            "Don’t have an account?",
+            style: AppFonts.textTheme.bodyMedium?.copyWith(
+              color: AppColors.neutral300,
+              fontWeight: FontWeight.w400,
+              fontSize: 15,
+              height: 22 / 15,
+            ),
+          ),
+          10.gap,
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: onSignup,
+            child: Text(
+              'Sign up',
+              style: AppFonts.textTheme.bodyMedium?.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w400,
+                fontSize: 15,
+                height: 22 / 15,
               ),
             ),
           ),
