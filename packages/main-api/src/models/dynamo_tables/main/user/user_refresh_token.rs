@@ -4,14 +4,10 @@ use crate::*;
 #[derive(Default, Debug, Clone, serde::Serialize, serde::Deserialize, DynamoEntity)]
 pub struct UserRefreshToken {
     pub pk: Partition,
-
-    #[dynamo(index = "gsi1", sk)]
     pub sk: EntityType,
-
-    #[dynamo(name = "find_by_token_hash", prefix = "TOKEN", index = "gsi1", pk)]
     pub token_hash: String,
 
-    #[dynamo(name = "find_by_device_id", prefix = "DEVICE", index = "gsi2", pk)]
+    #[dynamo(name = "find_by_device_id", prefix = "DEVICE", index = "gsi1", pk)]
     pub device_id: String,
 
     pub user_display_name: String,
@@ -19,7 +15,7 @@ pub struct UserRefreshToken {
     pub user_username: String,
     pub user_type: UserType,
 
-    #[dynamo(index = "gsi2", sk, order = 0)]
+    #[dynamo(index = "gsi1", sk, order = 0)]
     pub created_at: i64,
     pub expired_at: Option<i64>,
     pub revoked: bool,
