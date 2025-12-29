@@ -2,7 +2,7 @@ use crate::{
     AppState, Error,
     constants::SESSION_KEY_USER_ID,
     models::{
-        PhoneVerification, PhoneVerificationQueryOption,
+        PhoneVerification, PhoneVerificationQueryOption, UserRefreshToken,
         email::{EmailVerification, EmailVerificationQueryOption},
         user::{User, UserEvmAddress, UserQueryOption, UserReferralCode},
     },
@@ -37,6 +37,7 @@ pub struct SignupRequest {
 
     pub evm_address: Option<String>,
     pub phone_number: Option<String>,
+    pub device_id: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, aide::OperationIo, JsonSchema)]
@@ -60,6 +61,16 @@ pub enum SignupType {
         telegram_raw: String,
     },
 }
+
+#[derive(
+    Debug, Default, Clone, serde::Serialize, serde::Deserialize, aide::OperationIo, JsonSchema,
+)]
+pub struct SignupResponse {
+    #[serde(flatten)]
+    pub user: User,
+    pub refresh_token: Option<String>,
+}
+
 ///
 /// Signup handler
 /// Anonymous users can also use this endpoint to convert to normal users.
@@ -69,7 +80,7 @@ pub async fn signup_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<Session>,
     Json(req): Json<SignupRequest>,
-) -> Result<Json<User>, Error> {
+) -> Result<Json<SignupResponse>, Error> {
     tracing::info!("signup_handler: req = {:?}", req);
     req.validate()
         .map_err(|e| Error::BadRequest(format!("Invalid input: {}", e)))?;
@@ -80,12 +91,12 @@ pub async fn signup_handler(
             email,
             password,
             code,
-        } => signup_with_email_password(&dynamo.client, req, email, password, code).await?,
+        } => signup_with_email_password(&dynamo.client, req.clone(), email, password, code).await?,
         SignupType::Phone { phone, code } => signup_with_phone(&dynamo.client, phone, code).await?,
         SignupType::OAuth {
             provider,
             access_token,
-        } => signup_with_oauth(&dynamo.client, req, provider, access_token).await?,
+        } => signup_with_oauth(&dynamo.client, req.clone(), provider, access_token).await?,
         SignupType::Telegram { .. } => {
             unimplemented!()
         }
@@ -104,7 +115,21 @@ pub async fn signup_handler(
         .insert(SESSION_KEY_USER_ID, user.pk.to_string())
         .await?;
 
-    Ok(Json(user))
+    let device_id: Option<String> = req.device_id.clone();
+
+    let refresh_token = if let Some(device_id) = device_id {
+        let (rt, plain) = UserRefreshToken::new(&user, device_id);
+        rt.upsert(&dynamo.client).await?;
+
+        Some(plain)
+    } else {
+        None
+    };
+
+    Ok(Json(SignupResponse {
+        user,
+        refresh_token,
+    }))
 }
 
 async fn signup_with_email_password(
