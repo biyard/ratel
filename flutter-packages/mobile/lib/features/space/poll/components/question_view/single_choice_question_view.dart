@@ -1,5 +1,5 @@
 import 'package:ratel/exports.dart';
-import 'package:ratel/features/space/poll/components/option_tile.dart';
+import 'package:ratel/features/space/poll/components/question_view/choice_box.dart';
 
 class SingleChoiceQuestionView extends StatelessWidget {
   const SingleChoiceQuestionView({
@@ -28,107 +28,78 @@ class SingleChoiceQuestionView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (int i = 0; i < question.options.length; i++) ...[
-          if (question.options[i] != 'Others') ...[
-            OptionTile(
-              label: question.options[i],
-              selected: selectedIndex == i,
+          if (!_allowOther || i != othersIndex) ...[
+            ChoiceBox(
               enabled: !readOnly,
+              selected: selectedIndex == i,
               onTap: readOnly
-                  ? () {}
+                  ? null
                   : () => onChanged(SingleChoiceAnswer(i, null)),
+              child: Text(
+                question.options[i],
+                style: const TextStyle(
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16,
+                  height: 24 / 16,
+                  letterSpacing: 0.5,
+                  color: Colors.white,
+                ),
+                softWrap: true,
+              ),
             ),
             10.vgap,
           ],
         ],
-        if (_allowOther) ...[
-          Row(
-            children: [
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: readOnly
-                    ? null
-                    : () {
-                        if (isOtherSelected) {
-                          onChanged(const SingleChoiceAnswer(null, null));
-                        } else {
-                          onChanged(
-                            SingleChoiceAnswer(othersIndex!, otherText ?? ''),
-                          );
-                        }
-                      },
-                child: Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(4),
-                    border: Border.all(
-                      color: isOtherSelected
-                          ? AppColors.primary
-                          : AppColors.neutral80,
-                      width: 1.5,
-                    ),
-                    color: isOtherSelected
-                        ? AppColors.primary
-                        : Colors.transparent,
-                  ),
-                  alignment: Alignment.center,
-                  child: isOtherSelected
-                      ? const Icon(
-                          Icons.check,
-                          size: 16,
-                          color: Color(0xFF1D1D1D),
-                        )
-                      : null,
+        if (_allowOther && othersIndex != null) ...[
+          ChoiceBox(
+            enabled: !readOnly,
+            selected: isOtherSelected,
+            onTap: readOnly
+                ? null
+                : () {
+                    if (isOtherSelected) {
+                      onChanged(const SingleChoiceAnswer(null, null));
+                    } else {
+                      onChanged(
+                        SingleChoiceAnswer(othersIndex, otherText ?? ''),
+                      );
+                    }
+                  },
+            child: TextFormField(
+              key: ValueKey('${question.title}_single_other'),
+              initialValue: otherText ?? '',
+              enabled: !readOnly,
+              readOnly: readOnly,
+              onTap: () {
+                if (readOnly) return;
+                if (!isOtherSelected) {
+                  onChanged(SingleChoiceAnswer(othersIndex, otherText ?? ''));
+                }
+              },
+              onChanged: (value) {
+                if (readOnly) return;
+                onChanged(SingleChoiceAnswer(othersIndex, value));
+              },
+              style: const TextStyle(
+                fontWeight: FontWeight.w400,
+                fontSize: 16,
+                height: 24 / 16,
+                letterSpacing: 0.5,
+                color: Colors.white,
+              ),
+              decoration: const InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                hintText: 'Input the option.',
+                hintStyle: TextStyle(
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16,
+                  height: 24 / 16,
+                  letterSpacing: 0.5,
+                  color: Color(0xFF737373),
                 ),
               ),
-              10.gap,
-              Expanded(
-                child: Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFF404040)),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  alignment: Alignment.centerLeft,
-                  child: TextFormField(
-                    key: ValueKey(question),
-                    initialValue: otherText ?? '',
-                    enabled: !readOnly,
-                    readOnly: readOnly,
-                    onTap: () {
-                      if (readOnly) return;
-                      if (!isOtherSelected && othersIndex != null) {
-                        onChanged(
-                          SingleChoiceAnswer(othersIndex, otherText ?? ''),
-                        );
-                      }
-                    },
-                    onChanged: (value) {
-                      if (readOnly) return;
-                      if (othersIndex != null) {
-                        onChanged(SingleChoiceAnswer(othersIndex, value));
-                      }
-                    },
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14,
-                      color: Colors.white,
-                    ),
-                    decoration: const InputDecoration(
-                      isDense: true,
-                      border: InputBorder.none,
-                      hintText: 'Input the option.',
-                      hintStyle: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14,
-                        color: Color(0xFF6B6B6B),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ],

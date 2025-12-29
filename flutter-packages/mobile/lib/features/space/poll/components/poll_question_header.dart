@@ -24,74 +24,60 @@ class PollQuestionHeader extends StatelessWidget {
     return false;
   }
 
+  bool get _isMultiSelect {
+    if (question.type == AnswerType.multipleChoice) return true;
+    if (question is CheckboxQuestionModel) {
+      return (question as CheckboxQuestionModel).isMulti;
+    }
+    return false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final spans = <TextSpan>[];
-
-    if (_required) {
-      spans.add(
-        const TextSpan(
-          text: '[Required] ',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            color: Color(0xFFFF6467),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text.rich(
+          TextSpan(
+            children: [
+              if (_required)
+                const TextSpan(
+                  text: '*',
+                  style: TextStyle(
+                    fontFamily: 'Raleway',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 18,
+                    height: 24 / 18,
+                    color: Color(0xFFEF4444),
+                  ),
+                ),
+              TextSpan(
+                text: question.title,
+                style: const TextStyle(
+                  fontFamily: 'Raleway',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18,
+                  height: 24 / 18,
+                  color: Colors.white,
+                ),
+              ),
+            ],
           ),
+          softWrap: true,
         ),
-      );
-    }
-
-    if (question.type == AnswerType.singleChoice) {
-      spans.add(
-        const TextSpan(
-          text: '[Single Choice] ',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            color: Color(0xFF60A5FA),
+        if (_isMultiSelect)
+          const Text(
+            'Select all that apply',
+            style: TextStyle(
+              fontFamily: 'Raleway',
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+              height: 20 / 13,
+              color: Color(0xFF3B82F6),
+            ),
+            softWrap: true,
           ),
-        ),
-      );
-    } else if (question.type == AnswerType.multipleChoice) {
-      spans.add(
-        const TextSpan(
-          text: '[Multiple Choice] ',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            color: Color(0xFF60A5FA),
-          ),
-        ),
-      );
-    } else if (question is CheckboxQuestionModel) {
-      final q = question as CheckboxQuestionModel;
-      spans.add(
-        TextSpan(
-          text: q.isMulti ? '[Multiple Choice] ' : '[Single Choice] ',
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            color: q.isMulti
-                ? const Color(0xFF60A5FA)
-                : const Color(0xFFFF6467),
-          ),
-        ),
-      );
-    }
-
-    spans.add(const TextSpan(text: ' ', style: TextStyle(fontSize: 14)));
-
-    spans.add(
-      TextSpan(
-        text: question.title,
-        style: const TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 16,
-          color: Colors.white,
-        ),
-      ),
+      ],
     );
-
-    return Text.rich(TextSpan(children: spans), softWrap: true);
   }
 }

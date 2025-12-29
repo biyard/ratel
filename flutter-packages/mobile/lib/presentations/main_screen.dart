@@ -202,8 +202,8 @@ class _MainScreenState extends State<MainScreen>
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        AppColors.bg,
-                        AppColors.neutral800.withOpacity(0.7),
+                        AppColors.neutral900,
+                        AppColors.neutral900.withAlpha((255 * 0.9).toInt()),
                       ],
                     ),
                     border: Border(
