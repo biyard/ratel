@@ -10,87 +10,97 @@ class AccountScreen extends GetWidget<AccountController> {
 
   @override
   Widget build(BuildContext context) {
+    const pageBg = Color(0xFF1D1D1D);
+    const panelBg = Color(0xFF171717);
+
     return Layout<AccountController>(
       scrollable: false,
+      enableSafeArea: false,
+      style: const LayoutStyle(background: pageBg),
       child: Container(
-        color: const Color(0xFF1D1D1D),
-        padding: const EdgeInsets.only(top: 20),
-        child: Column(
-          children: [
-            const Padding(
-              padding: EdgeInsets.only(top: 20),
-              child: SignupLogo(),
-            ),
-            25.vgap,
+        color: pageBg,
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(top: 20),
+                child: SignupLogo(),
+              ),
+              25.vgap,
 
-            Expanded(
-              child: Obx(() {
-                final items = controller.accounts;
-
-                if (items.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-
-                return Column(
-                  children: [
-                    const Text(
-                      'Log in',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        height: 32 / 24,
-                      ),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: const BoxDecoration(
+                    color: panelBg,
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
                     ),
-                    20.vgap,
-                    Expanded(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Column(
-                          children: items
-                              .map(
-                                (a) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: AccountTile(
-                                    displayName: a.displayName,
-                                    username: a.username,
-                                    profileUrl: a.profileUrl,
-                                    onTap: () => controller.onSelectAccount(a),
+                  ),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: Obx(() {
+                          final items = controller.accounts;
+
+                          if (items.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+
+                          return SingleChildScrollView(
+                            physics: const BouncingScrollPhysics(),
+                            padding: const EdgeInsets.fromLTRB(20, 30, 20, 0),
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'Log in',
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                    height: 32 / 24,
                                   ),
                                 ),
-                              )
-                              .toList(),
+                                20.vgap,
+                                ...items.map(
+                                  (a) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 12),
+                                    child: AccountTile(
+                                      displayName: a.displayName,
+                                      username: a.username,
+                                      profileUrl: a.profileUrl,
+                                      onTap: () =>
+                                          controller.onSelectAccount(a),
+                                    ),
+                                  ),
+                                ),
+                                20.vgap,
+                                const OrDivider(),
+                                20.vgap,
+                                AddAnotherAccountButton(
+                                  onTap: controller.onAddAnotherAccount,
+                                ),
+                                30.vgap,
+                              ],
+                            ),
+                          );
+                        }),
+                      ),
+
+                      SafeArea(
+                        top: false,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 21),
+                          child: SignupHint(onSignup: controller.onSignup),
                         ),
                       ),
-                    ),
-                  ],
-                );
-              }),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Obx(() {
-                final hasAccounts = controller.accounts.isNotEmpty;
-
-                return Column(
-                  children: [
-                    if (hasAccounts) ...[20.vgap, const OrDivider()],
-                    20.vgap,
-                    AddAnotherAccountButton(
-                      onTap: controller.onAddAnotherAccount,
-                    ),
-                    const SizedBox(height: 28),
-                  ],
-                );
-              }),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.only(bottom: 21),
-              child: SignupHint(onSignup: controller.onSignup),
-            ),
-          ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
