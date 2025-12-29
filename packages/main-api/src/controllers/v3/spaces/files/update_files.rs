@@ -15,9 +15,9 @@ pub struct UpdateSpaceFileRequest {
     #[schemars(description = "Space Files")]
     pub files: Vec<File>,
 
-    #[schemars(description = "Optional: Link these files to additional targets")]
+    #[schemars(description = "Optional: Link these files to a specific target")]
     #[serde(default)]
-    pub link_targets: Vec<FileLinkTarget>,
+    pub link_target: Option<FileLinkTarget>,
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
@@ -55,15 +55,15 @@ pub async fn update_files_handler(
         files.create(&dynamo.client).await?;
     }
 
-    // Create file links if targets are specified
-    if !req.link_targets.is_empty() {
+    // Create file links if target is specified
+    if let Some(link_target) = req.link_target {
         let file_urls: Vec<String> = req.files.iter().filter_map(|f| f.url.clone()).collect();
         if !file_urls.is_empty() {
             FileLink::add_link_targets_batch(
                 &dynamo.client,
                 space_pk.clone(),
                 file_urls,
-                req.link_targets.clone(),
+                link_target,
             )
             .await?;
         }

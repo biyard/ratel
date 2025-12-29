@@ -35,7 +35,7 @@ export function SpaceFileEditorPage({ spacePk }: SpacePathProps) {
 
     const linkedUrls = fileLinks.file_links
       .filter((link) => {
-        return link.linked_targets.some((t) => isTargetMatch(t, targetFilter));
+        return isTargetMatch(link.link_target, targetFilter);
       })
       .map((link) => link.file_url);
 
@@ -84,9 +84,9 @@ export function SpaceFileEditorPage({ spacePk }: SpacePathProps) {
         </Row>
       </Row>
 
-      {ctrl.editing.get() && activeTab === 'all' ? (
+      {ctrl.editing.get() ? (
         <SpaceFileEditors
-          files={ctrl.files.get()}
+          files={displayedFiles}
           onremove={ctrl.handleRemoveFile}
           onadd={ctrl.handleAddFile}
         />

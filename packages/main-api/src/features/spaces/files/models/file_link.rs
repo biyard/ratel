@@ -12,7 +12,7 @@ pub struct FileLink {
     #[dynamo(prefix = "FILE_URL", index = "gsi1", pk, name = "find_by_file_url")]
     pub file_url: String,
 
-    pub link_targets: Vec<FileLinkTarget>,
+    pub link_target: FileLinkTarget,
 
     #[dynamo(index = "gsi1", sk)]
     pub created_at: i64,
@@ -20,7 +20,7 @@ pub struct FileLink {
 }
 
 impl FileLink {
-    pub fn new(space_pk: Partition, file_url: String, link_targets: Vec<FileLinkTarget>) -> Self {
+    pub fn new(space_pk: Partition, file_url: String, link_target: FileLinkTarget) -> Self {
         let now = get_now_timestamp_micros();
         let file_id = uuid::Uuid::new_v4().to_string();
 
@@ -28,14 +28,10 @@ impl FileLink {
             pk: space_pk,
             sk: EntityType::FileLink(file_id),
             file_url,
-            link_targets,
+            link_target,
             created_at: now,
             updated_at: now,
         }
-    }
-
-    pub fn keys(space_pk: &Partition, file_id: &str) -> (Partition, EntityType) {
-        (space_pk.clone(), EntityType::FileLink(file_id.to_string()))
     }
 
     pub async fn add_link_target(
@@ -46,24 +42,15 @@ impl FileLink {
     ) -> Result<Self, crate::Error> {
         let existing = Self::find_by_url(cli, &space_pk, &file_url).await?;
 
-        if let Some(mut file_link) = existing {
-            if !file_link.link_targets.contains(&target) {
-                file_link.link_targets.push(target.clone());
-                let now = get_now_timestamp_micros();
-
-                // Use DynamoDB updater
-                Self::updater(&file_link.pk, &file_link.sk)
-                    .with_link_targets(file_link.link_targets.clone())
-                    .with_updated_at(now)
-                    .execute(cli)
-                    .await?;
-
-                file_link.updated_at = now;
+        if let Some(file_link) = existing {
+            if file_link.link_target != target {
+                return Err(crate::Error::BadRequest(
+                    "File already linked to a different target".to_string(),
+                ));
             }
             Ok(file_link)
         } else {
-            // Create new file link
-            let file_link = Self::new(space_pk, file_url, vec![target]);
+            let file_link = Self::new(space_pk, file_url, target);
             file_link.create(cli).await?;
             Ok(file_link)
         }
@@ -73,43 +60,50 @@ impl FileLink {
         cli: &aws_sdk_dynamodb::Client,
         space_pk: Partition,
         file_urls: Vec<String>,
-        targets: Vec<FileLinkTarget>,
+        target: FileLinkTarget,
     ) -> Result<Vec<Self>, crate::Error> {
-        if file_urls.is_empty() || targets.is_empty() {
+        if file_urls.is_empty() {
             return Ok(vec![]);
         }
 
+        let mut existing_links = std::collections::HashMap::new();
+        for file_url in &file_urls {
+            if let Some(link) = Self::find_by_url(cli, &space_pk, file_url).await? {
+                existing_links.insert(file_url.clone(), link);
+            }
+        }
+
         let mut results = Vec::new();
+        let mut new_links = Vec::new();
 
         for file_url in file_urls {
-            let existing = Self::find_by_url(cli, &space_pk, &file_url).await?;
-
-            if let Some(mut file_link) = existing {
-                let mut updated = false;
-                for target in &targets {
-                    if !file_link.link_targets.contains(target) {
-                        file_link.link_targets.push(target.clone());
-                        updated = true;
-                    }
+            if let Some(existing) = existing_links.get(&file_url) {
+                if existing.link_target != target {
+                    return Err(crate::Error::BadRequest(
+                        format!("File {} already linked to a different target", file_url),
+                    ));
                 }
-
-                if updated {
-                    let now = get_now_timestamp_micros();
-                    Self::updater(&file_link.pk, &file_link.sk)
-                        .with_link_targets(file_link.link_targets.clone())
-                        .with_updated_at(now)
-                        .execute(cli)
-                        .await?;
-
-                    file_link.updated_at = now;
-                }
-                results.push(file_link);
+                results.push(existing.clone());
             } else {
-                // Create new file link with all targets
-                let file_link = Self::new(space_pk.clone(), file_url, targets.clone());
-                file_link.create(cli).await?;
-                results.push(file_link);
+                let new_link = Self::new(space_pk.clone(), file_url, target.clone());
+                new_links.push(new_link);
             }
+        }
+
+        // Batch create new links using transactions (DynamoDB allows up to 100 items per transaction)
+        for chunk in new_links.chunks(100) {
+            let transactions: Vec<_> = chunk
+                .iter()
+                .map(|link| link.create_transact_write_item())
+                .collect();
+
+            cli.transact_write_items()
+                .set_transact_items(Some(transactions))
+                .send()
+                .await
+                .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+            results.extend_from_slice(chunk);
         }
 
         Ok(results)
@@ -123,32 +117,11 @@ impl FileLink {
     ) -> Result<Option<Self>, crate::Error> {
         let existing = Self::find_by_url(cli, space_pk, file_url).await?;
 
-        if let Some(mut file_link) = existing {
-            file_link.link_targets.retain(|t| t != target);
-            let now = get_now_timestamp_micros();
-
-            if file_link.link_targets.is_empty() {
+        if let Some(file_link) = existing {
+            if &file_link.link_target == target {
                 Self::delete(cli, &file_link.pk, Some(file_link.sk.clone())).await?;
                 return Ok(None);
             }
-
-            let has_non_files_target = file_link
-                .link_targets
-                .iter()
-                .any(|t| !matches!(t, FileLinkTarget::Files));
-
-            if !has_non_files_target {
-                Self::delete(cli, &file_link.pk, Some(file_link.sk.clone())).await?;
-                return Ok(None);
-            }
-
-            Self::updater(&file_link.pk, &file_link.sk)
-                .with_link_targets(file_link.link_targets.clone())
-                .with_updated_at(now)
-                .execute(cli)
-                .await?;
-
-            file_link.updated_at = now;
             Ok(Some(file_link))
         } else {
             Ok(None)
@@ -165,11 +138,41 @@ impl FileLink {
             return Ok(vec![]);
         }
 
+        let mut existing_links = std::collections::HashMap::new();
+        for file_url in &file_urls {
+            if let Some(link) = Self::find_by_url(cli, space_pk, file_url).await? {
+                existing_links.insert(file_url.clone(), link);
+            }
+        }
+
         let mut results = Vec::new();
+        let mut to_delete = Vec::new();
 
         for file_url in file_urls {
-            let result = Self::remove_link_target(cli, space_pk, &file_url, target).await?;
-            results.push(result);
+            if let Some(existing) = existing_links.get(&file_url) {
+                if &existing.link_target == target {
+                    to_delete.push(existing.clone());
+                    results.push(None);
+                } else {
+                    results.push(Some(existing.clone()));
+                }
+            } else {
+                results.push(None);
+            }
+        }
+
+        // Batch delete using transactions (DynamoDB allows up to 100 items per transaction)
+        for chunk in to_delete.chunks(100) {
+            let transactions: Vec<_> = chunk
+                .iter()
+                .map(|link| Self::delete_transact_write_item(link.pk.clone(), link.sk.clone()))
+                .collect();
+
+            cli.transact_write_items()
+                .set_transact_items(Some(transactions))
+                .send()
+                .await
+                .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
         }
 
         Ok(results)
@@ -186,7 +189,6 @@ impl FileLink {
         let (items, _bookmark) =
             Self::find_by_file_url(cli, prefixed_url, FileLinkQueryOption::default()).await?;
 
-        // Find the one matching our space
         for item in items {
             if item.pk == *space_pk {
                 return Ok(Some(item));
@@ -218,7 +220,7 @@ impl FileLink {
 
         let file_urls: Vec<String> = all_links
             .into_iter()
-            .filter(|link| link.link_targets.contains(target))
+            .filter(|link| &link.link_target == target)
             .map(|link| link.file_url)
             .collect();
 

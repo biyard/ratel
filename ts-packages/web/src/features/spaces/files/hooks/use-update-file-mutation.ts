@@ -12,6 +12,7 @@ export function updateSpaceFiles(
 ): Promise<void> {
   return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}/files`, {
     files,
+    link_target: 'Files', // Files uploaded directly to Files tab
   });
 }
 
