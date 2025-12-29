@@ -8,10 +8,6 @@ class AccountController extends BaseController {
   RxBool get isLoading => auth.accountsBusy;
   RxnString get error => auth.accountsError;
 
-  String subtitleFromUserType(int userType) {
-    return 'Ratel';
-  }
-
   @override
   void onInit() {
     super.onInit();
@@ -29,6 +25,7 @@ class AccountController extends BaseController {
       return;
     }
     Get.rootDelegate.offNamed(AppRoutes.mainScreen);
+    Biyard.info("Login Successed.");
   }
 
   void onAddAnotherAccount() {
