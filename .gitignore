@@ -46,3 +46,6 @@ user.json
 # Davia
 .davia/
 .github/instructions/davia.instructions.md
+
+# Google Cloud Secret
+*/.gcp/*

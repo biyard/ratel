@@ -1,7 +1,7 @@
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
 use crate::features::membership::{UserMembership, user_membership};
 use crate::features::spaces::rewards::{
-    Reward, RewardKey, RewardType, RewardTypeRequest, SpaceReward, SpaceRewardResponse,
+    Reward, RewardAction, RewardKey, RewardTypeRequest, SpaceReward, SpaceRewardResponse,
 };
 use crate::models::space::SpaceCommon;
 use crate::types::{EntityType, SpacePublishState};
@@ -23,7 +23,7 @@ use aide::NoApi;
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 pub struct CreateRewardSpaceRequest {
     reward: RewardTypeRequest,
-    label: String,
+    #[serde(default)]
     description: String,
     credits: i64,
 }
@@ -58,14 +58,13 @@ pub async fn create_reward_handler(
             .decrease_remaining_credits(req.credits)
             .transact_write_item(),
     );
-    let reward_type: RewardType = req.reward.clone().into();
+    let reward_action: RewardAction = req.reward.clone().into();
     let reward_key = RewardKey::from(req.reward);
-    let reward = Reward::get_by_reward_type(&dynamo.client, &reward_type).await?;
+    let reward = Reward::get_by_reward_action(&dynamo.client, &reward_action).await?;
 
     let space_reward = SpaceReward::new(
         space_pk.into(),
         reward_key,
-        req.label,
         req.description,
         req.credits,
         reward.point,

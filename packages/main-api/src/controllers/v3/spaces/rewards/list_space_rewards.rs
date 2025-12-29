@@ -28,7 +28,7 @@ use aide::NoApi;
 
 pub struct ListRewardQuery {
     #[schemars(description = "Entity type to filter by e.g)POLL")]
-    pub feature: Option<EntityType>,
+    pub entity_type: Option<EntityType>,
     #[schemars(description = "Bookmark to start from")]
     pub bookmark: Option<String>,
 }
@@ -45,7 +45,7 @@ pub async fn list_rewards_handler(
     let (space_rewards, bookmark) = SpaceReward::list_by_feature(
         &dynamo.client,
         space_pk.clone().into(),
-        query.feature,
+        query.entity_type,
         query.bookmark,
     )
     .await?;
