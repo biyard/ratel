@@ -18,6 +18,8 @@ export const SpaceSettings = {
     public_setting: 'Public Setting',
     public: 'Public',
     private: 'Private',
+
+    reward: 'Reward',
   },
   ko: {
     title: '스페이스 설정',
@@ -36,6 +38,8 @@ export const SpaceSettings = {
     public_setting: '공개 설정',
     public: '공개',
     private: '비공개',
+
+    reward: '리워드',
   },
 };
 
@@ -55,6 +59,8 @@ export interface SettingsI18n {
   public_setting: string;
   public: string;
   private: string;
+
+  reward: string;
 }
 
 export function useSettingsI18n(): SettingsI18n {
@@ -78,5 +84,7 @@ export function useSettingsI18n(): SettingsI18n {
     public_setting: t('public_setting'),
     public: t('public'),
     private: t('private'),
+
+    reward: t('reward'),
   };
 }

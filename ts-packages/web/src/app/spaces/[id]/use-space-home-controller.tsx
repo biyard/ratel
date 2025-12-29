@@ -32,15 +32,11 @@ import { useParticipateSpaceMutation } from '@/features/spaces/hooks/use-partici
 import { SpaceType } from '@/features/spaces/types/space-type';
 import SpaceStartModal from '@/features/spaces/modals/space-start-modal';
 import { useStartSpaceMutation } from '@/features/spaces/hooks/use-start-mutation';
-import {
-  SpacePublishState,
-  SpaceStatus,
-} from '@/features/spaces/types/space-common';
+import { SpaceStatus } from '@/features/spaces/types/space-common';
 import useFileSpace from '@/features/spaces/files/hooks/use-file-space';
 import SpaceAuthorizePopup from './space-authorize-popup';
 import SpaceEndModal from '@/features/spaces/modals/space-end-modal';
 import { useFinishSpaceMutation } from '@/features/spaces/hooks/use-finish-mutation';
-import { config } from '@/config';
 import { Trophy } from '@/assets/icons/game';
 
 export class SpaceHomeController {
@@ -139,14 +135,11 @@ export class SpaceHomeController {
         label: this.t('menu_admin_settings'),
       },
     ];
-    // FIXME: add rewards only space_common.rewards is not null
-    // if (config.experiment) {
-    //   menus.push({
-    //     Icon: Trophy,
-    //     to: route.spaceRewardSetting(this.space.pk),
-    //     label: this.t('menu_rewards_settings'),
-    //   });
-    // }
+    // menus.push({
+    //   Icon: Trophy,
+    //   to: route.spaceReward(this.space.pk),
+    //   label: this.t('menu_rewards'),
+    // });
     return menus;
   }
 

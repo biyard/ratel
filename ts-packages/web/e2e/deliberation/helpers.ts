@@ -379,6 +379,22 @@ export async function setupPanels(page: Page, quota: string) {
   await page.waitForTimeout(100);
 
   await page.getByTestId('multi-select-trigger').click();
+
+  const trigger = page.getByTestId('multi-select-trigger');
+  const popover = page.locator('[data-state="open"]').first();
+  const triggerBox = await trigger.boundingBox();
+  await expect(popover).toBeVisible();
+  await page.waitForFunction(
+    ({ el, w }) => {
+      const node = document.querySelector(el) as HTMLElement | null;
+      if (!node) return false;
+      const cw = node.getBoundingClientRect().width;
+      return Math.abs(cw - w) < 2;
+    },
+    { el: '[data-state="open"]', w: triggerBox?.width ?? 0 },
+  );
+
+  await page.waitForTimeout(150);
   await page.locator('[data-value="University"]').click();
   await page.waitForLoadState('networkidle');
   await page.waitForTimeout(100);
