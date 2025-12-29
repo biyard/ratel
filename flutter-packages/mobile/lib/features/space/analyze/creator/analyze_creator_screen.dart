@@ -41,41 +41,7 @@ class AnalyzeCreatorScreen extends GetWidget<AnalyzeCreatorController> {
         );
 
         return NotificationListener<ScrollNotification>(
-          onNotification: (n) {
-            space.markScrollActivity();
-
-            if (n.metrics.axis != Axis.vertical) return false;
-            if (n is! ScrollUpdateNotification &&
-                n is! UserScrollNotification) {
-              return false;
-            }
-
-            final pixels = n.metrics.pixels;
-            final collapsedNow = space.isHeaderCollapsed.value;
-
-            if (!collapsedNow && pixels > SpaceController.collapseThresholdPx) {
-              space.isHeaderCollapsed.value = true;
-              return false;
-            }
-
-            if (collapsedNow) {
-              final minExtent = n.metrics.minScrollExtent;
-              final atTop = pixels <= (minExtent + 0.5);
-
-              final bool userPullingDown =
-                  (n is UserScrollNotification &&
-                      n.direction == ScrollDirection.forward) ||
-                  (n is ScrollUpdateNotification &&
-                      n.dragDetails != null &&
-                      (n.scrollDelta ?? 0) < 0);
-
-              if (atTop && userPullingDown) {
-                space.isHeaderCollapsed.value = false;
-              }
-            }
-
-            return false;
-          },
+          onNotification: space.handleHeaderByScroll,
           child: ListView.builder(
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
