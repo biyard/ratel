@@ -224,6 +224,32 @@ done
 
 echo 'Test users created successfully'
 
+# Create UserMemberships for test users
+echo 'Creating user memberships...'
+
+# Calculate expiration timestamp (30 days from now in milliseconds)
+EXPIRED_AT=$((TIMESTAMP + 30 * 24 * 60 * 60 * 1000))
+
+# User1 - PRO Membership (40 credits)
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "USER#00000000-0000-0000-0000-000000000001"},
+    "sk": {"S": "USER_MEMBERSHIP"},
+    "created_at": {"N": "'${TIMESTAMP}'"},
+    "updated_at": {"N": "'${TIMESTAMP}'"},
+    "expired_at": {"N": "'${EXPIRED_AT}'"},
+    "membership_pk": {"S": "MEMBERSHIP#PRO"},
+    "status": {"S": "Active"},
+    "total_credits": {"N": "40"},
+    "remaining_credits": {"N": "40"},
+    "auto_renew": {"BOOL": true},
+    "gsi1_pk": {"S": "UM#MEMBERSHIP#PRO"},
+    "gsi1_sk": {"S": "TS#'${TIMESTAMP}'"}
+  }'
+
+echo 'User memberships created successfully'
+
 # Create a Team (hiteam)
 aws --endpoint-url=$ENDPOINT dynamodb put-item \
     --table-name ratel-local-main \
@@ -352,6 +378,9 @@ echo 'System Admin:'
 echo '  Email: admin@ratel.foundation'
 echo '  Password: admin!234'
 echo '  Username: admin'
+echo ''
+echo 'User Memberships:'
+echo '  user1: PRO (40 credits)'
 echo ''
 echo 'Attribute Codes:'
 echo '  j94EA1 - Sogang Male'
