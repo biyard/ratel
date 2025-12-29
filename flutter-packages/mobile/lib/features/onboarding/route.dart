@@ -61,6 +61,7 @@ List<GetPage> onboardingPages = [
   GetPage(
     name: accountScreen,
     page: () => const AccountScreen(),
+    middlewares: [AccountMiddleware()],
     binding: AccountBinding(),
     customTransition: SlideOverTransition(),
     transitionDuration: const Duration(milliseconds: 300),
