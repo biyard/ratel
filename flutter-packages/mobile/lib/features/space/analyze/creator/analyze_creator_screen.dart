@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/rendering.dart';
 import 'package:ratel/exports.dart';
 import 'package:ratel/features/space/analyze/components/analyze_header.dart';
 import 'package:ratel/features/space/analyze/components/objective_answers_view.dart';
@@ -10,6 +11,8 @@ class AnalyzeCreatorScreen extends GetWidget<AnalyzeCreatorController> {
 
   @override
   Widget build(BuildContext context) {
+    final space = Get.find<SpaceController>();
+
     return Layout<AnalyzeCreatorController>(
       scrollable: false,
       child: Obx(() {
@@ -37,22 +40,62 @@ class AnalyzeCreatorScreen extends GetWidget<AnalyzeCreatorController> {
           result.summaries.length,
         );
 
-        return ListView.builder(
-          itemCount: questionCount + 1,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return AnalyzeHeader(poll: poll, result: result);
+        return NotificationListener<ScrollNotification>(
+          onNotification: (n) {
+            space.markScrollActivity();
+
+            if (n.metrics.axis != Axis.vertical) return false;
+            if (n is! ScrollUpdateNotification &&
+                n is! UserScrollNotification) {
+              return false;
             }
 
-            final q = poll.questions[index - 1];
-            final s = result.summaries[index - 1];
+            final pixels = n.metrics.pixels;
+            final collapsedNow = space.isHeaderCollapsed.value;
 
-            return _QuestionResultCard(
-              index: index - 1,
-              question: q,
-              summary: s,
-            );
+            if (!collapsedNow && pixels > SpaceController.collapseThresholdPx) {
+              space.isHeaderCollapsed.value = true;
+              return false;
+            }
+
+            if (collapsedNow) {
+              final minExtent = n.metrics.minScrollExtent;
+              final atTop = pixels <= (minExtent + 0.5);
+
+              final bool userPullingDown =
+                  (n is UserScrollNotification &&
+                      n.direction == ScrollDirection.forward) ||
+                  (n is ScrollUpdateNotification &&
+                      n.dragDetails != null &&
+                      (n.scrollDelta ?? 0) < 0);
+
+              if (atTop && userPullingDown) {
+                space.isHeaderCollapsed.value = false;
+              }
+            }
+
+            return false;
           },
+          child: ListView.builder(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            itemCount: questionCount + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return AnalyzeHeader(poll: poll, result: result);
+              }
+
+              final q = poll.questions[index - 1];
+              final s = result.summaries[index - 1];
+
+              return _QuestionResultCard(
+                index: index - 1,
+                question: q,
+                summary: s,
+              );
+            },
+          ),
         );
       }),
     );

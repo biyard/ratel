@@ -57,7 +57,9 @@ class SpaceScreen extends GetWidget<SpaceController> {
       final pullingDown =
           (n is UserScrollNotification &&
               n.direction == ScrollDirection.forward) ||
-          (n is ScrollUpdateNotification && (n.scrollDelta ?? 0) < 0);
+          (n is ScrollUpdateNotification &&
+              n.dragDetails != null &&
+              (n.scrollDelta ?? 0) < 0);
 
       if (atTop && pullingDown) {
         controller.isHeaderCollapsed.value = false;
