@@ -2,7 +2,7 @@ use crate::features::did::VerifiedAttributes;
 use crate::features::spaces::panels::SpacePanelParticipant;
 
 use crate::features::spaces::rewards::{
-    PollReward, RewardKey, RewardType, SpaceReward, UserReward,
+    PollRewardKey, RewardKey, RewardAction, SpaceReward, UserReward,
 };
 use crate::features::spaces::{SpaceParticipant, polls::*};
 use crate::models::user::User;
@@ -86,7 +86,7 @@ pub async fn respond_poll_handler(
     let reward = SpaceReward::get_by_reward_key(
         &dynamo.client,
         space_pk.clone().into(),
-        (poll.sk.clone().into(), PollReward::Respond).into(),
+        (poll.sk.clone().into(), PollRewardKey::Respond).into(),
     )
     .await;
     //FIXME: Too many awaits in single handler, need to optimize

@@ -22,12 +22,12 @@ class BoardsViewerScreen extends GetWidget<BoardsViewerController> {
 
         return Column(
           children: [
-            BoardsCategoryBar(
-              categories: controller.categories,
-              selectedCategory: controller.selectedCategory,
-              onCategorySelected: controller.onCategorySelected,
-            ),
-            10.vgap,
+            // BoardsCategoryBar(
+            //   categories: controller.categories,
+            //   selectedCategory: controller.selectedCategory,
+            //   onCategorySelected: controller.onCategorySelected,
+            // ),
+            // 10.vgap,
             Expanded(
               child: RefreshIndicator(
                 onRefresh: controller.refreshAll,
