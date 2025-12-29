@@ -491,44 +491,8 @@ jobs:
           channel: stable
           cache: false
 
-      - name: Dump proxy env
-        shell: bash
-        run: |
-          env | grep -i proxy || true
-
-      - name: Unset proxy env
-        shell: bash
-        run: |
-          unset http_proxy https_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY || true
-
-      - name: Cache Gradle
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('flutter-packages/mobile/android/**/*.gradle*', 'flutter-packages/mobile/android/**/gradle-wrapper.properties', 'flutter-packages/mobile/pubspec.lock') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
-
-      - name: Cache Pub
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache
-          key: pub-${{ runner.os }}-${{ hashFiles('flutter-packages/mobile/pubspec.lock') }}
-          restore-keys: |
-            pub-${{ runner.os }}-
-
       - name: Flutter pub get
         run: flutter pub get
-
-      - name: Gradle debug (version + repositories)
-        shell: bash
-        run: |
-          cd android
-          ./gradlew --version
-          ./gradlew -q repositories || true
 
       - name: Prepare Android signing (real or placeholder)
         working-directory: flutter-packages/mobile
@@ -559,7 +523,6 @@ jobs:
           fi
 
       - name: Build APK (debug)
-        shell: bash
         run: |
           make ENV=dev build-config
           flutter build apk --debug --dart-define-from-file=.build/config.json
