@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { call } from '@/lib/api/ratel/call';
+import { useUserInfo } from '@/hooks/use-user-info';
 
 export interface ChatMessage {
   id: string;
@@ -28,10 +29,17 @@ interface UsePdfAiChat {
   clearMessages: () => void;
 }
 
-export function usePdfAiChat(spacePk: string, fileId: string): UsePdfAiChat {
+export function usePdfAiChat(spacePk: string, fileId: string, fileUrl: string): UsePdfAiChat {
+  const { data: user } = useUserInfo();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(() => {
+    // Try to restore session from localStorage - user+file based
+    if (!user?.pk || !fileUrl) return null;
+    const key = `pdf-ai-session-${user.pk}-${fileUrl}`;
+    return localStorage.getItem(key);
+  });
 
   const sendMessage = async ({ message, context }: SendMessageParams) => {
     if (!message.trim()) return;
@@ -48,11 +56,12 @@ export function usePdfAiChat(spacePk: string, fileId: string): UsePdfAiChat {
     setError(null);
 
     try {
-      const response: { message: string } = await call(
+      const response: { message: string; session_id: string } = await call(
         'POST',
         `/v3/spaces/${encodeURIComponent(spacePk)}/files/${encodeURIComponent(fileId)}/ai-chat`,
         {
           message,
+          session_id: sessionId,
           context: {
             file_name: context.fileName,
             current_page: context.currentPage,
@@ -61,6 +70,13 @@ export function usePdfAiChat(spacePk: string, fileId: string): UsePdfAiChat {
           },
         },
       );
+
+      // Store session ID for continuity - per user per file
+      if (user?.pk && fileUrl) {
+        const key = `pdf-ai-session-${user.pk}-${fileUrl}`;
+        localStorage.setItem(key, response.session_id);
+        setSessionId(response.session_id);
+      }
 
       const assistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
@@ -91,6 +107,12 @@ export function usePdfAiChat(spacePk: string, fileId: string): UsePdfAiChat {
   const clearMessages = () => {
     setMessages([]);
     setError(null);
+    // Clear session to start fresh conversation
+    if (user?.pk && fileUrl) {
+      const key = `pdf-ai-session-${user.pk}-${fileUrl}`;
+      localStorage.removeItem(key);
+    }
+    setSessionId(null);
   };
 
   return {

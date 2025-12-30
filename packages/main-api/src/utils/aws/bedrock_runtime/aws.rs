@@ -7,6 +7,7 @@ use aws_sdk_bedrockruntime::{
     config::Credentials,
     types::{ContentBlock, ConversationRole, Message},
 };
+use aws_sdk_bedrockagentruntime::Client as AgentClient;
 
 use crate::{Error, Result};
 
@@ -18,14 +19,17 @@ pub enum BedrockModel {
 #[derive(Clone)]
 pub struct BedrockClient {
     client: Client,
+    agent_client: AgentClient,
     model_arns: HashMap<BedrockModel, String>,
+    agent_id: String,
+    agent_alias_id: String,
 }
 
 impl BedrockClient {
     pub fn new() -> Self {
         let conf = config::get();
         let timeout_config = TimeoutConfig::builder()
-            .operation_attempt_timeout(Duration::from_secs(5))
+            .operation_attempt_timeout(Duration::from_secs(60))
             .build();
 
         let retry_config = RetryConfig::standard().with_max_attempts(3);
@@ -38,12 +42,28 @@ impl BedrockClient {
                     .build(),
             )
             .region(Region::new(conf.aws.region))
-            .timeout_config(timeout_config)
-            .retry_config(retry_config)
+            .timeout_config(timeout_config.clone())
+            .retry_config(retry_config.clone())
             .behavior_version_latest()
             .build();
 
         let client = Client::from_conf(aws_config);
+        
+        // Create separate config for agent client
+        let agent_config = aws_sdk_bedrockagentruntime::Config::builder()
+            .credentials_provider(
+                Credentials::builder()
+                    .access_key_id(conf.aws.access_key_id)
+                    .secret_access_key(conf.aws.secret_access_key)
+                    .provider_name("ratel")
+                    .build(),
+            )
+            .region(Region::new(conf.aws.region))
+            .timeout_config(timeout_config)
+            .retry_config(retry_config)
+            .behavior_version_latest()
+            .build();
+        let agent_client = AgentClient::from_conf(agent_config);
 
         let model_arns = vec![
             (
@@ -58,7 +78,13 @@ impl BedrockClient {
         .into_iter()
         .collect::<HashMap<BedrockModel, String>>();
 
-        Self { client, model_arns }
+        Self {
+            client,
+            agent_client,
+            model_arns,
+            agent_id: conf.bedrock.agent_id.to_string(),
+            agent_alias_id: conf.bedrock.agent_alias_id.to_string(),
+        }
     }
 
     pub async fn send_message(
@@ -126,5 +152,56 @@ impl BedrockClient {
             .to_string();
 
         Ok(text)
+    }
+
+    /// Invoke agent with session management
+    pub async fn invoke_agent(
+        &self,
+        session_id: String,
+        input_text: String,
+    ) -> Result<(String, String)> {
+        let response = self
+            .agent_client
+            .invoke_agent()
+            .agent_id(&self.agent_id)
+            .agent_alias_id(&self.agent_alias_id)
+            .session_id(&session_id)
+            .input_text(input_text)
+            .send()
+            .await
+            .map_err(|e| {
+                tracing::error!("Error invoking Bedrock Agent: {:?}", e);
+                Error::AwsBedrockError(format!("{:?}", e))
+            })?;
+
+        let session_id = response.session_id().to_string();
+
+        // Collect chunks from the event stream
+        let mut completion_text = String::new();
+        let mut event_stream = response.completion;
+
+        while let Some(event) = event_stream
+            .recv()
+            .await
+            .map_err(|e| {
+                tracing::error!("Error receiving agent event: {:?}", e);
+                Error::AwsBedrockError(format!("{:?}", e))
+            })?
+        {
+            if let Ok(chunk) = event.as_chunk() {
+                if let Some(bytes) = chunk.bytes() {
+                    let text = String::from_utf8_lossy(bytes.as_ref());
+                    completion_text.push_str(&text);
+                }
+            }
+        }
+
+        if completion_text.is_empty() {
+            return Err(Error::AwsBedrockError(
+                "Empty agent response".to_string(),
+            ));
+        }
+
+        Ok((completion_text, session_id))
     }
 }

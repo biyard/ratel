@@ -11,6 +11,7 @@ interface PdfViewerProps {
   fileName?: string;
   onTextSelect?: (text: string) => void;
   onPageChange?: (page: number) => void;
+  onLoadSuccess?: (numPages: number) => void;
   scale?: number;
 }
 
@@ -19,6 +20,7 @@ export default function PdfViewer({
   fileName,
   onTextSelect,
   onPageChange,
+  onLoadSuccess,
   scale = 1.0,
 }: PdfViewerProps) {
   const [numPages, setNumPages] = useState<number>(0);
@@ -31,6 +33,7 @@ export default function PdfViewer({
     setNumPages(numPages);
     setLoading(false);
     pageRefs.current = Array(numPages).fill(null);
+    onLoadSuccess?.(numPages);
   }
 
   function onDocumentLoadError() {

@@ -163,7 +163,7 @@ export function PdfAiChatSidebar({
                 <div
                   className={`max-w-[85%] rounded-lg px-4 py-2 ${
                     msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
+                      ? 'bg-primary text-black'
                       : 'bg-muted text-foreground'
                   }`}
                 >
