@@ -82,12 +82,15 @@ class LoginController extends BaseController {
       showWarning.value = false;
 
       if (isEmail) {
+        final authService = Get.find<AuthService>();
         final auth = Get.find<AuthApi>();
         await auth.clearSession();
 
         final e = email.value.trim();
         final p = password.value.trim();
         final res = await auth.loginWithPassword(e, p);
+        await authService.loadAccounts(refresh: false);
+
         if (res != null) {
           Get.rootDelegate.offNamed(AppRoutes.mainScreen);
           Biyard.info("Login Successed.");
