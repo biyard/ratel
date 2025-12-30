@@ -21,4 +21,13 @@ impl BedrockClient {
     ) -> crate::Result<String> {
         Ok(prompt)
     }
+
+    pub async fn invoke_agent(
+        &self,
+        session_id: Option<String>,
+        prompt: String,
+    ) -> crate::Result<(String, String)> {
+        let session = session_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+        Ok((format!("Mock response: {}", prompt), session))
+    }
 }
