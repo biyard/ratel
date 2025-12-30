@@ -159,6 +159,7 @@ jobs:
 
           BEDROCK_AGENT_ID: ${{ secrets.PROD_BEDROCK_AGENT_ID }}
           BEDROCK_AGENT_ALIAS_ID: ${{ secrets.PROD_BEDROCK_AGENT_ALIAS_ID }}
+          BEDROCK_KNOWLEDGE_BASE_ID: ${{ secrets.PROD_BEDROCK_KNOWLEDGE_BASE_ID }}
           
           BIYARD_API_URL: https://api.biyard.co
           BIYARD_API_KEY: ${{ secrets.BIYARD_API_KEY }}
