@@ -5,6 +5,7 @@ import { GlobalTableStack } from "../lib/dynamodb-stack";
 import { ImageWorkerStack } from "../lib/image-worker-stack";
 import { StaticStack } from "../lib/static-stack";
 import { DaemonStack } from "../lib/daemon-stack";
+import { BedrockAgentStack } from "../lib/bedrock-agent-stack";
 
 const app = new App();
 
@@ -50,6 +51,18 @@ new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
     region: "ap-northeast-2",
   },
   commit: process.env.COMMIT!,
+});
+
+// Create Bedrock Agent stack (uses manually created KB and Agent from AWS Console)
+new BedrockAgentStack(app, `ratel-${env}-bedrock-agent`, {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: "ap-northeast-2", // Must match S3 bucket region
+  },
+  stage: env,
+  knowledgeBaseId: process.env.BEDROCK_KNOWLEDGE_BASE_ID || "your-kb-id",
+  dataSourceId: process.env.BEDROCK_DATA_SOURCE_ID || "your-data-source-id",
+  pdfBucketName: process.env.PDF_BUCKET_NAME || "your-bucket-name",
 });
 
 new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
