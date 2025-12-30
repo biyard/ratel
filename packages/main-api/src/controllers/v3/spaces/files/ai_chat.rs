@@ -97,9 +97,15 @@ pub async fn ai_chat_handler(
 
     // Use RetrieveAndGenerate with Knowledge Base
     let bedrock_client = BedrockClient::new();
+    
+    #[cfg(not(feature = "no-secret"))]
+    let knowledge_base_id = config.bedrock.knowledge_base_id.to_string();
+    #[cfg(feature = "no-secret")]
+    let knowledge_base_id = "mock-kb-id".to_string();
+    
     let (ai_response, returned_session_id) = bedrock_client
         .retrieve_and_generate(
-            config.bedrock.knowledge_base_id.to_string(),
+            knowledge_base_id,
             payload.session_id.clone(),
             prompt,
             Some(s3_uri),
