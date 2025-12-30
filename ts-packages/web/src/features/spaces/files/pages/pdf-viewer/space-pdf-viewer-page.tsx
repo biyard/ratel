@@ -9,21 +9,23 @@ import { PdfAiChatSidebar } from '../../components/pdf-ai-chat-sidebar';
 import { usePdfAiChat } from '../../hooks/use-pdf-ai-chat';
 import { useChatPreference } from '../../hooks/use-chat-preference';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ChevronDown, ChevronUp, ZoomIn, ZoomOut } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp, ZoomIn, ZoomOut, Moon, Sun } from 'lucide-react';
 import { route } from '@/route';
+import { useTheme } from '@/hooks/use-theme';
 
 export function SpacePdfViewerPage() {
   const { spacePk, fileId } = useParams<{ spacePk: string; fileId: string }>();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedText, setSelectedText] = useState<string | undefined>();
-  const [totalPages] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [scale, setScale] = useState(1.0);
   const [shouldOpenOverlay, setShouldOpenOverlay] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const { theme, setTheme } = useTheme();
 
   if (!spacePk || !fileId) {
     throw new Error('Space ID and File ID are required');
@@ -34,12 +36,19 @@ export function SpacePdfViewerPage() {
   const { data: space } = useSpaceById(spacePk);
   const { data: fileResponse } = useFileSpace(spacePk);
 
+  // Decode the fileId (which is the filename encoded)
+  const decodedFileId = decodeURIComponent(fileId);
+
+  // Find the file by name
+  const file = fileResponse.files.find((f) => f.name === decodedFileId);
+
   // Chat state
   const { chatState, setChatState, sidebarWidth, setSidebarWidth } =
     useChatPreference();
   const { messages, isLoading, sendMessage, clearMessages } = usePdfAiChat(
     spacePk,
     fileId,
+    file?.url || '',
   );
 
   // Auto-hide header on scroll
@@ -95,12 +104,6 @@ export function SpacePdfViewerPage() {
       document.body.style.userSelect = '';
     };
   }, [isResizing, setSidebarWidth]);
-
-  // Decode the fileId (which is the filename encoded)
-  const decodedFileId = decodeURIComponent(fileId);
-
-  // Find the file by name
-  const file = fileResponse.files.find((f) => f.name === decodedFileId);
 
   if (!file) {
     return (
@@ -191,6 +194,21 @@ export function SpacePdfViewerPage() {
               {file.name}
             </div>
 
+            {/* Theme toggle */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+              aria-label="Toggle theme"
+              className="px-2"
+            >
+              {theme === 'light' ? (
+                <Moon className="h-4 w-4" />
+              ) : (
+                <Sun className="h-4 w-4" />
+              )}
+            </Button>
+
             {/* Zoom controls */}
             <div className="flex items-center gap-2">
               <Button
@@ -236,6 +254,7 @@ export function SpacePdfViewerPage() {
             fileName={file.name}
             onTextSelect={handleTextSelect}
             onPageChange={handlePageChange}
+            onLoadSuccess={setTotalPages}
             scale={scale}
           />
         </div>
