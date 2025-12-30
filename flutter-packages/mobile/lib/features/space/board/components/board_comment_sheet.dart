@@ -1,6 +1,9 @@
 import 'package:ratel/exports.dart';
-import 'package:ratel/features/space/board/components/board_comment_input_bar.dart';
 import 'package:ratel/features/space/board/components/board_comment_item.dart';
+
+typedef CommentLikeTap<T> = void Function(T comment);
+typedef CommentEditTap<T> = Future<void> Function(T comment, String newContent);
+typedef CommentDeleteTap<T> = Future<void> Function(T comment);
 
 class BoardCommentsSheet extends StatefulWidget {
   final Rx<UserModel> user;
@@ -9,6 +12,8 @@ class BoardCommentsSheet extends StatefulWidget {
   final bool hasMore;
   final bool isLoadingMore;
   final bool canComment;
+  final bool showComposer;
+
   final ScrollController scrollController;
   final Future<void> Function(String text) onSend;
   final CommentLikeTap<SpacePostCommentModel>? onLikeTap;
@@ -32,6 +37,7 @@ class BoardCommentsSheet extends StatefulWidget {
     this.onLoadMore,
     this.canComment = true,
     this.onReport,
+    this.showComposer = true,
   });
 
   @override
@@ -48,17 +54,76 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
   bool _hasMore = false;
   bool _loadingMore = false;
 
+  static const double _loadMoreThresholdPx = 200.0;
+
   @override
   void initState() {
     super.initState();
     _hasMore = widget.hasMore;
+
+    widget.scrollController.addListener(_onScroll);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybeLoadMore(force: true);
+    });
+  }
+
+  @override
+  void didUpdateWidget(covariant BoardCommentsSheet oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.scrollController != widget.scrollController) {
+      oldWidget.scrollController.removeListener(_onScroll);
+      widget.scrollController.addListener(_onScroll);
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _maybeLoadMore(force: true);
+      });
+    }
+
+    if (oldWidget.hasMore != widget.hasMore) _hasMore = widget.hasMore;
   }
 
   @override
   void dispose() {
+    widget.scrollController.removeListener(_onScroll);
     _textController.dispose();
     _editingController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    _maybeLoadMore();
+  }
+
+  void _maybeLoadMore({bool force = false}) {
+    if (!mounted) return;
+    if (widget.onLoadMore == null) return;
+    if (!_hasMore) return;
+    if (_loadingMore) return;
+
+    final ctrl = widget.scrollController;
+    if (!ctrl.hasClients) return;
+
+    final pos = ctrl.position;
+    final shouldLoad = force || (pos.extentAfter <= _loadMoreThresholdPx);
+    if (!shouldLoad) return;
+
+    _triggerLoadMore();
+  }
+
+  Future<void> _triggerLoadMore() async {
+    if (_loadingMore) return;
+    if (widget.onLoadMore == null) return;
+
+    setState(() => _loadingMore = true);
+    try {
+      final hasMore = await widget.onLoadMore!();
+      if (!mounted) return;
+      setState(() => _hasMore = hasMore);
+    } finally {
+      if (mounted) setState(() => _loadingMore = false);
+    }
   }
 
   void _beginInlineEdit(int index, SpacePostCommentModel comment) {
@@ -164,236 +229,147 @@ class _BoardCommentsSheetState extends State<BoardCommentsSheet> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
+  ScrollPhysics get _physics =>
+      const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+
+  Widget _buildList(BuildContext context) {
     final theme = Theme.of(context);
 
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 150),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Container(
-        decoration: const BoxDecoration(
-          color: Color(0xFF29292F),
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-          border: Border(top: BorderSide(color: Color(0xFF3E3E4A))),
-          boxShadow: [
-            BoxShadow(
-              offset: Offset(0, -4),
-              blurRadius: 20,
-              spreadRadius: 10,
-              color: Color.fromARGB(128, 10, 10, 10),
-            ),
-          ],
+    if (widget.isLoading) {
+      return const Center(
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
         ),
-        child: Column(
-          children: [
-            const SizedBox(height: 8),
-            Container(
-              width: 50,
-              height: 5,
-              decoration: BoxDecoration(
-                color: const Color(0xFF6B6B6D),
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Comments',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 14,
-                    height: 20 / 14,
-                  ),
+      );
+    }
+
+    if (widget.comments.isEmpty) {
+      return ListView(
+        controller: widget.scrollController,
+        physics: _physics,
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+        children: [
+          SizedBox(
+            height: 180,
+            child: Center(
+              child: Text(
+                'No comments yet.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.neutral500,
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: widget.isLoading
-                  ? const Center(
-                      child: SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
-                  : widget.comments.isEmpty
-                  ? ListView(
-                      controller: widget.scrollController,
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      children: [
-                        SizedBox(
-                          height: 200,
-                          child: Center(
-                            child: Text(
-                              'No comments yet.',
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                color: AppColors.neutral500,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                  : ListView.builder(
-                      controller: widget.scrollController,
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                      itemCount: widget.comments.length + (_hasMore ? 1 : 0),
-                      itemBuilder: (context, index) {
-                        if (index < widget.comments.length) {
-                          final c = widget.comments[index];
-                          final editing = _editingIndex == index;
+          ),
+        ],
+      );
+    }
 
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 24),
-                            child: BoardCommentItem(
-                              user: widget.user.value,
-                              comment: c,
-                              isEditing: editing,
-                              isReported: c.isReport,
-                              editingController: editing
-                                  ? _editingController
-                                  : null,
-                              onSaveEdit: editing
-                                  ? () => _saveInlineEdit(index, c)
-                                  : null,
-                              onCancelEdit: editing ? _cancelInlineEdit : null,
-                              onLikeTap: widget.onLikeTap == null
-                                  ? null
-                                  : () async {
-                                      if (editing) return;
+    final extra = (_hasMore || _loadingMore) ? 1 : 0;
 
-                                      final prevLiked = c.liked;
-                                      final prevLikes = c.likes;
+    return ListView.builder(
+      controller: widget.scrollController,
+      physics: _physics,
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+      itemCount: widget.comments.length + extra,
+      itemBuilder: (context, index) {
+        if (index < widget.comments.length) {
+          final c = widget.comments[index];
+          final editing = _editingIndex == index;
 
-                                      final nextLiked = !prevLiked;
-                                      int nextLikes = prevLikes;
-                                      if (nextLiked && !prevLiked) {
-                                        nextLikes = prevLikes + 1;
-                                      } else if (!nextLiked &&
-                                          prevLiked &&
-                                          prevLikes > 0) {
-                                        nextLikes = prevLikes - 1;
-                                      }
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: BoardCommentItem(
+              user: widget.user.value,
+              comment: c,
+              isEditing: editing,
+              isReported: c.isReport,
+              editingController: editing ? _editingController : null,
+              onSaveEdit: editing ? () => _saveInlineEdit(index, c) : null,
+              onCancelEdit: editing ? _cancelInlineEdit : null,
+              onLikeTap: widget.onLikeTap == null
+                  ? null
+                  : () async {
+                      if (editing) return;
 
-                                      widget.onLikeTap!(c);
+                      final prevLiked = c.liked;
+                      final prevLikes = c.likes;
 
-                                      setState(() {
-                                        c.liked = nextLiked;
-                                        c.likes = nextLikes;
-                                      });
-                                    },
-                              onMoreTap: () => _showCommentActions(index, c),
-                              onReportTap: null,
-                            ),
-                          );
+                      final nextLiked = !prevLiked;
+                      int nextLikes = prevLikes;
+                      if (nextLiked && !prevLiked) {
+                        nextLikes = prevLikes + 1;
+                      } else if (!nextLiked && prevLiked && prevLikes > 0) {
+                        nextLikes = prevLikes - 1;
+                      }
+
+                      widget.onLikeTap!(c);
+
+                      setState(() {
+                        c.liked = nextLiked;
+                        c.likes = nextLikes;
+                      });
+                    },
+              onMoreTap: () => _showCommentActions(index, c),
+              onReportTap: null,
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Center(
+            child: _loadingMore
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const SizedBox.shrink(),
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final kb = MediaQuery.of(context).viewInsets.bottom;
+
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 150),
+      padding: EdgeInsets.only(bottom: kb),
+      child: Column(
+        children: [
+          Expanded(child: _buildList(context)),
+          if (widget.showComposer)
+            SafeArea(
+              top: false,
+              child: widget.canComment
+                  ? _BoardCommentInputBar(
+                      controller: _textController,
+                      sending: _sending,
+                      onSend: (text) async {
+                        final trimmed = text.trim();
+                        if (trimmed.isEmpty) return;
+                        if (_sending) return;
+
+                        setState(() => _sending = true);
+                        try {
+                          await widget.onSend(trimmed);
+                          _textController.clear();
+                        } finally {
+                          if (mounted) setState(() => _sending = false);
                         }
-
-                        if (!_hasMore) {
-                          return const SizedBox.shrink();
-                        }
-
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Center(
-                            child: _loadingMore
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : TextButton(
-                                    onPressed: widget.onLoadMore == null
-                                        ? null
-                                        : () async {
-                                            setState(() {
-                                              _loadingMore = true;
-                                            });
-                                            try {
-                                              final hasMore =
-                                                  await widget.onLoadMore!();
-                                              if (!mounted) return;
-                                              setState(() {
-                                                _hasMore = hasMore;
-                                              });
-                                            } finally {
-                                              if (mounted) {
-                                                setState(() {
-                                                  _loadingMore = false;
-                                                });
-                                              }
-                                            }
-                                          },
-                                    child: const Text(
-                                      'More',
-                                      style: TextStyle(
-                                        color: AppColors.neutral500,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ),
-                          ),
-                        );
                       },
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
+                      child: Container(),
                     ),
             ),
-            widget.canComment
-                ? _BoardCommentInputBar(
-                    controller: _textController,
-                    sending: _sending,
-                    onSend: (text) async {
-                      final trimmed = text.trim();
-                      if (trimmed.isEmpty) return;
-                      if (_sending) return;
-                      setState(() {
-                        _sending = true;
-                      });
-                      try {
-                        await widget.onSend(trimmed);
-                        _textController.clear();
-                      } finally {
-                        if (mounted) {
-                          setState(() {
-                            _sending = false;
-                          });
-                        }
-                      }
-                    },
-                  )
-                : SafeArea(
-                    top: false,
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-                      child: SizedBox(
-                        height: 44,
-                        child: Container(
-                          alignment: Alignment.center,
-                          decoration: BoxDecoration(
-                            color: AppColors.neutral700,
-                            borderRadius: BorderRadius.circular(22),
-                          ),
-                          child: const Text(
-                            "This discussion is not open at this time.",
-                            style: TextStyle(
-                              color: AppColors.neutral500,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -403,6 +379,7 @@ class _BoardCommentInputBar extends StatelessWidget {
   final TextEditingController controller;
   final bool sending;
   final Future<void> Function(String text) onSend;
+
   const _BoardCommentInputBar({
     required this.controller,
     required this.sending,
@@ -413,69 +390,66 @@ class _BoardCommentInputBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        child: RoundContainer(
-          radius: 100,
-          width: double.infinity,
-          color: const Color(0xFF101010),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          border: Border.all(color: const Color(0xFF3E3E4A)),
-          child: Row(
-            children: [
-              SvgPicture.asset(
-                Assets.roundBubble,
-                width: 20,
-                height: 20,
-                colorFilter: const ColorFilter.mode(
-                  Color(0xFFD4D4D4),
-                  BlendMode.srcIn,
-                ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+      child: RoundContainer(
+        radius: 100,
+        width: double.infinity,
+        color: const Color(0xFF101010),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        border: Border.all(color: const Color(0xFF3E3E4A)),
+        child: Row(
+          children: [
+            SvgPicture.asset(
+              Assets.roundBubble,
+              width: 20,
+              height: 20,
+              colorFilter: const ColorFilter.mode(
+                Color(0xFFD4D4D4),
+                BlendMode.srcIn,
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  style: theme.textTheme.bodyMedium?.copyWith(
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+                decoration: const InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  hintText: 'Add a comment',
+                  hintStyle: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
-                    color: Colors.white,
+                    color: Color(0xFF6B6B6D),
                   ),
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    border: InputBorder.none,
-                    hintText: 'Add a comment',
-                    hintStyle: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF6B6B6D),
-                    ),
-                  ),
-                  textInputAction: TextInputAction.newline,
-                  keyboardType: TextInputType.multiline,
-                  minLines: 1,
-                  maxLines: 4,
                 ),
+                textInputAction: TextInputAction.newline,
+                keyboardType: TextInputType.multiline,
+                minLines: 1,
+                maxLines: 4,
               ),
-              const SizedBox(width: 10),
-              GestureDetector(
-                onTap: sending ? null : () => onSend(controller.text),
-                child: sending
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(
-                        Icons.send_rounded,
-                        size: 20,
-                        color: AppColors.neutral500,
-                      ),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: sending ? null : () => onSend(controller.text),
+              child: sending
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(
+                      Icons.send_rounded,
+                      size: 20,
+                      color: AppColors.neutral500,
+                    ),
+            ),
+          ],
         ),
       ),
     );

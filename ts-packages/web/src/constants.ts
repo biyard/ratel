@@ -152,6 +152,9 @@ export const spaceKeys = {
     [...spaceKeys.art_nfts(spacePk), nftPk] as const,
   art_nft_trades: (spacePk: string, nftPk: string = 'default') =>
     [...spaceKeys.art_nft(spacePk, nftPk), 'trades'] as const,
+
+  rewards: (spacePk: string) =>
+    [...spaceKeys.detail(spacePk), 'rewards'] as const,
 };
 
 export const QK_MEMBERSHIPS = 'memberships';

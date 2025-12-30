@@ -28,6 +28,7 @@ import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
 import SpaceByIdLayout from './app/spaces/[id]/space-by-id-layout';
 import { SpaceHomePage } from './app/spaces/[id]/space-home-page';
 import { SpaceSettingsPage } from './app/spaces/[id]/settings/space-settings-page';
+import { SpaceRewardsPage } from './app/spaces/[id]/rewards/space-rewards-page';
 import SpaceSprintLeaguePage from './app/spaces/[id]/sprint-league/page';
 import SpaceDiscussionPage from './app/spaces/[id]/discussions/space-discussion-page';
 import SpaceFilePage from './app/spaces/[id]/file/space-file-page';
@@ -39,6 +40,7 @@ import AdminPage from './app/admin/page';
 import { MembershipsPage } from './app/admin/memberships/memberships-page';
 import AttributeCodesPage from './app/admin/attribute-codes/page';
 import AdminUsersPage from './app/admin/users/page';
+import { RewardsPage as AdminRewardsPage } from './app/admin/rewards/rewards-page';
 import TelegramPage from './app/telegram/page';
 import SpaceAnalyzePage from './app/spaces/[id]/analyze/space-analyze-page';
 import SpacePanelPage from './app/spaces/[id]/panels/space-panel-page';
@@ -64,6 +66,7 @@ import { Refund } from './app/refund';
 import SpaceMemberPage from './app/spaces/[id]/members/space-member-page';
 import MySpacesPage from './app/(social)/my-spaces/page';
 import NotificationsPage from './app/notifications/page';
+import RewardsPage from './app/rewards/page';
 import { MembershipPlan } from './features/membership/components/membership-plan';
 import Providers from './providers/providers';
 import { PdfViewerLoader } from './features/spaces/files/components/pdf-viewer-loader';
@@ -191,6 +194,11 @@ export const routes = createBrowserRouter([
             path: 'notifications',
             Component: NotificationsPage,
           },
+          {
+            id: 'rewards-page',
+            path: 'rewards',
+            Component: RewardsPage,
+          },
         ],
       }, // End of Social Layout
 
@@ -272,6 +280,11 @@ export const routes = createBrowserRouter([
             id: 'space-settings-page',
             path: 'settings',
             Component: SpaceSettingsPage,
+          },
+          {
+            id: 'space-rewards-page',
+            path: 'rewards',
+            Component: SpaceRewardsPage,
           },
 
           {
@@ -415,6 +428,11 @@ export const routes = createBrowserRouter([
         id: 'admin-attribute-codes-page',
         path: 'admin/attribute-codes',
         Component: AttributeCodesPage,
+      },
+      {
+        id: 'admin-rewards-page',
+        path: 'admin/rewards',
+        Component: AdminRewardsPage,
       }, // End of Admin Routes
 
       {

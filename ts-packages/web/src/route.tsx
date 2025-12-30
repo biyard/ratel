@@ -2,13 +2,16 @@ import { SpaceType } from './features/spaces/types/space-type';
 import { RelationType } from './types/relation-type';
 
 export const route = {
+  // User Menus
   home: () => '/',
   myProfile: () => '/my-profile',
   explore: () => '/explore',
   settings: () => '/settings',
   credentials: () => '/credentials',
+  rewards: () => '/rewards',
   myPosts: () => '/my-posts',
   mySpaces: () => '/my-spaces',
+
   createPost: (postPk?: string) =>
     postPk ? `/posts/new?post-pk=${encodeURIComponent(postPk)}` : '/posts/new',
   createArtwork: (postPk?: string) =>
@@ -56,7 +59,7 @@ export const route = {
 
   spaceSetting: (spacePk: string) =>
     `/spaces/${encodeURIComponent(spacePk)}/settings`,
-  spaceRewardSetting: (spacePk: string) =>
+  spaceReward: (spacePk: string) =>
     `/spaces/${encodeURIComponent(spacePk)}/rewards`,
   spaceByType: (spaceType: SpaceType, spaceId: number | string) => {
     switch (spaceType) {
@@ -116,6 +119,7 @@ export const route = {
   adminMemberships: () => '/admin/memberships',
   adminAttributeCodes: () => '/admin/attribute-codes',
   adminUsers: () => '/admin/users',
+  adminRewards: () => '/admin/rewards',
   newPost: (postPk?: string, teamPk?: string) => {
     let to = '/posts/new';
     const params: string[] = [];
