@@ -59,7 +59,7 @@ impl PortOne {
 
     pub async fn pay_with_billing_key(
         &self,
-        _customer_id: String,
+        customer_id: String,
         _customer_name: String,
         _order_name: String,
         _billing_key: String,
@@ -73,28 +73,37 @@ impl PortOne {
                     pg_tx_id: "merchantest".to_string(),
                 },
             },
-            "payment-id".to_string(),
+            customer_id,
         ))
     }
 
     pub async fn schedule_pay_with_billing_key(
         &self,
-        _customer_id: String,
+        customer_id: String,
         _customer_name: String,
         _order_name: String,
         _billing_key: String,
         _amount: i64,
         _currency: Currency,
         _time_to_pay: String,
-    ) -> Result<(BillingKeyPaymentResponse, String)> {
+    ) -> Result<(PaymentScheduleResponse, String)> {
         Ok((
-            BillingKeyPaymentResponse {
-                payment: Payment {
-                    paid_at: "2025-11-03T11:01:50.08942321Z".to_string(),
-                    pg_tx_id: "merchantest".to_string(),
+            PaymentScheduleResponse {
+                schedule: PaymentSchedule {
+                    id: "merchantest".to_string(),
                 },
             },
-            "payment-id".to_string(),
+            customer_id,
         ))
+    }
+
+    pub async fn cancel_schedule_with_billing_key(
+        &self,
+        billing_key: String,
+    ) -> Result<PaymentCancelScheduleResponse> {
+        Ok(PaymentCancelScheduleResponse {
+            revoked_schedule_ids: vec![billing_key],
+            revoked_at: Some("2025-11-03T11:01:50.08942321Z".to_string()),
+        })
     }
 }

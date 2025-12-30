@@ -14,20 +14,21 @@ class WarningMessage extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Positioned.fill(
             child: SvgPicture.asset(Assets.warning, width: 16, height: 16),
           ),
           4.gap,
-          Expanded(
-            child: Text(
-              message,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                height: 16 / 13,
-              ),
+          Text(
+            message,
+            style: const TextStyle(
+              color: Color(0xffef4444),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              height: 16 / 13,
             ),
           ),
         ],

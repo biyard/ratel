@@ -4,7 +4,7 @@ use chrono::Datelike;
 
 use crate::{
     features::spaces::rewards::{
-        FeatureRewardTrait, RewardCondition, RewardKey, RewardPeriod, RewardType,
+        FeatureRewardKeyTrait, RewardAction, RewardCondition, RewardKey, RewardPeriod,
     },
     *,
 };
@@ -21,19 +21,23 @@ use crate::{
     serde::Deserialize,
     OperationIo,
 )]
-pub enum PollReward {
+pub enum PollRewardKey {
     #[default]
     Respond,
 }
 
-impl FeatureRewardTrait for PollReward {
+impl FeatureRewardKeyTrait for PollRewardKey {
     fn is_empty(&self) -> bool {
         false
     }
+
+    fn get_action(&self) -> RewardAction {
+        RewardAction::PollRespond
+    }
 }
 
-impl From<(SpacePollEntityType, PollReward)> for RewardKey {
-    fn from(value: (SpacePollEntityType, PollReward)) -> Self {
+impl From<(SpacePollEntityType, PollRewardKey)> for RewardKey {
+    fn from(value: (SpacePollEntityType, PollRewardKey)) -> Self {
         Self::Poll(value.0, value.1)
     }
 }

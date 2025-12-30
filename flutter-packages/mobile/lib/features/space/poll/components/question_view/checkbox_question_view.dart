@@ -1,5 +1,4 @@
 import 'package:ratel/exports.dart';
-import 'package:ratel/features/space/poll/components/option_tile.dart';
 
 class CheckboxQuestionView extends StatelessWidget {
   const CheckboxQuestionView({
@@ -15,41 +14,111 @@ class CheckboxQuestionView extends StatelessWidget {
   final ValueChanged<Answer> onChanged;
   final bool readOnly;
 
+  void _toggle(Set<int> selected, int i) {
+    final set = selected.toSet();
+
+    if (question.isMulti) {
+      if (set.contains(i)) {
+        set.remove(i);
+      } else {
+        set.add(i);
+      }
+    } else {
+      if (set.contains(i)) {
+        set.clear();
+      } else {
+        set
+          ..clear()
+          ..add(i);
+      }
+    }
+
+    onChanged(CheckboxAnswer(set.toList()..sort()));
+  }
+
   @override
   Widget build(BuildContext context) {
     final selected = (answer?.answer ?? const <int>[]).toSet();
+    final enabled = !readOnly;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         for (int i = 0; i < question.options.length; i++) ...[
-          OptionTile(
-            label: question.options[i],
-            selected: selected.contains(i),
-            enabled: !readOnly,
-            onTap: readOnly
-                ? () {}
-                : () {
-                    final set = selected.toSet();
+          Builder(
+            builder: (_) {
+              final isSelected = selected.contains(i);
 
-                    if (question.isMulti) {
-                      if (set.contains(i)) {
-                        set.remove(i);
-                      } else {
-                        set.add(i);
-                      }
-                    } else {
-                      if (set.contains(i)) {
-                        set.clear();
-                      } else {
-                        set
-                          ..clear()
-                          ..add(i);
-                      }
-                    }
+              final selectedColor = enabled
+                  ? AppColors.primary
+                  : AppColors.primary.withAlpha(125);
 
-                    onChanged(CheckboxAnswer(set.toList()..sort()));
-                  },
+              final checkBg = isSelected
+                  ? selectedColor
+                  : const Color(0xFF101010);
+              final checkBorder = isSelected
+                  ? Colors.transparent
+                  : const Color(0xFF737373);
+
+              final boxBg = (isSelected && enabled)
+                  ? const Color(0xFFFCB300).withOpacity(0.05)
+                  : const Color(0xFF171717);
+
+              final boxBorder = (isSelected && enabled)
+                  ? const Border.fromBorderSide(
+                      BorderSide(color: Color(0xFFFCB300), width: 1),
+                    )
+                  : Border.all(color: Colors.transparent, width: 1);
+
+              return GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: enabled ? () => _toggle(selected, i) : null,
+                child: Container(
+                  height: 72,
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  decoration: BoxDecoration(
+                    color: boxBg,
+                    borderRadius: BorderRadius.circular(10),
+                    border: boxBorder,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 20,
+                        height: 20,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: checkBorder, width: 2),
+                          color: checkBg,
+                        ),
+                        child: isSelected
+                            ? const Icon(
+                                Icons.check,
+                                size: 16,
+                                color: Color(0xFF0A0A0A),
+                              )
+                            : null,
+                      ),
+                      20.gap,
+                      Expanded(
+                        child: Text(
+                          question.options[i],
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w400,
+                            fontSize: 16,
+                            height: 24 / 16,
+                            letterSpacing: 0.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
           10.vgap,
         ],

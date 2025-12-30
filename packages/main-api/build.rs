@@ -25,6 +25,10 @@ fn main() {
     let dist_dst = manifest_dir.join("dist");
     let assets_dir = dist_dst.join("assets");
 
+    // Fetch and embed build-time IP address (always do this, regardless of other build options)
+    let build_ip = fetch_build_ip();
+    println!("cargo:rustc-env=BUILD_IP_ADDRESS={}", build_ip);
+
     let web_build = env::var("WEB_BUILD").unwrap_or_default();
     let skip_web_build = env::var("CARGO_FEATURE_MODEL_ONLY").is_ok() || web_build == "ignore";
     if skip_web_build {
@@ -72,6 +76,21 @@ fn main() {
         "cargo:rustc-env=WEB_INDEX_JS={}",
         js.file_name().unwrap().to_string_lossy()
     );
+}
+
+fn fetch_build_ip() -> String {
+    // Try to fetch IP from ifconfig.me at build time
+    // Falls back to "unknown" if the request fails
+    let output = Command::new("curl")
+        .args(["-s", "--max-time", "5", "https://ifconfig.me"])
+        .output();
+
+    match output {
+        Ok(out) if out.status.success() => {
+            String::from_utf8_lossy(&out.stdout).trim().to_string()
+        }
+        _ => "unknown".to_string(),
+    }
 }
 
 fn copy_dir_all(src: &Path, dst: &Path) -> std::io::Result<()> {
