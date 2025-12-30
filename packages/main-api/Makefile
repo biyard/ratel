@@ -37,6 +37,9 @@ NOVA_MICRO_MODEL_ID ?= dummy
 NOVA_LITE_MODEL_ID ?= dummy
 PRIVATE_BUCKET_NAME ?= private.ratel.foundation
 
+BEDROCK_AGENT_ID ?= dummy
+BEDROCK_AGENT_ALIAS_ID ?= dummy
+
 REPO_NAME ?= $(PROJECT)/$(SERVICE)
 ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(REPO_NAME)  --query "repositories[0].repositoryUri" --output text)
 
