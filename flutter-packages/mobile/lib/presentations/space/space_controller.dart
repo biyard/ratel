@@ -21,8 +21,14 @@ class SpaceController extends BaseController {
   static const double collapseThresholdPx = 56.0;
   static const double dragThresholdPx = 56.0;
 
+  static const double scrollExpandThresholdPx = 72.0;
+  static const double scrollCollapseThresholdPx = 72.0;
+
   double _dragSum = 0.0;
   int _lastScrollMs = 0;
+
+  double _expandDragSum = 0.0;
+  double _collapseDragSum = 0.0;
 
   @override
   void onInit() {
@@ -126,6 +132,69 @@ class SpaceController extends BaseController {
     _dragSum = 0.0;
   }
 
+  void resetScrollDragSums() {
+    _expandDragSum = 0.0;
+    _collapseDragSum = 0.0;
+  }
+
+  bool handleHeaderByScroll(ScrollNotification n) {
+    markScrollActivity();
+
+    if (n.metrics.axis != Axis.vertical) return false;
+
+    if (n is ScrollEndNotification) {
+      resetScrollDragSums();
+      return false;
+    }
+
+    if (n is ScrollUpdateNotification) {
+      final delta = n.scrollDelta ?? 0.0;
+
+      if (n.dragDetails == null) return false;
+
+      final collapsedNow = isHeaderCollapsed.value;
+
+      if (!collapsedNow) {
+        if (delta > 0) {
+          _collapseDragSum += delta;
+        } else {
+          _collapseDragSum = 0.0;
+        }
+
+        if (_collapseDragSum >= scrollCollapseThresholdPx ||
+            n.metrics.pixels > collapseThresholdPx) {
+          isHeaderCollapsed.value = true;
+          resetScrollDragSums();
+        }
+
+        return false;
+      }
+
+      final minExtent = n.metrics.minScrollExtent;
+      final atTop = n.metrics.pixels <= (minExtent + 0.5);
+
+      if (!atTop) {
+        _expandDragSum = 0.0;
+        return false;
+      }
+
+      if (delta < 0) {
+        _expandDragSum += -delta;
+      } else {
+        _expandDragSum = 0.0;
+      }
+
+      if (_expandDragSum >= scrollExpandThresholdPx) {
+        isHeaderCollapsed.value = false;
+        resetScrollDragSums();
+      }
+
+      return false;
+    }
+
+    return false;
+  }
+
   List<SpaceTab> _buildTabsForPollSpace() {
     final baseTabs = <SpaceTab>[
       SpaceTab(id: 'overview', label: 'Overview', route: '/overview'),
@@ -137,7 +206,7 @@ class SpaceController extends BaseController {
     if (isAdmin) {
       baseTabs.addAll([
         SpaceTab(id: 'analyze', label: 'Analyze', route: '/analyze'),
-        SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
+        // SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
       ]);
     }
 
@@ -156,10 +225,7 @@ class SpaceController extends BaseController {
 
     if (isAdmin) {
       baseTabs.addAll([
-        // SpaceTab(id: 'member', label: 'Members', route: '/member'),
-        // SpaceTab(id: 'panel', label: 'Panels', route: '/panel'),
         SpaceTab(id: 'analyze', label: 'Analyze', route: '/analyzes'),
-        // SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
       ]);
     }
 

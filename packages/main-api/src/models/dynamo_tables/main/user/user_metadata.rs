@@ -8,6 +8,7 @@ use bdk::prelude::*;
 #[dynamo(pk_prefix = "EMAIL", index = "gsi3", name = "find_by_email")]
 pub enum UserMetadata {
     User(User),
+    UserRefreshToken(UserRefreshToken),
     UserNotification(UserNotification),
     UserPrincipal(UserPrincipal),
     UserEvmAddress(UserEvmAddress),
@@ -104,7 +105,9 @@ impl From<Vec<UserMetadata>> for UserDetailResponse {
                 UserMetadata::UserMembership(membership) => {
                     res.membership = Some(membership.into());
                 }
-                UserMetadata::UserTeamGroup(_) | UserMetadata::UserTelegram(_) => {
+                UserMetadata::UserTeamGroup(_)
+                | UserMetadata::UserTelegram(_)
+                | UserMetadata::UserRefreshToken(_) => {
                     // Skip
                 }
             }

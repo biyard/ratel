@@ -93,6 +93,7 @@ class AuthApi extends GetConnect {
 
   String get _sidKeyStorage => '${env}_sid';
   String get _authKeyStorage => '${env}_auth_token';
+  String _rtKey(String userPk) => '${env}_rt_$userPk';
 
   static final Map<String, String> _cookieJar = {};
 
@@ -149,6 +150,8 @@ class AuthApi extends GetConnect {
   }
 
   Future<dynamic> signup(String phone, String code) async {
+    final notificationService = Get.find<NotificationsService>();
+    final deviceId = await notificationService.getOrCreateDeviceId();
     final uri = Uri.parse(apiEndpoint).resolve('/v3/auth/signup');
     final body = {
       "phone": phone,
@@ -159,6 +162,7 @@ class AuthApi extends GetConnect {
       "description": "",
       "term_agreed": true,
       "informed_agreed": false,
+      "device_id": deviceId,
     };
     final res = await post(
       uri.toString(),
@@ -186,7 +190,13 @@ class AuthApi extends GetConnect {
     }
 
     final userService = Get.find<UserService>();
-    await userService.getUser();
+    final user = await userService.getUser();
+
+    final map = (res.body is Map) ? (res.body as Map) : null;
+    final refreshToken = map?['refresh_token'] as String?;
+    if (refreshToken != null) {
+      await _secure.write(key: _rtKey(user.pk), value: refreshToken);
+    }
 
     return LoginResult(
       body: res.body,
@@ -211,11 +221,15 @@ class AuthApi extends GetConnect {
 
   Future<dynamic> loginWithPassword(String email, String password) async {
     await ensureLoggedOut();
+    final notificationService = Get.find<NotificationsService>();
+    final deviceId = await notificationService.getOrCreateDeviceId();
     final hashed = '0x${sha256Hex(password)}';
     final uri = Uri.parse(apiEndpoint).resolve('/v3/auth/login');
-    final body = {"email": email, "password": hashed};
+    final body = {"email": email, "password": hashed, "device_id": deviceId};
+
     final res = await post(uri.toString(), body, headers: _noCookieJson());
     if (!res.isOk) return null;
+
     final cookies = _extractCookies(res.headers ?? {});
     final sidName = _sidKeyStorage;
     final authName = _authKeyStorage;
@@ -238,13 +252,97 @@ class AuthApi extends GetConnect {
     }
 
     final userService = Get.find<UserService>();
-    await userService.getUser();
+    final user = await userService.getUser();
+
+    final map = (res.body is Map) ? (res.body as Map) : null;
+    logger.d("login response body: $map");
+    final refreshToken = map?['refresh_token'] as String?;
+    if (refreshToken != null) {
+      await _secure.write(key: _rtKey(user.pk), value: refreshToken);
+    }
 
     return LoginResult(
       body: res.body,
       sid: cookies[sidName],
       authToken: cookies[authName],
     );
+  }
+
+  Future<ListAccountsResult?> listAccounts({String? bookmark}) async {
+    final notificationService = Get.find<NotificationsService>();
+    final deviceId = await notificationService.getOrCreateDeviceId();
+
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/auth/accounts');
+    final qp = <String, String>{
+      'device_id': deviceId,
+      if (bookmark != null && bookmark.isNotEmpty) 'bookmark': bookmark,
+    };
+
+    final res = await get(
+      uri.replace(queryParameters: qp).toString(),
+      headers: _noCookieJson(),
+    );
+    if (!res.isOk) return null;
+
+    final map = (res.body is Map)
+        ? (res.body as Map).cast<String, dynamic>()
+        : null;
+    if (map == null) return null;
+
+    return ListAccountsResult.fromJson(map);
+  }
+
+  Future<ChangeAccountResponse?> changeAccount(String userPk) async {
+    final notificationService = Get.find<NotificationsService>();
+    final deviceId = await notificationService.getOrCreateDeviceId();
+
+    final storedRt = await _secure.read(key: _rtKey(userPk));
+    if (storedRt == null || storedRt.isEmpty) {
+      throw Exception('Missing refresh token for userPk=$userPk');
+    }
+
+    final uri = Uri.parse(apiEndpoint).resolve('/v3/auth/change-account');
+    final req = ChangeAccountRequest(
+      userPk: userPk,
+      deviceId: deviceId,
+      refreshToken: storedRt,
+    );
+
+    final res = await post(
+      uri.toString(),
+      req.toJson(),
+      headers: _noCookieJson(),
+    );
+    if (!res.isOk) return null;
+
+    await absorbSetCookieHeaders(res.headers ?? {});
+
+    final map = (res.body is Map)
+        ? (res.body as Map).cast<String, dynamic>()
+        : null;
+    final resp = map == null
+        ? const ChangeAccountResponse()
+        : ChangeAccountResponse.fromJson(map);
+
+    final newRt = resp.refreshToken;
+    if (newRt != null && newRt.isNotEmpty) {
+      await _secure.write(key: _rtKey(userPk), value: newRt);
+    }
+
+    final sid = _cookieJar[_sidKeyStorage];
+    final auth = _cookieJar[_authKeyStorage];
+    await AuthDb.save(userPk, sid, auth);
+
+    try {
+      await NotificationsService.to.registerForCurrentUserIfPossible();
+    } catch (e) {
+      logger.w('AuthApi.changeAccount: register notification failed: $e');
+    }
+
+    final userService = Get.find<UserService>();
+    await userService.getUser();
+
+    return resp;
   }
 
   Map<String, String> _extractCookies(Map<String, String> headers) {
