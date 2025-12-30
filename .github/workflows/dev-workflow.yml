@@ -469,6 +469,7 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
       - name: Free disk space for Android build
         run: |
           echo "Before cleanup:"
@@ -485,16 +486,20 @@ jobs:
 
           echo "After cleanup:"
           df -h
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: false
+
       - name: Flutter pub get
         run: flutter pub get
+
       - name: Prepare Android signing (real or placeholder)
         working-directory: flutter-packages/mobile
         shell: bash
@@ -522,6 +527,7 @@ jobs:
               "keyPassword=android" \
               > android/key.properties
           fi
+
       - name: Build APK (debug)
         run: |
           make ENV=dev build-config

@@ -34,7 +34,7 @@ class IntroController extends BaseController {
         curve: Curves.easeOut,
       );
     } else {
-      Get.rootDelegate.offNamed(loginScreen);
+      Get.rootDelegate.offNamed(accountScreen);
     }
   }
 

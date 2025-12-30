@@ -56,7 +56,7 @@ class MyPageScreen extends GetWidget<MyPageController> {
                           title: MainLocalization.posts,
                           subtitle: 'Check all your posts',
                           onTap: () {
-                            Get.rootDelegate.toNamed(postScreen);
+                            Get.rootDelegate.toNamed(myPostsScreen);
                           },
                         ),
                         MyPageDivider(),
