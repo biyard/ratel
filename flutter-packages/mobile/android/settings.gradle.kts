@@ -11,16 +11,7 @@ pluginManagement {
 
     repositories {
         google()
-        maven { url = uri("https://repo1.maven.org/maven2") }
         gradlePluginPortal()
-        mavenCentral()
-    }
-}
-
-dependencyResolutionManagement {
-    repositories {
-        google()
-        maven { url = uri("https://repo1.maven.org/maven2") }
         mavenCentral()
     }
 }

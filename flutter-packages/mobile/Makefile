@@ -11,13 +11,8 @@ PORT ?= 5000
 
 UNAME_S := $(shell uname -s)
 
-MAIN_IP = $(shell sh -c 'if command -v ip >/dev/null 2>&1; then ip route get 1.1.1.1 2>/dev/null | awk "{print \$$7}" | head -n 1; else echo 127.0.0.1; fi')
-
-ifeq ($(UNAME_S),Darwin)
-IOS_SIMULATOR_ID = $(shell sh -c 'if command -v xcrun >/dev/null 2>&1; then xcrun simctl list devices available | grep "iPhone" | grep "Booted" | head -1 | grep -o "([A-F0-9-]*)" | tr -d "()" ; fi')
-else
-IOS_SIMULATOR_ID =
-endif
+MAIN_IP := $(shell ip route get 1.1.1.1 | awk '{print $$7}')
+IOS_SIMULATOR_ID := $(shell xcrun simctl list devices available | grep 'iPhone' | grep 'Booted' | head -1 | grep -o '([A-F0-9-]*)'  | tr -d '()')
 
 ANDROID_OUT_APK_DIR ?= build/app/outputs/flutter-apk
 ANDROID_OUT_APK_GLOB ?= $(ANDROID_OUT_APK_DIR)/*.apk
@@ -31,7 +26,7 @@ ARTIFACT_NAME ?= artifacts-$(ENV)-$(GIT_SHA)-$(DATE_STR)
 ARTIFACT_ZIP ?= $(ARTIFACT_DIR)/$(ARTIFACT_NAME).zip
 
 SED_INPLACE = sed -i
-ifeq ($(UNAME_S),Darwin)
+ifeq ($(shell uname),Darwin)
   SED_INPLACE = sed -i ''
 endif
 
