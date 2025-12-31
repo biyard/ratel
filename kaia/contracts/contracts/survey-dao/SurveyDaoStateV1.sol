@@ -4,40 +4,12 @@ pragma solidity ^0.8.0;
 import "../states/access/StateOperator.sol";
 import "../states/access/IStateOperator.sol";
 
+import "../library/QuestionMeta.sol";
+import "../library/Stage.sol";
+import "../library/QuestionType.sol";
+import "../library/TemplateMeta.sol";
+
 interface ISurveyDaoStateV1 is IStateOperator {
-    enum Stage { VoteConfig, SuggestQuestions, FinalizeVoting, Finalized }
-    enum QuestionType { SingleChoice, MultiChoice, ShortText, LongText, Number, Rating5 }
-
-    struct TemplateMeta {
-        uint256 templateId;
-        address creator;
-        uint64 createdAt;
-        Stage stage;
-        bool locked;
-        string topic;
-        string purpose;
-        string background;
-        string responseMethod;
-        uint64 configVoteStart;
-        uint64 configVoteEnd;
-        uint32 configYes;
-        uint32 configNo;
-        uint64 finalizeVoteStart;
-        uint64 finalizeVoteEnd;
-    }
-
-    struct QuestionMeta {
-        uint256 questionId;
-        address proposer;
-        uint64 createdAt;
-        QuestionType qtype;
-        bool required;
-        bool included;
-        uint32 approve;
-        uint32 reject;
-        string prompt;
-    }
-
     function daoManager() external view returns (address);
     function setDaoManager(address mgr) external;
 
@@ -90,10 +62,10 @@ contract SurveyDaoStateV1 is StateOperator {
     address private _daoManager;
 
     uint256 private _templateCount;
-    mapping(uint256 => ISurveyDaoStateV1.TemplateMeta) private _templates;
+    mapping(uint256 => TemplateMeta) private _templates;
 
     mapping(uint256 => uint256) private _questionCount;
-    mapping(uint256 => mapping(uint256 => ISurveyDaoStateV1.QuestionMeta)) private _questions;
+    mapping(uint256 => mapping(uint256 => QuestionMeta)) private _questions;
     mapping(uint256 => mapping(uint256 => string[])) private _questionOptions;
 
     mapping(uint256 => mapping(address => bool)) private _votedConfig;
@@ -117,8 +89,8 @@ contract SurveyDaoStateV1 is StateOperator {
         return _templateCount;
     }
 
-    function getTemplate(uint256 templateId) external view canRead returns (ISurveyDaoStateV1.TemplateMeta memory) {
-        ISurveyDaoStateV1.TemplateMeta memory t = _templates[templateId];
+    function getTemplate(uint256 templateId) external view canRead returns (TemplateMeta memory) {
+        TemplateMeta memory t = _templates[templateId];
         require(t.templateId != 0, "TEMPLATE_NOT_FOUND");
         return t;
     }
@@ -128,9 +100,9 @@ contract SurveyDaoStateV1 is StateOperator {
         return _questionCount[templateId];
     }
 
-    function getQuestion(uint256 templateId, uint256 questionId) external view canRead returns (ISurveyDaoStateV1.QuestionMeta memory) {
+    function getQuestion(uint256 templateId, uint256 questionId) external view canRead returns (QuestionMeta memory) {
         require(_templates[templateId].templateId != 0, "TEMPLATE_NOT_FOUND");
-        ISurveyDaoStateV1.QuestionMeta memory q = _questions[templateId][questionId];
+        QuestionMeta memory q = _questions[templateId][questionId];
         require(q.questionId != 0, "QUESTION_NOT_FOUND");
         return q;
     }
@@ -161,12 +133,12 @@ contract SurveyDaoStateV1 is StateOperator {
         _templateCount += 1;
         templateId = _templateCount;
 
-        ISurveyDaoStateV1.TemplateMeta storage t = _templates[templateId];
+        TemplateMeta storage t = _templates[templateId];
         t.templateId = templateId;
         t.creator = creator;
         t.createdAt = uint64(block.timestamp);
 
-        t.stage = ISurveyDaoStateV1.Stage.VoteConfig;
+        t.stage = Stage.VoteConfig;
         t.locked = false;
 
         t.topic = topic;
@@ -185,20 +157,20 @@ contract SurveyDaoStateV1 is StateOperator {
         _questionCount[templateId] = 0;
     }
 
-    function writeSetStage(uint256 templateId, ISurveyDaoStateV1.Stage stage_) external canWrite {
-        ISurveyDaoStateV1.TemplateMeta storage t = _templates[templateId];
+    function writeSetStage(uint256 templateId, Stage stage_) external canWrite {
+        TemplateMeta storage t = _templates[templateId];
         t.stage = stage_;
     }
 
     function writeSetLocked(uint256 templateId, bool locked_) external canWrite {
-        ISurveyDaoStateV1.TemplateMeta storage t = _templates[templateId];
+        TemplateMeta storage t = _templates[templateId];
         t.locked = locked_;
     }
 
     function writeRecordConfigVote(uint256 templateId, address voter, bool support) external canWrite {
         _votedConfig[templateId][voter] = true;
 
-        ISurveyDaoStateV1.TemplateMeta storage t = _templates[templateId];
+        TemplateMeta storage t = _templates[templateId];
         if (support) t.configYes += 1;
         else t.configNo += 1;
     }
@@ -206,7 +178,7 @@ contract SurveyDaoStateV1 is StateOperator {
     function writeAddQuestion(
         uint256 templateId,
         address proposer,
-        ISurveyDaoStateV1.QuestionType qtype,
+        QuestionType qtype,
         bool required,
         string calldata prompt,
         string[] calldata options
@@ -214,7 +186,7 @@ contract SurveyDaoStateV1 is StateOperator {
         _questionCount[templateId] += 1;
         questionId = _questionCount[templateId];
 
-        ISurveyDaoStateV1.QuestionMeta storage q = _questions[templateId][questionId];
+        QuestionMeta storage q = _questions[templateId][questionId];
         q.questionId = questionId;
         q.proposer = proposer;
         q.createdAt = uint64(block.timestamp);
@@ -239,19 +211,19 @@ contract SurveyDaoStateV1 is StateOperator {
     ) external canWrite {
         _votedQuestion[templateId][questionId][voter] = true;
 
-        ISurveyDaoStateV1.QuestionMeta storage q = _questions[templateId][questionId];
+        QuestionMeta storage q = _questions[templateId][questionId];
         if (approve) q.approve += 1;
         else q.reject += 1;
     }
 
     function writeSetFinalizeWindow(uint256 templateId, uint64 start, uint64 end) external canWrite {
-        ISurveyDaoStateV1.TemplateMeta storage t = _templates[templateId];
+        TemplateMeta storage t = _templates[templateId];
         t.finalizeVoteStart = start;
         t.finalizeVoteEnd = end;
     }
 
     function writeMarkIncluded(uint256 templateId, uint256 questionId, bool included) external canWrite {
-        ISurveyDaoStateV1.QuestionMeta storage q = _questions[templateId][questionId];
+        QuestionMeta storage q = _questions[templateId][questionId];
         q.included = included;
     }
 }
