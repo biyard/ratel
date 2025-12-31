@@ -7768,7 +7768,6 @@ dependencies = [
  "by-axum",
  "by-macros",
  "chrono",
- "dashmap 6.1.0",
  "ethers",
  "futures",
  "glob",
