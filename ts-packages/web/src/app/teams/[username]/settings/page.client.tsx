@@ -169,8 +169,6 @@ export default function SettingsPage({ username }: { username: string }) {
         config.env === 'dev' || config.env === 'local' ? 'testnet' : 'mainnet',
       );
 
-      logger.info('Connected wallet account (Kaia):', account);
-
       const { abi: stateAbi, bytecode: stateBytecode } =
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         daoRegistryStateV1Artifact as any;
@@ -182,7 +180,6 @@ export default function SettingsPage({ username }: { username: string }) {
       const stateContract = await stateFactory.deploy(account);
       const stateDeployed = await stateContract.waitForDeployment();
       const stateAddress = await stateDeployed.getAddress();
-      logger.info('DaoRegistryStateV1 deployed at:', stateAddress);
 
       const { abi: registryAbi, bytecode: registryBytecode } =
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -202,7 +199,6 @@ export default function SettingsPage({ username }: { username: string }) {
       );
       const registryDeployed = await registryContract.waitForDeployment();
       const registryAddress = await registryDeployed.getAddress();
-      logger.info('DaoRegistry deployed at:', registryAddress);
 
       await handleSave(registryAddress);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
