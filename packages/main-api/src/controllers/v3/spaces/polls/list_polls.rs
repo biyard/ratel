@@ -28,8 +28,6 @@ pub async fn list_polls_handler(
         return Err(Error::NotFoundPoll);
     }
 
-    let _is_owner = permissions.contains(TeamGroupPermission::SpaceEdit);
-    let _now = get_now_timestamp_millis();
     permissions.permitted(TeamGroupPermission::SpaceRead)?;
 
     let mut query_options = PollQueryOption::builder()
