@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Biyard
 pragma solidity ^0.8.0;
+
 import "./SurveyDaoStateV1.sol";
 import "../VersionManager.sol";
 
@@ -33,8 +34,12 @@ contract SurveyDao is VersionManager("v2.0") {
         string calldata responseMethod,
         uint64 configVoteDurationSecs
     ) external returns (uint256 templateId) {
+        require(msg.sender != address(0), "BAD_CREATOR");
+
         uint64 start = uint64(block.timestamp);
         uint64 end = start + configVoteDurationSecs;
+        require(end > start, "BAD_VOTE_WINDOW");
+
         templateId = state.writeCreateTemplate(
             msg.sender,
             topic,
@@ -97,6 +102,7 @@ contract SurveyDao is VersionManager("v2.0") {
 
         uint64 start = uint64(block.timestamp);
         uint64 end = start + finalizeDurationSecs;
+        require(end > start, "BAD_FINALIZE_WINDOW");
 
         state.writeSetFinalizeWindow(templateId, start, end);
         state.writeSetStage(templateId, ISurveyDaoStateV1.Stage.FinalizeVoting);
@@ -110,6 +116,8 @@ contract SurveyDao is VersionManager("v2.0") {
         require(t.stage == ISurveyDaoStateV1.Stage.FinalizeVoting, "BAD_STAGE");
         require(block.timestamp >= t.finalizeVoteStart && block.timestamp <= t.finalizeVoteEnd, "VOTE_CLOSED");
         require(!state.hasVotedQuestion(templateId, questionId, msg.sender), "ALREADY_VOTED");
+
+        state.getQuestion(templateId, questionId);
 
         state.writeRecordQuestionVote(templateId, questionId, msg.sender, approve);
         emit QuestionVoted(templateId, questionId, msg.sender, approve);

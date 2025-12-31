@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Biyard
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.0;
 
 import "../states/access/StateOperator.sol";
 import "../states/access/IStateOperator.sol";
@@ -158,9 +158,6 @@ contract SurveyDaoStateV1 is StateOperator {
         uint64 voteStart,
         uint64 voteEnd
     ) external canWrite returns (uint256 templateId) {
-        require(creator != address(0), "BAD_CREATOR");
-        require(voteEnd > voteStart, "BAD_VOTE_WINDOW");
-
         _templateCount += 1;
         templateId = _templateCount;
 
@@ -179,27 +176,29 @@ contract SurveyDaoStateV1 is StateOperator {
 
         t.configVoteStart = voteStart;
         t.configVoteEnd = voteEnd;
+
+        t.configYes = 0;
+        t.configNo = 0;
+        t.finalizeVoteStart = 0;
+        t.finalizeVoteEnd = 0;
+
+        _questionCount[templateId] = 0;
     }
 
     function writeSetStage(uint256 templateId, ISurveyDaoStateV1.Stage stage_) external canWrite {
         ISurveyDaoStateV1.TemplateMeta storage t = _templates[templateId];
-        require(t.templateId != 0, "TEMPLATE_NOT_FOUND");
         t.stage = stage_;
     }
 
     function writeSetLocked(uint256 templateId, bool locked_) external canWrite {
         ISurveyDaoStateV1.TemplateMeta storage t = _templates[templateId];
-        require(t.templateId != 0, "TEMPLATE_NOT_FOUND");
         t.locked = locked_;
     }
 
     function writeRecordConfigVote(uint256 templateId, address voter, bool support) external canWrite {
-        ISurveyDaoStateV1.TemplateMeta storage t = _templates[templateId];
-        require(t.templateId != 0, "TEMPLATE_NOT_FOUND");
-        require(!_votedConfig[templateId][voter], "ALREADY_VOTED");
-
         _votedConfig[templateId][voter] = true;
 
+        ISurveyDaoStateV1.TemplateMeta storage t = _templates[templateId];
         if (support) t.configYes += 1;
         else t.configNo += 1;
     }
@@ -212,10 +211,6 @@ contract SurveyDaoStateV1 is StateOperator {
         string calldata prompt,
         string[] calldata options
     ) external canWrite returns (uint256 questionId) {
-        ISurveyDaoStateV1.TemplateMeta storage t = _templates[templateId];
-        require(t.templateId != 0, "TEMPLATE_NOT_FOUND");
-        require(!t.locked, "TEMPLATE_LOCKED");
-
         _questionCount[templateId] += 1;
         questionId = _questionCount[templateId];
 
@@ -225,6 +220,9 @@ contract SurveyDaoStateV1 is StateOperator {
         q.createdAt = uint64(block.timestamp);
         q.qtype = qtype;
         q.required = required;
+        q.included = false;
+        q.approve = 0;
+        q.reject = 0;
         q.prompt = prompt;
 
         delete _questionOptions[templateId][questionId];
@@ -239,32 +237,21 @@ contract SurveyDaoStateV1 is StateOperator {
         address voter,
         bool approve
     ) external canWrite {
-        require(_templates[templateId].templateId != 0, "TEMPLATE_NOT_FOUND");
-
-        ISurveyDaoStateV1.QuestionMeta storage q = _questions[templateId][questionId];
-        require(q.questionId != 0, "QUESTION_NOT_FOUND");
-        require(!_votedQuestion[templateId][questionId][voter], "ALREADY_VOTED");
-
         _votedQuestion[templateId][questionId][voter] = true;
 
+        ISurveyDaoStateV1.QuestionMeta storage q = _questions[templateId][questionId];
         if (approve) q.approve += 1;
         else q.reject += 1;
     }
 
     function writeSetFinalizeWindow(uint256 templateId, uint64 start, uint64 end) external canWrite {
         ISurveyDaoStateV1.TemplateMeta storage t = _templates[templateId];
-        require(t.templateId != 0, "TEMPLATE_NOT_FOUND");
-        require(end > start, "BAD_FINALIZE_WINDOW");
         t.finalizeVoteStart = start;
         t.finalizeVoteEnd = end;
     }
 
     function writeMarkIncluded(uint256 templateId, uint256 questionId, bool included) external canWrite {
-        require(_templates[templateId].templateId != 0, "TEMPLATE_NOT_FOUND");
-
         ISurveyDaoStateV1.QuestionMeta storage q = _questions[templateId][questionId];
-        require(q.questionId != 0, "QUESTION_NOT_FOUND");
-
         q.included = included;
     }
 }
