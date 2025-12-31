@@ -6,19 +6,12 @@ function must(v, k) {
   return v;
 }
 
-async function deployFeeDelegated(
-  caver,
-  artifact,
-  args,
-  { from, feePayer, gas, label }
-) {
+async function deploy(caver, artifact, args, { from, gas, label }) {
   const c = new caver.contract(artifact.abi);
   const deployed = await c
     .deploy({ data: artifact.bytecode, arguments: args })
     .send({
       from,
-      feeDelegation: true,
-      feePayer,
       gas,
     });
   const addr = deployed.options.address;
@@ -26,11 +19,9 @@ async function deployFeeDelegated(
   return addr;
 }
 
-async function sendFeeDelegated(method, { from, feePayer, gas, label }) {
+async function sendTx(method, { from, gas, label }) {
   const tx = await method.send({
     from,
-    feeDelegation: true,
-    feePayer,
     gas,
   });
   const hash = tx.transactionHash || tx;
@@ -55,14 +46,10 @@ function pickEvent(receipt, eventName) {
     "CLI_CONTRACT_OWNER_KEY"
   );
 
-  const feePayer = must(process.env.CLI_FEEPAYER_ADDR, "CLI_FEEPAYER_ADDR");
-  const feePayerKey = must(process.env.CLI_FEEPAYER_KEY, "CLI_FEEPAYER_KEY");
-
   const endpoint = must(process.env.CLI_ENDPOINT, "CLI_ENDPOINT");
 
   const caver = new Caver(endpoint);
   caver.wallet.add(caver.wallet.keyring.create(owner, ownerKey));
-  caver.wallet.add(caver.wallet.keyring.create(feePayer, feePayerKey));
 
   const DaoRegistryStateV1 = require("./artifacts/contracts/dao-registry/DaoRegistryStateV1.sol/DaoRegistryStateV1.json");
   const DaoRegistry = require("./artifacts/contracts/dao-registry/DaoRegistry.sol/DaoRegistry.json");
@@ -85,16 +72,15 @@ function pickEvent(receipt, eventName) {
       "지금부터는 남녀 성별 구분 없이 다같이 토론을 시작합니다. '파일' 탭에는 1차 토론 내용이 정리되어 있으며, AI로 요약한 내용과 원본도 함께 업로드되어 있습니다. 토론은 반드시 확인된 정보만 기반으로 작성해야 하며, 모든 과정(사전 설문조사-1차 토론-2차 토론-사후 설문조사)에 참여해야 사례비 지급이 가능합니다.",
     responseMethod:
       "파일 탭 요약/원본 확인 → 게시판에서 2차 토론 참여(11/27 09:00~11/28 20:00 KST) → 11/28 20:00~23:00 설문 탭 최종 설문 참여",
-    configVoteDurationSecs: 35 * 60 * 60, // 11/27 09:00 ~ 11/28 20:00
+    configVoteDurationSecs: 35 * 60 * 60,
   };
 
   console.log("\n=== 1) Deploy DaoRegistryStateV1 ===");
-  const registryStateAddr = await deployFeeDelegated(
-    caver,
-    DaoRegistryStateV1,
-    [owner],
-    { from: owner, feePayer, gas: 25_000_000, label: "DaoRegistryStateV1" }
-  );
+  const registryStateAddr = await deploy(caver, DaoRegistryStateV1, [owner], {
+    from: owner,
+    gas: 25_000_000,
+    label: "DaoRegistryStateV1",
+  });
 
   const registryState = new caver.contract(
     DaoRegistryStateV1.abi,
@@ -102,25 +88,23 @@ function pickEvent(receipt, eventName) {
   );
 
   console.log("\n=== 2) Bootstrap: registryState.allowPublicWrite(true) ===");
-  await sendFeeDelegated(registryState.methods.allowPublicWrite(true), {
+  await sendTx(registryState.methods.allowPublicWrite(true), {
     from: owner,
-    feePayer,
     gas: 3_000_000,
     label: "DaoRegistryStateV1.allowPublicWrite(true)",
   });
 
   console.log("\n=== 3) Deploy DaoRegistry ===");
-  const registryAddr = await deployFeeDelegated(
+  const registryAddr = await deploy(
     caver,
     DaoRegistry,
     [registryName, registryStateAddr, registryInitialOperator],
-    { from: owner, feePayer, gas: 35_000_000, label: "DaoRegistry" }
+    { from: owner, gas: 35_000_000, label: "DaoRegistry" }
   );
 
   console.log("\n=== 4) Lock back: registryState.allowPublicWrite(false) ===");
-  await sendFeeDelegated(registryState.methods.allowPublicWrite(false), {
+  await sendTx(registryState.methods.allowPublicWrite(false), {
     from: owner,
-    feePayer,
     gas: 3_000_000,
     label: "DaoRegistryStateV1.allowPublicWrite(false)",
   });
@@ -128,28 +112,26 @@ function pickEvent(receipt, eventName) {
   const registry = new caver.contract(DaoRegistry.abi, registryAddr);
 
   console.log("\n=== 5) Deploy SurveyDaoStateV1 (offchain deploy) ===");
-  const surveyStateAddr = await deployFeeDelegated(
+  const surveyStateAddr = await deploy(
     caver,
     SurveyDaoStateV1,
     [surveyDaoManager, surveyOperator],
-    { from: owner, feePayer, gas: 25_000_000, label: "SurveyDaoStateV1" }
+    { from: owner, gas: 25_000_000, label: "SurveyDaoStateV1" }
   );
 
   console.log("\n=== 6) Deploy SurveyDao (offchain deploy) ===");
-  const surveyDaoAddr = await deployFeeDelegated(
-    caver,
-    SurveyDao,
-    [surveyStateAddr],
-    { from: owner, feePayer, gas: 25_000_000, label: "SurveyDao" }
-  );
+  const surveyDaoAddr = await deploy(caver, SurveyDao, [surveyStateAddr], {
+    from: owner,
+    gas: 25_000_000,
+    label: "SurveyDao",
+  });
 
   const surveyState = new caver.contract(SurveyDaoStateV1.abi, surveyStateAddr);
   const surveyDao = new caver.contract(SurveyDao.abi, surveyDaoAddr);
 
   console.log("\n=== 7) SurveyState.addOperator(SurveyDao) ===");
-  await sendFeeDelegated(surveyState.methods.addOperator(surveyDaoAddr), {
+  await sendTx(surveyState.methods.addOperator(surveyDaoAddr), {
     from: owner,
-    feePayer,
     gas: 3_000_000,
     label: "SurveyDaoStateV1.addOperator(surveyDao)",
   });
@@ -167,7 +149,7 @@ function pickEvent(receipt, eventName) {
   console.log(
     "\n=== 8) Registry.registerSurveyDao(name, operator, dao, state) ==="
   );
-  const regReceipt = await sendFeeDelegated(
+  const regReceipt = await sendTx(
     registry.methods.registerSurveyDao(
       surveyName,
       surveyOperator,
@@ -176,7 +158,6 @@ function pickEvent(receipt, eventName) {
     ),
     {
       from: owner,
-      feePayer,
       gas: 6_000_000,
       label: "DaoRegistry.registerSurveyDao",
     }
@@ -189,7 +170,7 @@ function pickEvent(receipt, eventName) {
   }
 
   console.log("\n=== 9) SurveyDao.createTemplate(...) ===");
-  const ctReceipt = await sendFeeDelegated(
+  const ctReceipt = await sendTx(
     surveyDao.methods.createTemplate(
       templateInput.topic,
       templateInput.purpose,
@@ -197,7 +178,7 @@ function pickEvent(receipt, eventName) {
       templateInput.responseMethod,
       templateInput.configVoteDurationSecs
     ),
-    { from: owner, feePayer, gas: 6_000_000, label: "SurveyDao.createTemplate" }
+    { from: owner, gas: 6_000_000, label: "SurveyDao.createTemplate" }
   );
 
   let templateId = null;

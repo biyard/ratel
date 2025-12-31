@@ -4,6 +4,12 @@ pragma solidity ^0.8.0;
 import "./SurveyDaoStateV1.sol";
 import "../VersionManager.sol";
 
+import "../library/QuestionMeta.sol";
+import "../library/Stage.sol";
+import "../library/QuestionType.sol";
+import "../library/TemplateMeta.sol";
+
+
 contract SurveyDao is VersionManager("v2.0") {
     using Address for address;
 
@@ -11,7 +17,7 @@ contract SurveyDao is VersionManager("v2.0") {
 
     event TemplateCreated(uint256 indexed templateId, address indexed creator);
     event ConfigVoted(uint256 indexed templateId, address indexed voter, bool support);
-    event StageAdvanced(uint256 indexed templateId, ISurveyDaoStateV1.Stage stage);
+    event StageAdvanced(uint256 indexed templateId, Stage stage);
     event QuestionProposed(uint256 indexed templateId, uint256 indexed questionId, address indexed proposer);
     event QuestionVoted(uint256 indexed templateId, uint256 indexed questionId, address indexed voter, bool approve);
     event TemplateFinalized(uint256 indexed templateId);
@@ -54,8 +60,8 @@ contract SurveyDao is VersionManager("v2.0") {
 
     // vote template
     function voteConfig(uint256 templateId, bool support) external {
-        ISurveyDaoStateV1.TemplateMeta memory t = state.getTemplate(templateId);
-        require(t.stage == ISurveyDaoStateV1.Stage.VoteConfig, "BAD_STAGE");
+        TemplateMeta memory t = state.getTemplate(templateId);
+        require(t.stage == Stage.VoteConfig, "BAD_STAGE");
         require(block.timestamp >= t.configVoteStart && block.timestamp <= t.configVoteEnd, "VOTE_CLOSED");
         require(!state.hasVotedConfig(templateId, msg.sender), "ALREADY_VOTED");
 
@@ -65,28 +71,28 @@ contract SurveyDao is VersionManager("v2.0") {
 
     // go to suggest question
     function advanceToSuggestQuestions(uint256 templateId) external onlyDaoManager {
-        ISurveyDaoStateV1.TemplateMeta memory t = state.getTemplate(templateId);
-        require(t.stage == ISurveyDaoStateV1.Stage.VoteConfig, "BAD_STAGE");
+        TemplateMeta memory t = state.getTemplate(templateId);
+        require(t.stage == Stage.VoteConfig, "BAD_STAGE");
         require(block.timestamp > t.configVoteEnd, "VOTE_NOT_ENDED");
         require(t.configYes > t.configNo, "CONFIG_REJECTED");
 
-        state.writeSetStage(templateId, ISurveyDaoStateV1.Stage.SuggestQuestions);
-        emit StageAdvanced(templateId, ISurveyDaoStateV1.Stage.SuggestQuestions);
+        state.writeSetStage(templateId, Stage.SuggestQuestions);
+        emit StageAdvanced(templateId, Stage.SuggestQuestions);
     }
 
     // propose question
     function proposeQuestion(
         uint256 templateId,
-        ISurveyDaoStateV1.QuestionType qtype,
+        QuestionType qtype,
         bool required,
         string calldata prompt,
         string[] calldata options
     ) external returns (uint256 questionId) {
-        ISurveyDaoStateV1.TemplateMeta memory t = state.getTemplate(templateId);
-        require(t.stage == ISurveyDaoStateV1.Stage.SuggestQuestions, "BAD_STAGE");
+        TemplateMeta memory t = state.getTemplate(templateId);
+        require(t.stage == Stage.SuggestQuestions, "BAD_STAGE");
         require(!t.locked, "TEMPLATE_LOCKED");
 
-        if (qtype == ISurveyDaoStateV1.QuestionType.SingleChoice || qtype == ISurveyDaoStateV1.QuestionType.MultiChoice) {
+        if (qtype == QuestionType.SingleChoice || qtype == QuestionType.MultiChoice) {
             require(options.length >= 2, "NEED_OPTIONS");
         }
 
@@ -96,8 +102,8 @@ contract SurveyDao is VersionManager("v2.0") {
 
     // 템플릿 확정
     function openFinalizeVoting(uint256 templateId, uint64 finalizeDurationSecs) external onlyDaoManager {
-        ISurveyDaoStateV1.TemplateMeta memory t = state.getTemplate(templateId);
-        require(t.stage == ISurveyDaoStateV1.Stage.SuggestQuestions, "BAD_STAGE");
+        TemplateMeta memory t = state.getTemplate(templateId);
+        require(t.stage == Stage.SuggestQuestions, "BAD_STAGE");
         require(state.questionCount(templateId) > 0, "NO_QUESTIONS");
 
         uint64 start = uint64(block.timestamp);
@@ -105,15 +111,15 @@ contract SurveyDao is VersionManager("v2.0") {
         require(end > start, "BAD_FINALIZE_WINDOW");
 
         state.writeSetFinalizeWindow(templateId, start, end);
-        state.writeSetStage(templateId, ISurveyDaoStateV1.Stage.FinalizeVoting);
+        state.writeSetStage(templateId, Stage.FinalizeVoting);
 
-        emit StageAdvanced(templateId, ISurveyDaoStateV1.Stage.FinalizeVoting);
+        emit StageAdvanced(templateId, Stage.FinalizeVoting);
     }
 
     // 문항별 투표
     function voteQuestion(uint256 templateId, uint256 questionId, bool approve) external {
-        ISurveyDaoStateV1.TemplateMeta memory t = state.getTemplate(templateId);
-        require(t.stage == ISurveyDaoStateV1.Stage.FinalizeVoting, "BAD_STAGE");
+        TemplateMeta memory t = state.getTemplate(templateId);
+        require(t.stage == Stage.FinalizeVoting, "BAD_STAGE");
         require(block.timestamp >= t.finalizeVoteStart && block.timestamp <= t.finalizeVoteEnd, "VOTE_CLOSED");
         require(!state.hasVotedQuestion(templateId, questionId, msg.sender), "ALREADY_VOTED");
 
@@ -128,29 +134,29 @@ contract SurveyDao is VersionManager("v2.0") {
         uint256 templateId,
         uint32 minApprove
     ) external onlyDaoManager {
-        ISurveyDaoStateV1.TemplateMeta memory t = state.getTemplate(templateId);
-        require(t.stage == ISurveyDaoStateV1.Stage.FinalizeVoting, "BAD_STAGE");
+        TemplateMeta memory t = state.getTemplate(templateId);
+        require(t.stage == Stage.FinalizeVoting, "BAD_STAGE");
         require(block.timestamp > t.finalizeVoteEnd, "VOTE_NOT_ENDED");
 
         uint256 qc = state.questionCount(templateId);
         for (uint256 qid = 1; qid <= qc; qid++) {
-            ISurveyDaoStateV1.QuestionMeta memory q = state.getQuestion(templateId, qid);
+            QuestionMeta memory q = state.getQuestion(templateId, qid);
             bool included = (q.approve >= minApprove) && (q.approve > q.reject);
             state.writeMarkIncluded(templateId, qid, included);
         }
 
-        state.writeSetStage(templateId, ISurveyDaoStateV1.Stage.Finalized);
+        state.writeSetStage(templateId, Stage.Finalized);
         state.writeSetLocked(templateId, true);
 
         emit TemplateFinalized(templateId);
-        emit StageAdvanced(templateId, ISurveyDaoStateV1.Stage.Finalized);
+        emit StageAdvanced(templateId, Stage.Finalized);
     }
 
-    function getTemplate(uint256 templateId) external view returns (ISurveyDaoStateV1.TemplateMeta memory) {
+    function getTemplate(uint256 templateId) external view returns (TemplateMeta memory) {
         return state.getTemplate(templateId);
     }
 
-    function getQuestion(uint256 templateId, uint256 questionId) external view returns (ISurveyDaoStateV1.QuestionMeta memory) {
+    function getQuestion(uint256 templateId, uint256 questionId) external view returns (QuestionMeta memory) {
         return state.getQuestion(templateId, questionId);
     }
 
