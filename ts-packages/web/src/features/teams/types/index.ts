@@ -32,6 +32,7 @@ export interface TeamDetailResponse {
   nickname: string;
   username: string;
   profile_url?: string;
+  dao_address?: string;
   user_type: number;
   html_contents: string;
   groups?: TeamGroupResponse[];
@@ -87,6 +88,7 @@ export interface UpdateTeamRequest {
   nickname?: string;
   description?: string;
   profile_url?: string;
+  dao_address?: string;
 }
 
 export interface UpdateGroupRequest {
