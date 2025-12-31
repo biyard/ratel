@@ -14,11 +14,13 @@
             <stringProp name="Argument.value">${__P(PROTOCOL,https)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
+
           <elementProp name="DOMAIN" elementType="Argument">
             <stringProp name="Argument.name">DOMAIN</stringProp>
             <stringProp name="Argument.value">${__P(DOMAIN,dev.ratel.foundation)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
+
           <elementProp name="PORT" elementType="Argument">
             <stringProp name="Argument.name">PORT</stringProp>
             <stringProp name="Argument.value">${__P(PORT,443)}</stringProp>
@@ -31,35 +33,21 @@
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
 
-          <elementProp name="API_PATH_1" elementType="Argument">
-            <stringProp name="Argument.name">API_PATH_1</stringProp>
-            <stringProp name="Argument.value">${__P(API_PATH_1,)}</stringProp>
-            <stringProp name="Argument.metadata">=</stringProp>
-          </elementProp>
-          <elementProp name="API_METHOD_1" elementType="Argument">
-            <stringProp name="Argument.name">API_METHOD_1</stringProp>
-            <stringProp name="Argument.value">${__P(API_METHOD_1,GET)}</stringProp>
-            <stringProp name="Argument.metadata">=</stringProp>
-          </elementProp>
-          <elementProp name="API_BODY_1" elementType="Argument">
-            <stringProp name="Argument.name">API_BODY_1</stringProp>
-            <stringProp name="Argument.value">${__P(API_BODY_1,)}</stringProp>
+          <elementProp name="API_PATH" elementType="Argument">
+            <stringProp name="Argument.name">API_PATH</stringProp>
+            <stringProp name="Argument.value">${__P(API_PATH,)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
 
-          <elementProp name="API_PATH_2" elementType="Argument">
-            <stringProp name="Argument.name">API_PATH_2</stringProp>
-            <stringProp name="Argument.value">${__P(API_PATH_2,)}</stringProp>
+          <elementProp name="API_METHOD" elementType="Argument">
+            <stringProp name="Argument.name">API_METHOD</stringProp>
+            <stringProp name="Argument.value">${__P(API_METHOD,GET)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
-          <elementProp name="API_METHOD_2" elementType="Argument">
-            <stringProp name="Argument.name">API_METHOD_2</stringProp>
-            <stringProp name="Argument.value">${__P(API_METHOD_2,GET)}</stringProp>
-            <stringProp name="Argument.metadata">=</stringProp>
-          </elementProp>
-          <elementProp name="API_BODY_2" elementType="Argument">
-            <stringProp name="Argument.name">API_BODY_2</stringProp>
-            <stringProp name="Argument.value">${__P(API_BODY_2,)}</stringProp>
+
+          <elementProp name="API_BODY" elementType="Argument">
+            <stringProp name="Argument.name">API_BODY</stringProp>
+            <stringProp name="Argument.value">${__P(API_BODY,)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
 
@@ -68,16 +56,19 @@
             <stringProp name="Argument.value">${__P(USERS,2000)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
+
           <elementProp name="RAMP_SECS" elementType="Argument">
             <stringProp name="Argument.name">RAMP_SECS</stringProp>
             <stringProp name="Argument.value">${__P(RAMP_SECS,60)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
+
           <elementProp name="DURATION_SECS" elementType="Argument">
             <stringProp name="Argument.name">DURATION_SECS</stringProp>
             <stringProp name="Argument.value">${__P(DURATION_SECS,300)}</stringProp>
             <stringProp name="Argument.metadata">=</stringProp>
           </elementProp>
+
           <elementProp name="POLL_INTERVAL_SECS" elementType="Argument">
             <stringProp name="Argument.name">POLL_INTERVAL_SECS</stringProp>
             <stringProp name="Argument.value">${__P(POLL_INTERVAL_SECS,10)}</stringProp>
@@ -153,92 +144,48 @@
         </HTTPSamplerProxy>
         <hashTree/>
 
-        <IfController guiclass="IfControllerPanel" testclass="IfController" testname="if_api_1" enabled="true">
-          <stringProp name="IfController.condition">${__jexl3("${API_PATH_1}".length() &gt; 0)}</stringProp>
+        <IfController guiclass="IfControllerPanel" testclass="IfController" testname="if_api" enabled="true">
+          <stringProp name="IfController.condition">${__jexl3("${API_PATH}".length() &gt; 0)}</stringProp>
           <boolProp name="IfController.evaluateAll">false</boolProp>
         </IfController>
+
         <hashTree>
 
-          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="if_api_1_get" enabled="true">
-            <stringProp name="IfController.condition">${__jexl3("${API_METHOD_1}".toUpperCase() == "GET")}</stringProp>
+          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="if_api_get" enabled="true">
+            <stringProp name="IfController.condition">${__jexl3("${API_METHOD}".toUpperCase() == "GET")}</stringProp>
             <boolProp name="IfController.evaluateAll">false</boolProp>
           </IfController>
+
           <hashTree>
-            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="API 1 GET" enabled="true">
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="API GET" enabled="true">
               <intProp name="HTTPSampler.response_timeout">30000</intProp>
               <stringProp name="HTTPSampler.method">GET</stringProp>
-              <stringProp name="HTTPSampler.path">${API_PATH_1}</stringProp>
+              <stringProp name="HTTPSampler.path">${API_PATH}</stringProp>
               <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
               <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
             </HTTPSamplerProxy>
             <hashTree/>
           </hashTree>
 
-          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="if_api_1_not_get" enabled="true">
-            <stringProp name="IfController.condition">${__jexl3("${API_METHOD_1}".toUpperCase() != "GET")}</stringProp>
+          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="if_api_not_get" enabled="true">
+            <stringProp name="IfController.condition">${__jexl3("${API_METHOD}".toUpperCase() != "GET")}</stringProp>
             <boolProp name="IfController.evaluateAll">false</boolProp>
           </IfController>
+
           <hashTree>
-            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="API 1 BODY" enabled="true">
+            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="API BODY" enabled="true">
               <intProp name="HTTPSampler.response_timeout">30000</intProp>
-              <stringProp name="HTTPSampler.method">${API_METHOD_1}</stringProp>
-              <stringProp name="HTTPSampler.path">${API_PATH_1}</stringProp>
+              <stringProp name="HTTPSampler.method">${API_METHOD}</stringProp>
+              <stringProp name="HTTPSampler.path">${API_PATH}</stringProp>
               <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
               <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
               <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+
               <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
                 <collectionProp name="Arguments.arguments">
                   <elementProp name="" elementType="HTTPArgument">
                     <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                    <stringProp name="Argument.value">${API_BODY_1}</stringProp>
-                    <stringProp name="Argument.metadata">=</stringProp>
-                  </elementProp>
-                </collectionProp>
-              </elementProp>
-            </HTTPSamplerProxy>
-            <hashTree/>
-          </hashTree>
-
-        </hashTree>
-
-        <IfController guiclass="IfControllerPanel" testclass="IfController" testname="if_api_2" enabled="true">
-          <stringProp name="IfController.condition">${__jexl3("${API_PATH_2}".length() &gt; 0)}</stringProp>
-          <boolProp name="IfController.evaluateAll">false</boolProp>
-        </IfController>
-        <hashTree>
-
-          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="if_api_2_get" enabled="true">
-            <stringProp name="IfController.condition">${__jexl3("${API_METHOD_2}".toUpperCase() == "GET")}</stringProp>
-            <boolProp name="IfController.evaluateAll">false</boolProp>
-          </IfController>
-          <hashTree>
-            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="API 2 GET" enabled="true">
-              <intProp name="HTTPSampler.response_timeout">30000</intProp>
-              <stringProp name="HTTPSampler.method">GET</stringProp>
-              <stringProp name="HTTPSampler.path">${API_PATH_2}</stringProp>
-              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-            </HTTPSamplerProxy>
-            <hashTree/>
-          </hashTree>
-
-          <IfController guiclass="IfControllerPanel" testclass="IfController" testname="if_api_2_not_get" enabled="true">
-            <stringProp name="IfController.condition">${__jexl3("${API_METHOD_2}".toUpperCase() != "GET")}</stringProp>
-            <boolProp name="IfController.evaluateAll">false</boolProp>
-          </IfController>
-          <hashTree>
-            <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="API 2 BODY" enabled="true">
-              <intProp name="HTTPSampler.response_timeout">30000</intProp>
-              <stringProp name="HTTPSampler.method">${API_METHOD_2}</stringProp>
-              <stringProp name="HTTPSampler.path">${API_PATH_2}</stringProp>
-              <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
-              <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
-              <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
-              <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
-                <collectionProp name="Arguments.arguments">
-                  <elementProp name="" elementType="HTTPArgument">
-                    <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                    <stringProp name="Argument.value">${API_BODY_2}</stringProp>
+                    <stringProp name="Argument.value">${API_BODY}</stringProp>
                     <stringProp name="Argument.metadata">=</stringProp>
                   </elementProp>
                 </collectionProp>
