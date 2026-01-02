@@ -6,15 +6,6 @@ use rand_chacha::ChaCha8Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
-#[derive(
-    Debug, Clone, Default, Serialize, Deserialize, aide::OperationIo, schemars::JsonSchema,
-)]
-pub struct TopicRow {
-    pub topic: String,
-    pub keyword: String,
-    pub weight: f64,
-}
-
 #[derive(Debug, Clone)]
 pub struct LdaConfigV1 {
     pub num_topics: usize,
@@ -196,7 +187,6 @@ fn lda_from_tokens(docs: Vec<Vec<String>>, cfg: &LdaConfigV1) -> Vec<TopicRow> {
     rows
 }
 
-// TODO: check lda logic
 pub fn run_lda(comments: &[String], cfg: LdaConfigV1) -> crate::Result<Vec<TopicRow>> {
     let token_docs = comments
         .iter()

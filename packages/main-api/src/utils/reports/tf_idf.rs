@@ -3,14 +3,6 @@ use crate::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(
-    Debug, Clone, Default, Serialize, Deserialize, aide::OperationIo, schemars::JsonSchema,
-)]
-pub struct TfidfRow {
-    pub keyword: String,
-    pub tf_idf: f64,
-}
-
 #[derive(Debug, Clone)]
 pub struct TfidfConfigV1 {
     pub max_features: usize,
