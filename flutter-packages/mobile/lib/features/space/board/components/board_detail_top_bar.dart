@@ -15,15 +15,15 @@ class BoardDetailTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 4, 12, 4),
+      padding: const EdgeInsets.fromLTRB(12, 20, 12, 10),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios, size: 18),
-            color: Colors.white,
-            onPressed: onBackTap,
-          ),
-          4.gap,
+          // IconButton(
+          //   icon: const Icon(Icons.arrow_back_ios, size: 18),
+          //   color: Colors.white,
+          //   onPressed: onBackTap,
+          // ),
+          10.gap,
           _BoardTagChip(label: 'Post'),
           if (categoryName.isNotEmpty) ...[
             6.gap,

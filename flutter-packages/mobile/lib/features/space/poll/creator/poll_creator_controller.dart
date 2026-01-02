@@ -70,7 +70,7 @@ class PollCreatorController extends BaseController {
 
       logger.d('Responded poll in creator: poll_space_pk=${res.pollSpacePk}');
 
-      Biyard.info("successfully submitted your responses.");
+      Biyard.info("Thanks for your participation!");
       await _loadPoll();
     } catch (e) {
       logger.e(

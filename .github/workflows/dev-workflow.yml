@@ -148,7 +148,7 @@ jobs:
           DYNAMO_TABLE_PREFIX: ratel-dev
           DYNAMO_ENDPOINT: none
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          RUST_FLAG: "--features bypass,lambda --release"
+          RUST_FLAG: "--features lambda --release"
           WEB_BUILD: false
           PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
           PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
@@ -158,6 +158,10 @@ jobs:
           FCM_ENABLED: true
           RATEL_PROJECT_ID: ${{ secrets.RATEL_PROJECT_ID }}
           REWARD: true
+
+          BIYARD_API_URL: https://api.dev.biyard.co
+          BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
+          BIYARD_PROJECT_ID: ${{ secrets.DEV_BIYARD_PROJECT_ID }}
 
         run: |
           tar xzvf dist.tar.gz
@@ -362,6 +366,9 @@ jobs:
         env:
           REGION: ap-northeast-2
           VITE_LOG_LEVEL: info
+          VITE_RPC_URL: https://public-en-kairos.node.kaia.io
+          VITE_BLOCK_EXPLORER_URL: https://kairos.scope.kaia.io
+          VITE_OPERATOR_ADDRESS: ${{ secrets.OPERATOR_ADDRESS }}
           VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
@@ -424,6 +431,9 @@ jobs:
         env:
           REGION: ap-northeast-2
           VITE_LOG_LEVEL: info
+          VITE_RPC_URL: https://public-en-kairos.node.kaia.io
+          VITE_BLOCK_EXPLORER_URL: https://kairos.scope.kaia.io
+          VITE_OPERATOR_ADDRESS: ${{ secrets.OPERATOR_ADDRESS }}
           VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
           VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
@@ -459,32 +469,33 @@ jobs:
         with:
           submodules: recursive
           ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
       - name: Free disk space for Android build
         run: |
           echo "Before cleanup:"
           df -h
-
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
           sudo rm -rf /opt/hostedtoolcache/CodeQL
-
           sudo rm -rf /usr/local/lib/android/sdk/system-images
           sudo rm -rf /usr/local/lib/android/sdk/emulator
-
           docker system prune -af || true
-
           echo "After cleanup:"
           df -h
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: false
+
       - name: Flutter pub get
         run: flutter pub get
+
       - name: Prepare Android signing (real or placeholder)
         working-directory: flutter-packages/mobile
         shell: bash
@@ -512,6 +523,7 @@ jobs:
               "keyPassword=android" \
               > android/key.properties
           fi
+
       - name: Build APK (debug)
         run: |
           make ENV=dev build-config

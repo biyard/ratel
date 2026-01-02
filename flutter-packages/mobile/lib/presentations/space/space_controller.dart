@@ -16,8 +16,19 @@ class SpaceController extends BaseController {
   SpaceModel? get space => spaceRx.value;
   RxBool get isLoading => _spaceService.isLoadingOf(spacePk);
 
-  final RxBool isHeaderCollapsed = false.obs;
-  double _gestureDelta = 0;
+  final isHeaderCollapsed = false.obs;
+
+  static const double collapseThresholdPx = 56.0;
+  static const double dragThresholdPx = 56.0;
+
+  static const double scrollExpandThresholdPx = 72.0;
+  static const double scrollCollapseThresholdPx = 72.0;
+
+  double _dragSum = 0.0;
+  int _lastScrollMs = 0;
+
+  double _expandDragSum = 0.0;
+  double _collapseDragSum = 0.0;
 
   @override
   void onInit() {
@@ -94,21 +105,94 @@ class SpaceController extends BaseController {
   String get baseRoute => '/space/${Uri.encodeComponent(spacePk)}';
   String get currentRoute => '$baseRoute${currentTab.value.route}';
 
-  void handlePointerMove(double dy) {
-    const threshold = 24.0;
-    _gestureDelta += dy;
+  void markScrollActivity() {
+    _lastScrollMs = DateTime.now().millisecondsSinceEpoch;
+  }
 
-    if (_gestureDelta <= -threshold && !isHeaderCollapsed.value) {
-      isHeaderCollapsed.value = true;
-      _gestureDelta = 0;
-    } else if (_gestureDelta >= threshold && isHeaderCollapsed.value) {
-      isHeaderCollapsed.value = false;
-      _gestureDelta = 0;
+  void handlePointerMove(double dy) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - _lastScrollMs < 140) return;
+
+    _dragSum += dy;
+
+    if (_dragSum <= -dragThresholdPx) {
+      if (!isHeaderCollapsed.value) isHeaderCollapsed.value = true;
+      _dragSum = 0;
+      return;
+    }
+
+    if (_dragSum >= dragThresholdPx) {
+      if (isHeaderCollapsed.value) isHeaderCollapsed.value = false;
+      _dragSum = 0;
+      return;
     }
   }
 
   void resetPointer() {
-    _gestureDelta = 0;
+    _dragSum = 0.0;
+  }
+
+  void resetScrollDragSums() {
+    _expandDragSum = 0.0;
+    _collapseDragSum = 0.0;
+  }
+
+  bool handleHeaderByScroll(ScrollNotification n) {
+    markScrollActivity();
+
+    if (n.metrics.axis != Axis.vertical) return false;
+
+    if (n is ScrollEndNotification) {
+      resetScrollDragSums();
+      return false;
+    }
+
+    if (n is ScrollUpdateNotification) {
+      final delta = n.scrollDelta ?? 0.0;
+
+      if (n.dragDetails == null) return false;
+
+      final collapsedNow = isHeaderCollapsed.value;
+
+      if (!collapsedNow) {
+        if (delta > 0) {
+          _collapseDragSum += delta;
+        } else {
+          _collapseDragSum = 0.0;
+        }
+
+        if (_collapseDragSum >= scrollCollapseThresholdPx ||
+            n.metrics.pixels > collapseThresholdPx) {
+          isHeaderCollapsed.value = true;
+          resetScrollDragSums();
+        }
+
+        return false;
+      }
+
+      final minExtent = n.metrics.minScrollExtent;
+      final atTop = n.metrics.pixels <= (minExtent + 0.5);
+
+      if (!atTop) {
+        _expandDragSum = 0.0;
+        return false;
+      }
+
+      if (delta < 0) {
+        _expandDragSum += -delta;
+      } else {
+        _expandDragSum = 0.0;
+      }
+
+      if (_expandDragSum >= scrollExpandThresholdPx) {
+        isHeaderCollapsed.value = false;
+        resetScrollDragSums();
+      }
+
+      return false;
+    }
+
+    return false;
   }
 
   List<SpaceTab> _buildTabsForPollSpace() {
@@ -122,7 +206,7 @@ class SpaceController extends BaseController {
     if (isAdmin) {
       baseTabs.addAll([
         SpaceTab(id: 'analyze', label: 'Analyze', route: '/analyze'),
-        SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
+        // SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
       ]);
     }
 
@@ -141,10 +225,7 @@ class SpaceController extends BaseController {
 
     if (isAdmin) {
       baseTabs.addAll([
-        // SpaceTab(id: 'member', label: 'Members', route: '/member'),
-        // SpaceTab(id: 'panel', label: 'Panels', route: '/panel'),
         SpaceTab(id: 'analyze', label: 'Analyze', route: '/analyzes'),
-        // SpaceTab(id: 'setting', label: 'Settings', route: '/setting'),
       ]);
     }
 

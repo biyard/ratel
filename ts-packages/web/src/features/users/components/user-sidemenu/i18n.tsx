@@ -5,6 +5,7 @@ export const UserSidemenu = {
     my_posts: 'My Posts',
     drafts: 'Drafts',
     my_spaces: 'My Spaces',
+    rewards: 'Rewards',
     credentials: 'Credentials',
     membership: 'Membership',
     settings: 'Settings',
@@ -13,6 +14,7 @@ export const UserSidemenu = {
     my_posts: '내 게시물',
     drafts: '임시글',
     my_spaces: '내 스페이스',
+    rewards: '리워드',
     credentials: '자격 증명',
     membership: '멤버십',
     settings: '설정',
@@ -23,6 +25,7 @@ export interface UserSidemenuI18n {
   my_posts: string;
   drafts: string;
   my_spaces: string;
+  rewards: string;
   credentials: string;
   membership: string;
   settings: string;
@@ -35,6 +38,7 @@ export function useUserSidemenuI18n(): UserSidemenuI18n {
     my_posts: t('my_posts'),
     drafts: t('drafts'),
     my_spaces: t('my_spaces'),
+    rewards: t('rewards'),
     credentials: t('credentials'),
     membership: t('membership'),
     settings: t('settings'),

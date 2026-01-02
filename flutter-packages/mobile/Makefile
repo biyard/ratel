@@ -8,7 +8,11 @@ BUILD_CONFIG_FILE=$(BUILD_DIR)/config.json
 NET ?= local
 MOBILE ?= android
 PORT ?= 5000
+
+UNAME_S := $(shell uname -s)
+
 MAIN_IP := $(shell ip route get 1.1.1.1 | awk '{print $$7}')
+IOS_SIMULATOR_ID := $(shell xcrun simctl list devices available | grep 'iPhone' | grep 'Booted' | head -1 | grep -o '([A-F0-9-]*)'  | tr -d '()')
 
 ANDROID_OUT_APK_DIR ?= build/app/outputs/flutter-apk
 ANDROID_OUT_APK_GLOB ?= $(ANDROID_OUT_APK_DIR)/*.apk
@@ -69,7 +73,14 @@ run.android: $(BUILD_CONFIG_FILE)
 	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d emulator-5554
 
 run.ios: $(BUILD_CONFIG_FILE)
-	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d 5608475F-6D9A-4CFB-A518-AB756BBDDC44
+	@if [ -z "$(IOS_SIMULATOR_ID)" ]; then \
+		echo "No booted iOS simulator found. Starting one..."; \
+		IOS_DEVICE_ID=$$(xcrun simctl list devices available | grep 'iPhone' | head -1 | grep -o '([A-F0-9-]*)' | tr -d '()'); \
+		xcrun simctl boot $$IOS_DEVICE_ID; \
+		flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d $$IOS_DEVICE_ID; \
+	else \
+		flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d $(IOS_SIMULATOR_ID); \
+	fi
 
 run.web: $(BUILD_CONFIG_FILE)
 	flutter run --dart-define-from-file=$(BUILD_CONFIG_FILE) -d chrome --web-renderer $(RENDERER)
