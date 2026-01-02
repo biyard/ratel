@@ -8,14 +8,23 @@ use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, Clone)]
 pub struct LdaConfigV1 {
+    // 토픽 수
     pub num_topics: usize,
+    // 반복 횟수
     pub iterations: usize,
+    // 상위 키워드 갯수
     pub top_n: usize,
+    // 랜덤 할당될 토픽에 대한 임의의 시드
     pub seed: u64,
+    // 희귀 단어 제거를 위한 문서 빈도 수 (해당 수 이하가 되면 단어 제거)
     pub no_below: usize,
+    // 너무 자주 등장하는 단어 제거를 위한 문서 비율 (해당 비율 이상이 되면 단어 제거)
     pub no_above: f64,
+    // 문장 내 최소 토큰 수
     pub min_tokens_per_doc: usize,
+    // Dirichlet 분포의 알파 파라미터
     pub alpha: f64,
+    // Dirichlet 분포의 베타 파라미터
     pub beta: f64,
 }
 

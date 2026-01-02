@@ -5,10 +5,15 @@ use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct TfidfConfigV1 {
+    // 최대 키워드 수
     pub max_features: usize,
+    // 문서 내 단어 등장 횟수
     pub min_df: usize,
+    // 단어 최소 크기
     pub ngram_min: usize,
+    // 단어 최대 크기
     pub ngram_max: usize,
+    // 문장 내 최소 토큰 수
     pub min_tokens_per_doc: usize,
 }
 
