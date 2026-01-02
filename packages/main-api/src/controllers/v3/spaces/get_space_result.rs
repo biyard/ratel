@@ -1,4 +1,7 @@
 use crate::models::SpaceCommon;
+use crate::utils::reports::NetworkCentralityRow;
+use crate::utils::reports::NetworkConfigV1;
+use crate::utils::reports::run_network_rows_from_xlsx;
 use crate::utils::reports::{LdaConfigV1, TopicRow, run_from_xlsx};
 use crate::*;
 use axum::{Extension, Json, extract::State};
@@ -18,7 +21,8 @@ const XLSX_PATH: &str = "";
     schemars::JsonSchema,
 )]
 pub struct GetSpaceResultResponse {
-    pub items: HashMap<String, Vec<TopicRow>>,
+    pub lda: HashMap<String, Vec<TopicRow>>,
+    pub network: HashMap<String, Vec<NetworkCentralityRow>>,
 }
 
 pub async fn get_space_result_handler(
@@ -27,6 +31,7 @@ pub async fn get_space_result_handler(
     NoApi(_perms): NoApi<Permissions>,
     Extension(_space): Extension<SpaceCommon>,
 ) -> Result<Json<GetSpaceResultResponse>> {
+    // FIXME: fix to query dynamo db
     if !Path::new(XLSX_PATH).exists() {
         return Err(crate::Error::InternalServerError(format!(
             "xlsx not found: {}",
@@ -34,6 +39,8 @@ pub async fn get_space_result_handler(
         )));
     }
 
-    let items = run_from_xlsx(XLSX_PATH, LdaConfigV1::default())?;
-    Ok(Json(GetSpaceResultResponse { items }))
+    let lda = run_from_xlsx(XLSX_PATH, LdaConfigV1::default())?;
+    let network = run_network_rows_from_xlsx(XLSX_PATH, NetworkConfigV1::default())?;
+
+    Ok(Json(GetSpaceResultResponse { lda, network }))
 }
