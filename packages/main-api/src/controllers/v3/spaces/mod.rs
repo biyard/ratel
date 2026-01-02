@@ -1,5 +1,6 @@
 pub mod create_space;
 pub mod delete_space;
+pub mod get_space_result;
 pub mod list_spaces;
 pub mod update_space;
 
@@ -25,6 +26,7 @@ pub use delete_space::*;
 pub use dto::*;
 use ethers::signers::Signer;
 pub use get_space::*;
+pub use get_space_result::*;
 pub use list_spaces::*;
 use participate_space::participate_space_handler;
 pub use update_space::*;
@@ -55,6 +57,7 @@ pub fn route() -> Result<Router<AppState>> {
                     app_state.clone(),
                     authorize_team_admin,
                 ))
+                .route("/results", get(get_space_result_handler))
                 .route("/", get(get_space_handler))
                 .route("/participate", post(participate_space_handler))
                 .nest("/members", members::route())
