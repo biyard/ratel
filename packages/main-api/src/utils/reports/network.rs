@@ -5,8 +5,11 @@ use std::collections::{HashMap, HashSet, VecDeque};
 
 #[derive(Debug, Clone)]
 pub struct NetworkConfigV1 {
+    // 문장 내 최소 토큰 수
     pub min_tokens_per_doc: usize,
+    // 간선 최소 빈도 수 (단어쌍 빈도 수)
     pub min_edge_count: u32,
+    // 상위 노드 갯수
     pub top_nodes: usize,
 }
 
