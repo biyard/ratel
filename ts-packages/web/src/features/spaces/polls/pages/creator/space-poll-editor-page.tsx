@@ -99,7 +99,10 @@ export function SpacePollEditorPage({ spacePk, pollPk }: SpacePollPathProps) {
                 questions={ctrl.poll.questions}
                 onUpdateAnswer={ctrl.handleUpdateAnswer}
                 selectedAnswers={ctrl.answers.get()}
-                isFinished={ctrl.space.status === SpaceStatus.Finished}
+                isFinished={
+                  ctrl.space.status === SpaceStatus.Finished ||
+                  ctrl.poll.ended_at < Date.now()
+                }
               />
             )}
           </Col>
