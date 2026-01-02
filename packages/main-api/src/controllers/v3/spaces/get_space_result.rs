@@ -1,17 +1,13 @@
+use crate::features::spaces::boards::models::space_post::SpacePost;
+use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
 use crate::models::SpaceCommon;
-use crate::utils::reports::NetworkCentralityRow;
-use crate::utils::reports::NetworkConfigV1;
-use crate::utils::reports::TfidfRow;
-use crate::utils::reports::run_network_rows_from_xlsx;
-use crate::utils::reports::run_tfidf_from_xlsx;
-use crate::utils::reports::{LdaConfigV1, TopicRow, run_from_xlsx};
+use crate::utils::reports::{
+    LdaConfigV1, NetworkCentralityRow, NetworkConfigV1, TfidfConfigV1, TfidfRow, TopicRow, run_lda,
+    run_network, run_tfidf,
+};
 use crate::*;
 use axum::{Extension, Json, extract::State};
-use std::collections::HashMap;
-use std::path::Path;
-
-const XLSX_PATH: &str = "";
-// const XLSX_PATH: &str = "/Users/leechanhui/Projects/ratel-copy/ratel/packages/main-api/Questionnaire_answer(12.06.).xlsx";
+use futures::future::try_join_all;
 
 #[derive(
     Debug,
@@ -23,28 +19,53 @@ const XLSX_PATH: &str = "";
     schemars::JsonSchema,
 )]
 pub struct GetSpaceResultResponse {
-    pub lda: HashMap<String, Vec<TopicRow>>,
-    pub network: HashMap<String, Vec<NetworkCentralityRow>>,
-    pub tf_idf: HashMap<String, Vec<TfidfRow>>,
+    pub lda: Vec<TopicRow>,
+    pub network: Vec<NetworkCentralityRow>,
+    pub tf_idf: Vec<TfidfRow>,
 }
 
 pub async fn get_space_result_handler(
-    State(AppState { .. }): State<AppState>,
-    NoApi(_user): NoApi<Option<User>>,
-    NoApi(_perms): NoApi<Permissions>,
-    Extension(_space): Extension<SpaceCommon>,
+    State(AppState { dynamo, .. }): State<AppState>,
+    NoApi(perms): NoApi<Permissions>,
+    Extension(space): Extension<SpaceCommon>,
 ) -> Result<Json<GetSpaceResultResponse>> {
-    // FIXME: fix to query dynamo db
-    if !Path::new(XLSX_PATH).exists() {
-        return Err(crate::Error::InternalServerError(format!(
-            "xlsx not found: {}",
-            XLSX_PATH
-        )));
+    // FIXME: add space results permission
+    perms.permitted(TeamGroupPermission::SpaceRead)?;
+    let posts = SpacePost::find_by_space_ordered(&dynamo.client, space.pk, SpacePost::opt_all())
+        .await?
+        .0;
+
+    let comment_futs = posts.iter().filter_map(|post| {
+        let space_post_pk = match &post.sk {
+            EntityType::SpacePost(pk) => Partition::SpacePost(pk.to_string()),
+            _ => return None,
+        };
+
+        Some(async {
+            let (comments, _) = SpacePostComment::find_by_post_order_by_likes(
+                &dynamo.client,
+                space_post_pk,
+                SpacePostComment::opt_all(),
+            )
+            .await?;
+            Ok::<Vec<SpacePostComment>, crate::Error>(comments)
+        })
+    });
+
+    let comments_per_post: Vec<Vec<SpacePostComment>> = try_join_all(comment_futs).await?;
+
+    let mut post_comments: Vec<String> = Vec::new();
+    for comments in comments_per_post {
+        for c in comments {
+            post_comments.push(c.content);
+        }
     }
 
-    let lda = run_from_xlsx(XLSX_PATH, LdaConfigV1::default())?;
-    let network = run_network_rows_from_xlsx(XLSX_PATH, NetworkConfigV1::default())?;
-    let tf_idf = run_tfidf_from_xlsx(XLSX_PATH, crate::utils::reports::TfidfConfigV1::default())?;
+    tracing::debug!("total comments: {}", post_comments.len());
+
+    let lda = run_lda(&post_comments, LdaConfigV1::default())?;
+    let network = run_network(&post_comments, NetworkConfigV1::default())?;
+    let tf_idf = run_tfidf(&post_comments, TfidfConfigV1::default())?;
 
     Ok(Json(GetSpaceResultResponse {
         lda,
