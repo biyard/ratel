@@ -1,7 +1,9 @@
 use crate::models::SpaceCommon;
 use crate::utils::reports::NetworkCentralityRow;
 use crate::utils::reports::NetworkConfigV1;
+use crate::utils::reports::TfidfRow;
 use crate::utils::reports::run_network_rows_from_xlsx;
+use crate::utils::reports::run_tfidf_from_xlsx;
 use crate::utils::reports::{LdaConfigV1, TopicRow, run_from_xlsx};
 use crate::*;
 use axum::{Extension, Json, extract::State};
@@ -23,6 +25,7 @@ const XLSX_PATH: &str = "";
 pub struct GetSpaceResultResponse {
     pub lda: HashMap<String, Vec<TopicRow>>,
     pub network: HashMap<String, Vec<NetworkCentralityRow>>,
+    pub tf_idf: HashMap<String, Vec<TfidfRow>>,
 }
 
 pub async fn get_space_result_handler(
@@ -41,6 +44,11 @@ pub async fn get_space_result_handler(
 
     let lda = run_from_xlsx(XLSX_PATH, LdaConfigV1::default())?;
     let network = run_network_rows_from_xlsx(XLSX_PATH, NetworkConfigV1::default())?;
+    let tf_idf = run_tfidf_from_xlsx(XLSX_PATH, crate::utils::reports::TfidfConfigV1::default())?;
 
-    Ok(Json(GetSpaceResultResponse { lda, network }))
+    Ok(Json(GetSpaceResultResponse {
+        lda,
+        network,
+        tf_idf,
+    }))
 }
