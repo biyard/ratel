@@ -153,6 +153,7 @@ export default function PollRequirement({
         disabled={respondPoll.isPending || canParticipate === false}
         canUpdate={false}
         isLogin={true}
+        isFinished={space.status === SpaceStatus.Finished}
       />
     </>
   );
