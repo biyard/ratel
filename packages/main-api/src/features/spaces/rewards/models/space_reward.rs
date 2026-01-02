@@ -1,4 +1,4 @@
-use crate::features::spaces::rewards::{RewardCondition, RewardKey, RewardPeriod};
+use crate::features::spaces::rewards::{RewardAction, RewardCondition, RewardKey, RewardPeriod};
 use crate::types::*;
 use crate::*;
 
@@ -6,7 +6,7 @@ use crate::*;
 ///
 /// Key Structure:
 /// - PK: SPACE#{space_pk}##REWARD
-/// - SK: {EntityType}#{RewardType}
+/// - SK: {EntityType}#{RewardAction}
 ///
 /// Examples:
 /// - Get All Rewards: SpaceReward::query(pk)
@@ -27,7 +27,7 @@ use crate::*;
 ///
 /// Key Structure:
 /// - PK: SPACE#{space_pk}##REWARD
-/// - SK: {EntityType}#{RewardType}
+/// - SK: {EntityType}#{RewardAction}
 ///
 /// Examples:
 /// - Get All Rewards: SpaceReward::query(pk)
@@ -40,7 +40,8 @@ pub struct SpaceReward {
     pub created_at: i64,
     pub updated_at: i64,
 
-    pub label: String,
+    pub action: RewardAction,
+    #[serde(default)]
     pub description: String,
 
     pub credits: i64,
@@ -57,23 +58,23 @@ impl SpaceReward {
     pub fn new(
         space_pk: SpacePartition,
         reward_key: RewardKey,
-        label: String,
         description: String,
         credits: i64,
         point: i64,
         period: RewardPeriod,
         condition: RewardCondition,
     ) -> Self {
+        let action = reward_key.get_action();
         let (pk, sk) = Self::keys(space_pk, reward_key);
         let now = now();
 
         Self {
             pk,
             sk,
+
             created_at: now,
             updated_at: now,
-
-            label,
+            action,
             credits,
             point,
             description,
@@ -129,7 +130,7 @@ impl SpaceReward {
         }
 
         if let Some(entity_type) = entity_type {
-            let begin_sk = RewardKey::get_feature_begin_sk(entity_type);
+            let begin_sk = RewardKey::get_sk_prefix(entity_type);
             opt = opt.sk(begin_sk);
         }
 

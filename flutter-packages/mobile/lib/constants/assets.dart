@@ -127,6 +127,10 @@ abstract class Assets {
   static const String bottomPalace = 'assets/icons/bottom/palace.svg';
   static const String bottomUser = 'assets/icons/bottom/user.svg';
 
+  static const String setupLogo = 'assets/icons/setup_logo.svg';
+  static const String email = 'assets/icons/email.svg';
+  static const String mobile = 'assets/icons/mobile.svg';
+
   static final addIcon = SvgPicture.asset(add, width: 15, height: 15);
   static final backIcon = SvgPicture.asset(back, width: 16, height: 16);
   static final badgeImage = SvgPicture.asset(badge, width: 20, height: 20);
