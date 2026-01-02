@@ -42,7 +42,7 @@ pub fn new() -> BiyardRouter {
         .with_target(false)
         .with_ansi(
             option_env!("DISABLE_ANSI")
-                .map(|e| e.to_lowercase() == "true")
+                .map(|e| e.to_lowercase() != "true")
                 .unwrap_or(true),
         )
         .try_init();
