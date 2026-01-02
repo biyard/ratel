@@ -3,15 +3,6 @@ use crate::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 
-#[derive(
-    Debug, Clone, Default, Serialize, Deserialize, aide::OperationIo, schemars::JsonSchema,
-)]
-pub struct NetworkCentralityRow {
-    pub node: String,
-    pub degree_centrality: f64,
-    pub betweenness_centrality: f64,
-}
-
 #[derive(Debug, Clone)]
 pub struct NetworkConfigV1 {
     pub min_tokens_per_doc: usize,
