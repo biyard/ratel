@@ -280,6 +280,8 @@ pub enum Error {
     CardInfoRequired,
     #[error("No user purchase found for payment")]
     NoUserPurchaseFound,
+    #[error("PortOne billing key error")]
+    PortOneBillingKeyError,
 
     // Biyard API errors 10,050 ~
     #[error("Biyard error: {0}")]

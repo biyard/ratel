@@ -214,7 +214,7 @@ jobs:
 
           # NOTE: Replace them after accepting.
           VITE_PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID}}
-          VITE_PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_INICIS_CHANNEL_KEY }}
+          VITE_PORTONE_INICIS_CHANNEL_KEY: ${{ secrets.PROD_PORTONE_INICIS_CHANNEL_KEY }}
 
           VITE_ENV: prod
           VITE_SIGN_DOMAIN: ratel.foundation
