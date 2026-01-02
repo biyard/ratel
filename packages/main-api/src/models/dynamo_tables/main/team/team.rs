@@ -43,6 +43,8 @@ pub struct Team {
     pub followings: i64,
 
     pub description: String,
+
+    pub dao_address: Option<String>,
 }
 
 impl Team {
@@ -69,6 +71,7 @@ impl Team {
             description,
             followers: 0,
             followings: 0,
+            dao_address: None,
         }
     }
 

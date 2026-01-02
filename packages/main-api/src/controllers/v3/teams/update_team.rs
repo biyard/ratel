@@ -40,6 +40,8 @@ pub struct UpdateTeamRequest {
     #[schemars(description = "Team profile URL to update")]
     #[validate(custom(function = "validate_image_url"))]
     pub profile_url: Option<String>,
+    #[schemars(description = "Team dao address to update")]
+    pub dao_address: Option<String>,
 }
 
 pub type UpdateTeamResponse = TeamResponse;
@@ -87,6 +89,10 @@ pub async fn update_team_handler(
         updater = updater.with_profile_url(profile_url.clone());
         team.profile_url = profile_url;
     }
+    if let Some(dao_address) = req.dao_address {
+        updater = updater.with_dao_address(dao_address.clone());
+        team.dao_address = Some(dao_address);
+    }
 
     updater.execute(&dynamo.client).await?;
 
@@ -105,11 +111,15 @@ pub async fn update_team_handler(
             UserTeam::find_by_team(&dynamo.client, &user_team_sk, option).await?;
         tracing::debug!("Found {:?} user teams", user_teams);
         for user_team in user_teams {
-            UserTeam::updater(&user_team.pk, &user_team.sk)
+            let mut updater = UserTeam::updater(&user_team.pk, &user_team.sk)
                 .with_display_name(team.display_name.clone())
-                .with_profile_url(team.profile_url.clone())
-                .execute(&dynamo.client)
-                .await?;
+                .with_profile_url(team.profile_url.clone());
+
+            if team.dao_address.clone().is_some() {
+                updater = updater.with_dao_address(team.dao_address.clone().unwrap());
+            }
+
+            updater.execute(&dynamo.client).await?;
         }
         if next.is_none() {
             break;

@@ -1,15 +1,12 @@
-use crate::{
-    AppState, Error,
-    constants::SESSION_KEY_USER_ID,
-    models::{
-        UserPhoneNumber, UserPhoneNumberQueryOption, UserTelegram, UserTelegramQueryOption,
-        phone::{PhoneVerification, PhoneVerificationQueryOption},
-        user::{User, UserQueryOption},
-    },
-    transact_write,
-    types::{EntityType, Partition, Provider},
-    utils::{password::hash_password, telegram::parse_telegram_raw, time::get_now_timestamp},
+use crate::models::{
+    PhoneVerification, PhoneVerificationQueryOption, UserPhoneNumber, UserQueryOption,
+    UserRefreshToken, UserTelegram, UserTelegramQueryOption,
 };
+use crate::time::get_now_timestamp;
+use crate::utils::password::hash_password;
+use crate::utils::telegram::parse_telegram_raw;
+use crate::*;
+
 use bdk::prelude::*;
 
 use by_axum::axum::{
@@ -25,10 +22,14 @@ pub enum LoginRequest {
     Phone {
         phone: String,
         code: String,
+
+        device_id: Option<String>,
     },
     Email {
         email: String,
         password: String,
+
+        device_id: Option<String>,
     },
     OAuth {
         provider: Provider,
@@ -39,18 +40,31 @@ pub enum LoginRequest {
     },
 }
 
+#[derive(
+    Debug, Default, Clone, serde::Serialize, serde::Deserialize, aide::OperationIo, JsonSchema,
+)]
+pub struct LoginResponse {
+    #[serde(flatten)]
+    pub user: User,
+    pub refresh_token: Option<String>,
+}
+
 pub async fn login_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     Extension(session): Extension<Session>,
     Json(req): Json<LoginRequest>,
-) -> Result<Json<User>, Error> {
-    let user = match req {
-        LoginRequest::Phone { phone, code } => {
-            login_with_phone(&dynamo.client, phone, code).await?
-        }
-        LoginRequest::Email { email, password } => {
-            login_with_email(&dynamo.client, email, password).await?
-        }
+) -> Result<Json<LoginResponse>> {
+    let user = match req.clone() {
+        LoginRequest::Phone {
+            phone,
+            code,
+            device_id: _,
+        } => login_with_phone(&dynamo.client, phone, code).await?,
+        LoginRequest::Email {
+            email,
+            password,
+            device_id: _,
+        } => login_with_email(&dynamo.client, email, password).await?,
         LoginRequest::OAuth {
             provider,
             access_token,
@@ -64,14 +78,32 @@ pub async fn login_handler(
         .insert(SESSION_KEY_USER_ID, user.pk.to_string())
         .await?;
 
-    Ok(Json(user))
+    let device_id: Option<String> = match &req.clone() {
+        LoginRequest::Phone { device_id, .. } => device_id.clone(),
+        LoginRequest::Email { device_id, .. } => device_id.clone(),
+        _ => None,
+    };
+
+    let refresh_token = if let Some(device_id) = device_id {
+        let (rt, plain) = UserRefreshToken::new(&user, device_id);
+        rt.upsert(&dynamo.client).await?;
+
+        Some(plain)
+    } else {
+        None
+    };
+
+    Ok(Json(LoginResponse {
+        user,
+        refresh_token,
+    }))
 }
 
 pub async fn login_with_phone(
     cli: &aws_sdk_dynamodb::Client,
     phone: String,
     code: String,
-) -> Result<User, Error> {
+) -> Result<User> {
     // Verify the phone verification code
     let now = get_now_timestamp();
     let (verification_list, _) = PhoneVerification::find_by_phone(
@@ -169,7 +201,7 @@ pub async fn login_with_oauth(
     cli: &aws_sdk_dynamodb::Client,
     provider: Provider,
     access_token: String,
-) -> Result<User, Error> {
+) -> Result<User> {
     let email = provider.get_email(&access_token).await?;
 
     let user = User::find_by_email(cli, &email, UserQueryOption::builder().limit(1))
@@ -188,7 +220,7 @@ pub async fn login_with_email(
     cli: &aws_sdk_dynamodb::Client,
     email: String,
     password: String,
-) -> Result<User, Error> {
+) -> Result<User> {
     let hashed_password = hash_password(&password);
     let (u, _) = User::find_by_email_and_password(
         cli,
@@ -219,7 +251,7 @@ pub async fn login_with_email(
 pub async fn login_with_telegram(
     cli: &aws_sdk_dynamodb::Client,
     telegram_raw: String,
-) -> Result<User, Error> {
+) -> Result<User> {
     let telegram_user = parse_telegram_raw(telegram_raw.clone()).map_err(|e| {
         tracing::error!("Failed to parse telegram raw data: {}", e);
         Error::Unauthorized("Invalid telegram data".into())

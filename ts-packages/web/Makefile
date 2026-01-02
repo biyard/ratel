@@ -26,6 +26,9 @@ VITE_SIGN_DOMAIN ?= dev.ratel.foundation
 VITE_API_URL ?= http://localhost:3000
 VITE_EXPERIMENT ?= false
 VITE_TELEGRAM_BOTNAME ?= dummy
+VITE_OPERATOR_ADDRESS ?= dummy
+VITE_RPC_URL ?= https://public-en-kairos.node.kaia.io
+VITE_BLOCK_EXPLORER_URL ?= https://kairos.scope.kaia.io
 
 ENV ?= dev
 
@@ -56,7 +59,10 @@ BUILD_ENV ?= VERSION=$(VERSION) \
 							VITE_SIGN_DOMAIN=$(VITE_SIGN_DOMAIN) \
 							VITE_API_URL=$(VITE_API_URL) \
 							VITE_EXPERIMENT=$(VITE_EXPERIMENT) \
-							VITE_TELEGRAM_BOTNAME=$(VITE_TELEGRAM_BOTNAME)
+							VITE_TELEGRAM_BOTNAME=$(VITE_TELEGRAM_BOTNAME) \
+							VITE_OPERATOR_ADDRESS=$(VITE_OPERATOR_ADDRESS) \
+							VITE_RPC_URL=$(VITE_RPC_URL) \
+							VITE_BLOCK_EXPLORER_URL=$(VITE_BLOCK_EXPLORER_URL)
 
 DOCKER_FLAGS ?= --build-arg VITE_ENV=$(VITE_ENV) \
 									--build-arg VITE_LOG_LEVEL=$(VITE_LOG_LEVEL) \
@@ -70,6 +76,9 @@ DOCKER_FLAGS ?= --build-arg VITE_ENV=$(VITE_ENV) \
 									--build-arg VITE_SIGN_DOMAIN=$(VITE_SIGN_DOMAIN) \
 									--build-arg VITE_API_URL=$(VITE_API_URL) \
 									--build-arg VITE_EXPERIMENT=$(VITE_EXPERIMENT) \
+									--build-arg VITE_OPERATOR_ADDRESS=$(VITE_OPERATOR_ADDRESS) \
+									--build-arg VITE_RPC_URL=$(VITE_RPC_URL) \
+									--build-arg VITE_BLOCK_EXPLORER_URL=$(VITE_BLOCK_EXPLORER_URL) \
                   --build-arg VITE_VERSION=$(VERSION) \
 									--build-arg VITE_TELEGRAM_BOTNAME=$(VITE_TELEGRAM_BOTNAME)
 
