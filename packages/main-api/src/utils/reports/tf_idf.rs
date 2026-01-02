@@ -1,9 +1,7 @@
-use crate::utils::reports::{cell_string, gender_label, preprocess_korean_nouns};
+use crate::utils::reports::preprocess_korean_nouns;
 use crate::*;
-use calamine::XlsxError;
-use calamine::{Data, Reader, Xlsx, open_workbook};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 #[derive(
     Debug, Clone, Default, Serialize, Deserialize, aide::OperationIo, schemars::JsonSchema,
@@ -166,90 +164,13 @@ fn compute_tfidf(docs_tokens: Vec<Vec<String>>, cfg: &TfidfConfigV1) -> Vec<Tfid
     rows
 }
 
-pub fn run_tfidf_from_xlsx(
-    path: &str,
-    cfg: TfidfConfigV1,
-) -> crate::Result<HashMap<String, Vec<TfidfRow>>> {
-    let mut workbook: Xlsx<_> = open_workbook(path)
-        .map_err(|e: XlsxError| crate::Error::InternalServerError(e.to_string()))?;
-
-    let range = workbook
-        .worksheet_range("raw")
-        .map_err(|e: XlsxError| crate::Error::InternalServerError(e.to_string()))?;
-
-    let mut rows_iter = range.rows();
-    let header_row = rows_iter
-        .next()
-        .ok_or_else(|| crate::Error::InternalServerError("empty sheet".to_string()))?;
-
-    let headers: Vec<String> = header_row.iter().map(|c| c.to_string()).collect();
-
-    let gender_idx = headers
+// TODO: check tf-idf logic
+pub fn run_tfidf(comments: &[String], cfg: TfidfConfigV1) -> crate::Result<Vec<TfidfRow>> {
+    let docs_tokens = comments
         .iter()
-        .position(|h| h.trim() == "Gender")
-        .ok_or_else(|| crate::Error::InternalServerError("missing column: Gender".to_string()))?;
+        .map(|c| preprocess_korean_nouns(c))
+        .filter(|t| !t.is_empty())
+        .collect::<Vec<_>>();
 
-    let mut cols_1st = Vec::new();
-    let mut cols_2nd = Vec::new();
-
-    for (i, h) in headers.iter().enumerate() {
-        let hl = h.to_lowercase();
-        if h.contains("1차") && !hl.contains("type") {
-            cols_1st.push(i);
-        }
-        if h.contains("2차") && !hl.contains("type") {
-            cols_2nd.push(i);
-        }
-    }
-
-    let all_rows: Vec<Vec<Data>> = rows_iter.map(|r| r.to_vec()).collect();
-
-    let mut comments_data: HashMap<String, Vec<String>> = HashMap::from([
-        ("1차_남성".to_string(), vec![]),
-        ("1차_여성".to_string(), vec![]),
-        ("2차_통합".to_string(), vec![]),
-    ]);
-
-    for r in &all_rows {
-        let gender = r.get(gender_idx).and_then(gender_label);
-        if let Some(g) = gender {
-            let key = format!("1차_{}", g);
-            if let Some(v) = comments_data.get_mut(&key) {
-                for &ci in &cols_1st {
-                    if let Some(cell) = r.get(ci) {
-                        if let Some(s) = cell_string(cell) {
-                            v.push(s);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    for r in &all_rows {
-        if let Some(v) = comments_data.get_mut("2차_통합") {
-            for &ci in &cols_2nd {
-                if let Some(cell) = r.get(ci) {
-                    if let Some(s) = cell_string(cell) {
-                        v.push(s);
-                    }
-                }
-            }
-        }
-    }
-
-    let mut out: HashMap<String, Vec<TfidfRow>> = HashMap::new();
-
-    for (group, comments) in comments_data {
-        let docs_tokens = comments
-            .iter()
-            .map(|c| preprocess_korean_nouns(c))
-            .filter(|t| !t.is_empty())
-            .collect::<Vec<_>>();
-
-        let rows = compute_tfidf(docs_tokens, &cfg);
-        out.insert(group, rows);
-    }
-
-    Ok(out)
+    Ok(compute_tfidf(docs_tokens, &cfg))
 }

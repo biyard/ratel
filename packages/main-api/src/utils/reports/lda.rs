@@ -1,14 +1,5 @@
-use crate::utils::reports::cell_string;
-use crate::utils::reports::gender_label;
 use crate::utils::reports::preprocess_korean_nouns;
 use crate::*;
-use calamine::XlsxError;
-use calamine::{Data, DataType as _, Reader, Xlsx, open_workbook};
-use lindera::dictionary::load_dictionary;
-use lindera::mode::Mode;
-use lindera::segmenter::Segmenter;
-use lindera::tokenizer::Tokenizer;
-use once_cell::sync::OnceCell;
 use rand::RngCore;
 use rand::SeedableRng;
 use rand_chacha::ChaCha8Rng;
@@ -205,91 +196,14 @@ fn lda_from_tokens(docs: Vec<Vec<String>>, cfg: &LdaConfigV1) -> Vec<TopicRow> {
     rows
 }
 
-// FIXME: checking this logic
-pub fn run_from_xlsx(
-    path: &str,
-    cfg: LdaConfigV1,
-) -> crate::Result<HashMap<String, Vec<TopicRow>>> {
-    let mut workbook: Xlsx<_> = open_workbook(path)
-        .map_err(|e: XlsxError| crate::Error::InternalServerError(e.to_string()))?;
-
-    let range = workbook
-        .worksheet_range("raw")
-        .map_err(|e: XlsxError| crate::Error::InternalServerError(e.to_string()))?;
-
-    let mut rows_iter = range.rows();
-    let header_row = rows_iter
-        .next()
-        .ok_or_else(|| crate::Error::InternalServerError("empty sheet".to_string()))?;
-
-    let headers: Vec<String> = header_row.iter().map(|c| c.to_string()).collect();
-
-    let gender_idx = headers
+// TODO: check lda logic
+pub fn run_lda(comments: &[String], cfg: LdaConfigV1) -> crate::Result<Vec<TopicRow>> {
+    let token_docs = comments
         .iter()
-        .position(|h| h.trim() == "Gender")
-        .ok_or_else(|| crate::Error::InternalServerError("missing column: Gender".to_string()))?;
+        .map(|c| preprocess_korean_nouns(c))
+        .filter(|t| t.len() >= cfg.min_tokens_per_doc)
+        .collect::<Vec<_>>();
 
-    let mut cols_1st = Vec::new();
-    let mut cols_2nd = Vec::new();
-
-    for (i, h) in headers.iter().enumerate() {
-        let hl = h.to_lowercase();
-        if h.contains("1차") && !hl.contains("type") {
-            cols_1st.push(i);
-        }
-        if h.contains("2차") && !hl.contains("type") {
-            cols_2nd.push(i);
-        }
-    }
-
-    let mut comments_data: HashMap<String, Vec<String>> = HashMap::from([
-        ("1차_남성".to_string(), vec![]),
-        ("1차_여성".to_string(), vec![]),
-        ("2차_통합".to_string(), vec![]),
-    ]);
-
-    let all_rows: Vec<Vec<Data>> = rows_iter.map(|r| r.to_vec()).collect();
-
-    for r in &all_rows {
-        let gender = r.get(gender_idx).and_then(gender_label);
-        if let Some(g) = gender {
-            let key = format!("1차_{}", g);
-            if let Some(v) = comments_data.get_mut(&key) {
-                for &ci in &cols_1st {
-                    if let Some(cell) = r.get(ci) {
-                        if let Some(s) = cell_string(cell) {
-                            v.push(s);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    for r in &all_rows {
-        if let Some(v) = comments_data.get_mut("2차_통합") {
-            for &ci in &cols_2nd {
-                if let Some(cell) = r.get(ci) {
-                    if let Some(s) = cell_string(cell) {
-                        v.push(s);
-                    }
-                }
-            }
-        }
-    }
-
-    let mut out: HashMap<String, Vec<TopicRow>> = HashMap::new();
-
-    for (group, comments) in comments_data {
-        let token_docs = comments
-            .iter()
-            .map(|c| preprocess_korean_nouns(c))
-            .filter(|t| t.len() >= cfg.min_tokens_per_doc)
-            .collect::<Vec<_>>();
-
-        let rows = lda_from_tokens(token_docs, &cfg);
-        out.insert(group, rows);
-    }
-
-    Ok(out)
+    let rows = lda_from_tokens(token_docs, &cfg);
+    Ok(rows)
 }
