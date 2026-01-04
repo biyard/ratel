@@ -46,7 +46,10 @@ export async function optimisticUpdate<T>(
 
   if (rollbackData) {
     rollbackData!.rollback = () => {
-      queryClient.setQueryData(queryKey, rollbackData);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      rollbackData.forEach(([key, data]: any) => {
+        queryClient.setQueryData(key, data);
+      });
     };
   }
 
