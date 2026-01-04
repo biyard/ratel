@@ -128,6 +128,8 @@ export default function FeedCard(props: FeedCardProps) {
         <FeedBody post={post} onEdit={handleEditPost(post.pk)} />
       </NavLink>
       <FeedFooter
+        post_pk={post.pk}
+        href={href}
         space_id={post.space_pk}
         space_type={post.space_type}
         booster_type={post.booster}
@@ -371,6 +373,8 @@ export function JoinNowButton({ onClick }: { onClick: () => void }) {
 }
 
 interface FeedFooterProps {
+  post_pk: string;
+  href: string;
   space_id?: string;
   space_type?: SpaceType;
   booster_type?: BoosterType;
@@ -386,6 +390,8 @@ interface FeedFooterProps {
 }
 
 export function FeedFooter({
+  post_pk,
+  href,
   space_id,
   space_type,
   booster_type,
@@ -474,7 +480,13 @@ export function FeedFooter({
           />
           {convertNumberToString(likes)}
         </IconText>
-        <IconText>
+        <IconText
+          onClick={(evt) => {
+            evt.stopPropagation();
+            nav(`${href}#comments`);
+          }}
+          className="cursor-pointer"
+        >
           <CommentIcon />
           {convertNumberToString(comments)}
         </IconText>
