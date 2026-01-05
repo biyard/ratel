@@ -87,6 +87,12 @@ impl PortOne {
             .send()
             .await?;
 
+        if !res.status().is_success() {
+            let err_text = res.text().await?;
+            error!("PortOne get billing key error: {}", err_text);
+            return Err(Error::PortOneBillingKeyError);
+        }
+
         Ok(res.json().await?)
     }
 

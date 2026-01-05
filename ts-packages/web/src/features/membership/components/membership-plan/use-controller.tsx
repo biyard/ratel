@@ -58,7 +58,7 @@ export class Controller {
     }
 
     if (this.i18n.language === 'ko') {
-      displayAmount = Math.round(displayAmount * 1000);
+      displayAmount = Math.round(displayAmount * 1500);
     }
 
     if (this.user.data.has_billing_key) {
