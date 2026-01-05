@@ -32,6 +32,8 @@ pub struct UserTeam {
     pub display_name: String,
     pub profile_url: String,
     pub username: String,
+
+    pub dao_address: Option<String>,
 }
 
 impl UserTeam {
@@ -41,6 +43,7 @@ impl UserTeam {
             display_name,
             profile_url,
             username,
+            dao_address,
             pk: team_pk,
             ..
         }: Team,
@@ -54,6 +57,7 @@ impl UserTeam {
             display_name,
             profile_url,
             username,
+            dao_address,
         }
     }
 
@@ -159,6 +163,7 @@ pub struct UserTeamResponse {
     pub profile_url: String,
     pub username: String,
     pub user_type: UserType,
+    pub dao_address: Option<String>,
 }
 
 impl From<UserTeam> for UserTeamResponse {
@@ -167,6 +172,7 @@ impl From<UserTeam> for UserTeamResponse {
             nickname: user_team.display_name,
             profile_url: user_team.profile_url,
             username: user_team.username,
+            dao_address: user_team.dao_address,
             user_type: UserType::Team,
         }
     }
