@@ -20,6 +20,7 @@ pub struct TeamResponse {
     pub nickname: String,
     pub username: String,
     pub profile_url: Option<String>,
+    pub dao_address: Option<String>,
     pub user_type: u8,
 
     pub html_contents: String,
@@ -34,6 +35,7 @@ impl From<Team> for TeamResponse {
             nickname: team.display_name,
             username: team.username,
             profile_url: Some(team.profile_url),
+            dao_address: team.dao_address,
             user_type: UserType::Team as u8,
             html_contents: team.description,
         }

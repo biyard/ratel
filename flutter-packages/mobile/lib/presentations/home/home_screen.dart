@@ -18,6 +18,7 @@ class HomeScreen extends GetWidget<HomeController> {
           backgroundColor: AppColors.bg,
           child: ListView.separated(
             controller: controller.scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.fromLTRB(0, 0, 0, bottomPad + 10),
             itemCount:
                 1 +

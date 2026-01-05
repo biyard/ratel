@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useContext, useMemo, useState } from 'react';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useNavigate } from 'react-router';
-import { route } from '@/route';
+// import { route } from '@/route';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast, showInfoToast } from '@/lib/toast';
 
@@ -28,6 +28,12 @@ import {
 import { TeamGroupPermission } from '@/features/auth/utils/team-group-permissions';
 import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
 import { useUserInfo } from '@/hooks/use-user-info';
+
+import daoRegistryArtifact from '../../../../contracts/DaoRegistry.json';
+import daoRegistryStateV1Artifact from '../../../../contracts/DaoRegistryStateV1.json';
+import { ethers } from 'ethers';
+import { getKaiaSigner } from '@/lib/service/kaia-wallet-service';
+import { config } from '@/config';
 
 export default function SettingsPage({ username }: { username: string }) {
   const { t } = useTranslation('Team');
@@ -53,13 +59,15 @@ export default function SettingsPage({ username }: { username: string }) {
   const [profileUrl, setProfileUrl] = useState(team?.profile_url || '');
   const [nickname, setNickname] = useState(team?.nickname);
   const [htmlContents, setHtmlContents] = useState(team?.html_contents);
-
+  const [daoAddress, setDaoAddress] = useState(team?.dao_address);
+  const [isConnectingWallet, setIsConnectingWallet] = useState(false);
   const deleteTeamPermission =
     permissions?.has(TeamGroupPermission.TeamAdmin) ?? false;
 
   if (!team) {
     return <></>;
   }
+
   const handleContents = (evt: React.FormEvent<HTMLTextAreaElement>) => {
     setHtmlContents(evt.currentTarget.value);
   };
@@ -115,7 +123,7 @@ export default function SettingsPage({ username }: { username: string }) {
       .withTitle('');
   };
 
-  const handleSave = async () => {
+  const handleSave = async (nextDaoAddress?: string) => {
     if (!teamDetailQuery.data) return;
 
     if (checkString(nickname ?? '') || checkString(htmlContents ?? '')) {
@@ -123,14 +131,17 @@ export default function SettingsPage({ username }: { username: string }) {
       return;
     }
 
+    const mergedDaoAddress =
+      nextDaoAddress ?? daoAddress ?? team.dao_address ?? undefined;
+
     try {
       await teamsV3Api.updateTeam(teamDetailQuery.data.id, {
         nickname: nickname || undefined,
         description: htmlContents || undefined,
         profile_url: profileUrl || undefined,
+        dao_address: mergedDaoAddress,
       });
 
-      // Refetch team data
       teamDetailQuery.refetch();
 
       updateSelectedTeam({
@@ -138,12 +149,64 @@ export default function SettingsPage({ username }: { username: string }) {
         nickname: nickname!,
         html_contents: htmlContents!,
         profile_url: profileUrl,
+        dao_address: mergedDaoAddress ?? null,
       });
 
-      navigate(route.teamByUsername(username));
+      setDaoAddress(mergedDaoAddress ?? null);
+
+      // navigate(route.teamByUsername(username));
     } catch (e) {
       logger.error('Failed to update team:', e);
       showErrorToast(t('failed_update_team') || 'Failed to update team');
+    }
+  };
+
+  const handleActivateDao = async () => {
+    try {
+      setIsConnectingWallet(true);
+
+      const { signer, account } = await getKaiaSigner(
+        config.env === 'dev' || config.env === 'local' ? 'testnet' : 'mainnet',
+      );
+
+      const { abi: stateAbi, bytecode: stateBytecode } =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        daoRegistryStateV1Artifact as any;
+      const stateFactory = new ethers.ContractFactory(
+        stateAbi,
+        stateBytecode,
+        signer,
+      );
+      const stateContract = await stateFactory.deploy(account);
+      const stateDeployed = await stateContract.waitForDeployment();
+      const stateAddress = await stateDeployed.getAddress();
+
+      const { abi: registryAbi, bytecode: registryBytecode } =
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        daoRegistryArtifact as any;
+      const daoName =
+        teamDetailQuery.data.nickname || teamDetailQuery.data.username || 'DAO';
+
+      const registryFactory = new ethers.ContractFactory(
+        registryAbi,
+        registryBytecode,
+        signer,
+      );
+      const registryContract = await registryFactory.deploy(
+        daoName,
+        stateAddress,
+        config.operator_address,
+      );
+      const registryDeployed = await registryContract.waitForDeployment();
+      const registryAddress = await registryDeployed.getAddress();
+
+      await handleSave(registryAddress);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (e: any) {
+      logger.error('Failed to activate DAO (deploy DaoRegistry)', e);
+      showErrorToast(t('failed_active_dao'));
+    } finally {
+      setIsConnectingWallet(false);
     }
   };
 
@@ -213,12 +276,36 @@ export default function SettingsPage({ username }: { username: string }) {
             data-pw="team-description-input"
           />
         </Col>
+        {config.experiment && (
+          <Row className="items-center">
+            <label className="w-35 font-bold text-text-primary">
+              {t('dao_address')}
+            </label>
+            {team.dao_address ? (
+              <span className="text-sm text-text-primary break-all">
+                {team.dao_address}
+              </span>
+            ) : (
+              <Button
+                variant="primary"
+                onClick={handleActivateDao}
+                disabled={isConnectingWallet}
+                data-pw="team-dao-activate-button"
+              >
+                {isConnectingWallet ? t('activating_dao') : t('activate_dao')}
+              </Button>
+            )}
+          </Row>
+        )}
+
         <Row className="justify-end py-5">
           <Button
             disabled={invalidInput}
             className={invalidInput ? 'bg-neutral-600' : 'bg-primary'}
             variant={'rounded_primary'}
-            onClick={handleSave}
+            onClick={async () => {
+              await handleSave();
+            }}
             data-pw="team-settings-save-button"
           >
             {t('save')}

@@ -50,5 +50,10 @@
   "team_owner": "팀 소유자",
   "remove_from_group": "그룹에서 제거",
   "member_removed_from_group": "{{groupName}}에서 멤버를 제거했습니다",
-  "failed_remove_member_from_group": "그룹에서 멤버를 제거하는데 실패했습니다"
+  "failed_remove_member_from_group": "그룹에서 멤버를 제거하는데 실패했습니다",
+
+  "failed_active_dao": "DAO 활성화에 실패했습니다. 가스비를 확인해주시고 다시 시도해주세요.",
+  "dao_address": "DAO 주소",
+  "activate_dao": "DAO 활성화",
+  "activating_dao": "DAO 활성화 중..."
 }
