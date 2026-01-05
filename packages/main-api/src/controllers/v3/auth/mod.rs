@@ -1,3 +1,5 @@
+pub mod change_account;
+pub mod list_accounts;
 pub mod login;
 pub mod logout;
 pub mod reset_password;
@@ -14,6 +16,8 @@ pub mod verification {
     pub mod tests;
 }
 
+use change_account::change_account_handler;
+use list_accounts::list_accounts_handler;
 use login::login_handler;
 use logout::logout_handler;
 use reset_password::reset_password_handler;
@@ -27,6 +31,8 @@ pub fn route() -> Result<Router<AppState>> {
         .route("/login", post(login_handler))
         .route("/logout", post(logout_handler))
         .route("/signup", post(signup_handler))
+        .route("/accounts", get(list_accounts_handler))
+        .route("/change-account", post(change_account_handler))
         .route("/reset", post(reset_password_handler))
         .nest(
             "/verification",

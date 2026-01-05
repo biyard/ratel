@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/rendering.dart';
 import 'package:ratel/exports.dart';
 import 'package:ratel/features/space/analyze/components/analyze_header.dart';
 import 'package:ratel/features/space/analyze/components/objective_answers_view.dart';
@@ -10,6 +11,8 @@ class AnalyzeCreatorScreen extends GetWidget<AnalyzeCreatorController> {
 
   @override
   Widget build(BuildContext context) {
+    final space = Get.find<SpaceController>();
+
     return Layout<AnalyzeCreatorController>(
       scrollable: false,
       child: Obx(() {
@@ -37,22 +40,28 @@ class AnalyzeCreatorScreen extends GetWidget<AnalyzeCreatorController> {
           result.summaries.length,
         );
 
-        return ListView.builder(
-          itemCount: questionCount + 1,
-          itemBuilder: (context, index) {
-            if (index == 0) {
-              return AnalyzeHeader(poll: poll, result: result);
-            }
+        return NotificationListener<ScrollNotification>(
+          onNotification: space.handleHeaderByScroll,
+          child: ListView.builder(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            itemCount: questionCount + 1,
+            itemBuilder: (context, index) {
+              if (index == 0) {
+                return AnalyzeHeader(poll: poll, result: result);
+              }
 
-            final q = poll.questions[index - 1];
-            final s = result.summaries[index - 1];
+              final q = poll.questions[index - 1];
+              final s = result.summaries[index - 1];
 
-            return _QuestionResultCard(
-              index: index - 1,
-              question: q,
-              summary: s,
-            );
-          },
+              return _QuestionResultCard(
+                index: index - 1,
+                question: q,
+                summary: s,
+              );
+            },
+          ),
         );
       }),
     );
