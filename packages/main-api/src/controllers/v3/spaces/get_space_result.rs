@@ -28,11 +28,15 @@ pub async fn get_space_result_handler(
     NoApi(perms): NoApi<Permissions>,
     Extension(space): Extension<SpaceCommon>,
 ) -> Result<Json<GetSpaceResultResponse>> {
+    use crate::utils::reports::build_space_report_pdf;
+    use crate::utils::reports::upload_report_pdf_to_s3;
+
     // FIXME: add space results permission
     perms.permitted(TeamGroupPermission::SpaceRead)?;
-    let posts = SpacePost::find_by_space_ordered(&dynamo.client, space.pk, SpacePost::opt_all())
-        .await?
-        .0;
+    let posts =
+        SpacePost::find_by_space_ordered(&dynamo.client, space.clone().pk, SpacePost::opt_all())
+            .await?
+            .0;
 
     let comment_futs = posts.iter().filter_map(|post| {
         let space_post_pk = match &post.sk {
@@ -65,6 +69,10 @@ pub async fn get_space_result_handler(
     let lda = run_lda(&post_comments, LdaConfigV1::default())?;
     let network = run_network(&post_comments, NetworkConfigV1::default())?;
     let tf_idf = run_tfidf(&post_comments, TfidfConfigV1::default())?;
+
+    let pdf_bytes = build_space_report_pdf(&space, &lda, &network, &tf_idf)?;
+    let (key, uri) = upload_report_pdf_to_s3(pdf_bytes).await?;
+    tracing::debug!("space_result: pdf uploaded: {:?} {:?}", key, uri);
 
     Ok(Json(GetSpaceResultResponse {
         lda,
