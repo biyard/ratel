@@ -39,6 +39,7 @@ pub enum EntityType {
     EmailVerification,
     PhoneVerification,
     UserRelationship(String),
+    UserRefreshToken(String),
 
     // Feed entity types
     Post,

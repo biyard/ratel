@@ -56,7 +56,7 @@ class SubmitModal extends StatelessWidget {
                   ),
                   SizedBox(height: 24),
                   Text(
-                    "Once submitted, you won’t be able to edit\nyour response.",
+                    "Once submitted, you won’t be able to edit your response.",
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 15,

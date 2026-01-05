@@ -84,6 +84,10 @@ export function SpacePollViewerPage({ spacePk, pollPk }: SpacePollPathProps) {
               disabled={!canSubmit && !canUpdate}
               canUpdate={canUpdate}
               isLogin={!!ctrl.user}
+              isFinished={
+                ctrl.space.status === SpaceStatus.Finished ||
+                ctrl.poll.ended_at < Date.now()
+              }
             />
           </Col>
         </Card>
