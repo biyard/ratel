@@ -40,6 +40,8 @@ export function useDeleteSpacePostMutation<T extends SpacePostResponse>() {
       qc.invalidateQueries({
         queryKey: spacePostQk,
       });
+      qc.invalidateQueries({ queryKey: spaceKeys.files(spacePk) });
+      qc.invalidateQueries({ queryKey: spaceKeys.file_links(spacePk) });
     },
   });
 

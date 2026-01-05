@@ -1,13 +1,13 @@
 import { State } from '@/types/state';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import useFileSpace from '../../hooks/use-file-space';
 import { FileResponse } from '../../types/file-response';
 import { Space } from '@/features/spaces/types/space';
 import { useUpdateFileMutation } from '../../hooks/use-update-file-mutation';
+import { useDeleteFileMutation } from '../../hooks/use-delete-file-mutation';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import FileModel from '../../types/file';
-import { deleteSpaceFile } from '@/lib/api/ratel/spaces.v3';
 
 export class SpaceFileEditorController {
   constructor(
@@ -15,32 +15,57 @@ export class SpaceFileEditorController {
     public space: Space,
     public file: FileResponse,
     public files: State<FileModel[]>,
+    public originalFiles: State<FileModel[]>,
     public editing: State<boolean>,
     public updateFile: ReturnType<typeof useUpdateFileMutation>,
+    public deleteFile: ReturnType<typeof useDeleteFileMutation>,
+    public filesToDelete: State<string[]>,
   ) {}
 
   handleEdit = () => {
+    // Store original files when entering edit mode
+    this.originalFiles.set([...this.files.get()]);
+    this.filesToDelete.set([]);
     this.editing.set(true);
   };
 
   handleSave = async () => {
-    const files = this.files.get();
+    const currentFiles = this.files.get();
+    const filesToDelete = this.filesToDelete.get();
 
     try {
+      // First, delete files that were marked for deletion
+      if (filesToDelete.length > 0) {
+        await Promise.all(
+          filesToDelete.map((fileUrl) =>
+            this.deleteFile.mutateAsync({
+              spacePk: this.spacePk,
+              fileUrl,
+            }),
+          ),
+        );
+      }
+
+      // Then update the files list
       await this.updateFile.mutateAsync({
         spacePk: this.spacePk,
-        files,
+        files: currentFiles,
       });
 
-      showSuccessToast('Success to update files');
-    } catch {
+      showSuccessToast('Files updated successfully');
+      this.filesToDelete.set([]);
+    } catch (error) {
       showErrorToast('Failed to update files');
+      console.error('Error updating files:', error);
     } finally {
       this.editing.set(false);
     }
   };
 
   handleDiscard = () => {
+    // Restore original files
+    this.files.set([...this.originalFiles.get()]);
+    this.filesToDelete.set([]);
     this.editing.set(false);
   };
 
@@ -48,24 +73,17 @@ export class SpaceFileEditorController {
     this.files.set([...this.files.get(), file]);
   };
 
-  handleRemoveFile = async (index: number) => {
+  handleRemoveFile = (index: number) => {
     const currentFiles = this.files.get();
     const fileToRemove = currentFiles[index];
-    
-    // Optimistically update UI
+
+    // Just update UI locally - don't call API yet
     const newFiles = currentFiles.filter((_, i) => i !== index);
     this.files.set(newFiles);
 
-    // Call API to delete file and cascade to Overview/Boards
+    // Track file URL for deletion on save (if it has a URL - uploaded files)
     if (fileToRemove?.url) {
-      try {
-        await deleteSpaceFile(this.spacePk, fileToRemove.url);
-        showSuccessToast('File deleted successfully');
-      } catch (error) {
-        showErrorToast('Failed to delete file');
-        // Revert on error
-        this.files.set(currentFiles);
-      }
+      this.filesToDelete.set([...this.filesToDelete.get(), fileToRemove.url]);
     }
   };
 }
@@ -73,17 +91,30 @@ export class SpaceFileEditorController {
 export function useSpaceFileEditorController(spacePk: string) {
   const { data: space } = useSpaceById(spacePk);
   const { data: file } = useFileSpace(spacePk);
-  const files = useState(file.files || []);
+  const files = useState<FileModel[]>(file.files || []);
+  const originalFiles = useState<FileModel[]>([]);
+  const filesToDelete = useState<string[]>([]);
   const editing = useState(false);
 
   const updateFile = useUpdateFileMutation();
+  const deleteFile = useDeleteFileMutation();
+
+  // Update local state when server data changes
+  useEffect(() => {
+    if (file?.files && !editing[0]) {
+      files[1](file.files);
+    }
+  }, [file?.files, editing[0]]);
 
   return new SpaceFileEditorController(
     spacePk,
     space,
     file,
     new State(files),
+    new State(originalFiles),
     new State(editing),
     updateFile,
+    deleteFile,
+    new State(filesToDelete),
   );
 }
