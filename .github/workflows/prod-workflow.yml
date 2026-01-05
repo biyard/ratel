@@ -161,6 +161,8 @@ jobs:
           BIYARD_API_KEY: ${{ secrets.BIYARD_API_KEY }}
           BIYARD_PROJECT_ID: ${{ secrets.BIYARD_PROJECT_ID }}
 
+          REPORT_FONTS_DIR: assets/fonts
+
         run: |
           tar xzvf dist.tar.gz
           ls dist
@@ -169,13 +171,17 @@ jobs:
 
           mkdir -p ../../.gcp
           cp .gcp/firebase-service-account.json ../../.gcp/firebase-service-account.json
-          mv target/release/main-api ../../bootstrap
+
+          mkdir -p ../../bundle/assets/fonts
+          cp src/utils/reports/assets/fonts/*.ttf ../../bundle/assets/fonts/
+
+          mv target/release/main-api ../../bundle/bootstrap
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ratel-main-api-${{ github.sha }}
-          path: ${{ github.workspace }}/bootstrap
+          path: ${{ github.workspace }}/bundle
           if-no-files-found: error
           retention-days: 7
 

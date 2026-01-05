@@ -41,6 +41,8 @@ pub struct Config {
     pub did: DidConfig,
     pub private_bucket_name: &'static str,
 
+    pub report_fonts_dir: &'static str,
+
     // Not supported features in test code
     #[cfg(not(feature = "no-secret"))]
     pub firebase: FirebaseConfig,
@@ -156,6 +158,8 @@ impl Default for Config {
             #[cfg(not(feature = "no-secret"))]
             watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL")
                 .expect("You must set WATERMARK_QUEUE_URL"),
+
+            report_fonts_dir: option_env!("REPORT_FONTS_DIR").unwrap_or("assets/fonts"),
 
             portone: PortoneConfig::default(),
             x402: X402Config::default(),

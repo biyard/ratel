@@ -42,6 +42,7 @@ aws-sdk-sqs = "1.81.0"
 jsonwebtoken = "9.3.0"
 percent-encoding = "2.3.2"
 aws-smithy-types = "1"
+genpdf = "0.2.0"
 
 rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-sdk", features = [
     "server",
