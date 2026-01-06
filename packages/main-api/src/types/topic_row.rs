@@ -6,5 +6,4 @@ use crate::*;
 pub struct TopicRow {
     pub topic: String,
     pub keyword: String,
-    pub weight: f64,
 }
