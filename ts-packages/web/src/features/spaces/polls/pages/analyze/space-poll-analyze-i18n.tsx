@@ -12,6 +12,9 @@ export const i18nSpacePollAnalyze = {
     question: 'Question',
     answer: 'Answer',
 
+    response_analyze: 'Response Analyze',
+    topic_analyze: 'Topic Analyze',
+
     btn_edit: 'Edit',
     btn_back: 'Back',
     btn_save: 'Save',
@@ -28,6 +31,9 @@ export const i18nSpacePollAnalyze = {
     final_survey: '사후조사',
     question: '질문',
     answer: '답변',
+
+    response_analyze: '응답 분석',
+    topic_analyze: '토픽 분석',
 
     btn_edit: '수정하기',
     btn_back: '뒤로가기',

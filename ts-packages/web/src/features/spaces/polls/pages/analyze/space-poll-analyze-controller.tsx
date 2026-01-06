@@ -16,6 +16,8 @@ import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { PanelAttribute } from '@/features/spaces/panels/types/panel-attribute';
 import { useListPanels } from '@/features/spaces/panels/hooks/use-list-panels';
+import useTopic from '../../hooks/use-topic';
+import { SpaceAnalyze } from '../../types/space-analyze';
 
 export class SpacePollAnalyzeController {
   constructor(
@@ -24,6 +26,7 @@ export class SpacePollAnalyzeController {
     public navigate: NavigateFunction,
     public space: Space,
     public poll: Poll,
+    public analyze: SpaceAnalyze,
     public summary: PollSurveySummariesResponse,
     public attributes: PanelAttribute[],
 
@@ -380,10 +383,13 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   // Fetching data from remote
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
+  const { data: analyze } = useTopic(spacePk);
   const { data: summary } = usePollSpaceSummaries(spacePk, pollPk);
   const { data: panels } = useListPanels(spacePk);
   const attribute = panels?.map((p) => p.attributes).flat() ?? [];
   const { t } = useTranslation('SpacePollAnalyze');
+
+  console.log('analyze data: ', analyze);
 
   const navigator = useNavigate();
 
@@ -393,6 +399,7 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
     navigator,
     space,
     poll,
+    analyze,
     summary,
     attribute,
 
