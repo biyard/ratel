@@ -8,14 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { cn } from '@/lib/utils';
-
-function TopicAnalyzeView({ spacePk, pollPk }: SpacePollPathProps) {
-  return (
-    <div className="w-full rounded-lg border p-4">
-      Topic Analyze (spacePk={spacePk}, pollPk={pollPk})
-    </div>
-  );
-}
+import { TopicAnalyzeView } from '@/features/spaces/components/topic/topic-analyze-view';
 
 type TabKey = 'response' | 'topic';
 
@@ -37,7 +30,7 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
   }, [showTabs]);
 
   return (
-    <Col>
+    <Col className="gap-4">
       {showTabs && (
         <div className="w-fit">
           <div className="flex items-center gap-6">

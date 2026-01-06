@@ -18,6 +18,13 @@ export const i18nSpacePollAnalyze = {
     btn_edit: 'Edit',
     btn_back: 'Back',
     btn_save: 'Save',
+
+    number_of_topics: 'Number of Topics',
+    analyzing: 'Anylyzing...',
+    confirm: 'Confirm',
+    input_hint: 'Please enter a number between 1 and 20.',
+    analyze_error:
+      'error occurred during topic analysis. Please try again later.',
   },
   ko: {
     id: 'ID',
@@ -38,5 +45,11 @@ export const i18nSpacePollAnalyze = {
     btn_edit: '수정하기',
     btn_back: '뒤로가기',
     btn_save: '저장하기',
+
+    number_of_topics: '토픽 개수',
+    analyzing: '분석 중...',
+    confirm: '확인',
+    input_hint: '1~20 사이로 입력해주세요.',
+    analyze_error: '분석에 실패했습니다. 잠시 후 다시 시도해주세요.',
   },
 };
