@@ -184,11 +184,10 @@ fn lda_from_tokens(docs: Vec<Vec<String>>, cfg: &LdaConfigV1) -> Vec<TopicRow> {
 
         scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
 
-        for (wid, phi) in scores.into_iter().take(cfg.top_n) {
+        for (wid, _) in scores.into_iter().take(cfg.top_n) {
             rows.push(TopicRow {
                 topic: format!("토픽_{}", t + 1),
                 keyword: id2word[wid].clone(),
-                weight: phi,
             });
         }
     }

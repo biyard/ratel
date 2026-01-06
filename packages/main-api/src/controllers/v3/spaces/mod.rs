@@ -4,6 +4,7 @@ pub mod get_space_result;
 pub mod list_spaces;
 pub mod update_space;
 
+pub mod analyzes;
 pub mod boards;
 pub mod discussions;
 pub mod files;
@@ -52,6 +53,7 @@ pub fn route() -> Result<Router<AppState>> {
                     delete(delete_space_handler).patch(update_space_handler),
                 )
                 .nest("/panels", panels::route())
+                .nest("/analyzes", analyzes::route())
                 // NOTE: Above are TeamAdmin-only routes
                 .layer(middleware::from_fn_with_state(
                     app_state.clone(),

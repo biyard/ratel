@@ -492,12 +492,12 @@ pub fn build_space_report_pdf(
 }
 
 fn lda_to_table_rows(lda: &[TopicRow], top_topics: usize) -> Vec<(String, String)> {
-    let mut by_topic: HashMap<String, Vec<(String, f64)>> = HashMap::new();
+    let mut by_topic: HashMap<String, Vec<String>> = HashMap::new();
     for r in lda {
         by_topic
             .entry(r.topic.clone())
             .or_default()
-            .push((r.keyword.clone(), r.weight));
+            .push(r.keyword.clone());
     }
 
     let mut topics: Vec<(usize, String)> = by_topic
@@ -518,7 +518,7 @@ fn lda_to_table_rows(lda: &[TopicRow], top_topics: usize) -> Vec<(String, String
     let mut out = Vec::new();
     for (_, t) in topics {
         let mut kws = by_topic.remove(&t).unwrap_or_default();
-        kws.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        kws.sort_by(|a, b| b.cmp(a));
 
         let label_num = t
             .split('_')
@@ -530,7 +530,7 @@ fn lda_to_table_rows(lda: &[TopicRow], top_topics: usize) -> Vec<(String, String
         let keywords = kws
             .into_iter()
             .take(10)
-            .map(|(k, _)| k)
+            .map(|k| k)
             .collect::<Vec<_>>()
             .join(", ");
 
