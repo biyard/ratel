@@ -12,7 +12,18 @@ use genpdf::elements;
 use genpdf::fonts::{FontData, FontFamily};
 use genpdf::{Alignment, Element, Mm, Position, RenderResult, Size, style};
 use std::collections::HashMap;
-use std::path::PathBuf;
+
+use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
+use imageproc::drawing::{
+    draw_filled_rect_mut, draw_hollow_rect_mut, draw_line_segment_mut, draw_text_mut,
+};
+use imageproc::rect::Rect;
+
+use std::io::Cursor;
+use std::path::{Path as StdPath, PathBuf};
+
+use ab_glyph::{Font, FontArc, PxScale, ScaleFont};
+use genpdf::Scale as PdfScale;
 
 struct VCenterText {
     text: String,
@@ -89,6 +100,212 @@ impl Element for VCenterText {
     }
 }
 
+fn load_ttf_font(path: &StdPath) -> Result<FontArc> {
+    let bytes =
+        std::fs::read(path).map_err(|e| crate::Error::InternalServerError(e.to_string()))?;
+    FontArc::try_from_vec(bytes)
+        .map_err(|e| crate::Error::InternalServerError(format!("failed to load ttf font: {e}")))
+}
+
+fn nice_step(max_v: f64, ticks: i32) -> f64 {
+    let raw = (max_v / (ticks as f64)).max(1e-9);
+    let pow = 10_f64.powf(raw.log10().floor());
+    let frac = raw / pow;
+    let nice = if frac <= 1.0 {
+        1.0
+    } else if frac <= 2.0 {
+        2.0
+    } else if frac <= 5.0 {
+        5.0
+    } else {
+        10.0
+    };
+    nice * pow
+}
+
+fn text_w_px(font: &FontArc, scale: f32, s: &str) -> i32 {
+    let scaled = font.as_scaled(PxScale::from(scale));
+    let mut w = 0.0f32;
+    for ch in s.chars() {
+        let id = scaled.glyph_id(ch);
+        w += scaled.h_advance(id);
+    }
+    w.ceil() as i32
+}
+
+pub fn render_tfidf_chart_image(
+    tf_idf: &[TfidfRow],
+    top_n: usize,
+    font_path: &std::path::Path,
+    title: &str,
+) -> Result<DynamicImage> {
+    let mut data = tf_idf.to_vec();
+    data.sort_by(|a, b| {
+        b.tf_idf
+            .partial_cmp(&a.tf_idf)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+    data.truncate(top_n);
+    if data.is_empty() {
+        return Ok(DynamicImage::ImageRgba8(RgbaImage::new(1, 1)));
+    }
+
+    let font = load_ttf_font(font_path)?;
+    let n = data.len() as i32;
+
+    let w: u32 = 2400;
+
+    let label_scale: f32 = 62.0;
+    let value_scale: f32 = 60.0;
+
+    let inner_l = 40i32;
+    let inner_r = 64i32;
+    let inner_t = 34i32;
+    let inner_b = 42i32;
+
+    let header_h = 128i32;
+
+    let label_gap = 28i32;
+    let max_label_w = data
+        .iter()
+        .map(|r| text_w_px(&font, label_scale, &r.keyword))
+        .max()
+        .unwrap_or(0);
+
+    let left_label_w = (max_label_w + label_gap + 12).max(120);
+    let right_pad = 120i32;
+
+    let bar_h = 64i32;
+    let gap = 18i32;
+    let axis_area = 112i32;
+
+    let h: u32 = (inner_t + header_h + n * bar_h + (n - 1) * gap + axis_area + inner_b) as u32;
+
+    let white = Rgba([255, 255, 255, 255]);
+    let border = Rgba([120, 120, 120, 255]);
+    let bar = Rgba([32, 84, 115, 255]);
+    let text = Rgba([60, 60, 60, 255]);
+
+    let mut img = RgbaImage::from_pixel(w, h, white);
+
+    let outer = Rect::at(0, 0).of_size(w - 1, h - 1);
+    draw_hollow_rect_mut(&mut img, outer, border);
+    let outer2 = Rect::at(1, 1).of_size(w - 3, h - 3);
+    draw_hollow_rect_mut(&mut img, outer2, border);
+
+    let chart_x0 = inner_l + left_label_w;
+    let chart_x1 = (w as i32) - inner_r - right_pad;
+
+    let chart_y0 = inner_t + header_h;
+    let chart_h = n * bar_h + (n - 1) * gap;
+    let chart_y1 = chart_y0 + chart_h;
+
+    let title_scale: f32 = 86.0;
+    let title_w = text_w_px(&font, title_scale, title);
+    let title_x = ((w as i32) / 2 - title_w / 2).max(inner_l);
+    let title_y = inner_t + 6;
+
+    draw_text_mut(&mut img, text, title_x, title_y, title_scale, &font, title);
+    draw_text_mut(
+        &mut img,
+        text,
+        title_x + 1,
+        title_y,
+        title_scale,
+        &font,
+        title,
+    );
+    draw_text_mut(
+        &mut img,
+        text,
+        title_x,
+        title_y + 1,
+        title_scale,
+        &font,
+        title,
+    );
+    draw_text_mut(
+        &mut img,
+        text,
+        title_x + 1,
+        title_y + 1,
+        title_scale,
+        &font,
+        title,
+    );
+
+    let max_v = data
+        .iter()
+        .map(|r| r.tf_idf)
+        .fold(0.0_f64, |m, v| if v > m { v } else { m })
+        .max(0.0001);
+
+    let tick_count = 6;
+    let step = nice_step(max_v, tick_count - 1);
+    let max_tick = ((max_v / step).ceil() * step).max(step);
+
+    let axis_y = chart_y1 + 24;
+    let x_tick_scale: f32 = 56.0;
+
+    for i in 0..tick_count {
+        let v = (i as f64) * step;
+        if v > max_tick + 1e-9 {
+            continue;
+        }
+
+        let t = (v / max_tick).min(1.0);
+        let x = chart_x0 + (t * ((chart_x1 - chart_x0) as f64)).round() as i32;
+
+        let label = if step >= 1.0 {
+            format!("{:.0}", v)
+        } else {
+            format!("{:.1}", v)
+        };
+
+        let lw = text_w_px(&font, x_tick_scale, &label);
+        draw_text_mut(
+            &mut img,
+            text,
+            x - (lw / 2),
+            axis_y + 16,
+            x_tick_scale,
+            &font,
+            &label,
+        );
+    }
+
+    let label_right = chart_x0 - label_gap;
+
+    for (i, r) in data.iter().enumerate() {
+        let y = chart_y0 + i as i32 * (bar_h + gap);
+
+        let lw = text_w_px(&font, label_scale, &r.keyword);
+        let label_x = (label_right - lw).max(inner_l);
+
+        draw_text_mut(
+            &mut img,
+            text,
+            label_x,
+            y + 6,
+            label_scale,
+            &font,
+            &r.keyword,
+        );
+
+        let bar_w = ((r.tf_idf / max_tick) * ((chart_x1 - chart_x0) as f64)).round() as i32;
+        let bar_w = bar_w.max(1);
+
+        let bar_rect = Rect::at(chart_x0, y).of_size(bar_w as u32, bar_h as u32);
+        draw_filled_rect_mut(&mut img, bar_rect, bar);
+
+        let val_str = format!("{:.2}", r.tf_idf);
+        let val_x = (chart_x0 + bar_w + 16).min((w as i32) - inner_r - 140);
+        draw_text_mut(&mut img, text, val_x, y + 6, value_scale, &font, &val_str);
+    }
+
+    Ok(DynamicImage::ImageRgba8(img))
+}
+
 pub async fn upload_report_pdf_to_s3(pdf_bytes: Vec<u8>) -> Result<(String, String)> {
     let ratel_config = crate::config::get();
     let aws_config = &ratel_config.aws;
@@ -144,7 +361,7 @@ pub fn build_space_report_pdf(
     _space: &SpaceCommon,
     lda: &[TopicRow],
     _network: &[NetworkCentralityRow],
-    _tf_idf: &[TfidfRow],
+    tf_idf: &[TfidfRow],
 ) -> Result<Vec<u8>> {
     let cfg = crate::config::get();
 
@@ -239,6 +456,34 @@ pub fn build_space_report_pdf(
     }
 
     doc.push(table);
+
+    doc.push(elements::Break::new(2));
+    doc.push(elements::Paragraph::new("• 토론 분석_TF-IDF").styled(style::Style::new().bold()));
+    doc.push(elements::Break::new(1));
+
+    let chart = render_tfidf_chart_image(tf_idf, 10, &p("NotoSansKR-Regular.ttf"), "TF-IDF")?;
+    let chart_rgb = DynamicImage::ImageRgb8(chart.to_rgb8());
+
+    let mut bytes = Vec::new();
+    chart_rgb
+        .write_to(&mut Cursor::new(&mut bytes), ImageFormat::Jpeg)
+        .map_err(|e| crate::Error::InternalServerError(e.to_string()))?;
+
+    let page_w_mm: f64 = 210.0;
+    let margin_mm: f64 = 10.0;
+    let content_w_mm = page_w_mm - margin_mm * 2.0;
+
+    let dpi: f64 = 300.0;
+    let img_w_mm = (chart_rgb.width() as f64) * 25.4 / dpi;
+
+    let s = ((content_w_mm / img_w_mm) * 1.03) as f32;
+
+    let chart_el = elements::Image::from_reader(Cursor::new(bytes))
+        .map_err(|e| crate::Error::InternalServerError(e.to_string()))?
+        .with_alignment(Alignment::Center)
+        .with_scale(PdfScale::new(s, s));
+
+    doc.push(chart_el);
 
     let mut out: Vec<u8> = Vec::new();
     doc.render(&mut out)
