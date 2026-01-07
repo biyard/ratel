@@ -18,6 +18,8 @@ import { PanelAttribute } from '@/features/spaces/panels/types/panel-attribute';
 import { useListPanels } from '@/features/spaces/panels/hooks/use-list-panels';
 import useTopic from '../../hooks/use-topic';
 import { SpaceAnalyze } from '../../types/space-analyze';
+import { useUpdateLdaMutation } from '../../hooks/use-update-lda-mutation';
+import { useUpsertAnalyzeMutation } from '../../hooks/use-upsert-analyze-mutation';
 
 export class SpacePollAnalyzeController {
   constructor(
@@ -31,6 +33,8 @@ export class SpacePollAnalyzeController {
     public attributes: PanelAttribute[],
 
     public t: TFunction<'SpacePollAnalyze', undefined>,
+    public updateLda: ReturnType<typeof useUpdateLdaMutation>,
+    public upsertAnalyze: ReturnType<typeof useUpsertAnalyzeMutation>,
   ) {}
 
   handleBack = () => {
@@ -61,6 +65,21 @@ export class SpacePollAnalyzeController {
       entries.push([k, Number(v) || 0]);
     }
     return entries;
+  };
+
+  handleUpsertAnalyze = async (ldaTopics: number) => {
+    this.upsertAnalyze.mutate({
+      spacePk: this.spacePk,
+      ldaTopics,
+    });
+  };
+
+  handleUpdateTopics = (topics: string[], keywords: string[][]) => {
+    this.updateLda.mutateAsync({
+      spacePk: this.spacePk,
+      topics: topics,
+      keywords: keywords,
+    });
   };
 
   handleDownloadExcel = () => {
@@ -386,6 +405,9 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   const { data: analyze } = useTopic(spacePk);
   const { data: summary } = usePollSpaceSummaries(spacePk, pollPk);
   const { data: panels } = useListPanels(spacePk);
+
+  const updateLda = useUpdateLdaMutation();
+  const upsertAnalyze = useUpsertAnalyzeMutation();
   const attribute = panels?.map((p) => p.attributes).flat() ?? [];
   const { t } = useTranslation('SpacePollAnalyze');
 
@@ -404,5 +426,7 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
     attribute,
 
     t,
+    updateLda,
+    upsertAnalyze,
   );
 }
