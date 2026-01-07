@@ -68,7 +68,8 @@ async fn test_upsert_analyze() {
         ),
         headers: test_user.1.clone(),
         body: {
-            "lda_topics": 5
+            "lda_topics": 5,
+            "tf_idf_keywords": 10,
         },
         response_type: SpaceAnalyze
     };
@@ -140,7 +141,8 @@ async fn test_upsert_lda() {
         ),
         headers: test_user.1.clone(),
         body: {
-            "lda_topics": 5
+            "lda_topics": 5,
+            "tf_idf_keywords": 10,
         },
         response_type: SpaceAnalyze
     };

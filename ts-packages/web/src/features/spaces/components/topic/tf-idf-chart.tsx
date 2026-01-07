@@ -13,9 +13,10 @@ import {
 export type TfIdfChartProps = {
   t: TFunction<'SpacePollAnalyze', undefined>;
   tf_idf?: TfIdf[];
+  limit?: number;
 };
 
-export function TfIdfChart({ t, tf_idf }: TfIdfChartProps) {
+export function TfIdfChart({ t, tf_idf, limit = 10 }: TfIdfChartProps) {
   const data = useMemo(() => {
     const list = Array.isArray(tf_idf) ? tf_idf : [];
     return list
@@ -27,8 +28,8 @@ export function TfIdfChart({ t, tf_idf }: TfIdfChartProps) {
       }))
       .filter((r) => r.keyword.length > 0 && Number.isFinite(r.tf_idf))
       .sort((a, b) => b.tf_idf - a.tf_idf)
-      .slice(0, 10);
-  }, [tf_idf]);
+      .slice(0, limit);
+  }, [tf_idf, limit]);
 
   const { niceMax, ticks } = useMemo(() => {
     const max = data.reduce((m, r) => Math.max(m, r.tf_idf), 0);
