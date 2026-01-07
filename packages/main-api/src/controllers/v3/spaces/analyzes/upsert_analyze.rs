@@ -5,8 +5,10 @@ use crate::models::SpaceCommon;
 use crate::spaces::SpacePath;
 use crate::spaces::SpacePathParam;
 use crate::utils::reports::LdaConfigV1;
+use crate::utils::reports::NetworkConfigV1;
 use crate::utils::reports::TfidfConfigV1;
 use crate::utils::reports::run_lda;
+use crate::utils::reports::run_network;
 use crate::utils::reports::run_tfidf;
 use crate::*;
 use futures::future::try_join_all;
@@ -17,6 +19,7 @@ use futures::future::try_join_all;
 pub struct UpsertAnalyzeRequest {
     pub lda_topics: usize,
     pub tf_idf_keywords: usize,
+    pub network_top_nodes: usize,
 }
 
 pub async fn upsert_analyze_handler(
@@ -67,11 +70,14 @@ pub async fn upsert_analyze_handler(
     let lda = run_lda(&post_comments, lda_config)?;
 
     let mut tfidf_config = TfidfConfigV1::default();
-    //FIXME: fix to params
     tfidf_config.max_features = req.tf_idf_keywords;
     let tf_idf = run_tfidf(&post_comments, tfidf_config)?;
 
-    let analyze = SpaceAnalyze::new(space_pk, Some(lda), None, Some(tf_idf));
+    let mut network_config = NetworkConfigV1::default();
+    network_config.top_nodes = req.network_top_nodes;
+    let network = run_network(&post_comments, network_config)?;
+
+    let analyze = SpaceAnalyze::new(space_pk, Some(lda), Some(network), Some(tf_idf));
     analyze.upsert(&dynamo.client).await?;
 
     Ok(Json(analyze))

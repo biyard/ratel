@@ -95,10 +95,7 @@ fn betweenness_centrality_undirected(adj: &[Vec<usize>]) -> Vec<f64> {
 }
 
 // TODO: check network logic
-pub fn run_network(
-    comments: &[String],
-    cfg: NetworkConfigV1,
-) -> crate::Result<Vec<NetworkCentralityRow>> {
+pub fn run_network(comments: &[String], cfg: NetworkConfigV1) -> crate::Result<NetworkGraph> {
     let docs = comments
         .iter()
         .map(|c| preprocess_korean_nouns(c))
@@ -135,7 +132,7 @@ pub fn run_network(
         .collect();
 
     if filtered_edges.is_empty() {
-        return Ok(vec![]);
+        return Ok(NetworkGraph::default());
     }
 
     let mut node2id: HashMap<String, usize> = HashMap::new();
@@ -179,15 +176,34 @@ pub fn run_network(
     ranked.sort_by(|&a, &b| degree[b].partial_cmp(&degree[a]).unwrap());
 
     let top = ranked.into_iter().take(cfg.top_nodes).collect::<Vec<_>>();
+    let top_set: HashSet<usize> = top.iter().copied().collect();
 
-    let mut rows = Vec::with_capacity(top.len());
-    for i in top {
-        rows.push(NetworkCentralityRow {
-            node: id2node[i].clone(),
-            degree_centrality: degree[i],
-            betweenness_centrality: betweenness[i],
+    let mut nodes = Vec::with_capacity(top.len());
+    for i in &top {
+        nodes.push(NetworkCentralityRow {
+            node: id2node[*i].clone(),
+            degree_centrality: degree[*i],
+            betweenness_centrality: betweenness[*i],
         });
     }
 
-    Ok(rows)
+    let mut edges = Vec::new();
+    for (a, b, w) in &filtered_edges {
+        let ia = node2id[a];
+        let ib = node2id[b];
+
+        if !top_set.contains(&ia) || !top_set.contains(&ib) {
+            continue;
+        }
+
+        edges.push(NetworkEdgeRow {
+            source: id2node[ia].clone(),
+            target: id2node[ib].clone(),
+            weight: *w,
+        });
+    }
+
+    edges.sort_by(|x, y| y.weight.cmp(&x.weight));
+
+    Ok(NetworkGraph { nodes, edges })
 }

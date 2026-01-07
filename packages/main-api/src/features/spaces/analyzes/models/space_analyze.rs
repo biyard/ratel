@@ -6,7 +6,7 @@ pub struct SpaceAnalyze {
     pub sk: EntityType,
 
     pub lda_topics: Option<Vec<TopicRow>>,
-    pub network_centrality: Option<Vec<NetworkCentralityRow>>,
+    pub network: Option<NetworkGraph>,
     pub tf_idf: Option<Vec<TfidfRow>>,
 }
 
@@ -14,14 +14,14 @@ impl SpaceAnalyze {
     pub fn new(
         space_pk: Partition,
         lda_topics: Option<Vec<TopicRow>>,
-        network_centrality: Option<Vec<NetworkCentralityRow>>,
+        network: Option<NetworkGraph>,
         tf_idf: Option<Vec<TfidfRow>>,
     ) -> Self {
         Self {
             pk: space_pk,
             sk: EntityType::SpaceAnalyze,
             lda_topics,
-            network_centrality,
+            network,
             tf_idf,
         }
     }

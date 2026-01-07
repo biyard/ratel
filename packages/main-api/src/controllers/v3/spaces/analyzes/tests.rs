@@ -70,6 +70,7 @@ async fn test_upsert_analyze() {
         body: {
             "lda_topics": 5,
             "tf_idf_keywords": 10,
+            "network_top_nodes": 30,
         },
         response_type: SpaceAnalyze
     };
@@ -143,6 +144,7 @@ async fn test_upsert_lda() {
         body: {
             "lda_topics": 5,
             "tf_idf_keywords": 10,
+            "network_top_nodes": 30,
         },
         response_type: SpaceAnalyze
     };
