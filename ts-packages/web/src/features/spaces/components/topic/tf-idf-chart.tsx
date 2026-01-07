@@ -35,11 +35,12 @@ export function TfIdfChart({ t, tf_idf, limit = 10 }: TfIdfChartProps) {
     const max = data.reduce((m, r) => Math.max(m, r.tf_idf), 0);
     const step = 0.5;
 
-    const nm = Math.max(step, Math.ceil(max / step) * step);
-    const count = Math.round(nm / step);
+    const base = Math.max(step, Math.ceil(max / step) * step);
+    const padded = base + step;
+    const count = Math.round(padded / step);
 
     return {
-      niceMax: nm,
+      niceMax: padded,
       ticks: Array.from({ length: count + 1 }, (_, i) => i * step),
     };
   }, [data]);
@@ -65,7 +66,7 @@ export function TfIdfChart({ t, tf_idf, limit = 10 }: TfIdfChartProps) {
           <BarChart
             data={data}
             layout="vertical"
-            margin={{ top: 6, right: 44, left: 28, bottom: 10 }}
+            margin={{ top: 6, right: 72, left: 28, bottom: 10 }}
             barCategoryGap={2}
           >
             <XAxis
@@ -99,13 +100,28 @@ export function TfIdfChart({ t, tf_idf, limit = 10 }: TfIdfChartProps) {
             >
               <LabelList
                 dataKey="tf_idf"
-                position="right"
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                formatter={(v: any) => {
-                  const n = Number(v);
-                  return Number.isFinite(n) ? n.toFixed(2) : '';
+                content={(p: any) => {
+                  const n = Number(p?.value);
+                  if (!Number.isFinite(n)) return null;
+
+                  const x = Number(p?.x ?? 0);
+                  const y = Number(p?.y ?? 0);
+                  const w = Number(p?.width ?? 0);
+                  const h = Number(p?.height ?? 0);
+
+                  return (
+                    <text
+                      x={x + w + 10}
+                      y={y + h / 2}
+                      dominantBaseline="middle"
+                      textAnchor="start"
+                      style={{ fill: '#E5E7EB', fontSize: 12 }}
+                    >
+                      {n.toFixed(2)}
+                    </text>
+                  );
                 }}
-                style={{ fill: '#111827', fontSize: 12 }}
               />
             </Bar>
           </BarChart>
