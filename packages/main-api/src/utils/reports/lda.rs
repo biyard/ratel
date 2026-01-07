@@ -57,6 +57,7 @@ fn filter_extremes(
 
     let mut df: HashMap<&str, usize> = HashMap::new();
     let ds = docs.clone();
+    // caculate document frequency
     for doc in &ds {
         let mut seen = HashSet::new();
         for w in doc {
@@ -116,6 +117,7 @@ fn lda_from_tokens(docs: Vec<Vec<String>>, cfg: &LdaConfigV1) -> Vec<TopicRow> {
 
     let mut rng = ChaCha8Rng::seed_from_u64(cfg.seed);
 
+    // randomly assign topics
     for (di, doc) in docs_ids.iter().enumerate() {
         let mut zd = Vec::with_capacity(doc.len());
         ndsum[di] = doc.len();

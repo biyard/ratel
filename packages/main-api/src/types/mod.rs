@@ -90,3 +90,9 @@ pub use network_centrality_row::*;
 
 pub mod tfidf_row;
 pub use tfidf_row::*;
+
+pub mod network_edge_row;
+pub use network_edge_row::*;
+
+pub mod network_graph;
+pub use network_graph::*;

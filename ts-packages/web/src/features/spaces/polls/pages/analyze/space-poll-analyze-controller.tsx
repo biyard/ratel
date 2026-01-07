@@ -67,16 +67,21 @@ export class SpacePollAnalyzeController {
     return entries;
   };
 
-  handleUpsertAnalyze = async (ldaTopics: number, tfIdfKeywords: number) => {
-    this.upsertAnalyze.mutate({
+  handleUpsertAnalyze = async (
+    ldaTopics: number,
+    tfIdfKeywords: number,
+    networkTopNodes: number,
+  ) => {
+    return await this.upsertAnalyze.mutateAsync({
       spacePk: this.spacePk,
       ldaTopics,
       tfIdfKeywords,
+      networkTopNodes,
     });
   };
 
   handleUpdateTopics = (topics: string[], keywords: string[][]) => {
-    this.updateLda.mutateAsync({
+    return this.updateLda.mutateAsync({
       spacePk: this.spacePk,
       topics: topics,
       keywords: keywords,
@@ -400,7 +405,6 @@ export class SpacePollAnalyzeController {
 }
 
 export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
-  // Fetching data from remote
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
   const { data: analyze } = useTopic(spacePk);

@@ -28,11 +28,15 @@ export const i18nSpacePollAnalyze = {
     tfidf_input_hint: 'Please enter a number between 1 and 50.',
     analyze_error:
       'error occurred during topic analysis. Please try again later.',
+    number_of_network_top_nodes: 'Number of Network Top Nodes',
+    network_top_nodes_input_hint: 'Please enter a number between 1 and 30.',
 
+    network: 'Network',
     topic: 'Topic',
     keywords: 'Keywords',
     no_topics: 'No topics found.',
     no_tfidf: 'No TF-IDF data found.',
+    no_network: 'No network data found.',
   },
   ko: {
     id: 'ID',
@@ -62,10 +66,14 @@ export const i18nSpacePollAnalyze = {
     input_hint: '1~20 사이로 입력해주세요.',
     tfidf_input_hint: '1~50 사이로 입력해주세요.',
     analyze_error: '분석에 실패했습니다. 잠시 후 다시 시도해주세요.',
+    number_of_network_top_nodes: '네트워크 상위 노드 개수',
+    network_top_nodes_input_hint: '1~30 사이로 입력해주세요.',
 
+    network: '네트워크',
     topic: '토픽',
     keywords: '키워드',
     no_topics: '토픽이 존재하지 않습니다.',
     no_tfidf: 'TF-IDF 데이터가 존재하지 않습니다.',
+    no_network: '네트워크 데이터가 존재하지 않습니다.',
   },
 };

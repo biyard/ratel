@@ -1,5 +1,4 @@
 import React from 'react';
-import { useUpsertAnalyzeMutation } from '../../polls/hooks/use-upsert-analyze-mutation';
 import Card from '@/components/card';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -8,11 +7,16 @@ import { useTranslation } from 'react-i18next';
 import { LdaTopicTable } from './lda-topic-table';
 import { SpaceAnalyze } from '../../polls/types/space-analyze';
 import { TfIdfChart } from './tf-idf-chart';
+import { NetworkChart } from './network-chart';
 
 type TopicAnalyzeViewProps = {
   analyze?: SpaceAnalyze;
   handleUpdateTopics?: (topics: string[], keywords: string[][]) => void;
-  handleUpsertAnalyze?: (ldaTopics: number, tfIdfKeywords: number) => void;
+  handleUpsertAnalyze?: (
+    ldaTopics: number,
+    tfIdfKeywords: number,
+    networkTopNodes: number,
+  ) => void | Promise<void>;
 };
 
 export function TopicAnalyzeView({
@@ -20,14 +24,18 @@ export function TopicAnalyzeView({
   handleUpdateTopics,
   handleUpsertAnalyze,
 }: TopicAnalyzeViewProps) {
-  const upsert = useUpsertAnalyzeMutation();
   const { t } = useTranslation('SpacePollAnalyze');
 
   const clamp = (v: number) => Math.min(20, Math.max(1, v));
   const clampTfIdf = (v: number) => Math.min(50, Math.max(1, v));
+  const clampNetwork = (v: number) => Math.min(200, Math.max(1, v));
 
   const [topicCount, setTopicCount] = React.useState<number>(5);
   const [tfIdfCount, setTfIdfCount] = React.useState<number>(10);
+  const [networkTopNodes, setNetworkTopNodes] = React.useState<number>(30);
+
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState(false);
 
   React.useEffect(() => {
     const list = Array.isArray(analyze?.lda_topics) ? analyze.lda_topics : [];
@@ -48,11 +56,30 @@ export function TopicAnalyzeView({
     setTfIdfCount(clampTfIdf(n > 0 ? n : 10));
   }, [analyze?.tf_idf]);
 
-  const onConfirm = () => {
+  React.useEffect(() => {
+    const n = Array.isArray(analyze?.network?.nodes)
+      ? analyze!.network.nodes.length
+      : 0;
+    setNetworkTopNodes(clampNetwork(n > 0 ? n : 30));
+  }, [analyze?.network?.nodes]);
+
+  const onConfirm = async () => {
     const n = clamp(Number(topicCount) || 1);
     const m = clampTfIdf(Number(tfIdfCount) || 10);
-    handleUpsertAnalyze?.(n, m);
+    const k = clampNetwork(Number(networkTopNodes) || 30);
+
+    try {
+      setSubmitError(false);
+      setIsSubmitting(true);
+      await Promise.resolve(handleUpsertAnalyze?.(n, m, k));
+    } catch {
+      setSubmitError(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const pending = isSubmitting;
 
   return (
     <div className="flex flex-col gap-4">
@@ -123,20 +150,49 @@ export function TopicAnalyzeView({
                   {t('tfidf_input_hint')}
                 </div>
               </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="text-sm font-medium text-text-primary">
+                  {t('number_of_network_top_nodes')}
+                </div>
+
+                <div className="flex flex-row w-full gap-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={200}
+                    value={networkTopNodes}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === '') return;
+                      const n = Number(raw);
+                      if (!Number.isFinite(n)) return;
+                      setNetworkTopNodes(clampNetwork(n));
+                    }}
+                    onBlur={() =>
+                      setNetworkTopNodes((v) => clampNetwork(Number(v) || 30))
+                    }
+                    className={cn(
+                      'h-10 w-full rounded-md border bg-background px-3 text-sm text-text-primary',
+                      'focus:outline-none focus:ring-2 focus:ring-primary/30',
+                    )}
+                  />
+                </div>
+
+                <div className="text-xs text-muted-foreground">
+                  {t('network_top_nodes_input_hint')}
+                </div>
+              </div>
             </div>
           </div>
 
-          {upsert.isError && (
+          {submitError && (
             <div className="text-sm text-destructive">{t('analyze_error')}</div>
           )}
 
           <div className="flex flex-row w-full justify-end items-end">
-            <Button
-              variant="primary"
-              onClick={onConfirm}
-              disabled={upsert.isPending}
-            >
-              {upsert.isPending ? t('analyzing') : t('confirm')}
+            <Button variant="primary" onClick={onConfirm} disabled={pending}>
+              {pending ? t('analyzing') : t('confirm')}
             </Button>
           </div>
         </div>
@@ -151,6 +207,15 @@ export function TopicAnalyzeView({
           />
         </Card>
       )}
+
+      {analyze?.network != null &&
+        analyze?.network?.nodes != null &&
+        Array.isArray(analyze?.network?.nodes) &&
+        analyze.network.nodes.length > 0 && (
+          <Card key="network-chart">
+            <NetworkChart t={t} network={analyze?.network} />
+          </Card>
+        )}
 
       {Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0 && (
         <Card key="tf-idf-chart">
