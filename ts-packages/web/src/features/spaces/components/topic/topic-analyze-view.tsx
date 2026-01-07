@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { LdaTopicTable } from './lda-topic-table';
 import { SpaceAnalyze } from '../../polls/types/space-analyze';
+import { TfIdfChart } from './tf-idf-chart';
 
 type TopicAnalyzeViewProps = {
   analyze?: SpaceAnalyze;
@@ -103,6 +104,12 @@ export function TopicAnalyzeView({
             lda_topics={analyze?.lda_topics}
             handleUpdateTopics={handleUpdateTopics}
           />
+        </Card>
+      )}
+
+      {Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0 && (
+        <Card key="tf-idf-chart">
+          <TfIdfChart t={t} tf_idf={analyze?.tf_idf} />
         </Card>
       )}
     </div>
