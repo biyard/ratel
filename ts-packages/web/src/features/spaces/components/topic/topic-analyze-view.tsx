@@ -16,7 +16,7 @@ type TopicAnalyzeViewProps = {
     ldaTopics: number,
     tfIdfKeywords: number,
     networkTopNodes: number,
-  ) => void | Promise<void>;
+  ) => void | Promise<{ spacePk: string }>;
 };
 
 export function TopicAnalyzeView({
