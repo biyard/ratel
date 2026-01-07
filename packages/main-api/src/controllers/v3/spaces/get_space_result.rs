@@ -25,14 +25,14 @@ pub struct GetSpaceResultResponse {
 
 pub async fn get_space_result_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(perms): NoApi<Permissions>,
+    NoApi(_perms): NoApi<Permissions>,
     Extension(space): Extension<SpaceCommon>,
 ) -> Result<Json<GetSpaceResultResponse>> {
     use crate::utils::reports::build_space_report_pdf;
     use crate::utils::reports::upload_report_pdf_to_s3;
 
     // FIXME: add space results permission
-    perms.permitted(TeamGroupPermission::SpaceRead)?;
+    // perms.permitted(TeamGroupPermission::SpaceRead)?;
     let posts =
         SpacePost::find_by_space_ordered(&dynamo.client, space.clone().pk, SpacePost::opt_all())
             .await?

@@ -30,6 +30,7 @@ export const i18nSpacePollAnalyze = {
     topic: 'Topic',
     keywords: 'Keywords',
     no_topics: 'No topics found.',
+    no_tfidf: 'No TF-IDF data found.',
   },
   ko: {
     id: 'ID',
@@ -61,5 +62,6 @@ export const i18nSpacePollAnalyze = {
     topic: '토픽',
     keywords: '키워드',
     no_topics: '토픽이 존재하지 않습니다.',
+    no_tfidf: 'TF-IDF 데이터가 존재하지 않습니다.',
   },
 };
