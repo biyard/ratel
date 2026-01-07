@@ -86,7 +86,11 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
       )}
 
       {showTabs && tab === 'topic' && (
-        <TopicAnalyzeView spacePk={spacePk} pollPk={pollPk} />
+        <TopicAnalyzeView
+          analyze={ctrl.analyze}
+          handleUpdateTopics={ctrl.handleUpdateTopics}
+          handleUpsertAnalyze={ctrl.handleUpsertAnalyze}
+        />
       )}
 
       {ctrl.space.spaceType === SpaceType.Deliberation && (
