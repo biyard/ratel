@@ -11,12 +11,15 @@ export function useUpsertAnalyzeMutation<T extends SpaceAnalyze>() {
     mutationFn: async ({
       spacePk,
       ldaTopics,
+      tfIdfKeywords,
     }: {
       spacePk: string;
       ldaTopics: number;
+      tfIdfKeywords: number;
     }) => {
       await call('POST', `/v3/spaces/${encodeURIComponent(spacePk)}/analyzes`, {
         lda_topics: ldaTopics,
+        tf_idf_keywords: tfIdfKeywords,
       });
 
       return { spacePk };

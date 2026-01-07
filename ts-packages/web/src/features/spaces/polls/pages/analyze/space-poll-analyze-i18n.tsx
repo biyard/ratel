@@ -20,10 +20,12 @@ export const i18nSpacePollAnalyze = {
     btn_back: 'Back',
     btn_save: 'Save',
 
-    number_of_topics: 'Number of Topics',
+    number_of_topics: 'Number of LDA Topics',
+    number_of_tfidf_keywords: 'Number of TF-IDF Keywords',
     analyzing: 'Anylyzing...',
     confirm: 'Confirm',
     input_hint: 'Please enter a number between 1 and 20.',
+    tfidf_input_hint: 'Please enter a number between 1 and 50.',
     analyze_error:
       'error occurred during topic analysis. Please try again later.',
 
@@ -53,10 +55,12 @@ export const i18nSpacePollAnalyze = {
     btn_back: '뒤로가기',
     btn_save: '저장하기',
 
-    number_of_topics: '토픽 개수',
+    number_of_topics: 'LDA 토픽 개수',
+    number_of_tfidf_keywords: 'TF-IDF 키워드 개수',
     analyzing: '분석 중...',
     confirm: '확인',
     input_hint: '1~20 사이로 입력해주세요.',
+    tfidf_input_hint: '1~50 사이로 입력해주세요.',
     analyze_error: '분석에 실패했습니다. 잠시 후 다시 시도해주세요.',
 
     topic: '토픽',

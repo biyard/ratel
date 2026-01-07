@@ -67,10 +67,11 @@ export class SpacePollAnalyzeController {
     return entries;
   };
 
-  handleUpsertAnalyze = async (ldaTopics: number) => {
+  handleUpsertAnalyze = async (ldaTopics: number, tfIdfKeywords: number) => {
     this.upsertAnalyze.mutate({
       spacePk: this.spacePk,
       ldaTopics,
+      tfIdfKeywords,
     });
   };
 

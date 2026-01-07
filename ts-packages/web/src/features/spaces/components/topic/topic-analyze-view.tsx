@@ -12,7 +12,7 @@ import { TfIdfChart } from './tf-idf-chart';
 type TopicAnalyzeViewProps = {
   analyze?: SpaceAnalyze;
   handleUpdateTopics?: (topics: string[], keywords: string[][]) => void;
-  handleUpsertAnalyze?: (ldaTopics: number) => void;
+  handleUpsertAnalyze?: (ldaTopics: number, tfIdfKeywords: number) => void;
 };
 
 export function TopicAnalyzeView({
@@ -24,8 +24,10 @@ export function TopicAnalyzeView({
   const { t } = useTranslation('SpacePollAnalyze');
 
   const clamp = (v: number) => Math.min(20, Math.max(1, v));
+  const clampTfIdf = (v: number) => Math.min(50, Math.max(1, v));
 
   const [topicCount, setTopicCount] = React.useState<number>(5);
+  const [tfIdfCount, setTfIdfCount] = React.useState<number>(10);
 
   React.useEffect(() => {
     const list = Array.isArray(analyze?.lda_topics) ? analyze.lda_topics : [];
@@ -41,52 +43,85 @@ export function TopicAnalyzeView({
     setTopicCount(clamp(n > 0 ? n : 5));
   }, [analyze?.lda_topics]);
 
+  React.useEffect(() => {
+    const n = Array.isArray(analyze?.tf_idf) ? analyze.tf_idf.length : 0;
+    setTfIdfCount(clampTfIdf(n > 0 ? n : 10));
+  }, [analyze?.tf_idf]);
+
   const onConfirm = () => {
     const n = clamp(Number(topicCount) || 1);
-    handleUpsertAnalyze?.(n);
+    const m = clampTfIdf(Number(tfIdfCount) || 10);
+    handleUpsertAnalyze?.(n, m);
   };
 
   return (
     <div className="flex flex-col gap-4">
       <Card key="topic-analyze-setting">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col items-end gap-4">
-            <div className="flex flex-col gap-2">
-              <div className="text-sm font-medium text-text-primary">
-                {t('number_of_topics')}
+        <div className="flex flex-col w-full gap-4">
+          <div className="flex flex-col w-full items-start gap-4">
+            <div className="flex flex-col w-full gap-4">
+              <div className="flex flex-col w-full gap-2">
+                <div className="text-sm font-medium text-text-primary">
+                  {t('number_of_topics')}
+                </div>
+
+                <div className="flex flex-row w-full gap-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={20}
+                    value={topicCount}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === '') return;
+                      const n = Number(raw);
+                      if (!Number.isFinite(n)) return;
+                      setTopicCount(clamp(n));
+                    }}
+                    onBlur={() => setTopicCount((v) => clamp(Number(v) || 1))}
+                    className={cn(
+                      'h-10 w-full rounded-md border bg-background px-3 text-sm text-text-primary',
+                      'focus:outline-none focus:ring-2 focus:ring-primary/30',
+                    )}
+                  />
+                </div>
+
+                <div className="text-xs text-muted-foreground">
+                  {t('input_hint')}
+                </div>
               </div>
 
-              <div className="flex flex-row w-fit gap-2">
-                <Input
-                  type="number"
-                  min={1}
-                  max={20}
-                  value={topicCount}
-                  onChange={(e) => {
-                    const raw = e.target.value;
-                    if (raw === '') return;
-                    const n = Number(raw);
-                    if (!Number.isFinite(n)) return;
-                    setTopicCount(clamp(n));
-                  }}
-                  onBlur={() => setTopicCount((v) => clamp(Number(v) || 1))}
-                  className={cn(
-                    'h-10 w-32 rounded-md border bg-background px-3 text-sm text-text-primary',
-                    'focus:outline-none focus:ring-2 focus:ring-primary/30',
-                  )}
-                />
+              <div className="flex flex-col gap-2">
+                <div className="text-sm font-medium text-text-primary">
+                  {t('number_of_tfidf_keywords')}
+                </div>
 
-                <Button
-                  variant="primary"
-                  onClick={onConfirm}
-                  disabled={upsert.isPending}
-                >
-                  {upsert.isPending ? t('analyzing') : t('confirm')}
-                </Button>
-              </div>
+                <div className="flex flex-row w-full gap-2">
+                  <Input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={tfIdfCount}
+                    onChange={(e) => {
+                      const raw = e.target.value;
+                      if (raw === '') return;
+                      const n = Number(raw);
+                      if (!Number.isFinite(n)) return;
+                      setTfIdfCount(clampTfIdf(n));
+                    }}
+                    onBlur={() =>
+                      setTfIdfCount((v) => clampTfIdf(Number(v) || 10))
+                    }
+                    className={cn(
+                      'h-10 w-full rounded-md border bg-background px-3 text-sm text-text-primary',
+                      'focus:outline-none focus:ring-2 focus:ring-primary/30',
+                    )}
+                  />
+                </div>
 
-              <div className="text-xs text-muted-foreground">
-                {t('input_hint')}
+                <div className="text-xs text-muted-foreground">
+                  {t('tfidf_input_hint')}
+                </div>
               </div>
             </div>
           </div>
@@ -94,6 +129,16 @@ export function TopicAnalyzeView({
           {upsert.isError && (
             <div className="text-sm text-destructive">{t('analyze_error')}</div>
           )}
+
+          <div className="flex flex-row w-full justify-end items-end">
+            <Button
+              variant="primary"
+              onClick={onConfirm}
+              disabled={upsert.isPending}
+            >
+              {upsert.isPending ? t('analyzing') : t('confirm')}
+            </Button>
+          </div>
         </div>
       </Card>
 
@@ -109,7 +154,11 @@ export function TopicAnalyzeView({
 
       {Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0 && (
         <Card key="tf-idf-chart">
-          <TfIdfChart t={t} tf_idf={analyze?.tf_idf} />
+          <TfIdfChart
+            t={t}
+            tf_idf={analyze?.tf_idf}
+            limit={analyze?.tf_idf.length}
+          />
         </Card>
       )}
     </div>
