@@ -26,9 +26,23 @@ export function TopicAnalyzeView({
 
   const [topicCount, setTopicCount] = React.useState<number>(5);
 
+  React.useEffect(() => {
+    const list = Array.isArray(analyze?.lda_topics) ? analyze.lda_topics : [];
+
+    const uniqTopics = new Set<string>();
+    for (const r of list) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const topic = String((r as any)?.topic ?? '').trim();
+      if (topic) uniqTopics.add(topic);
+    }
+
+    const n = uniqTopics.size;
+    setTopicCount(clamp(n > 0 ? n : 5));
+  }, [analyze?.lda_topics]);
+
   const onConfirm = () => {
     const n = clamp(Number(topicCount) || 1);
-    handleUpsertAnalyze(n);
+    handleUpsertAnalyze?.(n);
   };
 
   return (
@@ -82,13 +96,15 @@ export function TopicAnalyzeView({
         </div>
       </Card>
 
-      <Card key="topic-analyze-table">
-        <LdaTopicTable
-          t={t}
-          lda_topics={analyze?.lda_topics}
-          handleUpdateTopics={handleUpdateTopics}
-        />
-      </Card>
+      {Array.isArray(analyze?.lda_topics) && analyze.lda_topics.length > 0 && (
+        <Card key="topic-analyze-table">
+          <LdaTopicTable
+            t={t}
+            lda_topics={analyze?.lda_topics}
+            handleUpdateTopics={handleUpdateTopics}
+          />
+        </Card>
+      )}
     </div>
   );
 }
