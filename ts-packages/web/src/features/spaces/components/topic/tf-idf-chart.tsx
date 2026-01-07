@@ -55,6 +55,8 @@ export function TfIdfChart({ t, tf_idf, limit = 10 }: TfIdfChartProps) {
     );
   }
 
+  const LABEL_TEXT_COLOR = 'var(--color-text-secondary)';
+
   return (
     <div className="w-full">
       <div className="mb-3 text-center text-base font-semibold text-text-primary">
@@ -77,6 +79,7 @@ export function TfIdfChart({ t, tf_idf, limit = 10 }: TfIdfChartProps) {
               tickFormatter={(v) => Number(v).toFixed(1)}
               axisLine={false}
               tickLine={false}
+              tick={{ fill: LABEL_TEXT_COLOR, fontSize: 12 }}
             />
 
             <YAxis
@@ -87,7 +90,7 @@ export function TfIdfChart({ t, tf_idf, limit = 10 }: TfIdfChartProps) {
               tickLine={false}
               tickMargin={14}
               interval={0}
-              tick={{ dy: 2 }}
+              tick={{ dy: 2, fill: LABEL_TEXT_COLOR, fontSize: 12 }}
             />
 
             <Bar
@@ -116,7 +119,7 @@ export function TfIdfChart({ t, tf_idf, limit = 10 }: TfIdfChartProps) {
                       y={y + h / 2}
                       dominantBaseline="middle"
                       textAnchor="start"
-                      style={{ fill: '#E5E7EB', fontSize: 12 }}
+                      style={{ fill: LABEL_TEXT_COLOR, fontSize: 12 }}
                     >
                       {n.toFixed(2)}
                     </text>
