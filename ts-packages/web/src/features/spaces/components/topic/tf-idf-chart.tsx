@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { TFunction } from 'i18next';
 import { TfIdf } from '../../polls/types/tf-idf';
 import {
@@ -9,14 +9,42 @@ import {
   YAxis,
   LabelList,
 } from 'recharts';
+import { Edit1, Save } from '@/components/icons';
+import { PostEditor } from '@/features/posts/components/post-editor';
 
 export type TfIdfChartProps = {
   t: TFunction<'SpacePollAnalyze', undefined>;
   tf_idf?: TfIdf[];
   limit?: number;
+  htmlContents?: string;
+  handleUpdateTfIdf?: (htmlContents?: string) => void;
 };
 
-export function TfIdfChart({ t, tf_idf, limit = 10 }: TfIdfChartProps) {
+export function TfIdfChart({
+  t,
+  tf_idf,
+  htmlContents,
+  handleUpdateTfIdf,
+  limit = 10,
+}: TfIdfChartProps) {
+  const [content, setContent] = useState<string>(htmlContents ?? '');
+  const [editing, setEditing] = useState(false);
+
+  const startEdit = () => {
+    setContent(htmlContents ?? '');
+    setEditing(true);
+  };
+
+  const save = () => {
+    handleUpdateTfIdf?.(content);
+    setEditing(false);
+  };
+
+  useEffect(() => {
+    if (editing) return;
+    setContent(htmlContents ?? '');
+  }, [htmlContents, editing]);
+
   const data = useMemo(() => {
     const list = Array.isArray(tf_idf) ? tf_idf : [];
     return list
@@ -59,6 +87,19 @@ export function TfIdfChart({ t, tf_idf, limit = 10 }: TfIdfChartProps) {
 
   return (
     <div className="w-full">
+      <div className="mb-2 flex items-center justify-end gap-2">
+        {!editing ? (
+          <Edit1
+            className="cursor-pointer w-5 h-5 [&>path]:stroke-1"
+            onClick={startEdit}
+          />
+        ) : (
+          <Save
+            className="cursor-pointer w-5 h-5 [&>path]:stroke-1"
+            onClick={save}
+          />
+        )}
+      </div>
       <div className="mb-3 text-center text-base font-semibold text-text-primary">
         TF-IDF
       </div>
@@ -130,6 +171,16 @@ export function TfIdfChart({ t, tf_idf, limit = 10 }: TfIdfChartProps) {
           </BarChart>
         </ResponsiveContainer>
       </div>
+
+      <PostEditor
+        url={''}
+        content={content}
+        onUpdate={(next) => setContent(next)}
+        disabledFileUpload={true}
+        disabledImageUpload={true}
+        editable={editing}
+        showToolbar={editing}
+      />
     </div>
   );
 }
