@@ -2,7 +2,6 @@ use crate::features::spaces::analyzes::SpaceAnalyze;
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
 use crate::posts::CreatePostResponse;
 use crate::spaces::CreateSpaceResponse;
-use crate::spaces::analyzes::UpdateAnalyzeRequest;
 use crate::spaces::boards::CreateSpacePostResponse;
 use crate::tests::v3_setup::TestContextV3;
 use crate::*;
@@ -82,7 +81,7 @@ async fn test_upsert_analyze() {
 }
 
 #[tokio::test]
-async fn test_upsert_lda() {
+async fn test_update_analyze() {
     let (ctx, space_pk, space_post_pk) = setup_deliberation_space().await;
     let TestContextV3 { app, test_user, .. } = ctx;
 
@@ -154,34 +153,29 @@ async fn test_upsert_lda() {
     assert_ne!(analyze.lda_topics.len(), 0);
     assert_eq!(status, 200);
 
-    let update_req = UpdateAnalyzeRequest {
-        topics: vec![
-            "topic_1".to_string(),
-            "topic_2".to_string(),
-            "topic_3".to_string(),
-            "topic_4".to_string(),
-            "topic_5".to_string(),
-        ],
-        keywords: vec![
-            vec!["합의".to_string(), "쟁점".to_string(), "범위".to_string()],
-            vec![
-                "이해관계자".to_string(),
-                "관점".to_string(),
-                "사용자".to_string(),
-            ],
-            vec!["부작용".to_string(), "설계".to_string(), "검토".to_string()],
-            vec!["지표".to_string(), "데이터".to_string(), "근거".to_string()],
-            vec!["비용".to_string(), "효과".to_string(), "운영".to_string()],
-        ],
-    };
-
     let (status, _headers, updated_analyze) = patch! {
         app: app,
         path: format!("/v3/spaces/{}/analyzes", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "topics": update_req.topics,
-            "keywords": update_req.keywords,
+            "topics": vec![
+                "topic_1".to_string(),
+                "topic_2".to_string(),
+                "topic_3".to_string(),
+                "topic_4".to_string(),
+                "topic_5".to_string(),
+            ],
+            "keywords": vec![
+                vec!["합의".to_string(), "쟁점".to_string(), "범위".to_string()],
+                vec![
+                    "이해관계자".to_string(),
+                    "관점".to_string(),
+                    "사용자".to_string(),
+                ],
+                vec!["부작용".to_string(), "설계".to_string(), "검토".to_string()],
+                vec!["지표".to_string(), "데이터".to_string(), "근거".to_string()],
+                vec!["비용".to_string(), "효과".to_string(), "운영".to_string()],
+            ],
         },
         response_type: SpaceAnalyze
     };

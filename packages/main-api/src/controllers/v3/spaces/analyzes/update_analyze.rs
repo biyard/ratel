@@ -3,12 +3,21 @@ use crate::spaces::SpacePath;
 use crate::spaces::SpacePathParam;
 use crate::*;
 
-#[derive(
-    Debug, Clone, serde::Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema,
-)]
-pub struct UpdateAnalyzeRequest {
-    pub topics: Vec<String>,
-    pub keywords: Vec<Vec<String>>,
+#[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
+#[serde(untagged)]
+pub enum UpdateAnalyzeRequest {
+    Lda {
+        topics: Vec<String>,
+        keywords: Vec<Vec<String>>,
+        #[serde(default)]
+        lda_html_contents: Option<String>,
+    },
+    Network {
+        network_html_contents: String,
+    },
+    TfIdf {
+        tf_idf_html_contents: String,
+    },
 }
 
 pub async fn update_analyze_handler(
@@ -30,34 +39,60 @@ pub async fn update_analyze_handler(
     )
     .await?;
 
-    if analyze.is_none() {
-        return Err(Error::AnalyzeNotFound);
-    }
+    let mut analyze = analyze.ok_or(Error::AnalyzeNotFound)?;
 
-    let mut analyze = analyze.unwrap();
-
-    let lda_topics = req
-        .topics
-        .iter()
-        .zip(req.keywords.iter())
-        .map(|(topic, keywords)| {
-            keywords
+    match req {
+        UpdateAnalyzeRequest::Lda {
+            topics,
+            keywords,
+            lda_html_contents,
+        } => {
+            let lda_topics = topics
                 .iter()
-                .map(|keyword| TopicRow {
-                    topic: topic.clone(),
-                    keyword: keyword.clone(),
+                .zip(keywords.iter())
+                .flat_map(|(topic, kws)| {
+                    kws.iter().map(|kw| TopicRow {
+                        topic: topic.clone(),
+                        keyword: kw.clone(),
+                    })
                 })
-                .collect::<Vec<TopicRow>>()
-        })
-        .flatten()
-        .collect::<Vec<TopicRow>>();
+                .collect::<Vec<TopicRow>>();
 
-    let _ = SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
-        .with_lda_topics(lda_topics.clone())
-        .execute(&dynamo.client)
-        .await?;
+            let mut updater = SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
+                .with_lda_topics(lda_topics.clone());
 
-    analyze.lda_topics = lda_topics;
+            if let Some(v) = lda_html_contents.clone() {
+                updater = updater.with_lda_html_contents(v);
+            }
+
+            updater.execute(&dynamo.client).await?;
+
+            analyze.lda_topics = lda_topics;
+            analyze.lda_html_contents = lda_html_contents;
+        }
+
+        UpdateAnalyzeRequest::Network {
+            network_html_contents,
+        } => {
+            SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
+                .with_network_html_contents(network_html_contents.clone())
+                .execute(&dynamo.client)
+                .await?;
+
+            analyze.network_html_contents = Some(network_html_contents);
+        }
+
+        UpdateAnalyzeRequest::TfIdf {
+            tf_idf_html_contents,
+        } => {
+            SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
+                .with_tf_idf_html_contents(tf_idf_html_contents.clone())
+                .execute(&dynamo.client)
+                .await?;
+
+            analyze.tf_idf_html_contents = Some(tf_idf_html_contents);
+        }
+    }
 
     Ok(Json(analyze))
 }

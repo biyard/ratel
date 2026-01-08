@@ -4,9 +4,7 @@ import { call } from '@/lib/api/ratel/call';
 import { SpaceAnalyze } from '../types/space-analyze';
 import { optimisticUpdate } from '@/lib/hook-utils';
 
-export function useUpdateAnalyzeMutation<
-  T extends SpaceAnalyze = SpaceAnalyze,
->() {
+export function useUpdateLdaMutation<T extends SpaceAnalyze = SpaceAnalyze>() {
   const qc = useQueryClient();
 
   return useMutation({
@@ -14,10 +12,12 @@ export function useUpdateAnalyzeMutation<
       spacePk,
       topics,
       keywords,
+      htmlContents,
     }: {
       spacePk: string;
       topics: string[];
       keywords: string[][];
+      htmlContents?: string;
     }) => {
       await call(
         'PATCH',
@@ -25,6 +25,7 @@ export function useUpdateAnalyzeMutation<
         {
           topics,
           keywords,
+          lda_html_contents: htmlContents,
         },
       );
 
