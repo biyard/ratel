@@ -2,7 +2,7 @@ use crate::features::spaces::analyzes::SpaceAnalyze;
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
 use crate::posts::CreatePostResponse;
 use crate::spaces::CreateSpaceResponse;
-use crate::spaces::analyzes::UpdateLdaRequest;
+use crate::spaces::analyzes::UpdateAnalyzeRequest;
 use crate::spaces::boards::CreateSpacePostResponse;
 use crate::tests::v3_setup::TestContextV3;
 use crate::*;
@@ -77,7 +77,7 @@ async fn test_upsert_analyze() {
 
     tracing::debug!("analyze response: {:?}", analyze);
 
-    assert_ne!(analyze.lda_topics.unwrap_or_default().len(), 0);
+    assert_ne!(analyze.lda_topics.len(), 0);
     assert_eq!(status, 200);
 }
 
@@ -151,10 +151,10 @@ async fn test_upsert_lda() {
 
     tracing::debug!("analyze response: {:?}", analyze);
 
-    assert_ne!(analyze.lda_topics.unwrap_or_default().len(), 0);
+    assert_ne!(analyze.lda_topics.len(), 0);
     assert_eq!(status, 200);
 
-    let update_req = UpdateLdaRequest {
+    let update_req = UpdateAnalyzeRequest {
         topics: vec![
             "topic_1".to_string(),
             "topic_2".to_string(),
@@ -175,9 +175,9 @@ async fn test_upsert_lda() {
         ],
     };
 
-    let (status, _headers, updated_analyze) = post! {
+    let (status, _headers, updated_analyze) = patch! {
         app: app,
-        path: format!("/v3/spaces/{}/analyzes/lda", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/analyzes", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
             "topics": update_req.topics,
@@ -187,7 +187,7 @@ async fn test_upsert_lda() {
     };
 
     assert_eq!(status, 200);
-    let lda_topics = updated_analyze.lda_topics.clone().unwrap_or_default();
+    let lda_topics = updated_analyze.lda_topics.clone();
     assert_eq!(lda_topics.len(), 5 * 3);
     assert!(
         lda_topics
@@ -203,7 +203,7 @@ async fn test_upsert_lda() {
         response_type: SpaceAnalyze
     };
     assert_eq!(status, 200);
-    assert_eq!(fetched_analyze.lda_topics.unwrap_or_default().len(), 15);
+    assert_eq!(fetched_analyze.lda_topics.len(), 15);
 }
 
 pub async fn setup_deliberation_space() -> (TestContextV3, Partition, Partition) {

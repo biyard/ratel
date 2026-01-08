@@ -6,16 +6,16 @@ use crate::*;
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema,
 )]
-pub struct UpdateLdaRequest {
+pub struct UpdateAnalyzeRequest {
     pub topics: Vec<String>,
     pub keywords: Vec<Vec<String>>,
 }
 
-pub async fn update_lda_handler(
+pub async fn update_analyze_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
-    Json(req): Json<UpdateLdaRequest>,
+    Json(req): Json<UpdateAnalyzeRequest>,
 ) -> Result<Json<SpaceAnalyze>> {
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
@@ -57,7 +57,7 @@ pub async fn update_lda_handler(
         .execute(&dynamo.client)
         .await?;
 
-    analyze.lda_topics = Some(lda_topics);
+    analyze.lda_topics = lda_topics;
 
     Ok(Json(analyze))
 }

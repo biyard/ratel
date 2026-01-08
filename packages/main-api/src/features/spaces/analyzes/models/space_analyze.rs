@@ -7,17 +7,26 @@ pub struct SpaceAnalyze {
     pub sk: EntityType,
 
     pub created_at: i64,
-    pub lda_topics: Option<Vec<TopicRow>>,
-    pub network: Option<NetworkGraph>,
-    pub tf_idf: Option<Vec<TfidfRow>>,
+
+    pub lda_topics: Vec<TopicRow>,
+    #[serde(default)]
+    pub lda_html_contents: Option<String>,
+
+    pub network: NetworkGraph,
+    #[serde(default)]
+    pub network_html_contents: Option<String>,
+
+    pub tf_idf: Vec<TfidfRow>,
+    #[serde(default)]
+    pub tf_idf_html_contents: Option<String>,
 }
 
 impl SpaceAnalyze {
     pub fn new(
         space_pk: Partition,
-        lda_topics: Option<Vec<TopicRow>>,
-        network: Option<NetworkGraph>,
-        tf_idf: Option<Vec<TfidfRow>>,
+        lda_topics: Vec<TopicRow>,
+        network: NetworkGraph,
+        tf_idf: Vec<TfidfRow>,
     ) -> Self {
         let now = get_now_timestamp_millis();
 
@@ -26,8 +35,11 @@ impl SpaceAnalyze {
             sk: EntityType::SpaceAnalyze,
             created_at: now,
             lda_topics,
+            lda_html_contents: None,
             network,
+            network_html_contents: None,
             tf_idf,
+            tf_idf_html_contents: None,
         }
     }
 }

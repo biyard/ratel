@@ -1,9 +1,9 @@
 pub mod get_analyze;
-pub mod update_lda;
+pub mod update_analyze;
 pub mod upsert_analyze;
 
 pub use get_analyze::*;
-pub use update_lda::*;
+pub use update_analyze::*;
 pub use upsert_analyze::*;
 
 #[cfg(test)]
@@ -15,7 +15,10 @@ use by_axum::aide::axum::routing::*;
 use by_axum::axum::*;
 
 pub fn route() -> Router<AppState> {
-    Router::new()
-        .route("/", post(upsert_analyze_handler).get(get_analyze_handler))
-        .route("/lda", post(update_lda_handler))
+    Router::new().route(
+        "/",
+        post(upsert_analyze_handler)
+            .get(get_analyze_handler)
+            .patch(update_analyze_handler),
+    )
 }
