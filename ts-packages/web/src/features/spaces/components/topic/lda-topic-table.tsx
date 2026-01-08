@@ -1,25 +1,32 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { TFunction } from 'i18next';
 import { TopicRow } from '../../polls/types/topic-row';
 import { Input } from '@/components/ui/input';
 import { Edit1 } from '@/components/icons';
 import { Save } from '@/components/icons';
+import { PostEditor } from '@/features/posts/components/post-editor';
 
 export type LdaTopicTableProps = {
   t: TFunction<'SpacePollAnalyze', undefined>;
-  lda_topics?: TopicRow[];
-  handleUpdateLda?: (topics: string[], keywords: string[][]) => void;
+  htmlContents?: string;
+  ldaTopics?: TopicRow[];
+  handleUpdateLda?: (
+    topics: string[],
+    keywords: string[][],
+    htmlContents?: string,
+  ) => void;
 };
 
 export function LdaTopicTable({
   t,
-  lda_topics,
+  ldaTopics,
+  htmlContents,
   handleUpdateLda,
 }: LdaTopicTableProps) {
   const rows = useMemo(() => {
     const map = new Map<string, string[]>();
 
-    const list = Array.isArray(lda_topics) ? lda_topics : [];
+    const list = Array.isArray(ldaTopics) ? ldaTopics : [];
     for (const r of list) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const topic = String((r as any)?.topic ?? '').trim();
@@ -45,15 +52,22 @@ export function LdaTopicTable({
         if (ao !== bo) return ao - bo;
         return a.topic.localeCompare(b.topic);
       });
-  }, [lda_topics]);
+  }, [ldaTopics]);
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
+  const [content, setContent] = useState<string>(htmlContents ?? '');
+
+  useEffect(() => {
+    if (editing) return;
+    setContent(htmlContents ?? '');
+  }, [htmlContents, editing]);
 
   const startEdit = () => {
     const init: Record<string, string> = {};
     for (const r of rows) init[r.topic] = r.topic;
     setDraft(init);
+    setContent(htmlContents ?? '');
     setEditing(true);
   };
 
@@ -75,7 +89,7 @@ export function LdaTopicTable({
       keywords.push(r.keywords);
     }
 
-    handleUpdateLda?.(topics, keywords);
+    handleUpdateLda?.(topics, keywords, content);
     setEditing(false);
   };
 
@@ -145,6 +159,16 @@ export function LdaTopicTable({
           )}
         </tbody>
       </table>
+
+      <PostEditor
+        url={''}
+        content={content}
+        onUpdate={(next) => setContent(next)}
+        disabledFileUpload={true}
+        disabledImageUpload={true}
+        editable={editing}
+        showToolbar={editing}
+      />
     </div>
   );
 }

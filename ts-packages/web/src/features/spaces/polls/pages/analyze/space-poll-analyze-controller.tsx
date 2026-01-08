@@ -20,6 +20,8 @@ import useTopic from '../../hooks/use-topic';
 import { SpaceAnalyze } from '../../types/space-analyze';
 import { useUpdateLdaMutation } from '../../hooks/use-update-lda-mutation';
 import { useUpsertAnalyzeMutation } from '../../hooks/use-upsert-analyze-mutation';
+import { useUpdateNetworkMutation } from '../../hooks/use-update-network-mutation';
+import { useUpdateTfIdfMutation } from '../../hooks/use-update-tf-idf-mutation';
 
 export class SpacePollAnalyzeController {
   constructor(
@@ -34,6 +36,8 @@ export class SpacePollAnalyzeController {
 
     public t: TFunction<'SpacePollAnalyze', undefined>,
     public updateLda: ReturnType<typeof useUpdateLdaMutation>,
+    public updateNetwork: ReturnType<typeof useUpdateNetworkMutation>,
+    public updateTfIdf: ReturnType<typeof useUpdateTfIdfMutation>,
     public upsertAnalyze: ReturnType<typeof useUpsertAnalyzeMutation>,
   ) {}
 
@@ -80,11 +84,30 @@ export class SpacePollAnalyzeController {
     });
   };
 
-  handleUpdateLda = (topics: string[], keywords: string[][]) => {
+  handleUpdateLda = (
+    topics: string[],
+    keywords: string[][],
+    htmlContents?: string,
+  ) => {
     return this.updateLda.mutateAsync({
       spacePk: this.spacePk,
       topics: topics,
       keywords: keywords,
+      htmlContents,
+    });
+  };
+
+  handleUpdateNetwork = (htmlContents?: string) => {
+    return this.updateNetwork.mutateAsync({
+      spacePk: this.spacePk,
+      htmlContents,
+    });
+  };
+
+  handleUpdateTfIdf = (htmlContents?: string) => {
+    return this.updateTfIdf.mutateAsync({
+      spacePk: this.spacePk,
+      htmlContents,
     });
   };
 
@@ -412,6 +435,9 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   const { data: panels } = useListPanels(spacePk);
 
   const updateLda = useUpdateLdaMutation();
+  const updateNetwork = useUpdateNetworkMutation();
+  const updateTfIdf = useUpdateTfIdfMutation();
+
   const upsertAnalyze = useUpsertAnalyzeMutation();
   const attribute = panels?.map((p) => p.attributes).flat() ?? [];
   const { t } = useTranslation('SpacePollAnalyze');
@@ -432,6 +458,8 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
 
     t,
     updateLda,
+    updateNetwork,
+    updateTfIdf,
     upsertAnalyze,
   );
 }

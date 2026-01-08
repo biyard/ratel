@@ -3,17 +3,21 @@ import { TFunction } from 'i18next';
 import ForceGraph2D, { ForceGraphMethods } from 'react-force-graph-2d';
 import { forceCollide, forceCenter } from 'd3-force';
 import { NetworkGraph } from '../../polls/types/network-graph';
+import { Edit1, Save } from '@/components/icons';
+import { PostEditor } from '@/features/posts/components/post-editor';
 
 export type NetworkProps = {
   t: TFunction<'SpacePollAnalyze', undefined>;
   network?: NetworkGraph;
+  htmlContents?: string;
+  handleUpdateNetwork?: (htmlContents?: string) => void;
 };
 
 type FGNode = {
   id: string;
   degree?: number;
   betweenness?: number;
-  rank?: number; // ✅ 핵심: rank 추가
+  rank?: number;
   x?: number;
   y?: number;
 };
@@ -24,11 +28,33 @@ type FGLink = {
   weight?: number;
 };
 
-export function NetworkChart({ t, network }: NetworkProps) {
+export function NetworkChart({
+  t,
+  network,
+  htmlContents,
+  handleUpdateNetwork,
+}: NetworkProps) {
+  const [content, setContent] = useState<string>(htmlContents ?? '');
+  const [editing, setEditing] = useState(false);
   const fgRef = useRef<ForceGraphMethods<FGNode, FGLink> | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const didInitialFitRef = useRef(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
+
+  const startEdit = () => {
+    setContent(htmlContents ?? '');
+    setEditing(true);
+  };
+
+  const save = () => {
+    handleUpdateNetwork?.(content);
+    setEditing(false);
+  };
+
+  useEffect(() => {
+    if (editing) return;
+    setContent(htmlContents ?? '');
+  }, [htmlContents, editing]);
 
   const graph = useMemo(() => {
     const nodesRaw = Array.isArray(network?.nodes) ? network!.nodes : [];
@@ -45,7 +71,6 @@ export function NetworkChart({ t, network }: NetworkProps) {
       }))
       .filter((n) => n.id.length > 0);
 
-    // ✅ 핵심: "중심성 점수"로 순위(rank) 부여 (동점이면 같은 값이라 차이가 안 나므로, 계단식으로 크게 구분 가능)
     const scoreOf = (n: FGNode) => Math.max(n.degree ?? 0, n.betweenness ?? 0);
     const rankMap = new Map<string, number>(
       [...nodesBase]
@@ -84,7 +109,6 @@ export function NetworkChart({ t, network }: NetworkProps) {
     return { nodes, links, maxDegree, maxWeight };
   }, [network]);
 
-  // ✅ 핵심: 연속 스케일 대신 "랭크 계단식"으로 확 차이 나게
   const getNodeRadius = (n: FGNode) => {
     const r = n.rank ?? 9999;
     if (r === 0) return 52;
@@ -240,6 +264,19 @@ export function NetworkChart({ t, network }: NetworkProps) {
 
   return (
     <div className="w-full">
+      <div className="mb-2 flex items-center justify-end gap-2">
+        {!editing ? (
+          <Edit1
+            className="cursor-pointer w-5 h-5 [&>path]:stroke-1"
+            onClick={startEdit}
+          />
+        ) : (
+          <Save
+            className="cursor-pointer w-5 h-5 [&>path]:stroke-1"
+            onClick={save}
+          />
+        )}
+      </div>
       <div className="mb-3 flex items-center justify-center">
         <div className="text-center text-base font-semibold text-text-primary">
           Text Network
@@ -310,6 +347,16 @@ export function NetworkChart({ t, network }: NetworkProps) {
           />
         )}
       </div>
+
+      <PostEditor
+        url={''}
+        content={content}
+        onUpdate={(next) => setContent(next)}
+        disabledFileUpload={true}
+        disabledImageUpload={true}
+        editable={editing}
+        showToolbar={editing}
+      />
     </div>
   );
 }
