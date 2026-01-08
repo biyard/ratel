@@ -19,6 +19,9 @@ pub struct SpaceAnalyze {
     pub tf_idf: Vec<TfidfRow>,
     #[serde(default)]
     pub tf_idf_html_contents: Option<String>,
+
+    #[serde(default)]
+    pub metadata_url: Option<String>,
 }
 
 impl SpaceAnalyze {
@@ -40,6 +43,8 @@ impl SpaceAnalyze {
             network_html_contents: None,
             tf_idf,
             tf_idf_html_contents: None,
+
+            metadata_url: None,
         }
     }
 }

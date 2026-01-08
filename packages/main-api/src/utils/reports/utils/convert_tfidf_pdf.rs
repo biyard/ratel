@@ -1,3 +1,4 @@
+use crate::utils::reports::push_html_rendered_block;
 use crate::*;
 
 use genpdf::{
@@ -136,6 +137,7 @@ impl Element for KeepTogetherTfidfBlock {
 pub fn convert_tfidf_pdf(
     doc: &mut genpdf::Document,
     tf_idf: &[TfidfRow],
+    if_idf_html_contents: String,
     font_path: &StdPath,
 ) -> Result<()> {
     let (scale, max_chart_h_px, dpi) = compute_tfidf_scale_and_max_h();
@@ -173,6 +175,10 @@ pub fn convert_tfidf_pdf(
 
     if !tfidf_pages.is_empty() {
         push_tfidf_remaining_pages(doc, tfidf_pages, scale)?;
+    }
+
+    if !if_idf_html_contents.trim().is_empty() {
+        push_html_rendered_block(doc, &if_idf_html_contents)?;
     }
 
     Ok(())

@@ -22,6 +22,7 @@ type TopicAnalyzeViewProps = {
     tfIdfKeywords: number,
     networkTopNodes: number,
   ) => void | Promise<{ spacePk: string }>;
+  handleDownloadAnalyze?: () => void | Promise<{ spacePk: string }>;
 };
 
 export function TopicAnalyzeView({
@@ -30,6 +31,7 @@ export function TopicAnalyzeView({
   handleUpdateNetwork,
   handleUpdateTfIdf,
   handleUpsertAnalyze,
+  handleDownloadAnalyze,
 }: TopicAnalyzeViewProps) {
   const { t } = useTranslation('SpacePollAnalyze');
 
@@ -43,6 +45,18 @@ export function TopicAnalyzeView({
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState(false);
+
+  const [isDownloading, setIsDownloading] = React.useState(false);
+
+  const hasLda =
+    Array.isArray(analyze?.lda_topics) && analyze.lda_topics.length > 0;
+  const hasNetwork =
+    analyze?.network != null &&
+    Array.isArray(analyze?.network?.nodes) &&
+    analyze.network.nodes.length > 0;
+  const hasTfIdf = Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0;
+
+  const showDownload = hasLda || hasNetwork || hasTfIdf;
 
   React.useEffect(() => {
     const list = Array.isArray(analyze?.lda_topics) ? analyze.lda_topics : [];
@@ -86,10 +100,31 @@ export function TopicAnalyzeView({
     }
   };
 
+  const onDownload = async () => {
+    try {
+      setIsDownloading(true);
+      await Promise.resolve(handleDownloadAnalyze?.());
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const pending = isSubmitting;
 
   return (
     <div className="flex flex-col gap-4">
+      {showDownload && (
+        <div className="flex flex-row w-full justify-end">
+          <Button
+            variant="primary"
+            onClick={onDownload}
+            disabled={isDownloading}
+          >
+            {isDownloading ? t('downloading') : t('download_analyze')}
+          </Button>
+        </div>
+      )}
+
       <Card key="topic-analyze-setting">
         <div className="flex flex-col w-full gap-4">
           <div className="flex flex-col w-full gap-4">
@@ -142,7 +177,7 @@ export function TopicAnalyzeView({
         </div>
       </Card>
 
-      {Array.isArray(analyze?.lda_topics) && analyze.lda_topics.length > 0 && (
+      {hasLda && (
         <Card key="topic-analyze-table">
           <LdaTopicTable
             t={t}
@@ -153,21 +188,18 @@ export function TopicAnalyzeView({
         </Card>
       )}
 
-      {analyze?.network != null &&
-        analyze?.network?.nodes != null &&
-        Array.isArray(analyze?.network?.nodes) &&
-        analyze.network.nodes.length > 0 && (
-          <Card key="network-chart">
-            <NetworkChart
-              t={t}
-              network={analyze?.network}
-              htmlContents={analyze?.network_html_contents}
-              handleUpdateNetwork={handleUpdateNetwork}
-            />
-          </Card>
-        )}
+      {hasNetwork && (
+        <Card key="network-chart">
+          <NetworkChart
+            t={t}
+            network={analyze?.network}
+            htmlContents={analyze?.network_html_contents}
+            handleUpdateNetwork={handleUpdateNetwork}
+          />
+        </Card>
+      )}
 
-      {Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0 && (
+      {hasTfIdf && (
         <Card key="tf-idf-chart">
           <TfIdfChart
             t={t}

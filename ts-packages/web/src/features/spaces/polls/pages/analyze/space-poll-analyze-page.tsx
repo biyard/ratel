@@ -92,6 +92,7 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
           handleUpdateNetwork={ctrl.handleUpdateNetwork}
           handleUpdateTfIdf={ctrl.handleUpdateTfIdf}
           handleUpsertAnalyze={ctrl.handleUpsertAnalyze}
+          handleDownloadAnalyze={ctrl.handleDownloadAnalyze}
         />
       )}
 

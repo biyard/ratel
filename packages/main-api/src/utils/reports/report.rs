@@ -29,8 +29,10 @@ fn resolve_asset_dir(path: &str) -> PathBuf {
 
 pub fn build_space_report_pdf(
     lda: &[TopicRow],
+    lda_html_contents: String,
     _network: &[NetworkCentralityRow],
     tf_idf: &[TfidfRow],
+    tf_idf_html_contents: String,
 ) -> Result<Vec<u8>> {
     let cfg = crate::config::get();
 
@@ -66,10 +68,15 @@ pub fn build_space_report_pdf(
     );
     doc.push(elements::Break::new(1.0));
 
-    convert_lda_pdf(&mut doc, lda)?;
+    convert_lda_pdf(&mut doc, lda, lda_html_contents)?;
     doc.push(elements::Break::new(1.0));
 
-    convert_tfidf_pdf(&mut doc, tf_idf, &p("NotoSansKR-Regular.ttf"))?;
+    convert_tfidf_pdf(
+        &mut doc,
+        tf_idf,
+        tf_idf_html_contents,
+        &p("NotoSansKR-Regular.ttf"),
+    )?;
 
     let mut out: Vec<u8> = Vec::new();
     doc.render(&mut out)
