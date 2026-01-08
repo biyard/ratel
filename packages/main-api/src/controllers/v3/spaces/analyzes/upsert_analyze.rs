@@ -77,7 +77,7 @@ pub async fn upsert_analyze_handler(
     network_config.top_nodes = req.network_top_nodes;
     let network = run_network(&post_comments, network_config)?;
 
-    let analyze = SpaceAnalyze::new(space_pk, Some(lda), Some(network), Some(tf_idf));
+    let analyze = SpaceAnalyze::new(space_pk, lda, network, tf_idf);
     analyze.upsert(&dynamo.client).await?;
 
     Ok(Json(analyze))

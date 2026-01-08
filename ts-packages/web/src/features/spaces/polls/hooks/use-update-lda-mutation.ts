@@ -18,8 +18,8 @@ export function useUpdateLdaMutation<T extends SpaceAnalyze = SpaceAnalyze>() {
       keywords: string[][];
     }) => {
       await call(
-        'POST',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/analyzes/lda`,
+        'PATCH',
+        `/v3/spaces/${encodeURIComponent(spacePk)}/analyzes`,
         {
           topics,
           keywords,
