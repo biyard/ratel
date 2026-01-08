@@ -7,13 +7,13 @@ import { Input } from '@/components/ui/input';
 export type LdaTopicTableProps = {
   t: TFunction<'SpacePollAnalyze', undefined>;
   lda_topics?: TopicRow[];
-  handleUpdateTopics?: (topics: string[], keywords: string[][]) => void;
+  handleUpdateAnalyze?: (topics: string[], keywords: string[][]) => void;
 };
 
 export function LdaTopicTable({
   t,
   lda_topics,
-  handleUpdateTopics,
+  handleUpdateAnalyze,
 }: LdaTopicTableProps) {
   const rows = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -79,7 +79,7 @@ export function LdaTopicTable({
       keywords.push(r.keywords);
     }
 
-    handleUpdateTopics?.(topics, keywords);
+    handleUpdateAnalyze?.(topics, keywords);
     setEditing(false);
   };
 

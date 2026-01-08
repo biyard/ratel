@@ -88,7 +88,7 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
       {showTabs && tab === 'topic' && (
         <TopicAnalyzeView
           analyze={ctrl.analyze}
-          handleUpdateTopics={ctrl.handleUpdateTopics}
+          handleUpdateAnalyze={ctrl.handleUpdateAnalyze}
           handleUpsertAnalyze={ctrl.handleUpsertAnalyze}
         />
       )}
