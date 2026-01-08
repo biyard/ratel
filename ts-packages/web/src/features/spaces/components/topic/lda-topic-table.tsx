@@ -1,19 +1,20 @@
 import { useMemo, useState } from 'react';
 import { TFunction } from 'i18next';
 import { TopicRow } from '../../polls/types/topic-row';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Edit1 } from '@/components/icons';
+import { Save } from '@/components/icons';
 
 export type LdaTopicTableProps = {
   t: TFunction<'SpacePollAnalyze', undefined>;
   lda_topics?: TopicRow[];
-  handleUpdateAnalyze?: (topics: string[], keywords: string[][]) => void;
+  handleUpdateLda?: (topics: string[], keywords: string[][]) => void;
 };
 
 export function LdaTopicTable({
   t,
   lda_topics,
-  handleUpdateAnalyze,
+  handleUpdateLda,
 }: LdaTopicTableProps) {
   const rows = useMemo(() => {
     const map = new Map<string, string[]>();
@@ -56,11 +57,6 @@ export function LdaTopicTable({
     setEditing(true);
   };
 
-  const cancelEdit = () => {
-    setEditing(false);
-    setDraft({});
-  };
-
   const save = () => {
     const used = new Set<string>();
 
@@ -79,7 +75,7 @@ export function LdaTopicTable({
       keywords.push(r.keywords);
     }
 
-    handleUpdateAnalyze?.(topics, keywords);
+    handleUpdateLda?.(topics, keywords);
     setEditing(false);
   };
 
@@ -87,16 +83,15 @@ export function LdaTopicTable({
     <div className="w-full">
       <div className="mb-2 flex items-center justify-end gap-2">
         {!editing ? (
-          <Button onClick={startEdit} disabled={rows.length === 0}>
-            {t('btn_edit')}
-          </Button>
+          <Edit1
+            className="cursor-pointer w-5 h-5 [&>path]:stroke-1"
+            onClick={startEdit}
+          />
         ) : (
-          <>
-            <Button onClick={cancelEdit}>{t('btn_cancel')}</Button>
-            <Button variant="primary" onClick={save}>
-              {t('btn_save')}
-            </Button>
-          </>
+          <Save
+            className="cursor-pointer w-5 h-5 [&>path]:stroke-1"
+            onClick={save}
+          />
         )}
       </div>
 
