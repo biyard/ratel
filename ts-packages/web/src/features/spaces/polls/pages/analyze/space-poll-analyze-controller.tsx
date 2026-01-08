@@ -22,6 +22,7 @@ import { useUpdateLdaMutation } from '../../hooks/use-update-lda-mutation';
 import { useUpsertAnalyzeMutation } from '../../hooks/use-upsert-analyze-mutation';
 import { useUpdateNetworkMutation } from '../../hooks/use-update-network-mutation';
 import { useUpdateTfIdfMutation } from '../../hooks/use-update-tf-idf-mutation';
+import { useDownloadAnalyzeMutation } from '../../hooks/use-download-analyze-mutation';
 
 export class SpacePollAnalyzeController {
   constructor(
@@ -39,6 +40,7 @@ export class SpacePollAnalyzeController {
     public updateNetwork: ReturnType<typeof useUpdateNetworkMutation>,
     public updateTfIdf: ReturnType<typeof useUpdateTfIdfMutation>,
     public upsertAnalyze: ReturnType<typeof useUpsertAnalyzeMutation>,
+    public downloadAnalyze: ReturnType<typeof useDownloadAnalyzeMutation>,
   ) {}
 
   handleBack = () => {
@@ -69,6 +71,10 @@ export class SpacePollAnalyzeController {
       entries.push([k, Number(v) || 0]);
     }
     return entries;
+  };
+
+  handleDownloadAnalyze = async () => {
+    return await this.downloadAnalyze.mutateAsync({ spacePk: this.spacePk });
   };
 
   handleUpsertAnalyze = async (
@@ -439,6 +445,7 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   const updateTfIdf = useUpdateTfIdfMutation();
 
   const upsertAnalyze = useUpsertAnalyzeMutation();
+  const downloadAnalyze = useDownloadAnalyzeMutation();
   const attribute = panels?.map((p) => p.attributes).flat() ?? [];
   const { t } = useTranslation('SpacePollAnalyze');
 
@@ -461,5 +468,6 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
     updateNetwork,
     updateTfIdf,
     upsertAnalyze,
+    downloadAnalyze,
   );
 }

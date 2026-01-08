@@ -1,5 +1,6 @@
 use crate::*;
 
+use crate::utils::reports::push_html_rendered_block;
 use genpdf::{Alignment, Element, Mm, Position, RenderResult, Size, elements, style};
 use std::collections::{HashMap, HashSet};
 
@@ -134,7 +135,11 @@ impl Element for PCell {
     }
 }
 
-pub fn convert_lda_pdf(doc: &mut genpdf::Document, lda: &[TopicRow]) -> Result<()> {
+pub fn convert_lda_pdf(
+    doc: &mut genpdf::Document,
+    lda: &[TopicRow],
+    lda_html_contents: String,
+) -> Result<()> {
     let topic_cnt = lda
         .iter()
         .map(|r| r.topic.as_str())
@@ -198,6 +203,11 @@ pub fn convert_lda_pdf(doc: &mut genpdf::Document, lda: &[TopicRow]) -> Result<(
     }
 
     doc.push(table);
+
+    if !lda_html_contents.trim().is_empty() {
+        push_html_rendered_block(doc, &lda_html_contents)?;
+    }
+
     Ok(())
 }
 
