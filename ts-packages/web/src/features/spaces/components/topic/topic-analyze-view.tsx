@@ -11,7 +11,7 @@ import { NetworkChart } from './network-chart';
 
 type TopicAnalyzeViewProps = {
   analyze?: SpaceAnalyze;
-  handleUpdateTopics?: (topics: string[], keywords: string[][]) => void;
+  handleUpdateAnalyze?: (topics: string[], keywords: string[][]) => void;
   handleUpsertAnalyze?: (
     ldaTopics: number,
     tfIdfKeywords: number,
@@ -21,7 +21,7 @@ type TopicAnalyzeViewProps = {
 
 export function TopicAnalyzeView({
   analyze,
-  handleUpdateTopics,
+  handleUpdateAnalyze,
   handleUpsertAnalyze,
 }: TopicAnalyzeViewProps) {
   const { t } = useTranslation('SpacePollAnalyze');
@@ -203,7 +203,7 @@ export function TopicAnalyzeView({
           <LdaTopicTable
             t={t}
             lda_topics={analyze?.lda_topics}
-            handleUpdateTopics={handleUpdateTopics}
+            handleUpdateAnalyze={handleUpdateAnalyze}
           />
         </Card>
       )}

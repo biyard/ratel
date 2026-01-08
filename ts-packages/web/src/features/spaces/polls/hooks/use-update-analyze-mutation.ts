@@ -4,7 +4,9 @@ import { call } from '@/lib/api/ratel/call';
 import { SpaceAnalyze } from '../types/space-analyze';
 import { optimisticUpdate } from '@/lib/hook-utils';
 
-export function useUpdateLdaMutation<T extends SpaceAnalyze = SpaceAnalyze>() {
+export function useUpdateAnalyzeMutation<
+  T extends SpaceAnalyze = SpaceAnalyze,
+>() {
   const qc = useQueryClient();
 
   return useMutation({
