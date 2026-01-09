@@ -6,7 +6,7 @@ import { spaceKeys } from '@/constants';
 // List all file links in a space
 export function useListFileLinks(spacePk: string) {
   return useQuery({
-    queryKey: [...spaceKeys.files(spacePk), 'links'],
+    queryKey: spaceKeys.file_links(spacePk),
     queryFn: async () => {
       const result = await call(
         'GET',
