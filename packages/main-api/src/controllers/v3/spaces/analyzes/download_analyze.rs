@@ -36,7 +36,8 @@ pub async fn download_analyze_handler(
     let pdf_bytes = build_space_report_pdf(
         &analyze.lda_topics,
         analyze.lda_html_contents.unwrap_or_default(),
-        &analyze.network.nodes,
+        analyze.network,
+        analyze.network_html_contents.unwrap_or_default(),
         &analyze.tf_idf,
         analyze.tf_idf_html_contents.unwrap_or_default(),
     )?;
