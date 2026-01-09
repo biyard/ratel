@@ -1,5 +1,6 @@
 use crate::models::SpaceCommon;
 use crate::utils::reports::convert_lda_pdf;
+use crate::utils::reports::convert_network_pdf;
 use crate::utils::reports::convert_tfidf_pdf;
 use crate::*;
 
@@ -15,7 +16,7 @@ use genpdf::{Alignment, Element, elements, style};
 
 use std::path::PathBuf;
 
-fn resolve_asset_dir(path: &str) -> PathBuf {
+pub fn resolve_asset_dir(path: &str) -> PathBuf {
     let p = PathBuf::from(path);
     if p.is_absolute() {
         return p;
@@ -30,7 +31,8 @@ fn resolve_asset_dir(path: &str) -> PathBuf {
 pub fn build_space_report_pdf(
     lda: &[TopicRow],
     lda_html_contents: String,
-    _network: &[NetworkCentralityRow],
+    network: NetworkGraph,
+    network_html_contents: String,
     tf_idf: &[TfidfRow],
     tf_idf_html_contents: String,
 ) -> Result<Vec<u8>> {
@@ -77,6 +79,8 @@ pub fn build_space_report_pdf(
         tf_idf_html_contents,
         &p("NotoSansKR-Regular.ttf"),
     )?;
+
+    convert_network_pdf(&mut doc, network, network_html_contents)?;
 
     let mut out: Vec<u8> = Vec::new();
     doc.render(&mut out)
