@@ -5,7 +5,9 @@ import { GlobalTableStack } from "../lib/dynamodb-stack";
 import { ImageWorkerStack } from "../lib/image-worker-stack";
 import { StaticStack } from "../lib/static-stack";
 import { DaemonStack } from "../lib/daemon-stack";
-import { BedrockAgentStack } from "../lib/bedrock-agent-stack";
+import { KnowledgeBaseStack } from "../lib/knowledge-base-stack";
+import { AgentStack } from "../lib/agent-stack";
+import { KbSyncStack } from "../lib/kb-sync-stack";
 
 const app = new App();
 
@@ -51,18 +53,6 @@ new DaemonStack(app, `ratel-${env}-daemon-ap-northeast-2`, {
     region: "ap-northeast-2",
   },
   commit: process.env.COMMIT!,
-});
-
-// Create Bedrock Agent stack (uses manually created KB and Agent from AWS Console)
-new BedrockAgentStack(app, `ratel-${env}-bedrock-agent`, {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: "ap-northeast-2", // Must match S3 bucket region
-  },
-  stage: env,
-  knowledgeBaseId: process.env.BEDROCK_KNOWLEDGE_BASE_ID || "your-kb-id",
-  dataSourceId: process.env.BEDROCK_DATA_SOURCE_ID || "your-data-source-id",
-  pdfBucketName: process.env.PDF_BUCKET_NAME || "your-bucket-name",
 });
 
 new RegionalServiceStack(app, `ratel-${env}-svc-ap-northeast-2`, {
@@ -127,4 +117,41 @@ new GlobalTableStack(app, `ratel-${env}-dynamodb`, {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: "ap-northeast-2",
   },
+});
+
+// Knowledge Base for PDF AI Helper with S3 Vectors storage
+const pdfKnowledgeBaseStack = new KnowledgeBaseStack(app, `ratel-${env}-pdf-knowledge-base`, {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: "us-east-1",
+  },
+  knowledgeBaseName: "pdf-KB",
+  description: "The knowledge base for the PDF ai helper.",
+  dataSourceBucketArn: "arn:aws:s3:::rat-us",
+  dataSourcePrefix: "rat/",
+  dataSourceName: "metadata-s3",
+});
+
+// Deploy Bedrock Agent connected to the PDF Knowledge Base
+new AgentStack(app, `ratel-${env}-pdf-agent`, {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: "us-east-1",
+  },
+  stage: env,
+  knowledgeBaseId: pdfKnowledgeBaseStack.knowledgeBase.knowledgeBaseId,
+  knowledgeBaseArn: pdfKnowledgeBaseStack.knowledgeBase.knowledgeBaseArn,
+});
+
+// Deploy KB sync Lambda that triggers ingestion on S3 uploads
+new KbSyncStack(app, `ratel-${env}-pdf-kb-sync`, {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: "us-east-1",
+  },
+  stage: env,
+  knowledgeBaseId: pdfKnowledgeBaseStack.knowledgeBase.knowledgeBaseId,
+  dataSourceId: pdfKnowledgeBaseStack.dataSource.attrDataSourceId,
+  dataBucketName: "rat-us",
+  dataPrefix: "rat/",
 });
