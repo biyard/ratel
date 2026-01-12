@@ -322,11 +322,19 @@ jobs:
 
       - name: Build survey-worker Lambda
         env:
+          REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
           ENV: prod
+          RUST_LOG: info
+          SERVICE: survey-worker
           DOMAIN: ratel.foundation
 
           DYNAMO_TABLE_PREFIX: ratel-prod
           DYNAMO_ENDPOINT: none
+          RUST_FLAG: "--features lambda --release"
+          WEB_BUILD: false
         run: |
           make bin.build
           mv target/release/survey-worker ../../bootstrap
