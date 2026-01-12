@@ -65,8 +65,8 @@ async fn main() -> Result<(), LambdaError> {
     let cfg = config::get();
     let is_local = cfg.env == "local" || cfg.env == "test";
     let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
-    let dynamo = DynamoClient::new(Some(aws_config.clone()));
-    let ses = SesClient::new(aws_config, is_local);
+    let dynamo = DynamoClient::new(Some(aws_config.clone()), false);
+    let ses = SesClient::new(aws_config, is_local, false);
 
     let state = AppState { dynamo, ses };
 
@@ -77,15 +77,15 @@ async fn main() -> Result<(), LambdaError> {
 #[tokio::main]
 async fn main() -> Result<(), LambdaError> {
     use lambda_runtime::Context;
-    use main_api::utils::aws::get_aws_config;
+    use aws_config::BehaviorVersion;
 
     init_tracing();
 
     let cfg = config::get();
     let is_local = cfg.env == "local" || cfg.env == "test";
-    let aws_config = get_aws_config();
-    let dynamo = DynamoClient::new(Some(aws_config.clone()));
-    let ses = SesClient::new(aws_config, is_local);
+    let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+    let dynamo = DynamoClient::new(Some(aws_config.clone()), false);
+    let ses = SesClient::new(aws_config, is_local, false);
 
     let state = AppState { dynamo, ses };
 
