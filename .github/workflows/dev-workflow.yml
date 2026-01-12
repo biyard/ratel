@@ -327,7 +327,7 @@ jobs:
 
           ENV: dev
           RUST_LOG: info
-          SERVICE: main-api
+          SERVICE: survey-worker
           DOMAIN: dev.ratel.foundation
           BUCKET_NAME: metadata.ratel.foundation
           SLACK_HOOK: ${{ secrets.DEV_SLACK }}

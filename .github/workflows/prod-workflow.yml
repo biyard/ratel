@@ -328,7 +328,7 @@ jobs:
 
           ENV: prod
           RUST_LOG: info
-          SERVICE: main-api
+          SERVICE: survey-worker
           DOMAIN: ratel.foundation
 
           BUCKET_NAME: metadata.ratel.foundation
