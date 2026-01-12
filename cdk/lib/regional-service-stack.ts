@@ -73,7 +73,7 @@ export class RegionalServiceStack extends Stack {
           NO_COLOR: "true",
         },
         memorySize: 256,
-        timeout: Duration.seconds(30),
+        timeout: Duration.seconds(150),
       }
     );
 

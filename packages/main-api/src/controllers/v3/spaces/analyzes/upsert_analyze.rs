@@ -4,6 +4,8 @@ use crate::features::spaces::boards::models::space_post_comment::SpacePostCommen
 use crate::models::SpaceCommon;
 use crate::spaces::SpacePath;
 use crate::spaces::SpacePathParam;
+use crate::utils::aws::PollScheduler;
+use crate::utils::aws::get_aws_config;
 use crate::utils::reports::LdaConfigV1;
 use crate::utils::reports::NetworkConfigV1;
 use crate::utils::reports::TfidfConfigV1;
@@ -23,7 +25,7 @@ pub struct UpsertAnalyzeRequest {
 }
 
 pub async fn upsert_analyze_handler(
-    State(AppState { dynamo, .. }): State<AppState>,
+    State(AppState { .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<UpsertAnalyzeRequest>,
@@ -34,51 +36,17 @@ pub async fn upsert_analyze_handler(
 
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
-    let posts =
-        SpacePost::find_by_space_ordered(&dynamo.client, space_pk.clone(), SpacePost::opt_all())
-            .await?
-            .0;
+    let sdk_config = get_aws_config();
+    let scheduler = PollScheduler::new(&sdk_config);
 
-    let comment_futs = posts.iter().filter_map(|post| {
-        let space_post_pk = match &post.sk {
-            EntityType::SpacePost(pk) => Partition::SpacePost(pk.to_string()),
-            _ => return None,
-        };
+    scheduler
+        .schedule_upsert_analyze(
+            space_pk,
+            req.lda_topics,
+            req.tf_idf_keywords,
+            req.network_top_nodes,
+        )
+        .await?;
 
-        Some(async {
-            let (comments, _) = SpacePostComment::find_by_post_order_by_likes(
-                &dynamo.client,
-                space_post_pk,
-                SpacePostComment::opt_all(),
-            )
-            .await?;
-            Ok::<Vec<SpacePostComment>, crate::Error>(comments)
-        })
-    });
-
-    let comments_per_post: Vec<Vec<SpacePostComment>> = try_join_all(comment_futs).await?;
-    let mut post_comments: Vec<String> = Vec::new();
-    for comments in comments_per_post {
-        for c in comments {
-            post_comments.push(c.content);
-        }
-    }
-
-    tracing::debug!("total comments: {}", post_comments.len());
-    let mut lda_config = LdaConfigV1::default();
-    lda_config.num_topics = req.lda_topics;
-    let lda = run_lda(&post_comments, lda_config)?;
-
-    let mut tfidf_config = TfidfConfigV1::default();
-    tfidf_config.max_features = req.tf_idf_keywords;
-    let tf_idf = run_tfidf(&post_comments, tfidf_config)?;
-
-    let mut network_config = NetworkConfigV1::default();
-    network_config.top_nodes = req.network_top_nodes;
-    let network = run_network(&post_comments, network_config)?;
-
-    let analyze = SpaceAnalyze::new(space_pk, lda, network, tf_idf);
-    analyze.upsert(&dynamo.client).await?;
-
-    Ok(Json(analyze))
+    Ok(Json(SpaceAnalyze::default()))
 }
