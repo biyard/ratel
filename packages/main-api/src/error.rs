@@ -317,6 +317,9 @@ pub enum Error {
     #[error("attribute code not found")]
     AttributeCodeNotFound,
 
+    #[error("analyze not found")]
+    AnalyzeNotFound,
+
     #[error("No permission to access this resource")]
     #[rest_error(status = 401, code = 11001)]
     Forbidden,
