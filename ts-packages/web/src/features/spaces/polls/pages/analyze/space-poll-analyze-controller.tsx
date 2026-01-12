@@ -23,6 +23,8 @@ import { useUpsertAnalyzeMutation } from '../../hooks/use-upsert-analyze-mutatio
 import { useUpdateNetworkMutation } from '../../hooks/use-update-network-mutation';
 import { useUpdateTfIdfMutation } from '../../hooks/use-update-tf-idf-mutation';
 import { useDownloadAnalyzeMutation } from '../../hooks/use-download-analyze-mutation';
+import { logger } from '@/lib/logger';
+import { showSuccessToast } from '@/lib/toast';
 
 export class SpacePollAnalyzeController {
   constructor(
@@ -82,12 +84,19 @@ export class SpacePollAnalyzeController {
     tfIdfKeywords: number,
     networkTopNodes: number,
   ) => {
-    return await this.upsertAnalyze.mutateAsync({
-      spacePk: this.spacePk,
-      ldaTopics,
-      tfIdfKeywords,
-      networkTopNodes,
-    });
+    try {
+      const d = await this.upsertAnalyze.mutateAsync({
+        spacePk: this.spacePk,
+        ldaTopics,
+        tfIdfKeywords,
+        networkTopNodes,
+      });
+
+      showSuccessToast(this.t('success_analyze'));
+      return d;
+    } catch (e) {
+      logger.error('upsert analyze failed: {}', e);
+    }
   };
 
   handleUpdateLda = (
