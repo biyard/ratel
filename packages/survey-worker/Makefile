@@ -138,7 +138,7 @@ watch:
 build: docker.login docker.build docker.push
 
 bin.build:
-	$(BUILD_ENV) cargo build --release $(RUST_FLAG)
+	$(BUILD_ENV) cargo build $(RUST_FLAG)
 
 docker.push:
 	docker push $(ECR_NAME):$(COMMIT)
