@@ -24,7 +24,6 @@ AWS_REGION ?= $(shell aws configure get region)
 MIGRATE ?= false
 
 WATERMARK_QUEUE_URL ?= https://sqs.ap-northeast-2.amazonaws.com/385474633683/dev-artwork-image-queue
-REPORT_FONTS_DIR ?= assets/fonts
 
 ACCOUNT_ID ?=
 
@@ -93,7 +92,6 @@ BUILD_ENV ?= ENV=$(ENV) \
 								CHIME_BUCKET=$(CHIME_BUCKET) \
 								NONCELAB_TOKEN=$(NONCELAB_TOKEN) \
 								WATERMARK_QUEUE_URL=$(WATERMARK_QUEUE_URL) \
-								REPORT_FONTS_DIR=$(REPORT_FONTS_DIR) \
 								PRIVATE_BUCKET_NAME=$(PRIVATE_BUCKET_NAME) \
 								KAIA_ENDPOINT=$(KAIA_ENDPOINT) \
 								KAIA_OWNER_ADDR=$(KAIA_OWNER_ADDR) \

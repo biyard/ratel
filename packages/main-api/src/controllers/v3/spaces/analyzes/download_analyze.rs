@@ -40,7 +40,8 @@ pub async fn download_analyze_handler(
         analyze.network_html_contents.unwrap_or_default(),
         &analyze.tf_idf,
         analyze.tf_idf_html_contents.unwrap_or_default(),
-    )?;
+    )
+    .await?;
     let (_key, uri) = upload_report_pdf_to_s3(pdf_bytes).await?;
 
     let _ = SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)

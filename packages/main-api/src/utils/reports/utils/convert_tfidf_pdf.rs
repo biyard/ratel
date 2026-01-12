@@ -10,7 +10,6 @@ use image::{DynamicImage, ImageFormat, Rgba, RgbaImage};
 use imageproc::drawing::{draw_filled_rect_mut, draw_hollow_rect_mut, draw_text_mut};
 use imageproc::rect::Rect;
 use std::io::Cursor;
-use std::path::Path as StdPath;
 
 struct KeepTogetherTfidfBlock {
     title: String,
@@ -137,18 +136,13 @@ impl Element for KeepTogetherTfidfBlock {
 pub fn convert_tfidf_pdf(
     doc: &mut genpdf::Document,
     tf_idf: &[TfidfRow],
-    if_idf_html_contents: String,
-    font_path: &StdPath,
+    tf_idf_html_contents: String,
+    font: &FontArc,
 ) -> Result<()> {
     let (scale, max_chart_h_px, dpi) = compute_tfidf_scale_and_max_h();
 
-    let mut tfidf_pages = render_tfidf_chart_pages(
-        tf_idf,
-        tf_idf.len().max(1),
-        font_path,
-        "TF-IDF",
-        max_chart_h_px,
-    )?;
+    let mut tfidf_pages =
+        render_tfidf_chart_pages(tf_idf, tf_idf.len().max(1), font, "TF-IDF", max_chart_h_px)?;
 
     if tfidf_pages.is_empty() {
         return Ok(());
@@ -177,18 +171,11 @@ pub fn convert_tfidf_pdf(
         push_tfidf_remaining_pages(doc, tfidf_pages, scale)?;
     }
 
-    if !if_idf_html_contents.trim().is_empty() {
-        push_html_rendered_block(doc, &if_idf_html_contents)?;
+    if !tf_idf_html_contents.trim().is_empty() {
+        push_html_rendered_block(doc, &tf_idf_html_contents)?;
     }
 
     Ok(())
-}
-
-fn load_ttf_font(path: &StdPath) -> Result<FontArc> {
-    let bytes =
-        std::fs::read(path).map_err(|e| crate::Error::InternalServerError(e.to_string()))?;
-    FontArc::try_from_vec(bytes)
-        .map_err(|e| crate::Error::InternalServerError(format!("failed to load ttf font: {e}")))
 }
 
 fn nice_step(max_v: f64, ticks: i32) -> f64 {
@@ -239,12 +226,10 @@ fn compute_tfidf_scale_and_max_h() -> (f32, u32, f64) {
 pub fn render_tfidf_chart_pages(
     tf_idf: &[TfidfRow],
     top_n: usize,
-    font_path: &StdPath,
+    font: &FontArc,
     title: &str,
     max_page_h_px: u32,
 ) -> Result<Vec<DynamicImage>> {
-    let font = load_ttf_font(font_path)?;
-
     let mut data = tf_idf.to_vec();
     data.sort_by(|a, b| {
         b.tf_idf
@@ -275,7 +260,7 @@ pub fn render_tfidf_chart_pages(
 
     let max_label_w = data
         .iter()
-        .map(|r| text_w_px(&font, label_scale, &r.keyword))
+        .map(|r| text_w_px(font, label_scale, &r.keyword))
         .max()
         .unwrap_or(0);
 
@@ -328,18 +313,18 @@ pub fn render_tfidf_chart_pages(
         let outer2 = Rect::at(1, 1).of_size(w - 3, h - 3);
         draw_hollow_rect_mut(&mut img, outer2, border);
 
-        let title_w = text_w_px(&font, title_scale, title);
+        let title_w = text_w_px(font, title_scale, title);
         let title_x = ((w as i32) / 2 - title_w / 2).max(inner_l);
         let title_y = inner_t + 6;
 
-        draw_text_mut(&mut img, text, title_x, title_y, title_scale, &font, title);
+        draw_text_mut(&mut img, text, title_x, title_y, title_scale, font, title);
         draw_text_mut(
             &mut img,
             text,
             title_x + 1,
             title_y,
             title_scale,
-            &font,
+            font,
             title,
         );
         draw_text_mut(
@@ -348,7 +333,7 @@ pub fn render_tfidf_chart_pages(
             title_x,
             title_y + 1,
             title_scale,
-            &font,
+            font,
             title,
         );
         draw_text_mut(
@@ -357,7 +342,7 @@ pub fn render_tfidf_chart_pages(
             title_x + 1,
             title_y + 1,
             title_scale,
-            &font,
+            font,
             title,
         );
 
@@ -382,14 +367,14 @@ pub fn render_tfidf_chart_pages(
                 format!("{:.1}", v)
             };
 
-            let lw = text_w_px(&font, x_tick_scale, &label);
+            let lw = text_w_px(font, x_tick_scale, &label);
             draw_text_mut(
                 &mut img,
                 text,
                 x - (lw / 2),
                 axis_y + 16,
                 x_tick_scale,
-                &font,
+                font,
                 &label,
             );
         }
@@ -399,7 +384,7 @@ pub fn render_tfidf_chart_pages(
         for (i, r) in slice.iter().enumerate() {
             let y = chart_y0 + i as i32 * (bar_h + gap);
 
-            let lw = text_w_px(&font, label_scale, &r.keyword);
+            let lw = text_w_px(font, label_scale, &r.keyword);
             let label_x = (label_right - lw).max(inner_l);
 
             draw_text_mut(
@@ -408,7 +393,7 @@ pub fn render_tfidf_chart_pages(
                 label_x,
                 y + 6,
                 label_scale,
-                &font,
+                font,
                 &r.keyword,
             );
 
@@ -420,7 +405,7 @@ pub fn render_tfidf_chart_pages(
 
             let val_str = format!("{:.2}", r.tf_idf);
             let val_x = (chart_x0 + bar_w + 16).min((w as i32) - inner_r - 140);
-            draw_text_mut(&mut img, text, val_x, y + 6, value_scale, &font, &val_str);
+            draw_text_mut(&mut img, text, val_x, y + 6, value_scale, font, &val_str);
         }
 
         pages.push(DynamicImage::ImageRgba8(img));

@@ -7,6 +7,7 @@ import { SpaceAnalyze } from '../../polls/types/space-analyze';
 import { TfIdfChart } from './tf-idf-chart';
 import { NetworkChart } from './network-chart';
 import { AnalyzeNumberField } from './analyze_number_field';
+import { config } from '@/config';
 
 type TopicAnalyzeViewProps = {
   analyze?: SpaceAnalyze;
@@ -55,8 +56,7 @@ export function TopicAnalyzeView({
     Array.isArray(analyze?.network?.nodes) &&
     analyze.network.nodes.length > 0;
   const hasTfIdf = Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0;
-
-  const showDownload = hasLda || hasNetwork || hasTfIdf;
+  const showDownload = (hasLda || hasNetwork || hasTfIdf) && config.experiment;
 
   React.useEffect(() => {
     const list = Array.isArray(analyze?.lda_topics) ? analyze.lda_topics : [];
