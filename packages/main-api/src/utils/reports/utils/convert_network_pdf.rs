@@ -1,4 +1,4 @@
-use crate::utils::reports::{push_html_rendered_block, resolve_asset_dir};
+use crate::utils::reports::push_html_rendered_block;
 use crate::*;
 use ab_glyph::Font;
 use ab_glyph::{FontArc, PxScale, ScaleFont};
@@ -9,12 +9,12 @@ use imageproc::drawing::{
 };
 use std::collections::HashMap;
 use std::io::Cursor;
-use std::path::{Path, PathBuf};
 
 pub fn convert_network_pdf(
     doc: &mut genpdf::Document,
     network: NetworkGraph,
     network_html_contents: String,
+    font: &FontArc,
 ) -> Result<()> {
     if network.nodes.is_empty() {
         return Ok(());
@@ -26,10 +26,7 @@ pub fn convert_network_pdf(
     );
     doc.push(elements::Break::new(0.8));
 
-    let cfg = crate::config::get();
-    let font_path = resolve_asset_dir(cfg.report_fonts_dir).join("NotoSansKR-Regular.ttf");
-
-    let img = render_network_chart(&network, &font_path)?;
+    let img = render_network_chart(&network, font)?;
     let dpi: f64 = 300.0;
 
     let mut bytes = Vec::new();
@@ -52,13 +49,6 @@ pub fn convert_network_pdf(
     }
 
     Ok(())
-}
-
-fn load_ttf_font(path: &Path) -> Result<FontArc> {
-    let bytes =
-        std::fs::read(path).map_err(|e| crate::Error::InternalServerError(e.to_string()))?;
-    FontArc::try_from_vec(bytes)
-        .map_err(|e| crate::Error::InternalServerError(format!("failed to load ttf font: {e}")))
 }
 
 fn compute_image_scale_for_a4(w_px: u32, h_px: u32, dpi: f64) -> (f32, u32) {
@@ -84,9 +74,7 @@ fn compute_image_scale_for_a4(w_px: u32, h_px: u32, dpi: f64) -> (f32, u32) {
     (scale, max_img_h_px)
 }
 
-fn render_network_chart(network: &NetworkGraph, font_path: &Path) -> Result<DynamicImage> {
-    let font = load_ttf_font(font_path)?;
-
+fn render_network_chart(network: &NetworkGraph, font: &FontArc) -> Result<DynamicImage> {
     let w: u32 = 4200;
     let h: u32 = 2100;
     let pad: f64 = 50.0;
@@ -140,9 +128,7 @@ fn render_network_chart(network: &NetworkGraph, font_path: &Path) -> Result<Dyna
     let white = Rgba([255, 255, 255, 255]);
     let node_fill = Rgba([200, 226, 236, 255]);
     let node_stroke = Rgba([90, 90, 90, 255]);
-
     let edge_col = Rgba([160, 160, 160, 35]);
-
     let text_col = Rgba([30, 30, 30, 255]);
 
     let mut img = RgbaImage::from_pixel(w, h, white);
@@ -177,14 +163,13 @@ fn render_network_chart(network: &NetworkGraph, font_path: &Path) -> Result<Dyna
         draw_hollow_circle_mut(&mut img, (x, y), r, node_stroke);
 
         let label = &network.nodes[i].node;
-
         let font_px = ((r as f32) * 0.80).clamp(34.0, 72.0);
 
-        let (tw, th) = text_size_px(&font, font_px, label);
+        let (tw, th) = text_size_px(font, font_px, label);
         let tx = (x - (tw / 2)).clamp(10, (w as i32) - 10);
         let ty = (y - (th / 2)).clamp(10, (h as i32) - 10);
 
-        draw_text_mut(&mut img, text_col, tx, ty, font_px, &font, label);
+        draw_text_mut(&mut img, text_col, tx, ty, font_px, font, label);
     }
 
     Ok(DynamicImage::ImageRgba8(img))
