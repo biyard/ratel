@@ -169,6 +169,7 @@ jobs:
 
           mkdir -p ../../.gcp
           cp .gcp/firebase-service-account.json ../../.gcp/firebase-service-account.json
+
           mv target/release/main-api ../../bootstrap
 
       - name: Upload Artifacts
