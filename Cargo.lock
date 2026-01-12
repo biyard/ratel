@@ -16545,6 +16545,7 @@ dependencies = [
  "aws-config",
  "aws-sdk-dynamodb",
  "bdk",
+ "futures",
  "lambda_runtime 1.0.1",
  "main-api",
  "serde",
