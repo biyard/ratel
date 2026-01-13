@@ -14,6 +14,7 @@ export 'screens/detail/detail_post_screen.dart';
 
 const String createPostScreen = '/posts/new';
 const String postScreen = '/post';
+const String myPostsScreen = '/my-posts';
 const String spaceScreen = '/space';
 String postWithPk(String postPk) {
   return '$postScreen/${Uri.encodeComponent(postPk)}';
@@ -25,7 +26,7 @@ String spaceWithPk(String spacePk) {
 
 List<GetPage> postPages = [
   GetPage(
-    name: postScreen,
+    name: myPostsScreen,
     page: () => const PostScreen(),
     binding: PostBinding(),
     customTransition: SlideOverTransition(),
