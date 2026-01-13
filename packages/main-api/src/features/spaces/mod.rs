@@ -8,6 +8,7 @@ pub mod recommendations;
 pub mod reports;
 pub mod templates;
 
+pub mod analyzes;
 pub mod artworks;
 pub mod models;
 pub mod sprint_leagues;
