@@ -94,7 +94,6 @@ pub struct BedrockConfig {
     pub nova_lite_model_id: &'static str,
     pub agent_id: &'static str,
     pub agent_alias_id: &'static str,
-    pub knowledge_base_id: &'static str,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -158,8 +157,6 @@ impl Default for Config {
                     .expect("You must set BEDROCK_AGENT_ID"),
                 agent_alias_id: option_env!("BEDROCK_AGENT_ALIAS_ID")
                     .expect("You must set BEDROCK_AGENT_ALIAS_ID"),
-                knowledge_base_id: option_env!("BEDROCK_KNOWLEDGE_BASE_ID")
-                    .expect("You must set BEDROCK_KNOWLEDGE_BASE_ID"),
             },
 
             #[cfg(not(feature = "no-secret"))]

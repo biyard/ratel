@@ -38,6 +38,14 @@ export class KnowledgeBaseStack extends cdk.Stack {
       dataType: "float32",
       dimension: 1024, // Titan G2 produces 1024-dimensional vectors
       distanceMetric: "cosine",
+      // Make large Bedrock metadata keys non-filterable to avoid 2048 byte limit
+      // Non-filterable metadata has a 40KB limit instead of 2048 bytes
+      metadataConfiguration: {
+        nonFilterableMetadataKeys: [
+          "AMAZON_BEDROCK_TEXT",
+          "AMAZON_BEDROCK_METADATA"
+        ],
+      },
     });
 
     // Add dependency

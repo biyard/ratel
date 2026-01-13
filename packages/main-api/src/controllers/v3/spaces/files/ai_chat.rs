@@ -2,8 +2,7 @@ use crate::controllers::v3::spaces::dto::*;
 use crate::features::spaces::files::SpaceFile;
 use crate::models::space::SpaceCommon;
 use crate::models::user::User;
-use crate::utils::aws::{BedrockClient, S3Client};
-use crate::config::Config;
+use crate::utils::aws::BedrockClient;
 use crate::*;
 
 #[derive(Debug, Clone, serde::Deserialize, JsonSchema)]
@@ -33,8 +32,6 @@ pub async fn ai_chat_handler(
     Path((space_pk, file_id)): Path<(Partition, String)>,
     Json(payload): Json<AiChatRequest>,
 ) -> Result<Json<AiChatResponse>> {
-    let config = Config::default();
-    
     // Verify space access
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundDeliberationSpace);
@@ -54,37 +51,19 @@ pub async fn ai_chat_handler(
     let decoded_file_id = urlencoding::decode(&file_id)
         .map_err(|_| Error::BadRequest("Invalid file ID encoding".to_string()))?;
 
-    // Find the file and get its URL
-    let file = files
+    // Find the file to verify it exists in the space
+    let _file = files
         .files
         .iter()
         .find(|f| f.name == decoded_file_id.as_ref())
         .ok_or_else(|| Error::NotFound("File not found in space".to_string()))?;
 
-    let file_url = file
-        .url
-        .as_ref()
-        .ok_or_else(|| Error::BadRequest("File URL not available".to_string()))?;
-
-    // Extract S3 key from any URL format (CloudFront, Route53, or direct S3)
-    // The S3 key is the path component after the domain
-    let s3_key = file_url
-        .split('/')
-        .skip(3) // Skip scheme and domain parts
-        .collect::<Vec<_>>()
-        .join("/");
-    
-    // Build s3:// URI for Knowledge Base filtering
-    let s3_uri = format!("s3://{}/{}", config.s3.name, s3_key);
-    
-    tracing::debug!("File URL: {}", file_url);
-    tracing::debug!("Extracted S3 key: {}", s3_key);
-    tracing::debug!("KB filter URI: {}", s3_uri);
-
-    // Build context-aware prompt
+    // Build context-aware prompt with file information
     let mut prompt = format!(
         "Document: {}\nCurrent page: {} of {}\n\n",
-        payload.context.file_name, payload.context.current_page, payload.context.total_pages
+        payload.context.file_name,
+        payload.context.current_page,
+        payload.context.total_pages
     );
 
     if let Some(selected_text) = &payload.context.selected_text {
@@ -95,20 +74,16 @@ pub async fn ai_chat_handler(
 
     prompt.push_str(&format!("Question: {}", payload.message));
 
-    // Use RetrieveAndGenerate with Knowledge Base
+    // Use invoke_agent to leverage the agent's conversational instructions
     let bedrock_client = BedrockClient::new();
     
-    #[cfg(not(feature = "no-secret"))]
-    let knowledge_base_id = config.bedrock.knowledge_base_id.to_string();
-    #[cfg(feature = "no-secret")]
-    let knowledge_base_id = "mock-kb-id".to_string();
+    // Generate session ID if not provided
+    let session_id = payload.session_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
     
     let (ai_response, returned_session_id) = bedrock_client
-        .retrieve_and_generate(
-            knowledge_base_id,
-            payload.session_id.clone(),
+        .invoke_agent(
+            session_id,
             prompt,
-            Some(s3_uri),
         )
         .await?;
 
