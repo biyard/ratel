@@ -123,12 +123,12 @@ new GlobalTableStack(app, `ratel-${env}-dynamodb`, {
 const pdfKnowledgeBaseStack = new KnowledgeBaseStack(app, `ratel-${env}-pdf-knowledge-base`, {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: "us-east-1",
+    region: "ap-northeast-2",
   },
   knowledgeBaseName: "pdf-KB",
   description: "The knowledge base for the PDF ai helper.",
-  dataSourceBucketArn: "arn:aws:s3:::rat-us",
-  dataSourcePrefix: "rat/",
+  dataSourceBucketArn: "arn:aws:s3:::metadata.ratel.foundation",
+  dataSourcePrefix: "metadata/",
   dataSourceName: "metadata-s3",
 });
 
@@ -136,7 +136,7 @@ const pdfKnowledgeBaseStack = new KnowledgeBaseStack(app, `ratel-${env}-pdf-know
 new AgentStack(app, `ratel-${env}-pdf-agent`, {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: "us-east-1",
+    region: "ap-northeast-2",
   },
   stage: env,
   knowledgeBaseId: pdfKnowledgeBaseStack.knowledgeBase.knowledgeBaseId,
@@ -147,11 +147,11 @@ new AgentStack(app, `ratel-${env}-pdf-agent`, {
 new KbSyncStack(app, `ratel-${env}-pdf-kb-sync`, {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: "us-east-1",
+    region: "ap-northeast-2",
   },
   stage: env,
   knowledgeBaseId: pdfKnowledgeBaseStack.knowledgeBase.knowledgeBaseId,
   dataSourceId: pdfKnowledgeBaseStack.dataSource.attrDataSourceId,
-  dataBucketName: "rat-us",
-  dataPrefix: "rat/",
+  dataBucketName: "metadata.ratel.foundation",
+  dataPrefix: "metadata/",
 });

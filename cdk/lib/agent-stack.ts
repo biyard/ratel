@@ -22,26 +22,45 @@ export class AgentStack extends Stack {
 
     const { stage, knowledgeBaseId, knowledgeBaseArn } = props;
 
-    // Create IAM role for the Bedrock Agent
+    // Create IAM role for the Bedrock Agent (matching AWS auto-generated role)
     const agentRole = new iam.Role(this, "BedrockAgentRole", {
-      assumedBy: new iam.ServicePrincipal("bedrock.amazonaws.com"),
+      assumedBy: new iam.ServicePrincipal("bedrock.amazonaws.com", {
+        conditions: {
+          StringEquals: {
+            "aws:SourceAccount": this.account,
+          },
+          ArnLike: {
+            "aws:SourceArn": `arn:aws:bedrock:${this.region}:${this.account}:agent/*`,
+          },
+        },
+      }),
       description: "Role for Bedrock Agent to invoke models and access Knowledge Base",
     });
 
-    // Grant agent permission to invoke Nova Pro model
+    // Grant agent permission to invoke Nova Pro model (matching AWS auto-generated policy)
     agentRole.addToPolicy(
       new iam.PolicyStatement({
+        sid: "AmazonBedrockAgentInferenceProfilesCrossRegionPolicyProd",
         effect: iam.Effect.ALLOW,
-        actions: ["bedrock:InvokeModel"],
+        actions: [
+          "bedrock:InvokeModel",
+          "bedrock:InvokeModelWithResponseStream",
+          "bedrock:GetInferenceProfile",
+          "bedrock:GetFoundationModel",
+        ],
         resources: [
-          `arn:aws:bedrock:${this.region}::foundation-model/us.amazon.nova-pro-v1:0`,
+          // Inference profile ARN
+          `arn:aws:bedrock:${this.region}:${this.account}:inference-profile/us.amazon.nova-pro-v1:0`,
+          // Foundation model ARN (wildcard region for cross-region access)
+          "arn:aws:bedrock:*::foundation-model/amazon.nova-pro-v1:0",
         ],
       })
     );
 
-    // Grant agent permission to retrieve from Knowledge Base
+    // Grant agent permission to retrieve from Knowledge Base (matching AWS auto-generated policy)
     agentRole.addToPolicy(
       new iam.PolicyStatement({
+        sid: "AmazonBedrockAgentRetrieveKnowledgeBasePolicyProd",
         effect: iam.Effect.ALLOW,
         actions: ["bedrock:Retrieve"],
         resources: [knowledgeBaseArn],
@@ -54,9 +73,40 @@ export class AgentStack extends Stack {
       agentResourceRoleArn: agentRole.roleArn,
       foundationModel: "us.amazon.nova-pro-v1:0",
       description: "Agent connected to PDF Knowledge Base with Nova Pro",
-      instruction: `You are a helpful AI assistant with access to a knowledge base containing PDF documents. 
-When answering questions, search the knowledge base first and provide accurate, detailed responses based on the documents.
-Always cite the source documents when providing information from the knowledge base.`,
+      instruction: `You are a warm, helpful, and intelligent AI companion designed to assist users with their PDF documents and engage in meaningful conversations.
+
+IMPORTANT: Not every message requires a document search. Respond naturally to greetings, casual chat, and general questions without forcing a document lookup. Only search documents when the user specifically asks about document content or when it would genuinely help answer their question.
+
+Core Behaviors:
+- Respond naturally to greetings like "hello", "hi", or "hey" with warmth and friendliness
+- Be conversational and personable while maintaining professionalism
+- Show genuine interest in helping users understand their documents when they ask about them
+- Remember context from our conversation history and reference it naturally
+- Engage in back-and-forth dialogue - ask clarifying questions when needed
+- Acknowledge when users refer to previous exchanges in the conversation
+
+Document Assistance:
+- When users ask about documents, search the knowledge base thoroughly
+- Provide clear, detailed explanations with specific citations from the PDFs
+- If information isn't in the documents, say so clearly and honestly
+- Offer to help find related information or suggest what else might be useful
+- Break down complex document content into digestible explanations
+
+Beyond Documents:
+- You can discuss ethical questions, general knowledge, and topics outside the PDFs
+- When answering non-document questions, be clear that you're speaking from general knowledge
+- Feel free to explore ideas, provide analysis, and engage intellectually
+- Help users think through problems even if they're not directly in the documents
+
+Conversation Style:
+- Use "I", "you", and "we" naturally - be personable
+- Vary your sentence structure and tone to feel human
+- Show enthusiasm when appropriate
+- Express uncertainty honestly rather than guessing
+- Build on the conversation naturally rather than treating each question as isolated
+- If a user seems confused or frustrated, adjust your approach to be more helpful
+
+Remember: You're not just answering questions - you're being a thoughtful companion who helps users navigate information and ideas.`,
       idleSessionTtlInSeconds: 600, // 10 minutes idle timeout
       
       // Enable memory for sessions
