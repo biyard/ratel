@@ -173,11 +173,18 @@ docker.build:
 	$(eval WEB_INDEX_JS=$(shell basename $(shell ls dist/assets/index-*.js)))
 	$(eval WEB_INDEX_CSS=$(shell basename $(shell ls dist/assets/index-*.css)))
 
-	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'apt-get update && apt-get install -y libssl-dev pkg-config ca-certificates && $(BUILD_ENV) WEB_BUILD=false WEB_INDEX_JS=$(WEB_INDEX_JS) WEB_INDEX_CSS=$(WEB_INDEX_CSS) CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release $(RUST_FLAG)'
+	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c '\
+		apt-get update && apt-get install -y \
+			libssl-dev \
+			ca-certificates \
+			pkg-config \
+			g++ \
+			libfontconfig1-dev \
+			libfreetype6-dev \
+		&& $(BUILD_ENV) WEB_BUILD=false WEB_INDEX_JS=$(WEB_INDEX_JS) WEB_INDEX_CSS=$(WEB_INDEX_CSS) CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release $(RUST_FLAG)'
 
 	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'cp -rf dist target/release/'
 	docker build -t $(ECR_NAME):$(COMMIT) --no-cache -f Dockerfile $(PWD)/target/release
-
 docker.push:
 	docker push $(ECR_NAME):$(COMMIT)
 

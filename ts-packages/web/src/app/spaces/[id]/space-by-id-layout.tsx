@@ -107,6 +107,7 @@ function GeneralLayout() {
               rewards={ctrl.space.rewards ?? 0}
               isDraft={ctrl.space.isDraft}
               isPublic={ctrl.space.isPublic}
+              hasRewards={!!ctrl.space.rewards}
             />
           </Col>
         )}

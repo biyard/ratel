@@ -16,6 +16,15 @@ import { useTranslation } from 'react-i18next';
 import { TFunction } from 'i18next';
 import { PanelAttribute } from '@/features/spaces/panels/types/panel-attribute';
 import { useListPanels } from '@/features/spaces/panels/hooks/use-list-panels';
+import useTopic from '../../hooks/use-topic';
+import { SpaceAnalyze } from '../../types/space-analyze';
+import { useUpdateLdaMutation } from '../../hooks/use-update-lda-mutation';
+import { useUpsertAnalyzeMutation } from '../../hooks/use-upsert-analyze-mutation';
+import { useUpdateNetworkMutation } from '../../hooks/use-update-network-mutation';
+import { useUpdateTfIdfMutation } from '../../hooks/use-update-tf-idf-mutation';
+import { useDownloadAnalyzeMutation } from '../../hooks/use-download-analyze-mutation';
+import { logger } from '@/lib/logger';
+import { showSuccessToast } from '@/lib/toast';
 
 export class SpacePollAnalyzeController {
   constructor(
@@ -24,10 +33,16 @@ export class SpacePollAnalyzeController {
     public navigate: NavigateFunction,
     public space: Space,
     public poll: Poll,
+    public analyze: SpaceAnalyze,
     public summary: PollSurveySummariesResponse,
     public attributes: PanelAttribute[],
 
     public t: TFunction<'SpacePollAnalyze', undefined>,
+    public updateLda: ReturnType<typeof useUpdateLdaMutation>,
+    public updateNetwork: ReturnType<typeof useUpdateNetworkMutation>,
+    public updateTfIdf: ReturnType<typeof useUpdateTfIdfMutation>,
+    public upsertAnalyze: ReturnType<typeof useUpsertAnalyzeMutation>,
+    public downloadAnalyze: ReturnType<typeof useDownloadAnalyzeMutation>,
   ) {}
 
   handleBack = () => {
@@ -58,6 +73,57 @@ export class SpacePollAnalyzeController {
       entries.push([k, Number(v) || 0]);
     }
     return entries;
+  };
+
+  handleDownloadAnalyze = async () => {
+    return await this.downloadAnalyze.mutateAsync({ spacePk: this.spacePk });
+  };
+
+  handleUpsertAnalyze = async (
+    ldaTopics: number,
+    tfIdfKeywords: number,
+    networkTopNodes: number,
+  ) => {
+    try {
+      const d = await this.upsertAnalyze.mutateAsync({
+        spacePk: this.spacePk,
+        ldaTopics,
+        tfIdfKeywords,
+        networkTopNodes,
+      });
+
+      showSuccessToast(this.t('success_analyze'));
+      return d;
+    } catch (e) {
+      logger.error('upsert analyze failed: {}', e);
+    }
+  };
+
+  handleUpdateLda = (
+    topics: string[],
+    keywords: string[][],
+    htmlContents?: string,
+  ) => {
+    return this.updateLda.mutateAsync({
+      spacePk: this.spacePk,
+      topics: topics,
+      keywords: keywords,
+      htmlContents,
+    });
+  };
+
+  handleUpdateNetwork = (htmlContents?: string) => {
+    return this.updateNetwork.mutateAsync({
+      spacePk: this.spacePk,
+      htmlContents,
+    });
+  };
+
+  handleUpdateTfIdf = (htmlContents?: string) => {
+    return this.updateTfIdf.mutateAsync({
+      spacePk: this.spacePk,
+      htmlContents,
+    });
   };
 
   handleDownloadExcel = () => {
@@ -377,13 +443,22 @@ export class SpacePollAnalyzeController {
 }
 
 export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
-  // Fetching data from remote
   const { data: space } = useSpaceById(spacePk);
   const { data: poll } = usePollSpace(spacePk, pollPk);
+  const { data: analyze } = useTopic(spacePk);
   const { data: summary } = usePollSpaceSummaries(spacePk, pollPk);
   const { data: panels } = useListPanels(spacePk);
+
+  const updateLda = useUpdateLdaMutation();
+  const updateNetwork = useUpdateNetworkMutation();
+  const updateTfIdf = useUpdateTfIdfMutation();
+
+  const upsertAnalyze = useUpsertAnalyzeMutation();
+  const downloadAnalyze = useDownloadAnalyzeMutation();
   const attribute = panels?.map((p) => p.attributes).flat() ?? [];
   const { t } = useTranslation('SpacePollAnalyze');
+
+  console.log('analyze data: ', analyze);
 
   const navigator = useNavigate();
 
@@ -393,9 +468,15 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
     navigator,
     space,
     poll,
+    analyze,
     summary,
     attribute,
 
     t,
+    updateLda,
+    updateNetwork,
+    updateTfIdf,
+    upsertAnalyze,
+    downloadAnalyze,
   );
 }

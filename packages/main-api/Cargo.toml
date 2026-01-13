@@ -15,6 +15,7 @@ bdk = { workspace = true, features = ["be"] }
 by-macros = { workspace = true }
 by-axum = { workspace = true }
 
+lindera = { version = "1.5.0", features = ["embedded-ko-dic"] }
 regex = "1"
 tokio = { version = "1.40.0", features = ["full"] }
 tower = "0.5.1"
@@ -41,7 +42,12 @@ aws-sdk-sqs = "1.81.0"
 jsonwebtoken = "9.3.0"
 percent-encoding = "2.3.2"
 aws-smithy-types = "1"
-
+genpdf = { version = "0.2", features = ["images"] }
+plotters = "0.3"
+ab_glyph = "0.2.19"
+rusttype = "0.9.3"
+image = "0.25"
+imageproc = "0.26"
 rmcp = { version = "0.7.0", git = "https://github.com/modelcontextprotocol/rust-sdk", features = [
     "server",
     "transport-streamable-http-server",
@@ -53,6 +59,7 @@ aws-sdk-scheduler = "1.90.0"
 aws-sdk-sesv2 = "1.83.0"
 aws-sdk-sns = "1.83.0"
 rand = "0.9.1"
+rand_chacha = "0.9.0"
 url = "2.5.4"
 hmac = "0.12.1"
 base64 = "0.22.1"
@@ -88,6 +95,7 @@ iref = "3.2.2"
 futures = "0.3.31"
 x402-axum = "0.6.2"
 x402-rs = "0.9.3"
+tempfile = "3.24.0"
 
 [[bin]]
 name = "main-api"

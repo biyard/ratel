@@ -8,6 +8,8 @@ const en = {
   total_participants_label: 'Participant',
   remaining_days_label: 'Remaining Days',
   date_range_label: 'Survey Date Range',
+
+  not_found_response: 'Not Found Response',
 };
 
 const ko = {
@@ -20,6 +22,8 @@ const ko = {
   total_participants_label: '참여자',
   remaining_days_label: '남은 일자',
   date_range_label: '설문 기간',
+
+  not_found_response: '응답이 없습니다.',
 };
 const i18n = {
   en,

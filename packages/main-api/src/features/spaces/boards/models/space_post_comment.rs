@@ -28,7 +28,9 @@ pub struct SpacePostComment {
 
     #[serde(default)]
     pub created_at: i64,
+    #[serde(default)]
     pub updated_at: i64,
+    #[serde(default)]
     pub content: String,
 
     #[serde(default)]

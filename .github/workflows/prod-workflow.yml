@@ -172,6 +172,7 @@ jobs:
 
           mkdir -p ../../.gcp
           cp .gcp/firebase-service-account.json ../../.gcp/firebase-service-account.json
+
           mv target/release/main-api ../../bootstrap
 
       - name: Upload Artifacts
@@ -332,10 +333,52 @@ jobs:
           RUST_LOG: info
           SERVICE: survey-worker
           DOMAIN: ratel.foundation
+
+          BUCKET_NAME: metadata.ratel.foundation
+          SLACK_HOOK: ${{ secrets.SLACK_HOOK }}
+
+          BINANCE_API_KEY: ${{ secrets.PROD_BINANCE_API_KEY }}
+          BINANCE_SECRET_KEY: ${{ secrets.PROD_BINANCE_SECRET_KEY }}
+          BINANCE_WEBHOOK: https://api.ratel.foundation/v2/binances/webhooks
+          REDIRECT_DOMAIN: https://ratel.foundation
+
+          KAIA_ENDPOINT: https://public-en.node.kaia.io
+          KAIA_FEEPAYER_KEY: ${{ secrets.PROD_KAIA_FEEPAYER_KEY }}
+          KAIA_FEEPAYER_ADDR: ${{ secrets.PROD_KAIA_FEEPAYER_ADDR }}
+          KAIA_OWNER_KEY: ${{ secrets.PROD_KAIA_OWNER_KEY }}
+          KAIA_OWNER_ADDR: ${{ secrets.PROD_KAIA_OWNER_KEY_ADDR }}
+
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+
+          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
+          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
+          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
+          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
+
+          P256_X: ${{ secrets.P256_X }}
+          P256_Y: ${{ secrets.P256_Y }}
+          P256_D: ${{ secrets.P256_D }}
+          P256_CRV: ${{ secrets.P256_CRV }}
+
           DYNAMO_TABLE_PREFIX: ratel-prod
           DYNAMO_ENDPOINT: none
-          RUST_FLAG: "--features lambda"
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          RUST_FLAG: "--features lambda --release"
           WEB_BUILD: false
+
+          # NOTE: Change PORTONE API
+          PORTONE_API_SECRET: ${{ secrets.PORTONE_API_SECRET }}
+          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.PORTONE_KPN_BILLING_KEY_CHANNEL_KEY }}
+          PORTONE_STORE_ID: ${{ secrets.PORTONE_STORE_ID }}
+          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
+          REWARD: false
+
+          FCM_ENABLED: true
+          RATEL_PROJECT_ID: ${{ secrets.RATEL_PROJECT_ID }}
+
+          BIYARD_API_URL: https://api.biyard.co
+          BIYARD_API_KEY: ${{ secrets.BIYARD_API_KEY }}
+          BIYARD_PROJECT_ID: ${{ secrets.BIYARD_PROJECT_ID }}
         run: |
           make bin.build
           mv target/release/survey-worker ../../bootstrap
