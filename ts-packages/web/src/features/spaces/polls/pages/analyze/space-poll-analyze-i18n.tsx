@@ -12,9 +12,35 @@ export const i18nSpacePollAnalyze = {
     question: 'Question',
     answer: 'Answer',
 
+    response_analyze: 'Response Analyze',
+    topic_analyze: 'Topic Analyze',
+
     btn_edit: 'Edit',
+    btn_cancel: 'Cancel',
     btn_back: 'Back',
     btn_save: 'Save',
+
+    number_of_topics: 'Number of LDA Topics',
+    number_of_tfidf_keywords: 'Number of TF-IDF Keywords',
+    analyzing: 'Anylyzing...',
+    downloading: 'Downloading...',
+    download_analyze: 'Download Analyze',
+    confirm: 'Confirm',
+    input_hint: 'Please enter a number between 1 and 20.',
+    tfidf_input_hint: 'Please enter a number between 1 and 50.',
+    success_analyze:
+      'Your analysis request was successful. It may take some time for the analysis results to be reflected.',
+    analyze_error:
+      'error occurred during topic analysis. Please try again later.',
+    number_of_network_top_nodes: 'Number of Network Top Nodes',
+    network_top_nodes_input_hint: 'Please enter a number between 1 and 30.',
+
+    network: 'Network',
+    topic: 'Topic',
+    keywords: 'Keywords',
+    no_topics: 'No topics found.',
+    no_tfidf: 'No TF-IDF data found.',
+    no_network: 'No network data found.',
   },
   ko: {
     id: 'ID',
@@ -29,8 +55,33 @@ export const i18nSpacePollAnalyze = {
     question: '질문',
     answer: '답변',
 
+    response_analyze: '응답 분석',
+    topic_analyze: '토픽 분석',
+
     btn_edit: '수정하기',
+    btn_cancel: '취소하기',
     btn_back: '뒤로가기',
     btn_save: '저장하기',
+
+    number_of_topics: 'LDA 토픽 개수',
+    number_of_tfidf_keywords: 'TF-IDF 키워드 개수',
+    analyzing: '분석 중...',
+    downloading: '다운로드 중...',
+    download_analyze: '분석 다운로드',
+    confirm: '확인',
+    input_hint: '1~20 사이로 입력해주세요.',
+    tfidf_input_hint: '1~50 사이로 입력해주세요.',
+    success_analyze:
+      '분석 요청에 성공했습니다. 분석 결과 반영에는 시간이 소요될 수 있습니다.',
+    analyze_error: '분석에 실패했습니다. 잠시 후 다시 시도해주세요.',
+    number_of_network_top_nodes: '네트워크 상위 노드 개수',
+    network_top_nodes_input_hint: '1~30 사이로 입력해주세요.',
+
+    network: '네트워크',
+    topic: '토픽',
+    keywords: '키워드',
+    no_topics: '토픽이 존재하지 않습니다.',
+    no_tfidf: 'TF-IDF 데이터가 존재하지 않습니다.',
+    no_network: '네트워크 데이터가 존재하지 않습니다.',
   },
 };
