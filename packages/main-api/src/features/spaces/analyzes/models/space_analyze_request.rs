@@ -10,6 +10,7 @@ pub struct SpaceAnalyzeRequest {
     pub lda_topics: usize,
     pub tf_idf_keywords: usize,
     pub network_top_nodes: usize,
+    pub remove_topics: Vec<String>,
     pub analyze_finish: bool,
     #[serde(default)]
     #[dynamo(index = "gsi1", name = "find_by_analyze_finish", sk)]
@@ -22,6 +23,8 @@ impl SpaceAnalyzeRequest {
         lda_topics: usize,
         tf_idf_keywords: usize,
         network_top_nodes: usize,
+
+        remove_topics: Vec<String>,
     ) -> Self {
         let now = get_now_timestamp_millis();
         let uuid = sorted_uuid();
@@ -35,6 +38,7 @@ impl SpaceAnalyzeRequest {
             lda_topics,
             tf_idf_keywords,
             network_top_nodes,
+            remove_topics,
             analyze_finish: false,
             analyze_finish_key,
         }

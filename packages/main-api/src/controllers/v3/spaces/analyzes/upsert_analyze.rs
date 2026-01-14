@@ -23,6 +23,8 @@ pub struct UpsertAnalyzeRequest {
     pub lda_topics: usize,
     pub tf_idf_keywords: usize,
     pub network_top_nodes: usize,
+
+    pub remove_topics: Vec<String>,
 }
 
 pub async fn upsert_analyze_handler(
@@ -46,6 +48,7 @@ pub async fn upsert_analyze_handler(
             req.lda_topics,
             req.tf_idf_keywords,
             req.network_top_nodes,
+            req.remove_topics.clone(),
         )
         .await?;
 
@@ -54,6 +57,7 @@ pub async fn upsert_analyze_handler(
         req.lda_topics,
         req.tf_idf_keywords,
         req.network_top_nodes,
+        req.remove_topics,
     );
     request.create(&dynamo.client).await?;
     Ok(Json(SpaceAnalyze::default()))

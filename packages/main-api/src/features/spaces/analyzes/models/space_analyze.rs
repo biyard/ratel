@@ -11,6 +11,7 @@ pub struct SpaceAnalyze {
     pub lda_topics: Vec<TopicRow>,
     pub network: NetworkGraph,
     pub tf_idf: Vec<TfidfRow>,
+    pub remove_topics: Vec<String>,
 
     #[serde(default)]
     pub html_contents: Option<String>,
@@ -25,6 +26,7 @@ impl SpaceAnalyze {
         lda_topics: Vec<TopicRow>,
         network: NetworkGraph,
         tf_idf: Vec<TfidfRow>,
+        remove_topics: Vec<String>,
     ) -> Self {
         let now = get_now_timestamp_millis();
 
@@ -35,6 +37,7 @@ impl SpaceAnalyze {
             lda_topics,
             network,
             tf_idf,
+            remove_topics,
 
             html_contents: None,
             metadata_url: None,

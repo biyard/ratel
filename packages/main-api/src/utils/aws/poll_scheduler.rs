@@ -249,6 +249,8 @@ impl PollScheduler {
         lda_topics: usize,
         tf_idf_keywords: usize,
         network_top_nodes: usize,
+
+        remove_topics: Vec<String>,
     ) -> Result<()> {
         let space_id = match &space_pk {
             Partition::Space(id) => id.clone(),
@@ -256,14 +258,13 @@ impl PollScheduler {
         };
 
         let at_millis = get_now_timestamp_millis() + 10_000;
-        let remove_keywords: Vec<String> = vec![];
 
         let detail = serde_json::json!({
             "space_id": space_id,
             "lda_topics": lda_topics,
             "tf_idf_keywords": tf_idf_keywords,
             "network_top_nodes": network_top_nodes,
-            "remove_keywords": remove_keywords,
+            "remove_keywords": remove_topics,
         });
 
         self.schedule_eventbridge(

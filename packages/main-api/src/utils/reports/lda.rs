@@ -197,10 +197,14 @@ fn lda_from_tokens(docs: Vec<Vec<String>>, cfg: &LdaConfigV1) -> Vec<TopicRow> {
     rows
 }
 
-pub fn run_lda(comments: &[String], cfg: LdaConfigV1) -> crate::Result<Vec<TopicRow>> {
+pub fn run_lda(
+    comments: &[String],
+    cfg: LdaConfigV1,
+    remove_topics: &[String],
+) -> crate::Result<Vec<TopicRow>> {
     let token_docs = comments
         .iter()
-        .map(|c| preprocess_korean_nouns(c))
+        .map(|c| preprocess_korean_nouns(c, remove_topics))
         .filter(|t| t.len() >= cfg.min_tokens_per_doc)
         .collect::<Vec<_>>();
 
