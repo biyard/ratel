@@ -81,13 +81,24 @@ export class SpacePollAnalyzeController {
     ldaTopics: number,
     tfIdfKeywords: number,
     networkTopNodes: number,
+    topics: string,
   ) => {
+    const removeTopics = Array.from(
+      new Set(
+        topics
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0),
+      ),
+    );
+
     try {
       const d = await this.upsertAnalyze.mutateAsync({
         spacePk: this.spacePk,
         ldaTopics,
         tfIdfKeywords,
         networkTopNodes,
+        removeTopics,
       });
 
       showSuccessToast(this.t('success_analyze'));

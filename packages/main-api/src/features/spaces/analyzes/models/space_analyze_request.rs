@@ -10,6 +10,7 @@ pub struct SpaceAnalyzeRequest {
     pub lda_topics: usize,
     pub tf_idf_keywords: usize,
     pub network_top_nodes: usize,
+    #[serde(default)]
     pub remove_topics: Vec<String>,
     pub analyze_finish: bool,
     #[serde(default)]

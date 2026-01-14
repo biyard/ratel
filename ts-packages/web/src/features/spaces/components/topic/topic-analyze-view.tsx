@@ -7,6 +7,7 @@ import { SpaceAnalyze } from '../../polls/types/space-analyze';
 import { TfIdfChart } from './tf-idf-chart';
 import { NetworkChart } from './network-chart';
 import { AnalyzeNumberField } from './analyze_number_field';
+import { Input } from '@/components/ui/input';
 
 type TopicAnalyzeViewProps = {
   analyze?: SpaceAnalyze;
@@ -16,6 +17,7 @@ type TopicAnalyzeViewProps = {
     ldaTopics: number,
     tfIdfKeywords: number,
     networkTopNodes: number,
+    removeTopics: string,
   ) => void | Promise<{ spacePk: string }>;
 };
 
@@ -34,6 +36,7 @@ export function TopicAnalyzeView({
   const [topicCount, setTopicCount] = React.useState<number>(5);
   const [tfIdfCount, setTfIdfCount] = React.useState<number>(10);
   const [networkTopNodes, setNetworkTopNodes] = React.useState<number>(30);
+  const [removeTopics, setRemoveTopics] = React.useState<string>('');
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState(false);
@@ -72,6 +75,13 @@ export function TopicAnalyzeView({
     setNetworkTopNodes(clampNetwork(n > 0 ? n : 30));
   }, [analyze?.network?.nodes]);
 
+  React.useEffect(() => {
+    const arr = Array.isArray(analyze?.remove_topics)
+      ? analyze!.remove_topics
+      : [];
+    setRemoveTopics(arr.join(','));
+  }, [analyze?.remove_topics]);
+
   const onConfirm = async () => {
     const n = clamp(Number(topicCount) || 1);
     const m = clampTfIdf(Number(tfIdfCount) || 10);
@@ -80,7 +90,7 @@ export function TopicAnalyzeView({
     try {
       setSubmitError(false);
       setIsSubmitting(true);
-      await Promise.resolve(handleUpsertAnalyze?.(n, m, k));
+      await Promise.resolve(handleUpsertAnalyze?.(n, m, k, removeTopics));
     } catch {
       setSubmitError(true);
     } finally {
@@ -131,6 +141,20 @@ export function TopicAnalyzeView({
               fallbackOnBlur={30}
               disabled={pending || !allowRequest}
             />
+
+            <div className="flex flex-col w-full gap-2">
+              <div className="text-sm font-medium text-text-primary">
+                {t('excluded_topics')}
+              </div>
+              <Input
+                type="text"
+                value={removeTopics}
+                disabled={pending || !allowRequest}
+                onChange={(e) => setRemoveTopics(e.target.value)}
+                placeholder={t('excluded_topics_hint')}
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
           </div>
 
           {submitError && (
