@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { cn } from '@/lib/utils';
 import { TopicAnalyzeView } from '@/features/spaces/components/topic/topic-analyze-view';
-import { ReportDraftPanel } from './report-draft';
+import { ReportDraft } from './report-draft';
 
 type TabKey = 'response' | 'topic' | 'report';
 
@@ -112,7 +112,7 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
         />
       )}
 
-      {showTabs && tab === 'report' && <ReportDraftPanel />}
+      {showTabs && tab === 'report' && <ReportDraft analyze={ctrl.analyze} />}
 
       {ctrl.space.spaceType === SpaceType.Deliberation && (
         <div className="flex w-full flex-row justify-end">
