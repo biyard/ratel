@@ -12,6 +12,9 @@ export class SpaceAnalyze {
   public network?: NetworkGraph;
   public tf_idf?: TfIdf[];
   public remove_topics?: string[];
+  public lda_count?: number;
+  public tf_idf_count?: number;
+  public network_count?: number;
 
   public html_contents?: string;
   public metadata_url?: string;
@@ -49,5 +52,12 @@ export class SpaceAnalyze {
     this.remove_topics = Array.isArray(json?.remove_topics)
       ? json?.remove_topics
       : [];
+
+    this.lda_count =
+      typeof json?.lda_count === 'number' ? json.lda_count : undefined;
+    this.tf_idf_count =
+      typeof json?.tf_idf_count === 'number' ? json.tf_idf_count : undefined;
+    this.network_count =
+      typeof json?.network_count === 'number' ? json.network_count : undefined;
   }
 }
