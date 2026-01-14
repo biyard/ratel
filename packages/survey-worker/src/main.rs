@@ -96,7 +96,7 @@ async fn main() -> Result<(), LambdaError> {
             lda_topics: 5,
             tf_idf_keywords: 100,
             network_top_nodes: 30,
-            remove_keywords: vec![],
+            remove_keywords: vec!["성이해".to_string()],
         })?,
     };
 
@@ -311,19 +311,21 @@ async fn upsert_analyze(state: &AppState, evt: &UpsertAnalyzeEvent) -> Result<()
                 }
             }
 
+            let topics = request.clone().remove_topics;
+
             let mut lda_config = LdaConfigV1::default();
             lda_config.num_topics = request.lda_topics;
-            let lda = run_lda(&post_comments, lda_config)?;
+            let lda = run_lda(&post_comments, lda_config, &topics)?;
 
             let mut tfidf_config = TfidfConfigV1::default();
             tfidf_config.max_features = request.tf_idf_keywords;
-            let tf_idf = run_tfidf(&post_comments, tfidf_config)?;
+            let tf_idf = run_tfidf(&post_comments, tfidf_config, &topics)?;
 
             let mut network_config = NetworkConfigV1::default();
             network_config.top_nodes = request.network_top_nodes;
-            let network = run_network(&post_comments, network_config)?;
+            let network = run_network(&post_comments, network_config, &topics)?;
 
-            let analyze = SpaceAnalyze::new(space_pk.clone(), lda, network, tf_idf);
+            let analyze = SpaceAnalyze::new(space_pk.clone(), lda, network, tf_idf, topics);
 
             request.set_analyze_finish(true);
             let txs = vec![
