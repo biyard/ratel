@@ -1,8 +1,7 @@
-use crate::controllers::v3::spaces::dto::*;
+use crate::types::File;
 use crate::features::spaces::files::SpaceFile;
-use crate::models::space::SpaceCommon;
-use crate::models::user::User;
 use crate::utils::aws::BedrockClient;
+use crate::controllers::v3::spaces::dto::*;
 use crate::*;
 
 #[derive(Debug, Clone, serde::Deserialize, JsonSchema)]
@@ -45,23 +44,26 @@ pub async fn ai_chat_handler(
     let (pk, sk) = SpaceFile::keys(&space_pk);
     let files = SpaceFile::get(&dynamo.client, &pk, Some(sk)).await?;
 
-    let files = files.ok_or_else(|| Error::NotFound("Space files not found".to_string()))?;
+    let files: SpaceFile = files.ok_or_else(|| Error::NotFound("Space files not found".to_string()))?;
 
     // Decode file_id to match against file names
     let decoded_file_id = urlencoding::decode(&file_id)
         .map_err(|_| Error::BadRequest("Invalid file ID encoding".to_string()))?;
 
     // Find the file to verify it exists in the space
-    let _file = files
+    let file: &File = files
         .files
         .iter()
         .find(|f| f.name == decoded_file_id.as_ref())
         .ok_or_else(|| Error::NotFound("File not found in space".to_string()))?;
 
+    let file_url = file.url.as_deref().unwrap_or("");
+
     // Build context-aware prompt with file information
     let mut prompt = format!(
-        "Document: {}\nCurrent page: {} of {}\n\n",
+        "Document: {}\nFile URL: {}\nCurrent page: {} of {}\n\n",
         payload.context.file_name,
+        file_url,
         payload.context.current_page,
         payload.context.total_pages
     );
