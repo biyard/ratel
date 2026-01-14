@@ -74,37 +74,33 @@ impl PollScheduler {
         format!("arn:aws:iam::{}:role/{}", self.account_id, role_name)
     }
 
-    pub async fn schedule_start_notification(&self, poll: &Poll, started_at: i64) -> Result<()> {
-        use aws_smithy_types::error::metadata::ProvideErrorMetadata;
-
+    fn should_skip(&self, at_millis: i64, name: &str) -> Result<bool> {
         if self.env == "local" {
-            return Ok(());
-        }
-
-        let now = get_now_timestamp_millis();
-        if started_at <= now {
-            tracing::error!(
-                "schedule_start_notification skipped: started_at({}) <= now({})",
-                started_at,
-                now,
-            );
-            return Ok(());
+            return Ok(true);
         }
 
         if self.account_id.is_empty() {
             tracing::error!("account id is not found");
-            return Ok(());
+            return Ok(true);
         }
 
-        let sk_str = poll.sk.to_string();
-        let schedule_name = Self::sanitize_schedule_name(&format!("poll-start-{}", sk_str));
+        let now = get_now_timestamp_millis();
+        if at_millis <= now {
+            tracing::error!("{} skipped: at_millis({}) <= now({})", name, at_millis, now,);
+            return Ok(true);
+        }
 
-        let start_at: DateTime<Utc> = DateTime::<Utc>::from_timestamp_millis(started_at)
-            .ok_or_else(|| Error::InternalServerError("invalid started_at".into()))?;
+        Ok(false)
+    }
 
-        let start_at_str = start_at.format("%Y-%m-%dT%H:%M:%S").to_string();
-        let schedule_expr = format!("at({})", start_at_str);
+    fn to_at_expression(&self, at_millis: i64) -> Result<String> {
+        let at: DateTime<Utc> = DateTime::<Utc>::from_timestamp_millis(at_millis)
+            .ok_or_else(|| Error::InternalServerError("invalid at_millis".into()))?;
+        let at_str = at.format("%Y-%m-%dT%H:%M:%S").to_string();
+        Ok(format!("at({})", at_str))
+    }
 
+    fn poll_ids(poll: &Poll) -> Result<(String, String)> {
         let space_id = match &poll.pk {
             Partition::Space(id) => id.clone(),
             _ => {
@@ -123,30 +119,43 @@ impl PollScheduler {
             }
         };
 
-        let input_json = serde_json::json!({
-            "space_id": space_id,
-            "survey_id": survey_id,
-        })
-        .to_string();
+        Ok((space_id, survey_id))
+    }
 
-        let ftw = FlexibleTimeWindow::builder()
+    fn make_ftw() -> Result<FlexibleTimeWindow> {
+        FlexibleTimeWindow::builder()
             .mode(FlexibleTimeWindowMode::Off)
             .build()
-            .map_err(|e| Error::InternalServerError(e.to_string()))?;
+            .map_err(|e| Error::InternalServerError(e.to_string()))
+    }
 
-        let eb_params = EventBridgeParameters::builder()
-            .source("ratel.spaces")
-            .detail_type("SurveyFetcher")
+    fn make_eb_params(source: &str, detail_type: &str) -> Result<EventBridgeParameters> {
+        EventBridgeParameters::builder()
+            .source(source)
+            .detail_type(detail_type)
             .build()
-            .map_err(|e| Error::InternalServerError(e.to_string()))?;
+            .map_err(|e| Error::InternalServerError(e.to_string()))
+    }
 
-        let target = Target::builder()
+    fn make_target(&self, eb_params: EventBridgeParameters, input_json: String) -> Result<Target> {
+        Target::builder()
             .arn(self.bus_arn())
             .role_arn(self.scheduler_role_arn())
             .event_bridge_parameters(eb_params)
             .input(input_json)
             .build()
-            .map_err(|e| Error::InternalServerError(e.to_string()))?;
+            .map_err(|e| Error::InternalServerError(e.to_string()))
+    }
+
+    async fn upsert_schedule(
+        &self,
+        schedule_name: String,
+        schedule_expr: String,
+        target: Target,
+    ) -> Result<()> {
+        use aws_smithy_types::error::metadata::ProvideErrorMetadata;
+
+        let ftw = Self::make_ftw()?;
 
         let update_result = self
             .client
@@ -187,6 +196,84 @@ impl PollScheduler {
             })?;
 
         Ok(())
+    }
+
+    async fn schedule_eventbridge(
+        &self,
+        schedule_name_key: &str,
+        at_millis: i64,
+        source: &str,
+        detail_type: &str,
+        detail_json: serde_json::Value,
+    ) -> Result<()> {
+        let skip = self.should_skip(at_millis, schedule_name_key)?;
+        if skip {
+            return Ok(());
+        }
+
+        let schedule_name =
+            Self::sanitize_schedule_name(&format!("{}-{}", detail_type, schedule_name_key));
+        let schedule_expr = self.to_at_expression(at_millis)?;
+
+        let eb_params = Self::make_eb_params(source, detail_type)?;
+        let target = self.make_target(eb_params, detail_json.to_string())?;
+
+        self.upsert_schedule(schedule_name, schedule_expr, target)
+            .await
+    }
+
+    pub async fn schedule_start_notification(&self, poll: &Poll, started_at: i64) -> Result<()> {
+        let (_space_id, survey_id) = Self::poll_ids(poll)?;
+
+        let detail = serde_json::json!({
+            "space_id": match &poll.pk {
+                Partition::Space(id) => id.clone(),
+                _ => return Err(Error::InvalidPartitionKey("Poll must be under Space partition".into())),
+            },
+            "survey_id": survey_id.clone(),
+        });
+
+        self.schedule_eventbridge(
+            &format!("poll-start-{}", survey_id),
+            started_at,
+            "ratel.spaces",
+            "SurveyFetcher",
+            detail,
+        )
+        .await
+    }
+
+    pub async fn schedule_upsert_analyze(
+        &self,
+        space_pk: Partition,
+        lda_topics: usize,
+        tf_idf_keywords: usize,
+        network_top_nodes: usize,
+    ) -> Result<()> {
+        let space_id = match &space_pk {
+            Partition::Space(id) => id.clone(),
+            _ => return Err(Error::InvalidPartitionKey("Not Space Partition".into())),
+        };
+
+        let at_millis = get_now_timestamp_millis() + 10_000;
+        let remove_keywords: Vec<String> = vec![];
+
+        let detail = serde_json::json!({
+            "space_id": space_id,
+            "lda_topics": lda_topics,
+            "tf_idf_keywords": tf_idf_keywords,
+            "network_top_nodes": network_top_nodes,
+            "remove_keywords": remove_keywords,
+        });
+
+        self.schedule_eventbridge(
+            &detail.clone()["space_id"].as_str().unwrap_or("space"),
+            at_millis,
+            "ratel.spaces",
+            "SurveyFetcher",
+            detail,
+        )
+        .await
     }
 }
 

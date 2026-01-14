@@ -162,7 +162,6 @@ impl Default for Config {
             #[cfg(not(feature = "no-secret"))]
             watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL")
                 .expect("You must set WATERMARK_QUEUE_URL"),
-
             portone: PortoneConfig::default(),
             x402: X402Config::default(),
             account_id: option_env!("ACCOUNT_ID").unwrap_or(""),

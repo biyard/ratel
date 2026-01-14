@@ -25,6 +25,7 @@ pub mod validator;
 pub mod wallets;
 
 pub mod aws;
+pub mod reports;
 
 // pub mod mcp_middleware;
 
