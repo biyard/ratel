@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next';
+import { SpaceAnalyze } from '../../types/space-analyze';
 
-export function ReportDraft() {
+export function ReportDraft({ analyze }: { analyze: SpaceAnalyze }) {
   const { t } = useTranslation('SpacePollAnalyze');
+  console.log('analyze: ', analyze);
 
   return (
     <div className="w-full rounded-lg border border-border bg-card p-6">
