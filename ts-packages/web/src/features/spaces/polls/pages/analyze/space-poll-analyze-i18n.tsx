@@ -14,6 +14,7 @@ export const i18nSpacePollAnalyze = {
 
     response_analyze: 'Response Analyze',
     topic_analyze: 'Topic Analyze',
+    report_write: 'Write Report',
 
     btn_edit: 'Edit',
     btn_cancel: 'Cancel',
@@ -41,6 +42,7 @@ export const i18nSpacePollAnalyze = {
     no_topics: 'No topics found.',
     no_tfidf: 'No TF-IDF data found.',
     no_network: 'No network data found.',
+    report_draft_placeholder: 'Report drafting view is under construction.',
   },
   ko: {
     id: 'ID',
@@ -57,6 +59,7 @@ export const i18nSpacePollAnalyze = {
 
     response_analyze: '응답 분석',
     topic_analyze: '토픽 분석',
+    report_write: '보고서 작성',
 
     btn_edit: '수정하기',
     btn_cancel: '취소하기',
@@ -83,5 +86,6 @@ export const i18nSpacePollAnalyze = {
     no_topics: '토픽이 존재하지 않습니다.',
     no_tfidf: 'TF-IDF 데이터가 존재하지 않습니다.',
     no_network: '네트워크 데이터가 존재하지 않습니다.',
+    report_draft_placeholder: '보고서 작성 영역은 준비 중입니다.',
   },
 };
