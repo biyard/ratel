@@ -50,6 +50,13 @@ export function TopicAnalyzeView({
   const hasTfIdf = Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0;
 
   React.useEffect(() => {
+    const count =
+      typeof analyze?.lda_count === 'number' ? analyze.lda_count : undefined;
+    if (typeof count === 'number' && Number.isFinite(count) && count > 0) {
+      setTopicCount(clamp(count));
+      return;
+    }
+
     const list = Array.isArray(analyze?.lda_topics) ? analyze.lda_topics : [];
 
     const uniqTopics = new Set<string>();
@@ -64,16 +71,34 @@ export function TopicAnalyzeView({
   }, [analyze?.lda_topics]);
 
   React.useEffect(() => {
+    const count =
+      typeof analyze?.tf_idf_count === 'number'
+        ? analyze.tf_idf_count
+        : undefined;
+    if (typeof count === 'number' && Number.isFinite(count) && count > 0) {
+      setTfIdfCount(clampTfIdf(count));
+      return;
+    }
+
     const n = Array.isArray(analyze?.tf_idf) ? analyze.tf_idf.length : 0;
     setTfIdfCount(clampTfIdf(n > 0 ? n : 10));
-  }, [analyze?.tf_idf]);
+  }, [analyze?.tf_idf, analyze?.tf_idf_count]);
 
   React.useEffect(() => {
+    const count =
+      typeof analyze?.network_count === 'number'
+        ? analyze.network_count
+        : undefined;
+    if (typeof count === 'number' && Number.isFinite(count) && count > 0) {
+      setNetworkTopNodes(clampNetwork(count));
+      return;
+    }
+
     const n = Array.isArray(analyze?.network?.nodes)
       ? analyze!.network.nodes.length
       : 0;
     setNetworkTopNodes(clampNetwork(n > 0 ? n : 30));
-  }, [analyze?.network?.nodes]);
+  }, [analyze?.network?.nodes, analyze?.network_count]);
 
   React.useEffect(() => {
     const arr = Array.isArray(analyze?.remove_topics)
