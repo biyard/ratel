@@ -10,6 +10,7 @@ import { AnalyzeNumberField } from './analyze_number_field';
 
 type TopicAnalyzeViewProps = {
   analyze?: SpaceAnalyze;
+  analyzeFinish?: boolean;
   handleUpdateLda?: (topics: string[], keywords: string[][]) => void;
   handleUpsertAnalyze?: (
     ldaTopics: number,
@@ -20,6 +21,7 @@ type TopicAnalyzeViewProps = {
 
 export function TopicAnalyzeView({
   analyze,
+  analyzeFinish = true,
   handleUpdateLda,
   handleUpsertAnalyze,
 }: TopicAnalyzeViewProps) {
@@ -87,6 +89,7 @@ export function TopicAnalyzeView({
   };
 
   const pending = isSubmitting;
+  const allowRequest = analyzeFinish !== false;
 
   return (
     <div className="flex flex-col gap-4">
@@ -102,7 +105,7 @@ export function TopicAnalyzeView({
               max={20}
               clamp={clamp}
               fallbackOnBlur={1}
-              disabled={pending}
+              disabled={pending || !allowRequest}
             />
 
             <AnalyzeNumberField
@@ -114,7 +117,7 @@ export function TopicAnalyzeView({
               max={50}
               clamp={clampTfIdf}
               fallbackOnBlur={10}
-              disabled={pending}
+              disabled={pending || !allowRequest}
             />
 
             <AnalyzeNumberField
@@ -126,7 +129,7 @@ export function TopicAnalyzeView({
               max={200}
               clamp={clampNetwork}
               fallbackOnBlur={30}
-              disabled={pending}
+              disabled={pending || !allowRequest}
             />
           </div>
 
@@ -134,11 +137,13 @@ export function TopicAnalyzeView({
             <div className="text-sm text-destructive">{t('analyze_error')}</div>
           )}
 
-          <div className="flex flex-row w-full justify-end items-end">
-            <Button variant="primary" onClick={onConfirm} disabled={pending}>
-              {pending ? t('analyzing') : t('confirm')}
-            </Button>
-          </div>
+          {allowRequest && (
+            <div className="flex flex-row w-full justify-end items-end">
+              <Button variant="primary" onClick={onConfirm} disabled={pending}>
+                {pending ? t('analyzing') : t('confirm')}
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
 
