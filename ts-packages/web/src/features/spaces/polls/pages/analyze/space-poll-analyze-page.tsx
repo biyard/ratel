@@ -106,7 +106,6 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
           analyze={ctrl.analyze}
           handleUpdateLda={ctrl.handleUpdateLda}
           handleUpsertAnalyze={ctrl.handleUpsertAnalyze}
-          handleDownloadAnalyze={ctrl.handleDownloadAnalyze}
         />
       )}
 
@@ -114,6 +113,7 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
         <ReportDraft
           analyze={ctrl.analyze}
           handleUpdateHtmlContents={ctrl.handleUpdateHtmlContents}
+          handleDownloadAnalyze={ctrl.handleDownloadAnalyze}
         />
       )}
 
