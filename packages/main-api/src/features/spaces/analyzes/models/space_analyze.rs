@@ -9,16 +9,11 @@ pub struct SpaceAnalyze {
     pub created_at: i64,
 
     pub lda_topics: Vec<TopicRow>,
-    #[serde(default)]
-    pub lda_html_contents: Option<String>,
-
     pub network: NetworkGraph,
-    #[serde(default)]
-    pub network_html_contents: Option<String>,
-
     pub tf_idf: Vec<TfidfRow>,
+
     #[serde(default)]
-    pub tf_idf_html_contents: Option<String>,
+    pub html_contents: Option<String>,
 
     #[serde(default)]
     pub metadata_url: Option<String>,
@@ -38,12 +33,10 @@ impl SpaceAnalyze {
             sk: EntityType::SpaceAnalyze,
             created_at: now,
             lda_topics,
-            lda_html_contents: None,
             network,
-            network_html_contents: None,
             tf_idf,
-            tf_idf_html_contents: None,
 
+            html_contents: None,
             metadata_url: None,
         }
     }
