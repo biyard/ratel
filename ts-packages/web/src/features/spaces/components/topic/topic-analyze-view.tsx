@@ -7,7 +7,6 @@ import { SpaceAnalyze } from '../../polls/types/space-analyze';
 import { TfIdfChart } from './tf-idf-chart';
 import { NetworkChart } from './network-chart';
 import { AnalyzeNumberField } from './analyze_number_field';
-import { config } from '@/config';
 
 type TopicAnalyzeViewProps = {
   analyze?: SpaceAnalyze;
@@ -17,14 +16,12 @@ type TopicAnalyzeViewProps = {
     tfIdfKeywords: number,
     networkTopNodes: number,
   ) => void | Promise<{ spacePk: string }>;
-  handleDownloadAnalyze?: () => void | Promise<{ spacePk: string }>;
 };
 
 export function TopicAnalyzeView({
   analyze,
   handleUpdateLda,
   handleUpsertAnalyze,
-  handleDownloadAnalyze,
 }: TopicAnalyzeViewProps) {
   const { t } = useTranslation('SpacePollAnalyze');
 
@@ -39,8 +36,6 @@ export function TopicAnalyzeView({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState(false);
 
-  const [isDownloading, setIsDownloading] = React.useState(false);
-
   const hasLda =
     Array.isArray(analyze?.lda_topics) && analyze.lda_topics.length > 0;
   const hasNetwork =
@@ -48,7 +43,6 @@ export function TopicAnalyzeView({
     Array.isArray(analyze?.network?.nodes) &&
     analyze.network.nodes.length > 0;
   const hasTfIdf = Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0;
-  const showDownload = (hasLda || hasNetwork || hasTfIdf) && config.experiment;
 
   React.useEffect(() => {
     const list = Array.isArray(analyze?.lda_topics) ? analyze.lda_topics : [];
@@ -92,31 +86,10 @@ export function TopicAnalyzeView({
     }
   };
 
-  const onDownload = async () => {
-    try {
-      setIsDownloading(true);
-      await Promise.resolve(handleDownloadAnalyze?.());
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
   const pending = isSubmitting;
 
   return (
     <div className="flex flex-col gap-4">
-      {showDownload && (
-        <div className="flex flex-row w-full justify-end">
-          <Button
-            variant="primary"
-            onClick={onDownload}
-            disabled={isDownloading}
-          >
-            {isDownloading ? t('downloading') : t('download_analyze')}
-          </Button>
-        </div>
-      )}
-
       <Card key="topic-analyze-setting">
         <div className="flex flex-col w-full gap-4">
           <div className="flex flex-col w-full gap-4">
