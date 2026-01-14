@@ -35,6 +35,8 @@ export const i18nSpacePollAnalyze = {
       'error occurred during topic analysis. Please try again later.',
     number_of_network_top_nodes: 'Number of Network Top Nodes',
     network_top_nodes_input_hint: 'Please enter a number between 1 and 30.',
+    excluded_topics: 'Excluded Topics',
+    excluded_topics_hint: 'Please enter excluded topics.',
 
     report_draft_editor_placeholder: 'Please enter the report contents.',
     network: 'Network',
@@ -80,6 +82,8 @@ export const i18nSpacePollAnalyze = {
     analyze_error: '분석에 실패했습니다. 잠시 후 다시 시도해주세요.',
     number_of_network_top_nodes: '네트워크 상위 노드 개수',
     network_top_nodes_input_hint: '1~30 사이로 입력해주세요.',
+    excluded_topics: '제외된 토픽',
+    excluded_topics_hint: '제외 토픽을 입력해주세요.',
 
     report_draft_editor_placeholder: 'Report 보고서 내용을 입력해주세요.',
     network: '네트워크',

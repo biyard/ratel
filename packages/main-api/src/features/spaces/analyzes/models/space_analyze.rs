@@ -11,6 +11,7 @@ pub struct SpaceAnalyze {
     pub lda_topics: Vec<TopicRow>,
     pub network: NetworkGraph,
     pub tf_idf: Vec<TfidfRow>,
+    #[serde(default)]
     pub remove_topics: Vec<String>,
 
     #[serde(default)]

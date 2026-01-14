@@ -11,6 +11,7 @@ export class SpaceAnalyze {
   public lda_topics?: TopicRow[];
   public network?: NetworkGraph;
   public tf_idf?: TfIdf[];
+  public remove_topics?: string[];
 
   public html_contents?: string;
   public metadata_url?: string;
@@ -44,5 +45,9 @@ export class SpaceAnalyze {
     this.html_contents = String(json?.html_contents ?? '');
     this.metadata_url = String(json?.metadata_url ?? '');
     this.analyze_finish = json?.analyze_finish ?? false;
+
+    this.remove_topics = Array.isArray(json?.remove_topics)
+      ? json?.remove_topics
+      : [];
   }
 }
