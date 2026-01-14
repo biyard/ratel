@@ -105,14 +105,17 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
         <TopicAnalyzeView
           analyze={ctrl.analyze}
           handleUpdateLda={ctrl.handleUpdateLda}
-          handleUpdateNetwork={ctrl.handleUpdateNetwork}
-          handleUpdateTfIdf={ctrl.handleUpdateTfIdf}
           handleUpsertAnalyze={ctrl.handleUpsertAnalyze}
           handleDownloadAnalyze={ctrl.handleDownloadAnalyze}
         />
       )}
 
-      {showTabs && tab === 'report' && <ReportDraft analyze={ctrl.analyze} />}
+      {showTabs && tab === 'report' && (
+        <ReportDraft
+          analyze={ctrl.analyze}
+          handleUpdateHtmlContents={ctrl.handleUpdateHtmlContents}
+        />
+      )}
 
       {ctrl.space.spaceType === SpaceType.Deliberation && (
         <div className="flex w-full flex-row justify-end">

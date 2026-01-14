@@ -25,6 +25,8 @@ export interface EnabledFeatures {
   tfidf: boolean;
 }
 
+export type AnalyzeMode = 'lda' | 'network' | 'tfidf' | null;
+
 export type UploadResult = { url: string };
 
 /**
@@ -53,6 +55,7 @@ export interface TiptapEditorProps {
   editorClassName?: string;
   minHeight?: string;
   maxHeight?: string;
+  overlay?: React.ReactNode;
 
   // Focus state
   onFocus?: () => void;

@@ -11,13 +11,7 @@ import { config } from '@/config';
 
 type TopicAnalyzeViewProps = {
   analyze?: SpaceAnalyze;
-  handleUpdateLda?: (
-    topics: string[],
-    keywords: string[][],
-    htmlContents?: string,
-  ) => void;
-  handleUpdateNetwork?: (htmlContents?: string) => void;
-  handleUpdateTfIdf?: (htmlContents?: string) => void;
+  handleUpdateLda?: (topics: string[], keywords: string[][]) => void;
   handleUpsertAnalyze?: (
     ldaTopics: number,
     tfIdfKeywords: number,
@@ -29,8 +23,6 @@ type TopicAnalyzeViewProps = {
 export function TopicAnalyzeView({
   analyze,
   handleUpdateLda,
-  handleUpdateNetwork,
-  handleUpdateTfIdf,
   handleUpsertAnalyze,
   handleDownloadAnalyze,
 }: TopicAnalyzeViewProps) {
@@ -182,7 +174,6 @@ export function TopicAnalyzeView({
           <LdaTopicTable
             t={t}
             ldaTopics={analyze?.lda_topics}
-            htmlContents={analyze?.lda_html_contents}
             handleUpdateLda={handleUpdateLda}
           />
         </Card>
@@ -190,12 +181,7 @@ export function TopicAnalyzeView({
 
       {hasNetwork && (
         <Card key="network-chart">
-          <NetworkChart
-            t={t}
-            network={analyze?.network}
-            htmlContents={analyze?.network_html_contents}
-            handleUpdateNetwork={handleUpdateNetwork}
-          />
+          <NetworkChart t={t} network={analyze?.network} />
         </Card>
       )}
 
@@ -203,10 +189,9 @@ export function TopicAnalyzeView({
         <Card key="tf-idf-chart">
           <TfIdfChart
             t={t}
+            isHtml={true}
             tf_idf={analyze?.tf_idf}
             limit={analyze?.tf_idf.length}
-            htmlContents={analyze?.tf_idf_html_contents}
-            handleUpdateTfIdf={handleUpdateTfIdf}
           />
         </Card>
       )}

@@ -35,11 +35,11 @@ pub async fn download_analyze_handler(
     let analyze = analyze.unwrap();
     let pdf_bytes = build_space_report_pdf(
         &analyze.lda_topics,
-        analyze.lda_html_contents.unwrap_or_default(),
+        "".to_string(),
         analyze.network,
-        analyze.network_html_contents.unwrap_or_default(),
+        "".to_string(),
         &analyze.tf_idf,
-        analyze.tf_idf_html_contents.unwrap_or_default(),
+        "".to_string(),
     )
     .await?;
     let (_key, uri) = upload_report_pdf_to_s3(pdf_bytes).await?;

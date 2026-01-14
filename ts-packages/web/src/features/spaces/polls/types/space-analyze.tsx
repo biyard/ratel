@@ -6,14 +6,14 @@ export class SpaceAnalyze {
   public pk: string;
   public sk: string;
 
+  public created_at?: number;
+
   public lda_topics?: TopicRow[];
-  public lda_html_contents?: string;
-
   public network?: NetworkGraph;
-  public network_html_contents?: string;
-
   public tf_idf?: TfIdf[];
-  public tf_idf_html_contents?: string;
+
+  public html_contents?: string;
+  public metadata_url?: string;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
@@ -30,9 +30,6 @@ export class SpaceAnalyze {
     this.pk = String(json?.pk ?? '');
     this.sk = String(json?.sk ?? '');
     this.lda_topics = lda_topics;
-    this.lda_html_contents = String(json?.lda_html_contents ?? '');
-    this.network_html_contents = String(json?.network_html_contents ?? '');
-    this.tf_idf_html_contents = String(json?.tf_idf_html_contents ?? '');
     this.tf_idf = tf_idf;
 
     if (network) {
@@ -42,5 +39,8 @@ export class SpaceAnalyze {
     } else {
       this.network = undefined;
     }
+
+    this.html_contents = String(json?.html_contents ?? '');
+    this.metadata_url = String(json?.metadata_url ?? '');
   }
 }

@@ -4,7 +4,7 @@ import { call } from '@/lib/api/ratel/call';
 import { SpaceAnalyze } from '../types/space-analyze';
 import { optimisticUpdate } from '@/lib/hook-utils';
 
-export function useUpdateTfIdfMutation<
+export function useUpdateContentsMutation<
   T extends SpaceAnalyze = SpaceAnalyze,
 >() {
   const qc = useQueryClient();
@@ -15,13 +15,13 @@ export function useUpdateTfIdfMutation<
       htmlContents,
     }: {
       spacePk: string;
-      htmlContents?: string;
+      htmlContents: string;
     }) => {
       await call(
         'PATCH',
         `/v3/spaces/${encodeURIComponent(spacePk)}/analyzes`,
         {
-          tf_idf_html_contents: htmlContents,
+          html_contents: htmlContents,
         },
       );
 
