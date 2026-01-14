@@ -14,6 +14,7 @@ export class SpaceAnalyze {
 
   public html_contents?: string;
   public metadata_url?: string;
+  public analyze_finish?: boolean;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
@@ -42,5 +43,6 @@ export class SpaceAnalyze {
 
     this.html_contents = String(json?.html_contents ?? '');
     this.metadata_url = String(json?.metadata_url ?? '');
+    this.analyze_finish = json?.analyze_finish ?? false;
   }
 }
