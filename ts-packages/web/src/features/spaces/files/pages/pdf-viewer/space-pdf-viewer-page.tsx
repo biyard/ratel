@@ -36,11 +36,8 @@ export function SpacePdfViewerPage() {
   const { data: space } = useSpaceById(spacePk);
   const { data: fileResponse } = useFileSpace(spacePk);
 
-  // Decode the fileId (which is the filename encoded)
-  const decodedFileId = decodeURIComponent(fileId);
-
-  // Find the file by name
-  const file = fileResponse.files.find((f) => f.name === decodedFileId);
+  // Find the file by its ID
+  const file = fileResponse.files.find((f) => f.id === fileId);
 
   // Chat state
   const { chatState, setChatState, sidebarWidth, setSidebarWidth } =
