@@ -1,4 +1,5 @@
 use crate::features::spaces::analyzes::SpaceAnalyze;
+use crate::features::spaces::analyzes::SpaceAnalyzeRequest;
 use crate::features::spaces::boards::models::space_post::SpacePost;
 use crate::features::spaces::boards::models::space_post_comment::SpacePostComment;
 use crate::models::SpaceCommon;
@@ -25,7 +26,7 @@ pub struct UpsertAnalyzeRequest {
 }
 
 pub async fn upsert_analyze_handler(
-    State(AppState { .. }): State<AppState>,
+    State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     Json(req): Json<UpsertAnalyzeRequest>,
@@ -41,12 +42,19 @@ pub async fn upsert_analyze_handler(
 
     scheduler
         .schedule_upsert_analyze(
-            space_pk,
+            space_pk.clone(),
             req.lda_topics,
             req.tf_idf_keywords,
             req.network_top_nodes,
         )
         .await?;
 
+    let request = SpaceAnalyzeRequest::new(
+        space_pk.clone(),
+        req.lda_topics,
+        req.tf_idf_keywords,
+        req.network_top_nodes,
+    );
+    request.create(&dynamo.client).await?;
     Ok(Json(SpaceAnalyze::default()))
 }

@@ -130,6 +130,7 @@ pub enum EntityType {
     //SPACE FEATURE
     SpaceFile,
     SpaceAnalyze,
+    SpaceAnalyzeRequest(String),
     SpaceDiscussion(String),
     SpaceDiscussionMember(String, String),
     SpaceDiscussionParticipant(String, String),
