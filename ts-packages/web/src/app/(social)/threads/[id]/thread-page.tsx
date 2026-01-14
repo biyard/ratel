@@ -2,9 +2,21 @@ import { useThreadController } from './use-thread-controller';
 import ThreadHeader from './_components/thread-header';
 import ThreadComment from './_components/comment';
 import ThreadPost from './_components/thread';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router';
 
 export default function ThreadPage() {
   const ctrl = useThreadController();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash === '#comments') {
+      setTimeout(() => {
+        const element = document.getElementById('comments');
+        element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [location.hash]);
 
   return (
     <>

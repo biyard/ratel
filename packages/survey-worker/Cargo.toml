@@ -18,6 +18,7 @@ aws-config = "1"
 aws-sdk-dynamodb = "1"
 bdk = { workspace = true, features = ["be"] }
 main-api = { path = "../main-api", features = ["model-only"] }
+futures = "0.3.31"
 
 [features]
 default = []

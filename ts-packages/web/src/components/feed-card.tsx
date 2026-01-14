@@ -44,6 +44,10 @@ export default function FeedCard(props: FeedCardProps) {
   const { post } = props;
 
   const [isProcessing, setIsProcessing] = useState(false);
+  // Local state for optimistic updates
+  const [optimisticLiked, setOptimisticLiked] = useState(post.liked);
+  const [optimisticLikes, setOptimisticLikes] = useState(post.likes);
+  
   const { data: user } = useUserInfo();
   const isLoggedIn = user !== null;
   const popup = usePopup();
@@ -51,16 +55,29 @@ export default function FeedCard(props: FeedCardProps) {
 
   const likePost = useLikePostMutation().mutateAsync;
 
+  // Sync local state with props when they change (from cache updates)
+  useEffect(() => {
+    setOptimisticLiked(post.liked);
+    setOptimisticLikes(post.likes);
+  }, [post.liked, post.likes]);
+
   const handleLike = async (value: boolean) => {
     if (!isLoggedIn) {
       popup
         .open(<LoginModal />)
         .withTitle('Join the Movement')
         .withoutBackdropClose();
+      return;
     }
     if (isProcessing) return; // Prevent multiple clicks
 
-    // Set processing state and optimistic update
+    // Optimistic update - update UI immediately
+    const previousLiked = optimisticLiked;
+    const previousLikes = optimisticLikes;
+    const delta = value ? 1 : -1;
+    
+    setOptimisticLiked(value);
+    setOptimisticLikes(Math.max(0, optimisticLikes + delta));
     setIsProcessing(true);
 
     try {
@@ -72,8 +89,10 @@ export default function FeedCard(props: FeedCardProps) {
       // Success - trigger callbacks
       props.onLikeClick?.(value);
     } catch (error) {
-      // Revert optimistic update on error
+      // Rollback optimistic update on error
       console.error('Failed to update like:', error);
+      setOptimisticLiked(previousLiked);
+      setOptimisticLikes(previousLikes);
     } finally {
       setIsProcessing(false);
     }
@@ -128,14 +147,16 @@ export default function FeedCard(props: FeedCardProps) {
         <FeedBody post={post} onEdit={handleEditPost(post.pk)} />
       </NavLink>
       <FeedFooter
+        post_pk={post.pk}
+        href={href}
         space_id={post.space_pk}
         space_type={post.space_type}
         booster_type={post.booster}
-        likes={post.likes}
+        likes={optimisticLikes}
         comments={post.comments}
         rewards={post.rewards || 0}
         shares={post.shares}
-        is_liked={post.liked}
+        is_liked={optimisticLiked}
         isLikeProcessing={isProcessing}
         onLikeClick={handleLike}
         onRepostThought={handleRepostThought}
@@ -371,6 +392,8 @@ export function JoinNowButton({ onClick }: { onClick: () => void }) {
 }
 
 interface FeedFooterProps {
+  post_pk: string;
+  href: string;
   space_id?: string;
   space_type?: SpaceType;
   booster_type?: BoosterType;
@@ -386,6 +409,8 @@ interface FeedFooterProps {
 }
 
 export function FeedFooter({
+  post_pk,
+  href,
   space_id,
   space_type,
   booster_type,
@@ -474,7 +499,13 @@ export function FeedFooter({
           />
           {convertNumberToString(likes)}
         </IconText>
-        <IconText>
+        <IconText
+          onClick={(evt) => {
+            evt.stopPropagation();
+            nav(`${href}#comments`);
+          }}
+          className="cursor-pointer"
+        >
           <CommentIcon />
           {convertNumberToString(comments)}
         </IconText>

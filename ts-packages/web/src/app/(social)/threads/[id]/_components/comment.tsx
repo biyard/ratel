@@ -26,7 +26,7 @@ export default function ThreadComment({
 }: ThreadCommentProps) {
   return (
     <>
-      <div className="flex flex-col gap-2.5">
+      <div id="comments" className="flex flex-col gap-2.5">
         <div className="flex flex-row text-text-primary gap-2 ">
           <CommentIcon
             width={24}
