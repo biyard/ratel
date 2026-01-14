@@ -28,7 +28,7 @@ pub struct AiChatResponse {
 pub async fn ai_chat_handler(
     State(AppState { dynamo, s3: _, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
-    Path((space_pk, file_id)): Path<(Partition, String)>,
+    Path((space_pk, file_id)): Path<(Partition, String)>, // file_id is the unique file ID (UUID)
     Json(payload): Json<AiChatRequest>,
 ) -> Result<Json<AiChatResponse>> {
     // Verify space access
@@ -46,15 +46,11 @@ pub async fn ai_chat_handler(
 
     let files: SpaceFile = files.ok_or_else(|| Error::NotFound("Space files not found".to_string()))?;
 
-    // Decode file_id to match against file names
-    let decoded_file_id = urlencoding::decode(&file_id)
-        .map_err(|_| Error::BadRequest("Invalid file ID encoding".to_string()))?;
-
-    // Find the file to verify it exists in the space
+    // Find the file by its unique ID
     let file: &File = files
         .files
         .iter()
-        .find(|f| f.name == decoded_file_id.as_ref())
+        .find(|f| f.id == file_id)
         .ok_or_else(|| Error::NotFound("File not found in space".to_string()))?;
 
     let file_url = file.url.as_deref().unwrap_or("");

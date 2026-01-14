@@ -50,7 +50,7 @@ export default function SpaceFileViewer({ files }: SpaceFilesProps) {
                   if (isPdf(file.ext)) {
                     // Navigate to PDF viewer page
                     if (spacePk) {
-                      navigate(route.spacePdfViewer(spacePk, file.name));
+                      navigate(route.spacePdfViewer(spacePk, file.id));
                     }
                   }
                 }}
