@@ -36,6 +36,7 @@ export const i18nSpacePollAnalyze = {
     number_of_network_top_nodes: 'Number of Network Top Nodes',
     network_top_nodes_input_hint: 'Please enter a number between 1 and 30.',
 
+    report_draft_editor_placeholder: 'Please enter the report contents.',
     network: 'Network',
     topic: 'Topic',
     keywords: 'Keywords',
@@ -80,6 +81,7 @@ export const i18nSpacePollAnalyze = {
     number_of_network_top_nodes: '네트워크 상위 노드 개수',
     network_top_nodes_input_hint: '1~30 사이로 입력해주세요.',
 
+    report_draft_editor_placeholder: 'Report 보고서 내용을 입력해주세요.',
     network: '네트워크',
     topic: '토픽',
     keywords: '키워드',

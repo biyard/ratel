@@ -43,6 +43,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       variant = 'default',
       showToolbar = true,
       toolbarPosition = 'top',
+      onClickLda,
+      onClickNetwork,
+      onClickTfidf,
       enabledFeatures = DEFAULT_ENABLED_FEATURES,
       className,
       toolbarClassName,
@@ -251,6 +254,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
             onUploadPDF={onUploadPDF}
+            onClickLda={onClickLda}
+            onClickNetwork={onClickNetwork}
+            onClickTfidf={onClickTfidf}
           />
         )}
 
@@ -352,6 +358,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
             onUploadPDF={onUploadPDF}
+            onClickLda={onClickLda}
+            onClickNetwork={onClickNetwork}
+            onClickTfidf={onClickTfidf}
           />
         )}
       </div>
