@@ -81,26 +81,9 @@ export class RegionalServiceStack extends Stack {
         DISABLE_ANSI: "true",
         NO_COLOR: "true",
         GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
-        ...(chromiumLayerArn
-          ? {
-              CHROME_PATH: "/opt/headless-chromium/headless-chromium",
-              CHROME_BIN: "/opt/headless-chromium/headless-chromium",
-              PUPPETEER_EXECUTABLE_PATH:
-                "/opt/headless-chromium/headless-chromium",
-              HOME: "/tmp",
-              FONTCONFIG_PATH: "/opt/headless-chromium/.fontconfig",
-              XDG_CACHE_HOME: "/tmp",
-              TMPDIR: "/tmp",
-            }
-          : {
-              REPORT_RENDER_DISABLED: "true",
-            }),
       },
-      memorySize: 1024,
-      timeout: cdk.Duration.seconds(120),
-      ephemeralStorageSize: cdk.Size.mebibytes(1024),
-      architecture: lambda.Architecture.X86_64,
-      layers: chromiumLayer ? [chromiumLayer] : [],
+      memorySize: 128,
+      timeout: cdk.Duration.seconds(30),
     });
 
     const startSurveyLambda = new lambda.Function(
@@ -114,10 +97,26 @@ export class RegionalServiceStack extends Stack {
           REGION: this.region,
           DISABLE_ANSI: "true",
           NO_COLOR: "true",
+          ...(chromiumLayerArn
+            ? {
+                CHROME_PATH: "/opt/headless-chromium/headless-chromium",
+                CHROME_BIN: "/opt/headless-chromium/headless-chromium",
+                PUPPETEER_EXECUTABLE_PATH:
+                  "/opt/headless-chromium/headless-chromium",
+                HOME: "/tmp",
+                FONTCONFIG_PATH: "/opt/headless-chromium/.fontconfig",
+                XDG_CACHE_HOME: "/tmp",
+                TMPDIR: "/tmp",
+              }
+            : {
+                REPORT_RENDER_DISABLED: "true",
+              }),
         },
-        memorySize: 256,
+        memorySize: 1024,
         timeout: Duration.seconds(150),
+        ephemeralStorageSize: cdk.Size.mebibytes(1024),
         architecture: lambda.Architecture.X86_64,
+        layers: chromiumLayer ? [chromiumLayer] : [],
       }
     );
 
