@@ -46,16 +46,31 @@ export class RegionalServiceStack extends Stack {
       domainName: baseDomain,
     });
 
-    const chromiumLayerArn = process.env.CHROMIUM_LAYER_ARN;
-    if (!chromiumLayerArn) {
-      throw new Error("CHROMIUM_LAYER_ARN is required");
+    const region = cdk.Stack.of(this).region;
+
+    const chromiumLayerMapRaw = process.env.CHROMIUM_LAYER_ARNS_JSON ?? "";
+    let chromiumLayerArn: string | undefined;
+
+    if (chromiumLayerMapRaw.trim().length > 0) {
+      const parsed = JSON.parse(chromiumLayerMapRaw) as Record<string, string>;
+      const v = parsed[region];
+      if (typeof v === "string" && v.trim().length > 0) {
+        chromiumLayerArn = v.trim();
+      }
+    } else if (
+      process.env.CHROMIUM_LAYER_ARN &&
+      process.env.CHROMIUM_LAYER_ARN.trim().length > 0
+    ) {
+      chromiumLayerArn = process.env.CHROMIUM_LAYER_ARN.trim();
     }
 
-    const chromiumLayer = lambda.LayerVersion.fromLayerVersionArn(
-      this,
-      "ChromiumLayer",
-      chromiumLayerArn
-    );
+    const chromiumLayer = chromiumLayerArn
+      ? lambda.LayerVersion.fromLayerVersionArn(
+          this,
+          "ChromiumLayer",
+          chromiumLayerArn
+        )
+      : undefined;
 
     const apiLambda = new lambda.Function(this, "Function", {
       runtime: lambda.Runtime.PROVIDED_AL2023,
@@ -66,19 +81,26 @@ export class RegionalServiceStack extends Stack {
         DISABLE_ANSI: "true",
         NO_COLOR: "true",
         GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
-        CHROME_PATH: "/opt/headless-chromium/headless-chromium",
-        CHROME_BIN: "/opt/headless-chromium/headless-chromium",
-        PUPPETEER_EXECUTABLE_PATH: "/opt/headless-chromium/headless-chromium",
-        HOME: "/tmp",
-        FONTCONFIG_PATH: "/opt/headless-chromium/.fontconfig",
-        XDG_CACHE_HOME: "/tmp",
-        TMPDIR: "/tmp",
+        ...(chromiumLayerArn
+          ? {
+              CHROME_PATH: "/opt/headless-chromium/headless-chromium",
+              CHROME_BIN: "/opt/headless-chromium/headless-chromium",
+              PUPPETEER_EXECUTABLE_PATH:
+                "/opt/headless-chromium/headless-chromium",
+              HOME: "/tmp",
+              FONTCONFIG_PATH: "/opt/headless-chromium/.fontconfig",
+              XDG_CACHE_HOME: "/tmp",
+              TMPDIR: "/tmp",
+            }
+          : {
+              REPORT_RENDER_DISABLED: "true",
+            }),
       },
       memorySize: 1024,
       timeout: cdk.Duration.seconds(120),
       ephemeralStorageSize: cdk.Size.mebibytes(1024),
       architecture: lambda.Architecture.X86_64,
-      layers: [chromiumLayer],
+      layers: chromiumLayer ? [chromiumLayer] : [],
     });
 
     const startSurveyLambda = new lambda.Function(
@@ -208,7 +230,6 @@ export class RegionalServiceStack extends Stack {
       domainName: domainName,
     });
 
-    const region = this.region;
     const rid = region;
 
     // Latency-based routing for multi-region deployment
