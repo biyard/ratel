@@ -146,7 +146,8 @@ pub enum EntityType {
 
     // Membership
     Membership,
-    UserMembership, // PK: {USER_PK}, SK: UserMembership
+    UserMembership,  // PK: {USER_PK}, SK: UserMembership
+    TeamMembership,  // PK: {TEAM_PK}, SK: TeamMembership
 
     // ServiceAdmin
     ServiceAdmin, // PK: SERVICE_ADMIN#{USER_PK}, SK: ServiceAdmin
@@ -161,8 +162,10 @@ pub enum EntityType {
 
     // Payment features
     UserPayment,
+    TeamPayment,
     Purchase,
     UserPurchase(String),
+    TeamPurchase(String),
 
     Notification(String), // notification id
 
