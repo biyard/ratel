@@ -1,8 +1,9 @@
-use crate::features::membership::UserMembership;
+use crate::features::membership::{PaymentEntity, UserMembership};
 use crate::features::payment::*;
-use crate::services::portone::{PaymentCancelScheduleResponse, PortOne};
+use crate::services::portone::{Currency, PaymentCancelScheduleResponse, PortOne};
 use crate::types::*;
 use crate::*;
+use aws_sdk_dynamodb::types::TransactWriteItem;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default, JsonSchema, OperationIo)]
 pub struct UserPayment {
@@ -195,5 +196,51 @@ impl UserPayment {
         }
 
         Ok(res)
+    }
+}
+
+impl PaymentEntity for UserPayment {
+    type Purchase = UserPurchase;
+
+    async fn purchase(
+        &self,
+        portone: &PortOne,
+        tx_type: TransactionType,
+        amount: i64,
+        currency: Currency,
+    ) -> crate::Result<Self::Purchase> {
+        UserPayment::purchase(self, portone, tx_type, amount, currency).await
+    }
+
+    async fn schedule_next_membership_purchase(
+        &self,
+        portone: &PortOne,
+        tx_type: TransactionType,
+        amount: i64,
+        currency: Currency,
+        scheduled_at: String,
+    ) -> crate::Result<Self::Purchase> {
+        UserPayment::schedule_next_membership_purchase(
+            self,
+            portone,
+            tx_type,
+            amount,
+            currency,
+            scheduled_at,
+        )
+        .await
+    }
+
+    async fn cancel_scheduled_payments(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        portone: &PortOne,
+    ) -> crate::Result<()> {
+        UserPayment::cancel_scheduled_payments(self, cli, portone).await?;
+        Ok(())
+    }
+
+    fn upsert_transact_write_item(&self) -> TransactWriteItem {
+        self.upsert_transact_write_item()
     }
 }
