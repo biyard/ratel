@@ -29,6 +29,9 @@ import { TiptapEditorProps, DEFAULT_ENABLED_FEATURES } from './types';
 import { TiptapToolbar } from './tiptap-toolbar';
 import { showErrorToast } from '@/lib/toast';
 import './theme-aware-colors.css';
+import { AnalyzeLdaBlock } from './extensions/analyze/lda-block';
+import { AnalyzeNetworkBlock } from './extensions/analyze/network-block';
+import { AnalyzeTfidfBlock } from './extensions/analyze/tfidf-blck';
 
 const FOLD_HEIGHT = 240;
 
@@ -43,6 +46,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       variant = 'default',
       showToolbar = true,
       toolbarPosition = 'top',
+      onClickLda,
+      onClickNetwork,
+      onClickTfidf,
       enabledFeatures = DEFAULT_ENABLED_FEATURES,
       className,
       toolbarClassName,
@@ -65,6 +71,8 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
     const [isFolded, setIsFolded] = useState<boolean>(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [showFoldToggle, setShowFoldToggle] = useState(false);
+
+    const canFold = isFoldable;
 
     const insertImage = (ed: Editor, src: string, alt?: string) =>
       ed.chain().focus().setImage({ src, alt }).run();
@@ -106,9 +114,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             bulletList: { HTMLAttributes: { class: 'list-disc pl-4' } },
             orderedList: { HTMLAttributes: { class: 'list-decimal pl-4' } },
           }),
-          Placeholder.configure({
-            placeholder,
-          }),
+          Placeholder.configure({ placeholder }),
           TextStyle,
           Color,
           Highlight.configure({ multicolor: true }),
@@ -156,9 +162,12 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           TableCell.configure({
             HTMLAttributes: { class: 'border border-border p-2 min-w-[100px]' },
           }),
+          AnalyzeLdaBlock,
+          AnalyzeNetworkBlock,
+          AnalyzeTfidfBlock,
         ],
         content,
-        editable,
+        editable: editable,
         onUpdate: ({ editor }) => onUpdate?.(editor.getHTML()),
         onFocus: () => onFocus?.(),
         onBlur: () => onBlur?.(),
@@ -189,7 +198,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
     ) as Editor | null;
 
     useEffect(() => {
-      if (!isFoldable) {
+      if (!canFold) {
         setShowFoldToggle(false);
         setIsFolded(false);
         return;
@@ -205,7 +214,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       });
 
       return () => cancelAnimationFrame(id);
-    }, [isFoldable, content, minHeight]);
+    }, [canFold, content, minHeight]);
 
     useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [
       editor,
@@ -251,21 +260,23 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
             onUploadPDF={onUploadPDF}
+            onClickLda={onClickLda}
+            onClickNetwork={onClickNetwork}
+            onClickTfidf={onClickTfidf}
           />
         )}
 
         <div
-          className={cn('flex-1 overflow-y-auto', 'px-5 py-3', editorClassName)}
+          className={cn('flex-1 px-5 py-3', 'overflow-y-auto', editorClassName)}
           style={{
-            minHeight: !editable ? minHeight : 'auto',
-            overflowY: isFoldable && isFolded ? 'hidden' : 'auto',
+            minHeight,
           }}
         >
           <div
             ref={containerRef}
             style={{
-              maxHeight: isFoldable && isFolded ? `${FOLD_HEIGHT}px` : 'none',
-              overflowY: isFoldable && isFolded ? 'hidden' : 'visible',
+              maxHeight: canFold && isFolded ? `${FOLD_HEIGHT}px` : 'none',
+              overflowY: canFold && isFolded ? 'hidden' : 'visible',
             }}
           >
             <EditorContent
@@ -310,7 +321,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             />
           </div>
 
-          {isFoldable && showFoldToggle && (
+          {canFold && showFoldToggle && (
             <div className="flex justify-center mt-2">
               <button
                 type="button"
@@ -321,6 +332,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
               </button>
             </div>
           )}
+
           <input
             ref={videoInputRef}
             type="file"
@@ -352,6 +364,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
             onUploadPDF={onUploadPDF}
+            onClickLda={onClickLda}
+            onClickNetwork={onClickNetwork}
+            onClickTfidf={onClickTfidf}
           />
         )}
       </div>

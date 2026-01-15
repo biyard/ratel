@@ -6,14 +6,19 @@ export class SpaceAnalyze {
   public pk: string;
   public sk: string;
 
+  public created_at?: number;
+
   public lda_topics?: TopicRow[];
-  public lda_html_contents?: string;
-
   public network?: NetworkGraph;
-  public network_html_contents?: string;
-
   public tf_idf?: TfIdf[];
-  public tf_idf_html_contents?: string;
+  public remove_topics?: string[];
+  public lda_count?: number;
+  public tf_idf_count?: number;
+  public network_count?: number;
+
+  public html_contents?: string;
+  public metadata_url?: string;
+  public analyze_finish?: boolean;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
@@ -30,9 +35,6 @@ export class SpaceAnalyze {
     this.pk = String(json?.pk ?? '');
     this.sk = String(json?.sk ?? '');
     this.lda_topics = lda_topics;
-    this.lda_html_contents = String(json?.lda_html_contents ?? '');
-    this.network_html_contents = String(json?.network_html_contents ?? '');
-    this.tf_idf_html_contents = String(json?.tf_idf_html_contents ?? '');
     this.tf_idf = tf_idf;
 
     if (network) {
@@ -42,5 +44,20 @@ export class SpaceAnalyze {
     } else {
       this.network = undefined;
     }
+
+    this.html_contents = String(json?.html_contents ?? '');
+    this.metadata_url = String(json?.metadata_url ?? '');
+    this.analyze_finish = json?.analyze_finish ?? false;
+
+    this.remove_topics = Array.isArray(json?.remove_topics)
+      ? json?.remove_topics
+      : [];
+
+    this.lda_count =
+      typeof json?.lda_count === 'number' ? json.lda_count : undefined;
+    this.tf_idf_count =
+      typeof json?.tf_idf_count === 'number' ? json.tf_idf_count : undefined;
+    this.network_count =
+      typeof json?.network_count === 'number' ? json.network_count : undefined;
   }
 }

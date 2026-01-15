@@ -7,32 +7,25 @@ import { SpaceAnalyze } from '../../polls/types/space-analyze';
 import { TfIdfChart } from './tf-idf-chart';
 import { NetworkChart } from './network-chart';
 import { AnalyzeNumberField } from './analyze_number_field';
-import { config } from '@/config';
+import { Input } from '@/components/ui/input';
 
 type TopicAnalyzeViewProps = {
   analyze?: SpaceAnalyze;
-  handleUpdateLda?: (
-    topics: string[],
-    keywords: string[][],
-    htmlContents?: string,
-  ) => void;
-  handleUpdateNetwork?: (htmlContents?: string) => void;
-  handleUpdateTfIdf?: (htmlContents?: string) => void;
+  analyzeFinish?: boolean;
+  handleUpdateLda?: (topics: string[], keywords: string[][]) => void;
   handleUpsertAnalyze?: (
     ldaTopics: number,
     tfIdfKeywords: number,
     networkTopNodes: number,
+    removeTopics: string,
   ) => void | Promise<{ spacePk: string }>;
-  handleDownloadAnalyze?: () => void | Promise<{ spacePk: string }>;
 };
 
 export function TopicAnalyzeView({
   analyze,
+  analyzeFinish = true,
   handleUpdateLda,
-  handleUpdateNetwork,
-  handleUpdateTfIdf,
   handleUpsertAnalyze,
-  handleDownloadAnalyze,
 }: TopicAnalyzeViewProps) {
   const { t } = useTranslation('SpacePollAnalyze');
 
@@ -43,11 +36,10 @@ export function TopicAnalyzeView({
   const [topicCount, setTopicCount] = React.useState<number>(5);
   const [tfIdfCount, setTfIdfCount] = React.useState<number>(10);
   const [networkTopNodes, setNetworkTopNodes] = React.useState<number>(30);
+  const [removeTopics, setRemoveTopics] = React.useState<string>('');
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState(false);
-
-  const [isDownloading, setIsDownloading] = React.useState(false);
 
   const hasLda =
     Array.isArray(analyze?.lda_topics) && analyze.lda_topics.length > 0;
@@ -56,9 +48,15 @@ export function TopicAnalyzeView({
     Array.isArray(analyze?.network?.nodes) &&
     analyze.network.nodes.length > 0;
   const hasTfIdf = Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0;
-  const showDownload = (hasLda || hasNetwork || hasTfIdf) && config.experiment;
 
   React.useEffect(() => {
+    const count =
+      typeof analyze?.lda_count === 'number' ? analyze.lda_count : undefined;
+    if (typeof count === 'number' && Number.isFinite(count) && count > 0) {
+      setTopicCount(clamp(count));
+      return;
+    }
+
     const list = Array.isArray(analyze?.lda_topics) ? analyze.lda_topics : [];
 
     const uniqTopics = new Set<string>();
@@ -73,16 +71,41 @@ export function TopicAnalyzeView({
   }, [analyze?.lda_topics]);
 
   React.useEffect(() => {
+    const count =
+      typeof analyze?.tf_idf_count === 'number'
+        ? analyze.tf_idf_count
+        : undefined;
+    if (typeof count === 'number' && Number.isFinite(count) && count > 0) {
+      setTfIdfCount(clampTfIdf(count));
+      return;
+    }
+
     const n = Array.isArray(analyze?.tf_idf) ? analyze.tf_idf.length : 0;
     setTfIdfCount(clampTfIdf(n > 0 ? n : 10));
-  }, [analyze?.tf_idf]);
+  }, [analyze?.tf_idf, analyze?.tf_idf_count]);
 
   React.useEffect(() => {
+    const count =
+      typeof analyze?.network_count === 'number'
+        ? analyze.network_count
+        : undefined;
+    if (typeof count === 'number' && Number.isFinite(count) && count > 0) {
+      setNetworkTopNodes(clampNetwork(count));
+      return;
+    }
+
     const n = Array.isArray(analyze?.network?.nodes)
       ? analyze!.network.nodes.length
       : 0;
     setNetworkTopNodes(clampNetwork(n > 0 ? n : 30));
-  }, [analyze?.network?.nodes]);
+  }, [analyze?.network?.nodes, analyze?.network_count]);
+
+  React.useEffect(() => {
+    const arr = Array.isArray(analyze?.remove_topics)
+      ? analyze!.remove_topics
+      : [];
+    setRemoveTopics(arr.join(','));
+  }, [analyze?.remove_topics]);
 
   const onConfirm = async () => {
     const n = clamp(Number(topicCount) || 1);
@@ -92,7 +115,7 @@ export function TopicAnalyzeView({
     try {
       setSubmitError(false);
       setIsSubmitting(true);
-      await Promise.resolve(handleUpsertAnalyze?.(n, m, k));
+      await Promise.resolve(handleUpsertAnalyze?.(n, m, k, removeTopics));
     } catch {
       setSubmitError(true);
     } finally {
@@ -100,31 +123,11 @@ export function TopicAnalyzeView({
     }
   };
 
-  const onDownload = async () => {
-    try {
-      setIsDownloading(true);
-      await Promise.resolve(handleDownloadAnalyze?.());
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-
   const pending = isSubmitting;
+  const allowRequest = analyzeFinish !== false;
 
   return (
     <div className="flex flex-col gap-4">
-      {showDownload && (
-        <div className="flex flex-row w-full justify-end">
-          <Button
-            variant="primary"
-            onClick={onDownload}
-            disabled={isDownloading}
-          >
-            {isDownloading ? t('downloading') : t('download_analyze')}
-          </Button>
-        </div>
-      )}
-
       <Card key="topic-analyze-setting">
         <div className="flex flex-col w-full gap-4">
           <div className="flex flex-col w-full gap-4">
@@ -137,7 +140,7 @@ export function TopicAnalyzeView({
               max={20}
               clamp={clamp}
               fallbackOnBlur={1}
-              disabled={pending}
+              disabled={pending || !allowRequest}
             />
 
             <AnalyzeNumberField
@@ -149,7 +152,7 @@ export function TopicAnalyzeView({
               max={50}
               clamp={clampTfIdf}
               fallbackOnBlur={10}
-              disabled={pending}
+              disabled={pending || !allowRequest}
             />
 
             <AnalyzeNumberField
@@ -161,19 +164,35 @@ export function TopicAnalyzeView({
               max={200}
               clamp={clampNetwork}
               fallbackOnBlur={30}
-              disabled={pending}
+              disabled={pending || !allowRequest}
             />
+
+            <div className="flex flex-col w-full gap-2">
+              <div className="text-sm font-medium text-text-primary">
+                {t('excluded_topics')}
+              </div>
+              <Input
+                type="text"
+                value={removeTopics}
+                disabled={pending || !allowRequest}
+                onChange={(e) => setRemoveTopics(e.target.value)}
+                placeholder={t('excluded_topics_hint')}
+                className="h-10 w-full rounded-md border bg-background px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
           </div>
 
           {submitError && (
             <div className="text-sm text-destructive">{t('analyze_error')}</div>
           )}
 
-          <div className="flex flex-row w-full justify-end items-end">
-            <Button variant="primary" onClick={onConfirm} disabled={pending}>
-              {pending ? t('analyzing') : t('confirm')}
-            </Button>
-          </div>
+          {allowRequest && (
+            <div className="flex flex-row w-full justify-end items-end">
+              <Button variant="primary" onClick={onConfirm} disabled={pending}>
+                {pending ? t('analyzing') : t('confirm')}
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -182,7 +201,6 @@ export function TopicAnalyzeView({
           <LdaTopicTable
             t={t}
             ldaTopics={analyze?.lda_topics}
-            htmlContents={analyze?.lda_html_contents}
             handleUpdateLda={handleUpdateLda}
           />
         </Card>
@@ -190,12 +208,7 @@ export function TopicAnalyzeView({
 
       {hasNetwork && (
         <Card key="network-chart">
-          <NetworkChart
-            t={t}
-            network={analyze?.network}
-            htmlContents={analyze?.network_html_contents}
-            handleUpdateNetwork={handleUpdateNetwork}
-          />
+          <NetworkChart t={t} network={analyze?.network} />
         </Card>
       )}
 
@@ -203,10 +216,9 @@ export function TopicAnalyzeView({
         <Card key="tf-idf-chart">
           <TfIdfChart
             t={t}
+            isHtml={true}
             tf_idf={analyze?.tf_idf}
             limit={analyze?.tf_idf.length}
-            htmlContents={analyze?.tf_idf_html_contents}
-            handleUpdateTfIdf={handleUpdateTfIdf}
           />
         </Card>
       )}

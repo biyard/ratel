@@ -329,49 +329,11 @@ jobs:
           RUST_LOG: info
           SERVICE: survey-worker
           DOMAIN: dev.ratel.foundation
-          BUCKET_NAME: metadata.ratel.foundation
-          SLACK_HOOK: ${{ secrets.DEV_SLACK }}
-
-          BINANCE_API_KEY: ${{ secrets.DEV_BINANCE_API_KEY }}
-          BINANCE_SECRET_KEY: ${{ secrets.DEV_BINANCE_SECRET_KEY }}
-          BINANCE_WEBHOOK: https://api.dev.ratel.foundation/v2/binances/webhooks
-          REDIRECT_DOMAIN: https://dev.ratel.foundation
-
-          KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
-          KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
-          KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
-          KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
-          KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
-
-          TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
-
-          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
-          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
-          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
-          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
-
-          P256_X: ${{ secrets.P256_X }}
-          P256_Y: ${{ secrets.P256_Y }}
-          P256_D: ${{ secrets.P256_D }}
-          P256_CRV: ${{ secrets.P256_CRV }}
 
           DYNAMO_TABLE_PREFIX: ratel-dev
           DYNAMO_ENDPOINT: none
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           RUST_FLAG: "--features lambda --release"
           WEB_BUILD: false
-          PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
-          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
-          PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
-          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
-
-          FCM_ENABLED: true
-          RATEL_PROJECT_ID: ${{ secrets.RATEL_PROJECT_ID }}
-          REWARD: true
-
-          BIYARD_API_URL: https://api.dev.biyard.co
-          BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
-          BIYARD_PROJECT_ID: ${{ secrets.DEV_BIYARD_PROJECT_ID }}
         run: |
           make bin.build
           mv target/release/survey-worker ../../bootstrap
