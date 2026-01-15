@@ -63,7 +63,7 @@ export function ReportDraft({
   return (
     <div className="flex flex-col w-full">
       {showDownload && (
-        <div className="flex flex-row w-full justify-end">
+        <div className="flex flex-row w-full justify-end mb-2.5">
           <Button
             variant="primary"
             onClick={onDownload}
