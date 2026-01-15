@@ -667,7 +667,7 @@ export function useSpaceHomeController(spacePk: string) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mapped: FileModel[] = remote.map((f: any) => ({
-      id: f.id ?? crypto.randomUUID(),
+      id: f.id ?? '',
       name: f.name ?? '',
       size:
         typeof f.size === 'string'
