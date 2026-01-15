@@ -54,6 +54,7 @@ jobs:
           STACK: ratel-dev-stack
           DEPLOY_STORYBOOK: false
           DEPLOY_STATIC: false
+          CHROMIUM_LAYER_ARN: ${{ secrets.CHROMIUM_LAYER_ARN }}
         run: |
           npm i -g aws-cdk
           make cdk-deploy-v2

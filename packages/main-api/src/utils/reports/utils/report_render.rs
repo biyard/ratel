@@ -3,6 +3,7 @@ use crate::*;
 use headless_chrome::types::PrintToPdfOptions;
 use headless_chrome::{Browser, LaunchOptions, Tab};
 use std::ffi::OsStr;
+use std::path::PathBuf;
 use std::time::{Duration, Instant};
 use url::Url;
 
@@ -22,14 +23,29 @@ pub async fn render_report_pdf_bytes(html_contents: String) -> Result<Vec<u8>> {
             .map_err(|_| crate::Error::InternalServerError("failed to build file url".into()))?
             .to_string();
 
+        let chrome_path = resolve_chrome_path();
+        prepare_tmp_dirs()?;
+
+        let mut args: Vec<&OsStr> = vec![
+            OsStr::new("--no-sandbox"),
+            OsStr::new("--disable-dev-shm-usage"),
+            OsStr::new("--disable-gpu"),
+            OsStr::new("--disable-software-rasterizer"),
+            OsStr::new("--no-zygote"),
+            OsStr::new("--user-data-dir=/tmp/chrome-user-data"),
+            OsStr::new("--data-path=/tmp/chrome-data"),
+            OsStr::new("--disk-cache-dir=/tmp/chrome-cache"),
+        ];
+
+        if std::env::var("FONTCONFIG_PATH").is_ok() {
+            args.push(OsStr::new("--font-render-hinting=none"));
+        }
+
         let browser = Browser::new(LaunchOptions {
             headless: true,
             idle_browser_timeout: Duration::from_secs(120),
-            args: vec![
-                OsStr::new("--no-sandbox"),
-                OsStr::new("--disable-dev-shm-usage"),
-                OsStr::new("--disable-gpu"),
-            ],
+            path: chrome_path.map(PathBuf::from),
+            args,
             ..Default::default()
         })
         .map_err(|e| crate::Error::InternalServerError(e.to_string()))?;
@@ -71,6 +87,39 @@ pub async fn render_report_pdf_bytes(html_contents: String) -> Result<Vec<u8>> {
     .map_err(|e| crate::Error::InternalServerError(format!("spawn_blocking failed: {e}")))??;
 
     Ok(bytes)
+}
+
+fn resolve_chrome_path() -> Option<String> {
+    if let Ok(p) = std::env::var("CHROME_PATH") {
+        let p = p.trim();
+        if !p.is_empty() {
+            return Some(p.to_string());
+        }
+    }
+    if let Ok(p) = std::env::var("CHROME_BIN") {
+        let p = p.trim();
+        if !p.is_empty() {
+            return Some(p.to_string());
+        }
+    }
+    if let Ok(p) = std::env::var("PUPPETEER_EXECUTABLE_PATH") {
+        let p = p.trim();
+        if !p.is_empty() {
+            return Some(p.to_string());
+        }
+    }
+    None
+}
+
+fn prepare_tmp_dirs() -> Result<()> {
+    for p in [
+        "/tmp/chrome-user-data",
+        "/tmp/chrome-data",
+        "/tmp/chrome-cache",
+    ] {
+        std::fs::create_dir_all(p).map_err(|e| crate::Error::InternalServerError(e.to_string()))?;
+    }
+    Ok(())
 }
 
 fn eval_string(tab: &Tab, expr: &str) -> String {

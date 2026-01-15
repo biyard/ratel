@@ -46,6 +46,17 @@ export class RegionalServiceStack extends Stack {
       domainName: baseDomain,
     });
 
+    const chromiumLayerArn = process.env.CHROMIUM_LAYER_ARN;
+    if (!chromiumLayerArn) {
+      throw new Error("CHROMIUM_LAYER_ARN is required");
+    }
+
+    const chromiumLayer = lambda.LayerVersion.fromLayerVersionArn(
+      this,
+      "ChromiumLayer",
+      chromiumLayerArn
+    );
+
     const apiLambda = new lambda.Function(this, "Function", {
       runtime: lambda.Runtime.PROVIDED_AL2023,
       code: lambda.Code.fromAsset("main-api"),
@@ -55,9 +66,19 @@ export class RegionalServiceStack extends Stack {
         DISABLE_ANSI: "true",
         NO_COLOR: "true",
         GOOGLE_APPLICATION_CREDENTIALS: ".gcp/firebase-service-account.json",
+        CHROME_PATH: "/opt/headless-chromium/headless-chromium",
+        CHROME_BIN: "/opt/headless-chromium/headless-chromium",
+        PUPPETEER_EXECUTABLE_PATH: "/opt/headless-chromium/headless-chromium",
+        HOME: "/tmp",
+        FONTCONFIG_PATH: "/opt/headless-chromium/.fontconfig",
+        XDG_CACHE_HOME: "/tmp",
+        TMPDIR: "/tmp",
       },
-      memorySize: 128,
-      timeout: cdk.Duration.seconds(30),
+      memorySize: 1024,
+      timeout: cdk.Duration.seconds(120),
+      ephemeralStorageSize: cdk.Size.mebibytes(1024),
+      architecture: lambda.Architecture.X86_64,
+      layers: [chromiumLayer],
     });
 
     const startSurveyLambda = new lambda.Function(
@@ -74,6 +95,7 @@ export class RegionalServiceStack extends Stack {
         },
         memorySize: 256,
         timeout: Duration.seconds(150),
+        architecture: lambda.Architecture.X86_64,
       }
     );
 
