@@ -37,7 +37,7 @@ export function ReportDraft({
     Array.isArray(analyze?.network?.nodes) &&
     analyze.network.nodes.length > 0;
   const hasTfIdf = Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0;
-  const showDownload = (hasLda || hasNetwork || hasTfIdf) && config.experiment;
+  const showDownload = (hasLda || hasNetwork || hasTfIdf) && !config.experiment;
 
   useEffect(() => {
     if (editing) return;
