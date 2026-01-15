@@ -198,7 +198,7 @@ impl UserPayment {
         Ok(res)
     }
 }
-
+#[async_trait::async_trait]
 impl PaymentEntity for UserPayment {
     type Purchase = UserPurchase;
 

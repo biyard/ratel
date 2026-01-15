@@ -1,11 +1,11 @@
 use crate::{
+    Result,
     features::{
         membership::{Membership, MembershipTier},
         payment::{PaymentReceipt, TransactionType},
     },
     services::portone::{Currency, PortOne},
     types::{CompositePartition, MembershipPartition, Partition},
-    Result,
 };
 use aws_sdk_dynamodb::types::TransactWriteItem;
 
@@ -51,6 +51,7 @@ pub trait MembershipEntity: Clone + Send + Sync {
 }
 
 /// Trait for payment entities (UserPayment, TeamPayment)
+#[async_trait::async_trait]
 pub trait PaymentEntity: Clone + Send + Sync {
     type Purchase: PurchaseEntity;
 
@@ -191,13 +192,7 @@ where
         // NOTE: Real payment will call /hooks/portone but testing code.
         let next_time_to_pay = after_days_from_now_rfc_3339(new_membership.duration_days as i64);
         let next_purchase = payment
-            .schedule_next_membership_purchase(
-                portone,
-                tx_type,
-                amount,
-                currency,
-                next_time_to_pay,
-            )
+            .schedule_next_membership_purchase(portone, tx_type, amount, currency, next_time_to_pay)
             .await?;
         txs.push(next_purchase.create_transact_write_item());
     }

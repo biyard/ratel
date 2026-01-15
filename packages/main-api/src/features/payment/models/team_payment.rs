@@ -226,7 +226,7 @@ impl TeamPayment {
         Ok(res)
     }
 }
-
+#[async_trait::async_trait]
 impl PaymentEntity for TeamPayment {
     type Purchase = TeamPurchase;
 
