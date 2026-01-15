@@ -1,3 +1,4 @@
+#![allow(unused_variables)]
 use crate::features::membership::PaymentEntity;
 use crate::features::payment::*;
 use crate::models::team::{Team, TeamOwner};
