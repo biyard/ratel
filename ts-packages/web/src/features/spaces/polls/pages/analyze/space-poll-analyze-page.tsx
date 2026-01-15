@@ -9,8 +9,9 @@ import { useTranslation } from 'react-i18next';
 import { SpaceType } from '@/features/spaces/types/space-type';
 import { cn } from '@/lib/utils';
 import { TopicAnalyzeView } from '@/features/spaces/components/topic/topic-analyze-view';
+import { ReportDraft } from './report-draft';
 
-type TabKey = 'response' | 'topic';
+type TabKey = 'response' | 'topic' | 'report';
 
 export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
   logger.debug(
@@ -63,6 +64,21 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
             >
               {t('topic_analyze')}
             </button>
+
+            <button
+              type="button"
+              onClick={() => setTab('report')}
+              className={cn(
+                'relative px-1 py-3 text-sm transition-colors',
+                tab === 'report'
+                  ? 'text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+                tab === 'report' &&
+                  "after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:bg-primary after:content-['']",
+              )}
+            >
+              {t('report_write')}
+            </button>
           </div>
         </div>
       )}
@@ -88,10 +104,16 @@ export function SpacePollAnalyzePage({ spacePk, pollPk }: SpacePollPathProps) {
       {showTabs && tab === 'topic' && (
         <TopicAnalyzeView
           analyze={ctrl.analyze}
+          analyzeFinish={!!ctrl.analyze.analyze_finish}
           handleUpdateLda={ctrl.handleUpdateLda}
-          handleUpdateNetwork={ctrl.handleUpdateNetwork}
-          handleUpdateTfIdf={ctrl.handleUpdateTfIdf}
           handleUpsertAnalyze={ctrl.handleUpsertAnalyze}
+        />
+      )}
+
+      {showTabs && tab === 'report' && (
+        <ReportDraft
+          analyze={ctrl.analyze}
+          handleUpdateHtmlContents={ctrl.handleUpdateHtmlContents}
           handleDownloadAnalyze={ctrl.handleDownloadAnalyze}
         />
       )}

@@ -1,26 +1,21 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { TFunction } from 'i18next';
 import { TopicRow } from '../../polls/types/topic-row';
 import { Input } from '@/components/ui/input';
 import { Edit1 } from '@/components/icons';
 import { Save } from '@/components/icons';
-import { PostEditor } from '@/features/posts/components/post-editor';
 
 export type LdaTopicTableProps = {
   t: TFunction<'SpacePollAnalyze', undefined>;
-  htmlContents?: string;
   ldaTopics?: TopicRow[];
-  handleUpdateLda?: (
-    topics: string[],
-    keywords: string[][],
-    htmlContents?: string,
-  ) => void;
+  isHtml?: boolean;
+  handleUpdateLda?: (topics: string[], keywords: string[][]) => void;
 };
 
 export function LdaTopicTable({
   t,
   ldaTopics,
-  htmlContents,
+  isHtml,
   handleUpdateLda,
 }: LdaTopicTableProps) {
   const rows = useMemo(() => {
@@ -56,18 +51,11 @@ export function LdaTopicTable({
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<Record<string, string>>({});
-  const [content, setContent] = useState<string>(htmlContents ?? '');
-
-  useEffect(() => {
-    if (editing) return;
-    setContent(htmlContents ?? '');
-  }, [htmlContents, editing]);
 
   const startEdit = () => {
     const init: Record<string, string> = {};
     for (const r of rows) init[r.topic] = r.topic;
     setDraft(init);
-    setContent(htmlContents ?? '');
     setEditing(true);
   };
 
@@ -89,31 +77,33 @@ export function LdaTopicTable({
       keywords.push(r.keywords);
     }
 
-    handleUpdateLda?.(topics, keywords, content);
+    handleUpdateLda?.(topics, keywords);
     setEditing(false);
   };
 
   return (
     <div className="w-full">
-      <div className="mb-2 flex items-center justify-end gap-2">
-        {!editing ? (
-          <Edit1
-            className="cursor-pointer w-5 h-5 [&>path]:stroke-1"
-            onClick={startEdit}
-          />
-        ) : (
-          <Save
-            className="cursor-pointer w-5 h-5 [&>path]:stroke-1"
-            onClick={save}
-          />
-        )}
-      </div>
+      {!isHtml && (
+        <div className="mb-2 flex items-center justify-end gap-2">
+          {!editing ? (
+            <Edit1
+              className="cursor-pointer w-5 h-5 [&>path]:stroke-1"
+              onClick={startEdit}
+            />
+          ) : (
+            <Save
+              className="cursor-pointer w-5 h-5 [&>path]:stroke-1"
+              onClick={save}
+            />
+          )}
+        </div>
+      )}
 
       <table className="overflow-hidden w-full text-sm rounded-xl border border-input-box-border">
         <thead className="bg-muted text-[var(--color-panel-table-header)]">
           <tr>
-            <th className="py-3 px-4 text-left">{t('topic')}</th>
-            <th className="py-3 px-4 text-left">{t('keywords')}</th>
+            <th className="py-3 px-4 text-left !border-0">{t('topic')}</th>
+            <th className="py-3 px-4 text-left !border-0">{t('keywords')}</th>
           </tr>
         </thead>
 
@@ -123,7 +113,7 @@ export function LdaTopicTable({
               key={r.topic}
               className="border-t border-input-box-border hover:bg-muted/50"
             >
-              <td className="py-3 px-4 font-medium text-left whitespace-nowrap">
+              <td className="py-3 px-4 font-medium text-left whitespace-nowrap !border-0">
                 {!editing ? (
                   r.topic
                 ) : (
@@ -144,7 +134,7 @@ export function LdaTopicTable({
                 )}
               </td>
 
-              <td className="py-3 px-4 text-left text-text-secondary">
+              <td className="py-3 px-4 text-left text-text-secondary !border-0">
                 {r.keywords.join(', ')}
               </td>
             </tr>
@@ -159,16 +149,6 @@ export function LdaTopicTable({
           )}
         </tbody>
       </table>
-
-      <PostEditor
-        url={''}
-        content={content}
-        onUpdate={(next) => setContent(next)}
-        disabledFileUpload={true}
-        disabledImageUpload={true}
-        editable={editing}
-        showToolbar={editing}
-      />
     </div>
   );
 }

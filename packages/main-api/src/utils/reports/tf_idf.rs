@@ -162,10 +162,14 @@ fn compute_tfidf(docs_tokens: Vec<Vec<String>>, cfg: &TfidfConfigV1) -> Vec<Tfid
 }
 
 // TODO: check tf-idf logic
-pub fn run_tfidf(comments: &[String], cfg: TfidfConfigV1) -> crate::Result<Vec<TfidfRow>> {
+pub fn run_tfidf(
+    comments: &[String],
+    cfg: TfidfConfigV1,
+    remove_topics: &[String],
+) -> crate::Result<Vec<TfidfRow>> {
     let docs_tokens = comments
         .iter()
-        .map(|c| preprocess_korean_nouns(c))
+        .map(|c| preprocess_korean_nouns(c, remove_topics))
         .filter(|t| !t.is_empty())
         .collect::<Vec<_>>();
 

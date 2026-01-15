@@ -2,7 +2,7 @@ use crate::features::spaces::analyzes::SpaceAnalyze;
 // use crate::models::SpaceCommon;
 use crate::spaces::SpacePath;
 use crate::spaces::SpacePathParam;
-use crate::utils::reports::build_space_report_pdf;
+use crate::utils::reports::build_space_html_contents;
 use crate::utils::reports::upload_report_pdf_to_s3;
 use crate::*;
 
@@ -33,15 +33,8 @@ pub async fn download_analyze_handler(
     }
 
     let analyze = analyze.unwrap();
-    let pdf_bytes = build_space_report_pdf(
-        &analyze.lda_topics,
-        analyze.lda_html_contents.unwrap_or_default(),
-        analyze.network,
-        analyze.network_html_contents.unwrap_or_default(),
-        &analyze.tf_idf,
-        analyze.tf_idf_html_contents.unwrap_or_default(),
-    )
-    .await?;
+    let html_contents = analyze.html_contents.unwrap_or_default();
+    let pdf_bytes = build_space_html_contents(html_contents).await?;
     let (_key, uri) = upload_report_pdf_to_s3(pdf_bytes).await?;
 
     let _ = SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)

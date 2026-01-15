@@ -95,10 +95,14 @@ fn betweenness_centrality_undirected(adj: &[Vec<usize>]) -> Vec<f64> {
 }
 
 // TODO: check network logic
-pub fn run_network(comments: &[String], cfg: NetworkConfigV1) -> crate::Result<NetworkGraph> {
+pub fn run_network(
+    comments: &[String],
+    cfg: NetworkConfigV1,
+    remove_topics: &[String],
+) -> crate::Result<NetworkGraph> {
     let docs = comments
         .iter()
-        .map(|c| preprocess_korean_nouns(c))
+        .map(|c| preprocess_korean_nouns(c, remove_topics))
         .filter(|t| t.len() >= cfg.min_tokens_per_doc)
         .collect::<Vec<_>>();
 
