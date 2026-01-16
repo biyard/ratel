@@ -51,6 +51,7 @@ pub async fn update_analyze_handler(
 
             SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
                 .with_lda_topics(lda_topics.clone())
+                .with_metadata_url("".to_string())
                 .execute(&dynamo.client)
                 .await?;
 
@@ -59,6 +60,7 @@ pub async fn update_analyze_handler(
         UpdateAnalyzeRequest::HtmlContents { html_contents } => {
             SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
                 .with_html_contents(html_contents.clone())
+                .with_metadata_url("".to_string())
                 .execute(&dynamo.client)
                 .await?;
             analyze.html_contents = Some(html_contents);

@@ -29,6 +29,7 @@ export function ReportDraft({
   const [editing, setEditing] = useState(false);
   const editorRef = useRef<Editor | null>(null);
   const [isDownloading, setIsDownloading] = React.useState(false);
+  const [downloadToken, setDownloadToken] = React.useState<string>('');
 
   const hasLda =
     Array.isArray(analyze?.lda_topics) && analyze.lda_topics.length > 0;
@@ -37,12 +38,20 @@ export function ReportDraft({
     Array.isArray(analyze?.network?.nodes) &&
     analyze.network.nodes.length > 0;
   const hasTfIdf = Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0;
-  const showDownload = (hasLda || hasNetwork || hasTfIdf) && config.experiment;
+  const showDownload = (hasLda || hasNetwork || hasTfIdf) && !config.experiment;
 
   useEffect(() => {
     if (editing) return;
     setContent(String(analyze?.html_contents ?? ''));
   }, [analyze?.html_contents, editing]);
+
+  useEffect(() => {
+    if (!isDownloading) return;
+    const url = String(analyze?.metadata_url ?? '');
+    if (url.startsWith('http') && url !== downloadToken) {
+      setIsDownloading(false);
+    }
+  }, [analyze?.metadata_url, downloadToken, isDownloading]);
 
   const startEdit = () => setEditing(true);
 
@@ -52,10 +61,24 @@ export function ReportDraft({
   };
 
   const onDownload = async () => {
+    const existingUrl = String(analyze?.metadata_url ?? '');
+    if (existingUrl.startsWith('http')) {
+      const a = document.createElement('a');
+      a.href = existingUrl;
+      a.target = '_blank';
+      a.rel = 'noreferrer';
+      a.download = '';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      return;
+    }
+
     try {
+      setDownloadToken(String(analyze?.metadata_url ?? ''));
       setIsDownloading(true);
       await Promise.resolve(handleDownloadAnalyze?.());
-    } finally {
+    } catch {
       setIsDownloading(false);
     }
   };
