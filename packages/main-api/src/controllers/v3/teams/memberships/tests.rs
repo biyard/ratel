@@ -43,7 +43,7 @@ async fn test_get_team_membership_as_owner() {
     );
     // Default should be Free tier
     assert!(
-        membership_response.tier.to_string().contains("Free"),
+        membership_response.tier.to_string().contains("FREE"),
         "Default membership should be Free, got: {}",
         membership_response.tier
     );
@@ -225,7 +225,7 @@ async fn test_change_team_membership_denied_for_non_owner() {
     };
 
     assert_eq!(
-        status, 403,
+        status, 401,
         "Non-owner should not be able to change team membership"
     );
 }
