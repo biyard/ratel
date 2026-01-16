@@ -100,12 +100,12 @@ async fn main() -> Result<(), LambdaError> {
     let state = AppState { dynamo, ses };
 
     let payload = EventBridgeEnvelope {
-        detail: serde_json::to_value(DownloadAnalyzeEvent {
+        detail: serde_json::to_value(UpsertAnalyzeEvent {
             space_id: "019b914a-0a9b-7911-baa3-f673afd776ee".into(),
-            // lda_topics: 5,
-            // tf_idf_keywords: 100,
-            // network_top_nodes: 30,
-            // remove_keywords: vec!["성이해".to_string()],
+            lda_topics: 5,
+            tf_idf_keywords: 100,
+            network_top_nodes: 30,
+            remove_keywords: vec!["성이해".to_string()],
         })?,
     };
 
