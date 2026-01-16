@@ -276,6 +276,28 @@ impl PollScheduler {
         )
         .await
     }
+
+    pub async fn schedule_download_analyze(&self, space_pk: Partition) -> Result<()> {
+        let space_id = match &space_pk {
+            Partition::Space(id) => id.clone(),
+            _ => return Err(Error::InvalidPartitionKey("Not Space Partition".into())),
+        };
+
+        let at_millis = get_now_timestamp_millis() + 10_000;
+
+        let detail = serde_json::json!({
+            "space_id": space_id,
+        });
+
+        self.schedule_eventbridge(
+            &detail.clone()["space_id"].as_str().unwrap_or("space"),
+            at_millis,
+            "ratel.spaces",
+            "SurveyFetcher",
+            detail,
+        )
+        .await
+    }
 }
 
 #[cfg(test)]
