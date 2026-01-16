@@ -21,6 +21,10 @@ ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(REPO_NAME
 
 DYNAMO_ENDPOINT ?= http://localstack:4566
 DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
+BUCKET_NAME ?= metadata.ratel.foundation
+ASSET_DIR ?= metadata
+BUCKET_EXPIRE ?= 3600
+S3_REGION ?= ap-northeast-2
 
 BUILD_ENV ?= ENV=$(ENV) \
 								AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
@@ -34,7 +38,11 @@ BUILD_ENV ?= ENV=$(ENV) \
 								API_MODEL_ARTIFACT_DIR=$(API_MODEL_ARTIFACT_DIR) \
 								CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 								DYNAMO_ENDPOINT=$(DYNAMO_ENDPOINT) \
-								DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX)
+								DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
+								BUCKET_NAME=$(BUCKET_NAME) \
+								ASSET_DIR=$(ASSET_DIR) \
+								BUCKET_EXPIRE=$(BUCKET_EXPIRE) \
+								S3_REGION=$(S3_REGION)
 
 run:
 	$(BUILD_ENV) cargo run --features local-run

@@ -163,6 +163,10 @@ jobs:
           AWS_REGION: us-east-1
           DYNAMO_TABLE_PREFIX: ratel-local
           DYNAMO_ENDPOINT: http://localhost:4566
+          BUCKET_NAME: metadata.ratel.foundation
+          ASSET_DIR: metadata
+          BUCKET_EXPIRE: 3600
+          S3_REGION: us-east-1
         run: |
           cargo build --release
 
