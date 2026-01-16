@@ -15,10 +15,7 @@ use main_api::{
     types::{EntityType, Partition},
     utils::{
         aws::{DynamoClient, SesClient},
-        reports::{
-            LdaConfigV1, NetworkConfigV1, ReportS3Config, TfidfConfigV1, build_space_html_contents,
-            run_lda, run_network, run_tfidf, upload_report_pdf_with_config,
-        },
+        reports::{LdaConfigV1, NetworkConfigV1, TfidfConfigV1, run_lda, run_network, run_tfidf},
     },
 };
 use serde::{Deserialize, Serialize};
@@ -55,7 +52,6 @@ struct DownloadAnalyzeEvent {
 enum WorkerEvent {
     StartSurvey(StartSurveyEvent),
     UpsertAnalyze(UpsertAnalyzeEvent),
-    DownloadAnalyze(DownloadAnalyzeEvent),
 }
 
 #[derive(Clone)]
@@ -148,11 +144,6 @@ fn classify_event(detail: &JsonValue) -> Result<WorkerEvent, LambdaError> {
         return Ok(WorkerEvent::UpsertAnalyze(evt));
     }
 
-    if obj.contains_key("space_id") {
-        let evt: DownloadAnalyzeEvent = serde_json::from_value(normalized)?;
-        return Ok(WorkerEvent::DownloadAnalyze(evt));
-    }
-
     Err(LambdaError::from(
         "unknown event: cannot classify by detail fields",
     ))
@@ -191,17 +182,6 @@ async fn handler(
 
             if let Err(e) = upsert_analyze(&state, &evt).await {
                 error!("failed to upsert analyze: {e:?}");
-                return Err(e);
-            }
-        }
-        WorkerEvent::DownloadAnalyze(evt) => {
-            info!(
-                "DownloadAnalyze(detail-based): request_id={}, space_id={}",
-                ctx.request_id, evt.space_id
-            );
-
-            if let Err(e) = download_analyze(&state, &evt).await {
-                error!("failed to download analyze: {e:?}");
                 return Err(e);
             }
         }
@@ -377,50 +357,4 @@ async fn upsert_analyze(state: &AppState, evt: &UpsertAnalyzeEvent) -> Result<()
     info!("analyze update successed!");
 
     Ok(())
-}
-
-async fn download_analyze(state: &AppState, evt: &DownloadAnalyzeEvent) -> Result<(), LambdaError> {
-    let space_pk = Partition::Space(evt.space_id.clone());
-
-    let analyze = SpaceAnalyze::get(
-        &state.dynamo.client,
-        &space_pk,
-        Some(EntityType::SpaceAnalyze),
-    )
-    .await?
-    .ok_or_else(|| LambdaError::from("SpaceAnalyze not found"))?;
-
-    let html_contents = analyze.html_contents.unwrap_or_default();
-    let pdf_bytes = build_space_html_contents(html_contents).await?;
-    let report_cfg = report_s3_config_from_env()?;
-    let (_key, uri) = upload_report_pdf_with_config(pdf_bytes, report_cfg).await?;
-
-    let _ = SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
-        .with_metadata_url(uri.clone())
-        .execute(&state.dynamo.client)
-        .await?;
-
-    Ok(())
-}
-
-fn report_s3_config_from_env() -> Result<ReportS3Config, LambdaError> {
-    let bucket_name =
-        std::env::var("BUCKET_NAME").map_err(|_| LambdaError::from("BUCKET_NAME is required"))?;
-    let asset_dir =
-        std::env::var("ASSET_DIR").map_err(|_| LambdaError::from("ASSET_DIR is required"))?;
-    let env = std::env::var("ENV").unwrap_or_else(|_| "local".to_string());
-    let region = std::env::var("S3_REGION").unwrap_or_else(|_| "ap-northeast-2".to_string());
-    let access_key_id = std::env::var("AWS_ACCESS_KEY_ID")
-        .map_err(|_| LambdaError::from("AWS_ACCESS_KEY_ID is required"))?;
-    let secret_access_key = std::env::var("AWS_SECRET_ACCESS_KEY")
-        .map_err(|_| LambdaError::from("AWS_SECRET_ACCESS_KEY is required"))?;
-
-    Ok(ReportS3Config {
-        bucket_name,
-        asset_dir,
-        env,
-        region,
-        access_key_id,
-        secret_access_key,
-    })
 }
