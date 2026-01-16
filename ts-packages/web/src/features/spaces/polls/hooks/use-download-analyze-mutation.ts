@@ -109,10 +109,15 @@ const buildPdfBlob = async (htmlDocument: string): Promise<Blob> => {
     #content-root del,
     #content-root s,
     #content-root strike{
-      text-decoration: line-through !important;
-      text-decoration-color: #000000 !important;
-      text-decoration-thickness: 2px !important;
-      -webkit-text-decoration-line: line-through !important;
+      text-decoration: none !important;
+      position: relative !important;
+      background-image: linear-gradient(#000000, #000000) !important;
+      background-repeat: repeat-x !important;
+      background-size: 100% 1.5px !important;
+      background-position: 0 60% !important;
+      -webkit-box-decoration-break: clone !important;
+      box-decoration-break: clone !important;
+      padding: 0 0.02em !important;
     }
 
     #content-root h1{
