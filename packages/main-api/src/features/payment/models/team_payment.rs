@@ -49,7 +49,7 @@ impl TeamPayment {
         team_owner: &TeamOwner,
         card_info: Option<CardInfo>,
     ) -> crate::Result<(Self, bool)> {
-        #[cfg(feature = "bypass")]
+        #[cfg(test)]
         {
             let now = time::get_now_timestamp_millis();
             let team_pk: TeamPartition = team.pk.clone().into();
@@ -67,7 +67,7 @@ impl TeamPayment {
             ));
         }
 
-        #[cfg(not(feature = "bypass"))]
+        #[cfg(not(test))]
         {
             let pk = CompositePartition::team_payment_pk(team.pk.clone().into());
             let existing: Option<TeamPayment> = Self::get(cli, &pk, None::<String>).await?;
