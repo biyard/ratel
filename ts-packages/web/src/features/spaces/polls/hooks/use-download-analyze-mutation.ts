@@ -152,6 +152,37 @@ const buildPdfBlob = async (htmlDocument: string): Promise<Blob> => {
       fill:#000000 !important;
     }
 
+    #content-root ul,
+    #content-root ol{
+      margin: 0 0 10px 0 !important;
+      padding-left: 0 !important;
+      list-style: none !important;
+    }
+
+    #content-root li[data-pdf-li="1"]{
+      position: relative !important;
+      padding-left: 28px !important;
+      margin: 0 0 6px 0 !important;
+    }
+
+    #content-root .__pdf_marker{
+      position: absolute !important;
+      left: 0 !important;
+      top: 0 !important;
+      width: 24px !important;
+      height: 1.5em !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-weight: 400 !important;
+      font-size: 16px !important;
+      line-height: 1.5 !important;
+      color: #000000 !important;
+      -webkit-text-fill-color:#000000 !important;
+      white-space: nowrap !important;
+      overflow: visible !important;
+    }
+
     #content-root table{
       width:100% !important;
       border-collapse: collapse !important;
@@ -265,10 +296,57 @@ const buildPdfBlob = async (htmlDocument: string): Promise<Blob> => {
       const bodyRow =
         (t.tBodies?.[0]?.rows?.[0] as HTMLTableRowElement | undefined) ?? null;
       const cols = Math.max(countColumns(headRow), countColumns(bodyRow));
-      if (cols === 2) {
-        t.setAttribute('data-pdf-two-col', '1');
-      } else {
-        t.removeAttribute('data-pdf-two-col');
+      if (cols === 2) t.setAttribute('data-pdf-two-col', '1');
+      else t.removeAttribute('data-pdf-two-col');
+    }
+  };
+
+  const computeOlPrefix = (li: HTMLLIElement) => {
+    const parts: number[] = [];
+    let curLi: HTMLLIElement | null = li;
+
+    while (curLi) {
+      const parentOl = curLi.parentElement?.closest(
+        'ol',
+      ) as HTMLOListElement | null;
+      if (!parentOl) break;
+
+      const siblings = Array.from(parentOl.children).filter(
+        (n) => (n as HTMLElement).tagName === 'LI',
+      ) as HTMLLIElement[];
+      const idx = Math.max(0, siblings.indexOf(curLi)) + 1;
+      parts.unshift(idx);
+
+      curLi = parentOl.closest('li') as HTMLLIElement | null;
+    }
+
+    return parts.length ? `${parts.join('.')}.` : '1.';
+  };
+
+  const materializeListMarkers = (root: HTMLElement) => {
+    const lists = Array.from(root.querySelectorAll('ul, ol')) as (
+      | HTMLUListElement
+      | HTMLOListElement
+    )[];
+    for (const list of lists) {
+      const isOl = list.tagName === 'OL';
+      const lis = Array.from(
+        list.querySelectorAll(':scope > li'),
+      ) as HTMLLIElement[];
+
+      for (const li of lis) {
+        li.setAttribute('data-pdf-li', '1');
+
+        const already = li.querySelector(
+          ':scope > .__pdf_marker',
+        ) as HTMLSpanElement | null;
+        if (already) continue;
+
+        const marker = root.ownerDocument.createElement('span');
+        marker.className = '__pdf_marker';
+        marker.textContent = isOl ? computeOlPrefix(li) : '•';
+
+        li.insertBefore(marker, li.firstChild);
       }
     }
   };
@@ -282,24 +360,27 @@ const buildPdfBlob = async (htmlDocument: string): Promise<Blob> => {
           '[data-pdf-keep]',
           '.recharts-wrapper',
           '.recharts-responsive-container',
-          '.recharts-surface',
           '.chart',
           '.graph',
           '[class*="chart"]',
           '[class*="graph"]',
           'canvas',
           'svg',
+          'figure',
+          'img',
         ].join(','),
       ),
     ) as HTMLElement[];
 
     for (const el of candidates) {
       const container =
+        (el.closest('.recharts-responsive-container') as HTMLElement | null) ??
         (el.closest('.recharts-wrapper') as HTMLElement | null) ??
         (el.closest('[data-pdf-keep]') as HTMLElement | null) ??
         (el.closest(
           '.chart, .graph, [class*="chart"], [class*="graph"]',
         ) as HTMLElement | null) ??
+        (el.closest('figure') as HTMLElement | null) ??
         el;
 
       atomicRoots.add(container);
@@ -331,7 +412,6 @@ const buildPdfBlob = async (htmlDocument: string): Promise<Blob> => {
       'p',
       'ul',
       'ol',
-      'li',
       'table',
       'pre',
       'blockquote',
@@ -356,7 +436,7 @@ const buildPdfBlob = async (htmlDocument: string): Promise<Blob> => {
       return r.width > 0 && r.height > 0;
     });
 
-    const maxIter = 8;
+    const maxIter = 10;
     for (let iter = 0; iter < maxIter; iter += 1) {
       let changed = false;
       const rootRect = root.getBoundingClientRect();
@@ -434,6 +514,7 @@ const buildPdfBlob = async (htmlDocument: string): Promise<Blob> => {
             el.appendChild(wrap);
           }
 
+          materializeListMarkers(root);
           markAtomicBlocks(root);
           insertPageBreakSpacers(root);
         },
