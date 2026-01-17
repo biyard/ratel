@@ -13,16 +13,21 @@ export function useUpsertAnalyzeMutation<T extends SpaceAnalyze>() {
       ldaTopics,
       tfIdfKeywords,
       networkTopNodes,
+
+      removeTopics,
     }: {
       spacePk: string;
       ldaTopics: number;
       tfIdfKeywords: number;
       networkTopNodes: number;
+      removeTopics: string[];
     }) => {
       await call('POST', `/v3/spaces/${encodeURIComponent(spacePk)}/analyzes`, {
         lda_topics: ldaTopics,
         tf_idf_keywords: tfIdfKeywords,
         network_top_nodes: networkTopNodes,
+
+        remove_topics: removeTopics,
       });
 
       return { spacePk };
