@@ -49,8 +49,8 @@ export class AgentStack extends Stack {
           "bedrock:GetFoundationModel",
         ],
         resources: [
-          // Inference profile ARN
-          `arn:aws:bedrock:${this.region}:${this.account}:inference-profile/us.amazon.nova-pro-v1:0`,
+          // Inference profile ARN (use apac for ap-northeast-2)
+          `arn:aws:bedrock:${this.region}:${this.account}:inference-profile/apac.amazon.nova-pro-v1:0`,
           // Foundation model ARN (wildcard region for cross-region access)
           "arn:aws:bedrock:*::foundation-model/amazon.nova-pro-v1:0",
         ],
@@ -71,7 +71,7 @@ export class AgentStack extends Stack {
     this.agent = new bedrock.CfnAgent(this, "BedrockAgent", {
       agentName: `pdf-agent-${stage}`,
       agentResourceRoleArn: agentRole.roleArn,
-      foundationModel: "us.amazon.nova-pro-v1:0",
+      foundationModel: "apac.amazon.nova-pro-v1:0",
       description: "Agent connected to PDF Knowledge Base with Nova Pro",
       instruction: `You are a warm, helpful, and intelligent AI companion designed to assist users with their PDF documents and engage in meaningful conversations.
 
