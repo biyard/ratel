@@ -2,8 +2,8 @@ use crate::features::spaces::analyzes::SpaceAnalyze;
 // use crate::models::SpaceCommon;
 use crate::spaces::SpacePath;
 use crate::spaces::SpacePathParam;
-use crate::utils::reports::build_space_report_pdf;
-use crate::utils::reports::upload_report_pdf_to_s3;
+use crate::utils::aws::PollScheduler;
+use crate::utils::aws::get_aws_config;
 use crate::*;
 
 #[derive(
@@ -33,20 +33,29 @@ pub async fn download_analyze_handler(
     }
 
     let analyze = analyze.unwrap();
-    let pdf_bytes = build_space_report_pdf(
-        &analyze.lda_topics,
-        analyze.lda_html_contents.unwrap_or_default(),
-        analyze.network,
-        analyze.network_html_contents.unwrap_or_default(),
-        &analyze.tf_idf,
-        analyze.tf_idf_html_contents.unwrap_or_default(),
-    )
-    .await?;
-    let (_key, uri) = upload_report_pdf_to_s3(pdf_bytes).await?;
 
-    let _ = SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
-        .with_metadata_url(uri.clone())
+    if analyze.metadata_url.is_some() {
+        let metadata_url = analyze.metadata_url.unwrap();
+
+        if metadata_url != "".to_string() && metadata_url != "pending".to_string() {
+            return Ok(Json(DownloadAnalyzeResponse { metadata_url }));
+        }
+    }
+
+    let pending_url = "pending".to_string();
+
+    let _ = SpaceAnalyze::updater(&space_pk, EntityType::SpaceAnalyze)
+        .with_metadata_url(pending_url.clone())
         .execute(&dynamo.client)
         .await?;
-    Ok(Json(DownloadAnalyzeResponse { metadata_url: uri }))
+
+    let sdk_config = get_aws_config();
+    let scheduler = PollScheduler::new(&sdk_config);
+    scheduler
+        .schedule_download_analyze(space_pk.clone())
+        .await?;
+
+    Ok(Json(DownloadAnalyzeResponse {
+        metadata_url: pending_url,
+    }))
 }

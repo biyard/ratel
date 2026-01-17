@@ -14,6 +14,7 @@ export const i18nSpacePollAnalyze = {
 
     response_analyze: 'Response Analyze',
     topic_analyze: 'Topic Analyze',
+    report_write: 'Write Report',
 
     btn_edit: 'Edit',
     btn_cancel: 'Cancel',
@@ -34,13 +35,17 @@ export const i18nSpacePollAnalyze = {
       'error occurred during topic analysis. Please try again later.',
     number_of_network_top_nodes: 'Number of Network Top Nodes',
     network_top_nodes_input_hint: 'Please enter a number between 1 and 30.',
+    excluded_topics: 'Excluded Topics',
+    excluded_topics_hint: 'Please enter excluded topics.',
 
+    report_draft_editor_placeholder: 'Please enter the report contents.',
     network: 'Network',
     topic: 'Topic',
     keywords: 'Keywords',
     no_topics: 'No topics found.',
     no_tfidf: 'No TF-IDF data found.',
     no_network: 'No network data found.',
+    report_draft_placeholder: 'Report drafting view is under construction.',
   },
   ko: {
     id: 'ID',
@@ -57,6 +62,7 @@ export const i18nSpacePollAnalyze = {
 
     response_analyze: '응답 분석',
     topic_analyze: '토픽 분석',
+    report_write: '보고서 작성',
 
     btn_edit: '수정하기',
     btn_cancel: '취소하기',
@@ -76,12 +82,16 @@ export const i18nSpacePollAnalyze = {
     analyze_error: '분석에 실패했습니다. 잠시 후 다시 시도해주세요.',
     number_of_network_top_nodes: '네트워크 상위 노드 개수',
     network_top_nodes_input_hint: '1~30 사이로 입력해주세요.',
+    excluded_topics: '제외된 토픽',
+    excluded_topics_hint: '제외 토픽을 입력해주세요.',
 
+    report_draft_editor_placeholder: 'Report 보고서 내용을 입력해주세요.',
     network: '네트워크',
     topic: '토픽',
     keywords: '키워드',
     no_topics: '토픽이 존재하지 않습니다.',
     no_tfidf: 'TF-IDF 데이터가 존재하지 않습니다.',
     no_network: '네트워크 데이터가 존재하지 않습니다.',
+    report_draft_placeholder: '보고서 작성 영역은 준비 중입니다.',
   },
 };
