@@ -46,7 +46,7 @@ export default function RewardsPage() {
       />
       <ExchangePreviewCard
         i18n={i18n}
-        totalPoints={rewards.total_points}
+        totalPoints={rewards.user_points}
         estimatedTokens={estimatedTokens}
         name={rewards.project_name}
         tokenSymbol={rewards.token_symbol}
