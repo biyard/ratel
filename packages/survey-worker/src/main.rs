@@ -44,11 +44,6 @@ struct UpsertAnalyzeEvent {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct DownloadAnalyzeEvent {
-    pub space_id: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
 enum WorkerEvent {
     StartSurvey(StartSurveyEvent),
     UpsertAnalyze(UpsertAnalyzeEvent),
