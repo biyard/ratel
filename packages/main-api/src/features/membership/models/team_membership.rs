@@ -15,21 +15,21 @@ use aws_sdk_dynamodb::types::TransactWriteItem;
     schemars::JsonSchema,
     aide::OperationIo,
 )]
-pub struct UserMembership {
-    pub pk: Partition,
+pub struct TeamMembership {
+    pub pk: Partition, // TEAM#{team_id}
 
     #[dynamo(prefix = "TS", index = "gsi1", sk)]
-    pub sk: EntityType,
+    pub sk: EntityType, // TeamMembership
 
     pub created_at: i64,
     pub updated_at: i64,
     pub expired_at: i64,
 
-    #[dynamo(prefix = "UM", name = "find_by_membership", index = "gsi1", pk)]
+    #[dynamo(prefix = "TM", name = "find_by_membership", index = "gsi1", pk)]
     pub membership_pk: MembershipPartition,
     pub status: MembershipStatus,
 
-    // Credits management
+    // Credits management - shared pool for team
     pub total_credits: i64,
     pub remaining_credits: i64,
 
@@ -41,16 +41,15 @@ pub struct UserMembership {
     pub next_membership: Option<MembershipPartition>,
 }
 
-impl UserMembership {
+impl TeamMembership {
     pub fn new(
-        user_pk: UserPartition,
+        team_pk: TeamPartition,
         membership_pk: MembershipPartition,
         duration_days: i32,
         credits: i64,
     ) -> crate::Result<Self> {
         let created_at = now();
 
-        // Fix: Convert to i64 before multiplication to prevent overflow
         // Support -1 and 0 for infinite/lifetime memberships
         let expired_at = if duration_days <= 0 {
             // Infinite/Lifetime membership (far future)
@@ -60,8 +59,8 @@ impl UserMembership {
         };
 
         Ok(Self {
-            pk: user_pk.into(),
-            sk: EntityType::UserMembership,
+            pk: team_pk.into(),
+            sk: EntityType::TeamMembership,
             membership_pk,
             created_at,
             updated_at: created_at,
@@ -91,7 +90,7 @@ impl UserMembership {
         self.expired_at == i64::MAX
     }
 
-    /// Use credits from this membership
+    /// Use credits from this team membership (shared pool)
     pub fn use_credits(&mut self, amount: i64) -> crate::Result<()> {
         if self.remaining_credits < amount {
             return Err(crate::Error::InsufficientCredits);
@@ -103,7 +102,7 @@ impl UserMembership {
         Ok(())
     }
 
-    /// Add credits to this membership
+    /// Add credits to this team membership
     pub fn add_credits(&mut self, amount: i64) {
         self.remaining_credits += amount;
         self.total_credits += amount;
@@ -132,13 +131,6 @@ impl UserMembership {
         self.updated_at = now();
     }
 
-    /// Builder method - placeholder for purchase_id (field doesn't exist in current model)
-    /// This is a compatibility method for existing code
-    pub fn with_purchase_id(self, _purchase_id: CompositePartition) -> Self {
-        // No-op: purchase_id field doesn't exist in the simplified model
-        self
-    }
-
     pub fn calculate_remaining_duration_days(&self) -> i32 {
         if self.is_infinite() {
             return -1; // Infinite duration
@@ -165,7 +157,7 @@ impl UserMembership {
     }
 }
 
-impl MembershipEntity for UserMembership {
+impl MembershipEntity for TeamMembership {
     fn owner_pk(&self) -> Partition {
         self.pk.clone()
     }
@@ -195,7 +187,7 @@ impl MembershipEntity for UserMembership {
     }
 
     fn calculate_remaining_duration_days(&self) -> i32 {
-        UserMembership::calculate_remaining_duration_days(self)
+        TeamMembership::calculate_remaining_duration_days(self)
     }
 
     fn upsert_transact_write_item(&self) -> TransactWriteItem {

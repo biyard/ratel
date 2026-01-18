@@ -6,7 +6,7 @@ use crate::types::*;
 use crate::*;
 
 #[derive(Debug, Default, Clone, Serialize, Deserialize, DynamoEntity, JsonSchema, OperationIo)]
-/// UserReward: 유저가 획득한 리워드 기록 ( 중복 지급 제한 )
+/// UserReward: 유저가 획득한 리워드 기록 ( 중복 지급 제한용 ) 실제 목록은 Biyard Service 통해 조회
 ///
 /// Key Structure:
 /// - PK: USER#{user_pk}##REWARD
@@ -39,12 +39,12 @@ pub struct UserRewardHistory {
 }
 
 impl UserRewardHistory {
-    pub fn new(user_pk: UserPartition, space_reward: SpaceReward) -> Self {
+    pub fn new(target_pk: Partition, space_reward: SpaceReward) -> Self {
         let now = time::get_now_timestamp_millis();
         let time_key = space_reward.period.to_time_key(now);
         let amount = space_reward.get_amount();
         let (pk, sk) = Self::keys(
-            user_pk,
+            target_pk,
             space_reward.get_space_pk(),
             space_reward.sk,
             time_key,
@@ -64,12 +64,17 @@ impl UserRewardHistory {
         self
     }
     pub fn keys(
-        user_pk: UserPartition,
+        target_pk: Partition,
         space_pk: SpacePartition,
         reward_key: RewardKey,
         time_key: String,
     ) -> (CompositePartition, UserRewardHistoryKey) {
-        let user_reward_history: UserRewardHistoryPartition = UserRewardHistoryPartition(user_pk.0);
+        let id = match target_pk {
+            Partition::User(id) => id.clone(),
+            Partition::Team(id) => id.clone(),
+            _ => panic!("Biyard user_pk must be of Partition::User or Partition::Team type"),
+        };
+        let user_reward_history: UserRewardHistoryPartition = UserRewardHistoryPartition(id);
 
         let reward_history_type = UserRewardHistoryKey(reward_key, time_key);
         (

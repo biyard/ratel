@@ -82,14 +82,14 @@ async fn test_reward_period_daily() {
     reward.create(&cli).await.unwrap();
 
     // First award on same day - should succeed
-    let result1 = UserReward::award(&cli, &biyard, user.pk.clone().into(), reward.clone()).await;
+    let result1 = UserReward::award(&cli, &biyard, reward.clone(), user.pk.clone(), None).await;
     assert!(result1.is_ok(), "First award should succeed");
     let user_reward1 = result1.unwrap();
     assert_eq!(user_reward1.total_claims, 1);
     assert_eq!(user_reward1.total_points, reward.get_amount());
 
     // Second award on same day - should fail (duplicate)
-    let result2 = UserReward::award(&cli, &biyard, user.pk.clone().into(), reward.clone()).await;
+    let result2 = UserReward::award(&cli, &biyard, reward.clone(), user.pk.clone(), None).await;
     assert!(
         result2.is_err(),
         "Second award on same day should fail due to duplicate"
@@ -102,7 +102,7 @@ async fn test_reward_period_daily() {
     let today_key = RewardPeriod::Daily.to_time_key(now);
 
     let (history_pk, history_sk) = UserRewardHistory::keys(
-        user.pk.clone().into(),
+        user.pk.clone(),
         space.pk.clone().into(),
         reward.sk.clone(),
         today_key.clone(),
@@ -145,21 +145,21 @@ async fn test_reward_condition_max_user_claims() {
     reward.create(&cli).await.unwrap();
 
     // First claim - should succeed
-    let result1 = UserReward::award(&cli, &biyard, user.pk.clone().into(), reward.clone()).await;
+    let result1 = UserReward::award(&cli, &biyard, reward.clone(), user.pk.clone(), None).await;
     assert!(result1.is_ok(), "First claim should succeed");
     let user_reward1 = result1.unwrap();
     assert_eq!(user_reward1.total_claims, 1);
     assert_eq!(user_reward1.total_points, reward.get_amount());
 
     // Second claim - should succeed
-    let result2 = UserReward::award(&cli, &biyard, user.pk.clone().into(), reward.clone()).await;
+    let result2 = UserReward::award(&cli, &biyard, reward.clone(), user.pk.clone(), None).await;
     assert!(result2.is_ok(), "Second claim should succeed");
     let user_reward2 = result2.unwrap();
     assert_eq!(user_reward2.total_claims, 2);
     assert_eq!(user_reward2.total_points, reward.get_amount() * 2);
 
     // Third claim - should fail (MaxUserClaims reached)
-    let result3 = UserReward::award(&cli, &biyard, user.pk.clone().into(), reward.clone()).await;
+    let result3 = UserReward::award(&cli, &biyard, reward.clone(), user.pk.clone(), None).await;
     assert!(result3.is_err(), "Third claim should fail");
     match result3 {
         Err(crate::Error::RewardMaxUserClaimsReached) => {
@@ -169,11 +169,7 @@ async fn test_reward_condition_max_user_claims() {
     }
 
     // Verify UserReward still has only 2 claims
-    let (pk, sk) = UserReward::keys(
-        user.pk.clone().into(),
-        space.pk.clone().into(),
-        reward.sk.clone(),
-    );
+    let (pk, sk) = UserReward::keys(user.pk.clone(), space.pk.clone().into(), reward.sk.clone());
     let final_user_reward = UserReward::get(&cli, pk, Some(sk)).await.unwrap().unwrap();
     assert_eq!(final_user_reward.total_claims, 2);
     assert_eq!(final_user_reward.total_points, reward.get_amount() * 2);
@@ -207,7 +203,7 @@ async fn test_user_reward_award_flow() {
     let initial_reward_point = reward.get_amount();
 
     // Call UserReward::award()
-    let result = UserReward::award(&cli, &biyard, user.pk.clone().into(), reward.clone()).await;
+    let result = UserReward::award(&cli, &biyard, reward.clone(), user.pk.clone(), None).await;
     assert!(result.is_ok(), "Award should succeed");
     let user_reward = result.unwrap();
 
@@ -216,11 +212,8 @@ async fn test_user_reward_award_flow() {
     assert_eq!(user_reward.total_points, initial_reward_point);
 
     // 2. Verify UserReward persisted in DB
-    let (ur_pk, ur_sk) = UserReward::keys(
-        user.pk.clone().into(),
-        space.pk.clone().into(),
-        reward.sk.clone(),
-    );
+    let (ur_pk, ur_sk) =
+        UserReward::keys(user.pk.clone(), space.pk.clone().into(), reward.sk.clone());
     let fetched_user_reward = UserReward::get(&cli, ur_pk.clone(), Some(ur_sk.clone()))
         .await
         .unwrap()
@@ -243,7 +236,7 @@ async fn test_user_reward_award_flow() {
     // 4. Verify UserRewardHistory was created
     let now = get_now_timestamp_millis();
     let (history_pk, _) = UserRewardHistory::keys(
-        user.pk.clone().into(),
+        user.pk.clone(),
         space.pk.clone().into(),
         reward.sk.clone(),
         reward.period.to_time_key(now),
@@ -265,7 +258,7 @@ async fn test_user_reward_award_flow() {
     assert_eq!(history.month, Some("2025-12".to_string()));
 
     // 5. Test second award to verify incremental updates
-    let result2 = UserReward::award(&cli, &biyard, user.pk.clone().into(), reward.clone()).await;
+    let result2 = UserReward::award(&cli, &biyard, reward.clone(), user.pk.clone(), None).await;
     assert!(result2.is_ok(), "Second award should succeed");
     let user_reward2 = result2.unwrap();
     assert_eq!(user_reward2.total_claims, 2);
@@ -298,12 +291,12 @@ async fn test_biyard_transaction_rollback_on_duplicate() {
     reward.create(&cli).await.unwrap();
 
     // First award - should succeed and Biyard points awarded
-    let result1 = UserReward::award(&cli, &biyard, user.pk.clone().into(), reward.clone()).await;
+    let result1 = UserReward::award(&cli, &biyard, reward.clone(), user.pk.clone(), None).await;
     assert!(result1.is_ok(), "First award should succeed");
 
     // Verify first history was created
     let (history_pk, history_sk) = UserRewardHistory::keys(
-        user.pk.clone().into(),
+        user.pk.clone(),
         space.pk.clone().into(),
         reward.sk.clone(),
         "ONCE".to_string(),
@@ -320,7 +313,7 @@ async fn test_biyard_transaction_rollback_on_duplicate() {
 
     // Second award - should fail because of Once period (duplicate history)
     // The transaction will fail, and Biyard points should be rolled back
-    let result2 = UserReward::award(&cli, &biyard, user.pk.clone().into(), reward.clone()).await;
+    let result2 = UserReward::award(&cli, &biyard, reward.clone(), user.pk.clone(), None).await;
     assert!(
         result2.is_err(),
         "Second award should fail due to duplicate history"
@@ -344,11 +337,8 @@ async fn test_biyard_transaction_rollback_on_duplicate() {
     );
 
     // Verify UserReward still shows only 1 claim
-    let (ur_pk, ur_sk) = UserReward::keys(
-        user.pk.clone().into(),
-        space.pk.clone().into(),
-        reward.sk.clone(),
-    );
+    let (ur_pk, ur_sk) =
+        UserReward::keys(user.pk.clone(), space.pk.clone().into(), reward.sk.clone());
     let user_reward = UserReward::get(&cli, ur_pk, Some(ur_sk))
         .await
         .unwrap()

@@ -5,13 +5,13 @@ use crate::*;
 use aws_sdk_dynamodb::types::TransactWriteItem;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default, JsonSchema, OperationIo)]
-pub struct UserPurchase {
-    #[dynamo(prefix = "PAYMENT", name = "find_by_user", index = "gsi1", pk)]
+pub struct TeamPurchase {
+    #[dynamo(prefix = "PAYMENT", name = "find_by_team", index = "gsi1", pk)]
     #[dynamo(prefix = "PAYMENT", name = "find_by_status", index = "gsi2", pk)]
     pub pk: CompositePartition,
     pub sk: EntityType,
 
-    #[dynamo(prefix = "PAYMENT", name = "find_by_user", index = "gsi1", sk)]
+    #[dynamo(prefix = "TS", name = "find_by_team", index = "gsi1", sk)]
     pub created_at: i64,
 
     #[dynamo(name = "find_by_status", index = "gsi2", sk)]
@@ -25,9 +25,9 @@ pub struct UserPurchase {
     pub tx_id: String,
 }
 
-impl UserPurchase {
+impl TeamPurchase {
     pub fn new(
-        pk: UserPartition,
+        pk: TeamPartition,
         tx_type: TransactionType,
         amount: i64,
         currency: Currency,
@@ -38,8 +38,8 @@ impl UserPurchase {
         let created_at = now();
 
         Self {
-            pk: CompositePartition::user_purchase_pk(pk.into()),
-            sk: EntityType::UserPurchase(uuid),
+            pk: CompositePartition::team_purchase_pk(pk.into()),
+            sk: EntityType::TeamPurchase(uuid),
             tx_type,
             amount,
             created_at,
@@ -51,7 +51,7 @@ impl UserPurchase {
     }
 }
 
-impl PurchaseEntity for UserPurchase {
+impl PurchaseEntity for TeamPurchase {
     fn pk(&self) -> &CompositePartition {
         &self.pk
     }

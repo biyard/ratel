@@ -1,12 +1,14 @@
-use crate::features::membership::{PaymentEntity, UserMembership};
+#![allow(unused_variables)]
+use crate::features::membership::PaymentEntity;
 use crate::features::payment::*;
+use crate::models::team::{Team, TeamOwner};
 use crate::services::portone::{Currency, PaymentCancelScheduleResponse, PortOne};
 use crate::types::*;
 use crate::*;
 use aws_sdk_dynamodb::types::TransactWriteItem;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default, JsonSchema, OperationIo)]
-pub struct UserPayment {
+pub struct TeamPayment {
     pub pk: CompositePartition,
     pub sk: EntityType,
 
@@ -16,15 +18,12 @@ pub struct UserPayment {
     pub birth_date: String,
 }
 
-impl UserPayment {
-    pub fn new(pk: Partition, customer_id: String, name: String, birth_date: String) -> Self {
-        if !matches!(pk, Partition::User(_)) {
-            panic!("UserPayment pk must be of Partition::User type");
-        }
+impl TeamPayment {
+    pub fn new(pk: TeamPartition, customer_id: String, name: String, birth_date: String) -> Self {
         let now = time::get_now_timestamp_millis();
 
         Self {
-            pk: CompositePartition(pk, Partition::Payment),
+            pk: CompositePartition(pk.into(), Partition::Payment),
             sk: EntityType::Created(now.to_string()),
             customer_id,
             name,
@@ -34,63 +33,93 @@ impl UserPayment {
         }
     }
 
-    pub async fn get_by_user(
+    pub async fn get_by_team(
+        cli: &aws_sdk_dynamodb::Client,
+        team_pk: TeamPartition,
+    ) -> crate::Result<Option<Self>> {
+        let pk = CompositePartition::team_payment_pk(team_pk.into());
+        let result: Option<TeamPayment> = Self::get(cli, &pk, None::<String>).await?;
+        Ok(result)
+    }
+
+    pub async fn get_or_create(
         cli: &aws_sdk_dynamodb::Client,
         portone: &PortOne,
-        user_pk: UserPartition,
+        team: &Team,
+        team_owner: &TeamOwner,
         card_info: Option<CardInfo>,
     ) -> crate::Result<(Self, bool)> {
         #[cfg(test)]
         {
             let now = time::get_now_timestamp_millis();
+            let team_pk: TeamPartition = team.pk.clone().into();
 
             return Ok((
                 Self {
-                    pk: CompositePartition(user_pk.clone().into(), Partition::Payment),
+                    pk: CompositePartition(team.pk.clone(), Partition::Payment),
                     sk: EntityType::Created(now.to_string()),
-                    customer_id: user_pk.to_string(),
-                    name: "Test User".to_string(),
+                    customer_id: team_pk.to_string(),
+                    name: team_owner.display_name.clone(),
                     birth_date: "1990-01-15".to_string(),
-                    billing_key: Some(user_pk.to_string()),
+                    billing_key: Some(team_pk.to_string()),
                 },
                 false,
             ));
         }
 
-        let pk = CompositePartition::user_payment_pk(user_pk.into());
-        let mut user_payment: UserPayment = UserPayment::get(cli, &pk, None::<String>)
-            .await?
-            .ok_or_else(|| Error::InvalidIdentification)?;
+        #[cfg(not(test))]
+        {
+            let pk = CompositePartition::team_payment_pk(team.pk.clone().into());
+            let existing: Option<TeamPayment> = Self::get(cli, &pk, None::<String>).await?;
 
-        let mut should_update = false;
+            let mut should_update = false;
 
-        if user_payment.billing_key.is_none() {
-            let CardInfo {
-                card_number,
-                expiry_year,
-                expiry_month,
-                birth_or_business_registration_number,
-                password_two_digits,
-            } = card_info.ok_or_else(|| Error::CardInfoRequired)?;
+            let mut team_payment = match existing {
+                Some(payment) => payment,
+                None => {
+                    // Need card info to create new payment
+                    let card_info = card_info.clone().ok_or(Error::CardInfoRequired)?;
 
-            let res = portone
-                .get_billing_key(
-                    user_payment.pk.to_string(),
-                    user_payment.name.clone(),
+                    // Create new payment record
+                    let team_pk: TeamPartition = team.pk.clone().into();
+                    let new_payment = TeamPayment::new(
+                        team.pk.clone().into(),
+                        team_pk.to_string(),
+                        team_owner.display_name.clone(),
+                        card_info.birth_or_business_registration_number.clone(),
+                    );
+                    should_update = true;
+                    new_payment
+                }
+            };
+
+            if team_payment.billing_key.is_none() {
+                let CardInfo {
                     card_number,
                     expiry_year,
                     expiry_month,
                     birth_or_business_registration_number,
                     password_two_digits,
-                )
-                .await?;
+                } = card_info.ok_or(Error::CardInfoRequired)?;
 
-            user_payment.billing_key = Some(res.billing_key_info.billing_key.clone());
+                let res = portone
+                    .get_billing_key(
+                        team_payment.pk.to_string(),
+                        team_payment.name.clone(),
+                        card_number,
+                        expiry_year,
+                        expiry_month,
+                        birth_or_business_registration_number,
+                        password_two_digits,
+                    )
+                    .await?;
 
-            should_update = true;
+                team_payment.billing_key = Some(res.billing_key_info.billing_key.clone());
+                should_update = true;
+            }
+
+            Ok((team_payment, should_update))
         }
-
-        Ok((user_payment, should_update))
     }
 
     pub async fn purchase(
@@ -99,7 +128,7 @@ impl UserPayment {
         tx_type: TransactionType,
         amount: i64,
         currency: Currency,
-    ) -> crate::Result<UserPurchase> {
+    ) -> crate::Result<TeamPurchase> {
         let (res, payment_id) = portone
             .pay_with_billing_key(
                 self.customer_id.clone(),
@@ -111,7 +140,7 @@ impl UserPayment {
             )
             .await?;
 
-        let user_purchase = UserPurchase::new(
+        let team_purchase = TeamPurchase::new(
             self.pk.0.clone().into(),
             tx_type,
             amount,
@@ -120,7 +149,7 @@ impl UserPayment {
             res.payment.pg_tx_id,
         );
 
-        Ok(user_purchase)
+        Ok(team_purchase)
     }
 
     pub async fn schedule_next_membership_purchase(
@@ -130,7 +159,7 @@ impl UserPayment {
         amount: i64,
         currency: Currency,
         time_to_pay: String,
-    ) -> crate::Result<UserPurchase> {
+    ) -> crate::Result<TeamPurchase> {
         let (res, payment_id) = portone
             .schedule_pay_with_billing_key(
                 self.customer_id.clone(),
@@ -143,7 +172,7 @@ impl UserPayment {
             )
             .await?;
 
-        let user_purchase = UserPurchase::new(
+        let team_purchase = TeamPurchase::new(
             self.pk.0.clone().into(),
             tx_type,
             amount,
@@ -153,7 +182,7 @@ impl UserPayment {
         )
         .with_status(PurchaseStatus::Scheduled);
 
-        Ok(user_purchase)
+        Ok(team_purchase)
     }
 
     pub async fn cancel_scheduled_payments(
@@ -161,7 +190,7 @@ impl UserPayment {
         cli: &aws_sdk_dynamodb::Client,
         portone: &PortOne,
     ) -> crate::Result<PaymentCancelScheduleResponse> {
-        debug!("Canceling scheduled payments for user {:?}", self);
+        debug!("Canceling scheduled payments for team {:?}", self);
         if self.billing_key.is_none() {
             return Err(Error::CardInfoRequired);
         }
@@ -170,9 +199,9 @@ impl UserPayment {
             .cancel_schedule_with_billing_key(self.billing_key.clone().unwrap())
             .await?;
 
-        let opt = UserPurchase::opt_one().sk(PurchaseStatus::Scheduled.to_string());
-        let pk = CompositePartition::user_purchase_pk(self.pk.0.clone());
-        let (purchase, _bm) = UserPurchase::find_by_status(cli, &pk, opt).await?;
+        let opt = TeamPurchase::opt_one().sk(PurchaseStatus::Scheduled.to_string());
+        let pk = CompositePartition::team_purchase_pk(self.pk.0.clone());
+        let (purchase, _bm) = TeamPurchase::find_by_status(cli, &pk, opt).await?;
         debug!(
             "Found scheduled purchase to cancel: {:?} for {}",
             purchase, pk
@@ -181,9 +210,9 @@ impl UserPayment {
         let purchase = purchase
             .into_iter()
             .next()
-            .ok_or_else(|| Error::InvalidIdentification)?;
+            .ok_or(Error::InvalidIdentification)?;
 
-        while let Err(err) = UserPurchase::updater(&purchase.pk, &purchase.sk)
+        while let Err(err) = TeamPurchase::updater(&purchase.pk, &purchase.sk)
             .with_status(PurchaseStatus::Canceled)
             .execute(cli)
             .await
@@ -199,8 +228,8 @@ impl UserPayment {
     }
 }
 #[async_trait::async_trait]
-impl PaymentEntity for UserPayment {
-    type Purchase = UserPurchase;
+impl PaymentEntity for TeamPayment {
+    type Purchase = TeamPurchase;
 
     async fn purchase(
         &self,
@@ -209,7 +238,7 @@ impl PaymentEntity for UserPayment {
         amount: i64,
         currency: Currency,
     ) -> crate::Result<Self::Purchase> {
-        UserPayment::purchase(self, portone, tx_type, amount, currency).await
+        TeamPayment::purchase(self, portone, tx_type, amount, currency).await
     }
 
     async fn schedule_next_membership_purchase(
@@ -220,7 +249,7 @@ impl PaymentEntity for UserPayment {
         currency: Currency,
         scheduled_at: String,
     ) -> crate::Result<Self::Purchase> {
-        UserPayment::schedule_next_membership_purchase(
+        TeamPayment::schedule_next_membership_purchase(
             self,
             portone,
             tx_type,
@@ -236,7 +265,7 @@ impl PaymentEntity for UserPayment {
         cli: &aws_sdk_dynamodb::Client,
         portone: &PortOne,
     ) -> crate::Result<()> {
-        UserPayment::cancel_scheduled_payments(self, cli, portone).await?;
+        TeamPayment::cancel_scheduled_payments(self, cli, portone).await?;
         Ok(())
     }
 
