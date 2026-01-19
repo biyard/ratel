@@ -232,6 +232,8 @@ jobs:
           ECR_NAME: main-api
           MIGRATE: true
           DYNAMO_TABLE_PREFIX: ratel-local
+          BEDROCK_AGENT_ID: test
+          BEDROCK_AGENT_ALIAS_ID: test
         run: |
           # Build and tag image
           make dist
@@ -302,6 +304,9 @@ jobs:
           RUST_LOG: info
           DYNAMO_TABLE_PREFIX: ratel-local
           RUST_FLAG: "--features bypass,no-secret"
+          BEDROCK_AGENT_ID: test
+          BEDROCK_AGENT_ALIAS_ID: test
+          PDF_BUCKET_NAME: test
         run: |
           # Build and tag image
           make dist
