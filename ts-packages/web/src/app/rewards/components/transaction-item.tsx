@@ -20,7 +20,11 @@ export function TransactionItem({
   });
 
   return (
-    <Card className="rounded " variant="outlined">
+    <Card
+      data-testid="transaction-item"
+      className="rounded "
+      variant="outlined"
+    >
       <div className="flex items-center justify-between w-full">
         {/* Left side: Transaction info */}
         <div className="flex flex-col gap-0.5">

@@ -33,7 +33,10 @@ export default function RewardsPage() {
     (rewards.user_points / rewards.total_points) * rewards.monthly_token_supply,
   );
   return (
-    <div className="w-full max-w-desktop mx-auto px-4 py-6">
+    <div
+      data-testid="my-rewards-page"
+      className="w-full max-w-desktop mx-auto px-4 py-6"
+    >
       <PointsSummaryCard
         i18n={i18n}
         totalPoints={rewards.total_points}

@@ -37,7 +37,7 @@ export function TransactionList({
   }
 
   return (
-    <div className="flex flex-col gap-0">
+    <div data-testid="transaction-list" className="flex flex-col gap-0">
       {transactions.map((transaction, index) => (
         <TransactionItem
           key={`${transaction.created_at}-${index}`}
