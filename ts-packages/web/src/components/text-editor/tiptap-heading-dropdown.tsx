@@ -7,6 +7,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useState } from 'react';
 
 const HEADING_OPTIONS = [
   { value: 'paragraph', label: 'Normal', className: 'text-sm' },
@@ -24,6 +25,8 @@ export const HeadingDropdown = ({
   onTriggerPointerDown,
   contentProps,
 }: HeadingDropdownProps) => {
+  const [open, setOpen] = useState(false);
+
   const getCurrentHeading = () => {
     if (!editor) return 'Normal';
     if (editor.isActive('heading', { level: 1 })) return 'H1';
@@ -42,22 +45,46 @@ export const HeadingDropdown = ({
     } else {
       chain.setHeading({ level: parseInt(value) as 1 | 2 | 3 }).run();
     }
+
+    const { to } = editor.state.selection;
+    editor.commands.setTextSelection(to);
+    setOpen(false);
+    onOpenChange?.(false);
   };
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent) => {
     // Prevent losing text selection when clicking heading dropdown
     e.preventDefault();
+    e.stopPropagation();
     onTriggerPointerDown?.();
+    if (disabled) return;
+    if (open) return;
+    setOpen(true);
+    onOpenChange?.(true);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   return (
-    <DropdownMenu onOpenChange={onOpenChange}>
+    <DropdownMenu
+      modal={false}
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen === open) return;
+        setOpen(nextOpen);
+        onOpenChange?.(nextOpen);
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <button
           tabIndex={-1}
           type="button"
           disabled={disabled}
-          onMouseDown={handleMouseDown}
+          onPointerDown={handlePointerDown}
+          onClick={handleClick}
           className={cn(
             'flex items-center gap-1.5 px-2 py-1',
             'rounded transition-all',
