@@ -190,21 +190,7 @@ export function ReportDraft({
             placeholder={t('report_draft_editor_placeholder')}
             minHeight="0px"
             showToolbar={editing}
-            showBubbleToolbar={editing}
-            bubbleToolbarClassName="bg-card"
-            bubbleEnabledFeatures={{
-              bold: true,
-              italic: true,
-              underline: true,
-              strike: false,
-              textColor: true,
-              highlight: false,
-              heading: true,
-              align: true,
-              lists: true,
-              link: false,
-              video: false,
-            }}
+            showBubbleToolbar={false}
             editable={editing}
             disabledFileUpload
             disabledImageUpload={false}
