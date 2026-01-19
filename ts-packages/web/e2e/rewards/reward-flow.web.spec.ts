@@ -26,7 +26,7 @@ test.describe.serial('[Reward] Poll Space Reward Flow', () => {
   test.describe.configure({ retries: 0, timeout: 60000 });
 
   const userA = {
-    email: 'hi+admin2@biyard.co',
+    email: 'hi+admin1@biyard.co',
     password: REWARD_TEST_PASSWORD,
   };
 

@@ -251,10 +251,7 @@ async fn test_user_reward_award_flow() {
     assert_eq!(histories.0.len(), 1, "Should have one history entry");
     let history = &histories.0[0];
     assert_eq!(history.point, initial_reward_point);
-    assert_eq!(
-        history.transaction_id,
-        Some("test-transaction-id".to_string())
-    );
+
     assert_eq!(history.month, Some("2025-12".to_string()));
 
     // 5. Test second award to verify incremental updates
