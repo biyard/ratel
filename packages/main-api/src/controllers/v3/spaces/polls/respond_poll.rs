@@ -2,7 +2,7 @@ use crate::features::did::VerifiedAttributes;
 use crate::features::spaces::panels::SpacePanelParticipant;
 
 use crate::features::spaces::rewards::{
-    PollRewardKey, RewardKey, RewardAction, SpaceReward, UserReward,
+    PollRewardKey, RewardAction, RewardKey, SpaceReward, UserReward,
 };
 use crate::features::spaces::{SpaceParticipant, polls::*};
 use crate::models::user::User;
@@ -89,7 +89,6 @@ pub async fn respond_poll_handler(
         (poll.sk.clone().into(), PollRewardKey::Respond).into(),
     )
     .await;
-    //FIXME: Too many awaits in single handler, need to optimize
 
     // Create or Update User Response
 
@@ -110,7 +109,14 @@ pub async fn respond_poll_handler(
 
         transact_write!(&dynamo.client, create_tx, space_increment_tx)?;
         if let Ok(reward) = reward {
-            UserReward::award(&dynamo.client, &biyard, user_pk.clone().into(), reward).await?;
+            UserReward::award(
+                &dynamo.client,
+                &biyard,
+                reward,
+                user_pk.clone(),
+                Some(space.user_pk.clone()),
+            )
+            .await?;
         }
     } else {
         let (pk, sk) = PollUserAnswer::keys(&user.pk.clone(), &poll_pk.clone(), &poll.pk.clone());
