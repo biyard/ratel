@@ -36,8 +36,8 @@ impl AppState {
         let is_local = conf.env == "local" || conf.env == "test";
         let aws_sdk_config = get_aws_config();
         let aws_sns_config = get_aws_config_for_sns();
-        let dynamo = DynamoClient::new(Some(aws_sdk_config.clone()));
-        let ses = SesClient::new(aws_sdk_config.clone(), is_local);
+        let dynamo = DynamoClient::new(Some(aws_sdk_config.clone()), true);
+        let ses = SesClient::new(aws_sdk_config.clone(), is_local, true);
         let sns = SnsClient::new(aws_sns_config);
         let s3 = S3Client::new(conf.s3.name);
 

@@ -20,11 +20,10 @@ import useTopic from '../../hooks/use-topic';
 import { SpaceAnalyze } from '../../types/space-analyze';
 import { useUpdateLdaMutation } from '../../hooks/use-update-lda-mutation';
 import { useUpsertAnalyzeMutation } from '../../hooks/use-upsert-analyze-mutation';
-import { useUpdateNetworkMutation } from '../../hooks/use-update-network-mutation';
-import { useUpdateTfIdfMutation } from '../../hooks/use-update-tf-idf-mutation';
 import { useDownloadAnalyzeMutation } from '../../hooks/use-download-analyze-mutation';
 import { logger } from '@/lib/logger';
 import { showSuccessToast } from '@/lib/toast';
+import { useUpdateContentsMutation } from '../../hooks/use-update-contents-mutation';
 
 export class SpacePollAnalyzeController {
   constructor(
@@ -39,8 +38,7 @@ export class SpacePollAnalyzeController {
 
     public t: TFunction<'SpacePollAnalyze', undefined>,
     public updateLda: ReturnType<typeof useUpdateLdaMutation>,
-    public updateNetwork: ReturnType<typeof useUpdateNetworkMutation>,
-    public updateTfIdf: ReturnType<typeof useUpdateTfIdfMutation>,
+    public updateHtmlContents: ReturnType<typeof useUpdateContentsMutation>,
     public upsertAnalyze: ReturnType<typeof useUpsertAnalyzeMutation>,
     public downloadAnalyze: ReturnType<typeof useDownloadAnalyzeMutation>,
   ) {}
@@ -83,13 +81,24 @@ export class SpacePollAnalyzeController {
     ldaTopics: number,
     tfIdfKeywords: number,
     networkTopNodes: number,
+    topics: string,
   ) => {
+    const removeTopics = Array.from(
+      new Set(
+        topics
+          .split(',')
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0),
+      ),
+    );
+
     try {
       const d = await this.upsertAnalyze.mutateAsync({
         spacePk: this.spacePk,
         ldaTopics,
         tfIdfKeywords,
         networkTopNodes,
+        removeTopics,
       });
 
       showSuccessToast(this.t('success_analyze'));
@@ -99,30 +108,18 @@ export class SpacePollAnalyzeController {
     }
   };
 
-  handleUpdateLda = (
-    topics: string[],
-    keywords: string[][],
-    htmlContents?: string,
-  ) => {
+  handleUpdateLda = (topics: string[], keywords: string[][]) => {
     return this.updateLda.mutateAsync({
       spacePk: this.spacePk,
       topics: topics,
       keywords: keywords,
-      htmlContents,
     });
   };
 
-  handleUpdateNetwork = (htmlContents?: string) => {
-    return this.updateNetwork.mutateAsync({
+  handleUpdateHtmlContents = (htmlContents: string) => {
+    return this.updateHtmlContents.mutateAsync({
       spacePk: this.spacePk,
-      htmlContents,
-    });
-  };
-
-  handleUpdateTfIdf = (htmlContents?: string) => {
-    return this.updateTfIdf.mutateAsync({
-      spacePk: this.spacePk,
-      htmlContents,
+      htmlContents: htmlContents,
     });
   };
 
@@ -450,8 +447,7 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
   const { data: panels } = useListPanels(spacePk);
 
   const updateLda = useUpdateLdaMutation();
-  const updateNetwork = useUpdateNetworkMutation();
-  const updateTfIdf = useUpdateTfIdfMutation();
+  const updateHtmlContents = useUpdateContentsMutation();
 
   const upsertAnalyze = useUpsertAnalyzeMutation();
   const downloadAnalyze = useDownloadAnalyzeMutation();
@@ -474,8 +470,7 @@ export function useSpacePollAnalyzeController(spacePk: string, pollPk: string) {
 
     t,
     updateLda,
-    updateNetwork,
-    updateTfIdf,
+    updateHtmlContents,
     upsertAnalyze,
     downloadAnalyze,
   );
