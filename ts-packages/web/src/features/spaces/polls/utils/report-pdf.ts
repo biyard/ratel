@@ -173,6 +173,11 @@ export const buildReportPdfBlob = async (
       margin: 0 0 6px 0 !important;
     }
 
+    #content-root li[data-pdf-li="1"] > p{
+      display: inline !important;
+      margin: 0 !important;
+    }
+
     #content-root .__pdf_marker{
       position: absolute !important;
       left: 0 !important;
