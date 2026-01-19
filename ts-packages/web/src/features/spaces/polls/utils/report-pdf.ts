@@ -82,6 +82,7 @@ export const buildReportPdfBlob = async (
       text-rendering: geometricPrecision !important;
       color:#000000 !important;
       -webkit-text-fill-color:#000000 !important;
+      padding-bottom: 12px !important;
     }
 
     #content-root *{
@@ -149,11 +150,17 @@ export const buildReportPdfBlob = async (
       margin-top: 0 !important;
       margin-bottom: 10px !important;
       line-height: 1.5 !important;
+      word-break: keep-all !important;
+      overflow-wrap: break-word !important;
     }
 
     #content-root li{
       font-size: 16px !important;
       line-height: 1.5 !important;
+      word-break: keep-all !important;
+      overflow-wrap: break-word !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
     }
 
     #content-root svg text{
@@ -169,8 +176,12 @@ export const buildReportPdfBlob = async (
 
     #content-root li[data-pdf-li="1"]{
       position: relative !important;
-      padding-left: 28px !important;
+      padding-left: 0 !important;
       margin: 0 0 6px 0 !important;
+      display: grid !important;
+      grid-template-columns: 24px 1fr !important;
+      column-gap: 4px !important;
+      align-items: start !important;
     }
 
     #content-root li[data-pdf-li="1"] > p{
@@ -179,14 +190,11 @@ export const buildReportPdfBlob = async (
     }
 
     #content-root .__pdf_marker{
-      position: absolute !important;
-      left: 0 !important;
-      top: 0 !important;
       width: 24px !important;
-      height: 1.5em !important;
+      height: auto !important;
       display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
+      align-items: flex-start !important;
+      justify-content: flex-start !important;
       font-weight: 400 !important;
       font-size: 16px !important;
       line-height: 1.5 !important;
@@ -194,6 +202,10 @@ export const buildReportPdfBlob = async (
       -webkit-text-fill-color:#000000 !important;
       white-space: nowrap !important;
       overflow: visible !important;
+    }
+
+    #content-root .__pdf_li_content{
+      min-width: 0 !important;
     }
 
     #content-root table{
@@ -337,23 +349,39 @@ export const buildReportPdfBlob = async (
         ) as HTMLSpanElement | null;
         if (already) continue;
 
-        const marker = root.ownerDocument.createElement('span');
+        const marker = already ?? root.ownerDocument.createElement('span');
         marker.className = '__pdf_marker';
-        if (isOl) {
-          const valueRaw = li.getAttribute('value');
-          const valueAttr =
-            valueRaw && valueRaw.trim().length > 0
-              ? Number.parseInt(valueRaw, 10)
-              : Number.NaN;
-          const value = Number.isFinite(valueAttr)
-            ? valueAttr
-            : startIndex + index;
-          marker.textContent = `${value}.`;
-        } else {
-          marker.textContent = '•';
+        if (!already) {
+          if (isOl) {
+            const valueRaw = li.getAttribute('value');
+            const valueAttr =
+              valueRaw && valueRaw.trim().length > 0
+                ? Number.parseInt(valueRaw, 10)
+                : Number.NaN;
+            const value = Number.isFinite(valueAttr)
+              ? valueAttr
+              : startIndex + index;
+            marker.textContent = `${value}.`;
+          } else {
+            marker.textContent = '•';
+          }
+          li.insertBefore(marker, li.firstChild);
         }
 
-        li.insertBefore(marker, li.firstChild);
+        const existingContent = li.querySelector(
+          ':scope > .__pdf_li_content',
+        ) as HTMLSpanElement | null;
+        if (existingContent) continue;
+
+        const contentWrap = root.ownerDocument.createElement('span');
+        contentWrap.className = '__pdf_li_content';
+
+        const nodes = Array.from(li.childNodes);
+        for (const node of nodes) {
+          if (node === marker) continue;
+          contentWrap.appendChild(node);
+        }
+        li.appendChild(contentWrap);
       }
     }
   };
@@ -409,15 +437,18 @@ export const buildReportPdfBlob = async (
     const atomicBlocks = Array.from(
       root.querySelectorAll('[data-pdf-atomic="1"]'),
     ) as HTMLElement[];
-
     const atomicSet = new Set(atomicBlocks);
+
+    const listItems = Array.from(
+      root.querySelectorAll('li[data-pdf-li="1"]'),
+    ) as HTMLElement[];
+    const liSet = new Set(listItems);
 
     const baseSelectors = [
       'h1',
       'h2',
       'h3',
       'p',
-      // 'li',
       'table',
       'pre',
       'blockquote',
@@ -425,22 +456,24 @@ export const buildReportPdfBlob = async (
       'figure',
     ].join(',');
 
-    const blocks = [
-      ...atomicBlocks,
-      ...(
-        Array.from(root.querySelectorAll(baseSelectors)) as HTMLElement[]
-      ).filter((el) => {
-        let p: HTMLElement | null = el;
-        while (p && p !== root) {
-          if (atomicSet.has(p)) return false;
-          p = p.parentElement;
-        }
-        return true;
-      }),
-    ].filter((el) => {
-      const r = el.getBoundingClientRect();
-      return r.width > 0 && r.height > 0;
+    const otherBlocks = (
+      Array.from(root.querySelectorAll(baseSelectors)) as HTMLElement[]
+    ).filter((el) => {
+      let p: HTMLElement | null = el;
+      while (p && p !== root) {
+        if (atomicSet.has(p)) return false;
+        if (liSet.has(p)) return false;
+        p = p.parentElement;
+      }
+      return true;
     });
+
+    const blocks = [...atomicBlocks, ...listItems, ...otherBlocks].filter(
+      (el) => {
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+      },
+    );
 
     const maxIter = 10;
     for (let iter = 0; iter < maxIter; iter += 1) {
