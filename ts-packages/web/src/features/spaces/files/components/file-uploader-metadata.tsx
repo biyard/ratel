@@ -95,6 +95,7 @@ const FileUploaderMetadata = forwardRef<
         if (!uploadResponse.ok) throw new Error('PDF upload failed');
 
         onUploadSuccess?.({
+          id: crypto.randomUUID(),
           name: file.name,
           size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
           ext: FileExtension.PDF,
@@ -121,6 +122,7 @@ const FileUploaderMetadata = forwardRef<
         });
         if (!uploadResponse.ok) throw new Error('File upload failed');
         onUploadSuccess?.({
+          id: crypto.randomUUID(),
           name: file.name,
           size: `${(file.size / 1024).toFixed(1)} KB`,
           ext: fileTypeKey,
@@ -162,6 +164,7 @@ const FileUploaderMetadata = forwardRef<
 
       await completeMultipartUpload({ upload_id, key, parts: etags });
       onUploadSuccess?.({
+        id: crypto.randomUUID(),
         name: file.name,
         size: `${(file.size / 1024).toFixed(1)} KB`,
         ext: fileTypeKey,

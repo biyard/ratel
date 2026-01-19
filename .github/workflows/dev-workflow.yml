@@ -54,7 +54,6 @@ jobs:
           STACK: ratel-dev-stack
           DEPLOY_STORYBOOK: false
           DEPLOY_STATIC: false
-          CHROMIUM_LAYER_ARNS_JSON: ${{ secrets.CHROMIUM_LAYER_ARNS_JSON }}
         run: |
           npm i -g aws-cdk
           make cdk-deploy-v2
@@ -160,6 +159,9 @@ jobs:
           RATEL_PROJECT_ID: ${{ secrets.RATEL_PROJECT_ID }}
           REWARD: true
 
+          BEDROCK_AGENT_ID: ${{ secrets.DEV_BEDROCK_AGENT_ID }}
+          BEDROCK_AGENT_ALIAS_ID: ${{ secrets.DEV_BEDROCK_AGENT_ALIAS_ID }}
+          
           BIYARD_API_URL: https://api.dev.biyard.co
           BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
           BIYARD_PROJECT_ID: ${{ secrets.DEV_BIYARD_PROJECT_ID }}
@@ -333,10 +335,6 @@ jobs:
 
           DYNAMO_TABLE_PREFIX: ratel-dev
           DYNAMO_ENDPOINT: none
-          BUCKET_NAME: metadata.ratel.foundation
-          ASSET_DIR: metadata
-          BUCKET_EXPIRE: 3600
-          S3_REGION: ap-northeast-2
           RUST_FLAG: "--features lambda --release"
           WEB_BUILD: false
         run: |
