@@ -190,7 +190,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           Video,
           Table.configure({
             resizable: true,
-            HTMLAttributes: { class: 'border-collapse table-auto w-full my-4' },
+            HTMLAttributes: {
+              class: 'border-collapse table-auto w-full my-4',
+            },
           }),
           TableRow,
           TableHeader.configure({
@@ -204,7 +206,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           AnalyzeTfidfBlock,
         ],
         content,
-        editable: editable,
+        editable,
         onUpdate: ({ editor }) => onUpdate?.(editor.getHTML()),
         onFocus: () => onFocus?.(),
         onBlur: () => onBlur?.(),
@@ -231,7 +233,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           },
         },
       },
-      [uploadAsset, uploadVideo, maxImageSizeMB, maxVideoSizeMB],
+      [uploadAsset, uploadVideo, maxImageSizeMB, maxVideoSizeMB, editable],
     ) as Editor | null;
 
     const restoreBubbleSelection = useCallback(() => {
@@ -242,7 +244,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
         );
         // eslint-disable-next-line unused-imports/no-unused-vars
       } catch (_) {
-        // Ignore selection restore errors for non-text selections.
+        //
       }
     }, [editor]);
 
@@ -291,11 +293,6 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
         editor.commands.setContent(content);
       }
     }, [content, editor]);
-
-    useEffect(() => {
-      if (!editor || editor.isDestroyed) return;
-      editor.setEditable(editable);
-    }, [editor, editable]);
 
     useEffect(() => {
       return () => {
@@ -393,9 +390,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
 
         <div
           className={cn('flex-1 px-5 py-3', 'overflow-y-auto', editorClassName)}
-          style={{
-            minHeight,
-          }}
+          style={{ minHeight }}
         >
           <div
             ref={containerRef}
@@ -438,7 +433,8 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
                 '[&_.ProseMirror_.youtube]:pt-[56.25%]',
                 '[&_.ProseMirror_.selectedCell]:outline-primary/40',
                 '[&_.ProseMirror_.selectedCell]:outline-offset-[-1px]',
-                '[&_.ProseMirror_.column-resize-handle]:absolute [&_.ProseMirror_.column-resize-handle]:right-[-2px] [&_.ProseMirror_.column-resize-handle]:top-0 [&_.ProseMirror_.column-resize-handle]:bottom-0 [&_.ProseMirror_.column-resize-handle]:w-[4px] [&_.ProseMirror_.column-resize-handle]:bg-primary [&_.ProseMirror_.column-resize-handle]:pointer-events-none',
+                '[&_.ProseMirror_.column-resize-handle]:absolute [&_.ProseMirror_.column-resize-handle]:right-[-2px] [&_.ProseMirror_.column-resize-handle]:top-0 [&_.ProseMirror_.column-resize-handle]:bottom-0 [&_.ProseMirror_.column-resize-handle]:w-[6px] [&_.ProseMirror_.column-resize-handle]:bg-yellow-400/70 [&_.ProseMirror_.column-resize-handle]:!pointer-events-auto [&_.ProseMirror_.column-resize-handle]:cursor-col-resize [&_.ProseMirror_.column-resize-handle]:z-50 [&_.ProseMirror_.column-resize-handle]:touch-none',
+                '[&_.ProseMirror.resize-cursor]:cursor-col-resize',
                 '[&_.ProseMirror_iframe]:w-full [&_.ProseMirror_iframe]:max-w-full',
               )}
               data-testid="tiptap-editor-content"
