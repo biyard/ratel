@@ -18,6 +18,7 @@ export interface PostEditorProps extends TiptapEditorProps {
   onUploadPDF?: (fileList: FileList | File[]) => void;
   onRemovePdf?: (index: number) => void;
   onRemoveImage?: () => void;
+  containerClassName?: string;
 }
 
 export const PostEditor = forwardRef<Editor | null, PostEditorProps>(
@@ -30,6 +31,7 @@ export const PostEditor = forwardRef<Editor | null, PostEditorProps>(
       editable,
       disabledFileUpload = true,
       disabledImageUpload = false,
+      containerClassName,
       ...editorProps
     } = props;
 
@@ -67,7 +69,7 @@ export const PostEditor = forwardRef<Editor | null, PostEditorProps>(
     }, [files]);
 
     return (
-      <div className="flex flex-col w-full">
+      <div className={`flex flex-col w-full ${containerClassName ?? ''}`}>
         <TiptapEditor
           ref={ref}
           editable={editable}
