@@ -230,27 +230,6 @@ echo 'Creating user memberships...'
 # Calculate expiration timestamp (30 days from now in milliseconds)
 EXPIRED_AT=$((TIMESTAMP + 30 * 24 * 60 * 60 * 1000))
 
-# Admin1 - PRO Membership (40 credits)
-aws --endpoint-url=$ENDPOINT dynamodb put-item \
-  --table-name ratel-local-main \
-  --item '{
-    "pk": {"S": "USER#00000000-0000-0000-0000-000000000001"},
-    "sk": {"S": "USER_MEMBERSHIP"},
-    "created_at": {"N": "'${TIMESTAMP}'"},
-    "updated_at": {"N": "'${TIMESTAMP}'"},
-    "expired_at": {"N": "'${EXPIRED_AT}'"},
-    "membership_pk": {"S": "MEMBERSHIP#PRO"},
-    "status": {"S": "Active"},
-    "total_credits": {"N": "40"},
-    "remaining_credits": {"N": "40"},
-    "auto_renew": {"BOOL": true},
-    "gsi1_pk": {"S": "UM#MEMBERSHIP#PRO"},
-    "gsi1_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi2_pk": {"S": "USER#00000000-0000-0000-0000-000000000001"},
-    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
-    "gsi3_pk": {"S": "USER_MEMBERSHIP#00000000-0000-0000-0000-000000000001"},
-    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
-  }'
 
 # User1 - PRO Membership (40 credits)
 aws --endpoint-url=$ENDPOINT dynamodb put-item \
@@ -268,6 +247,28 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "auto_renew": {"BOOL": true},
     "gsi1_pk": {"S": "UM#MEMBERSHIP#PRO"},
     "gsi1_sk": {"S": "TS#'${TIMESTAMP}'"}
+  }'
+
+# Admin1 (hi+admin1@biyard.co) - PRO Membership (40 credits)
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "USER#00000000-0000-0000-0000-000000000021"},
+    "sk": {"S": "USER_MEMBERSHIP"},
+    "created_at": {"N": "'${TIMESTAMP}'"},
+    "updated_at": {"N": "'${TIMESTAMP}'"},
+    "expired_at": {"N": "'${EXPIRED_AT}'"},
+    "membership_pk": {"S": "MEMBERSHIP#PRO"},
+    "status": {"S": "Active"},
+    "total_credits": {"N": "40"},
+    "remaining_credits": {"N": "40"},
+    "auto_renew": {"BOOL": true},
+    "gsi1_pk": {"S": "UM#MEMBERSHIP#PRO"},
+    "gsi1_sk": {"S": "TS#'${TIMESTAMP}'"},
+    "gsi2_pk": {"S": "USER#00000000-0000-0000-0000-000000000021"},
+    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
+    "gsi3_pk": {"S": "USER_MEMBERSHIP#00000000-0000-0000-0000-000000000021"},
+    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
   }'
 
 echo 'User memberships created successfully'
@@ -403,6 +404,7 @@ echo '  Username: admin'
 echo ''
 echo 'User Memberships:'
 echo '  user1: PRO (40 credits)'
+echo '  admin1: PRO (40 credits)'
 echo ''
 echo 'Attribute Codes:'
 echo '  j94EA1 - Sogang Male'
