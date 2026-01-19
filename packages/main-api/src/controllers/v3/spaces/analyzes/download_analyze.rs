@@ -2,15 +2,16 @@ use crate::features::spaces::analyzes::SpaceAnalyze;
 // use crate::models::SpaceCommon;
 use crate::spaces::SpacePath;
 use crate::spaces::SpacePathParam;
-use crate::utils::aws::PollScheduler;
-use crate::utils::aws::get_aws_config;
+use crate::utils::reports::{build_report_html_document, presign_report_upload};
 use crate::*;
 
 #[derive(
     Debug, Clone, serde::Serialize, serde::Deserialize, Default, aide::OperationIo, JsonSchema,
 )]
 pub struct DownloadAnalyzeResponse {
+    pub presigned_url: String,
     pub metadata_url: String,
+    pub html_document: String,
 }
 
 pub async fn download_analyze_handler(
@@ -33,29 +34,13 @@ pub async fn download_analyze_handler(
     }
 
     let analyze = analyze.unwrap();
-
-    if analyze.metadata_url.is_some() {
-        let metadata_url = analyze.metadata_url.unwrap();
-
-        if metadata_url != "".to_string() && metadata_url != "pending".to_string() {
-            return Ok(Json(DownloadAnalyzeResponse { metadata_url }));
-        }
-    }
-
-    let pending_url = "pending".to_string();
-
-    let _ = SpaceAnalyze::updater(&space_pk, EntityType::SpaceAnalyze)
-        .with_metadata_url(pending_url.clone())
-        .execute(&dynamo.client)
-        .await?;
-
-    let sdk_config = get_aws_config();
-    let scheduler = PollScheduler::new(&sdk_config);
-    scheduler
-        .schedule_download_analyze(space_pk.clone())
-        .await?;
+    let html_contents = analyze.html_contents.unwrap_or_default();
+    let html_document = build_report_html_document(&html_contents);
+    let upload = presign_report_upload().await?;
 
     Ok(Json(DownloadAnalyzeResponse {
-        metadata_url: pending_url,
+        presigned_url: upload.presigned_url,
+        metadata_url: upload.metadata_url,
+        html_document,
     }))
 }

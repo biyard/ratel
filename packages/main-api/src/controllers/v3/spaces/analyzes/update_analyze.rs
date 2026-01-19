@@ -13,6 +13,9 @@ pub enum UpdateAnalyzeRequest {
     HtmlContents {
         html_contents: String,
     },
+    MetadataUrl {
+        metadata_url: String,
+    },
 }
 
 pub async fn update_analyze_handler(
@@ -64,6 +67,13 @@ pub async fn update_analyze_handler(
                 .execute(&dynamo.client)
                 .await?;
             analyze.html_contents = Some(html_contents);
+        }
+        UpdateAnalyzeRequest::MetadataUrl { metadata_url } => {
+            SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
+                .with_metadata_url(metadata_url.clone())
+                .execute(&dynamo.client)
+                .await?;
+            analyze.metadata_url = Some(metadata_url);
         }
     }
 
