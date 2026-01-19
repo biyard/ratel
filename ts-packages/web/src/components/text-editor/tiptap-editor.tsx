@@ -47,13 +47,11 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       variant = 'default',
       showToolbar = true,
       toolbarPosition = 'top',
-      onClickLda,
-      onClickNetwork,
-      onClickTfidf,
       enabledFeatures = DEFAULT_ENABLED_FEATURES,
       showBubbleToolbar = false,
       bubbleEnabledFeatures,
       bubbleToolbarClassName,
+      toolbarFooter,
       className,
       toolbarClassName,
       editorClassName,
@@ -108,9 +106,6 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       image: false,
       table: false,
       pdf: false,
-      lda: false,
-      network: false,
-      tfidf: false,
       ...bubbleEnabledFeatures,
     };
 
@@ -337,10 +332,10 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
             onUploadPDF={onUploadPDF}
-            onClickLda={onClickLda}
-            onClickNetwork={onClickNetwork}
-            onClickTfidf={onClickTfidf}
           />
+        )}
+        {showToolbar && toolbarPosition === 'top' && toolbarFooter && (
+          <div className="px-2 py-2">{toolbarFooter}</div>
         )}
 
         {(showBubbleToolbar || bubbleEnabledFeatures) && editor && (
@@ -495,9 +490,6 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
             onUploadPDF={onUploadPDF}
-            onClickLda={onClickLda}
-            onClickNetwork={onClickNetwork}
-            onClickTfidf={onClickTfidf}
           />
         )}
       </div>

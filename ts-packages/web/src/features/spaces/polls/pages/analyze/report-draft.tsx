@@ -64,6 +64,42 @@ export function ReportDraft({
     setEditing(false);
   };
 
+  const insertLda = () => {
+    const ed = editorRef.current;
+    if (!ed) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ed.commands as any).insertLdaBlock({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ldaTopics: (analyze as any)?.lda_topics,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      htmlContents: (analyze as any)?.lda_html,
+    });
+  };
+
+  const insertNetwork = () => {
+    const ed = editorRef.current;
+    if (!ed) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ed.commands as any).insertNetworkBlock({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      network: (analyze as any)?.network,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      htmlContents: (analyze as any)?.network_html,
+    });
+  };
+
+  const insertTfidf = () => {
+    const ed = editorRef.current;
+    if (!ed) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (ed.commands as any).insertTfidfBlock({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      tf_idf: (analyze as any)?.tf_idf,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      htmlContents: (analyze as any)?.tfidf_html,
+    });
+  };
+
   const onDownload = async () => {
     const existingUrl = String(analyze?.metadata_url ?? '');
     if (existingUrl.startsWith('http')) {
@@ -166,9 +202,6 @@ export function ReportDraft({
               heading: true,
               align: true,
               lists: true,
-              lda: false,
-              network: false,
-              tfidf: false,
             }}
             editable={editing}
             disabledFileUpload
@@ -176,43 +209,49 @@ export function ReportDraft({
             containerClassName="h-full min-h-0 overflow-hidden"
             className="h-full min-h-0 overflow-hidden"
             editorClassName="flex-1 min-h-0 overflow-y-auto"
+            toolbarFooter={
+              editing && (hasLda || hasNetwork || hasTfIdf) ? (
+                <div className="flex flex-row gap-2 w-full justify-end items-center">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="rounded_secondary"
+                    disabled={!hasLda}
+                    onClick={insertLda}
+                  >
+                    {t('insert_lda')}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="rounded_secondary"
+                    disabled={!hasNetwork}
+                    onClick={insertNetwork}
+                  >
+                    {t('insert_text_network')}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="rounded_secondary"
+                    disabled={!hasTfIdf}
+                    onClick={insertTfidf}
+                  >
+                    {t('insert_tf_idf')}
+                  </Button>
+                </div>
+              ) : null
+            }
             enabledFeatures={{
-              lda: true,
-              network: true,
-              tfidf: true,
-            }}
-            onClickLda={() => {
-              const ed = editorRef.current;
-              if (!ed) return;
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (ed.commands as any).insertLdaBlock({
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                ldaTopics: (analyze as any)?.lda_topics,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                htmlContents: (analyze as any)?.lda_html,
-              });
-            }}
-            onClickNetwork={() => {
-              const ed = editorRef.current;
-              if (!ed) return;
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (ed.commands as any).insertNetworkBlock({
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                network: (analyze as any)?.network,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                htmlContents: (analyze as any)?.network_html,
-              });
-            }}
-            onClickTfidf={() => {
-              const ed = editorRef.current;
-              if (!ed) return;
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (ed.commands as any).insertTfidfBlock({
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                tf_idf: (analyze as any)?.tf_idf,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                htmlContents: (analyze as any)?.tfidf_html,
-              });
+              bold: true,
+              italic: true,
+              underline: true,
+              strike: true,
+              textColor: true,
+              highlight: true,
+              heading: true,
+              align: true,
+              lists: true,
             }}
           />
         </div>
