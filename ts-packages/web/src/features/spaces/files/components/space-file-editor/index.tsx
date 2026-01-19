@@ -81,6 +81,7 @@ export default function SpaceFileEditors({
           onUploadingChange={setIsLoading}
           onUploadSuccess={(uploaded) => {
             const f: FileModel = {
+              id: uploaded.id,
               name: uploaded.name ?? 'untitled',
               size: uploaded.size,
               ext: toFileExtension(uploaded.ext),
