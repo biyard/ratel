@@ -196,16 +196,18 @@ export function ReportDraft({
               bold: true,
               italic: true,
               underline: true,
-              strike: true,
+              strike: false,
               textColor: true,
-              highlight: true,
+              highlight: false,
               heading: true,
               align: true,
               lists: true,
+              link: false,
+              video: false,
             }}
             editable={editing}
             disabledFileUpload
-            disabledImageUpload
+            disabledImageUpload={false}
             containerClassName="h-full min-h-0 overflow-hidden"
             className="h-full min-h-0 overflow-hidden"
             editorClassName="flex-1 min-h-0 overflow-y-auto"
@@ -246,12 +248,14 @@ export function ReportDraft({
               bold: true,
               italic: true,
               underline: true,
-              strike: true,
+              strike: false,
               textColor: true,
-              highlight: true,
+              highlight: false,
               heading: true,
               align: true,
               lists: true,
+              link: false,
+              video: false,
             }}
           />
         </div>

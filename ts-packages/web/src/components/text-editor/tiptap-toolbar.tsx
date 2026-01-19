@@ -615,31 +615,36 @@ export const TiptapToolbar = ({
 
           {mode !== 'bubble' && (
             <>
-              <ToolbarButton
-                icon={<Link2 />}
-                onClick={promptAndApplyLink}
-                active={editor.isActive('link')}
-                tooltip="Link"
-                aria-label="Link"
-                data-testid="tiptap-toolbar-link"
-              />
+              {features.link && (
+                <>
+                  <ToolbarButton
+                    icon={<Link2 />}
+                    onClick={promptAndApplyLink}
+                    active={editor.isActive('link')}
+                    tooltip="Link"
+                    aria-label="Link"
+                    data-testid="tiptap-toolbar-link"
+                  />
 
-              <ToolbarButton
-                icon={<Link2Off />}
-                onClick={removeLink}
-                disabled={!editor.isActive('link')}
-                tooltip="Remove Link"
-                aria-label="Remove Link"
-              />
+                  <ToolbarButton
+                    icon={<Link2Off />}
+                    onClick={removeLink}
+                    disabled={!editor.isActive('link')}
+                    tooltip="Remove Link"
+                    aria-label="Remove Link"
+                  />
+                </>
+              )}
 
-              <ToolbarButton
-                icon={<Video />}
-                onClick={openVideoPicker}
-                active={false}
-                tooltip="Upload Video"
-                aria-label="Upload Video"
-              />
-
+              {features.video && (
+                <ToolbarButton
+                  icon={<Video />}
+                  onClick={openVideoPicker}
+                  active={false}
+                  tooltip="Upload Video"
+                  aria-label="Upload Video"
+                />
+              )}
             </>
           )}
         </div>
