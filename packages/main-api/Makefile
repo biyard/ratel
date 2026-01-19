@@ -14,7 +14,7 @@ RUSTFLAGS ?= -D warnings
 API_MODEL_ARTIFACT_DIR ?= $(PWD)/.build
 CARGO_TARGET_DIR ?= $(PWD)/target
 
-RUST_FLAG ?=
+RUST_FLAG ?= "--timings"
 
 SECRET_TOKEN ?=
 RUST_LOG ?= debug
@@ -57,7 +57,7 @@ FIREBASE_PROJECT_ID ?=
 PORTONE_API_SECRET ?=
 
 BIYARD_API_URL ?= https://api.dev.biyard.co
-BIYARD_API_SECRET ?= biyard_default_api_secret
+BIYARD_API_KEY ?= biyard_default_api_key
 BIYARD_PROJECT_ID ?= ratel
 
 RATEL_PROJECT_ID ?= 
@@ -130,7 +130,7 @@ BUILD_ENV ?= ENV=$(ENV) \
 								FCM_ENABLED=$(FCM_ENABLED) \
 								REWARD=$(REWARD) \
 								BIYARD_API_URL=$(BIYARD_API_URL) \
-								BIYARD_API_SECRET=$(BIYARD_API_SECRET) \
+								BIYARD_API_KEY=$(BIYARD_API_KEY) \
 								BIYARD_PROJECT_ID=$(BIYARD_PROJECT_ID)
 
 .build/evm-keys:

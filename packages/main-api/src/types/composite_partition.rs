@@ -25,6 +25,14 @@ impl CompositePartition {
     pub fn user_purchase_pk(user_pk: Partition) -> Self {
         CompositePartition(user_pk, Partition::Purchase)
     }
+
+    pub fn team_payment_pk(team_pk: Partition) -> Self {
+        CompositePartition(team_pk, Partition::Payment)
+    }
+
+    pub fn team_purchase_pk(team_pk: Partition) -> Self {
+        CompositePartition(team_pk, Partition::Purchase)
+    }
 }
 
 impl<T, S> Display for CompositePartition<T, S>

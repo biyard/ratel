@@ -5,16 +5,20 @@ use bdk::prelude::*;
 use lambda_runtime::{Error as LambdaError, LambdaEvent};
 use main_api::{
     features::spaces::{
-        analyzes::SpaceAnalyze,
+        analyzes::{SpaceAnalyze, SpaceAnalyzeRequest, SpaceAnalyzeRequestQueryOption},
         boards::models::{space_post::SpacePost, space_post_comment::SpacePostComment},
         members::{SpaceInvitationMember, SpaceInvitationMemberQueryOption},
         polls::Poll,
     },
     models::{Post, SpaceCommon},
+    transact_write_items,
     types::{EntityType, Partition},
     utils::{
         aws::{DynamoClient, SesClient},
-        reports::{LdaConfigV1, NetworkConfigV1, TfidfConfigV1, run_lda, run_network, run_tfidf},
+        reports::{
+            LdaConfigV1, NetworkConfigV1, ReportS3Config, TfidfConfigV1, build_space_html_contents,
+            run_lda, run_network, run_tfidf, upload_report_pdf_with_config,
+        },
     },
 };
 use serde::{Deserialize, Serialize};
@@ -43,9 +47,15 @@ struct UpsertAnalyzeEvent {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+struct DownloadAnalyzeEvent {
+    pub space_id: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
 enum WorkerEvent {
     StartSurvey(StartSurveyEvent),
     UpsertAnalyze(UpsertAnalyzeEvent),
+    DownloadAnalyze(DownloadAnalyzeEvent),
 }
 
 #[derive(Clone)]
@@ -65,8 +75,8 @@ async fn main() -> Result<(), LambdaError> {
     let cfg = config::get();
     let is_local = cfg.env == "local" || cfg.env == "test";
     let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
-    let dynamo = DynamoClient::new(Some(aws_config.clone()));
-    let ses = SesClient::new(aws_config, is_local);
+    let dynamo = DynamoClient::new(Some(aws_config.clone()), false);
+    let ses = SesClient::new(aws_config, is_local, false);
 
     let state = AppState { dynamo, ses };
 
@@ -76,26 +86,26 @@ async fn main() -> Result<(), LambdaError> {
 #[cfg(feature = "local-run")]
 #[tokio::main]
 async fn main() -> Result<(), LambdaError> {
+    use aws_config::BehaviorVersion;
     use lambda_runtime::Context;
-    use main_api::utils::aws::get_aws_config;
 
     init_tracing();
 
     let cfg = config::get();
     let is_local = cfg.env == "local" || cfg.env == "test";
-    let aws_config = get_aws_config();
-    let dynamo = DynamoClient::new(Some(aws_config.clone()));
-    let ses = SesClient::new(aws_config, is_local);
+    let aws_config = aws_config::load_defaults(BehaviorVersion::latest()).await;
+    let dynamo = DynamoClient::new(Some(aws_config.clone()), false);
+    let ses = SesClient::new(aws_config, is_local, false);
 
     let state = AppState { dynamo, ses };
 
     let payload = EventBridgeEnvelope {
-        detail: serde_json::to_value(UpsertAnalyzeEvent {
+        detail: serde_json::to_value(DownloadAnalyzeEvent {
             space_id: "019b914a-0a9b-7911-baa3-f673afd776ee".into(),
-            lda_topics: 5,
-            tf_idf_keywords: 100,
-            network_top_nodes: 30,
-            remove_keywords: vec![],
+            // lda_topics: 5,
+            // tf_idf_keywords: 100,
+            // network_top_nodes: 30,
+            // remove_keywords: vec!["성이해".to_string()],
         })?,
     };
 
@@ -114,12 +124,19 @@ fn init_tracing() {
 }
 
 fn classify_event(detail: &JsonValue) -> Result<WorkerEvent, LambdaError> {
-    let obj = detail
+    let normalized = if let Some(raw) = detail.as_str() {
+        serde_json::from_str::<JsonValue>(raw).unwrap_or(detail.clone())
+    } else {
+        detail.clone()
+    };
+
+    let obj = normalized
         .as_object()
         .ok_or_else(|| LambdaError::from("detail must be a JSON object"))?;
 
+    info!("obj: {:?}", obj.keys());
     if obj.contains_key("survey_id") {
-        let evt: StartSurveyEvent = serde_json::from_value(detail.clone())?;
+        let evt: StartSurveyEvent = serde_json::from_value(normalized)?;
         return Ok(WorkerEvent::StartSurvey(evt));
     }
 
@@ -127,8 +144,13 @@ fn classify_event(detail: &JsonValue) -> Result<WorkerEvent, LambdaError> {
         || obj.contains_key("tf_idf_keywords")
         || obj.contains_key("network_top_nodes")
     {
-        let evt: UpsertAnalyzeEvent = serde_json::from_value(detail.clone())?;
+        let evt: UpsertAnalyzeEvent = serde_json::from_value(normalized)?;
         return Ok(WorkerEvent::UpsertAnalyze(evt));
+    }
+
+    if obj.contains_key("space_id") {
+        let evt: DownloadAnalyzeEvent = serde_json::from_value(normalized)?;
+        return Ok(WorkerEvent::DownloadAnalyze(evt));
     }
 
     Err(LambdaError::from(
@@ -169,6 +191,17 @@ async fn handler(
 
             if let Err(e) = upsert_analyze(&state, &evt).await {
                 error!("failed to upsert analyze: {e:?}");
+                return Err(e);
+            }
+        }
+        WorkerEvent::DownloadAnalyze(evt) => {
+            info!(
+                "DownloadAnalyze(detail-based): request_id={}, space_id={}",
+                ctx.request_id, evt.space_id
+            );
+
+            if let Err(e) = download_analyze(&state, &evt).await {
+                error!("failed to download analyze: {e:?}");
                 return Err(e);
             }
         }
@@ -251,56 +284,143 @@ async fn upsert_analyze(state: &AppState, evt: &UpsertAnalyzeEvent) -> Result<()
     use futures::future::try_join_all;
 
     let space_pk = Partition::Space(evt.space_id.clone());
-
-    let posts = SpacePost::find_by_space_ordered(
-        &state.dynamo.client,
-        space_pk.clone(),
-        SpacePost::opt_all(),
-    )
-    .await?
-    .0;
-
-    let comment_futs = posts.iter().filter_map(|post| {
-        let space_post_pk = match &post.sk {
-            EntityType::SpacePost(pk) => Partition::SpacePost(pk.to_string()),
-            _ => return None,
+    let mut bookmark: Option<String> = None;
+    loop {
+        let opt = if let Some(b) = &bookmark {
+            SpaceAnalyzeRequestQueryOption::builder()
+                .sk(SpaceAnalyzeRequest::pending_key())
+                .bookmark(b.clone())
+        } else {
+            SpaceAnalyzeRequestQueryOption::builder().sk(SpaceAnalyzeRequest::pending_key())
         };
 
-        Some(async {
-            let (comments, _) = SpacePostComment::find_by_post_order_by_likes(
-                &state.dynamo.client,
-                space_post_pk,
-                SpacePostComment::opt_all(),
-            )
-            .await?;
-            Ok::<Vec<SpacePostComment>, main_api::Error>(comments)
-        })
-    });
+        let (requests, next) = SpaceAnalyzeRequest::find_by_analyze_finish(
+            &state.dynamo.client,
+            space_pk.clone(),
+            opt,
+        )
+        .await?;
 
-    let comments_per_post: Vec<Vec<SpacePostComment>> = try_join_all(comment_futs).await?;
-    let mut post_comments: Vec<String> = Vec::new();
-    for comments in comments_per_post {
-        for c in comments {
-            post_comments.push(c.content);
+        if requests.is_empty() {
+            break;
+        }
+
+        for mut request in requests {
+            if request.analyze_finish {
+                continue;
+            }
+
+            let posts = SpacePost::find_by_space_ordered(
+                &state.dynamo.client,
+                space_pk.clone(),
+                SpacePost::opt_all(),
+            )
+            .await?
+            .0;
+
+            let comment_futs = posts.iter().filter_map(|post| {
+                let space_post_pk = match &post.sk {
+                    EntityType::SpacePost(pk) => Partition::SpacePost(pk.to_string()),
+                    _ => return None,
+                };
+
+                Some(async {
+                    let (comments, _) = SpacePostComment::find_by_post_order_by_likes(
+                        &state.dynamo.client,
+                        space_post_pk,
+                        SpacePostComment::opt_all(),
+                    )
+                    .await?;
+                    Ok::<Vec<SpacePostComment>, main_api::Error>(comments)
+                })
+            });
+
+            let comments_per_post: Vec<Vec<SpacePostComment>> = try_join_all(comment_futs).await?;
+            let mut post_comments: Vec<String> = Vec::new();
+            for comments in comments_per_post {
+                for c in comments {
+                    post_comments.push(c.content);
+                }
+            }
+
+            let topics = request.clone().remove_topics;
+
+            let mut lda_config = LdaConfigV1::default();
+            lda_config.num_topics = request.lda_topics;
+            let lda = run_lda(&post_comments, lda_config, &topics)?;
+
+            let mut tfidf_config = TfidfConfigV1::default();
+            tfidf_config.max_features = request.tf_idf_keywords;
+            let tf_idf = run_tfidf(&post_comments, tfidf_config, &topics)?;
+
+            let mut network_config = NetworkConfigV1::default();
+            network_config.top_nodes = request.network_top_nodes;
+            let network = run_network(&post_comments, network_config, &topics)?;
+
+            let analyze = SpaceAnalyze::new(space_pk.clone(), lda, network, tf_idf, topics);
+
+            request.set_analyze_finish(true);
+            let txs = vec![
+                analyze.upsert_transact_write_item(),
+                request.upsert_transact_write_item(),
+            ];
+            transact_write_items!(&state.dynamo.client, txs)
+                .map_err(|e| LambdaError::from(e.to_string()))?;
+        }
+
+        match next {
+            Some(b) => bookmark = Some(b),
+            None => break,
         }
     }
-
-    let mut lda_config = LdaConfigV1::default();
-    lda_config.num_topics = evt.lda_topics;
-    let lda = run_lda(&post_comments, lda_config)?;
-
-    let mut tfidf_config = TfidfConfigV1::default();
-    tfidf_config.max_features = evt.tf_idf_keywords;
-    let tf_idf = run_tfidf(&post_comments, tfidf_config)?;
-
-    let mut network_config = NetworkConfigV1::default();
-    network_config.top_nodes = evt.network_top_nodes;
-    let network = run_network(&post_comments, network_config)?;
-
-    let analyze = SpaceAnalyze::new(space_pk, lda, network, tf_idf);
-    analyze.upsert(&state.dynamo.client).await?;
 
     info!("analyze update successed!");
 
     Ok(())
+}
+
+async fn download_analyze(state: &AppState, evt: &DownloadAnalyzeEvent) -> Result<(), LambdaError> {
+    let space_pk = Partition::Space(evt.space_id.clone());
+
+    let analyze = SpaceAnalyze::get(
+        &state.dynamo.client,
+        &space_pk,
+        Some(EntityType::SpaceAnalyze),
+    )
+    .await?
+    .ok_or_else(|| LambdaError::from("SpaceAnalyze not found"))?;
+
+    let html_contents = analyze.html_contents.unwrap_or_default();
+    let pdf_bytes = build_space_html_contents(html_contents).await?;
+    let report_cfg = report_s3_config_from_env()?;
+    let (_key, uri) = upload_report_pdf_with_config(pdf_bytes, report_cfg).await?;
+
+    let _ = SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
+        .with_metadata_url(uri.clone())
+        .execute(&state.dynamo.client)
+        .await?;
+
+    Ok(())
+}
+
+fn report_s3_config_from_env() -> Result<ReportS3Config, LambdaError> {
+    let bucket_name =
+        std::env::var("BUCKET_NAME").map_err(|_| LambdaError::from("BUCKET_NAME is required"))?;
+    let asset_dir =
+        std::env::var("ASSET_DIR").map_err(|_| LambdaError::from("ASSET_DIR is required"))?;
+    let env = std::env::var("ENV").unwrap_or_else(|_| "local".to_string());
+    let region = std::env::var("S3_REGION").unwrap_or_else(|_| "ap-northeast-2".to_string());
+    let access_key_id = std::env::var("AWS_ACCESS_KEY_ID")
+        .map_err(|_| LambdaError::from("AWS_ACCESS_KEY_ID is required"))?;
+    let secret_access_key = std::env::var("AWS_SECRET_ACCESS_KEY")
+        .map_err(|_| LambdaError::from("AWS_SECRET_ACCESS_KEY is required"))?;
+
+    Ok(ReportS3Config {
+        bucket_name,
+        asset_dir,
+        env,
+        region,
+        access_key_id,
+        secret_access_key,
+    })
 }

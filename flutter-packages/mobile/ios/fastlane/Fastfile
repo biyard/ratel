@@ -6,7 +6,7 @@ platform :ios do
       key_id: ENV["ASC_KEY_ID"],
       issuer_id: ENV["ASC_ISSUER_ID"],
       key_filepath: "fastlane/AuthKey_#{ENV['ASC_KEY_ID']}.p8",
-      duration: 1200,
+      # duration: 1200,
       in_house: false
     )
 
