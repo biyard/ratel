@@ -11,6 +11,8 @@ export type DropdownMenuContentProps = React.ComponentProps<
 > & {
   portalled?: boolean;
   container?: HTMLElement | null;
+  onOpenAutoFocus?: (event: Event) => void;
+  onCloseAutoFocus?: (event: Event) => void;
 };
 
 function DropdownMenu({
