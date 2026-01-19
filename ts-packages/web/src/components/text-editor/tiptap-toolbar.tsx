@@ -43,6 +43,8 @@ export const TiptapToolbar = ({
   onHeadingDropdownOpenChange,
   onHeadingDropdownTriggerPointerDown,
   headingDropdownContentProps,
+  onColorPickerOpenChange,
+  onColorPickerTriggerPointerDown,
   openVideoPicker,
   onImageUpload,
   onUploadPDF,
@@ -236,6 +238,8 @@ export const TiptapToolbar = ({
     } else {
       editor.chain().focus().setColor(color).run();
     }
+    const { to } = editor.state.selection;
+    editor.commands.setTextSelection(to);
   };
 
   const handleHighlight = (color: string) => {
@@ -245,6 +249,8 @@ export const TiptapToolbar = ({
     } else {
       editor.chain().focus().setHighlight({ color }).run();
     }
+    const { to } = editor.state.selection;
+    editor.commands.setTextSelection(to);
   };
 
   const handleImageUpload = () => {
@@ -464,6 +470,11 @@ export const TiptapToolbar = ({
               type="text"
               currentColor={editor.getAttributes('textStyle').color}
               onColorChange={handleTextColor}
+              portalled={!!dropdownPortalContainer || mode !== 'bubble'}
+              container={dropdownPortalContainer}
+              contentProps={headingDropdownContentProps}
+              onOpenChange={onColorPickerOpenChange}
+              onTriggerPointerDown={onColorPickerTriggerPointerDown}
             />
           )}
           {features.highlight && (
@@ -471,6 +482,11 @@ export const TiptapToolbar = ({
               type="background"
               currentColor={editor.getAttributes('highlight').color}
               onColorChange={handleHighlight}
+              portalled={!!dropdownPortalContainer || mode !== 'bubble'}
+              container={dropdownPortalContainer}
+              contentProps={headingDropdownContentProps}
+              onOpenChange={onColorPickerOpenChange}
+              onTriggerPointerDown={onColorPickerTriggerPointerDown}
             />
           )}
           {features.heading && (

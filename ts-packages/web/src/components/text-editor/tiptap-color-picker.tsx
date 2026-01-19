@@ -27,12 +27,24 @@ export const ColorPicker = ({
   onColorChange,
   disabled = false,
   icon,
+  portalled = true,
+  container,
+  contentProps,
+  onOpenChange,
+  onTriggerPointerDown,
 }: ColorPickerProps) => {
   const [customColor, setCustomColor] = useState(currentColor || '#000000');
+  const [open, setOpen] = useState(false);
+
+  const close = () => {
+    setOpen(false);
+    onOpenChange?.(false);
+  };
 
   const handleColorSelect = (color: string) => {
     onColorChange(color);
     setCustomColor(color);
+    close();
   };
 
   const handleCustomColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,6 +56,13 @@ export const ColorPicker = ({
   const handleMouseDown = (e: React.MouseEvent) => {
     // Prevent losing text selection when clicking color picker
     e.preventDefault();
+    e.stopPropagation();
+    onTriggerPointerDown?.();
+    if (disabled) return;
+    if (!open) {
+      setOpen(true);
+      onOpenChange?.(true);
+    }
   };
 
   const iconContent = useMemo(() => {
@@ -62,7 +81,15 @@ export const ColorPicker = ({
   }, [icon, type]);
 
   return (
-    <DropdownMenu>
+    <DropdownMenu
+      modal={false}
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (nextOpen === open) return;
+        setOpen(nextOpen);
+        onOpenChange?.(nextOpen);
+      }}
+    >
       <DropdownMenuTrigger asChild>
         <button
           tabIndex={-1}
@@ -86,7 +113,13 @@ export const ColorPicker = ({
           {iconContent}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="p-3 w-56">
+      <DropdownMenuContent
+        align="start"
+        className="p-3 w-56"
+        portalled={portalled}
+        container={container}
+        {...contentProps}
+      >
         <div className="mb-3">
           <p className="mb-2 text-xs font-medium text-foreground-muted">
             {type === 'text' ? 'Text Color' : 'Highlight Color'}

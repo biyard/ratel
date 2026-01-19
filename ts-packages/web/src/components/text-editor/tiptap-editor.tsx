@@ -77,6 +77,10 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
     const [showFoldToggle, setShowFoldToggle] = useState(false);
     const bubbleHostRef = useRef<HTMLDivElement | null>(null);
     const bubbleEnabledRef = useRef(showBubbleToolbar);
+    const bubbleKeepAliveRef = useRef(false);
+    const bubbleSelectionRef = useRef<Editor['state']['selection'] | null>(
+      null,
+    );
 
     useEffect(() => {
       bubbleEnabledRef.current = showBubbleToolbar;
@@ -93,6 +97,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
         if (!bubbleEnabledRef.current) return false;
         if (!editor.isEditable) return false;
         if (!editor.view?.dom?.isConnected) return false;
+        if (bubbleKeepAliveRef.current) return true;
         return !state.selection.empty;
       },
       [],
@@ -234,6 +239,35 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       [uploadAsset, uploadVideo, maxImageSizeMB, maxVideoSizeMB],
     ) as Editor | null;
 
+    const restoreBubbleSelection = useCallback(() => {
+      if (!editor?.view || !bubbleSelectionRef.current) return;
+      try {
+        editor.view.dispatch(
+          editor.state.tr.setSelection(bubbleSelectionRef.current),
+        );
+        // eslint-disable-next-line unused-imports/no-unused-vars
+      } catch (_) {
+        // Ignore selection restore errors for non-text selections.
+      }
+    }, [editor]);
+
+    const handleHeadingDropdownOpenChange = useCallback(
+      (open: boolean) => {
+        bubbleKeepAliveRef.current = open;
+        if (open && editor?.state?.selection) {
+          bubbleSelectionRef.current = editor.state.selection;
+        }
+      },
+      [editor],
+    );
+
+    const handleHeadingDropdownTriggerPointerDown = useCallback(() => {
+      if (editor?.state?.selection) {
+        bubbleSelectionRef.current = editor.state.selection;
+      }
+      bubbleKeepAliveRef.current = true;
+    }, [editor]);
+
     useEffect(() => {
       if (!canFold) {
         setShowFoldToggle(false);
@@ -326,6 +360,33 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
                 enabledFeatures={resolvedBubbleFeatures}
                 variant={variant}
                 mode="bubble"
+                dropdownPortalContainer={
+                  typeof document !== 'undefined' ? document.body : null
+                }
+                onHeadingDropdownOpenChange={handleHeadingDropdownOpenChange}
+                onHeadingDropdownTriggerPointerDown={
+                  handleHeadingDropdownTriggerPointerDown
+                }
+                onColorPickerOpenChange={handleHeadingDropdownOpenChange}
+                onColorPickerTriggerPointerDown={
+                  handleHeadingDropdownTriggerPointerDown
+                }
+                headingDropdownContentProps={{
+                  side: 'bottom',
+                  align: 'start',
+                  sideOffset: 6,
+                  alignOffset: 0,
+                  avoidCollisions: false,
+                  sticky: 'always',
+                  onOpenAutoFocus: (event) => {
+                    event.preventDefault();
+                    restoreBubbleSelection();
+                  },
+                  onCloseAutoFocus: (event) => {
+                    event.preventDefault();
+                    restoreBubbleSelection();
+                  },
+                }}
                 className={cn(
                   'rounded-md border bg-card shadow-lg px-2 py-1',
                   bubbleToolbarClassName,

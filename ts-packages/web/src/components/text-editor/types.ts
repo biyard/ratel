@@ -98,9 +98,9 @@ export interface TiptapToolbarProps {
   dropdownPortalContainer?: HTMLElement | null;
   onHeadingDropdownOpenChange?: (open: boolean) => void;
   onHeadingDropdownTriggerPointerDown?: () => void;
-  headingDropdownContentProps?: React.ComponentProps<
-    typeof import('@radix-ui/react-dropdown-menu').Content
-  >;
+  headingDropdownContentProps?: import('@/components/ui/dropdown-menu').DropdownMenuContentProps;
+  onColorPickerOpenChange?: (open: boolean) => void;
+  onColorPickerTriggerPointerDown?: () => void;
 }
 
 /**
@@ -126,6 +126,11 @@ export interface ColorPickerProps {
   onColorChange: (color: string) => void;
   disabled?: boolean;
   icon?: React.ReactNode | React.ElementType;
+  portalled?: boolean;
+  container?: HTMLElement | null;
+  contentProps?: import('@/components/ui/dropdown-menu').DropdownMenuContentProps;
+  onOpenChange?: (open: boolean) => void;
+  onTriggerPointerDown?: () => void;
 }
 
 /**

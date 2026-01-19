@@ -6,6 +6,13 @@ import { CheckIcon, ChevronRightIcon, CircleIcon } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
+export type DropdownMenuContentProps = React.ComponentProps<
+  typeof DropdownMenuPrimitive.Content
+> & {
+  portalled?: boolean;
+  container?: HTMLElement | null;
+};
+
 function DropdownMenu({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
@@ -37,10 +44,7 @@ function DropdownMenuContent({
   portalled = true,
   container,
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.Content> & {
-  portalled?: boolean;
-  container?: HTMLElement | null;
-}) {
+}: DropdownMenuContentProps) {
   const content = (
     <DropdownMenuPrimitive.Content
       data-slot="dropdown-menu-content"
