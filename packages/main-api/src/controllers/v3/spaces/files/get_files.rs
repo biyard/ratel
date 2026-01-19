@@ -26,7 +26,24 @@ pub async fn get_files_handler(
 
     let files = SpaceFile::get(&dynamo.client, &pk.clone(), Some(sk.clone())).await?;
 
-    let files = files.unwrap_or_default();
+    let mut files = files.unwrap_or_default();
+
+    // Lazy migration: auto-generate IDs for files that don't have them
+    let mut needs_update = false;
+    for file in &mut files.files {
+        if file.id.is_empty() {
+            file.id = uuid::Uuid::new_v4().to_string();
+            needs_update = true;
+        }
+    }
+
+    // Save back to DynamoDB if we generated any IDs
+    if needs_update {
+        SpaceFile::updater(&pk, sk)
+            .with_files(files.files.clone())
+            .execute(&dynamo.client)
+            .await?;
+    }
 
     Ok(Json(GetSpaceFileResponse {
         files: files.clone().files,

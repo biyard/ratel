@@ -72,6 +72,9 @@ services:
       VITE_PORTONE_INICIS_CHANNEL_KEY: ${PORTONE_INICIS_CHANNEL_KEY}
 
       NODE_ENV: production
+
+      BEDROCK_AGENT_ID: ${BEDROCK_AGENT_ID}
+      BEDROCK_AGENT_ALIAS_ID: ${BEDROCK_AGENT_ALIAS_ID}
     volumes:
       - .:/app
       - ./.build/target:/app/target
