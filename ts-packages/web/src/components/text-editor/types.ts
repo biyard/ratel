@@ -151,7 +151,7 @@ export const DEFAULT_ENABLED_FEATURES: EnabledFeatures = {
   heading: true,
   align: true,
   lists: true,
-  link: false, // Disabled for now
+  link: true,
   image: true, // Enabled
   video: true,
   indent: false, // Disabled for now
