@@ -155,7 +155,7 @@ export function ReportDraft({
             minHeight="0px"
             showToolbar={editing}
             showBubbleToolbar={editing}
-            bubbleToolbarClassName="bg-card/95 backdrop-blur"
+            bubbleToolbarClassName="bg-card"
             bubbleEnabledFeatures={{
               bold: true,
               italic: true,
