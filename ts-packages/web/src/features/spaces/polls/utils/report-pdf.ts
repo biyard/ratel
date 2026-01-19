@@ -309,28 +309,6 @@ export const buildReportPdfBlob = async (
     }
   };
 
-  const computeOlPrefix = (li: HTMLLIElement) => {
-    const parts: number[] = [];
-    let curLi: HTMLLIElement | null = li;
-
-    while (curLi) {
-      const parentOl = curLi.parentElement?.closest(
-        'ol',
-      ) as HTMLOListElement | null;
-      if (!parentOl) break;
-
-      const siblings = Array.from(parentOl.children).filter(
-        (n) => (n as HTMLElement).tagName === 'LI',
-      ) as HTMLLIElement[];
-      const idx = Math.max(0, siblings.indexOf(curLi)) + 1;
-      parts.unshift(idx);
-
-      curLi = parentOl.closest('li') as HTMLLIElement | null;
-    }
-
-    return parts.length ? `${parts.join('.')}.` : '1.';
-  };
-
   const materializeListMarkers = (root: HTMLElement) => {
     const lists = Array.from(root.querySelectorAll('ul, ol')) as (
       | HTMLUListElement
@@ -338,11 +316,15 @@ export const buildReportPdfBlob = async (
     )[];
     for (const list of lists) {
       const isOl = list.tagName === 'OL';
+      const startAttr = Number(list.getAttribute('start') ?? '1');
+      const startIndex =
+        Number.isFinite(startAttr) && startAttr > 0 ? startAttr : 1;
       const lis = Array.from(
         list.querySelectorAll(':scope > li'),
       ) as HTMLLIElement[];
 
-      for (const li of lis) {
+      for (let index = 0; index < lis.length; index += 1) {
+        const li = lis[index];
         li.setAttribute('data-pdf-li', '1');
 
         const already = li.querySelector(
@@ -352,7 +334,19 @@ export const buildReportPdfBlob = async (
 
         const marker = root.ownerDocument.createElement('span');
         marker.className = '__pdf_marker';
-        marker.textContent = isOl ? computeOlPrefix(li) : '•';
+        if (isOl) {
+          const valueRaw = li.getAttribute('value');
+          const valueAttr =
+            valueRaw && valueRaw.trim().length > 0
+              ? Number.parseInt(valueRaw, 10)
+              : Number.NaN;
+          const value = Number.isFinite(valueAttr)
+            ? valueAttr
+            : startIndex + index;
+          marker.textContent = `${value}.`;
+        } else {
+          marker.textContent = '•';
+        }
 
         li.insertBefore(marker, li.firstChild);
       }
