@@ -17,6 +17,7 @@ export interface EnabledFeatures {
   lists?: boolean;
   link?: boolean;
   image?: boolean;
+  video?: boolean;
   indent?: boolean;
   table?: boolean;
   pdf?: boolean;
@@ -65,7 +66,6 @@ export interface TiptapEditorProps {
 
   uploadAsset?: (file: File) => Promise<UploadResult>;
   uploadVideo?: (file: File) => Promise<UploadResult>;
-
 
   maxImageSizeMB?: number;
   maxVideoSizeMB?: number;
@@ -153,6 +153,7 @@ export const DEFAULT_ENABLED_FEATURES: EnabledFeatures = {
   lists: true,
   link: false, // Disabled for now
   image: true, // Enabled
+  video: true,
   indent: false, // Disabled for now
   table: true, // Enabled
   pdf: true,

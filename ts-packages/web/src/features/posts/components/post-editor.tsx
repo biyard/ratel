@@ -29,13 +29,14 @@ export const PostEditor = forwardRef<Editor | null, PostEditorProps>(
       onRemoveImage,
       onRemovePdf,
       editable,
+      enabledFeatures,
       disabledFileUpload = true,
       disabledImageUpload = false,
       containerClassName,
       ...editorProps
     } = props;
 
-    let features = DEFAULT_ENABLED_FEATURES;
+    let features = { ...DEFAULT_ENABLED_FEATURES, ...enabledFeatures };
     if (disabledFileUpload) {
       features = { ...features, pdf: false };
     }
