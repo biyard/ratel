@@ -86,8 +86,6 @@ export const buildReportPdfBlob = async (
 
     #content-root *{
       box-sizing:border-box !important;
-      color:#000000 !important;
-      -webkit-text-fill-color:#000000 !important;
       caret-color:#000000 !important;
       opacity:1 !important;
       filter:none !important;
