@@ -44,9 +44,11 @@ pub fn build_report_html_document(fragment: &str) -> String {
       .page {{
         background: #ffffff !important;
       }}
-      #content-root, #content-root * {{
+      #content-root {{
         color: #000000 !important;
         -webkit-text-fill-color: #000000 !important;
+      }}
+      #content-root * {{
         opacity: 1 !important;
         filter: none !important;
         text-shadow: none !important;
