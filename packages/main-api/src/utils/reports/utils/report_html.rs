@@ -2,7 +2,7 @@ pub fn build_report_html_document(fragment: &str) -> String {
     let d3_src = "https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js";
 
     format!(
-        r#"<!doctype html>
+        r####"<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
@@ -23,50 +23,104 @@ pub fn build_report_html_document(fragment: &str) -> String {
       font-style: normal;
     }}
 
-    :root {{ color-scheme: dark; }}
+    :root {{ color-scheme: light; }}
 
     html, body {{
       margin: 0;
       padding: 0;
-      background: #0b0f14;
-      color: #e5e7eb;
+      background: #ffffff !important;
+      color: #000000 !important;
       font-family: "NotoSansKR", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }}
 
     @media print {{
       :root {{ color-scheme: light; }}
       html, body {{
         background: #ffffff !important;
-        color: #111827 !important;
+        color: #000000 !important;
       }}
       .page {{
         background: #ffffff !important;
       }}
-      p, td, th {{
-        color: #111827 !important;
+      #content-root, #content-root * {{
+        color: #000000 !important;
+        -webkit-text-fill-color: #000000 !important;
+        opacity: 1 !important;
+        filter: none !important;
+        text-shadow: none !important;
+        mix-blend-mode: normal !important;
       }}
       table, th, td {{
-        border-color: rgba(0,0,0,0.85) !important;
+        border-color: #000000 !important;
       }}
     }}
 
-    .page {{ padding: 24px 20px; }}
+    @page {{ size: A4; margin: 10mm; }}
+
+    .page {{
+      width: 190mm;
+      max-width: 190mm;
+      box-sizing: border-box;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }}
+
+    #content-root {{
+      line-height: 1.7 !important;
+      overflow: visible !important;
+    }}
+
+    #content-root p,
+    #content-root li,
+    #content-root div,
+    #content-root span,
+    #content-root a,
+    #content-root strong,
+    #content-root em {{
+      line-height: 1.7 !important;
+      overflow: visible !important;
+
+      padding-top: 1px !important;
+      padding-bottom: 3px !important;
+    }}
+
+    #content-root * {{
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: auto !important;
+    }}
+
+    #content-root {{
+      padding-bottom: 8px !important;
+    }}
+
+    #content-root > :last-child {{
+      padding-bottom: 10px !important;
+      margin-bottom: 0 !important;
+    }}
+
+    #content-root *:last-child {{
+      padding-bottom: 10px !important;
+    }}
 
     table {{
       width: 100%;
       border-collapse: collapse;
       font-size: 12px;
       margin-top: 8px;
-      border: 2px solid rgba(17,24,39,0.85);
+      border: 2px solid #000000;
+      background: #ffffff !important;
     }}
 
     th, td {{
-      border: 2px solid rgba(17,24,39,0.85);
+      border: 2px solid #000000;
       padding: 14px 12px;
       text-align: center;
       vertical-align: middle;
-      background: transparent;
-      color: rgba(17,24,39,0.92);
+      background: #ffffff !important;
+      color: #000000 !important;
       font-size: 12px;
       line-height: 1.55;
     }}
@@ -75,24 +129,61 @@ pub fn build_report_html_document(fragment: &str) -> String {
       font-weight: 700;
     }}
 
-    .lda-topic {{
-      font-weight: 700;
-      white-space: nowrap;
+    .lda-card {{
+      margin-top: 14px;
+      background: #ffffff !important;
+      padding: 0 !important;
     }}
 
-    .lda-keywords {{
-      font-weight: 400;
-      text-align: center;
-      word-break: keep-all;
+    table.lda-table {{
+      width: 100% !important;
+      border-collapse: collapse !important;
+      table-layout: fixed !important;
+      background: #ffffff !important;
+      border: 3px solid #000000 !important;
+    }}
+
+    table.lda-table th,
+    table.lda-table td {{
+      background: #ffffff !important;
+      color: #000000 !important;
+      border: 2px solid #000000 !important;
+      padding: 34px 22px !important;
+      text-align: center !important;
+      vertical-align: middle !important;
+      line-height: 1.55 !important;
+    }}
+
+    table.lda-table th {{
+      font-weight: 700 !important;
+      font-size: 22px !important;
+    }}
+
+    table.lda-table td {{
+      font-size: 20px !important;
+    }}
+
+    table.lda-table td.lda-topic {{
+      font-weight: 700 !important;
+      white-space: nowrap !important;
+    }}
+
+    table.lda-table td.lda-keywords {{
+      font-weight: 400 !important;
+      word-break: keep-all !important;
     }}
 
     .tfidf-wrap {{
-      margin-top: 14px;
+      break-inside: avoid;
+      page-break-inside: avoid;
       width: 100%;
+      max-width: 100%;
+      overflow: visible;
     }}
 
     .tfidf-svg {{
-      width: 100%;
+      width: 100% !important;
+      max-width: 100% !important;
       display: block;
     }}
 
@@ -155,13 +246,19 @@ pub fn build_report_html_document(fragment: &str) -> String {
     function renderLDA(host, payload) {{
       host.innerHTML = "";
 
+      const wrap = document.createElement("div");
+      wrap.className = "lda-card";
+      host.appendChild(wrap);
+
       const table = document.createElement("table");
+      table.className = "lda-table";
+      wrap.appendChild(table);
 
       const colgroup = document.createElement("colgroup");
       const c1 = document.createElement("col");
       const c2 = document.createElement("col");
-      c1.style.width = "28%";
-      c2.style.width = "72%";
+      c1.style.width = "38%";
+      c2.style.width = "62%";
       colgroup.appendChild(c1);
       colgroup.appendChild(c2);
       table.appendChild(colgroup);
@@ -181,12 +278,14 @@ pub fn build_report_html_document(fragment: &str) -> String {
       table.appendChild(thead);
 
       const tbody = document.createElement("tbody");
+      table.appendChild(tbody);
+
       const rows = payload.ldaTopics || payload.lda_topics || [];
       const map = new Map();
 
       for (const row of rows) {{
-        const t = String(row.topic || "").trim();
-        const k = String(row.keyword || "").trim();
+        const t = String(row.topic || row.topic_name || row.name || "").trim();
+        const k = String(row.keyword || row.key || "").trim();
         if (!t || !k) continue;
         if (!map.has(t)) map.set(t, []);
         map.get(t).push(k);
@@ -210,9 +309,6 @@ pub fn build_report_html_document(fragment: &str) -> String {
         tr.appendChild(td2);
         tbody.appendChild(tr);
       }}
-
-      table.appendChild(tbody);
-      host.appendChild(table);
     }}
 
     function sleep(ms) {{ return new Promise(r => setTimeout(r, ms)); }}
@@ -238,6 +334,12 @@ pub fn build_report_html_document(fragment: &str) -> String {
 
       const wrap = document.createElement("div");
       wrap.className = "tfidf-wrap";
+      wrap.style.width = "100%";
+      wrap.style.display = "flex";
+      wrap.style.justifyContent = "center";
+      wrap.style.alignItems = "flex-start";
+      wrap.style.breakInside = "avoid";
+      wrap.style.pageBreakInside = "avoid";
       host.appendChild(wrap);
 
       const rowsRaw = Array.isArray(payload.tf_idf) ? payload.tf_idf : [];
@@ -247,8 +349,14 @@ pub fn build_report_html_document(fragment: &str) -> String {
 
       if (rows.length === 0) return;
 
-      const rect = wrap.getBoundingClientRect();
-      const width = Math.max(360, Math.floor(rect.width || 900));
+      await new Promise(r => requestAnimationFrame(r));
+
+      const containerW =
+        host.clientWidth ||
+        (host.parentElement ? host.parentElement.clientWidth : 0) ||
+        720;
+
+      const maxCanvasW = Math.max(320, Math.min(760, Math.floor(containerW)));
 
       let maxVal = 0;
       let maxLen = 0;
@@ -266,28 +374,70 @@ pub fn build_report_html_document(fragment: &str) -> String {
       const xMax = Math.max(1, niceCeil(maxVal, 0.5));
       const tickStep = 0.5;
 
-      const margin = {{
+      const approxCharPx = 9.5;
+      const labelW = Math.min(200, Math.max(110, Math.floor(maxLen * approxCharPx) + 26));
+      const gap = 14;
+
+      const marginBase = {{
         top: 10,
-        right: 52,
+        right: 36,
         bottom: 34,
-        left: Math.min(210, Math.max(110, maxLen * 16 + 38)),
+        left: labelW,
       }};
 
-      const rowH = 34;
-      const height = margin.top + margin.bottom + rows.length * rowH;
+      const tickTextW = 30;
+      const valueTextW = 52;
+
+      const barLeft = marginBase.left + gap;
+
+      const minPlotW = 320;
+      const plotW = Math.max(
+        minPlotW,
+        Math.floor(maxCanvasW - barLeft - marginBase.right - tickTextW - valueTextW)
+      );
+
+      const svgW = Math.min(
+        maxCanvasW,
+        Math.floor(barLeft + plotW + marginBase.right + tickTextW + valueTextW)
+      );
+
+      const safePageH = 980;
+
+      let rowH = 34;
+      let fontAxis = 14;
+      let fontY = 12;
+      let fontVal = 12;
+      let margin = {{ ...marginBase }};
+
+      function calcHeight() {{
+        return margin.top + margin.bottom + rows.length * rowH;
+      }}
+
+      while (calcHeight() > safePageH && rowH > 22) {{
+        rowH -= 2;
+        if (fontAxis > 12) fontAxis -= 1;
+        if (fontY > 10) fontY -= 1;
+        if (fontVal > 10) fontVal -= 1;
+        if (margin.bottom > 26) margin.bottom -= 2;
+        if (margin.top > 8) margin.top -= 1;
+      }}
+
+      const height = calcHeight();
 
       const svgEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svgEl.setAttribute("class", "tfidf-svg");
-      svgEl.setAttribute("width", String(width));
+      svgEl.setAttribute("width", String(svgW));
       svgEl.setAttribute("height", String(height));
-      svgEl.setAttribute("viewBox", "0 0 " + width + " " + height);
+      svgEl.setAttribute("viewBox", "0 0 " + svgW + " " + height);
+      svgEl.setAttribute("preserveAspectRatio", "xMidYMin meet");
+      svgEl.style.display = "block";
       wrap.appendChild(svgEl);
 
       const s = window.d3.select(svgEl);
 
       const x = window.d3.scaleLinear()
         .domain([0, xMax])
-        .range([margin.left, width - margin.right]);
+        .range([barLeft, barLeft + plotW]);
 
       const y = window.d3.scaleBand()
         .domain(rows.map(d => d.key))
@@ -306,9 +456,9 @@ pub fn build_report_html_document(fragment: &str) -> String {
       const yAxis = window.d3.axisLeft(y)
         .tickSize(0)
         .tickSizeOuter(0)
-        .tickPadding(18);
+        .tickPadding(14);
 
-      const barX0 = margin.left + 18;
+      const barX0 = barLeft;
 
       s.append("g")
         .selectAll("rect")
@@ -324,7 +474,7 @@ pub fn build_report_html_document(fragment: &str) -> String {
         .attr("transform", "translate(0," + (height - margin.bottom) + ")")
         .call(xAxis)
         .call(g => g.selectAll(".tick line").remove())
-        .call(g => g.selectAll(".tick text").style("font-size", "15px").style("fill", "rgba(17,24,39,0.75)"))
+        .call(g => g.selectAll(".tick text").style("font-size", String(fontAxis) + "px").style("fill", "#000000"))
         .call(g => g.select(".domain").remove());
 
       s.append("g")
@@ -332,19 +482,21 @@ pub fn build_report_html_document(fragment: &str) -> String {
         .call(yAxis)
         .call(g => g.select(".domain").remove())
         .call(g => g.selectAll(".tick line").remove())
-        .call(g => g.selectAll(".tick text").style("font-size", "12px").style("fill", "rgba(17,24,39,0.75)"));
+        .call(g => g.selectAll(".tick text").style("font-size", String(fontY) + "px").style("fill", "#000000"));
+
+      const xTextMax = barLeft + plotW + valueTextW;
 
       s.append("g")
         .selectAll("text.tfidf-value")
         .data(rows)
         .join("text")
         .attr("class", "tfidf-value")
-        .attr("x", d => x(d.val) + 10)
+        .attr("x", d => Math.min(xTextMax, x(d.val) + 10))
         .attr("y", d => (y(d.key) ?? 0) + y.bandwidth() / 2)
         .attr("dy", "0.32em")
-        .style("font-size", "12px")
+        .style("font-size", String(fontVal) + "px")
         .style("font-weight", "700")
-        .style("fill", "rgba(17,24,39,0.90)")
+        .style("fill", "#000000")
         .text(d => d.val.toFixed(2));
     }}
 
@@ -545,7 +697,7 @@ pub fn build_report_html_document(fragment: &str) -> String {
 
           const fontSize = Math.max(12, Math.min(22, getNodeRadius(n) * 0.42)) * k;
           ctx.font = "700 " + Math.max(12, fontSize).toFixed(2) + "px sans-serif";
-          ctx.fillStyle = "rgba(17, 24, 39, 0.92)";
+          ctx.fillStyle = "#000000";
           ctx.textAlign = "center";
           ctx.textBaseline = "middle";
           ctx.fillText(n.id, x, y);
@@ -619,7 +771,7 @@ pub fn build_report_html_document(fragment: &str) -> String {
   </script>
 </body>
 </html>
-"#,
+"####,
         d3_src = d3_src,
         fragment = fragment
     )
