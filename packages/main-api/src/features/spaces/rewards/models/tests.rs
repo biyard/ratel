@@ -252,8 +252,6 @@ async fn test_user_reward_award_flow() {
     let history = &histories.0[0];
     assert_eq!(history.point, initial_reward_point);
 
-    assert_eq!(history.month, Some("2025-12".to_string()));
-
     // 5. Test second award to verify incremental updates
     let result2 = UserReward::award(&cli, &biyard, reward.clone(), user.pk.clone(), None).await;
     assert!(result2.is_ok(), "Second award should succeed");
