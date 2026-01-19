@@ -78,21 +78,19 @@ export class KnowledgeBaseStack extends cdk.Stack {
     // Grant read access to the KB role for the data source bucket
     dataSourceBucket.grantRead(this.knowledgeBase.role);
 
-    // Create the S3 Data Source
+    // Create CUSTOM Data Source (no auto-scanning)
+    // Documents are ingested directly via API with specific file lists
     this.dataSource = new bedrock.CfnDataSource(this, "DataSource", {
       name: props.dataSourceName,
-      description: `S3 data source for ${props.knowledgeBaseName}`,
+      description: `Custom data source for ${props.knowledgeBaseName} - direct ingestion only`,
       knowledgeBaseId: this.knowledgeBase.knowledgeBaseId,
       dataSourceConfiguration: {
-        type: "S3",
-        s3Configuration: {
-          bucketArn: props.dataSourceBucketArn,
-          ...(props.dataSourcePrefix && {
-            inclusionPrefixes: [props.dataSourcePrefix],
-          }),
-        },
+        type: "CUSTOM",
       },
     });
+
+    // Still grant S3 read access for the KB to fetch documents during ingestion
+    dataSourceBucket.grantRead(this.knowledgeBase.role);
 
     // Add dependencies for data source
     this.dataSource.node.addDependency(this.knowledgeBase);
