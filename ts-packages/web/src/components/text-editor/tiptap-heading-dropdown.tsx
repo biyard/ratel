@@ -18,6 +18,11 @@ const HEADING_OPTIONS = [
 export const HeadingDropdown = ({
   editor,
   disabled = false,
+  portalled = true,
+  container,
+  onOpenChange,
+  onTriggerPointerDown,
+  contentProps,
 }: HeadingDropdownProps) => {
   const getCurrentHeading = () => {
     if (!editor) return 'Normal';
@@ -42,10 +47,11 @@ export const HeadingDropdown = ({
   const handleMouseDown = (e: React.MouseEvent) => {
     // Prevent losing text selection when clicking heading dropdown
     e.preventDefault();
+    onTriggerPointerDown?.();
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={onOpenChange}>
       <DropdownMenuTrigger asChild>
         <button
           tabIndex={-1}
@@ -80,7 +86,13 @@ export const HeadingDropdown = ({
           />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-48">
+      <DropdownMenuContent
+        align="start"
+        className="w-48"
+        portalled={portalled}
+        container={container}
+        {...contentProps}
+      >
         {HEADING_OPTIONS.map((option) => (
           <DropdownMenuItem
             key={option.value}

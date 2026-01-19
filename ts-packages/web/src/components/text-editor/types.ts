@@ -48,6 +48,9 @@ export interface TiptapEditorProps {
   showToolbar?: boolean;
   toolbarPosition?: 'top' | 'bottom';
   enabledFeatures?: EnabledFeatures;
+  showBubbleToolbar?: boolean;
+  bubbleEnabledFeatures?: EnabledFeatures;
+  bubbleToolbarClassName?: string;
 
   // Styling
   className?: string;
@@ -85,12 +88,19 @@ export interface TiptapToolbarProps {
   enabledFeatures?: EnabledFeatures;
   className?: string;
   variant?: 'default' | 'post';
+  mode?: 'default' | 'bubble';
   openVideoPicker?: () => void;
   onImageUpload?: (imageUrl: string) => Promise<void>;
   onUploadPDF?: (files: FileList | File[]) => void;
   onClickLda?: () => void;
   onClickNetwork?: () => void;
   onClickTfidf?: () => void;
+  dropdownPortalContainer?: HTMLElement | null;
+  onHeadingDropdownOpenChange?: (open: boolean) => void;
+  onHeadingDropdownTriggerPointerDown?: () => void;
+  headingDropdownContentProps?: React.ComponentProps<
+    typeof import('@radix-ui/react-dropdown-menu').Content
+  >;
 }
 
 /**
@@ -124,6 +134,13 @@ export interface ColorPickerProps {
 export interface HeadingDropdownProps {
   editor: Editor | null;
   disabled?: boolean;
+  portalled?: boolean;
+  container?: HTMLElement | null;
+  onOpenChange?: (open: boolean) => void;
+  onTriggerPointerDown?: () => void;
+  contentProps?: React.ComponentProps<
+    typeof import('@radix-ui/react-dropdown-menu').Content
+  >;
 }
 
 /**

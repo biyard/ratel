@@ -1,4 +1,4 @@
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
@@ -18,6 +18,7 @@ import { ThemeAwareColor } from './extensions/theme-aware-color';
 import { ThemeAwareHighlight } from './extensions/theme-aware-highlight';
 import {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -50,6 +51,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       onClickNetwork,
       onClickTfidf,
       enabledFeatures = DEFAULT_ENABLED_FEATURES,
+      showBubbleToolbar = false,
+      bubbleEnabledFeatures,
+      bubbleToolbarClassName,
       className,
       toolbarClassName,
       editorClassName,
@@ -71,6 +75,39 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
     const [isFolded, setIsFolded] = useState<boolean>(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [showFoldToggle, setShowFoldToggle] = useState(false);
+    const bubbleHostRef = useRef<HTMLDivElement | null>(null);
+    const bubbleEnabledRef = useRef(showBubbleToolbar);
+
+    useEffect(() => {
+      bubbleEnabledRef.current = showBubbleToolbar;
+    }, [showBubbleToolbar]);
+
+    const shouldShowBubble = useCallback(
+      ({
+        editor,
+        state,
+      }: {
+        editor: Editor;
+        state: { selection: { empty: boolean } };
+      }) => {
+        if (!bubbleEnabledRef.current) return false;
+        if (!editor.isEditable) return false;
+        if (!editor.view?.dom?.isConnected) return false;
+        return !state.selection.empty;
+      },
+      [],
+    );
+
+    const resolvedBubbleFeatures: typeof DEFAULT_ENABLED_FEATURES = {
+      ...DEFAULT_ENABLED_FEATURES,
+      image: false,
+      table: false,
+      pdf: false,
+      lda: false,
+      network: false,
+      tfidf: false,
+      ...bubbleEnabledFeatures,
+    };
 
     const canFold = isFoldable;
 
@@ -194,7 +231,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           },
         },
       },
-      [editable, uploadAsset, uploadVideo, maxImageSizeMB, maxVideoSizeMB],
+      [uploadAsset, uploadVideo, maxImageSizeMB, maxVideoSizeMB],
     ) as Editor | null;
 
     useEffect(() => {
@@ -227,6 +264,11 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
     }, [content, editor]);
 
     useEffect(() => {
+      if (!editor || editor.isDestroyed) return;
+      editor.setEditable(editable);
+    }, [editor, editable]);
+
+    useEffect(() => {
       return () => {
         if (editor) editor.destroy();
       };
@@ -256,6 +298,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             editor={editor}
             enabledFeatures={enabledFeatures}
             variant={variant}
+            mode="default"
             className={toolbarClassName}
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
@@ -264,6 +307,32 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             onClickNetwork={onClickNetwork}
             onClickTfidf={onClickTfidf}
           />
+        )}
+
+        {(showBubbleToolbar || bubbleEnabledFeatures) && editor && (
+          <div ref={bubbleHostRef}>
+            <BubbleMenu
+              editor={editor}
+              shouldShow={shouldShowBubble}
+              tippyOptions={{
+                duration: 120,
+                placement: 'top',
+                maxWidth: 'none',
+                appendTo: () => bubbleHostRef.current ?? document.body,
+              }}
+            >
+              <TiptapToolbar
+                editor={editor}
+                enabledFeatures={resolvedBubbleFeatures}
+                variant={variant}
+                mode="bubble"
+                className={cn(
+                  'rounded-md border bg-card shadow-lg px-2 py-1',
+                  bubbleToolbarClassName,
+                )}
+              />
+            </BubbleMenu>
+          </div>
         )}
 
         <div
@@ -360,6 +429,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             editor={editor}
             enabledFeatures={enabledFeatures}
             variant={variant}
+            mode="default"
             className={toolbarClassName}
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}

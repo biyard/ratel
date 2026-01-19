@@ -154,6 +154,22 @@ export function ReportDraft({
             placeholder={t('report_draft_editor_placeholder')}
             minHeight="0px"
             showToolbar={editing}
+            showBubbleToolbar={editing}
+            bubbleToolbarClassName="bg-card/95 backdrop-blur"
+            bubbleEnabledFeatures={{
+              bold: true,
+              italic: true,
+              underline: true,
+              strike: true,
+              textColor: true,
+              highlight: true,
+              heading: true,
+              align: true,
+              lists: true,
+              lda: false,
+              network: false,
+              tfidf: false,
+            }}
             editable={editing}
             disabledFileUpload
             disabledImageUpload
