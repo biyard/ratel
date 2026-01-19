@@ -129,7 +129,7 @@ const pdfKnowledgeBaseStack = new KnowledgeBaseStack(app, `ratel-${env}-pdf-know
   description: "The knowledge base for the PDF ai helper.",
   dataSourceBucketArn: "arn:aws:s3:::metadata.ratel.foundation",
   dataSourcePrefix: "metadata/",
-  dataSourceName: "metadata-s3",
+  dataSourceName: "metadata-custom",
 });
 
 // Deploy Bedrock Agent connected to the PDF Knowledge Base
