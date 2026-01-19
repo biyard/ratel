@@ -1540,6 +1540,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "aws-sdk-bedrockagentruntime"
+version = "1.118.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8266fd49b39545aa1f52dd892959250988a2d89411a535b669263f6430ef77b9"
+dependencies = [
+ "aws-credential-types",
+ "aws-runtime",
+ "aws-smithy-async",
+ "aws-smithy-eventstream",
+ "aws-smithy-http",
+ "aws-smithy-json",
+ "aws-smithy-runtime",
+ "aws-smithy-runtime-api",
+ "aws-smithy-types",
+ "aws-types",
+ "bytes",
+ "fastrand 2.3.0",
+ "http 0.2.12",
+ "regex-lite",
+ "tracing",
+]
+
+[[package]]
 name = "aws-sdk-bedrockruntime"
 version = "1.107.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1888,9 +1911,9 @@ dependencies = [
 
 [[package]]
 name = "aws-sdk-textract"
-version = "1.85.0"
+version = "1.90.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d941191a6722aaa2ff419953030c4543bf7f2222793881bcecbf105e31c07f6"
+checksum = "39c2fd4877b99bc664f71bb87898127e75d94e47bc50183b388e024706efc91d"
 dependencies = [
  "aws-credential-types",
  "aws-runtime",
@@ -8772,6 +8795,7 @@ dependencies = [
  "async-trait",
  "aws-config",
  "aws-credential-types",
+ "aws-sdk-bedrockagentruntime",
  "aws-sdk-bedrockruntime",
  "aws-sdk-chimesdkmediapipelines",
  "aws-sdk-chimesdkmeetings",

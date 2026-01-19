@@ -53,7 +53,7 @@ export function updateSpaceVisibility(
 export function updateSpaceFiles(
   spacePk: string,
   files: FileModel[],
-): Promise<void> {
+): Promise<{ files: FileModel[] }> {
   return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
     files,
   });
