@@ -86,6 +86,44 @@ pub fn build_report_html_document(fragment: &str) -> String {
       padding-bottom: 3px !important;
     }}
 
+    #content-root h1,
+    #content-root h2,
+    #content-root h3,
+    #content-root h4,
+    #content-root h5,
+    #content-root h6 {{
+      font-weight: 400 !important;
+    }}
+
+    #content-root h1 *,
+    #content-root h2 *,
+    #content-root h3 *,
+    #content-root h4 *,
+    #content-root h5 *,
+    #content-root h6 * {{
+      font-weight: 400 !important;
+    }}
+
+    #content-root h1 strong,
+    #content-root h2 strong,
+    #content-root h3 strong,
+    #content-root h4 strong,
+    #content-root h5 strong,
+    #content-root h6 strong,
+    #content-root h1 b,
+    #content-root h2 b,
+    #content-root h3 b,
+    #content-root h4 b,
+    #content-root h5 b,
+    #content-root h6 b {{
+      font-weight: 700 !important;
+    }}
+
+    #content-root strong,
+    #content-root b {{
+      font-weight: 700 !important;
+    }}
+
     #content-root * {{
       box-sizing: border-box;
       -webkit-font-smoothing: antialiased;

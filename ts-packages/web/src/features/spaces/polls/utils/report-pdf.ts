@@ -112,23 +112,38 @@ export const buildReportPdfBlob = async (
 
     #content-root h1{
       font-size: 38px !important;
-      font-weight: 900 !important;
+      font-weight: 400 !important;
       line-height: 1.16 !important;
       margin: 0 0 12px 0 !important;
     }
 
     #content-root h2{
       font-size: 30px !important;
-      font-weight: 900 !important;
+      font-weight: 400 !important;
       line-height: 1.18 !important;
       margin: 0 0 12px 0 !important;
     }
 
     #content-root h3{
       font-size: 24px !important;
-      font-weight: 900 !important;
+      font-weight: 400 !important;
       line-height: 1.2 !important;
       margin: 0 0 10px 0 !important;
+    }
+
+    #content-root h1 *,
+    #content-root h2 *,
+    #content-root h3 *{
+      font-weight: 400 !important;
+    }
+
+    #content-root h1 strong,
+    #content-root h2 strong,
+    #content-root h3 strong,
+    #content-root h1 b,
+    #content-root h2 b,
+    #content-root h3 b{
+      font-weight: 700 !important;
     }
 
     #content-root p{
