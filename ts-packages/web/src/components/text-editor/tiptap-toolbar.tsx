@@ -26,9 +26,6 @@ import {
   TableSplitCell,
   ChevronLeft,
   ChevronRight2,
-  GraphPieChart,
-  GraphGraph,
-  GraphBarChart,
 } from '../icons';
 import { useRef, useState, useEffect } from 'react';
 import { Link2, Link2Off, Video, FileText } from 'lucide-react';
@@ -48,9 +45,6 @@ export const TiptapToolbar = ({
   openVideoPicker,
   onImageUpload,
   onUploadPDF,
-  onClickLda,
-  onClickNetwork,
-  onClickTfidf,
 }: TiptapToolbarProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
@@ -646,32 +640,6 @@ export const TiptapToolbar = ({
                 aria-label="Upload Video"
               />
 
-              <ToolbarButton
-                icon={<GraphPieChart className="w-5 h-5" />}
-                onClick={onClickLda}
-                active={false}
-                disabled={!features.lda || !onClickLda}
-                tooltip="LDA"
-                aria-label="LDA"
-              />
-
-              <ToolbarButton
-                icon={<GraphGraph className="w-5 h-5" />}
-                onClick={onClickNetwork}
-                active={false}
-                disabled={!features.network || !onClickNetwork}
-                tooltip="Network"
-                aria-label="Network"
-              />
-
-              <ToolbarButton
-                icon={<GraphBarChart className="w-5 h-5" />}
-                onClick={onClickTfidf}
-                active={false}
-                disabled={!features.tfidf || !onClickTfidf}
-                tooltip="TF-IDF"
-                aria-label="TF-IDF"
-              />
             </>
           )}
         </div>

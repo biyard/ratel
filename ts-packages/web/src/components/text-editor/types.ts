@@ -20,12 +20,7 @@ export interface EnabledFeatures {
   indent?: boolean;
   table?: boolean;
   pdf?: boolean;
-  lda: boolean;
-  network: boolean;
-  tfidf: boolean;
 }
-
-export type AnalyzeMode = 'lda' | 'network' | 'tfidf' | null;
 
 export type UploadResult = { url: string };
 
@@ -51,6 +46,7 @@ export interface TiptapEditorProps {
   showBubbleToolbar?: boolean;
   bubbleEnabledFeatures?: EnabledFeatures;
   bubbleToolbarClassName?: string;
+  toolbarFooter?: React.ReactNode;
 
   // Styling
   className?: string;
@@ -70,9 +66,6 @@ export interface TiptapEditorProps {
   uploadAsset?: (file: File) => Promise<UploadResult>;
   uploadVideo?: (file: File) => Promise<UploadResult>;
 
-  onClickLda?: () => void;
-  onClickNetwork?: () => void;
-  onClickTfidf?: () => void;
 
   maxImageSizeMB?: number;
   maxVideoSizeMB?: number;
@@ -92,9 +85,6 @@ export interface TiptapToolbarProps {
   openVideoPicker?: () => void;
   onImageUpload?: (imageUrl: string) => Promise<void>;
   onUploadPDF?: (files: FileList | File[]) => void;
-  onClickLda?: () => void;
-  onClickNetwork?: () => void;
-  onClickTfidf?: () => void;
   dropdownPortalContainer?: HTMLElement | null;
   onHeadingDropdownOpenChange?: (open: boolean) => void;
   onHeadingDropdownTriggerPointerDown?: () => void;
@@ -166,7 +156,4 @@ export const DEFAULT_ENABLED_FEATURES: EnabledFeatures = {
   indent: false, // Disabled for now
   table: true, // Enabled
   pdf: true,
-  lda: false,
-  tfidf: false,
-  network: false,
 };
