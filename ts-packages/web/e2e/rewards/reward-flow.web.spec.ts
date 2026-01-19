@@ -145,18 +145,11 @@ test.describe.serial('[Reward] Poll Space Reward Flow', () => {
   test('RW-5 [User B] Respond to the poll', async ({ page }) => {
     await login(page, userB);
 
-    // Debug: log spaceUrl
-    console.log('spaceUrl:', spaceUrl);
-
     // Navigate to the poll space
     expect(spaceUrl).not.toBe('');
     await page.goto(spaceUrl);
     await page.waitForLoadState('networkidle');
     await page.waitForTimeout(2000);
-
-    // Debug: take screenshot to see current page state
-    await page.screenshot({ path: 'test-results/debug-rw5-after-goto.png' });
-    console.log('Current URL after goto:', page.url());
 
     // Navigate to poll tab
     const pollMenu = page.locator('[data-testid^="space-sidemenu-"]').filter({
@@ -167,22 +160,12 @@ test.describe.serial('[Reward] Poll Space Reward Flow', () => {
       await page.waitForLoadState('networkidle');
     }
 
-    // Debug: take screenshot after poll menu click
-    await page.screenshot({
-      path: 'test-results/debug-rw5-after-poll-menu.png',
-    });
-
     // Check if we need to click Enter button to start the poll
     const enterButton = page.getByRole('button', { name: 'Enter' }).first();
     if (await enterButton.isVisible({ timeout: 3000 }).catch(() => false)) {
       await enterButton.click();
       await page.waitForLoadState('networkidle');
     }
-
-    // Debug: take screenshot before responding
-    await page.screenshot({
-      path: 'test-results/debug-rw5-before-respond.png',
-    });
 
     // Respond to the poll
     await respondToPoll(page, 0); // Select first option
