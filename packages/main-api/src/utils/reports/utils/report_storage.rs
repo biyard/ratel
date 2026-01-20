@@ -154,3 +154,45 @@ pub async fn presign_report_upload() -> Result<PresignedReportUpload> {
         key,
     })
 }
+
+pub async fn presign_report_download(key: &str, filename: &str) -> Result<String> {
+    use aws_sdk_s3::presigning::PresigningConfig;
+
+    let ratel_config = crate::config::get();
+    let aws_config = &ratel_config.aws;
+
+    let bucket_name = ratel_config.s3.name;
+    let bucket_region = ratel_config.s3.region;
+
+    let cfg = defaults(BehaviorVersion::latest())
+        .region(Region::new(bucket_region))
+        .credentials_provider(Credentials::new(
+            aws_config.access_key_id,
+            aws_config.secret_access_key,
+            None,
+            None,
+            "ratel",
+        ))
+        .load()
+        .await;
+
+    let client = S3Client::new(&cfg);
+    let safe_name = filename.replace('"', "");
+    let disposition = format!("attachment; filename=\"{}\"", safe_name);
+
+    let presigned = client
+        .get_object()
+        .bucket(bucket_name)
+        .key(key)
+        .response_content_disposition(disposition)
+        .presigned(
+            PresigningConfig::expires_in(std::time::Duration::from_secs(
+                ratel_config.s3.expire,
+            ))
+            .map_err(|e| crate::Error::InternalServerError(e.to_string()))?,
+        )
+        .await
+        .map_err(|e| crate::Error::InternalServerError(e.to_string()))?;
+
+    Ok(presigned.uri().to_string())
+}
