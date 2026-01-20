@@ -6,3 +6,11 @@ node_modules
 # CDK asset staging directory
 .cdk.staging
 cdk.out
+
+main-api/*
+survey-worker/*
+
+# Allow *.inline.js
+!*.inner.js
+
+
