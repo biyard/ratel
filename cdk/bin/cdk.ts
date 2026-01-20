@@ -4,7 +4,6 @@ import { GlobalAccelStack } from "../lib/global-accel-stack";
 import { GlobalTableStack } from "../lib/dynamodb-stack";
 import { StaticStack } from "../lib/static-stack";
 import { DaemonStack } from "../lib/daemon-stack";
-import { AiAgentStack } from "../lib/ai-agent-stack";
 
 const app = new App();
 
@@ -114,19 +113,4 @@ new GlobalTableStack(app, `ratel-${env}-dynamodb`, {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: "ap-northeast-2",
   },
-});
-
-// AI Agent Stack for PDF AI Helper (includes Knowledge Base, Agent, and KB Sync)
-new AiAgentStack(app, `ratel-${env}-ai-agent`, {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: "ap-northeast-2",
-  },
-  stage: env,
-  knowledgeBaseName: "pdf-KB",
-  description: "The knowledge base for the PDF ai helper.",
-  dataSourceBucketArn: "arn:aws:s3:::metadata.ratel.foundation",
-  dataSourceBucketName: "metadata.ratel.foundation",
-  dataSourcePrefix: "metadata/",
-  dataSourceName: "metadata-s3",
 });
