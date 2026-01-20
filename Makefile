@@ -84,7 +84,7 @@ DEPLOY_AGENT_ENV ?= AGENT_NAME=$(AGENT_NAME) AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) 
 cdk-deploy-ai-stack:
 	cd cdk && npm i
 	cd cdk && $(DEPLOY_AGENT_ENV) npm run build
-	cd cdk && $(DEPLOY_AGENT_ENV) cdk synth
+	cd cdk && $(DEPLOY_AGENT_ENV) cdk synth --app "npx ts-node bin/cdk-ai.ts"
 	cd cdk && $(DEPLOY_AGENT_ENV) cdk deploy --require-approval never $(AWS_FLAG) --all --concurrency 3 --app "npx ts-node bin/cdk-ai.ts" 
 
 node_modules:
