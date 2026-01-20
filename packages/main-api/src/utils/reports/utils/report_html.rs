@@ -464,9 +464,7 @@ pub fn build_report_html_document(fragment: &str) -> String {
 
       const title =
         (host.getAttribute("data-title") || "").trim();
-      const hasTitle = host.parentElement
-        ? host.parentElement.querySelector(".tfidf-title")
-        : null;
+      const hasTitle = host.querySelector(".tfidf-title");
       if (title && !hasTitle) {{
         const titleEl = document.createElement("div");
         titleEl.className = "tfidf-title";
