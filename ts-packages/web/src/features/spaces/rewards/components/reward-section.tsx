@@ -70,6 +70,7 @@ function RewardSectionContent({
           </div>
           {hasAvailableRewardTypes && (
             <Button
+              data-testid="reward-add-button"
               variant="outline"
               size="sm"
               onClick={() => onAddReward(entityType, rewardConfig.items)}
