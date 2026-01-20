@@ -79,6 +79,18 @@ export class KbSyncLambda extends Construct {
       }),
     );
 
+    // Grant Lambda permission to read from S3 bucket
+    this.lambdaFunction.addToRolePolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          "s3:GetObject",
+          "s3:HeadObject",
+        ],
+        resources: [`arn:aws:s3:::${props.dataSourceBucketName}/${props.dataSourcePrefix}*`],
+      }),
+    );
+
     // Create EventBridge rule to capture S3 object created events
     this.eventRule = new events.Rule(this, "S3ObjectCreatedRule", {
       eventPattern: {
