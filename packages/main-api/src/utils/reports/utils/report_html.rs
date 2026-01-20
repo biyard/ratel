@@ -283,6 +283,19 @@ pub fn build_report_html_document(fragment: &str) -> String {
       display: block;
     }}
 
+    .image-footnote {{
+      font-size: 11px;
+      color: rgba(17,24,39,0.82);
+      margin: 6px 0 0 0;
+      text-align: center;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: auto;
+      margin-right: auto;
+    }}
+
     div[data-analyze="tfidf"],
     div[data-analyze="network"] {{
       display: block;
@@ -876,6 +889,21 @@ pub fn build_report_html_document(fragment: &str) -> String {
         noteEl.className = "table-footnote";
         noteEl.textContent = note;
         table.parentElement?.insertBefore(noteEl, table);
+      }}
+
+      const images = Array.from(document.querySelectorAll("img[data-footnote]"));
+      for (const img of images) {{
+        const note = (img.getAttribute("data-footnote") || "").trim();
+        if (!note) continue;
+        const next = img.nextElementSibling;
+        if (next && next.classList && next.classList.contains("image-footnote")) {{
+          continue;
+        }}
+        const noteEl = document.createElement("div");
+        noteEl.className = "image-footnote";
+        noteEl.style.textAlign = "center";
+        noteEl.textContent = note;
+        img.parentElement?.insertBefore(noteEl, img.nextSibling);
       }}
 
       const blocks = Array.from(document.querySelectorAll("div[data-analyze][data-payload]"));

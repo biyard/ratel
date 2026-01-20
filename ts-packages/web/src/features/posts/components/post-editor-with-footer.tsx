@@ -9,6 +9,7 @@ type PostEditorWithFooterProps = {
   editing: boolean;
   toolbarFooter?: React.ReactNode;
   enableTableFootnote?: boolean;
+  enableImageFootnote?: boolean;
 };
 
 export const PostEditorWithFooter = forwardRef<
@@ -23,6 +24,7 @@ export const PostEditorWithFooter = forwardRef<
       editing,
       toolbarFooter,
       enableTableFootnote,
+      enableImageFootnote,
     },
     ref,
   ) => (
@@ -43,6 +45,7 @@ export const PostEditorWithFooter = forwardRef<
       editorClassName="flex-1 min-h-0 overflow-y-auto"
       toolbarFooter={toolbarFooter}
       enableTableFootnote={enableTableFootnote}
+      enableImageFootnote={enableImageFootnote}
       enabledFeatures={{
         bold: true,
         italic: true,
