@@ -38,6 +38,7 @@ function TfIdfNodeView(props: any) {
     [props?.node?.attrs?.payload],
   );
   const title = String(props?.node?.attrs?.title ?? '');
+  const footnote = String(props?.node?.attrs?.footnote ?? '');
   const isEditable = !!props?.editor?.isEditable;
 
   return (
@@ -79,6 +80,21 @@ function TfIdfNodeView(props: any) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           tf_idf={(payload as any)?.tf_idf}
         />
+        {isEditable ? (
+          <input
+            type="text"
+            value={footnote}
+            onChange={(event) =>
+              props?.updateAttributes?.({ footnote: event.target.value })
+            }
+            placeholder={t('tfidf_footnote_placeholder')}
+            className="mt-3 w-full rounded-md border border-input-box-border bg-transparent px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground text-center"
+          />
+        ) : footnote ? (
+          <div className="mt-3 w-full text-xs text-muted-foreground text-center">
+            {footnote}
+          </div>
+        ) : null}
       </div>
     </NodeViewWrapper>
   );
@@ -120,6 +136,20 @@ export const AnalyzeTfidfBlock = Node.create({
           return { 'data-title': attrs.title };
         },
       },
+      footnote: {
+        default: '',
+        parseHTML: (el) => {
+          const host = el as HTMLElement;
+          const direct = host.getAttribute('data-footnote');
+          if (direct) return direct;
+          const child = host.querySelector('div[data-analyze="tfidf"]');
+          return child?.getAttribute('data-footnote') ?? '';
+        },
+        renderHTML: (attrs) => {
+          if (!attrs.footnote) return {};
+          return { 'data-footnote': attrs.footnote };
+        },
+      },
     };
   },
 
@@ -137,6 +167,12 @@ export const AnalyzeTfidfBlock = Node.create({
     };
     if (title) {
       chartAttrs['data-title'] = title as string;
+    }
+    const footnoteAttr =
+      (HTMLAttributes as Record<string, unknown>)['data-footnote'] ??
+      (HTMLAttributes as Record<string, unknown>).footnote;
+    if (footnoteAttr) {
+      chartAttrs['data-footnote'] = String(footnoteAttr);
     }
     if (payload) {
       chartAttrs['data-payload'] = payload as string;
@@ -167,7 +203,10 @@ export const AnalyzeTfidfBlock = Node.create({
             .chain()
             .focus()
             .insertContent([
-              { type: this.name, attrs: { payload: encoded, title: '' } },
+              {
+                type: this.name,
+                attrs: { payload: encoded, title: '', footnote: '' },
+              },
               { type: 'paragraph' },
             ])
             .run();
