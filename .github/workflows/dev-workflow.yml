@@ -551,7 +551,7 @@ jobs:
           retention-days: 30
 
   ios-testflight:
-    runs-on: macos-15.6
+    runs-on: macos-latest
     permissions:
       contents: read
     defaults:
