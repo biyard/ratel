@@ -2,12 +2,9 @@ import { App } from "aws-cdk-lib";
 import { RegionalServiceStack } from "../lib/regional-service-stack";
 import { GlobalAccelStack } from "../lib/global-accel-stack";
 import { GlobalTableStack } from "../lib/dynamodb-stack";
-import { ImageWorkerStack } from "../lib/image-worker-stack";
 import { StaticStack } from "../lib/static-stack";
 import { DaemonStack } from "../lib/daemon-stack";
-import { KnowledgeBaseStack } from "../lib/knowledge-base-stack";
-import { AgentStack } from "../lib/agent-stack";
-import { KbSyncStack } from "../lib/kb-sync-stack";
+import { AiAgentStack } from "../lib/ai-agent-stack";
 
 const app = new App();
 
@@ -119,39 +116,17 @@ new GlobalTableStack(app, `ratel-${env}-dynamodb`, {
   },
 });
 
-// Knowledge Base for PDF AI Helper with S3 Vectors storage
-const pdfKnowledgeBaseStack = new KnowledgeBaseStack(app, `ratel-${env}-pdf-knowledge-base`, {
+// AI Agent Stack for PDF AI Helper (includes Knowledge Base, Agent, and KB Sync)
+new AiAgentStack(app, `ratel-${env}-ai-agent`, {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: "ap-northeast-2",
   },
+  stage: env,
   knowledgeBaseName: "pdf-KB",
   description: "The knowledge base for the PDF ai helper.",
   dataSourceBucketArn: "arn:aws:s3:::metadata.ratel.foundation",
+  dataSourceBucketName: "metadata.ratel.foundation",
   dataSourcePrefix: "metadata/",
   dataSourceName: "metadata-s3",
-});
-
-// Deploy Bedrock Agent connected to the PDF Knowledge Base
-new AgentStack(app, `ratel-${env}-pdf-agent`, {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: "ap-northeast-2",
-  },
-  stage: env,
-  knowledgeBaseId: pdfKnowledgeBaseStack.knowledgeBase.knowledgeBaseId,
-  knowledgeBaseArn: pdfKnowledgeBaseStack.knowledgeBase.knowledgeBaseArn,
-});
-
-// Deploy KB sync Lambda that triggers ingestion on S3 uploads
-new KbSyncStack(app, `ratel-${env}-pdf-kb-sync`, {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: "ap-northeast-2",
-  },
-  stage: env,
-  knowledgeBaseId: pdfKnowledgeBaseStack.knowledgeBase.knowledgeBaseId,
-  dataSourceId: pdfKnowledgeBaseStack.dataSource.attrDataSourceId,
-  dataBucketName: "metadata.ratel.foundation",
-  dataPrefix: "metadata/",
 });

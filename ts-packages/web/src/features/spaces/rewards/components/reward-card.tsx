@@ -21,7 +21,10 @@ export function RewardCard({
   const t = i18n.settings;
   console.log('reward.reward_action', reward.reward_action);
   return (
-    <div className="border border-c-wg-20 rounded-lg p-4 bg-c-bg-card">
+    <div
+      data-testid="reward-card"
+      className="border border-c-wg-20 rounded-lg p-4 bg-c-bg-card"
+    >
       <Col className="gap-3">
         <div className="flex justify-between items-start">
           <div className="flex-1">
@@ -36,6 +39,7 @@ export function RewardCard({
           </div>
           <div className="flex gap-2">
             <Button
+              data-testid="reward-edit-button"
               variant="outline"
               size="sm"
               onClick={onEdit}
@@ -44,6 +48,7 @@ export function RewardCard({
               <Edit2Icon className="w-4 h-4" />
             </Button>
             <Button
+              data-testid="reward-delete-button"
               variant="outline"
               size="sm"
               onClick={onDelete}
