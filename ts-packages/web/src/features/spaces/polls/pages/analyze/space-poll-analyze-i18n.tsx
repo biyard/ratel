@@ -50,6 +50,9 @@ export const i18nSpacePollAnalyze = {
     insert_lda: 'Insert LDA',
     insert_text_network: 'Insert Text Network',
     insert_tf_idf: 'Insert TF-IDF',
+    lda_footnote_placeholder: 'Enter a footnote for the LDA table',
+    tfidf_footnote_placeholder: 'Enter a footnote for the TF-IDF chart',
+    network_footnote_placeholder: 'Enter a footnote for the Text Network chart',
 
     input_tf_idf_title_hint: 'Input TF-IDF Title',
   },
@@ -103,6 +106,9 @@ export const i18nSpacePollAnalyze = {
     insert_lda: 'LDA 삽입하기',
     insert_text_network: 'Text Network 삽입하기',
     insert_tf_idf: 'TF-IDF 삽입하기',
+    lda_footnote_placeholder: 'LDA 표 각주를 입력해주세요',
+    tfidf_footnote_placeholder: 'TF-IDF 차트 각주를 입력해주세요',
+    network_footnote_placeholder: 'Text Network 차트 각주를 입력해주세요',
 
     input_tf_idf_title_hint: 'TF-IDF 제목을 입력해주세요',
   },

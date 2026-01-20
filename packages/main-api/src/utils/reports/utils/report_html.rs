@@ -241,6 +241,46 @@ pub fn build_report_html_document(fragment: &str) -> String {
       display: block;
     }}
 
+    .lda-footnote {{
+      font-size: 11px;
+      color: rgba(17,24,39,0.82);
+      margin: 0 0 6px 0;
+      text-align: left;
+    }}
+
+    .tfidf-footnote {{
+      font-size: 11px;
+      color: rgba(17,24,39,0.82);
+      margin: 10px 0 0 0;
+      text-align: center;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: auto;
+      margin-right: auto;
+    }}
+
+    .network-footnote {{
+      font-size: 11px;
+      color: rgba(17,24,39,0.82);
+      margin: 10px 0 0 0;
+      text-align: center;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: auto;
+      margin-right: auto;
+    }}
+
+    div[data-analyze="tfidf"],
+    div[data-analyze="network"] {{
+      display: block;
+      width: 100%;
+      text-align: center;
+    }}
+
     .tfidf-svg {{
       width: 100% !important;
       max-width: 100% !important;
@@ -309,6 +349,14 @@ pub fn build_report_html_document(fragment: &str) -> String {
       const wrap = document.createElement("div");
       wrap.className = "lda-card";
       host.appendChild(wrap);
+
+      const note = (host.getAttribute("data-footnote") || "").trim();
+      if (note) {{
+        const noteEl = document.createElement("div");
+        noteEl.className = "lda-footnote";
+        noteEl.textContent = note;
+        wrap.appendChild(noteEl);
+      }}
 
       const table = document.createElement("table");
       table.className = "lda-table";
@@ -572,6 +620,15 @@ pub fn build_report_html_document(fragment: &str) -> String {
         .style("font-weight", "700")
         .style("fill", "#000000")
         .text(d => d.val.toFixed(2));
+
+      const note = (host.getAttribute("data-footnote") || "").trim();
+      if (note) {{
+        const noteEl = document.createElement("div");
+        noteEl.className = "tfidf-footnote";
+        noteEl.style.textAlign = "center";
+        noteEl.textContent = note;
+        host.appendChild(noteEl);
+      }}
     }}
 
     async function renderNetwork(host, payload) {{
@@ -784,6 +841,15 @@ pub fn build_report_html_document(fragment: &str) -> String {
       for (let i = 0; i < 260; i++) sim.tick();
       draw();
       sim.stop();
+
+      const note = (host.getAttribute("data-footnote") || "").trim();
+      if (note) {{
+        const noteEl = document.createElement("div");
+        noteEl.className = "network-footnote";
+        noteEl.style.textAlign = "center";
+        noteEl.textContent = note;
+        host.appendChild(noteEl);
+      }}
     }}
 
     async function main() {{
