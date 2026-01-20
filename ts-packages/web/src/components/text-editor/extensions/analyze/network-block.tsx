@@ -4,6 +4,7 @@ import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
 import { NetworkChart } from '@/features/spaces/components/topic/network-chart';
 import { X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 type Payload = {
   network?: unknown;
@@ -65,7 +66,7 @@ function NetworkNodeView(props: any) {
           network={(payload as any)?.network}
         />
         {isEditable ? (
-          <input
+          <Input
             type="text"
             value={footnote}
             onChange={(event) =>
