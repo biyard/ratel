@@ -45,7 +45,10 @@ export function ReportPdfViewer({
     queryFn: getUserMembership,
   });
   const tierName = String(membership?.tier ?? '');
-  const isPaidMember = tierName.length > 0 && !tierName.includes('FREE');
+  const isPaidMember =
+    tierName.length > 0 &&
+    !tierName.includes('FREE') &&
+    !tierName.includes('Free');
   const canUseAi = enableAi && isPaidMember;
 
   const { messages, isLoading, sendMessage, clearMessages } =
