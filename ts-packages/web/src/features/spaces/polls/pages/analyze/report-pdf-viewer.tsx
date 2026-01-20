@@ -1,5 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
-import { X, ChevronDown, ChevronUp, ZoomIn, ZoomOut } from 'lucide-react';
+import {
+  X,
+  ChevronDown,
+  ChevronUp,
+  ZoomIn,
+  ZoomOut,
+  Download,
+  Moon,
+  Sun,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PdfViewer from '@/features/spaces/files/components/pdf-viewer';
 import { PdfAiChatOverlay } from '@/features/spaces/files/components/pdf-ai-chat-overlay';
@@ -8,6 +17,8 @@ import { useChatPreference } from '@/features/spaces/files/hooks/use-chat-prefer
 import { useReportPdfAiChat } from '../../hooks/use-report-pdf-ai-chat';
 import { useQuery } from '@tanstack/react-query';
 import { getUserMembership } from '@/lib/api/ratel/me.v3';
+import { call } from '@/lib/api/ratel/call';
+import { useTheme } from '@/hooks/use-theme';
 
 type ReportPdfViewerProps = {
   open: boolean;
@@ -40,6 +51,7 @@ export function ReportPdfViewer({
 
   const { chatState, setChatState, sidebarWidth, setSidebarWidth } =
     useChatPreference();
+  const { theme, setTheme } = useTheme();
   const { data: membership } = useQuery({
     queryKey: ['user-membership'],
     queryFn: getUserMembership,
@@ -140,6 +152,50 @@ export function ReportPdfViewer({
             </div>
 
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  try {
+                    const res: { download_url: string } = await call(
+                      'GET',
+                      `/v3/spaces/${encodeURIComponent(spacePk)}/analyzes/download-url`,
+                    );
+                    const objectUrl = res.download_url;
+                    const link = document.createElement('a');
+                    link.href = objectUrl;
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                  } catch {
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = fileName;
+                    document.body.appendChild(link);
+                    link.click();
+                    link.remove();
+                  }
+                }}
+                aria-label="Download PDF"
+                className="px-2"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+                aria-label="Toggle theme"
+                className="px-2"
+              >
+                {theme === 'light' ? (
+                  <Moon className="h-4 w-4" />
+                ) : (
+                  <Sun className="h-4 w-4" />
+                )}
+              </Button>
+
               <Button
                 variant="outline"
                 size="sm"
