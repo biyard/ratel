@@ -54,7 +54,7 @@ export class KbSyncLambda extends Construct {
     // Create the Lambda function
     this.lambdaFunction = new lambda.Function(this, "SyncTrigger", {
       runtime: lambda.Runtime.NODEJS_22_X,
-      handler: "kb-sync-trigger.handler",
+      handler: "index.handler",
       code: lambda.Code.fromInline(
         readFileSync(__dirname + "/./kb-sync-lambda.inner.js", "utf-8"),
       ),
@@ -64,14 +64,17 @@ export class KbSyncLambda extends Construct {
         DATA_PREFIX: props.dataSourcePrefix || "",
       },
       timeout: Duration.seconds(30),
-      description: `Triggers KB ingestion on S3 uploads for ${props.knowledgeBaseId}`,
+      description: `Triggers direct PDF ingestion for ${props.knowledgeBaseId} (CUSTOM data source)`,
     });
 
-    // Grant Lambda permission to start ingestion jobs
+    // Grant Lambda permission to ingest documents directly (CUSTOM data source)
     this.lambdaFunction.addToRolePolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
-        actions: ["bedrock:StartIngestionJob"],
+        actions: [
+          "bedrock:IngestKnowledgeBaseDocuments",
+          "bedrock:StartIngestionJob",
+        ],
         resources: [props.knowledgeBaseArn],
       }),
     );
@@ -92,7 +95,7 @@ export class KbSyncLambda extends Construct {
           }),
         },
       },
-      description: `Triggers KB sync when objects are created in s3://${props.dataSourceBucketName}${props.dataSourcePrefix ? "/" + props.dataSourcePrefix : ""}`,
+      description: `Triggers direct PDF ingestion when PDFs are created in s3://${props.dataSourceBucketName}${props.dataSourcePrefix ? "/" + props.dataSourcePrefix : ""} (CUSTOM data source - no full scans)`,
     });
 
     this.eventRule.addTarget(new targets.LambdaFunction(this.lambdaFunction));

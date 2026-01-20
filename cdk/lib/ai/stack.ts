@@ -5,7 +5,9 @@ import { Construct } from "constructs";
 
 import { KbSyncLambda } from "./constructs/kb-sync-lambda";
 import { BedrockAgent } from "./constructs/bedrock-agent";
-import { aws_s3vectors } from "aws-cdk-lib";
+import * as s3Vectors from "../s3-vectors/bucket";
+import * as s3VectorsIndex from "../s3-vectors/index";
+import * as s3VectorsKB from "../s3-vectors/knowledge-base";
 import * as iam from "aws-cdk-lib/aws-iam";
 
 export interface AiStackProps extends cdk.StackProps {
@@ -68,7 +70,7 @@ export class AiStack extends cdk.Stack {
     // S3 Vectors Resources
     // ========================================
     const vectorBucketName = `${knowledgeBaseName}-vectors`;
-    const vectorBucket = new aws_s3vectors.CfnVectorBucket(
+    const vectorBucket = new s3Vectors.Bucket(
       this,
       "VectorBucket",
       {
@@ -78,7 +80,7 @@ export class AiStack extends cdk.Stack {
 
     const vectorIndexName = `${vectorBucketName}-index`;
 
-    const vectorIndex = new aws_s3vectors.CfnIndex(this, "VectorIndex", {
+    const vectorIndex = new s3VectorsIndex.Index(this, "VectorIndex", {
       vectorBucketName: vectorBucket.vectorBucketName,
       indexName: vectorIndexName,
       dataType: "float32",
@@ -94,49 +96,23 @@ export class AiStack extends cdk.Stack {
 
     vectorIndex.node.addDependency(vectorBucket);
 
-    role.addToPolicy(
-      new iam.PolicyStatement({
-        actions: ["s3vectors:*"],
-        resources: [
-          vectorBucket.attrVectorBucketArn,
-          vectorIndex.attrIndexArn,
-          `${vectorIndex.attrIndexArn}/*`,
-          `${vectorBucket.attrVectorBucketArn}/*`,
-        ],
-      }),
-    );
-
     // ========================================
     // Knowledge Base
     // ========================================
-    const knowledgeBase = new bedrock.CfnKnowledgeBase(this, "KnowledgeBase", {
-      name: knowledgeBaseName,
+    const knowledgeBase = new s3VectorsKB.KnowledgeBase(this, "KnowledgeBase", {
+      knowledgeBaseName: knowledgeBaseName,
       description: props.description,
-      storageConfiguration: {
-        s3VectorsConfiguration: {
-          indexArn: vectorIndex.attrIndexArn,
-          vectorBucketArn: vectorBucket.attrVectorBucketArn,
-        },
-        type: "S3_VECTORS",
-      },
+      vectorBucketArn: vectorBucket.vectorBucketArn,
+      indexArn: vectorIndex.indexArn,
       knowledgeBaseConfiguration: {
-        vectorKnowledgeBaseConfiguration: {
-          embeddingModelArn,
-          embeddingModelConfiguration: {
-            bedrockEmbeddingModelConfiguration: {
-              dimensions: 1024,
-              embeddingDataType: "FLOAT32",
-            },
-          },
-        },
-        type: "VECTOR",
+        embeddingModelArn,
+        embeddingDataType: "FLOAT32",
+        dimensions: "1024",
       },
-      roleArn: role.roleArn,
     });
 
     knowledgeBase.node.addDependency(vectorBucket);
     knowledgeBase.node.addDependency(vectorIndex);
-    knowledgeBase.node.addDependency(role);
 
     // ========================================
     // Data Source
@@ -148,20 +124,14 @@ export class AiStack extends cdk.Stack {
       props.dataSourceBucketArn,
     );
 
-    dataSourceBucket.grantRead(role);
+    dataSourceBucket.grantRead(knowledgeBase.role);
 
     const dataSource = new bedrock.CfnDataSource(this, "DataSource", {
       name: props.dataSourceName,
-      description: `S3 data source for ${knowledgeBaseName}`,
-      knowledgeBaseId: knowledgeBase.attrKnowledgeBaseId,
+      description: `Custom data source for ${knowledgeBaseName} - direct ingestion only`,
+      knowledgeBaseId: knowledgeBase.knowledgeBaseId,
       dataSourceConfiguration: {
-        type: "S3",
-        s3Configuration: {
-          bucketArn: props.dataSourceBucketArn,
-          ...(props.dataSourcePrefix && {
-            inclusionPrefixes: [props.dataSourcePrefix],
-          }),
-        },
+        type: "CUSTOM",
       },
     });
     dataSource.node.addDependency(dataSourceBucket);
@@ -171,8 +141,8 @@ export class AiStack extends cdk.Stack {
     // KB Sync Lambda
     // ========================================
     const syncLambda = new KbSyncLambda(this, "KbSyncLambda", {
-      knowledgeBaseId: knowledgeBase.attrKnowledgeBaseId,
-      knowledgeBaseArn: knowledgeBase.attrKnowledgeBaseArn,
+      knowledgeBaseId: knowledgeBase.knowledgeBaseId,
+      knowledgeBaseArn: knowledgeBase.knowledgeBaseArn,
       dataSourceId: dataSource.attrDataSourceId,
       dataSourceBucketName: props.dataSourceBucketName,
       dataSourcePrefix: props.dataSourcePrefix,
@@ -185,8 +155,8 @@ export class AiStack extends cdk.Stack {
     // ========================================
     const bedrockAgent = new BedrockAgent(this, "BedrockAgent", {
       agentName: `${baseName}-agent`,
-      knowledgeBaseArn: knowledgeBase.attrKnowledgeBaseArn,
-      knowledgeBaseId: knowledgeBase.attrKnowledgeBaseId,
+      knowledgeBaseArn: knowledgeBase.knowledgeBaseArn,
+      knowledgeBaseId: knowledgeBase.knowledgeBaseId,
       foundationModel: props.foundationModel,
       description: "Agent connected to PDF Knowledge Base with Nova Pro",
       instruction: props.agentInstruction,
@@ -198,7 +168,7 @@ export class AiStack extends cdk.Stack {
           maxRecentSessions: 20,
         },
       },
-      aliasName: "production",
+      aliasName: "development",
     });
 
     bedrockAgent.node.addDependency(knowledgeBase);

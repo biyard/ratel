@@ -104,26 +104,18 @@ export class BedrockAgent extends Construct {
 
     // Create IAM role for the agent
     this.role = new iam.Role(this, "AgentRole", {
-      assumedBy: new iam.ServicePrincipal("bedrock.amazonaws.com", {
-        conditions: {
-          StringEquals: {
-            "aws:SourceAccount": stack.account,
-          },
-          ArnLike: {
-            "aws:SourceArn": `arn:aws:bedrock:${stack.region}:${stack.account}:agent/*`,
-          },
-        },
-      }),
+      assumedBy: new iam.ServicePrincipal("bedrock.amazonaws.com"),
       description: `Role for Bedrock Agent ${props.agentName}`,
     });
 
-    // Grant agent permission to invoke the foundation model
-    // Include both the base model and the APAC inference profile
+    // Grant agent permission to invoke the foundation model via inference profile
+    const inferenceProfile = `apac.${props.foundationModel}`;
+
     const modelResources = [
-      // Foundation model ARN
-      `arn:aws:bedrock:${stack.region}::foundation-model/${props.foundationModel}`,
-      // APAC inference profile ARN (for cross-region routing)
-      `arn:aws:bedrock:${stack.region}:${stack.account}:inference-profile/apac.${props.foundationModel}`,
+      // Inference profile ARN (for cross-region models)
+      `arn:aws:bedrock:${stack.region}:${stack.account}:inference-profile/${inferenceProfile}`,
+      // Foundation model with wildcard region (AWS best practice for cross-region inference)
+      `arn:aws:bedrock:*::foundation-model/${props.foundationModel}`,
     ];
 
     this.role.addToPolicy(
@@ -154,7 +146,7 @@ export class BedrockAgent extends Construct {
     this.agent = new bedrock.CfnAgent(this, "Agent", {
       agentName: props.agentName,
       agentResourceRoleArn: this.role.roleArn,
-      foundationModel: props.foundationModel,
+      foundationModel: inferenceProfile,
       description: props.description,
       instruction: props.instruction,
       idleSessionTtlInSeconds: props.idleSessionTtlInSeconds ?? 600,
