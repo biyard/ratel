@@ -104,7 +104,19 @@ export class BedrockAgent extends Construct {
 
     // Create IAM role for the agent
     this.role = new iam.Role(this, "AgentRole", {
-      assumedBy: new iam.ServicePrincipal("bedrock.amazonaws.com"),
+      assumedBy: new iam.ServicePrincipal("bedrock.amazonaws.com", {
+        conditions: {
+          StringEquals: {
+            "aws:SourceAccount": stack.account,
+          },
+          ArnLike: {
+            "aws:SourceArn": [
+              `arn:${stack.partition}:bedrock:${stack.region}:${stack.account}:agent/*`,
+              `arn:${stack.partition}:bedrock:${stack.region}:${stack.account}:agent-alias/*`,
+            ],
+          },
+        },
+      }),
       description: `Role for Bedrock Agent ${props.agentName}`,
     });
 
@@ -170,7 +182,7 @@ export class BedrockAgent extends Construct {
     // Create agent alias
     this.agentAlias = new bedrock.CfnAgentAlias(this, "AgentAlias", {
       agentId: this.agent.attrAgentId,
-      agentAliasName: props.aliasName ?? "production",
+      agentAliasName: props.aliasName ?? "development",
       description: `Alias for ${props.agentName}`,
     });
 
