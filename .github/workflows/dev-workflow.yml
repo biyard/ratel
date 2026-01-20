@@ -161,7 +161,7 @@ jobs:
 
           BEDROCK_AGENT_ID: ${{ secrets.DEV_BEDROCK_AGENT_ID }}
           BEDROCK_AGENT_ALIAS_ID: ${{ secrets.DEV_BEDROCK_AGENT_ALIAS_ID }}
-          
+
           BIYARD_API_URL: https://api.dev.biyard.co
           BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
           BIYARD_PROJECT_ID: ${{ secrets.DEV_BIYARD_PROJECT_ID }}
@@ -1026,3 +1026,38 @@ jobs:
                 body: comment
               });
             }
+  deploy-pdf-ai-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: cdk/package-lock.json
+
+      - name: Install AWS CDK globally
+        run: npm i -g aws-cdk
+
+      - name: Deploy AI Agent Stack
+        working-directory: cdk
+        env:
+          ENV: dev
+          AWS_REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AGENT_NAME: pdf
+        run: |
+          npm i -g aws-cdk
+          make cdk-deploy-ai-stack
