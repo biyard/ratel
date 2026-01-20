@@ -41,8 +41,8 @@ pub async fn ai_chat_handler(
         return Err(Error::ExpiredMembership);
     }
     let membership_name = user_membership.membership_pk.to_string();
-    if membership_name.contains("Free") {
-        return Err(Error::NoMembershipFound);
+    if membership_name.contains("Free") || membership_name.contains("FREE") {
+        return Err(Error::InvalidMembership);
     }
 
     let analyze =
