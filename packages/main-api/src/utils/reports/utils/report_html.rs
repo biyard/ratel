@@ -221,6 +221,26 @@ pub fn build_report_html_document(fragment: &str) -> String {
       overflow: visible;
     }}
 
+    .tfidf-title {{
+      font-weight: 700;
+      font-size: 14px;
+      margin: 0 0 10px 0;
+      color: rgba(17,24,39,0.92);
+      text-align: center;
+      width: 100%;
+      display: block;
+    }}
+
+    [data-analyze-title="tfidf"] {{
+      font-weight: 700;
+      font-size: 14px;
+      margin: 0 0 10px 0;
+      color: rgba(17,24,39,0.92);
+      text-align: center;
+      width: 100%;
+      display: block;
+    }}
+
     .tfidf-svg {{
       width: 100% !important;
       max-width: 100% !important;
@@ -371,6 +391,20 @@ pub fn build_report_html_document(fragment: &str) -> String {
 
       window.__REPORT_STAGE__ = "tfidf:render";
       host.innerHTML = "";
+
+      const title =
+        (host.getAttribute("data-title") || "").trim();
+      const hasTitle = host.parentElement
+        ? host.parentElement.querySelector(".tfidf-title")
+        : null;
+      if (title && !hasTitle) {{
+        const titleEl = document.createElement("div");
+        titleEl.className = "tfidf-title";
+        titleEl.style.width = "100%";
+        titleEl.style.textAlign = "center";
+        titleEl.textContent = title;
+        host.appendChild(titleEl);
+      }}
 
       const wrap = document.createElement("div");
       wrap.className = "tfidf-wrap";
