@@ -36,25 +36,11 @@ export function useDownloadAnalyzeMutation<
       return { spacePk, metadataUrl: res.metadata_url };
     },
 
-    onSuccess: async ({ metadataUrl }, { spacePk }) => {
+    onSuccess: async ({ spacePk }) => {
       await optimisticUpdate<T>(
         { queryKey: spaceKeys.topics(spacePk) },
         (response) => response,
       );
-
-      const bust = (url: string) =>
-        `${url}${url.includes('?') ? '&' : '?'}v=${Date.now()}`;
-
-      qc.invalidateQueries({ queryKey: spaceKeys.topics(spacePk) });
-
-      const a = document.createElement('a');
-      a.href = bust(metadataUrl);
-      a.target = '_blank';
-      a.rel = 'noreferrer';
-      a.download = '';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
 
       qc.invalidateQueries({ queryKey: spaceKeys.topics(spacePk) });
     },
