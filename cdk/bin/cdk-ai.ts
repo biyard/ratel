@@ -52,9 +52,9 @@ const region = process.env.AWS_REGION || "ap-northeast-2";
 const agentName = process.env.AGENT_NAME;
 
 const dataSourceBucketArn =
-  process.env.BUCKET_ARN || "arn:aws:s3:::metadata.ratel.foundation";
+  process.env.BUCKET_ARN || "arn:aws:s3:::rat-ap";
 const dataSourceBucketName =
-  process.env.BUCKET_NAME || "metadata.ratel.foundation";
+  process.env.BUCKET_NAME || "rat-ap";
 const dataSourcePrefix = process.env.BUCKET_PREFIX || "metadata/";
 const dataSourceName = process.env.DATASOURCE_NAME || "metadata-s3";
 const description = process.env.DESCRIPTION || "AI Agent";
