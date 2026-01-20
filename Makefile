@@ -23,6 +23,7 @@ ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(WEB_REPO_
 
 BUILD_CDK_ENV ?= AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY) AWS_REGION=$(REGION) DOMAIN=$(DOMAIN) WORKSPACE_ROOT=$(WORKSPACE_ROOT) SERVICE=$(SERVICE) AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) COMMIT=$(COMMIT) ENV=$(ENV) BASE_DOMAIN=$(BASE_DOMAIN) PROJECT=$(PROJECT) STACK=$(STACK)
 
+
 .build/evm-keys:
 	mkdir -p .build
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json
@@ -77,6 +78,14 @@ cdk-deploy: deps/rust-sdk/cdk/node_modules
 	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) npm run build
 	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) cdk synth
 	cd deps/rust-sdk/cdk && $(BUILD_CDK_ENV) CODE_PATH=$(PWD)/.build/$(SERVICE) cdk deploy --require-approval never $(AWS_FLAG) --all
+
+DEPLOY_AGENT_ENV ?= AGENT_NAME=$(AGENT_NAME) AWS_ACCESS_KEY_ID=$(ACCESS_KEY_ID) AWS_SECRET_ACCESS_KEY=$(SECRET_ACCESS_KEY) AWS_REGION=$(REGION)
+# FIXME: Use cdk-deploy-v2 with flag
+cdk-deploy-ai-stack:
+	cd cdk && npm i
+	cd cdk && $(DEPLOY_AGENT_ENV) npm run build
+	cd cdk && $(DEPLOY_AGENT_ENV) cdk synth
+	cd cdk && $(DEPLOY_AGENT_ENV) cdk deploy --require-approval never $(AWS_FLAG) --all --concurrency 3 --app "npx ts-node bin/cdk-ai.ts" 
 
 node_modules:
 	pnpm i
