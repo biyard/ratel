@@ -82,12 +82,11 @@ export const buildReportPdfBlob = async (
       text-rendering: geometricPrecision !important;
       color:#000000 !important;
       -webkit-text-fill-color:#000000 !important;
+      padding-bottom: 12px !important;
     }
 
     #content-root *{
       box-sizing:border-box !important;
-      color:#000000 !important;
-      -webkit-text-fill-color:#000000 !important;
       caret-color:#000000 !important;
       opacity:1 !important;
       filter:none !important;
@@ -112,23 +111,38 @@ export const buildReportPdfBlob = async (
 
     #content-root h1{
       font-size: 38px !important;
-      font-weight: 900 !important;
+      font-weight: 400 !important;
       line-height: 1.16 !important;
       margin: 0 0 12px 0 !important;
     }
 
     #content-root h2{
       font-size: 30px !important;
-      font-weight: 900 !important;
+      font-weight: 400 !important;
       line-height: 1.18 !important;
       margin: 0 0 12px 0 !important;
     }
 
     #content-root h3{
       font-size: 24px !important;
-      font-weight: 900 !important;
+      font-weight: 400 !important;
       line-height: 1.2 !important;
       margin: 0 0 10px 0 !important;
+    }
+
+    #content-root h1 *,
+    #content-root h2 *,
+    #content-root h3 *{
+      font-weight: 400 !important;
+    }
+
+    #content-root h1 strong,
+    #content-root h2 strong,
+    #content-root h3 strong,
+    #content-root h1 b,
+    #content-root h2 b,
+    #content-root h3 b{
+      font-weight: 700 !important;
     }
 
     #content-root p{
@@ -136,11 +150,17 @@ export const buildReportPdfBlob = async (
       margin-top: 0 !important;
       margin-bottom: 10px !important;
       line-height: 1.5 !important;
+      word-break: keep-all !important;
+      overflow-wrap: break-word !important;
     }
 
     #content-root li{
       font-size: 16px !important;
       line-height: 1.5 !important;
+      word-break: keep-all !important;
+      overflow-wrap: break-word !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
     }
 
     #content-root svg text{
@@ -156,19 +176,25 @@ export const buildReportPdfBlob = async (
 
     #content-root li[data-pdf-li="1"]{
       position: relative !important;
-      padding-left: 28px !important;
+      padding-left: 0 !important;
       margin: 0 0 6px 0 !important;
+      display: grid !important;
+      grid-template-columns: 24px 1fr !important;
+      column-gap: 4px !important;
+      align-items: start !important;
+    }
+
+    #content-root li[data-pdf-li="1"] > p{
+      display: inline !important;
+      margin: 0 !important;
     }
 
     #content-root .__pdf_marker{
-      position: absolute !important;
-      left: 0 !important;
-      top: 0 !important;
       width: 24px !important;
-      height: 1.5em !important;
+      height: auto !important;
       display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
+      align-items: flex-start !important;
+      justify-content: flex-start !important;
       font-weight: 400 !important;
       font-size: 16px !important;
       line-height: 1.5 !important;
@@ -176,6 +202,10 @@ export const buildReportPdfBlob = async (
       -webkit-text-fill-color:#000000 !important;
       white-space: nowrap !important;
       overflow: visible !important;
+    }
+
+    #content-root .__pdf_li_content{
+      min-width: 0 !important;
     }
 
     #content-root table{
@@ -296,28 +326,6 @@ export const buildReportPdfBlob = async (
     }
   };
 
-  const computeOlPrefix = (li: HTMLLIElement) => {
-    const parts: number[] = [];
-    let curLi: HTMLLIElement | null = li;
-
-    while (curLi) {
-      const parentOl = curLi.parentElement?.closest(
-        'ol',
-      ) as HTMLOListElement | null;
-      if (!parentOl) break;
-
-      const siblings = Array.from(parentOl.children).filter(
-        (n) => (n as HTMLElement).tagName === 'LI',
-      ) as HTMLLIElement[];
-      const idx = Math.max(0, siblings.indexOf(curLi)) + 1;
-      parts.unshift(idx);
-
-      curLi = parentOl.closest('li') as HTMLLIElement | null;
-    }
-
-    return parts.length ? `${parts.join('.')}.` : '1.';
-  };
-
   const materializeListMarkers = (root: HTMLElement) => {
     const lists = Array.from(root.querySelectorAll('ul, ol')) as (
       | HTMLUListElement
@@ -325,11 +333,15 @@ export const buildReportPdfBlob = async (
     )[];
     for (const list of lists) {
       const isOl = list.tagName === 'OL';
+      const startAttr = Number(list.getAttribute('start') ?? '1');
+      const startIndex =
+        Number.isFinite(startAttr) && startAttr > 0 ? startAttr : 1;
       const lis = Array.from(
         list.querySelectorAll(':scope > li'),
       ) as HTMLLIElement[];
 
-      for (const li of lis) {
+      for (let index = 0; index < lis.length; index += 1) {
+        const li = lis[index];
         li.setAttribute('data-pdf-li', '1');
 
         const already = li.querySelector(
@@ -337,11 +349,39 @@ export const buildReportPdfBlob = async (
         ) as HTMLSpanElement | null;
         if (already) continue;
 
-        const marker = root.ownerDocument.createElement('span');
+        const marker = already ?? root.ownerDocument.createElement('span');
         marker.className = '__pdf_marker';
-        marker.textContent = isOl ? computeOlPrefix(li) : '•';
+        if (!already) {
+          if (isOl) {
+            const valueRaw = li.getAttribute('value');
+            const valueAttr =
+              valueRaw && valueRaw.trim().length > 0
+                ? Number.parseInt(valueRaw, 10)
+                : Number.NaN;
+            const value = Number.isFinite(valueAttr)
+              ? valueAttr
+              : startIndex + index;
+            marker.textContent = `${value}.`;
+          } else {
+            marker.textContent = '•';
+          }
+          li.insertBefore(marker, li.firstChild);
+        }
 
-        li.insertBefore(marker, li.firstChild);
+        const existingContent = li.querySelector(
+          ':scope > .__pdf_li_content',
+        ) as HTMLSpanElement | null;
+        if (existingContent) continue;
+
+        const contentWrap = root.ownerDocument.createElement('span');
+        contentWrap.className = '__pdf_li_content';
+
+        const nodes = Array.from(li.childNodes);
+        for (const node of nodes) {
+          if (node === marker) continue;
+          contentWrap.appendChild(node);
+        }
+        li.appendChild(contentWrap);
       }
     }
   };
@@ -397,16 +437,18 @@ export const buildReportPdfBlob = async (
     const atomicBlocks = Array.from(
       root.querySelectorAll('[data-pdf-atomic="1"]'),
     ) as HTMLElement[];
-
     const atomicSet = new Set(atomicBlocks);
+
+    const listItems = Array.from(
+      root.querySelectorAll('li[data-pdf-li="1"]'),
+    ) as HTMLElement[];
+    const liSet = new Set(listItems);
 
     const baseSelectors = [
       'h1',
       'h2',
       'h3',
       'p',
-      'ul',
-      'ol',
       'table',
       'pre',
       'blockquote',
@@ -414,22 +456,24 @@ export const buildReportPdfBlob = async (
       'figure',
     ].join(',');
 
-    const blocks = [
-      ...atomicBlocks,
-      ...(
-        Array.from(root.querySelectorAll(baseSelectors)) as HTMLElement[]
-      ).filter((el) => {
-        let p: HTMLElement | null = el;
-        while (p && p !== root) {
-          if (atomicSet.has(p)) return false;
-          p = p.parentElement;
-        }
-        return true;
-      }),
-    ].filter((el) => {
-      const r = el.getBoundingClientRect();
-      return r.width > 0 && r.height > 0;
+    const otherBlocks = (
+      Array.from(root.querySelectorAll(baseSelectors)) as HTMLElement[]
+    ).filter((el) => {
+      let p: HTMLElement | null = el;
+      while (p && p !== root) {
+        if (atomicSet.has(p)) return false;
+        if (liSet.has(p)) return false;
+        p = p.parentElement;
+      }
+      return true;
     });
+
+    const blocks = [...atomicBlocks, ...listItems, ...otherBlocks].filter(
+      (el) => {
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+      },
+    );
 
     const maxIter = 10;
     for (let iter = 0; iter < maxIter; iter += 1) {
