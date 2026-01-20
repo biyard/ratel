@@ -46,6 +46,10 @@ export const i18nSpacePollAnalyze = {
     no_tfidf: 'No TF-IDF data found.',
     no_network: 'No network data found.',
     report_draft_placeholder: 'Report drafting view is under construction.',
+
+    insert_lda: 'Insert LDA',
+    insert_text_network: 'Insert Text Network',
+    insert_tf_idf: 'Insert TF-IDF',
   },
   ko: {
     id: 'ID',
@@ -93,5 +97,9 @@ export const i18nSpacePollAnalyze = {
     no_tfidf: 'TF-IDF 데이터가 존재하지 않습니다.',
     no_network: '네트워크 데이터가 존재하지 않습니다.',
     report_draft_placeholder: '보고서 작성 영역은 준비 중입니다.',
+
+    insert_lda: 'LDA 삽입하기',
+    insert_text_network: 'Text Network 삽입하기',
+    insert_tf_idf: 'TF-IDF 삽입하기',
   },
 };
