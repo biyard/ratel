@@ -1047,11 +1047,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: cdk/package-lock.json
 
-      - name: Install AWS CDK globally
-        run: npm i -g aws-cdk
-
       - name: Deploy AI Agent Stack
-        working-directory: cdk
         env:
           ENV: dev
           AWS_REGION: ap-northeast-2
