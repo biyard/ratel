@@ -50,6 +50,8 @@ export const i18nSpacePollAnalyze = {
     insert_lda: 'Insert LDA',
     insert_text_network: 'Insert Text Network',
     insert_tf_idf: 'Insert TF-IDF',
+
+    input_tf_idf_title_hint: 'Input TF-IDF Title',
   },
   ko: {
     id: 'ID',
@@ -101,5 +103,7 @@ export const i18nSpacePollAnalyze = {
     insert_lda: 'LDA 삽입하기',
     insert_text_network: 'Text Network 삽입하기',
     insert_tf_idf: 'TF-IDF 삽입하기',
+
+    input_tf_idf_title_hint: 'TF-IDF 제목을 입력해주세요',
   },
 };

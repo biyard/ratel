@@ -37,6 +37,7 @@ function TfIdfNodeView(props: any) {
     () => decode(props?.node?.attrs?.payload) as Payload | null,
     [props?.node?.attrs?.payload],
   );
+  const title = String(props?.node?.attrs?.title ?? '');
   const isEditable = !!props?.editor?.isEditable;
 
   return (
@@ -57,6 +58,21 @@ function TfIdfNodeView(props: any) {
             : ''
         }
       >
+        {isEditable ? (
+          <input
+            type="text"
+            value={title}
+            onChange={(event) =>
+              props?.updateAttributes?.({ title: event.target.value })
+            }
+            placeholder={t('input_tf_idf_title_hint')}
+            className="mb-3 w-full rounded-md border border-input-box-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground text-center"
+          />
+        ) : title ? (
+          <div className="mb-3 w-full text-sm font-semibold text-center">
+            {title}
+          </div>
+        ) : null}
         <TfIdfChart
           t={t}
           isHtml={true}
@@ -78,24 +94,63 @@ export const AnalyzeTfidfBlock = Node.create({
     return {
       payload: {
         default: null,
-        parseHTML: (el) => (el as HTMLElement).getAttribute('data-payload'),
+        parseHTML: (el) => {
+          const host = el as HTMLElement;
+          const direct = host.getAttribute('data-payload');
+          if (direct) return direct;
+          const child = host.querySelector('div[data-analyze="tfidf"]');
+          return child?.getAttribute('data-payload');
+        },
         renderHTML: (attrs) => {
           if (!attrs.payload) return {};
           return { 'data-payload': attrs.payload };
+        },
+      },
+      title: {
+        default: '',
+        parseHTML: (el) => {
+          const host = el as HTMLElement;
+          const direct = host.getAttribute('data-title');
+          if (direct) return direct;
+          const child = host.querySelector('[data-analyze-title="tfidf"]');
+          return child?.textContent ?? '';
+        },
+        renderHTML: (attrs) => {
+          if (!attrs.title) return {};
+          return { 'data-title': attrs.title };
         },
       },
     };
   },
 
   parseHTML() {
-    return [{ tag: 'div[data-analyze="tfidf"]' }];
+    return [
+      { tag: 'div[data-analyze-wrapper="tfidf"]' },
+      { tag: 'div[data-analyze="tfidf"]' },
+    ];
   },
 
   renderHTML({ HTMLAttributes }) {
-    return [
-      'div',
-      mergeAttributes(HTMLAttributes, { 'data-analyze': 'tfidf' }),
-    ];
+    const { payload, title, ...rest } = HTMLAttributes;
+    const chartAttrs: Record<string, string> = {
+      'data-analyze': 'tfidf',
+    };
+    if (title) {
+      chartAttrs['data-title'] = title as string;
+    }
+    if (payload) {
+      chartAttrs['data-payload'] = payload as string;
+    }
+
+    if (title) {
+      return [
+        'div',
+        mergeAttributes(rest, { 'data-analyze-wrapper': 'tfidf' }),
+        ['div', { class: 'tfidf-title', 'data-analyze-title': 'tfidf' }, title],
+        ['div', chartAttrs],
+      ];
+    }
+    return ['div', mergeAttributes(rest, chartAttrs)];
   },
 
   addNodeView() {
@@ -112,7 +167,7 @@ export const AnalyzeTfidfBlock = Node.create({
             .chain()
             .focus()
             .insertContent([
-              { type: this.name, attrs: { payload: encoded } },
+              { type: this.name, attrs: { payload: encoded, title: '' } },
               { type: 'paragraph' },
             ])
             .run();
