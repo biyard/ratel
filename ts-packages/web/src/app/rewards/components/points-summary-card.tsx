@@ -27,7 +27,10 @@ export function PointsSummaryCard({
 
   console.log('totalPoints', totalPoints);
   return (
-    <div className="bg-[#1A1A1A] rounded-xl p-5">
+    <div
+      data-testid="points-summary-card"
+      className="bg-[#1A1A1A] rounded-xl p-5"
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-base font-semibold text-white tracking-wide">
@@ -41,7 +44,10 @@ export function PointsSummaryCard({
           <span className="text-sm font-semibold text-text-primary">
             {i18n.your_share}
           </span>
-          <span className="text-xl font-bold text-white">
+          <span
+            data-testid="user-points-value"
+            className="text-xl font-bold text-white"
+          >
             {formatPoints(userPoints)} P
           </span>
           <div className="flex items-center gap-1">
