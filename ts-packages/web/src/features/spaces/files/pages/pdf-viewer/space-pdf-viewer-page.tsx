@@ -1,17 +1,16 @@
 import { useParams, useNavigate } from 'react-router';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { logger } from '@/lib/logger';
-import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import useFileSpace from '../../hooks/use-file-space';
-import PdfViewer from '../../components/pdf-viewer';
 import { PdfAiChatOverlay } from '../../components/pdf-ai-chat-overlay';
 import { PdfAiChatSidebar } from '../../components/pdf-ai-chat-sidebar';
 import { usePdfAiChat } from '../../hooks/use-pdf-ai-chat';
 import { useChatPreference } from '../../hooks/use-chat-preference';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ChevronDown, ChevronUp, ZoomIn, ZoomOut, Moon, Sun } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { route } from '@/route';
 import { useTheme } from '@/hooks/use-theme';
+import { PdfViewerShell } from '../../components/pdf-viewer-shell';
 
 export function SpacePdfViewerPage() {
   const { spacePk, fileId } = useParams<{ spacePk: string; fileId: string }>();
@@ -19,12 +18,8 @@ export function SpacePdfViewerPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedText, setSelectedText] = useState<string | undefined>();
   const [totalPages, setTotalPages] = useState(0);
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [scale, setScale] = useState(1.0);
   const [shouldOpenOverlay, setShouldOpenOverlay] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const { theme, setTheme } = useTheme();
 
   if (!spacePk || !fileId) {
@@ -33,7 +28,6 @@ export function SpacePdfViewerPage() {
 
   logger.debug(`SpacePdfViewerPage: spacePk=${spacePk}, fileId=${fileId}`);
 
-  const { data: space } = useSpaceById(spacePk);
   const { data: fileResponse } = useFileSpace(spacePk);
 
   // Find the file by its ID
@@ -47,30 +41,6 @@ export function SpacePdfViewerPage() {
     fileId,
     file?.url || '',
   );
-
-  // Auto-hide header on scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = scrollContainerRef.current?.scrollTop || 0;
-
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        // Scrolling down
-        setIsHeaderVisible(false);
-      } else if (currentScrollY < lastScrollY) {
-        // Scrolling up
-        setIsHeaderVisible(true);
-      }
-
-      setLastScrollY(currentScrollY);
-    };
-
-    const scrollContainer = scrollContainerRef.current;
-    scrollContainer?.addEventListener('scroll', handleScroll);
-
-    return () => {
-      scrollContainer?.removeEventListener('scroll', handleScroll);
-    };
-  }, [lastScrollY]);
 
   // Handle sidebar resize
   useEffect(() => {
@@ -162,99 +132,21 @@ export function SpacePdfViewerPage() {
   };
 
   return (
-    <div className="flex h-screen" style={{ backgroundColor: 'var(--background)' }}>
-      {/* Back button header */}
+    <div
+      className="flex h-screen"
+      style={{ backgroundColor: 'var(--background)' }}
+    >
       <div className="flex flex-col flex-1 relative">
-        {/* Show header button when header is hidden */}
-        {!isHeaderVisible && (
-          <Button
-            onClick={() => setIsHeaderVisible(true)}
-            variant="outline"
-            size="sm"
-            className="absolute top-4 right-4 z-50 shadow-lg rounded-full w-10 h-10 p-0"
-          >
-            <ChevronDown className="h-5 w-5" />
-          </Button>
-        )}
-
-        {isHeaderVisible && (
-          <div className="border-b p-4 flex items-center gap-4" style={{ backgroundColor: 'var(--background)' }}>
-            <Button
-              onClick={() => navigate(route.spaceFiles(spacePk))}
-              variant="outline"
-              size="sm"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Files
-            </Button>
-            <div className="flex-1 text-sm text-muted-foreground">
-              {file.name}
-            </div>
-
-            {/* Theme toggle */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-              aria-label="Toggle theme"
-              className="px-2"
-            >
-              {theme === 'light' ? (
-                <Moon className="h-4 w-4" />
-              ) : (
-                <Sun className="h-4 w-4" />
-              )}
-            </Button>
-
-            {/* Zoom controls */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setScale((prev) => Math.max(prev - 0.2, 0.5))}
-                disabled={scale <= 0.5}
-                aria-label="Zoom out"
-                className="px-2"
-              >
-                <ZoomOut className="h-4 w-4" />
-              </Button>
-              <span className="text-sm font-medium min-w-[60px] text-center">
-                {Math.round(scale * 100)}%
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setScale((prev) => Math.min(prev + 0.2, 3.0))}
-                disabled={scale >= 3.0}
-                aria-label="Zoom in"
-                className="px-2"
-              >
-                <ZoomIn className="h-4 w-4" />
-              </Button>
-            </div>
-
-            <Button
-              onClick={() => setIsHeaderVisible(false)}
-              variant="text"
-              size="sm"
-              className="rounded-full w-10 h-10 p-0"
-            >
-              <ChevronUp className="h-5 w-5" />
-            </Button>
-          </div>
-        )}
-
-        {/* PDF Viewer */}
-        <div className="flex-1 overflow-hidden" ref={scrollContainerRef}>
-          <PdfViewer
-            url={file.url}
-            fileName={file.name}
-            onTextSelect={handleTextSelect}
-            onPageChange={handlePageChange}
-            onLoadSuccess={setTotalPages}
-            scale={scale}
-          />
-        </div>
+        <PdfViewerShell
+          url={file.url}
+          fileName={file.name}
+          onBack={() => navigate(route.spaceFiles(spacePk))}
+          onToggleTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+          theme={theme}
+          onTextSelect={handleTextSelect}
+          onPageChange={handlePageChange}
+          onLoadSuccess={setTotalPages}
+        />
       </div>
 
       {/* AI Chat UI */}
