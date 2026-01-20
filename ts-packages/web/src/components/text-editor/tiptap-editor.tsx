@@ -34,6 +34,7 @@ import { AnalyzeLdaBlock } from './extensions/analyze/lda-block';
 import { AnalyzeNetworkBlock } from './extensions/analyze/network-block';
 import { AnalyzeTfidfBlock } from './extensions/analyze/tfidf-blck';
 import { TableWithFootnote } from './extensions/table-with-footnote';
+import { ImageWithFootnote } from './extensions/image-with-footnote';
 
 const FOLD_HEIGHT = 240;
 
@@ -67,6 +68,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       onImageUpload,
       onUploadPDF,
       enableTableFootnote = false,
+      enableImageFootnote = false,
       'data-pw': dataPw,
     },
     ref,
@@ -164,7 +166,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             alignments: ['left', 'center', 'right'],
           }),
           Underline,
-          Image.configure({
+          (enableImageFootnote ? ImageWithFootnote : Image).configure({
             inline: true,
             allowBase64: true,
             HTMLAttributes: {
@@ -242,6 +244,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
         maxVideoSizeMB,
         editable,
         enableTableFootnote,
+        enableImageFootnote,
       ],
     ) as Editor | null;
 

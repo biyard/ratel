@@ -54,6 +54,7 @@ export const i18nSpacePollAnalyze = {
     tfidf_footnote_placeholder: 'Enter a footnote for the TF-IDF chart',
     network_footnote_placeholder: 'Enter a footnote for the Text Network chart',
     table_footnote_placeholder: 'Enter a footnote for this table',
+    image_footnote_placeholder: 'Enter a footnote for this image',
 
     input_tf_idf_title_hint: 'Input TF-IDF Title',
   },
@@ -111,6 +112,7 @@ export const i18nSpacePollAnalyze = {
     tfidf_footnote_placeholder: 'TF-IDF 차트 각주를 입력해주세요',
     network_footnote_placeholder: 'Text Network 차트 각주를 입력해주세요',
     table_footnote_placeholder: '표 각주를 입력해주세요',
+    image_footnote_placeholder: '이미지 각주를 입력해주세요',
 
     input_tf_idf_title_hint: 'TF-IDF 제목을 입력해주세요',
   },
