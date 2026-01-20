@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Edit1, Resizing, Save } from '@/components/icons';
-import { PostEditor } from '@/features/posts/components/post-editor';
+import { PostEditorWithFooter } from '@/features/posts/components/post-editor-with-footer';
 import { Editor } from '@tiptap/react';
 import { SpaceAnalyze } from '@/features/spaces/polls/types/space-analyze';
 import { Button } from '@/components/ui/button';
@@ -182,21 +182,12 @@ export function ReportDraft({
           </div>
         </div>
         <div className="flex flex-col w-full min-h-0 flex-1 overflow-hidden">
-          <PostEditor
+          <PostEditorWithFooter
             ref={editorRef}
-            url={null}
             content={content}
             onUpdate={setContent}
             placeholder={t('report_draft_editor_placeholder')}
-            minHeight="0px"
-            showToolbar={editing}
-            showBubbleToolbar={false}
-            editable={editing}
-            disabledFileUpload
-            disabledImageUpload={false}
-            containerClassName="h-full min-h-0 overflow-hidden"
-            className="h-full min-h-0 overflow-hidden"
-            editorClassName="flex-1 min-h-0 overflow-y-auto"
+            editing={editing}
             toolbarFooter={
               editing && (hasLda || hasNetwork || hasTfIdf) ? (
                 <div className="flex flex-row gap-2 w-full justify-end items-center">
@@ -230,19 +221,6 @@ export function ReportDraft({
                 </div>
               ) : null
             }
-            enabledFeatures={{
-              bold: true,
-              italic: true,
-              underline: true,
-              strike: false,
-              textColor: true,
-              highlight: false,
-              heading: true,
-              align: true,
-              lists: true,
-              link: false,
-              video: false,
-            }}
           />
         </div>
 
