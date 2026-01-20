@@ -7,6 +7,9 @@ import { SpaceAnalyze } from '@/features/spaces/polls/types/space-analyze';
 import { Button } from '@/components/ui/button';
 import { config } from '@/config';
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { getUserMembership } from '@/lib/api/ratel/me.v3';
+import { ReportPdfViewer } from './report-pdf-viewer';
 
 type ReportDraftProps = {
   analyze?: SpaceAnalyze;
@@ -31,6 +34,9 @@ export function ReportDraft({
   const [isDownloading, setIsDownloading] = React.useState(false);
   const [downloadToken, setDownloadToken] = React.useState<string>('');
   const [editorHeight, setEditorHeight] = React.useState(560);
+  const [pdfViewerUrl, setPdfViewerUrl] = React.useState<string>('');
+  const [isPdfViewerOpen, setIsPdfViewerOpen] = React.useState(false);
+  const [pendingViewerOpen, setPendingViewerOpen] = React.useState(false);
   const resizeState = useRef<{ startY: number; startHeight: number } | null>(
     null,
   );
@@ -42,7 +48,14 @@ export function ReportDraft({
     Array.isArray(analyze?.network?.nodes) &&
     analyze.network.nodes.length > 0;
   const hasTfIdf = Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0;
-  const showDownload = (hasLda || hasNetwork || hasTfIdf) && config.experiment;
+  const showDownload = (hasLda || hasNetwork || hasTfIdf) && !config.experiment;
+
+  const { data: membership } = useQuery({
+    queryKey: ['user-membership'],
+    queryFn: getUserMembership,
+  });
+  const tierName = String(membership?.tier ?? '');
+  const isPaidMember = tierName.length > 0 && !tierName.includes('Free');
 
   useEffect(() => {
     if (editing) return;
@@ -55,7 +68,12 @@ export function ReportDraft({
     if (url.startsWith('http') && url !== downloadToken) {
       setIsDownloading(false);
     }
-  }, [analyze?.metadata_url, downloadToken, isDownloading]);
+    if (pendingViewerOpen && url.startsWith('http')) {
+      setPdfViewerUrl(url);
+      setIsPdfViewerOpen(true);
+      setPendingViewerOpen(false);
+    }
+  }, [analyze?.metadata_url, downloadToken, isDownloading, pendingViewerOpen]);
 
   const startEdit = () => setEditing(true);
 
@@ -103,23 +121,19 @@ export function ReportDraft({
   const onDownload = async () => {
     const existingUrl = String(analyze?.metadata_url ?? '');
     if (existingUrl.startsWith('http')) {
-      const a = document.createElement('a');
-      a.href = existingUrl;
-      a.target = '_blank';
-      a.rel = 'noreferrer';
-      a.download = '';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      setPdfViewerUrl(existingUrl);
+      setIsPdfViewerOpen(true);
       return;
     }
 
     try {
       setDownloadToken(String(analyze?.metadata_url ?? ''));
       setIsDownloading(true);
+      setPendingViewerOpen(true);
       await Promise.resolve(handleDownloadAnalyze?.());
     } catch {
       setIsDownloading(false);
+      setPendingViewerOpen(false);
     }
   };
 
@@ -151,6 +165,15 @@ export function ReportDraft({
 
   return (
     <div className="flex flex-col w-full">
+      <ReportPdfViewer
+        open={isPdfViewerOpen}
+        url={pdfViewerUrl}
+        fileName="analysis-report.pdf"
+        spacePk={String(analyze?.pk ?? '')}
+        analyzePk={String(analyze?.sk ?? '')}
+        enableAi={isPaidMember}
+        onClose={() => setIsPdfViewerOpen(false)}
+      />
       {showDownload && (
         <div className="flex flex-row w-full justify-end mb-2.5">
           <Button

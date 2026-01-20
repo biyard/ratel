@@ -2,11 +2,13 @@ pub mod download_analyze;
 pub mod get_analyze;
 pub mod update_analyze;
 pub mod upsert_analyze;
+pub mod ai_chat;
 
 pub use download_analyze::*;
 pub use get_analyze::*;
 pub use update_analyze::*;
 pub use upsert_analyze::*;
+pub use ai_chat::*;
 
 #[cfg(test)]
 pub mod tests;
@@ -25,4 +27,5 @@ pub fn route() -> Router<AppState> {
                 .patch(update_analyze_handler),
         )
         .route("/download", post(download_analyze_handler))
+        .route("/:analyze_pk/ai-chat", post(ai_chat_handler))
 }
