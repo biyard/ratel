@@ -2,17 +2,19 @@ use std::{collections::HashMap, time::Duration};
 
 use crate::config;
 use aws_config::{Region, retry::RetryConfig, timeout::TimeoutConfig};
+
+use aws_sdk_bedrockagentruntime::{
+    Client as AgentClient,
+    types::{
+        FilterAttribute, KnowledgeBaseRetrievalConfiguration,
+        KnowledgeBaseRetrieveAndGenerateConfiguration, RetrievalFilter,
+        RetrieveAndGenerateConfiguration, RetrieveAndGenerateInput,
+    },
+};
 use aws_sdk_bedrockruntime::{
     Client, Config,
     config::Credentials,
     types::{ContentBlock, ConversationRole, Message},
-};
-use aws_sdk_bedrockagentruntime::{
-    Client as AgentClient,
-    types::{
-        FilterAttribute, KnowledgeBaseRetrievalConfiguration, KnowledgeBaseRetrieveAndGenerateConfiguration,
-        RetrievalFilter, RetrieveAndGenerateConfiguration, RetrieveAndGenerateInput,
-    },
 };
 
 use crate::{Error, Result};
@@ -55,7 +57,7 @@ impl BedrockClient {
             .build();
 
         let client = Client::from_conf(aws_config);
-        
+
         // Create separate config for agent client
         let agent_config = aws_sdk_bedrockagentruntime::Config::builder()
             .credentials_provider(
@@ -167,6 +169,11 @@ impl BedrockClient {
         session_id: String,
         input_text: String,
     ) -> Result<(String, String)> {
+        tracing::debug!(
+            "bedlock agent id: {} bedlock agent alias id: {}",
+            self.agent_id,
+            self.agent_alias_id
+        );
         let response = self
             .agent_client
             .invoke_agent()
@@ -187,14 +194,10 @@ impl BedrockClient {
         let mut completion_text = String::new();
         let mut event_stream = response.completion;
 
-        while let Some(event) = event_stream
-            .recv()
-            .await
-            .map_err(|e| {
-                tracing::error!("Error receiving agent event: {:?}", e);
-                Error::AwsBedrockError(format!("{:?}", e))
-            })?
-        {
+        while let Some(event) = event_stream.recv().await.map_err(|e| {
+            tracing::error!("Error receiving agent event: {:?}", e);
+            Error::AwsBedrockError(format!("{:?}", e))
+        })? {
             if let Ok(chunk) = event.as_chunk() {
                 if let Some(bytes) = chunk.bytes() {
                     let text = String::from_utf8_lossy(bytes.as_ref());
@@ -204,9 +207,7 @@ impl BedrockClient {
         }
 
         if completion_text.is_empty() {
-            return Err(Error::AwsBedrockError(
-                "Empty agent response".to_string(),
-            ));
+            return Err(Error::AwsBedrockError("Empty agent response".to_string()));
         }
 
         Ok((completion_text, session_id))
@@ -226,7 +227,10 @@ impl BedrockClient {
             conf.aws.region
         );
 
-        tracing::info!("retrieve_and_generate called with KB ID: {}", knowledge_base_id);
+        tracing::info!(
+            "retrieve_and_generate called with KB ID: {}",
+            knowledge_base_id
+        );
         tracing::info!("Model ARN: {}", model_arn);
         tracing::info!("Query: {}", query);
         if let Some(ref uri) = s3_uri_filter {
@@ -302,14 +306,16 @@ impl BedrockClient {
         })?;
 
         tracing::info!("RetrieveAndGenerate response received");
-        
+
         let returned_session_id = response.session_id().to_string();
         tracing::info!("Session ID: {}", returned_session_id);
-        
+
         // Log citations if available
         let citations = response.citations();
         if citations.is_empty() {
-            tracing::warn!("No citations in response - Knowledge Base may have no matching documents");
+            tracing::warn!(
+                "No citations in response - Knowledge Base may have no matching documents"
+            );
         } else {
             tracing::info!("Number of citations: {}", citations.len());
             for (i, citation) in citations.iter().enumerate() {
@@ -325,7 +331,7 @@ impl BedrockClient {
                 }
             }
         }
-        
+
         let output_text = response
             .output()
             .ok_or(Error::AwsBedrockError("No output in response".to_string()))?

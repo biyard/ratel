@@ -17,7 +17,6 @@ interface PdfViewerProps {
 
 export default function PdfViewer({
   url,
-  fileName,
   onTextSelect,
   onPageChange,
   onLoadSuccess,
@@ -46,7 +45,9 @@ export default function PdfViewer({
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const pageNum = parseInt(entry.target.getAttribute('data-page-number') || '1');
+            const pageNum = parseInt(
+              entry.target.getAttribute('data-page-number') || '1',
+            );
             setCurrentPage(pageNum);
             onPageChange?.(pageNum);
           }
@@ -55,7 +56,7 @@ export default function PdfViewer({
       {
         root: containerRef.current,
         threshold: 0.5,
-      }
+      },
     );
 
     pageRefs.current.forEach((ref) => {
