@@ -4,6 +4,7 @@ import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
 import { TfIdfChart } from '@/features/spaces/components/topic/tf-idf-chart';
 import { X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 type Payload = {
   tf_idf?: unknown;
@@ -60,7 +61,7 @@ function TfIdfNodeView(props: any) {
         }
       >
         {isEditable ? (
-          <input
+          <Input
             type="text"
             value={title}
             onChange={(event) =>

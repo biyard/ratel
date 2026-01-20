@@ -211,6 +211,7 @@ export function ReportDraft({
             onUpdate={setContent}
             placeholder={t('report_draft_editor_placeholder')}
             editing={editing}
+            enableTableFootnote={true}
             toolbarFooter={
               editing && (hasLda || hasNetwork || hasTfIdf) ? (
                 <div className="flex flex-row gap-2 w-full justify-end items-center">

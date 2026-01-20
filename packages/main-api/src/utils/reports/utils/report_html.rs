@@ -274,6 +274,15 @@ pub fn build_report_html_document(fragment: &str) -> String {
       margin-right: auto;
     }}
 
+    .table-footnote {{
+      font-size: 11px;
+      color: rgba(17,24,39,0.82);
+      margin: 0 0 6px 0;
+      text-align: left;
+      width: 100%;
+      display: block;
+    }}
+
     div[data-analyze="tfidf"],
     div[data-analyze="network"] {{
       display: block;
@@ -854,6 +863,20 @@ pub fn build_report_html_document(fragment: &str) -> String {
 
     async function main() {{
       window.__REPORT_STAGE__ = "main:start";
+
+      const tables = Array.from(document.querySelectorAll("table[data-footnote]"));
+      for (const table of tables) {{
+        const note = (table.getAttribute("data-footnote") || "").trim();
+        if (!note) continue;
+        const prev = table.previousElementSibling;
+        if (prev && prev.classList && prev.classList.contains("table-footnote")) {{
+          continue;
+        }}
+        const noteEl = document.createElement("div");
+        noteEl.className = "table-footnote";
+        noteEl.textContent = note;
+        table.parentElement?.insertBefore(noteEl, table);
+      }}
 
       const blocks = Array.from(document.querySelectorAll("div[data-analyze][data-payload]"));
       for (const el of blocks) {{

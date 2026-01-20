@@ -8,42 +8,56 @@ type PostEditorWithFooterProps = {
   placeholder?: string;
   editing: boolean;
   toolbarFooter?: React.ReactNode;
+  enableTableFootnote?: boolean;
 };
 
 export const PostEditorWithFooter = forwardRef<
   Editor | null,
   PostEditorWithFooterProps
->(({ content, onUpdate, placeholder, editing, toolbarFooter }, ref) => (
-  <PostEditor
-    ref={ref}
-    url={null}
-    content={content}
-    onUpdate={onUpdate}
-    placeholder={placeholder}
-    minHeight="0px"
-    showToolbar={editing}
-    showBubbleToolbar={false}
-    editable={editing}
-    disabledFileUpload
-    disabledImageUpload={false}
-    containerClassName="h-full min-h-0 overflow-hidden"
-    className="h-full min-h-0 overflow-hidden"
-    editorClassName="flex-1 min-h-0 overflow-y-auto"
-    toolbarFooter={toolbarFooter}
-    enabledFeatures={{
-      bold: true,
-      italic: true,
-      underline: true,
-      strike: false,
-      textColor: true,
-      highlight: false,
-      heading: true,
-      align: true,
-      lists: true,
-      link: false,
-      video: false,
-    }}
-  />
-));
+>(
+  (
+    {
+      content,
+      onUpdate,
+      placeholder,
+      editing,
+      toolbarFooter,
+      enableTableFootnote,
+    },
+    ref,
+  ) => (
+    <PostEditor
+      ref={ref}
+      url={null}
+      content={content}
+      onUpdate={onUpdate}
+      placeholder={placeholder}
+      minHeight="0px"
+      showToolbar={editing}
+      showBubbleToolbar={false}
+      editable={editing}
+      disabledFileUpload
+      disabledImageUpload={false}
+      containerClassName="h-full min-h-0 overflow-hidden"
+      className="h-full min-h-0 overflow-hidden"
+      editorClassName="flex-1 min-h-0 overflow-y-auto"
+      toolbarFooter={toolbarFooter}
+      enableTableFootnote={enableTableFootnote}
+      enabledFeatures={{
+        bold: true,
+        italic: true,
+        underline: true,
+        strike: false,
+        textColor: true,
+        highlight: false,
+        heading: true,
+        align: true,
+        lists: true,
+        link: false,
+        video: false,
+      }}
+    />
+  ),
+);
 
 PostEditorWithFooter.displayName = 'PostEditorWithFooter';

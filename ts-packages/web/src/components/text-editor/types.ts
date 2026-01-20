@@ -69,6 +69,7 @@ export interface TiptapEditorProps {
 
   maxImageSizeMB?: number;
   maxVideoSizeMB?: number;
+  enableTableFootnote?: boolean;
 
   'data-pw'?: string;
 }

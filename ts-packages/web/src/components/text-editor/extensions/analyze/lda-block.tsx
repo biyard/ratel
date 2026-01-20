@@ -4,6 +4,7 @@ import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
 import { LdaTopicTable } from '@/features/spaces/components/topic/lda-topic-table';
 import { X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 type Payload = {
   ldaTopics?: unknown;
@@ -59,7 +60,7 @@ function LdaNodeView(props: any) {
         }
       >
         {isEditable ? (
-          <input
+          <Input
             type="text"
             value={footnote}
             onChange={(event) =>
