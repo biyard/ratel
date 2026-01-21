@@ -3,6 +3,7 @@ SERVICE ?= survey-worker
 ENV ?= local
 DOMAIN ?= dev.ratel.foundation
 
+RUST_FLAG ?=
 WORKSPACE_ROOT ?= $(PWD)/../..
 AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query "Account" --output text)
 COMMIT ?= $(shell git rev-parse --short HEAD)
@@ -11,123 +12,29 @@ RUSTFLAGS ?= -D warnings
 API_MODEL_ARTIFACT_DIR ?= $(PWD)/.build
 CARGO_TARGET_DIR ?= $(PWD)/target
 
-RUST_FLAG ?=
-
-SECRET_TOKEN ?=
-RUST_LOG ?= debug
 AWS_ACCESS_KEY_ID ?= $(shell aws configure get aws_access_key_id $(AWS_FLAG))
 AWS_SECRET_ACCESS_KEY ?= $(shell aws configure get aws_secret_access_key $(AWS_FLAG))
 AWS_REGION ?= $(shell aws configure get region)
-MIGRATE ?= false
-
-WATERMARK_QUEUE_URL ?= https://sqs.ap-northeast-2.amazonaws.com/385474633683/dev-artwork-image-queue
-
-ACCOUNT_ID ?=
-
-BUCKET_NAME ?= metadata.ratel.foundation
-BUCKET_EXPIRE ?= 3600
-ASSET_DIR ?= metadata
-S3_REGION ?= ap-northeast-2
-
-CHIME_BUCKET ?= metadata.ratel.foundation
-NOVA_MICRO_MODEL_ID ?= dummy
-NOVA_LITE_MODEL_ID ?= dummy
-PRIVATE_BUCKET_NAME ?= private.ratel.foundation
 
 REPO_NAME ?= $(PROJECT)/$(SERVICE)
 ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(REPO_NAME)  --query "repositories[0].repositoryUri" --output text)
 
-DATABASE_TYPE ?= postgres
-DATABASE_URL ?= "postgresql://postgres:postgres@postgres:5432/ratel"
 DYNAMO_ENDPOINT ?= http://localstack:4566
 DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
-KAIA_ENDPOINT ?= https://public-en-kairos.node.kaia.io
-KAIA_OWNER_ADDR ?= $(strip $(shell ./key.sh | awk '{print $$1}'))
-KAIA_OWNER_KEY ?= $(strip $(shell ./key.sh | awk '{print $$2}'))
-KAIA_FEEPAYER_ADDR ?= $(strip $(shell ./key.sh | awk '{print $$1}'))
-KAIA_FEEPAYER_KEY ?= $(strip $(shell ./key.sh | awk '{print $$2}'))
-TELEGRAM_TOKEN ?=
-FIREBASE_PROJECT_ID ?=
-PORTONE_API_SECRET ?=
-
-BIYARD_API_URL ?= https://api.dev.biyard.co
-BIYARD_API_SECRET ?= biyard_default_api_secret
-BIYARD_PROJECT_ID ?= ratel
-
-RATEL_PROJECT_ID ?= 
-FCM_ENABLED ?= false
-
-REWARD ?= true
-
-REPO_NAME ?= $(PROJECT)/$(SERVICE)
-ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(REPO_NAME)  --query "repositories[0].repositoryUri" --output text)
 
 BUILD_ENV ?= ENV=$(ENV) \
-								RUST_LOG=$(RUST_LOG) \
 								AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 								AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
 								AWS_REGION=$(AWS_REGION) \
 								VERSION=$(VERSION) \
 								COMMIT=$(COMMIT) \
-								SECRET_TOKEN=$(SECRET_TOKEN) \
 								DOMAIN=$(DOMAIN) \
-								DATABASE_TYPE=$(DATABASE_TYPE) \
-								DATABASE_URL=$(DATABASE_URL) \
 								AWS_ACCOUNT_ID=$(AWS_ACCOUNT_ID) \
-								BASE_DOMAIN=$(BASE_DOMAIN) \
 								RUSTFLAGS="$(RUSTFLAGS)" \
 								API_MODEL_ARTIFACT_DIR=$(API_MODEL_ARTIFACT_DIR) \
 								CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
-								AUTH_DOMAIN=$(AUTH_DOMAIN) \
-								MIGRATE=$(MIGRATE) \
-								SLACK_CHANNEL_BILL=$(SLACK_CHANNEL_BILL) \
-								SLACK_CHANNEL_SPONSOR=$(SLACK_CHANNEL_SPONSOR) \
-								SLACK_CHANNEL_ABUSING=$(SLACK_CHANNEL_ABUSING) \
-								SLACK_CHANNEL_MONITOR=$(SLACK_CHANNEL_MONITOR) \
-								BUCKET_NAME=$(BUCKET_NAME) \
-								ASSET_DIR=$(ASSET_DIR) \
-								BUCKET_EXPIRE=$(BUCKET_EXPIRE) \
-								S3_REGION=$(S3_REGION) \
-								CHIME_BUCKET=$(CHIME_BUCKET) \
-								NONCELAB_TOKEN=$(NONCELAB_TOKEN) \
-								WATERMARK_QUEUE_URL=$(WATERMARK_QUEUE_URL) \
-								PRIVATE_BUCKET_NAME=$(PRIVATE_BUCKET_NAME) \
-								KAIA_ENDPOINT=$(KAIA_ENDPOINT) \
-								KAIA_OWNER_ADDR=$(KAIA_OWNER_ADDR) \
-								KAIA_OWNER_KEY=$(KAIA_OWNER_KEY) \
-								KAIA_FEEPAYER_ADDR=$(KAIA_FEEPAYER_ADDR) \
-								KAIA_FEEPAYER_KEY=$(KAIA_FEEPAYER_KEY) \
-								JWT_SECRET_KEY=$(JWT_SECRET_KEY) \
-								BBS_BLS_X=$(BBS_BLS_X) \
-								BBS_BLS_Y=$(BBS_BLS_Y) \
-								BBS_BLS_D=$(BBS_BLS_Z) \
-								P256_X=$(P256_X) \
-								P256_Y=$(P256_Y) \
-								P256_D=$(P256_D) \
-								BBS_BLS_CRV=$(BBS_BLS_CRV) \
-								P256_CRV=$(P256_CRV) \
-								NOVA_LITE_MODEL_ID=$(NOVA_LITE_MODEL_ID) \
-								NOVA_MICRO_MODEL_ID=$(NOVA_MICRO_MODEL_ID) \
-								NOVA_LITE_MODEL_ID=$(NOVA_LITE_MODEL_ID) \
-								PRIVATE_BUCKET_NAME=$(PRIVATE_BUCKET_NAME) \
-								TELEGRAM_TOKEN=$(TELEGRAM_TOKEN) \
 								DYNAMO_ENDPOINT=$(DYNAMO_ENDPOINT) \
-								DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
-								BINANCE_API_KEY=$(BINANCE_API_KEY) \
-								BINANCE_SECRET_KEY=$(BINANCE_SECRET_KEY) \
-								BINANCE_WEBHOOK=$(BINANCE_WEBHOOK) \
-								REDIRECT_DOMAIN=$(REDIRECT_DOMAIN) \
-								FIREBASE_PROJECT_ID=$(FIREBASE_PROJECT_ID) \
-								PORTONE_API_SECRET=$(PORTONE_API_SECRET) \
-								PORTONE_KPN_CHANNEL_KEY=$(PORTONE_KPN_CHANNEL_KEY) \
-								PORTONE_STORE_ID=$(PORTONE_STORE_ID) \
-								ACCOUNT_ID=$(ACCOUNT_ID) \
-								RATEL_PROJECT_ID=$(RATEL_PROJECT_ID) \
-								FCM_ENABLED=$(FCM_ENABLED) \
-								REWARD=$(REWARD) \
-								BIYARD_API_URL=$(BIYARD_API_URL) \
-								BIYARD_API_SECRET=$(BIYARD_API_SECRET) \
-								BIYARD_PROJECT_ID=$(BIYARD_PROJECT_ID)
+								DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX)
 
 run:
 	$(BUILD_ENV) cargo run --features local-run

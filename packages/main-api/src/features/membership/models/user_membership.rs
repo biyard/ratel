@@ -1,8 +1,9 @@
 use crate::{
-    features::{membership::MembershipStatus, payment::PaymentMethod},
+    features::membership::{MembershipEntity, MembershipStatus},
     types::*,
     *,
 };
+use aws_sdk_dynamodb::types::TransactWriteItem;
 
 #[derive(
     Debug,
@@ -24,7 +25,6 @@ pub struct UserMembership {
     pub updated_at: i64,
     pub expired_at: i64,
 
-    // Fixed typo: membership_pk not memberhship_pk
     #[dynamo(prefix = "UM", name = "find_by_membership", index = "gsi1", pk)]
     pub membership_pk: MembershipPartition,
     pub status: MembershipStatus,
@@ -162,5 +162,43 @@ impl UserMembership {
 
         let datetime = chrono::DateTime::from_timestamp_millis(self.expired_at).unwrap();
         Some(datetime.to_rfc3339())
+    }
+}
+
+impl MembershipEntity for UserMembership {
+    fn owner_pk(&self) -> Partition {
+        self.pk.clone()
+    }
+
+    fn membership_pk(&self) -> &MembershipPartition {
+        &self.membership_pk
+    }
+
+    fn set_membership_pk(&mut self, pk: MembershipPartition) {
+        self.membership_pk = pk;
+    }
+
+    fn next_membership(&self) -> Option<&MembershipPartition> {
+        self.next_membership.as_ref()
+    }
+
+    fn set_next_membership(&mut self, pk: Option<MembershipPartition>) {
+        self.next_membership = pk;
+    }
+
+    fn expired_at(&self) -> i64 {
+        self.expired_at
+    }
+
+    fn set_updated_at(&mut self, timestamp: i64) {
+        self.updated_at = timestamp;
+    }
+
+    fn calculate_remaining_duration_days(&self) -> i32 {
+        UserMembership::calculate_remaining_duration_days(self)
+    }
+
+    fn upsert_transact_write_item(&self) -> TransactWriteItem {
+        self.upsert_transact_write_item()
     }
 }
