@@ -166,9 +166,10 @@ impl BedrockClient {
     /// Invoke agent with session management
     pub async fn invoke_agent(
         &self,
-        session_id: String,
+        session_id: Option<String>,
         input_text: String,
     ) -> Result<(String, String)> {
+        let session_id = session_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
         tracing::debug!(
             "bedlock agent id: {} bedlock agent alias id: {}",
             self.agent_id,

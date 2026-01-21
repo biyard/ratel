@@ -38,8 +38,7 @@ export function SpacePdfViewerPage() {
     useChatPreference();
   const { messages, isLoading, sendMessage, clearMessages } = usePdfAiChat(
     spacePk,
-    fileId,
-    file?.url || '',
+    { kind: 'file', fileId },
   );
 
   // Handle sidebar resize

@@ -48,7 +48,7 @@ export function ReportDraft({
     Array.isArray(analyze?.network?.nodes) &&
     analyze.network.nodes.length > 0;
   const hasTfIdf = Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0;
-  const showDownload = (hasLda || hasNetwork || hasTfIdf) && config.experiment;
+  const showDownload = (hasLda || hasNetwork || hasTfIdf) && !config.experiment;
 
   const { data: membership } = useQuery({
     queryKey: ['user-membership'],
@@ -56,6 +56,7 @@ export function ReportDraft({
   });
   const tierName = String(membership?.tier ?? '');
   const isPaidMember = tierName.length > 0 && !tierName.includes('Free');
+  const spacePk = String(analyze?.pk ?? '');
 
   useEffect(() => {
     if (editing) return;
@@ -169,7 +170,7 @@ export function ReportDraft({
         open={isPdfViewerOpen}
         url={pdfViewerUrl}
         fileName="analysis-report.pdf"
-        spacePk={String(analyze?.pk ?? '')}
+        spacePk={spacePk}
         analyzePk={String(analyze?.sk ?? '')}
         enableAi={isPaidMember}
         onClose={() => setIsPdfViewerOpen(false)}
