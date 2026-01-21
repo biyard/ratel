@@ -10,7 +10,7 @@ pub struct DownloadAnalyzeUrlResponse {
 }
 
 pub async fn download_analyze_url_handler(
-    State(AppState { dynamo, .. }): State<AppState>,
+    State(AppState { dynamo, s3, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
 ) -> Result<Json<DownloadAnalyzeUrlResponse>> {
@@ -39,7 +39,7 @@ pub async fn download_analyze_url_handler(
         .and_then(|rest| rest.splitn(2, '/').nth(1))
         .ok_or_else(|| Error::InternalServerError("Invalid metadata_url".to_string()))?;
 
-    let download_url = presign_report_download(key, "analysis-report.pdf").await?;
+    let download_url = presign_report_download(&s3, key, "analysis-report.pdf").await?;
 
     Ok(Json(DownloadAnalyzeUrlResponse { download_url }))
 }

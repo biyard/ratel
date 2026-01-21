@@ -15,7 +15,7 @@ pub struct DownloadAnalyzeResponse {
 }
 
 pub async fn download_analyze_handler(
-    State(AppState { dynamo, .. }): State<AppState>,
+    State(AppState { dynamo, s3, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
     // Extension(space): Extension<SpaceCommon>,
@@ -36,7 +36,7 @@ pub async fn download_analyze_handler(
     let analyze = analyze.unwrap();
     let html_contents = analyze.html_contents.unwrap_or_default();
     let html_document = build_report_html_document(&html_contents);
-    let upload = presign_report_upload().await?;
+    let upload = presign_report_upload(&s3).await?;
 
     Ok(Json(DownloadAnalyzeResponse {
         presigned_url: upload.presigned_url,

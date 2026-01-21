@@ -68,6 +68,10 @@ impl S3Client {
         }
     }
 
+    pub fn bucket_name(&self) -> &str {
+        &self.bucket_name
+    }
+
     pub async fn upload_object(
         &self,
         key: &str,

@@ -2,10 +2,11 @@ use crate::*;
 
 use aws_config::BehaviorVersion;
 use aws_config::{Region, defaults};
-use aws_sdk_s3::Client as S3Client;
+use aws_sdk_s3::Client;
 use aws_sdk_s3::config::Credentials;
 use aws_sdk_s3::primitives::ByteStream;
 use uuid::Uuid;
+use crate::utils::aws::S3Client as RatelS3Client;
 
 #[derive(Debug, Clone)]
 pub struct ReportS3Config {
@@ -24,34 +25,21 @@ pub struct PresignedReportUpload {
     pub key: String,
 }
 
-pub async fn upload_report_pdf(pdf_bytes: Vec<u8>) -> Result<(String, String)> {
+pub async fn upload_report_pdf(
+    pdf_bytes: Vec<u8>,
+    s3: &RatelS3Client,
+) -> Result<(String, String)> {
     let ratel_config = crate::config::get();
-    let aws_config = &ratel_config.aws;
 
     let asset_dir = ratel_config.s3.asset_dir;
     let bucket_name = ratel_config.s3.name;
-    let bucket_region = ratel_config.s3.region;
 
     let env = ratel_config.env;
-
-    let cfg = defaults(BehaviorVersion::latest())
-        .region(Region::new(bucket_region))
-        .credentials_provider(Credentials::new(
-            aws_config.access_key_id,
-            aws_config.secret_access_key,
-            None,
-            None,
-            "ratel",
-        ))
-        .load()
-        .await;
-
-    let client = S3Client::new(&cfg);
 
     let id = Uuid::new_v4();
     let key = format!("{}/{}/reports/{}.pdf", asset_dir, env.to_lowercase(), id);
 
-    client
+    s3.client
         .put_object()
         .bucket(bucket_name)
         .key(&key)
@@ -81,7 +69,7 @@ pub async fn upload_report_pdf_with_config(
         .load()
         .await;
 
-    let client = S3Client::new(&aws_cfg);
+    let client = Client::new(&aws_cfg);
 
     let id = Uuid::new_v4();
     let key = format!(
@@ -105,34 +93,20 @@ pub async fn upload_report_pdf_with_config(
     Ok((key, uri))
 }
 
-pub async fn presign_report_upload() -> Result<PresignedReportUpload> {
+pub async fn presign_report_upload(
+    s3: &RatelS3Client,
+) -> Result<PresignedReportUpload> {
     use aws_sdk_s3::presigning::PresigningConfig;
 
     let ratel_config = crate::config::get();
-    let aws_config = &ratel_config.aws;
 
     let asset_dir = ratel_config.s3.asset_dir;
     let bucket_name = ratel_config.s3.name;
-    let bucket_region = ratel_config.s3.region;
     let env = ratel_config.env;
-
-    let cfg = defaults(BehaviorVersion::latest())
-        .region(Region::new(bucket_region))
-        .credentials_provider(Credentials::new(
-            aws_config.access_key_id,
-            aws_config.secret_access_key,
-            None,
-            None,
-            "ratel",
-        ))
-        .load()
-        .await;
-
-    let client = S3Client::new(&cfg);
     let id = Uuid::new_v4();
     let key = format!("{}/{}/reports/{}.pdf", asset_dir, env.to_lowercase(), id);
 
-    let presigned = client
+    let presigned = s3.client
         .put_object()
         .bucket(bucket_name)
         .key(&key)
@@ -155,32 +129,19 @@ pub async fn presign_report_upload() -> Result<PresignedReportUpload> {
     })
 }
 
-pub async fn presign_report_download(key: &str, filename: &str) -> Result<String> {
+pub async fn presign_report_download(
+    s3: &RatelS3Client,
+    key: &str,
+    filename: &str,
+) -> Result<String> {
     use aws_sdk_s3::presigning::PresigningConfig;
 
     let ratel_config = crate::config::get();
-    let aws_config = &ratel_config.aws;
-
     let bucket_name = ratel_config.s3.name;
-    let bucket_region = ratel_config.s3.region;
-
-    let cfg = defaults(BehaviorVersion::latest())
-        .region(Region::new(bucket_region))
-        .credentials_provider(Credentials::new(
-            aws_config.access_key_id,
-            aws_config.secret_access_key,
-            None,
-            None,
-            "ratel",
-        ))
-        .load()
-        .await;
-
-    let client = S3Client::new(&cfg);
     let safe_name = filename.replace('"', "");
     let disposition = format!("attachment; filename=\"{}\"", safe_name);
 
-    let presigned = client
+    let presigned = s3.client
         .get_object()
         .bucket(bucket_name)
         .key(key)
