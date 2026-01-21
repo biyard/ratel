@@ -15,12 +15,22 @@ export interface ThemeAwareColorOptions {
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     themeAwareColor: {
+      /**
+       * Set the text color with theme awareness
+       */
       setThemeAwareColor: (color: string) => ReturnType;
+      /**
+       * Unset the text color
+       */
       unsetThemeAwareColor: () => ReturnType;
     };
   }
 }
 
+/**
+ * ThemeAwareColor extension
+ * Stores the original color as data attribute and uses CSS to handle theme-based inversion
+ */
 export const ThemeAwareColor = Extension.create<ThemeAwareColorOptions>({
   name: 'themeAwareColor',
 
@@ -40,7 +50,7 @@ export const ThemeAwareColor = Extension.create<ThemeAwareColorOptions>({
             parseHTML: (element) => {
               const dataColor = element.getAttribute('data-color');
               if (dataColor) return dataColor;
-              
+
               const styleColor = element.style.color?.replace(/['"]+/g, '');
               return styleColor || null;
             },
@@ -49,7 +59,7 @@ export const ThemeAwareColor = Extension.create<ThemeAwareColorOptions>({
                 return {};
               }
 
-              const currentTheme = this.options.getCurrentTheme?.() || 
+              const currentTheme = this.options.getCurrentTheme?.() ||
                 (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
               const adjustedColor = getThemeAdjustedColor(
                 attributes.color,
@@ -71,17 +81,17 @@ export const ThemeAwareColor = Extension.create<ThemeAwareColorOptions>({
     return {
       setThemeAwareColor:
         (color: string) =>
-        ({ chain }) => {
-          return chain().setMark('textStyle', { color }).run();
-        },
+          ({ chain }) => {
+            return chain().setMark('textStyle', { color }).run();
+          },
       unsetThemeAwareColor:
         () =>
-        ({ chain }) => {
-          return chain()
-            .setMark('textStyle', { color: null })
-            .removeEmptyTextStyle()
-            .run();
-        },
+          ({ chain }) => {
+            return chain()
+              .setMark('textStyle', { color: null })
+              .removeEmptyTextStyle()
+              .run();
+          },
     };
   },
 });
