@@ -27,6 +27,7 @@ export default function PdfViewer({
   const [loading, setLoading] = useState<boolean>(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const isValidUrl = typeof url === 'string' && url.startsWith('http');
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -38,6 +39,13 @@ export default function PdfViewer({
   function onDocumentLoadError() {
     setLoading(false);
   }
+
+  useEffect(() => {
+    setNumPages(0);
+    setCurrentPage(1);
+    setLoading(true);
+    pageRefs.current = [];
+  }, [url]);
 
   // Track current page based on scroll position
   useEffect(() => {
@@ -95,43 +103,53 @@ export default function PdfViewer({
               </div>
             </div>
           )}
-          <Document
-            file={url}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={onDocumentLoadError}
-            loading=""
-            error={
-              <div className="flex items-center justify-center min-h-[600px] bg-white dark:bg-gray-800 rounded p-8">
-                <div className="text-center max-w-md">
-                  <p className="text-lg font-semibold text-destructive mb-2">
-                    Failed to load PDF
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    The PDF file could not be loaded. It may be corrupted or
-                    unavailable.
-                  </p>
+          {isValidUrl ? (
+            <Document
+              key={url}
+              file={url}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              loading=""
+              error={
+                <div className="flex items-center justify-center min-h-[600px] bg-white dark:bg-gray-800 rounded p-8">
+                  <div className="text-center max-w-md">
+                    <p className="text-lg font-semibold text-destructive mb-2">
+                      Failed to load PDF
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      The PDF file could not be loaded. It may be corrupted or
+                      unavailable.
+                    </p>
+                  </div>
                 </div>
+              }
+            >
+              {Array.from(new Array(numPages), (_, index) => (
+                <div
+                  key={`page_${index + 1}`}
+                  ref={(el) => {
+                    pageRefs.current[index] = el;
+                  }}
+                  data-page-number={index + 1}
+                  className="shadow-xl mb-4"
+                >
+                  <Page
+                    pageNumber={index + 1}
+                    scale={scale}
+                    renderTextLayer={true}
+                    renderAnnotationLayer={true}
+                  />
+                </div>
+              ))}
+            </Document>
+          ) : (
+            <div className="flex items-center justify-center min-h-[600px] bg-white dark:bg-gray-800 rounded">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-sm text-muted-foreground">Loading PDF...</p>
               </div>
-            }
-          >
-            {Array.from(new Array(numPages), (_, index) => (
-              <div
-                key={`page_${index + 1}`}
-                ref={(el) => {
-                  pageRefs.current[index] = el;
-                }}
-                data-page-number={index + 1}
-                className="shadow-xl mb-4"
-              >
-                <Page
-                  pageNumber={index + 1}
-                  scale={scale}
-                  renderTextLayer={true}
-                  renderAnnotationLayer={true}
-                />
-              </div>
-            ))}
-          </Document>
+            </div>
+          )}
         </div>
       </div>
 

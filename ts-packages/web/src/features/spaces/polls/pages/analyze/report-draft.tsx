@@ -7,9 +7,8 @@ import { SpaceAnalyze } from '@/features/spaces/polls/types/space-analyze';
 import { Button } from '@/components/ui/button';
 import { config } from '@/config';
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { getUserMembership } from '@/lib/api/ratel/me.v3';
-import { ReportPdfViewer } from './report-pdf-viewer';
+import { useNavigate } from 'react-router';
+import { route } from '@/route';
 
 type ReportDraftProps = {
   analyze?: SpaceAnalyze;
@@ -32,14 +31,11 @@ export function ReportDraft({
   const [editing, setEditing] = useState(false);
   const editorRef = useRef<Editor | null>(null);
   const [isDownloading, setIsDownloading] = React.useState(false);
-  const [downloadToken, setDownloadToken] = React.useState<string>('');
   const [editorHeight, setEditorHeight] = React.useState(560);
-  const [pdfViewerUrl, setPdfViewerUrl] = React.useState<string>('');
-  const [isPdfViewerOpen, setIsPdfViewerOpen] = React.useState(false);
-  const [pendingViewerOpen, setPendingViewerOpen] = React.useState(false);
   const resizeState = useRef<{ startY: number; startHeight: number } | null>(
     null,
   );
+  const navigate = useNavigate();
 
   const hasLda =
     Array.isArray(analyze?.lda_topics) && analyze.lda_topics.length > 0;
@@ -48,33 +44,12 @@ export function ReportDraft({
     Array.isArray(analyze?.network?.nodes) &&
     analyze.network.nodes.length > 0;
   const hasTfIdf = Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0;
-  const showDownload = (hasLda || hasNetwork || hasTfIdf) && !config.experiment;
-
-  const { data: membership } = useQuery({
-    queryKey: ['user-membership'],
-    queryFn: getUserMembership,
-  });
-  const tierName = String(membership?.tier ?? '');
-  const isPaidMember = tierName.length > 0 && !tierName.includes('Free');
-  const spacePk = String(analyze?.pk ?? '');
+  const showDownload = (hasLda || hasNetwork || hasTfIdf) && config.experiment;
 
   useEffect(() => {
     if (editing) return;
     setContent(String(analyze?.html_contents ?? ''));
   }, [analyze?.html_contents, editing]);
-
-  useEffect(() => {
-    if (!isDownloading) return;
-    const url = String(analyze?.metadata_url ?? '');
-    if (url.startsWith('http') && url !== downloadToken) {
-      setIsDownloading(false);
-    }
-    if (pendingViewerOpen && url.startsWith('http')) {
-      setPdfViewerUrl(url);
-      setIsPdfViewerOpen(true);
-      setPendingViewerOpen(false);
-    }
-  }, [analyze?.metadata_url, downloadToken, isDownloading, pendingViewerOpen]);
 
   const startEdit = () => setEditing(true);
 
@@ -120,21 +95,24 @@ export function ReportDraft({
   };
 
   const onDownload = async () => {
+    const spacePkValue = String(analyze?.pk ?? '');
     const existingUrl = String(analyze?.metadata_url ?? '');
-    if (existingUrl.startsWith('http')) {
-      setPdfViewerUrl(existingUrl);
-      setIsPdfViewerOpen(true);
-      return;
-    }
+    if (!spacePkValue) return;
 
     try {
-      setDownloadToken(String(analyze?.metadata_url ?? ''));
       setIsDownloading(true);
-      setPendingViewerOpen(true);
-      await Promise.resolve(handleDownloadAnalyze?.());
-    } catch {
+      if (!existingUrl.startsWith('http')) {
+        await Promise.resolve(handleDownloadAnalyze?.());
+      }
+
+      const analyzePk = String(analyze?.sk ?? '');
+      navigate(
+        `${route.spacePdfViewer(spacePkValue, 'analyze')}?analyze_pk=${encodeURIComponent(
+          analyzePk,
+        )}`,
+      );
+    } finally {
       setIsDownloading(false);
-      setPendingViewerOpen(false);
     }
   };
 
@@ -166,15 +144,6 @@ export function ReportDraft({
 
   return (
     <div className="flex flex-col w-full">
-      <ReportPdfViewer
-        open={isPdfViewerOpen}
-        url={pdfViewerUrl}
-        fileName="analysis-report.pdf"
-        spacePk={spacePk}
-        analyzePk={String(analyze?.sk ?? '')}
-        enableAi={isPaidMember}
-        onClose={() => setIsPdfViewerOpen(false)}
-      />
       {showDownload && (
         <div className="flex flex-row w-full justify-end mb-2.5">
           <Button
