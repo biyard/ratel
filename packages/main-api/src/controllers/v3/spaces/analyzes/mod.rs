@@ -1,11 +1,9 @@
-pub mod ai_chat;
 pub mod download_analyze;
 pub mod download_analyze_url;
 pub mod get_analyze;
 pub mod update_analyze;
 pub mod upsert_analyze;
 
-pub use ai_chat::*;
 pub use download_analyze::*;
 pub use download_analyze_url::*;
 pub use get_analyze::*;
@@ -30,5 +28,4 @@ pub fn route() -> Router<AppState> {
         )
         .route("/download", post(download_analyze_handler))
         .route("/download-url", get(download_analyze_url_handler))
-        .route("/:analyze_pk/ai-chat", post(ai_chat_handler))
 }

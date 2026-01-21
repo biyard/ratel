@@ -1,6 +1,7 @@
-use crate::types::File;
-use crate::features::spaces::files::SpaceFile;
 use crate::controllers::v3::spaces::dto::*;
+use crate::features::spaces::analyzes::SpaceAnalyze;
+use crate::features::spaces::files::SpaceFile;
+use crate::types::File;
 use crate::*;
 
 #[derive(Debug, Clone, serde::Deserialize, JsonSchema)]
@@ -8,6 +9,8 @@ pub struct AiChatRequest {
     pub message: String,
     pub context: PdfContext,
     pub session_id: Option<String>,
+    #[serde(flatten)]
+    pub target: AiChatTarget,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, JsonSchema)]
@@ -24,15 +27,20 @@ pub struct AiChatResponse {
     pub session_id: String,
 }
 
+#[derive(Debug, Clone, serde::Deserialize, JsonSchema)]
+#[serde(untagged)]
+pub enum AiChatTarget {
+    File { file_id: String },
+    Analyze { analyze_pk: String },
+}
+
 pub async fn ai_chat_handler(
     State(AppState {
-        dynamo,
-        bedrock,
-        s3: _,
-        ..
+        dynamo, bedrock, ..
     }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
-    Path((space_pk, file_id)): Path<(Partition, String)>, // file_id is the unique file ID (UUID)
+    NoApi(user): NoApi<User>,
+    Path(SpacePathParam { space_pk }): SpacePath,
     Json(payload): Json<AiChatRequest>,
 ) -> Result<Json<AiChatResponse>> {
     // Verify space access
@@ -44,20 +52,38 @@ pub async fn ai_chat_handler(
         return Err(Error::NoPermission);
     }
 
-    // Verify file exists in space
-    let (pk, sk) = SpaceFile::keys(&space_pk);
-    let files = SpaceFile::get(&dynamo.client, &pk, Some(sk)).await?;
+    let file_url = match payload.target {
+        AiChatTarget::File { file_id } => {
+            let (pk, sk) = SpaceFile::keys(&space_pk);
+            let files = SpaceFile::get(&dynamo.client, &pk, Some(sk)).await?;
 
-    let files: SpaceFile = files.ok_or_else(|| Error::NotFound("Space files not found".to_string()))?;
+            let files: SpaceFile =
+                files.ok_or_else(|| Error::NotFound("Space files not found".to_string()))?;
 
-    // Find the file by its unique ID
-    let file: &File = files
-        .files
-        .iter()
-        .find(|f| f.id == file_id)
-        .ok_or_else(|| Error::NotFound("File not found in space".to_string()))?;
+            let file: &File = files
+                .files
+                .iter()
+                .find(|f| f.id == file_id)
+                .ok_or_else(|| Error::NotFound("File not found in space".to_string()))?;
 
-    let file_url = file.url.as_deref().unwrap_or("");
+            file.url.as_deref().unwrap_or("").to_string()
+        }
+        AiChatTarget::Analyze { analyze_pk: _ } => {
+            let user_membership = user.get_user_membership(&dynamo.client).await?;
+            if !user_membership.is_active() {
+                return Err(Error::ExpiredMembership);
+            }
+            if !user_membership.is_paid_membership() {
+                return Err(Error::InvalidMembership);
+            }
+
+            let analyze =
+                SpaceAnalyze::get(&dynamo.client, &space_pk, Some(EntityType::SpaceAnalyze))
+                    .await?;
+            let analyze = analyze.ok_or(Error::AnalyzeNotFound)?;
+            analyze.metadata_url.unwrap_or_default()
+        }
+    };
 
     // Build context-aware prompt with file information
     let mut prompt = format!(
@@ -78,10 +104,8 @@ pub async fn ai_chat_handler(
 
     // Use invoke_agent to leverage the agent's conversational instructions
     // Generate session ID if not provided
-    let session_id = payload.session_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
-    
     let (ai_response, returned_session_id) =
-        bedrock.invoke_agent(session_id, prompt).await?;
+        bedrock.invoke_agent(payload.session_id, prompt).await?;
 
     Ok(Json(AiChatResponse {
         message: ai_response,

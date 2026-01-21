@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { PdfAiChatOverlay } from '@/features/spaces/files/components/pdf-ai-chat-overlay';
 import { PdfAiChatSidebar } from '@/features/spaces/files/components/pdf-ai-chat-sidebar';
 import { useChatPreference } from '@/features/spaces/files/hooks/use-chat-preference';
+import { usePdfAiChat } from '@/features/spaces/files/hooks/use-pdf-ai-chat';
 import { PdfViewerShell } from '@/features/spaces/files/components/pdf-viewer-shell';
-import { useReportPdfAiChat } from '../../hooks/use-report-pdf-ai-chat';
 import { useQuery } from '@tanstack/react-query';
 import { getUserMembership } from '@/lib/api/ratel/me.v3';
 import { call } from '@/lib/api/ratel/call';
@@ -46,10 +46,12 @@ export function ReportPdfViewer({
     tierName.length > 0 &&
     !tierName.includes('FREE') &&
     !tierName.includes('Free');
-  const canUseAi = enableAi && isPaidMember;
+  const canUseAi = enableAi && isPaidMember && analyzePk.length > 0;
 
-  const { messages, isLoading, sendMessage, clearMessages } =
-    useReportPdfAiChat(spacePk, analyzePk, url);
+  const { messages, isLoading, sendMessage, clearMessages } = usePdfAiChat(
+    spacePk,
+    { kind: 'analyze', analyzePk },
+  );
 
   useEffect(() => {
     if (!isResizing) return;
