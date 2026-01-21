@@ -551,7 +551,7 @@ jobs:
           retention-days: 30
 
   ios-testflight:
-    runs-on: macos-latest
+    runs-on: macos-14
     permissions:
       contents: read
     defaults:
@@ -574,7 +574,7 @@ jobs:
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "26"
+          xcode-version: "16.2"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
