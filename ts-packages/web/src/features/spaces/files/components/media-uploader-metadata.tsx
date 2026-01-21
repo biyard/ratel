@@ -75,6 +75,7 @@ export default function MediaUploaderMetadata({
 
         logger.debug('File uploaded successfully:', file.name);
         onUploadSuccess?.({
+          id: crypto.randomUUID(),
           name: file.name,
           size: `${(file.size / 1024).toFixed(1)} KB`,
           ext: fileTypeKey,
@@ -111,6 +112,7 @@ export default function MediaUploaderMetadata({
         await completeMultipartUpload({ upload_id, key, parts: etags });
         logger.debug('Multipart upload completed successfully.');
         onUploadSuccess?.({
+          id: crypto.randomUUID(),
           name: file.name,
           size: `${(file.size / 1024).toFixed(1)} KB`,
           ext: fileTypeKey,

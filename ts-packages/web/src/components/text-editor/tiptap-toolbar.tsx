@@ -35,6 +35,13 @@ export const TiptapToolbar = ({
   enabledFeatures = DEFAULT_ENABLED_FEATURES,
   className,
   variant = 'default',
+  mode = 'default',
+  dropdownPortalContainer,
+  onHeadingDropdownOpenChange,
+  onHeadingDropdownTriggerPointerDown,
+  headingDropdownContentProps,
+  onColorPickerOpenChange,
+  onColorPickerTriggerPointerDown,
   openVideoPicker,
   onImageUpload,
   onUploadPDF,
@@ -47,6 +54,7 @@ export const TiptapToolbar = ({
   const [isInTable, setIsInTable] = useState(false);
 
   const features = { ...DEFAULT_ENABLED_FEATURES, ...enabledFeatures };
+  const showLists = mode === 'bubble' ? true : !!features.lists;
 
   // Check if cursor is inside a table
   useEffect(() => {
@@ -224,6 +232,8 @@ export const TiptapToolbar = ({
     } else {
       editor.chain().focus().setColor(color).run();
     }
+    const { to } = editor.state.selection;
+    editor.commands.setTextSelection(to);
   };
 
   const handleHighlight = (color: string) => {
@@ -233,6 +243,8 @@ export const TiptapToolbar = ({
     } else {
       editor.chain().focus().setHighlight({ color }).run();
     }
+    const { to } = editor.state.selection;
+    editor.commands.setTextSelection(to);
   };
 
   const handleImageUpload = () => {
@@ -452,6 +464,11 @@ export const TiptapToolbar = ({
               type="text"
               currentColor={editor.getAttributes('textStyle').color}
               onColorChange={handleTextColor}
+              portalled={!!dropdownPortalContainer || mode !== 'bubble'}
+              container={dropdownPortalContainer}
+              contentProps={headingDropdownContentProps}
+              onOpenChange={onColorPickerOpenChange}
+              onTriggerPointerDown={onColorPickerTriggerPointerDown}
             />
           )}
           {features.highlight && (
@@ -459,9 +476,23 @@ export const TiptapToolbar = ({
               type="background"
               currentColor={editor.getAttributes('highlight').color}
               onColorChange={handleHighlight}
+              portalled={!!dropdownPortalContainer || mode !== 'bubble'}
+              container={dropdownPortalContainer}
+              contentProps={headingDropdownContentProps}
+              onOpenChange={onColorPickerOpenChange}
+              onTriggerPointerDown={onColorPickerTriggerPointerDown}
             />
           )}
-          {features.heading && <HeadingDropdown editor={editor} />}
+          {features.heading && (
+            <HeadingDropdown
+              editor={editor}
+              portalled={!!dropdownPortalContainer || mode !== 'bubble'}
+              container={dropdownPortalContainer}
+              onOpenChange={onHeadingDropdownOpenChange}
+              onTriggerPointerDown={onHeadingDropdownTriggerPointerDown}
+              contentProps={headingDropdownContentProps}
+            />
+          )}
           {features.align && (
             <ToolbarButton
               icon={<AlignmentsAlignLeft className="[svg" />}
@@ -507,7 +538,7 @@ export const TiptapToolbar = ({
               aria-label="Align Right"
             />
           )}
-          {features.lists && (
+          {showLists && (
             <>
               <ToolbarButton
                 icon={<Ordered1 />}
@@ -582,30 +613,40 @@ export const TiptapToolbar = ({
             />
           )}
 
-          <ToolbarButton
-            icon={<Link2 />}
-            onClick={promptAndApplyLink}
-            active={editor.isActive('link')}
-            tooltip="Link"
-            aria-label="Link"
-            data-testid="tiptap-toolbar-link"
-          />
+          {mode !== 'bubble' && (
+            <>
+              {features.link && (
+                <>
+                  <ToolbarButton
+                    icon={<Link2 />}
+                    onClick={promptAndApplyLink}
+                    active={editor.isActive('link')}
+                    tooltip="Link"
+                    aria-label="Link"
+                    data-testid="tiptap-toolbar-link"
+                  />
 
-          <ToolbarButton
-            icon={<Link2Off />}
-            onClick={removeLink}
-            disabled={!editor.isActive('link')}
-            tooltip="Remove Link"
-            aria-label="Remove Link"
-          />
+                  <ToolbarButton
+                    icon={<Link2Off />}
+                    onClick={removeLink}
+                    disabled={!editor.isActive('link')}
+                    tooltip="Remove Link"
+                    aria-label="Remove Link"
+                  />
+                </>
+              )}
 
-          <ToolbarButton
-            icon={<Video />}
-            onClick={openVideoPicker}
-            active={false}
-            tooltip="Upload Video"
-            aria-label="Upload Video"
-          />
+              {features.video && (
+                <ToolbarButton
+                  icon={<Video />}
+                  onClick={openVideoPicker}
+                  active={false}
+                  tooltip="Upload Video"
+                  aria-label="Upload Video"
+                />
+              )}
+            </>
+          )}
         </div>
       </div>
 

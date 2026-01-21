@@ -179,7 +179,7 @@ export async function createBoardPosts(
     await page.waitForTimeout(500);
 
     // Check if navigation happened, if not, try clicking via JavaScript
-    let currentUrl = page.url();
+    const currentUrl = page.url();
     if (!currentUrl.includes('/create')) {
       // Try clicking via JavaScript
       await page.evaluate(() => {

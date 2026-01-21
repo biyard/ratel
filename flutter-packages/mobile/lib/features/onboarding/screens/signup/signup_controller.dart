@@ -81,7 +81,7 @@ class SignupController extends BaseController {
   }
 
   void goToLogin() {
-    Get.rootDelegate.offNamed(loginScreen);
+    Get.rootDelegate.offNamed(accountScreen);
   }
 
   void onContinueTap() {

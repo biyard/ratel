@@ -177,6 +177,7 @@ export class SpaceBoardsCreateController {
       );
 
       const newModels: FileModel[] = files.map((file, i) => ({
+        id: crypto.randomUUID(),
         name: file.name,
         size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
         ext: FileExtension.PDF,

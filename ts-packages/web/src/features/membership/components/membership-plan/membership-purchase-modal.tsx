@@ -38,12 +38,19 @@ export function MembershipPurchaseModal({
   customer,
   t,
 }: MembershipPurchaseModalProps) {
+  let isBusiness = false;
+  if (customer.birthDate.split('-')[0].length == 3) {
+    isBusiness = true;
+  }
+
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: customer.name,
     cardNumber: '',
     expiryMonth: '',
     expiryYear: '',
-    birthOrBiz: customer.birthDate.replaceAll('-', '').slice(0, 6),
+    birthOrBiz: isBusiness
+      ? customer.birthDate.replaceAll('-', '').slice(0, 10)
+      : customer.birthDate.replaceAll('-', '').slice(2, 8),
     cardPassword: '',
   });
 

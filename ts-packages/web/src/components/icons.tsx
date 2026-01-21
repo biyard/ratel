@@ -2,6 +2,7 @@
 // Total icons: 661
 
 // Root Icons (97)
+export { default as Resizing } from '@/assets/icons/resizing.svg?react';
 export { default as Add } from '@/assets/icons/add.svg?react';
 export { default as Mkv } from '@/assets/icons/mkv.svg?react';
 export { default as Age } from '@/assets/icons/did/attributes/age.svg?react';
