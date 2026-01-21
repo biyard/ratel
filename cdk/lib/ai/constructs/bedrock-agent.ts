@@ -126,9 +126,9 @@ export class BedrockAgent extends Construct {
     const modelResources = [
       // Inference profile ARN (for cross-region models)
       `arn:aws:bedrock:${stack.region}:${stack.account}:inference-profile/${inferenceProfile}`,
-      
+
       // Foundation model ARN
-      `arn:aws:bedrock:${stack.region}::foundation-model/${props.foundationModel}`,
+      `arn:aws:bedrock:*::foundation-model/${props.foundationModel}`,
     ];
 
     this.role.addToPolicy(
