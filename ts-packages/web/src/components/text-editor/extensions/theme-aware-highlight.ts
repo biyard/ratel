@@ -16,13 +16,26 @@ export interface ThemeAwareHighlightOptions {
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     themeAwareHighlight: {
+      /**
+       * Set highlight with theme awareness
+       */
       setThemeAwareHighlight: (attributes?: { color: string }) => ReturnType;
+      /**
+       * Toggle highlight
+       */
       toggleThemeAwareHighlight: (attributes?: { color: string }) => ReturnType;
+      /**
+       * Unset highlight
+       */
       unsetThemeAwareHighlight: () => ReturnType;
     };
   }
 }
 
+/**
+ * ThemeAwareHighlight extension
+ * Stores the original highlight color as data attribute and uses CSS to handle theme-based inversion
+ */
 export const ThemeAwareHighlight = Extension.create<ThemeAwareHighlightOptions>(
   {
     name: 'themeAwareHighlight',
@@ -44,7 +57,7 @@ export const ThemeAwareHighlight = Extension.create<ThemeAwareHighlightOptions>(
               parseHTML: (element) => {
                 const dataHighlight = element.getAttribute('data-highlight');
                 if (dataHighlight) return dataHighlight;
-                
+
                 const styleColor = element.style.backgroundColor?.replace(/['"]+/g, '');
                 return styleColor || null;
               },
@@ -53,7 +66,7 @@ export const ThemeAwareHighlight = Extension.create<ThemeAwareHighlightOptions>(
                   return {};
                 }
 
-                const currentTheme = this.options.getCurrentTheme?.() || 
+                const currentTheme = this.options.getCurrentTheme?.() ||
                   (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
                 const adjustedColor = getThemeAdjustedHighlight(
                   attributes.highlight,
@@ -75,26 +88,26 @@ export const ThemeAwareHighlight = Extension.create<ThemeAwareHighlightOptions>(
       return {
         setThemeAwareHighlight:
           (attributes) =>
-          ({ chain }) => {
-            return chain()
-              .setMark('textStyle', { highlight: attributes?.color })
-              .run();
-          },
+            ({ chain }) => {
+              return chain()
+                .setMark('textStyle', { highlight: attributes?.color })
+                .run();
+            },
         toggleThemeAwareHighlight:
           (attributes) =>
-          ({ chain }) => {
-            return chain()
-              .toggleMark('textStyle', { highlight: attributes?.color })
-              .run();
-          },
+            ({ chain }) => {
+              return chain()
+                .toggleMark('textStyle', { highlight: attributes?.color })
+                .run();
+            },
         unsetThemeAwareHighlight:
           () =>
-          ({ chain }) => {
-            return chain()
-              .setMark('textStyle', { highlight: null })
-              .removeEmptyTextStyle()
-              .run();
-          },
+            ({ chain }) => {
+              return chain()
+                .setMark('textStyle', { highlight: null })
+                .removeEmptyTextStyle()
+                .run();
+            },
       };
     },
   },

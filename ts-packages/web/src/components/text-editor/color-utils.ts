@@ -45,6 +45,10 @@ export function rgbToHex(r: number, g: number, b: number): string {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
+/**
+ * Calculate relative luminance of a color (WCAG formula)
+ * Returns a value between 0 (darkest) and 1 (lightest)
+ */
 export function getLuminance(r: number, g: number, b: number): number {
   const [rs, gs, bs] = [r, g, b].map((c) => {
     const val = c / 255;
@@ -54,6 +58,9 @@ export function getLuminance(r: number, g: number, b: number): number {
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }
 
+/**
+ * Determines if a color is "dark" (closer to black) or "light" (closer to white)
+ */
 export function isDarkColor(hex: string): boolean {
   const rgb = hexToRgb(hex);
   if (!rgb) return false;
@@ -62,6 +69,9 @@ export function isDarkColor(hex: string): boolean {
   return luminance < 0.5;
 }
 
+/**
+ * Inverts a hex color
+ */
 export function invertColor(hex: string): string {
   const rgb = hexToRgb(hex);
   if (!rgb) return hex;
@@ -69,6 +79,14 @@ export function invertColor(hex: string): string {
   return rgbToHex(255 - rgb.r, 255 - rgb.g, 255 - rgb.b);
 }
 
+/**
+ * Gets the appropriate color for the current theme
+ * If the color would be unreadable in the current theme, returns an inverted version
+ *
+ * @param originalColor - The color set by the user (hex format)
+ * @param currentTheme - The current theme ('light' or 'dark')
+ * @returns The color to use, potentially inverted for readability
+ */
 export function getThemeAwareColor(
   originalColor: string,
   currentTheme: 'light' | 'dark',
@@ -85,6 +103,10 @@ export function getThemeAwareColor(
   return needsInversion ? invertColor(originalColor) : originalColor;
 }
 
+/**
+ * Creates a CSS variable for theme-aware color
+ * This allows dynamic color changes when theme switches
+ */
 export function createThemeAwareColorStyle(
   originalColor: string,
 ): Record<string, string> {
@@ -103,6 +125,10 @@ export function createThemeAwareColorStyle(
   };
 }
 
+/**
+ * Get contrast ratio between two colors (WCAG formula)
+ * Useful for determining if color combination is readable
+ */
 export function getContrastRatio(color1: string, color2: string): number {
   const rgb1 = hexToRgb(color1);
   const rgb2 = hexToRgb(color2);
@@ -118,6 +144,11 @@ export function getContrastRatio(color1: string, color2: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
+
+/**
+ * Checks if text color has sufficient contrast against background
+ * According to WCAG AA standard (4.5:1 for normal text)
+ */
 export function hasGoodContrast(
   textColor: string,
   backgroundColor: string,
