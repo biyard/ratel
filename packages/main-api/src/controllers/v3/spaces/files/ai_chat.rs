@@ -1,6 +1,5 @@
 use crate::types::File;
 use crate::features::spaces::files::SpaceFile;
-use crate::utils::aws::BedrockClient;
 use crate::controllers::v3::spaces::dto::*;
 use crate::*;
 
@@ -26,7 +25,12 @@ pub struct AiChatResponse {
 }
 
 pub async fn ai_chat_handler(
-    State(AppState { dynamo, s3: _, .. }): State<AppState>,
+    State(AppState {
+        dynamo,
+        bedrock,
+        s3: _,
+        ..
+    }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     Path((space_pk, file_id)): Path<(Partition, String)>, // file_id is the unique file ID (UUID)
     Json(payload): Json<AiChatRequest>,
@@ -73,17 +77,11 @@ pub async fn ai_chat_handler(
     prompt.push_str(&format!("Question: {}", payload.message));
 
     // Use invoke_agent to leverage the agent's conversational instructions
-    let bedrock_client = BedrockClient::new();
-    
     // Generate session ID if not provided
     let session_id = payload.session_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
     
-    let (ai_response, returned_session_id) = bedrock_client
-        .invoke_agent(
-            session_id,
-            prompt,
-        )
-        .await?;
+    let (ai_response, returned_session_id) =
+        bedrock.invoke_agent(session_id, prompt).await?;
 
     Ok(Json(AiChatResponse {
         message: ai_response,

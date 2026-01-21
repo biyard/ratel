@@ -1,5 +1,4 @@
 use crate::features::spaces::analyzes::SpaceAnalyze;
-use crate::utils::aws::BedrockClient;
 use crate::*;
 
 #[derive(Debug, Clone, serde::Deserialize, JsonSchema)]
@@ -24,7 +23,7 @@ pub struct AiChatResponse {
 }
 
 pub async fn ai_chat_handler(
-    State(AppState { dynamo, .. }): State<AppState>,
+    State(AppState { dynamo, bedrock, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     NoApi(user): NoApi<User>,
     Path((space_pk, _analyze_pk)): Path<(Partition, String)>,
@@ -67,13 +66,12 @@ pub async fn ai_chat_handler(
 
     prompt.push_str(&format!("Question: {}", payload.message));
 
-    let bedrock_client = BedrockClient::new();
     let session_id = payload
         .session_id
         .unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
 
     let (ai_response, returned_session_id) =
-        bedrock_client.invoke_agent(session_id, prompt).await?;
+        bedrock.invoke_agent(session_id, prompt).await?;
 
     Ok(Json(AiChatResponse {
         message: ai_response,
