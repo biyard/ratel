@@ -3,14 +3,11 @@ import { TFunction } from 'i18next';
 import ForceGraph2D, { ForceGraphMethods } from 'react-force-graph-2d';
 import { forceCollide, forceCenter } from 'd3-force';
 import { NetworkGraph } from '../../polls/types/network-graph';
-import { Edit1, Save } from '@/components/icons';
-import { PostEditor } from '@/features/posts/components/post-editor';
 
 export type NetworkProps = {
   t: TFunction<'SpacePollAnalyze', undefined>;
+  isHtml?: boolean;
   network?: NetworkGraph;
-  htmlContents?: string;
-  handleUpdateNetwork?: (htmlContents?: string) => void;
 };
 
 type FGNode = {
@@ -28,33 +25,11 @@ type FGLink = {
   weight?: number;
 };
 
-export function NetworkChart({
-  t,
-  network,
-  htmlContents,
-  handleUpdateNetwork,
-}: NetworkProps) {
-  const [content, setContent] = useState<string>(htmlContents ?? '');
-  const [editing, setEditing] = useState(false);
+export function NetworkChart({ t, isHtml, network }: NetworkProps) {
   const fgRef = useRef<ForceGraphMethods<FGNode, FGLink> | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const didInitialFitRef = useRef(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
-
-  const startEdit = () => {
-    setContent(htmlContents ?? '');
-    setEditing(true);
-  };
-
-  const save = () => {
-    handleUpdateNetwork?.(content);
-    setEditing(false);
-  };
-
-  useEffect(() => {
-    if (editing) return;
-    setContent(htmlContents ?? '');
-  }, [htmlContents, editing]);
 
   const graph = useMemo(() => {
     const nodesRaw = Array.isArray(network?.nodes) ? network!.nodes : [];
@@ -264,24 +239,13 @@ export function NetworkChart({
 
   return (
     <div className="w-full">
-      <div className="mb-2 flex items-center justify-end gap-2">
-        {!editing ? (
-          <Edit1
-            className="cursor-pointer w-5 h-5 [&>path]:stroke-1"
-            onClick={startEdit}
-          />
-        ) : (
-          <Save
-            className="cursor-pointer w-5 h-5 [&>path]:stroke-1"
-            onClick={save}
-          />
-        )}
-      </div>
-      <div className="mb-3 flex items-center justify-center">
-        <div className="text-center text-base font-semibold text-text-primary">
-          Text Network
+      {!isHtml && (
+        <div className="mb-3 flex items-center justify-center">
+          <div className="text-center text-base font-semibold text-text-primary">
+            Text Network
+          </div>
         </div>
-      </div>
+      )}
 
       <div
         ref={wrapRef}
@@ -347,16 +311,6 @@ export function NetworkChart({
           />
         )}
       </div>
-
-      <PostEditor
-        url={''}
-        content={content}
-        onUpdate={(next) => setContent(next)}
-        disabledFileUpload={true}
-        disabledImageUpload={true}
-        editable={editing}
-        showToolbar={editing}
-      />
     </div>
   );
 }

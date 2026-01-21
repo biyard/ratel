@@ -159,6 +159,9 @@ jobs:
           RATEL_PROJECT_ID: ${{ secrets.RATEL_PROJECT_ID }}
           REWARD: true
 
+          BEDROCK_AGENT_ID: ${{ secrets.DEV_BEDROCK_AGENT_ID }}
+          BEDROCK_AGENT_ALIAS_ID: ${{ secrets.DEV_BEDROCK_AGENT_ALIAS_ID }}
+
           BIYARD_API_URL: https://api.dev.biyard.co
           BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
           BIYARD_PROJECT_ID: ${{ secrets.DEV_BIYARD_PROJECT_ID }}
@@ -329,49 +332,11 @@ jobs:
           RUST_LOG: info
           SERVICE: survey-worker
           DOMAIN: dev.ratel.foundation
-          BUCKET_NAME: metadata.ratel.foundation
-          SLACK_HOOK: ${{ secrets.DEV_SLACK }}
-
-          BINANCE_API_KEY: ${{ secrets.DEV_BINANCE_API_KEY }}
-          BINANCE_SECRET_KEY: ${{ secrets.DEV_BINANCE_SECRET_KEY }}
-          BINANCE_WEBHOOK: https://api.dev.ratel.foundation/v2/binances/webhooks
-          REDIRECT_DOMAIN: https://dev.ratel.foundation
-
-          KAIA_ENDPOINT: https://public-en-kairos.node.kaia.io
-          KAIA_FEEPAYER_KEY: ${{ secrets.DEV_KAIA_KEY }}
-          KAIA_FEEPAYER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
-          KAIA_OWNER_KEY: ${{ secrets.DEV_KAIA_KEY }}
-          KAIA_OWNER_ADDR: ${{ secrets.DEV_KAIA_ADDR }}
-
-          TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
-
-          BBS_BLS_X: ${{ secrets.BBS_BLS_X }}
-          BBS_BLS_Y: ${{ secrets.BBS_BLS_Y }}
-          BBS_BLS_D: ${{ secrets.BBS_BLS_D }}
-          BBS_BLS_CRV: ${{ secrets.BBS_BLS_CRV }}
-
-          P256_X: ${{ secrets.P256_X }}
-          P256_Y: ${{ secrets.P256_Y }}
-          P256_D: ${{ secrets.P256_D }}
-          P256_CRV: ${{ secrets.P256_CRV }}
 
           DYNAMO_TABLE_PREFIX: ratel-dev
           DYNAMO_ENDPOINT: none
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           RUST_FLAG: "--features lambda --release"
           WEB_BUILD: false
-          PORTONE_API_SECRET: ${{ secrets.DEV_PORTONE_API_SECRET }}
-          PORTONE_KPN_CHANNEL_KEY: ${{ secrets.DEV_PORTONE_KPN_CHANNEL_KEY }}
-          PORTONE_STORE_ID: ${{ secrets.DEV_PORTONE_STORE_ID }}
-          ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}
-
-          FCM_ENABLED: true
-          RATEL_PROJECT_ID: ${{ secrets.RATEL_PROJECT_ID }}
-          REWARD: true
-
-          BIYARD_API_URL: https://api.dev.biyard.co
-          BIYARD_API_KEY: ${{ secrets.DEV_BIYARD_API_KEY }}
-          BIYARD_PROJECT_ID: ${{ secrets.DEV_BIYARD_PROJECT_ID }}
         run: |
           make bin.build
           mv target/release/survey-worker ../../bootstrap
@@ -586,7 +551,7 @@ jobs:
           retention-days: 30
 
   ios-testflight:
-    runs-on: macos-14
+    runs-on: macos-latest
     permissions:
       contents: read
     defaults:
@@ -609,7 +574,7 @@ jobs:
       - name: Select Xcode
         uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: "16.2"
+          xcode-version: "26"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -874,11 +839,13 @@ jobs:
           docker save $ECR_NAME:$COMMIT | gzip > /tmp/main-api-image.tar.gz
           echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
 
-      - name: Cache Docker image
-        uses: actions/cache@v4
+      - name: Upload main-api image artifact
+        uses: actions/upload-artifact@v4
         with:
+          name: main-api-image-${{ github.sha }}
           path: /tmp/main-api-image.tar.gz
-          key: main-api-image-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 7
 
   playwright-tests:
     runs-on: ubuntu-latest
@@ -907,12 +874,11 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Restore main-api image cache
-        uses: actions/cache@v4
+      - name: Download main-api image artifact
+        uses: actions/download-artifact@v4
         with:
-          path: /tmp/main-api-image.tar.gz
-          key: main-api-image-${{ github.sha }}
-          fail-on-cache-miss: true
+          name: main-api-image-${{ github.sha }}
+          path: /tmp
 
       - name: Load Docker images
         run: |
@@ -1041,8 +1007,8 @@ jobs:
               repo: context.repo.repo,
             });
 
-            const existingComment = comments.find(comment => 
-              comment.body.includes('🎭 Playwright Test Results') && 
+            const existingComment = comments.find(comment =>
+              comment.body.includes('🎭 Playwright Test Results') &&
               comment.user.type === 'Bot'
             );
 
@@ -1061,3 +1027,34 @@ jobs:
                 body: comment
               });
             }
+  deploy-pdf-ai-agent:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          ssh-key: ${{ secrets.PULL_KEY_REPO }}
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: cdk/package-lock.json
+
+      - name: Deploy AI Agent Stack
+        env:
+          ENV: dev
+          AWS_REGION: ap-northeast-2
+          ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AGENT_NAME: pdf
+        run: |
+          npm i -g aws-cdk
+          make cdk-deploy-ai-stack

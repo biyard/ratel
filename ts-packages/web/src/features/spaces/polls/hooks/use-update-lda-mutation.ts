@@ -12,12 +12,10 @@ export function useUpdateLdaMutation<T extends SpaceAnalyze = SpaceAnalyze>() {
       spacePk,
       topics,
       keywords,
-      htmlContents,
     }: {
       spacePk: string;
       topics: string[];
       keywords: string[][];
-      htmlContents?: string;
     }) => {
       await call(
         'PATCH',
@@ -25,7 +23,6 @@ export function useUpdateLdaMutation<T extends SpaceAnalyze = SpaceAnalyze>() {
         {
           topics,
           keywords,
-          lda_html_contents: htmlContents,
         },
       );
 

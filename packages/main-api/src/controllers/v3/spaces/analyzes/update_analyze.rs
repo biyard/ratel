@@ -9,14 +9,12 @@ pub enum UpdateAnalyzeRequest {
     Lda {
         topics: Vec<String>,
         keywords: Vec<Vec<String>>,
-        #[serde(default)]
-        lda_html_contents: Option<String>,
     },
-    Network {
-        network_html_contents: String,
+    HtmlContents {
+        html_contents: String,
     },
-    TfIdf {
-        tf_idf_html_contents: String,
+    MetadataUrl {
+        metadata_url: String,
     },
 }
 
@@ -42,11 +40,7 @@ pub async fn update_analyze_handler(
     let mut analyze = analyze.ok_or(Error::AnalyzeNotFound)?;
 
     match req {
-        UpdateAnalyzeRequest::Lda {
-            topics,
-            keywords,
-            lda_html_contents,
-        } => {
+        UpdateAnalyzeRequest::Lda { topics, keywords } => {
             let lda_topics = topics
                 .iter()
                 .zip(keywords.iter())
@@ -58,39 +52,28 @@ pub async fn update_analyze_handler(
                 })
                 .collect::<Vec<TopicRow>>();
 
-            let mut updater = SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
-                .with_lda_topics(lda_topics.clone());
-
-            if let Some(v) = lda_html_contents.clone() {
-                updater = updater.with_lda_html_contents(v);
-            }
-
-            updater.execute(&dynamo.client).await?;
+            SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
+                .with_lda_topics(lda_topics.clone())
+                .with_metadata_url("".to_string())
+                .execute(&dynamo.client)
+                .await?;
 
             analyze.lda_topics = lda_topics;
-            analyze.lda_html_contents = lda_html_contents;
         }
-
-        UpdateAnalyzeRequest::Network {
-            network_html_contents,
-        } => {
+        UpdateAnalyzeRequest::HtmlContents { html_contents } => {
             SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
-                .with_network_html_contents(network_html_contents.clone())
+                .with_html_contents(html_contents.clone())
+                .with_metadata_url("".to_string())
                 .execute(&dynamo.client)
                 .await?;
-
-            analyze.network_html_contents = Some(network_html_contents);
+            analyze.html_contents = Some(html_contents);
         }
-
-        UpdateAnalyzeRequest::TfIdf {
-            tf_idf_html_contents,
-        } => {
+        UpdateAnalyzeRequest::MetadataUrl { metadata_url } => {
             SpaceAnalyze::updater(space_pk, EntityType::SpaceAnalyze)
-                .with_tf_idf_html_contents(tf_idf_html_contents.clone())
+                .with_metadata_url(metadata_url.clone())
                 .execute(&dynamo.client)
                 .await?;
-
-            analyze.tf_idf_html_contents = Some(tf_idf_html_contents);
+            analyze.metadata_url = Some(metadata_url);
         }
     }
 

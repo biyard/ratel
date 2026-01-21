@@ -29,7 +29,7 @@ pub async fn api_main() -> Result<Router, crate::Error> {
 
     let is_local = conf.env == "local" || conf.env == "test";
     let aws_sdk_config = get_aws_config();
-    let dynamo_client = DynamoClient::new(Some(aws_sdk_config.clone()));
+    let dynamo_client = DynamoClient::new(Some(aws_sdk_config.clone()), true);
     let bot = if let Some(token) = conf.telegram_token {
         let res = TelegramBot::new(token).await;
         if let Err(err) = res {

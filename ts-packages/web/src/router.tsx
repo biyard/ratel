@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router';
+import React from 'react';
 import RootLayout from './app/layout';
 import HomePage from './app/(social)/home-page';
 import SocialLayout from './app/(social)/layout';
@@ -67,8 +68,20 @@ import MySpacesPage from './app/(social)/my-spaces/page';
 import NotificationsPage from './app/notifications/page';
 import RewardsPage from './app/rewards/page';
 import { MembershipPlan } from './features/membership/components/membership-plan';
+import Providers from './providers/providers';
+import { PdfViewerLoader } from './features/spaces/files/components/pdf-viewer-loader';
 
 export const routes = createBrowserRouter([
+  // PDF Viewer - Completely standalone without any layout
+  {
+    id: 'space-pdf-viewer-standalone',
+    path: '/spaces/:spacePk/files/:fileId',
+    Component: () => (
+      <Providers>
+        <PdfViewerLoader />
+      </Providers>
+    ),
+  },
   {
     id: 'root-layout',
     Component: RootLayout,
