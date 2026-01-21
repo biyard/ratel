@@ -165,6 +165,40 @@ impl S3Client {
 
         Ok(result)
     }
+
+    pub async fn presign_download(
+        &self,
+        key: &str,
+        filename: &str,
+        expire: u64,
+    ) -> Result<String> {
+        use aws_sdk_s3::presigning::PresigningConfig;
+
+        let safe_name = filename.replace('"', "");
+        let disposition = format!("attachment; filename=\"{}\"", safe_name);
+
+        let presigned = self
+            .client
+            .get_object()
+            .bucket(&self.bucket_name)
+            .key(key)
+            .response_content_disposition(disposition)
+            .presigned(
+                PresigningConfig::expires_in(std::time::Duration::from_secs(expire)).map_err(
+                    |e| {
+                        tracing::error!("Failed to set expired time {}", e.to_string());
+                        Error::AssetError(e.to_string())
+                    },
+                )?,
+            )
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to presign download {}", e.to_string());
+                Error::AssetError(e.to_string())
+            })?;
+
+        Ok(presigned.uri().to_string())
+    }
     pub async fn delete_objects(&self, keys: Vec<String>) -> Result<()> {
         let objects = keys
             .into_iter()

@@ -1,7 +1,6 @@
 use crate::features::spaces::analyzes::SpaceAnalyze;
 use crate::spaces::SpacePath;
 use crate::spaces::SpacePathParam;
-use crate::utils::reports::presign_report_download;
 use crate::*;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize, aide::OperationIo, JsonSchema)]
@@ -24,11 +23,7 @@ pub async fn download_analyze_url_handler(
         SpaceAnalyze::get(&dynamo.client, &space_pk, Some(EntityType::SpaceAnalyze)).await?;
     let analyze = analyze.ok_or(Error::AnalyzeNotFound)?;
 
-    let metadata_url = analyze
-        .metadata_url
-        .unwrap_or_default()
-        .trim()
-        .to_string();
+    let metadata_url = analyze.metadata_url.unwrap_or_default().trim().to_string();
     if metadata_url.is_empty() {
         return Err(Error::AnalyzeNotFound);
     }
@@ -39,7 +34,11 @@ pub async fn download_analyze_url_handler(
         .and_then(|rest| rest.splitn(2, '/').nth(1))
         .ok_or_else(|| Error::InternalServerError("Invalid metadata_url".to_string()))?;
 
-    let download_url = presign_report_download(&s3, key, "analysis-report.pdf").await?;
+    let config = crate::config::get();
+    let download_url = s3
+        .presign_download(key, "analysis-report.pdf", config.s3.expire)
+        .await
+        .map_err(|e| Error::InternalServerError(e.to_string()))?;
 
     Ok(Json(DownloadAnalyzeUrlResponse { download_url }))
 }
