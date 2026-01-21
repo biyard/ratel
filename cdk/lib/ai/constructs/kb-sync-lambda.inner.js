@@ -85,7 +85,7 @@ exports.handler = async (event) => {
 
     console.log("Direct document ingestion completed:", {
       failedDocuments: response.failedDocuments?.length || 0,
-      ingestionStatus: response.documentDetails || [],
+      documentDetails: response.documentDetails || [],
     });
 
     if (response.failedDocuments && response.failedDocuments.length > 0) {
