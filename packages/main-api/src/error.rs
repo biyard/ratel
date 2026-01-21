@@ -280,10 +280,12 @@ pub enum Error {
     CardInfoRequired,
     #[error("No user purchase found for payment")]
     NoUserPurchaseFound,
+    #[error("PortOne billing key error")]
+    PortOneBillingKeyError,
 
     // Biyard API errors 10,050 ~
     #[error("Biyard error: {0}")]
-    #[rest_error(status = 502, code = 10050)]
+    #[rest_error(code = 10050)]
     Biyard(#[from] crate::services::biyard::BiyardError),
 
     // Reward errors 10,100 ~
@@ -314,6 +316,9 @@ pub enum Error {
     InvalidGender,
     #[error("attribute code not found")]
     AttributeCodeNotFound,
+
+    #[error("analyze not found")]
+    AnalyzeNotFound,
 
     #[error("No permission to access this resource")]
     #[rest_error(status = 401, code = 11001)]

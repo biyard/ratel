@@ -8,6 +8,9 @@ BUILD_CONFIG_FILE=$(BUILD_DIR)/config.json
 NET ?= local
 MOBILE ?= android
 PORT ?= 5000
+
+UNAME_S := $(shell uname -s)
+
 MAIN_IP := $(shell ip route get 1.1.1.1 | awk '{print $$7}')
 IOS_SIMULATOR_ID := $(shell xcrun simctl list devices available | grep 'iPhone' | grep 'Booted' | head -1 | grep -o '([A-F0-9-]*)'  | tr -d '()')
 

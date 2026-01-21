@@ -39,6 +39,7 @@ async fn test_update_files_handler() {
         headers: headers.clone(),
         body: {
             "files": vec![File {
+                id: uuid::Uuid::new_v4().to_string(),
                 name: "deliberation overview file title".to_string(),
                 size: "15KB".to_string(),
                 ext: crate::types::FileExtension::PDF,
@@ -68,6 +69,7 @@ async fn test_update_files_handler() {
         headers: headers.clone(),
         body: {
             "files": vec![File {
+                id: uuid::Uuid::new_v4().to_string(),
                 name: "updated deliberation overview file title".to_string(),
                 size: "15KB".to_string(),
                 ext: crate::types::FileExtension::PDF,

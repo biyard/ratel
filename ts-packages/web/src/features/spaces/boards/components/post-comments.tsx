@@ -72,7 +72,7 @@ export default function PostComments({
 
   return (
     <>
-      <div className="flex flex-col gap-2.5">
+      <div id="comments" className="flex flex-col gap-2.5">
         <div className="flex flex-row gap-2 text-text-primary">
           <CommentIcon
             width={24}

@@ -43,6 +43,7 @@ export interface Team {
 
   nickname: string;
   profile_url?: string;
+  dao_address?: string;
   user_type: UserType;
 
   parent_id?: number;

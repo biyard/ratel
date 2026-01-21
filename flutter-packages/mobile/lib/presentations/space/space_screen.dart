@@ -35,36 +35,7 @@ class SpaceScreen extends GetWidget<SpaceController> {
   }
 
   bool _onAnyScroll(ScrollNotification n) {
-    controller.markScrollActivity();
-
-    if (n.metrics.axis != Axis.vertical) return false;
-    if (n is! ScrollUpdateNotification && n is! UserScrollNotification) {
-      return false;
-    }
-
-    final pixels = n.metrics.pixels;
-    final collapsedNow = controller.isHeaderCollapsed.value;
-
-    if (!collapsedNow && pixels > _collapseThreshold) {
-      controller.isHeaderCollapsed.value = true;
-      return false;
-    }
-
-    if (collapsedNow) {
-      final min = n.metrics.minScrollExtent;
-      final atTop = pixels <= (min + 0.5);
-
-      final pullingDown =
-          (n is UserScrollNotification &&
-              n.direction == ScrollDirection.forward) ||
-          (n is ScrollUpdateNotification && (n.scrollDelta ?? 0) < 0);
-
-      if (atTop && pullingDown) {
-        controller.isHeaderCollapsed.value = false;
-      }
-    }
-
-    return false;
+    return controller.handleHeaderByScroll(n);
   }
 
   @override

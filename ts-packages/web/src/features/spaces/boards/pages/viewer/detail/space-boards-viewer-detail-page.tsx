@@ -7,6 +7,8 @@ import PostBody from '../../../components/post-body';
 import PostComments from '../../../components/post-comments';
 import { TimeRangeDisplay } from '../../../components/time-range-display';
 import { SpaceStatus } from '@/features/spaces/types/space-common';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router';
 
 export function SpaceBoardsViewerDetailPage({
   spacePk,
@@ -17,6 +19,16 @@ export function SpaceBoardsViewerDetailPage({
   );
   const ctrl = useSpaceBoardsViewerDetailController(spacePk, postPk);
   const { t } = useTranslation('SpaceBoardsEditorDetail');
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash === '#comments') {
+      setTimeout(() => {
+        const element = document.getElementById('comments');
+        element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [location.hash]);
 
   const canActive =
     ctrl.user &&

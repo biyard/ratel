@@ -44,13 +44,21 @@ pub async fn update_files_handler(
 
     let files = SpaceFile::get(&dynamo.client, &pk.clone(), Some(sk.clone())).await?;
 
+    // Ensure all files have IDs before saving
+    let mut files_with_ids = req.files;
+    for file in &mut files_with_ids {
+        if file.id.is_empty() {
+            file.id = uuid::Uuid::new_v4().to_string();
+        }
+    }
+
     if files.is_some() {
         SpaceFile::updater(&pk.clone(), sk.clone())
-            .with_files(req.files.clone())
+            .with_files(files_with_ids)
             .execute(&dynamo.client)
             .await?;
     } else {
-        let files = SpaceFile::new(space_pk.clone(), req.files.clone());
+        let files = SpaceFile::new(space_pk.clone(), files_with_ids);
 
         files.create(&dynamo.client).await?;
     }

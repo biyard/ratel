@@ -24,7 +24,7 @@ class LoginModal extends StatelessWidget {
               35.vgap,
               LoginButton(
                 onPressed: () async {
-                  await authService.connectToGoogle(Config.redirectUrl);
+                  // await authService.connectToGoogle(Config.redirectUrl);
                 },
                 label: LoginLocalization.continueWithGoogle,
                 icon: Assets.googleImage,

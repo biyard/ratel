@@ -40,7 +40,7 @@ impl DynamoTable {
 }
 
 pub async fn create_dynamo_tables(tables: Vec<DynamoTable>) -> Result<()> {
-    let client = DynamoClient::new(None); // We'll use the raw client
+    let client = DynamoClient::new(None, true); // We'll use the raw client
 
     for table in tables {
         create_table(&client, &table).await?;

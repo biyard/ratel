@@ -17,6 +17,7 @@ export interface EnabledFeatures {
   lists?: boolean;
   link?: boolean;
   image?: boolean;
+  video?: boolean;
   indent?: boolean;
   table?: boolean;
   pdf?: boolean;
@@ -43,6 +44,10 @@ export interface TiptapEditorProps {
   showToolbar?: boolean;
   toolbarPosition?: 'top' | 'bottom';
   enabledFeatures?: EnabledFeatures;
+  showBubbleToolbar?: boolean;
+  bubbleEnabledFeatures?: EnabledFeatures;
+  bubbleToolbarClassName?: string;
+  toolbarFooter?: React.ReactNode;
 
   // Styling
   className?: string;
@@ -50,6 +55,7 @@ export interface TiptapEditorProps {
   editorClassName?: string;
   minHeight?: string;
   maxHeight?: string;
+  overlay?: React.ReactNode;
 
   // Focus state
   onFocus?: () => void;
@@ -75,9 +81,16 @@ export interface TiptapToolbarProps {
   enabledFeatures?: EnabledFeatures;
   className?: string;
   variant?: 'default' | 'post';
+  mode?: 'default' | 'bubble';
   openVideoPicker?: () => void;
   onImageUpload?: (imageUrl: string) => Promise<void>;
   onUploadPDF?: (files: FileList | File[]) => void;
+  dropdownPortalContainer?: HTMLElement | null;
+  onHeadingDropdownOpenChange?: (open: boolean) => void;
+  onHeadingDropdownTriggerPointerDown?: () => void;
+  headingDropdownContentProps?: import('@/components/ui/dropdown-menu').DropdownMenuContentProps;
+  onColorPickerOpenChange?: (open: boolean) => void;
+  onColorPickerTriggerPointerDown?: () => void;
 }
 
 /**
@@ -103,6 +116,11 @@ export interface ColorPickerProps {
   onColorChange: (color: string) => void;
   disabled?: boolean;
   icon?: React.ReactNode | React.ElementType;
+  portalled?: boolean;
+  container?: HTMLElement | null;
+  contentProps?: import('@/components/ui/dropdown-menu').DropdownMenuContentProps;
+  onOpenChange?: (open: boolean) => void;
+  onTriggerPointerDown?: () => void;
 }
 
 /**
@@ -111,6 +129,13 @@ export interface ColorPickerProps {
 export interface HeadingDropdownProps {
   editor: Editor | null;
   disabled?: boolean;
+  portalled?: boolean;
+  container?: HTMLElement | null;
+  onOpenChange?: (open: boolean) => void;
+  onTriggerPointerDown?: () => void;
+  contentProps?: React.ComponentProps<
+    typeof import('@radix-ui/react-dropdown-menu').Content
+  >;
 }
 
 /**
@@ -126,8 +151,9 @@ export const DEFAULT_ENABLED_FEATURES: EnabledFeatures = {
   heading: true,
   align: true,
   lists: true,
-  link: false, // Disabled for now
+  link: true,
   image: true, // Enabled
+  video: true,
   indent: false, // Disabled for now
   table: true, // Enabled
   pdf: true,

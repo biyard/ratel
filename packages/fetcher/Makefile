@@ -71,8 +71,16 @@ docker.login:
 	aws ecr get-login-password --region $(AWS_REGION) | docker login --username AWS --password-stdin $(AWS_ACCOUNT_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 
 docker.build:
-	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'apt-get update && apt-get install -y libssl-dev pkg-config ca-certificates && $(BUILD_ENV) WEB_BUILD=false CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release'
+	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c '\
+		apt-get update && apt-get install -y \
+			libssl-dev \
+			pkg-config \
+			ca-certificates \
+			g++ \
+			libfreetype6-dev \
+			libfontconfig1-dev \
+		&& $(BUILD_ENV) WEB_BUILD=false CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release'
 	docker build -t $(ECR_NAME):$(COMMIT) --no-cache -f Dockerfile $(PWD)/target/release
-
+    
 test:
 	$(BUILD_ENV) RUSTFLAGS="-D warnings" RUST_TEST_THREADS=1 cargo test

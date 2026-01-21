@@ -28,8 +28,6 @@ pub async fn list_polls_handler(
         return Err(Error::NotFoundPoll);
     }
 
-    let is_owner = permissions.contains(TeamGroupPermission::SpaceEdit);
-    let now = get_now_timestamp_millis();
     permissions.permitted(TeamGroupPermission::SpaceRead)?;
 
     let mut query_options = PollQueryOption::builder()
@@ -48,9 +46,7 @@ pub async fn list_polls_handler(
     for response in responses {
         let poll: PollResponse = response.clone().into();
 
-        if is_owner || (poll.started_at <= now && now <= poll.ended_at) {
-            polls.push(poll);
-        }
+        polls.push(poll);
     }
 
     Ok(Json(ListPollsResponse { polls, bookmark }))

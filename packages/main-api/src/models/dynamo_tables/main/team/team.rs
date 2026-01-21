@@ -43,6 +43,8 @@ pub struct Team {
     pub followings: i64,
 
     pub description: String,
+
+    pub dao_address: Option<String>,
 }
 
 impl Team {
@@ -69,6 +71,7 @@ impl Team {
             description,
             followers: 0,
             followings: 0,
+            dao_address: None,
         }
     }
 
@@ -78,7 +81,7 @@ impl Team {
         user_pk: &Partition,
     ) -> Result<TeamGroupPermissions> {
         // Check if the user is the team owner first
-        let owner = TeamOwner::get(cli, team_pk, Some(EntityType::TeamOwner)).await?;
+        let owner = TeamOwner::get(cli, team_pk, Some(&EntityType::TeamOwner)).await?;
         if let Some(owner) = owner {
             if owner.user_pk == *user_pk {
                 // Team owner has all permissions
@@ -193,7 +196,7 @@ impl EntityPermissions for Team {
         cli: &aws_sdk_dynamodb::Client,
         requester: &Partition,
     ) -> Permissions {
-        let owner = TeamOwner::get(cli, &self.pk, Some(EntityType::TeamOwner)).await;
+        let owner = TeamOwner::get(cli, &self.pk, Some(&EntityType::TeamOwner)).await;
         if owner.is_err() {
             return Permissions::empty();
         }
