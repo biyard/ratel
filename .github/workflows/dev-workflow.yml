@@ -839,11 +839,13 @@ jobs:
           docker save $ECR_NAME:$COMMIT | gzip > /tmp/main-api-image.tar.gz
           echo "image=$ECR_NAME:$COMMIT" >> $GITHUB_OUTPUT
 
-      - name: Cache Docker image
-        uses: actions/cache@v4
+      - name: Upload main-api image artifact
+        uses: actions/upload-artifact@v4
         with:
+          name: main-api-image-${{ github.sha }}
           path: /tmp/main-api-image.tar.gz
-          key: main-api-image-${{ github.sha }}
+          if-no-files-found: error
+          retention-days: 7
 
   playwright-tests:
     runs-on: ubuntu-latest
@@ -872,12 +874,11 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Restore main-api image cache
-        uses: actions/cache@v4
+      - name: Download main-api image artifact
+        uses: actions/download-artifact@v4
         with:
-          path: /tmp/main-api-image.tar.gz
-          key: main-api-image-${{ github.sha }}
-          fail-on-cache-miss: true
+          name: main-api-image-${{ github.sha }}
+          path: /tmp
 
       - name: Load Docker images
         run: |
@@ -1006,8 +1007,8 @@ jobs:
               repo: context.repo.repo,
             });
 
-            const existingComment = comments.find(comment => 
-              comment.body.includes('🎭 Playwright Test Results') && 
+            const existingComment = comments.find(comment =>
+              comment.body.includes('🎭 Playwright Test Results') &&
               comment.user.type === 'Bot'
             );
 
