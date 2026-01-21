@@ -251,11 +251,7 @@ export function SpacePdfViewerPage(props: SpacePdfViewerPageProps) {
         <PdfViewerShell
           url={file.url}
           fileName={file.name}
-          onBack={
-            mode === 'route'
-              ? () => navigate(route.spaceFiles(spacePk || ''))
-              : undefined
-          }
+          onBack={mode === 'route' ? () => navigate(-1) : undefined}
           onClose={mode === 'report' ? reportProps?.onClose : undefined}
           onDownload={
             mode === 'report'
