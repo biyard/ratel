@@ -2,7 +2,7 @@ use crate::features::spaces::analyzes::SpaceAnalyze;
 // use crate::models::SpaceCommon;
 use crate::spaces::SpacePath;
 use crate::spaces::SpacePathParam;
-use crate::utils::reports::{build_report_html_document, presign_report_upload};
+use crate::utils::reports::build_report_html_document;
 use crate::*;
 
 #[derive(
@@ -36,7 +36,7 @@ pub async fn download_analyze_handler(
     let analyze = analyze.unwrap();
     let html_contents = analyze.html_contents.unwrap_or_default();
     let html_document = build_report_html_document(&html_contents);
-    let upload = presign_report_upload(&s3).await?;
+    let upload = s3.presign_report_upload().await?;
 
     Ok(Json(DownloadAnalyzeResponse {
         presigned_url: upload.presigned_url,
