@@ -21,9 +21,12 @@ pub struct TeamResponse {
     pub username: String,
     pub profile_url: Option<String>,
     pub dao_address: Option<String>,
+
     pub user_type: u8,
 
     pub html_contents: String,
+
+    pub permissions: Option<i64>,
 }
 
 impl From<Team> for TeamResponse {
@@ -38,11 +41,31 @@ impl From<Team> for TeamResponse {
             dao_address: team.dao_address,
             user_type: UserType::Team as u8,
             html_contents: team.description,
+            permissions: None,
         }
     }
 }
 
-#[derive(Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+impl From<(Team, i64)> for TeamResponse {
+    fn from((team, permissions): (Team, i64)) -> Self {
+        Self {
+            id: team.pk.to_string(),
+            created_at: team.created_at,
+            updated_at: team.updated_at,
+            nickname: team.display_name,
+            username: team.username,
+            profile_url: Some(team.profile_url),
+            dao_address: team.dao_address,
+            user_type: UserType::Team as u8,
+            html_contents: team.description,
+            permissions: Some(permissions),
+        }
+    }
+}
+
+#[derive(
+    Debug, Clone, Default, serde::Deserialize, serde::Serialize, JsonSchema, aide::OperationIo,
+)]
 pub struct TeamGroupResponse {
     pub id: String, // Just the UUID part, not the full EntityType
     pub name: String,
@@ -69,7 +92,7 @@ impl From<TeamGroup> for TeamGroupResponse {
     }
 }
 
-#[derive(Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
+#[derive(Debug, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct TeamOwnerResponse {
     pub id: String, // Just the UUID part, not the full Partition
     pub display_name: String,
@@ -124,5 +147,16 @@ impl From<Vec<TeamMetadata>> for TeamDetailResponse {
             }
         }
         res
+    }
+}
+
+impl From<(Team, TeamGroup, TeamOwner, Option<i64>)> for TeamDetailResponse {
+    fn from((team, group, owner, permissions): (Team, TeamGroup, TeamOwner, Option<i64>)) -> Self {
+        Self {
+            team: team.into(),
+            groups: Some(vec![group.into()]),
+            owner: Some(owner.into()),
+            permissions,
+        }
     }
 }
