@@ -15,8 +15,10 @@ export const THEME_BACKGROUNDS = {
 export function hexToRgb(
   hex: string,
 ): { r: number; g: number; b: number } | null {
+  // Remove # if present
   const cleanHex = hex.replace('#', '');
 
+  // Handle 3-character hex codes
   const fullHex =
     cleanHex.length === 3
       ? cleanHex
