@@ -393,6 +393,7 @@ export const buildReportPdfBlob = async (
       root.querySelectorAll(
         [
           '[data-pdf-keep]',
+          '.table-footnote-wrap',
           '.recharts-wrapper',
           '.recharts-responsive-container',
           '.chart',

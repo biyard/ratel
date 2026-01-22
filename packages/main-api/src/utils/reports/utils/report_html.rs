@@ -879,14 +879,41 @@ pub fn build_report_html_document(fragment: &str) -> String {
       for (const table of tables) {{
         const note = (table.getAttribute("data-footnote") || "").trim();
         if (!note) continue;
-        const prev = table.previousElementSibling;
-        if (prev && prev.classList && prev.classList.contains("table-footnote")) {{
-          continue;
+
+        const existingWrap = table.closest(".table-footnote-wrap");
+        if (existingWrap) {{
+          const existingNote = existingWrap.querySelector(":scope > .table-footnote");
+          if (existingNote && existingNote.textContent?.trim() === note) {{
+            continue;
+          }}
         }}
-        const noteEl = document.createElement("div");
-        noteEl.className = "table-footnote";
-        noteEl.textContent = note;
-        table.parentElement?.insertBefore(noteEl, table);
+
+        const prev = table.previousElementSibling;
+        const noteEl = (prev && prev.classList && prev.classList.contains("table-footnote"))
+          ? prev
+          : null;
+
+        const footnoteEl = noteEl ?? document.createElement("div");
+        if (!noteEl) {{
+          footnoteEl.className = "table-footnote";
+          footnoteEl.textContent = note;
+        }} else {{
+          footnoteEl.textContent = note;
+        }}
+
+        const wrap = document.createElement("div");
+        wrap.className = "table-footnote-wrap";
+        wrap.setAttribute("data-pdf-keep", "1");
+
+        table.parentElement?.insertBefore(wrap, table);
+        if (footnoteEl.parentElement) {{
+          footnoteEl.parentElement.removeChild(footnoteEl);
+        }}
+        if (table.parentElement) {{
+          table.parentElement.removeChild(table);
+        }}
+        wrap.appendChild(footnoteEl);
+        wrap.appendChild(table);
       }}
 
       const images = Array.from(document.querySelectorAll("img[data-footnote]"));
