@@ -16,7 +16,7 @@ contract SpaceDAO is Initializable, ReentrancyGuard {
     mapping(address => bool) public isExtension;
 
     // [Direct Link] Main Extension Address
-    address public rewardExtension; 
+    address public rewardExtension;
 
     // --- Events ---
     event Initialized(address[] admins, address extension);
