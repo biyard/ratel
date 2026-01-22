@@ -11,12 +11,10 @@ import {
   ArrowLeft,
   ChevronDown,
   ChevronUp,
-  Download,
   Moon,
   Sun,
   ZoomIn,
   ZoomOut,
-  X,
 } from 'lucide-react';
 import { route } from '@/route';
 import { useTheme } from '@/hooks/use-theme';
@@ -25,33 +23,8 @@ import { getUserMembership } from '@/lib/api/ratel/me.v3';
 import { call } from '@/lib/api/ratel/call';
 import PdfViewer from '../../components/pdf-viewer';
 
-type SpacePdfViewerRouteProps = {
-  mode?: 'route';
-};
-
-type SpacePdfViewerReportProps = {
-  mode: 'report';
-  open: boolean;
-  url: string;
-  fileName?: string;
-  spacePk: string;
-  analyzePk: string;
-  enableAi: boolean;
-  onClose: () => void;
-};
-
-type SpacePdfViewerPageProps =
-  | SpacePdfViewerRouteProps
-  | SpacePdfViewerReportProps;
-
-const isReportMode = (
-  props: SpacePdfViewerPageProps,
-): props is SpacePdfViewerReportProps => props.mode === 'report';
-
-export function SpacePdfViewerPage(props: SpacePdfViewerPageProps) {
-  const mode = props.mode ?? 'route';
-  const reportProps = isReportMode(props) ? props : null;
-  const routeParams = useParams<{ spacePk: string; fileId: string }>();
+export function SpacePdfViewerPage() {
+  const routeParams = useParams<{ spacePk?: string; fileId?: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
@@ -66,12 +39,12 @@ export function SpacePdfViewerPage(props: SpacePdfViewerPageProps) {
   const { theme, setTheme } = useTheme();
 
   const analyzePkFromQuery = searchParams.get('analyze_pk') ?? '';
-  const isAnalyzeRoute = mode === 'route' && analyzePkFromQuery.length > 0;
+  const isAnalyzeRoute = analyzePkFromQuery.length > 0;
 
   const { data: membership } = useQuery({
     queryKey: ['user-membership'],
     queryFn: getUserMembership,
-    enabled: mode === 'report' || isAnalyzeRoute,
+    enabled: isAnalyzeRoute,
   });
   const tierName = String(membership?.tier ?? '');
   const isPaidMember =
@@ -79,19 +52,16 @@ export function SpacePdfViewerPage(props: SpacePdfViewerPageProps) {
     !tierName.includes('FREE') &&
     !tierName.includes('Free');
 
-  const spacePk =
-    mode === 'route' ? routeParams.spacePk : (reportProps?.spacePk ?? '');
-  const fileId = mode === 'route' ? routeParams.fileId : undefined;
+  const spacePk = routeParams.spacePk ?? '';
+  const fileId = routeParams.fileId ?? '';
 
-  if (mode === 'route' && (!spacePk || (!fileId && !isAnalyzeRoute))) {
+  if (!spacePk || (!fileId && !isAnalyzeRoute)) {
     throw new Error('Space ID and File ID are required');
   }
 
-  if (mode === 'route') {
-    logger.debug(
-      `SpacePdfViewerPage: spacePk=${spacePk}, fileId=${fileId}, analyzePk=${analyzePkFromQuery}`,
-    );
-  }
+  logger.debug(
+    `SpacePdfViewerPage: spacePk=${spacePk}, fileId=${fileId}, analyzePk=${analyzePkFromQuery}`,
+  );
 
   const { data: fileResponse } = useFileSpace(spacePk || '');
   const { data: analyzeData } = useQuery<{ metadata_url?: string | null }>({
@@ -116,39 +86,26 @@ export function SpacePdfViewerPage(props: SpacePdfViewerPageProps) {
   const isHttpUrl = (value?: string | null) =>
     typeof value === 'string' && value.startsWith('http');
 
-  const file =
-    mode === 'route' && !isAnalyzeRoute
-      ? fileResponse?.files.find((f) => f.id === fileId)
-      : mode === 'route'
-        ? {
-            name: 'analysis-report.pdf',
-            url: isHttpUrl(analyzeData?.metadata_url)
-              ? String(analyzeData?.metadata_url)
-              : '',
-          }
-        : {
-            name: reportProps?.fileName ?? 'report.pdf',
-            url: isHttpUrl(reportProps?.url) ? (reportProps?.url ?? '') : '',
-          };
+  const file = !isAnalyzeRoute
+    ? fileResponse?.files.find((f) => f.id === fileId)
+    : {
+        name: 'analysis-report.pdf',
+        url: isHttpUrl(analyzeData?.metadata_url)
+          ? String(analyzeData?.metadata_url)
+          : '',
+      };
 
-  const canUseAi =
-    mode === 'report'
-      ? (reportProps?.enableAi ?? false) &&
-        isPaidMember &&
-        (reportProps?.analyzePk.length ?? 0) > 0
-      : isAnalyzeRoute
-        ? isPaidMember && analyzePkFromQuery.length > 0
-        : true;
+  const canUseAi = isAnalyzeRoute
+    ? isPaidMember && analyzePkFromQuery.length > 0
+    : true;
 
   const { chatState, setChatState, sidebarWidth, setSidebarWidth } =
     useChatPreference();
   const { messages, isLoading, sendMessage, clearMessages } = usePdfAiChat(
     spacePk || '',
-    mode === 'report'
-      ? { kind: 'analyze', analyzePk: reportProps?.analyzePk ?? '' }
-      : isAnalyzeRoute
-        ? { kind: 'analyze', analyzePk: analyzePkFromQuery }
-        : { kind: 'file', fileId: fileId || '' },
+    isAnalyzeRoute
+      ? { kind: 'analyze', analyzePk: analyzePkFromQuery }
+      : { kind: 'file', fileId: fileId || '' },
   );
 
   // Handle sidebar resize
@@ -219,7 +176,7 @@ export function SpacePdfViewerPage(props: SpacePdfViewerPageProps) {
     );
   }
 
-  if (!isHttpUrl(file.url) && (mode === 'report' || isAnalyzeRoute)) {
+  if (!isHttpUrl(file.url) && isAnalyzeRoute) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
         <div className="rounded-lg bg-card px-6 py-4 text-sm text-muted-foreground">
@@ -268,15 +225,9 @@ export function SpacePdfViewerPage(props: SpacePdfViewerPageProps) {
     setCurrentPage(page);
   };
 
-  if (mode === 'report' && !reportProps?.open) return null;
-
   return (
     <div
-      className={
-        mode === 'report'
-          ? 'fixed inset-0 z-50 flex bg-black/70'
-          : 'flex h-screen'
-      }
+      className="flex h-screen"
       style={{ backgroundColor: 'var(--background)' }}
     >
       <div className="flex flex-col flex-1 relative">
@@ -293,61 +244,15 @@ export function SpacePdfViewerPage(props: SpacePdfViewerPageProps) {
 
         {isHeaderVisible && (
           <div className="border-b p-4 flex items-center gap-4">
-            {mode === 'route' && (
-              <Button onClick={() => navigate(-1)} variant="outline" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back
-              </Button>
-            )}
-            {mode === 'report' && (
-              <Button
-                onClick={reportProps?.onClose}
-                variant="outline"
-                size="sm"
-              >
-                <X className="mr-2 h-4 w-4" />
-                Close
-              </Button>
-            )}
+            <Button onClick={() => navigate(-1)} variant="outline" size="sm">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Button>
             <div className="flex-1 text-sm text-muted-foreground">
               {file.name}
             </div>
 
             <div className="flex items-center gap-2">
-              {mode === 'report' && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={async () => {
-                    try {
-                      const res: { download_url: string } = await call(
-                        'GET',
-                        `/v3/spaces/${encodeURIComponent(
-                          reportProps?.spacePk ?? '',
-                        )}/analyzes/download-url`,
-                      );
-                      const objectUrl = res.download_url;
-                      const link = document.createElement('a');
-                      link.href = objectUrl;
-                      link.download = file.name;
-                      document.body.appendChild(link);
-                      link.click();
-                      link.remove();
-                    } catch {
-                      const link = document.createElement('a');
-                      link.href = file.url;
-                      link.download = file.name;
-                      document.body.appendChild(link);
-                      link.click();
-                      link.remove();
-                    }
-                  }}
-                  aria-label="Download PDF"
-                  className="px-2"
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-              )}
               <Button
                 variant="outline"
                 size="sm"
