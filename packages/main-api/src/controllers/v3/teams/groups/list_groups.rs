@@ -35,7 +35,8 @@ pub async fn list_groups_handler(
     }
 
     // Query all TeamGroup entities for this team with pagination
-    let (groups, next_bookmark) = TeamGroup::query(&dynamo.client, team_pk, query_options).await?;
+    let pk: Partition = team_pk.into();
+    let (groups, next_bookmark) = TeamGroup::query(&dynamo.client, pk, query_options).await?;
 
     // Convert to response format
     let group_responses: Vec<TeamGroupResponse> =
