@@ -13,6 +13,7 @@ import {
   EditContent,
   Folder,
 } from '@/components/icons';
+import { CubeTransparentIcon } from '@heroicons/react/24/outline';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useTranslation } from 'react-i18next';
 
@@ -28,13 +29,9 @@ export interface TeamSidemenuProps {
 
 export default function TeamSidemenu({ username }: TeamSidemenuProps) {
   const { t } = useTranslation('Team');
-  const { teams } = useContext(TeamContext);
-  const selectedTeam = useMemo(() => {
-    return teams.find((t) => t.username === username);
-  }, [teams, username]);
 
   // Get team data using v3 API
-  const { data: team } = useSuspenseFindTeam(selectedTeam.username);
+  const { data: team } = useSuspenseFindTeam(username);
 
   // Get permissions from team detail response (no API calls!)
   const permissions = new TeamGroupPermissions(team.permissions);
@@ -92,6 +89,17 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
           >
             <UserGroup className="w-6 h-6 [&>path]:stroke-[#737373]" />
             <span>{t('members')}</span>
+          </Link>
+        ) : null}
+        {permissions?.isAdmin() ? (
+          <Link
+            to={route.teamDao(team.username)}
+            className="sidemenu-link text-text-primary"
+            data-testid="sidemenu-team-dao"
+            data-pw="team-nav-dao"
+          >
+            <CubeTransparentIcon className="w-6 h-6 [&>path]:stroke-[#737373]" />
+            <span>{t('dao')}</span>
           </Link>
         ) : null}
         {permissions?.has(TeamGroupPermission.TeamEdit) ||

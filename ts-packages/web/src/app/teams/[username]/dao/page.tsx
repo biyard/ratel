@@ -1,7 +1,8 @@
 import { useParams } from 'react-router';
-import MembersPage from './members-page';
+import DaoPage from './dao-page';
 
 export default function Page() {
   const { username } = useParams<{ username: string }>();
-  return <MembersPage username={username!} />;
+
+  return <DaoPage username={username!} />;
 }

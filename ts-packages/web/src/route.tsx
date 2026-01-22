@@ -38,6 +38,7 @@ export const route = {
   teamMembers: (username: string) => `/teams/${username}/members`,
   teamSettings: (username: string) => `/teams/${username}/settings`,
   teamDrafts: (username: string) => `/teams/${username}/drafts`,
+  teamDao: (username: string) => `/teams/${username}/dao`,
   teamDraftEdit: (username: string, postPk: string) =>
     `/teams/${username}/drafts/${encodeURIComponent(postPk)}/edit`,
   space: (spaceId: number | string) => `/spaces/${encodeURIComponent(spaceId)}`,

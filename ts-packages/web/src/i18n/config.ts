@@ -82,6 +82,7 @@ import { i18nCompleteSurveyModal } from '@/features/spaces/polls/components/moda
 import { rewardsI18n } from '@/features/spaces/rewards/i18n';
 import { i18nRewardsPage } from '@/app/rewards/rewards-page-i18n';
 import { i18nTeamGroups } from '@/features/teams/groups/i18n';
+import { i18nTeamDao } from '@/features/teams/dao/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -173,6 +174,7 @@ Object.entries({
   Rewards: rewardsI18n,
   MyRewards: i18nRewardsPage,
   TeamGroups: i18nTeamGroups,
+  TeamDao: i18nTeamDao,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;

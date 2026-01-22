@@ -7,4 +7,5 @@ export interface TeamMember {
   profile_url: string;
   groups: MemberGroup[];
   is_owner: boolean;
+  evm_address?: string;
 }
