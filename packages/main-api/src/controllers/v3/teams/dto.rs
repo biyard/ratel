@@ -13,7 +13,7 @@ pub struct TeamPathParam {
 
 #[derive(Debug, Default, serde::Serialize, serde::Deserialize, schemars::JsonSchema)]
 pub struct TeamResponse {
-    pub id: String,
+    pub pk: String,
     pub created_at: i64,
     pub updated_at: i64,
 
@@ -32,7 +32,7 @@ pub struct TeamResponse {
 impl From<Team> for TeamResponse {
     fn from(team: Team) -> Self {
         Self {
-            id: team.pk.to_string(),
+            pk: team.pk.to_string(),
             created_at: team.created_at,
             updated_at: team.updated_at,
             nickname: team.display_name,
@@ -49,7 +49,7 @@ impl From<Team> for TeamResponse {
 impl From<(Team, i64)> for TeamResponse {
     fn from((team, permissions): (Team, i64)) -> Self {
         Self {
-            id: team.pk.to_string(),
+            pk: team.pk.to_string(),
             created_at: team.created_at,
             updated_at: team.updated_at,
             nickname: team.display_name,

@@ -26,9 +26,12 @@ pub async fn find_team_handler(
     NoApi(user): NoApi<Option<User>>,
     Query(params): Query<FindTeamQueryParams>,
 ) -> Result<Json<TeamResponse>, Error> {
-    let team_query_option = Team::opt_one().sk(params.username);
+    let team_query_option = Team::opt_one();
+
     let (team, _) =
-        Team::find_by_username_prefix(&dynamo.client, EntityType::Team, team_query_option).await?;
+        Team::find_by_username_prefix(&dynamo.client, params.username.clone(), team_query_option)
+            .await?;
+
     let team = team.into_iter().next().ok_or(Error::TeamNotFound)?;
 
     let permissions = if let Some(user) = user {
@@ -39,5 +42,6 @@ pub async fn find_team_handler(
     } else {
         0
     };
+
     Ok(Json(TeamResponse::from((team, permissions))))
 }
