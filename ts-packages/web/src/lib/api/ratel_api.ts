@@ -6,7 +6,6 @@ import {
 import { useApiCall } from './use-send';
 import type { RedeemCode } from './models/redeem-code';
 import type { Promotion } from './models/promotion';
-import { GroupPermission } from './models/group';
 import { FeedStatus } from '@/features/posts/types/post';
 
 // export function useSpaceById(id: number): UseSuspenseQueryResult<Space> {
@@ -131,11 +130,11 @@ export function usePromotion(): UseSuspenseQueryResult<Promotion> {
 // }
 
 export const ratelApi = {
-  permissions: {
-    // DEPRECATED: Use embedded permissions in v3 team detail instead
-    _legacy_getPermissions: (teamPk: string, permission: GroupPermission) =>
-      `/v3/teams/permissions?team_pk=${teamPk}&permission=${permission}`,
-  },
+  // permissions: {
+  //   // DEPRECATED: Use embedded permissions in v3 team detail instead
+  //   _legacy_getPermissions: (teamPk: string, permission: GroupPermission) =>
+  //     `/v3/teams/permissions?team_pk=${teamPk}&permission=${permission}`,
+  // },
   users: {
     // getUserInfo: () => '/v3/me',
     // getUserByEmail: (email: string) =>

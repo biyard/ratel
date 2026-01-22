@@ -229,7 +229,7 @@ export default function MobileSideMenu({
               <div className="flex flex-col gap-2">
                 {actualTeams.map((teamItem, index) => (
                   <NavLink
-                    key={`mobile-team-${teamItem.id}`}
+                    key={`mobile-team-${teamItem.pk}`}
                     to={route.teamByUsername(teamItem.username)}
                     className="flex items-center gap-3 px-3 py-2.5 hover:bg-hover rounded-md"
                     onClick={() => handleTeamSelect(index + 1)}

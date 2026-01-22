@@ -11,7 +11,7 @@ import { usePopup } from '@/lib/contexts/popup-service';
 import { ChevronDown } from 'lucide-react';
 import { useContext, useEffect } from 'react';
 import TeamCreationPopup from '../_popups/team-creation-popup';
-import type { Team } from '@/lib/api/models/team';
+import type { Team } from '@/features/teams/types/team';
 import { NavLink } from 'react-router';
 import { route } from '@/route';
 import { useAuth } from '@/lib/contexts/auth-context';
@@ -34,7 +34,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
 
   useEffect(() => {
     if (team) {
-      const index = teams.findIndex((t) => t.id === team.id);
+      const index = teams.findIndex((t) => t.pk === team.pk);
       if (index !== -1) {
         setSelectedTeam(index);
       }
@@ -69,7 +69,7 @@ export default function TeamSelector({ onSelect, team }: TeamSelectorProps) {
             {teams.map((team, index) =>
               team.nickname !== '' ? (
                 <DropdownMenuItem
-                  key={`team-select-${index}-${team.username || team.id}`}
+                  key={`team-select-${index}-${team.username || team.pk}`}
                   className="focus:bg-accent focus:text-text-primary [&_svg:not([class*='size-'])]:size-4 w-full flex flex-row items-center gap-2 px-2 py-2 hover:bg-hover"
                   asChild
                 >
