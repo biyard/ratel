@@ -55,5 +55,6 @@
   "failed_active_dao": "Failed to active DAO. please check gas fee and try again later.",
   "dao_address": "DAO Address",
   "activate_dao": "Activate DAO",
-  "activating_dao": "Activating DAO..."
+  "activating_dao": "Activating DAO...",
+  "dao": "DAO"
 }

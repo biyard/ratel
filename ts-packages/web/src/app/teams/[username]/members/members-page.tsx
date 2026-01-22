@@ -1,69 +1,18 @@
-import { checkString } from '@/lib/string-filter-utils';
 import { X } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
-import { showSuccessToast, showErrorToast } from '@/lib/toast';
-import { logger } from '@/lib/logger';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSuspenseTeamMembers } from '@/features/teams/hooks/use-team-members';
-import { useRemoveGroupMember } from '@/features/teams/hooks/use-remove-group-member';
-import { useSuspenseFindTeam } from '@/features/teams/hooks/use-find-team';
+import { useMembersPageController } from './use-members-page-controller';
+import { checkString } from '@/lib/string-filter-utils';
 
-export default function TeamMembers({ username }: { username: string }) {
+export default function MembersPage({ username }: { username: string }) {
+  const ctrl = useMembersPageController(username);
   const { t } = useTranslation('Team');
-  const { data: team } = useSuspenseFindTeam(username);
-  const { data: teamMembers } = useSuspenseTeamMembers(username); // Pass username directly
-  const queryClient = useQueryClient();
-  const [removingMember, setRemovingMember] = useState<string | null>(null);
-
-  const removeGroupMemberMutation = useRemoveGroupMember().mutateAsync;
-
-  const members =
-    teamMembers?.items?.filter(
-      (member) =>
-        member !== undefined &&
-        !(checkString(member.display_name) || checkString(member.username)),
-    ) ?? [];
-
-  const handleRemoveFromGroup = async (
-    memberUserId: string,
-    groupPk: string,
-    groupName: string,
-  ) => {
-    const key = `${memberUserId}-${groupPk}`;
-    if (removingMember === key) return; // Prevent double clicks
-
-    setRemovingMember(key);
-    try {
-      // Use team PK (with TEAM# prefix) directly - no need to extract UUID
-      await removeGroupMemberMutation({
-        teamPk: team.pk,
-        groupPk,
-        request: {
-          user_pks: [memberUserId],
-        },
-      });
-
-      showSuccessToast(t('member_removed_from_group', { groupName }));
-
-      // Invalidate team members query to refresh the list
-      queryClient.invalidateQueries({
-        queryKey: ['team', 'members', username],
-      });
-    } catch (err) {
-      logger.error('Failed to remove member from group:', err);
-      showErrorToast(t('failed_remove_member_from_group'));
-    } finally {
-      setRemovingMember(null);
-    }
-  };
 
   return (
     <div
       className="flex flex-col w-full max-w-[1152px] px-4 py-5 gap-[10px] bg-card-bg border border-card-border rounded-lg h-fit"
       data-pw="team-members-list"
     >
-      {members.map((member) => (
+      {ctrl.members.map((member) => (
         <div
           key={member.user_id}
           data-pw={`member-item-${member.user_id}`}
@@ -107,7 +56,7 @@ export default function TeamMembers({ username }: { username: string }) {
               .filter((group) => !checkString(group.group_name))
               .map((group) => {
                 const isRemoving =
-                  removingMember === `${member.user_id}-${group.group_id}`;
+                  ctrl.removingMember === `${member.user_id}-${group.group_id}`;
                 return (
                   <div
                     key={group.group_id}
@@ -119,7 +68,7 @@ export default function TeamMembers({ username }: { username: string }) {
                       <button
                         data-pw={`remove-member-from-group-${member.user_id}-${group.group_id}`}
                         onClick={() =>
-                          handleRemoveFromGroup(
+                          ctrl.handleRemoveFromGroup(
                             member.user_id,
                             group.group_id,
                             group.group_name,

@@ -25,7 +25,7 @@ import { useSuspenseFindTeam } from '@/features/teams/hooks/use-find-team';
 export default function TeamGroups({ username }: { username: string }) {
   const { t } = useTranslation('Team');
   const { data: team } = useSuspenseFindTeam(username);
-  const { data: groups } = useSuspenseTeamGroups(username);
+  const { data: groups } = useSuspenseTeamGroups(team.pk);
   const popup = usePopup();
 
   const deleteGroupMutation = useDeleteGroup().mutateAsync;
