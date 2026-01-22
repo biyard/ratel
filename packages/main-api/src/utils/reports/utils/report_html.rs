@@ -370,6 +370,7 @@ pub fn build_report_html_document(fragment: &str) -> String {
 
       const wrap = document.createElement("div");
       wrap.className = "lda-card";
+      wrap.setAttribute("data-pdf-keep", "1");
       host.appendChild(wrap);
 
       const note = (host.getAttribute("data-footnote") || "").trim();
