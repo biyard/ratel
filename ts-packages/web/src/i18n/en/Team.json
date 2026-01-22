@@ -56,5 +56,6 @@
   "dao_address": "DAO Address",
   "activate_dao": "Activate DAO",
   "activating_dao": "Activating DAO...",
-  "dao": "DAO"
+  "dao": "DAO",
+  "rewards": "Rewards"
 }

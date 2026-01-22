@@ -5,7 +5,7 @@ import { RewardCard } from './reward-card';
 import useSpaceRewards from '../hooks/use-space-rewards';
 import useRewardConfig, { RewardConfigItem } from '../hooks/use-reward-config';
 import { PlusIcon, ClipboardListIcon } from 'lucide-react';
-import { useRewardsI18n } from '../i18n';
+import { useSpaceRewardsI18n } from '../i18n';
 import { SpaceRewardResponse } from '../types/space-reward-response';
 import { FeatureType } from '../types/feature-type';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -47,7 +47,7 @@ function RewardSectionContent({
   onEditReward,
   onDeleteReward,
 }: RewardSectionProps) {
-  const i18n = useRewardsI18n();
+  const i18n = useSpaceRewardsI18n();
   const t = i18n.settings;
 
   const {

@@ -1,5 +1,5 @@
-import { RewardsI18n } from '../rewards-page-i18n';
-import { PointTransactionResponse, TransactionType } from '../types';
+import { RewardsI18n } from '../types';
+import { PointTransactionResponse, TransactionType } from '@/app/rewards/types';
 import { formatDistanceToNow } from 'date-fns';
 import Card from '@/components/card';
 

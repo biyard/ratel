@@ -1,12 +1,31 @@
-import { useMyRewardsI18n } from './rewards-page-i18n';
-import { useRewardsPageController } from './use-rewards-page-controller';
+import { Suspense } from 'react';
+import { useTeamRewardsI18n } from '../i18n';
+import { useTeamRewardsPageController } from './use-rewards-page-controller';
 import { PointsSummaryCard } from '@/features/rewards/components/points-summary-card';
 import { ExchangePreviewCard } from '@/features/rewards/components/exchange-preview-card';
 import { TransactionList } from '@/features/rewards/components/transaction-list';
 
-export default function RewardsPage() {
-  const ctrl = useRewardsPageController();
-  const i18n = useMyRewardsI18n();
+interface RewardsPageProps {
+  username: string;
+}
+
+function RewardsPageContent({ username }: RewardsPageProps) {
+  const ctrl = useTeamRewardsPageController(username);
+  const i18n = useTeamRewardsI18n();
+
+  // Check if user is a team member
+  if (!ctrl.permissions) {
+    return (
+      <div className="w-full max-w-desktop mx-auto px-4 py-8">
+        <div className="bg-card-bg border border-card-border rounded-lg p-8">
+          <div className="text-center text-destructive">
+            You must be a team member to view rewards
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (ctrl.isLoadingRewards) {
     return (
       <div className="w-full max-w-desktop mx-auto px-4 py-8">
@@ -20,7 +39,7 @@ export default function RewardsPage() {
       <div className="w-full max-w-desktop mx-auto px-4 py-8">
         <div className="bg-card-bg border border-card-border rounded-lg p-8">
           <div className="text-center text-destructive">
-            {i18n.error}: {ctrl.rewardsError.message}
+            {i18n.error}: {ctrl.rewardsError?.message}
           </div>
         </div>
       </div>
@@ -29,17 +48,18 @@ export default function RewardsPage() {
 
   const rewards = ctrl.rewards;
   const estimatedTokens = Math.round(
-    (rewards.user_points / rewards.total_points) * rewards.monthly_token_supply,
+    (rewards.team_points / rewards.total_points) * rewards.monthly_token_supply,
   );
+
   return (
     <div
-      data-testid="my-rewards-page"
+      data-testid="team-rewards-page"
       className="w-full max-w-desktop mx-auto px-4 py-6"
     >
       <PointsSummaryCard
         i18n={i18n}
         totalPoints={rewards.total_points}
-        userPoints={rewards.user_points}
+        userPoints={rewards.team_points}
         monthlyTokenSupply={rewards.monthly_token_supply}
         estimatedTokens={estimatedTokens}
         tokenSymbol={rewards.token_symbol}
@@ -48,13 +68,14 @@ export default function RewardsPage() {
       />
       <ExchangePreviewCard
         i18n={i18n}
-        totalPoints={rewards.user_points}
+        totalPoints={rewards.team_points}
         estimatedTokens={estimatedTokens}
-        name={rewards.project_name}
+        name={ctrl.team.nickname}
         tokenSymbol={rewards.token_symbol}
         formatPoints={ctrl.formatPoints}
         formatTokens={ctrl.formatTokens}
       />
+
       <div className="mt-6">
         <TransactionList
           i18n={i18n}
@@ -67,5 +88,13 @@ export default function RewardsPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function RewardsPage({ username }: RewardsPageProps) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RewardsPageContent username={username} />
+    </Suspense>
   );
 }

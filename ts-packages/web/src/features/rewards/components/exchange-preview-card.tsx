@@ -1,5 +1,5 @@
 import { ArrowsArrowRight } from '@/components/icons';
-import { RewardsI18n } from '../rewards-page-i18n';
+import { RewardsI18n } from '../types';
 import Card from '@/components/card';
 
 interface ExchangePreviewCardProps {
@@ -10,6 +10,9 @@ interface ExchangePreviewCardProps {
   tokenSymbol: string;
   formatPoints: (points: number) => string;
   formatTokens: (tokens: number) => string;
+  canExchange?: boolean; // Optional: Admin-only token exchange capability
+  exchangeButtonText?: string; // Optional: Custom button text
+  onExchangeClick?: () => void; // Optional: Exchange button click handler
 }
 
 export function ExchangePreviewCard({
@@ -20,6 +23,9 @@ export function ExchangePreviewCard({
   tokenSymbol,
   formatPoints,
   formatTokens,
+  canExchange = true,
+  exchangeButtonText,
+  onExchangeClick,
 }: ExchangePreviewCardProps) {
   return (
     <div className="border-t border-bg pt-10">
@@ -64,10 +70,19 @@ export function ExchangePreviewCard({
           </div>
         </div>
 
-        {/* Info Message */}
-        <p className="text-xs font-medium text-text-primary text-center">
-          {i18n.swap_available_message}
-        </p>
+        {/* Info Message or Exchange Button */}
+        {onExchangeClick && canExchange ? (
+          <button
+            onClick={onExchangeClick}
+            className="w-full py-2 px-4 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors"
+          >
+            {exchangeButtonText || 'Exchange'}
+          </button>
+        ) : (
+          <p className="text-xs font-medium text-text-primary text-center">
+            {i18n.swap_available_message}
+          </p>
+        )}
       </Card>
     </div>
   );

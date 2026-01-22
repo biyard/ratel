@@ -1,8 +1,3 @@
-'use client';
-
-import { useContext, useMemo } from 'react';
-// import { Users, MessageSquare } from 'lucide-react';
-// import type { Team } from '@/lib/api/models/team';
 import TeamProfile from './team-profile';
 import { Link } from 'react-router';
 import { route } from '@/route';
@@ -14,7 +9,6 @@ import {
   Folder,
 } from '@/components/icons';
 import { CubeTransparentIcon } from '@heroicons/react/24/outline';
-import { TeamContext } from '@/lib/contexts/team-context';
 import { useTranslation } from 'react-i18next';
 
 import { useSuspenseFindTeam } from '@/features/teams/hooks/use-find-team';
