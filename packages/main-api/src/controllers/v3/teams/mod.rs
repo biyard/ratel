@@ -5,6 +5,7 @@ pub mod get_team;
 pub mod list_members;
 pub mod list_team_posts;
 pub mod memberships;
+pub mod points;
 pub mod update_team;
 
 pub mod dto;
@@ -67,7 +68,8 @@ pub fn route() -> Result<Router<AppState>> {
                                 ),
                         ),
                 )
-                .nest("/membership", memberships::route()?),
+                .nest("/membership", memberships::route()?)
+                .nest("/points", points::route()),
         )
         .layer(middleware::from_fn_with_state(
             AppState::default(),

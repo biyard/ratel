@@ -1,17 +1,20 @@
-use crate::{features::rewards::RewardsResponse, types::MonthQuery, utils::time::current_month, *};
+use crate::{controllers::v3::teams::dto::TeamPathParam, types::MonthQuery, utils::time::current_month, *};
 use aide::NoApi;
 use axum::{Json, extract::{Query, State}};
 use bdk::prelude::*;
 
-pub async fn get_my_rewards_handler(
+use crate::features::rewards::RewardsResponse;
+
+pub async fn get_team_rewards_handler(
     State(AppState { biyard, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
+    NoApi(_user): NoApi<User>,
+    Path(TeamPathParam { team_pk }): Path<TeamPathParam>,
     Query(MonthQuery { month }): Query<MonthQuery>,
 ) -> Result<Json<RewardsResponse>> {
     let month = month.unwrap_or_else(|| current_month());
 
     let balance = biyard
-        .get_user_balance(user.pk.clone(), month.clone())
+        .get_user_balance(team_pk.clone(), month.clone())
         .await?;
 
     let token = biyard.get_project_info().await?;

@@ -17,3 +17,33 @@ pub struct Pagination {
     #[schemars(description = "Bookmark to start from")]
     pub bookmark: Option<String>,
 }
+
+#[derive(
+    serde::Deserialize,
+    serde::Serialize,
+    Debug,
+    Clone,
+    Default,
+    schemars::JsonSchema,
+    aide::OperationIo,
+)]
+pub struct MonthQuery {
+    #[schemars(description = "Month in YYYY-MM format (defaults to current month)")]
+    pub month: Option<String>,
+}
+
+#[derive(
+    serde::Deserialize,
+    serde::Serialize,
+    Debug,
+    Clone,
+    Default,
+    schemars::JsonSchema,
+    aide::OperationIo,
+)]
+pub struct TransactionsQuery {
+    #[serde(flatten)]
+    pub pagination: Pagination,
+    #[schemars(description = "Month in YYYY-MM format (defaults to current month)")]
+    pub month: Option<String>,
+}
