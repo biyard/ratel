@@ -19,7 +19,10 @@ function TableFootnoteView(props: any) {
     .join(' ');
 
   return (
-    <NodeViewWrapper className="relative my-4">
+    <NodeViewWrapper
+      className="relative my-4 table-footnote-wrap"
+      data-pdf-keep="1"
+    >
       {isEditable ? (
         <Input
           type="text"
