@@ -4,15 +4,15 @@ import { Col } from '@/components/ui/col';
 import useTeamInfiniteFeeds from '@/hooks/feeds/use-team-feeds-infinite-query';
 import { useObserver } from '@/hooks/use-observer';
 import { useCallback } from 'react';
-import { useTeamDetailByUsername } from '@/features/teams/hooks/use-team';
 import { useParams } from 'react-router';
 import { FeedEndMessage } from '@/features/drafts/components/list-drafts';
+import { useSuspenseFindTeam } from '@/features/teams/hooks/use-find-team';
 
 export default function TeamHome() {
   const { username } = useParams<{ username: string }>();
-  const { data: teamDetail } = useTeamDetailByUsername(username || '');
+  const { data: team } = useSuspenseFindTeam(username);
 
-  const teamPk = teamDetail?.id || '';
+  const teamPk = team?.pk || '';
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useTeamInfiniteFeeds(teamPk);

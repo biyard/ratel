@@ -1,42 +1,25 @@
-'use client';
-import {
-  useTeamMembers,
-  useTeamDetailByUsername,
-} from '@/features/teams/hooks/use-team';
 import { checkString } from '@/lib/string-filter-utils';
 import { X } from 'lucide-react';
-import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
 import { useQueryClient } from '@tanstack/react-query';
 import { showSuccessToast, showErrorToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSuspenseTeamMembers } from '@/features/teams/hooks/use-team-members';
+import { useRemoveGroupMember } from '@/features/teams/hooks/use-remove-group-member';
+import { useSuspenseFindTeam } from '@/features/teams/hooks/use-find-team';
 
 export default function TeamMembers({ username }: { username: string }) {
   const { t } = useTranslation('Team');
-  const teamDetailQuery = useTeamDetailByUsername(username);
-  const query = useTeamMembers(username); // Pass username directly
+  const { data: team } = useSuspenseFindTeam(username);
+  const { data: teamMembers } = useSuspenseTeamMembers(username); // Pass username directly
   const queryClient = useQueryClient();
   const [removingMember, setRemovingMember] = useState<string | null>(null);
 
-  if (query.isLoading || teamDetailQuery.isLoading) {
-    return (
-      <div className="flex justify-center p-8">{t('loading_members')}</div>
-    );
-  }
+  const removeGroupMemberMutation = useRemoveGroupMember().mutateAsync;
 
-  if (query.error || teamDetailQuery.error) {
-    return (
-      <div className="flex justify-center p-8 text-red-500">
-        {t('error_loading_members')}
-      </div>
-    );
-  }
-
-  const membersData = query.data;
-  const teamDetail = teamDetailQuery.data;
   const members =
-    membersData?.items?.filter(
+    teamMembers?.items?.filter(
       (member) =>
         member !== undefined &&
         !(checkString(member.display_name) || checkString(member.username)),
@@ -44,33 +27,28 @@ export default function TeamMembers({ username }: { username: string }) {
 
   const handleRemoveFromGroup = async (
     memberUserId: string,
-    groupId: string,
+    groupPk: string,
     groupName: string,
   ) => {
-    if (!teamDetail) return;
-
-    const key = `${memberUserId}-${groupId}`;
+    const key = `${memberUserId}-${groupPk}`;
     if (removingMember === key) return; // Prevent double clicks
 
     setRemovingMember(key);
     try {
       // Use team PK (with TEAM# prefix) directly - no need to extract UUID
-      await teamsV3Api.removeGroupMember(teamDetail.id, groupId, {
-        user_pks: [memberUserId],
+      await removeGroupMemberMutation({
+        teamPk: team.pk,
+        groupPk,
+        request: {
+          user_pks: [memberUserId],
+        },
       });
 
       showSuccessToast(t('member_removed_from_group', { groupName }));
 
-      // Invalidate queries to refresh member list
-      await queryClient.invalidateQueries({
-        predicate: (query) => {
-          const queryKey = query.queryKey;
-          return (
-            queryKey.includes(username) ||
-            queryKey.includes('team') ||
-            queryKey.includes('members')
-          );
-        },
+      // Invalidate team members query to refresh the list
+      queryClient.invalidateQueries({
+        queryKey: ['team', 'members', username],
       });
     } catch (err) {
       logger.error('Failed to remove member from group:', err);

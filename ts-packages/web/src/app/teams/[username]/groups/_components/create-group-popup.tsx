@@ -3,34 +3,44 @@ import CustomCheckbox from '@/components/checkbox/custom-checkbox';
 import Switch from '@/components/switch/switch';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { GroupPermission } from '@/lib/api/models/group';
 import { checkString } from '@/lib/string-filter-utils';
 import { showErrorToast } from '@/lib/toast';
-import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
+import { TeamGroupPermission } from '@/features/auth/utils/team-group-permissions';
+import {
+  useTeamGroupsI18n,
+  type TeamGroupsI18n,
+} from '@/features/teams/groups/i18n';
 
-const PERMISSION_GROUPS: Record<
-  string,
-  { label: string; value: GroupPermission }[]
-> = {
-  Post: [
-    { label: 'Read posts', value: GroupPermission.ReadPosts },
-    { label: 'Write posts', value: GroupPermission.WritePosts },
-    { label: 'Delete posts', value: GroupPermission.DeletePosts },
-  ],
-  // Reply: [
-  //   { label: 'Read replies', value: GroupPermission.ReadReplies },
-  //   { label: 'Write replies', value: GroupPermission.WriteReplies },
-  //   { label: 'Delete replies', value: GroupPermission.DeleteReplies },
-  // ],
-  Admin: [
-    // { label: 'Manage promotions', value: GroupPermission.ManagePromotions },
-    // { label: 'Manage news', value: GroupPermission.ManageNews },
-    { label: 'Invite member', value: GroupPermission.InviteMember },
-    { label: 'Update group', value: GroupPermission.UpdateGroup },
-    { label: 'Delete group', value: GroupPermission.DeleteGroup },
-  ],
-};
+function getPermissionGroups(i18n: TeamGroupsI18n) {
+  return {
+    [i18n.permission_group_post]: [
+      { label: i18n.permission_post_read, value: TeamGroupPermission.PostRead },
+      {
+        label: i18n.permission_post_write,
+        value: TeamGroupPermission.PostWrite,
+      },
+      {
+        label: i18n.permission_post_delete,
+        value: TeamGroupPermission.PostDelete,
+      },
+    ],
+    [i18n.permission_group_admin]: [
+      {
+        label: i18n.permission_group_edit,
+        value: TeamGroupPermission.GroupEdit,
+      },
+      {
+        label: i18n.permission_team_edit,
+        value: TeamGroupPermission.TeamEdit,
+      },
+      {
+        label: i18n.permission_team_admin,
+        value: TeamGroupPermission.TeamAdmin,
+      },
+    ],
+  };
+}
 
 export default function CreateGroupPopup({
   onCreate,
@@ -39,31 +49,38 @@ export default function CreateGroupPopup({
     profileUrl: string,
     groupName: string,
     groupDescription: string,
-    groupPermissions: GroupPermission[],
+    groupPermissions: TeamGroupPermission[],
   ) => void;
 }) {
+  const i18n = useTeamGroupsI18n();
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
-  const [groupPermissions, setGroupPermissions] = useState<GroupPermission[]>(
-    [],
-  );
+  const [groupPermissions, setGroupPermissions] = useState<
+    TeamGroupPermission[]
+  >([]);
   const [groupNameRequired, setGroupNameRequired] = useState(false);
   const [imageRequired, setGroupImageRequired] = useState(false);
   const [isError, setIsError] = useState(false);
 
   return (
     <div
-      className="flex flex-col w-[900px] max-w-[900px] min-w-[400px]
-    max-h-[700px] max-mobile:!w-full max-mobile:!max-w-full
+      className="flex flex-col w-tablet max-w-tablet min-w-[400px]
+    max-h-[700px] max-mobile:w-full! max-mobile:max-w-full!
     gap-5 overflow-y-auto px-[20px]
     custom-scrollbar"
     >
-      <GroupName groupName={groupName} setGroupName={setGroupName} />
+      <GroupName
+        i18n={i18n}
+        groupName={groupName}
+        setGroupName={setGroupName}
+      />
       <GroupDescription
+        i18n={i18n}
         groupDescription={groupDescription}
         setGroupDescription={setGroupDescription}
       />
       <GroupPermissionSelector
+        i18n={i18n}
         groupPermissions={groupPermissions}
         setGroupPermissions={setGroupPermissions}
         isError={isError}
@@ -72,6 +89,7 @@ export default function CreateGroupPopup({
       />
       <div className="flex flex-row w-full justify-end items-center px-[30px] py-[25px]">
         <CreateButton
+          i18n={i18n}
           isEnabled={!(checkString(groupName) || checkString(groupDescription))}
           onClick={() => {
             if (checkString(groupName) || checkString(groupDescription)) {
@@ -99,13 +117,14 @@ export default function CreateGroupPopup({
 }
 
 function CreateButton({
+  i18n,
   onClick,
   isEnabled,
 }: {
+  i18n: TeamGroupsI18n;
   isEnabled: boolean;
   onClick: () => void;
 }) {
-  const { t } = useTranslation('Team');
   return (
     <div
       data-pw="create-group-submit-button"
@@ -114,29 +133,32 @@ function CreateButton({
         onClick();
       }}
     >
-      {t('create')}
+      {i18n.create}
     </div>
   );
 }
 
 function GroupPermissionSelector({
+  i18n,
   groupPermissions,
   setGroupPermissions,
   isError,
   groupNameRequired,
   groupImageRequired,
 }: {
-  groupPermissions: GroupPermission[];
-  setGroupPermissions: (groupPermissions: GroupPermission[]) => void;
+  i18n: TeamGroupsI18n;
+  groupPermissions: TeamGroupPermission[];
+  setGroupPermissions: (groupPermissions: TeamGroupPermission[]) => void;
   isError: boolean;
   groupNameRequired: boolean;
   groupImageRequired: boolean;
 }) {
-  const { t } = useTranslation('Team');
-  const hasPermission = (perm: GroupPermission) =>
+  const PERMISSION_GROUPS = getPermissionGroups(i18n);
+
+  const hasPermission = (perm: TeamGroupPermission) =>
     groupPermissions.includes(perm);
 
-  const togglePermission = (perm: GroupPermission) => {
+  const togglePermission = (perm: TeamGroupPermission) => {
     if (hasPermission(perm)) {
       setGroupPermissions(groupPermissions.filter((p) => p !== perm));
     } else {
@@ -144,7 +166,7 @@ function GroupPermissionSelector({
     }
   };
 
-  const toggleAllInGroup = (perms: GroupPermission[]) => {
+  const toggleAllInGroup = (perms: TeamGroupPermission[]) => {
     const allSelected = perms.every((p) => hasPermission(p));
     if (allSelected) {
       setGroupPermissions(groupPermissions.filter((p) => !perms.includes(p)));
@@ -156,7 +178,7 @@ function GroupPermissionSelector({
   return (
     <div className="flex flex-col w-full gap-6">
       <div className="text-[15px]/[28px] font-bold text-modal-label-text">
-        {t('permission')}
+        {i18n.permission}
       </div>
 
       <div className="px-[10px]">
@@ -174,7 +196,7 @@ function GroupPermissionSelector({
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-sm/[20px] font-semibold text-modal-label-text">
-                    {t('select_all')}
+                    {i18n.select_all}
                   </span>
                   <CustomCheckbox
                     checked={allChecked}
@@ -214,15 +236,15 @@ function GroupPermissionSelector({
       <div className="mt-[20px]">
         {groupNameRequired ? (
           <div className="font-normal text-[#ef4444] text-sm">
-            {t('group_name_required')}
+            {i18n.group_name_required}
           </div>
         ) : groupImageRequired ? (
           <div className="font-normal text-[#ef4444] text-sm">
-            {t('group_image_required')}
+            {i18n.group_image_required}
           </div>
         ) : isError ? (
           <div className="font-normal text-[#ef4444] text-sm">
-            {t('group_option_required')}
+            {i18n.group_option_required}
           </div>
         ) : null}
       </div>
@@ -231,24 +253,25 @@ function GroupPermissionSelector({
 }
 
 function GroupDescription({
+  i18n,
   groupDescription,
   setGroupDescription,
 }: {
+  i18n: TeamGroupsI18n;
   groupDescription: string;
   setGroupDescription: (groupDescription: string) => void;
 }) {
-  const { t } = useTranslation('Team');
   return (
     <div className="flex flex-col w-full justify-start items-start gap-[5px]">
       <div className="font-bold text-[15px]/[28px] text-modal-label-text">
-        {t('description')}
+        {i18n.description}
       </div>
 
       <Textarea
         value={groupDescription}
         onChange={(e) => setGroupDescription(e.target.value)}
         maxLength={100}
-        placeholder={t('description_hint')}
+        placeholder={i18n.description_hint}
         className="w-full px-5 py-[10px] rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary placeholder:text-neutral-600 text-sm outline-none resize-none"
         data-pw="create-group-description-input"
       />
@@ -261,18 +284,19 @@ function GroupDescription({
 }
 
 function GroupName({
+  i18n,
   groupName,
   setGroupName,
 }: {
+  i18n: TeamGroupsI18n;
   groupName: string;
   setGroupName: (groupName: string) => void;
 }) {
-  const { t } = useTranslation('Team');
   return (
     <div className="flex flex-col w-full justify-start items-start gap-[5px]">
       <div className="flex flex-row gap-1 items-center">
         <div className="font-bold text-[15px]/[28px] text-modal-label-text">
-          {t('group_name')}
+          {i18n.group_name}
         </div>
         <div className="font-normal text-base/[24px] text-[#eb5757]">*</div>
       </div>
@@ -282,7 +306,7 @@ function GroupName({
         value={groupName}
         onChange={(e) => setGroupName(e.target.value)}
         maxLength={100}
-        placeholder={t('group_name_hint')}
+        placeholder={i18n.group_name_hint}
         className="w-full px-5 py-[10.5px] rounded-[8px] border border-input-box-border bg-input-box-bg text-text-primary placeholder:text-neutral-600 text-[15px]/[22.5px] outline-none"
         data-pw="create-group-name-input"
       />
