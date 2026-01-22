@@ -92,7 +92,6 @@ export const feedKeys = {
 // - Granular control: Target specific sub-keys for precise updates
 
 const QK_SPACES = 'spaces';
-
 export const spaceKeys = {
   all: [QK_SPACES] as const,
 
@@ -158,6 +157,15 @@ export const spaceKeys = {
 
   rewards: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'rewards'] as const,
+};
+
+const QK_TEAMS = 'teams';
+export const teamKeys = {
+  all: [QK_TEAMS] as const,
+  detail: (teamName: string) => [...teamKeys.all, teamName] as const,
+  members: (teamName: string) =>
+    [...teamKeys.detail(teamName), 'members'] as const,
+  groups: (teamPk: string) => [...teamKeys.detail(teamPk), 'groups'] as const,
 };
 
 export const QK_MEMBERSHIPS = 'memberships';

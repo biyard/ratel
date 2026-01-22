@@ -1,24 +1,27 @@
 'use client';
 
 import clsx from 'clsx';
-import { useTranslation } from 'react-i18next';
+import { TeamSettingsI18n } from '../i18n';
+
+interface DeleteTeamPopupProps {
+  onConfirm: () => void;
+  onCancel: () => void;
+  i18n: TeamSettingsI18n;
+}
 
 export default function DeleteTeamPopup({
   onConfirm,
   onCancel,
-}: {
-  onConfirm: () => void;
-  onCancel: () => void;
-}) {
-  const { t } = useTranslation('Team');
+  i18n,
+}: DeleteTeamPopupProps) {
   return (
     <div className="flex flex-col w-[480px] max-w-full gap-6 p-6">
       <div className="flex flex-col gap-2">
         <div className="text-lg font-bold text-text-primary text-center">
-          {t('delete_team_title')}
+          {i18n.delete_team_title}
         </div>
         <div className="text-sm text-text-secondary leading-6">
-          {t('delete_team_description')}
+          {i18n.delete_team_description}
         </div>
       </div>
 
@@ -32,7 +35,7 @@ export default function DeleteTeamPopup({
           )}
           data-pw="delete-team-cancel-button"
         >
-          {t('cancel')}
+          {i18n.cancel}
         </button>
         <button
           type="button"
@@ -43,7 +46,7 @@ export default function DeleteTeamPopup({
           )}
           data-pw="delete-team-confirm-button"
         >
-          {t('confirm')}
+          {i18n.confirm}
         </button>
       </div>
     </div>

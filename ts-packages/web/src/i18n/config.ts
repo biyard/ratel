@@ -81,6 +81,7 @@ import { MySpaces } from '@/app/(social)/my-spaces/i18n';
 import { i18nCompleteSurveyModal } from '@/features/spaces/polls/components/modal/complete_survey/complete-survey-modal-i18n';
 import { rewardsI18n } from '@/features/spaces/rewards/i18n';
 import { i18nRewardsPage } from '@/app/rewards/rewards-page-i18n';
+import { i18nTeamGroups } from '@/features/teams/groups/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -171,6 +172,7 @@ Object.entries({
   MySpaces,
   Rewards: rewardsI18n,
   MyRewards: i18nRewardsPage,
+  TeamGroups: i18nTeamGroups,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;

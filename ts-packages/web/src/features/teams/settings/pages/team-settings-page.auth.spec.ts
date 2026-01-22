@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { click } from '../../../../../tests/utils';
-import { CONFIGS } from '../../../../../tests/config';
+import { CONFIGS } from '@tests/config';
+import { click } from '@tests/utils';
 
 test.describe('Team Settings - Authenticated User', () => {
   let testTeamUsername: string;

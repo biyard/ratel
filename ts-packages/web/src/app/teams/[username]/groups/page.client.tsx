@@ -1,80 +1,103 @@
-'use client';
 import { Edit1, Extra, User } from '@/components/icons';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CreateGroupPopup from './_components/create-group-popup';
-import { GroupPermission } from '@/lib/api/models/group';
 import { logger } from '@/lib/logger';
-import type { TeamGroupResponse } from '@/lib/api/ratel/teams.v3';
 import InviteMemberPopup from './_components/invite-member-popup';
-import { useTeamDetailByUsername } from '@/features/teams/hooks/use-team';
 import { Folder } from 'lucide-react';
 import { checkString } from '@/lib/string-filter-utils';
 import { useTranslation } from 'react-i18next';
-import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
-import { useTeamPermissionsFromDetail } from '@/features/teams/hooks/use-team';
-import { TeamGroupPermission } from '@/features/auth/utils/team-group-permissions';
-import { useQueryClient } from '@tanstack/react-query';
+import {
+  TeamGroupPermission,
+  TeamGroupPermissions,
+} from '@/features/auth/utils/team-group-permissions';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useDeleteGroup } from '@/features/teams/hooks/use-delete-group';
+import { TeamGroup } from '@/features/teams/types/team_group';
+import { useSuspenseTeamGroups } from '@/features/teams/hooks/use-team-groups';
+import { useCreateGroup } from '@/features/teams/hooks/use-create-group';
+import { useSuspenseFindTeam } from '@/features/teams/hooks/use-find-team';
 
 export default function TeamGroups({ username }: { username: string }) {
   const { t } = useTranslation('Team');
-  const teamDetailQuery = useTeamDetailByUsername(username);
+  const { data: team } = useSuspenseFindTeam(username);
+  const { data: groups } = useSuspenseTeamGroups(username);
   const popup = usePopup();
-  const queryClient = useQueryClient();
+
+  const deleteGroupMutation = useDeleteGroup().mutateAsync;
+  const createGroupMutation = useCreateGroup().mutateAsync;
 
   // Get permissions directly from team detail response (no API calls!)
-  const permissions = useTeamPermissionsFromDetail(teamDetailQuery.data);
+  const permissions = new TeamGroupPermissions(team?.permissions);
 
-  if (teamDetailQuery.isLoading) {
-    return <div className="flex justify-center p-8">Loading team...</div>;
-  }
+  const canEditGroup = permissions?.has(TeamGroupPermission.GroupEdit) ?? false;
 
-  if (teamDetailQuery.error) {
-    return (
-      <div className="flex justify-center p-8 text-red-500">
-        Error loading team
-      </div>
-    );
-  }
+  const canEditTeam = permissions?.has(TeamGroupPermission.TeamEdit) ?? false;
 
-  const teamDetail = teamDetailQuery.data;
-  const canCreateGroup =
-    permissions?.has(TeamGroupPermission.TeamEdit) ?? false;
-  const canDeleteGroup =
-    permissions?.has(TeamGroupPermission.TeamEdit) ?? false;
-
-  // Use v3 groups directly - no more legacy conversion
-  const groups = teamDetail?.groups ?? [];
-
-  const deleteGroup = async (groupId: string) => {
-    if (!teamDetail) return;
+  const deleteGroup = async (groupPk: string) => {
+    if (!team) return;
 
     try {
-      // groupId is now just the UUID (not TEAM_GROUP#uuid format)
-      await teamsV3Api.deleteGroup(username, groupId);
-
-      // Invalidate all team-related queries to ensure fresh data
-      await queryClient.invalidateQueries({
-        predicate: (query) => {
-          const queryKey = query.queryKey;
-          return (
-            queryKey.includes(username) ||
-            queryKey.includes('team') ||
-            queryKey.includes('group')
-          );
-        },
+      // groupPk is now just the UUID (not TEAM_GROUP#uuid format)
+      await deleteGroupMutation({
+        teamUsername: username,
+        groupPk,
       });
-
-      // Also force refetch the current query
-      await teamDetailQuery.refetch();
     } catch (error) {
       logger.error('Failed to delete group:', error);
     }
+  };
+
+  const handleInviteMember = () => {
+    if (!team || !canEditGroup) return;
+    popup
+      .open(
+        <InviteMemberPopup
+          teamPk={team.pk}
+          username={username}
+          groups={groups.items}
+          onClose={() => popup.close()}
+        />,
+      )
+      .withoutBackdropClose();
+  };
+
+  /*
+  export interface CreateGroupRequest {
+  name: string;
+  description: string;
+  image_url: string;
+  permissions: number[]; // TeamGroupPermission values
+}
+  */
+  const handleCreateGroup = () => {
+    if (!team || !canEditGroup) return;
+    popup
+      .open(
+        <CreateGroupPopup
+          onCreate={(
+            profileUrl,
+            groupName,
+            groupDescription,
+            groupPermissions,
+          ) =>
+            createGroupMutation({
+              teamPk: team.pk,
+              request: {
+                name: groupName,
+                description: groupDescription,
+                image_url: profileUrl,
+                permissions: groupPermissions,
+              },
+            })
+          }
+        />,
+      )
+      .withTitle(t('create_group'));
   };
 
   return (
@@ -82,87 +105,19 @@ export default function TeamGroups({ username }: { username: string }) {
       <div className="flex flex-row w-full justify-end items-end gap-2.5">
         <InviteMemberButton
           data-pw="invite-member-button"
-          onClick={() => {
-            if (!teamDetail) return;
-
-            popup
-              .open(
-                <InviteMemberPopup
-                  teamId={teamDetail.id}
-                  username={username}
-                  groups={groups}
-                />,
-              )
-              .withoutBackdropClose();
-          }}
+          onClick={handleInviteMember}
         />
-        {canCreateGroup && (
+        {canEditTeam && (
           <CreateGroupButton
             data-pw="create-group-button"
-            onClick={() => {
-              if (!teamDetail) return;
-
-              popup
-                .open(
-                  <CreateGroupPopup
-                    onCreate={async (
-                      profileUrl: string,
-                      groupName: string,
-                      groupDescription: string,
-                      groupPermissions: GroupPermission[],
-                    ) => {
-                      try {
-                        // Convert legacy GroupPermission to TeamGroupPermission array
-                        const teamGroupPermissions = [];
-                        for (const permission of groupPermissions) {
-                          // Map old permissions to new TeamGroupPermission values
-                          // This is a simplification - you may need to adjust based on actual mappings
-                          if (permission === GroupPermission.WritePosts) {
-                            teamGroupPermissions.push(1); // TeamGroupPermission.PostWrite
-                          }
-                          if (permission === GroupPermission.DeletePosts) {
-                            teamGroupPermissions.push(2); // TeamGroupPermission.PostDelete
-                          }
-                        }
-
-                        await teamsV3Api.createGroup(teamDetail.id, {
-                          name: groupName,
-                          description: groupDescription,
-                          image_url: profileUrl,
-                          permissions: teamGroupPermissions,
-                        });
-
-                        // Invalidate all team-related queries to ensure fresh data
-                        await queryClient.invalidateQueries({
-                          predicate: (query) => {
-                            const queryKey = query.queryKey;
-                            return (
-                              queryKey.includes(username) ||
-                              queryKey.includes('team') ||
-                              queryKey.includes('group')
-                            );
-                          },
-                        });
-
-                        // Also force refetch the current query
-                        await teamDetailQuery.refetch();
-
-                        popup.close();
-                      } catch (err) {
-                        logger.error('request failed with error: ', err);
-                      }
-                    }}
-                  />,
-                )
-                .withTitle(t('create_group'));
-            }}
+            onClick={handleCreateGroup}
           />
         )}
       </div>
 
       <ListGroups
-        groups={groups ?? []}
-        permission={canDeleteGroup}
+        groups={groups.items ?? []}
+        permission={canEditTeam}
         deleteGroup={deleteGroup}
       />
     </div>
@@ -174,7 +129,7 @@ function ListGroups({
   permission,
   deleteGroup,
 }: {
-  groups: TeamGroupResponse[];
+  groups: TeamGroup[];
   permission: boolean;
   deleteGroup: (groupSk: string) => void;
 }) {

@@ -9,11 +9,12 @@ import TeamCreationPopup from '@/app/(social)/_popups/team-creation-popup';
 import { useTranslation } from 'react-i18next';
 import { useUserInfo } from '@/hooks/use-user-info';
 import { useUserSidemenuI18n } from '@/features/users/components/user-sidemenu/i18n';
+import {} from '@/features/teams/hooks/use-team';
 import {
-  useTeamDetailByUsername,
-  useTeamPermissionsFromDetail,
-} from '@/features/teams/hooks/use-team';
-import { TeamGroupPermission } from '@/features/auth/utils/team-group-permissions';
+  TeamGroupPermission,
+  TeamGroupPermissions,
+} from '@/features/auth/utils/team-group-permissions';
+import { useFindTeam } from '@/features/teams/hooks/use-find-team';
 
 interface MobileSideMenuProps {
   isOpen: boolean;
@@ -38,11 +39,10 @@ export default function MobileSideMenu({
   const currentTeamUsername = teamMatch?.[1];
 
   // Get team details and permissions if on a team page
-  const teamDetailQuery = useTeamDetailByUsername(currentTeamUsername || '');
-  const permissions = useTeamPermissionsFromDetail(teamDetailQuery.data);
-  const displayTeam = teamDetailQuery.data;
+  const { data: team } = useFindTeam(currentTeamUsername || '');
+  const permissions = new TeamGroupPermissions(team?.permissions || BigInt(0));
 
-  const isOnTeamPage = !!currentTeamUsername && !!displayTeam;
+  const isOnTeamPage = !!currentTeamUsername && !!team;
 
   if (!isOpen) return null;
 
@@ -109,7 +109,7 @@ export default function MobileSideMenu({
 
   // Render team-specific menu (when on a team page)
   const renderTeamMenu = () => {
-    if (!displayTeam) return null;
+    if (!team) return null;
 
     const writePostPermission =
       permissions?.has(TeamGroupPermission.PostWrite) ||
@@ -134,7 +134,7 @@ export default function MobileSideMenu({
     return (
       <>
         <NavLink
-          to={route.teamByUsername(displayTeam.username)}
+          to={route.teamByUsername(team.username)}
           onClick={onClose}
           className="w-full px-3 py-2.5 hover:bg-hover rounded-md text-base text-text-primary-muted"
         >
@@ -143,7 +143,7 @@ export default function MobileSideMenu({
 
         {writePostPermission && (
           <NavLink
-            to={route.teamDrafts(displayTeam.username)}
+            to={route.teamDrafts(team.username)}
             onClick={onClose}
             className="w-full px-3 py-2.5 hover:bg-hover rounded-md text-base text-text-primary-muted"
           >
@@ -153,7 +153,7 @@ export default function MobileSideMenu({
 
         {canManageGroup && (
           <NavLink
-            to={route.teamGroups(displayTeam.username)}
+            to={route.teamGroups(team.username)}
             onClick={onClose}
             className="w-full px-3 py-2.5 hover:bg-hover rounded-md text-base text-text-primary-muted"
           >
@@ -163,7 +163,7 @@ export default function MobileSideMenu({
 
         {canEditMembers && (
           <NavLink
-            to={route.teamMembers(displayTeam.username)}
+            to={route.teamMembers(team.username)}
             onClick={onClose}
             className="w-full px-3 py-2.5 hover:bg-hover rounded-md text-base text-text-primary-muted"
           >
@@ -173,7 +173,7 @@ export default function MobileSideMenu({
 
         {canEditTeam && (
           <NavLink
-            to={route.teamSettings(displayTeam.username)}
+            to={route.teamSettings(team.username)}
             onClick={onClose}
             className="w-full px-3 py-2.5 hover:bg-hover rounded-md text-base text-text-primary-muted"
           >

@@ -141,19 +141,19 @@ test.describe('Team Groups - Authenticated User', () => {
     if (count > 0) {
       // Get first group's ID from data-pw attribute
       const firstGroupPw = await groupItems.first().getAttribute('data-pw');
-      const groupId = firstGroupPw?.replace('group-item-', '');
+      const groupPk = firstGroupPw?.replace('group-item-', '');
 
-      if (groupId) {
+      if (groupPk) {
         // Click options button
         const optionsButton = page.locator(
-          `[data-pw="group-options-${groupId}"]`,
+          `[data-pw="group-options-${groupPk}"]`,
         );
         await expect(optionsButton).toBeVisible();
         await optionsButton.click();
 
         // Verify delete button is visible in dropdown
         const deleteButton = page.locator(
-          `[data-pw="delete-group-${groupId}"]`,
+          `[data-pw="delete-group-${groupPk}"]`,
         );
         await expect(deleteButton).toBeVisible();
 
@@ -198,14 +198,14 @@ test.describe('Team Groups - Authenticated User', () => {
       .locator('[data-pw^="group-item-"]')
       .filter({ hasText: groupName });
     const groupPw = await targetGroupItem.getAttribute('data-pw');
-    const groupId = groupPw?.replace('group-item-', '');
+    const groupPk = groupPw?.replace('group-item-', '');
 
-    if (groupId) {
+    if (groupPk) {
       // Click options and delete
-      await page.locator(`[data-pw="group-options-${groupId}"]`).click();
+      await page.locator(`[data-pw="group-options-${groupPk}"]`).click();
 
       // Wait for delete button to appear and click
-      const deleteButton = page.locator(`[data-pw="delete-group-${groupId}"]`);
+      const deleteButton = page.locator(`[data-pw="delete-group-${groupPk}"]`);
       await expect(deleteButton).toBeVisible();
       await deleteButton.click();
 
