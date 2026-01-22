@@ -4,10 +4,10 @@ import { Poll } from '@/features/spaces/polls/types/poll';
 import { SpaceRewardResponse } from '../types/space-reward-response';
 import { RewardCard } from './reward-card';
 import { PlusIcon } from 'lucide-react';
-import { RewardsI18n } from '../i18n';
+import { SpaceRewardsI18n } from '../i18n';
 
 interface FeatureRewardsSectionProps {
-  i18n: RewardsI18n;
+  i18n: SpaceRewardsI18n;
   poll: Poll;
   reward: SpaceRewardResponse | null;
   onCreateReward: (pollSk: string) => void;

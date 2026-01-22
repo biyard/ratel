@@ -2,11 +2,11 @@ import { Col } from '@/components/ui/col';
 import { Button } from '@/components/ui/button';
 import { SpaceRewardResponse } from '../types/space-reward-response';
 import { Edit2Icon, Trash2Icon } from 'lucide-react';
-import { RewardsI18n } from '../i18n';
+import { SpaceRewardsI18n } from '../i18n';
 import { getRewardActionI18nKey } from '../types/reward-type';
 
 interface RewardCardProps {
-  i18n: RewardsI18n;
+  i18n: SpaceRewardsI18n;
   reward: SpaceRewardResponse;
   onEdit: () => void;
   onDelete: () => void;

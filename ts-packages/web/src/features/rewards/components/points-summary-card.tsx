@@ -1,5 +1,5 @@
 import { ArrowUp, ArrowsExchange } from '@/components/icons';
-import { RewardsI18n } from '../rewards-page-i18n';
+import { RewardsI18n } from '../types';
 
 interface PointsSummaryCardProps {
   i18n: RewardsI18n;
@@ -25,7 +25,6 @@ export function PointsSummaryCard({
   const sharePercentage =
     totalPoints > 0 ? ((userPoints / totalPoints) * 100).toFixed(2) : '0';
 
-  console.log('totalPoints', totalPoints);
   return (
     <div
       data-testid="points-summary-card"

@@ -1,9 +1,12 @@
-import { useMyRewards } from './_hooks/use-my-rewards';
-import { useMyPointTransactions } from './_hooks/use-my-point-transactions';
-import { MyRewardsResponse, PointTransactionResponse } from './types';
+import { useTeamRewards } from '@/features/teams/rewards/hooks/use-team-rewards';
+import { useTeamPointTransactions } from '@/features/teams/rewards/hooks/use-team-point-transactions';
+import {
+  TeamRewardsResponse,
+  PointTransactionResponse,
+} from '@/features/teams/rewards/types';
 
-export interface RewardsData {
-  rewards: MyRewardsResponse | undefined;
+export interface TeamRewardsData {
+  rewards: TeamRewardsResponse | undefined;
   transactions: PointTransactionResponse[] | undefined;
   isLoadingRewards: boolean;
   isLoadingTransactions: boolean;
@@ -14,12 +17,15 @@ export interface RewardsData {
   isFetchingNextPage: boolean;
 }
 
-export function useRewardsData(month?: string): RewardsData {
+export function useTeamRewardsData(
+  teamPk: string,
+  month?: string,
+): TeamRewardsData {
   const {
     data: rewards,
     isLoading: isLoadingRewards,
     error: rewardsError,
-  } = useMyRewards(month);
+  } = useTeamRewards(teamPk, month);
 
   const {
     data: transactionsData,
@@ -28,7 +34,7 @@ export function useRewardsData(month?: string): RewardsData {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useMyPointTransactions(month);
+  } = useTeamPointTransactions(teamPk, month);
 
   const transactions = transactionsData?.pages.flatMap((page) => page.items);
 

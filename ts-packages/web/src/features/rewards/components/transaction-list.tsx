@@ -1,5 +1,5 @@
-import { RewardsI18n } from '../rewards-page-i18n';
-import { PointTransactionResponse } from '../types';
+import { RewardsI18n } from '../types';
+import { PointTransactionResponse } from '@/app/rewards/types';
 import { TransactionItem } from './transaction-item';
 
 interface TransactionListProps {

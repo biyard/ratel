@@ -79,10 +79,11 @@ import { i18nAdminRewards } from '@/app/admin/rewards/rewards-page-i18n';
 import { Errors } from '@/features/errors/i18n';
 import { MySpaces } from '@/app/(social)/my-spaces/i18n';
 import { i18nCompleteSurveyModal } from '@/features/spaces/polls/components/modal/complete_survey/complete-survey-modal-i18n';
-import { rewardsI18n } from '@/features/spaces/rewards/i18n';
+import { i18nSpaceRewards } from '@/features/spaces/rewards/i18n';
 import { i18nRewardsPage } from '@/app/rewards/rewards-page-i18n';
 import { i18nTeamGroups } from '@/features/teams/groups/i18n';
 import { i18nTeamDao } from '@/features/teams/dao/i18n';
+import { i18nTeamRewardsPage } from '@/features/teams/rewards/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -171,10 +172,11 @@ Object.entries({
   SpaceSettings,
   Errors,
   MySpaces,
-  Rewards: rewardsI18n,
+  SpaceRewards: i18nSpaceRewards,
   MyRewards: i18nRewardsPage,
   TeamGroups: i18nTeamGroups,
   TeamDao: i18nTeamDao,
+  TeamRewards: i18nTeamRewardsPage,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;
@@ -194,7 +196,7 @@ i18next.on('missingKey', (lngs, ns, key) => {
 const getBrowserLanguage = (): string => {
   if (typeof window === 'undefined') return 'en';
 
-  const browserLang = navigator.language || (navigator as any).userLanguage;
+  const browserLang = navigator.language || navigator.languages[0];
   // Extract the language code (e.g., 'ko' from 'ko-KR', 'en' from 'en-US')
   const langCode = browserLang.split('-')[0].toLowerCase();
 

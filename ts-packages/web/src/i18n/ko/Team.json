@@ -56,5 +56,6 @@
   "dao_address": "DAO 주소",
   "activate_dao": "DAO 활성화",
   "activating_dao": "DAO 활성화 중...",
-  "dao": "DAO"
+  "dao": "DAO",
+  "rewards": "리워드"
 }

@@ -10,7 +10,7 @@ import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { logger } from '@/lib/logger';
 import { CreateRewardRequest } from '../../types/create-reward-request';
 import { UpdateRewardRequest } from '../../types/update-reward-request';
-import { RewardsI18n, useRewardsI18n } from '../../i18n';
+import { SpaceRewardsI18n, useSpaceRewardsI18n } from '../../i18n';
 import {
   convertRewardActionToRequest,
   RewardAction,
@@ -35,7 +35,7 @@ export interface RewardFeature {
 export class RewardEditorController {
   constructor(
     public spacePk: string,
-    public i18n: RewardsI18n,
+    public i18n: SpaceRewardsI18n,
     public space: Space,
 
     public rewardFeatures: RewardFeature[],
@@ -140,7 +140,7 @@ export class RewardEditorController {
 }
 
 export function useRewardEditorController(spacePk: string) {
-  const i18n = useRewardsI18n();
+  const i18n = useSpaceRewardsI18n();
   const { data: space } = useSpaceById(spacePk);
 
   const { data: pollsData } = usePoll(spacePk);
