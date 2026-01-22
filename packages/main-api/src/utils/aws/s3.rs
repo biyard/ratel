@@ -2,18 +2,28 @@ use crate::{Error, Result};
 use aws_config::Region;
 #[cfg(test)]
 use aws_config::SdkConfig;
+use aws_config::{BehaviorVersion, defaults};
+use aws_sdk_s3::presigning::PresigningConfig;
 use aws_sdk_s3::{
     Client, Config,
     config::Credentials,
     primitives::ByteStream,
     types::{Delete, ObjectIdentifier},
 };
+use uuid::Uuid;
 
 use crate::config;
 
 pub struct PutObjectResult {
     pub presigned_uri: String,
     pub uri: String,
+    pub key: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct PresignedReportUpload {
+    pub presigned_url: String,
+    pub metadata_url: String,
     pub key: String,
 }
 
@@ -48,6 +58,19 @@ pub struct S3Object {
 }
 
 impl S3Client {
+    pub fn build_report_key(&self) -> String {
+        let conf = config::get();
+        let asset_dir = conf.s3.asset_dir;
+        let env = conf.env;
+        let id = Uuid::new_v4();
+        format!("{}/{}/reports/{}.pdf", asset_dir, env.to_lowercase(), id)
+    }
+
+    pub fn report_metadata_url(&self, key: &str) -> String {
+        let conf = config::get();
+        conf.s3.get_url(key)
+    }
+
     pub fn new(bucket_name: &str) -> Self {
         let conf = config::get();
         let aws_config = Config::builder()
@@ -166,12 +189,7 @@ impl S3Client {
         Ok(result)
     }
 
-    pub async fn presign_download(
-        &self,
-        key: &str,
-        filename: &str,
-        expire: u64,
-    ) -> Result<String> {
+    pub async fn presign_download(&self, key: &str, filename: &str, expire: u64) -> Result<String> {
         use aws_sdk_s3::presigning::PresigningConfig;
 
         let safe_name = filename.replace('"', "");
@@ -199,6 +217,38 @@ impl S3Client {
 
         Ok(presigned.uri().to_string())
     }
+
+    pub async fn presign_report_upload(&self) -> Result<PresignedReportUpload> {
+        let conf = config::get();
+        let key = self.build_report_key();
+        let presigned = self
+            .client
+            .put_object()
+            .bucket(&self.bucket_name)
+            .key(&key)
+            .content_type("application/pdf")
+            .presigned(
+                PresigningConfig::expires_in(std::time::Duration::from_secs(conf.s3.expire))
+                    .map_err(|e| {
+                        tracing::error!("Failed to set expired time {}", e.to_string());
+                        Error::AssetError(e.to_string())
+                    })?,
+            )
+            .await
+            .map_err(|e| {
+                tracing::error!("Failed to presign report upload {}", e.to_string());
+                Error::AssetError(e.to_string())
+            })?;
+
+        let metadata_url = self.report_metadata_url(&key);
+
+        Ok(PresignedReportUpload {
+            presigned_url: presigned.uri().to_string(),
+            metadata_url,
+            key,
+        })
+    }
+
     pub async fn delete_objects(&self, keys: Vec<String>) -> Result<()> {
         let objects = keys
             .into_iter()
