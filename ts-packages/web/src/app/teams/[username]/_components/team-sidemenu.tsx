@@ -8,7 +8,6 @@ import {
   EditContent,
   Folder,
 } from '@/components/icons';
-import { CubeTransparentIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 
 import { useSuspenseFindTeam } from '@/features/teams/hooks/use-find-team';
@@ -16,6 +15,7 @@ import {
   TeamGroupPermission,
   TeamGroupPermissions,
 } from '@/features/auth/utils/team-group-permissions';
+import { Controller, Trophy } from '@/assets/icons/game';
 
 export interface TeamSidemenuProps {
   username: string;
@@ -55,7 +55,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
             data-testid="sidemenu-team-drafts"
             data-pw="team-nav-drafts"
           >
-            <EditContent className="w-6 h-6 [&>path]:stroke-[#737373]" />
+            <EditContent className="w-6 h-6 [&>path]:stroke-icon" />
             <span>{t('drafts')}</span>
           </Link>
         ) : (
@@ -69,7 +69,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
             data-testid="sidemenu-team-groups"
             data-pw="team-nav-groups"
           >
-            <Folder className="w-6 h-6 [&>path]:stroke-[#737373]" />
+            <Folder className="w-6 h-6 [&>path]:stroke-icon" />
             <span>{t('manage_group')}</span>
           </Link>
         ) : null}
@@ -81,7 +81,7 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
             data-testid="sidemenu-team-members"
             data-pw="team-nav-members"
           >
-            <UserGroup className="w-6 h-6 [&>path]:stroke-[#737373]" />
+            <UserGroup className="w-6 h-6 [&>path]:stroke-icon" />
             <span>{t('members')}</span>
           </Link>
         ) : null}
@@ -92,8 +92,19 @@ export default function TeamSidemenu({ username }: TeamSidemenuProps) {
             data-testid="sidemenu-team-dao"
             data-pw="team-nav-dao"
           >
-            <CubeTransparentIcon className="w-6 h-6 [&>path]:stroke-[#737373]" />
+            <Controller className="[&>path]:stroke-icon [&>circle]:stroke-icon w-6 h-6" />
             <span>{t('dao')}</span>
+          </Link>
+        ) : null}
+        {permissions?.isAdmin() ? (
+          <Link
+            to={route.teamRewards(team.username)}
+            className="sidemenu-link text-text-primary"
+            data-testid="sidemenu-team-rewards"
+            data-pw="team-nav-rewards"
+          >
+            <Trophy className="[&>path]:stroke-icon w-6 h-6" />
+            <span>{t('rewards')}</span>
           </Link>
         ) : null}
         {permissions?.has(TeamGroupPermission.TeamEdit) ||

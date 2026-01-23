@@ -1,8 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { ListPointTransactionsResponse } from '../types';
-
-export const QK_MY_POINT_TRANSACTIONS = 'my-point-transactions';
+import { userKeys } from '@/constants';
 
 export async function listMyPointTransactions(
   month?: string,
@@ -28,7 +27,7 @@ export async function listMyPointTransactions(
 
 export function useMyPointTransactions(month?: string, limit: number = 10) {
   return useInfiniteQuery({
-    queryKey: [QK_MY_POINT_TRANSACTIONS, month],
+    queryKey: [userKeys.rewards(month)] as const,
     queryFn: async ({
       pageParam,
     }: {

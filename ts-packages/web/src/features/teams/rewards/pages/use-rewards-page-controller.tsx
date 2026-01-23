@@ -7,16 +7,6 @@ export function useTeamRewardsPageController(username: string) {
   const data = useTeamRewardsData(team.pk);
   const permissions = new TeamGroupPermissions(team.permissions || 0n);
 
-  const formatPoints = (points: number): string => {
-    return new Intl.NumberFormat().format(points);
-  };
-
-  const formatTokens = (tokens: number): string => {
-    return new Intl.NumberFormat(undefined, {
-      maximumFractionDigits: 2,
-    }).format(tokens);
-  };
-
   // Admin check for token exchange functionality
   const canExchangeTokens = permissions.isAdmin();
 
@@ -25,7 +15,5 @@ export function useTeamRewardsPageController(username: string) {
     team,
     permissions,
     canExchangeTokens,
-    formatPoints,
-    formatTokens,
   };
 }

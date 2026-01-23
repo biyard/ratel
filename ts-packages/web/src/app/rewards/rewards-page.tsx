@@ -43,8 +43,6 @@ export default function RewardsPage() {
         monthlyTokenSupply={rewards.monthly_token_supply}
         estimatedTokens={estimatedTokens}
         tokenSymbol={rewards.token_symbol}
-        formatPoints={ctrl.formatPoints}
-        formatTokens={ctrl.formatTokens}
       />
       <ExchangePreviewCard
         i18n={i18n}
@@ -52,8 +50,6 @@ export default function RewardsPage() {
         estimatedTokens={estimatedTokens}
         name={rewards.project_name}
         tokenSymbol={rewards.token_symbol}
-        formatPoints={ctrl.formatPoints}
-        formatTokens={ctrl.formatTokens}
       />
       <div className="mt-6">
         <TransactionList
@@ -63,7 +59,6 @@ export default function RewardsPage() {
           hasNextPage={ctrl.hasNextPage}
           isFetchingNextPage={ctrl.isFetchingNextPage}
           fetchNextPage={ctrl.fetchNextPage}
-          formatPoints={ctrl.formatPoints}
         />
       </div>
     </div>
