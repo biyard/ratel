@@ -3,12 +3,13 @@ import { spaceKeys } from '@/constants';
 import { call } from '@/lib/api/ratel/call';
 import { SpaceAnalyze } from '../types/space-analyze';
 import { optimisticUpdate } from '@/lib/hook-utils';
+import { buildReportHtmlDocument } from '../utils/report-html';
 import { buildReportPdfBlob, uploadReportPdf } from '../utils/report-pdf';
 
 type DownloadAnalyzeResponse = {
   presigned_url: string;
   metadata_url: string;
-  html_document: string;
+  html_contents: string;
 };
 
 export function useDownloadAnalyzeMutation<
@@ -24,7 +25,8 @@ export function useDownloadAnalyzeMutation<
         {},
       );
 
-      const pdfBlob = await buildReportPdfBlob(res.html_document);
+      const htmlDocument = buildReportHtmlDocument(res.html_contents ?? '');
+      const pdfBlob = await buildReportPdfBlob(htmlDocument);
       await uploadReportPdf(res.presigned_url, pdfBlob);
 
       await call(
