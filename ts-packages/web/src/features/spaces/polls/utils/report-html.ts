@@ -170,7 +170,7 @@ export const buildReportHtmlDocument = (fragment: string): string => {
       width: 100%;
       border-collapse: collapse;
       font-size: 12px;
-      margin-top: 8px;
+      margin-top: 12px;
       border: 2px solid #000000;
       background: #ffffff !important;
     }
@@ -191,7 +191,7 @@ export const buildReportHtmlDocument = (fragment: string): string => {
     }
 
     .lda-card {
-      margin-top: 14px;
+      margin-top: 18px;
       background: #ffffff !important;
       padding: 0 !important;
     }
@@ -270,8 +270,8 @@ export const buildReportHtmlDocument = (fragment: string): string => {
 
     .tfidf-title {
       font-weight: 700;
-      font-size: 14px;
-      margin: 0;
+      font-size: 18px;
+      margin: 0 0 8px 0;
       color: rgba(17,24,39,0.92);
       text-align: center;
       width: 100%;
@@ -286,8 +286,8 @@ export const buildReportHtmlDocument = (fragment: string): string => {
 
     [data-analyze-title="tfidf"] {
       font-weight: 700;
-      font-size: 14px;
-      margin: 0;
+      font-size: 18px;
+      margin: 0 0 8px 0;
       color: rgba(17,24,39,0.92);
       text-align: center;
       width: 100%;
@@ -306,16 +306,16 @@ export const buildReportHtmlDocument = (fragment: string): string => {
     }
 
     .lda-footnote {
-      font-size: 11px;
+      font-size: 14px;
       color: rgba(17,24,39,0.82);
-      margin: 0 0 6px 0;
+      margin: 0 0 8px 0;
       text-align: left;
     }
 
     .tfidf-footnote {
-      font-size: 11px;
+      font-size: 14px;
       color: rgba(17,24,39,0.82);
-      margin: 6px 0 0 0;
+      margin: 8px 0 0 0;
       text-align: center;
       width: 100%;
       display: flex;
@@ -331,7 +331,7 @@ export const buildReportHtmlDocument = (fragment: string): string => {
     }
 
     .network-footnote {
-      font-size: 11px;
+      font-size: 14px;
       color: rgba(17,24,39,0.82);
       margin: 10px 0 0 0;
       text-align: center;
@@ -344,18 +344,18 @@ export const buildReportHtmlDocument = (fragment: string): string => {
     }
 
     .table-footnote {
-      font-size: 11px;
+      font-size: 14px;
       color: rgba(17,24,39,0.82);
-      margin: 0 0 6px 0;
+      margin: 0 0 8px 0;
       text-align: left;
       width: 100%;
       display: block;
     }
 
     .image-footnote {
-      font-size: 11px;
+      font-size: 14px;
       color: rgba(17,24,39,0.82);
-      margin: 6px 0 0 0;
+      margin: 8px 0 0 0;
       text-align: center;
       width: 100%;
       display: flex;
@@ -379,7 +379,7 @@ export const buildReportHtmlDocument = (fragment: string): string => {
     }
 
     .network-wrap {
-      margin-top: 18px;
+      margin-top: 24px;
       padding: 0;
       border: none;
       border-radius: 0;

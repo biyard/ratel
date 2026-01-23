@@ -82,9 +82,9 @@ export const buildReportPdfBlob = async (
     #content-root .__pdf_analyze_title{
       display:block !important;
       text-align:center !important;
-      margin: 0 0 4px 0 !important;
+      margin: 0 0 8px 0 !important;
       padding: 0 !important;
-      font-size: 16px !important;
+      font-size: 18px !important;
       line-height: 1.25 !important;
       font-weight: 400 !important;
     }
@@ -98,11 +98,20 @@ export const buildReportPdfBlob = async (
     #content-root .__pdf_analyze_caption{
       display:block !important;
       text-align:center !important;
-      margin: 6px 0 0 0 !important;
+      margin: 10px 0 0 0 !important;
       padding: 0 !important;
       font-size: 14px !important;
       line-height: 1.25 !important;
       font-weight: 400 !important;
+    }
+
+    #content-root .lda-footnote,
+    #content-root .tfidf-footnote,
+    #content-root .network-footnote,
+    #content-root .table-footnote,
+    #content-root .image-footnote{
+      font-size: 14px !important;
+      line-height: 1.25 !important;
     }
 
     #content-root div[data-analyze] > svg,
@@ -115,7 +124,7 @@ export const buildReportPdfBlob = async (
     }
 
     #content-root div[data-analyze]{
-      margin: 0 0 10px 0 !important;
+      margin: 0 0 14px 0 !important;
       padding: 0 !important;
     }
 
