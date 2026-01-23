@@ -165,7 +165,10 @@ export const teamKeys = {
   detail: (teamName: string) => [...teamKeys.all, teamName] as const,
   members: (teamName: string) =>
     [...teamKeys.detail(teamName), 'members'] as const,
-  groups: (teamPk: string) => [...teamKeys.detail(teamPk), 'groups'] as const,
+  groups: (teamName: string) =>
+    [...teamKeys.detail(teamName), 'groups'] as const,
+  group: (teamName: string, groupId: string) =>
+    [...teamKeys.groups(teamName), groupId] as const,
   reward: (teamPk: string, month: string) =>
     [...teamKeys.detail(teamPk), 'reward', month] as const,
   reward_lists: (teamPk: string, month: string) =>

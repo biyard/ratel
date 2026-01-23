@@ -5,7 +5,7 @@ import SpaceFactoryArtifact from './artifacts/SpaceFactory.json';
 import SpaceDAOArtifact from './artifacts/SpaceDAO.json';
 import RewardExtensionArtifact from './artifacts/RewardExtension.json';
 
-const FACTORY_ADDRESS = process.env.NEXT_PUBLIC_FACTORY_ADDRESS || '';
+const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS || '';
 
 // ERC20 ABI for token balance checking
 const ERC20_ABI = [

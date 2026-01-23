@@ -32,7 +32,7 @@ export function useTeamPointTransactions(
   limit: number = 10,
 ) {
   return useInfiniteQuery({
-    queryKey: teamKeys.reward(teamPk, month),
+    queryKey: teamKeys.reward_lists(teamPk, month),
     queryFn: async ({
       pageParam,
     }: {

@@ -1,5 +1,3 @@
-import { useParams } from 'react-router';
-
 import { Edit1, Extra, User } from '@/components/icons';
 import { usePopup } from '@/lib/contexts/popup-service';
 import CreateGroupPopup from '../components/create-group-popup';
@@ -23,6 +21,7 @@ import { TeamGroup } from '@/features/teams/types/team_group';
 import { useSuspenseTeamGroups } from '@/features/teams/hooks/use-team-groups';
 import { useCreateGroup } from '@/features/teams/hooks/use-create-group';
 import { useSuspenseFindTeam } from '@/features/teams/hooks/use-find-team';
+import { showErrorToast } from '@/lib/toast';
 
 export default function TeamGroupsPage({ username }: { username: string }) {
   const { t } = useTranslation('Team');
@@ -40,14 +39,15 @@ export default function TeamGroupsPage({ username }: { username: string }) {
 
   const canEditTeam = permissions?.has(TeamGroupPermission.TeamEdit) ?? false;
 
-  const deleteGroup = async (groupPk: string) => {
+  const deleteGroup = async (groupId: string) => {
     if (!team) return;
 
     try {
-      // groupPk is now just the UUID (not TEAM_GROUP#uuid format)
+      // groupId is now just the UUID (not TEAM_GROUP#uuid format)
       await deleteGroupMutation({
         teamUsername: username,
-        groupPk,
+        groupId,
+        teamPk: team.pk,
       });
     } catch (error) {
       logger.error('Failed to delete group:', error);
@@ -67,33 +67,35 @@ export default function TeamGroupsPage({ username }: { username: string }) {
       )
       .withoutBackdropClose();
   };
+  const handleCreate = async (
+    profileUrl: string,
+    groupName: string,
+    groupDescription: string,
+    groupPermissions: TeamGroupPermission[],
+  ) => {
+    if (!team || !canEditGroup) return;
 
+    try {
+      await createGroupMutation({
+        teamPk: team.pk,
+        request: {
+          name: groupName,
+          description: groupDescription,
+          image_url: profileUrl,
+          permissions: groupPermissions,
+        },
+      });
+      popup.close();
+    } catch (error) {
+      showErrorToast(error);
+    }
+  };
   const handleCreateGroup = () => {
     if (!team || !canEditGroup) return;
     popup
-      .open(
-        <CreateGroupPopup
-          onCreate={(
-            profileUrl,
-            groupName,
-            groupDescription,
-            groupPermissions,
-          ) =>
-            createGroupMutation({
-              teamPk: team.pk,
-              request: {
-                name: groupName,
-                description: groupDescription,
-                image_url: profileUrl,
-                permissions: groupPermissions,
-              },
-            })
-          }
-        />,
-      )
+      .open(<CreateGroupPopup onCreate={handleCreate} />)
       .withTitle(t('create_group'));
   };
-
   return (
     <div className="flex flex-col w-full gap-2.5">
       <div className="flex flex-row w-full justify-end items-end gap-2.5">

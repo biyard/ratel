@@ -4,16 +4,19 @@ interface ProfileSectionProps {
   profileUrl: string;
   onProfileUrlChange: (url: string) => void;
   uploadLogoText: string;
+  isEditing?: boolean;
 }
 
 export function ProfileSection({
   profileUrl,
   onProfileUrlChange,
   uploadLogoText,
+  isEditing = true,
 }: ProfileSectionProps) {
   return (
     <FileUploader
-      onUploadSuccess={onProfileUrlChange}
+      onUploadSuccess={isEditing ? onProfileUrlChange : undefined}
+      className={!isEditing ? 'pointer-events-none opacity-60' : ''}
       data-pw="team-profile-uploader"
     >
       {profileUrl ? (

@@ -11,7 +11,9 @@ export const i18nTeamSettingsPage = {
     team_description_hint: 'Enter team description',
     activate_dao: 'Activate DAO',
     activating_dao: 'Activating...',
+    edit: 'Edit',
     save: 'Save',
+    save_changes: 'Save Changes',
     delete: 'Delete',
     cancel: 'Cancel',
     confirm: 'Confirm',
@@ -22,6 +24,8 @@ export const i18nTeamSettingsPage = {
     delete_team_title: 'Delete Team',
     delete_team_description:
       'Are you sure you want to delete this team? This action cannot be undone.',
+    validation_nickname_required: 'Display name is required',
+    validation_description_min_length: 'Description must be at least 10 characters',
   },
   ko: {
     username: '사용자명',
@@ -33,7 +37,9 @@ export const i18nTeamSettingsPage = {
     team_description_hint: '팀 설명을 입력하세요',
     activate_dao: 'DAO 활성화',
     activating_dao: '활성화 중...',
+    edit: '수정',
     save: '저장',
+    save_changes: '변경사항 저장',
     delete: '삭제',
     cancel: '취소',
     confirm: '확인',
@@ -44,6 +50,8 @@ export const i18nTeamSettingsPage = {
     delete_team_title: '팀 삭제',
     delete_team_description:
       '정말로 이 팀을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.',
+    validation_nickname_required: '표시 이름은 필수입니다',
+    validation_description_min_length: '설명은 최소 10자 이상이어야 합니다',
   },
 };
 
@@ -57,7 +65,9 @@ export interface TeamSettingsI18n {
   team_description_hint: string;
   activate_dao: string;
   activating_dao: string;
+  edit: string;
   save: string;
+  save_changes: string;
   delete: string;
   cancel: string;
   confirm: string;
@@ -67,6 +77,8 @@ export interface TeamSettingsI18n {
   remove_test_keyword: string;
   delete_team_title: string;
   delete_team_description: string;
+  validation_nickname_required: string;
+  validation_description_min_length: string;
 }
 
 export function useTeamSettingsI18n(): TeamSettingsI18n {
@@ -81,7 +93,9 @@ export function useTeamSettingsI18n(): TeamSettingsI18n {
     team_description_hint: t('team_description_hint'),
     activate_dao: t('activate_dao'),
     activating_dao: t('activating_dao'),
+    edit: t('edit'),
     save: t('save'),
+    save_changes: t('save_changes'),
     delete: t('delete'),
     cancel: t('cancel'),
     confirm: t('confirm'),
@@ -91,5 +105,7 @@ export function useTeamSettingsI18n(): TeamSettingsI18n {
     remove_test_keyword: t('remove_test_keyword'),
     delete_team_title: t('delete_team_title'),
     delete_team_description: t('delete_team_description'),
+    validation_nickname_required: t('validation_nickname_required'),
+    validation_description_min_length: t('validation_description_min_length'),
   };
 }
