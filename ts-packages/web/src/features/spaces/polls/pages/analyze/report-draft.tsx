@@ -5,8 +5,9 @@ import { PostEditorWithFooter } from '@/features/posts/components/post-editor-wi
 import { Editor } from '@tiptap/react';
 import { SpaceAnalyze } from '@/features/spaces/polls/types/space-analyze';
 import { Button } from '@/components/ui/button';
-import { config } from '@/config';
 import React from 'react';
+import { useNavigate } from 'react-router';
+import { route } from '@/route';
 
 type ReportDraftProps = {
   analyze?: SpaceAnalyze;
@@ -29,11 +30,11 @@ export function ReportDraft({
   const [editing, setEditing] = useState(false);
   const editorRef = useRef<Editor | null>(null);
   const [isDownloading, setIsDownloading] = React.useState(false);
-  const [downloadToken, setDownloadToken] = React.useState<string>('');
   const [editorHeight, setEditorHeight] = React.useState(560);
   const resizeState = useRef<{ startY: number; startHeight: number } | null>(
     null,
   );
+  const navigate = useNavigate();
 
   const hasLda =
     Array.isArray(analyze?.lda_topics) && analyze.lda_topics.length > 0;
@@ -42,20 +43,12 @@ export function ReportDraft({
     Array.isArray(analyze?.network?.nodes) &&
     analyze.network.nodes.length > 0;
   const hasTfIdf = Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0;
-  const showDownload = (hasLda || hasNetwork || hasTfIdf) && config.experiment;
+  const showDownload = hasLda || hasNetwork || hasTfIdf;
 
   useEffect(() => {
     if (editing) return;
     setContent(String(analyze?.html_contents ?? ''));
   }, [analyze?.html_contents, editing]);
-
-  useEffect(() => {
-    if (!isDownloading) return;
-    const url = String(analyze?.metadata_url ?? '');
-    if (url.startsWith('http') && url !== downloadToken) {
-      setIsDownloading(false);
-    }
-  }, [analyze?.metadata_url, downloadToken, isDownloading]);
 
   const startEdit = () => setEditing(true);
 
@@ -101,24 +94,23 @@ export function ReportDraft({
   };
 
   const onDownload = async () => {
+    const spacePkValue = String(analyze?.pk ?? '');
     const existingUrl = String(analyze?.metadata_url ?? '');
-    if (existingUrl.startsWith('http')) {
-      const a = document.createElement('a');
-      a.href = existingUrl;
-      a.target = '_blank';
-      a.rel = 'noreferrer';
-      a.download = '';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      return;
-    }
+    if (!spacePkValue) return;
 
     try {
-      setDownloadToken(String(analyze?.metadata_url ?? ''));
       setIsDownloading(true);
-      await Promise.resolve(handleDownloadAnalyze?.());
-    } catch {
+      if (!existingUrl.startsWith('http')) {
+        await Promise.resolve(handleDownloadAnalyze?.());
+      }
+
+      const analyzePk = String(analyze?.sk ?? '');
+      navigate(
+        `${route.spacePdfViewer(spacePkValue, 'analyze')}?analyze_pk=${encodeURIComponent(
+          analyzePk,
+        )}`,
+      );
+    } finally {
       setIsDownloading(false);
     }
   };
@@ -188,6 +180,8 @@ export function ReportDraft({
             onUpdate={setContent}
             placeholder={t('report_draft_editor_placeholder')}
             editing={editing}
+            enableTableFootnote={true}
+            enableImageFootnote={true}
             toolbarFooter={
               editing && (hasLda || hasNetwork || hasTfIdf) ? (
                 <div className="flex flex-row gap-2 w-full justify-end items-center">

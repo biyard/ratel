@@ -2,7 +2,8 @@ const waitFor = async (fn: () => boolean, timeoutMs: number) => {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     if (fn()) return true;
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await new Promise((resolve) => setTimeout(resolve, 50) as any);
   }
   return false;
 };
@@ -74,6 +75,62 @@ export const buildReportPdfBlob = async (
       color:#000000 !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    #content-root .__pdf_analyze_title{
+      display:block !important;
+      text-align:center !important;
+      margin: 0 0 8px 0 !important;
+      padding: 0 !important;
+      font-size: 18px !important;
+      line-height: 1.25 !important;
+      font-weight: 400 !important;
+    }
+
+    #content-root .__pdf_analyze_title + div:empty{
+      height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    #content-root .__pdf_analyze_caption{
+      display:block !important;
+      text-align:center !important;
+      margin: 10px 0 0 0 !important;
+      padding: 0 !important;
+      font-size: 14px !important;
+      line-height: 1.25 !important;
+      font-weight: 400 !important;
+    }
+
+    #content-root .lda-footnote,
+    #content-root .tfidf-footnote,
+    #content-root .network-footnote,
+    #content-root .table-footnote,
+    #content-root .image-footnote{
+      font-size: 14px !important;
+      line-height: 1.25 !important;
+    }
+
+    #content-root div[data-analyze] > svg,
+    #content-root div[data-analyze] > canvas,
+    #content-root div[data-analyze] > img,
+    #content-root div[data-analyze] svg,
+    #content-root div[data-analyze] canvas{
+      display:block !important;
+      margin: 0 auto !important;
+    }
+
+    #content-root div[data-analyze]{
+      margin: 0 0 14px 0 !important;
+      padding: 0 !important;
+    }
+
+    #content-root .image-footnote-wrap{
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
     }
 
     #content-root{
@@ -83,6 +140,7 @@ export const buildReportPdfBlob = async (
       color:#000000 !important;
       -webkit-text-fill-color:#000000 !important;
       padding-bottom: 12px !important;
+      overflow: visible !important;
     }
 
     #content-root *{
@@ -93,6 +151,7 @@ export const buildReportPdfBlob = async (
       text-shadow:none !important;
       mix-blend-mode:normal !important;
       -webkit-text-stroke:0 !important;
+      overflow: visible !important;
     }
 
     #content-root del,
@@ -110,24 +169,27 @@ export const buildReportPdfBlob = async (
     }
 
     #content-root h1{
-      font-size: 38px !important;
+      font-size: 40px !important;
       font-weight: 400 !important;
       line-height: 1.16 !important;
       margin: 0 0 12px 0 !important;
+      padding-top: 3px !important;
     }
 
     #content-root h2{
-      font-size: 30px !important;
+      font-size: 32px !important;
       font-weight: 400 !important;
       line-height: 1.18 !important;
       margin: 0 0 12px 0 !important;
+      padding-top: 3px !important;
     }
 
     #content-root h3{
-      font-size: 24px !important;
+      font-size: 26px !important;
       font-weight: 400 !important;
       line-height: 1.2 !important;
       margin: 0 0 10px 0 !important;
+      padding-top: 3px !important;
     }
 
     #content-root h1 *,
@@ -146,19 +208,32 @@ export const buildReportPdfBlob = async (
     }
 
     #content-root p{
-      font-size: 16px !important;
+      font-size: 18px !important;
       margin-top: 0 !important;
       margin-bottom: 10px !important;
       line-height: 1.5 !important;
       word-break: keep-all !important;
       overflow-wrap: break-word !important;
+      padding-top: 2px !important;
+    }
+
+    #content-root p:empty{
+      margin: 0 !important;
+      padding: 0 !important;
+      height: 0 !important;
     }
 
     #content-root li{
-      font-size: 16px !important;
+      font-size: 18px !important;
       line-height: 1.5 !important;
       word-break: keep-all !important;
       overflow-wrap: break-word !important;
+      break-inside: auto !important;
+      page-break-inside: auto !important;
+      padding-top: 0 !important;
+    }
+
+    #content-root li[data-pdf-atomic-li="1"]{
       break-inside: avoid !important;
       page-break-inside: avoid !important;
     }
@@ -176,36 +251,38 @@ export const buildReportPdfBlob = async (
 
     #content-root li[data-pdf-li="1"]{
       position: relative !important;
-      padding-left: 0 !important;
+      padding-left: 24px !important;
       margin: 0 0 6px 0 !important;
-      display: grid !important;
-      grid-template-columns: 24px 1fr !important;
-      column-gap: 4px !important;
-      align-items: start !important;
+      display: block !important;
     }
 
     #content-root li[data-pdf-li="1"] > p{
       display: inline !important;
       margin: 0 !important;
+      padding-top: 0 !important;
     }
 
     #content-root .__pdf_marker{
-      width: 24px !important;
+      position: absolute !important;
+      left: 0 !important;
+      top: 2px !important;
+      width: 20px !important;
       height: auto !important;
-      display: flex !important;
-      align-items: flex-start !important;
-      justify-content: flex-start !important;
+      display: block !important;
       font-weight: 400 !important;
-      font-size: 16px !important;
+      font-size: 18px !important;
       line-height: 1.5 !important;
       color: #000000 !important;
       -webkit-text-fill-color:#000000 !important;
       white-space: nowrap !important;
       overflow: visible !important;
+      padding-top: 0 !important;
+      transform: translateY(0) !important;
     }
 
     #content-root .__pdf_li_content{
       min-width: 0 !important;
+      display: block !important;
     }
 
     #content-root table{
@@ -326,6 +403,176 @@ export const buildReportPdfBlob = async (
     }
   };
 
+  const ensureAnalyzeTitleCaption = (root: HTMLElement) => {
+    const blocks = Array.from(
+      root.querySelectorAll(
+        'div[data-analyze], div[data-title], div[data-footnote]',
+      ),
+    ) as HTMLElement[];
+
+    for (const el of blocks) {
+      const debug =
+        typeof window !== 'undefined' &&
+        (window as unknown as { __REPORT_DEBUG__?: boolean })
+          .__REPORT_DEBUG__ === true;
+      const hasChart = !!el.querySelector('svg, canvas, img');
+      if (!hasChart && !el.hasAttribute('data-analyze')) continue;
+
+      const title = (el.getAttribute('data-title') ?? '').trim();
+      const footnote = (el.getAttribute('data-footnote') ?? '').trim();
+      const tfidfWrapper = el.closest(
+        'div[data-analyze-wrapper="tfidf"]',
+      ) as HTMLElement | null;
+      const isNetwork =
+        el.getAttribute('data-analyze') === 'network' ||
+        el.querySelector('.network-wrap, canvas') != null;
+      const isTfidf =
+        !!tfidfWrapper || el.querySelector('.tfidf-svg, .tfidf-wrap') != null;
+
+      if (debug && (isTfidf || isNetwork)) {
+        console.log('[report-pdf] block:start', {
+          kind: el.getAttribute('data-analyze'),
+          hasChart,
+          title,
+          footnote,
+          tfidfWrapper: !!tfidfWrapper,
+          tfidfTitles: el.querySelectorAll(
+            '.tfidf-title, [data-analyze-title="tfidf"]',
+          ).length,
+          tfidfFootnotes: el.querySelectorAll('.tfidf-footnote').length,
+          networkFootnotes: el.querySelectorAll('.network-footnote').length,
+        });
+      }
+
+      if (tfidfWrapper) {
+        tfidfWrapper
+          .querySelectorAll(
+            ':scope > .__pdf_analyze_title, :scope > .tfidf-title, :scope > [data-analyze-title="tfidf"]',
+          )
+          .forEach((n) => n.remove());
+      }
+
+      el.querySelectorAll(
+        ':scope > .__pdf_analyze_title, :scope > .__pdf_analyze_caption',
+      ).forEach((n) => n.remove());
+      el.querySelectorAll('.tfidf-title, [data-analyze-title="tfidf"]').forEach(
+        (n) => n.remove(),
+      );
+      el.querySelectorAll('.tfidf-footnote').forEach((n) => n.remove());
+      if (isNetwork) {
+        el.querySelectorAll('.network-footnote').forEach((n) => n.remove());
+      }
+
+      if (isTfidf) {
+        const tfidfRoot = tfidfWrapper ?? el;
+        tfidfRoot
+          .querySelectorAll('.tfidf-title, [data-analyze-title="tfidf"]')
+          .forEach((n) => n.remove());
+        const parent = tfidfWrapper?.parentElement ?? el.parentElement;
+        const sibling = (tfidfWrapper ?? el).nextElementSibling;
+        if (sibling && sibling.classList.contains('tfidf-footnote')) {
+          sibling.remove();
+        }
+        parent
+          ?.querySelectorAll(':scope > .tfidf-footnote')
+          .forEach((n) => n.remove());
+      }
+
+      if (title.length > 0) {
+        const t = root.ownerDocument.createElement('div');
+        t.className = '__pdf_analyze_title';
+        t.textContent = title;
+        if (tfidfWrapper) {
+          tfidfWrapper.insertBefore(t, tfidfWrapper.firstChild);
+        } else {
+          el.insertBefore(t, el.firstChild);
+        }
+      }
+
+      if (footnote.length > 0) {
+        const c = root.ownerDocument.createElement('div');
+        c.className = '__pdf_analyze_caption';
+        c.textContent = footnote;
+        if (tfidfWrapper) {
+          tfidfWrapper.appendChild(c);
+        } else {
+          el.appendChild(c);
+        }
+      }
+
+      if (debug && (isTfidf || isNetwork)) {
+        const holder = tfidfWrapper ?? el;
+        console.log('[report-pdf] block:end', {
+          kind: el.getAttribute('data-analyze'),
+          pdfTitles: holder.querySelectorAll('.__pdf_analyze_title').length,
+          pdfCaptions: holder.querySelectorAll('.__pdf_analyze_caption').length,
+          tfidfTitles: holder.querySelectorAll(
+            '.tfidf-title, [data-analyze-title="tfidf"]',
+          ).length,
+          tfidfFootnotes: holder.querySelectorAll('.tfidf-footnote').length,
+          networkFootnotes: holder.querySelectorAll('.network-footnote').length,
+        });
+        if (isTfidf) {
+          const box = holder.getBoundingClientRect();
+          console.log(
+            '[report-pdf] tfidf:box',
+            box.height,
+            box.top,
+            box.bottom,
+          );
+          const titleEl = holder.querySelector(
+            '.__pdf_analyze_title',
+          ) as HTMLElement | null;
+          const wrapEl = holder.querySelector(
+            '.tfidf-wrap',
+          ) as HTMLElement | null;
+          const svgEl = holder.querySelector(
+            'svg.tfidf-svg',
+          ) as SVGElement | null;
+          const captionEl = holder.querySelector(
+            '.__pdf_analyze_caption',
+          ) as HTMLElement | null;
+          console.log('[report-pdf] tfidf:parts', {
+            title: titleEl?.getBoundingClientRect?.().height ?? null,
+            wrap: wrapEl?.getBoundingClientRect?.().height ?? null,
+            svg: svgEl?.getBoundingClientRect?.().height ?? null,
+            caption: captionEl?.getBoundingClientRect?.().height ?? null,
+          });
+          console.log('[report-pdf] tfidf:svg?', !!holder.querySelector('svg'));
+          console.log('[report-pdf] tfidf:html', holder.innerHTML);
+        }
+      }
+
+      el.setAttribute('data-pdf-keep', '1');
+      el.setAttribute('data-pdf-atomic', '1');
+
+      const s = el.style as CSSStyleDeclaration;
+      s.breakInside = 'avoid';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (s as any).pageBreakInside = 'avoid';
+    }
+  };
+
+  const wrapImageFootnotes = (root: HTMLElement) => {
+    const images = Array.from(root.querySelectorAll('img')) as HTMLElement[];
+    for (const img of images) {
+      const parent = img.parentElement;
+      if (!parent) continue;
+      const next = img.nextElementSibling as HTMLElement | null;
+      if (!next || !next.classList.contains('image-footnote')) continue;
+      if (parent.classList.contains('image-footnote-wrap')) continue;
+
+      const wrap = root.ownerDocument.createElement('div');
+      wrap.className = 'image-footnote-wrap';
+      wrap.setAttribute('data-pdf-keep', '1');
+      wrap.setAttribute('data-pdf-atomic', '1');
+
+      parent.insertBefore(wrap, img);
+      wrap.appendChild(img);
+      wrap.appendChild(next);
+    }
+  };
+
   const materializeListMarkers = (root: HTMLElement) => {
     const lists = Array.from(root.querySelectorAll('ul, ol')) as (
       | HTMLUListElement
@@ -389,39 +636,67 @@ export const buildReportPdfBlob = async (
   const markAtomicBlocks = (root: HTMLElement) => {
     const atomicRoots = new Set<HTMLElement>();
 
+    const isNestedInKeptBlock = (el: Element) => {
+      const keep = el.closest('[data-pdf-keep="1"], [data-pdf-atomic="1"]');
+      return !!keep && keep !== el;
+    };
+
     const candidates = Array.from(
       root.querySelectorAll(
         [
+          'div[data-analyze]',
+          'div[data-title]',
+          'div[data-footnote]',
           '[data-pdf-keep]',
+          '.table-footnote-wrap',
           '.recharts-wrapper',
           '.recharts-responsive-container',
           '.chart',
           '.graph',
           '[class*="chart"]',
           '[class*="graph"]',
+          'table',
           'canvas',
           'svg',
           'figure',
           'img',
+          'pre',
+          'blockquote',
+          'h1,h2,h3,h4,h5,h6',
         ].join(','),
       ),
     ) as HTMLElement[];
 
     for (const el of candidates) {
+      if (isNestedInKeptBlock(el)) continue;
+
       const container =
+        (el.closest('div[data-analyze]') as HTMLElement | null) ??
+        (el.closest('[data-pdf-keep="1"]') as HTMLElement | null) ??
+        (el.closest('div[data-title]') as HTMLElement | null) ??
+        (el.closest('div[data-footnote]') as HTMLElement | null) ??
         (el.closest('.recharts-responsive-container') as HTMLElement | null) ??
         (el.closest('.recharts-wrapper') as HTMLElement | null) ??
-        (el.closest('[data-pdf-keep]') as HTMLElement | null) ??
         (el.closest(
           '.chart, .graph, [class*="chart"], [class*="graph"]',
         ) as HTMLElement | null) ??
         (el.closest('figure') as HTMLElement | null) ??
         el;
 
+      const parentAtomic = container.parentElement?.closest?.(
+        '[data-pdf-atomic="1"]',
+      ) as HTMLElement | null;
+      if (parentAtomic && parentAtomic !== container) continue;
+
       atomicRoots.add(container);
     }
 
     for (const a of atomicRoots) {
+      const parentAtomic = a.parentElement?.closest?.(
+        '[data-pdf-atomic="1"]',
+      ) as HTMLElement | null;
+      if (parentAtomic && parentAtomic !== a) continue;
+
       a.setAttribute('data-pdf-atomic', '1');
       const s = a.style as CSSStyleDeclaration;
       s.breakInside = 'avoid';
@@ -430,54 +705,63 @@ export const buildReportPdfBlob = async (
     }
   };
 
+  const removeEmptyParagraphs = (root: HTMLElement) => {
+    const ps = Array.from(root.querySelectorAll('p')) as HTMLParagraphElement[];
+    for (const p of ps) {
+      if (p.querySelector('img, table, svg, canvas, figure, a')) continue;
+
+      const text = (p.textContent ?? '').replace(/\u00A0/g, ' ').trim();
+      const onlyBr =
+        p.childNodes.length === 1 &&
+        p.firstChild?.nodeType === Node.ELEMENT_NODE &&
+        (p.firstChild as Element).tagName === 'BR';
+
+      if (text.length === 0 || onlyBr) p.remove();
+    }
+  };
+
   const insertPageBreakSpacers = (root: HTMLElement) => {
     const clearOld = Array.from(root.querySelectorAll('[data-pdf-spacer="1"]'));
     for (const n of clearOld) n.remove();
 
-    const atomicBlocks = Array.from(
-      root.querySelectorAll('[data-pdf-atomic="1"]'),
-    ) as HTMLElement[];
-    const atomicSet = new Set(atomicBlocks);
+    const getBlocks = () => {
+      const blocks = Array.from(
+        root.querySelectorAll(
+          ['[data-pdf-atomic="1"]', 'table', 'li[data-pdf-li="1"]'].join(','),
+        ),
+      ) as HTMLElement[];
 
-    const listItems = Array.from(
-      root.querySelectorAll('li[data-pdf-li="1"]'),
-    ) as HTMLElement[];
-    const liSet = new Set(listItems);
+      const out: HTMLElement[] = [];
+      const uniq = new Set<HTMLElement>();
 
-    const baseSelectors = [
-      'h1',
-      'h2',
-      'h3',
-      'p',
-      'table',
-      'pre',
-      'blockquote',
-      'img',
-      'figure',
-    ].join(',');
+      for (const el of blocks) {
+        const parentAtomic = el.parentElement?.closest?.(
+          '[data-pdf-atomic="1"]',
+        ) as HTMLElement | null;
+        if (parentAtomic && parentAtomic !== el) continue;
 
-    const otherBlocks = (
-      Array.from(root.querySelectorAll(baseSelectors)) as HTMLElement[]
-    ).filter((el) => {
-      let p: HTMLElement | null = el;
-      while (p && p !== root) {
-        if (atomicSet.has(p)) return false;
-        if (liSet.has(p)) return false;
-        p = p.parentElement;
-      }
-      return true;
-    });
-
-    const blocks = [...atomicBlocks, ...listItems, ...otherBlocks].filter(
-      (el) => {
         const r = el.getBoundingClientRect();
-        return r.width > 0 && r.height > 0;
-      },
-    );
+        if (r.width <= 0 || r.height <= 0) continue;
 
-    const maxIter = 10;
+        if (!uniq.has(el)) {
+          uniq.add(el);
+          out.push(el);
+        }
+      }
+
+      out.sort(
+        (a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top,
+      );
+      return out;
+    };
+
+    const maxIter = 12;
+    const safetyPx = 12;
+
     for (let iter = 0; iter < maxIter; iter += 1) {
       let changed = false;
+
+      const blocks = getBlocks();
       const rootRect = root.getBoundingClientRect();
 
       for (const el of blocks) {
@@ -493,8 +777,32 @@ export const buildReportPdfBlob = async (
           ((y % pageInnerHeightPx) + pageInnerHeightPx) % pageInnerHeightPx;
         const overflow = mod + h - pageInnerHeightPx;
 
-        if (overflow > 2) {
-          const spacerH = pageInnerHeightPx - mod + 2;
+        const isLi =
+          el.tagName === 'LI' && el.getAttribute('data-pdf-li') === '1';
+        const remaining = pageInnerHeightPx - mod;
+        let lineHeightPx = 0;
+        if (isLi) {
+          const cs = getComputedStyle(el);
+          const lh = parseFloat(cs.lineHeight);
+          if (Number.isFinite(lh) && lh > 0) {
+            lineHeightPx = lh;
+          } else {
+            const fs = parseFloat(cs.fontSize);
+            lineHeightPx = Number.isFinite(fs) && fs > 0 ? fs * 1.5 : 24;
+          }
+        }
+
+        const liNeedsSpacer =
+          isLi && overflow > 0 && remaining < lineHeightPx * 1.2;
+        const blockNeedsSpacer = !isLi && overflow > 6;
+
+        if (liNeedsSpacer || blockNeedsSpacer) {
+          const spacerH = pageInnerHeightPx - mod + safetyPx;
+          if (spacerH < 8) continue;
+
+          const prev = el.previousElementSibling as HTMLElement | null;
+          if (prev?.getAttribute('data-pdf-spacer') === '1') continue;
+
           const spacer = root.ownerDocument.createElement('div');
           spacer.setAttribute('data-pdf-spacer', '1');
           spacer.style.height = `${spacerH}px`;
@@ -553,6 +861,9 @@ export const buildReportPdfBlob = async (
             el.appendChild(wrap);
           }
 
+          removeEmptyParagraphs(root);
+          ensureAnalyzeTitleCaption(root);
+          wrapImageFootnotes(root);
           materializeListMarkers(root);
           markAtomicBlocks(root);
           insertPageBreakSpacers(root);
@@ -564,6 +875,14 @@ export const buildReportPdfBlob = async (
   const blob = await worker.outputPdf('blob');
   iframe.remove();
   return blob;
+};
+
+export const buildReportPdfBlobFromContents = async (
+  htmlContents: string,
+): Promise<Blob> => {
+  const { buildReportHtmlDocument } = await import('./report-html');
+  const htmlDocument = buildReportHtmlDocument(htmlContents);
+  return buildReportPdfBlob(htmlDocument);
 };
 
 export const uploadReportPdf = async (presignedUrl: string, blob: Blob) => {
