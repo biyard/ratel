@@ -195,7 +195,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           (enableTableFootnote ? TableWithFootnote : Table).configure({
             resizable: true,
             HTMLAttributes: {
-              class: 'border-collapse table-auto w-full my-4',
+              class: 'border-collapse table-fixed w-full min-w-full my-4',
             },
           }),
           TableRow,
@@ -203,7 +203,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             HTMLAttributes: { class: 'bg-muted font-semibold' },
           }),
           TableCell.configure({
-            HTMLAttributes: { class: 'border border-border p-2 min-w-[100px]' },
+            HTMLAttributes: { class: 'border border-border p-2' },
           }),
           AnalyzeLdaBlock,
           AnalyzeNetworkBlock,
@@ -434,7 +434,11 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
                 '[&_.ProseMirror_li]:my-1',
                 '[&_.ProseMirror_p]:my-2',
                 '[&_.ProseMirror_mark]:bg-yellow-200 [&_.ProseMirror_mark]:px-0.5',
-                '[&_.ProseMirror_table]:border-collapse [&_.ProseMirror_table]:table-auto [&_.ProseMirror_table]:w-full [&_.ProseMirror_table]:my-4',
+                '[&_.ProseMirror_table]:border-collapse [&_.ProseMirror_table]:table-fixed [&_.ProseMirror_table]:!w-full [&_.ProseMirror_table]:min-w-full [&_.ProseMirror_table]:my-4',
+                '[&_.table-footnote-wrap]:w-full',
+                '[&_.table-footnote-table]:w-full [&_.table-footnote-table]:min-w-full',
+                '[&_.table-footnote-table_tbody]:w-full',
+                '[&_.table-footnote-table_tbody>div[data-node-view-content-react]]:contents',
                 '[&_.ProseMirror_td]:border [&_.ProseMirror_td]:border-border [&_.ProseMirror_td]:p-2 [&_.ProseMirror_td]:min-w-[100px] [&_.ProseMirror_td]:relative',
                 '[&_.ProseMirror_th]:border [&_.ProseMirror_th]:border-border [&_.ProseMirror_th]:p-2 [&_.ProseMirror_th]:min-w-[100px] [&_.ProseMirror_th]:bg-muted [&_.ProseMirror_th]:font-semibold [&_.ProseMirror_th]:relative',
                 '[&_.ProseMirror_.selectedCell]:bg-primary/20',

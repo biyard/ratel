@@ -17,10 +17,92 @@ function TableFootnoteView(props: any) {
   const className = [htmlAttrs.class, 'table-footnote-table']
     .filter(Boolean)
     .join(' ');
+  const wrapRef = React.useRef<HTMLDivElement | null>(null);
+  const tableRef = React.useRef<HTMLTableElement | null>(null);
+  const cols = React.useMemo(() => {
+    const node = props?.node;
+    const firstRow = node?.firstChild;
+    const widths: Array<number | null> = [];
+    if (!firstRow) return widths;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    firstRow.forEach((cell: any) => {
+      const colspan = Number(cell?.attrs?.colspan ?? 1) || 1;
+      const colwidth = Array.isArray(cell?.attrs?.colwidth)
+        ? cell.attrs.colwidth
+        : [];
+      for (let i = 0; i < colspan; i += 1) {
+        const w = colwidth[i];
+        widths.push(Number.isFinite(w) ? Number(w) : null);
+      }
+    });
+
+    return widths;
+  }, [props?.node]);
+
+  React.useEffect(() => {
+    const logSizes = () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const debug = (window as any)?.__TABLE_DEBUG__ === true;
+      if (!debug) return;
+
+      const wrapEl = wrapRef.current;
+      const tableEl = tableRef.current;
+      const tbodyEl = tableEl?.querySelector('tbody') ?? null;
+      const innerEl =
+        tbodyEl?.querySelector('[data-node-view-content-react]') ?? null;
+
+      const info = (el: HTMLElement | null) => {
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        const cs = getComputedStyle(el);
+        return {
+          tag: el.tagName,
+          className: el.className,
+          width: r.width,
+          display: cs.display,
+          tableLayout: cs.tableLayout,
+          minWidth: cs.minWidth,
+          maxWidth: cs.maxWidth,
+          overflowX: cs.overflowX,
+        };
+      };
+
+      console.debug('[table-debug] sizes', {
+        wrap: info(wrapEl),
+        table: info(tableEl),
+        tbody: info(tbodyEl as HTMLElement | null),
+        inner: info(innerEl as HTMLElement | null),
+      });
+    };
+
+    logSizes();
+    const syncLayout = () => {
+      const tableEl = tableRef.current;
+      const tbodyEl = tableEl?.querySelector('tbody') ?? null;
+      const innerEl =
+        tbodyEl?.querySelector('[data-node-view-content-react]') ??
+        (tbodyEl?.querySelector('div') as HTMLElement | null);
+      if (tbodyEl) {
+        tbodyEl.style.width = '100%';
+        tbodyEl.style.minWidth = '100%';
+      }
+      if (innerEl instanceof HTMLElement) {
+        innerEl.style.display = 'contents';
+        innerEl.style.width = '100%';
+      }
+    };
+    syncLayout();
+
+    const handler = () => logSizes();
+    window.addEventListener('table-debug', handler);
+    return () => window.removeEventListener('table-debug', handler);
+  }, []);
 
   return (
     <NodeViewWrapper
-      className="relative my-4 table-footnote-wrap"
+      ref={wrapRef}
+      className="relative my-4 w-full table-footnote-wrap"
       data-pdf-keep="1"
     >
       {isEditable ? (
@@ -38,7 +120,22 @@ function TableFootnoteView(props: any) {
           {footnote}
         </div>
       ) : null}
-      <table className={className} data-footnote={footnote || undefined}>
+      <table
+        ref={tableRef}
+        className={className}
+        data-footnote={footnote || undefined}
+        style={{ width: '100%', minWidth: '100%', tableLayout: 'fixed' }}
+      >
+        {cols.length > 0 && (
+          <colgroup>
+            {cols.map((w, idx) => (
+              <col
+                key={`col-${idx}`}
+                style={w ? { width: `${w}px` } : undefined}
+              />
+            ))}
+          </colgroup>
+        )}
         <NodeViewContent as="tbody" />
       </table>
     </NodeViewWrapper>
