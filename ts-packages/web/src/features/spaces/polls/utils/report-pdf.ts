@@ -119,6 +119,11 @@ export const buildReportPdfBlob = async (
       padding: 0 !important;
     }
 
+    #content-root .image-footnote-wrap{
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+
     #content-root{
       font-family: "NotoSansKR", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif !important;
       -webkit-font-smoothing: antialiased !important;
@@ -155,7 +160,7 @@ export const buildReportPdfBlob = async (
     }
 
     #content-root h1{
-      font-size: 38px !important;
+      font-size: 40px !important;
       font-weight: 400 !important;
       line-height: 1.16 !important;
       margin: 0 0 12px 0 !important;
@@ -163,7 +168,7 @@ export const buildReportPdfBlob = async (
     }
 
     #content-root h2{
-      font-size: 30px !important;
+      font-size: 32px !important;
       font-weight: 400 !important;
       line-height: 1.18 !important;
       margin: 0 0 12px 0 !important;
@@ -171,7 +176,7 @@ export const buildReportPdfBlob = async (
     }
 
     #content-root h3{
-      font-size: 24px !important;
+      font-size: 26px !important;
       font-weight: 400 !important;
       line-height: 1.2 !important;
       margin: 0 0 10px 0 !important;
@@ -194,7 +199,7 @@ export const buildReportPdfBlob = async (
     }
 
     #content-root p{
-      font-size: 16px !important;
+      font-size: 18px !important;
       margin-top: 0 !important;
       margin-bottom: 10px !important;
       line-height: 1.5 !important;
@@ -210,13 +215,13 @@ export const buildReportPdfBlob = async (
     }
 
     #content-root li{
-      font-size: 16px !important;
+      font-size: 18px !important;
       line-height: 1.5 !important;
       word-break: keep-all !important;
       overflow-wrap: break-word !important;
       break-inside: auto !important;
       page-break-inside: auto !important;
-      padding-top: 2px !important;
+      padding-top: 0 !important;
     }
 
     #content-root li[data-pdf-atomic-li="1"]{
@@ -256,14 +261,14 @@ export const buildReportPdfBlob = async (
       height: auto !important;
       display: block !important;
       font-weight: 400 !important;
-      font-size: 16px !important;
+      font-size: 18px !important;
       line-height: 1.5 !important;
       color: #000000 !important;
       -webkit-text-fill-color:#000000 !important;
       white-space: nowrap !important;
       overflow: visible !important;
       padding-top: 0 !important;
-      transform: translateY(1px) !important;
+      transform: translateY(0) !important;
     }
 
     #content-root .__pdf_li_content{
@@ -539,6 +544,26 @@ export const buildReportPdfBlob = async (
     }
   };
 
+  const wrapImageFootnotes = (root: HTMLElement) => {
+    const images = Array.from(root.querySelectorAll('img')) as HTMLElement[];
+    for (const img of images) {
+      const parent = img.parentElement;
+      if (!parent) continue;
+      const next = img.nextElementSibling as HTMLElement | null;
+      if (!next || !next.classList.contains('image-footnote')) continue;
+      if (parent.classList.contains('image-footnote-wrap')) continue;
+
+      const wrap = root.ownerDocument.createElement('div');
+      wrap.className = 'image-footnote-wrap';
+      wrap.setAttribute('data-pdf-keep', '1');
+      wrap.setAttribute('data-pdf-atomic', '1');
+
+      parent.insertBefore(wrap, img);
+      wrap.appendChild(img);
+      wrap.appendChild(next);
+    }
+  };
+
   const materializeListMarkers = (root: HTMLElement) => {
     const lists = Array.from(root.querySelectorAll('ul, ol')) as (
       | HTMLUListElement
@@ -745,9 +770,24 @@ export const buildReportPdfBlob = async (
 
         const isLi =
           el.tagName === 'LI' && el.getAttribute('data-pdf-li') === '1';
-        const liBlockOk = !isLi || h < pageInnerHeightPx * 0.35;
+        const remaining = pageInnerHeightPx - mod;
+        let lineHeightPx = 0;
+        if (isLi) {
+          const cs = getComputedStyle(el);
+          const lh = parseFloat(cs.lineHeight);
+          if (Number.isFinite(lh) && lh > 0) {
+            lineHeightPx = lh;
+          } else {
+            const fs = parseFloat(cs.fontSize);
+            lineHeightPx = Number.isFinite(fs) && fs > 0 ? fs * 1.5 : 24;
+          }
+        }
 
-        if (overflow > 6 && liBlockOk) {
+        const liNeedsSpacer =
+          isLi && overflow > 0 && remaining < lineHeightPx * 1.2;
+        const blockNeedsSpacer = !isLi && overflow > 6;
+
+        if (liNeedsSpacer || blockNeedsSpacer) {
           const spacerH = pageInnerHeightPx - mod + safetyPx;
           if (spacerH < 8) continue;
 
@@ -814,6 +854,7 @@ export const buildReportPdfBlob = async (
 
           removeEmptyParagraphs(root);
           ensureAnalyzeTitleCaption(root);
+          wrapImageFootnotes(root);
           materializeListMarkers(root);
           markAtomicBlocks(root);
           insertPageBreakSpacers(root);
