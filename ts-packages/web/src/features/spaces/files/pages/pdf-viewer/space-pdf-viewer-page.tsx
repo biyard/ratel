@@ -19,7 +19,7 @@ import {
 import { route } from '@/route';
 import { useTheme } from '@/hooks/use-theme';
 import { useQuery } from '@tanstack/react-query';
-import { getUserMembership } from '@/lib/api/ratel/me.v3';
+// import { getUserMembership } from '@/lib/api/ratel/me.v3';
 import { call } from '@/lib/api/ratel/call';
 import PdfViewer from '../../components/pdf-viewer';
 
@@ -41,16 +41,16 @@ export function SpacePdfViewerPage() {
   const analyzePkFromQuery = searchParams.get('analyze_pk') ?? '';
   const isAnalyzeRoute = analyzePkFromQuery.length > 0;
 
-  const { data: membership } = useQuery({
-    queryKey: ['user-membership'],
-    queryFn: getUserMembership,
-    enabled: isAnalyzeRoute,
-  });
-  const tierName = String(membership?.tier ?? '');
-  const isPaidMember =
-    tierName.length > 0 &&
-    !tierName.includes('FREE') &&
-    !tierName.includes('Free');
+  // const { data: membership } = useQuery({
+  //   queryKey: ['user-membership'],
+  //   queryFn: getUserMembership,
+  //   enabled: isAnalyzeRoute,
+  // });
+  // const tierName = String(membership?.tier ?? '');
+  // const isPaidMember =
+  //   tierName.length > 0 &&
+  //   !tierName.includes('FREE') &&
+  //   !tierName.includes('Free');
 
   const spacePk = routeParams.spacePk ?? '';
   const fileId = routeParams.fileId ?? '';
@@ -95,9 +95,11 @@ export function SpacePdfViewerPage() {
           : '',
       };
 
-  const canUseAi = isAnalyzeRoute
-    ? isPaidMember && analyzePkFromQuery.length > 0
-    : true;
+  // const canUseAi = isAnalyzeRoute
+  //   ? isPaidMember && analyzePkFromQuery.length > 0
+  //   : true;
+
+  const canUseAi = false;
 
   const { chatState, setChatState, sidebarWidth, setSidebarWidth } =
     useChatPreference();
