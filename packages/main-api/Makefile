@@ -131,7 +131,9 @@ BUILD_ENV ?= ENV=$(ENV) \
 								REWARD=$(REWARD) \
 								BIYARD_API_URL=$(BIYARD_API_URL) \
 								BIYARD_API_KEY=$(BIYARD_API_KEY) \
-								BIYARD_PROJECT_ID=$(BIYARD_PROJECT_ID)
+								BIYARD_PROJECT_ID=$(BIYARD_PROJECT_ID) \
+								BEDROCK_AGENT_ID=$(BEDROCK_AGENT_ID) \
+								BEDROCK_AGENT_ALIAS_ID=$(BEDROCK_AGENT_ALIAS_ID)
 
 .build/evm-keys:
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json

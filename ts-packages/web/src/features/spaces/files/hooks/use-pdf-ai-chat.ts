@@ -16,6 +16,10 @@ export interface PdfContext {
   selectedText?: string;
 }
 
+export type PdfAiChatTarget =
+  | { kind: 'file'; fileId: string }
+  | { kind: 'analyze'; analyzePk: string };
+
 interface SendMessageParams {
   message: string;
   context: PdfContext;
@@ -29,15 +33,19 @@ interface UsePdfAiChat {
   clearMessages: () => void;
 }
 
-export function usePdfAiChat(spacePk: string, fileId: string, fileUrl: string): UsePdfAiChat {
+export function usePdfAiChat(
+  spacePk: string,
+  target: PdfAiChatTarget,
+): UsePdfAiChat {
   const { data: user } = useUserInfo();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(() => {
     // Try to restore session from localStorage - user+file based
-    if (!user?.pk || !fileUrl) return null;
-    const key = `pdf-ai-session-${user.pk}-${fileUrl}`;
+    if (!user?.pk) return null;
+    const targetKey = target.kind === 'file' ? target.fileId : target.analyzePk;
+    const key = `pdf-ai-session-${user.pk}-${spacePk}-${targetKey}`;
     return localStorage.getItem(key);
   });
 
@@ -56,9 +64,14 @@ export function usePdfAiChat(spacePk: string, fileId: string, fileUrl: string): 
     setError(null);
 
     try {
+      const targetPayload =
+        target.kind === 'file'
+          ? { file_id: target.fileId }
+          : { analyze_pk: target.analyzePk };
+
       const response: { message: string; session_id: string } = await call(
         'POST',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/files/${encodeURIComponent(fileId)}/ai-chat`,
+        `/v3/spaces/${encodeURIComponent(spacePk)}/files/ai-chat`,
         {
           message,
           session_id: sessionId,
@@ -68,12 +81,15 @@ export function usePdfAiChat(spacePk: string, fileId: string, fileUrl: string): 
             total_pages: context.totalPages,
             selected_text: context.selectedText || null,
           },
+          ...targetPayload,
         },
       );
 
       // Store session ID for continuity - per user per file
-      if (user?.pk && fileUrl) {
-        const key = `pdf-ai-session-${user.pk}-${fileUrl}`;
+      if (user?.pk) {
+        const targetKey =
+          target.kind === 'file' ? target.fileId : target.analyzePk;
+        const key = `pdf-ai-session-${user.pk}-${spacePk}-${targetKey}`;
         localStorage.setItem(key, response.session_id);
         setSessionId(response.session_id);
       }
@@ -108,8 +124,10 @@ export function usePdfAiChat(spacePk: string, fileId: string, fileUrl: string): 
     setMessages([]);
     setError(null);
     // Clear session to start fresh conversation
-    if (user?.pk && fileUrl) {
-      const key = `pdf-ai-session-${user.pk}-${fileUrl}`;
+    if (user?.pk) {
+      const targetKey =
+        target.kind === 'file' ? target.fileId : target.analyzePk;
+      const key = `pdf-ai-session-${user.pk}-${spacePk}-${targetKey}`;
       localStorage.removeItem(key);
     }
     setSessionId(null);
