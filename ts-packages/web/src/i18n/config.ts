@@ -84,6 +84,7 @@ import { i18nRewardsPage } from '@/app/rewards/rewards-page-i18n';
 import { i18nTeamGroups } from '@/features/teams/groups/i18n';
 import { i18nTeamDao } from '@/features/teams/dao/i18n';
 import { i18nTeamRewardsPage } from '@/features/teams/rewards/i18n';
+import { i18nTeamSettingsPage } from '@/features/teams/settings/i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -177,6 +178,7 @@ Object.entries({
   TeamGroups: i18nTeamGroups,
   TeamDao: i18nTeamDao,
   TeamRewards: i18nTeamRewardsPage,
+  TeamSettings: i18nTeamSettingsPage,
 }).forEach(([key, value]) => {
   resources.en[key] = value.en;
   resources.ko[key] = value.ko;

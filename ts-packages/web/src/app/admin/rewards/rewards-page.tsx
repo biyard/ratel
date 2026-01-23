@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { useRewardsPageController } from './use-rewards-page-controller';
 import { useAdminRewardsI18n, AdminRewardsI18n } from './rewards-page-i18n';
-import {
-  useAllTransactions,
-  ProjectPointTransactionResponse,
-} from './_hooks/use-all-transactions';
+import { useAllTransactions } from './_hooks/use-all-transactions';
 import type {
   GlobalRewardResponse,
   GlobalRewardAction,
@@ -145,11 +142,7 @@ function RewardTable({
   );
 }
 
-function TransactionTable({
-  i18n,
-}: {
-  i18n: AdminRewardsI18n;
-}) {
+function TransactionTable({ i18n }: { i18n: AdminRewardsI18n }) {
   const {
     data,
     isLoading,
@@ -159,8 +152,7 @@ function TransactionTable({
     isFetchingNextPage,
   } = useAllTransactions();
 
-  const transactions =
-    data?.pages.flatMap((page) => page.items) || [];
+  const transactions = data?.pages.flatMap((page) => page.items) || [];
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp / 1000).toLocaleString();
@@ -182,9 +174,7 @@ function TransactionTable({
   };
 
   if (isLoading) {
-    return (
-      <div className="py-8 text-center text-gray-500">{i18n.loading}</div>
-    );
+    return <div className="py-8 text-center text-gray-500">{i18n.loading}</div>;
   }
 
   if (error) {
@@ -197,7 +187,9 @@ function TransactionTable({
 
   if (transactions.length === 0) {
     return (
-      <div className="py-8 text-center text-gray-500">{i18n.noTransactions}</div>
+      <div className="py-8 text-center text-gray-500">
+        {i18n.noTransactions}
+      </div>
     );
   }
 

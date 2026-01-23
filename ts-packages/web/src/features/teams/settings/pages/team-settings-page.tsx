@@ -4,7 +4,6 @@ import { Row } from '@/components/ui/row';
 import { Button } from '@/components/ui/button';
 import { ProfileSection } from '../components/profile-section';
 import { BasicInfoSection } from '../components/basic-info-section';
-import { DaoSection } from '../components/dao-section';
 
 export default function TeamSettingsPage({ username }: { username: string }) {
   const ctrl = useTeamSettingsPageController(username);
@@ -19,6 +18,7 @@ export default function TeamSettingsPage({ username }: { username: string }) {
         profileUrl={ctrl.profileUrl}
         onProfileUrlChange={ctrl.updateProfileUrl}
         uploadLogoText={ctrl.i18n.upload_logo}
+        isEditing={ctrl.isEditing}
       />
 
       <Col className="w-full gap-2.5">
@@ -28,45 +28,52 @@ export default function TeamSettingsPage({ username }: { username: string }) {
           htmlContents={ctrl.htmlContents}
           onNicknameChange={ctrl.updateNickname}
           onDescriptionChange={ctrl.updateContents}
+          isEditing={ctrl.isEditing}
           i18n={ctrl.i18n}
         />
 
-        {/* <DaoSection
-          daoAddress={ctrl.daoAddress}
-          isDaoConnected={ctrl.isDaoConnected}
-          onActivate={ctrl.handleActivateDao}
-          i18n={ctrl.i18n}
-        />
-
-        <Row className="justify-end py-5">
-          <Button
-            disabled={ctrl.invalidInput}
-            className={ctrl.invalidInput ? 'bg-neutral-600' : 'bg-primary'}
-            variant={'rounded_primary'}
-            onClick={async () => {
-              await ctrl.handleSave();
-            }}
-            data-pw="team-settings-save-button"
-          >
-            {ctrl.i18n.save}
-          </Button>
-
-          {ctrl.deleteTeamPermission && (
+        {!ctrl.isEditing ? (
+          // Read-only mode - show Edit and Delete buttons
+          <Row className="justify-end py-5 gap-2">
             <Button
-              disabled={ctrl.invalidInput}
-              className={
-                ctrl.invalidInput
-                  ? 'bg-neutral-600'
-                  : 'bg-red-600 hover:bg-red-600/90'
-              }
-              variant={'rounded_primary'}
-              onClick={ctrl.openDeletePopup}
-              data-pw="team-delete-button"
+              onClick={ctrl.handleEdit}
+              variant="rounded_primary"
+              data-pw="team-settings-edit-button"
             >
-              {ctrl.i18n.delete}
+              {ctrl.i18n.edit}
             </Button>
-          )} */}
-        {/* </Row> */}
+            {ctrl.deleteTeamPermission && (
+              <Button
+                onClick={ctrl.openDeletePopup}
+                className="bg-red-600 hover:bg-red-600/90"
+                variant="rounded_primary"
+                data-pw="team-delete-button"
+              >
+                {ctrl.i18n.delete}
+              </Button>
+            )}
+          </Row>
+        ) : (
+          // Edit mode - show Save and Cancel buttons (Delete hidden)
+          <Row className="justify-end py-5 gap-2">
+            <Button
+              onClick={ctrl.handleCancel}
+              variant="rounded_primary"
+              data-pw="team-settings-cancel-button"
+            >
+              {ctrl.i18n.cancel}
+            </Button>
+            <Button
+              onClick={ctrl.handleSave}
+              disabled={ctrl.isSaving}
+              className="bg-primary"
+              variant="rounded_primary"
+              data-pw="team-settings-save-button"
+            >
+              {ctrl.isSaving ? 'Saving...' : ctrl.i18n.save_changes}
+            </Button>
+          </Row>
+        )}
       </Col>
     </div>
   );

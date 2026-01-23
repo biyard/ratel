@@ -27,7 +27,7 @@ export async function listMyPointTransactions(
 
 export function useMyPointTransactions(month?: string, limit: number = 10) {
   return useInfiniteQuery({
-    queryKey: [userKeys.rewards(month)] as const,
+    queryKey: [...userKeys.reward_lists(month)],
     queryFn: async ({
       pageParam,
     }: {

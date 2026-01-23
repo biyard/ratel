@@ -47,9 +47,13 @@ function RewardsPageContent({ username }: RewardsPageProps) {
   }
 
   const rewards = ctrl.rewards;
-  const estimatedTokens = Math.round(
-    (rewards.team_points / rewards.total_points) * rewards.monthly_token_supply,
-  );
+  const estimatedTokens =
+    rewards.total_points > 0
+      ? Math.round(
+          (rewards.team_points / rewards.total_points) *
+            rewards.monthly_token_supply,
+        )
+      : 0;
 
   return (
     <div

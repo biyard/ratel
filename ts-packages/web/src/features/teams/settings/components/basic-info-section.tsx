@@ -10,6 +10,7 @@ interface BasicInfoSectionProps {
   htmlContents: string;
   onNicknameChange: (evt: React.FormEvent<HTMLInputElement>) => void;
   onDescriptionChange: (evt: React.FormEvent<HTMLTextAreaElement>) => void;
+  isEditing?: boolean;
   i18n: TeamSettingsI18n;
 }
 
@@ -19,6 +20,7 @@ export function BasicInfoSection({
   htmlContents,
   onNicknameChange,
   onDescriptionChange,
+  isEditing = true,
   i18n,
 }: BasicInfoSectionProps) {
   return (
@@ -45,6 +47,7 @@ export function BasicInfoSection({
           placeholder={i18n.display_name_hint}
           value={nickname}
           onInput={onNicknameChange}
+          disabled={!isEditing}
           data-pw="team-nickname-input"
         />
       </Row>
@@ -57,6 +60,7 @@ export function BasicInfoSection({
           placeholder={i18n.team_description_hint}
           value={htmlContents}
           onChange={onDescriptionChange}
+          disabled={!isEditing}
           data-pw="team-description-input"
         />
       </Col>

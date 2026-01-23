@@ -1,8 +1,5 @@
 import { RewardsI18n } from '@/features/rewards/types';
-import {
-  rewardsCommonI18n,
-  useRewardsI18n,
-} from '@/features/rewards/i18n';
+import { rewardsCommonI18n, useRewardsI18n } from '@/features/rewards/i18n';
 
 // Only domain-specific i18n (team-specific texts)
 export const i18nTeamRewardsPage = {

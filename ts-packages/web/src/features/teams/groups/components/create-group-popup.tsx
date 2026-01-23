@@ -50,7 +50,7 @@ export default function CreateGroupPopup({
     groupName: string,
     groupDescription: string,
     groupPermissions: TeamGroupPermission[],
-  ) => void;
+  ) => Promise<void>;
 }) {
   const i18n = useTeamGroupsI18n();
   const [groupName, setGroupName] = useState('');

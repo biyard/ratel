@@ -1,38 +1,105 @@
-import { useState } from 'react';
-import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
+import { useState, useEffect } from 'react';
+import {
+  TeamGroupPermission,
+  TeamGroupPermissions,
+} from '@/features/auth/utils/team-group-permissions';
 import { useTeamSettingsI18n } from '../i18n';
 import { useSuspenseFindTeam } from '../../hooks/use-find-team';
+import { useUpdateTeam } from '../../hooks/use-update-team';
+import { useDeleteTeam } from '../../hooks/use-delete-team';
+import { showSuccessToast, showErrorToast } from '@/lib/toast';
+import { usePopup } from '@/lib/contexts/popup-service';
+import DeleteTeamPopup from '../components/delete-team-popup';
 
 export function useTeamSettingsPageController(username: string) {
   const i18n = useTeamSettingsI18n();
-  // const popup = usePopup();
-  // const navigate = useNavigate();
-  // const { updateSelectedTeam, setSelectedTeam } = useContext(TeamContext);
+  const updateTeamMutation = useUpdateTeam();
+  const deleteTeamMutation = useDeleteTeam();
+  const popup = usePopup();
 
   // Fetch team data
   const { data: team } = useSuspenseFindTeam(username);
 
   const [isEditing, setIsEditing] = useState(false);
-  // // Form state
-  const [profileUrl, setProfileUrl] = useState<string | null>(null);
-  const [nickname, setNickname] = useState<string | null>(null);
-  const [htmlContents, setHtmlContents] = useState<string | null>(null);
+  // Form state
+  const [profileUrl, setProfileUrl] = useState<string>('');
+  const [nickname, setNickname] = useState<string>('');
+  const [htmlContents, setHtmlContents] = useState<string>('');
 
-  const handleStartEdit = () => {
-    setIsEditing(() => {
-      setProfileUrl(team?.profile_url || '');
-      setNickname(team?.nickname || '');
-      setHtmlContents(team?.html_contents || '');
-      return true;
-    });
-  };
+  // Initialize form state from team data
+  useEffect(() => {
+    if (team) {
+      setProfileUrl(team.profile_url || '');
+      setNickname(team.nickname || '');
+      setHtmlContents(team.html_contents || '');
+    }
+  }, [team]);
 
   const permissions = new TeamGroupPermissions(team?.permissions);
 
   // Computed values
-  // const deleteTeamPermission = permissions.has(TeamGroupPermission.TeamAdmin);
+  const deleteTeamPermission = permissions.has(TeamGroupPermission.TeamAdmin);
+  const isSaving = updateTeamMutation.isPending;
+
+  // Validation
+  const validateForm = () => {
+    const errors: string[] = [];
+
+    if (!nickname || nickname.trim().length === 0) {
+      errors.push(i18n.validation_nickname_required);
+    }
+
+    if (htmlContents && htmlContents.length > 0 && htmlContents.length < 10) {
+      errors.push(i18n.validation_description_min_length);
+    }
+
+    return errors;
+  };
 
   // Event handlers
+  const handleEdit = () => {
+    // Sync form state with current team data
+    setProfileUrl(team?.profile_url || '');
+    setNickname(team?.nickname || '');
+    setHtmlContents(team?.html_contents || '');
+    setIsEditing(true);
+  };
+
+  const handleSave = async () => {
+    const errors = validateForm();
+    if (errors.length > 0) {
+      showErrorToast(errors.join(', '));
+      return;
+    }
+
+    try {
+      await updateTeamMutation.mutateAsync({
+        teamPk: team.pk,
+        request: {
+          nickname: nickname || undefined,
+          description: htmlContents || undefined,
+          profile_url: profileUrl || undefined,
+        },
+      });
+      showSuccessToast('Team settings updated successfully');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to update team:', error);
+      showErrorToast(
+        'Failed to update team: ' +
+          (error instanceof Error ? error.message : 'Unknown error'),
+      );
+    }
+  };
+
+  const handleCancel = () => {
+    // Reset form to original team values
+    setProfileUrl(team?.profile_url || '');
+    setNickname(team?.nickname || '');
+    setHtmlContents(team?.html_contents || '');
+    setIsEditing(false);
+  };
+
   const updateContents = (evt: React.FormEvent<HTMLTextAreaElement>) => {
     setHtmlContents(evt.currentTarget.value);
   };
@@ -45,90 +112,37 @@ export function useTeamSettingsPageController(username: string) {
     setProfileUrl(url);
   };
 
-  // eslint-disable-next-line unused-imports/no-unused-vars
-  const handleSaveDao = () => {};
-  // const handleSave = async (nextDaoAddress?: string) => {
-  //   if (!team) return;
+  const handleDeleteTeam = async () => {
+    try {
+      await deleteTeamMutation.mutateAsync(team.username);
 
-  //   if (validateInput) {
-  //     showErrorToast(i18n.remove_test_keyword);
-  //     return;
-  //   }
+      popup.close();
+      showSuccessToast(i18n.success_delete_team);
 
-  //   const mergedDaoAddress =
-  //     nextDaoAddress ?? daoAddress ?? team?.dao_address ?? undefined;
+      // Navigate to home page after successful deletion
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Failed to delete team:', error);
+      popup.close();
+      showErrorToast(
+        i18n.failed_delete_team +
+          ': ' +
+          (error instanceof Error ? error.message : 'Unknown error'),
+      );
+    }
+  };
 
-  //   try {
-  //     await teamsV3Api.updateTeam(teamDetailQuery.data.id, {
-  //       nickname: nickname || undefined,
-  //       description: htmlContents || undefined,
-  //       profile_url: profileUrl || undefined,
-  //       dao_address: mergedDaoAddress,
-  //     });
-
-  //     teamDetailQuery.refetch();
-
-  //     if (team) {
-  //       updateSelectedTeam({
-  //         ...team,
-  //         nickname: nickname!,
-  //         html_contents: htmlContents!,
-  //         profile_url: profileUrl,
-  //         dao_address: mergedDaoAddress ?? null,
-  //       });
-  //     }
-
-  //     setDaoAddress(mergedDaoAddress ?? null);
-  //   } catch (e) {
-  //     logger.error('Failed to update team:', e);
-  //     showErrorToast(i18n.failed_update_team);
-  //   }
-  // };
-  const openTeamDeletePopup = () => {};
-  const openDaoCreatePopup = () => {};
-  // const openDeletePopup = () => {
-  //   popup
-  //     .open(
-  //       <DeleteTeamPopup
-  //         onConfirm={async () => {
-  //           if (!team) return;
-
-  //           try {
-  //             await teamsV3Api.deleteTeam(username);
-  //             showInfoToast(i18n.success_delete_team);
-
-  //             // Invalidate all team-related queries
-  //             await queryClient.invalidateQueries({
-  //               predicate: (query) =>
-  //                 query.queryKey[0]?.toString().includes('team') ||
-  //                 query.queryKey[0]?.toString().includes('user-info'),
-  //             });
-
-  //             // Invalidate all published feeds after deleting team
-  //             await queryClient.invalidateQueries({
-  //               queryKey: feedKeys.list({
-  //                 status: FeedStatus.Published,
-  //               }),
-  //             });
-
-  //             userInfo.refetch();
-  //             setSelectedTeam(0);
-  //             navigate('/');
-  //           } catch (e) {
-  //             logger.error('failed to delete team with error: ', e);
-  //             showErrorToast(i18n.failed_delete_team);
-  //           } finally {
-  //             popup.close();
-  //           }
-  //         }}
-  //         onCancel={() => {
-  //           popup.close();
-  //         }}
-  //         i18n={i18n}
-  //       />,
-  //     )
-  //     .withTitle('');
-  // };
+  const openDeletePopup = () => {
+    popup
+      .open(
+        <DeleteTeamPopup
+          onConfirm={handleDeleteTeam}
+          onCancel={() => popup.close()}
+          i18n={i18n}
+        />,
+      )
+      .withoutBackdropClose();
+  };
 
   return {
     // Data
@@ -141,14 +155,17 @@ export function useTeamSettingsPageController(username: string) {
     htmlContents,
 
     isEditing,
+    isSaving,
+    deleteTeamPermission,
 
     // Event handlers
-    handleStartEdit,
+    handleEdit,
+    handleSave,
+    handleCancel,
     updateContents,
     updateNickname,
     updateProfileUrl,
-    openTeamDeletePopup,
-    openDaoCreatePopup,
+    openDeletePopup,
 
     // i18n
     i18n,
