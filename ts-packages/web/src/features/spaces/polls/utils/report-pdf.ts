@@ -2,7 +2,8 @@ const waitFor = async (fn: () => boolean, timeoutMs: number) => {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     if (fn()) return true;
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await new Promise((resolve) => setTimeout(resolve, 50) as any);
   }
   return false;
 };
@@ -74,6 +75,8 @@ export const buildReportPdfBlob = async (
       color:#000000 !important;
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
+      margin: 0 !important;
+      padding: 0 !important;
     }
 
     #content-root{
@@ -83,6 +86,7 @@ export const buildReportPdfBlob = async (
       color:#000000 !important;
       -webkit-text-fill-color:#000000 !important;
       padding-bottom: 12px !important;
+      overflow: visible !important;
     }
 
     #content-root *{
@@ -93,6 +97,7 @@ export const buildReportPdfBlob = async (
       text-shadow:none !important;
       mix-blend-mode:normal !important;
       -webkit-text-stroke:0 !important;
+      overflow: visible !important;
     }
 
     #content-root del,
@@ -114,6 +119,7 @@ export const buildReportPdfBlob = async (
       font-weight: 400 !important;
       line-height: 1.16 !important;
       margin: 0 0 12px 0 !important;
+      padding-top: 3px !important;
     }
 
     #content-root h2{
@@ -121,6 +127,7 @@ export const buildReportPdfBlob = async (
       font-weight: 400 !important;
       line-height: 1.18 !important;
       margin: 0 0 12px 0 !important;
+      padding-top: 3px !important;
     }
 
     #content-root h3{
@@ -128,6 +135,7 @@ export const buildReportPdfBlob = async (
       font-weight: 400 !important;
       line-height: 1.2 !important;
       margin: 0 0 10px 0 !important;
+      padding-top: 3px !important;
     }
 
     #content-root h1 *,
@@ -152,6 +160,13 @@ export const buildReportPdfBlob = async (
       line-height: 1.5 !important;
       word-break: keep-all !important;
       overflow-wrap: break-word !important;
+      padding-top: 2px !important;
+    }
+
+    #content-root p:empty{
+      margin: 0 !important;
+      padding: 0 !important;
+      height: 0 !important;
     }
 
     #content-root li{
@@ -159,6 +174,12 @@ export const buildReportPdfBlob = async (
       line-height: 1.5 !important;
       word-break: keep-all !important;
       overflow-wrap: break-word !important;
+      break-inside: auto !important;
+      page-break-inside: auto !important;
+      padding-top: 2px !important;
+    }
+
+    #content-root li[data-pdf-atomic-li="1"]{
       break-inside: avoid !important;
       page-break-inside: avoid !important;
     }
@@ -187,6 +208,7 @@ export const buildReportPdfBlob = async (
     #content-root li[data-pdf-li="1"] > p{
       display: inline !important;
       margin: 0 !important;
+      padding-top: 0 !important;
     }
 
     #content-root .__pdf_marker{
@@ -202,6 +224,7 @@ export const buildReportPdfBlob = async (
       -webkit-text-fill-color:#000000 !important;
       white-space: nowrap !important;
       overflow: visible !important;
+      padding-top: 2px !important;
     }
 
     #content-root .__pdf_li_content{
@@ -392,6 +415,9 @@ export const buildReportPdfBlob = async (
     const candidates = Array.from(
       root.querySelectorAll(
         [
+          'div[data-analyze]',
+          'div[data-title]',
+          'div[data-footnote]',
           '[data-pdf-keep]',
           '.table-footnote-wrap',
           '.recharts-wrapper',
@@ -400,16 +426,23 @@ export const buildReportPdfBlob = async (
           '.graph',
           '[class*="chart"]',
           '[class*="graph"]',
+          'table',
           'canvas',
           'svg',
           'figure',
           'img',
+          'pre',
+          'blockquote',
+          'h1,h2,h3,h4,h5,h6',
         ].join(','),
       ),
     ) as HTMLElement[];
 
     for (const el of candidates) {
       const container =
+        (el.closest('div[data-analyze]') as HTMLElement | null) ??
+        (el.closest('div[data-title]') as HTMLElement | null) ??
+        (el.closest('div[data-footnote]') as HTMLElement | null) ??
         (el.closest('.recharts-responsive-container') as HTMLElement | null) ??
         (el.closest('.recharts-wrapper') as HTMLElement | null) ??
         (el.closest('[data-pdf-keep]') as HTMLElement | null) ??
@@ -431,54 +464,74 @@ export const buildReportPdfBlob = async (
     }
   };
 
+  const removeEmptyParagraphs = (root: HTMLElement) => {
+    const ps = Array.from(root.querySelectorAll('p')) as HTMLParagraphElement[];
+    for (const p of ps) {
+      if (p.querySelector('img, table, svg, canvas, figure, a')) continue;
+
+      const text = (p.textContent ?? '').replace(/\u00A0/g, ' ').trim();
+      const onlyBr =
+        p.childNodes.length === 1 &&
+        p.firstChild?.nodeType === Node.ELEMENT_NODE &&
+        (p.firstChild as Element).tagName === 'BR';
+
+      if (text.length === 0 || onlyBr) p.remove();
+    }
+  };
+
   const insertPageBreakSpacers = (root: HTMLElement) => {
     const clearOld = Array.from(root.querySelectorAll('[data-pdf-spacer="1"]'));
     for (const n of clearOld) n.remove();
 
-    const atomicBlocks = Array.from(
-      root.querySelectorAll('[data-pdf-atomic="1"]'),
-    ) as HTMLElement[];
-    const atomicSet = new Set(atomicBlocks);
+    const getBlocks = () => {
+      const blocks = Array.from(
+        root.querySelectorAll(['[data-pdf-atomic="1"]', 'table'].join(',')),
+      ) as HTMLElement[];
 
-    const listItems = Array.from(
-      root.querySelectorAll('li[data-pdf-li="1"]'),
-    ) as HTMLElement[];
-    const liSet = new Set(listItems);
+      const uniq = new Set<HTMLElement>();
+      const out: HTMLElement[] = [];
 
-    const baseSelectors = [
-      'h1',
-      'h2',
-      'h3',
-      'p',
-      'table',
-      'pre',
-      'blockquote',
-      'img',
-      'figure',
-    ].join(',');
+      for (const el of blocks) {
+        let p: HTMLElement | null = el;
+        while (p && p !== root) {
+          const parentAtomic = p.parentElement?.closest?.(
+            '[data-pdf-atomic="1"]',
+          ) as HTMLElement | null;
+          if (parentAtomic && parentAtomic !== p && parentAtomic !== el) {
+            p = null;
+            break;
+          }
+          p = p.parentElement;
+        }
+        if (
+          !p &&
+          el.closest('[data-pdf-atomic="1"]') &&
+          !el.hasAttribute('data-pdf-atomic')
+        )
+          continue;
 
-    const otherBlocks = (
-      Array.from(root.querySelectorAll(baseSelectors)) as HTMLElement[]
-    ).filter((el) => {
-      let p: HTMLElement | null = el;
-      while (p && p !== root) {
-        if (atomicSet.has(p)) return false;
-        if (liSet.has(p)) return false;
-        p = p.parentElement;
+        if (!uniq.has(el)) {
+          const r = el.getBoundingClientRect();
+          if (r.width > 0 && r.height > 0) {
+            uniq.add(el);
+            out.push(el);
+          }
+        }
       }
-      return true;
-    });
 
-    const blocks = [...atomicBlocks, ...listItems, ...otherBlocks].filter(
-      (el) => {
-        const r = el.getBoundingClientRect();
-        return r.width > 0 && r.height > 0;
-      },
-    );
+      out.sort(
+        (a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top,
+      );
+      return out;
+    };
 
-    const maxIter = 10;
+    const maxIter = 12;
+    const safetyPx = 12;
+
     for (let iter = 0; iter < maxIter; iter += 1) {
       let changed = false;
+
+      const blocks = getBlocks();
       const rootRect = root.getBoundingClientRect();
 
       for (const el of blocks) {
@@ -494,8 +547,13 @@ export const buildReportPdfBlob = async (
           ((y % pageInnerHeightPx) + pageInnerHeightPx) % pageInnerHeightPx;
         const overflow = mod + h - pageInnerHeightPx;
 
-        if (overflow > 2) {
-          const spacerH = pageInnerHeightPx - mod + 2;
+        if (overflow > 6) {
+          const spacerH = pageInnerHeightPx - mod + safetyPx;
+          if (spacerH < 8) continue;
+
+          const prev = el.previousElementSibling as HTMLElement | null;
+          if (prev?.getAttribute('data-pdf-spacer') === '1') continue;
+
           const spacer = root.ownerDocument.createElement('div');
           spacer.setAttribute('data-pdf-spacer', '1');
           spacer.style.height = `${spacerH}px`;
@@ -554,6 +612,7 @@ export const buildReportPdfBlob = async (
             el.appendChild(wrap);
           }
 
+          removeEmptyParagraphs(root);
           materializeListMarkers(root);
           markAtomicBlocks(root);
           insertPageBreakSpacers(root);

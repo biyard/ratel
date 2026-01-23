@@ -28,11 +28,59 @@ pub fn build_report_html_document(fragment: &str) -> String {
     html, body {{
       margin: 0;
       padding: 0;
-      background: #ffffff !important;
-      color: #000000 !important;
       font-family: "NotoSansKR", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
+      color: #111;
+      background: #fff;
+    }}
+
+    * {{
+      box-sizing: border-box;
+    }}
+
+    @page {{
+      size: A4;
+      margin: 10mm;
+    }}
+
+    #content-root {{
+      width: 190mm;
+      margin: 0 auto;
+      overflow: visible;
+    }}
+
+    .page {{
+      width: 190mm;
+      margin: 0 auto;
+      overflow: visible;      
+      padding-bottom: 2mm;    
+    }}
+
+    p, li, td, th {{
+      line-height: 1.55;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }}
+
+    h1, h2, h3, h4 {{
+      margin: 0 0 8px 0;
+      line-height: 1.25;
+    }}
+
+    table {{
+      width: 100%;
+      border-collapse: collapse;
+    }}
+
+    th, td {{
+      border: 1px solid #e5e7eb;
+      padding: 6px 8px;
+      vertical-align: top;
+    }}
+
+    img, svg, canvas {{
+      max-width: 100%;
+      height: auto;
+      display: block;
     }}
 
     @media print {{
