@@ -51,8 +51,8 @@ pub fn build_report_html_document(fragment: &str) -> String {
     .page {{
       width: 190mm;
       margin: 0 auto;
-      overflow: visible;      
-      padding-bottom: 2mm;    
+      overflow: visible;
+      padding-bottom: 2mm;
     }}
 
     p, li, td, th {{
@@ -272,7 +272,7 @@ pub fn build_report_html_document(fragment: &str) -> String {
     .tfidf-title {{
       font-weight: 700;
       font-size: 14px;
-      margin: 0 0 10px 0;
+      margin: 0 0 6px 0;
       color: rgba(17,24,39,0.92);
       text-align: center;
       width: 100%;
@@ -282,7 +282,7 @@ pub fn build_report_html_document(fragment: &str) -> String {
     [data-analyze-title="tfidf"] {{
       font-weight: 700;
       font-size: 14px;
-      margin: 0 0 10px 0;
+      margin: 0 0 6px 0;
       color: rgba(17,24,39,0.92);
       text-align: center;
       width: 100%;
@@ -351,10 +351,32 @@ pub fn build_report_html_document(fragment: &str) -> String {
       text-align: center;
     }}
 
-    .tfidf-svg {{
-      width: 100% !important;
-      max-width: 100% !important;
+    div[data-analyze="tfidf"] {{
+      break-inside: avoid;
+      page-break-inside: avoid;
+      margin: 0 0 12px;
+    }}
+
+    .figure-title {{
+      text-align: center;
+      font-weight: 700;
+      margin: 0 0 6px;
+      line-height: 1.2;
+      width: 100%;
       display: block;
+    }}
+
+    .figure-caption {{
+      text-align: center;
+      font-size: 12px;
+      margin: 6px 0 0;
+      width: 100%;
+      display: block;
+    }}
+
+    .tfidf-svg {{
+      display: block;
+      margin: 0 auto;
     }}
 
     .network-wrap {{
@@ -363,6 +385,20 @@ pub fn build_report_html_document(fragment: &str) -> String {
       border: none;
       border-radius: 0;
       background: transparent;
+    }}
+
+    div[data-analyze-wrapper="tfidf"] {{
+      width: 100%;
+      text-align: center;
+    }}
+
+    div[data-analyze-wrapper="tfidf"] > .tfidf-title,
+    div[data-analyze="tfidf"] > .figure-title,
+    div[data-analyze="tfidf"] > .figure-caption,
+    .tfidf-footnote {{
+      width: 100%;
+      display: block;
+      text-align: center;
     }}
   </style>
 
@@ -503,25 +539,65 @@ pub fn build_report_html_document(fragment: &str) -> String {
       return false;
     }}
 
+    function ensureTfidfTitle(host) {{
+      const title = String(host.getAttribute("data-title") || "").trim();
+      if (!title) return;
+
+      const wrapper = host.closest('[data-analyze-wrapper="tfidf"]');
+
+      if (wrapper && wrapper !== host) {{
+        let titleEl = wrapper.querySelector(':scope > .tfidf-title');
+        if (titleEl) {{
+          titleEl.textContent = title;
+          titleEl.setAttribute("data-analyze-title", "tfidf");
+          return;
+        }}
+
+        titleEl = wrapper.querySelector(':scope > [data-analyze-title="tfidf"]');
+        if (titleEl) {{
+          titleEl.textContent = title;
+          if (!titleEl.classList.contains("tfidf-title")) titleEl.classList.add("tfidf-title");
+          return;
+        }}
+
+        const el = document.createElement("div");
+        el.className = "tfidf-title";
+        el.setAttribute("data-analyze-title", "tfidf");
+        el.textContent = title;
+        wrapper.insertBefore(el, wrapper.firstChild);
+        return;
+      }}
+
+      let localTitle = host.querySelector(':scope > .tfidf-title');
+      if (localTitle) {{
+        localTitle.textContent = title;
+        localTitle.setAttribute("data-analyze-title", "tfidf");
+        return;
+      }}
+
+      localTitle = host.querySelector(':scope > [data-analyze-title="tfidf"]');
+      if (localTitle) {{
+        localTitle.textContent = title;
+        if (!localTitle.classList.contains("tfidf-title")) localTitle.classList.add("tfidf-title");
+        return;
+      }}
+
+      const el = document.createElement("div");
+      el.className = "tfidf-title";
+      el.setAttribute("data-analyze-title", "tfidf");
+      el.textContent = title;
+      host.insertBefore(el, host.firstChild);
+    }}
+
     async function renderTFIDF(host, payload) {{
       window.__REPORT_STAGE__ = "tfidf:wait_d3";
       const ok = await waitFor(() => typeof window.d3 !== "undefined", 8000);
       if (!ok) throw new Error("d3 not loaded (check CDN/network).");
 
       window.__REPORT_STAGE__ = "tfidf:render";
-      host.innerHTML = "";
 
-      const title =
-        (host.getAttribute("data-title") || "").trim();
-      const hasTitle = host.querySelector(".tfidf-title");
-      if (title && !hasTitle) {{
-        const titleEl = document.createElement("div");
-        titleEl.className = "tfidf-title";
-        titleEl.style.width = "100%";
-        titleEl.style.textAlign = "center";
-        titleEl.textContent = title;
-        host.appendChild(titleEl);
-      }}
+      host.innerHTML = "";
+      ensureTfidfTitle(host);
 
       const wrap = document.createElement("div");
       wrap.className = "tfidf-wrap";
@@ -538,7 +614,17 @@ pub fn build_report_html_document(fragment: &str) -> String {
         .map(d => ({{ key: String(d.keyword || ""), val: Number(d.tf_idf || 0) }}))
         .filter(d => d.key.length > 0);
 
-      if (rows.length === 0) return;
+      if (rows.length === 0) {{
+        const note = (host.getAttribute("data-footnote") || "").trim();
+        if (note) {{
+          const noteEl = document.createElement("div");
+          noteEl.className = "tfidf-footnote";
+          noteEl.style.textAlign = "center";
+          noteEl.textContent = note;
+          host.appendChild(noteEl);
+        }}
+        return;
+      }}
 
       await new Promise(r => requestAnimationFrame(r));
 
@@ -570,7 +656,7 @@ pub fn build_report_html_document(fragment: &str) -> String {
       const gap = 14;
 
       const marginBase = {{
-        top: 10,
+        top: 4,
         right: 36,
         bottom: 34,
         left: labelW,
@@ -610,10 +696,11 @@ pub fn build_report_html_document(fragment: &str) -> String {
         if (fontY > 10) fontY -= 1;
         if (fontVal > 10) fontVal -= 1;
         if (margin.bottom > 26) margin.bottom -= 2;
-        if (margin.top > 8) margin.top -= 1;
+        if (margin.top > 4) margin.top -= 1;
       }}
 
       const height = calcHeight();
+      console.log("tfidf:margin", margin, "rowH", rowH, "height", height, "rows", rows.length);
 
       const svgEl = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svgEl.setAttribute("class", "tfidf-svg");
@@ -696,7 +783,13 @@ pub fn build_report_html_document(fragment: &str) -> String {
         noteEl.className = "tfidf-footnote";
         noteEl.style.textAlign = "center";
         noteEl.textContent = note;
-        host.appendChild(noteEl);
+
+        const next = host.nextElementSibling;
+        if (next && next.classList && next.classList.contains("tfidf-footnote")) {{
+          next.textContent = note;
+        }} else {{
+          host.parentElement?.insertBefore(noteEl, host.nextSibling);
+        }}
       }}
     }}
 
@@ -929,14 +1022,6 @@ pub fn build_report_html_document(fragment: &str) -> String {
         const note = (table.getAttribute("data-footnote") || "").trim();
         if (!note) continue;
 
-        const existingWrap = table.closest(".table-footnote-wrap");
-        if (existingWrap) {{
-          const existingNote = existingWrap.querySelector(":scope > .table-footnote");
-          if (existingNote && existingNote.textContent?.trim() === note) {{
-            continue;
-          }}
-        }}
-
         const prev = table.previousElementSibling;
         const noteEl = (prev && prev.classList && prev.classList.contains("table-footnote"))
           ? prev
@@ -945,22 +1030,17 @@ pub fn build_report_html_document(fragment: &str) -> String {
         const footnoteEl = noteEl ?? document.createElement("div");
         if (!noteEl) {{
           footnoteEl.className = "table-footnote";
-          footnoteEl.textContent = note;
-        }} else {{
-          footnoteEl.textContent = note;
         }}
+        footnoteEl.textContent = note;
 
         const wrap = document.createElement("div");
         wrap.className = "table-footnote-wrap";
         wrap.setAttribute("data-pdf-keep", "1");
 
         table.parentElement?.insertBefore(wrap, table);
-        if (footnoteEl.parentElement) {{
-          footnoteEl.parentElement.removeChild(footnoteEl);
-        }}
-        if (table.parentElement) {{
-          table.parentElement.removeChild(table);
-        }}
+        if (footnoteEl.parentElement) footnoteEl.parentElement.removeChild(footnoteEl);
+        if (table.parentElement) table.parentElement.removeChild(table);
+
         wrap.appendChild(footnoteEl);
         wrap.appendChild(table);
       }}
