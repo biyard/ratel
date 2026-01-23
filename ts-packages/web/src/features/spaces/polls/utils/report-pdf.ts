@@ -237,12 +237,9 @@ export const buildReportPdfBlob = async (
 
     #content-root li[data-pdf-li="1"]{
       position: relative !important;
-      padding-left: 0 !important;
+      padding-left: 24px !important;
       margin: 0 0 6px 0 !important;
-      display: grid !important;
-      grid-template-columns: 24px 1fr !important;
-      column-gap: 4px !important;
-      align-items: start !important;
+      display: block !important;
     }
 
     #content-root li[data-pdf-li="1"] > p{
@@ -252,11 +249,12 @@ export const buildReportPdfBlob = async (
     }
 
     #content-root .__pdf_marker{
-      width: 24px !important;
+      position: absolute !important;
+      left: 0 !important;
+      top: 2px !important;
+      width: 20px !important;
       height: auto !important;
-      display: flex !important;
-      align-items: flex-start !important;
-      justify-content: flex-start !important;
+      display: block !important;
       font-weight: 400 !important;
       font-size: 16px !important;
       line-height: 1.5 !important;
@@ -264,11 +262,13 @@ export const buildReportPdfBlob = async (
       -webkit-text-fill-color:#000000 !important;
       white-space: nowrap !important;
       overflow: visible !important;
-      padding-top: 2px !important;
+      padding-top: 0 !important;
+      transform: translateY(1px) !important;
     }
 
     #content-root .__pdf_li_content{
       min-width: 0 !important;
+      display: block !important;
     }
 
     #content-root table{
@@ -692,7 +692,9 @@ export const buildReportPdfBlob = async (
 
     const getBlocks = () => {
       const blocks = Array.from(
-        root.querySelectorAll(['[data-pdf-atomic="1"]', 'table'].join(',')),
+        root.querySelectorAll(
+          ['[data-pdf-atomic="1"]', 'table', 'li[data-pdf-li="1"]'].join(','),
+        ),
       ) as HTMLElement[];
 
       const out: HTMLElement[] = [];
@@ -741,7 +743,11 @@ export const buildReportPdfBlob = async (
           ((y % pageInnerHeightPx) + pageInnerHeightPx) % pageInnerHeightPx;
         const overflow = mod + h - pageInnerHeightPx;
 
-        if (overflow > 6) {
+        const isLi =
+          el.tagName === 'LI' && el.getAttribute('data-pdf-li') === '1';
+        const liBlockOk = !isLi || h < pageInnerHeightPx * 0.35;
+
+        if (overflow > 6 && liBlockOk) {
           const spacerH = pageInnerHeightPx - mod + safetyPx;
           if (spacerH < 8) continue;
 
