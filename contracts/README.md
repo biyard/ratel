@@ -1,56 +1,52 @@
-# Biyard Smart Contracts
+# Ratel Smart Contracts
 
-This directory contains the Solidity smart contracts for the Biyard platform, including the BiyardToken (ERC20) and DAOTreasury governance system with integrated token exchange.
+This directory contains the Solidity smart contracts for the Ratel platform, featuring a modular DAO system for decentralized space governance.
 
 ## Overview
 
-### BiyardToken
+### SpaceDAO
 
-An ERC20 token with extended functionality:
-- **Minting**: Controlled minting with role-based access
-- **Burning**: Users can burn their own tokens
-- **Pausable**: Owner can pause/unpause transfers
-- **Max Supply**: Optional supply cap to prevent unlimited minting
+A lightweight, upgradeable DAO core contract that manages admin permissions and delegates functionality to extensions:
+- **Admin Management**: Multi-admin governance (minimum 3 admins required)
+- **Extension System**: Whitelist-based extension mechanism for modular functionality
+- **Emergency Controls**: DAO activation/deactivation switch
+- **Call Delegation**: Secure execution of calls from authorized extensions
+- **Upgradeable**: Uses OpenZeppelin's Initializable pattern with Clones
 
-### DAOTreasury
+### RewardExtension
 
-A decentralized autonomous organization treasury contract with proposal-based governance:
-- **Proposal System**: Token holders can create proposals for fund transfers
-- **Voting Mechanism**: Token-weighted voting on proposals
-- **Quorum Requirements**: Configurable quorum percentage
-- **Multi-Asset Support**: Supports both native tokens (ETH/MATIC) and ERC20 tokens
-- **Time-Based Voting**: Configurable voting periods
-- **Proposal Lifecycle**: Complete proposal state management (Pending, Active, Succeeded, Defeated, Executed, Cancelled)
+A governance extension for managing batch reward distributions with multi-signature approval:
+- **Proposal System**: Admins can create batch transfer proposals
+- **Multi-Signature Approval**: Requires 2 out of 3 admin approvals for execution
+- **Batch Transfers**: Support for multiple recipients in a single proposal
+- **Multi-Asset Support**: Supports both native tokens (ETH/KAIA) and ERC20 tokens
+- **Auto-Execution**: Automatically executes when quorum is reached
+- **Proposal Tracking**: Complete proposal state management and history
 
-### DAOTreasuryWithExchange (Enhanced)
+### SpaceFactory
 
-The enhanced treasury contract includes all governance features PLUS:
-- **Automated Token Exchange**: Built-in DEX for USDT ↔ BiyardToken
-- **Dynamic Pricing**: Price calculated from reserves: `Price = USDT Reserve / Circulating BIYARD Supply`
-- **Slippage Protection**: Minimum output amount parameter on exchanges
-- **Exchange Fees**: Configurable fee percentage (default 0.3%)
-- **Reserve Management**: Separate tracking of treasury reserves vs circulating supply
-- **Enable/Disable**: Owner can enable/disable exchange functionality
+A factory contract for deploying DAO instances using the Clone pattern:
+- **Gas-Efficient Deployment**: Uses EIP-1167 minimal proxy clones
+- **Atomic Deployment**: Creates and links DAO + Extension in one transaction
+- **Deployment Registry**: Tracks all deployed DAOs
+- **Immutable Logic**: Implementation contracts are immutable and reusable
 
 ## Project Structure
 
 ```
 contracts/
 ├── contracts/
-│   ├── BiyardToken.sol                # ERC20 token implementation
-│   ├── DAOTreasury.sol                # DAO treasury with governance
-│   ├── DAOTreasuryWithExchange.sol    # Enhanced DAO with token exchange
-│   └── MockUSDT.sol                   # Mock USDT for testing
-├── test/
-│   ├── BiyardToken.test.ts            # Token contract tests (20 tests)
-│   ├── DAOTreasury.test.ts            # Treasury contract tests (31 tests)
-│   └── DAOTreasuryWithExchange.test.ts # Exchange tests (32 tests)
-├── scripts/
-│   ├── deploy.ts                      # Basic deployment script
-│   └── deployWithExchange.ts          # Deployment with exchange setup
-├── hardhat.config.ts                  # Hardhat configuration
-├── package.json                       # Dependencies
-└── README.md                          # This file
+│   ├── space_dao/
+│   │   ├── SpaceDao.sol                    # Core DAO contract
+│   │   ├── SpaceDaoRewardExtension.sol     # Reward distribution extension
+│   │   └── SpaceDaoFactory.sol             # Factory for deploying DAOs
+│   └── mocks/
+│       └── MockToken.sol                   # Mock ERC20 for testing
+├── tests/
+│   └── SpaceDao.test.ts                    # Comprehensive test suite (7 tests)
+├── hardhat.config.ts                       # Hardhat configuration
+├── package.json                            # Dependencies
+└── README.md                               # This file
 ```
 
 ## Prerequisites
@@ -78,273 +74,275 @@ pnpm install
 ### Compile Contracts
 
 ```bash
-pnpm --filter @biyard/contracts compile
+pnpm --filter @ratel/contracts compile
 ```
 
 ### Run Tests
 
 ```bash
-pnpm --filter @biyard/contracts test
+pnpm --filter @ratel/contracts test
 ```
 
 All tests should pass:
-- BiyardToken: 20 tests
-- DAOTreasury: 31 tests
-- **Total: 51 tests passing**
+- SpaceDAO System: 7 tests
+  - Deployment & Linking: 2 tests
+  - Governance (Propose & Approve): 3 tests
+  - Execution (Funds): 2 tests
+- **Total: 7 passing**
 
 ### Run Local Node
 
 ```bash
-pnpm --filter @biyard/contracts node
+pnpm --filter @ratel/contracts node
 ```
 
 ### Deploy to Local Network
 
 In one terminal, start the local node:
 ```bash
-pnpm --filter @biyard/contracts node
+pnpm --filter @ratel/contracts node
 ```
 
 In another terminal, deploy:
 ```bash
-pnpm --filter @biyard/contracts deploy:local
+pnpm --filter @ratel/contracts deploy:local
 ```
 
 ## Contract Details
 
-### BiyardToken
+### SpaceDAO
 
-**Constructor Parameters:**
-- `name`: Token name (e.g., "Biyard Token")
-- `symbol`: Token symbol (e.g., "BIYARD")
-- `initialSupply`: Initial token supply to mint to deployer
-- `maxSupply`: Maximum supply cap (0 for unlimited)
-
-**Key Functions:**
-- `mint(address to, uint256 amount)`: Mint new tokens (minter only)
-- `burn(uint256 amount)`: Burn your own tokens
-- `addMinter(address account)`: Grant minter role (owner only)
-- `removeMinter(address account)`: Revoke minter role (owner only)
-- `pause()`: Pause token transfers (owner only)
-- `unpause()`: Resume token transfers (owner only)
-
-### DAOTreasury
-
-**Constructor Parameters:**
-- `_governanceToken`: Address of the ERC20 token used for voting
-- `_proposalThreshold`: Minimum tokens needed to create a proposal
-- `_votingPeriod`: Voting period in seconds
-- `_quorumPercentage`: Percentage of total supply needed for quorum (1-100)
+**Initialization Parameters:**
+- `_admins`: Array of admin addresses (minimum 3 required)
+- `_initialExtension`: Address of the initial extension to register
 
 **Key Functions:**
 
-**Treasury Management:**
-- `depositTokens(address token, uint256 amount)`: Deposit ERC20 tokens
-- `receive()`: Accept native token deposits (ETH/MATIC)
-- `getTreasuryBalance(address tokenAddress)`: Check balance
+**Extension Management:**
+- `executeCall(address target, uint256 value, bytes calldata data)`: Execute calls from authorized extensions
+- `checkAdmin(address user)`: Check if an address has admin privileges
+
+**State Variables:**
+- `isDaoActive`: Emergency pause switch
+- `admins`: Array of admin addresses
+- `isAdmin`: Mapping to check admin status
+- `isExtension`: Whitelist of authorized extensions
+- `rewardExtension`: Direct reference to the main reward extension
+
+**Events:**
+- `Initialized(address[] admins, address extension)`: Emitted when DAO is initialized
+- `ExtensionCall(address indexed extension, address indexed target, uint256 value, bytes data)`: Emitted when extension executes a call
+- `Received(address indexed sender, uint256 amount)`: Emitted when DAO receives native tokens
+
+### RewardExtension
+
+**Initialization Parameters:**
+- `_dao`: Address of the SpaceDAO contract
+
+**Key Functions:**
 
 **Proposal Management:**
-- `createProposal(string description, address recipient, uint256 amount, address tokenAddress)`: Create new proposal
-- `castVote(uint256 proposalId, bool support)`: Vote on a proposal
-- `executeProposal(uint256 proposalId)`: Execute a passed proposal
-- `cancelProposal(uint256 proposalId)`: Cancel a proposal (proposer or owner only)
+- `proposeBatch(address token, TransferPair[] calldata pairs)`: Create a new batch transfer proposal
+  - `token`: Token address (address(0) for native tokens)
+  - `pairs`: Array of recipient-amount pairs (max 100)
+- `approveAndExecute(uint256 id)`: Approve a proposal and execute if quorum is reached
+- `getProposalInfo(uint256 id)`: Get proposal details
 
-**View Functions:**
-- `getProposal(uint256 proposalId)`: Get proposal details
-- `getProposalState(uint256 proposalId)`: Get proposal state
-- `hasVoted(uint256 proposalId, address voter)`: Check if address has voted
+**Structures:**
+- `TransferPair`: `{ address recipient, uint256 amount }`
+- `Proposal`: Contains token, pairs, approval count, execution status, and approver mapping
 
-**Governance Configuration (Owner Only):**
-- `updateProposalThreshold(uint256)`: Update minimum tokens for proposal creation
-- `updateVotingPeriod(uint256)`: Update voting period
-- `updateQuorumPercentage(uint256)`: Update quorum requirement
+**Constants:**
+- `REQUIRED_APPROVALS`: 2 (out of 3+ admins)
 
-### DAOTreasuryWithExchange
+**Events:**
+- `ProposalCreated(uint256 indexed id, address indexed proposer, uint256 count)`: New proposal created
+- `Approved(uint256 indexed id, address indexed approver)`: Admin approved a proposal
+- `BatchExecuted(uint256 indexed id)`: Proposal successfully executed
+
+### SpaceFactory
 
 **Constructor Parameters:**
-- `_governanceToken`: BiyardToken address
-- `_usdtToken`: USDT token address
-- `_proposalThreshold`: Minimum tokens for proposals
-- `_votingPeriod`: Voting period in seconds
-- `_quorumPercentage`: Quorum percentage (1-100)
-- `_exchangeFeePercentage`: Fee percentage (e.g., 30 = 0.3%)
+- `_daoImpl`: Address of SpaceDAO implementation contract
+- `_extImpl`: Address of RewardExtension implementation contract
 
-**Exchange Functions:**
-- `getCurrentPrice()`: Get current BIYARD price in USDT
-- `getExchangeInfo()`: Get detailed exchange information
-- `calculateBiyardToUsdt(uint256 biyardAmount)`: Calculate USDT output for BIYARD input
-- `calculateUsdtToBiyard(uint256 usdtAmount)`: Calculate BIYARD output for USDT input
-- `exchangeBiyardForUsdt(uint256 biyardAmount, uint256 minUsdtOut)`: Exchange BIYARD for USDT
-- `exchangeUsdtForBiyard(uint256 usdtAmount, uint256 minBiyardOut)`: Exchange USDT for BIYARD
+**Key Functions:**
+- `createSpace(address[] calldata admins)`: Deploy a new DAO instance with its extension
+  - Returns the address of the deployed DAO
+- `getDeployedDAOs()`: Get list of all deployed DAO addresses
 
-**Exchange Configuration (Owner Only):**
-- `setExchangeEnabled(bool enabled)`: Enable/disable exchange
-- `setExchangeFee(uint256 newFee)`: Update exchange fee
+**Events:**
+- `SpaceCreated(address indexed dao, address indexed rewardExtension)`: Emitted when a new space is created
 
-**Price Formula:**
-```
-Price (USDT per BIYARD) = USDT Reserve / Circulating BIYARD Supply
-Circulating Supply = Total BIYARD Supply - Treasury BIYARD Reserve
-```
+## Deployment
 
-All governance functions from DAOTreasury are also available.
+The SpaceDAO system uses a factory pattern for efficient deployment:
 
-## Deployment Configuration
+### Deployment Steps
 
-The default deployment script (`scripts/deploy.ts`) deploys:
+1. **Deploy Implementation Contracts**
+   ```typescript
+   const SpaceDAO = await ethers.getContractFactory("SpaceDAO");
+   const spaceDaoLogic = await SpaceDAO.deploy();
 
-1. **BiyardToken**
-   - Name: "Biyard Token"
-   - Symbol: "BIYARD"
-   - Initial Supply: 1,000,000 BIYARD
-   - Max Supply: 10,000,000 BIYARD
+   const RewardExtension = await ethers.getContractFactory("RewardExtension");
+   const rewardExtLogic = await RewardExtension.deploy();
+   ```
 
-2. **DAOTreasury**
-   - Governance Token: BiyardToken
-   - Proposal Threshold: 100 BIYARD
-   - Voting Period: 3 days
-   - Quorum: 10%
+2. **Deploy Factory**
+   ```typescript
+   const SpaceFactory = await ethers.getContractFactory("SpaceFactory");
+   const factory = await SpaceFactory.deploy(
+     await spaceDaoLogic.getAddress(),
+     await rewardExtLogic.getAddress()
+   );
+   ```
 
-The script also transfers 100,000 BIYARD tokens to the treasury for testing.
+3. **Create DAO Instances**
+   ```typescript
+   const admins = [admin1.address, admin2.address, admin3.address];
+   const tx = await factory.createSpace(admins);
+   ```
 
-### Enhanced Deployment with Exchange
-
-The exchange deployment script (`scripts/deployWithExchange.ts`) deploys:
-
-1. **BiyardToken** (same as above)
-2. **MockUSDT** (for testing - use real USDT in production)
-   - Symbol: "USDT"
-   - Decimals: 6
-3. **DAOTreasuryWithExchange**
-   - All governance parameters same as above
-   - Exchange Fee: 0.3%
-   - Initial Reserves: 100,000 BIYARD + 100,000 USDT
-   - Initial Price: ~0.111 USDT per BIYARD
-
-Run with: `pnpm --filter @biyard/contracts deploy:exchange`
+This approach uses EIP-1167 minimal proxy clones for gas-efficient deployments.
 
 ## Usage Examples
 
-### Token Exchange
+### Creating a Batch Reward Proposal
 
 ```typescript
-// Get current exchange information
-const info = await treasury.getExchangeInfo();
-console.log("Current price:", info.currentPrice);
-console.log("USDT reserve:", info.usdtReserve);
-console.log("BIYARD reserve:", info.biyardReserve);
+// 1. Admin creates a proposal for batch rewards
+const pairs = [
+  { recipient: user1.address, amount: ethers.parseEther("100") },
+  { recipient: user2.address, amount: ethers.parseEther("200") },
+  { recipient: user3.address, amount: ethers.parseEther("150") }
+];
 
-// Exchange BIYARD for USDT
-const biyardAmount = ethers.parseEther("100"); // 100 BIYARD
-const [expectedUsdt, fee] = await treasury.calculateBiyardToUsdt(biyardAmount);
-
-await biyardToken.approve(treasuryAddress, biyardAmount);
-await treasury.exchangeBiyardForUsdt(
-  biyardAmount,
-  expectedUsdt * 95n / 100n  // 5% slippage tolerance
+// For native tokens (ETH/KAIA)
+await rewardExtension.connect(admin1).proposeBatch(
+  ethers.ZeroAddress,  // address(0) for native tokens
+  pairs
 );
 
-// Exchange USDT for BIYARD
-const usdtAmount = 1000n * 10n ** 6n; // 1000 USDT
-const [expectedBiyard, fee2] = await treasury.calculateUsdtToBiyard(usdtAmount);
-
-await usdtToken.approve(treasuryAddress, usdtAmount);
-await treasury.exchangeUsdtForBiyard(
-  usdtAmount,
-  expectedBiyard * 95n / 100n  // 5% slippage tolerance
+// For ERC20 tokens
+await rewardExtension.connect(admin1).proposeBatch(
+  tokenAddress,  // ERC20 token address
+  pairs
 );
 ```
 
-### Creating and Executing a Proposal
+### Approving and Executing a Proposal
 
 ```typescript
-// 1. User creates a proposal (must have >= 100 BIYARD)
-await treasury.createProposal(
-  "Fund development team",
-  recipientAddress,
-  ethers.parseEther("1000"),
-  tokenAddress
-);
+// 2. Second admin approves (automatically executes when quorum is reached)
+await rewardExtension.connect(admin2).approveAndExecute(proposalId);
 
-// 2. Token holders vote
-await treasury.connect(voter1).castVote(proposalId, true);  // Vote yes
-await treasury.connect(voter2).castVote(proposalId, false); // Vote no
+// The proposal executes automatically when 2 approvals are reached
+// All recipients receive their tokens in a single transaction
+```
 
-// 3. Wait for voting period to end (3 days)
+### Funding the DAO
 
-// 4. Execute the proposal
-await treasury.executeProposal(proposalId);
+```typescript
+// Fund DAO with native tokens
+await admin1.sendTransaction({
+  to: daoAddress,
+  value: ethers.parseEther("10")
+});
+
+// Fund DAO with ERC20 tokens
+await token.transfer(daoAddress, ethers.parseEther("1000"));
+```
+
+### Checking Proposal Status
+
+```typescript
+// Get proposal information
+const info = await rewardExtension.getProposalInfo(proposalId);
+console.log("Token:", info.token);
+console.log("Recipients count:", info.count);
+console.log("Approvals:", info.approvals);
+console.log("Executed:", info.executed);
 ```
 
 ## Security Features
 
-- **Access Control**: Role-based permissions using OpenZeppelin's Ownable
-- **Reentrancy Protection**: SafeERC20 and ReentrancyGuard
-- **Pausable Transfers**: Emergency pause mechanism for token
-- **Supply Cap**: Optional maximum supply to prevent inflation
-- **Voting Integrity**: One vote per address, voting power based on token balance at vote time
-- **Proposal Validation**: Checks for sufficient treasury balance before proposal creation
+- **Multi-Admin Governance**: Requires minimum 3 admins for redundancy
+- **Multi-Signature Approval**: 2-of-3 approval quorum prevents single-point-of-failure
+- **Reentrancy Protection**: Uses OpenZeppelin's ReentrancyGuard
+- **Extension Whitelist**: Only authorized extensions can execute DAO calls
+- **Emergency Pause**: DAO can be deactivated in case of emergency
+- **Upgradeable Pattern**: Uses Initializable with constructor disabled
+- **Clone Pattern**: EIP-1167 minimal proxies for gas efficiency and security
+- **Admin-Only Actions**: Only registered admins can create and approve proposals
+- **Batch Limits**: Maximum 100 recipients per proposal to prevent gas issues
 
 ## Testing
 
 The test suite includes comprehensive coverage:
 
-**BiyardToken Tests:**
-- Deployment and initialization
-- Minting permissions and limits
-- Minter role management
-- Token burning
-- Pausable functionality
-- Token transfers
+**Deployment & Linking (2 tests):**
+- DAO and Extension deployment and initialization
+- Admin registration and verification
+- Extension-DAO linking
 
-**DAOTreasury Tests (31 tests):**
-- Deployment and configuration
-- Native and ERC20 token deposits
-- Proposal creation and validation
-- Voting mechanism
-- Proposal execution
-- Proposal cancellation
-- Governance parameter updates
-- View functions
+**Governance (3 tests):**
+- Proposal creation by admins
+- Access control (non-admin rejection)
+- Auto-execution when quorum is reached
+- Approval tracking
 
-**DAOTreasuryWithExchange Tests (32 tests):**
-- Exchange deployment and initialization
-- Dynamic price calculation based on reserves
-- BIYARD to USDT exchange calculations
-- USDT to BIYARD exchange calculations
-- Exchange execution with slippage protection
-- Exchange fee calculations
-- Exchange enable/disable functionality
-- Fee configuration updates
-- Price impact from exchanges
-- Governance integration with exchange
-- Edge cases and error handling
+**Execution (2 tests):**
+- Native token (ETH/KAIA) transfers
+- ERC20 token transfers
+- Batch transfers to multiple recipients
+- Balance verification
 
-**Total: 83 tests passing**
+**Total: 7 tests passing**
 
 Run tests with:
 ```bash
-pnpm --filter @biyard/contracts test
+pnpm --filter @ratel/contracts test
 ```
 
 Test output shows all contracts functioning correctly with comprehensive coverage of:
-- Token operations
-- Governance workflows
-- Exchange mechanisms
-- Security controls
-- Edge cases
+- Factory pattern deployment
+- Multi-signature governance
+- Batch reward distribution
+- Access control
+- Security features
 
 ## License
 
 MIT
 
-## Integration with Biyard Platform
+## Integration with Ratel Platform
 
-These contracts are designed to integrate with the Biyard platform's backend APIs:
-- The token can be minted through platform APIs when users earn points
-- The DAO treasury manages community funds and governance
-- Proposals can be created through the platform UI and voted on by token holders
-- The backend can listen to contract events to update the database
-- **Token Exchange**: Users can swap between BIYARD and USDT directly through the DAO treasury
-- **Price Discovery**: Dynamic pricing based on reserve ratios provides automatic market-making
-- **Event Listening**: Backend should listen to `TokensExchanged` events to track trades
+These contracts are designed to integrate with the Ratel platform's backend APIs:
+
+### Event Listening
+The backend should listen to the following events for database synchronization:
+
+**SpaceFactory Events:**
+- `SpaceCreated(address dao, address rewardExtension)`: Track newly created spaces
+
+**RewardExtension Events:**
+- `ProposalCreated(uint256 id, address proposer, uint256 count)`: Record new proposals
+- `Approved(uint256 id, address approver)`: Track approval progress
+- `BatchExecuted(uint256 id)`: Update proposal execution status
+
+**SpaceDAO Events:**
+- `ExtensionCall(address extension, address target, uint256 value, bytes data)`: Monitor extension activities
+- `Received(address sender, uint256 amount)`: Track treasury funding
+
+### Integration Points
+
+1. **Space Creation**: Backend API can call the factory to create new DAOs for spaces
+2. **Reward Distribution**: Platform can trigger batch reward proposals through admin accounts
+3. **Admin Management**: Initial admins are set during space creation from platform data
+4. **Treasury Monitoring**: Track DAO balances for both native tokens and ERC20s
+5. **Proposal Tracking**: Maintain proposal history and status in the backend database
+
+### Gas Optimization
+
+The system uses EIP-1167 minimal proxy clones, making each new DAO deployment cost approximately **456,070 gas** - significantly cheaper than deploying full contracts.
