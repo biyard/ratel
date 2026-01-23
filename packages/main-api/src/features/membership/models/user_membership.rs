@@ -74,6 +74,12 @@ impl UserMembership {
         })
     }
 
+    // FIXME: check membership paid check logic
+    pub fn is_paid_membership(&self) -> bool {
+        let membership_name = self.membership_pk.to_string();
+        !(membership_name.contains("Free") || membership_name.contains("FREE"))
+    }
+
     /// Check if membership is currently active and not expired
     pub fn is_active(&self) -> bool {
         self.status == MembershipStatus::Active

@@ -4,6 +4,7 @@ import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
 import { LdaTopicTable } from '@/features/spaces/components/topic/lda-topic-table';
 import { X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 type Payload = {
   ldaTopics?: unknown;
@@ -37,6 +38,7 @@ function LdaNodeView(props: any) {
     () => decode(props?.node?.attrs?.payload) as Payload | null,
     [props?.node?.attrs?.payload],
   );
+  const footnote = String(props?.node?.attrs?.footnote ?? '');
   const isEditable = !!props?.editor?.isEditable;
 
   return (
@@ -57,6 +59,21 @@ function LdaNodeView(props: any) {
             : ''
         }
       >
+        {isEditable ? (
+          <Input
+            type="text"
+            value={footnote}
+            onChange={(event) =>
+              props?.updateAttributes?.({ footnote: event.target.value })
+            }
+            placeholder={t('lda_footnote_placeholder')}
+            className="mb-2 w-full text-left rounded-md border border-input-box-border bg-transparent px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground"
+          />
+        ) : footnote ? (
+          <div className="mb-2 w-full text-left text-xs text-muted-foreground">
+            {footnote}
+          </div>
+        ) : null}
         <LdaTopicTable
           t={t}
           isHtml={true}
@@ -84,6 +101,15 @@ export const AnalyzeLdaBlock = Node.create({
           return { 'data-payload': attrs.payload };
         },
       },
+      footnote: {
+        default: '',
+        parseHTML: (el) =>
+          (el as HTMLElement).getAttribute('data-footnote') ?? '',
+        renderHTML: (attrs) => {
+          if (!attrs.footnote) return {};
+          return { 'data-footnote': attrs.footnote };
+        },
+      },
     };
   },
 
@@ -109,7 +135,7 @@ export const AnalyzeLdaBlock = Node.create({
             .chain()
             .focus()
             .insertContent([
-              { type: this.name, attrs: { payload: encoded } },
+              { type: this.name, attrs: { payload: encoded, footnote: '' } },
               { type: 'paragraph' },
             ])
             .run();

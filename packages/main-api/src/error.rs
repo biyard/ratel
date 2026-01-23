@@ -234,6 +234,8 @@ pub enum Error {
     #[error("Invalid membership tier")]
     #[rest_error(status = 400, code = 7001)]
     InvalidMembershipTier,
+    #[error("Invalid Membership")]
+    InvalidMembership,
 
     // /v3/panels endpoints 8000 ~
     #[rest_error(code = 8000)]

@@ -2,12 +2,14 @@ import {
   useSuspenseQuery,
   UseSuspenseQueryResult,
 } from '@tanstack/react-query';
+import { useRef } from 'react';
 
 import { spaceKeys } from '@/constants';
 import { call } from '@/lib/api/ratel/call';
 import { SpaceAnalyze } from '../types/space-analyze';
 
 const POLL_MS = 3000;
+const MAX_POLL_MS = 60_000 * 10; //10분
 
 export function getOption(spacePk: string) {
   return {
@@ -36,5 +38,19 @@ export function getOption(spacePk: string) {
 export default function useTopic(
   spacePk: string,
 ): UseSuspenseQueryResult<SpaceAnalyze> {
-  return useSuspenseQuery(getOption(spacePk));
+  const option = getOption(spacePk);
+  const startAtRef = useRef<number>(Date.now());
+
+  return useSuspenseQuery({
+    ...option,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    refetchInterval: (query: any) => {
+      const data = query?.state?.data as SpaceAnalyze | undefined;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const finished = !!(data as any)?.analyze_finish;
+      if (finished) return false;
+      if (Date.now() - startAtRef.current >= MAX_POLL_MS) return false;
+      return POLL_MS;
+    },
+  });
 }
