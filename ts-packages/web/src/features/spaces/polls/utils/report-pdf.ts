@@ -128,6 +128,41 @@ export const buildReportPdfBlob = async (
       padding: 0 !important;
     }
 
+    #content-root table{
+      width: 100% !important;
+      max-width: 100% !important;
+      table-layout: fixed !important;
+    }
+
+    #content-root th,
+    #content-root td{
+      word-break: break-all !important;
+      overflow-wrap: anywhere !important;
+      white-space: normal !important;
+      vertical-align: middle !important;
+      line-height: 1.4 !important;
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
+
+    #content-root th{
+      font-weight: 400 !important;
+    }
+
+    #content-root th strong,
+    #content-root th b,
+    #content-root td strong,
+    #content-root td b{
+      font-weight: 700 !important;
+    }
+
+    #content-root table p{
+      margin: 0 !important;
+      white-space: normal !important;
+      word-break: break-all !important;
+      overflow-wrap: anywhere !important;
+    }
+
     #content-root .image-footnote-wrap{
       break-inside: avoid !important;
       page-break-inside: avoid !important;
@@ -323,12 +358,13 @@ export const buildReportPdfBlob = async (
     #content-root .__pdf_cell{
       width: 100% !important;
       height: 100% !important;
-      display: grid !important;
-      place-items: center !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
       padding: 10px 14px 12px 14px !important;
       font-size: 14.5px !important;
       line-height: 1.35 !important;
-      text-align: center !important;
+      text-align: inherit !important;
       position: relative !important;
       z-index: 1 !important;
     }
@@ -337,7 +373,7 @@ export const buildReportPdfBlob = async (
       white-space: normal !important;
       word-break: keep-all !important;
       overflow-wrap: anywhere !important;
-      text-align: center !important;
+      text-align: inherit !important;
     }
 
     #content-root thead th .__pdf_cell{
@@ -854,6 +890,17 @@ export const buildReportPdfBlob = async (
 
             const wrap = clonedDoc.createElement('div');
             wrap.className = '__pdf_cell';
+            const align = clonedDoc.defaultView?.getComputedStyle(el).textAlign;
+            if (align) {
+              wrap.style.textAlign = align;
+              if (align === 'center') {
+                wrap.style.justifyContent = 'center';
+              } else if (align === 'right') {
+                wrap.style.justifyContent = 'flex-end';
+              } else {
+                wrap.style.justifyContent = 'flex-start';
+              }
+            }
 
             while (el.firstChild) {
               wrap.appendChild(el.firstChild);
