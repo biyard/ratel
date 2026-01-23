@@ -1,4 +1,3 @@
-#![allow(warnings)]
 use crate::{
     AppState, Error,
     controllers::v3::spaces::{SpacePath, SpacePathParam, SpacePostPath, SpacePostPathParam},
@@ -29,28 +28,14 @@ pub struct ListSpacePostQueryParams {
 
 pub async fn list_space_posts_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
-    NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
-    Extension(space): Extension<SpaceCommon>,
     Query(ListSpacePostQueryParams { bookmark, category }): Query<ListSpacePostQueryParams>,
 ) -> Result<Json<ListSpacePostsResponse>, Error> {
-    let now = chrono::Utc::now().timestamp() * 1000;
-
-    let is_owner = permissions.contains(TeamGroupPermission::SpaceEdit);
-
     if !matches!(space_pk, Partition::Space(_)) {
         return Err(Error::NotFoundSpace);
     }
 
-    if user.is_none() {
-        return Ok(Json(ListSpacePostsResponse {
-            posts: vec![],
-            bookmark: None,
-        }));
-    }
-
-    let mut opt = SpacePost::opt_with_bookmark(bookmark)
+    let opt = SpacePost::opt_with_bookmark(bookmark)
         .limit(10)
         .scan_index_forward(false);
 
