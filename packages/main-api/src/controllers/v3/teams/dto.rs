@@ -122,8 +122,6 @@ pub struct TeamDetailResponse {
     pub team: TeamResponse,
     pub groups: Option<Vec<TeamGroupResponse>>,
     pub owner: Option<TeamOwnerResponse>,
-    /// User's permissions bitmask for this team (i64)
-    pub permissions: Option<i64>,
 }
 
 impl From<Vec<TeamMetadata>> for TeamDetailResponse {
@@ -147,16 +145,5 @@ impl From<Vec<TeamMetadata>> for TeamDetailResponse {
             }
         }
         res
-    }
-}
-
-impl From<(Team, TeamGroup, TeamOwner, Option<i64>)> for TeamDetailResponse {
-    fn from((team, group, owner, permissions): (Team, TeamGroup, TeamOwner, Option<i64>)) -> Self {
-        Self {
-            team: team.into(),
-            groups: Some(vec![group.into()]),
-            owner: Some(owner.into()),
-            permissions,
-        }
     }
 }

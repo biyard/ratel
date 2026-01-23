@@ -65,19 +65,10 @@ pub struct TeamMemberResponse {
 
 pub async fn list_members_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
+    NoApi(_user): NoApi<User>,
     Path(team_username): Path<String>,
     Query(ListMembersQueryParams { bookmark, limit }): Query<ListMembersQueryParams>,
 ) -> Result<Json<ListItemsResponse<TeamMember>>, Error> {
-    tracing::info!("list_members_handler called - team_username: {}, bookmark: {:?}, limit: {:?}",
-        team_username, bookmark, limit);
-
-    // 1. Check if user is authenticated
-    let auth_user = user.ok_or(Error::Unauthorized("Authentication required".into()))?;
-    tracing::info!("User authenticated: {}", auth_user.pk);
-
-    // 2. Get team by username
-    tracing::info!("Finding team by username: {}", team_username);
     let team_results =
         Team::find_by_username_prefix(&dynamo.client, team_username.clone(), Default::default())
             .await?;
@@ -90,19 +81,10 @@ pub async fn list_members_handler(
 
     let team_partition = team.pk.clone();
     let team_pk_str = team_partition.to_string();
-    tracing::info!("Team found - pk: {}", team_pk_str);
 
-    // 3. Get team owner
-    tracing::info!("Getting team owner for team: {}", team_pk_str);
     let team_owner =
         TeamOwner::get(&dynamo.client, &team_pk_str, Some(&EntityType::TeamOwner)).await?;
-    let is_auth_user_owner = team_owner
-        .as_ref()
-        .map(|owner| owner.user_pk == auth_user.pk)
-        .unwrap_or(false);
-    tracing::info!("Is auth user owner: {}", is_auth_user_owner);
 
-    // 4. Set up pagination and get team members
     let page_limit = limit.unwrap_or(50).min(100);
     let mut query_options = UserTeamGroupQueryOption::builder().limit(page_limit);
 
@@ -110,27 +92,10 @@ pub async fn list_members_handler(
         query_options = query_options.bookmark(bookmark_str);
     }
 
-    tracing::info!("Querying UserTeamGroup for team: {}", team_partition);
     let (all_user_team_groups, next_bookmark) =
         UserTeamGroup::find_by_team_pk(&dynamo.client, team_partition.clone(), query_options)
             .await?;
-    tracing::info!("Found {} user team groups", all_user_team_groups.len());
 
-    // 5. Check permission: authenticated user must be owner or in the member list
-    let is_auth_user_member = all_user_team_groups
-        .iter()
-        .any(|utg| utg.pk == auth_user.pk);
-    tracing::info!("Is auth user member: {}", is_auth_user_member);
-
-    if !is_auth_user_owner && !is_auth_user_member {
-        tracing::warn!("User {} is not authorized to view members", auth_user.pk);
-        return Err(Error::Unauthorized(
-            "You must be a member of this team to view its members".into(),
-        ));
-    }
-
-    // 6. Get all team groups (directly query TeamGroup, not TeamMetadata)
-    tracing::info!("Querying TeamGroup for team: {}", team_partition);
     let (team_groups, _) = TeamGroup::query(
         &dynamo.client,
         team_partition.clone(),
@@ -139,9 +104,6 @@ pub async fn list_members_handler(
             .limit(100),
     )
     .await?;
-    tracing::info!("Found {} team groups", team_groups.len());
-
-    // Create group map
     let group_map: HashMap<String, TeamGroup> = team_groups
         .into_iter()
         .map(|group| {
@@ -152,14 +114,23 @@ pub async fn list_members_handler(
             (key, group)
         })
         .collect();
+    let user_keys: Vec<_> = {
+        use std::collections::HashSet;
+        let mut seen = HashSet::new();
+        all_user_team_groups
+            .iter()
+            .filter_map(|utg| {
+                let key = utg.pk.to_string();
+                if seen.insert(key) {
+                    Some((utg.pk.clone(), EntityType::User))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    };
+    tracing::info!("Found {:?} users", user_keys);
 
-    // 7. Batch get all user information (instead of N queries)
-    let user_keys: Vec<_> = all_user_team_groups
-        .iter()
-        .map(|utg| (utg.pk.clone(), EntityType::User))
-        .collect();
-
-    tracing::info!("Batch getting {} users", user_keys.len());
     let users = if !user_keys.is_empty() {
         User::batch_get(&dynamo.client, user_keys).await?
     } else {
@@ -168,16 +139,26 @@ pub async fn list_members_handler(
     tracing::info!("Retrieved {} users", users.len());
 
     // Create user map for quick lookup
-    let user_map: HashMap<String, User> = users
-        .into_iter()
-        .map(|u| (u.pk.to_string(), u))
-        .collect();
+    let user_map: HashMap<String, User> =
+        users.into_iter().map(|u| (u.pk.to_string(), u)).collect();
 
     // 8. Batch get all EVM addresses
-    let evm_keys: Vec<_> = all_user_team_groups
-        .iter()
-        .map(|utg| (utg.pk.clone(), EntityType::UserEvmAddress))
-        .collect();
+    // Remove duplicates to avoid DynamoDB ValidationException
+    let evm_keys: Vec<_> = {
+        use std::collections::HashSet;
+        let mut seen = HashSet::new();
+        all_user_team_groups
+            .iter()
+            .filter_map(|utg| {
+                let key = utg.pk.to_string();
+                if seen.insert(key) {
+                    Some((utg.pk.clone(), EntityType::UserEvmAddress))
+                } else {
+                    None
+                }
+            })
+            .collect()
+    };
 
     tracing::info!("Batch getting {} EVM addresses", evm_keys.len());
     let evm_addresses = if !evm_keys.is_empty() {
@@ -196,7 +177,10 @@ pub async fn list_members_handler(
         .collect();
 
     // 9. Build members map
-    tracing::info!("Building members map from {} user team groups", all_user_team_groups.len());
+    tracing::info!(
+        "Building members map from {} user team groups",
+        all_user_team_groups.len()
+    );
     let mut members_map: HashMap<String, TeamMember> = HashMap::new();
 
     for utg in all_user_team_groups {
@@ -212,8 +196,9 @@ pub async fn list_members_handler(
 
         // Get user from map
         if let Some(user) = user_map.get(&user_pk_str) {
-            let entry = members_map.entry(user_pk_str.clone()).or_insert_with(|| {
-                TeamMember {
+            let entry = members_map
+                .entry(user_pk_str.clone())
+                .or_insert_with(|| TeamMember {
                     user_id: user_pk_str.clone(),
                     username: user.username.clone(),
                     display_name: user.display_name.clone(),
@@ -221,8 +206,7 @@ pub async fn list_members_handler(
                     groups: Vec::new(),
                     is_owner: false,
                     evm_address: evm_map.get(&user_pk_str).cloned(),
-                }
-            });
+                });
 
             // Add group information
             if let Some(group) = group_map.get(&group_sk_string) {
@@ -276,7 +260,11 @@ pub async fn list_members_handler(
         }
     });
 
-    tracing::info!("Returning {} members with bookmark: {:?}", members.len(), next_bookmark);
+    tracing::info!(
+        "Returning {} members with bookmark: {:?}",
+        members.len(),
+        next_bookmark
+    );
     Ok(Json(ListItemsResponse {
         items: members,
         bookmark: next_bookmark,

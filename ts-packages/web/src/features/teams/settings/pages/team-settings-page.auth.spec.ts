@@ -65,17 +65,23 @@ test.describe('Team Settings - Authenticated User', () => {
     await expect(usernameDisplay).toHaveValue(`@${testTeamUsername}`);
     await expect(usernameDisplay).toBeDisabled();
 
-    // Verify nickname input
+    // Verify nickname input is disabled in read-only mode
     const nicknameInput = page.locator('[data-pw="team-nickname-input"]');
     await expect(nicknameInput).toBeVisible();
+    await expect(nicknameInput).toBeDisabled();
 
-    // Verify description textarea
+    // Verify description textarea is disabled in read-only mode
     const descriptionInput = page.locator('[data-pw="team-description-input"]');
     await expect(descriptionInput).toBeVisible();
+    await expect(descriptionInput).toBeDisabled();
 
-    // Verify save button
+    // Verify edit button is visible in read-only mode
+    const editButton = page.locator('[data-pw="team-settings-edit-button"]');
+    await expect(editButton).toBeVisible();
+
+    // Verify save button is NOT visible in read-only mode
     const saveButton = page.locator('[data-pw="team-settings-save-button"]');
-    await expect(saveButton).toBeVisible();
+    await expect(saveButton).not.toBeVisible();
   });
 
   test('[TS-002] should display delete team button for team owner', async ({
@@ -91,64 +97,63 @@ test.describe('Team Settings - Authenticated User', () => {
   test('[TS-003] should update team nickname', async ({ page }) => {
     const newNickname = `Updated Team ${Date.now()}`;
 
-    // Fill new nickname
+    // Click edit button first
+    await click(page, { 'data-pw': 'team-settings-edit-button' });
+
+    // Wait for inputs to be enabled
     const nicknameInput = page.locator('[data-pw="team-nickname-input"]');
+    await expect(nicknameInput).toBeEnabled();
+
+    // Fill new nickname
     await nicknameInput.clear();
     await nicknameInput.fill(newNickname);
 
     // Click save button
     await click(page, { 'data-pw': 'team-settings-save-button' });
 
-    // Verify we're redirected to team home
-    // await page.waitForURL(`/teams/${testTeamUsername}/home`);
+    // Wait for save to complete and return to read-only mode
+    await page.waitForTimeout(1000);
 
-    // Go back to settings to verify the change persisted
-
+    // Verify we're back in read-only mode with updated value
     const nicknameInputAfter = page.locator('[data-pw="team-nickname-input"]');
-    await nicknameInputAfter.waitFor({ state: 'visible' });
+    await expect(nicknameInputAfter).toBeDisabled();
     await expect(nicknameInputAfter).toHaveValue(newNickname);
   });
 
-  test('[TS-004] should disable save button for invalid input', async ({
+  test('[TS-004] should show validation error for invalid input', async ({
     page,
   }) => {
+    // Click edit button first
+    await click(page, { 'data-pw': 'team-settings-edit-button' });
+
     const nicknameInput = page.locator('[data-pw="team-nickname-input"]');
     const saveButton = page.locator('[data-pw="team-settings-save-button"]');
 
-    // Start with current valid value
-    const currentNickname = await nicknameInput.inputValue();
+    // Wait for edit mode
+    await expect(nicknameInput).toBeEnabled();
+    await expect(saveButton).toBeVisible();
 
-    // Clear to empty (which should disable)
+    // Clear nickname (should trigger validation error on save)
     await nicknameInput.clear();
 
-    // Check if button gets disabled for empty input
-    const isDisabledForEmpty = await saveButton.isDisabled().catch(() => false);
+    // Try to save with empty nickname
+    await click(page, { 'data-pw': 'team-settings-save-button' });
 
-    // If empty doesn't disable, the form allows empty values (which is valid)
-    if (!isDisabledForEmpty) {
-      // Restore original value
-      await nicknameInput.fill(currentNickname);
-    }
+    // Should still be in edit mode (validation failed)
+    await page.waitForTimeout(500);
+    await expect(saveButton).toBeVisible();
+    await expect(nicknameInput).toBeEnabled();
   });
 
   test('[TS-005] should show delete team confirmation popup', async ({
     page,
   }) => {
+    // Delete button should be visible in read-only mode
     const deleteButton = page.locator('[data-pw="team-delete-button"]');
     const isVisible = await deleteButton.isVisible().catch(() => false);
 
     if (isVisible) {
-      // First ensure button is enabled (no invalid input)
-      const nicknameInput = page.locator('[data-pw="team-nickname-input"]');
-      const currentValue = await nicknameInput.inputValue();
-
-      // Make sure we have valid input
-      if (currentValue.includes('test')) {
-        await nicknameInput.clear();
-        await nicknameInput.fill('Valid Team Name');
-      }
-
-      // Click delete button
+      // Click delete button (in read-only mode)
       await deleteButton.click();
 
       // Verify confirmation popup appears
@@ -207,24 +212,52 @@ test.describe('Team Settings - Authenticated User', () => {
     expect(isEditable).toBeFalsy();
   });
 
-  test('[TS-008] should handle empty nickname gracefully', async ({ page }) => {
+  test('[TS-008] should cancel edit and discard changes', async ({ page }) => {
+    // Get original nickname value
     const nicknameInput = page.locator('[data-pw="team-nickname-input"]');
-    const saveButton = page.locator('[data-pw="team-settings-save-button"]');
+    const originalNickname = await nicknameInput.inputValue();
 
-    // Clear nickname
+    // Click edit button
+    await click(page, { 'data-pw': 'team-settings-edit-button' });
+
+    // Wait for edit mode
+    await expect(nicknameInput).toBeEnabled();
+
+    // Change nickname
     await nicknameInput.clear();
+    await nicknameInput.fill('This should be discarded');
 
-    // Save button might be disabled or enabled depending on validation
-    const isDisabled = await saveButton.isDisabled().catch(() => false);
+    // Click cancel button
+    await click(page, { 'data-pw': 'team-settings-cancel-button' });
 
-    if (!isDisabled) {
-      // If save is allowed with empty nickname, try to save
-      await click(page, { 'data-pw': 'team-settings-save-button' });
+    // Should return to read-only mode
+    await expect(nicknameInput).toBeDisabled();
 
-      // Wait for redirect or error
-      await page
-        .waitForURL(`/teams/${testTeamUsername}/home`, { timeout: 5000 })
-        .catch(() => {});
-    }
+    // Verify original value is restored
+    await expect(nicknameInput).toHaveValue(originalNickname);
+  });
+
+  test('[TS-009] should hide delete button in edit mode', async ({ page }) => {
+    const deleteButton = page.locator('[data-pw="team-delete-button"]');
+    const editButton = page.locator('[data-pw="team-settings-edit-button"]');
+
+    // Delete button should be visible in read-only mode
+    const isVisibleBefore = await deleteButton.isVisible().catch(() => false);
+    expect(isVisibleBefore).toBeTruthy();
+
+    // Click edit button
+    await click(page, { 'data-pw': 'team-settings-edit-button' });
+
+    // Delete button should be hidden in edit mode
+    await expect(deleteButton).not.toBeVisible();
+
+    // Edit button should also be hidden
+    await expect(editButton).not.toBeVisible();
+
+    // Save and Cancel buttons should be visible
+    const saveButton = page.locator('[data-pw="team-settings-save-button"]');
+    const cancelButton = page.locator('[data-pw="team-settings-cancel-button"]');
+    await expect(saveButton).toBeVisible();
+    await expect(cancelButton).toBeVisible();
   });
 });

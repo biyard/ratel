@@ -4,7 +4,7 @@ use crate::{
         team::Team,
         user::{User, UserTeam, UserTeamQueryOption},
     },
-    types::{EntityType, TeamGroupPermission},
+    types::{EntityType, Permissions, TeamGroupPermission},
     utils::{
         security::{RatelResource, check_any_permission_with_user},
         validator::{validate_description, validate_image_url},
@@ -48,24 +48,13 @@ pub type UpdateTeamResponse = TeamResponse;
 
 pub async fn update_team_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
+    NoApi(user): NoApi<User>,
+    NoApi(perm): NoApi<Permissions>,
     Path(params): Path<UpdateTeamPathParams>,
     Json(req): Json<UpdateTeamRequest>,
 ) -> Result<Json<UpdateTeamResponse>, Error> {
-    let user = user.ok_or(Error::Unauthorized("Authentication required".into()))?;
+    perm.permitted(TeamGroupPermission::TeamEdit)?;
 
-    check_any_permission_with_user(
-        &dynamo.client,
-        &user,
-        RatelResource::Team {
-            team_pk: params.team_pk.clone(),
-        },
-        vec![
-            TeamGroupPermission::TeamEdit,
-            TeamGroupPermission::TeamAdmin,
-        ],
-    )
-    .await?;
     tracing::debug!("Updating team: {:?}", req);
 
     let team = Team::get(&dynamo.client, &params.team_pk, Some(EntityType::Team)).await?;
