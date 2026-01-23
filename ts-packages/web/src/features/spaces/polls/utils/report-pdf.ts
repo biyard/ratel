@@ -868,6 +868,14 @@ export const buildReportPdfBlob = async (
   return blob;
 };
 
+export const buildReportPdfBlobFromContents = async (
+  htmlContents: string,
+): Promise<Blob> => {
+  const { buildReportHtmlDocument } = await import('./report-html');
+  const htmlDocument = buildReportHtmlDocument(htmlContents);
+  return buildReportPdfBlob(htmlDocument);
+};
+
 export const uploadReportPdf = async (presignedUrl: string, blob: Blob) => {
   const res = await fetch(presignedUrl, {
     method: 'PUT',
