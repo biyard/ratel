@@ -166,9 +166,22 @@ export const teamKeys = {
   members: (teamName: string) =>
     [...teamKeys.detail(teamName), 'members'] as const,
   groups: (teamPk: string) => [...teamKeys.detail(teamPk), 'groups'] as const,
+  reward: (teamPk: string, month: string) =>
+    [...teamKeys.detail(teamPk), 'reward', month] as const,
+  reward_lists: (teamPk: string, month: string) =>
+    [...teamKeys.detail(teamPk), 'reward_lists', month] as const,
 };
 
 export const QK_MEMBERSHIPS = 'memberships';
 export const QK_ATTRIBUTE_CODES = 'attribute-codes';
 
 export const PANEL_NAME_AUTO_SAVE_DELAY_MS = 500;
+
+const QK_USERS = 'users';
+export const userKeys = {
+  all: [QK_USERS] as const,
+  detail: () => [...userKeys.all, 'detail'] as const,
+  rewards: (month?: string) => [...userKeys.all, 'rewards', month] as const,
+  reward_lists: (month?: string) =>
+    [...userKeys.all, 'reward_lists', month] as const,
+};

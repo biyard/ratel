@@ -157,14 +157,14 @@ export const ratelApi = {
   //     `/v3/assets/multiparts?file_type=${file_type}&total_count=${total_count}`,
   //   createMultipartUpload: () => `/v3/assets/multiparts/complete`,
   // },
-  teams: {
-    createTeam: () => '/v3/teams',
-    deleteTeam: (teamPk: string) => `/v3/teams/${teamPk}`,
-    getTeamByPk: (teamPk: string) => `/v3/teams/${teamPk}`,
-    getTeamByUsername: (username: string) => `/v3/teams?username=${username}`,
-    updateTeam: (teamPk: string) => `/v3/teams/${teamPk}`,
-    getTeamMembers: (teamPk: string) => `/v3/teams/${teamPk}/members`,
-  },
+  // teams: {
+  //   createTeam: () => '/v3/teams',
+  //   deleteTeam: (teamPk: string) => `/v3/teams/${teamPk}`,
+  //   getTeamByPk: (teamPk: string) => `/v3/teams/${teamPk}`,
+  //   getTeamByUsername: (username: string) => `/v3/teams?username=${username}`,
+  //   updateTeam: (teamPk: string) => `/v3/teams/${teamPk}`,
+  //   getTeamMembers: (teamPk: string) => `/v3/teams/${teamPk}/members`,
+  // },
   subscription: {
     subscribe: () => '/v1/subscriptions?action=subscribe',
   },

@@ -2,18 +2,14 @@ import { RewardsI18n } from '../types';
 import { PointTransactionResponse, TransactionType } from '@/app/rewards/types';
 import { formatDistanceToNow } from 'date-fns';
 import Card from '@/components/card';
+import { formatPoints } from './utils';
 
 interface TransactionItemProps {
   i18n: RewardsI18n;
   transaction: PointTransactionResponse;
-  formatPoints: (points: number) => string;
 }
 
-export function TransactionItem({
-  i18n,
-  transaction,
-  formatPoints,
-}: TransactionItemProps) {
+export function TransactionItem({ i18n, transaction }: TransactionItemProps) {
   const isReceived = transaction.transaction_type === TransactionType.Award;
   const timeAgo = formatDistanceToNow(new Date(transaction.created_at), {
     addSuffix: true,

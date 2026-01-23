@@ -1,6 +1,7 @@
 import { ArrowsArrowRight } from '@/components/icons';
 import { RewardsI18n } from '../types';
 import Card from '@/components/card';
+import { formatPoints, formatTokens } from './utils';
 
 interface ExchangePreviewCardProps {
   i18n: RewardsI18n;
@@ -8,8 +9,6 @@ interface ExchangePreviewCardProps {
   totalPoints: number;
   estimatedTokens: number;
   tokenSymbol: string;
-  formatPoints: (points: number) => string;
-  formatTokens: (tokens: number) => string;
   canExchange?: boolean; // Optional: Admin-only token exchange capability
   exchangeButtonText?: string; // Optional: Custom button text
   onExchangeClick?: () => void; // Optional: Exchange button click handler
@@ -21,8 +20,7 @@ export function ExchangePreviewCard({
   totalPoints,
   estimatedTokens,
   tokenSymbol,
-  formatPoints,
-  formatTokens,
+
   canExchange = true,
   exchangeButtonText,
   onExchangeClick,

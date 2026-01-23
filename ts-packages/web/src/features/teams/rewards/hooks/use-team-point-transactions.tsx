@@ -1,8 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { ListPointTransactionsResponse } from '../types';
-
-export const QK_TEAM_POINT_TRANSACTIONS = 'team-point-transactions';
+import { teamKeys } from '@/constants';
 
 export async function listTeamPointTransactions(
   teamPk: string,
@@ -22,7 +21,7 @@ export async function listTeamPointTransactions(
   }
 
   const queryString = params.toString();
-  const path = `/v3/teams/${teamPk}/points/transactions${queryString ? `?${queryString}` : ''}`;
+  const path = `/v3/teams/${encodeURIComponent(teamPk)}/points/transactions${queryString ? `?${queryString}` : ''}`;
 
   return call('GET', path);
 }
@@ -33,7 +32,7 @@ export function useTeamPointTransactions(
   limit: number = 10,
 ) {
   return useInfiniteQuery({
-    queryKey: [QK_TEAM_POINT_TRANSACTIONS, teamPk, month],
+    queryKey: teamKeys.reward(teamPk, month),
     queryFn: async ({
       pageParam,
     }: {

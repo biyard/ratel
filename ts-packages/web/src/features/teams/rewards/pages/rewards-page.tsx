@@ -63,8 +63,6 @@ function RewardsPageContent({ username }: RewardsPageProps) {
         monthlyTokenSupply={rewards.monthly_token_supply}
         estimatedTokens={estimatedTokens}
         tokenSymbol={rewards.token_symbol}
-        formatPoints={ctrl.formatPoints}
-        formatTokens={ctrl.formatTokens}
       />
       <ExchangePreviewCard
         i18n={i18n}
@@ -72,8 +70,6 @@ function RewardsPageContent({ username }: RewardsPageProps) {
         estimatedTokens={estimatedTokens}
         name={ctrl.team.nickname}
         tokenSymbol={rewards.token_symbol}
-        formatPoints={ctrl.formatPoints}
-        formatTokens={ctrl.formatTokens}
       />
 
       <div className="mt-6">
@@ -84,7 +80,6 @@ function RewardsPageContent({ username }: RewardsPageProps) {
           hasNextPage={ctrl.hasNextPage}
           isFetchingNextPage={ctrl.isFetchingNextPage}
           fetchNextPage={ctrl.fetchNextPage}
-          formatPoints={ctrl.formatPoints}
         />
       </div>
     </div>

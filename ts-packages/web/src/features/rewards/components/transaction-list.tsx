@@ -9,7 +9,6 @@ interface TransactionListProps {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
-  formatPoints: (points: number) => string;
 }
 
 export function TransactionList({
@@ -19,7 +18,6 @@ export function TransactionList({
   hasNextPage,
   isFetchingNextPage,
   fetchNextPage,
-  formatPoints,
 }: TransactionListProps) {
   if (isLoading) {
     return (
@@ -43,7 +41,6 @@ export function TransactionList({
           key={`${transaction.created_at}-${index}`}
           i18n={i18n}
           transaction={transaction}
-          formatPoints={formatPoints}
         />
       ))}
 

@@ -1,5 +1,6 @@
 import { ArrowUp, ArrowsExchange } from '@/components/icons';
 import { RewardsI18n } from '../types';
+import { formatPoints, formatTokens } from './utils';
 
 interface PointsSummaryCardProps {
   i18n: RewardsI18n;
@@ -8,8 +9,6 @@ interface PointsSummaryCardProps {
   userPoints: number;
   monthlyTokenSupply: number;
   estimatedTokens: number;
-  formatPoints: (points: number) => string;
-  formatTokens: (tokens: number) => string;
 }
 
 export function PointsSummaryCard({
@@ -19,8 +18,6 @@ export function PointsSummaryCard({
   tokenSymbol,
   monthlyTokenSupply,
   estimatedTokens,
-  formatPoints,
-  formatTokens,
 }: PointsSummaryCardProps) {
   const sharePercentage =
     totalPoints > 0 ? ((userPoints / totalPoints) * 100).toFixed(2) : '0';

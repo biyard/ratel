@@ -1,8 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { TeamRewardsResponse } from '../types';
-
-export const QK_TEAM_REWARDS = 'team-rewards';
+import { teamKeys } from '@/constants';
 
 export async function getTeamRewards(
   teamPk: string,
@@ -13,13 +12,14 @@ export async function getTeamRewards(
     params.append('month', month);
   }
   const queryString = params.toString();
-  const path = `/v3/teams/${teamPk}/points${queryString ? `?${queryString}` : ''}`;
+
+  const path = `/v3/teams/${encodeURIComponent(teamPk)}/points${queryString ? `?${queryString}` : ''}`;
   return call('GET', path);
 }
 
 export function useTeamRewards(teamPk: string, month?: string) {
   return useQuery({
-    queryKey: [QK_TEAM_REWARDS, teamPk, month],
+    queryKey: teamKeys.reward(teamPk, month),
     queryFn: () => getTeamRewards(teamPk, month),
   });
 }
