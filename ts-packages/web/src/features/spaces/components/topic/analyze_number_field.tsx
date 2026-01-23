@@ -57,7 +57,9 @@ export function AnalyzeNumberField({
             const n = Number(nextRaw);
             if (!Number.isFinite(n)) return;
 
-            onValueChange(clamp(n));
+            const fixed = clamp(n);
+            onValueChange(fixed);
+            if (fixed !== n) setRaw(String(fixed));
           }}
           onBlur={() => {
             const n = Number(raw);
