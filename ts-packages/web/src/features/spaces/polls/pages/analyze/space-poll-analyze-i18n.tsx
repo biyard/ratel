@@ -28,7 +28,7 @@ export const i18nSpacePollAnalyze = {
     download_analyze: 'Download Analyze',
     confirm: 'Confirm',
     input_hint: 'Please enter a number between 1 and 20.',
-    tfidf_input_hint: 'Please enter a number between 1 and 50.',
+    tfidf_input_hint: 'Please enter a number between 1 and 20.',
     success_analyze:
       'Your analysis request was successful. It may take some time for the analysis results to be reflected.',
     analyze_error:
@@ -87,7 +87,7 @@ export const i18nSpacePollAnalyze = {
     download_analyze: '분석 다운로드',
     confirm: '확인',
     input_hint: '1~20 사이로 입력해주세요.',
-    tfidf_input_hint: '1~50 사이로 입력해주세요.',
+    tfidf_input_hint: '1~20 사이로 입력해주세요.',
     success_analyze:
       '분석 요청에 성공했습니다. 분석 결과 반영에는 시간이 소요될 수 있습니다.',
     analyze_error: '분석에 실패했습니다. 잠시 후 다시 시도해주세요.',

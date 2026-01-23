@@ -5,7 +5,6 @@ import { PostEditorWithFooter } from '@/features/posts/components/post-editor-wi
 import { Editor } from '@tiptap/react';
 import { SpaceAnalyze } from '@/features/spaces/polls/types/space-analyze';
 import { Button } from '@/components/ui/button';
-import { config } from '@/config';
 import React from 'react';
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
@@ -44,7 +43,7 @@ export function ReportDraft({
     Array.isArray(analyze?.network?.nodes) &&
     analyze.network.nodes.length > 0;
   const hasTfIdf = Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0;
-  const showDownload = (hasLda || hasNetwork || hasTfIdf) && config.experiment;
+  const showDownload = hasLda || hasNetwork || hasTfIdf;
 
   useEffect(() => {
     if (editing) return;
