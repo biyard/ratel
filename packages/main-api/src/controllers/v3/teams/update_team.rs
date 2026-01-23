@@ -48,7 +48,7 @@ pub type UpdateTeamResponse = TeamResponse;
 
 pub async fn update_team_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
+    NoApi(_user): NoApi<User>,
     NoApi(perm): NoApi<Permissions>,
     Path(params): Path<UpdateTeamPathParams>,
     Json(req): Json<UpdateTeamRequest>,
