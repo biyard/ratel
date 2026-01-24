@@ -74,7 +74,7 @@ export default function Header(props: HeaderProps) {
       name: t('home'),
       icon: (
         <HomeIcon
-          className="group-hover:[&>path]:stroke-menu-text/80 transition-all"
+          className="[&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80 transition-all"
           width="24"
           height="24"
         />
@@ -87,7 +87,7 @@ export default function Header(props: HeaderProps) {
       name: t('my_network'),
       icon: (
         <UserGroupIcon
-          className="group-hover:[&>path]:stroke-menu-text/80 transition-all"
+          className="[&>path]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80 transition-all"
           width="24"
           height="24"
         />
@@ -127,7 +127,7 @@ export default function Header(props: HeaderProps) {
       name: t('admin'),
       icon: (
         <InternetIcon
-          className="group-hover:[&>path]:stroke-menu-text/80 group-hover:[&>circle]:stroke-menu-text/80 transition-all"
+          className="[&>path]:stroke-menu-text [&>circle]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80 group-hover:[&>circle]:stroke-menu-text/80 transition-all"
           width="24"
           height="24"
         />
@@ -140,7 +140,7 @@ export default function Header(props: HeaderProps) {
       name: 'Test Report',
       icon: (
         <InternetIcon
-          className="group-hover:[&>path]:stroke-white group-hover:[&>circle]:stroke-white transition-all"
+          className="[&>path]:stroke-menu-text [&>circle]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80 group-hover:[&>circle]:stroke-menu-text/80 transition-all"
           width="24"
           height="24"
         />
@@ -153,7 +153,7 @@ export default function Header(props: HeaderProps) {
       name: 'Storybook',
       icon: (
         <InternetIcon
-          className="group-hover:[&>path]:stroke-white group-hover:[&>circle]:stroke-white transition-all"
+          className="[&>path]:stroke-menu-text [&>circle]:stroke-menu-text group-hover:[&>path]:stroke-menu-text/80 group-hover:[&>circle]:stroke-menu-text/80 transition-all"
           width="24"
           height="24"
         />
