@@ -374,22 +374,22 @@ export function OnboardingTag() {
   );
 }
 
-export function JoinNowButton({ onClick }: { onClick: () => void }) {
-  const { t } = useTranslation('Home');
-  return (
-    <Button
-      variant="rounded_primary"
-      className="flex flex-row py-3 px-5 my-2.5 font-bold cursor-pointer bg-enable-button-bg w-fit rounded-[10px] text-enable-button-text text-[15px] hover:bg-enable-button-bg/80"
-      onClick={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        onClick();
-      }}
-    >
-      {t('join_now')}
-    </Button>
-  );
-}
+// export function JoinNowButton({ onClick }: { onClick: () => void }) {
+//   const { t } = useTranslation('Home');
+//   return (
+//     <Button
+//       variant="rounded_primary"
+//       className="flex flex-row py-3 px-5 my-2.5 font-bold cursor-pointer bg-enable-button-bg w-fit rounded-[10px] text-enable-button-text text-[15px] hover:bg-enable-button-bg/80"
+//       onClick={(e) => {
+//         e.stopPropagation();
+//         e.preventDefault();
+//         onClick();
+//       }}
+//     >
+//       {t('join_now')}
+//     </Button>
+//   );
+// }
 
 interface FeedFooterProps {
   post_pk: string;
@@ -455,28 +455,9 @@ export function FeedFooter({
 
   return (
     <Row
-      className={`items-center justify-between border-t w-full px-5 ${
-        space_id && space_type ? 'border-divider' : 'border-divider'
-      } `}
+      className="items-center justify-between border-t w-full px-5 border-divider"
     >
-      {space_id && space_type ? (
-        <div className="max-tablet:!hidden">
-          <JoinNowButton
-            onClick={() => {
-              nav(route.spaceByType(space_type, space_id));
-            }}
-          />
-        </div>
-      ) : (
-        <div></div>
-      )}
-      <div
-        className={`flex flex-row ${
-          space_id && space_type
-            ? 'w-fit items-center max-tablet:!w-full max-tablet:!justify-between max-tablet:!items-center'
-            : 'w-full justify-between items-center'
-        }`}
-      >
+      <div className="flex flex-row w-full justify-between items-center">
         <IconText
           onClick={(evt) => {
             evt.stopPropagation();
