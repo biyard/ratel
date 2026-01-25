@@ -168,7 +168,7 @@ interface FeedBodyProps {
   onEdit?: (e: React.MouseEvent) => void | Promise<void>;
 }
 
-export function FeedBody({ post, onEdit = () => { } }: FeedBodyProps) {
+export function FeedBody({ post, onEdit = () => {} }: FeedBodyProps) {
   const { data: user } = useSuspenseUserInfo();
   const {
     title,
@@ -286,8 +286,7 @@ export function IconText({
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
   return (
     <Row
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-text-primary text-[15px] px-3 py-3 ${className || ''
-        }`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-text-primary text-[15px] px-3 py-3 ${className || ''}`}
       {...props}
     >
       {children}
