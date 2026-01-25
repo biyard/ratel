@@ -29,6 +29,7 @@ export function NetworkChart({ t, isHtml, network }: NetworkProps) {
   const fgRef = useRef<ForceGraphMethods<FGNode, FGLink> | null>(null);
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const didInitialFitRef = useRef(false);
+  const didSetupRef = useRef(false);
   const [size, setSize] = useState({ w: 0, h: 0 });
 
   const graph = useMemo(() => {
@@ -101,6 +102,11 @@ export function NetworkChart({ t, isHtml, network }: NetworkProps) {
     return 0.06 + r * 0.22;
   };
 
+  const graphData = useMemo(
+    () => ({ nodes: graph.nodes, links: graph.links }),
+    [graph.nodes, graph.links],
+  );
+
   const fitToCenter = (force = false) => {
     const fg = fgRef.current;
     if (!fg || graph.nodes.length === 0) return;
@@ -152,7 +158,7 @@ export function NetworkChart({ t, isHtml, network }: NetworkProps) {
       const rect = el.getBoundingClientRect();
       const w = Math.max(0, Math.floor(rect.width));
       const h = Math.max(0, Math.floor(rect.height));
-      setSize({ w, h });
+      setSize((prev) => (prev.w === w && prev.h === h ? prev : { w, h }));
     });
 
     ro.observe(el);
@@ -160,6 +166,7 @@ export function NetworkChart({ t, isHtml, network }: NetworkProps) {
   }, []);
 
   useEffect(() => {
+    if (didSetupRef.current) return;
     const fg = fgRef.current;
     if (!fg || graph.nodes.length === 0 || size.w === 0 || size.h === 0) return;
 
@@ -212,6 +219,7 @@ export function NetworkChart({ t, isHtml, network }: NetworkProps) {
     );
 
     fg.d3ReheatSimulation();
+    didSetupRef.current = true;
 
     const raf1 = requestAnimationFrame(() => {
       const raf2 = requestAnimationFrame(() => fitToCenter(true));
@@ -256,7 +264,7 @@ export function NetworkChart({ t, isHtml, network }: NetworkProps) {
             ref={fgRef}
             width={size.w}
             height={size.h}
-            graphData={{ nodes: graph.nodes, links: graph.links }}
+            graphData={graphData}
             backgroundColor="transparent"
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             linkColor={(l: any) =>

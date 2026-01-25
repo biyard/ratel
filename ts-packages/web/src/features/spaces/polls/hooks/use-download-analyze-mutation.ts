@@ -3,12 +3,15 @@ import { spaceKeys } from '@/constants';
 import { call } from '@/lib/api/ratel/call';
 import { SpaceAnalyze } from '../types/space-analyze';
 import { optimisticUpdate } from '@/lib/hook-utils';
-import { buildReportPdfBlob, uploadReportPdf } from '../utils/report-pdf';
+import {
+  buildReportPdfBlobFromContents,
+  uploadReportPdf,
+} from '../utils/report-pdf';
 
 type DownloadAnalyzeResponse = {
   presigned_url: string;
   metadata_url: string;
-  html_document: string;
+  html_contents: string;
 };
 
 export function useDownloadAnalyzeMutation<
@@ -24,7 +27,9 @@ export function useDownloadAnalyzeMutation<
         {},
       );
 
-      const pdfBlob = await buildReportPdfBlob(res.html_document);
+      const pdfBlob = await buildReportPdfBlobFromContents(
+        res.html_contents ?? '',
+      );
       await uploadReportPdf(res.presigned_url, pdfBlob);
 
       await call(
@@ -36,25 +41,11 @@ export function useDownloadAnalyzeMutation<
       return { spacePk, metadataUrl: res.metadata_url };
     },
 
-    onSuccess: async ({ metadataUrl }, { spacePk }) => {
+    onSuccess: async ({ spacePk }) => {
       await optimisticUpdate<T>(
         { queryKey: spaceKeys.topics(spacePk) },
         (response) => response,
       );
-
-      const bust = (url: string) =>
-        `${url}${url.includes('?') ? '&' : '?'}v=${Date.now()}`;
-
-      qc.invalidateQueries({ queryKey: spaceKeys.topics(spacePk) });
-
-      const a = document.createElement('a');
-      a.href = bust(metadataUrl);
-      a.target = '_blank';
-      a.rel = 'noreferrer';
-      a.download = '';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
 
       qc.invalidateQueries({ queryKey: spaceKeys.topics(spacePk) });
     },
