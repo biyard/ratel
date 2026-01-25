@@ -5,7 +5,7 @@ import { Construct } from "constructs";
 
 import { KbSyncLambda } from "./constructs/kb-sync-lambda";
 import { BedrockAgent } from "./constructs/bedrock-agent";
-import { aws_s3vectors } from "aws-cdk-lib";
+import * as aws_s3vectors from "aws-cdk-lib/aws-s3vectors";
 import * as iam from "aws-cdk-lib/aws-iam";
 
 export interface AiStackProps extends cdk.StackProps {
@@ -152,16 +152,10 @@ export class AiStack extends cdk.Stack {
 
     const dataSource = new bedrock.CfnDataSource(this, "DataSource", {
       name: props.dataSourceName,
-      description: `S3 data source for ${knowledgeBaseName}`,
+      description: `Custom data source for ${knowledgeBaseName} - direct ingestion only`,
       knowledgeBaseId: knowledgeBase.attrKnowledgeBaseId,
       dataSourceConfiguration: {
-        type: "S3",
-        s3Configuration: {
-          bucketArn: props.dataSourceBucketArn,
-          ...(props.dataSourcePrefix && {
-            inclusionPrefixes: [props.dataSourcePrefix],
-          }),
-        },
+        type: "CUSTOM",
       },
     });
     dataSource.node.addDependency(dataSourceBucket);
@@ -198,7 +192,7 @@ export class AiStack extends cdk.Stack {
           maxRecentSessions: 20,
         },
       },
-      aliasName: "production",
+      aliasName: "development",
     });
 
     bedrockAgent.node.addDependency(knowledgeBase);

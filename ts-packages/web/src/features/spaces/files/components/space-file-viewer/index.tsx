@@ -7,7 +7,6 @@ import { route } from '@/route';
 
 const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 const VIDEO_EXTS = ['mp4', 'mov', 'webm', 'mkv'];
-const PDF_EXTS = ['pdf'];
 
 export interface SpaceFilesProps {
   files: FileModel[];

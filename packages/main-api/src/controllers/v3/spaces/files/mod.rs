@@ -17,5 +17,5 @@ use by_axum::axum::*;
 pub fn route() -> Router<AppState> {
     Router::new()
         .route("/", patch(update_files_handler).get(get_files_handler))
-        .route("/:file_id/ai-chat", post(ai_chat_handler))
+        .route("/ai-chat", post(ai_chat_handler))
 }
