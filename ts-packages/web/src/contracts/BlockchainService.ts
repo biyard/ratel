@@ -1,8 +1,8 @@
 // services/BlockchainService.ts
 import { ethers } from 'ethers';
 
-import SpaceFactoryArtifact from './artifacts/SpaceFactory.json';
-import SpaceDAOArtifact from './artifacts/SpaceDAO.json';
+import TeamDaoFactoryArtifact from './artifacts/TeamDaoFactory.json';
+import TeamDaoArtifact from './artifacts/TeamDAO.json';
 import RewardExtensionArtifact from './artifacts/RewardExtension.json';
 
 const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS || '';
@@ -60,7 +60,7 @@ export class BlockchainService {
 
     const factory = new ethers.Contract(
       FACTORY_ADDRESS,
-      SpaceFactoryArtifact.abi,
+      TeamDaoFactoryArtifact.abi,
       this.signer,
     );
 
@@ -170,7 +170,7 @@ export class BlockchainService {
 
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDAOArtifact.abi,
+      TeamDaoArtifact.abi,
       this.provider,
     );
 
@@ -223,7 +223,7 @@ export class BlockchainService {
 
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDAOArtifact.abi,
+      TeamDaoArtifact.abi,
       this.provider,
     );
 
@@ -250,7 +250,7 @@ export class BlockchainService {
   async getProposalInfo(daoAddress: string, proposalId: number) {
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDAOArtifact.abi,
+      TeamDaoArtifact.abi,
       this.provider,
     );
 
@@ -282,7 +282,7 @@ export class BlockchainService {
   async isDAOAdmin(daoAddress: string, userAddress: string): Promise<boolean> {
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDAOArtifact.abi,
+      TeamDaoArtifact.abi,
       this.provider,
     );
 
@@ -297,7 +297,7 @@ export class BlockchainService {
   async isDAOActive(daoAddress: string): Promise<boolean> {
     const dao = new ethers.Contract(
       daoAddress,
-      SpaceDAOArtifact.abi,
+      TeamDaoArtifact.abi,
       this.provider,
     );
 

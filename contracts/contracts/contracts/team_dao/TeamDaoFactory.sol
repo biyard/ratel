@@ -2,16 +2,16 @@
 pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "./SpaceDao.sol";
-import "./SpaceDaoRewardExtension.sol";
+import "./TeamDao.sol";
+import "./TeamDaoRewardExtension.sol";
 
-contract SpaceFactory {
+contract TeamDaoFactory {
     address public immutable daoImplementation;
     address public immutable extImplementation;
     
     address[] public deployedDAOs;
 
-    event SpaceCreated(address indexed dao, address indexed rewardExtension);
+    event TeamCreated(address indexed dao, address indexed rewardExtension);
 
     constructor(address _daoImpl, address _extImpl) {
         daoImplementation = _daoImpl;
@@ -34,12 +34,12 @@ contract SpaceFactory {
 
         // 3. Init DAO (Link Extension)
         // No mainToken passed here
-        SpaceDAO(payable(daoClone)).initialize(_admins, extClone);
+        TeamDAO(payable(daoClone)).initialize(_admins, extClone);
 
         // 4. Record
         deployedDAOs.push(daoClone);
         
-        emit SpaceCreated(daoClone, extClone);
+        emit TeamCreated(daoClone, extClone);
 
         return daoClone;
     }
