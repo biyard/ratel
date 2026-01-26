@@ -55,7 +55,7 @@ pub struct SpacePostPathParam {
     pub space_post_pk: Partition,
 }
 
-#[derive(Debug, serde::Serialize, serde::Deserialize, aide::OperationIo, JsonSchema, Default)]
+#[derive(Debug, serde::Serialize, aide::OperationIo, JsonSchema)]
 pub struct SpaceCommonResponse {
     pub pk: Partition,
     pub sk: EntityType,

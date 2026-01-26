@@ -91,13 +91,16 @@ pub async fn update_space_post_handler(
 
     let new_file_urls: Vec<String> = req.files.iter().filter_map(|f| f.url.clone()).collect();
     if !new_file_urls.is_empty() {
-        FileLink::add_link_targets_batch(
+        if let Err(e) = FileLink::add_link_targets_batch(
             &dynamo.client,
             space_pk.clone(),
             new_file_urls.clone(),
             FileLinkTarget::Board(post_id.clone()),
         )
-        .await?;
+        .await
+        {
+            tracing::error!("Failed to add file link targets: {:?}", e);
+        };
     }
 
     let removed_urls: Vec<String> = old_file_urls

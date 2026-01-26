@@ -73,12 +73,19 @@ export class SpaceFileEditorController {
     this.files.set([...this.files.get(), file]);
   };
 
-  handleRemoveFile = (index: number) => {
+  handleRemoveFile = (fileId: string) => {
     const currentFiles = this.files.get();
-    const fileToRemove = currentFiles[index];
+    const fileIndex = currentFiles.findIndex(file => file.id === fileId);
+    
+    if (fileIndex === -1) {
+      console.warn('File not found for removal:', fileId);
+      return;
+    }
+    
+    const fileToRemove = currentFiles[fileIndex];
 
     // Just update UI locally - don't call API yet
-    const newFiles = currentFiles.filter((_, i) => i !== index);
+    const newFiles = currentFiles.filter(file => file.id !== fileId);
     this.files.set(newFiles);
 
     // Track file URL for deletion on save (if it has a URL - uploaded files)
@@ -104,7 +111,7 @@ export function useSpaceFileEditorController(spacePk: string) {
     if (file?.files && !editing[0]) {
       files[1](file.files);
     }
-  }, [file?.files, editing[0]]);
+  }, [file?.files, editing[0]]); // eslint-disable-line react-hooks/exhaustive-deps -- files[1] setter is stable
 
   return new SpaceFileEditorController(
     spacePk,

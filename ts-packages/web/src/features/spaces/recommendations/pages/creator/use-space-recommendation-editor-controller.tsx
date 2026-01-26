@@ -70,8 +70,9 @@ export class SpaceRecommendationEditorController {
     this.files.set([...this.files.get(), file]);
   };
 
-  handleRemoveFile = (index: number) => {
-    const newFiles = this.files.get().filter((_, i) => i !== index);
+  handleRemoveFile = (fileId: string) => {
+    const currentFiles = this.files.get();
+    const newFiles = currentFiles.filter(file => file.id !== fileId);
     this.files.set(newFiles);
   };
 
@@ -102,8 +103,6 @@ export class SpaceRecommendationEditorController {
 
   handleUpdateContent = async (htmlContents: string) => {
     this.htmlContents.set(htmlContents);
-
-    console.log('Overview TipTap HTML output:', htmlContents);
 
     this.handleContentSave(htmlContents);
   };

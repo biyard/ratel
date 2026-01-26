@@ -67,13 +67,16 @@ pub async fn update_files_handler(
     if let Some(link_target) = req.link_target {
         let file_urls: Vec<String> = req.files.iter().filter_map(|f| f.url.clone()).collect();
         if !file_urls.is_empty() {
-            FileLink::add_link_targets_batch(
+            if let Err(e) = FileLink::add_link_targets_batch(
                 &dynamo.client,
                 space_pk.clone(),
                 file_urls,
                 link_target,
             )
-            .await?;
+            .await
+            {
+                tracing::error!("Failed to add file link targets: {:?}", e);
+            };
         }
     }
 
