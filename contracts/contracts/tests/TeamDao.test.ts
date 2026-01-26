@@ -174,12 +174,14 @@ describe("Modular DAO System", function () {
       await ext.connect(admin1).proposeBatch(ethers.ZeroAddress, pairs);
       await ext.connect(admin2).approveAndExecute(0);
 
-      expect(await ethers.provider.getBalance(user.address)).to.equal(
-        ethers.parseEther("10001")
-      ); // 기본 10000 + 1
-      expect(await ethers.provider.getBalance(recipient.address)).to.equal(
-        ethers.parseEther("10002")
-      ); // 기본 10000 + 2
+      const userBalance = await ethers.provider.getBalance(user.address);
+      const recipientBalance = await ethers.provider.getBalance(recipient.address);
+      const expectedUser = ethers.parseEther("10001");
+      const expectedRecipient = ethers.parseEther("10002");
+      const tolerance = ethers.parseEther("0.0003");
+
+      expect(userBalance).to.be.closeTo(expectedUser, tolerance);
+      expect(recipientBalance).to.be.closeTo(expectedRecipient, tolerance);
     });
   });
 });

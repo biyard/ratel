@@ -25,7 +25,7 @@ contract SpaceDAO {
     ) {
         require(usdt != address(0), "SpaceDAO: invalid token address");
         require(withdrawalAmount > 0, "SpaceDAO: invalid withdrawal amount");
-        require(_admins.length >= 3, "SpaceDAO: at least 3 admins required");
+        require(admins.length >= 3, "SpaceDAO: at least 3 admins required");
 
         _usdt = IERC20(usdt);
         _withdrawalAmount = withdrawalAmount;
