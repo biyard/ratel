@@ -26,13 +26,18 @@ pub async fn find_team_handler(
     NoApi(user): NoApi<Option<User>>,
     Query(params): Query<FindTeamQueryParams>,
 ) -> Result<Json<TeamResponse>, Error> {
-    let team_query_option = Team::opt_one();
+    let team_query_option = TeamQueryOption::builder().limit(50);
 
     let (team, _) =
         Team::find_by_username_prefix(&dynamo.client, params.username.clone(), team_query_option)
             .await?;
 
-    let team = team.into_iter().next().ok_or(Error::TeamNotFound)?;
+    tracing::debug!("ratel team: {:?}", team.clone());
+
+    let team = team
+        .into_iter()
+        .find(|t| t.username == params.username && t.sk == EntityType::Team)
+        .ok_or(Error::TeamNotFound)?;
 
     let permissions = if let Some(user) = user {
         let permissions = Team::get_permissions_by_team_pk(&dynamo.client, &team.pk, &user.pk)

@@ -39,7 +39,9 @@ pub struct Team {
     pub username: String, // Team Name
 
     #[dynamo(index = "gsi6", sk)]
+    #[serde(default)]
     pub followers: i64,
+    #[serde(default)]
     pub followings: i64,
 
     pub description: String,
