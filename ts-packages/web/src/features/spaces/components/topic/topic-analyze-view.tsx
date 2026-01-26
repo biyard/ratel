@@ -30,13 +30,18 @@ export function TopicAnalyzeView({
   const { t } = useTranslation('SpacePollAnalyze');
 
   const clamp = (v: number) => Math.min(20, Math.max(1, v));
-  const clampTfIdf = (v: number) => Math.min(50, Math.max(1, v));
-  const clampNetwork = (v: number) => Math.min(200, Math.max(1, v));
+  const clampTfIdf = (v: number) => Math.min(20, Math.max(1, v));
+  const clampNetwork = (v: number) => Math.min(30, Math.max(1, v));
 
   const [topicCount, setTopicCount] = React.useState<number>(5);
   const [tfIdfCount, setTfIdfCount] = React.useState<number>(10);
   const [networkTopNodes, setNetworkTopNodes] = React.useState<number>(30);
   const [removeTopics, setRemoveTopics] = React.useState<string>('');
+  const [networkSnapshot, setNetworkSnapshot] = React.useState(
+    analyze?.network,
+  );
+  const [networkRenderKey, setNetworkRenderKey] = React.useState(0);
+  const pendingNetworkRefreshRef = React.useRef(false);
 
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [submitError, setSubmitError] = React.useState(false);
@@ -44,9 +49,9 @@ export function TopicAnalyzeView({
   const hasLda =
     Array.isArray(analyze?.lda_topics) && analyze.lda_topics.length > 0;
   const hasNetwork =
-    analyze?.network != null &&
-    Array.isArray(analyze?.network?.nodes) &&
-    analyze.network.nodes.length > 0;
+    networkSnapshot != null &&
+    Array.isArray(networkSnapshot?.nodes) &&
+    networkSnapshot.nodes.length > 0;
   const hasTfIdf = Array.isArray(analyze?.tf_idf) && analyze.tf_idf.length > 0;
 
   React.useEffect(() => {
@@ -101,6 +106,20 @@ export function TopicAnalyzeView({
   }, [analyze?.network?.nodes, analyze?.network_count]);
 
   React.useEffect(() => {
+    if (!networkSnapshot && analyze?.network) {
+      setNetworkSnapshot(analyze.network);
+    }
+  }, [analyze?.network, networkSnapshot]);
+
+  React.useEffect(() => {
+    if (!pendingNetworkRefreshRef.current) return;
+    if (!analyze?.network) return;
+    setNetworkSnapshot(analyze.network);
+    setNetworkRenderKey((k) => k + 1);
+    pendingNetworkRefreshRef.current = false;
+  }, [analyze?.network]);
+
+  React.useEffect(() => {
     const arr = Array.isArray(analyze?.remove_topics)
       ? analyze!.remove_topics
       : [];
@@ -116,6 +135,7 @@ export function TopicAnalyzeView({
       setSubmitError(false);
       setIsSubmitting(true);
       await Promise.resolve(handleUpsertAnalyze?.(n, m, k, removeTopics));
+      pendingNetworkRefreshRef.current = true;
     } catch {
       setSubmitError(true);
     } finally {
@@ -149,7 +169,7 @@ export function TopicAnalyzeView({
               value={tfIdfCount}
               onValueChange={setTfIdfCount}
               min={1}
-              max={50}
+              max={20}
               clamp={clampTfIdf}
               fallbackOnBlur={10}
               disabled={pending || !allowRequest}
@@ -161,7 +181,7 @@ export function TopicAnalyzeView({
               value={networkTopNodes}
               onValueChange={setNetworkTopNodes}
               min={1}
-              max={200}
+              max={30}
               clamp={clampNetwork}
               fallbackOnBlur={30}
               disabled={pending || !allowRequest}
@@ -208,7 +228,11 @@ export function TopicAnalyzeView({
 
       {hasNetwork && (
         <Card key="network-chart">
-          <NetworkChart t={t} network={analyze?.network} />
+          <NetworkChart
+            key={networkRenderKey}
+            t={t}
+            network={networkSnapshot}
+          />
         </Card>
       )}
 

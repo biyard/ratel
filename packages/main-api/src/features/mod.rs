@@ -8,3 +8,5 @@ pub mod did;
 pub mod migration;
 pub mod teams;
 pub mod telegrams;
+
+pub mod rewards;

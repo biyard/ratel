@@ -55,5 +55,7 @@
   "failed_active_dao": "DAO 활성화에 실패했습니다. 가스비를 확인해주시고 다시 시도해주세요.",
   "dao_address": "DAO 주소",
   "activate_dao": "DAO 활성화",
-  "activating_dao": "DAO 활성화 중..."
+  "activating_dao": "DAO 활성화 중...",
+  "dao": "DAO",
+  "rewards": "리워드"
 }

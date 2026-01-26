@@ -1,5 +1,4 @@
 import { useMutation } from '@tanstack/react-query';
-import { getQueryClient } from '@/providers/getQueryClient';
 import { feedKeys } from '@/constants';
 import { FeedStatus } from '@/features/posts/types/post'; // FeedType 추가
 import { showErrorToast } from '@/lib/toast';
@@ -12,8 +11,6 @@ export function deletePost(postPk: string): Promise<void> {
 }
 
 export function useDeletePostMutation(username: string, status: FeedStatus) {
-  const queryClient = getQueryClient();
-
   return useMutation({
     mutationFn: async (postPk: string) => {
       await deletePost(postPk);

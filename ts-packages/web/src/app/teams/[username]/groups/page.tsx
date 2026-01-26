@@ -1,14 +1,11 @@
-'use client';
-
+import TeamGroupsPage from '@/features/teams/groups/pages/page';
 import { useParams } from 'react-router';
-import TeamGroups from './page.client';
 
 export default function Page() {
   const { username } = useParams<{ username: string }>();
 
   if (!username) {
-    return <div>Invalid team username</div>;
+    return <div>Username not found</div>;
   }
-
-  return <TeamGroups username={username} />;
+  return <TeamGroupsPage username={username!} />;
 }

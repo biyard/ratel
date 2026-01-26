@@ -4,6 +4,7 @@ import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { useTranslation } from 'react-i18next';
 import { NetworkChart } from '@/features/spaces/components/topic/network-chart';
 import { X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 type Payload = {
   network?: unknown;
@@ -37,6 +38,7 @@ function NetworkNodeView(props: any) {
     () => decode(props?.node?.attrs?.payload) as Payload | null,
     [props?.node?.attrs?.payload],
   );
+  const footnote = String(props?.node?.attrs?.footnote ?? '');
   const isEditable = !!props?.editor?.isEditable;
 
   return (
@@ -63,6 +65,21 @@ function NetworkNodeView(props: any) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           network={(payload as any)?.network}
         />
+        {isEditable ? (
+          <Input
+            type="text"
+            value={footnote}
+            onChange={(event) =>
+              props?.updateAttributes?.({ footnote: event.target.value })
+            }
+            placeholder={t('network_footnote_placeholder')}
+            className="mt-3 w-full rounded-md border border-input-box-border bg-transparent px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground text-center"
+          />
+        ) : footnote ? (
+          <div className="mt-3 w-full text-xs text-muted-foreground text-center">
+            {footnote}
+          </div>
+        ) : null}
       </div>
     </NodeViewWrapper>
   );
@@ -82,6 +99,20 @@ export const AnalyzeNetworkBlock = Node.create({
         renderHTML: (attrs) => {
           if (!attrs.payload) return {};
           return { 'data-payload': attrs.payload };
+        },
+      },
+      footnote: {
+        default: '',
+        parseHTML: (el) => {
+          const host = el as HTMLElement;
+          const direct = host.getAttribute('data-footnote');
+          if (direct) return direct;
+          const child = host.querySelector('div[data-analyze="network"]');
+          return child?.getAttribute('data-footnote') ?? '';
+        },
+        renderHTML: (attrs) => {
+          if (!attrs.footnote) return {};
+          return { 'data-footnote': attrs.footnote };
         },
       },
     };
@@ -112,7 +143,7 @@ export const AnalyzeNetworkBlock = Node.create({
             .chain()
             .focus()
             .insertContent([
-              { type: this.name, attrs: { payload: encoded } },
+              { type: this.name, attrs: { payload: encoded, footnote: '' } },
               { type: 'paragraph' },
             ])
             .run();
