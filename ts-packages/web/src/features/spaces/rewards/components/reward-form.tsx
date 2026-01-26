@@ -10,12 +10,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SpaceRewardResponse } from '../types/space-reward-response';
-import { RewardsI18n } from '../i18n';
+import { SpaceRewardsI18n } from '../i18n';
 import { RewardAction, getRewardActionI18nKey } from '../types/reward-type';
 import { RewardFormData } from '../pages/editor/reward-editor-controller';
 
 interface RewardFormProps {
-  i18n: RewardsI18n;
+  i18n: SpaceRewardsI18n;
   initialData?: SpaceRewardResponse | null;
   onSubmit: (data: RewardFormData) => Promise<void>;
   onCancel: () => void;

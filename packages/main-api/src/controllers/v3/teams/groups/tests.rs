@@ -224,7 +224,7 @@ async fn test_add_member_handler() {
     let groups = team_response.groups.unwrap_or_default();
     // group.id now contains just the UUID (not TEAM_GROUP#uuid format)
     let group_uuid = match &team_group.group_sk {
-        EntityType::TeamGroup(uuid) => uuid.to_string(),
+        EntityType::TeamGroup(uuid) => uuid.clone(),
         _ => team_group.group_sk.to_string(),
     };
     assert!(

@@ -11,7 +11,10 @@ import { useUserInfo } from '@/hooks/use-user-info';
 import Footer from '@/components/footer';
 import MobileSideMenu from '@/components/mobile-side-menu';
 import { usePageTracking } from '@/features/analytics/hooks/use-analytics';
-import { setAnalyticsUserId, setAnalyticsUserProperties } from '@/lib/service/analytics-service';
+import {
+  setAnalyticsUserId,
+  setAnalyticsUserProperties,
+} from '@/lib/service/analytics-service';
 
 export default function ClientLayout({
   children,

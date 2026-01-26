@@ -1,10 +1,13 @@
-use crate::models::{
-    dynamo_tables::main::user::user_team_group::UserTeamGroup,
-    team::{Team, TeamGroup, TeamMetadata, TeamOwner},
-    user::User,
-};
 use crate::types::EntityType;
 use crate::{AppState, Error};
+use crate::{
+    models::{
+        dynamo_tables::main::user::user_team_group::UserTeamGroup,
+        team::{Team, TeamGroup, TeamMetadata, TeamOwner},
+        user::User,
+    },
+    types::{Permissions, TeamGroupPermission},
+};
 use bdk::prelude::*;
 use by_axum::{
     aide::NoApi,
@@ -25,15 +28,12 @@ pub struct DeleteGroupResponse {
 
 pub async fn delete_group_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<Option<User>>,
+    NoApi(perms): NoApi<Permissions>,
     Path((team_username, group_id)): Path<(String, String)>,
 ) -> Result<Json<DeleteGroupResponse>, Error> {
     tracing::debug!("Deleting group {} from team: {}", group_id, team_username);
+    perms.permitted(TeamGroupPermission::GroupEdit)?;
 
-    // Check if user is authenticated
-    let auth_user = user.ok_or(Error::Unauthorized("Authentication required".into()))?;
-
-    // Get team by username
     let team_results =
         Team::find_by_username_prefix(&dynamo.client, team_username.clone(), Default::default())
             .await?;
@@ -45,17 +45,6 @@ pub async fn delete_group_handler(
         .ok_or(Error::NotFound("Team not found".into()))?;
 
     let team_pk = team.pk.clone();
-
-    // Check if user is the team owner
-    let team_owner = TeamOwner::get(&dynamo.client, &team_pk, Some(&EntityType::TeamOwner))
-        .await?
-        .ok_or(Error::NotFound("Team owner not found".into()))?;
-
-    if team_owner.user_pk != auth_user.pk {
-        return Err(Error::Unauthorized(
-            "Only the team owner can delete groups".into(),
-        ));
-    }
 
     // Find the specific group by ID using TeamMetadata::query
     let metadata_results = TeamMetadata::query(&dynamo.client, &team_pk).await?;
@@ -81,7 +70,6 @@ pub async fn delete_group_handler(
         .ok_or(Error::NotFound("Group not found".into()))?;
 
     // Delete all UserTeamGroup relationships for this specific group
-    // We need to query by team_pk and then filter for the specific group
     let group_sk_string = target_group.sk.to_string();
 
     let (all_user_team_groups, _) =

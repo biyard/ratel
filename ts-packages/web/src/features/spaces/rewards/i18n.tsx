@@ -1,7 +1,7 @@
 import { lang } from '@/i18n/config';
 import { useTranslation } from 'react-i18next';
 
-export const rewardsI18n: Record<lang, RewardsI18n> = {
+export const i18nSpaceRewards: Record<lang, SpaceRewardsI18n> = {
   en: {
     sidemenu: {
       title: 'Reward',
@@ -119,7 +119,7 @@ export const rewardsI18n: Record<lang, RewardsI18n> = {
   },
 };
 
-export interface RewardsI18n {
+export interface SpaceRewardsI18n {
   sidemenu: SideMenu;
   settings: SettingsI18n;
 }
@@ -179,8 +179,8 @@ interface SettingsI18n {
   points: string;
 }
 
-export function useRewardsI18n(): RewardsI18n {
-  const { t } = useTranslation('Rewards');
+export function useSpaceRewardsI18n(): SpaceRewardsI18n {
+  const { t } = useTranslation('SpaceRewards');
   return {
     sidemenu: {
       title: t('sidemenu.title'),
