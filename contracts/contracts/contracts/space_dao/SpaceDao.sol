@@ -8,71 +8,83 @@ interface IERC20 {
 }
 
 contract SpaceDAO {
-    address[] public admins;
-    mapping(address => bool) public isAdmin;
-    IERC20 public immutable usdt;
-    uint256 public withdrawalAmount;
-
-    error InvalidAdmin(address admin);
-    error InvalidWithdrawalAmount();
-    error InvalidTokenAddress();
-    error InsufficientBalance(uint256 needed, uint256 available);
+    address[] private _admins;
+    mapping(address => bool) private _isAdmin;
+    IERC20 private immutable _usdt;
+    uint256 private _withdrawalAmount;
 
     modifier onlyAdmin() {
-        require(isAdmin[msg.sender], "SpaceDAO: admin only");
+        require(_isAdmin[msg.sender], "SpaceDAO: admin only");
         _;
     }
 
     constructor(
-        address[] memory _admins,
-        address _usdt,
-        uint256 _withdrawalAmount
+        address[] memory admins,
+        address usdt,
+        uint256 withdrawalAmount
     ) {
-        if (_usdt == address(0)) {
-            revert InvalidTokenAddress();
-        }
-        if (_withdrawalAmount == 0) {
-            revert InvalidWithdrawalAmount();
+        require(usdt != address(0), "SpaceDAO: invalid token address");
+        require(withdrawalAmount > 0, "SpaceDAO: invalid withdrawal amount");
+
+        _usdt = IERC20(usdt);
+        _withdrawalAmount = withdrawalAmount;
+
+        for (uint256 i = 0; i < admins.length; i++) {
+            address admin = admins[i];
+            require(admin != address(0), "SpaceDAO: invalid admin");
+            require(!_isAdmin[admin], "SpaceDAO: duplicate admin");
+            _isAdmin[admin] = true;
+            _admins.push(admin);
         }
 
-        usdt = IERC20(_usdt);
-        withdrawalAmount = _withdrawalAmount;
-
-        for (uint256 i = 0; i < _admins.length; i++) {
-            address admin = _admins[i];
-            if (admin == address(0) || isAdmin[admin]) {
-                revert InvalidAdmin(admin);
-            }
-            isAdmin[admin] = true;
-            admins.push(admin);
-        }
-
-        if (admins.length == 0) {
-            revert InvalidAdmin(address(0));
-        }
+        require(_admins.length > 0, "SpaceDAO: no admins");
     }
 
     function deposit(uint256 amount) external {
         require(amount > 0, "SpaceDAO: amount is zero");
-        require(usdt.transferFrom(msg.sender, address(this), amount), "SpaceDAO: transfer failed");
+        require(_usdt.transferFrom(msg.sender, address(this), amount), "SpaceDAO: transfer failed");
+    }
+
+    function getAdmins() external view returns (address[] memory) {
+        return _admins;
+    }
+
+    function getIsAdmin(address account) external view returns (bool) {
+        return _isAdmin[account];
+    }
+
+    function getUsdt() external view returns (address) {
+        return address(_usdt);
+    }
+
+    function getWithdrawalAmount() external view returns (uint256) {
+        return _withdrawalAmount;
     }
 
     function distributeWithdrawal(address[] calldata recipients) external onlyAdmin {
         uint256 count = recipients.length;
         require(count > 0, "SpaceDAO: empty recipients");
 
-        uint256 totalNeeded = withdrawalAmount * count;
-        uint256 balance = usdt.balanceOf(address(this));
-        if (balance < totalNeeded) {
-            revert InsufficientBalance(totalNeeded, balance);
-        }
+        uint256 totalNeeded = _withdrawalAmount * count;
+        uint256 balance = _usdt.balanceOf(address(this));
+        require(
+            balance >= totalNeeded,
+            "SpaceDAO: insufficient balance"
+        );
 
         for (uint256 i = 0; i < count; i++) {
             address to = recipients[i];
-            if (to == address(0)) {
-                revert InvalidAdmin(to);
-            }
-            require(usdt.transfer(to, withdrawalAmount), "SpaceDAO: transfer failed");
+            require(to != address(0), "SpaceDAO: invalid recipient");
+            require(_usdt.transfer(to, _withdrawalAmount), "SpaceDAO: transfer failed");
         }
+    }
+
+    function getBalance() external view returns (uint256) {
+        return _usdt.balanceOf(address(this));
+    }
+
+    function setWithdrawalAmount(uint256 amount) external onlyAdmin {
+        require(amount > 0, "SpaceDAO: invalid withdrawal amount");
+        _withdrawalAmount = amount;
     }
 }
