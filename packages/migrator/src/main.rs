@@ -2,6 +2,7 @@
 mod migrate_poll_spaces;
 mod migrate_posts;
 mod migrate_teams;
+mod migrate_teams_v2;
 mod migrate_users;
 
 use aws_sdk_dynamodb::{
@@ -20,11 +21,11 @@ async fn main() {
         .with_target(false)
         .try_init();
 
-    let pool = PgPoolOptions::new()
-        .max_connections(10)
-        .connect("postgres://postgres:postgres@localhost:5432/ratel")
-        .await
-        .expect("Failed to create Postgres connection pool");
+    // let pool = PgPoolOptions::new()
+    //     .max_connections(10)
+    //     .connect("postgres://postgres:postgres@localhost:5432/ratel")
+    //     .await
+    //     .expect("Failed to create Postgres connection pool");
 
     let conf = Config::builder()
         .credentials_provider(
@@ -36,15 +37,14 @@ async fn main() {
         )
         .region(Region::new("us-east-1"))
         .behavior_version_latest()
-        .endpoint_url("http://localhost:4566")
         .build();
 
     let cli = Client::from_conf(conf);
-
-    migrate_users::migrate_users(&pool, &cli).await;
-    migrate_teams::migrate_teams(&pool, &cli).await;
-    migrate_posts::migrate_posts(&pool, &cli).await;
-    migrate_poll_spaces::migrate_poll_spaces(&pool, &cli).await;
+    migrate_teams_v2::migrate_teams_v2(&cli).await;
+    // migrate_users::migrate_users(&pool, &cli).await;
+    // migrate_teams::migrate_teams(&pool, &cli).await;
+    // migrate_posts::migrate_posts(&pool, &cli).await;
+    // migrate_poll_spaces::migrate_poll_spaces(&pool, &cli).await;
 
     // Migrate Survey for poll spaces
 
