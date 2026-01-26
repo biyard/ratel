@@ -21,7 +21,7 @@ pub struct Team {
     #[dynamo(index = "gsi6", name = "find_by_follwers", pk)]
     pub sk: EntityType,
 
-    #[dynamo(prefix = "TS", index = "gsi2", sk)]
+    #[dynamo(prefix = "TEAM", index = "gsi2", sk)]
     pub created_at: i64,
     pub updated_at: i64,
 
