@@ -10,7 +10,7 @@ interface IERC20 {
 contract SpaceDAO {
     address[] private _admins;
     mapping(address => bool) private _isAdmin;
-    IERC20 private immutable _usdt;
+    IERC20 private _usdt;
     uint256 private _withdrawalAmount;
 
     modifier onlyAdmin() {
@@ -25,6 +25,7 @@ contract SpaceDAO {
     ) {
         require(usdt != address(0), "SpaceDAO: invalid token address");
         require(withdrawalAmount > 0, "SpaceDAO: invalid withdrawal amount");
+        require(_admins.length >= 3, "SpaceDAO: at least 3 admins required");
 
         _usdt = IERC20(usdt);
         _withdrawalAmount = withdrawalAmount;
@@ -36,8 +37,6 @@ contract SpaceDAO {
             _isAdmin[admin] = true;
             _admins.push(admin);
         }
-
-        require(_admins.length > 0, "SpaceDAO: no admins");
     }
 
     function deposit(uint256 amount) external {
@@ -86,5 +85,17 @@ contract SpaceDAO {
     function setWithdrawalAmount(uint256 amount) external onlyAdmin {
         require(amount > 0, "SpaceDAO: invalid withdrawal amount");
         _withdrawalAmount = amount;
+    }
+
+    function addAdmin(address admin) external onlyAdmin {
+        require(admin != address(0), "SpaceDAO: invalid admin");
+        require(!_isAdmin[admin], "SpaceDAO: duplicate admin");
+        _isAdmin[admin] = true;
+        _admins.push(admin);
+    }
+
+    function setUsdtAddress(address usdt) external onlyAdmin {
+        require(usdt != address(0), "Invalid USDT Address");
+        _usdt = IERC20(usdt);
     }
 }
