@@ -16,14 +16,54 @@ This is a monorepo with a workspace structure:
 
 ### Key Components
 
+#### Core Services
+
 - **main-api** (`packages/main-api/`) - Primary REST API built with Axum
 - **fetcher** (`packages/fetcher/`) - Data fetching service for legislative information
+- **survey-worker** (`packages/survey-worker/`) - AWS Lambda worker for survey operations
 - **image-worker** (`packages/image-worker/`) - Image processing service
 - **telegram-bot** (`packages/telegram-bot/`) - Telegram integration
-- **dto** (`packages/dto/`) - Shared data transfer objects
 - **web** (`ts-packages/web/`) - Vite frontend with React 19
 
+#### Support Packages
+
+- **by-macros** (`packages/by-macros/`) - Procedural macros including DynamoEntity derive (v0.6.*)
+- **by-axum** (`packages/by-axum/`) - Axum framework extensions (v0.2.*)
+- **by-types** (`packages/by-types/`) - Shared type definitions (v0.3.*)
+- **bdk** (`packages/bdk/`) - Blockchain development kit with Ethereum support
+- **btracing** (`packages/btracing/`) - Tracing and observability utilities
+- **dto** (`packages/dto/`) - Shared data transfer objects
+- **dioxus-translate** (`packages/dioxus-translate/`) - i18n translation framework
+- **rest-api** (`packages/rest-api/`) - REST API utilities with test support
+- **migrator** (`packages/migrator/`) - Database migration utilities
+
 ### Frontend
+
+#### Package Management & Runtime
+- **Package Manager:** pnpm 10.18.2
+- **Node Version:** 22.14
+- **React:** 19.2.0
+- **Vite:** 7.1.9
+- **TypeScript:** 5.9.3
+- **TailwindCSS:** v4.1.14
+
+#### Key Dependencies
+- **State Management:** Zustand 5.0.8
+- **Data Fetching:** TanStack React Query 5.90.2, Axios 1.12.2
+- **Blockchain:** Ethers.js 6.15.0
+- **Rich Text Editor:** Tiptap 2.26+ (with tables, collaboration support)
+- **UI Components:** Radix UI, Heroicons, Lucide React
+- **Charts:** Recharts 3.3.0
+- **Forms & Validation:** Zod 4.1.12, React Hook Form
+- **Utilities:** dayjs, date-fns, i18next, DOMPurify
+
+#### Testing Infrastructure
+- **Framework:** Playwright 1.56.1
+- **Test Projects:** `anonymous`, `authenticated`, `admin`, `e2e-web`
+- **Test Patterns:** `*.anon.spec.ts`, `*.auth.spec.ts`, `*.admin.spec.ts`
+- **Configuration:** `/playwright.config.ts`
+
+#### Page Structure
 - All page implementations are placed in `ts-packages/web/src/app` as similar tree of routes.
 - Each page directory will contains below
   - `{name}-page.tsx` is a main component for the page.
@@ -33,6 +73,8 @@ This is a monorepo with a workspace structure:
   - `{name}-page.anon.spec.tsx` is Playwright tests for anonymous users for the page.
   - `{name}-page.auth.spec.tsx` is Playwright tests for authenticated users for the page.
   - `{name}-page.stories.tsx` is for Storybook file for the page.
+
+#### Feature Modules
 - `ts-packages/web/src/features` defines `feature`-based modules.
   - `features/{name}/components` implements feature components and their storybook files
   - `features/{name}/hooks` implements hooks for the feature
@@ -46,10 +88,6 @@ This is a monorepo with a workspace structure:
 - Uses custom build profiles (wasm-dev, server-dev, android-dev)
 - Common dependencies defined in workspace Cargo.toml
 
-### Frontend
-- Vite/React19 with TypeScript
-- Package manager: pnpm
-- Uses Tailwind CSS v4
 
 ## Development Commands
 
@@ -75,40 +113,47 @@ docker-compose down
 # Code changes will be reflected automatically to each docker
 ```
 
-### Manual Service Development
+### Root Makefile Commands
 ```bash
-# Run main API
-cd packages/main-api && make run
+# Start all services with Docker Compose
+make run
 
-# Run web frontend  
-cd ts-packages/web && make run
+# Stop all services
+make stop
 
-# Run any service via root Makefile
-make run SERVICE=main-api
+# Build main-api and web together
+make build-with-web
+
+# Deploy to AWS via CDK
+make deploy
+
+# Run specific service locally (without Docker)
 make serve SERVICE=main-api
+make serve SERVICE=fetcher
+
+# Run tests
+make test
 ```
 
-### Building
+### Service-Specific Development
 ```bash
-# For main-api
-cd packages/main-api && make build
+# Main API
+cd packages/main-api && make run      # Dev with cargo-watch
+cd packages/main-api && make build    # Build release binary
+cd packages/main-api && make test     # Run Rust tests
 
-# For fetcher
+# Web frontend
+cd ts-packages/web && make run        # Dev server on port 8080
+cd ts-packages/web && make build      # Production build
+cd ts-packages/web && make test       # Playwright tests
+cd ts-packages/web && make storybook  # Storybook on port 6006
+
+# Fetcher
+cd packages/fetcher && make run
 cd packages/fetcher && make build
 
 # Build for different environments
 ENV=dev make build SERVICE=main-api
-```
-
-### Testing
-```bash
-# Run Rust tests for main-api
-cd packages/main-api && make test
-
-# Run Playwright tests (from root)
-cd ts-packages/web && make test
-# or
-cd ts-packages/web && npx playwright test
 ```
 
 ### Linting/Formatting
@@ -119,11 +164,16 @@ cd ts-packages/web && npm run lint
 
 ## Key Technologies
 
-- **Backend**: Rust, Axum, DynamoDB, Tokio, Askama(for SSR)
-- **Frontend**: Vite, React 19, TailwindCSS v4, Apollo GraphQL
-- **Testing**: Playwright for E2E tests
-- **Infrastructure**: AWS (Lambda, S3, RDS), Docker
-- **Blockchain**: Ethereum-compatible contracts
+- **Backend**: Rust 2024, Axum 0.8.1, DynamoDB, Tokio, Askama (SSR)
+- **Frontend**: Vite 7, React 19, TailwindCSS v4.1, Zustand, TanStack Query
+- **Testing**: Playwright 1.56, Tokio test framework, custom HTTP test macros
+- **Infrastructure**: AWS (Lambda, S3, RDS, SQS, Bedrock), Docker, LocalStack
+- **Blockchain**: Ethers.js 6.15, Kaia network (Ethereum-compatible)
+- **Authentication**: Firebase, JWT, DID/Verifiable Credentials
+- **Payments**: Portone gateway, Binance API
+- **AI**: AWS Bedrock agents
+- **Messaging**: Telegram Bot API, FCM notifications
+- **API Spec**: Aide (OpenAPI/Swagger documentation)
 
 ## Docker Services
 
@@ -131,22 +181,50 @@ The docker-compose.yaml provides:
 
 - **main-api** - REST API (port 3000)
 - **fetcher** - Legislative data fetching (port 3001)
+- **survey-worker** - Survey worker service (port 3002)
 - **image-worker** - Image processing service
 - **telegram-bot** - Telegram bot (optional, requires TELEGRAM_TOKEN)
 - **web** - Vite/React frontend (port 8080)
-- **localstack** - DynamoDB (port 4566)
+- **storybook** - Component documentation (port 6006)
+- **localstack** - AWS services emulation (port 4566)
+- **localstack-init** - DynamoDB table initialization
+- **dynamodb-admin** - DynamoDB web UI (port 8081)
 
 Access points:
-- Web Application: http://localhost:3002
+- Web Application: http://localhost:8080
 - Main API: http://localhost:3000
 - Fetcher API: http://localhost:3001
+- Survey Worker: http://localhost:3002
+- Storybook: http://localhost:6006
+- DynamoDB Admin: http://localhost:8081
+- LocalStack: http://localhost:4566
 
 ## Environment Configuration
 
 Copy `.env.example` to `.env` and configure:
-- `TELEGRAM_TOKEN` - Required for telegram bot functionality
-- AWS credentials - Leave empty for local development
-- Other optional integrations (Slack, OpenAPI)
+
+### Backend Environment Variables
+- `ENV` - Environment (dev, staging, prod)
+- `PORT` - Service port
+- `RUST_LOG` - Logging level
+- `WEB_BUILD` - Web build configuration
+- `DYNAMO_ENDPOINT` - DynamoDB endpoint (http://localstack:4566 for local)
+- `DYNAMO_TABLE_PREFIX` - Table prefix (ratel-local for dev)
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` - AWS credentials
+- `TELEGRAM_TOKEN` - Telegram bot authentication token
+- `FIREBASE_PROJECT_ID` - Firebase project identifier
+- `PORTONE_*` - Payment gateway credentials
+- `BEDROCK_AGENT_*` - AWS Bedrock AI agent configuration
+- `BIYARD_*` - External Biyard API integration
+
+### Frontend Environment Variables (VITE_*)
+- `VITE_API_URL` - Backend API base URL
+- `VITE_LOG_LEVEL` - Frontend logging level
+- `VITE_RPC_URL` - Blockchain RPC endpoint
+- `VITE_BLOCK_EXPLORER_URL` - Blockchain explorer URL (Kaia network)
+- `VITE_FIREBASE_*` - Firebase authentication config
+- `VITE_PORTONE_*` - Payment UI configuration
+- `VITE_OPERATOR_ADDRESS` - Blockchain operator address
 
 ## Development Notes
 
@@ -157,14 +235,81 @@ Copy `.env.example` to `.env` and configure:
 - Real-time features using WebSockets and collaborative editing
 - Database migrations run automatically on startup when MIGRATE=true
 
+## Advanced Features
+
+### Notable Platform Capabilities
+- **MCP Integration** - Model Context Protocol server for LLM interactions
+- **Decentralized Identity** - DID (Decentralized Identifiers) & Verifiable Credentials
+- **Collaborative Editing** - Real-time document collaboration using Tiptap + Yjs
+- **Real-time Notifications** - Multi-channel delivery via WebSockets, Telegram, and FCM
+- **Reward System** - Complex points and membership tier management
+- **AI Assistance** - AWS Bedrock agent integration for legislative drafting
+- **Document Processing** - PDF generation and manipulation
+- **Workspace Management** - Multi-space organization with granular permissions
+- **DAO Governance** - Blockchain-based voting and proposal systems
+
+## CI/CD Workflows
+
+### GitHub Actions
+- **dev-workflow.yml** - Automated development branch builds and tests
+- **pr-workflow.yml** - Pull request validation and checks
+- **prod-workflow.yml** - Production deployment automation
+
+### Deployment Infrastructure
+- **AWS CDK** - Infrastructure as Code (TypeScript)
+- **ECR** - Container registry for Docker images
+- **Lambda** - Serverless function deployments
+- **CloudFormation** - Stack management and orchestration
+
+## DynamoDB Configuration
+
+### Local Development Setup
+- **Endpoint:** `http://localstack:4566`
+- **Table Prefix:** `ratel-local` (development environment)
+- **Main Table:** `ratel-local-main` (unified table with multiple GSIs)
+- **Global Secondary Indexes:** Email-based, username-based, timestamp-based queries
+- **Admin UI:** Available at http://localhost:8081
+
+### Table Initialization
+- Automatic schema creation via `localstack-init` container
+- Admin user seeded on startup
+- Migration support via `migrator` package
+
 ## Main API
 Main Api package is the main backend APIs for Ratel written by Rust.
 - location: `packages/main-api`
 - Language: Rust
 
-### `v3` endpoints
-- `v3` will be implemented based on Axum native convention.
-- `v3` endpoints will use DynamoDB models implemented in `packages/main-api/src/models/dynamo_tables/main`
+### API Architecture
+
+#### v3 API Controllers
+Located at `packages/main-api/src/controllers/v3/`:
+- **auth/** - Authentication endpoints (login, signup, token refresh)
+- **users/** - User management (profiles, settings, credentials)
+- **posts/** - Post CRUD operations (create, read, update, delete)
+- **spaces/** - Space management (creation, membership, settings)
+- **teams/** - Team operations (creation, invitations, roles)
+- **payments/** - Payment processing (Portone integration)
+- **rewards/** - Rewards system (points, tiers, distributions)
+- **notifications/** - Notification delivery (push, email, in-app)
+- **assets/** - Asset management (uploads, downloads)
+- **reports/** - Reporting features (moderation, analytics)
+
+#### Feature Modules
+Located at `packages/main-api/src/features/`:
+- **spaces/** - Space domain logic and business rules
+- **teams/** - Team functionality and permissions
+- **membership/** - Membership tier and access control
+- **payment/** - Payment gateway integration and processing
+- **notification/** - Multi-channel notification system
+- **did/** - Decentralized Identity implementation
+- **migration/** - Data migration utilities
+- **telegrams/** - Telegram bot integration logic
+
+#### v3 Endpoints
+- `v3` endpoints are implemented based on Axum native convention
+- `v3` endpoints use DynamoDB models implemented in `packages/main-api/src/models/dynamo_tables/main`
+- API documentation available via Aide (OpenAPI/Swagger)
 
 ### Testing Backend APIs
 The main-api uses custom HTTP request macros for testing API endpoints. Tests are located in `tests.rs` files within controller modules.

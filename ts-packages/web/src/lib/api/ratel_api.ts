@@ -6,7 +6,6 @@ import {
 import { useApiCall } from './use-send';
 import type { RedeemCode } from './models/redeem-code';
 import type { Promotion } from './models/promotion';
-import { GroupPermission } from './models/group';
 import { FeedStatus } from '@/features/posts/types/post';
 
 // export function useSpaceById(id: number): UseSuspenseQueryResult<Space> {
@@ -131,11 +130,11 @@ export function usePromotion(): UseSuspenseQueryResult<Promotion> {
 // }
 
 export const ratelApi = {
-  permissions: {
-    // DEPRECATED: Use embedded permissions in v3 team detail instead
-    _legacy_getPermissions: (teamPk: string, permission: GroupPermission) =>
-      `/v3/teams/permissions?team_pk=${teamPk}&permission=${permission}`,
-  },
+  // permissions: {
+  //   // DEPRECATED: Use embedded permissions in v3 team detail instead
+  //   _legacy_getPermissions: (teamPk: string, permission: GroupPermission) =>
+  //     `/v3/teams/permissions?team_pk=${teamPk}&permission=${permission}`,
+  // },
   users: {
     // getUserInfo: () => '/v3/me',
     // getUserByEmail: (email: string) =>
@@ -158,14 +157,14 @@ export const ratelApi = {
   //     `/v3/assets/multiparts?file_type=${file_type}&total_count=${total_count}`,
   //   createMultipartUpload: () => `/v3/assets/multiparts/complete`,
   // },
-  teams: {
-    createTeam: () => '/v3/teams',
-    deleteTeam: (teamPk: string) => `/v3/teams/${teamPk}`,
-    getTeamByPk: (teamPk: string) => `/v3/teams/${teamPk}`,
-    getTeamByUsername: (username: string) => `/v3/teams?username=${username}`,
-    updateTeam: (teamPk: string) => `/v3/teams/${teamPk}`,
-    getTeamMembers: (teamPk: string) => `/v3/teams/${teamPk}/members`,
-  },
+  // teams: {
+  //   createTeam: () => '/v3/teams',
+  //   deleteTeam: (teamPk: string) => `/v3/teams/${teamPk}`,
+  //   getTeamByPk: (teamPk: string) => `/v3/teams/${teamPk}`,
+  //   getTeamByUsername: (username: string) => `/v3/teams?username=${username}`,
+  //   updateTeam: (teamPk: string) => `/v3/teams/${teamPk}`,
+  //   getTeamMembers: (teamPk: string) => `/v3/teams/${teamPk}/members`,
+  // },
   subscription: {
     subscribe: () => '/v1/subscriptions?action=subscribe',
   },

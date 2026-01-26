@@ -7,11 +7,11 @@ import {
 import { SpaceRewardResponse } from '../types/space-reward-response';
 import { RewardForm } from '../components/reward-form';
 import { RewardFormData } from '../pages/editor';
-import { RewardsI18n } from '../i18n';
+import { SpaceRewardsI18n } from '../i18n';
 import { RewardConfigItem } from '../hooks/use-reward-config';
 
 interface RewardModalProps {
-  i18n: RewardsI18n;
+  i18n: SpaceRewardsI18n;
   configs: RewardConfigItem[] | null;
   isOpen: boolean;
   onClose: () => void;

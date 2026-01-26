@@ -14,18 +14,12 @@ export interface MembershipData {
 }
 
 export function useMembershipData(): MembershipData {
-  const {
-    data: membership,
-    isLoading: isLoadingMembership,
-  } = useQuery({
+  const { data: membership, isLoading: isLoadingMembership } = useQuery({
     queryKey: ['user-membership'],
     queryFn: getUserMembership,
   });
 
-  const {
-    data: purchaseHistory,
-    isLoading: isLoadingHistory,
-  } = useQuery({
+  const { data: purchaseHistory, isLoading: isLoadingHistory } = useQuery({
     queryKey: ['purchase-history'],
     queryFn: () => getPurchaseHistory(),
   });

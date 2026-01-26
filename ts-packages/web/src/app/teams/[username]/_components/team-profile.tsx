@@ -1,44 +1,14 @@
-import type { Team } from '@/lib/api/models/team';
 import TeamSelector from '@/app/(social)/_components/team-selector';
-import { useSuspenseUserInfo } from '@/hooks/use-user-info';
-import { ratelApi } from '@/lib/api/ratel_api';
-import { useApiCall } from '@/lib/api/use-send';
-import {
-  followRequest,
-  unfollowRequest,
-} from '@/lib/api/models/networks/follow';
-import { showErrorToast, showSuccessToast } from '@/lib/toast';
-import { logger } from '@/lib/logger';
-import FollowButton from './follow-button';
-import UnFollowButton from './unfollow-button';
+import { Team } from '@/features/teams/types/team';
 
 export interface TeamProfileProps {
   team?: Team;
 }
 
 export default function TeamProfile({ team }: TeamProfileProps) {
-  const { post } = useApiCall();
-  const data = useSuspenseUserInfo();
-
   if (!team) {
     return <div></div>;
   }
-
-  const userInfo = data.data;
-  // TODO: Implement followings in v3 API - using placeholder for now
-  const followings: never[] = [];
-
-  const isFollowing = followings.some((f: { id: number }) => f.id === team.id);
-  // TODO: Update to use username comparison instead of id
-  const enableFollowbutton = team.username !== userInfo?.username;
-
-  const handleFollow = async (userId: number) => {
-    await post(ratelApi.networks.follow(userId), followRequest());
-  };
-
-  const handleUnFollow = async (userId: number) => {
-    await post(ratelApi.networks.unfollow(userId), unfollowRequest());
-  };
 
   return (
     <div className="flex flex-col gap-5 px-4 py-5 rounded-[10px] bg-card-bg border border-card-border">
@@ -64,36 +34,6 @@ export default function TeamProfile({ team }: TeamProfileProps) {
         className="text-xs text-desc-text"
         dangerouslySetInnerHTML={{ __html: team.html_contents }}
       />
-
-      {enableFollowbutton ? (
-        !isFollowing ? (
-          <FollowButton
-            onClick={async () => {
-              try {
-                await handleFollow(team.id);
-                await data.refetch();
-                showSuccessToast('success to follow user');
-              } catch (err) {
-                showErrorToast('failed to follow user');
-                logger.error('failed to follow user with error: ', err);
-              }
-            }}
-          />
-        ) : (
-          <UnFollowButton
-            onClick={async () => {
-              try {
-                await handleUnFollow(team.id);
-                await data.refetch();
-                showSuccessToast('success to unfollow user');
-              } catch (err) {
-                showErrorToast('failed to unfollow user');
-                logger.error('failed to unfollow user with error: ', err);
-              }
-            }}
-          />
-        )
-      ) : null}
     </div>
   );
 }

@@ -14,12 +14,12 @@ export interface RewardsData {
   isFetchingNextPage: boolean;
 }
 
-export function useRewardsData(): RewardsData {
+export function useRewardsData(month?: string): RewardsData {
   const {
     data: rewards,
     isLoading: isLoadingRewards,
     error: rewardsError,
-  } = useMyRewards();
+  } = useMyRewards(month);
 
   const {
     data: transactionsData,
@@ -28,7 +28,7 @@ export function useRewardsData(): RewardsData {
     hasNextPage,
     fetchNextPage,
     isFetchingNextPage,
-  } = useMyPointTransactions();
+  } = useMyPointTransactions(month);
 
   const transactions = transactionsData?.pages.flatMap((page) => page.items);
 
