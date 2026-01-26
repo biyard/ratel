@@ -8,8 +8,6 @@ import { useUpdateRecommendationContentMutation } from '../../hooks/use-update-r
 import { useUpdateRecommendationFileMutation } from '../../hooks/use-update-recommendation-file-mutation';
 import { SpaceRecommendationResponse } from '../../types/recommendation-response';
 import FileModel from '@/features/spaces/files/types/file';
-import { extractFilesFromHtml } from '@/features/spaces/files/utils/extract-files-from-html';
-import { uploadBase64ImagesToS3 } from '@/features/spaces/files/utils/upload-base64-images';
 import { getPutObjectUrl } from '@/lib/api/ratel/assets.v3';
 import { parseFileType } from '@/lib/file-utils';
 import { logger } from '@/lib/logger';
@@ -106,28 +104,6 @@ export class SpaceRecommendationEditorController {
     this.htmlContents.set(htmlContents);
 
     console.log('Overview TipTap HTML output:', htmlContents);
-    const extractedFiles = extractFilesFromHtml(htmlContents);
-    console.log('Overview extracted files (may include base64):', extractedFiles);
-
-    const uploadedFiles = await uploadBase64ImagesToS3(extractedFiles);
-    console.log('Overview after S3 upload:', uploadedFiles);
-
-    const currentFiles = this.files.get();
-    const currentUrls = new Set(currentFiles.map((f) => f.url).filter(Boolean));
-
-    const newFiles = uploadedFiles.filter(
-      (file) => file.url && !currentUrls.has(file.url),
-    );
-
-    if (newFiles.length > 0) {
-      const updatedFiles = [...currentFiles, ...newFiles];
-      this.files.set(updatedFiles);
-
-      await this.updateFile.mutateAsync({
-        spacePk: this.spacePk,
-        files: updatedFiles,
-      });
-    }
 
     this.handleContentSave(htmlContents);
   };
