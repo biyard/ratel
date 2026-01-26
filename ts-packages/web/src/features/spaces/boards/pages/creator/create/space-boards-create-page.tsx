@@ -198,8 +198,12 @@ export function SpaceBoardsCreatePage({ spacePk }: SpacePathProps) {
               placeholder={t('contents_hint')}
               files={ctrl.files.get()}
               content={ctrl.htmlContents.get()}
-              onUpdate={(nextContent) => {
-                void ctrl.handleContent(nextContent);
+              onUpdate={async (nextContent) => {
+                try {
+                  await ctrl.handleContent(nextContent);
+                } catch (error) {
+                  logger.error('Failed to handle content update', { error });
+                }
               }}
               editable
               showToolbar
