@@ -51,16 +51,13 @@ pub async fn update_recommendation_handler(
 
             let new_file_urls: Vec<String> = files.iter().filter_map(|f| f.url.clone()).collect();
             if !new_file_urls.is_empty() {
-                if let Err(e) = FileLink::add_link_targets_batch(
+                FileLink::add_link_targets_batch(
                     &dynamo.client,
                     space_pk.clone(),
                     new_file_urls.clone(),
                     FileLinkTarget::Overview,
                 )
-                .await
-                {
-                    tracing::error!("Failed to add file link targets: {:?}", e);
-                }
+                .await?;
             }
 
             let removed_urls: Vec<String> = old_file_urls
@@ -74,8 +71,7 @@ pub async fn update_recommendation_handler(
                     removed_urls.clone(),
                     &FileLinkTarget::Overview,
                 )
-                .await
-                .ok();
+                .await?;
 
                 // Also remove from SpaceFile
                 let (pk, sk) = SpaceFile::keys(&space_pk);

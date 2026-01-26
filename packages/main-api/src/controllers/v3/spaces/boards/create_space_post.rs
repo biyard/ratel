@@ -103,8 +103,7 @@ pub async fn create_space_post_handler(
             file_urls.clone(),
             FileLinkTarget::Board(post_id.clone()),
         )
-        .await
-        .ok();
+        .await?;
     }
 
     send_create_post_alarm(&dynamo, &ses, &common, req.title, req.html_contents, user).await;
