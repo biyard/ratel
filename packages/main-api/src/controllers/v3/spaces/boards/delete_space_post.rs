@@ -38,7 +38,7 @@ pub async fn delete_space_post_handler(
         _ => "".to_string(),
     };
 
-    SpacePost::delete(
+    let post = SpacePost::delete(
         &dynamo.client,
         space_pk.clone(),
         Some(EntityType::SpacePost(space_post_id.clone())),
