@@ -195,8 +195,7 @@ pub async fn update_space_handler(
                     new_file_urls.clone(),
                     FileLinkTarget::Overview,
                 )
-                .await
-                .ok();
+                .await?;
             }
 
             let removed_urls: Vec<String> = old_file_urls
@@ -211,8 +210,7 @@ pub async fn update_space_handler(
                     removed_urls.clone(),
                     &FileLinkTarget::Overview,
                 )
-                .await
-                .ok();
+                .await?;
 
                 // Also remove from SpaceFile (Files tab)
                 let (pk, sk) = SpaceFile::keys(&space_pk);

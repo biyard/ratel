@@ -23,7 +23,7 @@ pub struct DeleteFileResponse {
 
 /// Delete a file from the space
 /// When a file is deleted from the files tab, it cascades to remove it from Overview/Boards
-pub async fn delete_file_handler(
+pub async fn delete_files_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): SpacePath,
