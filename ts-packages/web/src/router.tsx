@@ -19,6 +19,8 @@ import TeamGroups from './app/teams/[username]/groups/page';
 import TeamMembers from './app/teams/[username]/members/page';
 import TeamSettings from './app/teams/[username]/settings/page';
 import TeamDrafts from './app/teams/[username]/drafts/page';
+import TeamDao from './app/teams/[username]/dao/page';
+import TeamRewards from './app/teams/[username]/rewards/page';
 
 // Space
 import SpacePollPage from './app/spaces/[id]/poll/space-poll-page';
@@ -232,6 +234,16 @@ export const routes = createBrowserRouter([
             id: 'team-drafts',
             path: 'drafts',
             Component: TeamDrafts,
+          },
+          {
+            id: 'team-rewards',
+            path: 'rewards',
+            Component: TeamRewards,
+          },
+          {
+            id: 'team-dao',
+            path: 'dao',
+            Component: TeamDao,
           },
         ],
       },

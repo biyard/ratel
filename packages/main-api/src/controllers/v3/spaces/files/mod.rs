@@ -23,5 +23,5 @@ pub fn route() -> Router<AppState> {
         .route("/", patch(update_files_handler).get(get_files_handler).delete(delete_file_handler))
         .route("/links", get(list_file_links_handler))
         .route("/links/target", get(get_files_by_target_handler))
-        .route("/:file_id/ai-chat", post(ai_chat_handler))
+        .route("/ai-chat", post(ai_chat_handler))
 }
