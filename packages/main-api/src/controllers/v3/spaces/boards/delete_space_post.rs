@@ -2,10 +2,7 @@
 use crate::{
     AppState, Error, Permissions,
     controllers::v3::spaces::{SpacePath, SpacePathParam, SpacePostPath, SpacePostPathParam},
-    features::spaces::{
-        boards::models::{space_category::SpaceCategory, space_post::SpacePost},
-        files::{FileLink, FileLinkTarget, SpaceFile},
-    },
+    features::spaces::boards::models::{space_category::SpaceCategory, space_post::SpacePost},
     models::{SpaceCommon, feed::Post, team::Team, user::User},
     types::{EntityType, Partition, TeamGroupPermission, author::Author},
 };
@@ -41,55 +38,12 @@ pub async fn delete_space_post_handler(
         _ => "".to_string(),
     };
 
-    let post = SpacePost::get(
-        &dynamo.client,
-        space_pk.clone(),
-        Some(EntityType::SpacePost(space_post_id.clone())),
-    )
-    .await?;
-
     SpacePost::delete(
         &dynamo.client,
         space_pk.clone(),
         Some(EntityType::SpacePost(space_post_id.clone())),
     )
     .await?;
-
-    if let Some(post) = post {
-        if let Some(files) = post.files {
-            let file_urls: Vec<String> = files.iter().filter_map(|f| f.url.clone()).collect();
-            if !file_urls.is_empty() {
-                // Remove file links
-                FileLink::remove_link_targets_batch(
-                    &dynamo.client,
-                    &space_pk,
-                    file_urls.clone(),
-                    &FileLinkTarget::Board(space_post_id.clone()),
-                )
-                .await
-                .ok();
-
-                // Also remove files from SpaceFile (Files tab)
-                let (pk, sk) = SpaceFile::keys(&space_pk);
-                if let Some(mut space_file) = SpaceFile::get(&dynamo.client, &pk, Some(sk.clone())).await? {
-                    // Remove files that belonged to this board post
-                    space_file.files.retain(|f| {
-                        if let Some(url) = &f.url {
-                            !file_urls.contains(url)
-                        } else {
-                            true
-                        }
-                    });
-                    
-                    // Update SpaceFile
-                    SpaceFile::updater(&pk, sk)
-                        .with_files(space_file.files.clone())
-                        .execute(&dynamo.client)
-                        .await?;
-                }
-            }
-        }
-    }
 
     Ok(Json(DeleteSpacePostResponse {
         space_post_pk: Partition::SpacePost(space_post_id),

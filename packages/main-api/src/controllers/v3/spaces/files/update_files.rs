@@ -45,7 +45,7 @@ pub async fn update_files_handler(
     let files = SpaceFile::get(&dynamo.client, &pk.clone(), Some(sk.clone())).await?;
 
     // Ensure all files have IDs before saving
-    let mut files_with_ids = req.files;
+    let mut files_with_ids = req.files.clone();
     for file in &mut files_with_ids {
         if file.id.is_empty() {
             file.id = uuid::Uuid::new_v4().to_string();
