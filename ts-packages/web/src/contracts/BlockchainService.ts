@@ -2,9 +2,9 @@
 import { ethers } from 'ethers';
 
 import TeamDaoFactoryArtifact from './artifacts/TeamDaoFactory.json';
-import TeamDaoArtifact from './artifacts/TeamDAO.json';
+import TeamDaoArtifact from './artifacts/TeamDao.json';
 import RewardExtensionArtifact from './artifacts/RewardExtension.json';
-import SpaceDaoArtifact from './artifacts/SpaceDAO.json';
+import SpaceDaoArtifact from './artifacts/SpaceDao.json';
 
 const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS || '';
 
