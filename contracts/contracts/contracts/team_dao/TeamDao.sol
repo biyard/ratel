@@ -4,7 +4,7 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-contract SpaceDAO is Initializable, ReentrancyGuard {
+contract TeamDAO is Initializable, ReentrancyGuard {
     
     // --- State Variables ---
     bool public isDaoActive; // 여전히 비상 정지용으로 남겨둠 (true = Active)
