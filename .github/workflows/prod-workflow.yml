@@ -225,7 +225,7 @@ jobs:
           VITE_API_URL: https://ratel.foundation
           VITE_EXPERIMENT: false
           VITE_TELEGRAM_BOTNAME: crypto_ratel_bot
-          VITE_USDT_ADDRESS: 0xd077a400968890eacc75cdc901f0356c943e4fdb
+          VITE_USDT_ADDRESS: "0xd077a400968890eacc75cdc901f0356c943e4fdb"
         run: |
           make build
 
