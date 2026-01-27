@@ -128,6 +128,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
         if (file.size > maxImageSizeMB * 1024 * 1024) return false;
         if (uploadAsset) {
           const { url } = await uploadAsset(file);
+          insertImage(ed, url, file.name);
           return false;
         }
         return true;
