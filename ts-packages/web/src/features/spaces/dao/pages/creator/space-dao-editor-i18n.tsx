@@ -1,4 +1,93 @@
 export const i18nSpaceDaoEditor = {
-  en: {},
-  ko: {},
+  en: {
+    title: 'Space Reward DAO',
+    description: 'Configure admins and reward sampling for this space.',
+    team_only: 'Only team spaces can create a Space DAO.',
+    register_dao: 'Register DAO',
+    admin_requirements: 'Admin Requirements',
+    admin_requirements_description:
+      'To register a DAO, you need:\n• At least 3 team members with Admin permission\n• Each admin must have an EVM address registered\n• You must be a team admin',
+    admin_section_title: 'DAO Admins',
+    admin_section_description:
+      'Enter EVM addresses separated by commas or new lines.',
+    admin_placeholder: '0xabc..., 0xdef..., 0x123...',
+    register_helper:
+      'Register the DAO first, then set sampling and reward amount.',
+    eligible_admins_count: '{{count}} eligible admins',
+    min_admins_required: 'At least 3 admins required',
+    insufficient_admins:
+      'Insufficient eligible admins. You need at least 3 team admins with EVM addresses registered.',
+    ready_label: 'Ready',
+    need_more_label: 'Need {{count}} more',
+    error_insufficient_admins:
+      'Insufficient eligible admins. Need at least 3 team admins with EVM addresses.',
+    error_invalid_admin_selection: 'At least 3 admins must be selected',
+    error_invalid_reward_amount: 'Please enter a valid reward amount',
+    error_missing_inputs: 'Please enter sampling count and reward amount',
+    sampling_section_title: 'Reward Sampling',
+    sampling_section_description:
+      'Set how many participants will be sampled for rewards.',
+    sampling_count_label: 'Sampling Count',
+    sampling_count_placeholder: 'e.g. 100',
+    reward_amount_section_title: 'Reward Amount',
+    reward_amount_section_description:
+      'Set the reward amount per sampled participant.',
+    reward_amount_label: 'Reward Amount',
+    reward_amount_placeholder: 'e.g. 10',
+    toast_connecting_wallet: 'Connecting to Kaia network...',
+    toast_creating_dao: 'Creating Space DAO on blockchain...',
+    toast_registered: 'Space DAO registered! Transaction: {{hash}}...',
+    error_wallet_rejected:
+      'Transaction cancelled: You rejected the transaction',
+    error_wallet_not_installed:
+      'MetaMask not installed. Please install MetaMask to continue',
+    error_wallet_generic: 'Wallet error: {{message}}',
+    error_register_failed: 'Failed to register DAO: {{message}}',
+    error_register_failed_unknown:
+      'Failed to register DAO: An unknown error occurred',
+    save: 'Save',
+  },
+  ko: {
+    title: 'Space Reward DAO',
+    description: '이 공간의 관리자 및 리워드 샘플링을 설정합니다.',
+    team_only: '팀 소유 공간에서만 Space DAO를 만들 수 있습니다.',
+    register_dao: 'DAO 등록',
+    admin_requirements: '관리자 요구사항',
+    admin_requirements_description:
+      'DAO를 등록하려면 다음이 필요합니다:\n• 관리자 권한을 가진 팀 멤버 최소 3명\n• 각 관리자는 EVM 주소를 등록해야 함\n• 본인이 팀 관리자여야 함',
+    admin_section_title: 'DAO 관리자',
+    admin_section_description: '콤마 또는 줄바꿈으로 EVM 주소를 입력하세요.',
+    admin_placeholder: '0xabc..., 0xdef..., 0x123...',
+    register_helper: 'DAO 등록 후 샘플링 및 리워드 금액을 설정하세요.',
+    eligible_admins_count: '{{count}}명의 적격 관리자',
+    min_admins_required: '최소 3명의 관리자 필요',
+    insufficient_admins:
+      '적격 관리자가 부족합니다. EVM 주소가 등록된 팀 관리자가 최소 3명 필요합니다.',
+    ready_label: '준비 완료',
+    need_more_label: '{{count}}명 더 필요',
+    error_insufficient_admins:
+      '적격 관리자가 부족합니다. EVM 주소가 등록된 팀 관리자가 최소 3명 필요합니다.',
+    error_invalid_admin_selection: '최소 3명의 관리자를 선택해야 합니다',
+    error_invalid_reward_amount: '유효한 리워드 금액을 입력해주세요',
+    error_missing_inputs: '샘플링 인원 수와 리워드 금액을 입력해주세요',
+    sampling_section_title: '리워드 샘플링',
+    sampling_section_description: '리워드를 받을 샘플링 인원 수를 설정합니다.',
+    sampling_count_label: '샘플링 인원 수',
+    sampling_count_placeholder: '예: 100',
+    reward_amount_section_title: '리워드 금액',
+    reward_amount_section_description:
+      '샘플링된 참여자 1인당 리워드 금액을 설정합니다.',
+    reward_amount_label: '리워드 금액',
+    reward_amount_placeholder: '예: 10',
+    toast_connecting_wallet: 'Kaia 네트워크에 연결 중입니다...',
+    toast_creating_dao: '블록체인에 Space DAO를 생성 중입니다...',
+    toast_registered: 'Space DAO가 등록되었습니다! 트랜잭션: {{hash}}...',
+    error_wallet_rejected: '거래가 취소되었습니다: 서명이 거부되었습니다',
+    error_wallet_not_installed:
+      'MetaMask가 설치되어 있지 않습니다. 설치 후 다시 시도해주세요',
+    error_wallet_generic: '지갑 오류: {{message}}',
+    error_register_failed: 'DAO 등록 실패: {{message}}',
+    error_register_failed_unknown: 'DAO 등록 실패: 알 수 없는 오류',
+    save: '저장',
+  },
 };
