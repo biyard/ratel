@@ -40,8 +40,15 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
           {dao ? (
             <SpaceDaoInfoCard
               dao={dao}
-              balance={ctrl.balance}
-              balanceLoading={ctrl.balanceLoading}
+              balance={ctrl.balance.get()}
+              balanceLoading={ctrl.balanceLoading.get()}
+              isDepositOpen={ctrl.isDepositOpen.get()}
+              depositAmount={ctrl.depositAmount.get()}
+              isDepositing={ctrl.isDepositing.get()}
+              onOpenDeposit={ctrl.handleOpenDeposit}
+              onCloseDeposit={ctrl.handleCloseDeposit}
+              onDepositAmountChange={ctrl.handleDepositAmountChange}
+              onConfirmDeposit={ctrl.handleConfirmDeposit}
             />
           ) : (
             <>
@@ -103,8 +110,8 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
                   <Input
                     type="number"
                     min={0}
-                    value={ctrl.samplingCount}
-                    onChange={(e) => ctrl.setSamplingCount(e.target.value)}
+                    value={ctrl.samplingCount.get()}
+                    onChange={(e) => ctrl.samplingCount.set(e.target.value)}
                     placeholder={t('sampling_count_placeholder')}
                   />
                 </div>
@@ -116,8 +123,8 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
                   <Input
                     type="number"
                     min={0}
-                    value={ctrl.rewardAmount}
-                    onChange={(e) => ctrl.setRewardAmount(e.target.value)}
+                    value={ctrl.rewardAmount.get()}
+                    onChange={(e) => ctrl.rewardAmount.set(e.target.value)}
                     placeholder={t('reward_amount_placeholder')}
                   />
                 </div>
@@ -138,12 +145,12 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
           )}
         </div>
 
-        {ctrl.isPopupOpen && (
+        {ctrl.isPopupOpen.get() && (
           <RegisterDaoPopup
             eligibleAdmins={ctrl.eligibleAdmins}
             onRegister={ctrl.handleRegisterDao}
             onCancel={ctrl.handleClosePopup}
-            isRegistering={ctrl.isRegistering}
+            isRegistering={ctrl.isRegistering.get()}
           />
         )}
       </Card>
