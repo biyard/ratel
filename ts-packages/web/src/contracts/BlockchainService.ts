@@ -42,14 +42,17 @@ export interface TransferPair {
 }
 
 export class BlockchainService {
-  private provider: ethers.BrowserProvider;
+  private provider: ethers.AbstractProvider;
   private signer: ethers.JsonRpcSigner | null = null;
 
-  constructor(provider: ethers.BrowserProvider) {
+  constructor(provider: ethers.AbstractProvider) {
     this.provider = provider;
   }
 
   async connectWallet() {
+    if (!(this.provider instanceof ethers.BrowserProvider)) {
+      throw new Error('Browser wallet provider is required for signing.');
+    }
     this.signer = await this.provider.getSigner();
   }
 

@@ -29,7 +29,7 @@ VITE_TELEGRAM_BOTNAME ?= dummy
 VITE_OPERATOR_ADDRESS ?= dummy
 VITE_RPC_URL ?= https://public-en-kairos.node.kaia.io
 VITE_USDT_ADDRESS ?= 0xd077a400968890eacc75cdc901f0356c943e4fdb
-VITE_BLOCK_EXPLORER_URL ?= https://kairos.scope.kaia.io
+VITE_BLOCK_EXPLORER_URL ?= https://kairos.kaiascan.io
 
 ENV ?= dev
 
