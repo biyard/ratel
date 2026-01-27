@@ -8,12 +8,15 @@ export default function SpaceDaoPage() {
   const { spacePk } = useParams<{ spacePk: string }>();
   const { data: space } = useSpaceById(spacePk);
 
+  if (!spacePk) {
+    return null;
+  }
+
   if (!space) {
     throw new Error('Space not found');
   }
 
   if (space.isAdmin()) {
-    // Edit Mode
     return <SpaceDaoEditorPage spacePk={spacePk} />;
   }
 

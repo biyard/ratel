@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import { Space } from '@/features/spaces/types/space';
@@ -11,6 +11,9 @@ import {
 } from '@/lib/service/kaia-wallet-service';
 import { BlockchainService } from '@/contracts/BlockchainService';
 import { config } from '@/config';
+import { useCreateSpaceDaoMutation } from '@/features/spaces/dao/hooks/use-create-space-dao-mutation';
+import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
+import { ethers } from 'ethers';
 
 export class SpaceDaoEditorController {
   constructor(
@@ -25,6 +28,8 @@ export class SpaceDaoEditorController {
     public eligibleAdmins: ReturnType<typeof useDaoData>['eligibleAdmins'],
     public permissions: ReturnType<typeof useDaoData>['permissions'],
     public isTeamSpace: boolean,
+    public balance: string | null,
+    public balanceLoading: boolean,
     public isPopupOpen: boolean,
     public isRegistering: boolean,
     public canRegisterDao: boolean,
@@ -37,7 +42,10 @@ export class SpaceDaoEditorController {
   ) {}
 }
 
-export function useSpaceDaoEditorController(spacePk: string) {
+export function useSpaceDaoEditorController(
+  spacePk: string,
+  dao?: SpaceDaoResponse | null,
+) {
   const { data: space } = useSpaceById(spacePk);
   const { t } = useTranslation('SpaceDaoEditor');
   const [adminAddresses, setAdminAddresses] = useState('');
@@ -45,6 +53,15 @@ export function useSpaceDaoEditorController(spacePk: string) {
   const [rewardAmount, setRewardAmount] = useState('');
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
+  const [balance, setBalance] = useState<string | null>(null);
+  const [balanceLoading, setBalanceLoading] = useState(false);
+  const createSpaceDaoMutation = useCreateSpaceDaoMutation();
+  const provider = useMemo(() => {
+    if (!config.rpc_url) {
+      return null;
+    }
+    return new ethers.JsonRpcProvider(config.rpc_url);
+  }, []);
 
   const isTeamSpace = (space?.authorType ?? null) === UserType.Team;
   const teamUsername = space?.authorUsername ?? '';
@@ -64,6 +81,41 @@ export function useSpaceDaoEditorController(spacePk: string) {
       reward > 0
     );
   }, [samplingCount, rewardAmount]);
+
+  useEffect(() => {
+    if (!provider || !dao?.contract_address) {
+      return;
+    }
+
+    let mounted = true;
+    setBalanceLoading(true);
+
+    const fetchBalance = async () => {
+      try {
+        const service = new BlockchainService(provider);
+        const raw = await service.getSpaceBalance(dao.contract_address);
+        const formatted = ethers.formatUnits(raw, 6);
+        if (mounted) {
+          setBalance(formatted);
+        }
+      } catch (error) {
+        console.error('Failed to fetch Space DAO balance:', error);
+        if (mounted) {
+          setBalance(null);
+        }
+      } finally {
+        if (mounted) {
+          setBalanceLoading(false);
+        }
+      }
+    };
+
+    fetchBalance();
+
+    return () => {
+      mounted = false;
+    };
+  }, [dao?.contract_address, provider]);
 
   const handleOpenRegistrationPopup = () => {
     if (!canRegisterDao) {
@@ -113,9 +165,21 @@ export function useSpaceDaoEditorController(spacePk: string) {
         rewardAmount,
       );
 
+      const sampling = Number(samplingCount);
+      const reward = Number(rewardAmount);
+
+      await createSpaceDaoMutation.mutateAsync({
+        spacePk,
+        req: {
+          contract_address: result.daoAddress,
+          sampling_count: sampling,
+          reward_amount: reward,
+        },
+      });
+
       showSuccessToast(t('toast_registered'));
 
-      console.log('transaction hash: ', result);
+      console.log('transaction result: ', result);
 
       setIsPopupOpen(false);
     } catch (error) {
@@ -151,6 +215,8 @@ export function useSpaceDaoEditorController(spacePk: string) {
     eligibleAdmins,
     permissions,
     isTeamSpace,
+    balance,
+    balanceLoading,
     isPopupOpen,
     isRegistering,
     canRegisterDao,

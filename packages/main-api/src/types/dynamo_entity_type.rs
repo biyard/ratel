@@ -63,6 +63,7 @@ pub enum EntityType {
     // Space common entity types
     // SPACE_PK index is aligned by gsi2-index
     SpaceCommon,
+    SpaceDao,
     SpaceParticipant,
     SpaceInvitation,
     SpaceTemplate(String),          // template name
