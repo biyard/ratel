@@ -21,8 +21,15 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
     <div className="flex flex-col w-full max-w-[1152px] gap-5">
       <SpaceDaoInfoCard
         dao={dao}
-        balance={ctrl.balance}
-        balanceLoading={ctrl.balanceLoading}
+        balance={ctrl.balance.get()}
+        balanceLoading={ctrl.balanceLoading.get()}
+        isDepositOpen={ctrl.isDepositOpen.get()}
+        depositAmount={ctrl.depositAmount.get()}
+        isDepositing={ctrl.isDepositing.get()}
+        onOpenDeposit={ctrl.handleOpenDeposit}
+        onCloseDeposit={ctrl.handleCloseDeposit}
+        onDepositAmountChange={ctrl.handleDepositAmountChange}
+        onConfirmDeposit={ctrl.handleConfirmDeposit}
       />
     </div>
   );
