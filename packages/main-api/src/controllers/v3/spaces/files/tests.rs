@@ -3,6 +3,7 @@ use crate::controllers::v3::spaces::CreateSpaceResponse;
 use crate::controllers::v3::spaces::files::get_files::GetSpaceFileResponse;
 use crate::controllers::v3::spaces::files::update_files::UpdateSpaceFileResponse;
 use crate::features::spaces::files::{GetFilesByTargetResponse, ListFileLinksResponse};
+use crate::utils::time::get_now_timestamp_millis;
 
 use crate::tests::{
     create_app_state,
@@ -146,6 +147,7 @@ async fn test_update_files_with_link_targets() {
         headers: headers.clone(),
         body: {
             "files": vec![File {
+                id: format!("test-{}", get_now_timestamp_millis()),
                 name: "linked-file.pdf".to_string(),
                 size: "20KB".to_string(),
                 ext: crate::types::FileExtension::PDF,
@@ -190,6 +192,7 @@ async fn test_get_files_by_target() {
         headers: headers.clone(),
         body: {
             "files": vec![File {
+                id: format!("test-{}", get_now_timestamp_millis()),
                 name: "overview-file.pdf".to_string(),
                 size: "20KB".to_string(),
                 ext: crate::types::FileExtension::PDF,
@@ -232,12 +235,14 @@ async fn test_list_all_file_links() {
         body: {
             "files": vec![
                 File {
+                    id: format!("test-{}", get_now_timestamp_millis()),
                     name: "file1.pdf".to_string(),
                     size: "10KB".to_string(),
                     ext: crate::types::FileExtension::PDF,
                     url: Some("https://example.com/file1.pdf".to_string()),
                 },
                 File {
+                    id: format!("test-{}", get_now_timestamp_millis() + 1),
                     name: "file2.pdf".to_string(),
                     size: "15KB".to_string(),
                     ext: crate::types::FileExtension::PDF,
@@ -284,6 +289,7 @@ async fn test_unlink_all_targets_deletes_file_link() {
         headers: headers.clone(),
         body: {
             "files": vec![File {
+                id: format!("test-{}", get_now_timestamp_millis()),
                 name: "delete-test.pdf".to_string(),
                 size: "10KB".to_string(),
                 ext: crate::types::FileExtension::PDF,
@@ -336,6 +342,7 @@ async fn test_delete_file_from_files_tab() {
         headers: headers.clone(),
         body: {
             "files": vec![File {
+                id: format!("test-{}", get_now_timestamp_millis()),
                 name: "test-delete.pdf".to_string(),
                 size: "10KB".to_string(),
                 ext: crate::types::FileExtension::PDF,
