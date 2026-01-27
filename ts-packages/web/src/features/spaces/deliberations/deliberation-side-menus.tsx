@@ -1,4 +1,5 @@
 import {
+  Discuss,
   // CheckCircle2,
   // Discuss,
   PieChart1,
@@ -47,6 +48,14 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
     },
     // visible: (space) => space.participated || space.isAdmin(),
     label: 'menu_boards',
+  },
+  {
+    Icon: Discuss,
+    to: (space) => {
+      return route.spaceDao(space.pk);
+    },
+    visible: (space) => space.authorType === 2,
+    label: 'menu_dao',
   },
   // {
   //   Icon: Discuss,

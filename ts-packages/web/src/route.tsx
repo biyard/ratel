@@ -71,6 +71,7 @@ export const route = {
   },
   spaceBoards: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/boards`,
+  spaceDao: (spaceId: string) => `/spaces/${encodeURIComponent(spaceId)}/dao`,
   spaceCreatePost: (spaceId: string, postPk?: string) => {
     let to = `/spaces/${encodeURIComponent(spaceId)}/boards/create`;
     const params: string[] = [];
