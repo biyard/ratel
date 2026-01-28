@@ -5,14 +5,23 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 contract TeamDAO is ReentrancyGuard {
+    // --- Custom Errors ---
+    error TeamDAO__NotAdmin();
+    error TeamDAO__InvalidPairCount();
+    error TeamDAO__InvalidTokenAddress();
+    error TeamDAO__ProposalAlreadyExecuted();
+    error TeamDAO__AlreadyApproved();
+    error TeamDAO__TransferFailed();
+    error TeamDAO__InsufficientAdmins();
+    error TeamDAO__DuplicateAdmin();
+    error TeamDAO__ZeroAddress();
 
-    // --- State Variables ---
-    bool public isDaoActive;
+    // --- Enums & Structs ---
+    enum ProposalStatus {
+        Pending,
+        Executed
+    }
 
-    address[] public admins;
-    mapping(address => bool) public isAdmin;
-
-    // Reward proposal structures
     struct TransferPair {
         address recipient;
         uint256 amount;
@@ -23,94 +32,90 @@ contract TeamDAO is ReentrancyGuard {
         address token;
         TransferPair[] pairs;
         uint256 approvalCount;
-        bool executed;
+        ProposalStatus status;
         mapping(address => bool) approvedBy;
     }
 
+    // --- State Variables ---
+    address[] public admins;
+    mapping(address => bool) public isAdmin;
     Proposal[] public proposals;
 
     // --- Events ---
     event Initialized(address[] admins);
-    event Received(address indexed sender, uint256 amount);
-    event ProposalCreated(uint256 indexed id, address indexed proposer, uint256 count);
+    event ProposalCreated(
+        uint256 indexed id,
+        address indexed proposer,
+        uint256 count
+    );
     event Approved(uint256 indexed id, address indexed approver);
     event BatchExecuted(uint256 indexed id);
 
     // --- Modifiers ---
-    modifier onlyActive() {
-        require(isDaoActive, "TeamDAO: DAO is inactive");
-        _;
-    }
-
     modifier onlyAdmin() {
-        require(isAdmin[msg.sender], "TeamDAO: Not an admin");
+        if (!isAdmin[msg.sender]) revert TeamDAO__NotAdmin();
         _;
     }
 
-    /**
-     * @dev Constructor initializes the DAO with admins.
-     */
     constructor(address[] memory _admins) {
-        require(_admins.length >= 3, "TeamDAO: Must have at least 3 admins");
+        if (_admins.length < 3) revert TeamDAO__InsufficientAdmins();
 
         for (uint i = 0; i < _admins.length; i++) {
-            admins.push(_admins[i]);
-            isAdmin[_admins[i]] = true;
-        }
+            address admin = _admins[i];
+            if (admin == address(0)) revert TeamDAO__ZeroAddress();
+            if (isAdmin[admin]) revert TeamDAO__DuplicateAdmin();
 
-        isDaoActive = true;
+            admins.push(admin);
+            isAdmin[admin] = true;
+        }
 
         emit Initialized(_admins);
     }
 
-    receive() external payable {
-        emit Received(msg.sender, msg.value);
-    }
-
-    /**
-     * @dev Get the number of approvals required for proposals (majority).
-     */
     function getRequiredApprovals() public view returns (uint256) {
         return (admins.length / 2) + 1;
     }
 
     /**
-     * @dev Propose a batch of ERC20 token transfers.
+     * @dev Create a new batch transfer proposal
      */
     function proposeBatch(
         address _token,
         TransferPair[] calldata _pairs
     ) external onlyAdmin {
-        require(_pairs.length > 0 && _pairs.length <= 100, "TeamDAO: Invalid pairs count");
-        require(_token != address(0), "TeamDAO: Token address cannot be zero");
+        if (_pairs.length == 0 || _pairs.length > 100)
+            revert TeamDAO__InvalidPairCount();
+        if (_token == address(0)) revert TeamDAO__InvalidTokenAddress();
 
         uint256 id = proposals.length;
-        proposals.push();
-        Proposal storage p = proposals[id];
+        Proposal storage p = proposals.push();
 
         p.id = id;
         p.token = _token;
-        for(uint i = 0; i < _pairs.length; i++) {
+        p.status = ProposalStatus.Pending;
+        p.approvalCount = 1;
+        p.approvedBy[msg.sender] = true;
+
+        for (uint i = 0; i < _pairs.length; i++) {
             p.pairs.push(_pairs[i]);
         }
-
-        // Auto-approve creator
-        p.approvedBy[msg.sender] = true;
-        p.approvalCount = 1;
 
         emit ProposalCreated(id, msg.sender, _pairs.length);
     }
 
     /**
-     * @dev Approve a proposal and execute if majority is reached.
+     * @dev Approve and execute a proposal
      */
     function approveAndExecute(uint256 _id) external onlyAdmin {
         Proposal storage p = proposals[_id];
-        require(!p.executed, "TeamDAO: Already executed");
-        require(!p.approvedBy[msg.sender], "TeamDAO: Already approved");
+
+        if (p.status != ProposalStatus.Pending)
+            revert TeamDAO__ProposalAlreadyExecuted();
+        if (p.approvedBy[msg.sender]) revert TeamDAO__AlreadyApproved();
 
         p.approvedBy[msg.sender] = true;
         p.approvalCount++;
+
         emit Approved(_id, msg.sender);
 
         if (p.approvalCount >= getRequiredApprovals()) {
@@ -119,38 +124,42 @@ contract TeamDAO is ReentrancyGuard {
     }
 
     /**
-     * @dev Execute batch ERC20 transfers.
+     * @dev Execute a proposal (Internal function)
      */
     function _executeBatch(Proposal storage p) internal nonReentrant {
-        p.executed = true;
+        p.status = ProposalStatus.Executed;
 
         IERC20 token = IERC20(p.token);
-        for (uint i = 0; i < p.pairs.length; i++) {
-            address to = p.pairs[i].recipient;
-            uint256 amt = p.pairs[i].amount;
+        uint256 len = p.pairs.length;
 
-            require(token.transfer(to, amt), "TeamDAO: Token transfer failed");
+        for (uint i = 0; i < len; i++) {
+            TransferPair storage pair = p.pairs[i];
+            if (!token.transfer(pair.recipient, pair.amount)) {
+                revert TeamDAO__TransferFailed();
+            }
         }
 
         emit BatchExecuted(p.id);
     }
 
-    /**
-     * @dev Get proposal information.
-     */
-    function getProposalInfo(uint256 _id) external view returns (
-        address token,
-        uint256 count,
-        uint256 approvals,
-        bool executed
-    ) {
+    // --- View Functions ---
+
+    function getProposalInfo(
+        uint256 _id
+    )
+        external
+        view
+        returns (
+            address token,
+            uint256 count,
+            uint256 approvals,
+            ProposalStatus status
+        )
+    {
         Proposal storage p = proposals[_id];
-        return (p.token, p.pairs.length, p.approvalCount, p.executed);
+        return (p.token, p.pairs.length, p.approvalCount, p.status);
     }
 
-    /**
-     * @dev Check if an address is an admin.
-     */
     function checkAdmin(address _user) external view returns (bool) {
         return isAdmin[_user];
     }
