@@ -198,14 +198,14 @@ export class TeamDaoService {
       this.provider,
     );
 
-    const [token, count, approvals, executed] =
+    const [token, count, approvals, status] =
       await dao.getProposalInfo(proposalId);
 
     return {
       token,
       count: count.toString(),
       approvals: approvals.toString(),
-      executed,
+      status: Number(status), // 0 = Pending, 1 = Executed
     };
   }
 
@@ -217,16 +217,6 @@ export class TeamDaoService {
     );
 
     return await dao.checkAdmin(userAddress);
-  }
-
-  async isDAOActive(daoAddress: string): Promise<boolean> {
-    const dao = new ethers.Contract(
-      daoAddress,
-      TeamDaoArtifact.abi,
-      this.provider,
-    );
-
-    return await dao.isDaoActive();
   }
 
   async getRequiredApprovals(daoAddress: string): Promise<number> {
@@ -247,14 +237,10 @@ export class TeamDaoService {
       this.provider,
     );
 
-    const [isDaoActive, requiredApprovals] = await Promise.all([
-      dao.isDaoActive(),
-      dao.getRequiredApprovals(),
-    ]);
+    const [requiredApprovals] = await Promise.all([dao.getRequiredApprovals()]);
 
     return {
       daoAddress,
-      isDaoActive,
       requiredApprovals: Number(requiredApprovals),
     };
   }
