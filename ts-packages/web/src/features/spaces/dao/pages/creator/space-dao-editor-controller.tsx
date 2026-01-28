@@ -36,6 +36,7 @@ export class SpaceDaoEditorController {
     public isDepositOpen: State<boolean>,
     public depositAmount: State<string>,
     public isDepositing: State<boolean>,
+    public isUpdating: State<boolean>,
     public createSpaceDaoMutation: ReturnType<typeof useCreateSpaceDaoMutation>,
   ) {}
 
@@ -232,6 +233,60 @@ export class SpaceDaoEditorController {
       this.isRegistering.set(false);
     }
   };
+
+  handleUpdateDao = async (samplingCount: string, rewardAmount: string) => {
+    const dao = this.dao;
+    const sampling = Number(samplingCount);
+    const reward = Number(rewardAmount);
+
+    if (!dao?.contract_address) {
+      showErrorToast(this.t('error_register_failed_unknown'));
+      return;
+    }
+    if (!Number.isFinite(sampling) || sampling <= 0) {
+      showErrorToast(this.t('error_invalid_sampling_count'));
+      return;
+    }
+    if (!Number.isFinite(reward) || reward <= 0) {
+      showErrorToast(this.t('error_invalid_reward_amount'));
+      return;
+    }
+
+    this.isUpdating.set(true);
+    try {
+      showInfoToast(this.t('toast_connecting_wallet'));
+      const signer = await getKaiaSigner(
+        config.env === 'prod' ? 'mainnet' : 'testnet',
+      );
+      const provider = signer.provider;
+
+      const daoService = new SpaceDaoService(provider);
+      await daoService.connectWallet();
+      await daoService.setSpaceWithdrawalAmount(
+        dao.contract_address,
+        rewardAmount,
+      );
+
+      await this.createSpaceDaoMutation.mutateAsync({
+        spacePk: this.spacePk,
+        req: {
+          contract_address: dao.contract_address,
+          sampling_count: sampling,
+          reward_amount: reward,
+        },
+      });
+      showSuccessToast(this.t('toast_updated'));
+    } catch (error) {
+      console.error('Failed to update Space DAO:', error);
+      if (error instanceof Error) {
+        showErrorToast(this.t('error_register_failed', { message: error.message }));
+      } else {
+        showErrorToast(this.t('error_register_failed_unknown'));
+      }
+    } finally {
+      this.isUpdating.set(false);
+    }
+  };
 }
 
 export function useSpaceDaoEditorController(
@@ -250,6 +305,7 @@ export function useSpaceDaoEditorController(
   const isDepositOpen = useState(false);
   const depositAmount = useState('');
   const isDepositing = useState(false);
+  const isUpdating = useState(false);
   const createSpaceDaoMutation = useCreateSpaceDaoMutation();
   const provider = useMemo(() => {
     if (!config.rpc_url) {
@@ -279,6 +335,7 @@ export function useSpaceDaoEditorController(
     new State(isDepositOpen),
     new State(depositAmount),
     new State(isDepositing),
+    new State(isUpdating),
     createSpaceDaoMutation,
   );
 

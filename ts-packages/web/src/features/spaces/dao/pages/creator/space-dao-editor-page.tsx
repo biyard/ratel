@@ -49,6 +49,8 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
               onCloseDeposit={ctrl.handleCloseDeposit}
               onDepositAmountChange={ctrl.handleDepositAmountChange}
               onConfirmDeposit={ctrl.handleConfirmDeposit}
+              isUpdating={ctrl.isUpdating.get()}
+              onUpdateDao={ctrl.handleUpdateDao}
             />
           ) : (
             <>
