@@ -85,6 +85,7 @@ import { i18nTeamGroups } from '@/features/teams/groups/i18n';
 import { i18nTeamDao } from '@/features/teams/dao/i18n';
 import { i18nTeamRewardsPage } from '@/features/teams/rewards/i18n';
 import { i18nTeamSettingsPage } from '@/features/teams/settings/i18n';
+import { i18nSpaceDaoEditor } from '@/features/spaces/dao/pages/creator/space-dao-editor-i18n';
 export const LANGUAGES = ['en', 'ko'];
 
 // NOTE: it should be migrated to namespace based code splitting later
@@ -177,6 +178,7 @@ Object.entries({
   MyRewards: i18nRewardsPage,
   TeamGroups: i18nTeamGroups,
   TeamDao: i18nTeamDao,
+  SpaceDaoEditor: i18nSpaceDaoEditor,
   TeamRewards: i18nTeamRewardsPage,
   TeamSettings: i18nTeamSettingsPage,
 }).forEach(([key, value]) => {
