@@ -1,15 +1,16 @@
 /**
  * Custom TipTap extension for theme-aware text highlighting
- * Automatically inverts highlight colors when switching between light and dark themes
- * to maintain readability
+ * Automatically adjusts highlight colors dynamically for any color when switching themes
  */
 
 import { Extension } from '@tiptap/core';
 import '@tiptap/extension-text-style';
+import { getThemeAdjustedHighlight } from '../color-utils';
 
 export interface ThemeAwareHighlightOptions {
   multicolor: boolean;
   types: string[];
+  getCurrentTheme?: () => 'light' | 'dark';
 }
 
 declare module '@tiptap/core' {
@@ -53,17 +54,28 @@ export const ThemeAwareHighlight = Extension.create<ThemeAwareHighlightOptions>(
           attributes: {
             highlight: {
               default: null,
-              parseHTML: (element) =>
-                element.getAttribute('data-highlight') ||
-                element.style.backgroundColor?.replace(/['"]+/g, ''),
+              parseHTML: (element) => {
+                const dataHighlight = element.getAttribute('data-highlight');
+                if (dataHighlight) return dataHighlight;
+
+                const styleColor = element.style.backgroundColor?.replace(/['"]+/g, '');
+                return styleColor || null;
+              },
               renderHTML: (attributes) => {
                 if (!attributes.highlight) {
                   return {};
                 }
 
+                const currentTheme = this.options.getCurrentTheme?.() ||
+                  (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark');
+                const adjustedColor = getThemeAdjustedHighlight(
+                  attributes.highlight,
+                  currentTheme,
+                );
+
                 return {
                   'data-highlight': attributes.highlight,
-                  style: `background-color: var(--theme-highlight-color, ${attributes.highlight})`,
+                  style: `background-color: ${adjustedColor}`,
                 };
               },
             },
@@ -76,26 +88,26 @@ export const ThemeAwareHighlight = Extension.create<ThemeAwareHighlightOptions>(
       return {
         setThemeAwareHighlight:
           (attributes) =>
-          ({ chain }) => {
-            return chain()
-              .setMark('textStyle', { highlight: attributes?.color })
-              .run();
-          },
+            ({ chain }) => {
+              return chain()
+                .setMark('textStyle', { highlight: attributes?.color })
+                .run();
+            },
         toggleThemeAwareHighlight:
           (attributes) =>
-          ({ chain }) => {
-            return chain()
-              .toggleMark('textStyle', { highlight: attributes?.color })
-              .run();
-          },
+            ({ chain }) => {
+              return chain()
+                .toggleMark('textStyle', { highlight: attributes?.color })
+                .run();
+            },
         unsetThemeAwareHighlight:
           () =>
-          ({ chain }) => {
-            return chain()
-              .setMark('textStyle', { highlight: null })
-              .removeEmptyTextStyle()
-              .run();
-          },
+            ({ chain }) => {
+              return chain()
+                .setMark('textStyle', { highlight: null })
+                .removeEmptyTextStyle()
+                .run();
+            },
       };
     },
   },
