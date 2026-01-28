@@ -64,6 +64,7 @@ pub enum EntityType {
     // SPACE_PK index is aligned by gsi2-index
     SpaceCommon,
     SpaceDao,
+    SpaceDaoSample(String),
     SpaceParticipant,
     SpaceInvitation,
     SpaceTemplate(String),          // template name
