@@ -52,12 +52,12 @@ pub fn route() -> Result<Router<AppState>> {
                     delete(delete_space_handler).patch(update_space_handler),
                 )
                 .nest("/panels", panels::route())
-                .nest("/dao", dao::route())
                 // NOTE: Above are TeamAdmin-only routes
                 .layer(middleware::from_fn_with_state(
                     app_state.clone(),
                     authorize_team_admin,
                 ))
+                .nest("/dao", dao::route())
                 .nest("/analyzes", analyzes::route())
                 .route("/", get(get_space_handler))
                 .route("/participate", post(participate_space_handler))

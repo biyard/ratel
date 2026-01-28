@@ -6,6 +6,8 @@ import { config } from '@/config';
 import { CheckIcon, ClipboardIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { SpaceDaoDepositDialog } from './space-dao-deposit-dialog';
+import { Input } from '@/components/ui/input';
+import { Edit1 } from '@/components/icons';
 
 type SpaceDaoInfoCardProps = {
   dao: SpaceDaoResponse;
@@ -18,6 +20,8 @@ type SpaceDaoInfoCardProps = {
   onCloseDeposit?: () => void;
   onDepositAmountChange?: (value: string) => void;
   onConfirmDeposit?: () => void;
+  isUpdating?: boolean;
+  onUpdateDao?: (samplingCount: string, rewardAmount: string) => Promise<void>;
 };
 
 export function SpaceDaoInfoCard({
@@ -31,9 +35,18 @@ export function SpaceDaoInfoCard({
   onCloseDeposit,
   onDepositAmountChange,
   onConfirmDeposit,
+  isUpdating = false,
+  onUpdateDao,
 }: SpaceDaoInfoCardProps) {
   const { t } = useTranslation('SpaceDaoEditor');
   const [copied, setCopied] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [samplingValue, setSamplingValue] = useState(
+    String(dao.sampling_count ?? ''),
+  );
+  const [rewardValue, setRewardValue] = useState(
+    String(dao.reward_amount ?? ''),
+  );
   const explorerUrl = config.block_explorer_url
     ? `${config.block_explorer_url}/address/${dao.contract_address}`
     : null;
@@ -48,9 +61,61 @@ export function SpaceDaoInfoCard({
     }
   };
 
+  const handleEdit = () => {
+    setSamplingValue(String(dao.sampling_count ?? ''));
+    setRewardValue(String(dao.reward_amount ?? ''));
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!onUpdateDao) return;
+    await onUpdateDao(samplingValue, rewardValue);
+    setIsEditing(false);
+  };
+
   return (
     <Card>
       <div className="space-y-4 w-full">
+        <div className="flex flex-row w-full justify-end items-center">
+          {onUpdateDao && (
+            <>
+              {isEditing ? (
+                <div className="flex flex-row w-full justify-end items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCancelEdit}
+                    disabled={isUpdating}
+                  >
+                    {t('dao_info_edit_cancel')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="rounded_primary"
+                    size="sm"
+                    onClick={handleSaveEdit}
+                    disabled={isUpdating}
+                  >
+                    {isUpdating
+                      ? t('dao_info_edit_saving')
+                      : t('dao_info_edit_save')}
+                  </Button>
+                </div>
+              ) : (
+                <Edit1
+                  className="cursor-pointer w-4 h-4"
+                  onClick={handleEdit}
+                />
+              )}
+            </>
+          )}
+        </div>
+
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="text-xl font-semibold text-text-primary mb-1">
@@ -89,13 +154,33 @@ export function SpaceDaoInfoCard({
             <p className="text-text-secondary mb-1">
               {t('dao_info_sampling_count')}
             </p>
-            <p className="text-base text-text-primary">{dao.sampling_count}</p>
+            {isEditing ? (
+              <Input
+                type="number"
+                min={1}
+                value={samplingValue}
+                onChange={(e) => setSamplingValue(e.target.value)}
+              />
+            ) : (
+              <p className="text-base text-text-primary">
+                {dao.sampling_count}
+              </p>
+            )}
           </div>
           <div>
             <p className="text-text-secondary mb-1">
               {t('dao_info_reward_amount')}
             </p>
-            <p className="text-base text-text-primary">{dao.reward_amount}</p>
+            {isEditing ? (
+              <Input
+                type="number"
+                min={1}
+                value={rewardValue}
+                onChange={(e) => setRewardValue(e.target.value)}
+              />
+            ) : (
+              <p className="text-base text-text-primary">{dao.reward_amount}</p>
+            )}
           </div>
         </div>
 
@@ -113,32 +198,30 @@ export function SpaceDaoInfoCard({
         <div className="flex items-center justify-end gap-2">
           <Button
             type="button"
-            variant="outline"
+            variant="rounded_primary"
             size="sm"
             onClick={onOpenDeposit}
             disabled={!onOpenDeposit}
           >
             {t('dao_info_deposit_button')}
           </Button>
+
           {explorerUrl && (
-            <Button asChild variant="rounded_primary" size="sm">
-              <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
-                {t('dao_info_view_explorer')}
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </a>
-            </Button>
+            <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+            </a>
           )}
         </div>
       </div>
