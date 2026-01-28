@@ -47,7 +47,7 @@ export default function FeedCard(props: FeedCardProps) {
   // Local state for optimistic updates
   const [optimisticLiked, setOptimisticLiked] = useState(post.liked);
   const [optimisticLikes, setOptimisticLikes] = useState(post.likes);
-  
+
   const { data: user } = useUserInfo();
   const isLoggedIn = user !== null;
   const popup = usePopup();
@@ -75,7 +75,7 @@ export default function FeedCard(props: FeedCardProps) {
     const previousLiked = optimisticLiked;
     const previousLikes = optimisticLikes;
     const delta = value ? 1 : -1;
-    
+
     setOptimisticLiked(value);
     setOptimisticLikes(Math.max(0, optimisticLikes + delta));
     setIsProcessing(true);
@@ -147,10 +147,7 @@ export default function FeedCard(props: FeedCardProps) {
         <FeedBody post={post} onEdit={handleEditPost(post.pk)} />
       </NavLink>
       <FeedFooter
-        post_pk={post.pk}
         href={href}
-        space_id={post.space_pk}
-        space_type={post.space_type}
         booster_type={post.booster}
         likes={optimisticLikes}
         comments={post.comments}
@@ -289,9 +286,7 @@ export function IconText({
 }: React.HTMLAttributes<HTMLDivElement> & { children: React.ReactNode }) {
   return (
     <Row
-      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-text-primary text-[15px] px-3 py-3 ${
-        className || ''
-      }`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap leading-none text-text-primary text-[15px] px-3 py-3 ${className || ''}`}
       {...props}
     >
       {children}
@@ -374,28 +369,9 @@ export function OnboardingTag() {
   );
 }
 
-export function JoinNowButton({ onClick }: { onClick: () => void }) {
-  const { t } = useTranslation('Home');
-  return (
-    <Button
-      variant="rounded_primary"
-      className="flex flex-row py-3 px-5 my-2.5 font-bold cursor-pointer bg-enable-button-bg w-fit rounded-[10px] text-enable-button-text text-[15px] hover:bg-enable-button-bg/80"
-      onClick={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        onClick();
-      }}
-    >
-      {t('join_now')}
-    </Button>
-  );
-}
 
 interface FeedFooterProps {
-  post_pk: string;
   href: string;
-  space_id?: string;
-  space_type?: SpaceType;
   booster_type?: BoosterType;
   likes: number;
   comments: number;
@@ -409,10 +385,7 @@ interface FeedFooterProps {
 }
 
 export function FeedFooter({
-  post_pk,
   href,
-  space_id,
-  space_type,
   booster_type,
   likes,
   comments,
@@ -455,28 +428,9 @@ export function FeedFooter({
 
   return (
     <Row
-      className={`items-center justify-between border-t w-full px-5 ${
-        space_id && space_type ? 'border-divider' : 'border-divider'
-      } `}
+      className="items-center justify-between border-t w-full px-5 border-divider"
     >
-      {space_id && space_type ? (
-        <div className="max-tablet:!hidden">
-          <JoinNowButton
-            onClick={() => {
-              nav(route.spaceByType(space_type, space_id));
-            }}
-          />
-        </div>
-      ) : (
-        <div></div>
-      )}
-      <div
-        className={`flex flex-row ${
-          space_id && space_type
-            ? 'w-fit items-center max-tablet:!w-full max-tablet:!justify-between max-tablet:!items-center'
-            : 'w-full justify-between items-center'
-        }`}
-      >
+      <div className="flex flex-row w-full justify-between items-center">
         <IconText
           onClick={(evt) => {
             evt.stopPropagation();

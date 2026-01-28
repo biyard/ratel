@@ -16,6 +16,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Video from './extensions/video';
 import { ThemeAwareColor } from './extensions/theme-aware-color';
 import { ThemeAwareHighlight } from './extensions/theme-aware-highlight';
+import { getThemeAdjustedColor, getThemeAdjustedHighlight } from './color-utils';
 import {
   forwardRef,
   useCallback,
@@ -29,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { TiptapEditorProps, DEFAULT_ENABLED_FEATURES } from './types';
 import { TiptapToolbar } from './tiptap-toolbar';
 import { showErrorToast } from '@/lib/toast';
+import { useTheme } from '@/hooks/use-theme';
 import './theme-aware-colors.css';
 import { AnalyzeLdaBlock } from './extensions/analyze/lda-block';
 import { AnalyzeNetworkBlock } from './extensions/analyze/network-block';
@@ -73,6 +75,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
     },
     ref,
   ) => {
+    const { theme } = useTheme();
     const videoInputRef = useRef<HTMLInputElement | null>(null);
     const [isFolded, setIsFolded] = useState<boolean>(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -160,7 +163,9 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           Color,
           Highlight.configure({ multicolor: true }),
           ThemeAwareColor,
-          ThemeAwareHighlight.configure({ multicolor: true }),
+          ThemeAwareHighlight.configure({
+            multicolor: true,
+          }),
           TextAlign.configure({
             types: ['heading', 'paragraph'],
             alignments: ['left', 'center', 'right'],
@@ -276,6 +281,31 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       }
       bubbleKeepAliveRef.current = true;
     }, [editor]);
+
+    // Update colors when theme changes
+    useEffect(() => {
+      if (!editor || editor.isDestroyed) return;
+
+      const editorElement = editor.view.dom;
+      
+      const coloredElements = editorElement.querySelectorAll('[data-color]');
+      coloredElements.forEach((el) => {
+        const originalColor = el.getAttribute('data-color');
+        if (originalColor) {
+          const adjustedColor = getThemeAdjustedColor(originalColor, theme);
+          (el as HTMLElement).style.color = adjustedColor;
+        }
+      });
+      
+      const highlightedElements = editorElement.querySelectorAll('[data-highlight]');
+      highlightedElements.forEach((el) => {
+        const originalColor = el.getAttribute('data-highlight');
+        if (originalColor) {
+          const adjustedColor = getThemeAdjustedHighlight(originalColor, theme);
+          (el as HTMLElement).style.backgroundColor = adjustedColor;
+        }
+      });
+    }, [editor, theme]);
 
     useEffect(() => {
       if (!canFold) {

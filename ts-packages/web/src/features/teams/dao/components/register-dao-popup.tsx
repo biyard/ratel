@@ -47,10 +47,10 @@ export function RegisterDaoPopup({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-[600px] max-h-[80vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+      <div className="bg-background text-neutral-900 dark:text-neutral-100 rounded-lg shadow-xl w-full max-w-[600px] max-h-[80vh] flex flex-col border border-neutral-200/70 dark:border-neutral-700/60">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between p-6 border-b border-neutral-200/70 dark:border-neutral-700/60">
           <div>
             <h2 className="text-2xl font-bold text-text-primary">
               {t('select_admins')}
@@ -62,9 +62,9 @@ export function RegisterDaoPopup({
           <button
             onClick={onCancel}
             disabled={isRegistering}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors disabled:opacity-50"
+            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors disabled:opacity-50"
           >
-            <XMarkIcon className="w-6 h-6 text-text-secondary" />
+            <XMarkIcon className="w-6 h-6 text-neutral-500" />
           </button>
         </div>
 
@@ -82,8 +82,8 @@ export function RegisterDaoPopup({
                     flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all
                     ${
                       isSelected
-                        ? 'border-primary bg-primary/5'
-                        : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                        ? 'border-primary bg-primary/10'
+                        : 'border-neutral-200/70 dark:border-neutral-700/60 hover:border-neutral-400/50 dark:hover:border-neutral-500/50'
                     }
                     ${isRegistering ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
@@ -95,7 +95,7 @@ export function RegisterDaoPopup({
                     ${
                       isSelected
                         ? 'bg-primary border-primary'
-                        : 'border-gray-300 dark:border-gray-600'
+                        : 'border-neutral-300/70 dark:border-neutral-600/70'
                     }
                   `}
                   >
@@ -112,19 +112,19 @@ export function RegisterDaoPopup({
                   {/* Admin Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold text-text-primary truncate">
+                      <p className="font-semibold text-text-primary dark:text-neutral-100 truncate">
                         {admin.display_name}
                       </p>
                       {admin.is_owner && (
-                        <span className="px-2 py-0.5 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs font-medium rounded">
+                        <span className="px-2 py-0.5 bg-yellow-100/80 dark:bg-yellow-900/60 text-yellow-800 dark:text-yellow-200 text-xs font-medium rounded">
                           Owner
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-text-secondary truncate">
+                    <p className="text-sm text-neutral-500 dark:text-neutral-400 truncate">
                       @{admin.username}
                     </p>
-                    <p className="text-xs font-mono text-text-tertiary mt-1">
+                    <p className="text-xs font-mono text-neutral-400 dark:text-neutral-500 mt-1">
                       {truncateAddress(admin.evm_address)}
                     </p>
                   </div>
@@ -135,15 +135,13 @@ export function RegisterDaoPopup({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-200 dark:border-gray-700">
+        <div className="p-6 border-t border-neutral-200/70 dark:border-neutral-700/60">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-text-secondary">
+            <p className="text-sm text-neutral-500 dark:text-neutral-400">
               {t('selected_count', { count: selectedAddresses.size })}
             </p>
             {selectedAddresses.size < minRequired && (
-              <p className="text-sm text-red-600 dark:text-red-400">
-                {t('min_admins_required')}
-              </p>
+              <p className="text-sm text-red-500">{t('min_admins_required')}</p>
             )}
           </div>
 
@@ -151,14 +149,14 @@ export function RegisterDaoPopup({
             <button
               onClick={onCancel}
               disabled={isRegistering}
-              className="flex-1 px-6 py-3 bg-gray-100 dark:bg-gray-700 text-text-primary rounded-md font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-neutral-300 text-neutral-900 dark:bg-neutral-800 dark:text-neutral-100 rounded-md font-medium hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('cancel')}
             </button>
             <button
               onClick={handleConfirm}
               disabled={!canConfirm}
-              className="flex-1 px-6 py-3 bg-primary text-white rounded-md font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-primary hover:bg-primary/80 text-white rounded-md font-medium hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isRegistering ? t('registering_dao') : t('confirm')}
             </button>
