@@ -2,139 +2,224 @@ import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-describe("Modular DAO System", function () {
-  async function deploySystemFixture() {
-    const [deployer, admin1, admin2, admin3, user, recipient] =
+describe("TeamDAO System", function () {
+  async function deployTeamDAOFixture() {
+    const [deployer, admin1, admin2, admin3, admin4, user, recipient] =
       await ethers.getSigners();
     const admins = [admin1.address, admin2.address, admin3.address];
 
-    const SpaceDAO = await ethers.getContractFactory("TeamDAO");
-    const spaceDaoLogic = await SpaceDAO.deploy();
+    const TeamDAO = await ethers.getContractFactory("TeamDAO");
+    const dao = await TeamDAO.deploy(admins);
+    await dao.waitForDeployment();
 
-    const RewardExtension = await ethers.getContractFactory("RewardExtension");
-    const rewardExtLogic = await RewardExtension.deploy();
-
-    const SpaceFactory = await ethers.getContractFactory("TeamDaoFactory");
-    const factory = await SpaceFactory.deploy(
-      await spaceDaoLogic.getAddress(),
-      await rewardExtLogic.getAddress()
-    );
-
-    // Deploy MockToken
     const MockToken = await ethers.getContractFactory("MockToken");
-    const token = await MockToken.deploy(); // deployer가 100만 개 가짐
-
-    const tx = await factory.createSpace(admins);
-    const receipt = await tx.wait();
-
-    let daoAddress = "";
-    let extAddress = "";
-
-    if (receipt && receipt.logs) {
-      const filter = factory.filters.TeamCreated();
-      const events = await factory.queryFilter(
-        filter,
-        receipt.blockNumber,
-        receipt.blockNumber
-      );
-      if (events.length > 0) {
-        const event = events[0] as any;
-        daoAddress = event.args[0];
-        extAddress = event.args[1];
-      }
-    }
-
-    const dao = (await ethers.getContractAt("TeamDAO", daoAddress)) as any;
-    const ext = (await ethers.getContractAt(
-      "RewardExtension",
-      extAddress
-    )) as any;
+    const token = await MockToken.deploy();
+    await token.waitForDeployment();
 
     return {
-      factory,
       dao,
-      ext,
       token,
       deployer,
       admin1,
       admin2,
       admin3,
+      admin4,
       user,
       recipient,
       admins,
     };
   }
 
-  describe("Deployment & Linking", function () {
-    it("Should create DAO and Extension correctly", async function () {
-      const { dao, ext, admins } = await loadFixture(deploySystemFixture);
-
-      expect(await dao.rewardExtension()).to.equal(await ext.getAddress());
-
-      expect(await ext.dao()).to.equal(await dao.getAddress());
-
-      expect(await dao.isExtension(await ext.getAddress())).to.be.true;
-    });
-
+  describe("Deployment", function () {
     it("Should set admins correctly", async function () {
-      const { dao, admins } = await loadFixture(deploySystemFixture);
+      const { dao, admins } = await loadFixture(deployTeamDAOFixture);
 
       expect(await dao.isAdmin(admins[0])).to.be.true;
       expect(await dao.isAdmin(admins[1])).to.be.true;
       expect(await dao.isAdmin(admins[2])).to.be.true;
     });
+
+    it("Should set DAO as active", async function () {
+      const { dao } = await loadFixture(deployTeamDAOFixture);
+
+      expect(await dao.isDaoActive()).to.be.true;
+    });
+
+    it("Should calculate required approvals correctly for 3 admins", async function () {
+      const { dao } = await loadFixture(deployTeamDAOFixture);
+
+      expect(await dao.getRequiredApprovals()).to.equal(2);
+    });
   });
 
   describe("Governance (Propose & Approve)", function () {
     it("Should allow admin to create proposal", async function () {
-      const { ext, admin1, recipient } = await loadFixture(deploySystemFixture);
+      const { dao, token, admin1, recipient } = await loadFixture(
+        deployTeamDAOFixture
+      );
 
       const pairs = [{ recipient: recipient.address, amount: 100 }];
 
-      await expect(ext.connect(admin1).proposeBatch(ethers.ZeroAddress, pairs))
-        .to.emit(ext, "ProposalCreated")
+      await expect(
+        dao.connect(admin1).proposeBatch(await token.getAddress(), pairs)
+      )
+        .to.emit(dao, "ProposalCreated")
         .withArgs(0, admin1.address, 1);
 
-      const proposal = await ext.getProposalInfo(0);
+      const proposal = await dao.getProposalInfo(0);
       expect(proposal.approvals).to.equal(1);
     });
 
     it("Should NOT allow non-admin to create proposal", async function () {
-      const { ext, user, recipient } = await loadFixture(deploySystemFixture);
+      const { dao, token, user, recipient } = await loadFixture(
+        deployTeamDAOFixture
+      );
       const pairs = [{ recipient: recipient.address, amount: 100 }];
 
       await expect(
-        ext.connect(user).proposeBatch(ethers.ZeroAddress, pairs)
-      ).to.be.revertedWith("RewardExt: Not a DAO admin");
+        dao.connect(user).proposeBatch(await token.getAddress(), pairs)
+      ).to.be.revertedWith("TeamDAO: Not an admin");
     });
 
-    it("Should execute automatically when 2/3 quorum is reached", async function () {
-      const { dao, ext, admin1, admin2, recipient } = await loadFixture(
-        deploySystemFixture
+    it("Should NOT allow zero address for token", async function () {
+      const { dao, admin1, recipient } = await loadFixture(
+        deployTeamDAOFixture
       );
-
-      await admin1.sendTransaction({
-        to: await dao.getAddress(),
-        value: ethers.parseEther("10"),
-      });
-
-      const amount = ethers.parseEther("1");
-      const pairs = [{ recipient: recipient.address, amount: amount }];
-      await ext.connect(admin1).proposeBatch(ethers.ZeroAddress, pairs);
+      const pairs = [{ recipient: recipient.address, amount: 100 }];
 
       await expect(
-        ext.connect(admin2).approveAndExecute(0)
-      ).to.changeEtherBalances([dao, recipient], [-amount, amount]);
+        dao.connect(admin1).proposeBatch(ethers.ZeroAddress, pairs)
+      ).to.be.revertedWith("TeamDAO: Token address cannot be zero");
+    });
 
-      const proposal = await ext.getProposalInfo(0);
+    it("Should execute automatically when majority (2/3) is reached", async function () {
+      const { dao, token, admin1, admin2, recipient } = await loadFixture(
+        deployTeamDAOFixture
+      );
+
+      const fundAmount = ethers.parseEther("1000");
+      await token.transfer(await dao.getAddress(), fundAmount);
+
+      const amount = ethers.parseEther("100");
+      const pairs = [{ recipient: recipient.address, amount: amount }];
+      await dao.connect(admin1).proposeBatch(await token.getAddress(), pairs);
+
+      const balanceBefore = await token.balanceOf(recipient.address);
+
+      await expect(dao.connect(admin2).approveAndExecute(0))
+        .to.emit(dao, "Approved")
+        .withArgs(0, admin2.address)
+        .to.emit(dao, "BatchExecuted")
+        .withArgs(0);
+
+      const balanceAfter = await token.balanceOf(recipient.address);
+      expect(balanceAfter - balanceBefore).to.equal(amount);
+
+      const proposal = await dao.getProposalInfo(0);
       expect(proposal.executed).to.be.true;
+      expect(proposal.approvals).to.equal(2);
+    });
+
+    it("Should NOT execute if already approved by same admin", async function () {
+      const { dao, token, admin1, recipient } = await loadFixture(
+        deployTeamDAOFixture
+      );
+
+      const pairs = [{ recipient: recipient.address, amount: 100 }];
+      await dao.connect(admin1).proposeBatch(await token.getAddress(), pairs);
+
+      await expect(
+        dao.connect(admin1).approveAndExecute(0)
+      ).to.be.revertedWith("TeamDAO: Already approved");
+    });
+
+    it("Should NOT execute proposal twice", async function () {
+      const { dao, token, admin1, admin2, admin3, recipient } =
+        await loadFixture(deployTeamDAOFixture);
+
+      const fundAmount = ethers.parseEther("1000");
+      await token.transfer(await dao.getAddress(), fundAmount);
+
+      const pairs = [{ recipient: recipient.address, amount: 100 }];
+      await dao.connect(admin1).proposeBatch(await token.getAddress(), pairs);
+      await dao.connect(admin2).approveAndExecute(0);
+
+      await expect(
+        dao.connect(admin3).approveAndExecute(0)
+      ).to.be.revertedWith("TeamDAO: Already executed");
     });
   });
 
-  describe("Execution (Funds)", function () {
+  describe("Majority Logic", function () {
+    it("Should require 2 approvals for 3 admins", async function () {
+      const { dao, token, admin1, admin2, recipient } = await loadFixture(
+        deployTeamDAOFixture
+      );
+
+      expect(await dao.getRequiredApprovals()).to.equal(2);
+
+      const fundAmount = ethers.parseEther("1000");
+      await token.transfer(await dao.getAddress(), fundAmount);
+
+      const pairs = [{ recipient: recipient.address, amount: 100 }];
+      await dao.connect(admin1).proposeBatch(await token.getAddress(), pairs);
+
+      const proposalBefore = await dao.getProposalInfo(0);
+      expect(proposalBefore.executed).to.be.false;
+      expect(proposalBefore.approvals).to.equal(1);
+
+      await dao.connect(admin2).approveAndExecute(0);
+
+      const proposalAfter = await dao.getProposalInfo(0);
+      expect(proposalAfter.executed).to.be.true;
+      expect(proposalAfter.approvals).to.equal(2);
+    });
+
+    it("Should require 3 approvals for 4 admins", async function () {
+      const [deployer, admin1, admin2, admin3, admin4, user, recipient] =
+        await ethers.getSigners();
+      const admins = [
+        admin1.address,
+        admin2.address,
+        admin3.address,
+        admin4.address,
+      ];
+
+      const TeamDAO = await ethers.getContractFactory("TeamDAO");
+      const dao = await TeamDAO.deploy(admins);
+      await dao.waitForDeployment();
+
+      const MockToken = await ethers.getContractFactory("MockToken");
+      const token = await MockToken.deploy();
+      await token.waitForDeployment();
+
+      expect(await dao.getRequiredApprovals()).to.equal(3);
+
+      const fundAmount = ethers.parseEther("1000");
+      await token.transfer(await dao.getAddress(), fundAmount);
+
+      const pairs = [{ recipient: recipient.address, amount: 100 }];
+      await dao.connect(admin1).proposeBatch(await token.getAddress(), pairs);
+
+      await dao.connect(admin2).approveAndExecute(0);
+
+      let proposal = await dao.getProposalInfo(0);
+      expect(proposal.executed).to.be.false;
+      expect(proposal.approvals).to.equal(2);
+
+      await dao.connect(admin3).approveAndExecute(0);
+
+      proposal = await dao.getProposalInfo(0);
+      expect(proposal.executed).to.be.true;
+      expect(proposal.approvals).to.equal(3);
+    });
+  });
+
+  describe("Execution (ERC20 Transfers)", function () {
     it("Should transfer ERC20 tokens correctly", async function () {
-      const { dao, ext, token, deployer, admin1, admin2, recipient } =
-        await loadFixture(deploySystemFixture);
+      const { dao, token, admin1, admin2, recipient } = await loadFixture(
+        deployTeamDAOFixture
+      );
 
       const fundAmount = ethers.parseEther("1000");
       await token.transfer(await dao.getAddress(), fundAmount);
@@ -146,48 +231,58 @@ describe("Modular DAO System", function () {
       const transferAmount = ethers.parseEther("500");
       const pairs = [{ recipient: recipient.address, amount: transferAmount }];
 
-      await ext.connect(admin1).proposeBatch(await token.getAddress(), pairs);
+      await dao.connect(admin1).proposeBatch(await token.getAddress(), pairs);
+      await dao.connect(admin2).approveAndExecute(0);
 
-      await ext.connect(admin2).approveAndExecute(0);
-
-      expect(await token.balanceOf(recipient.address)).to.equal(transferAmount);
+      expect(await token.balanceOf(recipient.address)).to.equal(
+        transferAmount
+      );
       expect(await token.balanceOf(await dao.getAddress())).to.equal(
         ethers.parseEther("500")
       );
     });
 
     it("Should handle multiple recipients (Batch)", async function () {
-      const { dao, ext, admin1, admin2, user, recipient } = await loadFixture(
-        deploySystemFixture
+      const { dao, token, admin1, admin2, user, recipient } = await loadFixture(
+        deployTeamDAOFixture
       );
 
-      await admin1.sendTransaction({
-        to: await dao.getAddress(),
-        value: ethers.parseEther("5"),
-      });
+      const fundAmount = ethers.parseEther("5000");
+      await token.transfer(await dao.getAddress(), fundAmount);
 
       const pairs = [
-        { recipient: user.address, amount: ethers.parseEther("1") },
-        { recipient: recipient.address, amount: ethers.parseEther("2") },
+        { recipient: user.address, amount: ethers.parseEther("1000") },
+        { recipient: recipient.address, amount: ethers.parseEther("2000") },
       ];
 
-      await ext.connect(admin1).proposeBatch(ethers.ZeroAddress, pairs);
-      await ext.connect(admin2).approveAndExecute(0);
+      await dao.connect(admin1).proposeBatch(await token.getAddress(), pairs);
+      await dao.connect(admin2).approveAndExecute(0);
 
-      const userBalance = await ethers.provider.getBalance(user.address);
-      const recipientBalance = await ethers.provider.getBalance(recipient.address);
-      const expectedUser = ethers.parseEther("10001");
-      const expectedRecipient = ethers.parseEther("10002");
-      const tolerance = ethers.parseEther("0.0003");
+      expect(await token.balanceOf(user.address)).to.equal(
+        ethers.parseEther("1000")
+      );
+      expect(await token.balanceOf(recipient.address)).to.equal(
+        ethers.parseEther("2000")
+      );
+      expect(await token.balanceOf(await dao.getAddress())).to.equal(
+        ethers.parseEther("2000")
+      );
+    });
 
-      expect(userBalance).to.be.closeTo(expectedUser, tolerance);
-      expect(recipientBalance).to.be.closeTo(expectedRecipient, tolerance);
+    it("Should revert if DAO has insufficient token balance", async function () {
+      const { dao, token, admin1, admin2, recipient } = await loadFixture(
+        deployTeamDAOFixture
+      );
+
+      const pairs = [
+        { recipient: recipient.address, amount: ethers.parseEther("1000") },
+      ];
+
+      await dao.connect(admin1).proposeBatch(await token.getAddress(), pairs);
+
+      await expect(
+        dao.connect(admin2).approveAndExecute(0)
+      ).to.be.revertedWithCustomError(token, "ERC20InsufficientBalance");
     });
   });
 });
-
-// "@nomicfoundation/hardhat-toolbox": "^6.1.0",
-// "@openzeppelin/contracts": "^5.4.0",
-// "hardhat": "^3.16.0",
-// "typescript": "^5.9.0",
-// "@types/node": "^20.0.0"
