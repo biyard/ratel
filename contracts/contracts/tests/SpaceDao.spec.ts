@@ -4,8 +4,16 @@ import { ethers } from "hardhat";
 
 describe("SpaceDAO", function () {
   async function deploySpaceDaoFixture() {
-    const [deployer, admin1, admin2, admin3, admin4, user, recipient1, recipient2] =
-      await ethers.getSigners();
+    const [
+      deployer,
+      admin1,
+      admin2,
+      admin3,
+      admin4,
+      user,
+      recipient1,
+      recipient2,
+    ] = await ethers.getSigners();
     const admins = [admin1.address, admin2.address, admin3.address];
 
     const MockToken = await ethers.getContractFactory("MockToken");
@@ -13,7 +21,11 @@ describe("SpaceDAO", function () {
 
     const SpaceDAO = await ethers.getContractFactory("SpaceDAO");
     const withdrawalAmount = ethers.parseUnits("100", 18);
-    const dao = await SpaceDAO.deploy(admins, await token.getAddress(), withdrawalAmount);
+    const dao = await SpaceDAO.deploy(
+      admins,
+      await token.getAddress(),
+      withdrawalAmount
+    );
 
     return {
       dao,
@@ -52,15 +64,27 @@ describe("SpaceDAO", function () {
       const SpaceDAO = await ethers.getContractFactory("SpaceDAO");
 
       await expect(
-        SpaceDAO.deploy([admin1.address, admin2.address], await token.getAddress(), 1)
+        SpaceDAO.deploy(
+          [admin1.address, admin2.address],
+          await token.getAddress(),
+          1
+        )
       ).to.be.revertedWith("SpaceDAO: at least 3 admins required");
 
       await expect(
-        SpaceDAO.deploy([admin1.address, admin2.address, user.address], ethers.ZeroAddress, 1)
+        SpaceDAO.deploy(
+          [admin1.address, admin2.address, user.address],
+          ethers.ZeroAddress,
+          1
+        )
       ).to.be.revertedWith("SpaceDAO: invalid token address");
 
       await expect(
-        SpaceDAO.deploy([admin1.address, admin2.address, user.address], await token.getAddress(), 0)
+        SpaceDAO.deploy(
+          [admin1.address, admin2.address, user.address],
+          await token.getAddress(),
+          0
+        )
       ).to.be.revertedWith("SpaceDAO: invalid withdrawal amount");
     });
 
@@ -71,11 +95,19 @@ describe("SpaceDAO", function () {
       const SpaceDAO = await ethers.getContractFactory("SpaceDAO");
 
       await expect(
-        SpaceDAO.deploy([ethers.ZeroAddress, admin2.address, admin3.address], await token.getAddress(), 1)
+        SpaceDAO.deploy(
+          [ethers.ZeroAddress, admin2.address, admin3.address],
+          await token.getAddress(),
+          1
+        )
       ).to.be.revertedWith("SpaceDAO: invalid admin");
 
       await expect(
-        SpaceDAO.deploy([admin1.address, admin1.address, admin3.address], await token.getAddress(), 1)
+        SpaceDAO.deploy(
+          [admin1.address, admin1.address, admin3.address],
+          await token.getAddress(),
+          1
+        )
       ).to.be.revertedWith("SpaceDAO: duplicate admin");
     });
   });
@@ -85,7 +117,9 @@ describe("SpaceDAO", function () {
       const { dao, token, deployer } = await loadFixture(deploySpaceDaoFixture);
       const amount = ethers.parseUnits("250", 18);
 
-      await expect(dao.deposit(0)).to.be.revertedWith("SpaceDAO: amount is zero");
+      await expect(dao.deposit(0)).to.be.revertedWith(
+        "SpaceDAO: amount is zero"
+      );
 
       await token.connect(deployer).approve(await dao.getAddress(), amount);
       await dao.deposit(amount);
@@ -128,20 +162,51 @@ describe("SpaceDAO", function () {
     });
 
     it("distributes funds to recipients", async function () {
-      const { dao, token, deployer, admin1, recipient1, recipient2, withdrawalAmount } =
-        await loadFixture(deploySpaceDaoFixture);
+      const {
+        dao,
+        token,
+        deployer,
+        admin1,
+        recipient1,
+        recipient2,
+        withdrawalAmount,
+      } = await loadFixture(deploySpaceDaoFixture);
 
       const total = withdrawalAmount * 2n;
       await token.connect(deployer).approve(await dao.getAddress(), total);
       await dao.connect(deployer).deposit(total);
 
-      await dao.connect(admin1).distributeWithdrawal([
-        recipient1.address,
-        recipient2.address,
-      ]);
+      await dao
+        .connect(admin1)
+        .distributeWithdrawal([recipient1.address, recipient2.address]);
 
-      expect(await token.balanceOf(recipient1.address)).to.equal(withdrawalAmount);
-      expect(await token.balanceOf(recipient2.address)).to.equal(withdrawalAmount);
+      expect(await token.balanceOf(recipient1.address)).to.equal(
+        withdrawalAmount
+      );
+      expect(await token.balanceOf(recipient2.address)).to.equal(
+        withdrawalAmount
+      );
+      expect(await dao.getBalance()).to.equal(0);
+    });
+
+    it("distributes funds to 50 recipients", async function () {
+      const { dao, token, deployer, admin1, withdrawalAmount } =
+        await loadFixture(deploySpaceDaoFixture);
+
+      const recipients = Array.from(
+        { length: 50 },
+        () => ethers.Wallet.createRandom().address
+      );
+
+      const total = withdrawalAmount * 50n;
+      await token.connect(deployer).approve(await dao.getAddress(), total);
+      await dao.connect(deployer).deposit(total);
+
+      await dao.connect(admin1).distributeWithdrawal(recipients);
+
+      for (const addr of recipients) {
+        expect(await token.balanceOf(addr)).to.equal(withdrawalAmount);
+      }
       expect(await dao.getBalance()).to.equal(0);
     });
   });
@@ -150,9 +215,9 @@ describe("SpaceDAO", function () {
     it("allows admin to update withdrawal amount", async function () {
       const { dao, admin1, user } = await loadFixture(deploySpaceDaoFixture);
 
-      await expect(
-        dao.connect(user).setWithdrawalAmount(1)
-      ).to.be.revertedWith("SpaceDAO: admin only");
+      await expect(dao.connect(user).setWithdrawalAmount(1)).to.be.revertedWith(
+        "SpaceDAO: admin only"
+      );
 
       await expect(
         dao.connect(admin1).setWithdrawalAmount(0)
