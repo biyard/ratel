@@ -26,7 +26,8 @@ pub async fn find_team_handler(
     NoApi(user): NoApi<Option<User>>,
     Query(params): Query<FindTeamQueryParams>,
 ) -> Result<Json<TeamResponse>, Error> {
-    let team_query_option = Team::opt_one();
+    let gsi2_sk_prefix = Team::compose_gsi2_sk(String::default());
+    let team_query_option = Team::opt().sk(gsi2_sk_prefix);
 
     let (team, _) =
         Team::find_by_username_prefix(&dynamo.client, params.username.clone(), team_query_option)
