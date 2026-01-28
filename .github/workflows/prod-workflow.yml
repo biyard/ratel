@@ -159,7 +159,7 @@ jobs:
 
           BEDROCK_AGENT_ID: ${{ secrets.PROD_BEDROCK_AGENT_ID }}
           BEDROCK_AGENT_ALIAS_ID: ${{ secrets.PROD_BEDROCK_AGENT_ALIAS_ID }}
-          
+
           BIYARD_API_URL: https://api.biyard.co
           BIYARD_API_KEY: ${{ secrets.BIYARD_API_KEY }}
           BIYARD_PROJECT_ID: ${{ secrets.BIYARD_PROJECT_ID }}
@@ -206,7 +206,7 @@ jobs:
           REGION: ap-northeast-2
           VITE_LOG_LEVEL: info
           VITE_RPC_URL: "https://public-en.node.kaia.io"
-          VITE_BLOCK_EXPLORER_URL: "https://scope.kaia.io"
+          VITE_BLOCK_EXPLORER_URL: "https://kaiascan.io"
           VITE_OPERATOR_ADDRESS: ${{ secrets.OPERATOR_ADDRESS }}
           VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
@@ -225,6 +225,7 @@ jobs:
           VITE_API_URL: https://ratel.foundation
           VITE_EXPERIMENT: false
           VITE_TELEGRAM_BOTNAME: crypto_ratel_bot
+          VITE_USDT_ADDRESS: "0xd077a400968890eacc75cdc901f0356c943e4fdb"
         run: |
           make build
 

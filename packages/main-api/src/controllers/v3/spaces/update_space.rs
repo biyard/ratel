@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::dto::*;
-use crate::features::spaces::files::{FileLink, FileLinkTarget, SpaceFile};
+use crate::features::spaces::{SpaceDao, files::{FileLink, FileLinkTarget, SpaceFile}};
 use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
@@ -18,6 +18,7 @@ use crate::utils::telegram::ArcTelegramBot;
 use crate::utils::time::get_now_timestamp;
 use crate::*;
 
+use crate::utils::space_dao_sampling::sample_space_dao_participants;
 use serde::Deserialize;
 #[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 #[serde(untagged)]
@@ -281,6 +282,27 @@ pub async fn update_space_handler(
 
             space.status = Some(SpaceStatus::Finished);
             space.block_participate = block_participate;
+
+            // FIXME: This architecture should be changed to a event fetcher structure in the future.
+            let dao = SpaceDao::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceDao)).await?;
+            if let Some(dao) = dao {
+                if dao.sampling_count > 0 {
+                    let sampled = sample_space_dao_participants(
+                        &dynamo.client,
+                        &space_pk,
+                        dao.sampling_count,
+                    )
+                    .await?;
+                    let sampled_users: Vec<String> =
+                        sampled.iter().map(|p| p.user_pk.to_string()).collect();
+                    tracing::info!(
+                        "Finish sampling: space={}, count={}, sampled={:?}",
+                        space_pk,
+                        sampled_users.len(),
+                        sampled_users
+                    );
+                }
+            }
         }
         UpdateSpaceRequest::Anonymous {
             anonymous_participation,

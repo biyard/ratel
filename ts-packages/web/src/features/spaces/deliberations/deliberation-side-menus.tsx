@@ -1,4 +1,5 @@
 import {
+  Discuss,
   // CheckCircle2,
   // Discuss,
   PieChart1,
@@ -9,6 +10,7 @@ import {
 import { SpaceType } from '../types/space-type';
 import { addSideMenusForSpaceType } from '../utils/side-menus-for-space-type';
 import { route } from '@/route';
+import { config } from '@/config';
 // import { SpaceStatus } from '../types/space-common';
 
 // const checkCircle2Colored = (props) => (
@@ -47,6 +49,17 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
     },
     // visible: (space) => space.participated || space.isAdmin(),
     label: 'menu_boards',
+  },
+  {
+    Icon: Discuss,
+    to: (space) => {
+      return route.spaceDao(space.pk);
+    },
+    visible: (space) =>
+      config.experiment &&
+      space.authorType === 2 &&
+      (space.isAdmin() || Boolean(space.daoAddress)),
+    label: 'menu_dao',
   },
   // {
   //   Icon: Discuss,

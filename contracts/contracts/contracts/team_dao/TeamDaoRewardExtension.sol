@@ -4,14 +4,14 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
 
-interface ISpaceDAO {
+interface ITeamDAO {
     function executeCall(address target, uint256 value, bytes calldata data) external returns (bytes memory);
     function checkAdmin(address user) external view returns (bool);
 }
 
 contract RewardExtension is Initializable {
     
-    ISpaceDAO public dao;
+    ITeamDAO public dao;
     uint256 public constant REQUIRED_APPROVALS = 2;
 
     struct TransferPair {
@@ -38,7 +38,7 @@ contract RewardExtension is Initializable {
     constructor() { _disableInitializers(); }
 
     function initialize(address _dao) external initializer {
-        dao = ISpaceDAO(_dao);
+        dao = ITeamDAO(_dao);
     }
 
     modifier onlyAdmin() {
