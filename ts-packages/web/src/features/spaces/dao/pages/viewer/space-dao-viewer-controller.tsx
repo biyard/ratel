@@ -13,6 +13,11 @@ import {
   KaiaWalletError,
 } from '@/lib/service/kaia-wallet-service';
 import { State } from '@/types/state';
+import {
+  SpaceDaoSampleListResponse,
+  useSpaceDaoSamples,
+} from '@/features/spaces/dao/hooks/use-space-dao-samples';
+import { useUpdateSpaceDaoSamplesMutation } from '@/features/spaces/dao/hooks/use-update-space-dao-samples-mutation';
 
 export class SpaceDaoViewerController {
   constructor(
@@ -26,6 +31,11 @@ export class SpaceDaoViewerController {
     public isDepositOpen: State<boolean>,
     public depositAmount: State<string>,
     public isDepositing: State<boolean>,
+    public sampleBookmark: State<string | null>,
+    public sampleHistory: State<(string | null)[]>,
+    public samples: SpaceDaoSampleListResponse | undefined,
+    public samplesLoading: boolean,
+    public isDistributingPage: State<boolean>,
   ) {}
 
   fetchBalance = async () => {
@@ -115,6 +125,39 @@ export class SpaceDaoViewerController {
       this.isDepositing.set(false);
     }
   };
+
+  get canDistributeReward() {
+    return this.space?.isAdmin?.() ?? false;
+  }
+
+  get canPrevSample() {
+    return this.sampleHistory.get().length > 0;
+  }
+
+  get canNextSample() {
+    return Boolean(this.samples?.bookmark);
+  }
+
+  get visibleSamples() {
+    return this.samples?.items ?? [];
+  }
+
+  handleNextSample = () => {
+    const next = this.samples?.bookmark ?? null;
+    if (!next) return;
+    const history = [...this.sampleHistory.get()];
+    history.push(this.sampleBookmark.get());
+    this.sampleHistory.set(history);
+    this.sampleBookmark.set(next);
+  };
+
+  handlePrevSample = () => {
+    const history = [...this.sampleHistory.get()];
+    if (history.length === 0) return;
+    const prev = history.pop() ?? null;
+    this.sampleHistory.set(history);
+    this.sampleBookmark.set(prev);
+  };
 }
 
 export function useSpaceDaoViewerController(
@@ -128,6 +171,15 @@ export function useSpaceDaoViewerController(
   const isDepositOpen = useState(false);
   const depositAmount = useState('');
   const isDepositing = useState(false);
+  const sampleBookmark = useState<string | null>(null);
+  const sampleHistory = useState<(string | null)[]>([]);
+  const isDistributingPage = useState(false);
+  const { data: samples, isLoading: samplesLoading } = useSpaceDaoSamples(
+    spacePk,
+    sampleBookmark[0],
+    2,
+    Boolean(dao?.contract_address),
+  );
   const provider = useMemo(() => {
     if (!config.rpc_url) {
       return null;
@@ -146,6 +198,11 @@ export function useSpaceDaoViewerController(
     new State(isDepositOpen),
     new State(depositAmount),
     new State(isDepositing),
+    new State(sampleBookmark),
+    new State(sampleHistory),
+    samples,
+    samplesLoading,
+    new State(isDistributingPage),
   );
 
   useEffect(() => {

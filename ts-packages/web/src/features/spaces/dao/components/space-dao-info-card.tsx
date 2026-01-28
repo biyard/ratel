@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from '@/components/card';
 import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
+import { SpaceDaoSampleResponse } from '@/features/spaces/dao/hooks/use-space-dao-samples';
+import { SpaceDaoSampleTable } from './space-dao-sample-table';
 import { config } from '@/config';
 import { CheckIcon, ClipboardIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { SpaceDaoDepositDialog } from './space-dao-deposit-dialog';
 import { Input } from '@/components/ui/input';
-import { Edit1 } from '@/components/icons';
 
 type SpaceDaoInfoCardProps = {
   dao: SpaceDaoResponse;
@@ -22,6 +23,19 @@ type SpaceDaoInfoCardProps = {
   onConfirmDeposit?: () => void;
   isUpdating?: boolean;
   onUpdateDao?: (samplingCount: string, rewardAmount: string) => Promise<void>;
+  samples?: SpaceDaoSampleResponse[];
+  samplesBookmark?: string | null;
+  canPrevSample?: boolean;
+  canNextSample?: boolean;
+  samplesLoading?: boolean;
+  showSamples?: boolean;
+  showEdit?: boolean;
+  showDeposit?: boolean;
+  canDistributeReward?: boolean;
+  onNextSample?: () => void;
+  onPrevSample?: () => void;
+  onDistributePage?: () => void;
+  isDistributingPage?: boolean;
 };
 
 export function SpaceDaoInfoCard({
@@ -37,6 +51,19 @@ export function SpaceDaoInfoCard({
   onConfirmDeposit,
   isUpdating = false,
   onUpdateDao,
+  samples,
+  samplesBookmark,
+  canPrevSample = false,
+  canNextSample = false,
+  samplesLoading = false,
+  showSamples = true,
+  showEdit = true,
+  showDeposit = true,
+  canDistributeReward = false,
+  onNextSample,
+  onPrevSample,
+  onDistributePage,
+  isDistributingPage = false,
 }: SpaceDaoInfoCardProps) {
   const { t } = useTranslation('SpaceDaoEditor');
   const [copied, setCopied] = useState(false);
@@ -80,42 +107,6 @@ export function SpaceDaoInfoCard({
   return (
     <Card>
       <div className="space-y-4 w-full">
-        <div className="flex flex-row w-full justify-end items-center">
-          {onUpdateDao && (
-            <>
-              {isEditing ? (
-                <div className="flex flex-row w-full justify-end items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCancelEdit}
-                    disabled={isUpdating}
-                  >
-                    {t('dao_info_edit_cancel')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="rounded_primary"
-                    size="sm"
-                    onClick={handleSaveEdit}
-                    disabled={isUpdating}
-                  >
-                    {isUpdating
-                      ? t('dao_info_edit_saving')
-                      : t('dao_info_edit_save')}
-                  </Button>
-                </div>
-              ) : (
-                <Edit1
-                  className="cursor-pointer w-4 h-4"
-                  onClick={handleEdit}
-                />
-              )}
-            </>
-          )}
-        </div>
-
         <div className="flex items-start justify-between gap-4">
           <div>
             <h3 className="text-xl font-semibold text-text-primary mb-1">
@@ -195,16 +186,56 @@ export function SpaceDaoInfoCard({
           </p>
         </div>
 
-        <div className="flex items-center justify-end gap-2">
-          <Button
-            type="button"
-            variant="rounded_primary"
-            size="sm"
-            onClick={onOpenDeposit}
-            disabled={!onOpenDeposit}
-          >
-            {t('dao_info_deposit_button')}
-          </Button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          {onUpdateDao && showEdit && (
+            <>
+              {isEditing ? (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCancelEdit}
+                    disabled={isUpdating}
+                  >
+                    {t('dao_info_edit_cancel')}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="rounded_primary"
+                    size="sm"
+                    onClick={handleSaveEdit}
+                    disabled={isUpdating}
+                  >
+                    {isUpdating
+                      ? t('dao_info_edit_saving')
+                      : t('dao_info_edit_save')}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEdit}
+                >
+                  {t('dao_info_edit_button')}
+                </Button>
+              )}
+            </>
+          )}
+
+          {showDeposit && (
+            <Button
+              type="button"
+              variant="rounded_primary"
+              size="sm"
+              onClick={onOpenDeposit}
+              disabled={!onOpenDeposit}
+            >
+              {t('dao_info_deposit_button')}
+            </Button>
+          )}
 
           {explorerUrl && (
             <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
@@ -226,7 +257,22 @@ export function SpaceDaoInfoCard({
         </div>
       </div>
 
-      {onCloseDeposit && onDepositAmountChange && onConfirmDeposit && (
+      {showSamples && (
+        <SpaceDaoSampleTable
+          samples={samples}
+          samplesBookmark={samplesBookmark}
+          samplesLoading={samplesLoading}
+          canPrevSample={canPrevSample}
+          canNextSample={canNextSample}
+          onPrevSample={onPrevSample}
+          onNextSample={onNextSample}
+          canDistributeReward={canDistributeReward}
+          onDistributePage={onDistributePage}
+          isDistributingPage={isDistributingPage}
+        />
+      )}
+
+      {showDeposit && onCloseDeposit && onDepositAmountChange && onConfirmDeposit && (
         <SpaceDaoDepositDialog
           open={isDepositOpen}
           depositAmount={depositAmount}

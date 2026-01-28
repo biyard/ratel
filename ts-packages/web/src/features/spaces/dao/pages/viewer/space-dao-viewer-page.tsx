@@ -30,6 +30,18 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
         onCloseDeposit={ctrl.handleCloseDeposit}
         onDepositAmountChange={ctrl.handleDepositAmountChange}
         onConfirmDeposit={ctrl.handleConfirmDeposit}
+        samples={ctrl.visibleSamples}
+        samplesBookmark={ctrl.samples?.bookmark ?? null}
+        samplesLoading={ctrl.samplesLoading}
+        canPrevSample={ctrl.canPrevSample}
+        canNextSample={ctrl.canNextSample}
+        onPrevSample={ctrl.handlePrevSample}
+        onNextSample={ctrl.handleNextSample}
+        showSamples={Boolean(ctrl.space?.isFinished)}
+        showEdit={false}
+        showDeposit={false}
+        canDistributeReward={ctrl.canDistributeReward}
+        isDistributingPage={ctrl.isDistributingPage.get()}
       />
     </div>
   );
