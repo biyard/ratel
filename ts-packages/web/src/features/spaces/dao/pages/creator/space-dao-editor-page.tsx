@@ -51,6 +51,19 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
               onConfirmDeposit={ctrl.handleConfirmDeposit}
               isUpdating={ctrl.isUpdating.get()}
               onUpdateDao={ctrl.handleUpdateDao}
+              samples={ctrl.visibleSamples}
+              samplesBookmark={ctrl.samples?.bookmark ?? null}
+              samplesLoading={ctrl.samplesLoading}
+              canPrevSample={ctrl.canPrevSample}
+              canNextSample={ctrl.canNextSample}
+              onPrevSample={ctrl.handlePrevSample}
+              onNextSample={ctrl.handleNextSample}
+              showSamples={Boolean(ctrl.space?.isFinished)}
+              showEdit={Boolean(ctrl.space?.isDraft)}
+              showDeposit={Boolean(ctrl.space?.isDraft)}
+              canDistributeReward={ctrl.canDistributeReward}
+              onDistributePage={ctrl.handleDistribute}
+              isDistributingPage={ctrl.isDistributingPage.get()}
             />
           ) : (
             <>

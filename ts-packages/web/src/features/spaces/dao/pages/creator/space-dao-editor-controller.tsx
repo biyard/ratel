@@ -16,6 +16,11 @@ import { useCreateSpaceDaoMutation } from '@/features/spaces/dao/hooks/use-creat
 import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
 import { ethers } from 'ethers';
 import { State } from '@/types/state';
+import {
+  SpaceDaoSampleListResponse,
+  useSpaceDaoSamples,
+} from '@/features/spaces/dao/hooks/use-space-dao-samples';
+import { useUpdateSpaceDaoSamplesMutation } from '@/features/spaces/dao/hooks/use-update-space-dao-samples-mutation';
 
 export class SpaceDaoEditorController {
   constructor(
@@ -37,7 +42,15 @@ export class SpaceDaoEditorController {
     public depositAmount: State<string>,
     public isDepositing: State<boolean>,
     public isUpdating: State<boolean>,
+    public sampleBookmark: State<string | null>,
+    public sampleHistory: State<(string | null)[]>,
+    public samples: SpaceDaoSampleListResponse | undefined,
+    public samplesLoading: boolean,
+    public isDistributingPage: State<boolean>,
     public createSpaceDaoMutation: ReturnType<typeof useCreateSpaceDaoMutation>,
+    public updateSamplesMutation: ReturnType<
+      typeof useUpdateSpaceDaoSamplesMutation
+    >,
   ) {}
 
   get isTeamSpace() {
@@ -57,6 +70,22 @@ export class SpaceDaoEditorController {
       Number.isFinite(reward) &&
       reward > 0
     );
+  }
+
+  get canDistributeReward() {
+    return this.permissions?.isAdmin() ?? false;
+  }
+
+  get canPrevSample() {
+    return this.sampleHistory.get().length > 0;
+  }
+
+  get canNextSample() {
+    return Boolean(this.samples?.bookmark);
+  }
+
+  get visibleSamples() {
+    return this.samples?.items ?? [];
   }
 
   fetchBalance = async () => {
@@ -144,6 +173,73 @@ export class SpaceDaoEditorController {
       }
     } finally {
       this.isDepositing.set(false);
+    }
+  };
+
+  handleNextSample = () => {
+    const next = this.samples?.bookmark ?? null;
+    if (!next) return;
+    const history = [...this.sampleHistory.get()];
+    history.push(this.sampleBookmark.get());
+    this.sampleHistory.set(history);
+    this.sampleBookmark.set(next);
+  };
+
+  handlePrevSample = () => {
+    const history = [...this.sampleHistory.get()];
+    if (history.length === 0) return;
+    const prev = history.pop() ?? null;
+    this.sampleHistory.set(history);
+    this.sampleBookmark.set(prev);
+  };
+
+  handleDistribute = async () => {
+    if (!this.canDistributeReward) return;
+    const dao = this.dao;
+    if (!dao?.contract_address) return;
+
+    const candidates = this.visibleSamples.filter(
+      (item) => !item.reward_distributed,
+    );
+    if (candidates.length === 0) {
+      return;
+    }
+    const target = candidates.slice(0, 2);
+    const recipients = target.map((item) => item.evm_address);
+    const sampleSks = target.map((item) => item.sk);
+
+    this.isDistributingPage.set(true);
+    try {
+      showInfoToast(this.t('toast_connecting_wallet'));
+      const signer = await getKaiaSigner(
+        config.env === 'prod' ? 'mainnet' : 'testnet',
+      );
+      const provider = signer.provider;
+      const daoService = new SpaceDaoService(provider);
+      await daoService.connectWallet();
+      await daoService.spaceDistributeWithdrawal(
+        dao.contract_address,
+        recipients,
+      );
+
+      await this.updateSamplesMutation.mutateAsync({
+        spacePk: this.spacePk,
+        sampleSks,
+        rewardDistributed: true,
+      });
+      await this.fetchBalance();
+      showSuccessToast(this.t('toast_reward_distributed'));
+    } catch (error) {
+      console.error('Failed to distribute reward:', error);
+      if (error instanceof Error) {
+        showErrorToast(
+          this.t('error_reward_distribute_failed', { message: error.message }),
+        );
+      } else {
+        showErrorToast(this.t('error_register_failed_unknown'));
+      }
+    } finally {
+      this.isDistributingPage.set(false);
     }
   };
 
@@ -279,7 +375,9 @@ export class SpaceDaoEditorController {
     } catch (error) {
       console.error('Failed to update Space DAO:', error);
       if (error instanceof Error) {
-        showErrorToast(this.t('error_register_failed', { message: error.message }));
+        showErrorToast(
+          this.t('error_register_failed', { message: error.message }),
+        );
       } else {
         showErrorToast(this.t('error_register_failed_unknown'));
       }
@@ -306,7 +404,17 @@ export function useSpaceDaoEditorController(
   const depositAmount = useState('');
   const isDepositing = useState(false);
   const isUpdating = useState(false);
+  const sampleBookmark = useState<string | null>(null);
+  const sampleHistory = useState<(string | null)[]>([]);
+  const isDistributingPage = useState(false);
   const createSpaceDaoMutation = useCreateSpaceDaoMutation();
+  const updateSamplesMutation = useUpdateSpaceDaoSamplesMutation();
+  const { data: samples, isLoading: samplesLoading } = useSpaceDaoSamples(
+    spacePk,
+    sampleBookmark[0],
+    2,
+    Boolean(dao?.contract_address),
+  );
   const provider = useMemo(() => {
     if (!config.rpc_url) {
       return null;
@@ -336,7 +444,13 @@ export function useSpaceDaoEditorController(
     new State(depositAmount),
     new State(isDepositing),
     new State(isUpdating),
+    new State(sampleBookmark),
+    new State(sampleHistory),
+    samples,
+    samplesLoading,
+    new State(isDistributingPage),
     createSpaceDaoMutation,
+    updateSamplesMutation,
   );
 
   useEffect(() => {

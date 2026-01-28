@@ -16,10 +16,19 @@ use super::space_participant::SpaceParticipant;
 )]
 pub struct SpaceDaoSampleUser {
     pub pk: Partition,
+    #[dynamo(index = "gsi2", sk)]
     pub sk: EntityType,
 
     pub created_at: i64,
     pub updated_at: i64,
+
+    #[dynamo(
+        prefix = "SPACE_DAO_SAMPLE",
+        name = "find_by_space",
+        index = "gsi2",
+        pk
+    )]
+    pub space_pk: Partition,
 
     pub user_pk: Partition,
     pub username: String,
@@ -33,14 +42,11 @@ impl SpaceDaoSampleUser {
     pub fn new(space_pk: Partition, participant: SpaceParticipant, evm_address: String) -> Self {
         let now = get_now_timestamp_millis();
         let user_pk = participant.user_pk.clone();
-        let sk = EntityType::SpaceDaoSample(format!(
-            "TS#{}#{}",
-            now,
-            user_pk.to_string()
-        ));
+        let sk = EntityType::SpaceDaoSample(format!("TS#{}#{}", now, user_pk.to_string()));
 
         Self {
-            pk: space_pk,
+            pk: space_pk.clone(),
+            space_pk,
             sk,
             created_at: now,
             updated_at: now,
