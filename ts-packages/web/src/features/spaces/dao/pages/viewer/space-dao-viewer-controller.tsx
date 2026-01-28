@@ -4,7 +4,7 @@ import { TFunction } from 'i18next';
 import { useSpaceById } from '@/features/spaces/hooks/use-space-by-id';
 import { Space } from '@/features/spaces/types/space';
 import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
-import { BlockchainService } from '@/contracts/BlockchainService';
+import { SpaceDaoService } from '@/contracts/SpaceDaoService';
 import { config } from '@/config';
 import { ethers } from 'ethers';
 import { showErrorToast, showInfoToast, showSuccessToast } from '@/lib/toast';
@@ -36,7 +36,7 @@ export class SpaceDaoViewerController {
     this.balanceLoading.set(true);
 
     try {
-      const service = new BlockchainService(this.provider);
+      const service = new SpaceDaoService(this.provider);
       const raw = await service.getSpaceBalance(this.dao.contract_address);
       const formatted = ethers.formatUnits(raw, 6);
       this.balance.set(formatted);
@@ -80,7 +80,7 @@ export class SpaceDaoViewerController {
       const walletProvider = signer.provider;
 
       showInfoToast(this.t('toast_depositing'));
-      const service = new BlockchainService(walletProvider);
+      const service = new SpaceDaoService(walletProvider);
       await service.connectWallet();
       await service.spaceDeposit(
         dao.contract_address,

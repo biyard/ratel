@@ -10,7 +10,7 @@ import {
   getKaiaSigner,
   KaiaWalletError,
 } from '@/lib/service/kaia-wallet-service';
-import { BlockchainService } from '@/contracts/BlockchainService';
+import { SpaceDaoService } from '@/contracts/SpaceDaoService';
 import { config } from '@/config';
 import { useCreateSpaceDaoMutation } from '@/features/spaces/dao/hooks/use-create-space-dao-mutation';
 import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
@@ -66,7 +66,7 @@ export class SpaceDaoEditorController {
     this.balanceLoading.set(true);
 
     try {
-      const service = new BlockchainService(this.provider);
+      const service = new SpaceDaoService(this.provider);
       const raw = await service.getSpaceBalance(this.dao.contract_address);
       const formatted = ethers.formatUnits(raw, 6);
       this.balance.set(formatted);
@@ -110,7 +110,7 @@ export class SpaceDaoEditorController {
       const walletProvider = signer.provider;
 
       showInfoToast(this.t('toast_depositing'));
-      const service = new BlockchainService(walletProvider);
+      const service = new SpaceDaoService(walletProvider);
       await service.connectWallet();
       await service.spaceDeposit(
         dao.contract_address,
@@ -185,10 +185,10 @@ export class SpaceDaoEditorController {
       const provider = signer.provider;
 
       showInfoToast(this.t('toast_creating_dao'));
-      const blockchainService = new BlockchainService(provider);
-      await blockchainService.connectWallet();
+      const daoService = new SpaceDaoService(provider);
+      await daoService.connectWallet();
 
-      const result = await blockchainService.createSpaceDAO(
+      const result = await daoService.createSpaceDAO(
         selectedAdminAddresses,
         config.usdt_address,
         this.rewardAmount.get(),
