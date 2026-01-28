@@ -35,9 +35,7 @@ pub async fn list_space_posts_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    let opt = SpacePost::opt_with_bookmark(bookmark)
-        .limit(10)
-        .scan_index_forward(false);
+    let opt = SpacePost::opt_with_bookmark(bookmark);
 
     let (responses, bookmark) = if let Some(category) = category {
         SpacePost::find_by_category(&dynamo.client, format!("{}#{}", space_pk, category), opt)
