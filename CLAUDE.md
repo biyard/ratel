@@ -9,6 +9,7 @@ Ratel is a decentralized legislative platform built with Rust and TypeScript, de
 ## Architecture
 
 This is a monorepo with a workspace structure:
+
 - **packages/** - Rust workspace packages (APIs, workers, shared DTOs)
 - **ts-packages/** - TypeScript packages (Vite/React web frontend)
 - **kaia/** - Blockchain contracts
@@ -27,9 +28,9 @@ This is a monorepo with a workspace structure:
 
 #### Support Packages
 
-- **by-macros** (`packages/by-macros/`) - Procedural macros including DynamoEntity derive (v0.6.*)
-- **by-axum** (`packages/by-axum/`) - Axum framework extensions (v0.2.*)
-- **by-types** (`packages/by-types/`) - Shared type definitions (v0.3.*)
+- **by-macros** (`packages/by-macros/`) - Procedural macros including DynamoEntity derive (v0.6.\*)
+- **by-axum** (`packages/by-axum/`) - Axum framework extensions (v0.2.\*)
+- **by-types** (`packages/by-types/`) - Shared type definitions (v0.3.\*)
 - **bdk** (`packages/bdk/`) - Blockchain development kit with Ethereum support
 - **btracing** (`packages/btracing/`) - Tracing and observability utilities
 - **dto** (`packages/dto/`) - Shared data transfer objects
@@ -40,6 +41,7 @@ This is a monorepo with a workspace structure:
 ### Frontend
 
 #### Package Management & Runtime
+
 - **Package Manager:** pnpm 10.18.2
 - **Node Version:** 22.14
 - **React:** 19.2.0
@@ -48,6 +50,7 @@ This is a monorepo with a workspace structure:
 - **TailwindCSS:** v4.1.14
 
 #### Key Dependencies
+
 - **State Management:** Zustand 5.0.8
 - **Data Fetching:** TanStack React Query 5.90.2, Axios 1.12.2
 - **Blockchain:** Ethers.js 6.15.0
@@ -58,12 +61,14 @@ This is a monorepo with a workspace structure:
 - **Utilities:** dayjs, date-fns, i18next, DOMPurify
 
 #### Testing Infrastructure
+
 - **Framework:** Playwright 1.56.1
 - **Test Projects:** `anonymous`, `authenticated`, `admin`, `e2e-web`
 - **Test Patterns:** `*.anon.spec.ts`, `*.auth.spec.ts`, `*.admin.spec.ts`
 - **Configuration:** `/playwright.config.ts`
 
 #### Page Structure
+
 - All page implementations are placed in `ts-packages/web/src/app` as similar tree of routes.
 - Each page directory will contains below
   - `{name}-page.tsx` is a main component for the page.
@@ -75,6 +80,7 @@ This is a monorepo with a workspace structure:
   - `{name}-page.stories.tsx` is for Storybook file for the page.
 
 #### Feature Modules
+
 - `ts-packages/web/src/features` defines `feature`-based modules.
   - `features/{name}/components` implements feature components and their storybook files
   - `features/{name}/hooks` implements hooks for the feature
@@ -83,15 +89,16 @@ This is a monorepo with a workspace structure:
 ## Build System
 
 ### Rust Services
+
 - Rust workspace managed by Cargo
 - Each service has its own Makefile
 - Uses custom build profiles (wasm-dev, server-dev, android-dev)
 - Common dependencies defined in workspace Cargo.toml
 
-
 ## Development Commands
 
 ### Docker (Recommended for Local Development)
+
 ```bash
 # Start all services with Docker Compose
 docker-compose --profile development up -d
@@ -114,6 +121,7 @@ docker-compose down
 ```
 
 ### Root Makefile Commands
+
 ```bash
 # Start all services with Docker Compose
 make run
@@ -136,6 +144,7 @@ make test
 ```
 
 ### Service-Specific Development
+
 ```bash
 # Main API
 cd packages/main-api && make run      # Dev with cargo-watch
@@ -157,6 +166,7 @@ ENV=dev make build SERVICE=main-api
 ```
 
 ### Linting/Formatting
+
 ```bash
 # Vite/React linting
 cd ts-packages/web && npm run lint
@@ -191,6 +201,7 @@ The docker-compose.yaml provides:
 - **dynamodb-admin** - DynamoDB web UI (port 8081)
 
 Access points:
+
 - Web Application: http://localhost:8080
 - Main API: http://localhost:3000
 - Fetcher API: http://localhost:3001
@@ -204,6 +215,7 @@ Access points:
 Copy `.env.example` to `.env` and configure:
 
 ### Backend Environment Variables
+
 - `ENV` - Environment (dev, staging, prod)
 - `PORT` - Service port
 - `RUST_LOG` - Logging level
@@ -217,11 +229,13 @@ Copy `.env.example` to `.env` and configure:
 - `BEDROCK_AGENT_*` - AWS Bedrock AI agent configuration
 - `BIYARD_*` - External Biyard API integration
 
-### Frontend Environment Variables (VITE_*)
+### Frontend Environment Variables (VITE\_\*)
+
 - `VITE_API_URL` - Backend API base URL
 - `VITE_LOG_LEVEL` - Frontend logging level
 - `VITE_RPC_URL` - Blockchain RPC endpoint
 - `VITE_BLOCK_EXPLORER_URL` - Blockchain explorer URL (Kaia network)
+- `VITE_USDT_ADDRESS` - Blockchain USDT token contract address (Kaia network)
 - `VITE_FIREBASE_*` - Firebase authentication config
 - `VITE_PORTONE_*` - Payment UI configuration
 - `VITE_OPERATOR_ADDRESS` - Blockchain operator address
@@ -238,6 +252,7 @@ Copy `.env.example` to `.env` and configure:
 ## Advanced Features
 
 ### Notable Platform Capabilities
+
 - **MCP Integration** - Model Context Protocol server for LLM interactions
 - **Decentralized Identity** - DID (Decentralized Identifiers) & Verifiable Credentials
 - **Collaborative Editing** - Real-time document collaboration using Tiptap + Yjs
@@ -251,11 +266,13 @@ Copy `.env.example` to `.env` and configure:
 ## CI/CD Workflows
 
 ### GitHub Actions
+
 - **dev-workflow.yml** - Automated development branch builds and tests
 - **pr-workflow.yml** - Pull request validation and checks
 - **prod-workflow.yml** - Production deployment automation
 
 ### Deployment Infrastructure
+
 - **AWS CDK** - Infrastructure as Code (TypeScript)
 - **ECR** - Container registry for Docker images
 - **Lambda** - Serverless function deployments
@@ -264,6 +281,7 @@ Copy `.env.example` to `.env` and configure:
 ## DynamoDB Configuration
 
 ### Local Development Setup
+
 - **Endpoint:** `http://localstack:4566`
 - **Table Prefix:** `ratel-local` (development environment)
 - **Main Table:** `ratel-local-main` (unified table with multiple GSIs)
@@ -271,19 +289,24 @@ Copy `.env.example` to `.env` and configure:
 - **Admin UI:** Available at http://localhost:8081
 
 ### Table Initialization
+
 - Automatic schema creation via `localstack-init` container
 - Admin user seeded on startup
 - Migration support via `migrator` package
 
 ## Main API
+
 Main Api package is the main backend APIs for Ratel written by Rust.
+
 - location: `packages/main-api`
 - Language: Rust
 
 ### API Architecture
 
 #### v3 API Controllers
+
 Located at `packages/main-api/src/controllers/v3/`:
+
 - **auth/** - Authentication endpoints (login, signup, token refresh)
 - **users/** - User management (profiles, settings, credentials)
 - **posts/** - Post CRUD operations (create, read, update, delete)
@@ -296,7 +319,9 @@ Located at `packages/main-api/src/controllers/v3/`:
 - **reports/** - Reporting features (moderation, analytics)
 
 #### Feature Modules
+
 Located at `packages/main-api/src/features/`:
+
 - **spaces/** - Space domain logic and business rules
 - **teams/** - Team functionality and permissions
 - **membership/** - Membership tier and access control
@@ -307,22 +332,27 @@ Located at `packages/main-api/src/features/`:
 - **telegrams/** - Telegram bot integration logic
 
 #### v3 Endpoints
+
 - `v3` endpoints are implemented based on Axum native convention
 - `v3` endpoints use DynamoDB models implemented in `packages/main-api/src/models/dynamo_tables/main`
 - API documentation available via Aide (OpenAPI/Swagger)
 
 ### Testing Backend APIs
+
 The main-api uses custom HTTP request macros for testing API endpoints. Tests are located in `tests.rs` files within controller modules.
 
 #### Test File Structure
+
 - Test files are named `tests.rs` and placed within the corresponding controller module directory
 - Example: `/packages/main-api/src/controllers/v3/posts/tests.rs` contains tests for all post-related endpoints
 - Tests use the `#[tokio::test]` attribute for async test functions
 
 #### HTTP Request Macros
+
 The codebase provides convenient macros for making HTTP requests in tests, defined in `/packages/main-api/src/tests/macros.rs`:
 
 **Available Macros:**
+
 - `get!` - For GET requests
 - `post!` - For POST requests
 - `patch!` - For PATCH requests
@@ -331,6 +361,7 @@ The codebase provides convenient macros for making HTTP requests in tests, defin
 
 **Macro Parameters:**
 The macros accept the following parameters (in order):
+
 1. `app:` - The application instance from TestContextV3
 2. `path:` - The API endpoint path (e.g., "/v3/posts/{id}")
 3. `headers:` (optional) - HTTP headers (e.g., authentication headers)
@@ -343,6 +374,7 @@ All macros return a tuple: `(StatusCode, HeaderMap, ResponseBody)`
 #### Example Test Patterns
 
 **Basic GET request:**
+
 ```rust
 let (status, _headers, body) = get! {
     app: app,
@@ -354,6 +386,7 @@ assert_eq!(status, 200);
 ```
 
 **POST request with body:**
+
 ```rust
 let (status, _headers, body) = post! {
     app: app,
@@ -369,6 +402,7 @@ assert_eq!(status, 200);
 ```
 
 **Request without authentication:**
+
 ```rust
 let (status, _headers, body) = get! {
     app: app,
@@ -378,13 +412,16 @@ let (status, _headers, body) = get! {
 ```
 
 #### Test Context Setup
+
 Use `TestContextV3::setup()` to get test context with:
+
 - `app` - The application instance
 - `test_user` - A tuple of `(User, HeaderMap)` for authenticated requests
 - `now` - Current timestamp for unique test data
 - `ddb` - DynamoDB client for direct database operations
 
 **Example:**
+
 ```rust
 #[tokio::test]
 async fn test_get_post() {
@@ -394,6 +431,7 @@ async fn test_get_post() {
 ```
 
 #### Best Practices for Writing Tests
+
 1. **Test each handler function comprehensively** - Cover success cases, error cases, and edge cases
 2. **Use descriptive test names** - Name tests clearly (e.g., `test_get_post_when_authenticated`)
 3. **Test permissions** - Verify that authentication/authorization works correctly
@@ -403,7 +441,9 @@ async fn test_get_post() {
 7. **Always run tests before committing** - Execute `cd packages/main-api && make test` to ensure all tests pass
 
 #### Common Test Scenarios
+
 For a typical API handler, write tests for:
+
 - ✅ Successful request with valid data
 - ✅ Request with authentication vs without authentication
 - ✅ Request with invalid/missing parameters
@@ -413,6 +453,7 @@ For a typical API handler, write tests for:
 - ✅ Permission-based data filtering (e.g., hiding space info)
 
 #### Example Test Suite Structure
+
 ```rust
 // Test successful operations
 #[tokio::test]
@@ -435,11 +476,12 @@ async fn test_get_nonexistent_post() { /* ... */ }
 async fn test_get_post_permissions() { /* ... */ }
 ```
 
-
 ## by_macro
+
 `by_macro` package provides macros to simplify the code.
 
 ### DynamoEntity derive
+
 `DynamoEntity` generates CRUD utility functions for interaction with DynamoDB.
 
 #### Structure attribute
@@ -449,17 +491,17 @@ async fn test_get_post_permissions() { /* ... */ }
   - If `table` attribute is set to `users`, the full table name will be `ratel-local-users`.
 
 | Attribute  | Description                                  | Default             |
-|:-----------|----------------------------------------------|:--------------------|
+| :--------- | -------------------------------------------- | :------------------ |
 | table      | table name except for prefix                 | main                |
 | result_ty  | Result type                                  | std::result::Result |
 | error_ctor | Error type                                   | create::Error2      |
 | pk_name    | Partition key name                           | pk                  |
 | sk_name    | (optional) Sort key name (none for removing) | sk                  |
 
-
 #### Field attribute
+
 | Attribute | Description                          |
-|:----------|--------------------------------------|
+| :-------- | ------------------------------------ |
 | prefix    | Prefix of indexed value              |
 | index     | Index name                           |
 | pk        | Partition key of index               |
@@ -467,7 +509,9 @@ async fn test_get_post_permissions() { /* ... */ }
 | name      | Function name for querying the index |
 
 #### Usage
+
 The below code is an example of using DynamoEntity
+
 - If `DYNAMO_TABLE_PREFIX` environment is set to `ratel-local` and `table` is set to `main`, the practical table name will be `ratel-local-main`.
 - For the first `gsi1-index`, it can be queried by calling `EmailVerification::find_by_email_and_code`.
   - `email` field will be indexedm to `gsi1_pk` field.
@@ -692,6 +736,7 @@ mod tests {
     }
 }
 ```
+
 - Please make sure that your playwright code is alway success by executing `make test` yourself.
 - you should register i18n to i18n/config.tsx
 - you should add page route path to router.tsx

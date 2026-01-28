@@ -1,89 +1,9 @@
 /**
- * CSS utilities for theme-aware text colors in the TipTap editor
- * This provides automatic color inversion based on the current theme
+ * Theme-aware text colors for TipTap editor
+ * Color adjustments are handled dynamically via JavaScript
  */
 
 @layer components {
-  /* Theme-aware text colors */
-  
-  /* Common dark colors that need to be inverted in dark theme */
-  [data-theme='dark'] .ProseMirror [data-color='#000000'],
-  [data-theme='dark'] .ProseMirror [data-color='#171717'],
-  [data-theme='dark'] .ProseMirror [data-color='#262626'],
-  [data-theme='dark'] .ProseMirror [data-color='#404040'],
-  [data-theme='dark'] .ProseMirror [data-color='#525252'],
-  [data-theme='dark'] .ProseMirror [data-color='#6d6d6d'],
-  [data-theme='dark'] .ProseMirror [data-color='#737373'],
-  [data-theme='dark'] .ProseMirror [style*='color:#000000'],
-  [data-theme='dark'] .ProseMirror [style*='color: #000000'],
-  [data-theme='dark'] .ProseMirror [style*='color:#171717'],
-  [data-theme='dark'] .ProseMirror [style*='color: #171717'],
-  [data-theme='dark'] .ProseMirror [style*='color:#262626'],
-  [data-theme='dark'] .ProseMirror [style*='color: #262626'],
-  [data-theme='dark'] .ProseMirror [style*='color:#404040'],
-  [data-theme='dark'] .ProseMirror [style*='color: #404040'],
-  [data-theme='dark'] .ProseMirror [style*='color:#525252'],
-  [data-theme='dark'] .ProseMirror [style*='color: #525252'],
-  [data-theme='dark'] .ProseMirror [style*='color:#6d6d6d'],
-  [data-theme='dark'] .ProseMirror [style*='color: #6d6d6d'],
-  [data-theme='dark'] .ProseMirror [style*='color:#737373'],
-  [data-theme='dark'] .ProseMirror [style*='color: #737373'] {
-    color: #ffffff !important;
-  }
-
-  /* Common light colors that need to be inverted in light theme */
-  [data-theme='light'] .ProseMirror [data-color='#ffffff'],
-  [data-theme='light'] .ProseMirror [data-color='#fafafa'],
-  [data-theme='light'] .ProseMirror [data-color='#f5f5f5'],
-  [data-theme='light'] .ProseMirror [data-color='#e5e5e5'],
-  [data-theme='light'] .ProseMirror [data-color='#d4d4d4'],
-  [data-theme='light'] .ProseMirror [data-color='#a1a1a1'],
-  [data-theme='light'] .ProseMirror [style*='color:#ffffff'],
-  [data-theme='light'] .ProseMirror [style*='color: #ffffff'],
-  [data-theme='light'] .ProseMirror [style*='color:#fafafa'],
-  [data-theme='light'] .ProseMirror [style*='color: #fafafa'],
-  [data-theme='light'] .ProseMirror [style*='color:#f5f5f5'],
-  [data-theme='light'] .ProseMirror [style*='color: #f5f5f5'],
-  [data-theme='light'] .ProseMirror [style*='color:#e5e5e5'],
-  [data-theme='light'] .ProseMirror [style*='color: #e5e5e5'],
-  [data-theme='light'] .ProseMirror [style*='color:#d4d4d4'],
-  [data-theme='light'] .ProseMirror [style*='color: #d4d4d4'],
-  [data-theme='light'] .ProseMirror [style*='color:#a1a1a1'],
-  [data-theme='light'] .ProseMirror [style*='color: #a1a1a1'] {
-    color: #000000 !important;
-  }
-
-  /* Highlight color inversions */
-  
-  /* Light highlights on dark theme should be darker */
-  [data-theme='dark'] .ProseMirror [data-highlight='#ffffff'],
-  [data-theme='dark'] .ProseMirror [data-highlight='#fafafa'],
-  [data-theme='dark'] .ProseMirror [data-highlight='#f5f5f5'],
-  [data-theme='dark'] .ProseMirror [data-highlight='#e5e5e5'],
-  [data-theme='dark'] .ProseMirror [style*='background-color:#ffffff'],
-  [data-theme='dark'] .ProseMirror [style*='background-color: #ffffff'],
-  [data-theme='dark'] .ProseMirror [style*='background-color:#fafafa'],
-  [data-theme='dark'] .ProseMirror [style*='background-color: #fafafa'],
-  [data-theme='dark'] .ProseMirror [style*='background-color:#f5f5f5'],
-  [data-theme='dark'] .ProseMirror [style*='background-color: #f5f5f5'] {
-    background-color: #404040 !important;
-  }
-
-  /* Dark highlights on light theme should be lighter */
-  [data-theme='light'] .ProseMirror [data-highlight='#000000'],
-  [data-theme='light'] .ProseMirror [data-highlight='#171717'],
-  [data-theme='light'] .ProseMirror [data-highlight='#262626'],
-  [data-theme='light'] .ProseMirror [data-highlight='#404040'],
-  [data-theme='light'] .ProseMirror [style*='background-color:#000000'],
-  [data-theme='light'] .ProseMirror [style*='background-color: #000000'],
-  [data-theme='light'] .ProseMirror [style*='background-color:#171717'],
-  [data-theme='light'] .ProseMirror [style*='background-color: #171717'],
-  [data-theme='light'] .ProseMirror [style*='background-color:#262626'],
-  [data-theme='light'] .ProseMirror [style*='background-color: #262626'] {
-    background-color: #d4d4d4 !important;
-  }
-
-  /* Ensure highlighted text remains readable */
   .ProseMirror [data-highlight],
   .ProseMirror mark {
     padding: 0 2px;

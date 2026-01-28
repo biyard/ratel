@@ -47,6 +47,7 @@ export class Space {
   public blockParticipate: boolean;
   public quota: number;
   public remains: number;
+  public daoAddress: string | null;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(json: any) {
@@ -89,6 +90,7 @@ export class Space {
     this.blockParticipate = json.block_participate || false;
     this.quota = json.quota;
     this.remains = json.remains;
+    this.daoAddress = json.dao_address ?? null;
   }
 
   shouldParticipateManually() {

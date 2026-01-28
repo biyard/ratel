@@ -10,6 +10,9 @@ SPACE_FACTORY_ADDR ?=
 deploy:
 	PRIVATE_KEY=$(PRIVATE_KEY) npx hardhat run $(TARGET) --network $(NETWORK)
 
+build: node_modules
+	npx hardhat compile
+
 node:
 	npx hardhat node
 
