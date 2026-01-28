@@ -1,10 +1,20 @@
+/**
+ * TeamDAO Service
+ *
+ * Provides a unified interface for interacting with the TeamDAO smart contract.
+ * The TeamDAO contract now includes all reward proposal and execution functionality
+ * directly, eliminating the need for separate Factory and Extension contracts.
+ *
+ * Key features:
+ * - Direct DAO deployment via constructor
+ * - Integrated reward proposal system with dynamic majority voting
+ * - ERC20 token batch transfers
+ * - Admin management and permissions
+ */
+
 import { ethers } from 'ethers';
 
-import TeamDaoFactoryArtifact from './artifacts/TeamDaoFactory.json';
 import TeamDaoArtifact from './artifacts/TeamDao.json';
-import RewardExtensionArtifact from './artifacts/RewardExtension.json';
-
-const FACTORY_ADDRESS = import.meta.env.VITE_FACTORY_ADDRESS || '';
 
 const ERC20_ABI = [
   'function balanceOf(address owner) view returns (uint256)',
@@ -16,7 +26,6 @@ const ERC20_ABI = [
 
 export interface CreateDAOResult {
   daoAddress: string;
-  rewardExtensionAddress: string;
   transactionHash: string;
 }
 
@@ -55,35 +64,23 @@ export class TeamDaoService {
       throw new Error('At least 3 admins are required to create a DAO');
     }
 
-    const factory = new ethers.Contract(
-      FACTORY_ADDRESS,
-      TeamDaoFactoryArtifact.abi,
+    const TeamDAO = new ethers.ContractFactory(
+      TeamDaoArtifact.abi,
+      TeamDaoArtifact.bytecode,
       this.signer,
     );
 
-    const tx = await factory.createSpace(admins);
-    const receipt = await tx.wait();
+    const dao = await TeamDAO.deploy(admins);
+    const receipt = await dao.deploymentTransaction()?.wait();
 
-    const spaceCreatedEvent = receipt.logs
-      .map((log: ethers.Log | ethers.EventLog) => {
-        try {
-          return factory.interface.parseLog(log);
-        } catch {
-          return null;
-        }
-      })
-      .find(
-        (event: ethers.LogDescription | null): event is ethers.LogDescription =>
-          event?.name === 'SpaceCreated',
-      );
-
-    if (!spaceCreatedEvent) {
-      throw new Error('SpaceCreated event not found in transaction receipt');
+    if (!receipt) {
+      throw new Error('Deployment transaction failed');
     }
 
+    const daoAddress = await dao.getAddress();
+
     return {
-      daoAddress: spaceCreatedEvent.args.dao,
-      rewardExtensionAddress: spaceCreatedEvent.args.rewardExtension,
+      daoAddress,
       transactionHash: receipt.hash,
     };
   }
@@ -147,24 +144,16 @@ export class TeamDaoService {
     const dao = new ethers.Contract(
       daoAddress,
       TeamDaoArtifact.abi,
-      this.provider,
-    );
-
-    const extAddress = await dao.rewardExtension();
-
-    const ext = new ethers.Contract(
-      extAddress,
-      RewardExtensionArtifact.abi,
       this.signer,
     );
 
-    const tx = await ext.proposeBatch(tokenAddress, pairs);
+    const tx = await dao.proposeBatch(tokenAddress, pairs);
     const receipt = await tx.wait();
 
     const proposalCreatedEvent = receipt.logs
       .map((log: ethers.Log | ethers.EventLog) => {
         try {
-          return ext.interface.parseLog(log);
+          return dao.interface.parseLog(log);
         } catch {
           return null;
         }
@@ -193,18 +182,10 @@ export class TeamDaoService {
     const dao = new ethers.Contract(
       daoAddress,
       TeamDaoArtifact.abi,
-      this.provider,
-    );
-
-    const extAddress = await dao.rewardExtension();
-
-    const ext = new ethers.Contract(
-      extAddress,
-      RewardExtensionArtifact.abi,
       this.signer,
     );
 
-    const tx = await ext.approveAndExecute(proposalId);
+    const tx = await dao.approveAndExecute(proposalId);
     const receipt = await tx.wait();
 
     return receipt.hash;
@@ -217,16 +198,8 @@ export class TeamDaoService {
       this.provider,
     );
 
-    const extAddress = await dao.rewardExtension();
-
-    const ext = new ethers.Contract(
-      extAddress,
-      RewardExtensionArtifact.abi,
-      this.provider,
-    );
-
     const [token, count, approvals, executed] =
-      await ext.getProposalInfo(proposalId);
+      await dao.getProposalInfo(proposalId);
 
     return {
       token,
@@ -256,7 +229,33 @@ export class TeamDaoService {
     return await dao.isDaoActive();
   }
 
+  async getRequiredApprovals(daoAddress: string): Promise<number> {
+    const dao = new ethers.Contract(
+      daoAddress,
+      TeamDaoArtifact.abi,
+      this.provider,
+    );
+
+    const required = await dao.getRequiredApprovals();
+    return Number(required);
+  }
+
   async getDAOInfo(daoAddress: string) {
-    return { daoAddress };
+    const dao = new ethers.Contract(
+      daoAddress,
+      TeamDaoArtifact.abi,
+      this.provider,
+    );
+
+    const [isDaoActive, requiredApprovals] = await Promise.all([
+      dao.isDaoActive(),
+      dao.getRequiredApprovals(),
+    ]);
+
+    return {
+      daoAddress,
+      isDaoActive,
+      requiredApprovals: Number(requiredApprovals),
+    };
   }
 }
