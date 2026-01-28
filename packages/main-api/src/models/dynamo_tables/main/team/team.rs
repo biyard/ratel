@@ -21,7 +21,7 @@ pub struct Team {
     #[dynamo(index = "gsi6", name = "find_by_follwers", pk)]
     pub sk: EntityType,
 
-    #[dynamo(prefix = "TEAM", index = "gsi2", sk)]
+    #[dynamo(prefix = "TS", index = "gsi2", sk)]
     pub created_at: i64,
     pub updated_at: i64,
 
@@ -31,7 +31,7 @@ pub struct Team {
     pub profile_url: String,
     // NOTE: username is linked with gsi2-index of user model.
     #[dynamo(
-        prefix = "USERNAME",
+        prefix = "TEAM_USERNAME",
         name = "find_by_username_prefix",
         index = "gsi2",
         pk
