@@ -17,6 +17,7 @@ use by_axum::{
     },
 };
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 #[derive(Debug, Deserialize, aide::OperationIo, JsonSchema)]
 pub struct AddMemberPathParams {
@@ -78,7 +79,14 @@ pub async fn add_member_handler(
     let mut invite_emails: Vec<String> = Vec::new();
     let mut invite_pks: Vec<Partition> = Vec::new();
 
+    let mut seen_pks = HashSet::new();
+
     for member in &req.user_pks {
+        if !seen_pks.insert(member.as_str()) {
+            failed_pks.push(member.to_string());
+            continue;
+        }
+
         let user = User::get(&dynamo.client, member, Some(EntityType::User)).await?;
         if user.is_none() {
             failed_pks.push(member.to_string());
@@ -100,7 +108,15 @@ pub async fn add_member_handler(
             invite_pks.push(user.pk.clone());
         }
 
-        // Always create UserTeamGroup (user joining a new group)
+        let user_team_group_sk = EntityType::UserTeamGroup(team_group.sk.to_string());
+        let existing_user_team_group =
+            UserTeamGroup::get(&dynamo.client, &user.pk, Some(&user_team_group_sk)).await?;
+
+        if existing_user_team_group.is_some() {
+            continue;
+        }
+
+        // Create UserTeamGroup only if the user is not already in the group.
         UserTeamGroup::new(user.pk, team_group.clone())
             .create(&dynamo.client)
             .await?;

@@ -2,7 +2,8 @@ use super::*;
 use crate::features::report::ContentReport;
 use crate::features::spaces::members::{SpaceEmailVerification, SpaceInvitationMember};
 use crate::features::spaces::{
-    SpaceRequirement, SpaceRequirementDto, SpaceRequirementQueryOption, SpaceRequirementResponse,
+    SpaceDao, SpaceRequirement, SpaceRequirementDto, SpaceRequirementQueryOption,
+    SpaceRequirementResponse,
 };
 use crate::models::user::User;
 use crate::models::{Post, SpaceCommon};
@@ -65,6 +66,7 @@ pub struct GetSpaceResponse {
     pub quota: i64,
 
     pub is_report: bool,
+    pub dao_address: Option<String>,
 }
 
 pub async fn get_space_handler(
@@ -98,6 +100,8 @@ pub async fn get_space_handler(
     let (mut requirements, _bookmark) =
         SpaceRequirement::query(&dynamo.client, req_pk, opt).await?;
 
+    let dao = SpaceDao::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceDao)).await?;
+
     let can_participate = if let Some(ref user) = user {
         let (pk, sk) = SpaceInvitationMember::keys(&space.pk, &user.pk);
         let invitation = SpaceInvitationMember::get(&dynamo.client, &pk, Some(&sk)).await?;
@@ -110,6 +114,7 @@ pub async fn get_space_handler(
     };
 
     let mut res = GetSpaceResponse::from((space.clone(), post, permissions, user_participant));
+    res.dao_address = dao.map(|item| item.contract_address);
     requirements.sort_by(|a, b| a.order.cmp(&b.order));
 
     let (is_report, keys) = if let Some(ref user) = user {
@@ -215,6 +220,7 @@ impl
             quota: space.quota,
 
             is_report: false,
+            dao_address: None,
         }
     }
 }
