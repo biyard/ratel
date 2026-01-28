@@ -1,90 +1,101 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/proxy/utils/Initializable.sol";
+interface IERC20 {
+    function transfer(address to, uint256 value) external returns (bool);
+    function transferFrom(address from, address to, uint256 value) external returns (bool);
+    function balanceOf(address account) external view returns (uint256);
+}
 
-contract SpaceDAO is Initializable, ReentrancyGuard {
-    
-    // --- State Variables ---
-    bool public isDaoActive; // 여전히 비상 정지용으로 남겨둠 (true = Active)
-    
-    address[] public admins;
-    mapping(address => bool) public isAdmin;
-    
-    // Whitelist for extensions
-    mapping(address => bool) public isExtension;
+contract SpaceDAO {
+    address[] private _admins;
+    mapping(address => bool) private _isAdmin;
+    IERC20 private _usdt;
+    uint256 private _withdrawalAmount;
 
-    // [Direct Link] Main Extension Address
-    address public rewardExtension;
-
-    // --- Events ---
-    event Initialized(address[] admins, address extension);
-    event ExtensionCall(address indexed extension, address indexed target, uint256 value, bytes data);
-    event Received(address indexed sender, uint256 amount);
-
-    // --- Modifiers ---
-    modifier onlyExtension() {
-        require(isExtension[msg.sender], "SpaceDAO: Caller is not an extension");
+    modifier onlyAdmin() {
+        require(_isAdmin[msg.sender], "SpaceDAO: admin only");
         _;
     }
 
-    modifier onlyActive() {
-        require(isDaoActive, "SpaceDAO: DAO is inactive");
-        _;
-    }
+    constructor(
+        address[] memory admins,
+        address usdt,
+        uint256 withdrawalAmount
+    ) {
+        require(usdt != address(0), "SpaceDAO: invalid token address");
+        require(withdrawalAmount > 0, "SpaceDAO: invalid withdrawal amount");
+        require(admins.length >= 3, "SpaceDAO: at least 3 admins required");
 
-    /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() { _disableInitializers(); }
+        _usdt = IERC20(usdt);
+        _withdrawalAmount = withdrawalAmount;
 
-    /**
-     * @dev Initialize without mainToken.
-     */
-    function initialize(
-        address[] calldata _admins,
-        address _initialExtension
-    ) external initializer {
-        require(_admins.length >= 3, "SpaceDAO: Must have at least 3 admins");
-
-        for (uint i = 0; i < _admins.length; i++) {
-            admins.push(_admins[i]);
-            isAdmin[_admins[i]] = true;
+        for (uint256 i = 0; i < admins.length; i++) {
+            address admin = admins[i];
+            require(admin != address(0), "SpaceDAO: invalid admin");
+            require(!_isAdmin[admin], "SpaceDAO: duplicate admin");
+            _isAdmin[admin] = true;
+            _admins.push(admin);
         }
+    }
 
-        isDaoActive = true;
+    function deposit(uint256 amount) external {
+        require(amount > 0, "SpaceDAO: amount is zero");
+        require(_usdt.transferFrom(msg.sender, address(this), amount), "SpaceDAO: transfer failed");
+    }
 
-        // Register Extension
-        if (_initialExtension != address(0)) {
-            isExtension[_initialExtension] = true;
-            rewardExtension = _initialExtension;
+    function getAdmins() external view returns (address[] memory) {
+        return _admins;
+    }
+
+    function getIsAdmin(address account) external view returns (bool) {
+        return _isAdmin[account];
+    }
+
+    function getUsdt() external view returns (address) {
+        return address(_usdt);
+    }
+
+    function getWithdrawalAmount() external view returns (uint256) {
+        return _withdrawalAmount;
+    }
+
+    function distributeWithdrawal(address[] calldata recipients) external onlyAdmin {
+        uint256 count = recipients.length;
+        require(count > 0, "SpaceDAO: empty recipients");
+
+        uint256 totalNeeded = _withdrawalAmount * count;
+        uint256 balance = _usdt.balanceOf(address(this));
+        require(
+            balance >= totalNeeded,
+            "SpaceDAO: insufficient balance"
+        );
+
+        for (uint256 i = 0; i < count; i++) {
+            address to = recipients[i];
+            require(to != address(0), "SpaceDAO: invalid recipient");
+            require(_usdt.transfer(to, _withdrawalAmount), "SpaceDAO: transfer failed");
         }
-
-        emit Initialized(_admins, _initialExtension);
     }
 
-    receive() external payable {
-        emit Received(msg.sender, msg.value);
+    function getBalance() external view returns (uint256) {
+        return _usdt.balanceOf(address(this));
     }
 
-    /**
-     * @dev Executes actions requested by the Extension.
-     */
-    function executeCall(
-        address _target,
-        uint256 _value,
-        bytes calldata _data
-    ) external onlyExtension onlyActive nonReentrant returns (bytes memory) {
-        // Just execute the call
-        (bool success, bytes memory result) = _target.call{value: _value}(_data);
-        require(success, "SpaceDAO: Low-level call failed");
-
-        emit ExtensionCall(msg.sender, _target, _value, _data);
-
-        return result;
+    function setWithdrawalAmount(uint256 amount) external onlyAdmin {
+        require(amount > 0, "SpaceDAO: invalid withdrawal amount");
+        _withdrawalAmount = amount;
     }
 
-    // Helper to check admin status (called by Extension)
-    function checkAdmin(address _user) external view returns (bool) {
-        return isAdmin[_user];
+    function addAdmin(address admin) external onlyAdmin {
+        require(admin != address(0), "SpaceDAO: invalid admin");
+        require(!_isAdmin[admin], "SpaceDAO: duplicate admin");
+        _isAdmin[admin] = true;
+        _admins.push(admin);
+    }
+
+    function setUsdtAddress(address usdt) external onlyAdmin {
+        require(usdt != address(0), "Invalid USDT Address");
+        _usdt = IERC20(usdt);
     }
 }

@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "ISpaceDAO",
-  "sourceName": "SpaceDaoRewardExtension.sol",
+  "contractName": "ITeamDAO",
+  "sourceName": "TeamDaoRewardExtension.sol",
   "abi": [
     {
       "inputs": [

@@ -3,6 +3,7 @@ type Config = {
   operator_address: string;
   rpc_url: string;
   block_explorer_url: string;
+  usdt_address: string;
   firebase_api_key: string;
   firebase_auth_domain: string;
   firebase_project_id: string;
@@ -47,6 +48,7 @@ export const config: Config = {
   operator_address: import.meta.env.VITE_OPERATOR_ADDRESS || '',
   rpc_url: import.meta.env.VITE_RPC_URL || '',
   block_explorer_url: import.meta.env.VITE_BLOCK_EXPLORER_URL || '',
+  usdt_address: import.meta.env.VITE_USDT_ADDRESS || '',
   firebase_api_key: import.meta.env.VITE_FIREBASE_API_KEY || '',
   firebase_auth_domain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
   firebase_project_id: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
