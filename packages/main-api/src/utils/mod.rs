@@ -23,6 +23,7 @@ pub mod time;
 // pub mod users;
 pub mod validator;
 pub mod wallets;
+pub mod space_dao_sampling;
 
 pub mod aws;
 pub mod reports;

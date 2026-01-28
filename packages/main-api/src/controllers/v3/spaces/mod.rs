@@ -5,6 +5,7 @@ pub mod update_space;
 
 pub mod analyzes;
 pub mod boards;
+pub mod dao;
 pub mod discussions;
 pub mod files;
 pub mod members;
@@ -12,7 +13,6 @@ pub mod panels;
 pub mod polls;
 pub mod recommendations;
 pub mod reports;
-pub mod dao;
 
 pub mod dto;
 
