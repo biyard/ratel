@@ -177,7 +177,7 @@ export function useSpaceDaoViewerController(
   const { data: samples, isLoading: samplesLoading } = useSpaceDaoSamples(
     spacePk,
     sampleBookmark[0],
-    2,
+    50,
     Boolean(dao?.contract_address),
   );
   const provider = useMemo(() => {
