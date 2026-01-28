@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDaoData } from './use-dao-data';
-import { BlockchainService } from '@/contracts/BlockchainService';
+import { TeamDaoService } from '@/contracts/TeamDaoService';
 import {
   getKaiaSigner,
   KaiaWalletError,
@@ -59,10 +59,10 @@ export function useDaoPageController(username: string) {
       const provider = signer.provider;
 
       showInfoToast('Creating DAO on blockchain...');
-      const blockchainService = new BlockchainService(provider);
-      await blockchainService.connectWallet();
+      const daoService = new TeamDaoService(provider);
+      await daoService.connectWallet();
 
-      const result = await blockchainService.createDAO(selectedAdminAddresses);
+      const result = await daoService.createDAO(selectedAdminAddresses);
 
       showInfoToast('Saving DAO address...');
       await updateTeamMutation.mutateAsync({
