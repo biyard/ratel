@@ -114,9 +114,7 @@ describe("SpaceDAO", function () {
 
   describe("Deposit & Balance", function () {
     it("allows deposit with approval and tracks balance", async function () {
-      const { dao, token, deployer } = await loadFixture(
-        deploySpaceDaoFixture
-      );
+      const { dao, token, deployer } = await loadFixture(deploySpaceDaoFixture);
       const amount = ethers.parseUnits("250", 18);
 
       await expect(dao.deposit(0)).to.be.revertedWith(
@@ -228,7 +226,9 @@ describe("SpaceDAO", function () {
       await dao.connect(admin2).deposit(depositB);
 
       // distribute 50 (reward) to reduce the shared pool
-      await dao.connect(admin1).setWithdrawalAmount(ethers.parseUnits("50", 18));
+      await dao
+        .connect(admin1)
+        .setWithdrawalAmount(ethers.parseUnits("50", 18));
       await dao.connect(admin1).distributeWithdrawal([recipient1.address]);
 
       const withdrawAmount = ethers.parseUnits("30", 18);
@@ -272,8 +272,9 @@ describe("SpaceDAO", function () {
     });
 
     it("reverts when non-depositor tries to approve", async function () {
-      const { dao, token, deployer, admin1, admin2, user } =
-        await loadFixture(deploySpaceDaoFixture);
+      const { dao, token, deployer, admin1, admin2, user } = await loadFixture(
+        deploySpaceDaoFixture
+      );
 
       const depositA = ethers.parseUnits("80", 18);
       const depositB = ethers.parseUnits("20", 18);

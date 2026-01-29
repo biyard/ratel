@@ -39,9 +39,21 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
         onNextSample={ctrl.handleNextSample}
         showSamples={Boolean(ctrl.space?.isFinished)}
         showEdit={false}
-        showDeposit={false}
+        showDeposit={true}
         canDistributeReward={ctrl.canDistributeReward}
         isDistributingPage={ctrl.isDistributingPage.get()}
+        withdrawalAmount={ctrl.withdrawAmount.get()}
+        onWithdrawalAmountChange={ctrl.handleWithdrawAmountChange}
+        onProposeWithdrawal={ctrl.handleProposeWithdrawal}
+        isWithdrawing={ctrl.isWithdrawing.get()}
+        proposals={ctrl.proposals.get()}
+        proposalsLoading={ctrl.proposalsLoading.get()}
+        onApproveWithdrawal={ctrl.handleApproveWithdrawal}
+        isApprovingWithdrawal={ctrl.isApprovingWithdrawal.get()}
+        availableShare={ctrl.availableShare.get()}
+        availableShareLoading={ctrl.availableShareLoading.get()}
+        depositorCount={ctrl.depositorCount.get()}
+        canApproveWithdrawal={Number(ctrl.availableShare.get() ?? 0) > 0}
       />
     </div>
   );

@@ -36,6 +36,25 @@ type SpaceDaoInfoCardProps = {
   onPrevSample?: () => void;
   onDistributePage?: () => void;
   isDistributingPage?: boolean;
+  withdrawalAmount?: string;
+  onWithdrawalAmountChange?: (value: string) => void;
+  onProposeWithdrawal?: () => void;
+  isWithdrawing?: boolean;
+  proposals?: {
+    id: number;
+    proposer: string;
+    amount: string;
+    approvals: number;
+    executed: boolean;
+    approvedByMe: boolean;
+  }[];
+  proposalsLoading?: boolean;
+  onApproveWithdrawal?: (id: number) => void;
+  isApprovingWithdrawal?: boolean;
+  availableShare?: string | null;
+  availableShareLoading?: boolean;
+  depositorCount?: number | null;
+  canApproveWithdrawal?: boolean;
 };
 
 export function SpaceDaoInfoCard({
@@ -64,6 +83,18 @@ export function SpaceDaoInfoCard({
   onPrevSample,
   onDistributePage,
   isDistributingPage = false,
+  withdrawalAmount = '',
+  onWithdrawalAmountChange,
+  onProposeWithdrawal,
+  isWithdrawing = false,
+  proposals = [],
+  proposalsLoading = false,
+  onApproveWithdrawal,
+  isApprovingWithdrawal = false,
+  availableShare,
+  availableShareLoading = false,
+  depositorCount,
+  canApproveWithdrawal = false,
 }: SpaceDaoInfoCardProps) {
   const { t } = useTranslation('SpaceDaoEditor');
   const [copied, setCopied] = useState(false);
@@ -184,6 +215,126 @@ export function SpaceDaoInfoCard({
               ? t('dao_info_balance_loading')
               : (balance ?? t('dao_info_balance_unavailable'))}
           </p>
+        </div>
+
+        <div className="grid gap-4 rounded-md border border-border/60 px-4 py-4">
+          <div>
+            <p className="text-sm font-medium text-text-primary">
+              {t('dao_withdraw_title')}
+            </p>
+            <p className="text-sm text-text-secondary">
+              {t('dao_withdraw_description')}
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div>
+              <p className="text-xs text-text-secondary mb-1">
+                {t('dao_withdraw_available')}
+              </p>
+              <p className="text-base text-text-primary">
+                {availableShareLoading
+                  ? t('dao_withdraw_loading')
+                  : (availableShare ?? t('dao_info_balance_unavailable'))}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-text-secondary mb-1">
+                {t('dao_withdraw_depositor_count')}
+              </p>
+              <p className="text-base text-text-primary">
+                {typeof depositorCount === 'number'
+                  ? depositorCount
+                  : t('dao_info_balance_unavailable')}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 md:flex-row md:items-end">
+            <div className="flex-1">
+              <p className="text-xs text-text-secondary mb-1">
+                {t('dao_withdraw_amount_label')}
+              </p>
+              <Input
+                type="number"
+                min={0}
+                value={withdrawalAmount}
+                onChange={(e) => onWithdrawalAmountChange?.(e.target.value)}
+                placeholder={t('dao_withdraw_amount_placeholder')}
+                disabled={!onWithdrawalAmountChange}
+              />
+            </div>
+            <Button
+              type="button"
+              variant="rounded_primary"
+              size="sm"
+              onClick={onProposeWithdrawal}
+              disabled={!onProposeWithdrawal || isWithdrawing}
+              className="md:self-end"
+            >
+              {isWithdrawing
+                ? t('dao_withdraw_requesting')
+                : t('dao_withdraw_request_button')}
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            <p className="text-sm font-medium text-text-primary">
+              {t('dao_withdraw_proposals')}
+            </p>
+            {proposalsLoading ? (
+              <p className="text-sm text-text-secondary">
+                {t('dao_withdraw_loading')}
+              </p>
+            ) : proposals.length === 0 ? (
+              <p className="text-sm text-text-secondary">
+                {t('dao_withdraw_empty')}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {proposals.map((proposal) => (
+                  <div
+                    key={proposal.id}
+                    className="flex flex-col gap-2 rounded-md border border-border/60 px-3 py-2 md:flex-row md:items-center md:justify-between"
+                  >
+                    <div className="text-sm text-text-primary">
+                      <p>
+                        {t('dao_withdraw_proposal_id', { id: proposal.id })}
+                      </p>
+                      <p className="text-xs text-text-secondary">
+                        {t('dao_withdraw_proposal_amount', {
+                          amount: proposal.amount,
+                        })}
+                      </p>
+                      <p className="text-xs text-text-secondary">
+                        {t('dao_withdraw_proposal_approvals', {
+                          approvals: proposal.approvals,
+                        })}
+                      </p>
+                      <p className="text-xs text-text-secondary">
+                        {proposal.executed
+                          ? t('dao_withdraw_proposal_executed')
+                          : t('dao_withdraw_proposal_pending')}
+                      </p>
+                    </div>
+                    {!proposal.executed &&
+                      canApproveWithdrawal &&
+                      !proposal.approvedByMe && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => onApproveWithdrawal?.(proposal.id)}
+                        disabled={!onApproveWithdrawal || isApprovingWithdrawal}
+                      >
+                        {isApprovingWithdrawal
+                          ? t('dao_withdraw_approving')
+                          : t('dao_withdraw_approve_button')}
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2">

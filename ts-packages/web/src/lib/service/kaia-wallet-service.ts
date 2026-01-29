@@ -164,3 +164,18 @@ export async function getKaiaSigner(target: KaiaNetwork = 'testnet') {
     account: accounts[0] as string,
   };
 }
+
+export async function getKaiaAccount(): Promise<string | null> {
+  try {
+    const ethereum = await getEthereum();
+    const accounts: string[] = await ethereum.request({
+      method: 'eth_accounts',
+    });
+    if (!accounts || accounts.length === 0) {
+      return null;
+    }
+    return accounts[0] as string;
+  } catch {
+    return null;
+  }
+}
