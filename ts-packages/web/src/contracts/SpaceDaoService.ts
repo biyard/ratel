@@ -115,6 +115,127 @@ export class SpaceDaoService {
     return receipt.hash;
   }
 
+  async proposeShareWithdrawal(
+    daoAddress: string,
+    amount: string | bigint,
+    decimals = 6,
+  ): Promise<string> {
+    if (!this.signer) await this.connectWallet();
+
+    const dao = new ethers.Contract(
+      daoAddress,
+      SpaceDaoArtifact.abi,
+      this.signer,
+    );
+
+    const value =
+      typeof amount === 'bigint' ? amount : ethers.parseUnits(amount, decimals);
+
+    const tx = await dao.proposeShareWithdrawal(value);
+    const receipt = await tx.wait();
+    return receipt.hash;
+  }
+
+  async approveShareWithdrawal(
+    daoAddress: string,
+    id: number,
+  ): Promise<string> {
+    if (!this.signer) await this.connectWallet();
+
+    const dao = new ethers.Contract(
+      daoAddress,
+      SpaceDaoArtifact.abi,
+      this.signer,
+    );
+
+    const tx = await dao.approveShareWithdrawal(id);
+    const receipt = await tx.wait();
+    return receipt.hash;
+  }
+
+  async getShareWithdrawProposalCount(daoAddress: string): Promise<number> {
+    const dao = new ethers.Contract(
+      daoAddress,
+      SpaceDaoArtifact.abi,
+      this.provider,
+    );
+    const count = await dao.getShareWithdrawProposalCount();
+    return Number(count);
+  }
+
+  async getShareWithdrawProposal(
+    daoAddress: string,
+    id: number,
+  ): Promise<{
+    proposer: string;
+    amount: string;
+    approvals: string;
+    executed: boolean;
+  }> {
+    const dao = new ethers.Contract(
+      daoAddress,
+      SpaceDaoArtifact.abi,
+      this.provider,
+    );
+    const [proposer, amount, approvals, executed] =
+      await dao.getShareWithdrawProposal(id);
+    return {
+      proposer,
+      amount: amount.toString(),
+      approvals: approvals.toString(),
+      executed,
+    };
+  }
+
+  async isShareWithdrawApproved(
+    daoAddress: string,
+    id: number,
+    approver: string,
+  ): Promise<boolean> {
+    const dao = new ethers.Contract(
+      daoAddress,
+      SpaceDaoArtifact.abi,
+      this.provider,
+    );
+    return dao.isShareWithdrawApproved(id, approver);
+  }
+
+  async getDepositorCount(daoAddress: string): Promise<number> {
+    const dao = new ethers.Contract(
+      daoAddress,
+      SpaceDaoArtifact.abi,
+      this.provider,
+    );
+    const count = await dao.getDepositorCount();
+    return Number(count);
+  }
+
+  async getDepositorDeposit(
+    daoAddress: string,
+    depositor: string,
+  ): Promise<string> {
+    const dao = new ethers.Contract(
+      daoAddress,
+      SpaceDaoArtifact.abi,
+      this.provider,
+    );
+    const value = await dao.getDepositorDeposit(depositor);
+    return value.toString();
+  }
+
+  async getAvailableShare(
+    daoAddress: string,
+    depositor: string,
+  ): Promise<string> {
+    const dao = new ethers.Contract(
+      daoAddress,
+      SpaceDaoArtifact.abi,
+      this.provider,
+    );
+    const value = await dao.getAvailableShare(depositor);
+    return value.toString();
+  }
+
   async getSpaceBalance(daoAddress: string): Promise<string> {
     const dao = new ethers.Contract(
       daoAddress,

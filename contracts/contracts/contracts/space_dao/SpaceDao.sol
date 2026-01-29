@@ -12,17 +12,21 @@ contract SpaceDAO {
     mapping(address => bool) private _isAdmin;
     // 예치자 여부
     mapping(address => bool) private _isDepositor;
+    address[] private _depositors;
     // 예치자가 예치한 총 USDT
     mapping(address => uint256) private _depositorDeposits;
     // 예치자가 출금해간 누적 금액
     mapping(address => uint256) private _withdrawnByDepositor;
+    // 분배 시점 기준 확정 가능한 출금액
+    mapping(address => uint256) private _claimableByDepositor;
     IERC20 private _usdt;
     uint256 private _withdrawalAmount;
     // 예치한 총 USDT 누적액
     uint256 private _totalDepositorDeposited;
+    // 출금된 총 USDT 누적액
+    uint256 private _totalWithdrawn;
     // 분배된 총 Reward 누적액
     uint256 private _totalRewardDistributed;
-    uint256 public constant REQUIRED_APPROVALS = 2;
     uint256 private _depositorCount;
 
     struct ShareWithdrawProposal {
@@ -71,10 +75,12 @@ contract SpaceDAO {
         require(_usdt.transferFrom(msg.sender, address(this), amount), "SpaceDAO: transfer failed");
         if (!_isDepositor[msg.sender]) {
             _isDepositor[msg.sender] = true;
+            _depositors.push(msg.sender);
             _depositorCount += 1;
         }
         _depositorDeposits[msg.sender] += amount;
         _totalDepositorDeposited += amount;
+        _claimableByDepositor[msg.sender] += amount;
     }
 
     function getAdmins() external view returns (address[] memory) {
@@ -94,21 +100,7 @@ contract SpaceDAO {
     }
 
     function getAvailableShare(address depositor) public view returns (uint256) {
-        uint256 depositorDeposit = _depositorDeposits[depositor];
-        if (depositorDeposit == 0) {
-            return 0;
-        }
-        if (_totalDepositorDeposited == 0 || _totalRewardDistributed >= _totalDepositorDeposited) {
-            return 0;
-        }
-        uint256 remainingPool = _totalDepositorDeposited - _totalRewardDistributed;
-        uint256 maxShare =
-            (remainingPool * depositorDeposit) / _totalDepositorDeposited;
-        uint256 withdrawn = _withdrawnByDepositor[depositor];
-        if (withdrawn >= maxShare) {
-            return 0;
-        }
-        return maxShare - withdrawn;
+        return _claimableByDepositor[depositor];
     }
 
     function getShareWithdrawProposal(uint256 id)
@@ -120,11 +112,24 @@ contract SpaceDAO {
         return (p.proposer, p.amount, p.approvalCount, p.executed);
     }
 
+    function getShareWithdrawProposalCount() external view returns (uint256) {
+        return _shareWithdrawProposals.length;
+    }
+
+    function isShareWithdrawApproved(uint256 id, address approver)
+        external
+        view
+        returns (bool)
+    {
+        ShareWithdrawProposal storage p = _shareWithdrawProposals[id];
+        return p.approvedBy[approver];
+    }
+
     function proposeShareWithdrawal(uint256 amount) external onlyDepositor {
         require(amount > 0, "SpaceDAO: amount is zero");
         require(_depositorDeposits[msg.sender] > 0, "SpaceDAO: no deposit");
 
-        uint256 available = getAvailableShare(msg.sender);
+        uint256 available = _claimableByDepositor[msg.sender];
         require(amount <= available, "SpaceDAO: exceeds share");
 
         uint256 id = _shareWithdrawProposals.length;
@@ -132,8 +137,6 @@ contract SpaceDAO {
         ShareWithdrawProposal storage p = _shareWithdrawProposals[id];
         p.proposer = msg.sender;
         p.amount = amount;
-        p.approvedBy[msg.sender] = true;
-        p.approvalCount = 1;
     }
 
     function approveShareWithdrawal(uint256 id) external onlyDepositor {
@@ -144,7 +147,14 @@ contract SpaceDAO {
         p.approvedBy[msg.sender] = true;
         p.approvalCount += 1;
 
-        uint256 quorum = (_depositorCount / 2) + 1;
+        uint256 quorum = 0;
+
+        if (_depositorCount % 2 == 0) {
+            quorum = (_depositorCount / 2);
+        } else {
+            quorum = (_depositorCount / 2) + 1;
+        }
+
         if (p.approvalCount >= quorum) {
             _executeShareWithdrawal(p);
         }
@@ -154,11 +164,13 @@ contract SpaceDAO {
         require(!p.executed, "SpaceDAO: already executed");
         require(_usdt.balanceOf(address(this)) >= p.amount, "SpaceDAO: insufficient balance");
 
-        uint256 available = getAvailableShare(p.proposer);
+        uint256 available = _claimableByDepositor[p.proposer];
         require(p.amount <= available, "SpaceDAO: exceeds share");
 
         p.executed = true;
+        _claimableByDepositor[p.proposer] = available - p.amount;
         _withdrawnByDepositor[p.proposer] += p.amount;
+        _totalWithdrawn += p.amount;
         require(_usdt.transfer(p.proposer, p.amount), "SpaceDAO: transfer failed");
     }
 
@@ -180,6 +192,7 @@ contract SpaceDAO {
         }
 
         _totalRewardDistributed += totalNeeded;
+        _recalculateClaimables();
     }
 
     function getBalance() external view returns (uint256) {
@@ -212,6 +225,31 @@ contract SpaceDAO {
         require(!_isAdmin[admin], "SpaceDAO: duplicate admin");
         _isAdmin[admin] = true;
         _admins.push(admin);
+    }
+
+    function _recalculateClaimables() internal {
+        uint256 totalNetDeposits = _totalDepositorDeposited - _totalWithdrawn;
+        if (_depositors.length == 0) {
+            return;
+        }
+        if (totalNetDeposits == 0 || _totalRewardDistributed >= totalNetDeposits) {
+            for (uint256 i = 0; i < _depositors.length; i++) {
+                _claimableByDepositor[_depositors[i]] = 0;
+            }
+            return;
+        }
+        uint256 remainingPool = totalNetDeposits - _totalRewardDistributed;
+        for (uint256 i = 0; i < _depositors.length; i++) {
+            address depositor = _depositors[i];
+            uint256 depositorNet =
+                _depositorDeposits[depositor] - _withdrawnByDepositor[depositor];
+            if (depositorNet == 0) {
+                _claimableByDepositor[depositor] = 0;
+                continue;
+            }
+            _claimableByDepositor[depositor] =
+                (remainingPool * depositorNet) / totalNetDeposits;
+        }
     }
 
     function setUsdtAddress(address usdt) external onlyAdmin {
