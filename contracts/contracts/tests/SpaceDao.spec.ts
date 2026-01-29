@@ -114,7 +114,9 @@ describe("SpaceDAO", function () {
 
   describe("Deposit & Balance", function () {
     it("allows deposit with approval and tracks balance", async function () {
-      const { dao, token, deployer } = await loadFixture(deploySpaceDaoFixture);
+      const { dao, token, deployer } = await loadFixture(
+        deploySpaceDaoFixture
+      );
       const amount = ethers.parseUnits("250", 18);
 
       await expect(dao.deposit(0)).to.be.revertedWith(
@@ -122,7 +124,7 @@ describe("SpaceDAO", function () {
       );
 
       await token.connect(deployer).approve(await dao.getAddress(), amount);
-      await dao.deposit(amount);
+      await dao.connect(deployer).deposit(amount);
 
       expect(await dao.getBalance()).to.equal(amount);
     });
@@ -208,6 +210,86 @@ describe("SpaceDAO", function () {
         expect(await token.balanceOf(addr)).to.equal(withdrawalAmount);
       }
       expect(await dao.getBalance()).to.equal(0);
+    });
+  });
+
+  describe("Share-based withdrawals", function () {
+    it("allows approved withdrawals based on deposit share", async function () {
+      const { dao, token, deployer, admin1, admin2, recipient1 } =
+        await loadFixture(deploySpaceDaoFixture);
+
+      const depositA = ethers.parseUnits("80", 18);
+      const depositB = ethers.parseUnits("20", 18);
+      await token.connect(deployer).transfer(admin1.address, depositA);
+      await token.connect(deployer).transfer(admin2.address, depositB);
+      await token.connect(admin1).approve(await dao.getAddress(), depositA);
+      await token.connect(admin2).approve(await dao.getAddress(), depositB);
+      await dao.connect(admin1).deposit(depositA);
+      await dao.connect(admin2).deposit(depositB);
+
+      // distribute 50 (reward) to reduce the shared pool
+      await dao.connect(admin1).setWithdrawalAmount(ethers.parseUnits("50", 18));
+      await dao.connect(admin1).distributeWithdrawal([recipient1.address]);
+
+      const withdrawAmount = ethers.parseUnits("30", 18);
+      await dao.connect(admin1).proposeShareWithdrawal(withdrawAmount);
+
+      // second approval triggers execution
+      await dao.connect(admin2).approveShareWithdrawal(0);
+
+      expect(await token.balanceOf(admin1.address)).to.equal(withdrawAmount);
+      expect(await dao.getAvailableShare(admin1.address)).to.equal(
+        ethers.parseUnits("10", 18)
+      );
+    });
+
+    it("reverts when withdrawal exceeds share", async function () {
+      const { dao, token, deployer, admin1, admin2 } = await loadFixture(
+        deploySpaceDaoFixture
+      );
+
+      const depositA = ethers.parseUnits("80", 18);
+      const depositB = ethers.parseUnits("20", 18);
+      await token.connect(deployer).transfer(admin1.address, depositA);
+      await token.connect(deployer).transfer(admin2.address, depositB);
+      await token.connect(admin1).approve(await dao.getAddress(), depositA);
+      await token.connect(admin2).approve(await dao.getAddress(), depositB);
+      await dao.connect(admin1).deposit(depositA);
+      await dao.connect(admin2).deposit(depositB);
+
+      const tooMuch = ethers.parseUnits("81", 18);
+      await expect(
+        dao.connect(admin1).proposeShareWithdrawal(tooMuch)
+      ).to.be.revertedWith("SpaceDAO: exceeds share");
+    });
+
+    it("reverts when admin has no deposit", async function () {
+      const { dao, admin1 } = await loadFixture(deploySpaceDaoFixture);
+      const amount = ethers.parseUnits("1", 18);
+      await expect(
+        dao.connect(admin1).proposeShareWithdrawal(amount)
+      ).to.be.revertedWith("SpaceDAO: depositor only");
+    });
+
+    it("reverts when non-depositor tries to approve", async function () {
+      const { dao, token, deployer, admin1, admin2, user } =
+        await loadFixture(deploySpaceDaoFixture);
+
+      const depositA = ethers.parseUnits("80", 18);
+      const depositB = ethers.parseUnits("20", 18);
+      await token.connect(deployer).transfer(admin1.address, depositA);
+      await token.connect(deployer).transfer(admin2.address, depositB);
+      await token.connect(admin1).approve(await dao.getAddress(), depositA);
+      await token.connect(admin2).approve(await dao.getAddress(), depositB);
+      await dao.connect(admin1).deposit(depositA);
+      await dao.connect(admin2).deposit(depositB);
+
+      const withdrawAmount = ethers.parseUnits("10", 18);
+      await dao.connect(admin1).proposeShareWithdrawal(withdrawAmount);
+
+      await expect(
+        dao.connect(user).approveShareWithdrawal(0)
+      ).to.be.revertedWith("SpaceDAO: depositor only");
     });
   });
 
