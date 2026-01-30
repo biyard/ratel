@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
+import { spaceDaoKeys } from '@/constants';
 
 export type UpdateSpaceDaoSamplesRequest = {
   sample_sks: string[];
@@ -27,7 +28,9 @@ export function useUpdateSpaceDaoSamplesMutation() {
       );
     },
     onSuccess: async (_, { spacePk }) => {
-      await qc.invalidateQueries({ queryKey: ['space-dao-samples', spacePk] });
+      await qc.invalidateQueries({
+        queryKey: spaceDaoKeys.samplesBase(spacePk),
+      });
     },
   });
 }
