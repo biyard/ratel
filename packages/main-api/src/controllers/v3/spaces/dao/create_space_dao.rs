@@ -32,9 +32,9 @@ pub async fn create_space_dao_handler(
             "sampling_count must be greater than 0".to_string(),
         ));
     }
-    if req.reward_amount <= 0 {
+    if req.reward_amount < 0 {
         return Err(Error::BadRequest(
-            "reward_amount must be greater than 0".to_string(),
+            "reward_amount must be 0 or greater".to_string(),
         ));
     }
 

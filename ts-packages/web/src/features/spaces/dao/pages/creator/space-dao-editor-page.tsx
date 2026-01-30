@@ -142,19 +142,6 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
                     placeholder={t('sampling_count_placeholder')}
                   />
                 </div>
-
-                <div>
-                  <label className="text-sm text-text-secondary mb-2 block">
-                    {t('reward_amount_label')}
-                  </label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={ctrl.rewardAmount.get()}
-                    onChange={(e) => ctrl.rewardAmount.set(e.target.value)}
-                    placeholder={t('reward_amount_placeholder')}
-                  />
-                </div>
               </div>
 
               <button
