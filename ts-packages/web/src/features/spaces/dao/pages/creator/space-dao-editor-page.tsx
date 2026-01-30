@@ -9,6 +9,7 @@ import { useSpaceDao } from '@/features/spaces/dao/hooks/use-space-dao';
 import { SpaceDaoInfoCard } from '@/features/spaces/dao/components/space-dao-info-card';
 import { useSpaceDaoTokens } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
 import { useEffect, useState } from 'react';
+import { config } from '@/config';
 
 export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceDaoEditorPage: spacePk=${spacePk}`);
@@ -25,6 +26,10 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
   useEffect(() => {
     if (!selectedToken && tokenList?.items?.length) {
       setSelectedToken(tokenList.items[0].token_address);
+      return;
+    }
+    if (!selectedToken && !tokenList?.items?.length && config.usdt_address) {
+      setSelectedToken(config.usdt_address);
     }
   }, [selectedToken, tokenList?.items]);
 
