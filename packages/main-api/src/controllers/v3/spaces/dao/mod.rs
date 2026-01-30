@@ -7,6 +7,9 @@ pub use get_space_dao::*;
 pub mod list_space_dao_samples;
 pub use list_space_dao_samples::*;
 
+pub mod list_space_dao_tokens;
+pub use list_space_dao_tokens::*;
+
 pub mod update_space_dao_samples;
 pub use update_space_dao_samples::*;
 
@@ -27,4 +30,5 @@ pub fn route() -> Router<AppState> {
             "/samples",
             get(list_space_dao_samples_handler).patch(update_space_dao_samples_handler),
         )
+        .route("/tokens", get(list_space_dao_tokens_handler))
 }

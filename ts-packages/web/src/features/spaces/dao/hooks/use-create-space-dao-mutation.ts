@@ -3,14 +3,12 @@ import { call } from '@/lib/api/ratel/call';
 
 export type CreateSpaceDaoRequest = {
   contract_address: string;
-  sampling_count: number;
-  reward_amount: number;
+  deploy_block: number;
 };
 
 export type SpaceDaoResponse = {
   contract_address: string;
-  sampling_count: number;
-  reward_amount: number;
+  deploy_block: number;
 };
 
 export function useCreateSpaceDaoMutation() {

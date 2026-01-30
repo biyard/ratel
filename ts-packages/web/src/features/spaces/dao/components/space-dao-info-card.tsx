@@ -3,26 +3,19 @@ import { useTranslation } from 'react-i18next';
 import Card from '@/components/card';
 import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
 import { SpaceDaoSampleResponse } from '@/features/spaces/dao/hooks/use-space-dao-samples';
+import { SpaceDaoTokenResponse } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
 import { SpaceDaoSampleTable } from './space-dao-sample-table';
 import { config } from '@/config';
 import { CheckIcon, ClipboardIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
-import { SpaceDaoDepositDialog } from './space-dao-deposit-dialog';
 import { Input } from '@/components/ui/input';
+import { ethers } from 'ethers';
 
 type SpaceDaoInfoCardProps = {
   dao: SpaceDaoResponse;
-  balance?: string | null;
-  balanceLoading?: boolean;
-  isDepositOpen?: boolean;
-  depositAmount?: string;
-  isDepositing?: boolean;
-  onOpenDeposit?: () => void;
-  onCloseDeposit?: () => void;
-  onDepositAmountChange?: (value: string) => void;
-  onConfirmDeposit?: () => void;
   isUpdating?: boolean;
-  onUpdateDao?: (samplingCount: string, rewardAmount: string) => Promise<void>;
+  samplingCount?: string | number | null;
+  onUpdateDao?: (samplingCount: string) => Promise<void>;
   samples?: SpaceDaoSampleResponse[];
   samplesBookmark?: string | null;
   canPrevSample?: boolean;
@@ -30,45 +23,22 @@ type SpaceDaoInfoCardProps = {
   samplesLoading?: boolean;
   showSamples?: boolean;
   showEdit?: boolean;
-  showDeposit?: boolean;
   canDistributeReward?: boolean;
   onNextSample?: () => void;
   onPrevSample?: () => void;
   onDistributePage?: () => void;
   isDistributingPage?: boolean;
-  withdrawalAmount?: string;
-  onWithdrawalAmountChange?: (value: string) => void;
-  onProposeWithdrawal?: () => void;
-  isWithdrawing?: boolean;
-  proposals?: {
-    id: number;
-    proposer: string;
-    amount: string;
-    approvals: number;
-    executed: boolean;
-    approvedByMe: boolean;
-  }[];
-  proposalsLoading?: boolean;
-  onApproveWithdrawal?: (id: number) => void;
-  isApprovingWithdrawal?: boolean;
-  availableShare?: string | null;
-  availableShareLoading?: boolean;
-  depositorCount?: number | null;
-  canApproveWithdrawal?: boolean;
+  // withdrawal props removed
+  tokens?: SpaceDaoTokenResponse[];
+  selectedToken?: string | null;
+  onSelectToken?: (tokenAddress: string) => void;
+  tokensLoading?: boolean;
 };
 
 export function SpaceDaoInfoCard({
   dao,
-  balance,
-  balanceLoading = false,
-  isDepositOpen = false,
-  depositAmount = '',
-  isDepositing = false,
-  onOpenDeposit,
-  onCloseDeposit,
-  onDepositAmountChange,
-  onConfirmDeposit,
   isUpdating = false,
+  samplingCount,
   onUpdateDao,
   samples,
   samplesBookmark,
@@ -77,36 +47,30 @@ export function SpaceDaoInfoCard({
   samplesLoading = false,
   showSamples = true,
   showEdit = true,
-  showDeposit = true,
   canDistributeReward = false,
   onNextSample,
   onPrevSample,
   onDistributePage,
   isDistributingPage = false,
-  withdrawalAmount = '',
-  onWithdrawalAmountChange,
-  onProposeWithdrawal,
-  isWithdrawing = false,
-  proposals = [],
-  proposalsLoading = false,
-  onApproveWithdrawal,
-  isApprovingWithdrawal = false,
-  availableShare,
-  availableShareLoading = false,
-  depositorCount,
-  canApproveWithdrawal = false,
+  tokens = [],
+  selectedToken,
+  onSelectToken,
+  tokensLoading = false,
 }: SpaceDaoInfoCardProps) {
   const { t } = useTranslation('SpaceDaoEditor');
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [samplingValue, setSamplingValue] = useState(
-    String(dao.sampling_count ?? ''),
-  );
-  const [rewardValue, setRewardValue] = useState(
-    String(dao.reward_amount ?? ''),
+    String(samplingCount ?? ''),
   );
   const explorerUrl = config.block_explorer_url
     ? `${config.block_explorer_url}/address/${dao.contract_address}`
+    : null;
+
+  const selectedTokenItem =
+    tokens.find((item) => item.token_address === selectedToken) ?? null;
+  const formattedTokenBalance = selectedTokenItem
+    ? formatTokenBalance(selectedTokenItem.balance, selectedTokenItem.decimals)
     : null;
 
   const handleCopy = async () => {
@@ -120,8 +84,7 @@ export function SpaceDaoInfoCard({
   };
 
   const handleEdit = () => {
-    setSamplingValue(String(dao.sampling_count ?? ''));
-    setRewardValue(String(dao.reward_amount ?? ''));
+    setSamplingValue(String(samplingCount ?? ''));
     setIsEditing(true);
   };
 
@@ -131,7 +94,7 @@ export function SpaceDaoInfoCard({
 
   const handleSaveEdit = async () => {
     if (!onUpdateDao) return;
-    await onUpdateDao(samplingValue, rewardValue);
+    await onUpdateDao(samplingValue);
     setIsEditing(false);
   };
 
@@ -171,7 +134,7 @@ export function SpaceDaoInfoCard({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 text-sm">
+        <div className="grid grid-cols-1 gap-4 text-sm">
           <div>
             <p className="text-text-secondary mb-1">
               {t('dao_info_sampling_count')}
@@ -185,156 +148,37 @@ export function SpaceDaoInfoCard({
               />
             ) : (
               <p className="text-base text-text-primary">
-                {dao.sampling_count}
+                {samplingCount ?? '-'}
               </p>
-            )}
-          </div>
-          <div>
-            <p className="text-text-secondary mb-1">
-              {t('dao_info_reward_amount')}
-            </p>
-            {isEditing ? (
-              <Input
-                type="number"
-                min={1}
-                value={rewardValue}
-                onChange={(e) => setRewardValue(e.target.value)}
-              />
-            ) : (
-              <p className="text-base text-text-primary">{dao.reward_amount}</p>
             )}
           </div>
         </div>
 
-        <div>
-          <p className="text-text-secondary mb-1 text-sm">
-            {t('dao_info_balance_label')}
+        <div className="space-y-2">
+          <p className="text-text-secondary text-sm">
+            {t('dao_info_token_label')}
           </p>
+          <select
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
+            value={selectedToken ?? ''}
+            onChange={(e) => onSelectToken?.(e.target.value)}
+            disabled={tokensLoading || tokens.length === 0}
+          >
+            {tokens.length === 0 ? (
+              <option value="">{t('dao_info_token_empty')}</option>
+            ) : (
+              tokens.map((item) => (
+                <option key={item.token_address} value={item.token_address}>
+                  {item.symbol || item.token_address}
+                </option>
+              ))
+            )}
+          </select>
           <p className="text-base text-text-primary">
-            {balanceLoading
-              ? t('dao_info_balance_loading')
-              : (balance ?? t('dao_info_balance_unavailable'))}
+            {tokensLoading
+              ? t('dao_info_token_loading')
+              : (formattedTokenBalance ?? t('dao_info_balance_unavailable'))}
           </p>
-        </div>
-
-        <div className="grid gap-4 rounded-md border border-border/60 px-4 py-4">
-          <div>
-            <p className="text-sm font-medium text-text-primary">
-              {t('dao_withdraw_title')}
-            </p>
-            <p className="text-sm text-text-secondary">
-              {t('dao_withdraw_description')}
-            </p>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div>
-              <p className="text-xs text-text-secondary mb-1">
-                {t('dao_withdraw_available')}
-              </p>
-              <p className="text-base text-text-primary">
-                {availableShareLoading
-                  ? t('dao_withdraw_loading')
-                  : (availableShare ?? t('dao_info_balance_unavailable'))}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-text-secondary mb-1">
-                {t('dao_withdraw_depositor_count')}
-              </p>
-              <p className="text-base text-text-primary">
-                {typeof depositorCount === 'number'
-                  ? depositorCount
-                  : t('dao_info_balance_unavailable')}
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-col gap-2 md:flex-row md:items-end">
-            <div className="flex-1">
-              <p className="text-xs text-text-secondary mb-1">
-                {t('dao_withdraw_amount_label')}
-              </p>
-              <Input
-                type="number"
-                min={0}
-                value={withdrawalAmount}
-                onChange={(e) => onWithdrawalAmountChange?.(e.target.value)}
-                placeholder={t('dao_withdraw_amount_placeholder')}
-                disabled={!onWithdrawalAmountChange}
-              />
-            </div>
-            <Button
-              type="button"
-              variant="rounded_primary"
-              size="sm"
-              onClick={onProposeWithdrawal}
-              disabled={!onProposeWithdrawal || isWithdrawing}
-              className="md:self-end"
-            >
-              {isWithdrawing
-                ? t('dao_withdraw_requesting')
-                : t('dao_withdraw_request_button')}
-            </Button>
-          </div>
-
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-text-primary">
-              {t('dao_withdraw_proposals')}
-            </p>
-            {proposalsLoading ? (
-              <p className="text-sm text-text-secondary">
-                {t('dao_withdraw_loading')}
-              </p>
-            ) : proposals.length === 0 ? (
-              <p className="text-sm text-text-secondary">
-                {t('dao_withdraw_empty')}
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {proposals.map((proposal) => (
-                  <div
-                    key={proposal.id}
-                    className="flex flex-col gap-2 rounded-md border border-border/60 px-3 py-2 md:flex-row md:items-center md:justify-between"
-                  >
-                    <div className="text-sm text-text-primary">
-                      <p>
-                        {t('dao_withdraw_proposal_id', { id: proposal.id })}
-                      </p>
-                      <p className="text-xs text-text-secondary">
-                        {t('dao_withdraw_proposal_amount', {
-                          amount: proposal.amount,
-                        })}
-                      </p>
-                      <p className="text-xs text-text-secondary">
-                        {t('dao_withdraw_proposal_approvals', {
-                          approvals: proposal.approvals,
-                        })}
-                      </p>
-                      <p className="text-xs text-text-secondary">
-                        {proposal.executed
-                          ? t('dao_withdraw_proposal_executed')
-                          : t('dao_withdraw_proposal_pending')}
-                      </p>
-                    </div>
-                    {!proposal.executed &&
-                      canApproveWithdrawal &&
-                      !proposal.approvedByMe && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onApproveWithdrawal?.(proposal.id)}
-                        disabled={!onApproveWithdrawal || isApprovingWithdrawal}
-                      >
-                        {isApprovingWithdrawal
-                          ? t('dao_withdraw_approving')
-                          : t('dao_withdraw_approve_button')}
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
         </div>
 
         <div className="flex flex-wrap items-center justify-end gap-2">
@@ -376,18 +220,6 @@ export function SpaceDaoInfoCard({
             </>
           )}
 
-          {showDeposit && (
-            <Button
-              type="button"
-              variant="rounded_primary"
-              size="sm"
-              onClick={onOpenDeposit}
-              disabled={!onOpenDeposit}
-            >
-              {t('dao_info_deposit_button')}
-            </Button>
-          )}
-
           {explorerUrl && (
             <a href={explorerUrl} target="_blank" rel="noopener noreferrer">
               <svg
@@ -423,16 +255,15 @@ export function SpaceDaoInfoCard({
         />
       )}
 
-      {showDeposit && onCloseDeposit && onDepositAmountChange && onConfirmDeposit && (
-        <SpaceDaoDepositDialog
-          open={isDepositOpen}
-          depositAmount={depositAmount}
-          isDepositing={isDepositing}
-          onClose={onCloseDeposit}
-          onDepositAmountChange={onDepositAmountChange}
-          onConfirmDeposit={onConfirmDeposit}
-        />
-      )}
     </Card>
   );
+}
+
+function formatTokenBalance(balance: string, decimals: number) {
+  try {
+    if (!balance) return '0';
+    return ethers.formatUnits(balance, decimals ?? 0);
+  } catch {
+    return balance;
+  }
 }

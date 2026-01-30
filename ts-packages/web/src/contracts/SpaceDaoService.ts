@@ -10,9 +10,15 @@ const ERC20_ABI = [
   'function name() view returns (string)',
 ];
 
+const SAMPLING_ABI = [
+  'function getSamplingConfig() view returns (tuple(uint8 mode,uint256 randomCount))',
+  'function setSamplingCount(uint256 randomCount)',
+];
+
 export interface CreateSpaceDAOResult {
   daoAddress: string;
   transactionHash: string;
+  deployBlock: number;
 }
 
 export class SpaceDaoService {
@@ -57,11 +63,32 @@ export class SpaceDaoService {
 
     const addr = await contract.getAddress();
     const txHash = contract.deploymentTransaction()?.hash ?? '';
+    const deployReceipt = await contract.deploymentTransaction()?.wait();
+    const deployBlock = deployReceipt?.blockNumber ?? 0;
 
     return {
       daoAddress: addr,
       transactionHash: txHash,
+      deployBlock,
     };
+  }
+
+  async getSamplingCount(daoAddress: string): Promise<number> {
+    const dao = new ethers.Contract(daoAddress, SAMPLING_ABI, this.provider);
+    const config = await dao.getSamplingConfig();
+    const raw = config?.randomCount ?? config?.[1] ?? 0;
+    return Number(raw);
+  }
+
+  async setSamplingCount(daoAddress: string, count: number): Promise<string> {
+    if (!this.signer) await this.connectWallet();
+    if (!Number.isFinite(count) || count <= 0) {
+      throw new Error('Sampling count must be greater than 0');
+    }
+    const dao = new ethers.Contract(daoAddress, SAMPLING_ABI, this.signer);
+    const tx = await dao.setSamplingCount(count);
+    const receipt = await tx.wait();
+    return receipt.hash;
   }
 
   async spaceDeposit(

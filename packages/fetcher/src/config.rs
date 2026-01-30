@@ -6,6 +6,7 @@ use by_types::config::*;
 pub struct Config {
     // pub database: DatabaseConfig,
     pub dynamodb: DatabaseConfig,
+    pub rpc_url: String,
 
     // pub migrate: bool,
     // pub rpc_endpoint: &'static str,
@@ -14,6 +15,8 @@ pub struct Config {
 
 impl Default for Config {
     fn default() -> Self {
+        let rpc_url = option_env!("RPC_URL").expect("RPC_URL is required");
+        let rpc_url = normalize_ws_url(rpc_url);
         Config {
             dynamodb: DatabaseConfig::DynamoDb {
                 aws: AwsConfig::default(),
@@ -21,6 +24,7 @@ impl Default for Config {
                 table_prefix: option_env!("DYNAMO_TABLE_PREFIX")
                     .expect("You must set TABLE_PREFIX"),
             },
+            rpc_url,
             telegram_token: option_env!("TELEGRAM_TOKEN").filter(|s| !s.is_empty()),
             // database: DatabaseConfig::default(),
             // migrate: option_env!("MIGRATE")
@@ -28,6 +32,16 @@ impl Default for Config {
             //     .unwrap_or(false),
             // rpc_endpoint: option_env!("RPC_ENDPOINT").expect("RPC_ENDPOINT is required"),
         }
+    }
+}
+
+fn normalize_ws_url(url: &str) -> String {
+    if let Some(rest) = url.strip_prefix("https://") {
+        format!("wss://{}/ws", rest.trim_end_matches('/'))
+    } else if let Some(rest) = url.strip_prefix("http://") {
+        format!("ws://{}/ws", rest.trim_end_matches('/'))
+    } else {
+        url.to_string()
     }
 }
 

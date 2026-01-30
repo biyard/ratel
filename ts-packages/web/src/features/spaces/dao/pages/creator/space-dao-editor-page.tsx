@@ -7,12 +7,26 @@ import { RegisterDaoPopup } from '@/features/teams/dao/components/register-dao-p
 import Card from '@/components/card';
 import { useSpaceDao } from '@/features/spaces/dao/hooks/use-space-dao';
 import { SpaceDaoInfoCard } from '@/features/spaces/dao/components/space-dao-info-card';
+import { useSpaceDaoTokens } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
+import { useEffect, useState } from 'react';
 
 export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceDaoEditorPage: spacePk=${spacePk}`);
   const { t } = useTranslation('SpaceDaoEditor');
   const { data: dao, isLoading } = useSpaceDao(spacePk);
   const ctrl = useSpaceDaoEditorController(spacePk, dao);
+  const { data: tokenList, isLoading: tokensLoading } = useSpaceDaoTokens(
+    spacePk,
+    50,
+    Boolean(dao?.contract_address),
+  );
+  const [selectedToken, setSelectedToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedToken && tokenList?.items?.length) {
+      setSelectedToken(tokenList.items[0].token_address);
+    }
+  }, [selectedToken, tokenList?.items]);
 
   if (!ctrl.space || isLoading) {
     return null;
@@ -40,15 +54,7 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
           {dao ? (
             <SpaceDaoInfoCard
               dao={dao}
-              balance={ctrl.balance.get()}
-              balanceLoading={ctrl.balanceLoading.get()}
-              isDepositOpen={ctrl.isDepositOpen.get()}
-              depositAmount={ctrl.depositAmount.get()}
-              isDepositing={ctrl.isDepositing.get()}
-              onOpenDeposit={ctrl.handleOpenDeposit}
-              onCloseDeposit={ctrl.handleCloseDeposit}
-              onDepositAmountChange={ctrl.handleDepositAmountChange}
-              onConfirmDeposit={ctrl.handleConfirmDeposit}
+              samplingCount={ctrl.chainSamplingCount.get()}
               isUpdating={ctrl.isUpdating.get()}
               onUpdateDao={ctrl.handleUpdateDao}
               samples={ctrl.visibleSamples}
@@ -60,22 +66,13 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
               onNextSample={ctrl.handleNextSample}
               showSamples={Boolean(ctrl.space?.isFinished)}
               showEdit={Boolean(ctrl.space?.isDraft)}
-              showDeposit={true}
               canDistributeReward={ctrl.canDistributeReward}
               onDistributePage={ctrl.handleDistribute}
               isDistributingPage={ctrl.isDistributingPage.get()}
-              withdrawalAmount={ctrl.withdrawAmount.get()}
-              onWithdrawalAmountChange={ctrl.handleWithdrawAmountChange}
-              onProposeWithdrawal={ctrl.handleProposeWithdrawal}
-              isWithdrawing={ctrl.isWithdrawing.get()}
-              proposals={ctrl.proposals.get()}
-              proposalsLoading={ctrl.proposalsLoading.get()}
-              onApproveWithdrawal={ctrl.handleApproveWithdrawal}
-              isApprovingWithdrawal={ctrl.isApprovingWithdrawal.get()}
-              availableShare={ctrl.availableShare.get()}
-              availableShareLoading={ctrl.availableShareLoading.get()}
-              depositorCount={ctrl.depositorCount.get()}
-              canApproveWithdrawal={Number(ctrl.availableShare.get() ?? 0) > 0}
+              tokens={tokenList?.items ?? []}
+              selectedToken={selectedToken}
+              onSelectToken={setSelectedToken}
+              tokensLoading={tokensLoading}
             />
           ) : (
             <>
