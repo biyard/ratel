@@ -1,5 +1,6 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { call, RatelSdkError } from '@/lib/api/ratel/call';
+import { spaceDaoKeys } from '@/constants';
 
 export type SpaceDaoResponse = {
   contract_address: string;
@@ -26,7 +27,7 @@ export function useSpaceDao(
   spacePk: string,
 ): UseQueryResult<SpaceDaoResponse | null> {
   return useQuery({
-    queryKey: ['space-dao', spacePk],
+    queryKey: spaceDaoKeys.dao(spacePk),
     queryFn: async () => {
       try {
         return await call<void, SpaceDaoResponse>(

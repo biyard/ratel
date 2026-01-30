@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
+import { spaceDaoKeys } from '@/constants';
 
 export type CreateSpaceDaoRequest = {
   contract_address: string;
@@ -30,8 +31,8 @@ export function useCreateSpaceDaoMutation() {
       );
     },
     onSuccess: async (data, { spacePk }) => {
-      qc.setQueryData(['space-dao', spacePk], data);
-      await qc.invalidateQueries({ queryKey: ['space-dao', spacePk] });
+      qc.setQueryData(spaceDaoKeys.dao(spacePk), data);
+      await qc.invalidateQueries({ queryKey: spaceDaoKeys.dao(spacePk) });
     },
   });
 }

@@ -1,5 +1,6 @@
 import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
+import { spaceDaoKeys } from '@/constants';
 
 export type SpaceDaoTokenResponse = {
   pk: string;
@@ -22,7 +23,7 @@ export function useSpaceDaoTokens(
   enabled = true,
 ): UseQueryResult<SpaceDaoTokenListResponse> {
   return useQuery({
-    queryKey: ['space-dao-tokens', spacePk, limit],
+    queryKey: spaceDaoKeys.tokens(spacePk, limit),
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set('limit', String(limit));
