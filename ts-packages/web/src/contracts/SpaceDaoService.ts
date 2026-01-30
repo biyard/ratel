@@ -32,23 +32,16 @@ export class SpaceDaoService {
 
   async createSpaceDAO(
     admins: string[],
-    usdtAddress: string,
-    withdrawalAmount: string | bigint,
-    decimals = 6,
+    samplingCount: number,
   ): Promise<CreateSpaceDAOResult> {
     if (!this.signer) await this.connectWallet();
 
     if (admins.length < 3) {
       throw new Error('At least 3 admins are required to create a DAO');
     }
-    if (!usdtAddress) {
-      throw new Error('USDT address is required');
+    if (!Number.isFinite(samplingCount) || samplingCount <= 0) {
+      throw new Error('Sampling count must be greater than 0');
     }
-
-    const amount =
-      typeof withdrawalAmount === 'bigint'
-        ? withdrawalAmount
-        : ethers.parseUnits(withdrawalAmount, decimals);
 
     const factory = new ethers.ContractFactory(
       SpaceDaoArtifact.abi,
@@ -56,7 +49,10 @@ export class SpaceDaoService {
       this.signer!,
     );
 
-    const contract = await factory.deploy(admins, usdtAddress, amount);
+    const contract = await factory.deploy(admins, {
+      mode: 0,
+      randomCount: samplingCount,
+    });
     await contract.waitForDeployment();
 
     const addr = await contract.getAddress();

@@ -34,7 +34,6 @@ export class SpaceDaoEditorController {
     public provider: ethers.JsonRpcProvider | null,
     public adminAddresses: State<string>,
     public samplingCount: State<string>,
-    public rewardAmount: State<string>,
     public isPopupOpen: State<boolean>,
     public isRegistering: State<boolean>,
     public balance: State<string | null>,
@@ -82,12 +81,9 @@ export class SpaceDaoEditorController {
 
   get canSubmitInputs() {
     const sampling = Number(this.samplingCount.get());
-    const reward = Number(this.rewardAmount.get());
     return (
       Number.isFinite(sampling) &&
-      sampling > 0 &&
-      Number.isFinite(reward) &&
-      reward > 0
+      sampling > 0
     );
   }
 
@@ -438,11 +434,6 @@ export class SpaceDaoEditorController {
       return;
     }
 
-    if (!this.rewardAmount.get() || Number(this.rewardAmount.get()) <= 0) {
-      showErrorToast(this.t('error_invalid_reward_amount'));
-      return;
-    }
-
     this.isRegistering.set(true);
 
     try {
@@ -456,21 +447,18 @@ export class SpaceDaoEditorController {
       const daoService = new SpaceDaoService(provider);
       await daoService.connectWallet();
 
+      const sampling = Number(this.samplingCount.get());
       const result = await daoService.createSpaceDAO(
         selectedAdminAddresses,
-        config.usdt_address,
-        this.rewardAmount.get(),
+        sampling,
       );
-
-      const sampling = Number(this.samplingCount.get());
-      const reward = Number(this.rewardAmount.get());
 
       await this.createSpaceDaoMutation.mutateAsync({
         spacePk: this.spacePk,
         req: {
           contract_address: result.daoAddress,
           sampling_count: sampling,
-          reward_amount: reward,
+          reward_amount: 0,
         },
       });
 
@@ -566,7 +554,6 @@ export function useSpaceDaoEditorController(
   const { t } = useTranslation('SpaceDaoEditor');
   const adminAddresses = useState('');
   const samplingCount = useState('');
-  const rewardAmount = useState('');
   const isPopupOpen = useState(false);
   const isRegistering = useState(false);
   const balance = useState<string | null>(null);
@@ -624,7 +611,6 @@ export function useSpaceDaoEditorController(
     provider,
     new State(adminAddresses),
     new State(samplingCount),
-    new State(rewardAmount),
     new State(isPopupOpen),
     new State(isRegistering),
     new State(balance),
