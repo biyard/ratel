@@ -15,8 +15,7 @@ async fn test_create_space_dao() {
         headers: test_user.1.clone(),
         body: {
             "contract_address": "0x0000000000000000000000000000000000000001",
-            "sampling_count": 100,
-            "reward_amount": 10
+            "deploy_block": 100
         },
         response_type: SpaceDao
     };
@@ -26,8 +25,7 @@ async fn test_create_space_dao() {
         body.contract_address,
         "0x0000000000000000000000000000000000000001"
     );
-    assert_eq!(body.sampling_count, 100);
-    assert_eq!(body.reward_amount, 10);
+    assert_eq!(body.deploy_block, 100);
 }
 
 #[tokio::test]
@@ -41,8 +39,7 @@ async fn test_get_space_dao() {
         headers: test_user.1.clone(),
         body: {
             "contract_address": "0x0000000000000000000000000000000000000002",
-            "sampling_count": 50,
-            "reward_amount": 5
+            "deploy_block": 0
         },
         response_type: SpaceDao
     };
@@ -59,8 +56,7 @@ async fn test_get_space_dao() {
         body.contract_address,
         "0x0000000000000000000000000000000000000002"
     );
-    assert_eq!(body.sampling_count, 50);
-    assert_eq!(body.reward_amount, 5);
+    assert_eq!(body.deploy_block, 0);
 }
 
 #[tokio::test]

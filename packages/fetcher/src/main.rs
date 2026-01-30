@@ -1,10 +1,12 @@
 mod config;
+mod space_dao_token_indexer;
 
 use aws_config::Region;
 use aws_credential_types::Credentials;
 use bdk::prelude::*;
 
 use main_api::utils::telegram::TelegramBot;
+use std::time::Duration;
 
 // mod controllers;
 // use bdk::prelude::sqlx::PgPool;
@@ -72,6 +74,14 @@ async fn main() -> main_api::Result<()> {
     let conf = config::get();
 
     let client = get_dynamo_client();
+    let token_indexer_client = client.clone();
+    let token_indexer = tokio::spawn(space_dao_token_indexer::run_space_dao_token_indexer(
+        token_indexer_client,
+        &conf.rpc_url,
+        space_dao_token_indexer::DaoTokenIndexConfig {
+            poll_interval: Duration::from_secs(60),
+        },
+    ));
 
     let bot = if let Some(token) = conf.telegram_token {
         let res = TelegramBot::new(token).await;
@@ -93,6 +103,9 @@ async fn main() -> main_api::Result<()> {
     // let axum_handler = by_axum::serve(listener, app);
     if let Some(ref bot) = bot {
         tokio::select! {
+            _ = token_indexer => {
+                tracing::error!("Token indexer stopped unexpectedly.");
+            }
             result = bot.dispatcher(&client) => {
                 tracing::debug!("Teloxide dispatcher finished: {:?}", result);
             }
@@ -109,6 +122,14 @@ async fn main() -> main_api::Result<()> {
         }
     } else {
         // axum_handler.await.unwrap();
+        tokio::select! {
+            _ = token_indexer => {
+                tracing::error!("Token indexer stopped unexpectedly.");
+            }
+            _ = tokio::signal::ctrl_c() => {
+                tracing::info!("Received Ctrl+C, shutting down gracefully...");
+            }
+        }
     }
 
     Ok(())

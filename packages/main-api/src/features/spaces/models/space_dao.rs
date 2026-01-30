@@ -1,5 +1,6 @@
 use crate::types::*;
 use crate::utils::time::get_now_timestamp_millis;
+use aws_sdk_dynamodb::types::AttributeValue;
 use bdk::prelude::*;
 
 #[derive(
@@ -14,22 +15,22 @@ use bdk::prelude::*;
 )]
 pub struct SpaceDao {
     pub pk: Partition,
+    #[dynamo(index = "type", name = "find_by_type", pk)]
     pub sk: EntityType,
 
     pub created_at: i64,
     pub updated_at: i64,
 
     pub contract_address: String,
-    pub sampling_count: i64,
-    pub reward_amount: i64,
+    #[serde(default)]
+    pub deploy_block: i64,
 }
 
 impl SpaceDao {
     pub fn new(
         space_pk: SpacePartition,
         contract_address: String,
-        sampling_count: i64,
-        reward_amount: i64,
+        deploy_block: i64,
     ) -> Self {
         let now = get_now_timestamp_millis();
         Self {
@@ -38,8 +39,35 @@ impl SpaceDao {
             created_at: now,
             updated_at: now,
             contract_address,
-            sampling_count,
-            reward_amount,
+            deploy_block,
         }
+    }
+
+    pub async fn list_all(cli: &aws_sdk_dynamodb::Client) -> crate::Result<Vec<Self>> {
+        use serde_dynamo::from_item;
+
+        let resp = cli
+            .query()
+            .table_name(Self::table_name())
+            .index_name("type-index")
+            .key_condition_expression("#sk = :sk")
+            .expression_attribute_names("#sk", "sk")
+            .expression_attribute_values(":sk", AttributeValue::S(EntityType::SpaceDao.to_string()))
+            .send()
+            .await
+            .map_err(Into::<aws_sdk_dynamodb::Error>::into)?;
+
+        let items: Vec<Self> = resp
+            .items
+            .unwrap_or_default()
+            .into_iter()
+            .map(from_item)
+            .collect::<std::result::Result<_, _>>()?;
+
+        Ok(items)
+    }
+
+    pub fn compose_type_sk(key: impl std::fmt::Display) -> String {
+        key.to_string()
     }
 }

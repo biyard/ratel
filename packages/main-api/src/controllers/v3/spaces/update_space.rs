@@ -230,25 +230,14 @@ pub async fn update_space_handler(
             space.status = Some(SpaceStatus::Finished);
             space.block_participate = block_participate;
 
-            // FIXME: This architecture should be changed to a event fetcher structure in the future.
+            // FIXME: This architecture should be changed to an event fetcher structure in the future.
             let dao = SpaceDao::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceDao)).await?;
             if let Some(dao) = dao {
-                if dao.sampling_count > 0 {
-                    let sampled = sample_space_dao_participants(
-                        &dynamo.client,
-                        &space_pk,
-                        dao.sampling_count,
-                    )
-                    .await?;
-                    let sampled_users: Vec<String> =
-                        sampled.iter().map(|p| p.user_pk.to_string()).collect();
-                    tracing::info!(
-                        "Finish sampling: space={}, count={}, sampled={:?}",
-                        space_pk,
-                        sampled_users.len(),
-                        sampled_users
-                    );
-                }
+                tracing::info!(
+                    "Finish sampling skipped (sampling count now stored on-chain only): space={}, dao={}",
+                    space_pk,
+                    dao.contract_address
+                );
             }
         }
         UpdateSpaceRequest::Anonymous {

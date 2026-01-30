@@ -3,8 +3,7 @@ import { call, RatelSdkError } from '@/lib/api/ratel/call';
 
 export type SpaceDaoResponse = {
   contract_address: string;
-  sampling_count: number;
-  reward_amount: number;
+  deploy_block?: number;
   created_at?: number;
   updated_at?: number;
 };

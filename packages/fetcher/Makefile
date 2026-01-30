@@ -24,7 +24,7 @@ OPENAPI_KEY ?=
 SLACK_CHANNEL_BILL ?=
 SERVER_KEY ?=
 US_CONGRESS_KEY ?=
-RPC_ENDPOINT ?= https://public-en-kairos.node.kaia.io
+RPC_URL ?= https://public-en-kairos.node.kaia.io
 TELEGRAM_TOKEN ?=
 BUILD_ENV ?= ENV=$(ENV) \
                                 RUST_LOG=$(RUST_LOG) \
@@ -53,6 +53,7 @@ BUILD_ENV ?= ENV=$(ENV) \
                                 RPC_ENDPOINT=$(RPC_ENDPOINT) \
                                 DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX) \
                                 TELEGRAM_TOKEN=$(TELEGRAM_TOKEN) \
+                                RPC_URL=$(RPC_URL) \
                                 DYNAMO_ENDPOINT=$(DYNAMO_ENDPOINT) \
 								DYNAMO_TABLE_PREFIX=$(DYNAMO_TABLE_PREFIX)
 

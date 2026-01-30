@@ -25,6 +25,7 @@ contract SpaceDAO {
     address[] private _sampled;
 
     event Sampled(SamplingMode mode, uint256 count);
+    event SamplingConfigUpdated(SamplingMode mode, uint256 randomCount);
     event Distributed(address indexed token, uint256 count, uint256 value);
 
     modifier onlyAdmin() {
@@ -54,6 +55,12 @@ contract SpaceDAO {
 
     function getSamplingConfig() external view returns (SamplingConfig memory) {
         return _samplingConfig;
+    }
+
+    function setSamplingCount(uint256 randomCount) external onlyAdmin {
+        require(randomCount > 0, "SpaceDAO: invalid sample count");
+        _samplingConfig = SamplingConfig({mode: _samplingConfig.mode, randomCount: randomCount});
+        emit SamplingConfigUpdated(_samplingConfig.mode, randomCount);
     }
 
     function getSampledAddresses() external view returns (address[] memory) {

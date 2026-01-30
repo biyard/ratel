@@ -289,6 +289,7 @@ jobs:
           TELEGRAM_TOKEN: ${{ secrets.DEV_TELEGRAM_TOKEN }}
 
           DYNAMO_TABLE_PREFIX: ratel-dev
+          RPC_URL: "https://public-en-kairos.node.kaia.io"
         run: |
           make docker.build
           make docker.login
