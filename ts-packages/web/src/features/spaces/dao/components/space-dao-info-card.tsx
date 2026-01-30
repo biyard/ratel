@@ -67,8 +67,31 @@ export function SpaceDaoInfoCard({
     ? `${config.block_explorer_url}/address/${dao.contract_address}`
     : null;
 
+  const tokensWithDefault = (() => {
+    if (!config.usdt_address) return tokens;
+    const hasUsdt = tokens.some(
+      (item) =>
+        item.token_address.toLowerCase() ===
+        config.usdt_address.toLowerCase(),
+    );
+    if (hasUsdt) return tokens;
+    return [
+      {
+        token_address: config.usdt_address,
+        symbol: 'USDT',
+        decimals: 6,
+        balance: '0',
+        updated_at: Date.now(),
+        sk: `TOKEN#${config.usdt_address}`,
+        pk: `SPACE_DAO#${dao.contract_address}`,
+      },
+      ...tokens,
+    ];
+  })();
+
   const selectedTokenItem =
-    tokens.find((item) => item.token_address === selectedToken) ?? null;
+    tokensWithDefault.find((item) => item.token_address === selectedToken) ??
+    null;
   const formattedTokenBalance = selectedTokenItem
     ? formatTokenBalance(selectedTokenItem.balance, selectedTokenItem.decimals)
     : null;
@@ -162,12 +185,12 @@ export function SpaceDaoInfoCard({
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
             value={selectedToken ?? ''}
             onChange={(e) => onSelectToken?.(e.target.value)}
-            disabled={tokensLoading || tokens.length === 0}
+            disabled={tokensLoading || tokensWithDefault.length === 0}
           >
-            {tokens.length === 0 ? (
+            {tokensWithDefault.length === 0 ? (
               <option value="">{t('dao_info_token_empty')}</option>
             ) : (
-              tokens.map((item) => (
+              tokensWithDefault.map((item) => (
                 <option key={item.token_address} value={item.token_address}>
                   {item.symbol || item.token_address}
                 </option>
