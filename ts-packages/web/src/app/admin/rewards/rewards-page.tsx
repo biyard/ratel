@@ -88,7 +88,6 @@ function RewardTable({
       <div className="py-8 text-center text-gray-500">{i18n.noRewards}</div>
     );
   }
-  console.log('REAWRD', rewards);
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-full divide-y divide-gray-200 dark:divide-gray-700">

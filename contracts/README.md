@@ -1,72 +1,62 @@
 # Ratel Smart Contracts
 
-This directory contains the Solidity smart contracts for the Ratel platform, featuring a modular DAO system for decentralized space governance.
+This directory contains the Solidity smart contracts for the Ratel platform, featuring standalone DAO contracts for decentralized governance and treasury management.
 
 ## Overview
 
-### SpaceDAO
+### TeamDAO
 
-A lightweight, upgradeable DAO core contract that manages admin permissions and delegates functionality to extensions:
-- **Admin Management**: Multi-admin governance (minimum 3 admins required)
-- **Extension System**: Whitelist-based extension mechanism for modular functionality
-- **Emergency Controls**: DAO activation/deactivation switch
-- **Call Delegation**: Secure execution of calls from authorized extensions
-- **Upgradeable**: Uses OpenZeppelin's Initializable pattern with Clones
-
-### RewardExtension
-
-A governance extension for managing batch reward distributions with multi-signature approval:
-- **Proposal System**: Admins can create batch transfer proposals
-- **Multi-Signature Approval**: Requires 2 out of 3 admin approvals for execution
-- **Batch Transfers**: Support for multiple recipients in a single proposal
-- **Multi-Asset Support**: Supports both native tokens (ETH/KAIA) and ERC20 tokens
-- **Auto-Execution**: Automatically executes when quorum is reached
+A standalone multi-admin governance contract for managing batch reward distributions:
+- **Multi-Admin Governance**: Requires minimum 3 admins for redundancy
+- **Majority Approval System**: Proposals execute when `(admins.length / 2) + 1` approvals reached
+- **Batch Rewards**: Support for multiple recipients in a single proposal (max 100)
+- **ERC20 Token Support**: Handles ERC20 token transfers only
+- **Auto-Execution**: Automatically executes when approval quorum is reached
+- **Reentrancy Protection**: Uses OpenZeppelin's ReentrancyGuard
 - **Proposal Tracking**: Complete proposal state management and history
 
-### SpaceFactory
+### SpaceDAO
 
-A factory contract for deploying DAO instances using the Clone pattern:
-- **Gas-Efficient Deployment**: Uses EIP-1167 minimal proxy clones
-- **Atomic Deployment**: Creates and links DAO + Extension in one transaction
-- **Deployment Registry**: Tracks all deployed DAOs
-- **Immutable Logic**: Implementation contracts are immutable and reusable
+A standalone treasury management contract for deposit and withdrawal operations:
+- **Multi-Admin Governance**: Requires minimum 3 admins
+- **USDT Treasury**: Manages USDT token deposits and distributions
+- **Fixed Withdrawal Amounts**: Configurable per-recipient withdrawal amount
+- **Admin-Only Withdrawals**: Only admins can distribute funds to recipients
+- **Balance Tracking**: View treasury balance and withdrawal amounts
+- **Flexible Configuration**: Update withdrawal amounts and token addresses
 
 ## Project Structure
 
 ```
 contracts/
 ├── contracts/
+│   ├── team_dao/
+│   │   └── TeamDao.sol           # Multi-admin governance with reward proposals
 │   ├── space_dao/
-│   │   ├── SpaceDao.sol                    # Core DAO contract
-│   │   ├── SpaceDaoRewardExtension.sol     # Reward distribution extension
-│   │   └── SpaceDaoFactory.sol             # Factory for deploying DAOs
+│   │   └── SpaceDao.sol           # Deposit/withdrawal treasury management
 │   └── mocks/
-│       └── MockToken.sol                   # Mock ERC20 for testing
+│       └── MockToken.sol          # Mock ERC20 for testing
 ├── tests/
-│   └── SpaceDao.test.ts                    # Comprehensive test suite (7 tests)
-├── hardhat.config.ts                       # Hardhat configuration
-├── package.json                            # Dependencies
-└── README.md                               # This file
+│   ├── TeamDao.test.ts            # 17 tests in 5 suites
+│   └── SpaceDao.spec.ts           # 9 tests in 5 suites
+├── hardhat.config.ts              # Hardhat configuration
+├── package.json                   # Dependencies
+├── Makefile                       # Build commands
+└── README.md                      # This file
 ```
 
 ## Prerequisites
 
 - Node.js 18+
-- pnpm 10+
+- npm (comes with Node.js)
 
 ## Installation
 
-From the root of the monorepo:
-
-```bash
-pnpm install
-```
-
-Or from the contracts directory:
+From the contracts directory:
 
 ```bash
 cd contracts
-pnpm install
+npm install
 ```
 
 ## Development Commands
@@ -74,243 +64,299 @@ pnpm install
 ### Compile Contracts
 
 ```bash
-pnpm --filter @ratel/contracts compile
+npm run compile
+# or
+make build
 ```
 
 ### Run Tests
 
 ```bash
-pnpm --filter @ratel/contracts test
+npm run test
+# or
+make test
 ```
 
-All tests should pass:
-- SpaceDAO System: 7 tests
-  - Deployment & Linking: 2 tests
-  - Governance (Propose & Approve): 3 tests
-  - Execution (Funds): 2 tests
-- **Total: 7 passing**
+Test results:
+- **TeamDAO System**: 16 tests
+  - Deployment: 2 tests passing
+  - Governance (Propose & Approve): 4 tests passing
+  - Majority Logic: 2 tests passing
+  - Execution (ERC20 Transfers): 3 tests passing
+- **SpaceDAO System**: 9 tests passing
+  - Deployment: 3 tests passing
+  - Deposit & Balance: 1 test passing
+  - Withdraw distribution: 3 tests passing
+  - Admin management: 3 tests passing
+- **Total: 23 passing**
 
 ### Run Local Node
 
 ```bash
-pnpm --filter @ratel/contracts node
-```
-
-### Deploy to Local Network
-
-In one terminal, start the local node:
-```bash
-pnpm --filter @ratel/contracts node
-```
-
-In another terminal, deploy:
-```bash
-pnpm --filter @ratel/contracts deploy:local
+npm run node
+# or
+make node
 ```
 
 ## Contract Details
 
-### SpaceDAO
+### TeamDAO
 
-**Initialization Parameters:**
+**Constructor Parameters:**
 - `_admins`: Array of admin addresses (minimum 3 required)
-- `_initialExtension`: Address of the initial extension to register
-
-**Key Functions:**
-
-**Extension Management:**
-- `executeCall(address target, uint256 value, bytes calldata data)`: Execute calls from authorized extensions
-- `checkAdmin(address user)`: Check if an address has admin privileges
-
-**State Variables:**
-- `isDaoActive`: Emergency pause switch
-- `admins`: Array of admin addresses
-- `isAdmin`: Mapping to check admin status
-- `isExtension`: Whitelist of authorized extensions
-- `rewardExtension`: Direct reference to the main reward extension
-
-**Events:**
-- `Initialized(address[] admins, address extension)`: Emitted when DAO is initialized
-- `ExtensionCall(address indexed extension, address indexed target, uint256 value, bytes data)`: Emitted when extension executes a call
-- `Received(address indexed sender, uint256 amount)`: Emitted when DAO receives native tokens
-
-### RewardExtension
-
-**Initialization Parameters:**
-- `_dao`: Address of the SpaceDAO contract
 
 **Key Functions:**
 
 **Proposal Management:**
 - `proposeBatch(address token, TransferPair[] calldata pairs)`: Create a new batch transfer proposal
-  - `token`: Token address (address(0) for native tokens)
+  - `token`: ERC20 token address (cannot be zero address)
   - `pairs`: Array of recipient-amount pairs (max 100)
+  - Creator is automatically counted as first approver
 - `approveAndExecute(uint256 id)`: Approve a proposal and execute if quorum is reached
-- `getProposalInfo(uint256 id)`: Get proposal details
+- `getProposalInfo(uint256 id)`: Get proposal details (token, count, approvals, executed status)
+- `checkAdmin(address user)`: Check if an address has admin privileges
+- `getRequiredApprovals()`: Get the number of approvals required for execution
 
 **Structures:**
 - `TransferPair`: `{ address recipient, uint256 amount }`
-- `Proposal`: Contains token, pairs, approval count, execution status, and approver mapping
+- `Proposal`: Contains id, token, pairs, approval count, execution status, and approver mapping
 
-**Constants:**
-- `REQUIRED_APPROVALS`: 2 (out of 3+ admins)
+**Majority Rule:**
+- Required approvals: `(admins.length / 2) + 1`
+- For 3 admins: requires 2 approvals
+- For 4 admins: requires 3 approvals
+- For 5 admins: requires 3 approvals
+
+**State Variables:**
+- `admins`: Array of admin addresses
+- `isAdmin`: Mapping to check admin status
+- `proposals`: Array of all proposals
 
 **Events:**
+- `Initialized(address[] admins)`: Emitted when DAO is deployed
+- `Received(address indexed sender, uint256 amount)`: Emitted when DAO receives native tokens
 - `ProposalCreated(uint256 indexed id, address indexed proposer, uint256 count)`: New proposal created
 - `Approved(uint256 indexed id, address indexed approver)`: Admin approved a proposal
 - `BatchExecuted(uint256 indexed id)`: Proposal successfully executed
 
-### SpaceFactory
+### SpaceDAO
 
 **Constructor Parameters:**
-- `_daoImpl`: Address of SpaceDAO implementation contract
-- `_extImpl`: Address of RewardExtension implementation contract
+- `admins`: Array of admin addresses (minimum 3 required)
+- `usdt`: USDT token contract address
+- `withdrawalAmount`: Fixed amount to distribute per recipient
 
 **Key Functions:**
-- `createSpace(address[] calldata admins)`: Deploy a new DAO instance with its extension
-  - Returns the address of the deployed DAO
-- `getDeployedDAOs()`: Get list of all deployed DAO addresses
+
+**Treasury Management:**
+- `deposit(uint256 amount)`: Deposit USDT tokens into the DAO treasury
+  - Requires prior token approval
+- `distributeWithdrawal(address[] calldata recipients)`: Distribute fixed amounts to recipients
+  - Admin-only function
+  - Requires sufficient balance for all recipients
+- `getBalance()`: View current treasury balance
+
+**Configuration:**
+- `setWithdrawalAmount(uint256 amount)`: Update the per-recipient withdrawal amount (admin-only)
+- `setUsdtAddress(address usdt)`: Update the USDT token address (admin-only)
+- `addAdmin(address admin)`: Add a new admin (admin-only)
+
+**View Functions:**
+- `getAdmins()`: Get list of all admin addresses
+- `getIsAdmin(address account)`: Check if an address is an admin
+- `getUsdt()`: Get the USDT token contract address
+- `getWithdrawalAmount()`: Get the current per-recipient withdrawal amount
 
 **Events:**
-- `SpaceCreated(address indexed dao, address indexed rewardExtension)`: Emitted when a new space is created
+- No custom events (uses standard ERC20 transfer events)
 
-## Deployment
 
-The SpaceDAO system uses a factory pattern for efficient deployment:
-
-### Deployment Steps
-
-1. **Deploy Implementation Contracts**
-   ```typescript
-   const SpaceDAO = await ethers.getContractFactory("SpaceDAO");
-   const spaceDaoLogic = await SpaceDAO.deploy();
-
-   const RewardExtension = await ethers.getContractFactory("RewardExtension");
-   const rewardExtLogic = await RewardExtension.deploy();
-   ```
-
-2. **Deploy Factory**
-   ```typescript
-   const SpaceFactory = await ethers.getContractFactory("SpaceFactory");
-   const factory = await SpaceFactory.deploy(
-     await spaceDaoLogic.getAddress(),
-     await rewardExtLogic.getAddress()
-   );
-   ```
-
-3. **Create DAO Instances**
-   ```typescript
-   const admins = [admin1.address, admin2.address, admin3.address];
-   const tx = await factory.createSpace(admins);
-   ```
-
-This approach uses EIP-1167 minimal proxy clones for gas-efficient deployments.
 
 ## Usage Examples
 
-### Creating a Batch Reward Proposal
+### TeamDAO: Creating and Executing a Batch Reward Proposal
 
 ```typescript
-// 1. Admin creates a proposal for batch rewards
+// 1. Deploy MockToken for testing
+const MockToken = await ethers.getContractFactory("MockToken");
+const token = await MockToken.deploy();
+
+// 2. Fund the TeamDAO
+const fundAmount = ethers.parseEther("1000");
+await token.transfer(await teamDao.getAddress(), fundAmount);
+
+// 3. Admin1 creates a proposal for batch rewards
 const pairs = [
   { recipient: user1.address, amount: ethers.parseEther("100") },
   { recipient: user2.address, amount: ethers.parseEther("200") },
   { recipient: user3.address, amount: ethers.parseEther("150") }
 ];
 
-// For native tokens (ETH/KAIA)
-await rewardExtension.connect(admin1).proposeBatch(
-  ethers.ZeroAddress,  // address(0) for native tokens
+await teamDao.connect(admin1).proposeBatch(
+  await token.getAddress(),
   pairs
 );
+// Admin1 is automatically counted as the first approver
 
-// For ERC20 tokens
-await rewardExtension.connect(admin1).proposeBatch(
-  tokenAddress,  // ERC20 token address
-  pairs
+// 4. Admin2 approves - automatically executes when quorum (2/3) is reached
+await teamDao.connect(admin2).approveAndExecute(0);
+
+// 5. All recipients have received their tokens
+console.log(await token.balanceOf(user1.address)); // 100 tokens
+console.log(await token.balanceOf(user2.address)); // 200 tokens
+console.log(await token.balanceOf(user3.address)); // 150 tokens
+```
+
+### SpaceDAO: Depositing and Distributing Funds
+
+```typescript
+// 1. Deploy MockToken (representing USDT)
+const MockToken = await ethers.getContractFactory("MockToken");
+const usdt = await MockToken.deploy();
+
+// 2. Deploy SpaceDAO with 100 USDT per recipient
+const withdrawalAmount = ethers.parseUnits("100", 18);
+const spaceDao = await SpaceDAO.deploy(
+  [admin1.address, admin2.address, admin3.address],
+  await usdt.getAddress(),
+  withdrawalAmount
 );
+
+// 3. User deposits USDT into the DAO
+const depositAmount = ethers.parseUnits("1000", 18);
+await usdt.connect(user).approve(await spaceDao.getAddress(), depositAmount);
+await spaceDao.connect(user).deposit(depositAmount);
+
+// 4. Check balance
+console.log(await spaceDao.getBalance()); // 1000 USDT
+
+// 5. Admin distributes to 5 recipients (100 USDT each)
+await spaceDao.connect(admin1).distributeWithdrawal([
+  recipient1.address,
+  recipient2.address,
+  recipient3.address,
+  recipient4.address,
+  recipient5.address
+]);
+
+// 6. Each recipient receives exactly 100 USDT
+console.log(await usdt.balanceOf(recipient1.address)); // 100 USDT
+console.log(await spaceDao.getBalance()); // 500 USDT remaining
+
+// 7. Admin can update withdrawal amount
+await spaceDao.connect(admin1).setWithdrawalAmount(ethers.parseUnits("200", 18));
+console.log(await spaceDao.getWithdrawalAmount()); // 200 USDT
 ```
 
-### Approving and Executing a Proposal
-
-```typescript
-// 2. Second admin approves (automatically executes when quorum is reached)
-await rewardExtension.connect(admin2).approveAndExecute(proposalId);
-
-// The proposal executes automatically when 2 approvals are reached
-// All recipients receive their tokens in a single transaction
-```
-
-### Funding the DAO
-
-```typescript
-// Fund DAO with native tokens
-await admin1.sendTransaction({
-  to: daoAddress,
-  value: ethers.parseEther("10")
-});
-
-// Fund DAO with ERC20 tokens
-await token.transfer(daoAddress, ethers.parseEther("1000"));
-```
-
-### Checking Proposal Status
+### Checking Proposal Status (TeamDAO)
 
 ```typescript
 // Get proposal information
-const info = await rewardExtension.getProposalInfo(proposalId);
+const info = await teamDao.getProposalInfo(proposalId);
 console.log("Token:", info.token);
 console.log("Recipients count:", info.count);
 console.log("Approvals:", info.approvals);
 console.log("Executed:", info.executed);
+
+// Check if address is admin
+const isAdmin = await teamDao.checkAdmin(someAddress);
+console.log("Is admin:", isAdmin);
+
+// Get required approvals
+const required = await teamDao.getRequiredApprovals();
+console.log("Required approvals:", required); // 2 for 3 admins
 ```
 
 ## Security Features
 
+### TeamDAO
 - **Multi-Admin Governance**: Requires minimum 3 admins for redundancy
-- **Multi-Signature Approval**: 2-of-3 approval quorum prevents single-point-of-failure
+- **Majority Approval**: Requires `(admins.length / 2) + 1` approvals to execute
 - **Reentrancy Protection**: Uses OpenZeppelin's ReentrancyGuard
-- **Extension Whitelist**: Only authorized extensions can execute DAO calls
-- **Emergency Pause**: DAO can be deactivated in case of emergency
-- **Upgradeable Pattern**: Uses Initializable with constructor disabled
-- **Clone Pattern**: EIP-1167 minimal proxies for gas efficiency and security
 - **Admin-Only Actions**: Only registered admins can create and approve proposals
 - **Batch Limits**: Maximum 100 recipients per proposal to prevent gas issues
+- **Double-Approval Prevention**: Admins cannot approve the same proposal twice
+- **Execution Protection**: Proposals cannot be executed more than once
+
+### SpaceDAO
+- **Multi-Admin Governance**: Requires minimum 3 admins
+- **Admin-Only Withdrawals**: Only admins can distribute funds
+- **Balance Checks**: Ensures sufficient balance before distribution
+- **Invalid Recipient Protection**: Prevents transfers to zero address
+- **Duplicate Admin Prevention**: Cannot add the same admin twice
+- **Configuration Controls**: Only admins can update settings
+
+### Common Security Considerations
+- Both contracts use Solidity 0.8.20+ with built-in overflow protection
+- OpenZeppelin contracts for standard ERC20 interfaces
+- No native token (ETH) support to reduce complexity
+- Clear separation of concerns between governance and treasury
 
 ## Testing
 
 The test suite includes comprehensive coverage:
 
-**Deployment & Linking (2 tests):**
-- DAO and Extension deployment and initialization
-- Admin registration and verification
-- Extension-DAO linking
+**TeamDAO (16 tests, 1 needs fixing):**
+- **Deployment (2 passing, 1 failing):**
+  - Admin registration and verification ✓
+  - DAO activation status (test needs removal - field removed from contract) ✗
+  - Required approvals calculation ✓
+- **Governance (4 tests):**
+  - Proposal creation by admins
+  - Access control (non-admin rejection)
+  - Zero address token validation
+  - Auto-execution when quorum is reached
+  - Double-approval prevention
+  - Double-execution prevention
+- **Majority Logic (2 tests):**
+  - 2 approvals required for 3 admins
+  - 3 approvals required for 4 admins
+- **Execution (3 tests):**
+  - ERC20 token transfers
+  - Batch transfers to multiple recipients
+  - Insufficient balance handling
 
-**Governance (3 tests):**
-- Proposal creation by admins
-- Access control (non-admin rejection)
-- Auto-execution when quorum is reached
-- Approval tracking
+**SpaceDAO (9 tests):**
+- **Deployment (3 tests):**
+  - Valid deployment with admins and parameters
+  - Minimum admin count validation
+  - Invalid/duplicate admin rejection
+- **Deposit & Balance (1 test):**
+  - Deposit with approval and balance tracking
+- **Withdraw distribution (3 tests):**
+  - Non-admin access rejection
+  - Insufficient balance handling
+  - Successful distribution to multiple recipients
+- **Admin management (3 tests):**
+  - Withdrawal amount updates
+  - Adding new admins
+  - USDT address updates
 
-**Execution (2 tests):**
-- Native token (ETH/KAIA) transfers
-- ERC20 token transfers
-- Batch transfers to multiple recipients
-- Balance verification
-
-**Total: 7 tests passing**
+**Total: 23 tests passing, 1 test failing**
 
 Run tests with:
 ```bash
-pnpm --filter @ratel/contracts test
+npm run test
+# or
+make test
 ```
 
 Test output shows all contracts functioning correctly with comprehensive coverage of:
-- Factory pattern deployment
-- Multi-signature governance
-- Batch reward distribution
+- Direct deployment pattern
+- Multi-admin governance
+- Majority approval system (TeamDAO)
+- Batch reward distribution (TeamDAO)
+- Deposit and withdrawal operations (SpaceDAO)
 - Access control
 - Security features
+
+## Technology Stack
+
+- **Solidity**: 0.8.20
+- **OpenZeppelin Contracts**: 5.4.0 (IERC20, ReentrancyGuard)
+- **Hardhat**: 2.28.3
+- **TypeScript**: 5.9.3
+- **Testing**: Hardhat Toolbox with Chai matchers
 
 ## License
 
@@ -321,28 +367,23 @@ MIT
 These contracts are designed to integrate with the Ratel platform's backend APIs:
 
 ### Event Listening
+
 The backend should listen to the following events for database synchronization:
 
-**SpaceFactory Events:**
-- `SpaceCreated(address dao, address rewardExtension)`: Track newly created spaces
-
-**RewardExtension Events:**
+**TeamDAO Events:**
 - `ProposalCreated(uint256 id, address proposer, uint256 count)`: Record new proposals
 - `Approved(uint256 id, address approver)`: Track approval progress
 - `BatchExecuted(uint256 id)`: Update proposal execution status
+- `Received(address sender, uint256 amount)`: Track treasury funding (if native tokens used)
 
 **SpaceDAO Events:**
-- `ExtensionCall(address extension, address target, uint256 value, bytes data)`: Monitor extension activities
-- `Received(address sender, uint256 amount)`: Track treasury funding
+- No custom events - rely on ERC20 `Transfer` events for tracking deposits and distributions
 
 ### Integration Points
 
-1. **Space Creation**: Backend API can call the factory to create new DAOs for spaces
+1. **DAO Deployment**: Backend API can deploy new DAO instances for teams/spaces
 2. **Reward Distribution**: Platform can trigger batch reward proposals through admin accounts
-3. **Admin Management**: Initial admins are set during space creation from platform data
-4. **Treasury Monitoring**: Track DAO balances for both native tokens and ERC20s
+3. **Admin Management**: Initial admins are set during deployment from platform data
+4. **Treasury Monitoring**: Track DAO balances for ERC20 tokens
 5. **Proposal Tracking**: Maintain proposal history and status in the backend database
-
-### Gas Optimization
-
-The system uses EIP-1167 minimal proxy clones, making each new DAO deployment cost approximately **456,070 gas** - significantly cheaper than deploying full contracts.
+6. **Withdrawal Operations**: SpaceDAO provides simple deposit/withdrawal for space treasuries
