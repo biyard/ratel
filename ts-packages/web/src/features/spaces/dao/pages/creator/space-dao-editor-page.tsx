@@ -9,7 +9,7 @@ import { useSpaceDao } from '@/features/spaces/dao/hooks/use-space-dao';
 import { SpaceDaoInfoCard } from '@/features/spaces/dao/components/space-dao-info-card';
 import { useSpaceDaoTokens } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
 import { useRefreshSpaceDaoTokensMutation } from '@/features/spaces/dao/hooks/use-refresh-space-dao-tokens-mutation';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { config } from '@/config';
 
 export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
@@ -25,15 +25,37 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
   const [didRefreshTokens, setDidRefreshTokens] = useState(false);
 
+  const orderedTokens = useMemo(() => {
+    const items = tokenList?.items ?? [];
+    const usdt = config.usdt_address?.toLowerCase();
+    if (!usdt || items.length === 0) {
+      return items;
+    }
+    return [...items].sort((a, b) => {
+      const aIsUsdt = a.token_address.toLowerCase() === usdt;
+      const bIsUsdt = b.token_address.toLowerCase() === usdt;
+      if (aIsUsdt === bIsUsdt) return 0;
+      return aIsUsdt ? -1 : 1;
+    });
+  }, [tokenList?.items]);
+
   useEffect(() => {
-    if (!selectedToken && tokenList?.items?.length) {
-      setSelectedToken(tokenList.items[0].token_address);
+    if (selectedToken) return;
+    const items = orderedTokens;
+    if (items.length) {
+      const usdt = config.usdt_address?.toLowerCase();
+      const usdtItem = usdt
+        ? items.find((item) => item.token_address.toLowerCase() === usdt)
+        : null;
+      setSelectedToken(
+        (usdtItem?.token_address ?? items[0].token_address) || null,
+      );
       return;
     }
-    if (!selectedToken && !tokenList?.items?.length && config.usdt_address) {
+    if (config.usdt_address) {
       setSelectedToken(config.usdt_address);
     }
-  }, [selectedToken, tokenList?.items]);
+  }, [selectedToken, orderedTokens]);
 
   useEffect(() => {
     if (!dao?.contract_address || didRefreshTokens) return;
@@ -42,8 +64,22 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
   }, [dao?.contract_address, didRefreshTokens, refreshTokens]);
 
   const selectedTokenItem =
-    tokenList?.items?.find((item) => item.token_address === selectedToken) ??
-    null;
+    orderedTokens.find(
+      (item) =>
+        item.token_address.toLowerCase() === selectedToken?.toLowerCase(),
+    ) ?? null;
+  const preferredTokenItem = orderedTokens[0] ?? null;
+  const preferredToken = preferredTokenItem?.token_address ?? selectedToken;
+  const preferredTokenBalance =
+    preferredTokenItem?.balance ??
+    (preferredToken?.toLowerCase() === config.usdt_address?.toLowerCase()
+      ? '0'
+      : null);
+  const preferredTokenDecimals =
+    preferredTokenItem?.decimals ??
+    (preferredToken?.toLowerCase() === config.usdt_address?.toLowerCase()
+      ? 6
+      : null);
   const fallbackIsUsdt =
     Boolean(selectedToken && config.usdt_address) &&
     selectedToken?.toLowerCase() === config.usdt_address?.toLowerCase();
@@ -58,6 +94,9 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
     selectedToken,
     selectedTokenBalance,
     selectedTokenDecimals,
+    preferredToken ?? null,
+    preferredTokenBalance,
+    preferredTokenDecimals,
   );
 
   if (!ctrl.space || isLoading) {
@@ -104,7 +143,7 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
                 refreshTokens.mutate();
               }}
               isDistributingPage={ctrl.isDistributingPage.get()}
-              tokens={tokenList?.items ?? []}
+              tokens={orderedTokens}
               selectedToken={selectedToken}
               onSelectToken={setSelectedToken}
               tokensLoading={tokensLoading}
