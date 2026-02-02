@@ -19,6 +19,7 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
   );
   const refreshTokens = useRefreshSpaceDaoTokensMutation(spacePk);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
+  const [didRefreshTokens, setDidRefreshTokens] = useState(false);
 
   useEffect(() => {
     if (!selectedToken && tokenList?.items?.length) {
@@ -29,6 +30,12 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
       setSelectedToken(config.usdt_address);
     }
   }, [selectedToken, tokenList?.items]);
+
+  useEffect(() => {
+    if (!dao?.contract_address || didRefreshTokens) return;
+    refreshTokens.mutate();
+    setDidRefreshTokens(true);
+  }, [dao?.contract_address, didRefreshTokens, refreshTokens]);
 
   if (isLoading) {
     return null;

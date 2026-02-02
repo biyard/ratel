@@ -23,6 +23,7 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
   );
   const refreshTokens = useRefreshSpaceDaoTokensMutation(spacePk);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
+  const [didRefreshTokens, setDidRefreshTokens] = useState(false);
 
   useEffect(() => {
     if (!selectedToken && tokenList?.items?.length) {
@@ -33,6 +34,12 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
       setSelectedToken(config.usdt_address);
     }
   }, [selectedToken, tokenList?.items]);
+
+  useEffect(() => {
+    if (!dao?.contract_address || didRefreshTokens) return;
+    refreshTokens.mutate();
+    setDidRefreshTokens(true);
+  }, [dao?.contract_address, didRefreshTokens, refreshTokens]);
 
   const selectedTokenItem =
     tokenList?.items?.find((item) => item.token_address === selectedToken) ??
@@ -92,7 +99,10 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
               showSamples={Boolean(ctrl.space?.isFinished)}
               showEdit={Boolean(ctrl.space?.isDraft)}
               canDistributeReward={ctrl.canDistributeReward}
-              onDistributePage={ctrl.handleDistribute}
+              onDistributePage={async () => {
+                await ctrl.handleDistribute();
+                refreshTokens.mutate();
+              }}
               isDistributingPage={ctrl.isDistributingPage.get()}
               tokens={tokenList?.items ?? []}
               selectedToken={selectedToken}
