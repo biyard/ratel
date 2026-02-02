@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
-use crate::features::spaces::{SpaceDao, SpaceDaoSampleUser, SpaceDaoSampleUserQueryOption};
+use crate::features::spaces::{SpaceDao, SpaceDaoSampleUser};
 use crate::types::{EntityType, Permissions, TeamGroupPermission};
 use crate::{AppState, Error};
 use aide::NoApi;
@@ -29,20 +29,14 @@ pub async fn list_space_dao_samples_handler(
 ) -> Result<Json<ListSpaceDaoSamplesResponse>, Error> {
     permissions.permitted(TeamGroupPermission::SpaceRead)?;
 
-    let mut opt = if let Some(b) = &bookmark {
-        SpaceDaoSampleUserQueryOption::builder()
-            .sk("SPACE_DAO_SAMPLE#".into())
-            .bookmark(b.clone())
-    } else {
-        SpaceDaoSampleUserQueryOption::builder().sk("SPACE_DAO_SAMPLE#".into())
-    };
+    let mut opt = SpaceDaoSampleUser::opt_with_bookmark(bookmark);
 
     if let Some(limit) = limit {
         opt = opt.limit(limit);
     }
 
     let (items, bookmark) =
-        SpaceDaoSampleUser::query(&dynamo.client, space_pk.clone(), opt)
+        SpaceDaoSampleUser::find_by_space(&dynamo.client, &space_pk, opt)
             .await
             .map_err(|err| {
                 tracing::error!(
