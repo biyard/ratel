@@ -53,7 +53,7 @@ import ResetPasswordPage from './app/(auth)/reset-password/page';
 
 import CreatePostPage from './features/posts/components/create-post-page';
 import SpacePollsPage from './app/spaces/[id]/polls/space-polls-page';
-import SpaceAnalyzesPage from './app/spaces/[id]/analyzes/space_analyzes-page';
+import SpaceAnalyzesPage from './app/spaces/[id]/analyzes/space-analyzes-page';
 import CreateArtworkPage from './features/posts/components/create-artwork-page';
 import SpaceArtNftPreviewPage from './app/spaces/[id]/art-nfts/space-art-nft-page';
 import SpaceArtNftArtTwinPage from './app/spaces/[id]/art-nfts/space-art-nft-twin-page';
