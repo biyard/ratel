@@ -18,7 +18,6 @@ bdk = { workspace = true, features = ["be"] }
 # ethers-core = "2.0.14"
 # ethers-middleware = "2.0.14"
 # ethers = "2.0.14"
-futures = "0.3.30"
 tokio = { version = "1.40.0", features = ["full"] }
 tracing = "0.1.41"
 scraper = "0.23.1"
