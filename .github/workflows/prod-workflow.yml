@@ -124,6 +124,7 @@ jobs:
           REDIRECT_DOMAIN: https://ratel.foundation
 
           KAIA_ENDPOINT: https://public-en.node.kaia.io
+          KAIA_ARCHIVE_ENDPOINT: https://archive-en.node.kaia.io
           KAIA_FEEPAYER_KEY: ${{ secrets.PROD_KAIA_FEEPAYER_KEY }}
           KAIA_FEEPAYER_ADDR: ${{ secrets.PROD_KAIA_FEEPAYER_ADDR }}
           KAIA_OWNER_KEY: ${{ secrets.PROD_KAIA_OWNER_KEY }}
