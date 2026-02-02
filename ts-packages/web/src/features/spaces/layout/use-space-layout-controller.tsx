@@ -21,6 +21,7 @@ import { Space } from '../types/space';
 import { UserDetailResponse } from '@/lib/api/ratel/users.v3';
 import { FileResponse } from '../files/types/file-response';
 import { SpaceStatus } from '../types/space-common';
+import PublishSpaceModal from '../modals/space-publish-modal';
 
 export type SideMenuProps = {
   Icon: React.ComponentType<React.ComponentProps<'svg'>>;
@@ -140,6 +141,15 @@ export function useSpaceLayoutController(
     ],
     [space.createdAt, t],
   );
+
+  const handleActionPublish = async () => {
+    logger.debug('Action publish triggered');
+
+    popup
+      .open(<PublishSpaceModal onPublish={handlePublish} />)
+      .withTitle(t('publish_space'))
+      .withoutBackdropClose();
+  };
 
   const handlePublish = useCallback(
     async (publishType: string) => {
@@ -288,22 +298,33 @@ export function useSpaceLayoutController(
       });
     }
 
-    if (space.isStarted) {
+    // if (space.isStarted) {
+    //   ret.unshift({
+    //     label: t('finished'),
+    //     onClick: handleFinish,
+    //   });
+    // }
+
+    if (space.isDraft) {
       ret.unshift({
-        label: t('finished'),
-        onClick: handleFinish,
+        label: t('publish'),
+        onClick: handleActionPublish,
       });
     }
 
     return ret;
   }, [
-    space,
     t,
     handleDelete,
+    space.isInProgress,
+    space.isPublic,
+    space.change_visibility,
+    space.spaceType,
+    space.isDraft,
     handleActionPrivate,
     handleActionPublic,
     handleStart,
-    handleFinish,
+    handleActionPublish,
   ]);
 
   const viewerActions = useMemo(() => {
@@ -335,13 +356,7 @@ export function useSpaceLayoutController(
     }
 
     return participantActions;
-  }, [
-    space,
-    adminActions,
-    viewerActions,
-    participantActions,
-    canParticipate,
-  ]);
+  }, [space, adminActions, viewerActions, participantActions, canParticipate]);
 
   const handleNextRequirement = useCallback(() => {
     logger.debug(
