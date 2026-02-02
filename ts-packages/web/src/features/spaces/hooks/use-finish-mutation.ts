@@ -3,10 +3,22 @@ import { optimisticUpdate } from '@/lib/hook-utils';
 import { SpaceCommon, SpaceStatus } from '@/features/spaces/types/space-common';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
-import { SpaceDaoCandidateListResponse } from '@/features/spaces/dao/hooks/use-space-dao-candidates';
 import { SpaceDaoService } from '@/contracts/SpaceDaoService';
 import { getKaiaSigner } from '@/lib/service/kaia-wallet-service';
 import { config } from '@/config';
+
+type SpaceDaoCandidateResponse = {
+  user_pk: string;
+  username: string;
+  display_name: string;
+  profile_url: string;
+  evm_address: string;
+};
+
+type SpaceDaoCandidateListResponse = {
+  dao_address: string | null;
+  candidates: SpaceDaoCandidateResponse[];
+};
 
 export function useFinishSpaceMutation<T extends SpaceCommon>() {
   const queryClient = useQueryClient();
