@@ -16,25 +16,26 @@ use crate::features::spaces::SpaceParticipant;
 )]
 pub struct SpaceDaoSampleUser {
     pub pk: Partition,
-    #[dynamo(index = "gsi2", sk)]
     pub sk: EntityType,
 
+    #[serde(default)]
     pub created_at: i64,
+    #[serde(default)]
     pub updated_at: i64,
-
-    #[dynamo(
-        prefix = "SPACE_DAO_SAMPLE",
-        name = "find_by_space",
-        index = "gsi2",
-        pk
-    )]
+    #[serde(default)]
     pub space_pk: Partition,
 
+    #[serde(default)]
     pub user_pk: Partition,
+    #[serde(default)]
     pub username: String,
+    #[serde(default)]
     pub display_name: String,
+    #[serde(default)]
     pub profile_url: String,
+    #[serde(default)]
     pub evm_address: String,
+    #[serde(default)]
     pub reward_distributed: bool,
 }
 

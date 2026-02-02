@@ -39,8 +39,16 @@ pub async fn create_space_dao_samples_handler(
     }
 
     let (existing, _) =
-        SpaceDaoSampleUser::find_by_space(&dynamo.client, &space_pk, SpaceDaoSampleUser::opt_all())
-            .await?;
+        SpaceDaoSampleUser::query(&dynamo.client, &space_pk, SpaceDaoSampleUser::opt_all())
+            .await
+            .map_err(|err| {
+                tracing::error!(
+                    "create_space_dao_samples: failed to load existing samples: space={} err={:?}",
+                    space_pk,
+                    err
+                );
+                err
+            })?;
     let mut existing_set = HashSet::new();
     for item in existing {
         existing_set.insert(item.evm_address.to_lowercase());
@@ -81,13 +89,9 @@ pub async fn create_space_dao_samples_handler(
 
     if !created.is_empty() {
         let created_count = created.len() as i64;
-        let dao = SpaceDao::get(
-            &dynamo.client,
-            space_pk.clone(),
-            Some(EntityType::SpaceDao),
-        )
-        .await?
-        .ok_or(Error::DaoNotFound)?;
+        let dao = SpaceDao::get(&dynamo.client, space_pk.clone(), Some(EntityType::SpaceDao))
+            .await?
+            .ok_or(Error::DaoNotFound)?;
         let remaining = dao.remaining_count + created_count;
         let total = dao.total_count + created_count;
         SpaceDao::updater(space_pk.clone(), EntityType::SpaceDao)

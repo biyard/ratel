@@ -65,6 +65,7 @@ pub enum EntityType {
     SpaceCommon,
     SpaceDao,
     SpaceDaoSample(String),
+    SpaceDaoToken(String),
     SpaceParticipant,
     SpaceInvitation,
     SpaceTemplate(String),          // template name
@@ -176,6 +177,8 @@ pub enum EntityType {
     Reward(String), // Type
 
     ContentReport,
+
+    Cursor,
 }
 
 impl TryInto<Partition> for EntityType {
