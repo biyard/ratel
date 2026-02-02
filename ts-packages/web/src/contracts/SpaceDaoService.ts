@@ -160,6 +160,25 @@ export class SpaceDaoService {
     return receipt.hash;
   }
 
+  async distribute(
+    daoAddress: string,
+    token: string,
+    recipients: string[],
+    value: bigint,
+  ): Promise<string> {
+    if (!this.signer) await this.connectWallet();
+
+    const dao = new ethers.Contract(
+      daoAddress,
+      SpaceDaoArtifact.abi,
+      this.signer,
+    );
+
+    const tx = await dao.distribute(token, recipients, value);
+    const receipt = await tx.wait();
+    return receipt.hash;
+  }
+
   async proposeShareWithdrawal(
     daoAddress: string,
     amount: string | bigint,

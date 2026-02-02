@@ -23,6 +23,8 @@ contract SpaceDAO {
 
     SamplingConfig private _samplingConfig;
     address[] private _sampled;
+    mapping(address => bool) private _isSampled;
+    mapping(address => bool) private _isRewarded;
 
     event Sampled(SamplingMode mode, uint256 count);
     event SamplingConfigUpdated(SamplingMode mode, uint256 randomCount);
@@ -67,6 +69,14 @@ contract SpaceDAO {
         return _sampled;
     }
 
+    function isSampled(address account) external view returns (bool) {
+        return _isSampled[account];
+    }
+
+    function isRewarded(address account) external view returns (bool) {
+        return _isRewarded[account];
+    }
+
     function sample(address[] calldata candidates)
         external
         onlyAdmin
@@ -97,9 +107,18 @@ contract SpaceDAO {
             picked[i] = pool[i];
         }
 
+        for (uint256 i = 0; i < _sampled.length; i++) {
+            address prev = _sampled[i];
+            _isSampled[prev] = false;
+            _isRewarded[prev] = false;
+        }
         delete _sampled;
         for (uint256 i = 0; i < picked.length; i++) {
-            _sampled.push(picked[i]);
+            address pickedAddr = picked[i];
+            require(pickedAddr != address(0), "SpaceDAO: invalid recipient");
+            _isSampled[pickedAddr] = true;
+            _isRewarded[pickedAddr] = false;
+            _sampled.push(pickedAddr);
         }
 
         emit Sampled(_samplingConfig.mode, picked.length);
@@ -122,7 +141,10 @@ contract SpaceDAO {
         for (uint256 i = 0; i < recipients.length; i++) {
             address to = recipients[i];
             require(to != address(0), "SpaceDAO: invalid recipient");
+            require(_isSampled[to], "SpaceDAO: not sampled");
+            require(!_isRewarded[to], "SpaceDAO: reward finished");
             require(erc20.transfer(to, value), "SpaceDAO: transfer failed");
+            _isRewarded[to] = true;
         }
 
         emit Distributed(token, recipients.length, value);
