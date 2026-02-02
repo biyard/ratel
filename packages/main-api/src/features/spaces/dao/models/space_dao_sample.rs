@@ -2,7 +2,7 @@ use crate::types::*;
 use crate::utils::time::get_now_timestamp_millis;
 use bdk::prelude::*;
 
-use super::space_participant::SpaceParticipant;
+use crate::features::spaces::SpaceParticipant;
 
 #[derive(
     Debug,

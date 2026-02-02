@@ -162,6 +162,8 @@ export const spaceKeys = {
 // Space DAO query keys
 export const spaceDaoKeys = {
   dao: (spacePk: string) => [...spaceKeys.detail(spacePk), 'dao'] as const,
+  candidates: (spacePk: string) =>
+    [...spaceDaoKeys.dao(spacePk), 'candidates'] as const,
   samples: (spacePk: string, bookmark: string | null, limit: number) =>
     [...spaceDaoKeys.dao(spacePk), 'samples', bookmark ?? null, limit] as const,
   samplesBase: (spacePk: string) =>

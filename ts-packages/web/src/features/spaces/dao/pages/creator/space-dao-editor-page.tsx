@@ -59,8 +59,8 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
           )}
 
           {dao ? (
-      <SpaceDaoInfoCard
-        dao={dao}
+            <SpaceDaoInfoCard
+              dao={dao}
               samplingCount={ctrl.chainSamplingCount.get()}
               isUpdating={ctrl.isUpdating.get()}
               onUpdateDao={ctrl.handleUpdateDao}
@@ -76,13 +76,13 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
               canDistributeReward={ctrl.canDistributeReward}
               onDistributePage={ctrl.handleDistribute}
               isDistributingPage={ctrl.isDistributingPage.get()}
-        tokens={tokenList?.items ?? []}
-        selectedToken={selectedToken}
-        onSelectToken={setSelectedToken}
-        tokensLoading={tokensLoading}
-        onRefreshTokens={() => refreshTokens.mutate()}
-        isRefreshingTokens={refreshTokens.isPending}
-      />
+              tokens={tokenList?.items ?? []}
+              selectedToken={selectedToken}
+              onSelectToken={setSelectedToken}
+              tokensLoading={tokensLoading}
+              onRefreshTokens={() => refreshTokens.mutate()}
+              isRefreshingTokens={refreshTokens.isPending}
+            />
           ) : (
             <>
               <>

@@ -1,5 +1,4 @@
 use crate::controllers::v3::spaces::dto::*;
-use crate::features::spaces::SpaceDao;
 use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
@@ -18,7 +17,6 @@ use crate::utils::telegram::ArcTelegramBot;
 use crate::utils::time::get_now_timestamp;
 use crate::*;
 
-use crate::utils::space_dao_sampling::sample_space_dao_participants;
 use serde::Deserialize;
 #[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 #[serde(untagged)]
@@ -230,15 +228,6 @@ pub async fn update_space_handler(
             space.status = Some(SpaceStatus::Finished);
             space.block_participate = block_participate;
 
-            // FIXME: This architecture should be changed to an event fetcher structure in the future.
-            let dao = SpaceDao::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceDao)).await?;
-            if let Some(dao) = dao {
-                tracing::info!(
-                    "Finish sampling skipped (sampling count now stored on-chain only): space={}, dao={}",
-                    space_pk,
-                    dao.contract_address
-                );
-            }
         }
         UpdateSpaceRequest::Anonymous {
             anonymous_participation,

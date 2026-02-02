@@ -21,6 +21,7 @@ import {
   useSpaceDaoSamples,
 } from '@/features/spaces/dao/hooks/use-space-dao-samples';
 import { useUpdateSpaceDaoSamplesMutation } from '@/features/spaces/dao/hooks/use-update-space-dao-samples-mutation';
+import { useSpaceDaoCandidates } from '@/features/spaces/dao/hooks/use-space-dao-candidates';
 
 export class SpaceDaoEditorController {
   constructor(
@@ -62,14 +63,23 @@ export class SpaceDaoEditorController {
   }
 
   get canDistributeReward() {
+    if (this.space?.isFinished) {
+      return false;
+    }
     return this.permissions?.isAdmin() ?? false;
   }
 
   get canPrevSample() {
+    if (this.space?.isFinished) {
+      return false;
+    }
     return this.sampleHistory.get().length > 0;
   }
 
   get canNextSample() {
+    if (this.space?.isFinished) {
+      return false;
+    }
     return Boolean(this.samples?.bookmark);
   }
 
@@ -84,9 +94,7 @@ export class SpaceDaoEditorController {
 
     try {
       const service = new SpaceDaoService(this.provider);
-      const count = await service.getSamplingCount(
-        this.dao.contract_address,
-      );
+      const count = await service.getSamplingCount(this.dao.contract_address);
       this.chainSamplingCount.set(String(count));
     } catch (error) {
       console.error('Failed to fetch sampling count:', error);
@@ -296,14 +304,51 @@ export function useSpaceDaoEditorController(
   const sampleBookmark = useState<string | null>(null);
   const sampleHistory = useState<(string | null)[]>([]);
   const isDistributingPage = useState(false);
+  const sampledAddresses = useState<string[]>([]);
+  const sampledLoading = useState(false);
   const createSpaceDaoMutation = useCreateSpaceDaoMutation();
   const updateSamplesMutation = useUpdateSpaceDaoSamplesMutation();
+  const isFinished = Boolean(space?.isFinished);
   const { data: samples, isLoading: samplesLoading } = useSpaceDaoSamples(
     spacePk,
     sampleBookmark[0],
     50,
-    Boolean(dao?.contract_address),
+    Boolean(dao?.contract_address) && !isFinished,
   );
+  const { data: candidates, isLoading: candidatesLoading } =
+    useSpaceDaoCandidates(
+      spacePk,
+      Boolean(dao?.contract_address) && isFinished,
+    );
+  const sampledCandidates: SpaceDaoSampleListResponse | undefined =
+    useMemo(() => {
+      if (!candidates?.candidates || sampledAddresses[0].length === 0) {
+        return undefined;
+      }
+      const addressSet = new Set(
+        sampledAddresses[0].map((addr) => addr.toLowerCase()),
+      );
+      const items = candidates.candidates
+        .filter((item) => addressSet.has(item.evm_address.toLowerCase()))
+        .map((item) => ({
+          pk: item.user_pk,
+          sk: `SAMPLED#${item.evm_address}`,
+          user_pk: item.user_pk,
+          username: item.username,
+          display_name: item.display_name,
+          profile_url: item.profile_url,
+          evm_address: item.evm_address,
+          reward_distributed: false,
+        }));
+      return {
+        items,
+        bookmark: null,
+      };
+    }, [candidates, sampledAddresses[0]]);
+  const effectiveSamples = isFinished ? sampledCandidates : samples;
+  const effectiveSamplesLoading = isFinished
+    ? candidatesLoading || sampledLoading[0]
+    : samplesLoading;
   const provider = useMemo(() => {
     if (!config.rpc_url) {
       return null;
@@ -330,8 +375,8 @@ export function useSpaceDaoEditorController(
     new State(isUpdating),
     new State(sampleBookmark),
     new State(sampleHistory),
-    samples,
-    samplesLoading,
+    effectiveSamples,
+    effectiveSamplesLoading,
     new State(isDistributingPage),
     createSpaceDaoMutation,
     updateSamplesMutation,
@@ -340,6 +385,40 @@ export function useSpaceDaoEditorController(
   useEffect(() => {
     void ctrl.fetchSamplingCount();
   }, [dao?.contract_address, provider]);
+
+  useEffect(() => {
+    if (!isFinished || !dao?.contract_address || !provider) {
+      return;
+    }
+
+    let cancelled = false;
+    const fetchSampled = async () => {
+      sampledLoading[1](true);
+      try {
+        const service = new SpaceDaoService(provider);
+        const addresses = await service.getSampledAddresses(
+          dao.contract_address,
+        );
+        if (!cancelled) {
+          sampledAddresses[1](addresses ?? []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch sampled addresses:', error);
+        if (!cancelled) {
+          sampledAddresses[1]([]);
+        }
+      } finally {
+        if (!cancelled) {
+          sampledLoading[1](false);
+        }
+      }
+    };
+
+    fetchSampled();
+    return () => {
+      cancelled = true;
+    };
+  }, [dao?.contract_address, isFinished, provider]);
 
   return ctrl;
 }
