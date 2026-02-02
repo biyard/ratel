@@ -5,7 +5,7 @@ use crate::{AppState, Error, Permissions};
 
 use aide::NoApi;
 
-use crate::features::spaces::files::SpaceFile;
+use crate::features::spaces::files::{FileLink, FileLinkTarget, SpaceFile};
 use crate::types::File;
 use axum::extract::{Json, Path, State};
 use bdk::prelude::*;
@@ -14,6 +14,10 @@ use bdk::prelude::*;
 pub struct UpdateSpaceFileRequest {
     #[schemars(description = "Space Files")]
     pub files: Vec<File>,
+
+    #[schemars(description = "Optional: Link these files to a specific target")]
+    #[serde(default)]
+    pub link_target: Option<FileLinkTarget>,
 }
 
 #[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize, JsonSchema)]
@@ -41,7 +45,7 @@ pub async fn update_files_handler(
     let files = SpaceFile::get(&dynamo.client, &pk.clone(), Some(sk.clone())).await?;
 
     // Ensure all files have IDs before saving
-    let mut files_with_ids = req.files;
+    let mut files_with_ids = req.files.clone();
     for file in &mut files_with_ids {
         if file.id.is_empty() {
             file.id = uuid::Uuid::new_v4().to_string();
@@ -57,6 +61,20 @@ pub async fn update_files_handler(
         let files = SpaceFile::new(space_pk.clone(), files_with_ids);
 
         files.create(&dynamo.client).await?;
+    }
+
+    // Create file links if target is specified
+    if let Some(link_target) = req.link_target {
+        let file_urls: Vec<String> = req.files.iter().filter_map(|f| f.url.clone()).collect();
+        if !file_urls.is_empty() {
+            FileLink::add_link_targets_batch(
+                &dynamo.client,
+                space_pk.clone(),
+                file_urls,
+                link_target,
+            )
+            .await?;
+        }
     }
 
     let files = SpaceFile::get(&dynamo.client, &pk.clone(), Some(sk.clone())).await?;
