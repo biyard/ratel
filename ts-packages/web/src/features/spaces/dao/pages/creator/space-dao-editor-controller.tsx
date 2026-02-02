@@ -45,6 +45,9 @@ export class SpaceDaoEditorController {
     public selectedToken: string | null,
     public tokenBalance: string | null,
     public tokenDecimals: number | null,
+    public preferredToken: string | null,
+    public preferredTokenBalance: string | null,
+    public preferredTokenDecimals: number | null,
     public createSpaceDaoMutation: ReturnType<typeof useCreateSpaceDaoMutation>,
     public updateSamplesMutation: ReturnType<
       typeof useUpdateSpaceDaoSamplesMutation
@@ -123,9 +126,9 @@ export class SpaceDaoEditorController {
     const dao = this.dao;
     if (!dao?.contract_address) return;
 
-    const tokenAddress = this.selectedToken;
-    const balance = this.tokenBalance;
-    const decimals = this.tokenDecimals;
+    const tokenAddress = this.preferredToken ?? this.selectedToken;
+    const balance = this.preferredTokenBalance ?? this.tokenBalance;
+    const decimals = this.preferredTokenDecimals ?? this.tokenDecimals;
     if (!tokenAddress || !balance || decimals == null) {
       showErrorToast(this.t('error_register_failed_unknown'));
       return;
@@ -149,12 +152,12 @@ export class SpaceDaoEditorController {
       const daoService = new SpaceDaoService(provider);
       await daoService.connectWallet();
       const totalBalance = ethers.toBigInt(balance);
-      const remainingCount = this.samples?.remaining_count ?? 0;
-      if (remainingCount <= 0) {
+      const totalCount = this.samples?.remaining_count ?? candidates.length;
+      if (totalCount <= 0) {
         showErrorToast(this.t('error_register_failed_unknown'));
         return;
       }
-      const perRecipient = totalBalance / BigInt(remainingCount);
+      const perRecipient = totalBalance / BigInt(totalCount);
       if (perRecipient <= 0n) {
         showErrorToast(this.t('error_register_failed_unknown'));
         return;
@@ -313,6 +316,9 @@ export function useSpaceDaoEditorController(
   selectedToken?: string | null,
   tokenBalance?: string | null,
   tokenDecimals?: number | null,
+  preferredToken?: string | null,
+  preferredTokenBalance?: string | null,
+  preferredTokenDecimals?: number | null,
 ) {
   const { data: space } = useSpaceById(spacePk);
   const { t } = useTranslation('SpaceDaoEditor');
@@ -365,6 +371,9 @@ export function useSpaceDaoEditorController(
     selectedToken ?? null,
     tokenBalance ?? null,
     tokenDecimals ?? null,
+    preferredToken ?? null,
+    preferredTokenBalance ?? null,
+    preferredTokenDecimals ?? null,
     createSpaceDaoMutation,
     updateSamplesMutation,
   );
