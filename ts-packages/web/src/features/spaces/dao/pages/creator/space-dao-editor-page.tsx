@@ -16,7 +16,6 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceDaoEditorPage: spacePk=${spacePk}`);
   const { t } = useTranslation('SpaceDaoEditor');
   const { data: dao, isLoading } = useSpaceDao(spacePk);
-  const ctrl = useSpaceDaoEditorController(spacePk, dao);
   const { data: tokenList, isLoading: tokensLoading } = useSpaceDaoTokens(
     spacePk,
     50,
@@ -34,6 +33,25 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
       setSelectedToken(config.usdt_address);
     }
   }, [selectedToken, tokenList?.items]);
+
+  const selectedTokenItem =
+    tokenList?.items?.find((item) => item.token_address === selectedToken) ??
+    null;
+  const fallbackIsUsdt =
+    Boolean(selectedToken && config.usdt_address) &&
+    selectedToken?.toLowerCase() === config.usdt_address?.toLowerCase();
+  const selectedTokenBalance =
+    selectedTokenItem?.balance ?? (fallbackIsUsdt ? '0' : null);
+  const selectedTokenDecimals =
+    selectedTokenItem?.decimals ?? (fallbackIsUsdt ? 6 : null);
+
+  const ctrl = useSpaceDaoEditorController(
+    spacePk,
+    dao,
+    selectedToken,
+    selectedTokenBalance,
+    selectedTokenDecimals,
+  );
 
   if (!ctrl.space || isLoading) {
     return null;

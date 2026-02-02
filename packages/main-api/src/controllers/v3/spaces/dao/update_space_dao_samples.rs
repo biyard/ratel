@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::SpacePathParam;
-use crate::features::spaces::SpaceDaoSampleUser;
+use crate::features::spaces::{SpaceDao, SpaceDaoSampleUser};
 use crate::types::{EntityType, Permissions, TeamGroupPermission};
 use crate::{AppState, Error};
 use aide::NoApi;
@@ -25,17 +25,52 @@ pub async fn update_space_dao_samples_handler(
         return Err(Error::BadRequest("sample_sks is empty".to_string()));
     }
 
-    let mut updated = Vec::with_capacity(req.sample_sks.len());
-    for sk in req.sample_sks {
-        let sk = sk
+    let mut parsed_sks = Vec::with_capacity(req.sample_sks.len());
+    for sk in &req.sample_sks {
+        let parsed = sk
             .parse::<EntityType>()
             .map_err(|_| Error::BadRequest("invalid sample sk".to_string()))?;
+        parsed_sks.push(parsed);
+    }
 
+    let keys = parsed_sks
+        .iter()
+        .map(|sk| SpaceDaoSampleUser::keys(&space_pk, sk))
+        .collect::<Vec<_>>();
+    let existing = SpaceDaoSampleUser::batch_get(&dynamo.client, keys).await?;
+    let changed_count = if req.reward_distributed {
+        existing.iter().filter(|item| !item.reward_distributed).count()
+    } else {
+        existing.iter().filter(|item| item.reward_distributed).count()
+    } as i64;
+
+    let mut updated = Vec::with_capacity(parsed_sks.len());
+    for sk in parsed_sks {
         let item = SpaceDaoSampleUser::updater(&space_pk, &sk)
             .with_reward_distributed(req.reward_distributed)
             .execute(&dynamo.client)
             .await?;
         updated.push(item);
+    }
+
+    if changed_count > 0 {
+        let dao = SpaceDao::get(
+            &dynamo.client,
+            space_pk.clone(),
+            Some(EntityType::SpaceDao),
+        )
+        .await?
+        .ok_or(Error::DaoNotFound)?;
+        let delta = if req.reward_distributed {
+            -changed_count
+        } else {
+            changed_count
+        };
+        let remaining = (dao.remaining_count + delta).max(0);
+        SpaceDao::updater(space_pk.clone(), EntityType::SpaceDao)
+            .with_remaining_count(remaining)
+            .execute(&dynamo.client)
+            .await?;
     }
 
     Ok(Json(updated))

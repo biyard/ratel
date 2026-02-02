@@ -174,6 +174,9 @@ describe("SpaceDAO", function () {
       const { dao, admin1, token } = await loadFixture(deploySpaceDaoFixture);
       const recipients = [ethers.Wallet.createRandom().address];
 
+      await dao.connect(admin1).setSamplingCount(recipients.length);
+      await dao.connect(admin1).sample(recipients);
+
       await expect(
         dao.connect(admin1).distribute(await token.getAddress(), recipients, 1)
       ).to.be.revertedWith("SpaceDAO: insufficient balance");
@@ -193,6 +196,9 @@ describe("SpaceDAO", function () {
         { length: 3 },
         () => ethers.Wallet.createRandom().address
       );
+
+      await dao.connect(admin1).setSamplingCount(recipients.length);
+      await dao.connect(admin1).sample(recipients);
 
       const value = ethers.parseUnits("5", 18);
       const total = value * BigInt(recipients.length);

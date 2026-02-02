@@ -37,6 +37,14 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
           daoAddress,
           candidates.map((item) => item.evm_address),
         );
+        const sampledAddresses = await service.getSampledAddresses(daoAddress);
+        if (sampledAddresses.length > 0) {
+          await call(
+            'POST',
+            `/v3/spaces/${encodeURIComponent(spacePk)}/dao/samples`,
+            { sampled_addresses: sampledAddresses },
+          );
+        }
       }
 
       await call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
@@ -52,6 +60,9 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
       });
       await queryClient.invalidateQueries({
         queryKey: spaceDaoKeys.candidates(spacePk),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: spaceDaoKeys.samplesBase(spacePk),
       });
     },
   });

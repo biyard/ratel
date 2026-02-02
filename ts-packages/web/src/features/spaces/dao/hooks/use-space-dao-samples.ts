@@ -18,6 +18,8 @@ export type SpaceDaoSampleResponse = {
 export type SpaceDaoSampleListResponse = {
   items: SpaceDaoSampleResponse[];
   bookmark?: string | null;
+  remaining_count?: number;
+  total_count?: number;
 };
 
 export function useSpaceDaoSamples(

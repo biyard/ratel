@@ -24,6 +24,10 @@ pub struct SpaceDao {
     pub contract_address: String,
     #[serde(default)]
     pub deploy_block: i64,
+    #[serde(default)]
+    pub remaining_count: i64,
+    #[serde(default)]
+    pub total_count: i64,
 }
 
 impl SpaceDao {
@@ -40,6 +44,8 @@ impl SpaceDao {
             updated_at: now,
             contract_address,
             deploy_block,
+            remaining_count: 0,
+            total_count: 0,
         }
     }
 

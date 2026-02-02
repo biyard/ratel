@@ -39,9 +39,19 @@ pub struct SpaceDaoSampleUser {
 }
 
 impl SpaceDaoSampleUser {
-    pub fn new(space_pk: Partition, participant: SpaceParticipant, evm_address: String) -> Self {
+    pub fn keys(space_pk: &Partition, sk: &EntityType) -> (Partition, EntityType) {
+        (space_pk.clone(), sk.clone())
+    }
+
+    pub fn new(
+        space_pk: Partition,
+        user_pk: Partition,
+        username: String,
+        display_name: String,
+        profile_url: String,
+        evm_address: String,
+    ) -> Self {
         let now = get_now_timestamp_millis();
-        let user_pk = participant.user_pk.clone();
         let sk = EntityType::SpaceDaoSample(format!("TS#{}#{}", now, user_pk.to_string()));
 
         Self {
@@ -50,10 +60,10 @@ impl SpaceDaoSampleUser {
             sk,
             created_at: now,
             updated_at: now,
-            user_pk: participant.user_pk,
-            username: participant.username,
-            display_name: participant.display_name,
-            profile_url: participant.profile_url,
+            user_pk,
+            username,
+            display_name,
+            profile_url,
             evm_address,
             reward_distributed: false,
         }

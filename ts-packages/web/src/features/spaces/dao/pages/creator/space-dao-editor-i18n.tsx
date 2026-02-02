@@ -178,8 +178,7 @@ export const i18nSpaceDaoEditor = {
     dao_info_edit_saving: '저장 중...',
     dao_info_edit_cancel: '취소',
     dao_withdraw_title: '출금 요청',
-    dao_withdraw_description:
-      '출금 요청 후 예치자 과반수 승인이 필요합니다.',
+    dao_withdraw_description: '출금 요청 후 예치자 과반수 승인이 필요합니다.',
     dao_withdraw_available: '출금 가능 금액',
     dao_withdraw_depositor_count: '예치자 수',
     dao_withdraw_amount_label: '출금 요청 금액',
