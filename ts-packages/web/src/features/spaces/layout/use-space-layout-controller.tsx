@@ -14,11 +14,13 @@ import { usePublishSpaceMutation } from '../hooks/use-publish-mutation';
 import { useStartSpaceMutation } from '../hooks/use-start-mutation';
 import { useFinishSpaceMutation } from '../hooks/use-finish-mutation';
 import { useDeleteSpaceMutation } from '../hooks/use-delete-mutation';
+import { useParticipateSpaceMutation } from '../hooks/use-participate-space-mutation';
 import { logger } from '@/lib/logger';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
 import { Space } from '../types/space';
 import { UserDetailResponse } from '@/lib/api/ratel/users.v3';
 import { FileResponse } from '../files/types/file-response';
+import { SpaceStatus } from '../types/space-common';
 
 export type SideMenuProps = {
   Icon: React.ComponentType<React.ComponentProps<'svg'>>;
@@ -68,6 +70,7 @@ export function useSpaceLayoutController(
   const startSpace = useStartSpaceMutation();
   const finishSpace = useFinishSpaceMutation();
   const deleteSpace = useDeleteSpaceMutation();
+  const participateSpace = useParticipateSpaceMutation();
 
   // Requirements management state
   const [requirementIndex, setRequirementIndex] = useState(() =>
@@ -221,6 +224,41 @@ export function useSpaceLayoutController(
     });
   }, [space.pk, publishSpace]);
 
+  const handleParticipate = useCallback(async () => {
+    logger.debug('handleParticipate is called');
+
+    try {
+      // TODO: In the future, implement proper verifiable credential logic
+      // For now, using empty string as the backend has a TODO comment
+      const result = await participateSpace.mutateAsync({
+        spacePk: space.pk,
+        verifiablePresentation: '',
+      });
+
+      logger.debug('Participation successful:', result);
+      showSuccessToast(t('success_participate_space'));
+    } catch (error) {
+      logger.error('Failed to participate in space:', error);
+      showErrorToast(t('failed_participate_space'));
+    }
+  }, [space.pk, participateSpace, t]);
+
+  const canParticipate = useCallback(() => {
+    // User can participate if:
+    // 1. User is authenticated
+    // 2. User is not already a space admin
+    // 3. User is not already an anonymous space participant
+    if (space.participated) {
+      return false;
+    }
+
+    if (space.isAdmin()) {
+      return false;
+    }
+
+    return space.canParticipate;
+  }, [space]);
+
   const adminActions = useMemo(() => {
     const ret: Array<{ label: string; onClick: () => Promise<void> }> = [
       {
@@ -268,6 +306,43 @@ export function useSpaceLayoutController(
     handleFinish,
   ]);
 
+  const viewerActions = useMemo(() => {
+    const ret: Array<{ label: string; onClick: () => Promise<void> }> = [
+      {
+        label: t('action_participate'),
+        onClick: handleParticipate,
+      },
+    ];
+
+    return ret;
+  }, [t, handleParticipate]);
+
+  const participantActions = useMemo(() => {
+    const ret: Array<{ label: string; onClick: () => Promise<void> }> = [];
+
+    return ret;
+  }, []);
+
+  const actions = useMemo(() => {
+    if (space.isAdmin()) {
+      return adminActions;
+    } else if (
+      space.shouldParticipateManually() &&
+      canParticipate() &&
+      space.status === SpaceStatus.InProgress
+    ) {
+      return viewerActions;
+    }
+
+    return participantActions;
+  }, [
+    space,
+    adminActions,
+    viewerActions,
+    participantActions,
+    canParticipate,
+  ]);
+
   const handleNextRequirement = useCallback(() => {
     logger.debug(
       'handleNextRequirement called, current index:',
@@ -306,7 +381,7 @@ export function useSpaceLayoutController(
     handleActionPrivate,
     handleActionPublic,
     adminActions,
-    actions: space.isAdmin() ? adminActions : [],
+    actions,
     shouldShowLayout: !shouldHideLayout,
     isAdmin: space.isAdmin(),
     handleTitleChange,
