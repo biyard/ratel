@@ -16,9 +16,7 @@ abigen!(
 );
 
 pub fn parse_address(value: &str) -> Result<Address, Error> {
-    value
-        .parse::<Address>()
-        .map_err(|_| Error::BadRequest("invalid dao address".to_string()))
+    value.parse::<Address>().map_err(|_| Error::InvalidResource)
 }
 
 pub fn format_addr(addr: Address) -> String {
@@ -49,14 +47,14 @@ pub async fn fetch_transfer_logs(
         .from_block(from_block)
         .to_block(to_block);
 
-    let mut logs = provider
-        .get_logs(&filter_from)
-        .await
-        .map_err(|err| Error::InternalServerError(format!("archive get_logs failed: {err:?}")))?;
-    let mut logs_to = provider
-        .get_logs(&filter_to)
-        .await
-        .map_err(|err| Error::InternalServerError(format!("archive get_logs failed: {err:?}")))?;
+    let mut logs = provider.get_logs(&filter_from).await.map_err(|err| {
+        tracing::error!("archive get_logs failed: {err:?}");
+        Error::InternalServerError("archive get_logs failed".to_string())
+    })?;
+    let mut logs_to = provider.get_logs(&filter_to).await.map_err(|err| {
+        tracing::error!("archive get_logs failed: {err:?}");
+        Error::InternalServerError("archive get_logs failed".to_string())
+    })?;
     logs.append(&mut logs_to);
 
     let mut seen = HashSet::new();

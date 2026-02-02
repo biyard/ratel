@@ -319,6 +319,11 @@ pub enum Error {
     #[error("attribute code not found")]
     AttributeCodeNotFound,
 
+    // Dao errors 11,050 ~
+    #[error("Not Found DAO")]
+    #[rest_error(code = 10000)]
+    DaoNotFound,
+
     #[error("analyze not found")]
     AnalyzeNotFound,
 

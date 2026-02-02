@@ -4,6 +4,7 @@ import { useSpaceDaoViewerController } from './space-dao-viewer-controller';
 import { useSpaceDao } from '@/features/spaces/dao/hooks/use-space-dao';
 import { SpaceDaoInfoCard } from '@/features/spaces/dao/components/space-dao-info-card';
 import { useSpaceDaoTokens } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
+import { useRefreshSpaceDaoTokensMutation } from '@/features/spaces/dao/hooks/use-refresh-space-dao-tokens-mutation';
 import { useEffect, useState } from 'react';
 import { config } from '@/config';
 
@@ -16,6 +17,7 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
     50,
     Boolean(dao?.contract_address),
   );
+  const refreshTokens = useRefreshSpaceDaoTokensMutation(spacePk);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -56,6 +58,8 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
         selectedToken={selectedToken}
         onSelectToken={setSelectedToken}
         tokensLoading={tokensLoading}
+        onRefreshTokens={() => refreshTokens.mutate()}
+        isRefreshingTokens={refreshTokens.isPending}
       />
     </div>
   );
