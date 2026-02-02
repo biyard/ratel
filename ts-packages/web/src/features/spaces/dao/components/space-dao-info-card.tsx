@@ -6,7 +6,11 @@ import { SpaceDaoSampleResponse } from '@/features/spaces/dao/hooks/use-space-da
 import { SpaceDaoTokenResponse } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
 import { SpaceDaoSampleTable } from './space-dao-sample-table';
 import { config } from '@/config';
-import { CheckIcon, ClipboardIcon } from '@heroicons/react/24/outline';
+import {
+  ArrowPathIcon,
+  CheckIcon,
+  ClipboardIcon,
+} from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ethers } from 'ethers';
@@ -33,6 +37,8 @@ type SpaceDaoInfoCardProps = {
   selectedToken?: string | null;
   onSelectToken?: (tokenAddress: string) => void;
   tokensLoading?: boolean;
+  onRefreshTokens?: () => void;
+  isRefreshingTokens?: boolean;
 };
 
 export function SpaceDaoInfoCard({
@@ -56,6 +62,8 @@ export function SpaceDaoInfoCard({
   selectedToken,
   onSelectToken,
   tokensLoading = false,
+  onRefreshTokens,
+  isRefreshingTokens = false,
 }: SpaceDaoInfoCardProps) {
   const { t } = useTranslation('SpaceDaoEditor');
   const [copied, setCopied] = useState(false);
@@ -71,8 +79,7 @@ export function SpaceDaoInfoCard({
     if (!config.usdt_address) return tokens;
     const hasUsdt = tokens.some(
       (item) =>
-        item.token_address.toLowerCase() ===
-        config.usdt_address.toLowerCase(),
+        item.token_address.toLowerCase() === config.usdt_address.toLowerCase(),
     );
     if (hasUsdt) return tokens;
     return [
@@ -178,9 +185,32 @@ export function SpaceDaoInfoCard({
         </div>
 
         <div className="space-y-2">
-          <p className="text-text-secondary text-sm">
-            {t('dao_info_token_label')}
-          </p>
+          <div className="flex items-center gap-2.5">
+            <p className="text-text-secondary text-sm">
+              {t('dao_info_token_label')}
+            </p>
+            {onRefreshTokens && (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  if (!isRefreshingTokens) onRefreshTokens();
+                }}
+                className={`${
+                  isRefreshingTokens
+                    ? 'opacity-60 cursor-not-allowed'
+                    : 'cursor-pointer hover:bg-muted/40'
+                }`}
+                aria-disabled={isRefreshingTokens}
+              >
+                <ArrowPathIcon
+                  className={`h-4 w-4 ${
+                    isRefreshingTokens ? 'animate-spin' : ''
+                  }`}
+                />
+              </div>
+            )}
+          </div>
           <select
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
             value={selectedToken ?? ''}
@@ -277,7 +307,6 @@ export function SpaceDaoInfoCard({
           isDistributingPage={isDistributingPage}
         />
       )}
-
     </Card>
   );
 }

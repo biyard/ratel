@@ -39,4 +39,21 @@ impl SpaceDaoTokenCursor {
     ) -> crate::Result<Option<Self>> {
         Self::get(cli, Self::compose_pk(dao_address), Some("CURSOR")).await
     }
+
+    pub async fn get_last_block(
+        cli: &aws_sdk_dynamodb::Client,
+        dao_address: impl std::fmt::Display,
+    ) -> crate::Result<Option<i64>> {
+        Ok(Self::get_by_dao(cli, dao_address).await?.map(|c| c.last_block))
+    }
+
+    pub async fn set_last_block(
+        cli: &aws_sdk_dynamodb::Client,
+        dao_address: impl std::fmt::Display,
+        block: i64,
+    ) -> crate::Result<()> {
+        let cursor = Self::new(dao_address, block);
+        cursor.upsert(cli).await?;
+        Ok(())
+    }
 }

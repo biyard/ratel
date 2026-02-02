@@ -8,6 +8,7 @@ import Card from '@/components/card';
 import { useSpaceDao } from '@/features/spaces/dao/hooks/use-space-dao';
 import { SpaceDaoInfoCard } from '@/features/spaces/dao/components/space-dao-info-card';
 import { useSpaceDaoTokens } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
+import { useRefreshSpaceDaoTokensMutation } from '@/features/spaces/dao/hooks/use-refresh-space-dao-tokens-mutation';
 import { useEffect, useState } from 'react';
 import { config } from '@/config';
 
@@ -21,6 +22,7 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
     50,
     Boolean(dao?.contract_address),
   );
+  const refreshTokens = useRefreshSpaceDaoTokensMutation(spacePk);
   const [selectedToken, setSelectedToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -57,8 +59,8 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
           )}
 
           {dao ? (
-            <SpaceDaoInfoCard
-              dao={dao}
+      <SpaceDaoInfoCard
+        dao={dao}
               samplingCount={ctrl.chainSamplingCount.get()}
               isUpdating={ctrl.isUpdating.get()}
               onUpdateDao={ctrl.handleUpdateDao}
@@ -74,11 +76,13 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
               canDistributeReward={ctrl.canDistributeReward}
               onDistributePage={ctrl.handleDistribute}
               isDistributingPage={ctrl.isDistributingPage.get()}
-              tokens={tokenList?.items ?? []}
-              selectedToken={selectedToken}
-              onSelectToken={setSelectedToken}
-              tokensLoading={tokensLoading}
-            />
+        tokens={tokenList?.items ?? []}
+        selectedToken={selectedToken}
+        onSelectToken={setSelectedToken}
+        tokensLoading={tokensLoading}
+        onRefreshTokens={() => refreshTokens.mutate()}
+        isRefreshingTokens={refreshTokens.isPending}
+      />
           ) : (
             <>
               <>
