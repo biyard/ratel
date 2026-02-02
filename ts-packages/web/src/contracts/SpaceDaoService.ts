@@ -13,6 +13,8 @@ const ERC20_ABI = [
 const SAMPLING_ABI = [
   'function getSamplingConfig() view returns (tuple(uint8 mode,uint256 randomCount))',
   'function setSamplingCount(uint256 randomCount)',
+  'function sample(address[] candidates) returns (address[])',
+  'function getSampledAddresses() view returns (address[])',
 ];
 
 export interface CreateSpaceDAOResult {
@@ -89,6 +91,26 @@ export class SpaceDaoService {
     const tx = await dao.setSamplingCount(count);
     const receipt = await tx.wait();
     return receipt.hash;
+  }
+
+  async sampleCandidates(
+    daoAddress: string,
+    candidates: string[],
+  ): Promise<string> {
+    if (!this.signer) await this.connectWallet();
+    if (candidates.length === 0) {
+      throw new Error('Candidates are required to sample');
+    }
+    const dao = new ethers.Contract(daoAddress, SAMPLING_ABI, this.signer);
+    const tx = await dao.sample(candidates);
+    const receipt = await tx.wait();
+    return receipt.hash;
+  }
+
+  async getSampledAddresses(daoAddress: string): Promise<string[]> {
+    const dao = new ethers.Contract(daoAddress, SAMPLING_ABI, this.provider);
+    const addresses = await dao.getSampledAddresses();
+    return Array.isArray(addresses) ? addresses : [];
   }
 
   async spaceDeposit(

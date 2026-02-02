@@ -1,34 +1,31 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use rand::prelude::IndexedRandom;
 
-use crate::{transact_write_items, Result};
+use crate::features::spaces::SpaceDaoCandidate;
 use crate::features::spaces::{SpaceDaoSampleUser, SpaceParticipant};
 use crate::models::user::UserEvmAddress;
 use crate::types::{EntityType, Partition};
+use crate::{Result, transact_write_items};
+use bdk::prelude::*;
 
-pub async fn sample_space_dao_participants(
+pub async fn collect_space_dao_candidate_addresses(
     cli: &aws_sdk_dynamodb::Client,
     space_pk: &Partition,
-    sampling_count: i64,
-) -> Result<Vec<SpaceDaoSampleUser>> {
-    if sampling_count <= 0 {
-        return Ok(Vec::new());
-    }
-
+) -> Result<Vec<SpaceDaoCandidate>> {
     let (participants, _bookmark) =
         SpaceParticipant::find_by_space(cli, space_pk, SpaceParticipant::opt_all()).await?;
 
-    let mut seen = HashSet::new();
-    let mut unique: Vec<SpaceParticipant> = Vec::new();
+    let mut seen_users = HashSet::new();
+    let mut unique_users: Vec<SpaceParticipant> = Vec::new();
     for participant in participants {
         let key = participant.user_pk.to_string();
-        if seen.insert(key) {
-            unique.push(participant);
+        if seen_users.insert(key) {
+            unique_users.push(participant);
         }
     }
 
-    let evm_keys: Vec<_> = unique
+    let evm_keys: Vec<_> = unique_users
         .iter()
         .map(|p| (p.user_pk.clone(), EntityType::UserEvmAddress))
         .collect();
@@ -44,41 +41,22 @@ pub async fn sample_space_dao_participants(
         evm_map.insert(evm.pk.to_string(), evm.evm_address);
     }
 
-    let mut eligible: Vec<(SpaceParticipant, String)> = Vec::new();
-    for participant in unique {
+    let mut seen_addresses = HashSet::new();
+    let mut candidates = Vec::new();
+    for participant in unique_users {
         let key = participant.user_pk.to_string();
         if let Some(evm_address) = evm_map.get(&key) {
-            eligible.push((participant, evm_address.clone()));
+            if seen_addresses.insert(evm_address.clone()) {
+                candidates.push(SpaceDaoCandidate {
+                    user_pk: key,
+                    username: participant.username,
+                    display_name: participant.display_name,
+                    profile_url: participant.profile_url,
+                    evm_address: evm_address.clone(),
+                });
+            }
         }
     }
 
-    let target = sampling_count as usize;
-    let selected: Vec<(SpaceParticipant, String)> = {
-        let mut rng = rand::rng();
-        eligible
-            .choose_multiple(&mut rng, target.min(eligible.len()))
-            .cloned()
-            .collect()
-    };
-
-    let mut results = Vec::with_capacity(selected.len());
-    for (participant, evm_address) in selected {
-        results.push(SpaceDaoSampleUser::new(
-            space_pk.clone(),
-            participant,
-            evm_address,
-        ));
-    }
-
-    if !results.is_empty() {
-        let txs: Vec<_> = results
-            .iter()
-            .map(|item| item.create_transact_write_item())
-            .collect();
-        for chunk in txs.chunks(25) {
-            transact_write_items!(cli, chunk.to_vec())?;
-        }
-    }
-
-    Ok(results)
+    Ok(candidates)
 }

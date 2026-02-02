@@ -1,10 +1,15 @@
-import { spaceKeys } from '@/constants';
+import { spaceDaoKeys, spaceKeys } from '@/constants';
 import { optimisticUpdate } from '@/lib/hook-utils';
 import { SpaceCommon, SpaceStatus } from '@/features/spaces/types/space-common';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
+import { SpaceDaoCandidateListResponse } from '@/features/spaces/dao/hooks/use-space-dao-candidates';
+import { SpaceDaoService } from '@/contracts/SpaceDaoService';
+import { getKaiaSigner } from '@/lib/service/kaia-wallet-service';
+import { config } from '@/config';
 
 export function useFinishSpaceMutation<T extends SpaceCommon>() {
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationKey: ['end-space'],
     mutationFn: async ({
@@ -14,7 +19,27 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
       spacePk: string;
       block?: boolean;
     }) => {
-      call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
+      const res = await call<void, SpaceDaoCandidateListResponse>(
+        'GET',
+        `/v3/spaces/${encodeURIComponent(spacePk)}/dao/candidates`,
+      );
+      const daoAddress = res?.dao_address ?? null;
+      const candidates = res?.candidates ?? [];
+
+      if (daoAddress && candidates.length > 0) {
+        const signer = await getKaiaSigner(
+          config.env === 'prod' ? 'mainnet' : 'testnet',
+        );
+        const provider = signer.provider;
+        const service = new SpaceDaoService(provider);
+        await service.connectWallet();
+        await service.sampleCandidates(
+          daoAddress,
+          candidates.map((item) => item.evm_address),
+        );
+      }
+
+      await call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
         finished: true,
         block_participate: block ?? false,
       });
@@ -24,6 +49,9 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
       await optimisticUpdate<T>({ queryKey: spaceQK }, (space) => {
         space.status = SpaceStatus.Finished;
         return space;
+      });
+      await queryClient.invalidateQueries({
+        queryKey: spaceDaoKeys.candidates(spacePk),
       });
     },
   });
