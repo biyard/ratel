@@ -1,4 +1,5 @@
 use crate::controllers::v3::spaces::SpacePathParam;
+use crate::features::spaces::files::{FileLink, FileLinkTarget, SpaceFile};
 use crate::features::spaces::recommendations::{SpaceRecommendation, SpaceRecommendationResponse};
 
 use crate::types::{File, Partition, TeamGroupPermission};
@@ -33,8 +34,65 @@ pub async fn update_recommendation_handler(
 
     match req {
         UpdateRecommendationRequest::File { files } => {
+            let (pk, sk) = SpaceRecommendation::keys(&space_pk);
+            let existing = SpaceRecommendation::get(&dynamo.client, pk, Some(sk)).await?;
+            let old_file_urls: Vec<String> = existing
+                .as_ref()
+                .map(|r| r.files.iter().filter_map(|f| f.url.clone()).collect())
+                .unwrap_or_default();
+
             let recommendation =
-                SpaceRecommendation::update_files(&dynamo.client, space_pk, files).await?;
+                SpaceRecommendation::update_files(&dynamo.client, space_pk.clone(), files.clone())
+                    .await?;
+
+            if !files.is_empty() {
+                SpaceFile::add_files(&dynamo.client, space_pk.clone(), files.clone()).await?;
+            }
+
+            let new_file_urls: Vec<String> = files.iter().filter_map(|f| f.url.clone()).collect();
+            if !new_file_urls.is_empty() {
+                FileLink::add_link_targets_batch(
+                    &dynamo.client,
+                    space_pk.clone(),
+                    new_file_urls.clone(),
+                    FileLinkTarget::Overview,
+                )
+                .await?;
+            }
+
+            let removed_urls: Vec<String> = old_file_urls
+                .into_iter()
+                .filter(|url| !new_file_urls.contains(url))
+                .collect();
+            if !removed_urls.is_empty() {
+                FileLink::remove_link_targets_batch(
+                    &dynamo.client,
+                    &space_pk,
+                    removed_urls.clone(),
+                    &FileLinkTarget::Overview,
+                )
+                .await?;
+
+                // Also remove from SpaceFile
+                let (pk, sk) = SpaceFile::keys(&space_pk);
+                if let Some(mut space_file) =
+                    SpaceFile::get(&dynamo.client, &pk, Some(sk.clone())).await?
+                {
+                    space_file.files.retain(|f| {
+                        if let Some(url) = &f.url {
+                            !removed_urls.contains(url)
+                        } else {
+                            true
+                        }
+                    });
+
+                    SpaceFile::updater(&pk, sk)
+                        .with_files(space_file.files.clone())
+                        .execute(&dynamo.client)
+                        .await?;
+                }
+            }
+
             Ok(Json(recommendation.into()))
         }
         UpdateRecommendationRequest::Content { html_contents } => {
