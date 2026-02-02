@@ -27,7 +27,7 @@ impl SpaceDaoTokenCursor {
         let now = chrono::Utc::now().timestamp_millis();
         Self {
             pk: Self::compose_pk(dao_address),
-            sk: "CURSOR".to_string(),
+            sk: EntityType::Cursor.to_string(),
             last_block,
             updated_at: now,
         }
@@ -37,7 +37,12 @@ impl SpaceDaoTokenCursor {
         cli: &aws_sdk_dynamodb::Client,
         dao_address: impl std::fmt::Display,
     ) -> crate::Result<Option<Self>> {
-        Self::get(cli, Self::compose_pk(dao_address), Some("CURSOR")).await
+        Self::get(
+            cli,
+            Self::compose_pk(dao_address),
+            Some(EntityType::Cursor.to_string()),
+        )
+        .await
     }
 
     pub async fn get_last_block(

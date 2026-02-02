@@ -13,8 +13,8 @@ use std::collections::HashSet;
     aide::OperationIo,
 )]
 pub struct SpaceDaoToken {
-    pub pk: String,
-    pub sk: String,
+    pub pk: Partition,
+    pub sk: EntityType,
 
     pub token_address: String,
     pub symbol: String,
@@ -35,7 +35,7 @@ impl SpaceDaoToken {
         let token_address = token_address.to_string();
         Self {
             pk: Self::compose_pk(dao_address),
-            sk: format!("TOKEN#{}", token_address),
+            sk: EntityType::SpaceDaoToken(token_address.clone()),
             token_address,
             symbol,
             decimals,
@@ -44,8 +44,8 @@ impl SpaceDaoToken {
         }
     }
 
-    pub fn compose_pk(dao_address: impl std::fmt::Display) -> String {
-        format!("SPACE_DAO#{}", dao_address.to_string().to_lowercase())
+    pub fn compose_pk(dao_address: impl std::fmt::Display) -> Partition {
+        Partition::SpaceDao(dao_address.to_string().to_lowercase())
     }
 
     pub fn compose_sk(key: impl std::fmt::Display) -> String {
@@ -57,7 +57,7 @@ impl SpaceDaoToken {
         dao_address: &str,
         opt: SpaceDaoTokenQueryOption,
     ) -> crate::Result<(Vec<Self>, Option<String>)> {
-        let opt = opt.sk("TOKEN#".to_string());
+        let opt = opt.sk(EntityType::SpaceDaoToken(String::new()).to_string());
         Self::query(cli, Self::compose_pk(dao_address), opt).await
     }
 
