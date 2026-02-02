@@ -24,7 +24,7 @@ export default function TimelineMenu({
       <div className="flex flex-col w-full text-neutral-500 gap-5">
         <div className="flex flex-row font-bold text-sm justify-between">
           <div className="flex flex-row gap-2">
-            <Clock className="size-5 [&>*]:stroke-neutral-500" />
+            <Clock className="size-5 *:stroke-neutral-500" />
             {titleLabel}
           </div>
           {isEditing && (
@@ -34,7 +34,7 @@ export default function TimelineMenu({
               onClick={handleSetting}
               className="cursor-pointer"
             >
-              <Settings2 className="size-5 [&>*]:stroke-neutral-500" />
+              <Settings2 className="size-5 *:stroke-neutral-500" />
             </button>
           )}
         </div>

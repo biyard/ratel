@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import SurveyViewer from '../survey/viewer';
 import usePollSpace from '../../polls/hooks/use-poll-space';
 import { SurveyAnswer } from '../../polls/types/poll-question';
 import { logger } from '@/lib/logger';
@@ -13,6 +12,7 @@ import CompleteSurveyPopup from '../../polls/components/modal/complete_survey';
 import { useSpaceById } from '../../hooks/use-space-by-id';
 import { SpaceType } from '../../types/space-type';
 import { SpaceStatus } from '../../types/space-common';
+import SurveyViewer from '../../components/survey/viewer';
 export type PollRequirementProps = React.HTMLAttributes<HTMLDivElement> & {
   spacePk: string;
   pollSk: string;

@@ -27,7 +27,7 @@ import SpacePollPage from './app/spaces/[id]/poll/space-poll-page';
 import { TestReportPage } from './app/test-report/test-report-page';
 import { StorybookPage } from './app/storybook/stroybook-page';
 import ThreadNotFound from './app/(social)/threads/[id]/thread-not-found';
-import SpaceByIdLayout from './app/spaces/[id]/space-by-id-layout';
+import SpaceByIdLayout from './features/spaces/layout/space-by-id-layout';
 import { SpaceHomePage } from './app/spaces/[id]/space-home-page';
 import { SpaceSettingsPage } from './app/spaces/[id]/settings/space-settings-page';
 import { SpaceRewardsPage } from './app/spaces/[id]/rewards/space-rewards-page';
