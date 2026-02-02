@@ -1,9 +1,5 @@
-import { createContext, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Outlet, useLocation, useParams } from 'react-router';
-import {
-  SpaceHomeController,
-  useSpaceHomeController,
-} from './use-space-home-controller';
 import { Row } from '@/components/ui/row';
 import SpaceSideMenu from '@/features/spaces/components/space-side-menu';
 import { Col } from '@/components/ui/col';
@@ -15,21 +11,23 @@ import {
 import TimelineMenu from '@/features/spaces/components/side-menu/timeline';
 import { SpaceActions } from '@/features/spaces/components/space-actions';
 import SpaceParticipantProfile from '@/features/spaces/components/space-participant-profile';
-import { useSpaceLayoutContext } from './use-space-layout-context';
-import { Requirements } from '@/features/spaces/components/requirements';
+import { Requirements } from './requirements';
 import { SafeArea } from '@/components/ui/safe-area';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import SpaceMobileHeader from '@/features/spaces/components/space-mobile-header';
 import { cn } from '@/lib/utils';
-import RewardMenu from '@/features/spaces/rewards/components/reward-menu';
+import {
+  useSpaceLayoutController,
+  SpaceLayoutController,
+} from '@/features/spaces/layout/use-space-layout-controller';
+import { useParticipateSpaceMutation } from '@/features/spaces/hooks/use-participate-space-mutation';
+import { usePopup } from '@/lib/contexts/popup-service';
+import { logger } from '@/lib/logger';
+import SpaceAuthorizePopup from './components/space-authorize-popup';
+import { useTranslation } from 'react-i18next';
 
-export const Context = createContext<SpaceHomeController | undefined>(
-  undefined,
-);
-
-function GeneralLayout() {
-  const ctrl = useSpaceLayoutContext();
+function GeneralLayout({ ctrl }: { ctrl: SpaceLayoutController }) {
   const location = useLocation();
   const showInfo = !/\/boards\/posts(\/|$)/.test(location.pathname);
   const isMobile = useIsMobile();
@@ -86,7 +84,7 @@ function GeneralLayout() {
           />
         )}
 
-        {showInfo && (
+        {ctrl.shouldShowLayout && showInfo && (
           <Col className="gap-4 w-full min-w-0">
             <TitleSection
               canEdit={ctrl.isAdmin}
@@ -116,7 +114,7 @@ function GeneralLayout() {
       </Col>
 
       {/* Desktop Side Menu */}
-      {!isMobile && (
+      {!isMobile && ctrl.shouldShowLayout && (
         <Col className="gap-2.5 w-[250px] shrink-0">
           {ctrl.actions.length > 0 && <SpaceActions actions={ctrl.actions} />}
 
@@ -125,15 +123,6 @@ function GeneralLayout() {
           )}
 
           <SpaceSideMenu menus={ctrl.menus} />
-          {ctrl.space.rewards && (
-            <RewardMenu
-              rewardItems={[
-                { label: 'Sample Reward 1', point: 5000, isUserRewared: true },
-                { label: 'Sample Reward 2', point: 3000, isUserRewared: false },
-                { label: 'Sample Reward 3', point: 2000, isUserRewared: false },
-              ]}
-            />
-          )}
           <TimelineMenu
             isEditing={false}
             handleSetting={() => {}}
@@ -144,7 +133,7 @@ function GeneralLayout() {
       )}
 
       {/* Mobile sheet with full content */}
-      {isMobile && (
+      {isMobile && ctrl.shouldShowLayout && (
         <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
           <SheetContent side="right" className="w-full overflow-y-auto p-5">
             <Col className="gap-4 mt-4" onClick={() => setSheetOpen(false)}>
@@ -171,23 +160,63 @@ function GeneralLayout() {
 
 export default function SpaceByIdLayout() {
   const { spacePk } = useParams<{ spacePk: string }>();
-  const ctrl = useSpaceHomeController(spacePk ?? '');
+  const ctrl = useSpaceLayoutController(spacePk!);
+  const participateSpace = useParticipateSpaceMutation();
+  const popup = usePopup();
+  const { t } = useTranslation('Space');
+  const participationAttemptedRef = useRef(false);
+
+  // Authorization check - runs for ALL page access patterns
+  useEffect(() => {
+    if (participationAttemptedRef.current || participateSpace.isPending) {
+      return;
+    }
+
+    const space = ctrl.space;
+
+    if (!space) return;
+
+    const shouldAutoParticipate = space.canParticipate;
+
+    if (!shouldAutoParticipate) return;
+
+    participationAttemptedRef.current = true;
+
+    (async () => {
+      try {
+        await participateSpace.mutateAsync({
+          spacePk: spacePk ?? '',
+          verifiablePresentation: '',
+        });
+      } catch (err) {
+        logger.debug('auto participate failed: ', err);
+        console.log('auto participate failed: ', err);
+
+        popup.open(<SpaceAuthorizePopup />).withTitle(t('authorize_title'));
+      }
+    })();
+  }, [
+    spacePk,
+    ctrl.space.pk,
+    ctrl.space.canParticipate,
+    ctrl.space.status,
+    participateSpace,
+    popup,
+    t,
+    ctrl.space,
+  ]);
 
   const content =
     !ctrl.space.havePreTasks() ||
     ctrl.space.isAdmin() ||
     ctrl.space.isFinished ? (
-      <GeneralLayout />
+      <GeneralLayout ctrl={ctrl} />
     ) : ctrl.space.participated ? (
-      <Requirements />
+      <Requirements layoutCtrl={ctrl} />
     ) : (
       <></>
     );
 
   // NOTE: Must authorize permission for viewer/participant/admin before
-  return (
-    <Context.Provider value={ctrl}>
-      <SafeArea>{content}</SafeArea>
-    </Context.Provider>
-  );
+  return <SafeArea>{content}</SafeArea>;
 }

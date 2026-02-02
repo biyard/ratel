@@ -13,7 +13,7 @@ export default function SpaceAuthorizePopup() {
   return (
     <div className="w-100 max-tablet:w-full flex flex-col gap-10 items-center">
       <Col className="w-full gap-2.5">
-        <p className="text-center break-words leading-relaxed">
+        <p className="text-center wrap-break-word leading-relaxed">
           {t('authorize_desc_1')}
           <br />
           {t('authorize_desc_2')}
