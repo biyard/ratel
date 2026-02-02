@@ -330,21 +330,13 @@ export const routes = createBrowserRouter([
                 path: ':pollPk',
                 Component: SpacePollPage,
               },
-            ],
-          }, // End of Poll Feature
-
-          // Space Analyze Feature
-          {
-            id: 'space-poll-analyze-feature',
-            path: 'polls',
-            children: [
               {
                 id: 'poll-analyze-by-id',
                 path: ':pollPk/analyzes',
                 Component: SpaceAnalyzePage,
               },
             ],
-          }, // End of Analyze Feature
+          }, // End of Poll Feature
           // Space Discussion Feature
           {
             id: 'space-discussion',
