@@ -13,7 +13,11 @@ main-api = { path = "../main-api", features = ["model-only"] }
 serde.workspace = true
 serde_json.workspace = true
 bdk = { workspace = true, features = ["be"] }
-ethers = { version = "2.0.14", features = ["ws"] }
+# ethers-providers = "2.0.14"
+# ethers-contract = "2.0.14"
+# ethers-core = "2.0.14"
+# ethers-middleware = "2.0.14"
+# ethers = "2.0.14"
 futures = "0.3.30"
 tokio = { version = "1.40.0", features = ["full"] }
 tracing = "0.1.41"
