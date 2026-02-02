@@ -40,6 +40,7 @@ async fn main() {
         .build();
 
     let cli = Client::from_conf(conf);
+
     migrate_users::migrate_users(&pool, &cli).await;
     migrate_teams::migrate_teams(&pool, &cli).await;
     migrate_posts::migrate_posts(&pool, &cli).await;
