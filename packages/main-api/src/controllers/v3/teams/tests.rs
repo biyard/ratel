@@ -155,7 +155,7 @@ async fn test_get_team() {
     let owner = team_response.owner.expect("Owner should exist");
     // owner.id now contains just the UUID (not USER#uuid format)
     let user_uuid = match &test_user.0.pk {
-        Partition::User(uuid) => uuid.to_string(),
+        Partition::User(uuid) => uuid.clone(),
         _ => test_user.0.pk.to_string(),
     };
     assert_eq!(owner.id, user_uuid);

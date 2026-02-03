@@ -59,6 +59,7 @@ export const i18nSpaceHome = {
     menu_boards: 'Boards',
     menu_members: 'Members',
     menu_files: 'Files',
+    menu_dao: 'DAO',
     menu_quiz: 'Quizzes',
     menu_recommendations: 'Recommendations',
     menu_sprint_league: 'Sprint League',
@@ -157,6 +158,7 @@ export const i18nSpaceHome = {
     menu_boards: '게시판',
     menu_members: '멤버',
     menu_files: '파일',
+    menu_dao: '다오',
     menu_quiz: '퀴즈',
     menu_recommendations: '권고사항',
 

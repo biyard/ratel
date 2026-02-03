@@ -2,7 +2,7 @@ use crate::{
     AppState, Error,
     models::User,
     services::biyard::UserPointTransactionResponse,
-    types::{ListItemsQuery, ListItemsResponse, Pagination},
+    types::{ListItemsResponse, TransactionsQuery},
     utils::time as time_utils,
 };
 use aide::NoApi;
@@ -15,9 +15,10 @@ use bdk::prelude::*;
 pub async fn list_my_point_transactions_handler(
     State(AppState { biyard, .. }): State<AppState>,
     NoApi(user): NoApi<User>,
-    Query(Pagination { bookmark }): ListItemsQuery,
+    Query(TransactionsQuery { pagination, month }): Query<TransactionsQuery>,
 ) -> Result<Json<ListItemsResponse<UserPointTransactionResponse>>, Error> {
-    let month = time_utils::current_month();
+    let month = month.unwrap_or_else(|| time_utils::current_month());
+    let bookmark = pagination.bookmark;
 
     let res = biyard
         .list_user_transactions(user.pk, month, bookmark, None)

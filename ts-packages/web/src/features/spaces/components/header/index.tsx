@@ -122,6 +122,7 @@ export default function SpaceHeader({
         rewards={post.rewards ?? 0}
         isDraft={publishState === SpacePublishState.Draft}
         isPublic={visibility.type === 'Public'}
+        hasRewards={!!post.rewards}
       />
       <TitleSection
         canEdit={isEditingMode}

@@ -2,7 +2,7 @@ import { Add, Check } from '@/assets/icons/validations';
 import { Trophy } from '@/assets/icons/game';
 import Card from '@/components/card';
 
-import { useRewardsI18n } from '../i18n';
+import { useSpaceRewardsI18n } from '../i18n';
 import { cn } from '@/lib/utils';
 
 interface RewardItem {
@@ -16,7 +16,7 @@ interface RewardMenuProps {
 }
 
 export default function RewardMenu({ rewardItems }: RewardMenuProps) {
-  const i18n = useRewardsI18n();
+  const i18n = useSpaceRewardsI18n();
   const totalEstimatedValue = rewardItems.reduce(
     (sum, item) => sum + item.point,
     0,

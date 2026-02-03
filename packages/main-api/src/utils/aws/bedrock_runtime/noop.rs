@@ -21,4 +21,24 @@ impl BedrockClient {
     ) -> crate::Result<String> {
         Ok(prompt)
     }
+
+    pub async fn invoke_agent(
+        &self,
+        session_id: Option<String>,
+        prompt: String,
+    ) -> crate::Result<(String, String)> {
+        let session_id = session_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+        Ok((format!("Mock response: {}", prompt), session_id))
+    }
+
+    pub async fn retrieve_and_generate(
+        &self,
+        _knowledge_base_id: String,
+        session_id: Option<String>,
+        prompt: String,
+        _s3_uri: Option<String>,
+    ) -> crate::Result<(String, String)> {
+        let session = session_id.unwrap_or_else(|| "mock-session-id".to_string());
+        Ok((format!("Mock KB response: {}", prompt), session))
+    }
 }

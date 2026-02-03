@@ -2,7 +2,7 @@ import { SpacePathProps } from '@/features/space-path-props';
 import { useRewardViewerController } from './reward-viewer-controller';
 import { Col } from '@/components/ui/col';
 import { SpaceRewardResponse } from '../../types/space-reward-response';
-import { RewardsI18n } from '../../i18n';
+import { SpaceRewardsI18n } from '../../i18n';
 import { GiftIcon } from 'lucide-react';
 import { getRewardActionI18nKey } from '../../types/reward-type';
 
@@ -11,7 +11,7 @@ function RewardViewCard({
   t,
 }: {
   reward: SpaceRewardResponse;
-  t: RewardsI18n['settings'];
+  t: SpaceRewardsI18n['settings'];
 }) {
   return (
     <div className="border border-c-wg-20 rounded-lg p-4 bg-c-bg-card">

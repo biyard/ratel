@@ -51,10 +51,11 @@ impl Biyard {
         }
     }
 
-    fn convert_to_meta_user_id(user_pk: &Partition) -> String {
-        match user_pk {
+    fn convert_to_meta_user_id(target_pk: &Partition) -> String {
+        match target_pk {
             Partition::User(id) => id.clone(),
-            _ => panic!("Biyard user_pk must be of Partition::User type"),
+            Partition::Team(id) => id.clone(),
+            _ => panic!("Biyard target_pk must be of Partition::User or Partition::Team type"),
         }
     }
 
@@ -98,7 +99,7 @@ impl Biyard {
 
     pub async fn award_points(
         &self,
-        user_pk: Partition,
+        target_pk: Partition,
         points: i64,
         description: String,
         month: Option<String>,
@@ -106,7 +107,7 @@ impl Biyard {
         let path = format!("{}/v1/projects/{}/points", self.base_url, self.project_id);
         let body = vec![TransactPointRequest {
             tx_type: "Award".to_string(),
-            to: Some(Self::convert_to_meta_user_id(&user_pk)),
+            to: Some(Self::convert_to_meta_user_id(&target_pk)),
             from: None,
             amount: points,
             description: Some(description),
@@ -289,7 +290,6 @@ impl Biyard {
         }
 
         let res = self.cli.get(&path).send().await?;
-
         if !res.status().is_success() {
             let status = res.status();
             let error_text = res.text().await.unwrap_or_default();

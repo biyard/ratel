@@ -1,4 +1,3 @@
-#![allow(warnings)]
 use crate::{
     AppState, Error, Permissions,
     controllers::v3::spaces::{SpacePath, SpacePathParam, SpacePostPath, SpacePostPathParam},
@@ -27,8 +26,7 @@ use serde::{Deserialize, Serialize};
 
 pub async fn get_space_post_handler(
     State(AppState { dynamo, .. }): State<AppState>,
-    NoApi(user): NoApi<User>,
-    NoApi(permissions): NoApi<Permissions>,
+    NoApi(user): NoApi<Option<User>>,
     Path(SpacePostPathParam {
         space_pk,
         space_post_pk,
@@ -38,24 +36,23 @@ pub async fn get_space_post_handler(
         return Err(Error::NotFoundSpace);
     }
 
-    if !permissions.contains(TeamGroupPermission::SpaceRead) {
-        return Err(Error::NoPermission);
-    }
-
     let (pk, sk) = SpacePost::keys(&space_pk, &space_post_pk);
     let post = SpacePost::get(&dynamo.client, pk, Some(sk))
         .await?
         .ok_or(Error::PostNotFound)?;
 
     let mut post_response: SpacePostResponse = post.clone().into();
-    let is_report = ContentReport::is_reported_for_target_by_user(
-        &dynamo.client,
-        &post.clone().pk,
-        Some(&post.clone().sk),
-        &user.clone().pk,
-    )
-    .await?;
-    post_response.is_report = is_report;
+
+    if user.is_some() {
+        let is_report = ContentReport::is_reported_for_target_by_user(
+            &dynamo.client,
+            &post.clone().pk,
+            Some(&post.clone().sk),
+            &user.clone().unwrap().pk,
+        )
+        .await?;
+        post_response.is_report = is_report;
+    }
 
     Ok(Json(post_response))
 }

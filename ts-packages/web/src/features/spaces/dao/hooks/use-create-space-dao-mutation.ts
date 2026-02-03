@@ -1,0 +1,39 @@
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { call } from '@/lib/api/ratel/call';
+
+export type CreateSpaceDaoRequest = {
+  contract_address: string;
+  sampling_count: number;
+  reward_amount: number;
+};
+
+export type SpaceDaoResponse = {
+  contract_address: string;
+  sampling_count: number;
+  reward_amount: number;
+};
+
+export function useCreateSpaceDaoMutation() {
+  const qc = useQueryClient();
+
+  return useMutation({
+    mutationKey: ['create-space-dao'],
+    mutationFn: async ({
+      spacePk,
+      req,
+    }: {
+      spacePk: string;
+      req: CreateSpaceDaoRequest;
+    }) => {
+      return call<CreateSpaceDaoRequest, SpaceDaoResponse>(
+        'POST',
+        `/v3/spaces/${encodeURIComponent(spacePk)}/dao`,
+        req,
+      );
+    },
+    onSuccess: async (data, { spacePk }) => {
+      qc.setQueryData(['space-dao', spacePk], data);
+      await qc.invalidateQueries({ queryKey: ['space-dao', spacePk] });
+    },
+  });
+}

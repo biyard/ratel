@@ -1,4 +1,5 @@
 use crate::controllers::v3::spaces::dto::*;
+use crate::features::spaces::{SpaceDao, files::{FileLink, FileLinkTarget, SpaceFile}};
 use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
@@ -17,6 +18,7 @@ use crate::utils::telegram::ArcTelegramBot;
 use crate::utils::time::get_now_timestamp;
 use crate::*;
 
+use crate::utils::space_dao_sampling::sample_space_dao_participants;
 use serde::Deserialize;
 #[derive(Debug, Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
 #[serde(untagged)]
@@ -176,6 +178,59 @@ pub async fn update_space_handler(
         UpdateSpaceRequest::File { files } => {
             su = su.with_files(files.clone());
 
+            let old_file_urls: Vec<String> = space
+                .files
+                .as_ref()
+                .map(|files| files.iter().filter_map(|f| f.url.clone()).collect())
+                .unwrap_or_default();
+
+            if !files.is_empty() {
+                SpaceFile::add_files(&dynamo.client, space_pk.clone(), files.clone()).await?;
+            }
+
+            let new_file_urls: Vec<String> = files.iter().filter_map(|f| f.url.clone()).collect();
+            if !new_file_urls.is_empty() {
+                FileLink::add_link_targets_batch(
+                    &dynamo.client,
+                    space_pk.clone(),
+                    new_file_urls.clone(),
+                    FileLinkTarget::Overview,
+                )
+                .await?;
+            }
+
+            let removed_urls: Vec<String> = old_file_urls
+                .into_iter()
+                .filter(|url| !new_file_urls.contains(url))
+                .collect();
+            if !removed_urls.is_empty() {
+                // Remove file links for Overview
+                FileLink::remove_link_targets_batch(
+                    &dynamo.client,
+                    &space_pk,
+                    removed_urls.clone(),
+                    &FileLinkTarget::Overview,
+                )
+                .await?;
+
+                // Also remove from SpaceFile (Files tab)
+                let (pk, sk) = SpaceFile::keys(&space_pk);
+                if let Some(mut space_file) = SpaceFile::get(&dynamo.client, &pk, Some(sk.clone())).await? {
+                    space_file.files.retain(|f| {
+                        if let Some(url) = &f.url {
+                            !removed_urls.contains(url)
+                        } else {
+                            true
+                        }
+                    });
+                    
+                    SpaceFile::updater(&pk, sk)
+                        .with_files(space_file.files.clone())
+                        .execute(&dynamo.client)
+                        .await?;
+                }
+            }
+
             space.files = Some(files);
         }
         UpdateSpaceRequest::Title { title } => {
@@ -227,6 +282,27 @@ pub async fn update_space_handler(
 
             space.status = Some(SpaceStatus::Finished);
             space.block_participate = block_participate;
+
+            // FIXME: This architecture should be changed to a event fetcher structure in the future.
+            let dao = SpaceDao::get(&dynamo.client, &space_pk, Some(&EntityType::SpaceDao)).await?;
+            if let Some(dao) = dao {
+                if dao.sampling_count > 0 {
+                    let sampled = sample_space_dao_participants(
+                        &dynamo.client,
+                        &space_pk,
+                        dao.sampling_count,
+                    )
+                    .await?;
+                    let sampled_users: Vec<String> =
+                        sampled.iter().map(|p| p.user_pk.to_string()).collect();
+                    tracing::info!(
+                        "Finish sampling: space={}, count={}, sampled={:?}",
+                        space_pk,
+                        sampled_users.len(),
+                        sampled_users
+                    );
+                }
+            }
         }
         UpdateSpaceRequest::Anonymous {
             anonymous_participation,

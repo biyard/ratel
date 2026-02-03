@@ -39,8 +39,8 @@ pub struct UserReward {
 }
 
 impl UserReward {
-    pub fn new(space_reward: SpaceReward, user_pk: UserPartition) -> Self {
-        let (pk, sk) = Self::keys(user_pk, space_reward.get_space_pk(), space_reward.sk);
+    pub fn new(space_reward: SpaceReward, target_pk: Partition) -> Self {
+        let (pk, sk) = Self::keys(target_pk, space_reward.get_space_pk(), space_reward.sk);
         let now = time::get_now_timestamp_millis();
         Self {
             pk,
@@ -53,14 +53,20 @@ impl UserReward {
     }
 
     pub fn keys(
-        user_pk: UserPartition,
+        target_pk: Partition,
         space_pk: SpacePartition,
         reward_key: RewardKey,
     ) -> (CompositePartition, RewardKey) {
-        let user_reward: UserRewardPartition = UserRewardPartition(user_pk.0);
+        let id = match target_pk {
+            Partition::User(id) => id.clone(),
+            Partition::Team(id) => id.clone(),
+            _ => panic!("Biyard target_pk must be of Partition::User or Partition::Team type"),
+        };
+
+        let reward: UserRewardPartition = UserRewardPartition(id);
 
         (
-            CompositePartition(user_reward.into(), space_pk.into()),
+            CompositePartition(reward.into(), space_pk.into()),
             reward_key,
         )
     }
@@ -68,14 +74,15 @@ impl UserReward {
     pub async fn award(
         cli: &aws_sdk_dynamodb::Client,
         biyard: &Biyard,
-        user_pk: UserPartition,
         space_reward: SpaceReward,
+        target_pk: Partition,        // Team Or User
+        owner_pk: Option<Partition>, // Team Or User
     ) -> Result<Self> {
         let now = time::get_now_timestamp_millis();
         let space_pk = space_reward.get_space_pk();
 
         let (user_reward_pk, user_reward_sk) =
-            Self::keys(user_pk.clone(), space_pk.clone(), space_reward.sk.clone());
+            Self::keys(target_pk.clone(), space_pk.clone(), space_reward.sk.clone());
         let user_reward =
             Self::get(cli, user_reward_pk.clone(), Some(user_reward_sk.clone())).await?;
 
@@ -118,7 +125,7 @@ impl UserReward {
 
             user_reward
         } else {
-            let mut user_reward = Self::new(space_reward.clone(), user_pk.clone());
+            let mut user_reward = Self::new(space_reward.clone(), target_pk.clone());
             user_reward.total_claims += 1;
             user_reward.total_points += space_reward.get_amount();
             txs.push(user_reward.create_transact_write_item());
@@ -135,31 +142,76 @@ impl UserReward {
         );
 
         // Create UserRewardHistory
-        let mut history = UserRewardHistory::new(user_pk.clone(), space_reward.clone());
+        let mut history = UserRewardHistory::new(target_pk.clone(), space_reward.clone());
 
-        let res = biyard
+        let user_res = biyard
             .award_points(
-                user_pk.clone().into(),
+                target_pk.clone().into(),
                 space_reward.get_amount(),
                 space_reward.description.clone(),
                 None,
             )
             .await?;
 
-        history.set_transaction(res.transaction_id.clone(), res.month.clone());
-        txs.push(history.create_transact_write_item());
-        if let Err(_) = transact_write_items!(cli, txs) {
-            //When Transaction Failed. Revert Points
-            biyard
+        let owner_res = if let Some(ref owner_pk) = owner_pk {
+            let owner_amount = space_reward.get_amount() * 10 / 100;
+            match biyard
                 .award_points(
-                    user_pk.clone().into(),
+                    owner_pk.clone().into(),
+                    owner_amount,
+                    space_reward.description.clone(),
+                    None,
+                )
+                .await
+            {
+                Ok(res) => Some(res),
+                Err(e) => {
+                    // Rollback user points
+                    let _ = biyard
+                        .award_points(
+                            target_pk.clone().into(),
+                            space_reward.get_amount() * -1,
+                            "Revert Points".to_string(),
+                            Some(user_res.month.clone()),
+                        )
+                        .await;
+                    return Err(e);
+                }
+            }
+        } else {
+            None
+        };
+
+        history.set_transaction(user_res.transaction_id.clone(), user_res.month.clone());
+        txs.push(history.create_transact_write_item());
+
+        // 3. Execute DB transaction
+        if let Err(_) = transact_write_items!(cli, txs) {
+            // Rollback user points
+            let _ = biyard
+                .award_points(
+                    target_pk.clone().into(),
                     space_reward.get_amount() * -1,
                     "Revert Points".to_string(),
-                    Some(res.month),
+                    Some(user_res.month.clone()),
                 )
-                .await?;
+                .await;
+
+            // Rollback owner points (if awarded)
+            if let (Some(owner_pk), Some(owner_res)) = (owner_pk, owner_res) {
+                let _ = biyard
+                    .award_points(
+                        owner_pk.clone().into(),
+                        (space_reward.get_amount() * 10 / 100) * -1,
+                        "Revert Points".to_string(),
+                        Some(owner_res.month.clone()),
+                    )
+                    .await;
+            }
+
             return Err(Error::RewardAlreadyClaimedInPeriod);
         }
+
         Ok(user_reward)
     }
 }

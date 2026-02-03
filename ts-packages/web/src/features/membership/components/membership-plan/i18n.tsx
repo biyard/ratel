@@ -179,7 +179,7 @@ export const MembershipPlan = {
       {
         name: 'VIP',
         description:
-          '인플루언서 및 마케팅 전문 기업를 위한 보상 스페이스 기능 제공',
+          '인플루언서 및 마케팅 전문 기업을 위한 보상 스페이스 기능 제공',
         features: [
           '모든 무료 플랜 포함',
           '월별 1,360 크레딧 제공',

@@ -389,6 +389,7 @@ const UserSetupPopup = ({
           <div className="flex flex-col items-start mt-5 mb-5 gap-2.25">
             <Checkbox
               id="agree_checkbox"
+              value={agreed}
               onChange={(checked) => {
                 setAgreed(checked);
                 if (checked) {
@@ -413,6 +414,7 @@ const UserSetupPopup = ({
 
             <Checkbox
               id="announcement_checkbox"
+              value={announcementAgreed}
               onChange={setAnnouncementAgree}
             >
               <span className="text-sm text-gray-400">{t('agree_news')}</span>

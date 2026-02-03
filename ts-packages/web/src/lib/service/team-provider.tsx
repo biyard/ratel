@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import type { Team } from '@/lib/api/models/team';
+import type { Team } from '@/features/teams/types/team';
 import { useSuspenseUserInfo } from '@/hooks/use-user-info';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { useUserInfo } from '@/hooks/use-user-info';
@@ -28,10 +28,11 @@ export const TeamAuthProvider = ({
 
   useEffect(() => {
     if (user) {
-      // TODO: Update Team type to match v3 UserResponse or create proper conversion
       const userAsTeam: Team = {
-        ...user,
-        id: 0,
+        pk: user.pk,
+        nickname: user.nickname,
+        username: user.username,
+        profile_url: user.profile_url,
         created_at: 0,
         updated_at: 0,
         html_contents: user.description || '',
@@ -39,8 +40,10 @@ export const TeamAuthProvider = ({
       };
 
       const userTeamsAsTeams: Team[] = (user.teams ?? []).map((team) => ({
-        ...team,
-        id: 0,
+        pk: team.team_pk,
+        nickname: team.nickname,
+        username: team.username,
+        profile_url: team.profile_url,
         created_at: 0,
         updated_at: 0,
         html_contents: '',
@@ -57,7 +60,7 @@ export const TeamAuthProvider = ({
 
   const updateSelectedTeam = (updatedTeam: Team) => {
     const updatedTeams = teams.map((team) =>
-      team.id === updatedTeam.id ? { ...team, ...updatedTeam } : team,
+      team.pk === updatedTeam.pk ? { ...team, ...updatedTeam } : team,
     );
     setTeams(updatedTeams);
     setSelectedTeam(0);

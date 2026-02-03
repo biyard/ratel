@@ -8,12 +8,12 @@ pub struct BiyardConfig {
 impl Default for BiyardConfig {
     fn default() -> Self {
         BiyardConfig {
-            api_secret: option_env!("BIYARD_API_SECRET").unwrap_or_else(|| {
+            api_secret: option_env!("BIYARD_API_KEY").unwrap_or_else(|| {
                 tracing::warn!(
-                    "BIYARD_API_SECRET not set, using default value. Some features may not work properly."
+                    "BIYARD_API_KEY not set, using default value. Some features may not work properly."
                 );
 
-                "biyard_default_api_secret"
+                "biyard_default_api_key"
             }),
             project_id: option_env!("BIYARD_PROJECT_ID").unwrap_or_else(|| {
                 tracing::warn!(

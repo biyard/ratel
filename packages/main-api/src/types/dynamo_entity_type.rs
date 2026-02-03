@@ -63,6 +63,8 @@ pub enum EntityType {
     // Space common entity types
     // SPACE_PK index is aligned by gsi2-index
     SpaceCommon,
+    SpaceDao,
+    SpaceDaoSample(String),
     SpaceParticipant,
     SpaceInvitation,
     SpaceTemplate(String),          // template name
@@ -129,6 +131,9 @@ pub enum EntityType {
 
     //SPACE FEATURE
     SpaceFile,
+    FileLink(String), // FileLink#{file_id}
+    SpaceAnalyze,
+    SpaceAnalyzeRequest(String),
     SpaceDiscussion(String),
     SpaceDiscussionMember(String, String),
     SpaceDiscussionParticipant(String, String),
@@ -145,7 +150,8 @@ pub enum EntityType {
 
     // Membership
     Membership,
-    UserMembership, // PK: {USER_PK}, SK: UserMembership
+    UserMembership,  // PK: {USER_PK}, SK: UserMembership
+    TeamMembership,  // PK: {TEAM_PK}, SK: TeamMembership
 
     // ServiceAdmin
     ServiceAdmin, // PK: SERVICE_ADMIN#{USER_PK}, SK: ServiceAdmin
@@ -160,8 +166,10 @@ pub enum EntityType {
 
     // Payment features
     UserPayment,
+    TeamPayment,
     Purchase,
     UserPurchase(String),
+    TeamPurchase(String),
 
     Notification(String), // notification id
 

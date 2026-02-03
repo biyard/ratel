@@ -2,15 +2,22 @@ use bdk::prelude::*;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize, Clone, JsonSchema, PartialEq, Eq)]
 pub struct File {
+    #[serde(default = "generate_file_id")]
+    pub id: String,
     pub name: String,
     pub size: String,
     pub ext: FileExtension,
     pub url: Option<String>,
 }
 
+fn generate_file_id() -> String {
+    uuid::Uuid::new_v4().to_string()
+}
+
 impl Default for File {
     fn default() -> Self {
         File {
+            id: generate_file_id(),
             name: String::new(),
             size: String::new(),
             ext: FileExtension::JPG,

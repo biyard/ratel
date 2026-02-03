@@ -92,6 +92,8 @@ pub struct KaiaConfig {
 pub struct BedrockConfig {
     pub nova_micro_model_id: &'static str,
     pub nova_lite_model_id: &'static str,
+    pub agent_id: &'static str,
+    pub agent_alias_id: &'static str,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -151,12 +153,15 @@ impl Default for Config {
                     .expect("You must set NOVA_MICRO_MODEL_ID"),
                 nova_lite_model_id: option_env!("NOVA_LITE_MODEL_ID")
                     .expect("You must set NOVA_LITE_MODEL_ID"),
+                agent_id: option_env!("BEDROCK_AGENT_ID")
+                    .expect("You must set BEDROCK_AGENT_ID"),
+                agent_alias_id: option_env!("BEDROCK_AGENT_ALIAS_ID")
+                    .expect("You must set BEDROCK_AGENT_ALIAS_ID"),
             },
 
             #[cfg(not(feature = "no-secret"))]
             watermark_sqs_url: option_env!("WATERMARK_QUEUE_URL")
                 .expect("You must set WATERMARK_QUEUE_URL"),
-
             portone: PortoneConfig::default(),
             x402: X402Config::default(),
             account_id: option_env!("ACCOUNT_ID").unwrap_or(""),

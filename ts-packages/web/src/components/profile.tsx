@@ -72,7 +72,7 @@ export default function Profile({ profileUrl, name }: ProfileProps) {
           <DropdownMenuGroup>
             {teams.map((team, index) => (
               <DropdownMenuItem
-                key={`team-select-menu-${team.id}`}
+                key={`team-select-menu-${team.pk}`}
                 asChild
                 className="w-full px-2 py-1.5 hover:bg-hover rounded-md cursor-pointer focus-visible:outline-none"
               >

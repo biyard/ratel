@@ -1,8 +1,8 @@
 import { useMyRewardsI18n } from './rewards-page-i18n';
 import { useRewardsPageController } from './use-rewards-page-controller';
-import { PointsSummaryCard } from './components/points-summary-card';
-import { ExchangePreviewCard } from './components/exchange-preview-card';
-import { TransactionList } from './components/transaction-list';
+import { PointsSummaryCard } from '@/features/rewards/components/points-summary-card';
+import { ExchangePreviewCard } from '@/features/rewards/components/exchange-preview-card';
+import { TransactionList } from '@/features/rewards/components/transaction-list';
 
 export default function RewardsPage() {
   const ctrl = useRewardsPageController();
@@ -28,12 +28,18 @@ export default function RewardsPage() {
   }
 
   const rewards = ctrl.rewards;
-  console.log('rewards', rewards);
-  const estimatedTokens = Math.round(
-    (rewards.user_points / rewards.total_points) * rewards.monthly_token_supply,
-  );
+  const estimatedTokens =
+    rewards.total_points > 0
+      ? Math.round(
+          (rewards.user_points / rewards.total_points) *
+            rewards.monthly_token_supply,
+        )
+      : 0;
   return (
-    <div className="w-full max-w-desktop mx-auto px-4 py-6">
+    <div
+      data-testid="my-rewards-page"
+      className="w-full max-w-desktop mx-auto px-4 py-6"
+    >
       <PointsSummaryCard
         i18n={i18n}
         totalPoints={rewards.total_points}
@@ -41,17 +47,13 @@ export default function RewardsPage() {
         monthlyTokenSupply={rewards.monthly_token_supply}
         estimatedTokens={estimatedTokens}
         tokenSymbol={rewards.token_symbol}
-        formatPoints={ctrl.formatPoints}
-        formatTokens={ctrl.formatTokens}
       />
       <ExchangePreviewCard
         i18n={i18n}
-        totalPoints={rewards.total_points}
+        totalPoints={rewards.user_points}
         estimatedTokens={estimatedTokens}
         name={rewards.project_name}
         tokenSymbol={rewards.token_symbol}
-        formatPoints={ctrl.formatPoints}
-        formatTokens={ctrl.formatTokens}
       />
       <div className="mt-6">
         <TransactionList
@@ -61,7 +63,6 @@ export default function RewardsPage() {
           hasNextPage={ctrl.hasNextPage}
           isFetchingNextPage={ctrl.isFetchingNextPage}
           fetchNextPage={ctrl.fetchNextPage}
-          formatPoints={ctrl.formatPoints}
         />
       </div>
     </div>

@@ -40,7 +40,8 @@ export function useLikePostMutation() {
       const previousFeedDetail = await optimisticUpdate<PostDetailResponse>(
         { queryKey: detailQueryKey },
         (old) => {
-          if (!old || old.is_liked === like) return old;
+          // If the detail query doesn't exist or the state is already what we want, don't update
+          if (!old || !old.post || old.is_liked === like) return old;
           return {
             ...old,
             post: {
@@ -79,11 +80,21 @@ export function useLikePostMutation() {
       showErrorToast(error.message || 'Failed to like feed');
     },
 
-    onSettled: (_data, _error, variables) => {
-      const { feedId } = variables;
-      const detailQueryKey = feedKeys.detail(feedId);
+    onSuccess: (_data, variables) => {
+      // On success, we trust the optimistic update and don't need to refetch
+      // The server has confirmed the like/unlike, so the cache is already correct
+    },
 
-      queryClient.invalidateQueries({ queryKey: detailQueryKey });
+    onSettled: (_data, error, variables) => {
+      // Only invalidate queries if there was an error, to force a refetch
+      if (error) {
+        const { feedId } = variables;
+        const detailQueryKey = feedKeys.detail(feedId);
+        const listQueryKey = feedKeys.lists();
+
+        queryClient.invalidateQueries({ queryKey: detailQueryKey });
+        queryClient.invalidateQueries({ queryKey: listQueryKey });
+      }
     },
   });
 }

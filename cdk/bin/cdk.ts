@@ -2,7 +2,6 @@ import { App } from "aws-cdk-lib";
 import { RegionalServiceStack } from "../lib/regional-service-stack";
 import { GlobalAccelStack } from "../lib/global-accel-stack";
 import { GlobalTableStack } from "../lib/dynamodb-stack";
-import { ImageWorkerStack } from "../lib/image-worker-stack";
 import { StaticStack } from "../lib/static-stack";
 import { DaemonStack } from "../lib/daemon-stack";
 

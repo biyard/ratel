@@ -1,6 +1,8 @@
+use crate::features::membership::PurchaseEntity;
 use crate::features::payment::*;
 use crate::types::*;
 use crate::*;
+use aws_sdk_dynamodb::types::TransactWriteItem;
 
 #[derive(Debug, Clone, Serialize, Deserialize, DynamoEntity, Default, JsonSchema, OperationIo)]
 pub struct UserPurchase {
@@ -46,5 +48,15 @@ impl UserPurchase {
             currency,
             status: PurchaseStatus::Success,
         }
+    }
+}
+
+impl PurchaseEntity for UserPurchase {
+    fn pk(&self) -> &CompositePartition {
+        &self.pk
+    }
+
+    fn create_transact_write_item(&self) -> TransactWriteItem {
+        self.create_transact_write_item()
     }
 }

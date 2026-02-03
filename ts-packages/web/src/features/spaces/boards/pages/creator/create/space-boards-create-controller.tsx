@@ -37,7 +37,7 @@ export class SpaceBoardsCreateController {
     public updateSpacePosts: ReturnType<typeof useUpdateSpacePostMutation>,
   ) {}
 
-  handleContent = (htmlContents: string) => {
+  handleContent = async (htmlContents: string) => {
     this.htmlContents.set(htmlContents);
   };
 
@@ -81,13 +81,15 @@ export class SpaceBoardsCreateController {
       }
     } else {
       try {
+        const filesToSend = this.files.get() ?? [];
+
         await this.createSpacePosts.mutateAsync({
           spacePk: this.spacePk,
           title,
           htmlContents,
           categoryName,
           image,
-          files: this.files.get() ?? [],
+          files: filesToSend,
 
           startedAt: this.startedAt.get(),
           endedAt: this.endedAt.get(),
@@ -159,6 +161,7 @@ export class SpaceBoardsCreateController {
       );
 
       const newModels: FileModel[] = files.map((file, i) => ({
+        id: crypto.randomUUID(),
         name: file.name,
         size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
         ext: FileExtension.PDF,
@@ -189,8 +192,6 @@ export class SpaceBoardsCreateController {
             body: blob,
           });
           const uploadedUrl = res.uris[0];
-          logger.debug('Uploaded image URL:', uploadedUrl);
-
           this.image.set(uploadedUrl);
         }
       }
@@ -200,11 +201,32 @@ export class SpaceBoardsCreateController {
     }
   };
 
+  uploadAsset = async (file: File): Promise<{ url: string }> => {
+    try {
+      const res = await getPutObjectUrl(1, parseFileType(file.type));
+
+      if (!res || !res.presigned_uris?.[0] || !res.uris?.[0]) {
+        throw new Error('Failed to get presigned URL');
+      }
+
+      await fetch(res.presigned_uris[0], {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type,
+        },
+        body: file,
+      });
+
+      const uploadedUrl = res.uris[0];
+      return { url: uploadedUrl };
+    } catch (error) {
+      logger.error('Asset upload failed:', error);
+      showErrorToast('Failed to upload asset');
+      throw error;
+    }
+  };
+
   handleTimeRange = async (started_at: number, ended_at: number) => {
-    logger.debug(
-      `onChangeTimeRange called: start=${started_at}, end=${ended_at}`,
-    );
-    // validate time range
     if (started_at >= ended_at) {
       showErrorToast(this.t('invalid_time'));
       return;

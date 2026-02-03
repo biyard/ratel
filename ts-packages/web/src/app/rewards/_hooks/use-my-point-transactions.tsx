@@ -1,14 +1,17 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { ListPointTransactionsResponse } from '../types';
-
-export const QK_MY_POINT_TRANSACTIONS = 'my-point-transactions';
+import { userKeys } from '@/constants';
 
 export async function listMyPointTransactions(
+  month?: string,
   bookmark?: string,
   limit?: number,
 ): Promise<ListPointTransactionsResponse> {
   const params = new URLSearchParams();
+  if (month) {
+    params.append('month', month);
+  }
   if (bookmark) {
     params.append('bookmark', bookmark);
   }
@@ -22,15 +25,15 @@ export async function listMyPointTransactions(
   return call('GET', path);
 }
 
-export function useMyPointTransactions(limit: number = 10) {
+export function useMyPointTransactions(month?: string, limit: number = 10) {
   return useInfiniteQuery({
-    queryKey: [QK_MY_POINT_TRANSACTIONS],
+    queryKey: [...userKeys.reward_lists(month)],
     queryFn: async ({
       pageParam,
     }: {
       pageParam?: string;
     }): Promise<ListPointTransactionsResponse> => {
-      return listMyPointTransactions(pageParam, limit);
+      return listMyPointTransactions(month, pageParam, limit);
     },
     getNextPageParam: (last: ListPointTransactionsResponse) =>
       last.bookmark ?? undefined,

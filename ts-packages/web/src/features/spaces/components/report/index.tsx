@@ -80,27 +80,33 @@ export default function Report({
         />
       )}
 
-      <SummaryOption
-        t={t}
-        primary={primary}
-        setPrimary={setPrimary}
-        detailKey={detailKey}
-        setDetailKey={setDetailKey}
-        summariesByGender={summariesByGender}
-        summariesByAge={summariesByAge}
-        summariesBySchool={summariesBySchool}
-      />
+      {totalResponses > 0 && (
+        <SummaryOption
+          t={t}
+          primary={primary}
+          setPrimary={setPrimary}
+          detailKey={detailKey}
+          setDetailKey={setDetailKey}
+          summariesByGender={summariesByGender}
+          summariesByAge={summariesByAge}
+          summariesBySchool={summariesBySchool}
+        />
+      )}
 
-      <div className="flex flex-col gap-2.5 w-full">
-        {displaySummaries.map((summary, idx) => (
-          <SummaryItem
-            key={`summary-item-${idx}`}
-            t={t}
-            question={questions[idx]}
-            summary={summary}
-          />
-        ))}
-      </div>
+      {totalResponses > 0 && (
+        <div className="flex flex-col gap-2.5 w-full">
+          {displaySummaries.map((summary, idx) => (
+            <SummaryItem
+              key={`summary-item-${idx}`}
+              t={t}
+              question={questions[idx]}
+              summary={summary}
+            />
+          ))}
+        </div>
+      )}
+
+      {totalResponses <= 0 && <div>{t('not_found_response')}</div>}
     </div>
   );
 }

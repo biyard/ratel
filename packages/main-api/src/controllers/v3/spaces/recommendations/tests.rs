@@ -72,6 +72,7 @@ async fn test_update_recommendation_files() {
         body: {
             "File": {
                 "files": vec![File{
+                    id: uuid::Uuid::new_v4().to_string(),
                     name: "recommendation file name".to_string(),
                     size: "15KB".to_string(),
                     ext: FileExtension::PDF,

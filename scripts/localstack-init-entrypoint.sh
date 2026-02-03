@@ -230,6 +230,7 @@ echo 'Creating user memberships...'
 # Calculate expiration timestamp (30 days from now in milliseconds)
 EXPIRED_AT=$((TIMESTAMP + 30 * 24 * 60 * 60 * 1000))
 
+
 # User1 - PRO Membership (40 credits)
 aws --endpoint-url=$ENDPOINT dynamodb put-item \
   --table-name ratel-local-main \
@@ -246,6 +247,28 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     "auto_renew": {"BOOL": true},
     "gsi1_pk": {"S": "UM#MEMBERSHIP#PRO"},
     "gsi1_sk": {"S": "TS#'${TIMESTAMP}'"}
+  }'
+
+# Admin1 (hi+admin1@biyard.co) - PRO Membership (40 credits)
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+  --table-name ratel-local-main \
+  --item '{
+    "pk": {"S": "USER#00000000-0000-0000-0000-000000000021"},
+    "sk": {"S": "USER_MEMBERSHIP"},
+    "created_at": {"N": "'${TIMESTAMP}'"},
+    "updated_at": {"N": "'${TIMESTAMP}'"},
+    "expired_at": {"N": "'${EXPIRED_AT}'"},
+    "membership_pk": {"S": "MEMBERSHIP#PRO"},
+    "status": {"S": "Active"},
+    "total_credits": {"N": "40"},
+    "remaining_credits": {"N": "40"},
+    "auto_renew": {"BOOL": true},
+    "gsi1_pk": {"S": "UM#MEMBERSHIP#PRO"},
+    "gsi1_sk": {"S": "TS#'${TIMESTAMP}'"},
+    "gsi2_pk": {"S": "USER#00000000-0000-0000-0000-000000000021"},
+    "gsi2_sk": {"S": "TS#'${TIMESTAMP}'"},
+    "gsi3_pk": {"S": "USER_MEMBERSHIP#00000000-0000-0000-0000-000000000021"},
+    "gsi3_sk": {"S": "TS#'${TIMESTAMP}'"}
   }'
 
 echo 'User memberships created successfully'
@@ -277,7 +300,7 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
     --table-name ratel-local-main \
     --item '{
             "permissions": {"N": "-4611686018420032497"},
-            "members": {"N": "2"},
+            "members": {"N": "3"},
             "gsi1_pk": {"S": "TEAM_GROUP_PK#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"},
             "name": {"S": "Admin"},
             "sk": {"S": "TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"},
@@ -356,6 +379,71 @@ aws --endpoint-url=$ENDPOINT dynamodb put-item \
             "gsi1_sk": {"S": "-4611686018420032497"}
         }'
 
+## User team (user4)
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+    --table-name ratel-local-main \
+    --item '{
+            "last_used_at": {"N": "'${TIMESTAMP}'"},
+            "profile_url": {"S": "https://metadata.ratel.foundation/ratel/default-profile.png"},
+            "gsi1_pk": {"S": "TEAM_PK#USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
+            "sk": {"S": "USER_TEAM#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
+            "pk": {"S": "USER#00000000-0000-0000-0000-000000000004"},
+            "display_name": {"S": "hiteam"},
+            "gsi1_sk": {"S": "'${TIMESTAMP}'"},
+            "username": {"S": "hiteam"}
+        }'
+## User group (user4)
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+    --table-name ratel-local-main \
+    --item '{
+            "team_group_permissions": {"N": "-4611686018420032497"},
+            "gsi1_pk": {"S": "TEAM_GROUP_PK#USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"},
+            "sk": {"S": "USER_TEAM_GROUP#TEAM_GROUP#0e55a3b3-fb35-45b2-8a57-1440dda643ef"},
+            "gsi2_pk": {"S": "USER_TEAM_GROUP#TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
+            "pk": {"S": "USER#00000000-0000-0000-0000-000000000004"},
+            "team_pk": {"S": "TEAM#d4004e2b-093a-41cc-9f21-b8fb3e5e9f61"},
+            "gsi2_sk": {"S": "USER#00000000-0000-0000-0000-000000000004"},
+            "gsi1_sk": {"S": "-4611686018420032497"}
+        }'
+
+# Add EVM addresses for team admin members
+echo 'Creating EVM addresses for team admins...'
+
+# User2 EVM Address (team owner)
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+    --table-name ratel-local-main \
+    --item '{
+            "pk": {"S": "USER#00000000-0000-0000-0000-000000000002"},
+            "sk": {"S": "USER_EVM_ADDRESS"},
+            "evm_address": {"S": "0x1234567890123456789012345678901234567890"},
+            "gsi1_pk": {"S": "EVM#0x1234567890123456789012345678901234567890"},
+            "gsi1_sk": {"S": "USER_EVM_ADDRESS"}
+        }'
+
+# User3 EVM Address
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+    --table-name ratel-local-main \
+    --item '{
+            "pk": {"S": "USER#00000000-0000-0000-0000-000000000003"},
+            "sk": {"S": "USER_EVM_ADDRESS"},
+            "evm_address": {"S": "0x2345678901234567890123456789012345678901"},
+            "gsi1_pk": {"S": "EVM#0x2345678901234567890123456789012345678901"},
+            "gsi1_sk": {"S": "USER_EVM_ADDRESS"}
+        }'
+
+# User4 EVM Address
+aws --endpoint-url=$ENDPOINT dynamodb put-item \
+    --table-name ratel-local-main \
+    --item '{
+            "pk": {"S": "USER#00000000-0000-0000-0000-000000000004"},
+            "sk": {"S": "USER_EVM_ADDRESS"},
+            "evm_address": {"S": "0x3456789012345678901234567890123456789012"},
+            "gsi1_pk": {"S": "EVM#0x3456789012345678901234567890123456789012"},
+            "gsi1_sk": {"S": "USER_EVM_ADDRESS"}
+        }'
+
+echo 'EVM addresses created successfully'
+
 
 echo '======================================'
 echo 'LocalStack initialization completed!'
@@ -381,6 +469,13 @@ echo '  Username: admin'
 echo ''
 echo 'User Memberships:'
 echo '  user1: PRO (40 credits)'
+echo '  admin1: PRO (40 credits)'
+echo ''
+echo 'Team hiteam:'
+echo '  Members with Admin permission & EVM addresses:'
+echo '    user2 (owner): 0x1234567890123456789012345678901234567890'
+echo '    user3: 0x2345678901234567890123456789012345678901'
+echo '    user4: 0x3456789012345678901234567890123456789012'
 echo ''
 echo 'Attribute Codes:'
 echo '  j94EA1 - Sogang Male'

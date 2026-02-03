@@ -1,4 +1,5 @@
 interface FileModel {
+  id: string;
   name: string;
   size: string;
   ext: FileExtension;

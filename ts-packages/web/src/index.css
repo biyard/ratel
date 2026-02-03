@@ -563,6 +563,21 @@ a {
   background-color: var(--table-row-hover-bg) !important;
 }
 
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  z-index: 20;
+  background-color: #facc15;
+  pointer-events: auto;
+}
+
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
+}
+
 /* ----------------------------
    UI Components
    ---------------------------- */

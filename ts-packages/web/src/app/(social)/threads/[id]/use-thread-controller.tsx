@@ -1,7 +1,6 @@
 import { useDeletePostMutation } from '@/features/posts/hooks/use-delete-post-mutation';
 import { useLikePostMutation } from '@/features/posts/hooks/use-like-post-mutation';
 import { useReplyCommentMutation } from '@/features/comments/hooks/use-reply-comment-mutation';
-import { GroupPermission } from '@/lib/api/models/group';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { TeamContext } from '@/lib/contexts/team-context';
 import { logger } from '@/lib/logger';
@@ -12,7 +11,10 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router';
 import SpaceCreateModal from '../../../../features/spaces/modals/space-type-selector-modal';
 import { useThreadData } from './use-thread-data';
-import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
+import {
+  TeamGroupPermission,
+  TeamGroupPermissions,
+} from '@/features/auth/utils/team-group-permissions';
 import { useLikeCommentMutation } from '@/features/comments/hooks/use-like-comment-mutation';
 import { useCommentMutation } from '@/features/posts/hooks/use-comment-mutation';
 import { PostDetailResponse } from '@/features/posts/dto/post-detail-response';
@@ -51,9 +53,9 @@ export class ThreadController {
       );
     this.permissions = new TeamGroupPermissions(this.feed.permissions);
     this.canEdit =
-      this.isPostOwner || this.permissions.has(GroupPermission.WritePosts);
+      this.isPostOwner || this.permissions.has(TeamGroupPermission.PostEdit);
     this.canDelete =
-      this.isPostOwner || this.permissions.has(GroupPermission.DeletePosts);
+      this.isPostOwner || this.permissions.has(TeamGroupPermission.PostDelete);
     logger.debug('ThreadController', this);
   }
 

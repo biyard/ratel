@@ -99,6 +99,7 @@ interface PostInfoSectionProps {
   rewards: number;
   isDraft: boolean;
   isPublic: boolean;
+  hasRewards?: boolean;
 }
 
 export function PostInfoSection({
@@ -108,6 +109,7 @@ export function PostInfoSection({
   shares,
   isDraft,
   isPublic,
+  hasRewards = false,
 }: PostInfoSectionProps) {
   const { t } = useTranslation('SprintSpace');
   return (
@@ -131,12 +133,14 @@ export function PostInfoSection({
           </div>
         </div>
 
-        <div className="flex flex-row gap-1">
-          <RewardCoin />
-          <div className="font-medium text-[15px] text-text-primary">
-            {rewards}
+        {hasRewards && (
+          <div className="flex flex-row gap-1">
+            <RewardCoin />
+            <div className="font-medium text-[15px] text-text-primary">
+              {rewards}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex flex-row gap-1">
           <Repost />

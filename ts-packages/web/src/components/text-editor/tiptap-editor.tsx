@@ -1,4 +1,4 @@
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import TextAlign from '@tiptap/extension-text-align';
@@ -16,8 +16,10 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Video from './extensions/video';
 import { ThemeAwareColor } from './extensions/theme-aware-color';
 import { ThemeAwareHighlight } from './extensions/theme-aware-highlight';
+import { getThemeAdjustedColor, getThemeAdjustedHighlight } from './color-utils';
 import {
   forwardRef,
+  useCallback,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -28,7 +30,13 @@ import { cn } from '@/lib/utils';
 import { TiptapEditorProps, DEFAULT_ENABLED_FEATURES } from './types';
 import { TiptapToolbar } from './tiptap-toolbar';
 import { showErrorToast } from '@/lib/toast';
+import { useTheme } from '@/hooks/use-theme';
 import './theme-aware-colors.css';
+import { AnalyzeLdaBlock } from './extensions/analyze/lda-block';
+import { AnalyzeNetworkBlock } from './extensions/analyze/network-block';
+import { AnalyzeTfidfBlock } from './extensions/analyze/tfidf-blck';
+import { TableWithFootnote } from './extensions/table-with-footnote';
+import { ImageWithFootnote } from './extensions/image-with-footnote';
 
 const FOLD_HEIGHT = 240;
 
@@ -44,6 +52,10 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       showToolbar = true,
       toolbarPosition = 'top',
       enabledFeatures = DEFAULT_ENABLED_FEATURES,
+      showBubbleToolbar = false,
+      bubbleEnabledFeatures,
+      bubbleToolbarClassName,
+      toolbarFooter,
       className,
       toolbarClassName,
       editorClassName,
@@ -57,14 +69,54 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       maxVideoSizeMB = 50,
       onImageUpload,
       onUploadPDF,
+      enableTableFootnote = false,
+      enableImageFootnote = false,
       'data-pw': dataPw,
     },
     ref,
   ) => {
+    const { theme } = useTheme();
     const videoInputRef = useRef<HTMLInputElement | null>(null);
     const [isFolded, setIsFolded] = useState<boolean>(false);
     const containerRef = useRef<HTMLDivElement | null>(null);
     const [showFoldToggle, setShowFoldToggle] = useState(false);
+    const bubbleHostRef = useRef<HTMLDivElement | null>(null);
+    const bubbleEnabledRef = useRef(showBubbleToolbar);
+    const bubbleKeepAliveRef = useRef(false);
+    const bubbleSelectionRef = useRef<Editor['state']['selection'] | null>(
+      null,
+    );
+
+    useEffect(() => {
+      bubbleEnabledRef.current = showBubbleToolbar;
+    }, [showBubbleToolbar]);
+
+    const shouldShowBubble = useCallback(
+      ({
+        editor,
+        state,
+      }: {
+        editor: Editor;
+        state: { selection: { empty: boolean } };
+      }) => {
+        if (!bubbleEnabledRef.current) return false;
+        if (!editor.isEditable) return false;
+        if (!editor.view?.dom?.isConnected) return false;
+        if (bubbleKeepAliveRef.current) return true;
+        return !state.selection.empty;
+      },
+      [],
+    );
+
+    const resolvedBubbleFeatures: typeof DEFAULT_ENABLED_FEATURES = {
+      ...DEFAULT_ENABLED_FEATURES,
+      image: false,
+      table: false,
+      pdf: false,
+      ...bubbleEnabledFeatures,
+    };
+
+    const canFold = isFoldable;
 
     const insertImage = (ed: Editor, src: string, alt?: string) =>
       ed.chain().focus().setImage({ src, alt }).run();
@@ -106,20 +158,20 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             bulletList: { HTMLAttributes: { class: 'list-disc pl-4' } },
             orderedList: { HTMLAttributes: { class: 'list-decimal pl-4' } },
           }),
-          Placeholder.configure({
-            placeholder,
-          }),
+          Placeholder.configure({ placeholder }),
           TextStyle,
           Color,
           Highlight.configure({ multicolor: true }),
           ThemeAwareColor,
-          ThemeAwareHighlight.configure({ multicolor: true }),
+          ThemeAwareHighlight.configure({
+            multicolor: true,
+          }),
           TextAlign.configure({
             types: ['heading', 'paragraph'],
             alignments: ['left', 'center', 'right'],
           }),
           Underline,
-          Image.configure({
+          (enableImageFootnote ? ImageWithFootnote : Image).configure({
             inline: true,
             allowBase64: true,
             HTMLAttributes: {
@@ -145,17 +197,22 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             },
           }),
           Video,
-          Table.configure({
+          (enableTableFootnote ? TableWithFootnote : Table).configure({
             resizable: true,
-            HTMLAttributes: { class: 'border-collapse table-auto w-full my-4' },
+            HTMLAttributes: {
+              class: 'border-collapse table-fixed w-full min-w-full my-4',
+            },
           }),
           TableRow,
           TableHeader.configure({
             HTMLAttributes: { class: 'bg-muted font-semibold' },
           }),
           TableCell.configure({
-            HTMLAttributes: { class: 'border border-border p-2 min-w-[100px]' },
+            HTMLAttributes: { class: 'border border-border p-2' },
           }),
+          AnalyzeLdaBlock,
+          AnalyzeNetworkBlock,
+          AnalyzeTfidfBlock,
         ],
         content,
         editable,
@@ -185,11 +242,73 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
           },
         },
       },
-      [editable, uploadAsset, uploadVideo, maxImageSizeMB, maxVideoSizeMB],
+      [
+        uploadAsset,
+        uploadVideo,
+        maxImageSizeMB,
+        maxVideoSizeMB,
+        editable,
+        enableTableFootnote,
+        enableImageFootnote,
+      ],
     ) as Editor | null;
 
+    const restoreBubbleSelection = useCallback(() => {
+      if (!editor?.view || !bubbleSelectionRef.current) return;
+      try {
+        editor.view.dispatch(
+          editor.state.tr.setSelection(bubbleSelectionRef.current),
+        );
+        // eslint-disable-next-line unused-imports/no-unused-vars
+      } catch (_) {
+        //
+      }
+    }, [editor]);
+
+    const handleHeadingDropdownOpenChange = useCallback(
+      (open: boolean) => {
+        bubbleKeepAliveRef.current = open;
+        if (open && editor?.state?.selection) {
+          bubbleSelectionRef.current = editor.state.selection;
+        }
+      },
+      [editor],
+    );
+
+    const handleHeadingDropdownTriggerPointerDown = useCallback(() => {
+      if (editor?.state?.selection) {
+        bubbleSelectionRef.current = editor.state.selection;
+      }
+      bubbleKeepAliveRef.current = true;
+    }, [editor]);
+
+    // Update colors when theme changes
     useEffect(() => {
-      if (!isFoldable) {
+      if (!editor || editor.isDestroyed) return;
+
+      const editorElement = editor.view.dom;
+      
+      const coloredElements = editorElement.querySelectorAll('[data-color]');
+      coloredElements.forEach((el) => {
+        const originalColor = el.getAttribute('data-color');
+        if (originalColor) {
+          const adjustedColor = getThemeAdjustedColor(originalColor, theme);
+          (el as HTMLElement).style.color = adjustedColor;
+        }
+      });
+      
+      const highlightedElements = editorElement.querySelectorAll('[data-highlight]');
+      highlightedElements.forEach((el) => {
+        const originalColor = el.getAttribute('data-highlight');
+        if (originalColor) {
+          const adjustedColor = getThemeAdjustedHighlight(originalColor, theme);
+          (el as HTMLElement).style.backgroundColor = adjustedColor;
+        }
+      });
+    }, [editor, theme]);
+
+    useEffect(() => {
+      if (!canFold) {
         setShowFoldToggle(false);
         setIsFolded(false);
         return;
@@ -205,7 +324,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
       });
 
       return () => cancelAnimationFrame(id);
-    }, [isFoldable, content, minHeight]);
+    }, [canFold, content, minHeight]);
 
     useImperativeHandle<Editor | null, Editor | null>(ref, () => editor, [
       editor,
@@ -247,25 +366,79 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             editor={editor}
             enabledFeatures={enabledFeatures}
             variant={variant}
+            mode="default"
             className={toolbarClassName}
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}
             onUploadPDF={onUploadPDF}
           />
         )}
+        {showToolbar && toolbarPosition === 'top' && toolbarFooter && (
+          <div className="px-2 py-2">{toolbarFooter}</div>
+        )}
+
+        {(showBubbleToolbar || bubbleEnabledFeatures) && editor && (
+          <div ref={bubbleHostRef}>
+            <BubbleMenu
+              editor={editor}
+              shouldShow={shouldShowBubble}
+              tippyOptions={{
+                duration: 120,
+                placement: 'top',
+                maxWidth: 'none',
+                appendTo: () => bubbleHostRef.current ?? document.body,
+              }}
+            >
+              <TiptapToolbar
+                editor={editor}
+                enabledFeatures={resolvedBubbleFeatures}
+                variant={variant}
+                mode="bubble"
+                dropdownPortalContainer={
+                  typeof document !== 'undefined' ? document.body : null
+                }
+                onHeadingDropdownOpenChange={handleHeadingDropdownOpenChange}
+                onHeadingDropdownTriggerPointerDown={
+                  handleHeadingDropdownTriggerPointerDown
+                }
+                onColorPickerOpenChange={handleHeadingDropdownOpenChange}
+                onColorPickerTriggerPointerDown={
+                  handleHeadingDropdownTriggerPointerDown
+                }
+                headingDropdownContentProps={{
+                  side: 'bottom',
+                  align: 'start',
+                  sideOffset: 6,
+                  alignOffset: 0,
+                  avoidCollisions: false,
+                  sticky: 'always',
+                  onOpenAutoFocus: (event) => {
+                    event.preventDefault();
+                    restoreBubbleSelection();
+                  },
+                  onCloseAutoFocus: (event) => {
+                    event.preventDefault();
+                    restoreBubbleSelection();
+                  },
+                }}
+                className={cn(
+                  'rounded-md border bg-card shadow-lg px-2 py-1',
+                  bubbleToolbarClassName,
+                )}
+              />
+            </BubbleMenu>
+          </div>
+        )}
 
         <div
-          className={cn('flex-1 overflow-y-auto', 'px-5 py-3', editorClassName)}
-          style={{
-            minHeight: !editable ? minHeight : 'auto',
-            overflowY: isFoldable && isFolded ? 'hidden' : 'auto',
-          }}
+          className={cn('flex-1 px-5 py-3', 'overflow-y-auto', editorClassName)}
+          style={{ minHeight }}
         >
           <div
             ref={containerRef}
             style={{
-              maxHeight: isFoldable && isFolded ? `${FOLD_HEIGHT}px` : 'none',
-              overflowY: isFoldable && isFolded ? 'hidden' : 'visible',
+              maxHeight: canFold && isFolded ? `${FOLD_HEIGHT}px` : 'none',
+              overflowY: canFold && isFolded ? 'hidden' : 'visible',
             }}
           >
             <EditorContent
@@ -291,7 +464,11 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
                 '[&_.ProseMirror_li]:my-1',
                 '[&_.ProseMirror_p]:my-2',
                 '[&_.ProseMirror_mark]:bg-yellow-200 [&_.ProseMirror_mark]:px-0.5',
-                '[&_.ProseMirror_table]:border-collapse [&_.ProseMirror_table]:table-auto [&_.ProseMirror_table]:w-full [&_.ProseMirror_table]:my-4',
+                '[&_.ProseMirror_table]:border-collapse [&_.ProseMirror_table]:table-fixed [&_.ProseMirror_table]:!w-full [&_.ProseMirror_table]:min-w-full [&_.ProseMirror_table]:my-4',
+                '[&_.table-footnote-wrap]:w-full',
+                '[&_.table-footnote-table]:w-full [&_.table-footnote-table]:min-w-full',
+                '[&_.table-footnote-table_tbody]:w-full',
+                '[&_.table-footnote-table_tbody>div[data-node-view-content-react]]:contents',
                 '[&_.ProseMirror_td]:border [&_.ProseMirror_td]:border-border [&_.ProseMirror_td]:p-2 [&_.ProseMirror_td]:min-w-[100px] [&_.ProseMirror_td]:relative',
                 '[&_.ProseMirror_th]:border [&_.ProseMirror_th]:border-border [&_.ProseMirror_th]:p-2 [&_.ProseMirror_th]:min-w-[100px] [&_.ProseMirror_th]:bg-muted [&_.ProseMirror_th]:font-semibold [&_.ProseMirror_th]:relative',
                 '[&_.ProseMirror_.selectedCell]:bg-primary/20',
@@ -302,7 +479,8 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
                 '[&_.ProseMirror_.youtube]:pt-[56.25%]',
                 '[&_.ProseMirror_.selectedCell]:outline-primary/40',
                 '[&_.ProseMirror_.selectedCell]:outline-offset-[-1px]',
-                '[&_.ProseMirror_.column-resize-handle]:absolute [&_.ProseMirror_.column-resize-handle]:right-[-2px] [&_.ProseMirror_.column-resize-handle]:top-0 [&_.ProseMirror_.column-resize-handle]:bottom-0 [&_.ProseMirror_.column-resize-handle]:w-[4px] [&_.ProseMirror_.column-resize-handle]:bg-primary [&_.ProseMirror_.column-resize-handle]:pointer-events-none',
+                '[&_.ProseMirror_.column-resize-handle]:absolute [&_.ProseMirror_.column-resize-handle]:right-[-2px] [&_.ProseMirror_.column-resize-handle]:top-0 [&_.ProseMirror_.column-resize-handle]:bottom-0 [&_.ProseMirror_.column-resize-handle]:w-[6px] [&_.ProseMirror_.column-resize-handle]:bg-yellow-400/70 [&_.ProseMirror_.column-resize-handle]:!pointer-events-auto [&_.ProseMirror_.column-resize-handle]:cursor-col-resize [&_.ProseMirror_.column-resize-handle]:z-50 [&_.ProseMirror_.column-resize-handle]:touch-none',
+                '[&_.ProseMirror.resize-cursor]:cursor-col-resize',
                 '[&_.ProseMirror_iframe]:w-full [&_.ProseMirror_iframe]:max-w-full',
               )}
               data-testid="tiptap-editor-content"
@@ -310,7 +488,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             />
           </div>
 
-          {isFoldable && showFoldToggle && (
+          {canFold && showFoldToggle && (
             <div className="flex justify-center mt-2">
               <button
                 type="button"
@@ -321,6 +499,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
               </button>
             </div>
           )}
+
           <input
             ref={videoInputRef}
             type="file"
@@ -348,6 +527,7 @@ export const TiptapEditor = forwardRef<Editor | null, TiptapEditorProps>(
             editor={editor}
             enabledFeatures={enabledFeatures}
             variant={variant}
+            mode="default"
             className={toolbarClassName}
             openVideoPicker={() => videoInputRef.current?.click()}
             onImageUpload={onImageUpload}

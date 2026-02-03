@@ -21,7 +21,7 @@ pub struct Team {
     #[dynamo(index = "gsi6", name = "find_by_follwers", pk)]
     pub sk: EntityType,
 
-    #[dynamo(prefix = "TS", index = "gsi2", sk)]
+    #[dynamo(prefix = "TEAM", index = "gsi2", sk)]
     pub created_at: i64,
     pub updated_at: i64,
 
@@ -39,7 +39,9 @@ pub struct Team {
     pub username: String, // Team Name
 
     #[dynamo(index = "gsi6", sk)]
+    #[serde(default)]
     pub followers: i64,
+    #[serde(default)]
     pub followings: i64,
 
     pub description: String,
@@ -81,7 +83,7 @@ impl Team {
         user_pk: &Partition,
     ) -> Result<TeamGroupPermissions> {
         // Check if the user is the team owner first
-        let owner = TeamOwner::get(cli, team_pk, Some(EntityType::TeamOwner)).await?;
+        let owner = TeamOwner::get(cli, team_pk, Some(&EntityType::TeamOwner)).await?;
         if let Some(owner) = owner {
             if owner.user_pk == *user_pk {
                 // Team owner has all permissions
@@ -196,7 +198,7 @@ impl EntityPermissions for Team {
         cli: &aws_sdk_dynamodb::Client,
         requester: &Partition,
     ) -> Permissions {
-        let owner = TeamOwner::get(cli, &self.pk, Some(EntityType::TeamOwner)).await;
+        let owner = TeamOwner::get(cli, &self.pk, Some(&EntityType::TeamOwner)).await;
         if owner.is_err() {
             return Permissions::empty();
         }
