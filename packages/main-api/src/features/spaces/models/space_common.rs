@@ -70,6 +70,8 @@ pub struct SpaceCommon {
 
     #[serde(default)]
     pub anonymous_participation: bool,
+    //FIXME: Remove this field.
+    //We already have publish_state to control the visibility of the space.
     #[serde(default)]
     pub change_visibility: bool,
     #[serde(default)]
@@ -142,17 +144,6 @@ impl SpaceCommon {
                 .unwrap_or(false)
         } else {
             false
-        }
-    }
-
-    pub fn can_participate(&self) -> bool {
-        if self.status.is_none() {
-            return false;
-        }
-
-        match self.status.as_ref().unwrap() {
-            SpaceStatus::InProgress | SpaceStatus::Started => true,
-            _ => false,
         }
     }
 }
