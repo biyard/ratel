@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use crate::config;
 use crate::controllers::v3::spaces::{SpacePath, SpacePathParam};
-use crate::features::spaces::{SpaceDao, SpaceDaoToken, SpaceDaoTokenCursor};
+use crate::features::spaces::{SpaceDao, SpaceDaoToken};
 use crate::types::{EntityType, Permissions, TeamGroupPermission};
 use crate::utils::evm_token::{fetch_token_state, fetch_transfer_logs, format_addr, parse_address};
 use crate::{AppState, Error};
@@ -39,25 +39,13 @@ pub async fn refresh_space_dao_tokens_handler(
         Error::InternalServerError("archive provider init failed".to_string())
     })?;
 
-    let start_block = if dao.deploy_block > 0 {
-        dao.deploy_block as u64
+    let mut last_block = if dao.last_block > 0 {
+        U64::from(dao.last_block as u64)
+    } else if dao.deploy_block > 0 {
+        U64::from(dao.deploy_block as u64)
     } else {
-        0
+        U64::from(0)
     };
-
-    let mut last_block =
-        match SpaceDaoTokenCursor::get_last_block(&dynamo.client, format_addr(dao_addr)).await? {
-            Some(v) => U64::from(v as u64),
-            None => {
-                SpaceDaoTokenCursor::set_last_block(
-                    &dynamo.client,
-                    format_addr(dao_addr),
-                    start_block as i64,
-                )
-                .await?;
-                U64::from(start_block)
-            }
-        };
 
     if last_block.is_zero() {
         return Ok(Json(RefreshSpaceDaoTokensResponse {
@@ -95,12 +83,10 @@ pub async fn refresh_space_dao_tokens_handler(
             updated += 1;
         }
 
-        SpaceDaoTokenCursor::set_last_block(
-            &dynamo.client,
-            format_addr(dao_addr),
-            latest.as_u64() as i64,
-        )
-        .await?;
+        let mut updated_dao = dao.clone();
+        updated_dao.last_block = latest.as_u64() as i64;
+        updated_dao.updated_at = chrono::Utc::now().timestamp_millis();
+        updated_dao.upsert(&dynamo.client).await?;
         last_block = latest;
     }
 
