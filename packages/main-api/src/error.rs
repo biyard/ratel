@@ -284,6 +284,9 @@ pub enum Error {
     NoUserPurchaseFound,
     #[error("PortOne billing key error")]
     PortOneBillingKeyError,
+    #[error("PortOne payment list error: {0}")]
+    #[rest_error(status = 500, code = 10001)]
+    PortOnePaymentListError(String),
 
     // Biyard API errors 10,050 ~
     #[error("Biyard error: {0}")]
