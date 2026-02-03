@@ -11,6 +11,7 @@ import { useSpaceDaoTokens } from '@/features/spaces/dao/hooks/use-space-dao-tok
 import { useRefreshSpaceDaoTokensMutation } from '@/features/spaces/dao/hooks/use-refresh-space-dao-tokens-mutation';
 import { useEffect, useMemo, useState } from 'react';
 import { config } from '@/config';
+import { Checkbox } from '@/components/checkbox/checkbox';
 
 export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
   logger.debug(`SpaceDaoEditorPage: spacePk=${spacePk}`);
@@ -213,6 +214,25 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
                     onChange={(e) => ctrl.rewardCount.set(e.target.value)}
                     placeholder={t('reward_count_placeholder')}
                   />
+                </div>
+                <div className="grid gap-3">
+                  <label className="text-sm text-text-secondary block">
+                    {t('reward_requirements_label')}
+                  </label>
+                  <Checkbox
+                    id="reward-require-pre"
+                    value={ctrl.requirePreSurvey.get()}
+                    onChange={(checked) => ctrl.requirePreSurvey.set(checked)}
+                  >
+                    {t('reward_require_pre')}
+                  </Checkbox>
+                  <Checkbox
+                    id="reward-require-post"
+                    value={ctrl.requirePostSurvey.get()}
+                    onChange={(checked) => ctrl.requirePostSurvey.set(checked)}
+                  >
+                    {t('reward_require_post')}
+                  </Checkbox>
                 </div>
               </div>
 

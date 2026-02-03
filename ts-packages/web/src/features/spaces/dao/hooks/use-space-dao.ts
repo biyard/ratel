@@ -7,6 +7,8 @@ export type SpaceDaoResponse = {
   deploy_block?: number;
   created_at?: number;
   updated_at?: number;
+  require_pre_survey?: boolean;
+  require_post_survey?: boolean;
 };
 
 function isNotFound(error: unknown) {

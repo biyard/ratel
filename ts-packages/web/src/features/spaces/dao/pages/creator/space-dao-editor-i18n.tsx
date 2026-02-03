@@ -28,6 +28,9 @@ export const i18nSpaceDaoEditor = {
     reward_section_description: 'Set how many recipients will receive rewards.',
     reward_count_label: 'Reward Headcount',
     reward_count_placeholder: 'e.g. 100',
+    reward_requirements_label: 'Reward eligibility',
+    reward_require_pre: 'Pre-survey completed',
+    reward_require_post: 'Post-survey completed',
     reward_amount_section_title: 'Per-person Reward Amount',
     reward_amount_section_description:
       'Set the reward amount per reward recipient.',
@@ -151,6 +154,9 @@ export const i18nSpaceDaoEditor = {
     reward_section_description: '리워드를 받을 인원 수를 설정합니다.',
     reward_count_label: '리워드 인원 수',
     reward_count_placeholder: '예: 100',
+    reward_requirements_label: '리워드 지급 조건',
+    reward_require_pre: '사전 조사 수행',
+    reward_require_post: '사후 조사 수행',
     reward_amount_section_title: '인당 리워드 금액',
     reward_amount_section_description:
       '리워드 대상 참여자 1인당 리워드 금액을 설정합니다.',

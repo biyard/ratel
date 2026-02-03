@@ -27,12 +27,22 @@ pub async fn create_space_dao_reward_handler(
         return Err(Error::BadRequest("reward_addresses is empty".to_string()));
     }
 
+    let dao = SpaceDao::get(&dynamo.client, space_pk.clone(), Some(EntityType::SpaceDao))
+        .await?
+        .ok_or(Error::DaoNotFound)?;
+
     let mut target_set = HashSet::new();
     for addr in req.reward_addresses {
         target_set.insert(addr.to_lowercase());
     }
 
-    let candidates = collect_space_dao_candidate_addresses(&dynamo.client, &space_pk).await?;
+    let candidates = collect_space_dao_candidate_addresses(
+        &dynamo.client,
+        &space_pk,
+        dao.require_pre_survey,
+        dao.require_post_survey,
+    )
+    .await?;
     let mut candidate_map: HashMap<String, SpaceDaoCandidate> = HashMap::new();
     for candidate in candidates {
         candidate_map.insert(candidate.evm_address.to_lowercase(), candidate);
@@ -92,9 +102,6 @@ pub async fn create_space_dao_reward_handler(
 
     if !created.is_empty() {
         let created_count = created.len() as i64;
-        let dao = SpaceDao::get(&dynamo.client, space_pk.clone(), Some(EntityType::SpaceDao))
-            .await?
-            .ok_or(Error::DaoNotFound)?;
         let remaining = dao.remaining_count + created_count;
         let total = dao.total_count + created_count;
         SpaceDao::updater(space_pk.clone(), EntityType::SpaceDao)

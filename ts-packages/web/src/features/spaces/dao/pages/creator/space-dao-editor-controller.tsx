@@ -38,6 +38,8 @@ export class SpaceDaoEditorController {
     public isPopupOpen: State<boolean>,
     public isRegistering: State<boolean>,
     public isUpdating: State<boolean>,
+    public requirePreSurvey: State<boolean>,
+    public requirePostSurvey: State<boolean>,
     public rewardData: SpaceDaoRewardResponseBody | undefined,
     public rewardLoading: boolean,
     public currentUserEvm: string | null,
@@ -247,6 +249,8 @@ export class SpaceDaoEditorController {
         req: {
           contract_address: result.daoAddress,
           deploy_block: result.deployBlock,
+          require_pre_survey: this.requirePreSurvey.get(),
+          require_post_survey: this.requirePostSurvey.get(),
         },
       });
 
@@ -337,6 +341,8 @@ export function useSpaceDaoEditorController(
   const isPopupOpen = useState(false);
   const isRegistering = useState(false);
   const isUpdating = useState(false);
+  const requirePreSurvey = useState(false);
+  const requirePostSurvey = useState(false);
   const isRewardRecipient = useState(false);
   const isRewarded = useState(false);
   const isClaiming = useState(false);
@@ -372,6 +378,8 @@ export function useSpaceDaoEditorController(
     new State(isPopupOpen),
     new State(isRegistering),
     new State(isUpdating),
+    new State(requirePreSurvey),
+    new State(requirePostSurvey),
     reward,
     rewardLoading,
     user?.evm_address ?? null,
