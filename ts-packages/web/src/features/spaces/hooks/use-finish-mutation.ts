@@ -49,12 +49,12 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
           daoAddress,
           candidates.map((item) => item.evm_address),
         );
-        const sampledAddresses = await service.getRewardRecipients(daoAddress);
-        if (sampledAddresses.length > 0) {
+        const selectedAddresses = await service.getRewardRecipients(daoAddress);
+        if (selectedAddresses.length > 0) {
           await call(
             'POST',
-            `/v3/spaces/${encodeURIComponent(spacePk)}/dao/samples`,
-            { sampled_addresses: sampledAddresses },
+            `/v3/spaces/${encodeURIComponent(spacePk)}/dao/selected`,
+            { selected_addresses: selectedAddresses },
           );
         }
       }

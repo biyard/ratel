@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 use rand::prelude::IndexedRandom;
 
 use crate::features::spaces::SpaceDaoCandidate;
-use crate::features::spaces::{SpaceDaoSampleUser, SpaceParticipant};
+use crate::features::spaces::SpaceParticipant;
 use crate::models::user::UserEvmAddress;
 use crate::types::{EntityType, Partition};
 use crate::{Result, transact_write_items};
