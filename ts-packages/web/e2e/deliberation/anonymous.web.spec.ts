@@ -26,6 +26,7 @@ import {
   goToTeam,
   inviteMembers,
   login,
+  participateInSpace,
   publishSpacePrivately,
   replyToPost,
   setupPanels,
@@ -291,12 +292,12 @@ test.describe.serial('[Deliberation] General Spec', () => {
   test(`DS-${i()} [Participant 1] Conduct PrePoll`, async ({ page }) => {
     await login(page, participant1);
     await goToMySpaces(page);
-    await expect(page.getByText(POST_TITLE).first()).toBeVisible();
-    await page.getByTestId('space-card').first().click();
-    await expect(
-      page.getByTestId('objective-viewer-option').first(),
-    ).toBeVisible();
+    await goToSpace(page, POST_TITLE);
 
+    // Manual participation step (auto-redirects to Pre-Poll)
+    await participateInSpace(page);
+
+    // Survey is now visible (no manual navigation needed)
     await conductSurvey(page, [
       0,
       0,
@@ -316,11 +317,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
   test(`DS-${i()} [Participant 2] Conduct PrePoll`, async ({ page }) => {
     await login(page, participant2);
     await goToMySpaces(page);
-    await expect(page.getByText(POST_TITLE).first()).toBeVisible();
-    await page.getByTestId('space-card').first().click();
-    await expect(
-      page.getByTestId('objective-viewer-option').first(),
-    ).toBeVisible();
+    await goToSpace(page, POST_TITLE);
+    await participateInSpace(page);
 
     await conductSurvey(page, [
       1,
@@ -341,11 +339,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
   test(`DS-${i()} [Participant 3] Conduct PrePoll`, async ({ page }) => {
     await login(page, participant3);
     await goToMySpaces(page);
-    await expect(page.getByText(POST_TITLE).first()).toBeVisible();
-    await page.getByTestId('space-card').first().click();
-    await expect(
-      page.getByTestId('objective-viewer-option').first(),
-    ).toBeVisible();
+    await goToSpace(page, POST_TITLE);
+    await participateInSpace(page);
 
     await conductSurvey(page, [
       0,
@@ -366,11 +361,8 @@ test.describe.serial('[Deliberation] General Spec', () => {
   test(`DS-${i()} [Participant 4] Conduct PrePoll`, async ({ page }) => {
     await login(page, participant4);
     await goToMySpaces(page);
-    await expect(page.getByText(POST_TITLE).first()).toBeVisible();
-    await page.getByTestId('space-card').first().click();
-    await expect(
-      page.getByTestId('objective-viewer-option').first(),
-    ).toBeVisible();
+    await goToSpace(page, POST_TITLE);
+    await participateInSpace(page);
 
     await conductSurvey(page, [
       0,

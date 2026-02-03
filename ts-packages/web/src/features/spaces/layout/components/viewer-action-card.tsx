@@ -88,6 +88,7 @@ export default function ViewerActionCard({
           variant="rounded_primary"
           className="w-full"
           onClick={actions[0].onClick}
+          data-testid="viewer-participate-button"
         >
           {actions[0].label}
         </Button>
@@ -95,6 +96,7 @@ export default function ViewerActionCard({
           variant="rounded_secondary"
           className="w-full"
           onClick={actions[1].onClick}
+          data-testid="viewer-credentials-button"
         >
           {actions[1].label}
         </Button>
