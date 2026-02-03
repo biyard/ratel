@@ -40,3 +40,11 @@ export async function demoteAdmin(
 ): Promise<DemoteAdminResponse> {
   return await call('DELETE', `/m3/admin/${userId}`);
 }
+
+/**
+ * Run teams migration
+ * POST /m3/migrations/teams
+ */
+export async function runTeamsMigration(): Promise<void> {
+  return await call('POST', '/m3/migrations/teams');
+}
