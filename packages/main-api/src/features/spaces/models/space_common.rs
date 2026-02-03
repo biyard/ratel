@@ -77,6 +77,23 @@ pub struct SpaceCommon {
     #[serde(default)]
     // participants is the number of participants. It is incremented when a user participates in the space.
     // It is only used for spaces enabling explicit participation such as anonymous participation.
+
+    /*
+    TODO: Participate 로직 개선
+
+    `participate_space_handler` 에서는
+    Space Visibility 에 따라 서로 다른 로직으로 처리하고 있음.
+        1. SpaceVisibility::Public => 초대 없이도 참여 가능
+        2. SpaceVisibility::Team, Private => 초대 받은 멤버만 참여 가능
+
+    `get_space_handler` 에서는
+        can_participate 필드에서는 SpaceInvitationMember::get() 결과만 사용하고 있음.
+        위 조건을 반영해야함.
+
+    SpaceVisibility::Team 인 경우, Team Member 는 글 조회는 가능하지만,
+        초대 받지 않은 경우, 참여가 불가능함.
+
+     */
     pub participants: i64,
 
     // space pdf files
@@ -85,6 +102,14 @@ pub struct SpaceCommon {
     #[serde(default)]
     pub block_participate: bool,
 
+    // FIXME
+    /*
+    AS-IS
+        SpacePanelQuota 와 SpaceCommon Quota, Remain 가 별도로 동작함
+    TO-DO
+        1. SpacePanelQuota 등록 시, SpaceCommon 의 Quota / Remain 가 함께 업데이트.
+        2. PATCH /spaces/{space_id} body: { quotas: i64 } Update 로직 제거
+     */
     #[serde(default = "max_quota")]
     pub quota: i64,
     #[serde(default = "max_quota")]
@@ -195,9 +220,14 @@ impl SpaceCommon {
         let user_attributes = user.get_attributes(cli).await?;
         let age: Option<u8> = user_attributes.age().and_then(|v| u8::try_from(v).ok());
         let gender = user_attributes.gender;
-
+        tracing::info!(
+            "age: {:?}, gender: {:?}, remains: {}",
+            age,
+            gender,
+            self.remains
+        );
         if self.remains <= 0 {
-            return Err(Error::LackOfVerifiedAttributes);
+            return Err(Error::FullQuota);
         }
 
         for q in panel_quota {
