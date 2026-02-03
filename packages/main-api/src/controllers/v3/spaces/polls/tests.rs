@@ -483,7 +483,7 @@ async fn test_get_poll_results_with_panel_responses() {
 
     let mut attribute = AttributeCode::new();
     attribute.gender = Some(Gender::Male);
-    attribute.birth_date = Some("19991231".to_string());
+    attribute.birth_date = Some("20100101".to_string()); // 2010-01-01, age ~16 (fits 0-18 range)
     let _ = attribute.create(&ddb).await;
 
     let code = match attribute.pk {
@@ -515,6 +515,16 @@ async fn test_get_poll_results_with_panel_responses() {
         },
     ];
 
+    let (status, _headers, _res) = patch! {
+        app: app,
+        path: format!("/v3/spaces/{}", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "quotas": 60,
+        }
+    };
+    assert_eq!(status, 200);
+
     let (status, _headers, body) = post! {
         app: app,
         path: format!("/v3/spaces/{}/panels", space_pk.to_string()),
@@ -529,7 +539,7 @@ async fn test_get_poll_results_with_panel_responses() {
                 ),
                 PanelAttributeWithQuota::VerifiableAttribute(
                     VerifiableAttributeWithQuota {
-                        attribute: VerifiableAttribute::Age(Age::Range { inclusive_min: 0, inclusive_max: 18 }),
+                        attribute: VerifiableAttribute::Age(Age::Range { inclusive_min: 0, inclusive_max: 30 }),
                         quota: 30
                     }
                 )
@@ -543,18 +553,6 @@ async fn test_get_poll_results_with_panel_responses() {
 
     let participant = SpacePanelParticipant::new(space_pk.clone(), test_user.0.clone());
     let _ = participant.create(&ddb).await;
-
-    // Participate in the space before responding to poll
-    let (status, _headers, _res) = post! {
-        app: app,
-        path: format!("/v3/spaces/{}/participate", space_pk.to_string()),
-        headers: test_user.1.clone(),
-        body: {
-            "verifiable_presentation": ""
-        },
-        response_type: ParticipateSpaceResponse
-    };
-    assert_eq!(status, 200, "test_user failed to participate");
 
     let (status, _headers, _res) = post! {
         app: app,
@@ -577,6 +575,28 @@ async fn test_get_poll_results_with_panel_responses() {
             other: None,
         },
     ];
+
+    // Setup credential for user2
+    let mut attribute2 = AttributeCode::new();
+    attribute2.gender = Some(Gender::Male);
+    attribute2.birth_date = Some("20100101".to_string());
+    let _ = attribute2.create(&ddb).await;
+
+    let code2 = match attribute2.pk {
+        Partition::AttributeCode(v) => v.to_string(),
+        _ => "".to_string(),
+    };
+
+    let (status, _headers, _body) = put! {
+        app: app,
+        path: format!("/v3/me/did"),
+        headers: user2.1.clone(),
+        body: {
+            "type": "code",
+            "code": code2
+        }
+    };
+    assert_eq!(status, 200, "user2 failed to set credential");
 
     // user2 participates in the space before responding to poll
     let (status, _headers, _res) = post! {
@@ -646,29 +666,6 @@ async fn test_get_poll_results_with_responses() {
             other: None,
         },
     ];
-
-    // test_user participates in the space before responding to poll
-    let (status, _headers, _res) = post! {
-        app: app,
-        path: format!("/v3/spaces/{}/participate", space_pk.to_string()),
-        headers: test_user.1.clone(),
-        body: {
-            "verifiable_presentation": ""
-        },
-        response_type: ParticipateSpaceResponse
-    };
-    assert_eq!(status, 200, "test_user failed to participate");
-
-    let (status, _headers, _res) = post! {
-        app: app,
-        path: format!("/v3/spaces/{}/polls/{}/responses", space_pk.to_string(), poll_sk.to_string()),
-        headers: test_user.1.clone(),
-        body: {
-            "answers": answers1,
-        },
-        response_type: RespondPollSpaceResponse
-    };
-    assert_eq!(status, 200);
 
     let answers2 = vec![
         Answer::SingleChoice {
