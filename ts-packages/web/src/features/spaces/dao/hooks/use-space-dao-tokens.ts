@@ -1,4 +1,7 @@
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  UseInfiniteQueryResult,
+} from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { spaceDaoKeys } from '@/constants';
 
@@ -21,12 +24,15 @@ export function useSpaceDaoTokens(
   spacePk: string,
   limit = 50,
   enabled = true,
-): UseQueryResult<SpaceDaoTokenListResponse> {
-  return useQuery({
-    queryKey: spaceDaoKeys.tokens(spacePk, limit),
-    queryFn: async () => {
+): UseInfiniteQueryResult<SpaceDaoTokenListResponse> {
+  return useInfiniteQuery({
+    queryKey: spaceDaoKeys.tokens(spacePk),
+    queryFn: async ({ pageParam }) => {
       const params = new URLSearchParams();
       params.set('limit', String(limit));
+      if (pageParam) {
+        params.set('bookmark', String(pageParam));
+      }
       const query = params.toString();
       return call<void, SpaceDaoTokenListResponse>(
         'GET',
@@ -35,7 +41,17 @@ export function useSpaceDaoTokens(
         }`,
       );
     },
+    getNextPageParam: (lastPage) => lastPage.bookmark ?? undefined,
+    select: (data) => {
+      const items = data.pages.flatMap((page) => page.items);
+      const last = data.pages[data.pages.length - 1];
+      return {
+        items,
+        bookmark: last?.bookmark ?? null,
+      };
+    },
     enabled: Boolean(spacePk) && enabled,
     refetchOnWindowFocus: false,
+    initialPageParam: null,
   });
 }

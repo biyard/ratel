@@ -19,7 +19,7 @@ export function useRefreshSpaceDaoTokensMutation(spacePk: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: spaceDaoKeys.tokens(spacePk, 50),
+        queryKey: spaceDaoKeys.tokens(spacePk),
       });
     },
   });

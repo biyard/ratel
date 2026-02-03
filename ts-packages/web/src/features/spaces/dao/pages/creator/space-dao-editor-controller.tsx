@@ -37,10 +37,12 @@ export class SpaceDaoEditorController {
     public isPopupOpen: State<boolean>,
     public isRegistering: State<boolean>,
     public isUpdating: State<boolean>,
-    public rewardBookmark: State<string | null>,
-    public rewardHistory: State<(string | null)[]>,
-    public reward: SpaceDaoRewardListResponse | undefined,
+    public rewardPageIndex: State<number>,
+    public rewardPages: SpaceDaoRewardListResponse[] | undefined,
     public rewardLoading: boolean,
+    public rewardHasNextPage: boolean,
+    public rewardFetchingNextPage: boolean,
+    public fetchNextRewardPage: () => Promise<unknown>,
     public isDistributingPage: State<boolean>,
     public selectedToken: string | null,
     public tokenBalance: string | null,
@@ -72,29 +74,27 @@ export class SpaceDaoEditorController {
   }
 
   get canPrevReward() {
-    if (this.space?.isFinished) {
-      return false;
-    }
-    return this.rewardHistory.get().length > 0;
+    return this.rewardPageIndex.get() > 0;
   }
 
   get canNextReward() {
-    if (this.space?.isFinished) {
-      return false;
-    }
-    return Boolean(this.reward?.bookmark);
+    const index = this.rewardPageIndex.get();
+    const pages = this.rewardPages ?? [];
+    return index < pages.length - 1 || this.rewardHasNextPage;
   }
 
   get visibleRewardRecipients() {
-    return this.reward?.items ?? [];
+    return this.rewardRecipients?.items ?? [];
   }
 
   get rewardRecipients() {
-    return this.reward;
+    const pages = this.rewardPages ?? [];
+    const index = this.rewardPageIndex.get();
+    return pages[index] ?? pages[0];
   }
 
   get rewardRecipientsLoading() {
-    return this.rewardLoading;
+    return this.rewardLoading || this.rewardFetchingNextPage;
   }
 
   fetchRecipientCount = async () => {
@@ -114,21 +114,22 @@ export class SpaceDaoEditorController {
     }
   };
 
-  handleNextReward = () => {
-    const next = this.reward?.bookmark ?? null;
-    if (!next) return;
-    const history = [...this.rewardHistory.get()];
-    history.push(this.rewardBookmark.get());
-    this.rewardHistory.set(history);
-    this.rewardBookmark.set(next);
+  handleNextReward = async () => {
+    const pages = this.rewardPages ?? [];
+    const index = this.rewardPageIndex.get();
+    if (index < pages.length - 1) {
+      this.rewardPageIndex.set(index + 1);
+      return;
+    }
+    if (!this.rewardHasNextPage) return;
+    await this.fetchNextRewardPage();
+    this.rewardPageIndex.set(index + 1);
   };
 
   handlePrevReward = () => {
-    const history = [...this.rewardHistory.get()];
-    if (history.length === 0) return;
-    const prev = history.pop() ?? null;
-    this.rewardHistory.set(history);
-    this.rewardBookmark.set(prev);
+    const index = this.rewardPageIndex.get();
+    if (index <= 0) return;
+    this.rewardPageIndex.set(index - 1);
   };
 
   handleDistribute = async () => {
@@ -162,7 +163,8 @@ export class SpaceDaoEditorController {
       const daoService = new SpaceDaoService(provider);
       await daoService.connectWallet();
       const totalBalance = ethers.toBigInt(balance);
-      const totalCount = this.reward?.remaining_count ?? candidates.length;
+      const totalCount =
+        this.rewardRecipients?.remaining_count ?? candidates.length;
       if (totalCount <= 0) {
         showErrorToast(this.t('error_register_failed_unknown'));
         return;
@@ -338,17 +340,17 @@ export function useSpaceDaoEditorController(
   const isPopupOpen = useState(false);
   const isRegistering = useState(false);
   const isUpdating = useState(false);
-  const rewardBookmark = useState<string | null>(null);
-  const rewardHistory = useState<(string | null)[]>([]);
+  const rewardPageIndex = useState(0);
   const isDistributingPage = useState(false);
   const createSpaceDaoMutation = useCreateSpaceDaoMutation();
   const updateRewardMutation = useUpdateSpaceDaoRewardMutation();
-  const { data: reward, isLoading: rewardLoading } = useSpaceDaoReward(
-    spacePk,
-    rewardBookmark[0],
-    50,
-    Boolean(dao?.contract_address),
-  );
+  const {
+    data: reward,
+    isLoading: rewardLoading,
+    fetchNextPage: fetchNextRewardPage,
+    hasNextPage: rewardHasNextPage,
+    isFetchingNextPage: rewardFetchingNextPage,
+  } = useSpaceDaoReward(spacePk, 1, Boolean(dao?.contract_address));
   const provider = useMemo(() => {
     if (!config.rpc_url) {
       return null;
@@ -373,10 +375,12 @@ export function useSpaceDaoEditorController(
     new State(isPopupOpen),
     new State(isRegistering),
     new State(isUpdating),
-    new State(rewardBookmark),
-    new State(rewardHistory),
-    reward,
+    new State(rewardPageIndex),
+    reward?.pages,
     rewardLoading,
+    Boolean(rewardHasNextPage),
+    rewardFetchingNextPage,
+    fetchNextRewardPage,
     new State(isDistributingPage),
     selectedToken ?? null,
     tokenBalance ?? null,
