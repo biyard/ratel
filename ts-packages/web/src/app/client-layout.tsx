@@ -56,7 +56,9 @@ export default function ClientLayout({
         mobileExtends={mobileExtends}
         setMobileExtends={setMobileExtends}
       />
-      <div className="w-full min-h-screen">{children}</div>
+      <div className="w-full min-h-[calc(100vh-var(--header-height))]">
+        {children}
+      </div>
       <Footer />
 
       {/* Mobile Side Menu for authenticated users */}
@@ -72,7 +74,7 @@ export default function ClientLayout({
         <div
           className={
             mobileExtends
-              ? 'fixed top-[var(--header-height)] left-0 w-screen h-[calc(100vh-var(--header-height))] z-50 bg-bg hidden max-tablet:flex max-tablet:flex-col max-tablet:items-start max-tablet:justify-start pt-6 px-4 gap-6'
+              ? 'fixed top-(--header-height) left-0 w-screen h-[calc(100vh-var(--header-height))] z-50 bg-bg hidden max-tablet:flex max-tablet:flex-col max-tablet:items-start max-tablet:justify-start pt-6 px-4 gap-6'
               : 'hidden'
           }
         >

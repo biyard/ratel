@@ -5,19 +5,49 @@ import {
   GameTrophy,
   User,
   Vote,
+  Settings,
 } from '@/components/icons';
 import { config } from '@/config';
 import { route } from '@/route';
 import { SpaceType } from '../types/space-type';
-import { SideMenu } from './types/space-menu';
+import { Space } from '../types/space';
+import { UserType } from '@/lib/api/ratel/users.v3';
 
-const pieChartColored = (props) => (
-  <PieChart1
-    {...props}
-    className="[&>path]:stroke-neutral-500 [&>circle]:stroke-neutral-500 w-5 h-5"
-  />
-);
+export type SideMenu = {
+  Icon: React.ComponentType<React.ComponentProps<'svg'>>;
+  to: (space: Space) => string;
+  label: string;
+  visible?: (space: Space) => boolean;
+};
 
+export enum Label {
+  Overview = 'menu_overview',
+  Poll = 'menu_poll',
+  Discussions = 'menu_discussions',
+  Panels = 'menu_panels',
+  Boards = 'menu_boards',
+  Members = 'menu_members',
+  Files = 'menu_files',
+  Dao = 'menu_dao',
+  Quiz = 'menu_quiz',
+  AdminSettings = 'menu_admin_settings',
+  Rewards = 'menu_rewards',
+  Analyze = 'menu_analyze',
+}
+export const BASE_MENUS: SideMenu[] = [
+  {
+    Icon: Post,
+    to: (space) => route.spaceByType(space.spaceType, space.pk),
+    label: Label.Overview,
+  },
+];
+export const ADMIN_MENUS: SideMenu[] = [
+  {
+    Icon: Settings,
+    to: (space) => route.spaceSetting(space.pk),
+    label: Label.AdminSettings,
+  },
+];
 export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
   [SpaceType.Poll]: [
     {
@@ -26,13 +56,13 @@ export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
         const pollPk = `SPACE_POLL#${space.pk.split('#')[1]}`;
         return route.spacePollById(space.pk, pollPk);
       },
-      label: 'menu_poll',
+      label: Label.Poll,
     },
     {
       Icon: User,
       to: (space) => route.spaceMembers(space.pk),
       visible: () => config.experiment,
-      label: 'menu_members',
+      label: Label.Members,
     },
     {
       Icon: PieChart1,
@@ -41,14 +71,13 @@ export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
         return route.spaceAnalyzePollById(space.pk, pollPk);
       },
       visible: (space) => !space.isDraft && space.isAdmin(),
-      label: 'menu_analyze',
+      label: Label.Analyze,
     },
     {
       Icon: GameTrophy,
       to: (space) => route.spaceReward(space.pk),
-      visible: (space) =>
-        (config.experiment && !space.isDraft) || space.isAdmin(),
-      label: 'menu_rewards',
+      visible: (space) => !space.isDraft || space.isAdmin(),
+      label: Label.Rewards,
     },
   ],
 
@@ -56,44 +85,44 @@ export const SPACE_MENUS: Record<SpaceType, SideMenu[]> = {
     {
       Icon: Post,
       to: (space) => route.spaceFiles(space.pk),
-      label: 'menu_files',
+      label: Label.Files,
     },
     {
       Icon: Vote,
       to: (space) => route.spacePolls(space.pk),
-      label: 'menu_poll',
+      label: Label.Poll,
     },
     {
       Icon: Post,
       to: (space) => route.spaceBoards(space.pk),
-      label: 'menu_boards',
+      label: Label.Boards,
     },
     {
       Icon: Discuss,
       to: (space) => route.spaceDao(space.pk),
       visible: (space) =>
         config.experiment &&
-        space.authorType === 2 &&
+        space.authorType === UserType.Team &&
         (space.isAdmin() || Boolean(space.daoAddress)),
-      label: 'menu_dao',
+      label: Label.Dao,
     },
     {
       Icon: User,
       to: (space) => route.spaceMembers(space.pk),
       visible: (space) => space.isAdmin(),
-      label: 'menu_members',
+      label: Label.Members,
     },
     {
       Icon: User,
       to: (space) => route.spacePanels(space.pk),
       visible: (space) => space.isAdmin(),
-      label: 'menu_panels',
+      label: Label.Panels,
     },
     {
-      Icon: pieChartColored,
+      Icon: PieChart1,
       to: (space) => route.spaceAnalyzePolls(space.pk),
       visible: (space) => !space.isDraft && space.isAdmin(),
-      label: 'menu_analyze',
+      label: Label.Analyze,
     },
   ],
 
