@@ -1,33 +1,33 @@
 import { useTranslation } from 'react-i18next';
 import { CheckIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
-import { SpaceDaoSampleResponse } from '@/features/spaces/dao/hooks/use-space-dao-samples';
+import { SpaceDaoSelectedResponse } from '@/features/spaces/dao/hooks/use-space-dao-selected';
 
-type SpaceDaoSampleTableProps = {
-  samples?: SpaceDaoSampleResponse[];
-  samplesBookmark?: string | null;
-  canPrevSample?: boolean;
-  canNextSample?: boolean;
-  samplesLoading?: boolean;
+type SpaceDaoSelectedTableProps = {
+  selected?: SpaceDaoSelectedResponse[];
+  selectedBookmark?: string | null;
+  canPrevSelected?: boolean;
+  canNextSelected?: boolean;
+  selectedLoading?: boolean;
   canDistributeReward?: boolean;
-  onNextSample?: () => void;
-  onPrevSample?: () => void;
+  onNextSelected?: () => void;
+  onPrevSelected?: () => void;
   onDistributePage?: () => void;
   isDistributingPage?: boolean;
 };
 
-export function SpaceDaoSampleTable({
-  samples,
-  samplesBookmark,
-  canPrevSample = false,
-  canNextSample = false,
-  samplesLoading = false,
+export function SpaceDaoSelectedTable({
+  selected,
+  selectedBookmark,
+  canPrevSelected = false,
+  canNextSelected = false,
+  selectedLoading = false,
   canDistributeReward = false,
-  onNextSample,
-  onPrevSample,
+  onNextSelected,
+  onPrevSelected,
   onDistributePage,
   isDistributingPage = false,
-}: SpaceDaoSampleTableProps) {
+}: SpaceDaoSelectedTableProps) {
   const { t } = useTranslation('SpaceDaoEditor');
 
   const renderAddress = (address: string) => {
@@ -38,63 +38,65 @@ export function SpaceDaoSampleTable({
   return (
     <div className="mt-6 space-y-3 w-full">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-text-secondary">{t('dao_samples_title')}</p>
+        <p className="text-sm text-text-secondary">{t('dao_selected_title')}</p>
         <div className="flex items-center gap-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={onPrevSample}
-            disabled={!canPrevSample}
+            onClick={onPrevSelected}
+            disabled={!canPrevSelected}
           >
-            {t('dao_samples_prev')}
+            {t('dao_selected_prev')}
           </Button>
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={onNextSample}
-            disabled={!canNextSample || !samplesBookmark}
+            onClick={onNextSelected}
+            disabled={!canNextSelected || !selectedBookmark}
           >
-            {t('dao_samples_next')}
+            {t('dao_selected_next')}
           </Button>
         </div>
       </div>
 
-      {samplesLoading ? (
+      {selectedLoading ? (
         <div className="text-sm text-text-secondary">
-          {t('dao_samples_loading')}
+          {t('dao_selected_loading')}
         </div>
-      ) : samples && samples.length > 0 ? (
+      ) : selected && selected.length > 0 ? (
         <table className="overflow-hidden w-full text-sm rounded-xl border border-input-box-border">
           <thead className="bg-muted text-[var(--color-panel-table-header)]">
             <tr>
-              <th className="py-3 px-4 text-left">{t('dao_samples_user')}</th>
-              <th className="py-3 px-4 text-left">{t('dao_samples_evm')}</th>
-              <th className="py-3 px-4 text-left">{t('dao_samples_status')}</th>
+              <th className="py-3 px-4 text-left">{t('dao_selected_user')}</th>
+              <th className="py-3 px-4 text-left">{t('dao_selected_evm')}</th>
+              <th className="py-3 px-4 text-left">
+                {t('dao_selected_status')}
+              </th>
             </tr>
           </thead>
           <tbody>
-            {samples.map((sample) => (
+            {selected.map((item) => (
               <tr
-                key={sample.sk}
+                key={item.sk}
                 className="border-t border-input-box-border hover:bg-muted/50"
               >
                 <td className="py-3 px-4">
-                  <span className="font-medium">{sample.display_name}</span>
+                  <span className="font-medium">{item.display_name}</span>
                 </td>
                 <td className="py-3 px-4 text-xs break-all">
-                  {renderAddress(sample.evm_address)}
+                  {renderAddress(item.evm_address)}
                 </td>
                 <td className="py-3 px-4 text-xs">
-                  {sample.reward_distributed ? (
+                  {item.reward_distributed ? (
                     <span className="inline-flex items-center gap-1 text-green-600">
                       <CheckIcon className="w-4 h-4" />
-                      {t('dao_samples_distributed')}
+                      {t('dao_selected_distributed')}
                     </span>
                   ) : (
                     <span className="text-text-secondary">
-                      {t('dao_samples_pending')}
+                      {t('dao_selected_pending')}
                     </span>
                   )}
                 </td>
@@ -104,13 +106,13 @@ export function SpaceDaoSampleTable({
         </table>
       ) : (
         <div className="text-sm text-text-secondary">
-          {t('dao_samples_empty')}
+          {t('dao_selected_empty')}
         </div>
       )}
 
       {canDistributeReward &&
-        samples &&
-        samples.some((item) => !item.reward_distributed) && (
+        selected &&
+        selected.some((item) => !item.reward_distributed) && (
           <div className="flex justify-end">
             <Button
               type="button"
@@ -120,8 +122,8 @@ export function SpaceDaoSampleTable({
               disabled={!onDistributePage || isDistributingPage}
             >
               {isDistributingPage
-                ? t('dao_samples_distributing')
-                : t('dao_samples_distribute')}
+                ? t('dao_selected_distributing')
+                : t('dao_selected_distribute')}
             </Button>
           </div>
         )}

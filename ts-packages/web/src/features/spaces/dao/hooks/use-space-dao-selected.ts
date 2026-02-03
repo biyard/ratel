@@ -2,7 +2,7 @@ import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { call } from '@/lib/api/ratel/call';
 import { spaceDaoKeys } from '@/constants';
 
-export type SpaceDaoSampleResponse = {
+export type SpaceDaoSelectedResponse = {
   pk: string;
   sk: string;
   user_pk: string;
@@ -15,21 +15,21 @@ export type SpaceDaoSampleResponse = {
   updated_at?: number;
 };
 
-export type SpaceDaoSampleListResponse = {
-  items: SpaceDaoSampleResponse[];
+export type SpaceDaoSelectedListResponse = {
+  items: SpaceDaoSelectedResponse[];
   bookmark?: string | null;
   remaining_count?: number;
   total_count?: number;
 };
 
-export function useSpaceDaoSamples(
+export function useSpaceDaoSelected(
   spacePk: string,
   bookmark: string | null | undefined,
   limit = 1,
   enabled = true,
-): UseQueryResult<SpaceDaoSampleListResponse> {
+): UseQueryResult<SpaceDaoSelectedListResponse> {
   return useQuery({
-    queryKey: spaceDaoKeys.samples(spacePk, bookmark ?? null, limit),
+    queryKey: spaceDaoKeys.selected(spacePk, bookmark ?? null, limit),
     queryFn: async () => {
       const params = new URLSearchParams();
       params.set('limit', String(limit));
@@ -37,7 +37,7 @@ export function useSpaceDaoSamples(
         params.set('bookmark', bookmark);
       }
       const query = params.toString();
-      return call<void, SpaceDaoSampleListResponse>(
+      return call<void, SpaceDaoSelectedListResponse>(
         'GET',
         `/v3/spaces/${encodeURIComponent(spacePk)}/dao/selected${
           query ? `?${query}` : ''

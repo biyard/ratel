@@ -125,17 +125,17 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
           {dao ? (
             <SpaceDaoInfoCard
               dao={dao}
-              samplingCount={ctrl.chainSamplingCount.get()}
+              recipientCount={ctrl.chainRecipientCount.get()}
               isUpdating={ctrl.isUpdating.get()}
               onUpdateDao={ctrl.handleUpdateDao}
-              samples={ctrl.visibleSamples}
-              samplesBookmark={ctrl.samples?.bookmark ?? null}
-              samplesLoading={ctrl.samplesLoading}
-              canPrevSample={ctrl.canPrevSample}
-              canNextSample={ctrl.canNextSample}
-              onPrevSample={ctrl.handlePrevSample}
-              onNextSample={ctrl.handleNextSample}
-              showSamples={Boolean(ctrl.space?.isFinished)}
+              selected={ctrl.visibleSelected}
+              selectedBookmark={ctrl.selected?.bookmark ?? null}
+              selectedLoading={ctrl.selectedLoading}
+              canPrevSelected={ctrl.canPrevSelected}
+              canNextSelected={ctrl.canNextSelected}
+              onPrevSelected={ctrl.handlePrevSelected}
+              onNextSelected={ctrl.handleNextSelected}
+              showSelected={Boolean(ctrl.space?.isFinished)}
               showEdit={Boolean(ctrl.space?.isDraft)}
               canDistributeReward={ctrl.canDistributeReward}
               onDistributePage={async () => {
@@ -205,14 +205,14 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
               <div className="grid gap-5">
                 <div>
                   <label className="text-sm text-text-secondary mb-2 block">
-                    {t('sampling_count_label')}
+                    {t('reward_count_label')}
                   </label>
                   <Input
                     type="number"
                     min={0}
-                    value={ctrl.samplingCount.get()}
-                    onChange={(e) => ctrl.samplingCount.set(e.target.value)}
-                    placeholder={t('sampling_count_placeholder')}
+                    value={ctrl.rewardCount.get()}
+                    onChange={(e) => ctrl.rewardCount.set(e.target.value)}
+                    placeholder={t('reward_count_placeholder')}
                   />
                 </div>
               </div>
