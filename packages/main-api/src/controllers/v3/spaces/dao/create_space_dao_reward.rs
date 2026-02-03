@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::SpacePathParam;
-use crate::features::spaces::{SpaceDao, SpaceDaoCandidate, SpaceDaoSelectedUser};
+use crate::features::spaces::{SpaceDao, SpaceDaoCandidate, SpaceDaoRewardUser};
 use crate::types::{EntityType, Permissions, TeamGroupPermission};
 use crate::utils::space_dao_sampling::collect_space_dao_candidate_addresses;
 use crate::{AppState, Error, transact_write_items};
@@ -11,24 +11,24 @@ use bdk::prelude::*;
 use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
-pub struct CreateSpaceDaoSelectedRequest {
-    pub selected_addresses: Vec<String>,
+pub struct CreateSpaceDaoRewardRequest {
+    pub reward_addresses: Vec<String>,
 }
 
-pub async fn create_space_dao_selected_handler(
+pub async fn create_space_dao_reward_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
-    Json(req): Json<CreateSpaceDaoSelectedRequest>,
-) -> Result<Json<Vec<SpaceDaoSelectedUser>>, Error> {
+    Json(req): Json<CreateSpaceDaoRewardRequest>,
+) -> Result<Json<Vec<SpaceDaoRewardUser>>, Error> {
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
-    if req.selected_addresses.is_empty() {
-        return Err(Error::BadRequest("selected_addresses is empty".to_string()));
+    if req.reward_addresses.is_empty() {
+        return Err(Error::BadRequest("reward_addresses is empty".to_string()));
     }
 
     let mut target_set = HashSet::new();
-    for addr in req.selected_addresses {
+    for addr in req.reward_addresses {
         target_set.insert(addr.to_lowercase());
     }
 
@@ -38,15 +38,15 @@ pub async fn create_space_dao_selected_handler(
         candidate_map.insert(candidate.evm_address.to_lowercase(), candidate);
     }
 
-    let (existing, _) = SpaceDaoSelectedUser::query(
+    let (existing, _) = SpaceDaoRewardUser::query(
         &dynamo.client,
         space_pk.clone(),
-        SpaceDaoSelectedUser::opt_all().sk("SPACE_DAO_SELECTED#".to_string()),
+        SpaceDaoRewardUser::opt_all().sk("SPACE_DAO_REWARD#".to_string()),
     )
             .await
             .map_err(|err| {
                 tracing::error!(
-                    "create_space_dao_selected: failed to load existing selected users: space={} err={:?}",
+                    "create_space_dao_reward: failed to load existing reward users: space={} err={:?}",
                     space_pk,
                     err
                 );
@@ -57,7 +57,7 @@ pub async fn create_space_dao_selected_handler(
         existing_set.insert(item.evm_address.to_lowercase());
     }
 
-    let mut pending: Vec<SpaceDaoSelectedUser> = Vec::new();
+    let mut pending: Vec<SpaceDaoRewardUser> = Vec::new();
     for addr in target_set {
         if existing_set.contains(&addr) {
             continue;
@@ -69,7 +69,7 @@ pub async fn create_space_dao_selected_handler(
             .user_pk
             .parse()
             .map_err(|_| Error::BadRequest("invalid user pk".to_string()))?;
-        let item = SpaceDaoSelectedUser::new(
+        let item = SpaceDaoRewardUser::new(
             space_pk.clone(),
             user_pk,
             candidate.username.clone(),

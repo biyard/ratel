@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::tests::setup_space;
-use crate::features::spaces::{SpaceDao, SpaceDaoSelectedUser, SpaceParticipant};
+use crate::features::spaces::{SpaceDao, SpaceDaoRewardUser, SpaceParticipant};
 use crate::models::user::UserEvmAddress;
 use crate::types::*;
 use crate::tests::v3_setup::TestContextV3;
@@ -77,7 +77,7 @@ async fn test_get_space_dao_not_found() {
 }
 
 #[tokio::test]
-async fn test_create_and_list_space_dao_selected() {
+async fn test_create_and_list_space_dao_reward() {
     let (ctx, space_pk) = setup_space(SpaceType::Poll).await;
     let user2 = ctx.create_another_user().await;
     let TestContextV3 {
@@ -131,12 +131,12 @@ async fn test_create_and_list_space_dao_selected() {
 
     let (status, _headers, body) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/dao/selected", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/dao/reward", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "selected_addresses": [evm1.clone(), evm2.clone()]
+            "reward_addresses": [evm1.clone(), evm2.clone()]
         },
-        response_type: Vec<SpaceDaoSelectedUser>
+        response_type: Vec<SpaceDaoRewardUser>
     };
 
     assert_eq!(status, 200);
@@ -144,7 +144,7 @@ async fn test_create_and_list_space_dao_selected() {
 
     let (status, _headers, body) = get! {
         app: app,
-        path: format!("/v3/spaces/{}/dao/selected?limit=50", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/dao/reward?limit=50", space_pk.to_string()),
         headers: test_user.1.clone(),
         response_type: serde_json::Value
     };
@@ -156,7 +156,7 @@ async fn test_create_and_list_space_dao_selected() {
 }
 
 #[tokio::test]
-async fn test_update_space_dao_selected() {
+async fn test_update_space_dao_reward() {
     let (ctx, space_pk) = setup_space(SpaceType::Poll).await;
     let user2 = ctx.create_another_user().await;
     let TestContextV3 {
@@ -210,25 +210,25 @@ async fn test_update_space_dao_selected() {
 
     let (_status, _headers, body) = post! {
         app: app,
-        path: format!("/v3/spaces/{}/dao/selected", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/dao/reward", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "selected_addresses": [evm1.clone(), evm2.clone()]
+            "reward_addresses": [evm1.clone(), evm2.clone()]
         },
-        response_type: Vec<SpaceDaoSelectedUser>
+        response_type: Vec<SpaceDaoRewardUser>
     };
 
-    let selected_sks: Vec<String> = body.iter().map(|item| item.sk.to_string()).collect();
+    let reward_sks: Vec<String> = body.iter().map(|item| item.sk.to_string()).collect();
 
     let (status, _headers, updated) = patch! {
         app: app,
-        path: format!("/v3/spaces/{}/dao/selected", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/dao/reward", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "selected_sks": selected_sks,
+            "reward_sks": reward_sks,
             "reward_distributed": true
         },
-        response_type: Vec<SpaceDaoSelectedUser>
+        response_type: Vec<SpaceDaoRewardUser>
     };
 
     assert_eq!(status, 200);
@@ -236,7 +236,7 @@ async fn test_update_space_dao_selected() {
 
     let (status, _headers, body) = get! {
         app: app,
-        path: format!("/v3/spaces/{}/dao/selected?limit=50", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/dao/reward?limit=50", space_pk.to_string()),
         headers: test_user.1.clone(),
         response_type: serde_json::Value
     };

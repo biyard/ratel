@@ -30,7 +30,7 @@ export const i18nSpaceDaoEditor = {
     reward_count_placeholder: 'e.g. 100',
     reward_amount_section_title: 'Per-person Reward Amount',
     reward_amount_section_description:
-      'Set the reward amount per selected recipient.',
+      'Set the reward amount per reward recipient.',
     reward_amount_label: 'Per-person Reward Amount',
     reward_amount_placeholder: 'e.g. 10',
     dao_info_title: 'DAO Address',
