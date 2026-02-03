@@ -1,4 +1,3 @@
-import { logger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from 'react-i18next';
 import { Col } from '@/components/ui/col';
@@ -10,8 +9,6 @@ import SpaceFileViewer from '@/features/spaces/files/components/space-file-viewe
 import { SpacePathProps } from '@/features/space-path-props';
 
 export function SpaceRecommendationEditorPage({ spacePk }: SpacePathProps) {
-  logger.debug(`SpaceRecommendationEditorPage: spacePk=${spacePk}`);
-
   const ctrl = useSpaceRecommendationEditorController(spacePk);
   const { t } = useTranslation('SpaceRecommendationEditor');
 
@@ -23,6 +20,7 @@ export function SpaceRecommendationEditorPage({ spacePk }: SpacePathProps) {
             htmlContent={ctrl.htmlContents.get()}
             canEdit={true}
             onContentChange={ctrl.handleUpdateContent}
+            uploadAsset={ctrl.uploadAsset}
             url={null}
           />
         </Col>

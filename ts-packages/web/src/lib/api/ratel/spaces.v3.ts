@@ -53,7 +53,7 @@ export function updateSpaceVisibility(
 export function updateSpaceFiles(
   spacePk: string,
   files: FileModel[],
-): Promise<void> {
+): Promise<{ files: FileModel[] }> {
   return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
     files,
   });
@@ -66,6 +66,16 @@ export function updateSpaceContent(
   return call('PATCH', `/v3/spaces/${encodeURIComponent(spacePk)}`, {
     content,
   });
+}
+
+export function deleteSpaceFile(
+  spacePk: string,
+  fileUrl: string,
+): Promise<{ success: boolean; message: string }> {
+  return call(
+    'DELETE',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/files?file_url=${encodeURIComponent(fileUrl)}`,
+  );
 }
 
 export function updateSpaceTitle(

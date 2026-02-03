@@ -37,7 +37,6 @@ import useFileSpace from '@/features/spaces/files/hooks/use-file-space';
 import SpaceAuthorizePopup from './space-authorize-popup';
 import SpaceEndModal from '@/features/spaces/modals/space-end-modal';
 import { useFinishSpaceMutation } from '@/features/spaces/hooks/use-finish-mutation';
-import { Trophy } from '@/assets/icons/game';
 
 export class SpaceHomeController {
   public space: Space;
@@ -201,6 +200,7 @@ export class SpaceHomeController {
       );
 
       const newModels: FileModel[] = files.map((file, i) => ({
+        id: crypto.randomUUID(),
         name: file.name,
         size: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
         ext: FileExtension.PDF,
@@ -666,6 +666,7 @@ export function useSpaceHomeController(spacePk: string) {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const mapped: FileModel[] = remote.map((f: any) => ({
+      id: f.id ?? '',
       name: f.name ?? '',
       size:
         typeof f.size === 'string'

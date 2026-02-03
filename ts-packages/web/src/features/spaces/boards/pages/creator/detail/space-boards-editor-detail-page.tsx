@@ -7,6 +7,8 @@ import PostBody from '../../../components/post-body';
 import PostComments from '../../../components/post-comments';
 import { TimeRangeSetting } from '@/features/spaces/polls/components/time-range-setting';
 import { SpaceStatus } from '@/features/spaces/types/space-common';
+import { useEffect } from 'react';
+import { useLocation } from 'react-router';
 // import { TimeRangeSetting } from '@/features/spaces/polls/components/time-range-setting';
 
 export function SpaceBoardsEditorDetailPage({
@@ -18,6 +20,16 @@ export function SpaceBoardsEditorDetailPage({
   );
   const ctrl = useSpaceBoardsEditorDetailController(spacePk, postPk);
   const { t } = useTranslation('SpaceBoardsEditorDetail');
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash === '#comments') {
+      setTimeout(() => {
+        const element = document.getElementById('comments');
+        element?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [location.hash]);
 
   return (
     <>

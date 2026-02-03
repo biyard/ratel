@@ -14,7 +14,7 @@ RUSTFLAGS ?= -D warnings
 API_MODEL_ARTIFACT_DIR ?= $(PWD)/.build
 CARGO_TARGET_DIR ?= $(PWD)/target
 
-RUST_FLAG ?=
+RUST_FLAG ?= "--timings"
 
 SECRET_TOKEN ?=
 RUST_LOG ?= debug
@@ -37,6 +37,9 @@ NOVA_MICRO_MODEL_ID ?= dummy
 NOVA_LITE_MODEL_ID ?= dummy
 PRIVATE_BUCKET_NAME ?= private.ratel.foundation
 
+BEDROCK_AGENT_ID ?= dummy
+BEDROCK_AGENT_ALIAS_ID ?= dummy
+
 REPO_NAME ?= $(PROJECT)/$(SERVICE)
 ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(REPO_NAME)  --query "repositories[0].repositoryUri" --output text)
 
@@ -54,7 +57,7 @@ FIREBASE_PROJECT_ID ?=
 PORTONE_API_SECRET ?=
 
 BIYARD_API_URL ?= https://api.dev.biyard.co
-BIYARD_API_SECRET ?= biyard_default_api_secret
+BIYARD_API_KEY ?= biyard_default_api_key
 BIYARD_PROJECT_ID ?= ratel
 
 RATEL_PROJECT_ID ?= 
@@ -127,8 +130,10 @@ BUILD_ENV ?= ENV=$(ENV) \
 								FCM_ENABLED=$(FCM_ENABLED) \
 								REWARD=$(REWARD) \
 								BIYARD_API_URL=$(BIYARD_API_URL) \
-								BIYARD_API_SECRET=$(BIYARD_API_SECRET) \
-								BIYARD_PROJECT_ID=$(BIYARD_PROJECT_ID)
+								BIYARD_API_KEY=$(BIYARD_API_KEY) \
+								BIYARD_PROJECT_ID=$(BIYARD_PROJECT_ID) \
+								BEDROCK_AGENT_ID=$(BEDROCK_AGENT_ID) \
+								BEDROCK_AGENT_ALIAS_ID=$(BEDROCK_AGENT_ALIAS_ID)
 
 .build/evm-keys:
 	docker run --rm ghcr.io/foundry-rs/foundry:latest "cast wallet new --json" > .build/evm-keys.json
@@ -170,11 +175,18 @@ docker.build:
 	$(eval WEB_INDEX_JS=$(shell basename $(shell ls dist/assets/index-*.js)))
 	$(eval WEB_INDEX_CSS=$(shell basename $(shell ls dist/assets/index-*.css)))
 
-	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'apt-get update && apt-get install -y libssl-dev pkg-config ca-certificates && $(BUILD_ENV) WEB_BUILD=false WEB_INDEX_JS=$(WEB_INDEX_JS) WEB_INDEX_CSS=$(WEB_INDEX_CSS) CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release $(RUST_FLAG)'
+	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c '\
+		apt-get update && apt-get install -y \
+			libssl-dev \
+			ca-certificates \
+			pkg-config \
+			g++ \
+			libfontconfig1-dev \
+			libfreetype6-dev \
+		&& $(BUILD_ENV) WEB_BUILD=false WEB_INDEX_JS=$(WEB_INDEX_JS) WEB_INDEX_CSS=$(WEB_INDEX_CSS) CARGO_TARGET_DIR=/app/packages/$(SERVICE)/target cargo build --release $(RUST_FLAG)'
 
 	docker run --rm --name $(SERVICE) -v $(PWD)/../..:/app -w /app/packages/$(SERVICE) rust:slim-bookworm sh -c 'cp -rf dist target/release/'
 	docker build -t $(ECR_NAME):$(COMMIT) --no-cache -f Dockerfile $(PWD)/target/release
-
 docker.push:
 	docker push $(ECR_NAME):$(COMMIT)
 

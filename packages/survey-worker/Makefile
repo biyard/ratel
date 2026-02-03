@@ -3,6 +3,7 @@ SERVICE ?= survey-worker
 ENV ?= local
 DOMAIN ?= dev.ratel.foundation
 
+RUST_FLAG ?=
 WORKSPACE_ROOT ?= $(PWD)/../..
 AWS_ACCOUNT_ID ?= $(shell aws sts get-caller-identity --query "Account" --output text)
 COMMIT ?= $(shell git rev-parse --short HEAD)
@@ -11,20 +12,17 @@ RUSTFLAGS ?= -D warnings
 API_MODEL_ARTIFACT_DIR ?= $(PWD)/.build
 CARGO_TARGET_DIR ?= $(PWD)/target
 
-RUST_FLAG ?=
-RUST_LOG ?= debug
 AWS_ACCESS_KEY_ID ?= $(shell aws configure get aws_access_key_id $(AWS_FLAG))
 AWS_SECRET_ACCESS_KEY ?= $(shell aws configure get aws_secret_access_key $(AWS_FLAG))
 AWS_REGION ?= $(shell aws configure get region)
 
-DYNAMO_ENDPOINT ?= http://localstack:4566
-DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
-
 REPO_NAME ?= $(PROJECT)/$(SERVICE)
 ECR_NAME ?= $(shell aws ecr describe-repositories --repository-names $(REPO_NAME)  --query "repositories[0].repositoryUri" --output text)
 
+DYNAMO_ENDPOINT ?= http://localstack:4566
+DYNAMO_TABLE_PREFIX ?= ratel-$(ENV)
+
 BUILD_ENV ?= ENV=$(ENV) \
-								RUST_LOG=$(RUST_LOG) \
 								AWS_ACCESS_KEY_ID=$(AWS_ACCESS_KEY_ID) \
 								AWS_SECRET_ACCESS_KEY=$(AWS_SECRET_ACCESS_KEY) \
 								AWS_REGION=$(AWS_REGION) \
@@ -47,7 +45,7 @@ watch:
 build: docker.login docker.build docker.push
 
 bin.build:
-	$(BUILD_ENV) cargo build --release $(RUST_FLAG)
+	$(BUILD_ENV) cargo build $(RUST_FLAG)
 
 docker.push:
 	docker push $(ECR_NAME):$(COMMIT)

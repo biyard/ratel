@@ -9,7 +9,6 @@ import {
   InvalidLowerAlphaNumeric,
   InvalidTooShort,
 } from '@/errors';
-import * as teamsV3Api from '@/lib/api/ratel/teams.v3';
 import { usePopup } from '@/lib/contexts/popup-service';
 import { logger } from '@/lib/logger';
 import { checkString } from '@/lib/string-filter-utils';
@@ -17,9 +16,9 @@ import { showErrorToast } from '@/lib/toast';
 import { checkLowerAlphaNumeric } from '@/lib/valid-utils';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useUserInfo } from '@/hooks/use-user-info';
 import { useNavigate } from 'react-router';
 import { route } from '@/route';
+import { useCreateTeam } from '@/features/teams/hooks/use-create-team';
 
 const defaultProfile =
   'https://metadata.ratel.foundation/ratel/default-profile.png';
@@ -27,7 +26,6 @@ const defaultProfile =
 export default function TeamCreationPopup() {
   const { t } = useTranslation('Home');
   const popup = usePopup();
-  const userInfo = useUserInfo();
   const navigate = useNavigate();
 
   const [profileUrl, setProfileUrl] = useState('');
@@ -35,6 +33,8 @@ export default function TeamCreationPopup() {
   const [nickname, setNickname] = useState('');
   const [invalid, setInvalid] = useState<Error | undefined>(undefined);
   const [htmlContents, setHtmlContents] = useState('');
+
+  const createTeamMutation = useCreateTeam().mutateAsync;
 
   const handleContents = (evt: React.FormEvent<HTMLTextAreaElement>) => {
     setHtmlContents(evt.currentTarget.value);
@@ -52,14 +52,13 @@ export default function TeamCreationPopup() {
 
     try {
       logger.debug('Team creation button clicked');
-      await teamsV3Api.createTeam({
+      await createTeamMutation({
         username,
         nickname,
         profile_url: profileUrl || defaultProfile,
         description: htmlContents,
       });
 
-      userInfo.refetch();
       popup.close();
 
       // Redirect to the newly created team's home page

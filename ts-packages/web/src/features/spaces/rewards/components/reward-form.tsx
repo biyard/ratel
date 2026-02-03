@@ -10,12 +10,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SpaceRewardResponse } from '../types/space-reward-response';
-import { RewardsI18n } from '../i18n';
+import { SpaceRewardsI18n } from '../i18n';
 import { RewardAction, getRewardActionI18nKey } from '../types/reward-type';
 import { RewardFormData } from '../pages/editor/reward-editor-controller';
 
 interface RewardFormProps {
-  i18n: RewardsI18n;
+  i18n: SpaceRewardsI18n;
   initialData?: SpaceRewardResponse | null;
   onSubmit: (data: RewardFormData) => Promise<void>;
   onCancel: () => void;
@@ -80,7 +80,11 @@ export function RewardForm({
             value={action}
             onValueChange={(value) => setAction(value as RewardAction)}
           >
-            <SelectTrigger className="w-full" aria-invalid={!!errors.action}>
+            <SelectTrigger
+              data-testid="reward-action-select"
+              className="w-full"
+              aria-invalid={!!errors.action}
+            >
               <SelectValue placeholder={t.select_reward_type} />
             </SelectTrigger>
             <SelectContent>
@@ -102,6 +106,7 @@ export function RewardForm({
             {t.credits}
           </label>
           <Input
+            data-testid="reward-credits-input"
             type="number"
             value={credits}
             onChange={(e) => setCredits(parseInt(e.target.value) || 0)}
@@ -119,6 +124,7 @@ export function RewardForm({
             {t.description}
           </label>
           <Input
+            data-testid="reward-description-input"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t.description_placeholder}
@@ -127,6 +133,7 @@ export function RewardForm({
 
         <div className="flex gap-3 justify-end mt-4">
           <Button
+            data-testid="reward-cancel-button"
             type="button"
             variant="outline"
             onClick={onCancel}
@@ -134,7 +141,12 @@ export function RewardForm({
           >
             {t.cancel}
           </Button>
-          <Button type="submit" variant="primary" disabled={isSubmitting}>
+          <Button
+            data-testid="reward-save-button"
+            type="submit"
+            variant="primary"
+            disabled={isSubmitting}
+          >
             {isSubmitting ? t.loading : t.save}
           </Button>
         </div>

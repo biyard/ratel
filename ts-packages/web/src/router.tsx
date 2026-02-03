@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router';
+import React from 'react';
 import RootLayout from './app/layout';
 import HomePage from './app/(social)/home-page';
 import SocialLayout from './app/(social)/layout';
@@ -18,6 +19,8 @@ import TeamGroups from './app/teams/[username]/groups/page';
 import TeamMembers from './app/teams/[username]/members/page';
 import TeamSettings from './app/teams/[username]/settings/page';
 import TeamDrafts from './app/teams/[username]/drafts/page';
+import TeamDao from './app/teams/[username]/dao/page';
+import TeamRewards from './app/teams/[username]/rewards/page';
 
 // Space
 import SpacePollPage from './app/spaces/[id]/poll/space-poll-page';
@@ -67,8 +70,21 @@ import MySpacesPage from './app/(social)/my-spaces/page';
 import NotificationsPage from './app/notifications/page';
 import RewardsPage from './app/rewards/page';
 import { MembershipPlan } from './features/membership/components/membership-plan';
+import Providers from './providers/providers';
+import { PdfViewerLoader } from './features/spaces/files/components/pdf-viewer-loader';
+import SpaceDaoPage from './app/spaces/[id]/dao/space-dao-page';
 
 export const routes = createBrowserRouter([
+  // PDF Viewer - Completely standalone without any layout
+  {
+    id: 'space-pdf-viewer-standalone',
+    path: '/spaces/:spacePk/files/:fileId',
+    Component: () => (
+      <Providers>
+        <PdfViewerLoader />
+      </Providers>
+    ),
+  },
   {
     id: 'root-layout',
     Component: RootLayout,
@@ -220,6 +236,16 @@ export const routes = createBrowserRouter([
             path: 'drafts',
             Component: TeamDrafts,
           },
+          {
+            id: 'team-rewards',
+            path: 'rewards',
+            Component: TeamRewards,
+          },
+          {
+            id: 'team-dao',
+            path: 'dao',
+            Component: TeamDao,
+          },
         ],
       },
 
@@ -273,7 +299,12 @@ export const routes = createBrowserRouter([
             path: 'rewards',
             Component: SpaceRewardsPage,
           },
-
+          // Space Dao Feature
+          {
+            id: 'space-dao-page',
+            path: 'dao',
+            Component: SpaceDaoPage,
+          }, // End of Dao Feature
           {
             id: 'space-sprint-league-feature',
             path: 'sprint-leagues',
@@ -301,6 +332,7 @@ export const routes = createBrowserRouter([
               },
             ],
           }, // End of Poll Feature
+
           // Space Analyze Feature
           {
             id: 'space-poll-analyze-feature',

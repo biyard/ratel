@@ -1,25 +1,20 @@
 import Card from '@/components/card';
 import { checkString } from '@/lib/string-filter-utils';
-import { downloadPdfFromUrl } from '@/lib/pdf-utils';
 import SpaceFile from './space-file';
 import FileModel from '../../types/file';
-import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router';
+import { route } from '@/route';
 
 const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 const VIDEO_EXTS = ['mp4', 'mov', 'webm', 'mkv'];
-const PDF_EXTS = ['pdf'];
 
 export interface SpaceFilesProps {
   files: FileModel[];
 }
 
 export default function SpaceFileViewer({ files }: SpaceFilesProps) {
-  const handlePdfDownload = async (file: FileModel) => {
-    await downloadPdfFromUrl({
-      url: file.url ?? '',
-      fileName: file.name,
-    });
-  };
+  const navigate = useNavigate();
+  const { spacePk } = useParams<{ spacePk: string }>();
 
   const isImage = (ext?: string) =>
     !!ext &&
@@ -40,29 +35,6 @@ export default function SpaceFileViewer({ files }: SpaceFilesProps) {
     return isVideo(f.ext) || VIDEO_EXTS.some((ext) => name.includes(`.${ext}`));
   });
 
-  const pdfFiles = files.filter((f) => {
-    const name = f.name.toLowerCase();
-    return isPdf(f.ext) || PDF_EXTS.some((ext) => name.includes(`.${ext}`));
-  });
-
-  const [previewUrl, setPreviewUrl] = useState<string | null>(
-    () => pdfFiles?.[0]?.url ?? null,
-  );
-
-  useEffect(() => {
-    if (!files || files.length === 0) {
-      setPreviewUrl(null);
-      return;
-    }
-
-    setPreviewUrl((prev) => {
-      if (prev && pdfFiles.some((f) => f.url === prev)) {
-        return prev;
-      }
-      return pdfFiles[0]?.url ?? null;
-    });
-  }, [pdfFiles]);
-
   return (
     <Card>
       <div className="flex flex-col w-full gap-5">
@@ -75,23 +47,15 @@ export default function SpaceFileViewer({ files }: SpaceFilesProps) {
                 key={'file ' + index}
                 onclick={() => {
                   if (isPdf(file.ext)) {
-                    handlePdfDownload(file);
-                    setPreviewUrl(file.url);
+                    // Navigate to PDF viewer page
+                    if (spacePk) {
+                      navigate(route.spacePdfViewer(spacePk, file.id));
+                    }
                   }
                 }}
               />
             ))}
         </div>
-
-        {previewUrl && (
-          <div className="mt-4">
-            <iframe
-              src={`${previewUrl}`}
-              className="w-full h-[600px] rounded-lg"
-              title="PDF preview"
-            />
-          </div>
-        )}
 
         {(videoFiles.length > 0 || imageFiles.length > 0) && (
           <div className="flex flex-col gap-6 mt-4 border-t border-neutral-700 pt-4">

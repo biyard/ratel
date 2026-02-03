@@ -1,18 +1,17 @@
 // TeamDraftPage.tsx
 import { FeedStatus } from '@/features/posts/types/post';
-import { useTeamDetailByUsername } from '@/features/teams/hooks/use-team';
 import { useDeletePostMutation } from '@/features/posts/hooks/use-delete-post-mutation';
 import useInfiniteTeamDrafts from '@/features/drafts/hooks/use-team-drafts';
 import ListDrafts, {
   CreatePostButton,
 } from '@/features/drafts/components/list-drafts';
 import { useParams } from 'react-router';
+import { useSuspenseFindTeam } from '@/features/teams/hooks/use-find-team';
 
 export default function TeamDraftPage() {
   const { username } = useParams<{ username: string }>();
-  const teamQuery = useTeamDetailByUsername(username);
-  const team = teamQuery.data;
-  const teamPk = team?.id ?? '';
+  const { data: team } = useSuspenseFindTeam(username);
+  const teamPk = team?.pk ?? '';
 
   const {
     data: drafts,
@@ -24,16 +23,6 @@ export default function TeamDraftPage() {
   const deleteMutation = useDeletePostMutation(username, FeedStatus.Draft);
   const handleRemoveDraft = deleteMutation.mutateAsync;
 
-  if (teamQuery.isLoading) {
-    return <div className="flex justify-center p-8">Loading drafts...</div>;
-  }
-  if (teamQuery.isError) {
-    return (
-      <div className="flex justify-center p-8 text-red-500">
-        Error loading team
-      </div>
-    );
-  }
   if (!team) {
     return (
       <div className="flex justify-center p-8 text-red-500">Team not found</div>

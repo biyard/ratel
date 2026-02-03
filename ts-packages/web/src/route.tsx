@@ -38,6 +38,8 @@ export const route = {
   teamMembers: (username: string) => `/teams/${username}/members`,
   teamSettings: (username: string) => `/teams/${username}/settings`,
   teamDrafts: (username: string) => `/teams/${username}/drafts`,
+  teamDao: (username: string) => `/teams/${username}/dao`,
+  teamRewards: (username: string) => `/teams/${username}/rewards`,
   teamDraftEdit: (username: string, postPk: string) =>
     `/teams/${username}/drafts/${encodeURIComponent(postPk)}/edit`,
   space: (spaceId: number | string) => `/spaces/${encodeURIComponent(spaceId)}`,
@@ -69,6 +71,7 @@ export const route = {
   },
   spaceBoards: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/boards`,
+  spaceDao: (spaceId: string) => `/spaces/${encodeURIComponent(spaceId)}/dao`,
   spaceCreatePost: (spaceId: string, postPk?: string) => {
     let to = `/spaces/${encodeURIComponent(spaceId)}/boards/create`;
     const params: string[] = [];
@@ -100,6 +103,8 @@ export const route = {
     `/spaces/${encodeURIComponent(spaceId)}/polls/${encodeURIComponent(pollId)}/analyzes`,
   spaceFiles: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/files`,
+  spacePdfViewer: (spaceId: string, fileId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/files/${encodeURIComponent(fileId)}`,
   spaceDiscussions: (spaceId: string) =>
     `/spaces/${encodeURIComponent(spaceId)}/discussions`,
   spaceRecommendations: (spaceId: string) =>

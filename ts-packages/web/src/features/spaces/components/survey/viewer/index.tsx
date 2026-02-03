@@ -31,6 +31,7 @@ export interface SurveyViewerProps {
   canSubmit?: boolean;
   canUpdate?: boolean;
   isLogin?: boolean;
+  isFinished?: boolean;
   disabled?: boolean;
   initialIndex?: number;
 }
@@ -50,6 +51,7 @@ export default function SurveyViewer({
   canUpdate,
   isLogin,
   isAdmin = false,
+  isFinished = false,
   initialIndex = 0,
 }: SurveyViewerProps) {
   let button = <></>;
@@ -76,7 +78,9 @@ export default function SurveyViewer({
   };
 
   const canNext = () => {
+    if (isFinished) return true;
     if (isAdmin) return true;
+
     const ans = current.answer?.answer;
     if (current.question.is_required && !isValidAnswer(ans)) return false;
     return true;
@@ -102,7 +106,7 @@ export default function SurveyViewer({
     button = (
       <Button
         onClick={() => {
-          if (!isAdmin) {
+          if (!isAdmin && !isFinished) {
             if (
               current.question.is_required &&
               !isValidAnswer(current.answer?.answer)

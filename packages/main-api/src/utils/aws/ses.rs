@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{env, sync::Arc};
 
 use crate::config;
 use aws_config::SdkConfig;
@@ -28,13 +28,18 @@ pub enum SesServiceError {
     SendEmailFailed(String),
 }
 impl SesClient {
-    pub fn new(config: SdkConfig, allow_error: bool) -> Self {
+    pub fn new(config: SdkConfig, allow_error: bool, enable_config: bool) -> Self {
         let aws_config = Config::from(&config);
         let client = Client::from_conf(aws_config);
+        let from_email = if enable_config {
+            config::get().from_email.to_string()
+        } else {
+            env::var("FROM_EMAIL").unwrap_or_else(|_| "no-reply@ratel.foundation".to_string())
+        };
 
         Self {
             client,
-            from: Arc::new(config::get().from_email.to_string()),
+            from: Arc::new(from_email),
             allow_error,
         }
     }

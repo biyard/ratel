@@ -35,6 +35,7 @@ pub mod team_group_permission;
 pub mod theme;
 pub mod url_type;
 pub mod user_type;
+
 pub use composite_partition::*;
 
 pub use booster_type::*;
@@ -80,3 +81,18 @@ pub use attribute::*;
 
 pub mod report_publish_state;
 pub use report_publish_state::*;
+
+pub mod topic_row;
+pub use topic_row::*;
+
+pub mod network_centrality_row;
+pub use network_centrality_row::*;
+
+pub mod tfidf_row;
+pub use tfidf_row::*;
+
+pub mod network_edge_row;
+pub use network_edge_row::*;
+
+pub mod network_graph;
+pub use network_graph::*;

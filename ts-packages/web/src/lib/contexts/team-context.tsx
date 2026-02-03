@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react';
-import type { Team } from '@/lib/api/models/team';
+import type { Team } from '@/features/teams/types/team';
 
 export interface TeamContextType {
   teams: Team[];
