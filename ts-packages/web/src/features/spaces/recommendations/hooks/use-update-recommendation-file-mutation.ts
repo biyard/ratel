@@ -1,6 +1,6 @@
 import { spaceKeys } from '@/constants';
 import { optimisticUpdate } from '@/lib/hook-utils';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SpaceRecommendationResponse } from '../types/recommendation-response';
 import { updateRecommendationFiles } from '@/lib/api/ratel/recommendation.spaces.v3';
 import FileModel from '../../files/types/file';
@@ -8,6 +8,8 @@ import FileModel from '../../files/types/file';
 export function useUpdateRecommendationFileMutation<
   T extends SpaceRecommendationResponse,
 >() {
+  const qc = useQueryClient();
+
   const mutation = useMutation({
     mutationKey: ['update-recommendations-file'],
     mutationFn: async ({
@@ -25,6 +27,7 @@ export function useUpdateRecommendationFileMutation<
         response.files = files;
         return response;
       });
+      qc.invalidateQueries({ queryKey: spaceKeys.files(spacePk) });
     },
   });
 

@@ -1,7 +1,7 @@
 export const i18nTeamDao = {
   en: {
     dao: 'DAO',
-    dao_title: 'Reward DAO',
+    dao_title: 'Team DAO',
     dao_description: "Manage your team's decentralized autonomous organization",
     register_dao: 'Register DAO',
     registering_dao: 'Registering...',
@@ -34,7 +34,7 @@ export const i18nTeamDao = {
   },
   ko: {
     dao: 'DAO',
-    dao_title: 'Reawrd DAO',
+    dao_title: 'Team DAO',
     dao_description: '팀의 탈중앙화 자율 조직을 관리합니다',
     register_dao: 'DAO 등록',
     registering_dao: '등록 중...',
