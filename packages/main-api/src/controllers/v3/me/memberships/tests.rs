@@ -329,7 +329,7 @@ async fn test_change_membership_creates_purchase_record() {
 
 #[tokio::test]
 async fn test_change_membership_without_auth_returns_error() {
-    let TestContextV3 { app, ddb, .. } = TestContextV3::setup().await;
+    let TestContextV3 { app, .. } = TestContextV3::setup().await;
 
     // Try to change membership without authentication
     let (status, _headers, _body) = post! {

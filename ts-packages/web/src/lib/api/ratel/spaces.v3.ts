@@ -68,6 +68,16 @@ export function updateSpaceContent(
   });
 }
 
+export function deleteSpaceFile(
+  spacePk: string,
+  fileUrl: string,
+): Promise<{ success: boolean; message: string }> {
+  return call(
+    'DELETE',
+    `/v3/spaces/${encodeURIComponent(spacePk)}/files?file_url=${encodeURIComponent(fileUrl)}`,
+  );
+}
+
 export function updateSpaceTitle(
   spacePk: string,
   title: string,

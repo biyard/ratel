@@ -132,6 +132,7 @@ pub enum EntityType {
 
     //SPACE FEATURE
     SpaceFile,
+    FileLink(String), // FileLink#{file_id}
     SpaceAnalyze,
     SpaceAnalyzeRequest(String),
     SpaceDiscussion(String),

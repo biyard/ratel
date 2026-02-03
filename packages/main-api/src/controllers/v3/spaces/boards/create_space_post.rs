@@ -1,5 +1,5 @@
 #![allow(warnings)]
-use crate::File;
+use crate::{File, notify};
 use crate::models::email_template::email_template::EmailTemplate;
 use crate::services::fcm_notification::FCMService;
 use crate::utils::html::create_space_post_html;
@@ -8,6 +8,7 @@ use crate::{
     controllers::v3::spaces::{SpacePath, SpacePathParam},
     features::spaces::{
         boards::models::{space_category::SpaceCategory, space_post::SpacePost},
+        files::{FileLink, FileLinkTarget, SpaceFile},
         members::{SpaceInvitationMember, SpaceInvitationMemberQueryOption},
     },
     models::{SpaceCommon, feed::Post, team::Team, user::User},
@@ -68,7 +69,7 @@ pub async fn create_space_post_handler(
     }
 
     let post = SpacePost::new(
-        space_pk,
+        space_pk.clone(),
         req.title.clone(),
         req.html_contents.clone(),
         req.category_name.clone(),
@@ -80,74 +81,106 @@ pub async fn create_space_post_handler(
     );
     post.create(&dynamo.client).await?;
 
-    let _ =
-        send_create_post_alerm(&dynamo, &ses, &common, req.title, req.html_contents, user).await?;
-
-    let post_id = match post.sk {
+    // Link files to both Files tab and Board
+    let post_id = match &post.sk {
         EntityType::SpacePost(v) => v.to_string(),
         _ => "".to_string(),
     };
+
+    tracing::info!("Linking {} files for post {}", req.files.len(), post_id);
+
+    // Add files to SpaceFile entity (for Files tab visibility)
+    if !req.files.is_empty() {
+        SpaceFile::add_files(&dynamo.client, space_pk.clone(), req.files.clone()).await?;
+    }
+
+    // Link files to Board origin (files uploaded from board belong to the board)
+    let file_urls: Vec<String> = req.files.iter().filter_map(|f| f.url.clone()).collect();
+    if !file_urls.is_empty() {
+        FileLink::add_link_targets_batch(
+            &dynamo.client,
+            space_pk.clone(),
+            file_urls.clone(),
+            FileLinkTarget::Board(post_id.clone()),
+        )
+        .await?;
+    }
+
+    send_create_post_alarm(&dynamo, &ses, &common, req.title, req.html_contents, user).await;
 
     Ok(Json(CreateSpacePostResponse {
         space_post_pk: Partition::SpacePost(post_id),
     }))
 }
 
-async fn send_create_post_alerm(
+async fn send_create_post_alarm(
     dynamo: &DynamoClient,
     ses: &SesClient,
     space: &SpaceCommon,
     title: String,
     html_contents: String,
     user: User,
-) -> Result<Json<()>, Error> {
-    let mut bookmark = None::<String>;
-    let mut emails: Vec<String> = Vec::new();
-    let mut user_pks: Vec<Partition> = Vec::new();
-
-    loop {
-        let (responses, new_bookmark) = SpaceInvitationMember::query(
-            &dynamo.client,
-            space.pk.clone(),
-            if let Some(b) = &bookmark {
-                SpaceInvitationMemberQueryOption::builder()
-                    .sk("SPACE_INVITATION_MEMBER#".into())
-                    .bookmark(b.clone())
-            } else {
-                SpaceInvitationMemberQueryOption::builder().sk("SPACE_INVITATION_MEMBER#".into())
-            },
+) {
+    let result = async {
+        let mut bookmark = None::<String>;
+        let mut emails: Vec<String> = Vec::new();
+        let mut user_pks: Vec<Partition> = Vec::new();
+        
+        loop {
+            let (responses, new_bookmark) = SpaceInvitationMember::query(
+                &dynamo.client,
+                space.pk.clone(),
+                if let Some(b) = &bookmark {
+                    SpaceInvitationMemberQueryOption::builder()
+                        .sk("SPACE_INVITATION_MEMBER#".into())
+                        .bookmark(b.clone())
+                } else {
+                    SpaceInvitationMemberQueryOption::builder().sk("SPACE_INVITATION_MEMBER#".into())
+                },
+            )
+            .await?;
+            
+            for response in responses {
+                emails.push(response.email);
+                user_pks.push(response.user_pk);
+            }
+            
+            match new_bookmark {
+                Some(b) => bookmark = Some(b),
+                None => break,
+            }
+        }
+        
+        if emails.is_empty() {
+            return Ok(());
+        }
+        
+        // Try to send email - log error but continue with FCM
+        if let Err(e) = SpacePost::send_email(
+            dynamo,
+            ses,
+            emails,
+            space.clone(),
+            title.clone(),
+            html_contents,
+            user.clone(),
         )
-        .await?;
-
-        for response in responses {
-            emails.push(response.email);
-            user_pks.push(response.user_pk);
+        .await
+        {
+            tracing::error!("Failed to send email notification: {:?}", e);
         }
-
-        match new_bookmark {
-            Some(b) => bookmark = Some(b),
-            None => break,
+        
+        // Try to send FCM notification
+        let mut fcm = FCMService::new().await?;
+        if let Err(e) = SpacePost::send_notification(&dynamo, &mut fcm, space, title.clone(), user_pks).await {
+            tracing::error!("Failed to send FCM notification: {:?}", e);
         }
+        
+        Ok::<(), Error>(())
+    }.await;
+    
+    if let Err(e) = result {
+        notify!("Failed to send post creation notifications: {:?}", e);
+        tracing::error!("Critical failure in send_create_post_alarm: {:?}", e);
     }
-
-    if emails.is_empty() {
-        return Ok(Json(()));
-    }
-
-    let _ = SpacePost::send_email(
-        dynamo,
-        ses,
-        emails,
-        space.clone(),
-        title.clone(),
-        html_contents,
-        user,
-    )
-    .await?;
-
-    // FIXME: fix to one call code
-    let mut fcm = FCMService::new().await?;
-    let _ = SpacePost::send_notification(&dynamo, &mut fcm, space, title, user_pks).await?;
-
-    Ok(Json(()))
 }

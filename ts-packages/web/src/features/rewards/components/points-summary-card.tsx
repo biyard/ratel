@@ -20,7 +20,9 @@ export function PointsSummaryCard({
   estimatedTokens,
 }: PointsSummaryCardProps) {
   const sharePercentage =
-    totalPoints > 0 ? ((userPoints / totalPoints) * 100).toFixed(2) : '0';
+    totalPoints > 0 && userPoints >= 0
+      ? ((userPoints / totalPoints) * 100).toFixed(2)
+      : '0.00';
 
   return (
     <div

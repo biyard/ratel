@@ -73,6 +73,8 @@ export function useCreateSpacePostMutation<T extends SpacePostResponse>() {
       });
 
       qc.invalidateQueries({ queryKey: spaceKeys.boards_category(spacePk) });
+      qc.invalidateQueries({ queryKey: spaceKeys.files(spacePk) });
+      qc.invalidateQueries({ queryKey: spaceKeys.file_links(spacePk) });
     },
   });
 

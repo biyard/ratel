@@ -3,9 +3,12 @@ use crate::File;
 use crate::{
     AppState, Error, Permissions,
     controllers::v3::spaces::{SpacePath, SpacePathParam, SpacePostPath, SpacePostPathParam},
-    features::spaces::boards::{
-        dto::space_post_response::SpacePostResponse,
-        models::{space_category::SpaceCategory, space_post::SpacePost},
+    features::spaces::{
+        boards::{
+            dto::space_post_response::SpacePostResponse,
+            models::{space_category::SpaceCategory, space_post::SpacePost},
+        },
+        files::{FileLink, FileLinkTarget, SpaceFile},
     },
     models::{SpaceCommon, feed::Post, team::Team, user::User},
     types::{EntityType, Partition, TeamGroupPermission, author::Author},
@@ -59,6 +62,13 @@ pub async fn update_space_post_handler(
 
     let (pk, sk) = SpacePost::keys(&space_pk, &space_post_pk);
 
+    let existing_post = SpacePost::get(&dynamo.client, pk.clone(), Some(sk.clone())).await?;
+    let old_file_urls: Vec<String> = existing_post
+        .as_ref()
+        .and_then(|p| p.files.as_ref())
+        .map(|files| files.iter().filter_map(|f| f.url.clone()).collect())
+        .unwrap_or_default();
+
     let v = SpacePost::updater(pk, sk)
         .with_title(req.title.clone())
         .with_html_contents(req.html_contents.clone())
@@ -69,6 +79,57 @@ pub async fn update_space_post_handler(
         .with_ended_at(req.ended_at.clone())
         .execute(&dynamo.client)
         .await?;
+
+    let post_id = match &v.sk {
+        EntityType::SpacePost(id) => id.to_string(),
+        _ => "".to_string(),
+    };
+
+    if !req.files.is_empty() {
+        SpaceFile::add_files(&dynamo.client, space_pk.clone(), req.files.clone()).await?;
+    }
+
+    let new_file_urls: Vec<String> = req.files.iter().filter_map(|f| f.url.clone()).collect();
+    if !new_file_urls.is_empty() {
+        FileLink::add_link_targets_batch(
+            &dynamo.client,
+            space_pk.clone(),
+            new_file_urls.clone(),
+            FileLinkTarget::Board(post_id.clone()),
+        )
+        .await?;
+    }
+
+    let removed_urls: Vec<String> = old_file_urls
+        .into_iter()
+        .filter(|url| !new_file_urls.contains(url))
+        .collect();
+    if !removed_urls.is_empty() {
+        FileLink::remove_link_targets_batch(
+            &dynamo.client,
+            &space_pk,
+            removed_urls.clone(),
+            &FileLinkTarget::Board(post_id.clone()),
+        )
+        .await?;
+
+        // Also remove from SpaceFile
+        let (pk, sk) = SpaceFile::keys(&space_pk);
+        if let Some(mut space_file) = SpaceFile::get(&dynamo.client, &pk, Some(sk.clone())).await? {
+            space_file.files.retain(|f| {
+                if let Some(url) = &f.url {
+                    !removed_urls.contains(url)
+                } else {
+                    true
+                }
+            });
+            
+            SpaceFile::updater(&pk, sk)
+                .with_files(space_file.files.clone())
+                .execute(&dynamo.client)
+                .await?;
+        }
+    }
 
     Ok(Json(v.into()))
 }
