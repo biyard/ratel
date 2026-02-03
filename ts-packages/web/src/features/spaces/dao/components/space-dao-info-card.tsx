@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from '@/components/card';
 import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
-import { SpaceDaoSelectedResponse } from '@/features/spaces/dao/hooks/use-space-dao-selected';
+import { SpaceDaoRewardResponse } from '@/features/spaces/dao/hooks/use-space-dao-reward';
 import { SpaceDaoTokenResponse } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
-import { SpaceDaoSelectedTable } from './space-dao-selected-table';
+import { SpaceDaoRewardTable } from './space-dao-reward-table';
 import { config } from '@/config';
 import {
   ArrowPathIcon,
@@ -20,16 +20,16 @@ type SpaceDaoInfoCardProps = {
   isUpdating?: boolean;
   recipientCount?: string | number | null;
   onUpdateDao?: (rewardCount: string) => Promise<void>;
-  selected?: SpaceDaoSelectedResponse[];
-  selectedBookmark?: string | null;
-  canPrevSelected?: boolean;
-  canNextSelected?: boolean;
-  selectedLoading?: boolean;
-  showSelected?: boolean;
+  rewardRecipients?: SpaceDaoRewardResponse[];
+  rewardBookmark?: string | null;
+  canPrevReward?: boolean;
+  canNextReward?: boolean;
+  rewardLoading?: boolean;
+  showRewardRecipients?: boolean;
   showEdit?: boolean;
   canDistributeReward?: boolean;
-  onNextSelected?: () => void;
-  onPrevSelected?: () => void;
+  onNextReward?: () => void;
+  onPrevReward?: () => void;
   onDistributePage?: () => void;
   isDistributingPage?: boolean;
   // withdrawal props removed
@@ -46,16 +46,16 @@ export function SpaceDaoInfoCard({
   isUpdating = false,
   recipientCount,
   onUpdateDao,
-  selected,
-  selectedBookmark,
-  canPrevSelected = false,
-  canNextSelected = false,
-  selectedLoading = false,
-  showSelected = true,
+  rewardRecipients,
+  rewardBookmark,
+  canPrevReward = false,
+  canNextReward = false,
+  rewardLoading = false,
+  showRewardRecipients = true,
   showEdit = true,
   canDistributeReward = false,
-  onNextSelected,
-  onPrevSelected,
+  onNextReward,
+  onPrevReward,
   onDistributePage,
   isDistributingPage = false,
   tokens = [],
@@ -293,15 +293,15 @@ export function SpaceDaoInfoCard({
         </div>
       </div>
 
-      {showSelected && (
-        <SpaceDaoSelectedTable
-          selected={selected}
-          selectedBookmark={selectedBookmark}
-          selectedLoading={selectedLoading}
-          canPrevSelected={canPrevSelected}
-          canNextSelected={canNextSelected}
-          onPrevSelected={onPrevSelected}
-          onNextSelected={onNextSelected}
+      {showRewardRecipients && (
+        <SpaceDaoRewardTable
+          rewardRecipients={rewardRecipients}
+          rewardBookmark={rewardBookmark}
+          rewardLoading={rewardLoading}
+          canPrevReward={canPrevReward}
+          canNextReward={canNextReward}
+          onPrevReward={onPrevReward}
+          onNextReward={onNextReward}
           canDistributeReward={canDistributeReward}
           onDistributePage={onDistributePage}
           isDistributingPage={isDistributingPage}

@@ -53,8 +53,8 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
         if (selectedAddresses.length > 0) {
           await call(
             'POST',
-            `/v3/spaces/${encodeURIComponent(spacePk)}/dao/selected`,
-            { selected_addresses: selectedAddresses },
+            `/v3/spaces/${encodeURIComponent(spacePk)}/dao/reward`,
+            { reward_addresses: selectedAddresses },
           );
         }
       }
@@ -74,7 +74,7 @@ export function useFinishSpaceMutation<T extends SpaceCommon>() {
         queryKey: spaceDaoKeys.candidates(spacePk),
       });
       await queryClient.invalidateQueries({
-        queryKey: spaceDaoKeys.selectedBase(spacePk),
+        queryKey: spaceDaoKeys.rewardBase(spacePk),
       });
     },
   });

@@ -17,10 +17,10 @@ import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
 import { ethers } from 'ethers';
 import { State } from '@/types/state';
 import {
-  SpaceDaoSelectedListResponse,
-  useSpaceDaoSelected,
-} from '@/features/spaces/dao/hooks/use-space-dao-selected';
-import { useUpdateSpaceDaoSelectedMutation } from '@/features/spaces/dao/hooks/use-update-space-dao-selected-mutation';
+  SpaceDaoRewardListResponse,
+  useSpaceDaoReward,
+} from '@/features/spaces/dao/hooks/use-space-dao-reward';
+import { useUpdateSpaceDaoRewardMutation } from '@/features/spaces/dao/hooks/use-update-space-dao-reward-mutation';
 
 export class SpaceDaoEditorController {
   constructor(
@@ -37,10 +37,10 @@ export class SpaceDaoEditorController {
     public isPopupOpen: State<boolean>,
     public isRegistering: State<boolean>,
     public isUpdating: State<boolean>,
-    public selectedBookmark: State<string | null>,
-    public selectedHistory: State<(string | null)[]>,
-    public selected: SpaceDaoSelectedListResponse | undefined,
-    public selectedLoading: boolean,
+    public rewardBookmark: State<string | null>,
+    public rewardHistory: State<(string | null)[]>,
+    public reward: SpaceDaoRewardListResponse | undefined,
+    public rewardLoading: boolean,
     public isDistributingPage: State<boolean>,
     public selectedToken: string | null,
     public tokenBalance: string | null,
@@ -49,8 +49,8 @@ export class SpaceDaoEditorController {
     public preferredTokenBalance: string | null,
     public preferredTokenDecimals: number | null,
     public createSpaceDaoMutation: ReturnType<typeof useCreateSpaceDaoMutation>,
-    public updateSelectedMutation: ReturnType<
-      typeof useUpdateSpaceDaoSelectedMutation
+    public updateRewardMutation: ReturnType<
+      typeof useUpdateSpaceDaoRewardMutation
     >,
   ) {}
 
@@ -71,22 +71,30 @@ export class SpaceDaoEditorController {
     return this.permissions?.isAdmin() ?? false;
   }
 
-  get canPrevSelected() {
+  get canPrevReward() {
     if (this.space?.isFinished) {
       return false;
     }
-    return this.selectedHistory.get().length > 0;
+    return this.rewardHistory.get().length > 0;
   }
 
-  get canNextSelected() {
+  get canNextReward() {
     if (this.space?.isFinished) {
       return false;
     }
-    return Boolean(this.selected?.bookmark);
+    return Boolean(this.reward?.bookmark);
   }
 
-  get visibleSelected() {
-    return this.selected?.items ?? [];
+  get visibleRewardRecipients() {
+    return this.reward?.items ?? [];
+  }
+
+  get rewardRecipients() {
+    return this.reward;
+  }
+
+  get rewardRecipientsLoading() {
+    return this.rewardLoading;
   }
 
   fetchRecipientCount = async () => {
@@ -106,21 +114,21 @@ export class SpaceDaoEditorController {
     }
   };
 
-  handleNextSelected = () => {
-    const next = this.selected?.bookmark ?? null;
+  handleNextReward = () => {
+    const next = this.reward?.bookmark ?? null;
     if (!next) return;
-    const history = [...this.selectedHistory.get()];
-    history.push(this.selectedBookmark.get());
-    this.selectedHistory.set(history);
-    this.selectedBookmark.set(next);
+    const history = [...this.rewardHistory.get()];
+    history.push(this.rewardBookmark.get());
+    this.rewardHistory.set(history);
+    this.rewardBookmark.set(next);
   };
 
-  handlePrevSelected = () => {
-    const history = [...this.selectedHistory.get()];
+  handlePrevReward = () => {
+    const history = [...this.rewardHistory.get()];
     if (history.length === 0) return;
     const prev = history.pop() ?? null;
-    this.selectedHistory.set(history);
-    this.selectedBookmark.set(prev);
+    this.rewardHistory.set(history);
+    this.rewardBookmark.set(prev);
   };
 
   handleDistribute = async () => {
@@ -135,14 +143,14 @@ export class SpaceDaoEditorController {
       showErrorToast(this.t('error_register_failed_unknown'));
       return;
     }
-    const candidates = this.visibleSelected.filter(
+    const candidates = this.visibleRewardRecipients.filter(
       (item) => !item.reward_distributed,
     );
     if (candidates.length === 0) {
       return;
     }
     const recipients = candidates.map((item) => item.evm_address);
-    const selectedSks = candidates.map((item) => item.sk);
+    const rewardSks = candidates.map((item) => item.sk);
 
     this.isDistributingPage.set(true);
     try {
@@ -154,7 +162,7 @@ export class SpaceDaoEditorController {
       const daoService = new SpaceDaoService(provider);
       await daoService.connectWallet();
       const totalBalance = ethers.toBigInt(balance);
-      const totalCount = this.selected?.remaining_count ?? candidates.length;
+      const totalCount = this.reward?.remaining_count ?? candidates.length;
       if (totalCount <= 0) {
         showErrorToast(this.t('error_register_failed_unknown'));
         return;
@@ -171,9 +179,9 @@ export class SpaceDaoEditorController {
         perRecipient,
       );
 
-      await this.updateSelectedMutation.mutateAsync({
+      await this.updateRewardMutation.mutateAsync({
         spacePk: this.spacePk,
-        selectedSks,
+        rewardSks,
         rewardDistributed: true,
       });
 
@@ -330,14 +338,14 @@ export function useSpaceDaoEditorController(
   const isPopupOpen = useState(false);
   const isRegistering = useState(false);
   const isUpdating = useState(false);
-  const selectedBookmark = useState<string | null>(null);
-  const selectedHistory = useState<(string | null)[]>([]);
+  const rewardBookmark = useState<string | null>(null);
+  const rewardHistory = useState<(string | null)[]>([]);
   const isDistributingPage = useState(false);
   const createSpaceDaoMutation = useCreateSpaceDaoMutation();
-  const updateSelectedMutation = useUpdateSpaceDaoSelectedMutation();
-  const { data: selected, isLoading: selectedLoading } = useSpaceDaoSelected(
+  const updateRewardMutation = useUpdateSpaceDaoRewardMutation();
+  const { data: reward, isLoading: rewardLoading } = useSpaceDaoReward(
     spacePk,
-    selectedBookmark[0],
+    rewardBookmark[0],
     50,
     Boolean(dao?.contract_address),
   );
@@ -365,10 +373,10 @@ export function useSpaceDaoEditorController(
     new State(isPopupOpen),
     new State(isRegistering),
     new State(isUpdating),
-    new State(selectedBookmark),
-    new State(selectedHistory),
-    selected,
-    selectedLoading,
+    new State(rewardBookmark),
+    new State(rewardHistory),
+    reward,
+    rewardLoading,
     new State(isDistributingPage),
     selectedToken ?? null,
     tokenBalance ?? null,
@@ -377,7 +385,7 @@ export function useSpaceDaoEditorController(
     preferredTokenBalance ?? null,
     preferredTokenDecimals ?? null,
     createSpaceDaoMutation,
-    updateSelectedMutation,
+    updateRewardMutation,
   );
 
   useEffect(() => {

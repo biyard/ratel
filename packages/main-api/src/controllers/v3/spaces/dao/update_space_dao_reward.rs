@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::SpacePathParam;
-use crate::features::spaces::{SpaceDao, SpaceDaoSelectedUser};
+use crate::features::spaces::{SpaceDao, SpaceDaoRewardUser};
 use crate::types::{EntityType, Permissions, TeamGroupPermission};
 use crate::{AppState, Error};
 use aide::NoApi;
@@ -8,36 +8,36 @@ use axum::Json;
 use bdk::prelude::*;
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, aide::OperationIo, JsonSchema)]
-pub struct UpdateSpaceDaoSelectedRequest {
-    pub selected_sks: Vec<String>,
+pub struct UpdateSpaceDaoRewardRequest {
+    pub reward_sks: Vec<String>,
     pub reward_distributed: bool,
 }
 
-pub async fn update_space_dao_selected_handler(
+pub async fn update_space_dao_reward_handler(
     State(AppState { dynamo, .. }): State<AppState>,
     NoApi(permissions): NoApi<Permissions>,
     Path(SpacePathParam { space_pk }): Path<SpacePathParam>,
-    Json(req): Json<UpdateSpaceDaoSelectedRequest>,
-) -> Result<Json<Vec<SpaceDaoSelectedUser>>, Error> {
+    Json(req): Json<UpdateSpaceDaoRewardRequest>,
+) -> Result<Json<Vec<SpaceDaoRewardUser>>, Error> {
     permissions.permitted(TeamGroupPermission::SpaceEdit)?;
 
-    if req.selected_sks.is_empty() {
-        return Err(Error::BadRequest("selected_sks is empty".to_string()));
+    if req.reward_sks.is_empty() {
+        return Err(Error::BadRequest("reward_sks is empty".to_string()));
     }
 
-    let mut parsed_sks = Vec::with_capacity(req.selected_sks.len());
-    for sk in &req.selected_sks {
+    let mut parsed_sks = Vec::with_capacity(req.reward_sks.len());
+    for sk in &req.reward_sks {
         let parsed = sk
             .parse::<EntityType>()
-            .map_err(|_| Error::BadRequest("invalid selected sk".to_string()))?;
+            .map_err(|_| Error::BadRequest("invalid reward sk".to_string()))?;
         parsed_sks.push(parsed);
     }
 
     let keys = parsed_sks
         .iter()
-        .map(|sk| SpaceDaoSelectedUser::keys(&space_pk, sk))
+        .map(|sk| SpaceDaoRewardUser::keys(&space_pk, sk))
         .collect::<Vec<_>>();
-    let existing = SpaceDaoSelectedUser::batch_get(&dynamo.client, keys).await?;
+    let existing = SpaceDaoRewardUser::batch_get(&dynamo.client, keys).await?;
     let changed_count = if req.reward_distributed {
         existing.iter().filter(|item| !item.reward_distributed).count()
     } else {
@@ -46,7 +46,7 @@ pub async fn update_space_dao_selected_handler(
 
     let mut updated = Vec::with_capacity(parsed_sks.len());
     for sk in parsed_sks {
-        let item = SpaceDaoSelectedUser::updater(&space_pk, &sk)
+        let item = SpaceDaoRewardUser::updater(&space_pk, &sk)
             .with_reward_distributed(req.reward_distributed)
             .execute(&dynamo.client)
             .await?;

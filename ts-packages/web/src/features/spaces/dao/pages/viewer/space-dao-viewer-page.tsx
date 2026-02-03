@@ -72,14 +72,14 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
       <SpaceDaoInfoCard
         dao={dao}
         recipientCount={ctrl.chainRecipientCount.get()}
-        selected={ctrl.visibleSelected}
-        selectedBookmark={ctrl.selected?.bookmark ?? null}
-        selectedLoading={ctrl.selectedLoading}
-        canPrevSelected={ctrl.canPrevSelected}
-        canNextSelected={ctrl.canNextSelected}
-        onPrevSelected={ctrl.handlePrevSelected}
-        onNextSelected={ctrl.handleNextSelected}
-        showSelected={Boolean(ctrl.space?.isFinished)}
+        rewardRecipients={ctrl.visibleRewardRecipients}
+        rewardBookmark={ctrl.rewardRecipients?.bookmark ?? null}
+        rewardLoading={ctrl.rewardRecipientsLoading}
+        canPrevReward={ctrl.canPrevReward}
+        canNextReward={ctrl.canNextReward}
+        onPrevReward={ctrl.handlePrevReward}
+        onNextReward={ctrl.handleNextReward}
+        showRewardRecipients={Boolean(ctrl.space?.isFinished)}
         showEdit={false}
         canDistributeReward={ctrl.canDistributeReward}
         isDistributingPage={ctrl.isDistributingPage.get()}

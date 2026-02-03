@@ -2,8 +2,6 @@ use crate::types::*;
 use crate::utils::time::get_now_timestamp_millis;
 use bdk::prelude::*;
 
-use crate::features::spaces::SpaceParticipant;
-
 #[derive(
     Debug,
     Clone,
@@ -14,7 +12,7 @@ use crate::features::spaces::SpaceParticipant;
     schemars::JsonSchema,
     aide::OperationIo,
 )]
-pub struct SpaceDaoSelectedUser {
+pub struct SpaceDaoRewardUser {
     pub pk: Partition,
     pub sk: EntityType,
 
@@ -24,7 +22,7 @@ pub struct SpaceDaoSelectedUser {
     #[serde(default)]
     pub updated_at: i64,
     #[dynamo(
-        prefix = "SPACE_DAO_SELECTED",
+        prefix = "SPACE_DAO_REWARD",
         name = "find_by_space",
         index = "gsi2",
         pk
@@ -46,7 +44,7 @@ pub struct SpaceDaoSelectedUser {
     pub reward_distributed: bool,
 }
 
-impl SpaceDaoSelectedUser {
+impl SpaceDaoRewardUser {
     pub fn keys(space_pk: &Partition, sk: &EntityType) -> (Partition, EntityType) {
         (space_pk.clone(), sk.clone())
     }
@@ -60,7 +58,7 @@ impl SpaceDaoSelectedUser {
         evm_address: String,
     ) -> Self {
         let now = get_now_timestamp_millis();
-        let sk = EntityType::SpaceDaoSelected(user_pk.to_string());
+        let sk = EntityType::SpaceDaoReward(user_pk.to_string());
 
         Self {
             pk: space_pk.clone(),

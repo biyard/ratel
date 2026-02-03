@@ -1,33 +1,33 @@
 import { useTranslation } from 'react-i18next';
 import { CheckIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
-import { SpaceDaoSelectedResponse } from '@/features/spaces/dao/hooks/use-space-dao-selected';
+import { SpaceDaoRewardResponse } from '@/features/spaces/dao/hooks/use-space-dao-reward';
 
-type SpaceDaoSelectedTableProps = {
-  selected?: SpaceDaoSelectedResponse[];
-  selectedBookmark?: string | null;
-  canPrevSelected?: boolean;
-  canNextSelected?: boolean;
-  selectedLoading?: boolean;
+type SpaceDaoRewardTableProps = {
+  rewardRecipients?: SpaceDaoRewardResponse[];
+  rewardBookmark?: string | null;
+  canPrevReward?: boolean;
+  canNextReward?: boolean;
+  rewardLoading?: boolean;
   canDistributeReward?: boolean;
-  onNextSelected?: () => void;
-  onPrevSelected?: () => void;
+  onNextReward?: () => void;
+  onPrevReward?: () => void;
   onDistributePage?: () => void;
   isDistributingPage?: boolean;
 };
 
-export function SpaceDaoSelectedTable({
-  selected,
-  selectedBookmark,
-  canPrevSelected = false,
-  canNextSelected = false,
-  selectedLoading = false,
+export function SpaceDaoRewardTable({
+  rewardRecipients,
+  rewardBookmark,
+  canPrevReward = false,
+  canNextReward = false,
+  rewardLoading = false,
   canDistributeReward = false,
-  onNextSelected,
-  onPrevSelected,
+  onNextReward,
+  onPrevReward,
   onDistributePage,
   isDistributingPage = false,
-}: SpaceDaoSelectedTableProps) {
+}: SpaceDaoRewardTableProps) {
   const { t } = useTranslation('SpaceDaoEditor');
 
   const renderAddress = (address: string) => {
@@ -44,8 +44,8 @@ export function SpaceDaoSelectedTable({
             type="button"
             variant="outline"
             size="sm"
-            onClick={onPrevSelected}
-            disabled={!canPrevSelected}
+            onClick={onPrevReward}
+            disabled={!canPrevReward}
           >
             {t('dao_selected_prev')}
           </Button>
@@ -53,19 +53,19 @@ export function SpaceDaoSelectedTable({
             type="button"
             variant="outline"
             size="sm"
-            onClick={onNextSelected}
-            disabled={!canNextSelected || !selectedBookmark}
+            onClick={onNextReward}
+            disabled={!canNextReward || !rewardBookmark}
           >
             {t('dao_selected_next')}
           </Button>
         </div>
       </div>
 
-      {selectedLoading ? (
+      {rewardLoading ? (
         <div className="text-sm text-text-secondary">
           {t('dao_selected_loading')}
         </div>
-      ) : selected && selected.length > 0 ? (
+      ) : rewardRecipients && rewardRecipients.length > 0 ? (
         <table className="overflow-hidden w-full text-sm rounded-xl border border-input-box-border">
           <thead className="bg-muted text-[var(--color-panel-table-header)]">
             <tr>
@@ -77,7 +77,7 @@ export function SpaceDaoSelectedTable({
             </tr>
           </thead>
           <tbody>
-            {selected.map((item) => (
+            {rewardRecipients.map((item) => (
               <tr
                 key={item.sk}
                 className="border-t border-input-box-border hover:bg-muted/50"
@@ -111,8 +111,8 @@ export function SpaceDaoSelectedTable({
       )}
 
       {canDistributeReward &&
-        selected &&
-        selected.some((item) => !item.reward_distributed) && (
+        rewardRecipients &&
+        rewardRecipients.some((item) => !item.reward_distributed) && (
           <div className="flex justify-end">
             <Button
               type="button"

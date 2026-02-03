@@ -128,14 +128,14 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
               recipientCount={ctrl.chainRecipientCount.get()}
               isUpdating={ctrl.isUpdating.get()}
               onUpdateDao={ctrl.handleUpdateDao}
-              selected={ctrl.visibleSelected}
-              selectedBookmark={ctrl.selected?.bookmark ?? null}
-              selectedLoading={ctrl.selectedLoading}
-              canPrevSelected={ctrl.canPrevSelected}
-              canNextSelected={ctrl.canNextSelected}
-              onPrevSelected={ctrl.handlePrevSelected}
-              onNextSelected={ctrl.handleNextSelected}
-              showSelected={Boolean(ctrl.space?.isFinished)}
+              rewardRecipients={ctrl.visibleRewardRecipients}
+              rewardBookmark={ctrl.rewardRecipients?.bookmark ?? null}
+              rewardLoading={ctrl.rewardRecipientsLoading}
+              canPrevReward={ctrl.canPrevReward}
+              canNextReward={ctrl.canNextReward}
+              onPrevReward={ctrl.handlePrevReward}
+              onNextReward={ctrl.handleNextReward}
+              showRewardRecipients={Boolean(ctrl.space?.isFinished)}
               showEdit={Boolean(ctrl.space?.isDraft)}
               canDistributeReward={ctrl.canDistributeReward}
               onDistributePage={async () => {

@@ -6,9 +6,9 @@ import { Space } from '@/features/spaces/types/space';
 import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
 import { State } from '@/types/state';
 import {
-  SpaceDaoSelectedListResponse,
-  useSpaceDaoSelected,
-} from '@/features/spaces/dao/hooks/use-space-dao-selected';
+  SpaceDaoRewardListResponse,
+  useSpaceDaoReward,
+} from '@/features/spaces/dao/hooks/use-space-dao-reward';
 import { SpaceDaoService } from '@/contracts/SpaceDaoService';
 import { config } from '@/config';
 import { ethers } from 'ethers';
@@ -21,10 +21,10 @@ export class SpaceDaoViewerController {
     public t: TFunction<'SpaceDaoEditor', undefined>,
     public provider: ethers.JsonRpcProvider | null,
     public chainRecipientCount: State<string | null>,
-    public selectedBookmark: State<string | null>,
-    public selectedHistory: State<(string | null)[]>,
-    public selected: SpaceDaoSelectedListResponse | undefined,
-    public selectedLoading: boolean,
+    public rewardBookmark: State<string | null>,
+    public rewardHistory: State<(string | null)[]>,
+    public reward: SpaceDaoRewardListResponse | undefined,
+    public rewardLoading: boolean,
     public isDistributingPage: State<boolean>,
   ) {}
 
@@ -32,22 +32,30 @@ export class SpaceDaoViewerController {
     return this.space?.isAdmin?.() ?? false;
   }
 
-  get canPrevSelected() {
+  get canPrevReward() {
     if (this.space?.isFinished) {
       return false;
     }
-    return this.selectedHistory.get().length > 0;
+    return this.rewardHistory.get().length > 0;
   }
 
-  get canNextSelected() {
+  get canNextReward() {
     if (this.space?.isFinished) {
       return false;
     }
-    return Boolean(this.selected?.bookmark);
+    return Boolean(this.reward?.bookmark);
   }
 
-  get visibleSelected() {
-    return this.selected?.items ?? [];
+  get visibleRewardRecipients() {
+    return this.reward?.items ?? [];
+  }
+
+  get rewardRecipients() {
+    return this.reward;
+  }
+
+  get rewardRecipientsLoading() {
+    return this.rewardLoading;
   }
 
   fetchRecipientCount = async () => {
@@ -66,21 +74,21 @@ export class SpaceDaoViewerController {
     }
   };
 
-  handleNextSelected = () => {
-    const next = this.selected?.bookmark ?? null;
+  handleNextReward = () => {
+    const next = this.reward?.bookmark ?? null;
     if (!next) return;
-    const history = [...this.selectedHistory.get()];
-    history.push(this.selectedBookmark.get());
-    this.selectedHistory.set(history);
-    this.selectedBookmark.set(next);
+    const history = [...this.rewardHistory.get()];
+    history.push(this.rewardBookmark.get());
+    this.rewardHistory.set(history);
+    this.rewardBookmark.set(next);
   };
 
-  handlePrevSelected = () => {
-    const history = [...this.selectedHistory.get()];
+  handlePrevReward = () => {
+    const history = [...this.rewardHistory.get()];
     if (history.length === 0) return;
     const prev = history.pop() ?? null;
-    this.selectedHistory.set(history);
-    this.selectedBookmark.set(prev);
+    this.rewardHistory.set(history);
+    this.rewardBookmark.set(prev);
   };
 }
 
@@ -91,12 +99,12 @@ export function useSpaceDaoViewerController(
   const { data: space } = useSpaceById(spacePk);
   const { t } = useTranslation('SpaceDaoEditor');
   const chainRecipientCount = useState<string | null>(null);
-  const selectedBookmark = useState<string | null>(null);
-  const selectedHistory = useState<(string | null)[]>([]);
+  const rewardBookmark = useState<string | null>(null);
+  const rewardHistory = useState<(string | null)[]>([]);
   const isDistributingPage = useState(false);
-  const { data: selected, isLoading: selectedLoading } = useSpaceDaoSelected(
+  const { data: reward, isLoading: rewardLoading } = useSpaceDaoReward(
     spacePk,
-    selectedBookmark[0],
+    rewardBookmark[0],
     50,
     Boolean(dao?.contract_address),
   );
@@ -114,10 +122,10 @@ export function useSpaceDaoViewerController(
     t,
     provider,
     new State(chainRecipientCount),
-    new State(selectedBookmark),
-    new State(selectedHistory),
-    selected,
-    selectedLoading,
+    new State(rewardBookmark),
+    new State(rewardHistory),
+    reward,
+    rewardLoading,
     new State(isDistributingPage),
   );
 
