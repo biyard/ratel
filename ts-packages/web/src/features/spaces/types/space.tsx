@@ -9,7 +9,7 @@ import { SpaceType } from './space-type';
 import { TeamGroupPermissions } from '@/features/auth/utils/team-group-permissions';
 import { BoosterType } from './booster-type';
 import FileModel from '../files/types/file';
-import { SpaceRequirement } from './space-requirement';
+import { SpaceRequirement } from '../requirments/types';
 
 export class Space {
   readonly permissions: TeamGroupPermissions;

@@ -33,7 +33,16 @@ export enum Label {
   AdminSettings = 'menu_admin_settings',
   Rewards = 'menu_rewards',
   Analyze = 'menu_analyze',
+  Requirements = 'menu_requirements',
 }
+
+export const REQUIRE_MENUS: SideMenu[] = [
+  {
+    Icon: Vote,
+    to: (space) => route.spaceRequirements(space.pk),
+    label: Label.Requirements,
+  },
+];
 export const BASE_MENUS: SideMenu[] = [
   {
     Icon: Post,

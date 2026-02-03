@@ -17,10 +17,9 @@ export default function SpaceSideMenu({
   menus,
   selectedMenu,
 }: SpaceSideMenuProps) {
-  // const [selected, setSelected] = useState(
-  //   menus?.findIndex((item) => item.to === currentPath) ?? 0,
-  // );
-  const selectedIndex = menus?.findIndex((item) => item.to === selectedMenu.to);
+  const selectedIndex = selectedMenu
+    ? menus?.findIndex((item) => item.to === selectedMenu.to)
+    : -1;
 
   return (
     <Card className={cn('flex flex-col gap-2.5 w-full p-0')}>
