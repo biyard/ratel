@@ -134,7 +134,7 @@ Object.entries({
   SpaceSurveyReport: i18nSpaceSurveyReportComponent,
   SpaceFile: i18nSpaceFileComponent,
   SpaceTypeSelectModal: i18nSpaceTypeSelectModal,
-  Space: i18nSpaceHome,
+  SpaceHome: i18nSpaceHome,
   SpacePollSubmitSurvey: i18nSubmitSurveyModal,
   SpaceCompleteSurvey: i18nCompleteSurveyModal,
   SpacePollAnalyze: i18nSpacePollAnalyze,

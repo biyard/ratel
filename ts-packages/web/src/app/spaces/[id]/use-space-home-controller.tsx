@@ -2,8 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import { State } from '@/types/state';
 import { useSpaceHomeData } from './use-space-home-data';
 import { Space } from '@/features/spaces/types/space';
-import { useTranslation } from 'react-i18next';
-import { TFunction } from 'i18next';
 import { logger } from '@/lib/logger';
 import { useSpaceUpdateContentMutation } from '@/features/spaces/hooks/use-space-update-content-mutation';
 import { showErrorToast, showSuccessToast } from '@/lib/toast';
@@ -21,6 +19,7 @@ import { useUpdateDraftImageMutation } from '@/features/posts/hooks/use-update-d
 import { dataUrlToBlob, parseFileType } from '@/lib/file-utils';
 import { getPutObjectUrl } from '@/lib/api/ratel/assets.v3';
 import { spacePkToPostPk } from '@/features/spaces/utils/partition-key-utils';
+import { type I18nSpaceHome, useSpaceHomeI18n } from './space-home-i18n';
 
 export class SpaceHomeController {
   public space: Space;
@@ -32,7 +31,7 @@ export class SpaceHomeController {
     public navigate: NavigateFunction,
     public data: ReturnType<typeof useSpaceHomeData>,
     public state: State<boolean>,
-    public t: TFunction<'Space'>,
+    public i18n: I18nSpaceHome,
     public updateSpaceContent: ReturnType<typeof useSpaceUpdateContentMutation>,
     public updateSpaceTitle: ReturnType<typeof useSpaceUpdateTitleMutation>,
     public updateSpaceFiles: ReturnType<typeof useSpaceUpdateFilesMutation>,
@@ -78,11 +77,11 @@ export class SpaceHomeController {
 
     for (const f of files) {
       if (f.type !== 'application/pdf') {
-        showErrorToast('only PDF files can uploaded');
+        showErrorToast(this.i18n.onlyPdfFiles);
         return;
       }
       if (f.size > maxSizeMB * 1024 * 1024) {
-        showErrorToast(`Each file must be less than ${maxSizeMB}MB.`);
+        showErrorToast(this.i18n.fileSizeLimit);
         return;
       }
     }
@@ -96,7 +95,7 @@ export class SpaceHomeController {
       const uris = presign?.uris ?? [];
 
       if (presigned.length !== files.length || uris.length !== files.length) {
-        showErrorToast('Failed to issue upload URL.');
+        showErrorToast(this.i18n.failedIssueUploadUrl);
         return;
       }
 
@@ -119,10 +118,10 @@ export class SpaceHomeController {
       }));
 
       this.files.set([...this.files.get(), ...newModels]);
-      showSuccessToast('Complete to PDF upload');
+      showSuccessToast(this.i18n.completePdfUpload);
     } catch (error) {
       logger.error('PDF upload failed:', error);
-      showErrorToast('Failed to PDF upload');
+      showErrorToast(this.i18n.failedPdfUpload);
     }
   };
 
@@ -144,10 +143,10 @@ export class SpaceHomeController {
         spacePk: this.space.pk,
         files,
       });
-      showSuccessToast('Success to update space files');
+      showSuccessToast(this.i18n.successUpdateFiles);
     } catch (error) {
       logger.error('Failed to update space files', error);
-      showErrorToast(`Failed to update space files: ${error}`);
+      showErrorToast(`${this.i18n.failedUpdateFiles}: ${error}`);
     }
   };
 
@@ -161,10 +160,10 @@ export class SpaceHomeController {
         spacePk: this.space.pk,
         files: this.files.get(),
       });
-      showSuccessToast('Success to update space content');
+      showSuccessToast(this.i18n.successUpdateContent);
     } catch (error) {
       logger.error('Failed to update space content', error);
-      showErrorToast(`Failed to update space content: ${error}`);
+      showErrorToast(`${this.i18n.failedUpdateContent}: ${error}`);
     }
   };
 
@@ -175,10 +174,10 @@ export class SpaceHomeController {
         spacePk: this.space.pk,
         title,
       });
-      showSuccessToast('Success to update space title');
+      showSuccessToast(this.i18n.successUpdateTitle);
     } catch (error) {
       logger.error('Failed to update space title', error);
-      showErrorToast(`Failed to update space title: ${error}`);
+      showErrorToast(`${this.i18n.failedUpdateTitle}: ${error}`);
     }
   };
 
@@ -218,7 +217,7 @@ export class SpaceHomeController {
       }
     } catch (error) {
       logger.error('Image upload failed:', error);
-      showErrorToast('Failed to upload image');
+      showErrorToast(this.i18n.failedUploadImage);
     }
   };
 
@@ -237,7 +236,8 @@ export class SpaceHomeController {
 export function useSpaceHomeController(spacePk: string) {
   const data = useSpaceHomeData(spacePk);
   const state = useState(false);
-  const { t } = useTranslation('Space');
+  const i18n = useSpaceHomeI18n();
+  // const { t } = useTranslation('SpaceHome');
   const navigate = useNavigate();
   const updateSpaceContent = useSpaceUpdateContentMutation();
   const updateSpaceTitle = useSpaceUpdateTitleMutation();
@@ -250,6 +250,8 @@ export function useSpaceHomeController(spacePk: string) {
   const popup = usePopup();
   const image = useState<string | null>(null);
   const files = useState<FileModel[]>([]);
+
+  // FIXME: filesInitializedRef is Not needed.
   const filesInitializedRef = useRef(false);
 
   // Initialize image from space data
@@ -288,7 +290,7 @@ export function useSpaceHomeController(spacePk: string) {
     navigate,
     data,
     new State(state),
-    t,
+    i18n,
     updateSpaceContent,
     updateSpaceTitle,
     updateSpaceFiles,
