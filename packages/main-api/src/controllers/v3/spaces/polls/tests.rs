@@ -1,5 +1,6 @@
 use crate::controllers::v3::posts::CreatePostResponse;
 use crate::controllers::v3::spaces::create_space::CreateSpaceResponse;
+use crate::controllers::v3::spaces::participate_space::ParticipateSpaceResponse;
 use crate::controllers::v3::spaces::polls::{
     DeletePollSpaceResponse, RespondPollSpaceResponse, UpdatePollSpaceResponse,
 };
@@ -543,6 +544,18 @@ async fn test_get_poll_results_with_panel_responses() {
     let participant = SpacePanelParticipant::new(space_pk.clone(), test_user.0.clone());
     let _ = participant.create(&ddb).await;
 
+    // Participate in the space before responding to poll
+    let (status, _headers, _res) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/participate", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "verifiable_presentation": ""
+        },
+        response_type: ParticipateSpaceResponse
+    };
+    assert_eq!(status, 200, "test_user failed to participate");
+
     let (status, _headers, _res) = post! {
         app: app,
         path: format!("/v3/spaces/{}/polls/{}/responses", space_pk.to_string(), poll_sk.to_string()),
@@ -564,6 +577,18 @@ async fn test_get_poll_results_with_panel_responses() {
             other: None,
         },
     ];
+
+    // user2 participates in the space before responding to poll
+    let (status, _headers, _res) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/participate", space_pk.to_string()),
+        headers: user2.1.clone(),
+        body: {
+            "verifiable_presentation": ""
+        },
+        response_type: ParticipateSpaceResponse
+    };
+    assert_eq!(status, 200, "user2 failed to participate");
 
     let (status, _headers, _res) = post! {
         app: app,
@@ -622,6 +647,18 @@ async fn test_get_poll_results_with_responses() {
         },
     ];
 
+    // test_user participates in the space before responding to poll
+    let (status, _headers, _res) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/participate", space_pk.to_string()),
+        headers: test_user.1.clone(),
+        body: {
+            "verifiable_presentation": ""
+        },
+        response_type: ParticipateSpaceResponse
+    };
+    assert_eq!(status, 200, "test_user failed to participate");
+
     let (status, _headers, _res) = post! {
         app: app,
         path: format!("/v3/spaces/{}/polls/{}/responses", space_pk.to_string(), poll_sk.to_string()),
@@ -643,6 +680,18 @@ async fn test_get_poll_results_with_responses() {
             other: None,
         },
     ];
+
+    // user2 participates in the space before responding to poll
+    let (status, _headers, _res) = post! {
+        app: app,
+        path: format!("/v3/spaces/{}/participate", space_pk.to_string()),
+        headers: user2.1.clone(),
+        body: {
+            "verifiable_presentation": ""
+        },
+        response_type: ParticipateSpaceResponse
+    };
+    assert_eq!(status, 200, "user2 failed to participate");
 
     let (status, _headers, _res) = post! {
         app: app,
