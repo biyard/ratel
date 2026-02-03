@@ -1,5 +1,5 @@
 use crate::controllers::v3::spaces::dto::*;
-use crate::features::spaces::SpaceDao;
+use crate::features::spaces::{SpaceDao, files::{FileLink, FileLinkTarget, SpaceFile}};
 use crate::features::spaces::members::{
     SpaceEmailVerification, SpaceInvitationMember, SpaceInvitationMemberQueryOption,
 };
@@ -177,6 +177,59 @@ pub async fn update_space_handler(
         }
         UpdateSpaceRequest::File { files } => {
             su = su.with_files(files.clone());
+
+            let old_file_urls: Vec<String> = space
+                .files
+                .as_ref()
+                .map(|files| files.iter().filter_map(|f| f.url.clone()).collect())
+                .unwrap_or_default();
+
+            if !files.is_empty() {
+                SpaceFile::add_files(&dynamo.client, space_pk.clone(), files.clone()).await?;
+            }
+
+            let new_file_urls: Vec<String> = files.iter().filter_map(|f| f.url.clone()).collect();
+            if !new_file_urls.is_empty() {
+                FileLink::add_link_targets_batch(
+                    &dynamo.client,
+                    space_pk.clone(),
+                    new_file_urls.clone(),
+                    FileLinkTarget::Overview,
+                )
+                .await?;
+            }
+
+            let removed_urls: Vec<String> = old_file_urls
+                .into_iter()
+                .filter(|url| !new_file_urls.contains(url))
+                .collect();
+            if !removed_urls.is_empty() {
+                // Remove file links for Overview
+                FileLink::remove_link_targets_batch(
+                    &dynamo.client,
+                    &space_pk,
+                    removed_urls.clone(),
+                    &FileLinkTarget::Overview,
+                )
+                .await?;
+
+                // Also remove from SpaceFile (Files tab)
+                let (pk, sk) = SpaceFile::keys(&space_pk);
+                if let Some(mut space_file) = SpaceFile::get(&dynamo.client, &pk, Some(sk.clone())).await? {
+                    space_file.files.retain(|f| {
+                        if let Some(url) = &f.url {
+                            !removed_urls.contains(url)
+                        } else {
+                            true
+                        }
+                    });
+                    
+                    SpaceFile::updater(&pk, sk)
+                        .with_files(space_file.files.clone())
+                        .execute(&dynamo.client)
+                        .await?;
+                }
+            }
 
             space.files = Some(files);
         }

@@ -4,7 +4,7 @@ import { NavLink } from 'react-router';
 import { route } from '@/route';
 
 export function AdminPage() {
-  const ctrl = useAdminPageController();
+  const _ctrl = useAdminPageController();
   const i18n = useAdminI18n();
 
   const adminCards = [
@@ -35,6 +35,13 @@ export function AdminPage() {
       description: i18n.rewardsDesc,
       icon: '🎁',
       color: 'border-l-yellow-500',
+    },
+    {
+      to: route.adminMigrations(),
+      title: i18n.migrations,
+      description: i18n.migrationsDesc,
+      icon: '🧩',
+      color: 'border-l-teal-500',
     },
   ];
 

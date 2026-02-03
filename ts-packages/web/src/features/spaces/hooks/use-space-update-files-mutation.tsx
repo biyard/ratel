@@ -1,11 +1,13 @@
 import { spaceKeys } from '@/constants';
 import { updateSpaceFiles } from '@/lib/api/ratel/spaces.v3';
 import { optimisticUpdate } from '@/lib/hook-utils';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Space } from '../types/space';
 import FileModel from '../files/types/file';
 
 export function useSpaceUpdateFilesMutation<T extends Space>() {
+  const queryClient = useQueryClient();
+  
   const mutation = useMutation({
     mutationKey: ['update-files-space'],
     mutationFn: async ({
@@ -23,6 +25,14 @@ export function useSpaceUpdateFilesMutation<T extends Space>() {
       await optimisticUpdate<T>({ queryKey: spaceQK }, (space) => {
         space.files = updatedFiles;
         return space;
+      });
+      
+      // Invalidate file links and files list
+      await queryClient.invalidateQueries({
+        queryKey: spaceKeys.file_links(spacePk),
+      });
+      await queryClient.invalidateQueries({
+        queryKey: spaceKeys.files(spacePk),
       });
     },
   });

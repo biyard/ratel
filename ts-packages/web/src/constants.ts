@@ -118,6 +118,7 @@ export const spaceKeys = {
     [...spaceKeys.detail(spacePk), 'topics'] as const,
 
   files: (spacePk: string) => [...spaceKeys.detail(spacePk), 'files'] as const,
+  file_links: (spacePk: string) => [...spaceKeys.files(spacePk), 'links'] as const,
 
   recommendations: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'recommendations'] as const,

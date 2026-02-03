@@ -8,6 +8,9 @@ import { useUpdateRecommendationContentMutation } from '../../hooks/use-update-r
 import { useUpdateRecommendationFileMutation } from '../../hooks/use-update-recommendation-file-mutation';
 import { SpaceRecommendationResponse } from '../../types/recommendation-response';
 import FileModel from '@/features/spaces/files/types/file';
+import { getPutObjectUrl } from '@/lib/api/ratel/assets.v3';
+import { parseFileType } from '@/lib/file-utils';
+import { logger } from '@/lib/logger';
 
 export class SpaceRecommendationEditorController {
   constructor(
@@ -67,13 +70,40 @@ export class SpaceRecommendationEditorController {
     this.files.set([...this.files.get(), file]);
   };
 
-  handleRemoveFile = (index: number) => {
-    const newFiles = this.files.get().filter((_, i) => i !== index);
+  handleRemoveFile = (fileId: string) => {
+    const currentFiles = this.files.get();
+    const newFiles = currentFiles.filter(file => file.id !== fileId);
     this.files.set(newFiles);
+  };
+
+  uploadAsset = async (file: File): Promise<{ url: string }> => {
+    try {
+      const res = await getPutObjectUrl(1, parseFileType(file.type));
+
+      if (!res || !res.presigned_uris?.[0] || !res.uris?.[0]) {
+        throw new Error('Failed to get presigned URL');
+      }
+
+      await fetch(res.presigned_uris[0], {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type,
+        },
+        body: file,
+      });
+
+      const uploadedUrl = res.uris[0];
+      return { url: uploadedUrl };
+    } catch (error) {
+      logger.error('Overview asset upload failed:', error);
+      showErrorToast('Failed to upload asset');
+      throw error;
+    }
   };
 
   handleUpdateContent = async (htmlContents: string) => {
     this.htmlContents.set(htmlContents);
+
     this.handleContentSave(htmlContents);
   };
 }
