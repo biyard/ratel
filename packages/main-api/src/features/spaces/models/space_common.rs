@@ -165,6 +165,15 @@ impl SpaceCommon {
                 && (self.status == Some(SpaceStatus::Waiting) || self.status.is_none()))
     }
 
+    pub async fn get_participant(
+        &self,
+        cli: &aws_sdk_dynamodb::Client,
+        user_pk: &Partition,
+    ) -> Result<Option<SpaceParticipant>> {
+        let (pk, sk) = SpaceParticipant::keys(self.pk.clone(), user_pk.clone());
+
+        SpaceParticipant::get(cli, &pk, Some(&sk)).await
+    }
     pub async fn check_if_satisfying_panel_attribute(
         &self,
         cli: &aws_sdk_dynamodb::Client,
@@ -237,7 +246,6 @@ impl SpaceCommon {
         Err(Error::LackOfVerifiedAttributes)
     }
 }
-
 #[async_trait::async_trait]
 impl ResourcePermissions for SpaceCommon {
     fn viewer_permissions(&self) -> Permissions {
@@ -259,9 +267,7 @@ impl ResourcePermissions for SpaceCommon {
     }
 
     async fn is_participant(&self, cli: &aws_sdk_dynamodb::Client, requester: &Partition) -> bool {
-        let (pk, sk) = SpaceParticipant::keys(self.pk.clone(), requester.clone());
-
-        SpaceParticipant::get(cli, &pk, Some(&sk))
+        self.get_participant(cli, requester)
             .await
             .map(|sp| sp.is_some())
             .unwrap_or(false)
