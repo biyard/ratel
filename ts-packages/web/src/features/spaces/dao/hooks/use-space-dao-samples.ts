@@ -39,7 +39,7 @@ export function useSpaceDaoSamples(
       const query = params.toString();
       return call<void, SpaceDaoSampleListResponse>(
         'GET',
-        `/v3/spaces/${encodeURIComponent(spacePk)}/dao/samples${
+        `/v3/spaces/${encodeURIComponent(spacePk)}/dao/selected${
           query ? `?${query}` : ''
         }`,
       );

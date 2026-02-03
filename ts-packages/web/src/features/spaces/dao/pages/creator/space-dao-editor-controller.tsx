@@ -142,7 +142,7 @@ export class SpaceDaoEditorController {
       return;
     }
     const recipients = candidates.map((item) => item.evm_address);
-    const sampleSks = candidates.map((item) => item.sk);
+    const selectedSks = candidates.map((item) => item.sk);
 
     this.isDistributingPage.set(true);
     try {
@@ -173,7 +173,7 @@ export class SpaceDaoEditorController {
 
       await this.updateSamplesMutation.mutateAsync({
         spacePk: this.spacePk,
-        sampleSks,
+        selectedSks,
         rewardDistributed: true,
       });
 

@@ -14,7 +14,7 @@ use crate::features::spaces::SpaceParticipant;
     schemars::JsonSchema,
     aide::OperationIo,
 )]
-pub struct SpaceDaoSampleUser {
+pub struct SpaceDaoSelectedUser {
     pub pk: Partition,
     pub sk: EntityType,
 
@@ -24,7 +24,7 @@ pub struct SpaceDaoSampleUser {
     #[serde(default)]
     pub updated_at: i64,
     #[dynamo(
-        prefix = "SPACE_DAO_SAMPLE",
+        prefix = "SPACE_DAO_SELECTED",
         name = "find_by_space",
         index = "gsi2",
         pk
@@ -46,7 +46,7 @@ pub struct SpaceDaoSampleUser {
     pub reward_distributed: bool,
 }
 
-impl SpaceDaoSampleUser {
+impl SpaceDaoSelectedUser {
     pub fn keys(space_pk: &Partition, sk: &EntityType) -> (Partition, EntityType) {
         (space_pk.clone(), sk.clone())
     }
@@ -60,7 +60,7 @@ impl SpaceDaoSampleUser {
         evm_address: String,
     ) -> Self {
         let now = get_now_timestamp_millis();
-        let sk = EntityType::SpaceDaoSample(user_pk.to_string());
+        let sk = EntityType::SpaceDaoSelected(user_pk.to_string());
 
         Self {
             pk: space_pk.clone(),
