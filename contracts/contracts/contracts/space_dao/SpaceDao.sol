@@ -10,24 +10,24 @@ contract SpaceDAO {
     address[] private _admins;
     mapping(address => bool) private _isAdmin;
 
-    enum SamplingMode {
+    enum RewardDistributionMode {
         Random,
         Ranking,
         Mixed
     }
 
-    struct SamplingConfig {
-        SamplingMode mode;
-        uint256 randomCount;
+    struct RewardDistributionConfig {
+        RewardDistributionMode mode;
+        uint256 numOfTargets;
     }
 
-    SamplingConfig private _samplingConfig;
-    address[] private _sampled;
-    mapping(address => bool) private _isSampled;
+    RewardDistributionConfig private _rewardDistributionConfig;
+    address[] private _rewardRecipients;
+    mapping(address => bool) private _isRewardRecipient;
     mapping(address => bool) private _isRewarded;
 
-    event Sampled(SamplingMode mode, uint256 count);
-    event SamplingConfigUpdated(SamplingMode mode, uint256 randomCount);
+    event RewardDistributionSelected(RewardDistributionMode mode, uint256 count);
+    event RewardDistributionConfigUpdated(RewardDistributionMode mode, uint256 numOfTargets);
     event Distributed(address indexed token, uint256 count, uint256 value);
 
     modifier onlyAdmin() {
@@ -35,7 +35,7 @@ contract SpaceDAO {
         _;
     }
 
-    constructor(address[] memory admins, SamplingConfig memory samplingConfig) {
+    constructor(address[] memory admins, RewardDistributionConfig memory rewardDistributionConfig) {
         require(admins.length >= 3, "SpaceDAO: at least 3 admins required");
         for (uint256 i = 0; i < admins.length; i++) {
             address admin = admins[i];
@@ -44,7 +44,7 @@ contract SpaceDAO {
             _isAdmin[admin] = true;
             _admins.push(admin);
         }
-        _samplingConfig = samplingConfig;
+        _rewardDistributionConfig = rewardDistributionConfig;
     }
 
     function getAdmins() external view returns (address[] memory) {
@@ -55,40 +55,45 @@ contract SpaceDAO {
         return _isAdmin[account];
     }
 
-    function getSamplingConfig() external view returns (SamplingConfig memory) {
-        return _samplingConfig;
+    function getRewardDistributionConfig() external view returns (RewardDistributionConfig memory) {
+        return _rewardDistributionConfig;
     }
 
-    function setSamplingCount(uint256 randomCount) external onlyAdmin {
-        require(randomCount > 0, "SpaceDAO: invalid sample count");
-        _samplingConfig = SamplingConfig({mode: _samplingConfig.mode, randomCount: randomCount});
-        emit SamplingConfigUpdated(_samplingConfig.mode, randomCount);
+    function setRewardRecipientCount(uint256 numOfTargets) external onlyAdmin {
+        require(numOfTargets > 0, "SpaceDAO: invalid recipient count");
+        _rewardDistributionConfig = RewardDistributionConfig({
+            mode: _rewardDistributionConfig.mode,
+            numOfTargets: numOfTargets
+        });
+        emit RewardDistributionConfigUpdated(_rewardDistributionConfig.mode, numOfTargets);
     }
 
-    function getSampledAddresses() external view returns (address[] memory) {
-        return _sampled;
+    function getRewardRecipients() external view returns (address[] memory) {
+        return _rewardRecipients;
     }
 
-    function isSampled(address account) external view returns (bool) {
-        return _isSampled[account];
+    function isRewardRecipient(address account) external view returns (bool) {
+        return _isRewardRecipient[account];
     }
 
     function isRewarded(address account) external view returns (bool) {
         return _isRewarded[account];
     }
 
-    function sample(address[] calldata candidates)
+    function selectRewardRecipients(address[] calldata candidates)
         external
         onlyAdmin
         returns (address[] memory)
     {
         require(candidates.length > 0, "SpaceDAO: empty candidates");
-        require(_samplingConfig.mode == SamplingMode.Random, "SpaceDAO: mode not supported");
+        require(
+            _rewardDistributionConfig.mode == RewardDistributionMode.Random,
+            "SpaceDAO: mode not supported"
+        );
 
-        uint256 count = _samplingConfig.randomCount;
-        if (count == 0) {
-            revert("SpaceDAO: invalid sample count");
-        }
+        uint256 count = _rewardDistributionConfig.numOfTargets;
+        require(count > 0, "SpaceDAO: invalid recipient count");
+
         if (count > candidates.length) {
             count = candidates.length;
         }
@@ -107,21 +112,21 @@ contract SpaceDAO {
             picked[i] = pool[i];
         }
 
-        for (uint256 i = 0; i < _sampled.length; i++) {
-            address prev = _sampled[i];
-            _isSampled[prev] = false;
+        for (uint256 i = 0; i < _rewardRecipients.length; i++) {
+            address prev = _rewardRecipients[i];
+            _isRewardRecipient[prev] = false;
             _isRewarded[prev] = false;
         }
-        delete _sampled;
+        delete _rewardRecipients;
         for (uint256 i = 0; i < picked.length; i++) {
             address pickedAddr = picked[i];
             require(pickedAddr != address(0), "SpaceDAO: invalid recipient");
-            _isSampled[pickedAddr] = true;
+            _isRewardRecipient[pickedAddr] = true;
             _isRewarded[pickedAddr] = false;
-            _sampled.push(pickedAddr);
+            _rewardRecipients.push(pickedAddr);
         }
 
-        emit Sampled(_samplingConfig.mode, picked.length);
+        emit RewardDistributionSelected(_rewardDistributionConfig.mode, picked.length);
         return picked;
     }
 
@@ -141,7 +146,7 @@ contract SpaceDAO {
         for (uint256 i = 0; i < recipients.length; i++) {
             address to = recipients[i];
             require(to != address(0), "SpaceDAO: invalid recipient");
-            require(_isSampled[to], "SpaceDAO: not sampled");
+            require(_isRewardRecipient[to], "SpaceDAO: not selected");
             require(!_isRewarded[to], "SpaceDAO: reward finished");
             require(erc20.transfer(to, value), "SpaceDAO: transfer failed");
             _isRewarded[to] = true;
