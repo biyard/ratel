@@ -11,7 +11,7 @@ pub struct ParticipateSpaceRequest {
     pub verifiable_presentation: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, OperationIo, JsonSchema)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize, OperationIo, JsonSchema)]
 pub struct ParticipateSpaceResponse {
     pub username: String,
     pub display_name: String,
