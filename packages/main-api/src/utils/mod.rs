@@ -21,9 +21,9 @@ pub mod sqs_client;
 pub mod telegram;
 pub mod time;
 // pub mod users;
+pub mod space_dao_reward;
 pub mod validator;
 pub mod wallets;
-pub mod space_dao_sampling;
 
 pub mod aws;
 pub mod reports;
@@ -35,8 +35,8 @@ pub mod dynamo_session_store;
 
 pub mod password;
 
-pub mod evm_utils;
 pub mod evm_token;
+pub mod evm_utils;
 pub mod firebase;
 mod rand_utils;
 pub mod security;
