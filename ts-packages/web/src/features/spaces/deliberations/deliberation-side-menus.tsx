@@ -56,8 +56,9 @@ addSideMenusForSpaceType(SpaceType.Deliberation, [
       return route.spaceDao(space.pk);
     },
     visible: (space) =>
-      // config.experiment &&
-      space.authorType === 2 && (space.isAdmin() || Boolean(space.daoAddress)),
+      config.experiment &&
+      space.authorType === 2 &&
+      (space.isAdmin() || Boolean(space.daoAddress)),
     label: 'menu_dao',
   },
   // {
