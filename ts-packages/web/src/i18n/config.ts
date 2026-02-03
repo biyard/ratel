@@ -53,6 +53,7 @@ import { i18nSpacePollViewerPage } from '@/features/spaces/polls/pages/viewer/sp
 import { i18nSpaceFileEditor } from '@/features/spaces/files/pages/creator/space-file-editor-i18n';
 import { i18nSpaceRecommendationEditor } from '@/features/spaces/recommendations/pages/creator/space-recommendation-editor-i18n';
 import { i18nAdmin } from '@/app/admin/admin-page-i18n';
+import { i18nAdminMigrations } from '@/app/admin/migrations/migrations-page-i18n';
 import { i18nAdmins } from '@/app/admin/users/admins-page-i18n';
 import { i18nMemberships } from '@/features/membership/i18n';
 import { i18nNotifications } from '@/features/notification/i18n';
@@ -153,6 +154,7 @@ Object.entries({
   SpaceMemberEditor: i18nSpaceMemberEditorPage,
   SpaceMemberViewer: i18nSpaceMemberViewerPage,
   Admin: i18nAdmin,
+  AdminMigrations: i18nAdminMigrations,
   Admins: i18nAdmins,
   Memberships: i18nMemberships,
   Notifications: i18nNotifications,
