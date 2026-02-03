@@ -13,7 +13,7 @@ const VIDEO_EXTS = ['mp4', 'mov', 'webm', 'mkv'];
 
 export interface SpaceFilesEditorProps {
   files: FileModel[];
-  onremove?: (index: number) => void;
+  onremove?: (fileId: string) => void;
   onadd?: (file: FileModel) => void;
 }
 
@@ -62,7 +62,6 @@ export default function SpaceFileEditors({
 
   const videoFiles = files.filter((f) => {
     const name = f.name.toLowerCase();
-    console.log('file: ', f.ext, f.name);
     return isVideo(f.ext) || VIDEO_EXTS.some((ext) => name.includes(`.${ext}`));
   });
   return (
@@ -128,9 +127,9 @@ export default function SpaceFileEditors({
             ?.filter((file) => !checkString(file.name))
             .map((file, index) => (
               <EditableFile
-                key={index}
+                key={file.id || index}
                 file={file}
-                onclick={() => onremove(index)}
+                onclick={() => onremove(file.id)}
               />
             ))}
         </div>

@@ -13,6 +13,7 @@ use crate::{AppState, models::dynamo_tables::main::user::User};
 pub mod admin;
 mod attribute_codes;
 pub mod memberships;
+pub mod migrations;
 pub mod payments;
 pub mod rewards;
 
@@ -23,6 +24,7 @@ pub fn route() -> crate::Result<by_axum::axum::Router> {
         .nest("/attribute-codes", attribute_codes::route()?)
         .nest("/admin", admin::route()?)
         .nest("/rewards", rewards::route()?)
+        .nest("/migrations", migrations::route()?)
         .nest("/payments", payments::route()?)
         .layer(middleware::from_fn_with_state(
             app_state.clone(),
