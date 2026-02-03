@@ -4,7 +4,7 @@ import Card from '@/components/card';
 import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
 import { SpaceDaoRewardResponse } from '@/features/spaces/dao/hooks/use-space-dao-reward';
 import { SpaceDaoTokenResponse } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
-import { SpaceDaoRewardTable } from './space-dao-reward-table';
+import { SpaceDaoRewardCard } from './space-dao-reward-card';
 import { config } from '@/config';
 import {
   ArrowPathIcon,
@@ -21,17 +21,16 @@ type SpaceDaoInfoCardProps = {
   recipientCount?: string | number | null;
   onUpdateDao?: (rewardCount: string) => Promise<void>;
   rewardRecipients?: SpaceDaoRewardResponse[];
-  rewardBookmark?: string | null;
-  canPrevReward?: boolean;
-  canNextReward?: boolean;
+  rewardRemainingCount?: number | null;
+  rewardTotalCount?: number | null;
   rewardLoading?: boolean;
   showRewardRecipients?: boolean;
   showEdit?: boolean;
-  canDistributeReward?: boolean;
-  onNextReward?: () => void;
-  onPrevReward?: () => void;
-  onDistributePage?: () => void;
-  isDistributingPage?: boolean;
+  currentUserEvm?: string | null;
+  claimableAmount?: string | null;
+  isClaimable?: boolean;
+  isClaiming?: boolean;
+  onClaimReward?: (rewardSk: string) => void;
   // withdrawal props removed
   tokens?: SpaceDaoTokenResponse[];
   selectedToken?: string | null;
@@ -47,17 +46,16 @@ export function SpaceDaoInfoCard({
   recipientCount,
   onUpdateDao,
   rewardRecipients,
-  rewardBookmark,
-  canPrevReward = false,
-  canNextReward = false,
+  rewardRemainingCount,
+  rewardTotalCount,
   rewardLoading = false,
   showRewardRecipients = true,
   showEdit = true,
-  canDistributeReward = false,
-  onNextReward,
-  onPrevReward,
-  onDistributePage,
-  isDistributingPage = false,
+  currentUserEvm,
+  claimableAmount,
+  isClaimable = false,
+  isClaiming = false,
+  onClaimReward,
   tokens = [],
   selectedToken,
   onSelectToken,
@@ -294,17 +292,16 @@ export function SpaceDaoInfoCard({
       </div>
 
       {showRewardRecipients && (
-        <SpaceDaoRewardTable
-          rewardRecipients={rewardRecipients}
-          rewardBookmark={rewardBookmark}
+        <SpaceDaoRewardCard
+          rewardRecipient={rewardRecipients?.[0] ?? null}
+          remainingCount={rewardRemainingCount ?? null}
+          totalCount={rewardTotalCount ?? null}
           rewardLoading={rewardLoading}
-          canPrevReward={canPrevReward}
-          canNextReward={canNextReward}
-          onPrevReward={onPrevReward}
-          onNextReward={onNextReward}
-          canDistributeReward={canDistributeReward}
-          onDistributePage={onDistributePage}
-          isDistributingPage={isDistributingPage}
+          currentUserEvm={currentUserEvm}
+          claimableAmount={claimableAmount}
+          isClaimable={isClaimable}
+          isClaiming={isClaiming}
+          onClaimReward={onClaimReward}
         />
       )}
     </Card>

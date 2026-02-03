@@ -25,10 +25,13 @@ contract SpaceDAO {
     address[] private _rewardRecipients;
     mapping(address => bool) private _isRewardRecipient;
     mapping(address => bool) private _isRewarded;
+    uint256 private _rewardEpoch;
+    mapping(address => uint256) private _rewardAmountByToken;
+    mapping(address => uint256) private _rewardAmountEpoch;
 
     event RewardDistributionSelected(RewardDistributionMode mode, uint256 count);
     event RewardDistributionConfigUpdated(RewardDistributionMode mode, uint256 numOfTargets);
-    event Distributed(address indexed token, uint256 count, uint256 value);
+    event RewardClaimed(address indexed token, address indexed recipient, uint256 value);
 
     modifier onlyAdmin() {
         require(_isAdmin[msg.sender], "SpaceDAO: admin only");
@@ -80,6 +83,21 @@ contract SpaceDAO {
         return _isRewarded[account];
     }
 
+    function getClaimAmount(address token) external view returns (uint256) {
+        if (token == address(0)) {
+            return 0;
+        }
+        uint256 count = _rewardRecipients.length;
+        if (count == 0) {
+            return 0;
+        }
+        if (_rewardAmountEpoch[token] == _rewardEpoch) {
+            return _rewardAmountByToken[token];
+        }
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        return balance / count;
+    }
+
     function selectRewardRecipients(address[] calldata candidates)
         external
         onlyAdmin
@@ -125,34 +143,36 @@ contract SpaceDAO {
             _isRewarded[pickedAddr] = false;
             _rewardRecipients.push(pickedAddr);
         }
+        _rewardEpoch += 1;
 
         emit RewardDistributionSelected(_rewardDistributionConfig.mode, picked.length);
         return picked;
     }
 
-    function distribute(
-        address token,
-        address[] calldata recipients,
-        uint256 value
-    ) external onlyAdmin {
+    function claimReward(address token) external {
         require(token != address(0), "SpaceDAO: invalid token");
-        require(recipients.length > 0, "SpaceDAO: empty recipients");
-        require(value > 0, "SpaceDAO: invalid value");
+
+        address recipient = msg.sender;
+        require(_isRewardRecipient[recipient], "SpaceDAO: not selected");
+        require(!_isRewarded[recipient], "SpaceDAO: reward finished");
 
         IERC20 erc20 = IERC20(token);
-        uint256 total = value * recipients.length;
-        require(erc20.balanceOf(address(this)) >= total, "SpaceDAO: insufficient balance");
-
-        for (uint256 i = 0; i < recipients.length; i++) {
-            address to = recipients[i];
-            require(to != address(0), "SpaceDAO: invalid recipient");
-            require(_isRewardRecipient[to], "SpaceDAO: not selected");
-            require(!_isRewarded[to], "SpaceDAO: reward finished");
-            require(erc20.transfer(to, value), "SpaceDAO: transfer failed");
-            _isRewarded[to] = true;
+        uint256 count = _rewardRecipients.length;
+        require(count > 0, "SpaceDAO: invalid recipient count");
+        uint256 value = _rewardAmountByToken[token];
+        if (_rewardAmountEpoch[token] != _rewardEpoch) {
+            uint256 balance = erc20.balanceOf(address(this));
+            value = balance / count;
+            require(value > 0, "SpaceDAO: invalid value");
+            _rewardAmountByToken[token] = value;
+            _rewardAmountEpoch[token] = _rewardEpoch;
         }
+        require(erc20.balanceOf(address(this)) >= value, "SpaceDAO: insufficient balance");
 
-        emit Distributed(token, recipients.length, value);
+        require(erc20.transfer(recipient, value), "SpaceDAO: transfer failed");
+        _isRewarded[recipient] = true;
+
+        emit RewardClaimed(token, recipient, value);
     }
 
     function _randomIndex(uint256 range, uint256 nonce) internal view returns (uint256) {

@@ -129,20 +129,19 @@ export function SpaceDaoEditorPage({ spacePk }: SpacePathProps) {
               isUpdating={ctrl.isUpdating.get()}
               onUpdateDao={ctrl.handleUpdateDao}
               rewardRecipients={ctrl.visibleRewardRecipients}
-              rewardBookmark={ctrl.rewardRecipients?.bookmark ?? null}
+              rewardRemainingCount={ctrl.rewardMeta?.remaining_count ?? null}
+              rewardTotalCount={ctrl.rewardMeta?.total_count ?? null}
               rewardLoading={ctrl.rewardRecipientsLoading}
-              canPrevReward={ctrl.canPrevReward}
-              canNextReward={ctrl.canNextReward}
-              onPrevReward={ctrl.handlePrevReward}
-              onNextReward={ctrl.handleNextReward}
               showRewardRecipients={Boolean(ctrl.space?.isFinished)}
               showEdit={Boolean(ctrl.space?.isDraft)}
-              canDistributeReward={ctrl.canDistributeReward}
-              onDistributePage={async () => {
-                await ctrl.handleDistribute();
+              currentUserEvm={ctrl.currentUserEvm}
+              claimableAmount={ctrl.perRecipientDisplay}
+              isClaimable={ctrl.canClaimReward}
+              isClaiming={ctrl.isClaiming.get()}
+              onClaimReward={async (rewardSk) => {
+                await ctrl.handleClaimReward(rewardSk);
                 refreshTokens.mutate();
               }}
-              isDistributingPage={ctrl.isDistributingPage.get()}
               tokens={orderedTokens}
               selectedToken={selectedToken}
               onSelectToken={setSelectedToken}

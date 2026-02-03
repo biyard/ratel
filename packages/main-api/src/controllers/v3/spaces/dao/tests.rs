@@ -77,7 +77,7 @@ async fn test_get_space_dao_not_found() {
 }
 
 #[tokio::test]
-async fn test_create_and_list_space_dao_reward() {
+async fn test_create_and_get_space_dao_reward() {
     let (ctx, space_pk) = setup_space(SpaceType::Poll).await;
     let user2 = ctx.create_another_user().await;
     let TestContextV3 {
@@ -144,13 +144,13 @@ async fn test_create_and_list_space_dao_reward() {
 
     let (status, _headers, body) = get! {
         app: app,
-        path: format!("/v3/spaces/{}/dao/reward?limit=50", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/dao/reward", space_pk.to_string()),
         headers: test_user.1.clone(),
         response_type: serde_json::Value
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body["items"].as_array().unwrap().len(), 2);
+    assert!(body["item"].is_object());
     assert_eq!(body["remaining_count"].as_i64().unwrap(), 2);
     assert_eq!(body["total_count"].as_i64().unwrap(), 2);
 }
@@ -218,14 +218,12 @@ async fn test_update_space_dao_reward() {
         response_type: Vec<SpaceDaoRewardUser>
     };
 
-    let reward_sks: Vec<String> = body.iter().map(|item| item.sk.to_string()).collect();
-
     let (status, _headers, updated) = patch! {
         app: app,
         path: format!("/v3/spaces/{}/dao/reward", space_pk.to_string()),
         headers: test_user.1.clone(),
         body: {
-            "reward_sks": reward_sks,
+            "reward_sk": body[0].sk.to_string(),
             "reward_distributed": true
         },
         response_type: Vec<SpaceDaoRewardUser>
@@ -236,7 +234,7 @@ async fn test_update_space_dao_reward() {
 
     let (status, _headers, body) = get! {
         app: app,
-        path: format!("/v3/spaces/{}/dao/reward?limit=50", space_pk.to_string()),
+        path: format!("/v3/spaces/{}/dao/reward", space_pk.to_string()),
         headers: test_user.1.clone(),
         response_type: serde_json::Value
     };
