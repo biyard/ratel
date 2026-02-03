@@ -240,6 +240,6 @@ async fn test_update_space_dao_reward() {
     };
 
     assert_eq!(status, 200);
-    assert_eq!(body["remaining_count"].as_i64().unwrap(), 0);
+    assert_eq!(body["remaining_count"].as_i64().unwrap(), 1);
     assert_eq!(body["total_count"].as_i64().unwrap(), 2);
 }

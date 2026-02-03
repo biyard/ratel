@@ -1,7 +1,7 @@
 use crate::controllers::v3::spaces::SpacePathParam;
 use crate::features::spaces::{SpaceDao, SpaceDaoCandidate, SpaceDaoRewardUser};
 use crate::types::{EntityType, Permissions, TeamGroupPermission};
-use crate::utils::space_dao_sampling::collect_space_dao_candidate_addresses;
+use crate::utils::space_dao_reward::collect_space_dao_candidate_addresses;
 use crate::{AppState, Error, transact_write_items};
 use aide::NoApi;
 use aws_sdk_dynamodb::types::TransactWriteItem;
@@ -53,15 +53,15 @@ pub async fn create_space_dao_reward_handler(
         space_pk.clone(),
         SpaceDaoRewardUser::opt_all().sk("SPACE_DAO_REWARD#".to_string()),
     )
-            .await
-            .map_err(|err| {
-                tracing::error!(
-                    "create_space_dao_reward: failed to load existing reward users: space={} err={:?}",
-                    space_pk,
-                    err
-                );
-                err
-            })?;
+    .await
+    .map_err(|err| {
+        tracing::error!(
+            "create_space_dao_reward: failed to load existing reward users: space={} err={:?}",
+            space_pk,
+            err
+        );
+        err
+    })?;
     let mut existing_set = HashSet::new();
     for item in existing {
         existing_set.insert(item.evm_address.to_lowercase());
