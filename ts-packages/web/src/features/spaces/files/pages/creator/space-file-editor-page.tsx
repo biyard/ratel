@@ -70,7 +70,7 @@ export function SpaceFileEditorPage({ spacePk }: SpacePathProps) {
           </Button>
         </Row>
 
-        <Row className="gap-2">
+        <Row className="gap-2 justify-end">
           {ctrl.editing.get() ? (
             <>
               <Button variant="primary" onClick={ctrl.handleSave}>
