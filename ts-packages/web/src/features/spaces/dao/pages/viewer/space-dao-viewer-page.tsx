@@ -71,15 +71,15 @@ export function SpaceDaoViewerPage({ spacePk }: SpacePathProps) {
     <div className="flex flex-col w-full max-w-[1152px] gap-5">
       <SpaceDaoInfoCard
         dao={dao}
-        samplingCount={ctrl.chainSamplingCount.get()}
-        samples={ctrl.visibleSamples}
-        samplesBookmark={ctrl.samples?.bookmark ?? null}
-        samplesLoading={ctrl.samplesLoading}
-        canPrevSample={ctrl.canPrevSample}
-        canNextSample={ctrl.canNextSample}
-        onPrevSample={ctrl.handlePrevSample}
-        onNextSample={ctrl.handleNextSample}
-        showSamples={Boolean(ctrl.space?.isFinished)}
+        recipientCount={ctrl.chainRecipientCount.get()}
+        selected={ctrl.visibleSelected}
+        selectedBookmark={ctrl.selected?.bookmark ?? null}
+        selectedLoading={ctrl.selectedLoading}
+        canPrevSelected={ctrl.canPrevSelected}
+        canNextSelected={ctrl.canNextSelected}
+        onPrevSelected={ctrl.handlePrevSelected}
+        onNextSelected={ctrl.handleNextSelected}
+        showSelected={Boolean(ctrl.space?.isFinished)}
         showEdit={false}
         canDistributeReward={ctrl.canDistributeReward}
         isDistributingPage={ctrl.isDistributingPage.get()}

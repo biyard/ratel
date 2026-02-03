@@ -17,10 +17,10 @@ import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
 import { ethers } from 'ethers';
 import { State } from '@/types/state';
 import {
-  SpaceDaoSampleListResponse,
-  useSpaceDaoSamples,
-} from '@/features/spaces/dao/hooks/use-space-dao-samples';
-import { useUpdateSpaceDaoSamplesMutation } from '@/features/spaces/dao/hooks/use-update-space-dao-samples-mutation';
+  SpaceDaoSelectedListResponse,
+  useSpaceDaoSelected,
+} from '@/features/spaces/dao/hooks/use-space-dao-selected';
+import { useUpdateSpaceDaoSelectedMutation } from '@/features/spaces/dao/hooks/use-update-space-dao-selected-mutation';
 
 export class SpaceDaoEditorController {
   constructor(
@@ -32,15 +32,15 @@ export class SpaceDaoEditorController {
     public t: TFunction<'SpaceDaoEditor', undefined>,
     public provider: ethers.JsonRpcProvider | null,
     public adminAddresses: State<string>,
-    public samplingCount: State<string>,
-    public chainSamplingCount: State<string | null>,
+    public rewardCount: State<string>,
+    public chainRecipientCount: State<string | null>,
     public isPopupOpen: State<boolean>,
     public isRegistering: State<boolean>,
     public isUpdating: State<boolean>,
-    public sampleBookmark: State<string | null>,
-    public sampleHistory: State<(string | null)[]>,
-    public samples: SpaceDaoSampleListResponse | undefined,
-    public samplesLoading: boolean,
+    public selectedBookmark: State<string | null>,
+    public selectedHistory: State<(string | null)[]>,
+    public selected: SpaceDaoSelectedListResponse | undefined,
+    public selectedLoading: boolean,
     public isDistributingPage: State<boolean>,
     public selectedToken: string | null,
     public tokenBalance: string | null,
@@ -49,8 +49,8 @@ export class SpaceDaoEditorController {
     public preferredTokenBalance: string | null,
     public preferredTokenDecimals: number | null,
     public createSpaceDaoMutation: ReturnType<typeof useCreateSpaceDaoMutation>,
-    public updateSamplesMutation: ReturnType<
-      typeof useUpdateSpaceDaoSamplesMutation
+    public updateSelectedMutation: ReturnType<
+      typeof useUpdateSpaceDaoSelectedMutation
     >,
   ) {}
 
@@ -63,33 +63,33 @@ export class SpaceDaoEditorController {
   }
 
   get canSubmitInputs() {
-    const sampling = Number(this.samplingCount.get());
-    return Number.isFinite(sampling) && sampling > 0;
+    const count = Number(this.rewardCount.get());
+    return Number.isFinite(count) && count > 0;
   }
 
   get canDistributeReward() {
     return this.permissions?.isAdmin() ?? false;
   }
 
-  get canPrevSample() {
+  get canPrevSelected() {
     if (this.space?.isFinished) {
       return false;
     }
-    return this.sampleHistory.get().length > 0;
+    return this.selectedHistory.get().length > 0;
   }
 
-  get canNextSample() {
+  get canNextSelected() {
     if (this.space?.isFinished) {
       return false;
     }
-    return Boolean(this.samples?.bookmark);
+    return Boolean(this.selected?.bookmark);
   }
 
-  get visibleSamples() {
-    return this.samples?.items ?? [];
+  get visibleSelected() {
+    return this.selected?.items ?? [];
   }
 
-  fetchSamplingCount = async () => {
+  fetchRecipientCount = async () => {
     if (!this.provider || !this.dao?.contract_address) {
       return;
     }
@@ -99,28 +99,28 @@ export class SpaceDaoEditorController {
       const count = await service.getRewardRecipientCount(
         this.dao.contract_address,
       );
-      this.chainSamplingCount.set(String(count));
+      this.chainRecipientCount.set(String(count));
     } catch (error) {
-      console.error('Failed to fetch sampling count:', error);
-      this.chainSamplingCount.set(null);
+      console.error('Failed to fetch reward recipient count:', error);
+      this.chainRecipientCount.set(null);
     }
   };
 
-  handleNextSample = () => {
-    const next = this.samples?.bookmark ?? null;
+  handleNextSelected = () => {
+    const next = this.selected?.bookmark ?? null;
     if (!next) return;
-    const history = [...this.sampleHistory.get()];
-    history.push(this.sampleBookmark.get());
-    this.sampleHistory.set(history);
-    this.sampleBookmark.set(next);
+    const history = [...this.selectedHistory.get()];
+    history.push(this.selectedBookmark.get());
+    this.selectedHistory.set(history);
+    this.selectedBookmark.set(next);
   };
 
-  handlePrevSample = () => {
-    const history = [...this.sampleHistory.get()];
+  handlePrevSelected = () => {
+    const history = [...this.selectedHistory.get()];
     if (history.length === 0) return;
     const prev = history.pop() ?? null;
-    this.sampleHistory.set(history);
-    this.sampleBookmark.set(prev);
+    this.selectedHistory.set(history);
+    this.selectedBookmark.set(prev);
   };
 
   handleDistribute = async () => {
@@ -135,7 +135,7 @@ export class SpaceDaoEditorController {
       showErrorToast(this.t('error_register_failed_unknown'));
       return;
     }
-    const candidates = this.visibleSamples.filter(
+    const candidates = this.visibleSelected.filter(
       (item) => !item.reward_distributed,
     );
     if (candidates.length === 0) {
@@ -154,7 +154,7 @@ export class SpaceDaoEditorController {
       const daoService = new SpaceDaoService(provider);
       await daoService.connectWallet();
       const totalBalance = ethers.toBigInt(balance);
-      const totalCount = this.samples?.remaining_count ?? candidates.length;
+      const totalCount = this.selected?.remaining_count ?? candidates.length;
       if (totalCount <= 0) {
         showErrorToast(this.t('error_register_failed_unknown'));
         return;
@@ -171,7 +171,7 @@ export class SpaceDaoEditorController {
         perRecipient,
       );
 
-      await this.updateSamplesMutation.mutateAsync({
+      await this.updateSelectedMutation.mutateAsync({
         spacePk: this.spacePk,
         selectedSks,
         rewardDistributed: true,
@@ -229,10 +229,10 @@ export class SpaceDaoEditorController {
       const daoService = new SpaceDaoService(provider);
       await daoService.connectWallet();
 
-      const sampling = Number(this.samplingCount.get());
+      const count = Number(this.rewardCount.get());
       const result = await daoService.createSpaceDAO(
         selectedAdminAddresses,
-        sampling,
+        count,
       );
 
       await this.createSpaceDaoMutation.mutateAsync({
@@ -243,7 +243,7 @@ export class SpaceDaoEditorController {
         },
       });
 
-      this.chainSamplingCount.set(String(sampling));
+      this.chainRecipientCount.set(String(count));
       showSuccessToast(this.t('toast_registered'));
       this.isPopupOpen.set(false);
     } catch (error) {
@@ -271,16 +271,16 @@ export class SpaceDaoEditorController {
     }
   };
 
-  handleUpdateDao = async (samplingCount: string) => {
+  handleUpdateDao = async (rewardCount: string) => {
     const dao = this.dao;
-    const sampling = Number(samplingCount);
+    const count = Number(rewardCount);
 
     if (!dao?.contract_address) {
       showErrorToast(this.t('error_register_failed_unknown'));
       return;
     }
-    if (!Number.isFinite(sampling) || sampling <= 0) {
-      showErrorToast(this.t('error_invalid_sampling_count'));
+    if (!Number.isFinite(count) || count <= 0) {
+      showErrorToast(this.t('error_invalid_reward_count'));
       return;
     }
 
@@ -294,8 +294,8 @@ export class SpaceDaoEditorController {
 
       const daoService = new SpaceDaoService(provider);
       await daoService.connectWallet();
-      await daoService.setRewardRecipientCount(dao.contract_address, sampling);
-      this.chainSamplingCount.set(String(sampling));
+      await daoService.setRewardRecipientCount(dao.contract_address, count);
+      this.chainRecipientCount.set(String(count));
       showSuccessToast(this.t('toast_updated'));
     } catch (error) {
       console.error('Failed to update Space DAO:', error);
@@ -325,19 +325,19 @@ export function useSpaceDaoEditorController(
   const { data: space } = useSpaceById(spacePk);
   const { t } = useTranslation('SpaceDaoEditor');
   const adminAddresses = useState('');
-  const samplingCount = useState('');
-  const chainSamplingCount = useState<string | null>(null);
+  const rewardCount = useState('');
+  const chainRecipientCount = useState<string | null>(null);
   const isPopupOpen = useState(false);
   const isRegistering = useState(false);
   const isUpdating = useState(false);
-  const sampleBookmark = useState<string | null>(null);
-  const sampleHistory = useState<(string | null)[]>([]);
+  const selectedBookmark = useState<string | null>(null);
+  const selectedHistory = useState<(string | null)[]>([]);
   const isDistributingPage = useState(false);
   const createSpaceDaoMutation = useCreateSpaceDaoMutation();
-  const updateSamplesMutation = useUpdateSpaceDaoSamplesMutation();
-  const { data: samples, isLoading: samplesLoading } = useSpaceDaoSamples(
+  const updateSelectedMutation = useUpdateSpaceDaoSelectedMutation();
+  const { data: selected, isLoading: selectedLoading } = useSpaceDaoSelected(
     spacePk,
-    sampleBookmark[0],
+    selectedBookmark[0],
     50,
     Boolean(dao?.contract_address),
   );
@@ -360,15 +360,15 @@ export function useSpaceDaoEditorController(
     t,
     provider,
     new State(adminAddresses),
-    new State(samplingCount),
-    new State(chainSamplingCount),
+    new State(rewardCount),
+    new State(chainRecipientCount),
     new State(isPopupOpen),
     new State(isRegistering),
     new State(isUpdating),
-    new State(sampleBookmark),
-    new State(sampleHistory),
-    samples,
-    samplesLoading,
+    new State(selectedBookmark),
+    new State(selectedHistory),
+    selected,
+    selectedLoading,
     new State(isDistributingPage),
     selectedToken ?? null,
     tokenBalance ?? null,
@@ -377,11 +377,11 @@ export function useSpaceDaoEditorController(
     preferredTokenBalance ?? null,
     preferredTokenDecimals ?? null,
     createSpaceDaoMutation,
-    updateSamplesMutation,
+    updateSelectedMutation,
   );
 
   useEffect(() => {
-    void ctrl.fetchSamplingCount();
+    void ctrl.fetchRecipientCount();
   }, [dao?.contract_address, provider]);
 
   return ctrl;

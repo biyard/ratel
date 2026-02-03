@@ -6,9 +6,9 @@ import { Space } from '@/features/spaces/types/space';
 import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
 import { State } from '@/types/state';
 import {
-  SpaceDaoSampleListResponse,
-  useSpaceDaoSamples,
-} from '@/features/spaces/dao/hooks/use-space-dao-samples';
+  SpaceDaoSelectedListResponse,
+  useSpaceDaoSelected,
+} from '@/features/spaces/dao/hooks/use-space-dao-selected';
 import { SpaceDaoService } from '@/contracts/SpaceDaoService';
 import { config } from '@/config';
 import { ethers } from 'ethers';
@@ -20,11 +20,11 @@ export class SpaceDaoViewerController {
     public dao: SpaceDaoResponse | null | undefined,
     public t: TFunction<'SpaceDaoEditor', undefined>,
     public provider: ethers.JsonRpcProvider | null,
-    public chainSamplingCount: State<string | null>,
-    public sampleBookmark: State<string | null>,
-    public sampleHistory: State<(string | null)[]>,
-    public samples: SpaceDaoSampleListResponse | undefined,
-    public samplesLoading: boolean,
+    public chainRecipientCount: State<string | null>,
+    public selectedBookmark: State<string | null>,
+    public selectedHistory: State<(string | null)[]>,
+    public selected: SpaceDaoSelectedListResponse | undefined,
+    public selectedLoading: boolean,
     public isDistributingPage: State<boolean>,
   ) {}
 
@@ -32,25 +32,25 @@ export class SpaceDaoViewerController {
     return this.space?.isAdmin?.() ?? false;
   }
 
-  get canPrevSample() {
+  get canPrevSelected() {
     if (this.space?.isFinished) {
       return false;
     }
-    return this.sampleHistory.get().length > 0;
+    return this.selectedHistory.get().length > 0;
   }
 
-  get canNextSample() {
+  get canNextSelected() {
     if (this.space?.isFinished) {
       return false;
     }
-    return Boolean(this.samples?.bookmark);
+    return Boolean(this.selected?.bookmark);
   }
 
-  get visibleSamples() {
-    return this.samples?.items ?? [];
+  get visibleSelected() {
+    return this.selected?.items ?? [];
   }
 
-  fetchSamplingCount = async () => {
+  fetchRecipientCount = async () => {
     if (!this.provider || !this.dao?.contract_address) {
       return;
     }
@@ -59,28 +59,28 @@ export class SpaceDaoViewerController {
       const count = await service.getRewardRecipientCount(
         this.dao.contract_address,
       );
-      this.chainSamplingCount.set(String(count));
+      this.chainRecipientCount.set(String(count));
     } catch (error) {
-      console.error('Failed to fetch sampling count:', error);
-      this.chainSamplingCount.set(null);
+      console.error('Failed to fetch reward recipient count:', error);
+      this.chainRecipientCount.set(null);
     }
   };
 
-  handleNextSample = () => {
-    const next = this.samples?.bookmark ?? null;
+  handleNextSelected = () => {
+    const next = this.selected?.bookmark ?? null;
     if (!next) return;
-    const history = [...this.sampleHistory.get()];
-    history.push(this.sampleBookmark.get());
-    this.sampleHistory.set(history);
-    this.sampleBookmark.set(next);
+    const history = [...this.selectedHistory.get()];
+    history.push(this.selectedBookmark.get());
+    this.selectedHistory.set(history);
+    this.selectedBookmark.set(next);
   };
 
-  handlePrevSample = () => {
-    const history = [...this.sampleHistory.get()];
+  handlePrevSelected = () => {
+    const history = [...this.selectedHistory.get()];
     if (history.length === 0) return;
     const prev = history.pop() ?? null;
-    this.sampleHistory.set(history);
-    this.sampleBookmark.set(prev);
+    this.selectedHistory.set(history);
+    this.selectedBookmark.set(prev);
   };
 }
 
@@ -90,13 +90,13 @@ export function useSpaceDaoViewerController(
 ) {
   const { data: space } = useSpaceById(spacePk);
   const { t } = useTranslation('SpaceDaoEditor');
-  const chainSamplingCount = useState<string | null>(null);
-  const sampleBookmark = useState<string | null>(null);
-  const sampleHistory = useState<(string | null)[]>([]);
+  const chainRecipientCount = useState<string | null>(null);
+  const selectedBookmark = useState<string | null>(null);
+  const selectedHistory = useState<(string | null)[]>([]);
   const isDistributingPage = useState(false);
-  const { data: samples, isLoading: samplesLoading } = useSpaceDaoSamples(
+  const { data: selected, isLoading: selectedLoading } = useSpaceDaoSelected(
     spacePk,
-    sampleBookmark[0],
+    selectedBookmark[0],
     50,
     Boolean(dao?.contract_address),
   );
@@ -113,16 +113,16 @@ export function useSpaceDaoViewerController(
     dao,
     t,
     provider,
-    new State(chainSamplingCount),
-    new State(sampleBookmark),
-    new State(sampleHistory),
-    samples,
-    samplesLoading,
+    new State(chainRecipientCount),
+    new State(selectedBookmark),
+    new State(selectedHistory),
+    selected,
+    selectedLoading,
     new State(isDistributingPage),
   );
 
   useEffect(() => {
-    void ctrl.fetchSamplingCount();
+    void ctrl.fetchRecipientCount();
   }, [dao?.contract_address, provider]);
 
   return ctrl;

@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Card from '@/components/card';
 import { SpaceDaoResponse } from '@/features/spaces/dao/hooks/use-space-dao';
-import { SpaceDaoSampleResponse } from '@/features/spaces/dao/hooks/use-space-dao-samples';
+import { SpaceDaoSelectedResponse } from '@/features/spaces/dao/hooks/use-space-dao-selected';
 import { SpaceDaoTokenResponse } from '@/features/spaces/dao/hooks/use-space-dao-tokens';
-import { SpaceDaoSampleTable } from './space-dao-sample-table';
+import { SpaceDaoSelectedTable } from './space-dao-selected-table';
 import { config } from '@/config';
 import {
   ArrowPathIcon,
@@ -18,18 +18,18 @@ import { ethers } from 'ethers';
 type SpaceDaoInfoCardProps = {
   dao: SpaceDaoResponse;
   isUpdating?: boolean;
-  samplingCount?: string | number | null;
-  onUpdateDao?: (samplingCount: string) => Promise<void>;
-  samples?: SpaceDaoSampleResponse[];
-  samplesBookmark?: string | null;
-  canPrevSample?: boolean;
-  canNextSample?: boolean;
-  samplesLoading?: boolean;
-  showSamples?: boolean;
+  recipientCount?: string | number | null;
+  onUpdateDao?: (rewardCount: string) => Promise<void>;
+  selected?: SpaceDaoSelectedResponse[];
+  selectedBookmark?: string | null;
+  canPrevSelected?: boolean;
+  canNextSelected?: boolean;
+  selectedLoading?: boolean;
+  showSelected?: boolean;
   showEdit?: boolean;
   canDistributeReward?: boolean;
-  onNextSample?: () => void;
-  onPrevSample?: () => void;
+  onNextSelected?: () => void;
+  onPrevSelected?: () => void;
   onDistributePage?: () => void;
   isDistributingPage?: boolean;
   // withdrawal props removed
@@ -44,18 +44,18 @@ type SpaceDaoInfoCardProps = {
 export function SpaceDaoInfoCard({
   dao,
   isUpdating = false,
-  samplingCount,
+  recipientCount,
   onUpdateDao,
-  samples,
-  samplesBookmark,
-  canPrevSample = false,
-  canNextSample = false,
-  samplesLoading = false,
-  showSamples = true,
+  selected,
+  selectedBookmark,
+  canPrevSelected = false,
+  canNextSelected = false,
+  selectedLoading = false,
+  showSelected = true,
   showEdit = true,
   canDistributeReward = false,
-  onNextSample,
-  onPrevSample,
+  onNextSelected,
+  onPrevSelected,
   onDistributePage,
   isDistributingPage = false,
   tokens = [],
@@ -68,8 +68,8 @@ export function SpaceDaoInfoCard({
   const { t } = useTranslation('SpaceDaoEditor');
   const [copied, setCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [samplingValue, setSamplingValue] = useState(
-    String(samplingCount ?? ''),
+  const [rewardCountValue, setRewardCountValue] = useState(
+    String(recipientCount ?? ''),
   );
   const explorerUrl = config.block_explorer_url
     ? `${config.block_explorer_url}/address/${dao.contract_address}`
@@ -114,7 +114,7 @@ export function SpaceDaoInfoCard({
   };
 
   const handleEdit = () => {
-    setSamplingValue(String(samplingCount ?? ''));
+    setRewardCountValue(String(recipientCount ?? ''));
     setIsEditing(true);
   };
 
@@ -124,7 +124,7 @@ export function SpaceDaoInfoCard({
 
   const handleSaveEdit = async () => {
     if (!onUpdateDao) return;
-    await onUpdateDao(samplingValue);
+    await onUpdateDao(rewardCountValue);
     setIsEditing(false);
   };
 
@@ -167,18 +167,18 @@ export function SpaceDaoInfoCard({
         <div className="grid grid-cols-1 gap-4 text-sm">
           <div>
             <p className="text-text-secondary mb-1">
-              {t('dao_info_sampling_count')}
+              {t('dao_info_reward_count')}
             </p>
             {isEditing ? (
               <Input
                 type="number"
                 min={1}
-                value={samplingValue}
-                onChange={(e) => setSamplingValue(e.target.value)}
+                value={rewardCountValue}
+                onChange={(e) => setRewardCountValue(e.target.value)}
               />
             ) : (
               <p className="text-base text-text-primary">
-                {samplingCount ?? '-'}
+                {recipientCount ?? '-'}
               </p>
             )}
           </div>
@@ -293,15 +293,15 @@ export function SpaceDaoInfoCard({
         </div>
       </div>
 
-      {showSamples && (
-        <SpaceDaoSampleTable
-          samples={samples}
-          samplesBookmark={samplesBookmark}
-          samplesLoading={samplesLoading}
-          canPrevSample={canPrevSample}
-          canNextSample={canNextSample}
-          onPrevSample={onPrevSample}
-          onNextSample={onNextSample}
+      {showSelected && (
+        <SpaceDaoSelectedTable
+          selected={selected}
+          selectedBookmark={selectedBookmark}
+          selectedLoading={selectedLoading}
+          canPrevSelected={canPrevSelected}
+          canNextSelected={canNextSelected}
+          onPrevSelected={onPrevSelected}
+          onNextSelected={onNextSelected}
           canDistributeReward={canDistributeReward}
           onDistributePage={onDistributePage}
           isDistributingPage={isDistributingPage}

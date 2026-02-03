@@ -7,11 +7,11 @@ export type UpdateSpaceDaoSelectedRequest = {
   reward_distributed: boolean;
 };
 
-export function useUpdateSpaceDaoSamplesMutation() {
+export function useUpdateSpaceDaoSelectedMutation() {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationKey: ['update-space-dao-samples'],
+    mutationKey: ['update-space-dao-selected'],
     mutationFn: async ({
       spacePk,
       selectedSks,
@@ -29,7 +29,7 @@ export function useUpdateSpaceDaoSamplesMutation() {
     },
     onSuccess: async (_, { spacePk }) => {
       await qc.invalidateQueries({
-        queryKey: spaceDaoKeys.samplesBase(spacePk),
+        queryKey: spaceDaoKeys.selectedBase(spacePk),
       });
     },
   });

@@ -118,7 +118,8 @@ export const spaceKeys = {
     [...spaceKeys.detail(spacePk), 'topics'] as const,
 
   files: (spacePk: string) => [...spaceKeys.detail(spacePk), 'files'] as const,
-  file_links: (spacePk: string) => [...spaceKeys.files(spacePk), 'links'] as const,
+  file_links: (spacePk: string) =>
+    [...spaceKeys.files(spacePk), 'links'] as const,
 
   recommendations: (spacePk: string) =>
     [...spaceKeys.detail(spacePk), 'recommendations'] as const,
@@ -165,10 +166,15 @@ export const spaceDaoKeys = {
   dao: (spacePk: string) => [...spaceKeys.detail(spacePk), 'dao'] as const,
   candidates: (spacePk: string) =>
     [...spaceDaoKeys.dao(spacePk), 'candidates'] as const,
-  samples: (spacePk: string, bookmark: string | null, limit: number) =>
-    [...spaceDaoKeys.dao(spacePk), 'samples', bookmark ?? null, limit] as const,
-  samplesBase: (spacePk: string) =>
-    [...spaceDaoKeys.dao(spacePk), 'samples'] as const,
+  selected: (spacePk: string, bookmark: string | null, limit: number) =>
+    [
+      ...spaceDaoKeys.dao(spacePk),
+      'selected',
+      bookmark ?? null,
+      limit,
+    ] as const,
+  selectedBase: (spacePk: string) =>
+    [...spaceDaoKeys.dao(spacePk), 'selected'] as const,
   tokens: (spacePk: string, limit: number) =>
     [...spaceDaoKeys.dao(spacePk), 'tokens', limit] as const,
 };
