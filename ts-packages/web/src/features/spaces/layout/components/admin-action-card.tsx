@@ -17,7 +17,7 @@ export type AdminCardProps = React.HTMLAttributes<HTMLDivElement> & {
   actions: LayoutAction[];
 };
 
-export default function AdminCard({
+export default function AdminActionCard({
   actions,
   title,
   description,
@@ -43,17 +43,7 @@ export default function AdminCard({
           onChange={(n) => setHold(n)}
         />
       ) : (
-        <Button
-          aria-role={actions[hold].holdingLabel}
-          variant="rounded_primary"
-          className="w-full"
-          onClick={() => {
-            setHold(-1);
-            actions[hold].onClickWhileHolding();
-          }}
-        >
-          {actions[hold].holdingLabel}
-        </Button>
+        <></>
       )}
     </Card>
   );

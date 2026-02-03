@@ -48,7 +48,7 @@ interface ParticipationCardProps {
   actions: LayoutAction[];
 }
 
-export function ParticipationCard({
+export default function ViewerActionCard({
   title = 'Participation',
   description = 'You can read everything, but posting, voting and commenting require verification.',
   verifiedCredentials = [
@@ -92,7 +92,7 @@ export function ParticipationCard({
           {actions[0].label}
         </Button>
         <Button
-          variant="outline"
+          variant="rounded_secondary"
           className="w-full"
           onClick={actions[1].onClick}
         >

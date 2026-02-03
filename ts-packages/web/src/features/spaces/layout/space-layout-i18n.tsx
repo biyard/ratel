@@ -6,11 +6,11 @@ export interface I18nSpaceLayout extends Record<Label, string> {
   admin_title: string;
   admin_description: string;
 
-  // Candidate Card
-  candidate_title: string;
-  candidate_description: string;
-  candidate_participant_button_label: string;
-  candidate_credentials_button_label: string;
+  // Viewer Card
+  viewer_title: string;
+  viewer_description: string;
+  viewer_participant_button_label: string;
+  viewer_credentials_button_label: string;
 
   // Timeline
   timeline_title: string;
@@ -42,8 +42,8 @@ export interface I18nSpaceLayout extends Record<Label, string> {
   action_admin_publish: string;
 
   // Candidate Action
-  action_candidate_participate: string;
-  action_candidate_credentials: string;
+  action_viewer_participate: string;
+  action_viewer_credentials: string;
 
   // Toast Message
   toast_participate_success: string;
@@ -88,24 +88,25 @@ export const i18nSpaceLayout = {
     menu_nft_preview: 'ArtNFT',
     menu_nft_settings: 'Settings',
     menu_nft_art_twin: 'Art Twin',
+    menu_requirements: 'Requirements',
 
     // Admin Card
     admin_title: 'Admin',
     admin_description: 'You have full access to manage this space.',
 
     // Candidate
-    candidate_title: 'Candidate',
-    candidate_description:
+    viewer_title: 'Candidate',
+    viewer_description:
       'You can read everything, but posting, voting and commenting require verification.',
-    candidate_participant_button_label: 'Participate',
-    candidate_credentials_button_label: 'See My Credential',
+    viewer_participant_button_label: 'Participate',
+    viewer_credentials_button_label: 'See My Credential',
 
     // Admin Action
     action_admin_start: 'Start',
     action_admin_delete: 'Delete',
     action_admin_publish: 'Publish',
-    action_candidate_participate: 'Participate',
-    action_candidate_credentials: 'See Credentials',
+    action_viewer_participate: 'Participate',
+    action_viewer_credentials: 'See Credentials',
 
     // Toast Message
     toast_participate_success: 'Successfully joined the space.',
@@ -153,18 +154,18 @@ export const i18nSpaceLayout = {
     admin_description: '모든 권한을 가지고 있습니다.',
 
     // Candidate
-    candidate_title: '참여자',
-    candidate_description:
+    viewer_title: '참여자',
+    viewer_description:
       '모든 게시물을 읽을 수 있지만, 게시, 투표, 댓글을 작성하려면 인증이 필요합니다.',
-    candidate_participant_button_label: '참여하기',
-    candidate_credentials_button_label: '내 자격 증명 확인',
+    viewer_participant_button_label: '참여하기',
+    viewer_credentials_button_label: '내 자격 증명 확인',
 
     // Admin Action
     action_admin_start: '시작하기',
     action_admin_delete: '삭제하기',
     action_admin_publish: '게시하기',
-    action_candidate_participate: '참여하기',
-    action_candidate_credentials: '자격 증명 확인',
+    action_viewer_participate: '참여하기',
+    action_viewer_credentials: '자격 증명 확인',
 
     // Toast Message
     toast_participate_success: '스페이스에 성공적으로 참여했습니다.',
@@ -180,6 +181,8 @@ export const i18nSpaceLayout = {
     publish_space_title: '스페이스 게시',
     delete_space_title: '스페이스 삭제',
     start_space_title: '스페이스 시작',
+
+    menu_requirements: '사전 조건',
   },
 };
 
@@ -206,20 +209,21 @@ export function useSpaceLayoutI18n(): I18nSpaceLayout {
     menu_nft_preview: t('menu_nft_preview'),
     menu_nft_settings: t('menu_nft_settings'),
     menu_nft_art_twin: t('menu_nft_art_twin'),
+    menu_requirements: t('menu_requirements'),
 
     admin_title: t('admin_title'),
     admin_description: t('admin_description'),
 
-    candidate_title: t('candidate_title'),
-    candidate_description: t('candidate_description'),
-    candidate_participant_button_label: t('candidate_participant_button_label'),
-    candidate_credentials_button_label: t('candidate_credentials_button_label'),
+    viewer_title: t('viewer_title'),
+    viewer_description: t('viewer_description'),
+    viewer_participant_button_label: t('viewer_participant_button_label'),
+    viewer_credentials_button_label: t('viewer_credentials_button_label'),
 
     action_admin_start: t('action_admin_start'),
     action_admin_delete: t('action_admin_delete'),
     action_admin_publish: t('action_admin_publish'),
-    action_candidate_participate: t('action_candidate_participate'),
-    action_candidate_credentials: t('action_candidate_credentials'),
+    action_viewer_participate: t('action_viewer_participate'),
+    action_viewer_credentials: t('action_viewer_credentials'),
 
     toast_participate_success: t('toast_participate_success'),
     toast_participate_failed: t('toast_participate_failed'),

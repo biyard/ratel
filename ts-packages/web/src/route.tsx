@@ -116,6 +116,8 @@ export const route = {
     `/spaces/${encodeURIComponent(spacePk)}/nfts`,
   spaceNftArtTwin: (spacePk: string) =>
     `/spaces/${encodeURIComponent(spacePk)}/nfts/art-twin`,
+  spaceRequirements: (spaceId: string) =>
+    `/spaces/${encodeURIComponent(spaceId)}/requirements`,
 
   // Admin routes
   admin: () => '/admin',

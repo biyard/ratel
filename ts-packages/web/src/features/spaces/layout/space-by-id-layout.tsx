@@ -20,8 +20,8 @@ import { SafeArea } from '@/components/ui/safe-area';
 import SpaceParticipantProfile from './components/space-participant-profile';
 import SpaceSideMenu from './components/space-side-menu';
 
-import AdminCard from './components/admin-card';
-import { ParticipationCard } from './components/participation-card';
+import AdminActionCard from './components/admin-action-card';
+import ViewerActionCard from './components/viewer-action-card';
 
 function GeneralLayout({ ctrl }: { ctrl: SpaceLayoutController }) {
   const matches = useMatches();
@@ -38,21 +38,21 @@ function GeneralLayout({ ctrl }: { ctrl: SpaceLayoutController }) {
       className="flex flex-row items-start gap-0 flex-nowrap h-[calc(100vh-var(--header-height))]"
     >
       {/* Left Sidebar - Fixed */}
-      <Col className="max-w-[250px] shrink-0 bg-component-bg flex flex-col h-full divide-y divide-divider">
+      <Col className="max-w-[250px] shrink-0 bg-component-bg flex flex-col h-full divide-y divide-divider py-2">
         <div className="flex-1 overflow-y-auto flex flex-col gap-4 px-3 divide-y divide-divider">
           {ctrl.role == Role.Admin && (
-            <AdminCard
+            <AdminActionCard
               title={ctrl.i18n.admin_title}
               description={ctrl.i18n.admin_description}
               actions={ctrl.adminActions}
             />
           )}
-          {ctrl.role == Role.Candidate && (
-            <ParticipationCard
-              title={ctrl.i18n.candidate_title}
-              description={ctrl.i18n.candidate_description}
+          {ctrl.role == Role.Viewer && (
+            <ViewerActionCard
+              title={ctrl.i18n.viewer_title}
+              description={ctrl.i18n.viewer_description}
               verifiedCredentials={[]}
-              actions={ctrl.candidateActions}
+              actions={ctrl.viewerActions}
             />
           )}
 

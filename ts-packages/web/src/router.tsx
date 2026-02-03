@@ -36,6 +36,7 @@ import SpaceDiscussionPage from './app/spaces/[id]/discussions/space-discussion-
 import SpaceFilePage from './app/spaces/[id]/file/space-file-page';
 import SpaceRecommendationPage from './app/spaces/[id]/recommendation/space-recommendation-page';
 import DiscussionPage from './app/spaces/[id]/discussions/[discussion-id]/discussion-page';
+import SpaceRequirementPage from './app/spaces/[id]/requirements/space-requirment-page';
 
 // Admin
 import AdminPage from './app/admin/page';
@@ -388,6 +389,12 @@ export const routes = createBrowserRouter([
                 Component: SpaceArtNftArtTwinPage,
               },
             ],
+          },
+          {
+            id: 'space-requirement-page',
+            path: 'requirements',
+            Component: SpaceRequirementPage,
+            handle: { hideHeader: true },
           },
         ],
       }, // End of Space Layout

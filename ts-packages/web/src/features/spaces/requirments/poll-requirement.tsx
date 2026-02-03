@@ -1,18 +1,18 @@
 import { useTranslation } from 'react-i18next';
-import usePollSpace from '../../polls/hooks/use-poll-space';
-import { SurveyAnswer } from '../../polls/types/poll-question';
 import { logger } from '@/lib/logger';
 import { useEffect, useState } from 'react';
-import { usePollResponseMutation } from '../../polls/hooks/use-poll-response-mutation';
 import { useErrorZone } from '@/features/errors/hooks/use-error-zone';
 import { ErrorSpacePollRequiredField } from '@/features/errors/types/errors';
 import { Error } from '@/features/errors/types/errors';
 import { usePopup } from '@/lib/contexts/popup-service';
-import CompleteSurveyPopup from '../../polls/components/modal/complete_survey';
-import { useSpaceById } from '../../hooks/use-space-by-id';
-import { SpaceType } from '../../types/space-type';
-import { SpaceStatus } from '../../types/space-common';
-import SurveyViewer from '../../components/survey/viewer';
+import { useSpaceById } from '../hooks/use-space-by-id';
+import usePollSpace from '../polls/hooks/use-poll-space';
+import { SurveyAnswer } from '../types/survey-type';
+import { usePollResponseMutation } from '../polls/hooks/use-poll-response-mutation';
+import CompleteSurveyPopup from '../polls/components/modal/complete_survey';
+import { SpaceType } from '../types/space-type';
+import SurveyViewer from '../components/survey/viewer';
+import { SpaceStatus } from '../types/space-common';
 export type PollRequirementProps = React.HTMLAttributes<HTMLDivElement> & {
   spacePk: string;
   pollSk: string;

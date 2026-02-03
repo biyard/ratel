@@ -1,7 +1,12 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { route } from '@/route';
-import { ADMIN_MENUS, BASE_MENUS, SPACE_MENUS } from './space-menus';
+import {
+  ADMIN_MENUS,
+  BASE_MENUS,
+  REQUIRE_MENUS,
+  SPACE_MENUS,
+} from './space-menus';
 import { useSpaceById } from '../hooks/use-space-by-id';
 import { useUserInfo } from '@/hooks/use-user-info';
 import useFileSpace from '../files/hooks/use-file-space';
@@ -34,7 +39,6 @@ export type SideMenuProps = {
 export enum Role {
   Admin,
   Participant,
-  Candidate,
   Viewer,
 }
 
@@ -55,7 +59,7 @@ export interface SpaceLayoutController {
   popup: ReturnType<typeof usePopup>;
   i18n: I18nSpaceLayout;
   adminActions: LayoutAction[];
-  candidateActions: LayoutAction[];
+  viewerActions: LayoutAction[];
   participantActions: LayoutAction[];
 
   role: Role;
@@ -80,6 +84,17 @@ export function useSpaceLayoutController(
 
   const location = useLocation();
 
+  const preTaskRequired =
+    space.participated &&
+    space.havePreTasks() &&
+    !space.isAdmin() &&
+    !space.isFinished;
+  useEffect(() => {
+    if (preTaskRequired) {
+      navigate(route.spaceRequirements(spacePk), { replace: true });
+    }
+  }, [navigate, spacePk, space, preTaskRequired]);
+
   const role = useMemo(() => {
     if (space.isAdmin()) {
       // Admin
@@ -91,12 +106,6 @@ export function useSpaceLayoutController(
       return Role.Participant;
     }
 
-    if (space.canParticipate && !space.blockParticipate) {
-      // can_participate === true
-      return Role.Candidate;
-    }
-    // 참여 불가 / 유저 액션으로 처리 불가능한 상태
-    // canParticipate === false || blockParticipate == true
     return Role.Viewer;
   }, [space]);
 
@@ -117,10 +126,12 @@ export function useSpaceLayoutController(
   }
 
   const menus: SideMenuProps[] = useMemo(() => {
-    const items = [...BASE_MENUS, ...(SPACE_MENUS[space.spaceType] || [])];
+    const baseMenus = [...BASE_MENUS, ...(SPACE_MENUS[space.spaceType] || [])];
+    const items = preTaskRequired ? [...REQUIRE_MENUS] : baseMenus;
     if (space.isAdmin()) {
       items.push(...ADMIN_MENUS);
     }
+
     return items
       .filter((menu) => {
         if (!menu.visible) {
@@ -341,14 +352,14 @@ export function useSpaceLayoutController(
     handleActionPublish,
   ]);
 
-  const candidateActions = useMemo(() => {
+  const viewerActions = useMemo(() => {
     const ret: LayoutAction[] = [
       {
-        label: i18n.action_candidate_participate,
+        label: i18n.action_viewer_participate,
         onClick: handleParticipate,
       },
       {
-        label: i18n.action_candidate_credentials,
+        label: i18n.action_viewer_credentials,
         onClick: () => {
           navigate(route.credentials());
         },
@@ -357,8 +368,8 @@ export function useSpaceLayoutController(
 
     return ret;
   }, [
-    i18n.action_candidate_participate,
-    i18n.action_candidate_credentials,
+    i18n.action_viewer_participate,
+    i18n.action_viewer_credentials,
     handleParticipate,
     navigate,
   ]);
@@ -408,7 +419,7 @@ export function useSpaceLayoutController(
     role,
     currentMenu,
     adminActions,
-    candidateActions,
+    viewerActions,
     participantActions,
   };
 }
